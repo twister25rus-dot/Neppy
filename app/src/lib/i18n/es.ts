@@ -3082,8 +3082,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'Conexión fallida: {status} {statusText}',
   'welcome.connectionFailedMsg': 'Conexión fallida: {message}',
   'welcome.continueLocally': 'Continuar localmente',
-  'welcome.continueLocallyExperimental': 'Continuar localmente (Experimental)',
-  'welcome.localSessionStarting': 'Iniciando sesión local...',
   'welcome.coreConfigUnreadable':
     'El entorno de ejecución no pudo leer su archivo de configuración. Es posible que config.toml pertenezca a otra cuenta de usuario o que resulte inaccesible para el proceso por otro motivo. Reinicia el entorno de ejecución y, si eso no ayuda, repara la propiedad del espacio de trabajo o vuelve a crear su volumen.',
   'welcome.localSessionErrorFallback': 'No se pudo iniciar una sesión local.',
@@ -7035,6 +7033,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Ubicación',
   'devOptions.provisionedCore': 'Núcleo iniciado por esta aplicación',
   'devOptions.gatewayId': 'ID de la ubicación',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'Modo local',
+  'localMode.description':
+    'Ejecuta OpenHuman sin el backend alojado del proyecto. El inicio de sesión, el enrutamiento de modelos, la búsqueda y el uso se sirven en este equipo. Distinto del modo de privacidad: aquí se decide de qué servicios depende la aplicación, no cuántos datos pueden salir.',
+  'localMode.enable': 'Funcionar sin el backend alojado',
+  'localMode.enableDesc':
+    'Sirve el plano de control desde un servicio local en 127.0.0.1. Requiere reiniciar.',
+  'localMode.applyDefaults': 'Usar proveedores locales por defecto',
+  'localMode.applyDefaultsDesc':
+    'Redirige los valores predeterminados gestionados a equivalentes locales: los embeddings a Ollama y la búsqueda web a tu instancia de SearXNG. Los proveedores que elegiste nunca se modifican.',
+  'localMode.proxyInference': 'Servir las llamadas al modelo localmente',
+  'localMode.proxyInferenceDesc':
+    'Reenvía las solicitudes compatibles con OpenAI a tu entorno local (Ollama, LM Studio, vLLM).',
+  'localMode.servingAt': 'Backend local disponible en',
+  'localMode.restartRequired': 'Reinicia OpenHuman para aplicar este cambio.',
+  'localMode.overridden':
+    'La variable de entorno OPENHUMAN_LOCAL_MODE está anulando este ajuste para el proceso en ejecución.',
+  'localMode.setupPrefix': 'Para configurarlo:',
+  'localMode.kind.replaced': 'Local',
+  'localMode.kind.requiresSetup': 'Requiere configuración',
+  'localMode.kind.unavailable': 'Sin equivalente local',
+  'localMode.kind.notApplicable': 'No aplicable',
+  'localMode.saved': 'Guardado',
+  'localMode.saveError': 'No se pudo actualizar el modo local.',
 };
 
 export default messages;

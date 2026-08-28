@@ -48,6 +48,7 @@ pub(crate) use load::CONFIG_OWNER_MISMATCH_MARKER;
 pub mod claude_agent_sdk;
 pub use claude_agent_sdk::ClaudeAgentSdkConfig;
 mod local_ai;
+mod local_mode;
 mod modules;
 mod node;
 mod observability;
@@ -86,6 +87,9 @@ pub use heartbeat_cron::{CronConfig, HeartbeatConfig, SubconsciousMode};
 pub use identity_cost::{CostConfig, ModelPricing};
 pub use learning::{LearningConfig, ReflectionSource};
 pub use local_ai::{LocalAiConfig, LocalAiUsage};
+pub use local_mode::{
+    LocalModeConfig, DEFAULT_LOCAL_BACKEND_PORT, LOCAL_BACKEND_PORT_ENV_VAR, LOCAL_MODE_ENV_VAR,
+};
 pub use modules::{ModuleOverride, ModulesConfig};
 pub use node::NodeConfig;
 pub use observability::{AgentTracingBackend, AgentTracingConfig, ObservabilityConfig};

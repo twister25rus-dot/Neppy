@@ -56,6 +56,27 @@ pub fn local_only_blocks(mode: PrivacyMode, desc: &EgressDescriptor) -> bool {
     mode == PrivacyMode::LocalOnly && desc.is_external && !is_control_plane(desc)
 }
 
+/// Pure decision: under Local Mode, is the transfer described by `desc`
+/// blocked?
+///
+/// # Why the control-plane exemption is exactly inverted here
+///
+/// [`local_only_blocks`] lets the backend control plane through under
+/// `LocalOnly` because blocking sign-in buys no privacy. Local mode's subject
+/// is the *dependency*, not the data, so the control plane is precisely what it
+/// must stop: those calls are the reason a local install still needs
+/// `api.tinyhumans.ai` at all. They are not lost — they are served by the
+/// loopback local backend instead.
+///
+/// Only [`EgressReason::Integration`] descriptors are eligible. Inference,
+/// composio tool calls, cloud embeddings and agent network fetches go to *third
+/// parties*, not to our backend; local mode is not an offline switch and must
+/// not block a user's own vendor accounts. (`PrivacyMode::LocalOnly` is the
+/// switch for that, and the two compose: turn both on and nothing leaves.)
+pub fn local_mode_blocks(local_mode: bool, desc: &EgressDescriptor) -> bool {
+    local_mode && desc.is_external && desc.reason == EgressReason::Integration
+}
+
 /// Is `desc` a backend **control-plane** round-trip that must keep flowing even
 /// under `LocalOnly` (blocking it would break sign-in / the Connections UI with
 /// no privacy benefit, because it carries no user *content* — only auth tokens,
@@ -144,6 +165,25 @@ fn block_message(desc: &EgressDescriptor) -> String {
     )
 }
 
+/// Human-readable reason a local-mode transfer was refused, naming the local
+/// alternative from the [`services`](crate::openhuman::local_mode::services)
+/// inventory when one claims the route — the same text the local backend's
+/// `501` carries, so a user sees one consistent answer whether the call was
+/// refused here or answered by the backend.
+fn local_mode_block_message(desc: &EgressDescriptor) -> String {
+    let alternative = crate::openhuman::local_mode::services::entry_for_path(&desc.service)
+        .map(|entry| entry.local_alternative)
+        .unwrap_or(
+            "Turn local mode off in Settings → Privacy to reach the hosted backend, or use a \
+             local tool or MCP server for this capability.",
+        );
+    format!(
+        "Local mode is active: `{}` is served by the hosted backend, which this install does \
+         not use. {alternative}",
+        desc.service
+    )
+}
+
 /// Enforce the live privacy policy for an `anyhow`-returning egress site
 /// (composio tool calls, backend integrations, cloud embeddings). Reads the live
 /// mode (defaulting to `Standard`/allow when no session policy is installed) and
@@ -162,6 +202,16 @@ pub fn enforce_egress(desc: &EgressDescriptor) -> anyhow::Result<()> {
         );
         anyhow::bail!("{}", block_message(desc));
     }
+    if local_mode_blocks(crate::openhuman::local_mode::local_mode_active(), desc) {
+        log::warn!(
+            "[local-mode][egress-enforce] BLOCK provider={} service={} reason={:?} — \
+             hosted backend is not used in local mode",
+            desc.provider_slug,
+            desc.service,
+            desc.reason,
+        );
+        anyhow::bail!("{}", local_mode_block_message(desc));
+    }
     log::debug!(
         "[privacy][egress-enforce] privacy_mode={:?} provider={} service={} reason={:?} — permitted",
         mode,
@@ -179,6 +229,19 @@ pub fn enforce_egress(desc: &EgressDescriptor) -> anyhow::Result<()> {
 /// transfer is refused, else `None`. Call it before the disclose-and-send; on
 /// `Some`, short-circuit with `Ok(ToolResult::error(message))`.
 pub fn local_only_tool_block(desc: &EgressDescriptor) -> Option<String> {
+    if local_mode_blocks(crate::openhuman::local_mode::local_mode_active(), desc) {
+        log::warn!(
+            "[local-mode][egress-enforce] BLOCK (tool) provider={} service={} reason={:?} — \
+             hosted backend is not used in local mode",
+            desc.provider_slug,
+            desc.service,
+            desc.reason,
+        );
+        return Some(format!(
+            "{POLICY_BLOCKED_MARKER} {}",
+            local_mode_block_message(desc)
+        ));
+    }
     let mode = current_privacy_mode();
     if local_only_blocks(mode, desc) {
         log::warn!(

@@ -136,6 +136,14 @@ pub fn effective_api_url(api_url: &Option<String>) -> String {
 /// auth, billing, team, referral, webhooks, credentials, channels,
 /// voice, sockets, app-state, integrations, core/jsonrpc, …
 ///
+/// # Local Mode
+///
+/// When [`local_mode`](crate::openhuman::local_mode) is active this returns the
+/// loopback local backend and nothing else is consulted — see the short-circuit
+/// at the top of the body for why it runs before the user override. This one
+/// redirect is what lets the whole app run without the hosted backend without
+/// touching the several hundred call sites that resolve through here.
+///
 /// # Key difference from [`effective_api_url`]
 ///
 /// The user override is **skipped** when it [`looks_like_local_ai_endpoint`]
@@ -152,6 +160,33 @@ pub fn effective_api_url(api_url: &Option<String>) -> String {
 /// request 404 because `config.api_url` (set to the Ollama endpoint) was also
 /// used as the integrations base.
 pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
+    // ── Local Mode short-circuit ─────────────────────────────────────────────
+    //
+    // Local mode replaces the hosted control plane with a loopback service, so
+    // this resolver — the single point every hosted round-trip funnels through
+    // — is where the redirect belongs. Doing it here rather than at the call
+    // sites is what preserves the app's features by construction: `api::rest`,
+    // `IntegrationClient`, the renderer's `fetch` calls and the existing tests
+    // all keep working unchanged against a backend that happens to be local.
+    //
+    // It runs BEFORE the user-override arm on purpose. `config.api_url`
+    // doubles as the BYO *inference* base (see `effective_inference_url`), so a
+    // local-mode user who points it at their own provider must not thereby
+    // re-point every `/auth/*` and `/teams/*` call at that provider — the same
+    // misroute the local-AI and cloud-inference guards below exist to prevent,
+    // arrived at from the other direction.
+    //
+    // Inference routing is unaffected: it resolves through `effective_api_url`,
+    // which never consults this function.
+    if crate::openhuman::local_mode::local_mode_active() {
+        let local = crate::openhuman::local_mode::local_backend_base_url();
+        tracing::debug!(
+            local_backend = %local,
+            "[api/config] local mode active — backend calls resolve to the local backend"
+        );
+        return normalize_api_base_url(&local);
+    }
+
     if let Some(u) = non_empty_str(api_url) {
         let is_local_ai = looks_like_local_ai_endpoint(u);
         let is_inference_provider = looks_like_inference_provider_endpoint(u);

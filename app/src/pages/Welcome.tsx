@@ -7,6 +7,7 @@ import { oauthProviderConfigs } from '../components/oauth/providerConfigs';
 import Button from '../components/ui/Button';
 import { useT } from '../lib/i18n/I18nContext';
 import { useCoreState } from '../providers/CoreStateProvider';
+import { setLocalMode } from '../services/api/localModeApi';
 import { clearBackendUrlCache } from '../services/backendUrl';
 import { clearCoreRpcTokenCache, clearCoreRpcUrlCache } from '../services/coreRpcClient';
 import { resetCoreMode } from '../store/coreModeSlice';
@@ -76,6 +77,22 @@ const Welcome = () => {
     setLocalLoginError(null);
     try {
       log('[welcome] local session login requested');
+      // Turn Local Mode on before minting the session. Without it the app
+      // would hold a local identity while still resolving every backend call
+      // to api.tinyhumans.ai — a session nothing on the other end recognises,
+      // which is what made this path "experimental". Enabling it first means
+      // the very first call after sign-in already resolves to the local
+      // backend.
+      //
+      // A failure here is not fatal to signing in: the user still gets a local
+      // session, just against the hosted control plane, and Settings → Privacy
+      // can turn Local Mode on afterwards. Failing the whole sign-in over it
+      // would be a worse trade.
+      try {
+        await setLocalMode({ enabled: true });
+      } catch (modeErr) {
+        log('[welcome] could not enable local mode: %s', String(modeErr));
+      }
       await storeSessionToken(createLocalSessionToken(), LOCAL_SESSION_USER);
       navigate('/onboarding/custom/inference', { replace: true });
     } catch (err) {
@@ -258,9 +275,7 @@ const Welcome = () => {
             onClick={handleLocalLogin}
             disabled={isLocalSigningIn}
             className="w-full py-3">
-            {isLocalSigningIn
-              ? t('welcome.localSessionStarting')
-              : t('welcome.continueLocallyExperimental')}
+            {isLocalSigningIn ? t('welcome.localSessionStarting') : t('welcome.continueLocally')}
           </Button>
           {localLoginError ? (
             <p className="text-[11px] leading-4 text-center font-medium text-red-700">

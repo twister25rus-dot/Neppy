@@ -3022,8 +3022,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'कनेक्शन विफल: {status} {statusText}',
   'welcome.connectionFailedMsg': 'कनेक्शन विफल: {message}',
   'welcome.continueLocally': 'स्थानीय स्तर पर जारी रखें',
-  'welcome.continueLocallyExperimental': 'लोकल रूप से जारी रखें (प्रायोगिक)',
-  'welcome.localSessionStarting': 'स्थानीय सत्र प्रारंभ हो रहा है...',
   'welcome.coreConfigUnreadable':
     'रनटाइम अपनी कॉन्फ़िगरेशन फ़ाइल नहीं पढ़ सका। हो सकता है config.toml किसी दूसरे उपयोगकर्ता खाते का हो, या किसी अन्य कारण से रनटाइम प्रक्रिया के लिए दुर्गम हो। रनटाइम को पुनः आरंभ करें, और यदि इससे मदद न मिले तो वर्कस्पेस का स्वामित्व ठीक करें या उसका वॉल्यूम दोबारा बनाएँ।',
   'welcome.localSessionErrorFallback': 'स्थानीय सत्र शुरू नहीं किया जा सका।',
@@ -6883,6 +6881,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'स्थान',
   'devOptions.provisionedCore': 'इस ऐप द्वारा शुरू किया गया कोर',
   'devOptions.gatewayId': 'स्थान',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'लोकल मोड',
+  'localMode.description':
+    'प्रोजेक्ट के होस्टेड बैकएंड के बिना OpenHuman चलाएँ। साइन-इन, मॉडल रूटिंग, खोज और उपयोग-आँकड़े इसी मशीन पर उपलब्ध कराए जाते हैं। यह प्राइवेसी मोड से अलग है: लोकल मोड तय करता है कि ऐप किन सेवाओं पर निर्भर है, न कि कितना डेटा बाहर जा सकता है।',
+  'localMode.enable': 'होस्टेड बैकएंड के बिना चलाएँ',
+  'localMode.enableDesc':
+    '127.0.0.1 पर एक लोकल सेवा से कंट्रोल प्लेन उपलब्ध कराता है। लागू होने के लिए पुनः आरंभ आवश्यक है।',
+  'localMode.applyDefaults': 'डिफ़ॉल्ट रूप से लोकल प्रदाता उपयोग करें',
+  'localMode.applyDefaultsDesc':
+    'प्रबंधित डिफ़ॉल्ट को लोकल विकल्पों पर भेजता है — एम्बेडिंग Ollama पर, वेब खोज आपके SearXNG इंस्टेंस पर। आपके चुने हुए प्रदाता कभी नहीं बदले जाते।',
+  'localMode.proxyInference': 'मॉडल कॉल लोकल रूप से पूरी करें',
+  'localMode.proxyInferenceDesc':
+    'OpenAI-संगत अनुरोध आपके लोकल रनटाइम (Ollama, LM Studio, vLLM) को भेजता है।',
+  'localMode.servingAt': 'लोकल बैकएंड यहाँ उपलब्ध है',
+  'localMode.restartRequired': 'यह बदलाव लागू करने के लिए OpenHuman पुनः आरंभ करें।',
+  'localMode.overridden':
+    'चल रही प्रक्रिया के लिए OPENHUMAN_LOCAL_MODE एनवायरनमेंट वेरिएबल इस सेटिंग को ओवरराइड कर रहा है।',
+  'localMode.setupPrefix': 'सेट अप करने के लिए:',
+  'localMode.kind.replaced': 'लोकल',
+  'localMode.kind.requiresSetup': 'सेटअप आवश्यक',
+  'localMode.kind.unavailable': 'कोई लोकल विकल्प नहीं',
+  'localMode.kind.notApplicable': 'लागू नहीं',
+  'localMode.saved': 'सहेजा गया',
+  'localMode.saveError': 'लोकल मोड अपडेट नहीं किया जा सका।',
 };
 
 export default messages;

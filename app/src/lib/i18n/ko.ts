@@ -2988,8 +2988,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': '연결 실패: {status} {statusText}',
   'welcome.connectionFailedMsg': '연결 실패: {message}',
   'welcome.continueLocally': '로컬에서 계속',
-  'welcome.continueLocallyExperimental': '로컬에서 계속(실험적)',
-  'welcome.localSessionStarting': '로컬 세션 시작 중...',
   'welcome.coreConfigUnreadable':
     '런타임이 자체 구성 파일을 읽지 못했습니다. config.toml이 다른 사용자 계정 소유이거나 다른 이유로 런타임 프로세스가 접근할 수 없는 상태일 수 있습니다. 런타임을 다시 시작하고, 그래도 해결되지 않으면 작업 디렉터리의 소유권을 복구하거나 볼륨을 다시 만드세요.',
   'welcome.localSessionErrorFallback': '로컬 세션을 시작할 수 없습니다.',
@@ -6809,6 +6807,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': '위치',
   'devOptions.provisionedCore': '이 앱이 시작한 코어',
   'devOptions.gatewayId': '위치',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': '로컬 모드',
+  'localMode.description':
+    '프로젝트의 호스팅 백엔드 없이 OpenHuman을 실행합니다. 로그인, 모델 라우팅, 검색, 사용량이 이 컴퓨터에서 제공됩니다. 개인정보 보호 모드와는 다릅니다. 로컬 모드는 앱이 어떤 서비스에 의존하는지를 정하며, 데이터가 얼마나 외부로 나갈 수 있는지를 정하지 않습니다.',
+  'localMode.enable': '호스팅 백엔드 없이 실행',
+  'localMode.enableDesc':
+    '127.0.0.1의 로컬 서비스가 제어 평면을 제공합니다. 적용하려면 재시작이 필요합니다.',
+  'localMode.applyDefaults': '기본값으로 로컬 제공자 사용',
+  'localMode.applyDefaultsDesc':
+    '관리형 기본값을 로컬 대체 항목으로 전환합니다. 임베딩은 Ollama로, 웹 검색은 사용자의 SearXNG 인스턴스로 연결됩니다. 직접 선택한 제공자는 변경되지 않습니다.',
+  'localMode.proxyInference': '모델 호출을 로컬에서 처리',
+  'localMode.proxyInferenceDesc':
+    'OpenAI 호환 요청을 로컬 런타임(Ollama, LM Studio, vLLM)으로 전달합니다.',
+  'localMode.servingAt': '로컬 백엔드 주소',
+  'localMode.restartRequired': '변경 사항을 적용하려면 OpenHuman을 재시작하세요.',
+  'localMode.overridden':
+    '환경 변수 OPENHUMAN_LOCAL_MODE가 실행 중인 프로세스에 대해 이 설정을 재정의하고 있습니다.',
+  'localMode.setupPrefix': '설정 방법:',
+  'localMode.kind.replaced': '로컬',
+  'localMode.kind.requiresSetup': '설정 필요',
+  'localMode.kind.unavailable': '로컬 대체 없음',
+  'localMode.kind.notApplicable': '해당 없음',
+  'localMode.saved': '저장됨',
+  'localMode.saveError': '로컬 모드를 업데이트하지 못했습니다.',
 };
 
 export default messages;

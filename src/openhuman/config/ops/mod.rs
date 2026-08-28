@@ -2,6 +2,7 @@
 
 mod agent;
 mod loader;
+mod local_mode;
 mod model;
 mod privacy;
 mod sandbox;
@@ -52,6 +53,11 @@ pub use model::{
     load_and_apply_memory_settings, load_and_apply_model_settings, load_and_apply_runtime_settings,
     load_and_resolve_api_url, ComposioTriggerSettingsPatch, LocalAiSettingsPatch,
     MemorySettingsPatch, ModelSettingsPatch, RuntimeSettingsPatch,
+};
+
+pub use local_mode::{
+    apply_local_mode_settings, get_local_mode, load_and_apply_local_mode_settings,
+    LocalModeSettingsPatch,
 };
 
 pub use privacy::{

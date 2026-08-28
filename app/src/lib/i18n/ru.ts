@@ -3046,8 +3046,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'Ошибка подключения: {status} {statusText}',
   'welcome.connectionFailedMsg': 'Ошибка подключения: {message}',
   'welcome.continueLocally': 'Продолжить локально',
-  'welcome.continueLocallyExperimental': 'Продолжить локально (Экспериментально)',
-  'welcome.localSessionStarting': 'Запуск локального сеанса...',
   'welcome.coreConfigUnreadable':
     'Среде выполнения не удалось прочитать свой файл конфигурации. Возможно, config.toml принадлежит другой учётной записи или недоступен процессу по иной причине. Перезапустите среду выполнения, а если это не поможет, исправьте владельца рабочего каталога или создайте его том заново.',
   'welcome.localSessionErrorFallback': 'Не удалось запустить локальный сеанс.',
@@ -6961,6 +6959,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Размещение',
   'devOptions.provisionedCore': 'Ядро, запущенное этим приложением',
   'devOptions.gatewayId': 'Размещение',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'Локальный режим',
+  'localMode.description':
+    'Запуск OpenHuman без размещённого бэкенда проекта. Вход, маршрутизация моделей, поиск и статистика использования обслуживаются на этом устройстве. Не путать с режимом приватности: здесь решается, от каких сервисов зависит приложение, а не сколько данных может его покинуть.',
+  'localMode.enable': 'Работать без размещённого бэкенда',
+  'localMode.enableDesc':
+    'Управляющий слой обслуживается локальной службой на 127.0.0.1. Требуется перезапуск.',
+  'localMode.applyDefaults': 'Использовать локальных поставщиков по умолчанию',
+  'localMode.applyDefaultsDesc':
+    'Переводит управляемые значения по умолчанию на локальные аналоги: эмбеддинги — на Ollama, веб-поиск — на ваш экземпляр SearXNG. Выбранные вами поставщики не изменяются.',
+  'localMode.proxyInference': 'Обслуживать вызовы моделей локально',
+  'localMode.proxyInferenceDesc':
+    'Перенаправляет OpenAI-совместимые запросы в вашу локальную среду (Ollama, LM Studio, vLLM).',
+  'localMode.servingAt': 'Локальный бэкенд доступен по адресу',
+  'localMode.restartRequired': 'Перезапустите OpenHuman, чтобы применить изменение.',
+  'localMode.overridden':
+    'Переменная окружения OPENHUMAN_LOCAL_MODE переопределяет эту настройку для текущего процесса.',
+  'localMode.setupPrefix': 'Настройка:',
+  'localMode.kind.replaced': 'Локально',
+  'localMode.kind.requiresSetup': 'Нужна настройка',
+  'localMode.kind.unavailable': 'Нет локального аналога',
+  'localMode.kind.notApplicable': 'Неприменимо',
+  'localMode.saved': 'Сохранено',
+  'localMode.saveError': 'Не удалось обновить локальный режим.',
 };
 
 export default messages;

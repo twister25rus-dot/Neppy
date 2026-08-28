@@ -17,6 +17,7 @@ import {
   SettingsSwitch,
 } from '../controls';
 import SettingsPanel from '../layout/SettingsPanel';
+import LocalModeSection from './LocalModeSection';
 import PrivacyModeSection from './PrivacyModeSection';
 
 const log = debug('privacy-panel');
@@ -95,6 +96,14 @@ const PrivacyPanel = () => {
       <>
         {/* Privacy Mode selector (#4435) — data-egress posture */}
         <PrivacyModeSection />
+
+        {/*
+          Local Mode — service topology. Sits next to Privacy Mode because the
+          two are the pair a privacy-minded user reasons about together, and
+          orthogonal: privacy mode governs how much data may leave, local mode
+          governs whether the hosted backend is used at all.
+        */}
+        <LocalModeSection />
 
         {/* What leaves my computer */}
         <SettingsSection title={t('privacy.whatLeavesComputer')}>

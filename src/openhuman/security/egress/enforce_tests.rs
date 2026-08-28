@@ -214,3 +214,116 @@ fn local_only_tool_block_marks_message_and_clears_when_allowed() {
     let _mode = test_privacy_scope(PrivacyMode::Standard);
     assert!(local_only_tool_block(&desc).is_none());
 }
+
+// ── Pure decision: local_mode_blocks truth table ──────────────────────────
+//
+// Local Mode's rule is the mirror image of `local_only_blocks`: where the
+// privacy rule exempts the backend control plane, this one blocks precisely it
+// and lets third-party traffic through. These tests pin both halves, because
+// getting either backwards silently defeats the feature — the wrong direction
+// would either keep calling the hosted backend or take a user's own vendor
+// accounts down with it.
+
+#[test]
+fn local_mode_blocks_backend_round_trips() {
+    for path in [
+        "/agent-integrations/composio/execute",
+        "/agent-integrations/composio/connections",
+        "/agent-integrations/parallel/research",
+        "/agent-integrations/pricing",
+        "/teams/me/usage",
+    ] {
+        assert!(
+            local_mode_blocks(true, &EgressDescriptor::integration(path)),
+            "{path} is a hosted-backend round-trip and must be refused in local mode"
+        );
+    }
+}
+
+#[test]
+fn local_mode_blocks_the_control_plane_that_privacy_mode_exempts() {
+    // The whole reason this rule exists. `connections` / `authorize` / catalog
+    // reads are exempt under LocalOnly (blocking sign-in buys no privacy) and
+    // are exactly the calls that keep a local install tied to the backend.
+    for path in [
+        "/agent-integrations/composio/connections",
+        "/agent-integrations/composio/authorize",
+        "/agent-integrations/composio/toolkits",
+        "/teams/me/usage",
+    ] {
+        let desc = EgressDescriptor::integration(path);
+        assert!(
+            !local_only_blocks(PrivacyMode::LocalOnly, &desc),
+            "precondition: {path} is control-plane-exempt under LocalOnly"
+        );
+        assert!(
+            local_mode_blocks(true, &desc),
+            "{path} must nonetheless be refused in local mode"
+        );
+    }
+}
+
+#[test]
+fn local_mode_leaves_third_party_traffic_alone() {
+    // Local mode drops *our* backend, not the user's own vendor accounts. A
+    // rule that blocked these would make local mode an offline switch, which is
+    // what `PrivacyMode::LocalOnly` is for.
+    let third_party = [
+        EgressDescriptor::inference("openai", "gpt-4o", true),
+        EgressDescriptor::composio("SLACK_SEND_MESSAGE"),
+        EgressDescriptor::embedding("voyage", "voyage-3"),
+        EgressDescriptor::network_fetch("api.example.com"),
+    ];
+    for desc in &third_party {
+        assert!(
+            !local_mode_blocks(true, desc),
+            "{:?} goes to a third party, not to our backend",
+            desc.reason
+        );
+    }
+}
+
+#[test]
+fn local_mode_permits_everything_when_it_is_off() {
+    assert!(!local_mode_blocks(
+        false,
+        &EgressDescriptor::integration("/agent-integrations/composio/execute")
+    ));
+}
+
+#[test]
+fn local_mode_permits_a_transfer_that_never_leaves_the_device() {
+    // `is_external == false` is a local runtime; there is nothing to refuse.
+    let mut desc = EgressDescriptor::integration("/agent-integrations/composio/execute");
+    desc.is_external = false;
+    assert!(!local_mode_blocks(true, &desc));
+}
+
+#[test]
+fn local_mode_and_privacy_local_only_compose() {
+    // Both on: the backend round-trip is refused by local mode, the third-party
+    // call by privacy mode, and nothing leaves.
+    let backend = EgressDescriptor::integration("/agent-integrations/composio/connections");
+    let third_party = EgressDescriptor::inference("openai", "gpt-4o", true);
+
+    assert!(local_mode_blocks(true, &backend));
+    assert!(local_only_blocks(PrivacyMode::LocalOnly, &third_party));
+}
+
+#[test]
+fn the_local_mode_message_names_the_service_and_its_alternative() {
+    // Same text the local backend's 501 carries, so the user sees one
+    // consistent answer wherever the call was refused.
+    let message = local_mode_block_message(&EgressDescriptor::integration(
+        "/agent-integrations/composio/execute",
+    ));
+    assert!(message.contains("/agent-integrations/composio/execute"));
+    assert!(message.contains("MCP"), "must name the local alternative");
+}
+
+#[test]
+fn the_local_mode_message_falls_back_for_an_unclaimed_route() {
+    let message = local_mode_block_message(&EgressDescriptor::integration("/some/future/route"));
+    assert!(message.contains("/some/future/route"));
+    assert!(message.contains("local mode"));
+}

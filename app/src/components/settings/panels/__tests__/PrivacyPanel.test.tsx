@@ -64,8 +64,11 @@ describe('PrivacyPanel', () => {
     vi.mocked(listCapabilities).mockResolvedValue([]);
     renderWithProviders(<PrivacyPanel />);
 
-    const toggles = await screen.findAllByRole('switch');
-    const toggle = toggles[0];
+    // Selected by its own test id, not by position among the panel's switches:
+    // the panel gained a Local Mode section above this one, and a positional
+    // `findAllByRole('switch')[0]` silently retargets the assertion at whatever
+    // section happens to render first.
+    const toggle = await screen.findByTestId('privacy-analytics-toggle');
     expect(toggle.getAttribute('aria-checked')).toBe('false');
 
     fireEvent.click(toggle);

@@ -89,6 +89,12 @@ struct RawSearxngResult {
 }
 
 pub struct SearxngSearchTool {
+    /// Registered tool name. `searxng_search` for the auxiliary tool that sits
+    /// alongside another engine; `web_search_tool` when SearXNG *is* the
+    /// canonical engine (see [`Self::new_web_search_tool`]). Held as a field
+    /// rather than a const so one implementation serves both roles — the same
+    /// shape `QueritSearchTool` uses.
+    tool_name: &'static str,
     base_url: String,
     max_results: usize,
     default_language: String,
@@ -97,7 +103,8 @@ pub struct SearxngSearchTool {
 }
 
 impl SearxngSearchTool {
-    /// Build a SearXNG search tool for a user-configured endpoint.
+    /// Build a SearXNG search tool for a user-configured endpoint, registered
+    /// under its own `searxng_search` name.
     pub fn new(
         base_url: String,
         max_results: usize,
@@ -113,6 +120,25 @@ impl SearxngSearchTool {
         )
     }
 
+    /// Build the same tool registered as the canonical `web_search_tool`.
+    ///
+    /// Used when SearXNG is the selected search engine — including the engine
+    /// Local Mode resolves to, since it is the only one that needs no
+    /// third-party account. The agent prompt names `web_search_tool`, so an
+    /// engine that only ever registers under its own name is invisible to
+    /// every skill and system prompt that asks for "web search".
+    pub fn new_web_search_tool(
+        base_url: String,
+        max_results: usize,
+        default_language: String,
+        timeout_secs: u64,
+    ) -> Self {
+        Self {
+            tool_name: "web_search_tool",
+            ..Self::new(base_url, max_results, default_language, timeout_secs)
+        }
+    }
+
     /// Build a SearXNG search tool with a caller-provided HTTP client.
     pub fn with_http_client(
         base_url: String,
@@ -124,6 +150,7 @@ impl SearxngSearchTool {
         let timeout = timeout_secs.max(1);
 
         Self {
+            tool_name: "searxng_search",
             base_url,
             max_results: max_results.clamp(1, MAX_RESULTS),
             default_language,
@@ -244,7 +271,7 @@ impl SearxngSearchTool {
 #[async_trait]
 impl Tool for SearxngSearchTool {
     fn name(&self) -> &str {
-        "searxng_search"
+        self.tool_name
     }
 
     fn description(&self) -> &str {

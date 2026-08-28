@@ -47,6 +47,13 @@ pub mod integrations;
 // one of those directions is the back-edge the kernelization work removes.
 // Ungated — `composio` is always compiled, `tinyflows` is behind `flows`.
 pub mod json_schema;
+/// Local Mode — running with no dependency on the project's hosted backend.
+/// Ungated: the resolution point and the service inventory are consulted from
+/// the always-compiled config and inference paths, and cost nothing when local
+/// mode is off. Only the loopback backend server inside it is
+/// `http-server`-gated, since it is an axum listener like every other one
+/// (#5048).
+pub mod local_mode;
 // Ungated family root: `mcp/http_client` is always compiled, and the
 // `server`/`registry`/`audit` facades each need their `stub` to resolve in an
 // `mcp`-less build. The gate is pushed onto each member inside `mcp/mod.rs`.

@@ -273,13 +273,14 @@ pub async fn get_search_settings() -> Result<RpcOutcome<serde_json::Value>, Stri
     let config = load_config_with_timeout().await?;
     let result = serde_json::json!({
         "engine": config.search.requested_engine_str(),
-        "effective_engine": match config.search.effective_engine() {
+        "effective_engine": match config.effective_search_engine() {
             crate::openhuman::config::SearchEngine::Disabled => "disabled",
             crate::openhuman::config::SearchEngine::Managed => "managed",
             crate::openhuman::config::SearchEngine::Parallel => "parallel",
             crate::openhuman::config::SearchEngine::Brave => "brave",
             crate::openhuman::config::SearchEngine::Querit => "querit",
             crate::openhuman::config::SearchEngine::Exa => "exa",
+            crate::openhuman::config::SearchEngine::Searxng => "searxng",
         },
         "max_results": config.search.max_results,
         "timeout_secs": config.search.timeout_secs,
@@ -287,6 +288,11 @@ pub async fn get_search_settings() -> Result<RpcOutcome<serde_json::Value>, Stri
         "brave_configured": config.search.brave.has_key(),
         "querit_configured": config.search.querit.has_key(),
         "exa_configured": config.search.exa.has_key(),
+        // SearXNG's "credential" is a reachable instance, not a key — it is
+        // the one engine that needs no third-party account, which is why local
+        // mode can fall back to it.
+        "searxng_configured": config.searxng.enabled
+            && !config.searxng.base_url.trim().is_empty(),
         "allowed_domains": config.http_request.allowed_domains,
         "allow_all": config.http_request.allowed_domains.iter().any(|d| d == "*"),
     });

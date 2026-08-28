@@ -236,6 +236,17 @@ impl CoreContext {
         };
         let workspace_dir = config.as_ref().map(|cfg| cfg.workspace_dir.clone());
 
+        // 5b. Local Mode, before anything else boots.
+        //
+        //     Two preconditions live here. The published local-mode state is
+        //     what the enforcement chokepoints (the inference factory, the
+        //     egress spine) read, and the local backend is what
+        //     `effective_backend_api_url` resolves to — so a subsystem that
+        //     starts before this runs would resolve against the wrong topology
+        //     and make a hosted call the user had turned off, or get a
+        //     connection refused from a listener that has not bound yet.
+        crate::openhuman::local_mode::bootstrap(config.as_ref()).await;
+
         // 6. Long-lived runtime infrastructure: event bus, domain subscribers,
         //    ledgers, agent-definition registry, live security policy, approval
         //    gate, socket manager. Idempotent (Once-guarded internally). Selected

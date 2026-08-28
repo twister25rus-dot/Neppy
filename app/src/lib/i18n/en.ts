@@ -1520,6 +1520,31 @@ const en: TranslationMap = {
   'privacy.mode.saved': 'Saved',
   'privacy.mode.saveError': 'Could not update privacy mode.',
 
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'Local Mode',
+  'localMode.description':
+    "Run OpenHuman without the project's hosted backend. Sign-in, model routing, search and usage are served on this machine instead. Separate from Privacy Mode: this decides which services the app depends on, not how much data may leave.",
+  'localMode.enable': 'Run without the hosted backend',
+  'localMode.enableDesc':
+    'Serves the control plane from a local service on 127.0.0.1. Requires a restart to take effect.',
+  'localMode.applyDefaults': 'Use local providers by default',
+  'localMode.applyDefaultsDesc':
+    'Re-points managed defaults at local equivalents — embeddings to Ollama, web search to your SearXNG instance. Providers you chose yourself are never changed.',
+  'localMode.proxyInference': 'Serve model calls locally',
+  'localMode.proxyInferenceDesc':
+    'Forwards OpenAI-compatible requests to your local runtime (Ollama, LM Studio, vLLM).',
+  'localMode.servingAt': 'Local backend serving at',
+  'localMode.restartRequired': 'Restart OpenHuman to apply this change.',
+  'localMode.overridden':
+    'The OPENHUMAN_LOCAL_MODE environment variable is overriding this setting for the running process.',
+  'localMode.setupPrefix': 'To set up:',
+  'localMode.kind.replaced': 'Local',
+  'localMode.kind.requiresSetup': 'Needs setup',
+  'localMode.kind.unavailable': 'No local equivalent',
+  'localMode.kind.notApplicable': 'Not applicable',
+  'localMode.saved': 'Saved',
+  'localMode.saveError': 'Could not update Local Mode.',
+
   // Privacy status pill + per-action egress disclosure (#4437 / S3)
   'privacy.status.ariaLabel': 'Privacy status',
   'privacy.status.external': 'Off-device',
@@ -3289,8 +3314,6 @@ const en: TranslationMap = {
   'welcome.connectionFailed': 'Connection failed: {status} {statusText}',
   'welcome.connectionFailedMsg': 'Connection failed: {message}',
   'welcome.continueLocally': 'Continue locally',
-  'welcome.continueLocallyExperimental': 'Continue Locally (Experimental)',
-  'welcome.localSessionStarting': 'Starting local session...',
   'welcome.coreConfigUnreadable':
     'The runtime could not read its configuration file. config.toml may belong to a different user account, or be inaccessible to the runtime process for another reason. Restart the runtime, and if that does not help, repair the workspace ownership or re-create its volume.',
   'welcome.localSessionErrorFallback': 'Could not start a local session.',

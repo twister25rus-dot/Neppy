@@ -168,6 +168,13 @@ pub struct Config {
     #[serde(default)]
     pub privacy: PrivacyConfig,
 
+    /// Service topology (Local Mode). Distinct from `privacy` (which governs
+    /// data egress): this decides whether the app depends on the project's
+    /// hosted backend at all. Missing `[local_mode]` block → disabled, so an
+    /// existing install is unaffected until the user opts in.
+    #[serde(default)]
+    pub local_mode: LocalModeConfig,
+
     #[serde(default)]
     pub sandbox: SandboxConfig,
 
@@ -692,6 +699,36 @@ impl Config {
         }
     }
 
+    /// The search engine that will actually be registered, after both
+    /// resolution steps.
+    ///
+    /// Two steps, in this order:
+    ///
+    /// 1. [`SearchConfig::effective_engine_with_searxng`] applies the user's
+    ///    selection and its credential gate (a BYO engine with no key falls
+    ///    back to `managed`).
+    /// 2. [`local_mode::defaults::search_engine`](crate::openhuman::local_mode::defaults::search_engine)
+    ///    rewrites a `managed` result when local mode is on, because `managed`
+    ///    is the hosted backend's Exa proxy and there is no backend to proxy
+    ///    through.
+    ///
+    /// The order matters: local mode must see the *resolved* engine, so a BYO
+    /// engine that fell back to `managed` for want of a key is redirected too
+    /// rather than left pointing at a proxy that is not there.
+    ///
+    /// This is the single source of truth. `search::registry` registers what it
+    /// returns and the settings RPC reports it; two hand-rolled copies of a
+    /// two-step rule is how the UI ends up naming an engine the agent is not
+    /// using.
+    pub fn effective_search_engine(&self) -> SearchEngine {
+        let selected = self.search.effective_engine_with_searxng(&self.searxng);
+        crate::openhuman::local_mode::defaults::search_engine(
+            crate::openhuman::local_mode::defaults::local_defaults_active(self),
+            selected,
+            &self.searxng,
+        )
+    }
+
     /// `true` when `workload_local_model` returns `Some` for the named
     /// workload. Convenience wrapper for the common "do I dispatch
     /// locally?" branch.
@@ -802,6 +839,7 @@ impl Default for Config {
             autonomy: AutonomyConfig::default(),
             hooks: super::HooksConfig::default(),
             privacy: PrivacyConfig::default(),
+            local_mode: LocalModeConfig::default(),
             sandbox: SandboxConfig::default(),
             runtime: RuntimeConfig::default(),
             shell: ShellConfig::default(),

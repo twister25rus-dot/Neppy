@@ -3034,8 +3034,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'Koneksi gagal: {status} {statusText}',
   'welcome.connectionFailedMsg': 'Koneksi gagal: {message}',
   'welcome.continueLocally': 'Lanjutkan secara lokal',
-  'welcome.continueLocallyExperimental': 'Lanjutkan Secara Lokal (Eksperimental)',
-  'welcome.localSessionStarting': 'Memulai sesi lokal...',
   'welcome.coreConfigUnreadable':
     'Runtime tidak dapat membaca berkas konfigurasinya. config.toml mungkin milik akun pengguna lain, atau tidak dapat diakses oleh proses runtime karena alasan lain. Mulai ulang runtime, dan jika belum teratasi, perbaiki kepemilikan direktori kerja atau buat ulang volumenya.',
   'welcome.localSessionErrorFallback': 'Tidak dapat memulai sesi lokal.',
@@ -6919,6 +6917,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Lokasi',
   'devOptions.provisionedCore': 'Core yang dijalankan aplikasi ini',
   'devOptions.gatewayId': 'Lokasi',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'Mode Lokal',
+  'localMode.description':
+    'Jalankan OpenHuman tanpa backend terkelola milik proyek. Masuk, perutean model, pencarian, dan penggunaan dilayani di mesin ini. Berbeda dari Mode Privasi: mode lokal menentukan layanan apa yang menjadi ketergantungan aplikasi, bukan seberapa banyak data yang boleh keluar.',
+  'localMode.enable': 'Jalankan tanpa backend terkelola',
+  'localMode.enableDesc':
+    'Menyajikan control plane dari layanan lokal di 127.0.0.1. Perlu memulai ulang.',
+  'localMode.applyDefaults': 'Gunakan penyedia lokal secara bawaan',
+  'localMode.applyDefaultsDesc':
+    'Mengalihkan nilai bawaan terkelola ke padanan lokal — embedding ke Ollama, pencarian web ke instans SearXNG Anda. Penyedia yang Anda pilih sendiri tidak pernah diubah.',
+  'localMode.proxyInference': 'Layani panggilan model secara lokal',
+  'localMode.proxyInferenceDesc':
+    'Meneruskan permintaan yang kompatibel dengan OpenAI ke runtime lokal Anda (Ollama, LM Studio, vLLM).',
+  'localMode.servingAt': 'Backend lokal tersedia di',
+  'localMode.restartRequired': 'Mulai ulang OpenHuman untuk menerapkan perubahan ini.',
+  'localMode.overridden':
+    'Variabel lingkungan OPENHUMAN_LOCAL_MODE menimpa pengaturan ini untuk proses yang sedang berjalan.',
+  'localMode.setupPrefix': 'Cara menyiapkan:',
+  'localMode.kind.replaced': 'Lokal',
+  'localMode.kind.requiresSetup': 'Perlu disiapkan',
+  'localMode.kind.unavailable': 'Tidak ada padanan lokal',
+  'localMode.kind.notApplicable': 'Tidak berlaku',
+  'localMode.saved': 'Tersimpan',
+  'localMode.saveError': 'Tidak dapat memperbarui Mode Lokal.',
 };
 
 export default messages;

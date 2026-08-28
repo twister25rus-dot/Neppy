@@ -650,6 +650,72 @@ fn enforce_local_only_inference(role: &str, provider: &str) -> anyhow::Result<()
     }
 }
 
+/// Local Mode pure decision: under `local_mode`, is constructing chat provider
+/// `provider` a violation? Returns `Some(label)` when refused, else `None`.
+///
+/// # Why this is narrower than [`local_only_violation`]
+///
+/// Privacy mode's `LocalOnly` blocks **every** external provider, because its
+/// subject is the user's data. Local mode's subject is the *hosted backend*, so
+/// it blocks exactly one thing: [`PROVIDER_OPENHUMAN`], the managed proxy. A
+/// BYOK provider (`openai:gpt-4o`, an Anthropic slug, OpenRouter) is the user's
+/// own account and keeps working — dropping our backend is not the same as
+/// going offline, and conflating them would make local mode unusable for the
+/// large group of users who want self-hosting without local weights.
+///
+/// [`BYOK_INCOMPLETE_SENTINEL`] is blocked too: it means "the user wanted BYOK
+/// but no matching provider entry was found", whose fallback is the managed
+/// backend. Letting it through would silently route to a backend that is not
+/// there.
+///
+/// The re-resolving sentinels (`""` / `"cloud"`) return `None` for the same
+/// reason as in [`local_only_violation`] — they are resolved before model
+/// construction and re-checked with the concrete string.
+///
+/// # The recursion this prevents
+///
+/// In local mode `effective_backend_api_url` points at the loopback local
+/// backend. Without this guard, a managed-provider call would dial the local
+/// backend's `/openai/v1/chat/completions`, whose handler resolves a provider
+/// through this same factory, which would resolve to managed again — a loop
+/// that ends in a connection storm rather than an error the user can read.
+fn local_mode_violation(local_mode: bool, provider: &str) -> Option<String> {
+    if !local_mode {
+        return None;
+    }
+    let p = provider.trim();
+    if p.is_empty() || p == "cloud" {
+        // Deferred: re-resolves to a concrete string on the recursive call.
+        return None;
+    }
+    if p == PROVIDER_OPENHUMAN || p == BYOK_INCOMPLETE_SENTINEL {
+        return Some(external_provider_label(p));
+    }
+    None
+}
+
+/// Enforce Local Mode at the inference chokepoint: refuse to build the managed
+/// backend provider when there is no hosted backend to build it against. Reads
+/// the published local-mode state (defaults to the env var, i.e. `false`, in
+/// unmanaged contexts). See [`local_mode_violation`] for the pure decision.
+fn enforce_local_mode_inference(role: &str, provider: &str) -> anyhow::Result<()> {
+    let local_mode = crate::openhuman::local_mode::local_mode_active();
+    match local_mode_violation(local_mode, provider) {
+        None => Ok(()),
+        Some(label) => {
+            log::warn!(
+                "[local-mode][chat-factory] BLOCK: role={} managed provider='{}' ({}) refused —                  no hosted backend in local mode",
+                role,
+                provider.trim(),
+                label
+            );
+            anyhow::bail!(
+                "Local mode is active: this workload is routed to {label}, which needs the                  hosted backend. Point it at a local runtime (Ollama/LM Studio/MLX) or at your                  own provider key in Settings → Models."
+            )
+        }
+    }
+}
+
 /// Egress spine (privacy epic S2, #4436): emit an [`EgressDescriptor`] for a
 /// concrete inference provider string. `provider` is expected to be already
 /// resolved (no `""` / `"cloud"` / BYOK sentinels — those are handled before
@@ -973,7 +1039,9 @@ fn with_default_temperature(
 fn unresolved_chat_model_error(role: &str, provider: &str, config: &Config) -> anyhow::Error {
     let p = provider.trim();
 
-    if let Err(error) = enforce_local_only_inference(role, p) {
+    if let Err(error) =
+        enforce_local_only_inference(role, p).and_then(|()| enforce_local_mode_inference(role, p))
+    {
         return error;
     }
 
@@ -1469,7 +1537,9 @@ fn prepare_claude_agent_sdk_chat_model(
     config: &Config,
 ) -> Option<anyhow::Result<String>> {
     let model = claude_agent_sdk_model_from_string(provider, config)?;
-    if let Err(error) = enforce_local_only_inference(role, provider) {
+    if let Err(error) = enforce_local_only_inference(role, provider)
+        .and_then(|()| enforce_local_mode_inference(role, provider))
+    {
         return Some(Err(error));
     }
     #[cfg(not(test))]
@@ -1524,7 +1594,9 @@ fn try_create_claude_code_chat_model_from_string(
             role
         )));
     }
-    if let Err(error) = enforce_local_only_inference(role, provider) {
+    if let Err(error) = enforce_local_only_inference(role, provider)
+        .and_then(|()| enforce_local_mode_inference(role, provider))
+    {
         return Some(Err(error));
     }
     #[cfg(not(test))]
@@ -1708,7 +1780,9 @@ fn try_create_local_runtime_chat_model_from_string(
 
     // Preserve host privacy-mode refusal + the session requirement for
     // custom/local providers.
-    if let Err(e) = enforce_local_only_inference(role, &p) {
+    if let Err(e) =
+        enforce_local_only_inference(role, &p).and_then(|()| enforce_local_mode_inference(role, &p))
+    {
         return Some(Err(e));
     }
     if require_session {
@@ -2371,7 +2445,9 @@ fn try_create_cloud_slug_chat_model_from_string_with_native_tools(
     }
 
     // Preserve the `Provider` path's gate for custom/cloud providers.
-    if let Err(e) = enforce_local_only_inference(role, &p) {
+    if let Err(e) =
+        enforce_local_only_inference(role, &p).and_then(|()| enforce_local_mode_inference(role, &p))
+    {
         return Some(Err(e));
     }
     #[cfg(not(test))]

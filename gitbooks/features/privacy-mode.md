@@ -37,8 +37,15 @@ Local-only mode is designed to work with OpenHuman's [Local AI](model-routing/lo
 
 See the [Use OpenHuman with a local model](../guides/local-model.md) guide for a full local setup, and [Keep sensitive data private](../guides/privacy-sensitive-data.md) for a broader privacy walkthrough.
 
+## Privacy Mode is not the same as Local Mode
+
+Privacy Mode governs how much of your data may leave the device. It deliberately does **not** block the backend control plane — sign-in, session refresh, team usage — because blocking those buys no privacy and only breaks the app.
+
+If what you want is to run with no dependency on the hosted backend *at all*, that is [Local Mode](local-mode.md), and the two compose: turn both on and nothing leaves the machine.
+
 ## See also
 
+- [Local Mode](local-mode.md): running without the hosted backend.
 - [Privacy & Security](privacy-and-security.md): the full trust model (approval gate, sandboxing, path roots, command classification).
 - [OS Keyring & Secret Storage](os-keyring-and-secret-storage.md): where credentials live.
 - [Local AI](model-routing/local-ai.md): the on-device model runtimes.

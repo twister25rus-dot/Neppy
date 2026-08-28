@@ -3056,8 +3056,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'Połączenie nie powiodło się: {status} {statusText}',
   'welcome.connectionFailedMsg': 'Połączenie nie powiodło się: {message}',
   'welcome.continueLocally': 'Kontynuuj lokalnie',
-  'welcome.continueLocallyExperimental': 'Kontynuuj lokalnie (Eksperymentalne)',
-  'welcome.localSessionStarting': 'Rozpoczynanie sesji lokalnej...',
   'welcome.coreConfigUnreadable':
     'Środowisko uruchomieniowe nie mogło odczytać swojego pliku konfiguracyjnego. Plik config.toml może należeć do innego konta użytkownika lub być niedostępny dla procesu z innego powodu. Uruchom ponownie środowisko, a jeśli to nie pomoże, napraw właściciela katalogu roboczego lub utwórz jego wolumin od nowa.',
   'welcome.localSessionErrorFallback': 'Nie udało się rozpocząć sesji lokalnej.',
@@ -6988,6 +6986,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Lokalizacja',
   'devOptions.provisionedCore': 'Rdzeń uruchomiony przez tę aplikację',
   'devOptions.gatewayId': 'Identyfikator lokalizacji',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'Tryb lokalny',
+  'localMode.description':
+    'Uruchom OpenHuman bez hostowanego zaplecza projektu. Logowanie, routing modeli, wyszukiwanie i statystyki użycia są obsługiwane na tym komputerze. To co innego niż tryb prywatności: tryb lokalny decyduje, od jakich usług zależy aplikacja, a nie ile danych może opuścić urządzenie.',
+  'localMode.enable': 'Działaj bez hostowanego zaplecza',
+  'localMode.enableDesc':
+    'Warstwę sterowania obsługuje lokalna usługa pod adresem 127.0.0.1. Wymaga ponownego uruchomienia.',
+  'localMode.applyDefaults': 'Domyślnie używaj lokalnych dostawców',
+  'localMode.applyDefaultsDesc':
+    'Przekierowuje domyślne ustawienia zarządzane na lokalne odpowiedniki — osadzenia na Ollamę, wyszukiwanie w sieci na Twoją instancję SearXNG. Dostawcy wybrani przez Ciebie nigdy nie są zmieniani.',
+  'localMode.proxyInference': 'Obsługuj wywołania modeli lokalnie',
+  'localMode.proxyInferenceDesc':
+    'Przekazuje żądania zgodne z OpenAI do lokalnego środowiska (Ollama, LM Studio, vLLM).',
+  'localMode.servingAt': 'Lokalne zaplecze dostępne pod adresem',
+  'localMode.restartRequired': 'Uruchom OpenHuman ponownie, aby zastosować tę zmianę.',
+  'localMode.overridden':
+    'Zmienna środowiskowa OPENHUMAN_LOCAL_MODE nadpisuje to ustawienie dla działającego procesu.',
+  'localMode.setupPrefix': 'Konfiguracja:',
+  'localMode.kind.replaced': 'Lokalnie',
+  'localMode.kind.requiresSetup': 'Wymaga konfiguracji',
+  'localMode.kind.unavailable': 'Brak lokalnego odpowiednika',
+  'localMode.kind.notApplicable': 'Nie dotyczy',
+  'localMode.saved': 'Zapisano',
+  'localMode.saveError': 'Nie udało się zaktualizować trybu lokalnego.',
 };
 
 export default messages;

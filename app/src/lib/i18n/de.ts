@@ -3107,8 +3107,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'Verbindung fehlgeschlagen: {status} {statusText}',
   'welcome.connectionFailedMsg': 'Verbindung fehlgeschlagen: {message}',
   'welcome.continueLocally': 'Lokal fortfahren',
-  'welcome.continueLocallyExperimental': 'Lokal fortfahren (Experimentell)',
-  'welcome.localSessionStarting': 'Lokal starten Sitzung...',
   'welcome.coreConfigUnreadable':
     'Die Laufzeitumgebung konnte ihre Konfigurationsdatei nicht lesen. config.toml gehört möglicherweise einem anderen Benutzerkonto oder ist für den Laufzeitprozess aus einem anderen Grund nicht zugänglich. Starten Sie die Laufzeitumgebung neu, und reparieren Sie andernfalls die Besitzrechte des Arbeitsverzeichnisses oder erstellen Sie dessen Volume neu.',
   'welcome.localSessionErrorFallback': 'Lokale Sitzung konnte nicht gestartet werden.',
@@ -7076,6 +7074,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Ort',
   'devOptions.provisionedCore': 'Von dieser App gestarteter Kern',
   'devOptions.gatewayId': 'Ort',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'Lokaler Modus',
+  'localMode.description':
+    'OpenHuman ohne das gehostete Backend des Projekts betreiben. Anmeldung, Modell-Routing, Suche und Nutzungsdaten werden stattdessen auf diesem Gerät bereitgestellt. Nicht zu verwechseln mit dem Datenschutzmodus: Hier geht es darum, von welchen Diensten die App abhängt, nicht darum, wie viele Daten das Gerät verlassen dürfen.',
+  'localMode.enable': 'Ohne gehostetes Backend ausführen',
+  'localMode.enableDesc':
+    'Stellt die Steuerungsebene über einen lokalen Dienst auf 127.0.0.1 bereit. Erfordert einen Neustart.',
+  'localMode.applyDefaults': 'Standardmäßig lokale Anbieter verwenden',
+  'localMode.applyDefaultsDesc':
+    'Leitet verwaltete Standardwerte auf lokale Entsprechungen um — Embeddings auf Ollama, Websuche auf Ihre SearXNG-Instanz. Selbst gewählte Anbieter bleiben unverändert.',
+  'localMode.proxyInference': 'Modellaufrufe lokal bereitstellen',
+  'localMode.proxyInferenceDesc':
+    'Leitet OpenAI-kompatible Anfragen an Ihre lokale Laufzeit weiter (Ollama, LM Studio, vLLM).',
+  'localMode.servingAt': 'Lokales Backend erreichbar unter',
+  'localMode.restartRequired': 'Starten Sie OpenHuman neu, um diese Änderung zu übernehmen.',
+  'localMode.overridden':
+    'Die Umgebungsvariable OPENHUMAN_LOCAL_MODE überschreibt diese Einstellung für den laufenden Prozess.',
+  'localMode.setupPrefix': 'Einrichtung:',
+  'localMode.kind.replaced': 'Lokal',
+  'localMode.kind.requiresSetup': 'Einrichtung nötig',
+  'localMode.kind.unavailable': 'Keine lokale Entsprechung',
+  'localMode.kind.notApplicable': 'Nicht zutreffend',
+  'localMode.saved': 'Gespeichert',
+  'localMode.saveError': 'Lokaler Modus konnte nicht aktualisiert werden.',
 };
 
 export default messages;

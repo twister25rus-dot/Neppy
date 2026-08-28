@@ -199,6 +199,30 @@ pub fn create_embedding_provider_with_config(
     api_key: &str,
     custom_endpoint: Option<&str>,
 ) -> anyhow::Result<Box<dyn EmbeddingProvider>> {
+    // Local mode has no managed embedder to build: the endpoint the cloud
+    // embedder posts to is the hosted backend. Re-resolve here rather than at
+    // the ~dozen call sites that pass a provider string, so a config that still
+    // says `managed` (the default nobody chose) lands on Ollama instead of on a
+    // backend that is not there. An explicitly chosen provider is untouched —
+    // see `local_mode::defaults::embedding_provider`.
+    let local_defaults = crate::openhuman::local_mode::defaults::local_defaults_active(config);
+    let resolved =
+        crate::openhuman::local_mode::defaults::embedding_provider(local_defaults, provider);
+    if resolved != provider {
+        log::info!(
+            "[embeddings::factory] local mode re-resolved embedding provider \"{provider}\" → \"{resolved}\""
+        );
+        // The managed model id (`voyage-*`) means nothing to Ollama, so the
+        // local default carries its own model and dimensions. Passing the
+        // caller's `model`/`dims` through would ask Ollama for a model it has
+        // never heard of and 404 on the first embed.
+        return create_embedding_provider(
+            &resolved,
+            tinyagents::harness::embeddings::DEFAULT_OLLAMA_MODEL,
+            tinyagents::harness::embeddings::DEFAULT_OLLAMA_DIMENSIONS,
+        );
+    }
+
     match provider {
         "cloud" | "managed" => {
             let (state_dir, encrypt_secrets) = managed_credential_scope(config);
@@ -254,6 +278,16 @@ fn managed_credential_scope(config: &Config) -> (Option<PathBuf>, bool) {
 /// connection" passed (config-scoped) while the embed batch silently failed
 /// (keyless scope) — #5501.
 pub fn default_embedding_provider_with_config(config: &Config) -> Arc<dyn EmbeddingProvider> {
+    // Same re-resolution as `create_embedding_provider_with_config`: under local
+    // mode the managed default has no backend to reach, so the default becomes
+    // the local one.
+    if crate::openhuman::local_mode::defaults::local_defaults_active(config) {
+        log::info!(
+            "[embeddings::factory] local mode — default embedder is the local Ollama provider"
+        );
+        return default_local_embedding_provider();
+    }
+
     let (state_dir, encrypt_secrets) = managed_credential_scope(config);
     // Never log `state_dir`: the user-scoped path embeds the OS username and/or
     // `users/<uid>` (PII). Log only the non-identifying flag.

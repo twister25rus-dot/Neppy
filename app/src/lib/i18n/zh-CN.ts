@@ -2858,8 +2858,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': '连接失败: {status} {statusText}',
   'welcome.connectionFailedMsg': '连接失败: {message}',
   'welcome.continueLocally': '本地继续',
-  'welcome.continueLocallyExperimental': '本地继续（实验性）',
-  'welcome.localSessionStarting': '正在启动本地会话...',
   'welcome.coreConfigUnreadable':
     '运行时无法读取自己的配置文件。config.toml 可能归属于其他用户账户，或因其他原因无法被运行时进程访问。请重启运行时；若仍未解决，请修复工作目录的归属权或重新创建其数据卷。',
   'welcome.localSessionErrorFallback': '无法启动本地会话。',
@@ -6516,6 +6514,29 @@ const messages: TranslationMap = {
   'devOptions.gateway': '位置',
   'devOptions.provisionedCore': '由本应用启动的内核',
   'devOptions.gatewayId': '位置',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': '本地模式',
+  'localMode.description':
+    '在不依赖项目托管后端的情况下运行 OpenHuman。登录、模型路由、搜索和用量统计改由本机提供。它与隐私模式不同：本地模式决定应用依赖哪些服务，而不是有多少数据可以离开设备。',
+  'localMode.enable': '不使用托管后端运行',
+  'localMode.enableDesc': '由 127.0.0.1 上的本地服务提供控制面。需要重启后生效。',
+  'localMode.applyDefaults': '默认使用本地提供方',
+  'localMode.applyDefaultsDesc':
+    '将托管默认值改为本地等价物——嵌入改用 Ollama，网页搜索改用你的 SearXNG 实例。你自己选择的提供方不会被更改。',
+  'localMode.proxyInference': '在本地处理模型调用',
+  'localMode.proxyInferenceDesc':
+    '将 OpenAI 兼容请求转发到你的本地运行时（Ollama、LM Studio、vLLM）。',
+  'localMode.servingAt': '本地后端地址',
+  'localMode.restartRequired': '请重启 OpenHuman 以应用此更改。',
+  'localMode.overridden': '环境变量 OPENHUMAN_LOCAL_MODE 正在为当前进程覆盖此设置。',
+  'localMode.setupPrefix': '设置方法：',
+  'localMode.kind.replaced': '本地',
+  'localMode.kind.requiresSetup': '需要设置',
+  'localMode.kind.unavailable': '无本地等价物',
+  'localMode.kind.notApplicable': '不适用',
+  'localMode.saved': '已保存',
+  'localMode.saveError': '无法更新本地模式。',
 };
 
 export default messages;

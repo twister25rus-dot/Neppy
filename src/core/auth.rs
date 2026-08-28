@@ -365,7 +365,13 @@ pub async fn rpc_auth_middleware(req: axum::extract::Request, next: Next) -> Res
 /// Use constant-time equality so callers that validate attacker-controlled
 /// bearer strings do not leak partial-match timing through HTTP, SSE, Socket.IO,
 /// or future transports that share this helper.
-fn bearer_matches(supplied: &str, expected: &str) -> bool {
+///
+/// `pub(crate)` so the local backend's guard
+/// ([`local_mode::backend`](crate::openhuman::local_mode)) shares this exact
+/// comparison rather than reaching for `==`. Its listener is loopback-only, but
+/// a second, subtly different token compare in the tree is how the constant-time
+/// property gets lost.
+pub(crate) fn bearer_matches(supplied: &str, expected: &str) -> bool {
     !supplied.is_empty() && constant_time_eq(supplied, expected)
 }
 

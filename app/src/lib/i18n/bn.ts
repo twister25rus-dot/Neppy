@@ -3024,8 +3024,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'সংযোগ ব্যর্থ: {status} {statusText}',
   'welcome.connectionFailedMsg': 'সংযোগ ব্যর্থ: {message}',
   'welcome.continueLocally': 'স্থানীয়ভাবে চালিয়ে যান',
-  'welcome.continueLocallyExperimental': 'লোকালি চালিয়ে যান (প্রায়োগিক)',
-  'welcome.localSessionStarting': 'স্থানীয় অধিবেশন শুরু করা হচ্ছে...',
   'welcome.coreConfigUnreadable':
     'রানটাইম তার কনফিগারেশন ফাইল পড়তে পারেনি। config.toml অন্য কোনো ব্যবহারকারী অ্যাকাউন্টের হতে পারে, অথবা অন্য কোনো কারণে রানটাইম প্রক্রিয়ার জন্য দুর্গম হতে পারে। রানটাইম পুনরায় চালু করুন, আর তাতে কাজ না হলে ওয়ার্কস্পেসের মালিকানা ঠিক করুন বা এর ভলিউম নতুন করে তৈরি করুন।',
   'welcome.localSessionErrorFallback': 'স্থানীয় সেশন শুরু করা যায়নি।',
@@ -6886,6 +6884,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'অবস্থান',
   'devOptions.provisionedCore': 'এই অ্যাপের চালু করা কোর',
   'devOptions.gatewayId': 'অবস্থান',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'লোকাল মোড',
+  'localMode.description':
+    'প্রকল্পের হোস্টেড ব্যাকএন্ড ছাড়াই OpenHuman চালান। সাইন-ইন, মডেল রাউটিং, সার্চ ও ব্যবহারের হিসাব এই যন্ত্রেই পরিবেশিত হয়। এটি প্রাইভেসি মোড থেকে আলাদা: লোকাল মোড ঠিক করে অ্যাপ কোন কোন সেবার উপর নির্ভর করে, কত ডেটা বাইরে যেতে পারে তা নয়।',
+  'localMode.enable': 'হোস্টেড ব্যাকএন্ড ছাড়া চালান',
+  'localMode.enableDesc':
+    '127.0.0.1-এ একটি লোকাল সার্ভিস থেকে কন্ট্রোল প্লেন পরিবেশন করে। কার্যকর হতে পুনরায় চালু করা প্রয়োজন।',
+  'localMode.applyDefaults': 'ডিফল্টভাবে লোকাল প্রোভাইডার ব্যবহার করুন',
+  'localMode.applyDefaultsDesc':
+    'ম্যানেজড ডিফল্টগুলিকে লোকাল বিকল্পে সরিয়ে দেয় — এমবেডিং Ollama-তে, ওয়েব সার্চ আপনার SearXNG ইনস্ট্যান্সে। আপনার নিজের বেছে নেওয়া প্রোভাইডার কখনও বদলানো হয় না।',
+  'localMode.proxyInference': 'মডেল কল লোকালি পরিবেশন করুন',
+  'localMode.proxyInferenceDesc':
+    'OpenAI-সঙ্গতিপূর্ণ অনুরোধ আপনার লোকাল রানটাইমে (Ollama, LM Studio, vLLM) পাঠায়।',
+  'localMode.servingAt': 'লোকাল ব্যাকএন্ড এখানে চলছে',
+  'localMode.restartRequired': 'এই পরিবর্তন কার্যকর করতে OpenHuman পুনরায় চালু করুন।',
+  'localMode.overridden':
+    'চলমান প্রসেসের জন্য OPENHUMAN_LOCAL_MODE এনভায়রনমেন্ট ভেরিয়েবল এই সেটিং ওভাররাইড করছে।',
+  'localMode.setupPrefix': 'সেট আপ করতে:',
+  'localMode.kind.replaced': 'লোকাল',
+  'localMode.kind.requiresSetup': 'সেটআপ দরকার',
+  'localMode.kind.unavailable': 'লোকাল বিকল্প নেই',
+  'localMode.kind.notApplicable': 'প্রযোজ্য নয়',
+  'localMode.saved': 'সংরক্ষিত',
+  'localMode.saveError': 'লোকাল মোড আপডেট করা যায়নি।',
 };
 
 export default messages;

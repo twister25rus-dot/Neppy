@@ -218,6 +218,20 @@ pub(super) struct PrivacyModeUpdate {
     pub(super) mode: Option<String>,
 }
 
+/// Partial update for the `[local_mode]` block. Every field is optional so a
+/// settings panel can PATCH one toggle without echoing the rest.
+#[derive(Debug, Deserialize)]
+pub(super) struct LocalModeUpdate {
+    /// Run without the project's hosted backend.
+    pub(super) enabled: Option<bool>,
+    /// Loopback port for the local backend; `0` asks for an ephemeral one.
+    pub(super) backend_port: Option<u16>,
+    /// Re-resolve managed provider defaults (embeddings, search) to local ones.
+    pub(super) apply_local_defaults: Option<bool>,
+    /// Serve `/openai/v1/*` by forwarding to the local model runtime.
+    pub(super) proxy_inference: Option<bool>,
+}
+
 #[derive(Debug, Deserialize)]
 pub(super) struct AgentSettingsUpdate {
     /// Tool/action wall-clock timeout in seconds (1–3600). Validated server-side.
@@ -290,6 +304,17 @@ pub fn required_string(name: &'static str, comment: &'static str) -> FieldSchema
         ty: TypeSchema::String,
         comment,
         required: true,
+    }
+}
+
+/// An optional unsigned-integer input. Ports and counts use this rather than
+/// `optional_json` so the generated schema tells a client what it may send.
+pub fn optional_u64(name: &'static str, comment: &'static str) -> FieldSchema {
+    FieldSchema {
+        name,
+        ty: TypeSchema::Option(Box::new(TypeSchema::U64)),
+        comment,
+        required: false,
     }
 }
 

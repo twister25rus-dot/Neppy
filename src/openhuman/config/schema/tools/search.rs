@@ -134,6 +134,10 @@ pub const SEARCH_ENGINE_PARALLEL: &str = "parallel";
 pub const SEARCH_ENGINE_BRAVE: &str = "brave";
 pub const SEARCH_ENGINE_QUERIT: &str = "querit";
 pub const SEARCH_ENGINE_EXA: &str = "exa";
+/// Self-hosted SearXNG. Unlike every other BYO engine this one is keyless —
+/// the "credential" is a reachable `[searxng] base_url` — so
+/// [`SearchConfig::effective_engine`] gates it on that instead of `has_key`.
+pub const SEARCH_ENGINE_SEARXNG: &str = "searxng";
 
 fn default_search_engine() -> String {
     SEARCH_ENGINE_MANAGED.into()
@@ -219,6 +223,16 @@ pub struct SearchConfig {
     pub exa: SearchEngineCredentials,
 }
 
+/// Is `searxng` a usable canonical engine — i.e. is a base URL configured?
+///
+/// SearXNG's `[searxng] enabled` flag governs the *auxiliary* `searxng_search`
+/// tool, not this selection. Requiring both would mean picking `engine =
+/// "searxng"` silently did nothing until a second, differently-named flag was
+/// also set.
+fn searxng_selectable(searxng: &SearxngConfig) -> bool {
+    !searxng.base_url.trim().is_empty()
+}
+
 impl Default for SearchConfig {
     fn default() -> Self {
         Self {
@@ -244,6 +258,10 @@ pub enum SearchEngine {
     Brave,
     Querit,
     Exa,
+    /// Self-hosted SearXNG serving the canonical `web_search_tool`. The one
+    /// engine that needs no third-party account, and so the one Local Mode can
+    /// fall back to when the managed proxy is gone.
+    Searxng,
 }
 
 impl SearchConfig {
@@ -251,15 +269,32 @@ impl SearchConfig {
     /// availability. A BYO engine without a key silently falls back to
     /// managed so the agent never ends up with zero search tools — the
     /// UI surfaces the misconfiguration separately.
-    pub fn effective_engine(&self) -> SearchEngine {
+    ///
+    /// `searxng` is not in [`SearchConfig`] (it predates the unified selector
+    /// and lives in its own top-level block), so it is passed in. Use
+    /// [`Self::effective_engine`] when the caller has no `[searxng]` block to
+    /// hand — it behaves as if none were configured.
+    pub fn effective_engine_with_searxng(&self, searxng: &SearxngConfig) -> SearchEngine {
         match self.engine.trim().to_ascii_lowercase().as_str() {
             SEARCH_ENGINE_DISABLED => SearchEngine::Disabled,
             SEARCH_ENGINE_PARALLEL if self.parallel.has_key() => SearchEngine::Parallel,
             SEARCH_ENGINE_BRAVE if self.brave.has_key() => SearchEngine::Brave,
             SEARCH_ENGINE_QUERIT if self.querit.has_key() => SearchEngine::Querit,
             SEARCH_ENGINE_EXA if self.exa.has_key() => SearchEngine::Exa,
+            SEARCH_ENGINE_SEARXNG if searxng_selectable(searxng) => SearchEngine::Searxng,
             _ => SearchEngine::Managed,
         }
+    }
+
+    /// [`Self::effective_engine_with_searxng`] against the **default**
+    /// `[searxng]` block, for callers that hold only a `SearchConfig`.
+    ///
+    /// That default carries the standard `http://localhost:8080` base URL, so
+    /// an explicit `engine = "searxng"` still resolves to
+    /// [`SearchEngine::Searxng`] here — the selection is honoured, and tool
+    /// construction reads the real block for the URL it actually calls.
+    pub fn effective_engine(&self) -> SearchEngine {
+        self.effective_engine_with_searxng(&SearxngConfig::default())
     }
 
     pub fn requested_engine_str(&self) -> &str {
@@ -357,6 +392,84 @@ mod search_config_tests {
         assert_eq!(cfg.allowed_domains, vec!["*".to_string()]);
         assert_eq!(cfg.max_response_size, 1_000_000);
         assert_eq!(cfg.timeout_secs, 30);
+    }
+
+    #[test]
+    fn searxng_is_selectable_on_a_base_url_alone() {
+        // The one keyless engine: the "credential" is a reachable instance, so
+        // `has_key` has nothing to check.
+        let cfg = SearchConfig {
+            engine: SEARCH_ENGINE_SEARXNG.into(),
+            ..Default::default()
+        };
+        let searxng = SearxngConfig {
+            base_url: "http://localhost:8080".into(),
+            ..Default::default()
+        };
+        assert_eq!(
+            cfg.effective_engine_with_searxng(&searxng),
+            SearchEngine::Searxng
+        );
+    }
+
+    #[test]
+    fn searxng_with_a_blank_base_url_falls_back_to_managed() {
+        let cfg = SearchConfig {
+            engine: SEARCH_ENGINE_SEARXNG.into(),
+            ..Default::default()
+        };
+        let searxng = SearxngConfig {
+            base_url: "   ".into(),
+            ..Default::default()
+        };
+        assert_eq!(
+            cfg.effective_engine_with_searxng(&searxng),
+            SearchEngine::Managed
+        );
+    }
+
+    #[test]
+    fn searxng_selection_does_not_require_the_auxiliary_tool_flag() {
+        // `[searxng] enabled` governs the separate `searxng_search` tool.
+        // Requiring it for an explicit engine selection would make
+        // `engine = "searxng"` silently do nothing.
+        let cfg = SearchConfig {
+            engine: SEARCH_ENGINE_SEARXNG.into(),
+            ..Default::default()
+        };
+        let searxng = SearxngConfig {
+            enabled: false,
+            base_url: "http://localhost:8080".into(),
+            ..Default::default()
+        };
+        assert_eq!(
+            cfg.effective_engine_with_searxng(&searxng),
+            SearchEngine::Searxng
+        );
+    }
+
+    #[test]
+    fn a_searxng_instance_does_not_disturb_another_engines_selection() {
+        // Having SearXNG configured must not hijack a managed or BYO choice.
+        let searxng = SearxngConfig {
+            enabled: true,
+            base_url: "http://localhost:8080".into(),
+            ..Default::default()
+        };
+        assert_eq!(
+            SearchConfig::default().effective_engine_with_searxng(&searxng),
+            SearchEngine::Managed
+        );
+
+        let mut brave = SearchConfig {
+            engine: SEARCH_ENGINE_BRAVE.into(),
+            ..Default::default()
+        };
+        brave.brave.api_key = Some("real".into());
+        assert_eq!(
+            brave.effective_engine_with_searxng(&searxng),
+            SearchEngine::Brave
+        );
     }
 
     #[test]

@@ -7,7 +7,7 @@ use crate::openhuman::config::rpc as config_rpc;
 use super::helpers::{
     deserialize_params, to_json, ActivityLevelSettingsUpdate, AgentPathsUpdate,
     AgentSettingsUpdate, AnalyticsSettingsUpdate, AutonomySettingsUpdate, BrowserSettingsUpdate,
-    ComposioTriggerSettingsUpdate, DictationSettingsUpdate, LocalAiSettingsUpdate,
+    ComposioTriggerSettingsUpdate, DictationSettingsUpdate, LocalAiSettingsUpdate, LocalModeUpdate,
     MemorySettingsUpdate, MemorySyncSettingsUpdate, ModelSettingsUpdate,
     OnboardingCompletedSetParams, PrivacyModeUpdate, RuntimeSettingsUpdate, SandboxSettingsUpdate,
     SearchSettingsUpdate, SetBrowserAllowAllParams, VoiceServerSettingsUpdate,
@@ -49,6 +49,8 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("update_autonomy_settings"),
         schemas("get_privacy_mode"),
         schemas("set_privacy_mode"),
+        schemas("get_local_mode"),
+        schemas("set_local_mode"),
         schemas("get_agent_settings"),
         schemas("update_agent_settings"),
         schemas("update_search_settings"),
@@ -191,6 +193,14 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("set_privacy_mode"),
             handler: handle_set_privacy_mode,
+        },
+        RegisteredController {
+            schema: schemas("get_local_mode"),
+            handler: handle_get_local_mode,
+        },
+        RegisteredController {
+            schema: schemas("set_local_mode"),
+            handler: handle_set_local_mode,
         },
         RegisteredController {
             schema: schemas("get_agent_settings"),
@@ -427,6 +437,23 @@ pub(super) fn handle_update_autonomy_settings(params: Map<String, Value>) -> Con
 
 pub(super) fn handle_get_privacy_mode(_params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move { to_json(config_rpc::get_privacy_mode().await?) })
+}
+
+pub(super) fn handle_get_local_mode(_params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move { to_json(config_rpc::get_local_mode().await?) })
+}
+
+pub(super) fn handle_set_local_mode(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let update = deserialize_params::<LocalModeUpdate>(params)?;
+        let patch = config_rpc::LocalModeSettingsPatch {
+            enabled: update.enabled,
+            backend_port: update.backend_port,
+            apply_local_defaults: update.apply_local_defaults,
+            proxy_inference: update.proxy_inference,
+        };
+        to_json(config_rpc::load_and_apply_local_mode_settings(patch).await?)
+    })
 }
 
 pub(super) fn handle_set_privacy_mode(params: Map<String, Value>) -> ControllerFuture {

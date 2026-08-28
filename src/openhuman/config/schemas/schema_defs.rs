@@ -1,6 +1,6 @@
 use crate::core::{ControllerSchema, FieldSchema, TypeSchema};
 
-use super::helpers::{json_output, optional_bool, optional_json, optional_string};
+use super::helpers::{json_output, optional_bool, optional_json, optional_string, optional_u64};
 
 pub fn schemas(function: &str) -> ControllerSchema {
     match function {
@@ -203,6 +203,28 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 optional_string("mode", "Privacy mode: local_only | standard | sensitive."),
             ],
             outputs: vec![json_output("mode", "Updated privacy mode.")],
+        },
+        "get_local_mode" => ControllerSchema {
+            namespace: "config",
+            function: "get_local_mode",
+            description: "Read the Local Mode posture (running without the project's hosted backend) plus the inventory of hosted services and their local replacements. Distinct from privacy mode, which governs data egress rather than which services the app depends on.",
+            inputs: vec![],
+            outputs: vec![json_output(
+                "local_mode",
+                "Settings, the effective state, the local backend URL, and the service inventory.",
+            )],
+        },
+        "set_local_mode" => ControllerSchema {
+            namespace: "config",
+            function: "set_local_mode",
+            description: "Turn Local Mode on or off and adjust its settings. Enforcement (refusing hosted round-trips) applies immediately; binding or releasing the local backend needs a core restart, reported as `restartRequired`.",
+            inputs: vec![
+                optional_bool("enabled", "Run without the project's hosted backend."),
+                optional_u64("backend_port", "Loopback port for the local backend; 0 for an ephemeral one."),
+                optional_bool("apply_local_defaults", "Re-resolve managed provider defaults (embeddings, search) to local ones."),
+                optional_bool("proxy_inference", "Serve /openai/v1/* by forwarding to the local model runtime."),
+            ],
+            outputs: vec![json_output("local_mode", "The updated posture, in the same shape as get_local_mode.")],
         },
         "get_agent_settings" => ControllerSchema {
             namespace: "config",

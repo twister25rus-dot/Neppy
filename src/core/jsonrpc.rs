@@ -1269,8 +1269,15 @@ const ALLOWED_ORIGINS_ENV: &str = "OPENHUMAN_CORE_ALLOWED_ORIGINS";
 /// token via leaked logs / screenshots / a compromised third-party origin
 /// loaded in a CEF child webview) must be refused — the bearer token alone
 /// is not enough authorization without an origin binding.
+///
+/// `pub(crate)` so the local backend
+/// ([`local_mode::backend`](crate::openhuman::local_mode)) enforces the *same*
+/// allow-list. Its listener is loopback-only, which keeps it off the network
+/// but not away from the browser: a page on any site the user visits can issue
+/// a cross-origin request to `127.0.0.1`. A second, subtly different origin
+/// list in the tree is how one of the two ends up letting such a page through.
 #[cfg(feature = "http-server")]
-pub(super) fn is_origin_allowed(origin: &str) -> bool {
+pub(crate) fn is_origin_allowed(origin: &str) -> bool {
     let extra_origins = std::env::var(ALLOWED_ORIGINS_ENV).ok();
     is_origin_allowed_with_extra(origin, extra_origins.as_deref())
 }

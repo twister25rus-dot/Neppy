@@ -2954,8 +2954,6 @@ const messages: TranslationMap = {
   'welcome.connectionFailed': 'فشل الاتصال: {status} {statusText}',
   'welcome.connectionFailedMsg': 'فشل الاتصال: {message}',
   'welcome.continueLocally': 'المتابعة محليًا',
-  'welcome.continueLocallyExperimental': 'المتابعة محليًا (تجريبي)',
-  'welcome.localSessionStarting': 'بدء الجلسة المحلية...',
   'welcome.coreConfigUnreadable':
     'تعذّر على بيئة التشغيل قراءة ملف الإعدادات الخاص بها. قد يكون الملف config.toml مملوكًا لحساب مستخدم آخر، أو غير متاح لعملية التشغيل لسبب آخر. أعد تشغيل بيئة التشغيل، وإن لم يُجدِ ذلك فأصلح ملكية مجلد العمل أو أعد إنشاء وحدة التخزين الخاصة به.',
   'welcome.localSessionErrorFallback': 'تعذّر بدء جلسة محلية.',
@@ -6731,6 +6729,29 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'الموقع',
   'devOptions.provisionedCore': 'نواة شغّلها هذا التطبيق',
   'devOptions.gatewayId': 'معرّف الموقع',
+
+  // Local Mode: service topology (distinct from Privacy Mode's data egress)
+  'localMode.title': 'الوضع المحلي',
+  'localMode.description':
+    'تشغيل OpenHuman دون الواجهة الخلفية المستضافة للمشروع. يتم تقديم تسجيل الدخول وتوجيه النماذج والبحث وبيانات الاستخدام على هذا الجهاز. وهو يختلف عن وضع الخصوصية: الوضع المحلي يحدد الخدمات التي يعتمد عليها التطبيق، لا حجم البيانات التي يُسمح لها بمغادرة الجهاز.',
+  'localMode.enable': 'التشغيل دون الواجهة الخلفية المستضافة',
+  'localMode.enableDesc': 'يقدّم مستوى التحكم من خدمة محلية على 127.0.0.1. يتطلب إعادة التشغيل.',
+  'localMode.applyDefaults': 'استخدام مزوّدين محليين افتراضيًا',
+  'localMode.applyDefaultsDesc':
+    'يعيد توجيه الإعدادات الافتراضية المُدارة إلى بدائل محلية — التضمينات إلى Ollama، والبحث على الويب إلى نسخة SearXNG الخاصة بك. أما المزوّدون الذين اخترتهم بنفسك فلا يتغيرون أبدًا.',
+  'localMode.proxyInference': 'تقديم استدعاءات النماذج محليًا',
+  'localMode.proxyInferenceDesc':
+    'يمرّر الطلبات المتوافقة مع OpenAI إلى بيئة التشغيل المحلية لديك (Ollama أو LM Studio أو vLLM).',
+  'localMode.servingAt': 'الواجهة الخلفية المحلية متاحة على',
+  'localMode.restartRequired': 'أعد تشغيل OpenHuman لتطبيق هذا التغيير.',
+  'localMode.overridden': 'متغير البيئة OPENHUMAN_LOCAL_MODE يتجاوز هذا الإعداد للعملية الجارية.',
+  'localMode.setupPrefix': 'للإعداد:',
+  'localMode.kind.replaced': 'محلي',
+  'localMode.kind.requiresSetup': 'يحتاج إعدادًا',
+  'localMode.kind.unavailable': 'لا يوجد بديل محلي',
+  'localMode.kind.notApplicable': 'غير منطبق',
+  'localMode.saved': 'تم الحفظ',
+  'localMode.saveError': 'تعذّر تحديث الوضع المحلي.',
 };
 
 export default messages;

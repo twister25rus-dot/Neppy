@@ -66,6 +66,7 @@
 - [Approval Gate](features/approval-gate.md)
 - [Privacy & Security](features/privacy-and-security.md)
   - [Privacy Mode](features/privacy-mode.md)
+  - [Local Mode](features/local-mode.md)
   - [OS Keyring & Secret Storage](features/os-keyring-and-secret-storage.md)
 - [Platform & Availability](features/platform.md)
 - [Cloud Deploy](features/cloud-deploy.md)
