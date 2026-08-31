@@ -1,0 +1,210 @@
+use serde_json::json;
+use tinyhumans_sdk::{Error, TinyHumansClient};
+use wiremock::matchers::{header, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
+
+// User credential headers plus the static headers must reach the server.
+#[tokio::test]
+async fn sends_all_auth_and_static_headers() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/auth/me"))
+        .and(header("authorization", "Bearer t"))
+        .and(header("x-api-key", "k"))
+        .and(header("accept", "application/json"))
+        .and(header("x-sdk-client", "tinyhumans-rust"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"success": true, "data": {"id": "u_1"}})),
+        )
+        .mount(&server)
+        .await;
+
+    let client = TinyHumansClient::new(server.uri())
+        .with_token(Some("t".into()))
+        .with_api_key(Some("k".into()));
+
+    let result = client.auth().me().await.unwrap();
+    assert_eq!(result, json!({"id": "u_1"}));
+}
+
+#[tokio::test]
+async fn raw_get_unwraps_envelope() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/some/new/route"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"success": true, "data": {"ok": true}})),
+        )
+        .mount(&server)
+        .await;
+
+    let client = TinyHumansClient::new(server.uri());
+    let result = client.raw().get("/some/new/route").await.unwrap();
+    assert_eq!(result, json!({"ok": true}));
+}
+
+#[tokio::test]
+async fn raw_post_sends_body_and_unwraps() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/some/new/route"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"success": true, "data": {"created": 1}})),
+        )
+        .mount(&server)
+        .await;
+
+    let client = TinyHumansClient::new(server.uri());
+    let result = client
+        .raw()
+        .post("/some/new/route", &json!({"name": "x"}))
+        .await
+        .unwrap();
+    assert_eq!(result, json!({"created": 1}));
+}
+
+#[tokio::test]
+async fn error_status_is_returned_as_err() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/auth/me"))
+        .respond_with(
+            ResponseTemplate::new(500).set_body_json(json!({"success": false, "error": "boom"})),
+        )
+        .mount(&server)
+        .await;
+
+    let client = TinyHumansClient::new(server.uri());
+    let err = client.auth().me().await.unwrap_err();
+    match err {
+        Error::Status { status, body } => {
+            assert_eq!(status, 500);
+            assert_eq!(body, json!({"success": false, "error": "boom"}));
+        }
+        other => panic!("expected Error::Status, got {other:?}"),
+    }
+}
+
+// A path param containing a space must be percent-encoded via `enc`.
+#[tokio::test]
+async fn path_param_is_percent_encoded() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/mascots/red%20fox"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"success": true, "data": {"id": "red fox"}})),
+        )
+        .mount(&server)
+        .await;
+
+    let client = TinyHumansClient::new(server.uri());
+    let result = client.mascots().get_mascot("red fox").await.unwrap();
+    assert_eq!(result, json!({"id": "red fox"}));
+}
+
+// A host application must be able to supply its own `reqwest::Client` so the
+// SDK inherits that host's TLS backend, timeouts, proxy, and redirect policy
+// instead of the crate's defaults. OpenHuman needs this to keep using schannel
+// on Windows (corporate TLS-inspection proxies present an OS-trusted cert that
+// the bundled rustls roots reject) while staying on rustls elsewhere.
+#[tokio::test]
+async fn caller_supplied_http_client_is_used_for_requests() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/auth/me"))
+        .and(header("user-agent", "openhuman-core/test"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"success": true, "data": {"id": "u_1"}})),
+        )
+        .mount(&server)
+        .await;
+
+    let http = reqwest::Client::builder()
+        .user_agent("openhuman-core/test")
+        .build()
+        .unwrap();
+    let client = TinyHumansClient::new(server.uri()).with_http_client(http);
+
+    let result = client.auth().me().await.unwrap();
+    assert_eq!(result, json!({"id": "u_1"}));
+}
+
+// Hosts also need to attach their own default headers (build/version
+// attribution, tenant routing) to every request without wrapping each call.
+#[tokio::test]
+async fn caller_supplied_default_headers_are_sent_on_every_request() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/auth/me"))
+        .and(header("x-core-version", "0.61.0"))
+        .and(header("x-sdk-client", "tinyhumans-rust"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"success": true, "data": {"id": "u_1"}})),
+        )
+        .mount(&server)
+        .await;
+
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert("x-core-version", "0.61.0".parse().unwrap());
+    let client = TinyHumansClient::new(server.uri()).with_default_headers(headers);
+
+    let result = client.auth().me().await.unwrap();
+    assert_eq!(result, json!({"id": "u_1"}));
+}
+
+// The backend signals a failed operation with `{success:false, error, ...}`,
+// sometimes on an HTTP 200. Unwrapping must surface that as an error rather
+// than handing the caller the failure envelope as if it were data.
+#[tokio::test]
+async fn unsuccessful_envelope_on_http_200_is_an_error() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/auth/me"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "success": false,
+            "error": "session expired",
+            "errorCode": "SESSION_EXPIRED",
+            "details": {"hint": "re-authenticate"},
+        })))
+        .mount(&server)
+        .await;
+
+    let client = TinyHumansClient::new(server.uri());
+    let err = client.auth().me().await.unwrap_err();
+    match err {
+        Error::Envelope {
+            error,
+            error_code,
+            details,
+        } => {
+            assert_eq!(error, "session expired");
+            assert_eq!(error_code.as_deref(), Some("SESSION_EXPIRED"));
+            assert_eq!(details, json!({"hint": "re-authenticate"}));
+        }
+        other => panic!("expected Error::Envelope, got {other:?}"),
+    }
+}
+
+// A successful envelope whose `data` is absent still yields the remaining
+// fields, and `success` itself is not leaked into the returned value.
+#[tokio::test]
+async fn successful_envelope_without_data_drops_the_success_flag() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/auth/me"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(json!({"success": true, "jwt": "abc"})),
+        )
+        .mount(&server)
+        .await;
+
+    let client = TinyHumansClient::new(server.uri());
+    let result = client.auth().me().await.unwrap();
+    assert_eq!(result, json!({"jwt": "abc"}));
+}

@@ -1,0 +1,71 @@
+# cargo-deny configuration — run locally with `cargo deny check all`.
+# CI runs the same check in the "Supply chain" job of .github/workflows/ci.yml.
+
+[graph]
+all-features = true
+
+[advisories]
+# Fail on any crate with a security advisory or an unmaintained warning.
+# Add an entry here only with a comment explaining the exposure and the plan.
+ignore = []
+
+[licenses]
+# Licenses accepted for this crate and its dependencies. Keep GPL-3.0-only for
+# the template crate itself; the remaining entries cover compatible dependency
+# licenses commonly encountered by Rust projects.
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    # `webpki-roots` — Mozilla's CA root bundle, reached through
+    # `reqwest`'s rustls-tls, which the hosted-engine adapter needs for HTTPS.
+    #
+    # A *data* licence rather than a code one, which is why it is not on the
+    # usual list: the crate is Mozilla's trust store rendered as a Rust array,
+    # not software. CDLA-Permissive-2.0 places no conditions on use or
+    # redistribution of that data and adds no obligations to the binaries that
+    # embed it.
+    #
+    # It reached this graph when #18 §D1 gave the facade per-engine features:
+    # `[graph] all-features = true` above now enables `supermemory`/`mem0`/
+    # `cognee`, so the remote adapter's TLS stack is evaluated where before
+    # nothing on the facade pulled it.
+    "CDLA-Permissive-2.0",
+    "GPL-3.0-only",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+# Duplicate versions bloat build times; review them rather than ignoring them.
+multiple-versions = "warn"
+wildcards = "deny"
+# ...except on a path dependency of a crate that is never published.
+#
+# `wildcards = "deny"` exists to stop an *unpinned registry* dependency, where
+# "any version" means whatever crates.io serves next. A version-less `{ path =
+# "api" }` is not that: it resolves to the copy in this repo, at this commit, and
+# cannot float.
+#
+# The version keys were removed from the intra-workspace path deps deliberately
+# (see the release workflow's bump step): they only ever existed to satisfy
+# crates.io publishing, which this repo does not do, and a sibling requiring
+# `^0.1.0` makes a `minor` release bump fail to resolve. cargo-deny scores those
+# as wildcards, so without this the two requirements contradict each other.
+#
+# Scoped, not blanket: cargo-deny only applies it to crates marked
+# `publish = false`, which every crate here is. Publishing one again would put
+# this error back, correctly.
+allow-wildcard-paths = true
+# Crates that must never enter the dependency graph.
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

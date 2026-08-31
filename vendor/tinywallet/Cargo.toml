@@ -1,0 +1,238 @@
+[package]
+name = "tinywallet"
+version = "0.5.0"
+edition = "2024"
+rust-version = "1.85"
+license = "GPL-3.0-only"
+description = "Agent-friendly multi-chain wallet primitives in Rust."
+repository = "https://github.com/tinyhumansai/tinywallet"
+readme = "README.md"
+# Not published to crates.io. Hosts take this crate as a git submodule and get
+# its behaviour as the module artifacts the release workflow builds, so a
+# registry upload would be a third distribution channel nobody reads. Declared
+# here as well as being absent from the workflow, so a local `cargo publish`
+# refuses rather than quietly succeeding and creating one.
+#
+# `documentation` is deliberately not set: it pointed at docs.rs, which only
+# builds for published crates, so the link was dead. `cargo doc` from the repo
+# is the documentation.
+publish = false
+keywords = ["wallet", "bitcoin", "solana", "ethereum", "tron"]
+categories = ["cryptography::cryptocurrencies"]
+# Keep the published package to what a consumer actually needs.
+exclude = [
+    ".github/",
+    ".gitmodules",
+    "docs/",
+    "vendor/",
+    "worktrees/",
+    ".env.example",
+    "deny.toml",
+]
+
+[workspace]
+members = ["crates/tinywallet-bus", "crates/tinywallet-module"]
+default-members = [".", "crates/tinywallet-bus", "crates/tinywallet-module"]
+# The vendored bus is a submodule with its own workspace; it must not be pulled
+# into this one.
+exclude = ["vendor/tinybus"]
+resolver = "3"
+
+[dependencies]
+# The wire contract, the address rules, the ABI/EIP-712 encoders and the
+# transaction-verification codec. Split out so a host that has moved signing
+# into the loadable module can take that crate alone and link none of what
+# follows; everything it owns is re-exported from this crate's own module
+# paths, so `tinywallet::address::…` and `tinywallet::wire::…` still resolve.
+#
+# No version requirement, deliberately, matching how `tinywallet-module` already
+# takes this crate: both are `publish = false`, so there is no registry copy a
+# requirement could select, and a stale `version = "0.4.0"` here would make the
+# release workflow's next minor bump fail resolution rather than resolve to the
+# sibling in this workspace.
+tinywallet-bus = { path = "crates/tinywallet-bus", default-features = false }
+# Derive macros for the transaction error type in `src/tx/mod.rs`.
+thiserror = "2"
+# Base58 for a Solana transaction's signature and account keys
+# (`src/tx/solana.rs`). Address encoding itself lives in `tinywallet-bus`.
+bs58 = { version = "0.5", features = ["check"], optional = true }
+# PSBT construction and signing for Bitcoin (`src/tx/btc.rs`), and the
+# recoverable secp256k1 API the EVM and Tron signers use. This is the one
+# dependency that carries a native C build, and the `tx` gate is the only thing
+# that pulls it — which is the entire point of the split.
+bitcoin = { version = "0.32", default-features = false, features = ["std", "secp-recovery"], optional = true }
+# RIPEMD-160, the second half of Bitcoin's HASH160. Only needed to turn a
+# derived public key into a P2WPKH witness program (`src/key/btc.rs`).
+#
+# On 0.2, and not 0.1, because `hash160` feeds a `Sha256` (sha2 0.11) output
+# straight into `Ripemd160::digest`, so the two must sit on the same `digest`
+# line. Settle back to 0.1 when `coins-core` (or sha2) moves, and only when the
+# shared `digest` reunifies.
+ripemd = { version = "0.2", optional = true }
+# BIP-32 on secp256k1, backed by the pure-Rust `k256` rather than the
+# `secp256k1` C library. Deriving a key wrong is silent and unrecoverable, so
+# this stays delegated to a vetted implementation — see `src/key/bip32.rs`.
+coins-bip32 = { version = "0.13", optional = true }
+# Keccak-256 for the EVM and Tron addresses key derivation produces.
+#
+# PINNED TO 0.10, and not by accident — do not let dependabot move it.
+# `coins-bip32` 0.8 (via `coins-core`) depends on `sha3` 0.10 and is not going
+# to move, so 0.10 is already in the graph of every consumer that enables
+# `key`. Asking for 0.12 here does not replace it, it ADDS a second copy: cargo
+# cannot unify across a major, so a host ends up compiling `sha3` twice plus
+# the `keccak` and `sponge-cursor` tail that 0.12 pulls. Measured on
+# tinyhumansai/openhuman: +3 packages for no functional change.
+#
+# Revisit when `coins-bip32` moves, and only then.
+sha3 = { version = "0.12", optional = true }
+# Async trait methods for the `client` queries, which take `&dyn Transport`.
+async-trait = { version = "0.1", optional = true }
+# BIP-39 mnemonic -> seed. Pinned to the same 0.8 line OpenHuman used before
+# this extraction, so a wallet derived by the old code derives identically here.
+coins-bip39 = { version = "0.13", optional = true }
+# HMAC-SHA512, the whole of SLIP-0010's ed25519 derivation.
+#
+# On 0.13 because `src/key/slip10.rs` builds `Hmac<Sha512>` and `Sha512` now
+# comes from sha2 0.11 (digest 0.11): hmac must sit on the same `digest` line
+# or `new_from_slice` refuses to unify. Fold back to 0.12 when the ecosystem
+# moves to digest 0.11 and the two unify.
+hmac = { version = "0.13", optional = true }
+sha2 = { version = "0.11", optional = true }
+# ed25519 signing keys for Solana.
+ed25519-dalek = { version = "2", default-features = false, features = ["std"], optional = true }
+# Wipes derived key material on drop rather than leaving it in freed memory.
+zeroize = { version = "1", optional = true }
+# `client` builds RPC params and reads results as `Value`.
+serde_json = { version = "1", optional = true }
+# Derives on the `client` response types and the x402 wire types.
+serde = { version = "1", optional = true }
+
+[dev-dependencies]
+# Drives the async `Transport` tests. The crate itself pulls in no runtime -
+# picking one is the host's call, so it is a dev-dependency only.
+tokio = { version = "1", features = ["macros", "rt"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# The example and the public-API tests exercise every chain, so they only
+# build with the full default set. Without this, a `--no-default-features`
+# check fails on those targets rather than reporting the real question: does
+# the library itself still compile with the gates off.
+[[example]]
+name = "basic"
+required-features = ["btc", "evm", "solana", "tron", "keccak"]
+
+[[test]]
+name = "public_api"
+required-features = ["btc", "evm", "solana", "tron", "keccak"]
+
+[features]
+default = ["btc", "evm", "solana", "tron", "keccak", "net", "key", "asset", "client", "tx", "x402", "wire", "eip712", "abi"]
+# Every gate below that names a module this crate no longer owns forwards to
+# `tinywallet-bus`. The names are unchanged on purpose: a consumer that asked
+# for `tinywallet/btc` before the split gets exactly what it got before, from a
+# different crate.
+#
+# Bitcoin address parsing and validation.
+btc = ["tinywallet-bus/btc"]
+# Serde derives on the crate's core types (today `Chain`).
+serde = ["dep:serde", "serde/derive", "tinywallet-bus/serde"]
+# EVM (Ethereum and compatible chains) address validation.
+evm = ["tinywallet-bus/evm"]
+# Solana base58 address validation.
+solana = ["tinywallet-bus/solana"]
+# Tron base58check address validation and hex conversion.
+tron = ["tinywallet-bus/tron"]
+# EIP-55 mixed-case checksum support for EVM addresses. `dep:sha3` is this
+# crate's own, for the addresses `key` derivation produces.
+keccak = ["evm", "dep:sha3", "tinywallet-bus/keccak"]
+# The `Transport` network seam (`tinywallet::rpc`).
+net = ["tinywallet-bus/net"]
+# Network and token reference data (`tinywallet::asset`).
+asset = ["btc", "evm", "solana", "tron", "tinywallet-bus/asset"]
+# Chain queries over the `Transport` seam (`tinywallet::client`). Needs the
+# seam plus the reference data that names the networks.
+client = ["net", "asset", "tx", "dep:async-trait", "dep:serde", "dep:serde_json", "serde/derive"]
+# EIP-712 typed-data hashing (`tinywallet::eip712`) and the EIP-3009
+# authorization x402 signs.
+eip712 = ["tinywallet-bus/eip712"]
+# ERC-20 `transfer` calldata (`tinywallet::abi`).
+abi = ["evm", "keccak", "eip712", "tinywallet-bus/abi"]
+x402 = ["dep:serde", "dep:serde_json", "serde/derive", "eip712"]
+# The host/backend wire contract (`tinywallet::wire`).
+wire = ["serde", "tinywallet-bus/wire"]
+# The half of `tinywallet::tx` that reads and checks bytes rather than
+# producing signatures: `tx::proto` and the verification half of `tx::tron`.
+#
+# Implied by `tx`, so nothing that took `tx` before sees a change.
+tx-codec = ["wire", "tinywallet-bus/tx-codec"]
+# Transaction building and signing (`tinywallet::tx`). This is the only gate
+# that pulls the `bitcoin` crate, for PSBT construction and secp256k1
+# recoverable signing. Everything else — addresses, verification, reference
+# data — is deliberately reachable without it, so a host that has moved signing
+# into a loadable module sheds `bitcoin` and its native build entirely.
+tx = [
+    "tx-codec",
+    "btc",
+    "evm",
+    "keccak",
+    "solana",
+    "tron",
+    "key",
+    "dep:bitcoin",
+    "dep:ed25519-dalek",
+    "dep:bs58",
+    "dep:sha2",
+]
+# Deterministic key derivation from a BIP-39 mnemonic (`tinywallet::key`).
+key = [
+    "dep:coins-bip39",
+    "dep:coins-bip32",
+    "dep:hmac",
+    "dep:sha2",
+    "dep:ripemd",
+    "dep:ed25519-dalek",
+    "dep:zeroize",
+    "btc",
+    "keccak",
+]
+
+# Lints are defined at the workspace level and inherited by every member, so
+# the module crate is held to exactly the same bar as the library. CI runs
+# clippy with `-D warnings`, so anything set to "warn" here fails the build.
+[lints]
+workspace = true
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Library code must not panic on its own; tests and examples may.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+# Public fallible/panicking APIs must document their failure modes.
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+# Documentation hygiene.
+doc_markdown = "warn"
+# `#[must_use]` on pure public functions.
+must_use_candidate = "warn"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "warn"
+private_intra_doc_links = "warn"
+
+[profile.release]
+# Cross-crate optimization and smaller, faster binaries for release builds.
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

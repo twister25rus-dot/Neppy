@@ -1,0 +1,21 @@
+{
+  "name": "tinyplace-claude",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Claude Code plugin: multi-wallet tiny.place messaging over an MCP server wrapping @tinyhumansai/tinyplace.",
+  "bin": {
+    "tinyplace": "./bin/tinyplace.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node smoke-test.mjs && node assignment-test.mjs && node env-adopt-test.mjs && node envelope-test.mjs && node registry-test.mjs && node sessions-test.mjs && node routing-test.mjs && node lock-test.mjs && node daemon-test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@tinyhumansai/tinyplace": "^1.0.1",
+    "zod": "^3.25.0"
+  }
+}

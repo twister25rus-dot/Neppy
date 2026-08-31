@@ -1,0 +1,73 @@
+"""tiny.place Hermes plugin — register the ``tinyplace`` toolset.
+
+Hermes calls :func:`register` once at startup. We wire each tool schema to its
+handler under the ``tinyplace`` toolset. Tools are gated on the plugin being
+configured (a present ``TINYPLACE_AGENT_KEY``), so a missing key disables them
+gracefully instead of failing at call time.
+"""
+
+from __future__ import annotations
+
+from . import schemas, tools
+from .config import is_configured
+
+_TOOLS = (
+    ("tinyplace_poll_inbox", schemas.POLL_INBOX, tools.poll_inbox),
+    ("tinyplace_send_message", schemas.SEND_MESSAGE, tools.send_message),
+    ("tinyplace_search_domain", schemas.SEARCH_DOMAIN, tools.search_domain),
+    ("tinyplace_register_domain", schemas.REGISTER_DOMAIN, tools.register_domain),
+    ("tinyplace_get_identity", schemas.GET_IDENTITY, tools.get_identity),
+    ("tinyplace_discover_agents", schemas.DISCOVER_AGENTS, tools.discover_agents),
+    ("tinyplace_get_agent", schemas.GET_AGENT, tools.get_agent),
+    ("tinyplace_search", schemas.SEARCH, tools.search),
+    ("tinyplace_notifications", schemas.NOTIFICATIONS, tools.notifications),
+    (
+        "tinyplace_mark_notifications_read",
+        schemas.MARK_NOTIFICATIONS_READ,
+        tools.mark_notifications_read,
+    ),
+    ("tinyplace_list_groups", schemas.LIST_GROUPS, tools.list_groups),
+    ("tinyplace_join_group", schemas.JOIN_GROUP, tools.join_group),
+    ("tinyplace_send_group_message", schemas.SEND_GROUP_MESSAGE, tools.send_group_message),
+    ("tinyplace_poll_group_inbox", schemas.POLL_GROUP_INBOX, tools.poll_group_inbox),
+    ("tinyplace_list_products", schemas.LIST_PRODUCTS, tools.list_products),
+    ("tinyplace_buy_product", schemas.BUY_PRODUCT, tools.buy_product),
+    ("tinyplace_list_jobs", schemas.LIST_JOBS, tools.list_jobs),
+    ("tinyplace_post_job", schemas.POST_JOB, tools.post_job),
+    ("tinyplace_apply_to_job", schemas.APPLY_TO_JOB, tools.apply_to_job),
+    ("tinyplace_accept_escrow", schemas.ACCEPT_ESCROW, tools.accept_escrow),
+    ("tinyplace_deliver_escrow", schemas.DELIVER_ESCROW, tools.deliver_escrow),
+    (
+        "tinyplace_accept_escrow_delivery",
+        schemas.ACCEPT_ESCROW_DELIVERY,
+        tools.accept_escrow_delivery,
+    ),
+    ("tinyplace_list_bounties", schemas.LIST_BOUNTIES, tools.list_bounties),
+    ("tinyplace_create_bounty", schemas.CREATE_BOUNTY, tools.create_bounty),
+    ("tinyplace_submit_bounty", schemas.SUBMIT_BOUNTY, tools.submit_bounty),
+    ("tinyplace_follow", schemas.FOLLOW, tools.follow),
+    ("tinyplace_unfollow", schemas.UNFOLLOW, tools.unfollow),
+    ("tinyplace_feed", schemas.FEED, tools.feed),
+    ("tinyplace_reputation", schemas.REPUTATION, tools.reputation),
+    ("tinyplace_profile", schemas.PROFILE, tools.profile),
+    ("tinyplace_vouch", schemas.VOUCH, tools.vouch),
+    ("tinyplace_conversations", schemas.CONVERSATIONS, tools.conversations),
+    ("tinyplace_join_conversation", schemas.JOIN_CONVERSATION, tools.join_conversation),
+    ("tinyplace_post_conversation", schemas.POST_CONVERSATION, tools.post_conversation),
+    ("tinyplace_broadcasts", schemas.BROADCASTS, tools.broadcasts),
+    ("tinyplace_subscribe_broadcast", schemas.SUBSCRIBE_BROADCAST, tools.subscribe_broadcast),
+    ("tinyplace_post_broadcast", schemas.POST_BROADCAST, tools.post_broadcast),
+    ("tinyplace_rsvp_event", schemas.RSVP_EVENT, tools.rsvp_event),
+)
+
+
+def register(ctx: object) -> None:
+    """Register all tiny.place tools with the Hermes plugin context."""
+    for name, schema, handler in _TOOLS:
+        ctx.register_tool(  # type: ignore[attr-defined]
+            name=name,
+            toolset="tinyplace",
+            schema=schema,
+            handler=handler,
+            check_fn=is_configured,
+        )

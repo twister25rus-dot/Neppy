@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  rust-sdk:
+    name: Rust SDK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # This job executes repo code (cargo build/test); don't persist the
+          # token in git config.
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Clippy all features
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build
+        run: cargo build --all-targets
+
+      - name: Build all features
+        run: cargo build --all-targets --all-features
+
+      - name: Test
+        run: cargo test
+
+      - name: Test all features
+        run: cargo test --all-features
+
+      - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Coverage
+        # Unit tests live in *_tests.rs files, which cargo-llvm-cov excludes by
+        # default. Include them to preserve the coverage gate's historical
+        # semantics while still excluding dependencies, build output, and
+        # standalone integration-test sources.
+        run: >-
+          cargo llvm-cov --all-features --workspace --summary-only
+          --no-default-ignore-filename-regex
+          --ignore-filename-regex
+          '(/rustc/|/target/|/.cargo/(registry|git)/|/.rustup/toolchains/|/(tests|examples|benches)/)'
+          --fail-under-lines 90
+
+  chrome-extension:
+    name: Chrome Extension
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint, typecheck, unit test, and build
+        run: npm run verify
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run extension end-to-end tests
+        run: npm run test:e2e
+
+      - name: Build deterministic release archive
+        run: npm run package
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: tinyflows-chrome-extension
+          path: |
+            extension/artifacts/*.zip
+            extension/artifacts/*.sha256
+
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: chrome-extension-playwright-traces
+          path: extension/test-results/
+          if-no-files-found: ignore

@@ -1,0 +1,32 @@
+[workspace]
+# Three crates, and there is a reason they are not one. `tinybus-macros` is a
+# proc-macro crate, which means it compiles for the *host* even when the bus
+# itself is cross-compiled; keeping it separate is the only way to have
+# `#[interface]` without forcing that split on every downstream target.
+# `tinybus-module` is the module-side half of the C ABI. It is versioned here in
+# lockstep with the host ABI so the two definitions cannot drift. Integrations
+# themselves remain separate repositories and are never workspace members.
+members = ["crates/tinybus", "crates/tinybus-macros", "crates/tinybus-module"]
+exclude = ["examples"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+repository = "https://github.com/tinyhumansai/tinybus"
+
+[workspace.dependencies]
+tinybus = { path = "crates/tinybus", version = "0.1.0", default-features = false }
+tinybus-macros = { path = "crates/tinybus-macros", version = "0.1.0" }
+tinybus-module = { path = "crates/tinybus-module", version = "0.1.0" }
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
+
+async-trait = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tracing = "0.1"
+
+[profile.release]
+lto = "thin"

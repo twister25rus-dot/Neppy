@@ -1,0 +1,51 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.next
+*.local
+*.tsbuildinfo
+
+# Claude Code (local agent settings, notes, and personal overrides)
+.claude/
+CLAUDE.local.md
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# storybook
+storybook-static
+
+# tests
+/coverage/
+contracts-sol/.test-ledger
+website/test-results
+website/playwright-report
+
+# Python SDK
+sdk/python/.venv/
+sdk/python/.pytest_cache/
+sdk/python/**/__pycache__/
+sdk/python/**/*.py[cod]
+website/.env.local.bak
+sdk/python/.coverage

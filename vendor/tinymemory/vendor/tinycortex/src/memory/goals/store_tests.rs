@@ -1,0 +1,190 @@
+//! Persistence + cap + path-safety tests for [`super::store`]. Ported from
+//! OpenHuman `memory_goals/store.rs`, plus the symlink-escape rejection
+//! required by the TinyCortex port.
+
+use super::*;
+use crate::memory::error::MemoryError;
+
+#[test]
+fn load_empty_when_missing() {
+    let tmp = tempfile::tempdir().unwrap();
+    let doc = load(tmp.path()).unwrap();
+    assert!(doc.is_empty());
+}
+
+#[test]
+fn add_edit_delete_round_trip_to_disk() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (id, _) = add(tmp.path(), "ship the app").unwrap();
+
+    let reloaded = load(tmp.path()).unwrap();
+    assert_eq!(reloaded.items.len(), 1);
+    assert_eq!(reloaded.items[0].text, "ship the app");
+
+    edit(tmp.path(), &id, "ship the app to all platforms").unwrap();
+    let reloaded = load(tmp.path()).unwrap();
+    assert_eq!(reloaded.items[0].text, "ship the app to all platforms");
+
+    delete(tmp.path(), &id).unwrap();
+    let reloaded = load(tmp.path()).unwrap();
+    assert!(reloaded.is_empty());
+}
+
+#[test]
+fn save_enforces_item_count_cap() {
+    let tmp = tempfile::tempdir().unwrap();
+    let mut doc = GoalsDoc::default();
+    for i in 0..(GOALS_MAX_ITEMS + 3) {
+        doc.add(&format!("goal number {i}")).unwrap();
+    }
+    save(tmp.path(), &mut doc).unwrap();
+    assert_eq!(doc.items.len(), GOALS_MAX_ITEMS);
+    // The oldest items (goal number 0..2) should have been dropped.
+    assert!(doc.items.iter().all(|i| i.text != "goal number 0"));
+}
+
+#[test]
+fn save_enforces_byte_cap() {
+    let tmp = tempfile::tempdir().unwrap();
+    let mut doc = GoalsDoc::default();
+    // Two large items that together exceed the byte cap.
+    let big = "x".repeat(GOALS_FILE_MAX_CHARS);
+    doc.add(&big).unwrap();
+    doc.add(&big).unwrap();
+    save(tmp.path(), &mut doc).unwrap();
+    // At least one item dropped; never fully emptied.
+    assert_eq!(doc.items.len(), 1);
+    // The persisted file must respect the byte cap is loosely held: a single
+    // oversized entry is allowed, but two are not.
+    assert!(doc.render().len() <= GOALS_FILE_MAX_CHARS + big.len());
+}
+
+#[test]
+fn save_rejects_secret_or_pii_text_even_when_items_are_built_directly() {
+    // `GoalsDoc.items` and `GoalItem.text` are public: a caller can bypass
+    // `GoalsDocMutations::add`/`edit`'s validation entirely by constructing a
+    // document by hand. `save` must be the choke point that still refuses to
+    // persist secret/PII-bearing text.
+    let tmp = tempfile::tempdir().unwrap();
+    let mut doc = GoalsDoc {
+        items: vec![crate::memory::goals::types::GoalItem::new(
+            "g1",
+            "rotate api_key=sk-abcdefghijklmnopqrstuvwxyz123456",
+        )],
+    };
+    let err = save(tmp.path(), &mut doc).unwrap_err();
+    assert!(matches!(err, MemoryError::Invalid(_)));
+
+    // Nothing was written.
+    let reloaded = load(tmp.path()).unwrap();
+    assert!(reloaded.is_empty());
+}
+
+#[test]
+fn save_rejects_empty_or_multiline_text_even_when_items_are_built_directly() {
+    // Same bypass as the secret/PII case above, but for the other two
+    // `validate_goal_text` invariants: non-empty and single-line. `GoalItem`'s
+    // fields are public, so a caller can set `text` to anything, including
+    // values `GoalsDocMutations::add`/`edit` would never have accepted.
+    use crate::memory::goals::types::GoalItem;
+
+    let tmp = tempfile::tempdir().unwrap();
+    let mut empty_doc = GoalsDoc {
+        items: vec![GoalItem {
+            id: "g1".to_string(),
+            text: "   ".to_string(),
+        }],
+    };
+    let err = save(tmp.path(), &mut empty_doc).unwrap_err();
+    assert!(matches!(err, MemoryError::Invalid(_)));
+
+    let mut multiline_doc = GoalsDoc {
+        items: vec![GoalItem {
+            id: "g1".to_string(),
+            text: "line one\n- [x] injected".to_string(),
+        }],
+    };
+    let err = save(tmp.path(), &mut multiline_doc).unwrap_err();
+    assert!(matches!(err, MemoryError::Invalid(_)));
+
+    // Neither call wrote anything to disk.
+    let reloaded = load(tmp.path()).unwrap();
+    assert!(reloaded.is_empty());
+}
+
+#[test]
+fn config_rooted_wrappers_round_trip() {
+    use crate::memory::config::MemoryConfig;
+    let tmp = tempfile::tempdir().unwrap();
+    let cfg = MemoryConfig::new(tmp.path());
+
+    let (id, doc) = add_for(&cfg, "learn rust").unwrap();
+    assert_eq!(doc.items.len(), 1);
+    let doc = edit_for(&cfg, &id, "learn rust deeply").unwrap();
+    assert_eq!(doc.items[0].text, "learn rust deeply");
+    let listed = list_for(&cfg).unwrap();
+    assert_eq!(listed.items.len(), 1);
+    let doc = delete_for(&cfg, &id).unwrap();
+    assert!(doc.is_empty());
+}
+
+#[cfg(unix)]
+#[test]
+fn rejects_symlink_escape_outside_workspace() {
+    use std::os::unix::fs::symlink;
+
+    let workspace = tempfile::tempdir().unwrap();
+    let outside = tempfile::tempdir().unwrap();
+
+    // A real target file living OUTSIDE the workspace.
+    let evil_target = outside.path().join("evil.md");
+    std::fs::write(&evil_target, "# Long-term Goals\n\n- [g1] exfiltrated\n").unwrap();
+
+    // MEMORY_GOALS.md inside the workspace is a symlink pointing at it.
+    let link = goals_path(workspace.path());
+    symlink(&evil_target, &link).unwrap();
+
+    // Both reads and writes must refuse the escaping link.
+    let load_err = load(workspace.path()).unwrap_err();
+    assert!(matches!(load_err, MemoryError::PathEscape(_)));
+
+    let mut doc = GoalsDoc::default();
+    doc.add("benign").unwrap();
+    let save_err = save(workspace.path(), &mut doc).unwrap_err();
+    assert!(matches!(save_err, MemoryError::PathEscape(_)));
+
+    // The escape target must be untouched.
+    let target_body = std::fs::read_to_string(&evil_target).unwrap();
+    assert!(target_body.contains("exfiltrated"));
+}
+
+#[test]
+fn save_overwrite_is_atomic_and_leaves_no_temp_litter() {
+    let tmp = tempfile::tempdir().unwrap();
+
+    // Write a multi-item doc, then overwrite it with a smaller one.
+    let mut doc = GoalsDoc::default();
+    doc.add("first goal").unwrap();
+    doc.add("second goal").unwrap();
+    save(tmp.path(), &mut doc).unwrap();
+
+    let mut smaller = GoalsDoc::default();
+    smaller.add("only goal now").unwrap();
+    save(tmp.path(), &mut smaller).unwrap();
+
+    // Destination holds the fully-replaced new content (old-or-new, never torn).
+    let reloaded = load(tmp.path()).unwrap();
+    assert_eq!(reloaded.items.len(), 1);
+    assert_eq!(reloaded.items[0].text, "only goal now");
+
+    // The atomic temp file must have been renamed away, not left behind.
+    let leftovers: Vec<_> = std::fs::read_dir(tmp.path())
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .filter(|name| name != GOALS_FILE)
+        .collect();
+    assert!(
+        leftovers.is_empty(),
+        "save must not leave temp files behind, found: {leftovers:?}"
+    );
+}

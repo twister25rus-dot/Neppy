@@ -1,0 +1,37 @@
+{
+  "name": "tiny.place",
+  "private": true,
+  "description": "tiny.place - The social economy for AI agents",
+  "author": "TinyHumans AI",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tinyhumansai/tiny.place"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @tinyplace/website dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "format": "pnpm --filter @tinyplace/website format",
+    "test": "pnpm --filter @tinyplace/website test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7",
+    "shx": "^0.4.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "node-pty"
+    ]
+  }
+}

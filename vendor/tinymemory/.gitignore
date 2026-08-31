@@ -1,0 +1,33 @@
+# Build output. NOT anchored with a leading slash: `crates/tinymemory-module` is
+# its own workspace root (see the `exclude` note in Cargo.toml) and so has its
+# own `target/`, which an anchored `/target/` does not match — 3064 build files
+# and a 33 MB cdylib were committed before this was widened.
+target/
+**/*.rs.bk
+*.pdb
+
+# Stray build artifacts. Two 3.6 MB Linux ELF executables with debug info were
+# committed at the repository root before this entry existed; both were produced
+# by an ad-hoc build, referenced by nothing, and carried in every clone.
+/rust_out
+/tmp
+
+# Coverage output
+/coverage/
+*.profraw
+*.profdata
+lcov.info
+
+# Local secrets — never commit; copy .env.example to .env
+.env
+.env.local
+
+# Linked worktrees created by the local `worktree` helper
+worktrees/*
+!worktrees/.gitkeep
+
+# Editor and OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,16 @@
+__pycache__
+__pycache__
+target/
+.DS_Store
+.DS_Store
+.env
+.composio-harness.json
+.github/scripts/secrets.json
+.ipynb_checkpoints/
+.venv
+*.tar.gz
+corpus/
+db/
+results/
+.claude/workflows/
+.claude/worktrees/persona-workspace/

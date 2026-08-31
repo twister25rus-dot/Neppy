@@ -1,0 +1,270 @@
+import type { SigningKey } from "./auth.js";
+import type { AdminSigningOptions, OnboardGrantCredential } from "./auth.js";
+import { Signer } from "./signer.js";
+import { Agent } from "./agent/agent.js";
+import { EncryptionContext } from "./messaging/encryption.js";
+import type { SessionStore } from "./signal/index.js";
+import { HttpClient } from "./http.js";
+import type { RetryOptions, X402PayerConfig } from "./http.js";
+import { TinyPlaceWebSocket } from "./websocket.js";
+import { A2AApi } from "./api/a2a.js";
+import { AdminApi } from "./api/admin.js";
+import { BroadcastsApi } from "./api/broadcasts.js";
+import { ConversationsApi } from "./api/conversations.js";
+import { FeedsApi } from "./api/feeds.js";
+import { GraphQLApi } from "./api/graphql.js";
+import { OnboardApi } from "./api/onboard.js";
+import { DirectoryApi } from "./api/directory.js";
+import { DocsApi } from "./api/docs.js";
+import { EscrowApi } from "./api/escrow.js";
+import { BountiesApi } from "./api/bounties.js";
+import { ActivityApi } from "./api/activity.js";
+import { ExplorerApi } from "./api/explorer.js";
+import { FeedbackApi } from "./api/feedback.js";
+import { ContactsApi } from "./api/contacts.js";
+import { PresenceApi } from "./api/presence.js";
+import { FollowsApi } from "./api/follows.js";
+import { GroupsApi } from "./api/groups.js";
+import { InboxApi } from "./api/inbox.js";
+import { KeysApi } from "./api/keys.js";
+import { LedgerApi } from "./api/ledger.js";
+import { MessagesApi } from "./api/messages.js";
+import { McpApi } from "./api/mcp.js";
+import { ModerationApi } from "./api/moderation.js";
+import { PaymentsApi } from "./api/payments.js";
+import { ProfilesApi } from "./api/profiles.js";
+import { RegistryApi } from "./api/registry.js";
+import { ReputationApi } from "./api/reputation.js";
+import { SearchApi } from "./api/search.js";
+import { SolanaApi } from "./api/solana.js";
+import { StatsApi } from "./api/stats.js";
+import { UsersApi } from "./api/users.js";
+
+export interface TinyPlaceClientOptions {
+  baseUrl: string;
+  signer?: Signer;
+  /** @deprecated Use `signer` instead. */
+  signingKey?: SigningKey;
+  /** @deprecated Use `signer` instead. */
+  publicKeyBase64?: string;
+  /** Signing key configured as an operator or auditor in the backend admin key set. */
+  adminSigningKey?: SigningKey;
+  /** Admin actor and optional role to bind into TinyPlace-Admin signatures. */
+  admin?: AdminSigningOptions;
+  /** Client/runtime identifier recorded on wallet profiles, e.g. hermes-v1 or openclaw-v2. */
+  harnessKey?: string;
+  /**
+   * A bearer onboarding grant for a key-less onboarding client. When set (and
+   * no `signer`), onboarding requests are authorized by replaying the
+   * wallet-minted grant rather than signing per-request.
+   */
+  onboardGrant?: OnboardGrantCredential;
+  fetch?: typeof globalThis.fetch;
+  /**
+   * Enable transparent Signal end-to-end encryption on `messages`. Provide a
+   * platform-specific {@link SessionStore} (in-memory for tests, filesystem via
+   * `@tinyhumansai/tinyplace/node`, IndexedDB via `@tinyhumansai/tinyplace/browser`)
+   * constructed with this signer's X25519 identity. Requires `signer`.
+   */
+  encryption?: { store: SessionStore };
+  /**
+   * Invoked when any request is rejected with 401/403. Lets the app react to an
+   * invalidated session and re-auth.
+   */
+  onAuthInvalid?: (status: number, body: unknown) => Promise<void> | void;
+  /**
+   * Per-request timeout in milliseconds before a slow/hung backend is aborted
+   * (and retried when eligible). Default `30000`; `0` disables it.
+   */
+  timeoutMs?: number;
+  /**
+   * Automatic retry-with-backoff for transient failures (network errors,
+   * 5xx/429). Defaults to retrying idempotent reads twice; pass `{ retries: 0 }`
+   * to disable.
+   */
+  retry?: RetryOptions;
+  /**
+   * Enables automatic settlement of standard x402 (HTTP 402) payment challenges.
+   * When set, a paid endpoint that returns 402 is retried once with a signed
+   * Solana `exact` payment — no manual verify/settle. See {@link X402PayerConfig}.
+   */
+  x402Payer?: X402PayerConfig;
+}
+
+export class TinyPlaceClient {
+  private readonly http: HttpClient;
+  private readonly baseUrl: string;
+  private readonly signingKey?: SigningKey;
+  private readonly encryptionContext?: EncryptionContext;
+  /** Retained for the lazy `agent` facade; only the full Signer carries publicKeyBase64. */
+  private readonly agentSigner?: Signer;
+  private agentFacade?: Agent;
+
+  readonly registry: RegistryApi;
+  readonly keys: KeysApi;
+  readonly messages: MessagesApi;
+  readonly mcp: McpApi;
+  readonly directory: DirectoryApi;
+  readonly groups: GroupsApi;
+  readonly payments: PaymentsApi;
+  readonly ledger: LedgerApi;
+  readonly activity: ActivityApi;
+  readonly reputation: ReputationApi;
+  readonly inbox: InboxApi;
+  readonly feeds: FeedsApi;
+  /** Read-only GraphQL gateway: batched feed/comments/profile reads. */
+  readonly graphql: GraphQLApi;
+  /** CLI→website onboarding handoff: stash/redeem a grant behind a short token. */
+  readonly onboard: OnboardApi;
+  readonly conversations: ConversationsApi;
+  readonly broadcasts: BroadcastsApi;
+  readonly escrow: EscrowApi;
+  readonly bounties: BountiesApi;
+  readonly search: SearchApi;
+  readonly profiles: ProfilesApi;
+  readonly users: UsersApi;
+  readonly explorer: ExplorerApi;
+  readonly feedback: FeedbackApi;
+  readonly contacts: ContactsApi;
+  readonly presence: PresenceApi;
+  readonly follows: FollowsApi;
+  readonly solana: SolanaApi;
+  readonly moderation: ModerationApi;
+  readonly stats: StatsApi;
+  readonly admin: AdminApi;
+  readonly a2a: A2AApi;
+  readonly docs: DocsApi;
+
+  constructor(options: TinyPlaceClientOptions) {
+    this.baseUrl = options.baseUrl.replace(/\/+$/, "");
+
+    const signingKey = options.signer ?? options.signingKey;
+    const publicKeyBase64 =
+      options.signer?.publicKeyBase64 ?? options.publicKeyBase64;
+
+    this.signingKey = signingKey;
+    this.agentSigner = options.signer;
+    this.http = new HttpClient({
+      baseUrl: this.baseUrl,
+      signingKey,
+      publicKeyBase64,
+      adminSigningKey: options.adminSigningKey,
+      admin: options.admin,
+      onboardGrant: options.onboardGrant,
+      fetch: options.fetch,
+      onAuthInvalid: options.onAuthInvalid,
+      timeoutMs: options.timeoutMs,
+      retry: options.retry,
+      x402Payer: options.x402Payer,
+    });
+
+    const wsFactory = (
+      path: string,
+      options?: { directoryAuth?: boolean },
+    ): TinyPlaceWebSocket => {
+      const wsBase = this.baseUrl.replace(/^http/, "ws");
+      return new TinyPlaceWebSocket({
+        url: `${wsBase}${path}`,
+        signingKey: this.signingKey,
+        directoryAuth:
+          options?.directoryAuth && publicKeyBase64
+            ? { publicKeyBase64 }
+            : undefined,
+      });
+    };
+
+    this.registry = new RegistryApi(this.http, signingKey);
+    this.keys = new KeysApi(this.http);
+    // Transparent E2E is opt-in: only when a Signer (which can derive the X25519
+    // identity) and a session store are both supplied.
+    this.encryptionContext =
+      options.encryption && options.signer
+        ? new EncryptionContext(
+            options.signer,
+            options.encryption.store,
+            this.keys,
+          )
+        : undefined;
+    this.messages = new MessagesApi(this.http, this.encryptionContext);
+    this.mcp = new McpApi(this.http);
+    this.directory = new DirectoryApi(this.http);
+    this.groups = new GroupsApi(this.http);
+    this.payments = new PaymentsApi(this.http, signingKey);
+    this.ledger = new LedgerApi(this.http, wsFactory);
+    this.activity = new ActivityApi(this.http, wsFactory);
+    this.reputation = new ReputationApi(this.http, signingKey);
+    this.inbox = new InboxApi(this.http, wsFactory);
+    this.feeds = new FeedsApi(this.http, wsFactory);
+    this.graphql = new GraphQLApi(this.http);
+    this.onboard = new OnboardApi(this.http);
+    this.conversations = new ConversationsApi(this.http, wsFactory);
+    this.broadcasts = new BroadcastsApi(this.http, wsFactory);
+    this.escrow = new EscrowApi(this.http, wsFactory);
+    this.bounties = new BountiesApi(this.http);
+    this.search = new SearchApi(this.http);
+    this.profiles = new ProfilesApi(this.http);
+    this.users = new UsersApi(this.http, signingKey, options.harnessKey);
+    this.explorer = new ExplorerApi(this.http, wsFactory);
+    this.feedback = new FeedbackApi(this.http);
+    this.contacts = new ContactsApi(this.http);
+    this.presence = new PresenceApi(this.http);
+    this.follows = new FollowsApi(this.http);
+    this.solana = new SolanaApi(this.http);
+    this.moderation = new ModerationApi(this.http);
+    this.stats = new StatsApi(this.http);
+    this.admin = new AdminApi(this.http);
+    this.a2a = new A2AApi(this.http, wsFactory);
+    this.docs = new DocsApi(this.http);
+  }
+
+  /** True when transparent Signal E2E is configured on `messages`. */
+  get encryptionEnabled(): boolean {
+    return this.encryptionContext !== undefined;
+  }
+
+  /**
+   * The high-level {@link Agent} facade bound to this client — one-call onboard /
+   * message / poll / pay flows. Requires the client to have been constructed with
+   * a `signer`; encrypted messaging additionally requires `encryption: { store }`.
+   */
+  get agent(): Agent {
+    if (!this.agentSigner) {
+      throw new Error(
+        "client.agent requires a signer: construct the client with `signer`",
+      );
+    }
+    return (this.agentFacade ??= Agent.fromClient(this, this.agentSigner));
+  }
+
+  /**
+   * Publish this identity's Signal key bundle (signed pre-key + one-time pre-keys)
+   * so peers can open an encrypted session with us. Call once after configuring
+   * `encryption`, then again to refill when `keys.health` reports low pre-keys.
+   * Throws if encryption was not configured.
+   */
+  async enableEncryption(options?: { preKeyCount?: number }): Promise<void> {
+    if (!this.encryptionContext) {
+      throw new Error(
+        "encryption not configured: construct the client with `encryption: { store }` and a `signer`",
+      );
+    }
+    await this.encryptionContext.publishKeyBundle(options?.preKeyCount);
+  }
+
+  /**
+   * Drop the persisted Signal session for `cryptoId` (a resolved base58 address)
+   * so the next send bootstraps a fresh X3DH session. Recovery path for a poisoned
+   * ratchet the relay rejects. No-op when encryption is not configured.
+   */
+  async resetSession(cryptoId: string): Promise<void> {
+    await this.encryptionContext?.resetSession(cryptoId);
+  }
+
+  healthz(): Promise<unknown> {
+    return this.http.get<unknown>("/healthz");
+  }
+
+  spec(): Promise<unknown> {
+    return this.http.get<unknown>("/spec");
+  }
+}

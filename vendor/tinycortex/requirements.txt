@@ -1,0 +1,49 @@
+# Requirements for the hosted benchmark harness (RAGAS/TemporalBench/etc.),
+# which is not included in this repository. The in-repo benchmark is the Rust
+# harness at benchmarks/effectiveness (no Python needed).
+# Install: pip install -r requirements.txt
+
+# --- Core (required by all benchmarks) ---
+python-dotenv>=1.0.1
+tqdm>=4.60.0
+numpy>=1.24.0
+xxhash>=3.5.0
+openai>=1.52.1
+# Pin gensim (transitive): older versions fail on Python 3.13 + modern numpy
+gensim>=4.3.0
+# Pin scipy so pip uses pre-built wheels (avoids building from source + OpenBLAS on macOS)
+scipy>=1.14.0
+
+# --- This project (tinycortex) ---
+# Install from repo root:  pip install -e .
+
+# --- fast_graphrag (separate package, used by some external framework benchmarks) ---
+fast-graphrag
+
+# --- External RAG frameworks ---
+lightrag-hku>=1.0.0
+nano-graphrag>=0.0.8
+graphrag>=1.0.0
+cognee>=0.1.0
+
+protego>=0.1
+playwright>=1.9.0
+
+# --- GraphRAG config ---
+pyyaml>=6.0
+
+# --- RAGAS quality evaluation (optional) ---
+ragas>=0.1.0
+datasets>=2.14.0
+
+# --- Google Gemini ---
+google-generativeai>=0.8.0
+
+# --- Report formatting (optional) ---
+tabulate>=0.9.0
+rapidfuzz
+
+# --- Jupyter notebooks ---
+jupyter>=1.0.0
+nest_asyncio>=1.5.0
+ipywidgets>=8.0.0

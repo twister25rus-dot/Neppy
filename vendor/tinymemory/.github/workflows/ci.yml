@@ -1,0 +1,453 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Lint levels live in `[lints]` in Cargo.toml so local and CI runs agree;
+  # don't add a blanket RUSTFLAGS here.
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # This job executes repository code (cargo build/test); don't persist
+          # the token in git config.
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build
+        run: cargo build --all-targets --all-features
+
+      - name: Test
+        run: cargo test --all-features
+
+      - name: Test default features
+        run: cargo test
+
+      # The adapter's `memory-git` feature gates the diff family, and the test
+      # that the family is *withheld* without it is `#[cfg(not(feature =
+      # "memory-git"))]`. Both the `--all-features` and default runs above
+      # compile that test out, so without this step it would be checked by
+      # nothing — a feature-gated test whose default fate is to be built by one
+      # job and executed by none.
+      #
+      # This is also the configuration that keeps the promise the feature
+      # exists for: no `git2` / `libgit2-sys` in the graph.
+      # `crates/tinymemory-api/Cargo.toml` spells out this command in a comment and asks
+      # that the contract crate never link a storage engine, a native library,
+      # an HTTP client, or an async runtime. It was left as a comment, so
+      # nothing checked it — and a forbidden dependency arrives transitively,
+      # through a feature someone enabled two crates away, which is precisely
+      # the way nobody notices.
+      #
+      # The FORWARD form is required. `cargo tree -i <crate> -p tinymemory-api`
+      # discards the `-p` scope, prints the whole-workspace inverse tree, and
+      # exits 0 looking clean even when this crate is the one at fault. The
+      # manifest says so; this runs what it says.
+      # `cargo build --all-targets` only *compiles* an example. `AGENTS.md`
+      # promises `cargo run --example basic` works, and a compiled example can
+      # still panic on its first line — which is the state the repository was in
+      # before issue #18 §E7, when the command was documented and there was no
+      # `examples/` directory at all.
+      # §D5. Prints the dependency count of every build configuration and fails
+      # when the minimal one grows past its ceiling. The property this protects
+      # — that asking for no features gets you the contract and nothing that
+      # links a storage engine or an HTTP stack — is invisible in a diff,
+      # because the dependency arrives transitively through a feature enabled
+      # two crates away.
+      - name: Dependency budget
+        run: ./scripts/ci/dependency-budget.sh
+
+      - name: Run the bundled example
+        run: cargo run -p tinymemory --example basic
+
+      - name: Assert engine containment (#18 §C1)
+        run: ./scripts/ci/engine-containment.sh
+
+      - name: Assert the contract crate stays free of heavy dependencies
+        run: |
+          forbidden="$(cargo tree -p tinymemory-api -e normal,build --prefix none \
+            | grep -Ei 'rusqlite|libsqlite|git2|reqwest|regex|tokio' || true)"
+          if [ -n "$forbidden" ]; then
+            echo "tinymemory-api pulled in a dependency its manifest forbids:" >&2
+            echo "$forbidden" >&2
+            echo >&2
+            echo "The contract is what hosts compile against. It must stay free of" >&2
+            echo "storage engines, native libraries, HTTP clients and async runtimes." >&2
+            exit 1
+          fi
+
+      # The minimal build has to stay genuinely usable, not merely compile:
+      # a host that wants the ports wired and nothing retained must be able to
+      # bind the null driver without pulling an engine in behind it.
+      - name: Build and bind the minimal configuration
+        run: |
+          cargo build -p tinymemory --no-default-features
+          cargo test -p tinymemory --no-default-features --test null_provider
+
+      - name: Lint and test the adapter without its optional engine features
+        run: |
+          cargo clippy -p tinymemory-tinycortex --all-targets --no-default-features -- -D warnings
+          cargo test -p tinymemory-tinycortex --no-default-features
+
+      - name: Assert the default adapter build links no native git
+        run: |
+          linked="$(cargo tree -p tinymemory-tinycortex --no-default-features \
+            -e normal --prefix none | grep -cE '^(git2|libgit2-sys)' || true)"
+          if [ "$linked" -ne 0 ]; then
+            echo "the default adapter build linked $linked native-git crate(s);" >&2
+            echo "the memory-git feature exists to keep them out" >&2
+            exit 1
+          fi
+
+  # Feature-unification and coverage. Their own job: both are slower than the
+  # main lane and independent of it, so a failure in one should not mask the
+  # other, and neither should delay the fast feedback the main job gives.
+  feature-matrix:
+    name: Feature powerset and coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        with:
+          components: llvm-tools-preview
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      - uses: taiki-e/install-action@5b4d68e2e660441203ab128a23676f1e4faf1532 # v2
+        with:
+          tool: cargo-hack,cargo-llvm-cov
+
+      # §E2's second half. Cargo features are additive: enabling one for crate A
+      # enables it for every consumer in the graph, so a pair that nobody builds
+      # deliberately can still be built by someone else's dependency. `--depth 2`
+      # covers every pair without the combinatorial blow-up of the full set.
+      #
+      # Check-only: this is about whether the combinations *compile*, and
+      # whether they link and run is the `feature-configs` job's business.
+      #
+      # This is also where §E2's `contacts` row is covered, without a step of
+      # its own: `contacts` is a feature of `tinymemory-core`, and the powerset
+      # enumerates it as a subset of size one on this same runner. What it does
+      # not cover is *executing* it, which needs `macos-latest` — the feature's
+      # only behaviour is a CNContactStore reader whose dependencies sit behind
+      # a `cfg(target_os = "macos")` table, so on ubuntu there is nothing to run
+      # but the empty stub. That runner is deliberately not spent.
+      - name: Feature powerset compiles
+        run: cargo hack --feature-powerset --depth 2 --workspace check --all-targets
+
+      # §E8. Enforce the repository's 80% floor over production sources only.
+      # Test helpers and vendored code can make the aggregate look healthy
+      # without exercising the libraries a release actually ships.
+      - name: Enforce production-source coverage
+        run: |
+          set -euo pipefail
+          cargo llvm-cov --all-features --workspace \
+            --ignore-filename-regex '(^|/)(tests|vendor)/|(^|/)(test|tests|test_helpers|test_support|test_seams)\.rs$|(_test|_tests|_test_support)\.rs$|/crates/tinymemory-core/src/(engine/parity|tree/retrieval/benchmarks)\.rs$' \
+            --fail-under-lines 80 --summary-only \
+            | tee "$GITHUB_STEP_SUMMARY"
+          cargo llvm-cov report \
+            --ignore-filename-regex '(^|/)(tests|vendor)/|(^|/)(test|tests|test_helpers|test_support|test_seams)\.rs$|(_test|_tests|_test_support)\.rs$|/crates/tinymemory-core/src/(engine/parity|tree/retrieval/benchmarks)\.rs$' \
+            --json --output-path target/production-coverage.json
+          test_decl_line="$(grep -n '#\[cfg(test)\]' \
+            crates/tinymemory-api/src/host/local_ai.rs | tail -1 | cut -d: -f1)"
+          active_line="$(grep -n 'pub fn is_active' \
+            crates/tinymemory-api/src/host/local_ai.rs | cut -d: -f1)"
+          jq -e --argjson test_decl_line "$test_decl_line" \
+            --argjson active_line "$active_line" '
+            .data as $data
+            | [$data[].files[]
+                | select(.filename | endswith("/crates/tinymemory-api/src/host/local_ai.rs"))]
+              as $local_ai
+            | ($local_ai | length == 1)
+              and ([$local_ai[].segments[]
+                | select(.[0] >= $test_decl_line and .[3] == true)] | length == 0)
+              and ([$local_ai[].segments[]
+                | select(.[0] == $active_line and .[2] > 0 and .[3] == true)] | length > 0)
+              and ([$data[].files[]
+                | select(.filename | endswith("/local_ai_tests.rs"))] | length == 0)
+          ' target/production-coverage.json
+          inline_test_code="$(
+            grep -R -l -E '^[[:space:]]*#\[cfg\((test|any\(test,)' crates \
+              --include='*.rs' --exclude='test.rs' --exclude='tests.rs' \
+              --exclude='*_test.rs' --exclude='*_tests.rs' \
+              --exclude='*_test_support.rs' --exclude='test_support.rs' \
+              --exclude='test_helpers.rs' --exclude='test_seams.rs' \
+            | xargs -r awk '
+              /^[[:space:]]*#\[cfg\((test|any\(test,)/ { cfgline=FNR; pending=1; next }
+              pending && (/^[[:space:]]*$/ || /^[[:space:]]*#/ || /^[[:space:]]*\/\//) { next }
+              pending {
+                if ($0 !~ /^[[:space:]]*(pub\([^)]*\)[[:space:]]+)?(pub[[:space:]]+)?(mod|use)[[:space:]]/)
+                  print FILENAME ":" cfgline ":" $0
+                pending=0
+              }
+            '
+          )"
+          if [[ -n "$inline_test_code" ]]; then
+            printf '%s\n' "$inline_test_code" >&2
+            echo 'inline test-only executable code must live in a filtered test file' >&2
+            exit 1
+          fi
+
+  # §E2's first half: build **and test** each engine configuration on its own.
+  #
+  # What this adds over the powerset pass, precisely: `cargo check` never
+  # links, and it never runs a test binary. A feature set that type-checks can
+  # still fail to link — the root `Cargo.toml` documents one such hazard, where
+  # a second crate claiming `links = "git2"` becomes a hard cargo error — and
+  # that failure is invisible to a check. So these rows are worth their minutes
+  # for linking and running, not for behaviour that varies by feature: the
+  # facade's own suite is the same set of tests in every configuration, because
+  # `DriverRegistry` admission is a static policy table rather than a function
+  # of which adapters were compiled in.
+  #
+  # `--features sync-composio` names a feature that exists nowhere in the
+  # workspace: the Composio sync is unconditional in
+  # `tinymemory-core`, so there is nothing to select and nothing to isolate.
+  # Recorded here rather than quietly dropped, because a missing row in a
+  # matrix reads as covered.
+  feature-configs:
+    name: Test ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Every configuration is independent, and knowing that three of them
+      # broke is worth more than stopping at the first.
+      fail-fast: false
+      matrix:
+        include:
+          - name: no default features
+            features: --no-default-features
+          - name: tinycortex
+            features: --features tinycortex
+          - name: tinycortex and memory-git
+            features: --features tinycortex,memory-git
+          - name: memory-git implication
+            features: --no-default-features --features memory-git
+          - name: all engines aggregate
+            features: --no-default-features --features engines
+          - name: sources network implication
+            features: --no-default-features --features sources-network
+          - name: documents network implication
+            features: --no-default-features --features documents-network
+          - name: contacts implication
+            features: --no-default-features --features contacts
+          - name: full aggregate
+            features: --no-default-features --features full
+          - name: mem0
+            features: --features mem0
+          - name: supermemory
+            features: --features supermemory
+          - name: cognee
+            features: --features cognee
+          - name: all features
+            features: --all-features
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      # Scoped to the facade: these are *its* features, and it is what a host
+      # compiles against. An engine's own suite runs in the main job.
+      - name: Test
+        run: cargo test -p tinymemory ${{ matrix.features }}
+
+  # A retaining HTTP double checks adapter translation cheaply; this separate
+  # job proves the routes and wire payloads against the pinned AgentMemory and
+  # iii containers the integration guide tells operators to run.
+  agentmemory-e2e:
+    name: AgentMemory E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      - name: Run AgentMemory conformance
+        run: ./scripts/ci/agentmemory-e2e.sh
+
+  # The module crate is its own workspace root (see the `exclude` note in the
+  # root Cargo.toml), so NONE of the steps above touch it: `--all-targets`,
+  # `--all-features` and `--workspace` all stop at the workspace boundary and
+  # exit 0 without having compiled a line of it.
+  #
+  # That silence is the hazard. A cdylib that fails to build is a release that
+  # cannot be cut, and it would be discovered at release time rather than on the
+  # PR that broke it. So it gets its own job with the same gates.
+  module:
+    name: Module (own workspace)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        with:
+          components: rustfmt, clippy, llvm-tools-preview
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      - uses: taiki-e/install-action@5b4d68e2e660441203ab128a23676f1e4faf1532 # v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path crates/tinymemory-module/Cargo.toml --all -- --check
+
+      - name: Clippy
+        run: >-
+          cargo clippy --manifest-path crates/tinymemory-module/Cargo.toml
+          --all-targets -- -D warnings
+
+      # `--locked`, matching how the release builds this crate. Without it, a
+      # stale `crates/tinymemory-module/Cargo.lock` — which is a *separate*
+      # lockfile from the root's, and easy to forget when the root version moves
+      # — passes here and then fails all eleven release bundle jobs, after the
+      # tag has already been pushed. That happened once; this is the guard.
+      - name: Build the cdylib
+        run: cargo build --locked --manifest-path crates/tinymemory-module/Cargo.toml --release
+
+      - name: Unit tests
+        run: cargo test --manifest-path crates/tinymemory-module/Cargo.toml --lib
+
+      # The module is excluded from the root workspace, so the root coverage
+      # gate cannot see it. Hold its production code to the same floor here.
+      - name: Enforce module production-source coverage
+        run: |
+          set -euo pipefail
+          cargo llvm-cov --manifest-path crates/tinymemory-module/Cargo.toml \
+            --workspace --all-features \
+            --ignore-filename-regex '(^|/)(tests|vendor)/|(^|/)(test|tests|test_helpers|test_support|test_seams)\.rs$|(_test|_tests|_test_support)\.rs$|/crates/tinymemory-core/src/(engine/parity|tree/retrieval/benchmarks)\.rs$' \
+            --fail-under-lines 80 --summary-only \
+            | tee "$GITHUB_STEP_SUMMARY"
+
+      # The loader E2E drives a real dlopen'ed module, and tinybus binds its
+      # broker tasks to the runtime that created them. The module is loaded once
+      # per process and never unloaded, so two such tests in one process leave the
+      # second talking to a dead broker and it HANGS rather than failing. Hence
+      # one process per test, with a timeout so a hang is a red build and not a
+      # six-hour job.
+      - name: Loader E2E (one process per test)
+        env:
+          TINYMEMORY_TEST_MODULE: >-
+            ${{ github.workspace }}/crates/tinymemory-module/target/release/libtinymemory_module.so
+        run: |
+          set -euo pipefail
+          tests=$(
+            cargo test --manifest-path crates/tinymemory-module/Cargo.toml \
+              --test module_e2e -- --ignored --list \
+              | sed -n 's/^\(.*\): test$/\1/p'
+          )
+          if [ -z "$tests" ]; then
+            echo "No ignored E2E tests were found — the list step is broken." >&2
+            exit 1
+          fi
+          for test in $tests; do
+            echo "::group::$test"
+            timeout 300 cargo test --manifest-path crates/tinymemory-module/Cargo.toml \
+              --test module_e2e -- --ignored --exact "$test"
+            echo "::endgroup::"
+          done
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      - name: Build documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --no-deps --all-features
+
+  msrv:
+    name: Minimum supported Rust version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Read rust-version from Cargo.toml
+        id: msrv
+        run: |
+          set -euo pipefail
+          msrv="$(cargo metadata --format-version 1 --no-deps \
+            | jq -r '.packages[] | select(.name == "tinymemory") | .rust_version')"
+          if [[ -z "$msrv" || "$msrv" == "null" ]]; then
+            echo "package.rust-version is not set in Cargo.toml" >&2
+            exit 1
+          fi
+          echo "version=$msrv" >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      - name: Build with the declared MSRV
+        run: cargo build --all-targets --all-features
+
+  supply-chain:
+    name: Supply chain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Check advisories, licenses, bans, and sources
+        uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2
+        with:
+          command: check all

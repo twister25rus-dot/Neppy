@@ -1,0 +1,34 @@
+[package]
+name = "tinybox-ssh"
+description = "A tinybox host that reaches another machine over SSH."
+documentation = "https://docs.rs/tinybox-ssh"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+publish = false
+
+[dependencies]
+tinybox-core.workspace = true
+async-trait.workspace = true
+# A port forward is a process that outlives the call creating it, so unlike
+# every other operation here it cannot be handed to the inner host. `net` and
+# `time` are what waiting for the tunnel's local listener needs without
+# blocking a runtime worker for the whole timeout.
+tokio = { workspace = true, features = ["net", "time"] }
+
+[dev-dependencies]
+# `sync` for the OnceCell that shares one test server across the suite.
+tokio = { workspace = true, features = ["sync"] }
+# The live suite reaches a containerized sshd through the real local host.
+tinybox-host.workspace = true
+tinybox-docker.workspace = true
+tempfile = "3"
+tinybox-sync.workspace = true
+
+[lints]
+workspace = true

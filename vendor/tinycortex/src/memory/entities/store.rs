@@ -1,0 +1,219 @@
+//! Disk-backed entity store.
+//!
+//! Read/write of entity markdown files under
+//! `<content_root>/entities/<kind>/<canonical_id>.md`. Upserts rewrite only the
+//! YAML front matter and preserve any user-edited notes body, so the vault can
+//! be hand-edited (in Obsidian, an editor, or by another tool) without losing
+//! those edits on the next programmatic write.
+//!
+//! ## Atomicity
+//!
+//! Each write goes through the private `write_entity_atomic` helper: content is written to a
+//! sibling `.entity-<uuid>.tmp` file, `fsync`'d, then moved into place with
+//! `rename` (atomic on the same filesystem). A reader never observes a
+//! partially-written file, and a crash mid-write leaves the previous file (or
+//! no file) intact plus an orphaned `.tmp` file that is never automatically
+//! swept.
+//!
+//! ## Concurrency
+//!
+//! There is no locking. [`put_entity`] performs a read-modify-write: it reads
+//! the existing notes body, then writes a new file combining those notes with
+//! the fresh front matter. Two concurrent `put_entity` calls for the same
+//! canonical id race on that read — the loser's rename still lands atomically,
+//! but whichever caller read first can clobber the other's front-matter
+//! update (notes are preserved either way since both read the same
+//! pre-write body). Callers that need strict single-writer semantics must
+//! serialize `put_entity` externally (e.g. per-workspace mutex).
+
+use std::fs;
+use std::io::Write;
+use std::path::PathBuf;
+
+use anyhow::{anyhow, Context, Result};
+use chrono::Utc;
+use uuid::Uuid;
+
+use crate::memory::config::MemoryConfig;
+use crate::memory::entities::canonical::slugify_id;
+use crate::memory::entities::frontmatter::{compose, notes_body, parse};
+use crate::memory::entities::types::{Entity, EntityKind};
+
+/// Directory under the content root that holds entity files.
+const ENTITIES_DIR: &str = "entities";
+
+/// Resolve the content root from the workspace.
+///
+/// Mirrors OpenHuman's `memory_tree` content layout: markdown content lives
+/// under `<workspace>/memory_tree/content`. The entity registry is rooted at
+/// `<content_root>/entities`.
+fn content_root(config: &MemoryConfig) -> PathBuf {
+    config.workspace.join("memory_tree").join("content")
+}
+
+/// Directory holding every file of one kind: `<content_root>/entities/<kind>`.
+fn kind_dir(config: &MemoryConfig, kind: EntityKind) -> PathBuf {
+    content_root(config).join(ENTITIES_DIR).join(kind.as_str())
+}
+
+/// Full path to one entity file.
+fn entity_path(config: &MemoryConfig, kind: EntityKind, canonical_id: &str) -> PathBuf {
+    kind_dir(config, kind).join(format!("{}.md", slugify_id(canonical_id)))
+}
+
+/// Upsert an entity.
+///
+/// Preserves any user-edited notes body that already exists on disk; only the
+/// YAML front matter is rewritten. Returns the stored entity with `updated_at`
+/// refreshed to the write time.
+pub fn put_entity(config: &MemoryConfig, mut entity: Entity) -> Result<Entity> {
+    let dir = kind_dir(config, entity.kind);
+    fs::create_dir_all(&dir).with_context(|| format!("failed to mkdir -p {}", dir.display()))?;
+    let path = entity_path(config, entity.kind, &entity.id);
+
+    // Preserve any free-form notes the user typed into the file. A non-empty
+    // file whose front matter we cannot recognise is refused rather than
+    // overwritten: `notes_body` returning `None` means the parser did not
+    // understand the file, and blindly rewriting it would destroy whatever the
+    // user had hand-typed there.
+    let existing_notes = match fs::read_to_string(&path) {
+        Ok(text) if text.is_empty() => String::new(),
+        Ok(text) => notes_body(&text).ok_or_else(|| {
+            anyhow!(
+                "refusing to overwrite {}: file is non-empty but has no \
+                 recognisable entity front matter; resolve it manually to \
+                 avoid destroying its contents",
+                path.display()
+            )
+        })?,
+        Err(_) => String::new(),
+    };
+
+    entity.updated_at = Utc::now();
+    let bytes = compose(&entity, &existing_notes).into_bytes();
+    write_entity_atomic(&path, &bytes)?;
+    Ok(entity)
+}
+
+/// Write `bytes` to `path` without ever exposing a partially-written file.
+///
+/// Writes to a `.entity-<uuid>.tmp` sibling in the same directory, `fsync`s it,
+/// then `rename`s it over `path` — atomic on POSIX filesystems (and on
+/// Windows, where `rename` replaces an existing destination). On any failure
+/// before the rename completes, the temp file is best-effort removed; on
+/// success the temp file no longer exists. `path`'s parent directory must
+/// already exist (callers create it via `fs::create_dir_all` beforehand).
+///
+/// Idempotent from the caller's point of view: calling this twice with the
+/// same `bytes` leaves the same file on disk. Not safe to call concurrently
+/// for the same `path` from multiple threads/processes without external
+/// serialization — see the module-level concurrency note.
+fn write_entity_atomic(path: &PathBuf, bytes: &[u8]) -> Result<()> {
+    let parent = path
+        .parent()
+        .with_context(|| format!("entity path has no parent: {}", path.display()))?;
+    let tmp_path = parent.join(format!(".entity-{}.tmp", Uuid::new_v4()));
+
+    let write_result = (|| -> Result<()> {
+        {
+            let mut file = fs::File::create(&tmp_path)
+                .with_context(|| format!("failed to create {}", tmp_path.display()))?;
+            file.write_all(bytes)
+                .with_context(|| format!("failed to write {}", tmp_path.display()))?;
+            file.sync_all()
+                .with_context(|| format!("failed to sync {}", tmp_path.display()))?;
+        }
+        fs::rename(&tmp_path, path).with_context(|| {
+            format!(
+                "failed to atomically replace {} with {}",
+                path.display(),
+                tmp_path.display()
+            )
+        })?;
+        Ok(())
+    })();
+
+    if write_result.is_err() {
+        let _ = fs::remove_file(&tmp_path);
+    }
+    write_result
+}
+
+/// Read an entity by canonical id. Returns `Ok(None)` when the file is absent.
+pub fn get_entity(
+    config: &MemoryConfig,
+    kind: EntityKind,
+    canonical_id: &str,
+) -> Result<Option<Entity>> {
+    let path = entity_path(config, kind, canonical_id);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let text =
+        fs::read_to_string(&path).with_context(|| format!("failed to read {}", path.display()))?;
+    Ok(parse(&text))
+}
+
+/// List every stored entity of a given kind.
+///
+/// Order is filesystem-dependent — callers that need a sort impose their own.
+pub fn list_entities(config: &MemoryConfig, kind: EntityKind) -> Result<Vec<Entity>> {
+    let dir = kind_dir(config, kind);
+    if !dir.exists() {
+        return Ok(Vec::new());
+    }
+    let mut out = Vec::new();
+    for entry in
+        fs::read_dir(&dir).with_context(|| format!("failed to read_dir {}", dir.display()))?
+    {
+        let entry = entry?;
+        let name = entry.file_name();
+        let s = name.to_string_lossy();
+        if !s.ends_with(".md") {
+            continue;
+        }
+        let text = fs::read_to_string(entry.path())
+            .with_context(|| format!("failed to read {}", entry.path().display()))?;
+        if let Some(e) = parse(&text) {
+            out.push(e);
+        }
+    }
+    Ok(out)
+}
+
+/// Find an entity of `kind` whose `aliases`, `emails`, `handles[*].value`, or
+/// `display_name` matches `needle` (case-insensitive).
+///
+/// Returns the first match in walk order, or `None`. A linear scan — for a
+/// single-user workspace with thousands (not millions) of entities this is
+/// fine and avoids maintaining a separate index.
+pub fn lookup_alias(
+    config: &MemoryConfig,
+    kind: EntityKind,
+    needle: &str,
+) -> Result<Option<Entity>> {
+    let lower = needle.to_lowercase();
+    for e in list_entities(config, kind)? {
+        if e.aliases.iter().any(|a| a.to_lowercase() == lower) {
+            return Ok(Some(e));
+        }
+        if e.emails.iter().any(|m| m.to_lowercase() == lower) {
+            return Ok(Some(e));
+        }
+        if e.handles.iter().any(|h| h.value.to_lowercase() == lower) {
+            return Ok(Some(e));
+        }
+        if e.display_name
+            .as_deref()
+            .map(|n| n.to_lowercase() == lower)
+            .unwrap_or(false)
+        {
+            return Ok(Some(e));
+        }
+    }
+    Ok(None)
+}
+
+#[cfg(test)]
+#[path = "store_tests.rs"]
+mod tests;

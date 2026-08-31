@@ -1,0 +1,27 @@
+[package]
+name = "tinybox-core"
+description = "Core model, provider traits, and policy for the tinybox workspace runtime."
+documentation = "https://docs.rs/tinybox-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+publish = false
+
+[dependencies]
+thiserror.workspace = true
+async-trait.workspace = true
+# A `BoxSpec` is inert data that has to survive between CLI invocations and
+# inside snapshot manifests, so the model types are serializable. TinyBus
+# already links serde, so this costs the module nothing.
+serde.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,272 @@
+//! Memory-tree summariser: fold N inputs into one parent summary.
+//!
+//! OpenHuman's `memory_tree::summarise` made a real chat-provider call. Here
+//! the LLM is abstracted behind the [`Summariser`] trait so the engine never
+//! depends on a network backend. The default [`ConcatSummariser`] is fully
+//! deterministic (concatenate-with-provenance + truncate-to-budget), which is
+//! also the [`fallback_summary`] a host wires its own LLM-backed [`Summariser`]
+//! over and falls back to when the model errors or returns blank output.
+
+use anyhow::Result;
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+
+use crate::memory::chunks::approx_token_count;
+use crate::memory::tree::store::TreeKind;
+
+/// One contribution being folded — a raw leaf at L0→L1, or a lower-level
+/// summary at L_n→L_{n+1}.
+#[derive(Clone, Debug)]
+pub struct SummaryInput {
+    /// Machine-readable id of the contributing leaf or lower-level summary.
+    pub id: String,
+    /// Raw text being folded into the parent summary.
+    pub content: String,
+    /// Approximate token count of [`content`](Self::content).
+    pub token_count: u32,
+    /// Canonical entity ids attached to this input.
+    pub entities: Vec<String>,
+    /// Topic labels attached to this input.
+    pub topics: Vec<String>,
+    /// Start of the time window this input covers (inclusive).
+    pub time_range_start: DateTime<Utc>,
+    /// End of the time window this input covers (inclusive).
+    pub time_range_end: DateTime<Utc>,
+    /// Importance weight; higher-scoring inputs are folded first and are least
+    /// likely to be dropped under budget pressure.
+    pub score: f32,
+}
+
+/// Per-seal context — identifies which tree/level is being sealed.
+#[derive(Clone, Debug)]
+pub struct SummaryContext<'a> {
+    /// Machine-readable id of the tree being sealed.
+    pub tree_id: &'a str,
+    /// Wire kind of the tree (see [`TreeKind`]).
+    pub tree_kind: TreeKind,
+    /// Level the produced summary lands at; inputs come from `target_level - 1`.
+    pub target_level: u32,
+    /// Maximum approximate tokens the produced summary may occupy.
+    pub token_budget: u32,
+    /// Total input/context budget available to this fold.
+    pub input_token_budget: u32,
+    /// Prompt and formatting headroom withheld from source inputs.
+    pub overhead_reserve_tokens: u32,
+    /// Natural-language ask that steers the fold, for
+    /// [`TreeKind::Flavoured`] trees.
+    /// When present, [`prepare_summary_prompt`] emits a flavour-directed system
+    /// prompt instead of the generic folding prompt. `None` for every other
+    /// tree kind.
+    pub ask: Option<&'a str>,
+}
+
+/// Output of a summarise call.
+#[derive(Clone, Debug, Default)]
+pub struct SummaryOutput {
+    /// Folded summary text, clamped to the seal's token budget.
+    pub content: String,
+    /// Approximate token count of [`content`](Self::content).
+    pub token_count: u32,
+    /// Always emitted empty by the built-in summarisers; canonical entity ids
+    /// are populated separately by the seal-time label strategy.
+    pub entities: Vec<String>,
+    /// Topic labels for the summary; empty from the built-in summarisers.
+    pub topics: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct SummaryCall {
+    pub output: SummaryOutput,
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub charged_amount_usd: Option<f64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PreparedSummaryPrompt {
+    pub system: String,
+    pub user: String,
+    pub effective_budget: u32,
+}
+
+/// Build the canonical provider prompt for a summary fold. Returns `None`
+/// when every input is blank.
+pub fn prepare_summary_prompt(
+    inputs: &[SummaryInput],
+    ctx: &SummaryContext<'_>,
+    output_language: Option<&str>,
+) -> Option<PreparedSummaryPrompt> {
+    let effective_budget = ctx.token_budget;
+    let per_input_cap = if inputs.is_empty() {
+        0
+    } else {
+        ctx.input_token_budget
+            .saturating_sub(effective_budget)
+            .saturating_sub(ctx.overhead_reserve_tokens)
+            / inputs.len() as u32
+    };
+    let mut ordered: Vec<_> = inputs.iter().collect();
+    ordered.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let user = ordered
+        .into_iter()
+        .filter_map(|input| {
+            let content = input.content.trim();
+            (!content.is_empty()).then(|| {
+                let (content, _) = clamp_to_budget(content, per_input_cap);
+                format!("[{}]\n{content}", input.id)
+            })
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    if user.trim().is_empty() {
+        return None;
+    }
+    let language = output_language
+        .filter(|language| !language.trim().is_empty())
+        .map(|language| format!("\nWrite the summary in {language}."))
+        .unwrap_or_default();
+    let system = match ctx.ask.map(str::trim).filter(|ask| !ask.is_empty()) {
+        // Flavour-directed fold: the produced summary is a running *profile*
+        // answering the ask, distilled from the evidence and the prior profile.
+        Some(ask) => format!(
+            "You are distilling evidence into a profile that answers this ask:\n{ask}\n\n\
+             The inputs below are evidence (and, where present, the current profile). \
+             Merge them into one updated profile.\n\
+             Keep it prescriptive and concrete — describe the patterns, not the individual items.\n\
+             Aim for ~{effective_budget} tokens or fewer.\n\
+             Output only the profile prose — no preamble, no JSON, no markdown headings.{language}"
+        ),
+        // Generic fold used by source/topic/global trees.
+        None => format!(
+            "You are folding multiple notes into one compact summary.\n\
+             Aim for ~{effective_budget} tokens or fewer. Capture key facts, decisions, and entities.\n\
+             Output only the summary prose — no preamble, no JSON, no markdown headings.{language}"
+        ),
+    };
+    Some(PreparedSummaryPrompt {
+        system,
+        user,
+        effective_budget,
+    })
+}
+
+pub fn finish_provider_summary(text: &str, budget: u32) -> SummaryOutput {
+    let (content, token_count) = clamp_to_budget(text.trim(), budget);
+    SummaryOutput {
+        content,
+        token_count,
+        entities: Vec::new(),
+        topics: Vec::new(),
+    }
+}
+
+/// Backend that folds inputs into one summary. Abstracted so the crate never
+/// calls a real LLM; the default is the deterministic [`ConcatSummariser`].
+#[async_trait]
+pub trait Summariser: Send + Sync {
+    /// Stable short name for diagnostics.
+    fn name(&self) -> &str {
+        "summariser"
+    }
+
+    /// Fold `inputs` into a single summary, clamped to `ctx.token_budget`.
+    /// Returns `Err` on backend failure; seal cascades fall back to
+    /// [`fallback_summary`] in that case.
+    async fn summarise(
+        &self,
+        inputs: &[SummaryInput],
+        ctx: &SummaryContext<'_>,
+    ) -> Result<SummaryOutput>;
+
+    async fn summarise_with_usage(
+        &self,
+        inputs: &[SummaryInput],
+        ctx: &SummaryContext<'_>,
+    ) -> Result<SummaryCall> {
+        Ok(SummaryCall {
+            output: self.summarise(inputs, ctx).await?,
+            ..SummaryCall::default()
+        })
+    }
+}
+
+/// Deterministic, dependency-free summariser: concatenate inputs (priority-first
+/// by score) with a provenance prefix and truncate to budget. Identical output
+/// to [`fallback_summary`].
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ConcatSummariser;
+
+impl ConcatSummariser {
+    /// Construct the stateless deterministic summariser.
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+#[async_trait]
+impl Summariser for ConcatSummariser {
+    fn name(&self) -> &str {
+        "concat"
+    }
+
+    async fn summarise(
+        &self,
+        inputs: &[SummaryInput],
+        ctx: &SummaryContext<'_>,
+    ) -> Result<SummaryOutput> {
+        Ok(fallback_summary(inputs, ctx.token_budget))
+    }
+}
+
+/// Deterministic concat-and-truncate fold. Each non-blank input is joined with
+/// a `"— "` provenance prefix; the result is clamped to `budget` tokens.
+pub fn fallback_summary(inputs: &[SummaryInput], budget: u32) -> SummaryOutput {
+    const PROVENANCE_PREFIX: &str = "— ";
+    // Priority-first by score so the most important material is least likely
+    // to be truncated under budget pressure; `sort_by` is stable so equal-score
+    // inputs keep chronological order.
+    let mut order: Vec<&SummaryInput> = inputs.iter().collect();
+    order.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    let mut parts: Vec<String> = Vec::with_capacity(order.len());
+    for inp in order {
+        let trimmed = inp.content.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        parts.push(format!("{PROVENANCE_PREFIX}{trimmed}"));
+    }
+    let joined = parts.join("\n\n");
+    let (content, token_count) = clamp_to_budget(&joined, budget);
+    SummaryOutput {
+        content,
+        token_count,
+        entities: Vec::new(),
+        topics: Vec::new(),
+    }
+}
+
+/// Truncate `text` to at most `budget` approximate tokens. Returns the
+/// (possibly clamped) text and its token estimate.
+pub fn clamp_to_budget(text: &str, budget: u32) -> (String, u32) {
+    let initial = approx_token_count(text);
+    if initial <= budget {
+        return (text.to_string(), initial);
+    }
+    let char_ceiling = (budget as usize).saturating_mul(4);
+    let truncated: String = text.chars().take(char_ceiling).collect();
+    let tokens = approx_token_count(&truncated);
+    (truncated, tokens)
+}
+
+#[cfg(test)]
+#[path = "summarise_tests.rs"]
+mod tests;

@@ -1,0 +1,137 @@
+//! Content store for memory-tree chunk and summary `.md` files.
+//!
+//! Bodies are stored on disk as `.md` files with YAML front-matter. SQLite (in
+//! the chunk store, ported separately) holds `content_path` (relative,
+//! forward-slash) and `content_sha256` (over body bytes only) as pointers +
+//! integrity tokens.
+//!
+//! ## Module layout
+//!
+//! - `paths` — path generation, slugification, and summary path builders
+//! - `compose` — YAML front matter, body composition, and tag rewriting
+//! - `atomic` — tempfile, fsync, rename, SHA-256, and summary staging
+//! - `read` — reads, SHA-256 verification, and front-matter splitting
+//! - `tags` — chunk-tag updates and Obsidian tag slugifiers
+//! - `raw` — verbatim per-item raw archive (`raw/<source>/<kind>/…`)
+//! - `obsidian` / `obsidian_registry` — Obsidian vault interop (`obsidian`
+//!   feature): stage bundled `.obsidian/` defaults, detect vault registration
+//! - `wiki_git` — git-backed mirror of summary nodes (`wiki-git` feature)
+//!
+//! ## Deferred
+//!
+//! The Config/SQLite-aware high-level readers (`read_chunk_body`, summary tag
+//! rewrite, `stage_chunks` SQLite upsert) live with the chunk store.
+
+pub mod atomic;
+pub mod compose;
+#[cfg(feature = "obsidian")]
+pub mod obsidian;
+#[cfg(feature = "obsidian")]
+pub mod obsidian_registry;
+pub mod paths;
+pub mod raw;
+pub mod read;
+pub mod tags;
+#[cfg(feature = "wiki-git")]
+pub mod wiki_git;
+
+use std::path::Path;
+
+use crate::memory::chunks::{Chunk, SourceKind, StagedChunk};
+
+/// Best-effort stage of the bundled `.obsidian/` vault defaults into
+/// `content_root`, no-op when the `obsidian` feature is disabled.
+///
+/// Every content-write route (`stage_chunks`, `stage_summary*`, raw writes)
+/// calls this before creating files, so a fresh content root gets its
+/// `.obsidian/` directory on first write. The underlying helper is idempotent
+/// (never overwrites an existing file) and never returns a hard error — a
+/// failed stage logs a warning and is ignored so persistence is never aborted
+/// over a cosmetic vault default.
+#[cfg(feature = "obsidian")]
+fn ensure_obsidian_defaults_if_enabled(content_root: &Path) {
+    if let Err(err) = obsidian::ensure_obsidian_defaults(content_root) {
+        log::warn!(
+            "[content_store] stage obsidian defaults failed at {:?}: {err:#}",
+            content_root
+        );
+    }
+}
+
+/// Feature-off twin: no-op so callers don't need `#[cfg]` per call site.
+#[cfg(not(feature = "obsidian"))]
+fn ensure_obsidian_defaults_if_enabled(_content_root: &Path) {}
+
+pub use atomic::{stage_summary, stage_summary_with_layout, StagedSummary};
+pub use compose::{
+    compose_chunk_file, compose_summary_md, rewrite_summary_tags, rewrite_tags, split_front_matter,
+    ComposedSummary, SummaryComposeInput,
+};
+pub use paths::{
+    chunk_abs_path, chunk_rel_path, slugify_source_id, summary_abs_path, summary_rel_path,
+    SummaryDiskLayout, SummaryTreeKind,
+};
+pub use raw::{
+    raw_kind_dir, raw_rel_path, raw_source_dir, sanitize_uid, slug_account_email, write_raw_items,
+    RawItem, RawKind,
+};
+pub use read::{
+    read_chunk_body, read_chunk_file, read_summary_body, read_summary_file,
+    resolve_within_content_root, verify_chunk_file, verify_summary_file, ChunkFileContents,
+    VerifyResult,
+};
+pub use tags::{entity_tag, slugify_tag_kind, slugify_tag_value, update_chunk_tags};
+
+/// Write all chunks to disk and return [`StagedChunk`] records ready for SQLite
+/// upsert.
+///
+/// Each chunk file is written atomically via a sibling temp-file + rename.
+/// Already-existing files are skipped (immutable-body contract). Parent
+/// directories are created on demand.
+///
+/// **Email chunks skip the disk write.** Their content already lives in the
+/// per-message raw archive, so a `StagedChunk` row with an empty `content_path`
+/// is emitted and read paths fall back to the raw archive.
+pub fn stage_chunks(content_root: &Path, chunks: &[Chunk]) -> anyhow::Result<Vec<StagedChunk>> {
+    ensure_obsidian_defaults_if_enabled(content_root);
+
+    let mut staged = Vec::with_capacity(chunks.len());
+
+    for chunk in chunks {
+        if chunk.metadata.source_kind == SourceKind::Email {
+            staged.push(StagedChunk {
+                chunk: chunk.clone(),
+                content_path: String::new(),
+                content_sha256: String::new(),
+            });
+            continue;
+        }
+
+        let source_kind = chunk.metadata.source_kind.as_str();
+        let path_id = chunk
+            .metadata
+            .path_scope
+            .as_deref()
+            .unwrap_or(&chunk.metadata.source_id);
+
+        let rel_path = paths::chunk_rel_path(source_kind, path_id, &chunk.id);
+        let abs_path = paths::chunk_abs_path(content_root, source_kind, path_id, &chunk.id);
+
+        let (full_bytes, body_bytes) = compose::compose_chunk_file(chunk);
+        let sha256 = atomic::sha256_hex(&body_bytes);
+
+        atomic::write_or_replace_body(&abs_path, &full_bytes, &sha256)?;
+
+        staged.push(StagedChunk {
+            chunk: chunk.clone(),
+            content_path: rel_path,
+            content_sha256: sha256,
+        });
+    }
+
+    Ok(staged)
+}
+
+#[cfg(test)]
+#[path = "content_tests.rs"]
+mod tests;

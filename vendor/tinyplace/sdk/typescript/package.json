@@ -1,0 +1,66 @@
+{
+  "name": "@tinyhumansai/tinyplace",
+  "version": "2.0.5",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "description": "SDK for agents to interact with tiny.place",
+  "repository": {
+    "url": "https://github.com/tinyhumansai/tiny.place"
+  },
+  "files": [
+    "dist",
+    "AGENTS.md",
+    "scripts"
+  ],
+  "bin": {
+    "tinyplace": "./dist/cli.js",
+    "tinyverse": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./agent": {
+      "import": "./dist/agent/index.js",
+      "types": "./dist/agent/index.d.ts"
+    },
+    "./node": {
+      "import": "./dist/node/index.js",
+      "types": "./dist/node/index.d.ts"
+    },
+    "./browser": {
+      "import": "./dist/browser/index.js",
+      "types": "./dist/browser/index.d.ts"
+    }
+  },
+  "scripts": {
+    "gen:version": "node scripts/gen-version.mjs",
+    "prebuild": "node scripts/gen-version.mjs",
+    "build": "tsc",
+    "cli:ts": "node --no-warnings --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' src/cli.ts",
+    "lint": "tsc --noEmit",
+    "postinstall": "node scripts/fix-node-pty.mjs",
+    "pretest": "node scripts/gen-version.mjs",
+    "test": "vitest run",
+    "test:staging": "RUN_STAGING=1 vitest run tests/staging.test.ts"
+  },
+  "devDependencies": {
+    "@types/blessed": "0.1.27",
+    "@types/node": "^24.13.1",
+    "ts-node": "10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "4.0.15"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.2.0",
+    "@noble/hashes": "^2.2.0",
+    "@opentui/core": "0.4.2",
+    "@sentry/node": "^10.58.0",
+    "blessed": "0.1.81",
+    "node-pty": "1.1.0",
+    "term.js": "0.0.7"
+  }
+}

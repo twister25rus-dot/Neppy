@@ -1,0 +1,511 @@
+"use client";
+
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
+
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+import type { GroupMember, GroupMetadata } from "@tinyhumansai/tinyplace";
+
+import type { FunctionComponent } from "@src/common/types";
+import { useCreateChannel } from "@src/hooks/use-channels";
+import { useGroupMessages } from "@src/hooks/use-group-messages";
+import {
+	useCreateGroup,
+	useGroupMembers,
+	useGroups,
+	useJoinGroup,
+	useMyGroups,
+} from "@src/hooks/use-groups";
+import { useWriteGateMessage } from "@src/hooks/use-write-gate";
+import { useAuthStore } from "@src/store/auth";
+import { groupUnread } from "@src/store/group-conversations";
+
+import { GroupAdminPanel } from "./GroupAdminPanel";
+
+dayjs.extend(relativeTime);
+
+export const Groups = ({ isDark }: { isDark: boolean }): FunctionComponent => {
+	const { t } = useTranslation();
+	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+	const [name, setName] = useState("Research Guild");
+	const [description, setDescription] = useState("Encrypted agent workspace");
+	const [isPublic, setIsPublic] = useState(false);
+	const [messageInput, setMessageInput] = useState("");
+	const agentId = useAuthStore((state) => state.agentId);
+	// Group membership, fanout delivery, and message addressing are all keyed by
+	// the wallet agent id (a @handle is display/resolution only — authorization is
+	// always by the wallet signature). Using the @handle username here broke
+	// membership detection (member.agentId === actor), `groups.list({member})`,
+	// and group message delivery (fanout targets agent ids, not usernames).
+	const actor = agentId ?? "";
+	const gateMessage = useWriteGateMessage(
+		t("writeGate.actions.createOrJoinGroups")
+	);
+
+	const myGroupsQuery = useMyGroups(actor);
+	const discoverQuery = useGroups();
+	const createGroup = useCreateGroup();
+	const createChannel = useCreateChannel();
+	const joinGroup = useJoinGroup();
+	const [createdChannelName, setCreatedChannelName] = useState<string | null>(
+		null
+	);
+
+	const groupMessages = useGroupMessages(actor);
+	const memberQuery = useGroupMembers(selectedGroupId ?? "");
+	const activeMemberIds = (memberQuery.data?.members ?? [])
+		.filter((member: GroupMember): boolean => member.status === "active")
+		.map((member: GroupMember): string => member.agentId);
+
+	const myGroups: Array<GroupMetadata> = useMemo(
+		(): Array<GroupMetadata> => myGroupsQuery.data?.groups ?? [],
+		[myGroupsQuery.data]
+	);
+	const discoverGroups: Array<GroupMetadata> = useMemo(
+		(): Array<GroupMetadata> => discoverQuery.data?.groups ?? [],
+		[discoverQuery.data]
+	);
+
+	// A private group the agent created/joined won't appear in Discover, so
+	// search both lists when resolving the open group.
+	const activeGroup = useMemo((): GroupMetadata | undefined => {
+		const all = [...myGroups, ...discoverGroups];
+		return all.find((group): boolean => group.groupId === selectedGroupId);
+	}, [myGroups, discoverGroups, selectedGroupId]);
+
+	const myMember = (memberQuery.data?.members ?? []).find(
+		(member): boolean => member.agentId === actor
+	);
+	const isMember = Boolean(myMember && myMember.status === "active");
+	const isOwner =
+		activeGroup?.createdBy === actor || myMember?.role === "owner";
+	const isAdmin = isOwner || myMember?.role === "admin";
+
+	const mutationError =
+		createGroup.error ?? createChannel.error ?? joinGroup.error;
+
+	// Viewing a group clears its unread marker.
+	const markGroupRead = groupMessages.markGroupRead;
+	useEffect((): void => {
+		if (selectedGroupId) {
+			markGroupRead(selectedGroupId);
+		}
+	}, [selectedGroupId, groupMessages.threads, markGroupRead]);
+
+	const handleSendMessage = (event: FormEvent): void => {
+		event.preventDefault();
+		const text = messageInput.trim();
+		if (!activeGroup || !text || !actor || groupMessages.isSending) {
+			return;
+		}
+		void groupMessages
+			.send({
+				groupId: activeGroup.groupId,
+				epoch: activeGroup.membershipEpoch,
+				members: activeMemberIds,
+				text,
+			})
+			.then((): void => {
+				setMessageInput("");
+			})
+			.catch((): void => {
+				/* keep the draft; the hook surfaces the failure */
+			});
+	};
+
+	const handleCreate = (event: FormEvent): void => {
+		event.preventDefault();
+		if (!actor || !name.trim()) {
+			return;
+		}
+		setCreatedChannelName(null);
+		// "Public" means a plaintext, server-readable public channel (per the
+		// constitution spec) — not an encrypted group. Route it to the channels
+		// backend; encrypted groups are always private.
+		if (isPublic) {
+			createChannel.mutate(
+				{
+					creator: actor,
+					name,
+					description,
+					tags: ["explore"],
+				},
+				{
+					onSuccess: (channel): void => {
+						setCreatedChannelName(channel.name ?? name);
+					},
+				}
+			);
+			return;
+		}
+		createGroup.mutate(
+			{
+				name,
+				description,
+				createdBy: actor,
+				membershipPolicy: "invite-only",
+				membersPublic: true,
+				tags: ["explore"],
+			},
+			{
+				onSuccess: (group): void => {
+					setSelectedGroupId(group.groupId);
+				},
+			}
+		);
+	};
+
+	const formClass = isDark
+		? "border-neutral-800 bg-neutral-950"
+		: "border-neutral-200 bg-neutral-50";
+	const inputClass = isDark
+		? "border-neutral-800 bg-neutral-900 text-white placeholder:text-neutral-600"
+		: "border-neutral-200 bg-white text-black placeholder:text-neutral-400";
+	const mutedClass = isDark ? "text-neutral-500" : "text-neutral-400";
+
+	const renderGroupThread = (group: GroupMetadata): React.ReactElement => {
+		const thread = groupMessages.threads[group.groupId] ?? [];
+		const placeholder = groupMessages.isReady
+			? t("groups.messagePlaceholder")
+			: t("groups.enableEncryption");
+		const canSend =
+			groupMessages.isReady &&
+			!groupMessages.isSending &&
+			messageInput.trim().length > 0;
+		return (
+			<div
+				className={`mt-4 flex flex-col rounded-lg border ${isDark ? "border-neutral-800" : "border-neutral-200"}`}
+			>
+				<div className="flex max-h-64 flex-1 flex-col gap-2 overflow-y-auto p-3">
+					{thread.length === 0 ? (
+						<p className={`text-xs ${mutedClass}`}>{t("groups.noMessages")}</p>
+					) : null}
+					{thread.map(
+						(entry): React.ReactElement => (
+							<div
+								key={entry.id}
+								className={`max-w-[75%] rounded-lg px-2.5 py-1.5 text-xs ${
+									entry.outgoing
+										? "self-end bg-blue-600 text-white"
+										: isDark
+											? "self-start bg-neutral-800 text-white"
+											: "self-start bg-neutral-100 text-black"
+								}`}
+							>
+								{!entry.outgoing ? (
+									<span
+										className={`mb-0.5 block text-[10px] font-medium ${isDark ? "text-neutral-400" : "text-neutral-500"}`}
+									>
+										{entry.from}
+									</span>
+								) : null}
+								{entry.text}
+							</div>
+						)
+					)}
+				</div>
+				<form
+					className={`flex gap-2 border-t p-2 ${isDark ? "border-neutral-800" : "border-neutral-200"}`}
+					onSubmit={handleSendMessage}
+				>
+					<input
+						className={`flex-1 rounded-md border px-2 py-1 text-xs ${inputClass} disabled:opacity-50`}
+						disabled={!groupMessages.isReady || groupMessages.isSending}
+						placeholder={placeholder}
+						value={messageInput}
+						onChange={(event): void => {
+							setMessageInput(event.target.value);
+						}}
+					/>
+					<button
+						className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white disabled:opacity-50"
+						disabled={!canSend}
+						type="submit"
+					>
+						{groupMessages.isSending ? t("groups.sending") : t("groups.send")}
+					</button>
+				</form>
+			</div>
+		);
+	};
+
+	const renderGroupDetail = (group: GroupMetadata): React.ReactElement => {
+		// Every group here is an encrypted (Signal sender-key) group. Open vs
+		// invite-only is a join policy, NOT plaintext visibility — public, readable
+		// conversations are Channels, a separate surface. Label the join policy so
+		// the badge no longer implies the group is publicly readable.
+		const isOpenPolicy = group.membershipPolicy === "open";
+		const canJoin = !isMember && group.membershipPolicy !== "invite-only";
+		return (
+			<div className="space-y-2">
+				<p className={`text-xs ${mutedClass}`}>{group.description ?? ""}</p>
+				<div className="flex flex-wrap items-center gap-2">
+					<span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-500">
+						🔒 {t("groups.encrypted")}
+					</span>
+					<span
+						className={`rounded-full px-2 py-0.5 text-[10px] ${
+							isOpenPolicy
+								? "bg-green-500/10 text-green-500"
+								: "bg-amber-500/10 text-amber-500"
+						}`}
+					>
+						{isOpenPolicy ? t("groups.open") : t("groups.inviteOnly")}
+					</span>
+					<span className={`text-[10px] ${mutedClass}`}>
+						{t("groups.memberCount", { count: group.memberCount })}
+					</span>
+					{isMember ? (
+						<span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-500">
+							{myMember?.role ?? t("groups.member")}
+						</span>
+					) : null}
+				</div>
+				{group.tags && group.tags.length > 0 ? (
+					<div className="flex flex-wrap gap-1">
+						{group.tags.map(
+							(tag): React.ReactElement => (
+								<span
+									key={tag}
+									className={`rounded-full px-2 py-0.5 text-[10px] ${isDark ? "bg-neutral-800 text-neutral-400" : "bg-neutral-200 text-neutral-600"}`}
+								>
+									{tag}
+								</span>
+							)
+						)}
+					</div>
+				) : null}
+
+				{canJoin ? (
+					<button
+						className="mt-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+						disabled={!actor || joinGroup.isPending}
+						type="button"
+						onClick={(): void => {
+							joinGroup.mutate({ agentId: actor, groupId: group.groupId });
+						}}
+					>
+						{joinGroup.isPending ? t("groups.joining") : t("groups.join")}
+					</button>
+				) : null}
+				{!isMember && group.membershipPolicy === "invite-only" ? (
+					<p className={`text-[10px] ${mutedClass}`}>
+						{t("groups.inviteOnlyNote")}
+					</p>
+				) : null}
+
+				{isAdmin && actor ? (
+					<GroupAdminPanel
+						actor={actor}
+						group={group}
+						isDark={isDark}
+						isOwner={isOwner}
+					/>
+				) : null}
+
+				{isMember ? renderGroupThread(group) : null}
+			</div>
+		);
+	};
+
+	const renderGroupCard = (
+		group: GroupMetadata,
+		mine: boolean
+	): React.ReactElement => (
+		<button
+			key={group.groupId}
+			className={`rounded-lg border p-3 text-left ${isDark ? "border-neutral-800 hover:border-neutral-700" : "border-neutral-200 hover:border-neutral-300"}`}
+			type="button"
+			onClick={(): void => {
+				setSelectedGroupId(group.groupId);
+			}}
+		>
+			<div className="flex items-center justify-between gap-2">
+				<span
+					className={`flex min-w-0 items-center gap-1.5 text-xs font-medium ${isDark ? "text-white" : "text-black"}`}
+				>
+					{mine &&
+					groupUnread(groupMessages.threads, group.groupId) > 0 &&
+					selectedGroupId !== group.groupId ? (
+						<span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+					) : null}
+					<span className="truncate">{group.name}</span>
+				</span>
+				<span
+					className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] ${
+						group.membershipPolicy === "open"
+							? "bg-green-500/10 text-green-500"
+							: "bg-amber-500/10 text-amber-500"
+					}`}
+				>
+					{group.membershipPolicy === "open"
+						? t("groups.open")
+						: t("groups.inviteOnly")}
+				</span>
+			</div>
+			<p className={`mt-1 text-[10px] ${mutedClass}`}>
+				{group.description ?? ""}
+			</p>
+			<div className="mt-2 flex items-center justify-between">
+				<span className={`text-[10px] ${mutedClass}`}>
+					{t("groups.memberCount", { count: group.memberCount })}
+				</span>
+				<span className={`text-[10px] ${mutedClass}`}>
+					{dayjs(group.createdAt).fromNow()}
+				</span>
+			</div>
+		</button>
+	);
+
+	const renderSection = (
+		title: string,
+		groups: Array<GroupMetadata>,
+		mine: boolean,
+		emptyLabel: string
+	): React.ReactElement => (
+		<div className="space-y-2">
+			<span className={`text-[11px] font-medium uppercase ${mutedClass}`}>
+				{title}
+			</span>
+			{groups.length === 0 ? (
+				<p className={`text-xs ${mutedClass}`}>{emptyLabel}</p>
+			) : (
+				<div className="grid grid-cols-2 gap-2">
+					{groups.map(
+						(group): React.ReactElement => renderGroupCard(group, mine)
+					)}
+				</div>
+			)}
+		</div>
+	);
+
+	const renderContent = (): React.ReactElement => {
+		if (activeGroup) {
+			return renderGroupDetail(activeGroup);
+		}
+		if (myGroupsQuery.isLoading && discoverQuery.isLoading) {
+			return (
+				<div className="flex flex-1 items-center justify-center p-6">
+					<span className={`text-xs ${mutedClass}`}>
+						{t("groups.loadingGroups")}
+					</span>
+				</div>
+			);
+		}
+		// Discover only lists public groups the agent hasn't joined yet.
+		const joinedIds = new Set(myGroups.map((group): string => group.groupId));
+		const discoverable = discoverGroups.filter(
+			(group): boolean => !joinedIds.has(group.groupId)
+		);
+		return (
+			<div className="space-y-4">
+				{actor
+					? renderSection(
+							t("groups.myGroups"),
+							myGroups,
+							true,
+							t("groups.myGroupsEmpty")
+						)
+					: null}
+				{renderSection(
+					t("groups.discover"),
+					discoverable,
+					false,
+					t("groups.discoverEmpty")
+				)}
+			</div>
+		);
+	};
+
+	return (
+		<div
+			className={`flex h-full flex-col overflow-hidden rounded-lg border ${isDark ? "border-neutral-800 bg-neutral-950" : "border-neutral-200 bg-neutral-50"}`}
+		>
+			<form className={`border-b p-3 ${formClass}`} onSubmit={handleCreate}>
+				<div className="grid gap-2 md:grid-cols-[1fr_auto]">
+					<input
+						className={`rounded-md border px-2 py-1 text-xs ${inputClass}`}
+						placeholder={t("groups.groupNamePlaceholder")}
+						type="text"
+						value={name}
+						onChange={(event): void => {
+							setName(event.target.value);
+						}}
+					/>
+					<button
+						className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+						type="submit"
+						disabled={
+							createGroup.isPending ||
+							createChannel.isPending ||
+							!actor ||
+							!name.trim()
+						}
+					>
+						{createGroup.isPending || createChannel.isPending
+							? t("common.creating")
+							: isPublic
+								? t("groups.createChannel")
+								: t("groups.createGroup")}
+					</button>
+				</div>
+				<input
+					className={`mt-2 w-full rounded-md border px-2 py-1 text-xs ${inputClass}`}
+					placeholder={t("groups.descriptionPlaceholder")}
+					type="text"
+					value={description}
+					onChange={(event): void => {
+						setDescription(event.target.value);
+					}}
+				/>
+				<label
+					className={`mt-2 flex items-center gap-2 text-[11px] ${mutedClass}`}
+				>
+					<input
+						checked={isPublic}
+						type="checkbox"
+						onChange={(event): void => {
+							setIsPublic(event.target.checked);
+						}}
+					/>
+					{t("groups.publicChannelHint")}
+				</label>
+				{createdChannelName ? (
+					<p className="mt-2 text-xs text-green-500">
+						{t("groups.channelCreated", { name: createdChannelName })}
+					</p>
+				) : null}
+				{mutationError ? (
+					<p className="mt-2 text-xs text-red-500">{mutationError.message}</p>
+				) : null}
+				<p className={`mt-2 text-xs ${actor ? mutedClass : "text-red-500"}`}>
+					{actor ? t("groups.actingAs", { actor }) : gateMessage}
+				</p>
+			</form>
+			<div
+				className={`flex items-center justify-between border-b px-4 py-3 ${isDark ? "border-neutral-800" : "border-neutral-200"}`}
+			>
+				<span
+					className={`text-sm font-medium ${isDark ? "text-white" : "text-black"}`}
+				>
+					{activeGroup ? activeGroup.name : t("groups.title")}
+				</span>
+				{activeGroup ? (
+					<button
+						className={`text-[10px] ${isDark ? "text-neutral-500 hover:text-neutral-300" : "text-neutral-400 hover:text-neutral-600"}`}
+						type="button"
+						onClick={(): void => {
+							setSelectedGroupId(null);
+						}}
+					>
+						{t("common.back")}
+					</button>
+				) : null}
+			</div>
+
+			<div className="flex-1 overflow-y-auto p-3">{renderContent()}</div>
+		</div>
+	);
+};

@@ -1,0 +1,99 @@
+[workspace]
+resolver = "3"
+# Crates arrive with the milestone that gives them real content, so this list
+# grows over time. `tinybox-host`, `tinybox-docker`, `tinybox-linux`, and
+# `tinybox-cli` are named in `docs/specs/tinybox-runtime.md` but are not
+# scaffolded until they do something — an empty crate is a placeholder.
+members = [
+    "crates/tinybox-cli",
+    "crates/tinybox-core",
+    "crates/tinybox-docker",
+    "crates/tinybox-host",
+    "crates/tinybox-linux",
+    "crates/tinybox-microvm",
+    "crates/tinybox-module",
+    "crates/tinybox-ssh",
+    "crates/tinybox-sync",
+]
+# `vendor/tinybus` is its own workspace with its own `[workspace.dependencies]`.
+# Without this exclusion cargo attaches it to *this* workspace instead, and the
+# vendored crates' `serde.workspace = true` then fails to resolve against a root
+# that never declared serde.
+exclude = ["vendor"]
+
+[workspace.package]
+version = "0.1.5"
+edition = "2024"
+rust-version = "1.88"
+license = "GPL-3.0-only"
+repository = "https://github.com/tinyhumansai/tinybox"
+readme = "README.md"
+keywords = ["tinybus", "sandbox", "container", "workspace"]
+categories = ["development-tools", "virtualization"]
+
+[workspace.dependencies]
+# TinyBus defines the message types, interface macro, and frozen module ABI used
+# by the bus adapter. Socket and CLI features are unnecessary here.
+tinybus = { path = "vendor/tinybus/crates/tinybus", version = "0.1.0", default-features = false, features = [
+    "macros",
+    "modules",
+] }
+# The module-side SDK owns the isolated runtime and exports the ABI entrypoints
+# required by TinyBus's dynamic loader.
+tinybus-module = { path = "vendor/tinybus/crates/tinybus-module", version = "0.1.0" }
+# Derive macros for the crate-wide error type in `tinybox-core`.
+thiserror = "2"
+# `Host` and `Sandbox` are object-safe async traits stored as trait objects in a
+# provider registry, which native `async fn` in traits cannot express yet.
+async-trait = "0.1"
+# The workspace's single async runtime, matching the one the module SDK owns.
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+# Module integration tests and the release verifier pass explicit JSON config,
+# and the CLI persists its box store as JSON.
+serde_json = "1"
+# The model types are serializable; see `tinybox-core`'s dependency comment.
+serde = { version = "1", features = ["derive"] }
+# Internal path dependencies between workspace members.
+tinybox-core = { path = "crates/tinybox-core", version = "0.1.5" }
+tinybox-host = { path = "crates/tinybox-host", version = "0.1.5" }
+tinybox-linux = { path = "crates/tinybox-linux", version = "0.1.5" }
+tinybox-microvm = { path = "crates/tinybox-microvm", version = "0.1.5" }
+tinybox-docker = { path = "crates/tinybox-docker", version = "0.1.5" }
+tinybox-ssh = { path = "crates/tinybox-ssh", version = "0.1.5" }
+tinybox-sync = { path = "crates/tinybox-sync", version = "0.1.5" }
+
+# Lints apply to every crate in the workspace via `[lints] workspace = true`.
+# CI runs clippy with `-D warnings`, so anything set to "warn" here fails CI.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Library code must not panic on its own; tests and examples may.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+# Public fallible/panicking APIs must document their failure modes.
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+# Documentation hygiene.
+doc_markdown = "warn"
+# `#[must_use]` on pure public functions.
+must_use_candidate = "warn"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "warn"
+private_intra_doc_links = "warn"
+
+[profile.release]
+# Cross-crate optimization and smaller, faster binaries for release builds.
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

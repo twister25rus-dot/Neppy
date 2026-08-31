@@ -1,0 +1,132 @@
+[package]
+name = "tinyhosts"
+version = "0.1.5"
+edition = "2024"
+rust-version = "1.88"
+license = "GPL-3.0-only"
+description = "Unified hosting API for shipping Next.js applications, databases, domains and analytics to a real hosting provider."
+repository = "https://github.com/tinyhumansai/tinyhosts"
+documentation = "https://docs.rs/tinyhosts"
+readme = "README.md"
+keywords = ["hosting", "vercel", "nextjs", "deploy", "tinybus"]
+categories = ["api-bindings", "web-programming"]
+publish = false
+# Keep the published package to what a consumer actually needs.
+exclude = [
+    ".github/",
+    ".gitmodules",
+    "docs/",
+    "vendor/",
+    "worktrees/",
+    ".env.example",
+    "deny.toml",
+]
+
+[lib]
+# Keep the ordinary Rust library for tests and downstream reuse while also
+# producing the native module artifact that TinyBus loads at runtime.
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+# TinyBus defines the message types, interface macro, and frozen module ABI used
+# by the generated integration. Socket and CLI features are unnecessary here.
+tinybus = { path = "vendor/tinybus/crates/tinybus", version = "0.1.0", default-features = false, features = ["macros", "modules"], optional = true }
+# The module-side SDK owns the isolated runtime and exports the ABI entrypoints
+# required by TinyBus's dynamic loader.
+tinybus-module = { path = "vendor/tinybus/crates/tinybus-module", version = "0.1.0", optional = true }
+# Derive macros for the crate-wide error type in `src/error/mod.rs`.
+thiserror = "2"
+# `Host` is consumed as `dyn Host`, and every method performs network I/O, so
+# the trait needs boxed async methods to stay object-safe on the MSRV.
+async-trait = "0.1"
+# The unified model crosses process boundaries twice: over TinyBus, and into the
+# OpenCompany front end. Every public type in `host::types` is (de)serializable.
+serde = { version = "1", features = ["derive"] }
+# Request and response bodies for the provider REST APIs, and the JSON envelope
+# the `rpc` module exchanges over the bus.
+serde_json = "1"
+# Bundle file contents travel as base64 in JSON: a byte array would triple the
+# size of every deployment payload crossing the bus.
+base64 = "0.22"
+# Provider HTTP clients. rustls keeps the build free of a system OpenSSL, and
+# `json` covers every request body except the raw file upload.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"], optional = true }
+# Vercel identifies uploaded deployment files by their SHA-1 digest
+# (`x-vercel-digest`), so the digest algorithm is not a free choice.
+sha1 = { version = "0.10", optional = true }
+# Renders the SHA-1 digest as the lowercase hex string the upload header wants.
+hex = { version = "0.4", optional = true }
+# Percent-encodes an RPC-supplied identifier (site name, deployment id, domain)
+# before it is interpolated into a Vercel API path, so `/`, `?` and `..` in one
+# cannot redirect the request to a different route.
+percent-encoding = { version = "2", optional = true }
+
+# The two module-verification examples load a compiled `cdylib` through TinyBus's
+# own loader, so they only build when the module is in the build.
+[[example]]
+name = "verify_module"
+required-features = ["module"]
+
+[[example]]
+name = "verify_github_release"
+required-features = ["module"]
+
+[dev-dependencies]
+# Module integration tests exercise the real asynchronous in-memory TinyBus.
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+# Provider tests run against a local mock of the REST API rather than the live
+# service, which keeps the suite deterministic and offline.
+wiremock = "0.6"
+# `Bundle::from_dir` is tested against a real directory tree.
+tempfile = "3"
+
+[features]
+default = ["vercel", "module"]
+# The Vercel provider and the HTTP stack it needs. Off, the crate is the
+# provider-agnostic model alone: `Host`, its types, `Bundle`, and `launch`.
+vercel = ["dep:reqwest", "dep:sha1", "dep:hex", "dep:percent-encoding"]
+# The TinyBus module: the bus interface, the ABI exports, and the `cdylib` a
+# TinyBus host loads. On by default, because the installable module is how this
+# crate ships.
+#
+# A downstream that links the library directly — OpenHuman does — takes
+# `default-features = false, features = ["vercel"]` and gets no TinyBus at all.
+# That is not only a smaller graph: OpenHuman vendors its own TinyBus, and two
+# path copies of one package cannot both be written to a lockfile.
+module = ["dep:tinybus", "dep:tinybus-module"]
+
+# Lints apply to the whole crate and to every target. CI runs clippy with
+# `-D warnings`, so anything set to "warn" here fails the build in CI.
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Library code must not panic on its own; tests and examples may.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+# Public fallible/panicking APIs must document their failure modes.
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+# Documentation hygiene.
+doc_markdown = "warn"
+# `#[must_use]` on pure public functions.
+must_use_candidate = "warn"
+
+[lints.rustdoc]
+broken_intra_doc_links = "warn"
+private_intra_doc_links = "warn"
+
+[profile.release]
+# Cross-crate optimization and smaller, faster binaries for release builds.
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

@@ -1,0 +1,361 @@
+import type { HttpClient } from "../http.js";
+import type { SigningKey } from "../auth.js";
+import { signCanonicalPayload } from "../auth.js";
+import { canonicalPayload } from "../crypto.js";
+import { asString, listField } from "../safe.js";
+import type {
+  Attestation,
+  AttestationCreate,
+  GroupLeaderboardQueryParams,
+  LeaderboardCategory,
+  LeaderboardEntry,
+  LeaderboardQueryParams,
+  LeaderboardResponse,
+  ReputationHistoryPoint,
+  ReputationLeaderboardQueryParams,
+  ReputationReview,
+  ReputationReviewCreate,
+  ReputationScore,
+  ReputationVouch,
+  ReputationVouchCreate,
+  SellerLeaderboardQueryParams,
+  TrustGraph,
+  TrustGraphEdge,
+  TrustGraphNode,
+  TrustGraphQueryParams,
+  TrustScore,
+} from "../types/index.js";
+
+export class ReputationApi {
+  constructor(
+    private readonly http: HttpClient,
+    private readonly signingKey?: SigningKey,
+  ) {}
+
+  getScore(agentId: string): Promise<ReputationScore> {
+    return this.http.get<ReputationScore>(
+      `/reputation/${encodeURIComponent(agentId)}`,
+    );
+  }
+
+  getHistory(
+    agentId: string,
+  ): Promise<{ history: Array<ReputationHistoryPoint> }> {
+    return this.http
+      .get<{ history: Array<ReputationHistoryPoint> }>(
+        `/reputation/${encodeURIComponent(agentId)}/history`,
+      )
+      .then((result) => ({
+        history: listField<ReputationHistoryPoint>(result, "history"),
+      }));
+  }
+
+  getReviews(agentId: string): Promise<{ reviews: Array<ReputationReview> }> {
+    return this.http
+      .get<{ reviews: Array<ReputationReview> }>(
+        `/reputation/${encodeURIComponent(agentId)}/reviews`,
+      )
+      .then((result) => ({
+        reviews: listField<ReputationReview>(result, "reviews"),
+      }));
+  }
+
+  getAttestations(
+    agentId: string,
+  ): Promise<{ attestations: Array<Attestation> }> {
+    return this.http
+      .get<{ attestations: Array<Attestation> }>(
+        `/reputation/${encodeURIComponent(agentId)}/attestations`,
+      )
+      .then((result) => ({
+        attestations: listField<Attestation>(result, "attestations"),
+      }));
+  }
+
+  async createReview(
+    review: ReputationReviewCreate,
+  ): Promise<ReputationReview> {
+    if (this.signingKey && !review.signature) {
+      review = {
+        ...review,
+        reviewId: review.reviewId ?? nextReputationId("rev"),
+      };
+      review.signature = await signCanonicalPayload(
+        this.signingKey,
+        reputationReviewSignaturePayload(review),
+      );
+      // Present the signer so the backend can authorize a delegated session key
+      // (the signature above is verified against it). For the reviewer's own key
+      // this is simply the registered key.
+      review.signerPublicKey ??= this.http.signingPublicKey();
+    }
+
+    return this.http.post<ReputationReview>("/reputation/reviews", review);
+  }
+
+  async createAttestation(
+    attestation: AttestationCreate,
+  ): Promise<Attestation> {
+    if (this.signingKey && !attestation.signature) {
+      attestation = {
+        ...attestation,
+        attestationId: attestation.attestationId ?? nextReputationId("att"),
+      };
+      attestation.signature = await signCanonicalPayload(
+        this.signingKey,
+        attestationSignaturePayload(attestation),
+      );
+      attestation.signerPublicKey ??= this.http.signingPublicKey();
+    }
+
+    return this.http.post<Attestation>("/reputation/attestations", attestation);
+  }
+
+  async deleteAttestation(attestationId: string): Promise<void> {
+    if (!this.signingKey) {
+      return this.http.delete<void>(
+        `/reputation/attestations/${encodeURIComponent(attestationId)}`,
+      );
+    }
+
+    const signature = await signCanonicalPayload(
+      this.signingKey,
+      attestationRevokeSignaturePayload(attestationId),
+    );
+    return this.http.delete<void>(
+      `/reputation/attestations/${encodeURIComponent(attestationId)}?signature=${encodeURIComponent(signature)}${signerPublicKeyQuery(this.http.signingPublicKey())}`,
+    );
+  }
+
+  trustGraph(params?: TrustGraphQueryParams): Promise<TrustGraph> {
+    return this.http
+      .get<TrustGraph>(
+        "/reputation/trust/graph",
+        params as Record<string, unknown>,
+      )
+      .then((result) => ({
+        nodes: listField<TrustGraphNode>(result, "nodes"),
+        edges: listField<TrustGraphEdge>(result, "edges"),
+        updatedAt: asString((result as TrustGraph | undefined)?.updatedAt),
+      }));
+  }
+
+  getTrust(agentId: string): Promise<TrustScore> {
+    return this.http.get<TrustScore>(
+      `/reputation/${encodeURIComponent(agentId)}/trust`,
+    );
+  }
+
+  getVouches(agentId: string): Promise<{ vouches: Array<ReputationVouch> }> {
+    return this.http
+      .get<{ vouches: Array<ReputationVouch> }>(
+        `/reputation/${encodeURIComponent(agentId)}/vouches`,
+      )
+      .then((result) => ({
+        vouches: listField<ReputationVouch>(result, "vouches"),
+      }));
+  }
+
+  getGivenVouches(
+    agentId: string,
+  ): Promise<{ vouches: Array<ReputationVouch> }> {
+    return this.http
+      .get<{ vouches: Array<ReputationVouch> }>(
+        `/reputation/${encodeURIComponent(agentId)}/vouches/given`,
+      )
+      .then((result) => ({
+        vouches: listField<ReputationVouch>(result, "vouches"),
+      }));
+  }
+
+  async createVouch(vouch: ReputationVouchCreate): Promise<ReputationVouch> {
+    if (this.signingKey && !vouch.signature) {
+      vouch = {
+        ...vouch,
+        vouchId: vouch.vouchId ?? nextReputationId("vouch"),
+      };
+      vouch.signature = await signCanonicalPayload(
+        this.signingKey,
+        vouchSignaturePayload(vouch),
+      );
+      vouch.signerPublicKey ??= this.http.signingPublicKey();
+    }
+
+    return this.http.post<ReputationVouch>("/reputation/vouches", vouch);
+  }
+
+  async deleteVouch(vouchId: string): Promise<void> {
+    if (!this.signingKey) {
+      return this.http.delete<void>(
+        `/reputation/vouches/${encodeURIComponent(vouchId)}`,
+      );
+    }
+
+    const signature = await signCanonicalPayload(
+      this.signingKey,
+      vouchRevokeSignaturePayload(vouchId),
+    );
+    return this.http.delete<void>(
+      `/reputation/vouches/${encodeURIComponent(vouchId)}?signature=${encodeURIComponent(signature)}${signerPublicKeyQuery(this.http.signingPublicKey())}`,
+    );
+  }
+
+  leaderboard(
+    category?: LeaderboardCategory,
+    params?:
+      | ReputationLeaderboardQueryParams
+      | GroupLeaderboardQueryParams
+      | SellerLeaderboardQueryParams
+      | LeaderboardQueryParams,
+  ): Promise<LeaderboardResponse> {
+    return this.http
+      .get<LeaderboardResponse>(
+        category
+          ? `/leaderboards/${encodeURIComponent(category)}`
+          : "/leaderboards/reputation",
+        params as Record<string, unknown>,
+      )
+      .then(coalesceLeaderboardResponse);
+  }
+
+  reputationLeaderboard(
+    params?: ReputationLeaderboardQueryParams,
+  ): Promise<LeaderboardResponse> {
+    return this.http
+      .get<LeaderboardResponse>(
+        "/reputation/leaderboard",
+        params as Record<string, unknown>,
+      )
+      .then(coalesceLeaderboardResponse);
+  }
+
+  risingLeaderboard(
+    params?: LeaderboardQueryParams,
+  ): Promise<LeaderboardResponse> {
+    return this.http
+      .get<LeaderboardResponse>(
+        "/leaderboards/rising",
+        params as Record<string, unknown>,
+      )
+      .then(coalesceLeaderboardResponse);
+  }
+
+  sellersLeaderboard(
+    params?: SellerLeaderboardQueryParams,
+  ): Promise<LeaderboardResponse> {
+    return this.http
+      .get<LeaderboardResponse>(
+        "/leaderboards/sellers",
+        params as Record<string, unknown>,
+      )
+      .then(coalesceLeaderboardResponse);
+  }
+
+  groupsLeaderboard(
+    params?: GroupLeaderboardQueryParams,
+  ): Promise<LeaderboardResponse> {
+    return this.http
+      .get<LeaderboardResponse>(
+        "/leaderboards/groups",
+        params as Record<string, unknown>,
+      )
+      .then(coalesceLeaderboardResponse);
+  }
+
+  messagesLeaderboard(
+    params?: LeaderboardQueryParams,
+  ): Promise<LeaderboardResponse> {
+    return this.http
+      .get<LeaderboardResponse>(
+        "/leaderboards/messages",
+        params as Record<string, unknown>,
+      )
+      .then(coalesceLeaderboardResponse);
+  }
+
+  volumeLeaderboard(
+    params?: LeaderboardQueryParams,
+  ): Promise<LeaderboardResponse> {
+    return this.http
+      .get<LeaderboardResponse>(
+        "/leaderboards/volume",
+        params as Record<string, unknown>,
+      )
+      .then(coalesceLeaderboardResponse);
+  }
+}
+
+function coalesceLeaderboardResponse(result: unknown): LeaderboardResponse {
+  const source = result as LeaderboardResponse | undefined;
+  return {
+    leaderboard: asString(source?.leaderboard),
+    period: source?.period,
+    sort: source?.sort,
+    entries: listField<LeaderboardEntry>(result, "entries"),
+    updatedAt: asString(source?.updatedAt),
+  };
+}
+
+function reputationReviewSignaturePayload(
+  review: ReputationReviewCreate,
+): string {
+  return canonicalPayload("reputation.review", {
+    comment: review.comment ?? "",
+    context: review.context ?? "",
+    rating: review.rating,
+    reviewer: review.reviewer,
+    subject: review.subject,
+    transactionRef: review.transactionRef,
+  });
+}
+
+function vouchSignaturePayload(vouch: ReputationVouchCreate): string {
+  return canonicalPayload("reputation.vouch", {
+    comment: vouch.comment ?? "",
+    context: vouch.context ?? "",
+    subject: vouch.subject,
+    vouchId: vouch.vouchId ?? "",
+    voucher: vouch.voucher,
+    weight: vouch.weight,
+  });
+}
+
+function vouchRevokeSignaturePayload(vouchId: string): string {
+  return canonicalPayload("reputation.vouch.revoke", {
+    vouchId,
+  });
+}
+
+function attestationSignaturePayload(attestation: AttestationCreate): string {
+  return canonicalPayload("reputation.attestation", {
+    agent: attestation.agent,
+    agentCryptoId: attestation.agentCryptoId,
+    handle: attestation.handle,
+    platform: attestation.platform,
+    proofUrl: attestation.proofUrl ?? "",
+  });
+}
+
+function attestationRevokeSignaturePayload(attestationId: string): string {
+  return canonicalPayload("reputation.attestation.revoke", {
+    attestationId,
+  });
+}
+
+// Builds the optional &signerPublicKey= query suffix for body-less revoke
+// requests, so the backend can authorize a delegated session key revoking on
+// the owner's behalf. Empty when there is no presented key.
+function signerPublicKeyQuery(signerPublicKey: string | undefined): string {
+  return signerPublicKey
+    ? `&signerPublicKey=${encodeURIComponent(signerPublicKey)}`
+    : "";
+}
+
+function nextReputationId(prefix: string): string {
+  const random = new Uint8Array(6);
+  globalThis.crypto.getRandomValues(random);
+  const suffix = Array.from(random, (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  return `${prefix}_${Date.now().toString(36)}_${suffix}`;
+}
