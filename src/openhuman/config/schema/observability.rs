@@ -36,11 +36,16 @@ pub struct ObservabilityConfig {
 }
 
 fn default_analytics_enabled() -> bool {
-    true
+    // Neppy: off by default (no hosted analytics/error-reporting backend).
+    // See NEPPY-BUILD-SPEC.md §2.6.
+    false
 }
 
 fn default_share_usage_data() -> bool {
-    true
+    // Neppy: off by default. This flag consents to the backend Langfuse usage
+    // push; a local-first fork has no hosted backend to receive it. See
+    // NEPPY-BUILD-SPEC.md §2.6.
+    false
 }
 
 /// Destination format for the agent tracing export. Vendor-neutral
@@ -113,7 +118,7 @@ impl Default for ObservabilityConfig {
     fn default() -> Self {
         Self {
             sentry_dsn: None,
-            analytics_enabled: true,
+            analytics_enabled: default_analytics_enabled(),
             share_usage_data: default_share_usage_data(),
             agent_tracing: AgentTracingConfig::default(),
         }
@@ -126,30 +131,31 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn default_enables_analytics() {
+    fn default_disables_analytics() {
+        // Neppy: telemetry off by default (NEPPY-BUILD-SPEC.md §2.6).
         let cfg = ObservabilityConfig::default();
         assert!(cfg.sentry_dsn.is_none());
-        assert!(cfg.analytics_enabled);
+        assert!(!cfg.analytics_enabled);
     }
 
     #[test]
-    fn default_analytics_enabled_helper_returns_true() {
-        assert!(default_analytics_enabled());
+    fn default_analytics_enabled_helper_returns_false() {
+        assert!(!default_analytics_enabled());
     }
 
     #[test]
-    fn share_usage_data_is_on_by_default() {
-        assert!(default_share_usage_data());
-        assert!(ObservabilityConfig::default().share_usage_data);
+    fn share_usage_data_is_off_by_default() {
+        assert!(!default_share_usage_data());
+        assert!(!ObservabilityConfig::default().share_usage_data);
     }
 
     #[test]
     fn deserialize_missing_optional_fields_uses_defaults() {
         let cfg: ObservabilityConfig = serde_json::from_value(json!({})).unwrap();
-        assert!(cfg.analytics_enabled, "analytics default must be true");
+        assert!(!cfg.analytics_enabled, "analytics default must be false (Neppy)");
         assert!(
-            cfg.share_usage_data,
-            "usage-data sharing is on by default (consent to Langfuse push)"
+            !cfg.share_usage_data,
+            "usage-data sharing is off by default (Neppy: no hosted Langfuse push)"
         );
         // The local exporter stays opt-in and vendor-neutral by default.
         assert!(
