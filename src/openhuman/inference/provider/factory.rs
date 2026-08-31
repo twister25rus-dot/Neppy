@@ -1860,6 +1860,30 @@ pub(crate) fn create_local_chat_model_from_string(
         .ok_or_else(|| anyhow::anyhow!("unsupported local provider string '{provider}'"))?
 }
 
+/// Whether Neppy's local-first mode is active (default: on).
+///
+/// Neppy is a fork of OpenHuman cut off from the TinyHumans hosted backend.
+/// With no backend, the app-session gates that upstream applies to custom
+/// providers have nothing to validate against, so local mode short-circuits
+/// them. Set `NEPPY_LOCAL_MODE=0` (or `false`/`off`) to restore the upstream
+/// hosted-session gating. Read once and cached. See NEPPY-BUILD-SPEC.md §2.1.
+pub(crate) fn neppy_local_mode() -> bool {
+    use std::sync::OnceLock;
+    static LOCAL_MODE: OnceLock<bool> = OnceLock::new();
+    *LOCAL_MODE.get_or_init(|| {
+        match std::env::var("NEPPY_LOCAL_MODE") {
+            Ok(v) => {
+                let v = v.trim().to_ascii_lowercase();
+                !(v == "0" || v == "false" || v == "off" || v == "no")
+            }
+            // Default: on in real builds, off under `cfg!(test)` so the
+            // upstream session-gate tests keep exercising the real gate. A test
+            // that wants local mode can still set `NEPPY_LOCAL_MODE=1`.
+            Err(_) => !cfg!(test),
+        }
+    })
+}
+
 /// Verify the user has an active OpenHuman backend session.
 ///
 /// Without this check, an unregistered user can configure every workload
@@ -1874,6 +1898,15 @@ pub(crate) fn create_local_chat_model_from_string(
 /// construction-time chokepoint can never diverge on what "session active"
 /// means.
 pub(crate) fn verify_session_active(config: &Config) -> anyhow::Result<()> {
+    // Neppy local-first mode: there is no hosted backend to hold an
+    // `app-session` JWT, and this gate exists only to stop an *unregistered*
+    // desktop user from routing around registration — a concern that is void
+    // for a personal fork with no backend. When local mode is on (the default;
+    // set `NEPPY_LOCAL_MODE=0` to restore upstream gating), a BYOK/local
+    // provider is always admissible. See NEPPY-BUILD-SPEC.md §2.1.
+    if neppy_local_mode() {
+        return Ok(());
+    }
     // Fast path: the scheduler gate already knows the session is dead.
     if crate::openhuman::cron::scheduler_gate::is_signed_out() {
         anyhow::bail!(

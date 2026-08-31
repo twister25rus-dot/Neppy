@@ -1834,7 +1834,12 @@ async fn run_server_with_services(
     };
     let mut builder = crate::core::runtime::CoreBuilder::new(host_kind)
         .token(token)
-        .services(services);
+        .services(services)
+        // Neppy: local-first fork with no hosted backend. Drop the `hosted`
+        // and `relay` domain groups so nothing proxies to TinyHumans and no
+        // failed hosted call can publish `SessionExpired`. See
+        // NEPPY-BUILD-SPEC.md §2.2.
+        .domains(crate::core::runtime::DomainSet::full_local());
     if let Some(host) = host {
         builder = builder.host(host);
     }

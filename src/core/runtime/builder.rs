@@ -256,6 +256,23 @@ impl DomainSet {
         }
     }
 
+    /// Like [`full`](Self::full) but with the two TinyHumans-backend-coupled
+    /// groups off: `hosted` (announcements, billing, orchestration, referral,
+    /// team — all thin proxies to the hosted backend) and `relay` (the
+    /// tiny.place agent social network). Neppy is a local-first fork with no
+    /// hosted backend, so these groups have nothing to talk to; disabling them
+    /// (rather than stubbing) makes their controllers report unknown-method,
+    /// their agent tools disappear, and their stores/subscribers never
+    /// initialise — which also stops the `SessionExpired` cascade that a failed
+    /// hosted 401 would otherwise trigger. See NEPPY-BUILD-SPEC.md §2.2.
+    pub fn full_local() -> Self {
+        Self {
+            hosted: false,
+            relay: false,
+            ..Self::full()
+        }
+    }
+
     /// The embeddable agent core: agent + memory + threads + config + security.
     /// Every gate family AND `platform` are off. Used by
     /// `examples/embed_headless.rs`.
