@@ -17,7 +17,7 @@
 // reached zero gates — silently re-arming the exact failure described below.
 // That is why assertion 1 exists and why it compares an explicit list.
 //
-// Why this exists (#4919): the shell declares `openhuman_core` with
+// Why this exists (#4919): the shell declares `neppy_core` with
 // `default-features = false`, so it does NOT inherit the core's `default` list.
 // Every default-ON gate must be forwarded by hand, and nothing enforced that.
 // When the two drift, the domain is compiled out of the shipped desktop app and
@@ -123,13 +123,13 @@ export function parseCoreDefaultFeatures(coreToml) {
 }
 
 /**
- * What the shell forwards on its `openhuman_core` dependency.
+ * What the shell forwards on its `neppy_core` dependency.
  *
  * Returns `{ defaultFeatures, features }`. `defaultFeatures: true` means the
  * shell inherits the core's defaults and forwarding is moot — there is nothing
  * to drift.
  */
-export function parseShellForwardedFeatures(shellToml, depName = 'openhuman_core') {
+export function parseShellForwardedFeatures(shellToml, depName = 'neppy_core') {
   const text = stripComments(shellToml);
   // `[ \t]` not `\s`, for the same newline-matching reason as above.
   const declAt = text.search(new RegExp(`^[ \\t]*${depName}[ \\t]*=[ \\t]*\\{`, 'm'));
@@ -233,11 +233,11 @@ export function checkProductForwarding({ productFeatures, coreFeatureNames, shel
 
 export function formatProductReport(result, { productFeatures, shell }) {
   if (result.reason === 'dependency-not-found') {
-    return 'FAIL: could not find the `openhuman_core` dependency in the shell manifest.\nThe guard cannot verify forwarding — fix the parser or the manifest.';
+    return 'FAIL: could not find the `neppy_core` dependency in the shell manifest.\nThe guard cannot verify forwarding — fix the parser or the manifest.';
   }
   if (result.reason === 'shell-inherits-defaults') {
     return [
-      'FAIL: the shell no longer sets `default-features = false` on `openhuman_core`.',
+      'FAIL: the shell no longer sets `default-features = false` on `neppy_core`.',
       'It would inherit `[features] default`, which is the CONTRIBUTOR set and is',
       'deliberately smaller than the product — voice, web3, documents, meet, contacts',
       'and crash-reporting would vanish from the shipped app.',
@@ -258,7 +258,7 @@ export function formatProductReport(result, { productFeatures, shell }) {
     lines.push(
       '',
       'Each of these is compiled OUT of the shipped desktop app, silently.',
-      'Add it to the `openhuman_core` features list in app/src-tauri/Cargo.toml.',
+      'Add it to the `neppy_core` features list in app/src-tauri/Cargo.toml.',
       'See #4901 (voice, 56 users) and #4918 (tokenjuice-treesitter).'
     );
   }
@@ -308,7 +308,7 @@ export function diffForwarding({ coreDefaults, shell, allowlist = {} }) {
 
 export function formatReport(result, { coreDefaults, shell, allowlist = {} }) {
   if (result.reason === 'dependency-not-found') {
-    return 'FAIL: could not find the `openhuman_core` dependency in the shell manifest.\nThe guard cannot verify forwarding — fix the parser or the manifest.';
+    return 'FAIL: could not find the `neppy_core` dependency in the shell manifest.\nThe guard cannot verify forwarding — fix the parser or the manifest.';
   }
   if (result.reason === 'inherits-defaults') {
     return 'OK: the shell inherits the core default features (no `default-features = false`), so no forwarding is required.';
@@ -330,7 +330,7 @@ export function formatReport(result, { coreDefaults, shell, allowlist = {} }) {
     lines.push(
       '',
       'Each of these is compiled OUT of the shipped desktop app, silently.',
-      'Fix by adding the gate to the `openhuman_core` features list in',
+      'Fix by adding the gate to the `neppy_core` features list in',
       'app/src-tauri/Cargo.toml — or, if the exclusion is deliberate, add it to',
       'INTENTIONALLY_NOT_FORWARDED in scripts/ci/check-feature-forwarding.mjs',
       'with a reason. See #4901 (voice) and #4918 (tokenjuice-treesitter).'

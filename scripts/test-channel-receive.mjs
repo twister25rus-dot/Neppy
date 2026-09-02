@@ -75,7 +75,7 @@ function dbg(...args) {
 
 // ── Get session token from core ─────────────────────────────────────
 function getSessionToken() {
-  const coreBin = path.join(ROOT, 'target', 'debug', 'openhuman-core');
+  const coreBin = path.join(ROOT, 'target', 'debug', 'neppy-core');
   try {
     const output = execSync(`"${coreBin}" auth get_session_token`, {
       cwd: ROOT,

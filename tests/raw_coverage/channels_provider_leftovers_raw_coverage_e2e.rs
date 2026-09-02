@@ -14,16 +14,16 @@ use axum::{
     routing::post,
     Router,
 };
-use openhuman_core::openhuman::channels::providers::telegram::TelegramChannel;
-use openhuman_core::openhuman::web_chat::{
+use neppy_core::openhuman::channels::providers::telegram::TelegramChannel;
+use neppy_core::openhuman::web_chat::{
     cancel_chat, start_chat, subscribe_web_channel_events, test_support as web_test_support,
     ChatRequestMetadata,
 };
-use openhuman_core::openhuman::channels::providers::yuanbao::{
+use neppy_core::openhuman::channels::providers::yuanbao::{
     connection::YuanbaoConnection, YuanbaoChannel, YuanbaoConfig,
 };
-use openhuman_core::openhuman::channels::{Channel, LarkChannel, SendMessage};
-use openhuman_core::openhuman::config::{schema::LarkConfig, StreamMode};
+use neppy_core::openhuman::channels::{Channel, LarkChannel, SendMessage};
+use neppy_core::openhuman::config::{schema::LarkConfig, StreamMode};
 use serde_json::{json, Value};
 use tokio::sync::{mpsc, watch};
 use tokio::time::timeout;

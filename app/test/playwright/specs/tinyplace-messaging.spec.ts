@@ -1,5 +1,5 @@
 // Core-RPC e2e: tiny.place direct messaging between the app's own core (Alice)
-// and a second real openhuman-core (Bob), against a real tiny.place backend.
+// and a second real neppy-core (Bob), against a real tiny.place backend.
 //
 // This used to also drive the in-app Messaging UI (the `/agent-world/messaging`
 // route), but that surface was removed (#5424) along with the rest of the

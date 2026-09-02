@@ -8,7 +8,7 @@ Neppy can route any chat workload through **Anthropic's `claude` CLI** instead o
 
 - Claude Code CLI **≥ 2.0.0** on `PATH` (or `OPENHUMAN_CLAUDE_CLI=/abs/path/to/claude`).
 - An Anthropic API key in `ANTHROPIC_API_KEY`, **or** a pre-existing `~/.claude/.credentials.json` from `claude login`.
-- The `openhuman-core` binary on disk: Neppy spawns `openhuman-core mcp` as a stdio MCP server so the CLI can call Neppy tools. The path is discovered via `std::env::current_exe()`.
+- The `neppy-core` binary on disk: Neppy spawns `neppy-core mcp` as a stdio MCP server so the CLI can call Neppy tools. The path is discovered via `std::env::current_exe()`.
 
 ## Routing a workload through the CLI
 
@@ -16,7 +16,7 @@ The factory grammar accepts a new prefix: `claude-code:<model>[@<temperature>]`.
 
 ```bash
 # Through the JSON-RPC update endpoint:
-openhuman-core rpc openhuman.inference_update_model_settings \
+neppy-core rpc openhuman.inference_update_model_settings \
   --json '{"chat_provider":"claude-code:claude-sonnet-4-5"}'
 ```
 
@@ -33,7 +33,7 @@ A workload set to `claude-code:<model>` always spawns a fresh `claude` child per
 The status RPC is on the existing inference namespace:
 
 ```bash
-openhuman-core rpc openhuman.inference_claude_code_status
+neppy-core rpc openhuman.inference_claude_code_status
 ```
 
 Returns one of (`CliStatus` in [`src/openhuman/inference/provider/claude_code/types.rs`](../../../src/openhuman/inference/provider/claude_code/types.rs)):
@@ -50,7 +50,7 @@ The same status is rendered in the settings panel via `ClaudeCodeStatusCard` ([`
 Each chat turn:
 
 1. Resolve a per-thread CC session UUID from `<workspace>/claude-code-sessions.json`. New threads get a fresh RFC-4122 v4 UUID; the CLI requires v4 specifically for `--resume`.
-2. Write `mcp-config.json` to a tempdir pointing at `openhuman-core mcp` (stdio MCP server, no extra credentials).
+2. Write `mcp-config.json` to a tempdir pointing at `neppy-core mcp` (stdio MCP server, no extra credentials).
 3. Spawn the CLI with:
    - `-p --input-format stream-json --output-format stream-json --verbose --include-partial-messages`
    - `--mcp-config <tmp> --strict-mcp-config` so only the configured MCP servers are visible

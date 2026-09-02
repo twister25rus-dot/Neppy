@@ -2,7 +2,7 @@
 //!
 //! This binary is gated by the default-OFF dev-resource-profiler feature and
 //! is never linked into the shipped app. It samples the Tauri host, which also
-//! embeds openhuman_core, and its CEF descendants. On macOS it also captures an
+//! embeds neppy_core, and its CEF descendants. On macOS it also captures an
 //! Apple sample report for Rust module-level CPU attribution.
 //!
 //! Run from the repository root:
@@ -587,7 +587,7 @@ fn parse_rust_module_cpu(contents: &str) -> Vec<RustModuleCpu> {
 }
 
 fn own_rust_module(symbol: &str) -> Option<String> {
-    const CORE_PREFIX: &str = "openhuman_core::openhuman::";
+    const CORE_PREFIX: &str = "neppy_core::openhuman::";
     const TAURI_PREFIX: &str = "openhuman::";
     if let Some(start) = symbol.find(CORE_PREFIX) {
         let tail = &symbol[start + CORE_PREFIX.len()..];
@@ -784,9 +784,9 @@ mod tests {
     fn parses_recursive_stack_counts_into_openhuman_modules() {
         let sample = r#"
 Total number in stack (recursive counted multiple, when >=5):
-        81 openhuman_core::openhuman::agent::run  (in Neppy) + 10
-        34 <openhuman_core::openhuman::agent::Tool as core::future::Future>::poll  (in Neppy) + 2
-        17 openhuman_core::openhuman::memory::search  (in Neppy) + 4
+        81 neppy_core::openhuman::agent::run  (in Neppy) + 10
+        34 <neppy_core::openhuman::agent::Tool as core::future::Future>::poll  (in Neppy) + 2
+        17 neppy_core::openhuman::memory::search  (in Neppy) + 4
          9 openhuman::core_process::ensure_running  (in Neppy) + 1
        200 tokio::runtime::park  (in Neppy) + 3
 
@@ -796,11 +796,11 @@ Sort by top of stack, same collapsed (when >= 5):
             parse_rust_module_cpu(sample),
             vec![
                 RustModuleCpu {
-                    module: "openhuman_core::openhuman::agent".into(),
+                    module: "neppy_core::openhuman::agent".into(),
                     recursive_samples: 115,
                 },
                 RustModuleCpu {
-                    module: "openhuman_core::openhuman::memory".into(),
+                    module: "neppy_core::openhuman::memory".into(),
                     recursive_samples: 17,
                 },
                 RustModuleCpu {

@@ -25,10 +25,10 @@ import {
   storeRpcUrl,
 } from '../configPersistence';
 
-const STORAGE_KEY = 'openhuman_core_rpc_url';
-const TOKEN_STORAGE_KEY = 'openhuman_core_rpc_token';
-const MODE_STORAGE_KEY = 'openhuman_core_mode';
-const GATEWAY_ID_STORAGE_KEY = 'openhuman_core_gateway_id';
+const STORAGE_KEY = 'neppy_core_rpc_url';
+const TOKEN_STORAGE_KEY = 'neppy_core_rpc_token';
+const MODE_STORAGE_KEY = 'neppy_core_mode';
+const GATEWAY_ID_STORAGE_KEY = 'neppy_core_gateway_id';
 
 describe('configPersistence', () => {
   beforeEach(() => {
@@ -357,7 +357,7 @@ describe('configPersistence', () => {
     it('localStorage key is null after clearStoredRpcUrl', () => {
       storeRpcUrl('http://some-host:9999/rpc');
       clearStoredRpcUrl();
-      expect(localStorage.getItem('openhuman_core_rpc_url')).toBeNull();
+      expect(localStorage.getItem('neppy_core_rpc_url')).toBeNull();
     });
   });
 

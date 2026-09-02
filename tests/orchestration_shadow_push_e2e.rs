@@ -8,11 +8,9 @@
 
 use std::time::Duration;
 
-use openhuman_core::api::rest::BackendOAuthClient;
-use openhuman_core::openhuman::hosted::orchestration::cloud::{
-    push_event_with, push_world_diff_with,
-};
-use openhuman_core::openhuman::hosted::orchestration::wire::{
+use neppy_core::api::rest::BackendOAuthClient;
+use neppy_core::openhuman::hosted::orchestration::cloud::{push_event_with, push_world_diff_with};
+use neppy_core::openhuman::hosted::orchestration::wire::{
     parse_ts_ms, OrchestrationEventEnvelopeWire, WorldDiffBatchWire, WorldDiffEntryWire,
     ORCH_WIRE_PROTOCOL,
 };

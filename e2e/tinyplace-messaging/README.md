@@ -6,7 +6,7 @@ openhuman's real core against a real tiny.place backend. Two layers:
 
 | Layer | File | What it drives |
 | ----- | ---- | -------------- |
-| **Core** | [`messaging.e2e.mjs`](messaging.e2e.mjs) | Two real `openhuman-core` processes talking to each other over the `openhuman.tinyplace_*` JSON-RPC surface (the exact API the desktop UI calls via `core_rpc_relay`). |
+| **Core** | [`messaging.e2e.mjs`](messaging.e2e.mjs) | Two real `neppy-core` processes talking to each other over the `openhuman.tinyplace_*` JSON-RPC surface (the exact API the desktop UI calls via `core_rpc_relay`). |
 | **UI** | [`../../app/test/playwright/specs/tinyplace-messaging.spec.ts`](../../app/test/playwright/specs/tinyplace-messaging.spec.ts) | The web build of the app (Messaging screen) driving the same flow through the browser, with a second core as the peer. |
 
 Both run against the **real Go backend** (identity/contacts/relay/Signal
@@ -15,7 +15,7 @@ Signal-encrypted server-side, and only the real backend enforces that.
 
 ## What the core suite proves
 
-Each `openhuman-core` derives its tiny.place identity (a base58 Solana
+Each `neppy-core` derives its tiny.place identity (a base58 Solana
 `cryptoId`) from its wallet mnemonic, so two cores with two fresh mnemonics are
 two distinct agents. The suite walks the full lifecycle:
 
@@ -32,7 +32,7 @@ two distinct agents. The suite walks the full lifecycle:
 ## Run it
 
 ```bash
-# Core layer (two openhuman-core processes over JSON-RPC). Brings up an isolated
+# Core layer (two neppy-core processes over JSON-RPC). Brings up an isolated
 # backend (mongo+redis+backend, static payment verifier) if one isn't already
 # reachable, builds the core if needed, then runs the node:test suite.
 ./run.sh
@@ -64,7 +64,7 @@ user actually performs on screen.
 ### Requirements
 
 - Docker (only if you want `run.sh` to auto-start the backend).
-- A built `openhuman-core` binary (`cargo build --bin openhuman-core`; `run.sh`
+- A built `neppy-core` binary (`cargo build --bin neppy-core`; `run.sh`
   builds it if missing). On Apple Silicon prefix with `GGML_NATIVE=OFF`.
 
 ### Env knobs
@@ -72,7 +72,7 @@ user actually performs on screen.
 | Var | Default | Meaning |
 | --- | ------- | ------- |
 | `TINYPLACE_API_BASE_URL` | `http://localhost:18080` | Backend base URL both cores point at. |
-| `OPENHUMAN_CORE_BIN` | `target/debug/openhuman-core` | Path to the core binary. |
+| `OPENHUMAN_CORE_BIN` | `target/debug/neppy-core` | Path to the core binary. |
 | `MANAGE_STACK` | `1` | `0` disables auto start/stop of the backend. |
 | `BACKEND_PORT` | `18080` | Host port for the managed backend. |
 | `VERBOSE` | – | `1` streams each core's stdout/stderr. |

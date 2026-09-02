@@ -168,7 +168,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': '보관소가 코어 호스트에 있습니다.',
   'crossHostVault.message':
-    '이 메모리 보관소는 openhuman-core 호스트({os})에 저장되어 있습니다. 해당 컴퓨터에서만 열거나 표시할 수 있으며 이 기기에서는 불가능합니다.',
+    '이 메모리 보관소는 neppy-core 호스트({os})에 저장되어 있습니다. 해당 컴퓨터에서만 열거나 표시할 수 있으며 이 기기에서는 불가능합니다.',
   'conversations.toolFailure.whyLabel': '이유',
   'conversations.toolFailure.nextLabel': '다음 할 일',
   'conversations.toolFailure.missingPermission.cause':
@@ -5110,7 +5110,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.title': 'MCP 서버',
   'settings.mcpServer.toolsSectionTitle': '사용 가능한 도구',
   'settings.mcpServer.toolsSectionDesc':
-    '도구 노출 openhuman-core mcp 실행 시 MCP stdio 서버를 통해',
+    '도구 노출 neppy-core mcp 실행 시 MCP stdio 서버를 통해',
   'settings.mcpServer.configSectionTitle': '클라이언트 구성',
   'settings.mcpServer.configSectionDesc':
     '올바른 구성 조각을 생성하려면 MCP 클라이언트를 선택하세요.',
@@ -5118,7 +5118,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': '복사되었습니다!',
   'settings.mcpServer.openConfigFile': '구성 파일 열기',
   'settings.mcpServer.binaryPathNotFound':
-    'Neppy 바이너리를 찾을 수 없습니다. 소스에서 실행하는 경우 다음을 사용하여 빌드하세요: cargo build --bin openhuman-core',
+    'Neppy 바이너리를 찾을 수 없습니다. 소스에서 실행하는 경우 다음을 사용하여 빌드하세요: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': '구성 파일을 열지 못했습니다.',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': '커서',
@@ -6792,7 +6792,7 @@ const messages: TranslationMap = {
     '한 번도 본 적 없는 호스트 키를 받아들입니다. 바뀐 키는 여전히 거부되는데, 바로 그 경우가 무언가 잘못되었다는 뜻이기 때문입니다.',
   'settings.gateway.containedLabel': '컨테이너 안에서 실행',
   'settings.gateway.imageLabel': '컨테이너 이미지',
-  'settings.gateway.binaryLabel': 'openhuman-core 경로',
+  'settings.gateway.binaryLabel': 'neppy-core 경로',
   'settings.gateway.kind.desktop': '이 앱 안에서',
   'settings.gateway.kind.remote': 'URL의 코어',
   'settings.gateway.kind.docker': '여기 컨테이너에서',
@@ -6803,7 +6803,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': '그 이름은 앱 자체 코어용으로 예약되어 있습니다.',
   'settings.gateway.destinationRequired': '연결할 컴퓨터를 입력하세요.',
   'settings.gateway.imageRequired': '실행할 컨테이너 이미지를 입력하세요.',
-  'settings.gateway.binaryRequired': '그 컴퓨터의 openhuman-core 경로를 입력하세요.',
+  'settings.gateway.binaryRequired': '그 컴퓨터의 neppy-core 경로를 입력하세요.',
   'settings.gateway.portInvalid': 'SSH 포트는 숫자여야 합니다.',
 
   'devOptions.gateway': '위치',

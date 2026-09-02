@@ -2,17 +2,17 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
 use chrono::Utc;
-use openhuman_core::openhuman::config::rpc as config_rpc;
-use openhuman_core::openhuman::security::credentials::profiles::{
+use neppy_core::openhuman::config::rpc as config_rpc;
+use neppy_core::openhuman::security::credentials::profiles::{
     AuthProfile, AuthProfileKind, AuthProfilesStore, TokenSet,
 };
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::memory::{
     AppendConversationMessageRequest, ConversationMessageRecord, ConversationMessagesRequest,
     DeleteConversationThreadRequest, EmptyRequest, UpdateConversationMessageRequest,
     UpdateConversationThreadLabelsRequest, UpdateConversationThreadTitleRequest,
     UpsertConversationThreadRequest,
 };
-use openhuman_core::openhuman::threads::ops as thread_ops;
+use neppy_core::openhuman::threads::ops as thread_ops;
 use serde_json::json;
 use tempfile::{Builder, TempDir};
 

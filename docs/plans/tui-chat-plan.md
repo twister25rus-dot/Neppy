@@ -7,7 +7,7 @@
 
 ## Goal
 
-Running `openhuman-core tui` (alias `chat`) opens a ratatui-based terminal UI that is an
+Running `neppy-core tui` (alias `chat`) opens a ratatui-based terminal UI that is an
 interface into the general chat (the same `web_chat` surface the desktop app uses),
 gated behind a Cargo feature `tui`.
 

@@ -88,7 +88,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 FieldSchema {
                     name: "asset_name",
                     ty: TypeSchema::String,
-                    comment: "Asset file name (e.g. openhuman-core-aarch64-apple-darwin).",
+                    comment: "Asset file name (e.g. neppy-core-aarch64-apple-darwin).",
                     required: true,
                 },
                 FieldSchema {

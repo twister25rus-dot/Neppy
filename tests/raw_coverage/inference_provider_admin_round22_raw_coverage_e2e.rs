@@ -18,18 +18,18 @@ use tempfile::{tempdir, TempDir};
 use tinyagents::harness::message::Message;
 use tinyagents::harness::model::ModelRequest;
 
-use openhuman_core::openhuman::config::schema::cloud_providers::{
+use neppy_core::openhuman::config::schema::cloud_providers::{
     AuthStyle as CloudAuthStyle, CloudProviderCreds,
 };
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::security::credentials::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use openhuman_core::openhuman::inference::local::LocalAiService;
-use openhuman_core::openhuman::inference::provider::factory::{
+use neppy_core::openhuman::inference::local::LocalAiService;
+use neppy_core::openhuman::inference::provider::factory::{
     auth_key_for_slug, create_chat_model_from_string_with_model_id,
 };
-use openhuman_core::openhuman::inference::provider::list_configured_models;
+use neppy_core::openhuman::inference::provider::list_configured_models;
 
 #[derive(Clone, Default)]
 struct MockState {

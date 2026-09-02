@@ -16,7 +16,7 @@
 //! conflict so it can be diagnosed instead of producing 401s and version
 //! drift downstream.
 //! Set `OPENHUMAN_CORE_REUSE_EXISTING=1` to opt back into the legacy
-//! attach-to-whatever-is-listening behavior (e.g. a manual `openhuman-core
+//! attach-to-whatever-is-listening behavior (e.g. a manual `neppy-core
 //! run` harness for debugging).
 
 use std::sync::Arc;
@@ -44,7 +44,7 @@ const CORE_READY_TIMEOUT_MS: u64 = CORE_READY_POLL_MS * CORE_READY_ATTEMPTS as u
 
 /// Generate a 256-bit cryptographically-random bearer token as a hex string.
 ///
-/// Uses the same encoding as `openhuman_core::core::auth::generate_token`
+/// Uses the same encoding as `neppy_core::core::auth::generate_token`
 /// (`hex::encode`) so the token format never silently diverges between the
 /// Tauri-side generator and the core-side validator.
 pub fn generate_rpc_token() -> String {
@@ -77,7 +77,7 @@ pub struct CoreProcessHandle {
     /// Bearer token the embedded server validates on every inbound request.
     ///
     /// Handed to the embedded server **in-memory** (via the `rpc_token`
-    /// argument of [`openhuman_core::core::jsonrpc::run_server_embedded_with_ready`])
+    /// argument of [`neppy_core::core::jsonrpc::run_server_embedded_with_ready`])
     /// rather than through `OPENHUMAN_CORE_TOKEN` on the process environment.
     /// Avoiding the env crossing keeps the bearer off `/proc/<pid>/environ`
     /// (Linux) and out of `sysctl KERN_PROCARGS2` / `ps eww -p <pid>` (macOS)
@@ -224,7 +224,7 @@ impl CoreProcessHandle {
             let mut retry_after_takeover = false;
             let shutdown_token = self.fresh_shutdown_token().await;
             let (ready_tx, mut ready_rx) = tokio::sync::oneshot::channel::<
-                openhuman_core::core::jsonrpc::EmbeddedReadySignal,
+                neppy_core::core::jsonrpc::EmbeddedReadySignal,
             >();
             let mut received_ready = false;
 
@@ -292,7 +292,7 @@ impl CoreProcessHandle {
                         "[core] spawning embedded in-process core server on preferred port {port}"
                     );
                     let task = tokio::spawn(async move {
-                        openhuman_core::core::jsonrpc::run_server_embedded_with_ready(
+                        neppy_core::core::jsonrpc::run_server_embedded_with_ready(
                             None,
                             Some(port),
                             true,
@@ -370,8 +370,8 @@ impl CoreProcessHandle {
                                     .to_string())
                             }
                             Ok(Err(err)) => {
-                                if let Some(openhuman_core::openhuman::platform::connectivity::rpc::PickListenPortError::WouldTakeOver { preferred, .. }) = err
-                                    .downcast_ref::<openhuman_core::openhuman::platform::connectivity::rpc::PickListenPortError>()
+                                if let Some(neppy_core::openhuman::platform::connectivity::rpc::PickListenPortError::WouldTakeOver { preferred, .. }) = err
+                                    .downcast_ref::<neppy_core::openhuman::platform::connectivity::rpc::PickListenPortError>()
                                 {
                                     if startup_attempt == 0 {
                                         log::warn!(
@@ -462,7 +462,7 @@ impl CoreProcessHandle {
 
     pub(crate) fn apply_embedded_ready_signal(
         &self,
-        ready: openhuman_core::core::jsonrpc::EmbeddedReadySignal,
+        ready: neppy_core::core::jsonrpc::EmbeddedReadySignal,
     ) {
         *self.active_port.write() = ready.port;
         std::env::set_var("OPENHUMAN_CORE_RPC_URL", self.rpc_url());
@@ -575,7 +575,7 @@ impl CoreProcessHandle {
     ///
     /// macOS caches permission state per-process; restarting forces a fresh
     /// read. If something else is bound to the port (e.g. a manual
-    /// `openhuman-core run` harness) we surface that instead of looping.
+    /// `neppy-core run` harness) we surface that instead of looping.
     ///
     /// Issue: <https://github.com/tinyhumansai/openhuman/issues/133>
     pub async fn restart(&self) -> Result<(), String> {

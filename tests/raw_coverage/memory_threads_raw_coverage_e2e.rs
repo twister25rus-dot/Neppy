@@ -17,15 +17,15 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 use tempfile::TempDir;
 
-use openhuman_core::openhuman::agent::progress::AgentProgress;
-use openhuman_core::openhuman::agent::task_board::{TaskBoard, TaskBoardCard, TaskCardStatus};
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::inference::embeddings::NoopEmbedding;
-use openhuman_core::openhuman::memory::api::tool_memory::{
+use neppy_core::openhuman::agent::progress::AgentProgress;
+use neppy_core::openhuman::agent::task_board::{TaskBoard, TaskBoardCard, TaskCardStatus};
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::inference::embeddings::NoopEmbedding;
+use neppy_core::openhuman::memory::api::tool_memory::{
     ToolMemoryPriority as ApiToolMemoryPriority, ToolMemoryRule as ApiToolMemoryRule,
     ToolMemorySource as ApiToolMemorySource,
 };
-use openhuman_core::openhuman::memory::query::{
+use neppy_core::openhuman::memory::query::{
     MemoryQueryTool, MemoryTreeDrillDownTool, MemoryTreeFetchLeavesTool,
     MemoryTreeIngestDocumentTool, MemoryTreeQuerySourceTool, MemoryTreeSearchEntitiesTool,
 };
@@ -34,15 +34,15 @@ use tinymemory_core::queue::{
     self as memory_queue, AppendBufferPayload, AppendTarget, ExtractChunkPayload,
     FlushStalePayload, JobKind, JobStatus, NewJob, NodeRef, SealPayload, DEFAULT_LOCK_DURATION_MS,
 };
-use openhuman_core::openhuman::memory::sources::readers::reader_for;
-use openhuman_core::openhuman::memory::sources::registry;
-use openhuman_core::openhuman::memory::sources::rpc as memory_sources_rpc;
-use openhuman_core::openhuman::memory::sources::status::{source_status, FreshnessLabel};
-use openhuman_core::openhuman::memory::sources::sync::sync_source;
-use openhuman_core::openhuman::memory::sources::types::{
+use neppy_core::openhuman::memory::sources::readers::reader_for;
+use neppy_core::openhuman::memory::sources::registry;
+use neppy_core::openhuman::memory::sources::rpc as memory_sources_rpc;
+use neppy_core::openhuman::memory::sources::status::{source_status, FreshnessLabel};
+use neppy_core::openhuman::memory::sources::sync::sync_source;
+use neppy_core::openhuman::memory::sources::types::{
     ContentType, MemorySourceEntry, SourceContent, SourceItem, SourceKind,
 };
-use openhuman_core::openhuman::memory::sources::{
+use neppy_core::openhuman::memory::sources::{
     all_memory_sources_controller_schemas, all_memory_sources_registered_controllers,
 };
 use tinymemory_core::store::chunks::store::{upsert_chunks, with_connection};
@@ -56,24 +56,24 @@ use tinymemory_core::store::trees::types::{
 use tinymemory_core::store::{
     MemoryClient, NamespaceDocumentInput, UnifiedMemory,
 };
-use openhuman_core::openhuman::memory::sync::composio;
-use openhuman_core::openhuman::memory::sync::composio::providers::profile::{
+use neppy_core::openhuman::memory::sync::composio;
+use neppy_core::openhuman::memory::sync::composio::providers::profile::{
     canonicalize, delete_connected_identity_facets, is_self_identity, is_self_identity_any_toolkit,
     load_connected_identities, render_connected_identities_section, ConnectedIdentity,
     IdentityKind,
 };
-use openhuman_core::openhuman::memory::sync::composio::providers::profile_md::{
+use neppy_core::openhuman::memory::sync::composio::providers::profile_md::{
     block_end, block_start, merge_provider_into_profile_md, remove_provider_from_profile_md,
     replace_managed_block,
 };
-use openhuman_core::openhuman::memory::sync::composio::providers::slack::{
+use neppy_core::openhuman::memory::sync::composio::providers::slack::{
     post_process as slack_post_process, schemas as slack_memory_schemas,
 };
-use openhuman_core::openhuman::memory::sync::composio::providers::sync_state::{
+use neppy_core::openhuman::memory::sync::composio::providers::sync_state::{
     extract_item_id, DailyBudget, PersistedSyncState, SyncState, DEFAULT_DAILY_REQUEST_LIMIT,
 };
-use openhuman_core::openhuman::memory::sync::composio::providers::user_scopes;
-use openhuman_core::openhuman::memory::sync::composio::providers::{
+use neppy_core::openhuman::memory::sync::composio::providers::user_scopes;
+use neppy_core::openhuman::memory::sync::composio::providers::{
     agent_ready_toolkits, all_providers as all_composio_providers, capability_matrix,
     catalog_for_toolkit, classify_unknown, curated_scope_for, find_curated, get_provider,
     init_default_providers as init_default_composio_providers, is_action_visible_with_pref,
@@ -81,49 +81,49 @@ use openhuman_core::openhuman::memory::sync::composio::providers::{
     NormalizedTask, ProviderContext, ProviderUserProfile, SyncOutcome as ComposioSyncOutcome,
     SyncReason, TaskFetchFilter, ToolScope, UserScopePref,
 };
-use openhuman_core::openhuman::memory::sync::sync_status::{
+use neppy_core::openhuman::memory::sync::sync_status::{
     rpc as memory_sync_status_rpc, schemas as memory_sync_status_schemas,
 };
-use openhuman_core::openhuman::memory::tool_memory::prompt::{
+use neppy_core::openhuman::memory::tool_memory::prompt::{
     render_tool_memory_rules, ToolMemoryRulesSection, TOOL_MEMORY_HEADING,
 };
-use openhuman_core::openhuman::memory::tool_memory::{
+use neppy_core::openhuman::memory::tool_memory::{
     tool_memory_namespace, tool_memory_store, ToolMemoryPriority, ToolMemoryRule, ToolMemorySource,
     TOOL_MEMORY_PROMPT_CAP,
 };
-use openhuman_core::openhuman::memory::tools::tool_memory::{
+use neppy_core::openhuman::memory::tools::tool_memory::{
     MemoryToolsListTool, MemoryToolsPutTool,
 };
-use openhuman_core::openhuman::memory::tools::{
+use neppy_core::openhuman::memory::tools::{
     MemoryForgetTool, MemoryRecallTool, MemoryStoreTool,
 };
-use openhuman_core::openhuman::memory::tree::score::embed::Embedder;
-use openhuman_core::openhuman::memory::tree::score::extract::{
+use neppy_core::openhuman::memory::tree::score::embed::Embedder;
+use neppy_core::openhuman::memory::tree::score::extract::{
     CompositeExtractor, EntityExtractor, EntityKind, ExtractedEntities, ExtractedEntity,
     ExtractedTopic,
 };
-use openhuman_core::openhuman::memory::tree::score::resolver::CanonicalEntity;
-use openhuman_core::openhuman::memory::tree::score::signals::{
+use neppy_core::openhuman::memory::tree::score::resolver::CanonicalEntity;
+use neppy_core::openhuman::memory::tree::score::signals::{
     combine, combine_cheap_only, compute as compute_score_signals, entity_density_score,
     interaction, metadata_weight, source_weight, token_count, unique_words, ScoreSignals,
     SignalWeights,
 };
-use openhuman_core::openhuman::memory::tree::score::store as score_store;
-use openhuman_core::openhuman::memory::tree::score::{resolver, ScoringConfig};
-use openhuman_core::openhuman::memory::tree::summarise::{
+use neppy_core::openhuman::memory::tree::score::store as score_store;
+use neppy_core::openhuman::memory::tree::score::{resolver, ScoringConfig};
+use neppy_core::openhuman::memory::tree::summarise::{
     fallback_summary, SummaryContext, SummaryInput,
 };
-use openhuman_core::openhuman::memory::tree::tree::bucket_seal::LeafRef;
-use openhuman_core::openhuman::memory::tree::tree_runtime::store as tree_runtime_store;
-use openhuman_core::openhuman::memory::tree::tree_runtime::{
+use neppy_core::openhuman::memory::tree::tree::bucket_seal::LeafRef;
+use neppy_core::openhuman::memory::tree::tree_runtime::store as tree_runtime_store;
+use neppy_core::openhuman::memory::tree::tree_runtime::{
     all_tree_summarizer_controller_schemas, all_tree_summarizer_registered_controllers,
     derive_node_ids, derive_parent_id, estimate_tokens, level_from_node_id, node_id_to_path,
     NodeLevel, TreeNode,
 };
-use openhuman_core::openhuman::memory::tree::{retrieval, score::embed};
+use neppy_core::openhuman::memory::tree::{retrieval, score::embed};
 use tinymemory_core::tree_policy::TreePolicy;
 use tinymemory_core::tree_source;
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::memory::{
     all_memory_controller_schemas, all_memory_registered_controllers,
     preferences::{
         load_general_preferences, recall_related_preferences, recall_situational_preferences,
@@ -137,12 +137,12 @@ use openhuman_core::openhuman::memory::{
 // their contents flat but not the modules themselves.
 // The guard exposes `store` through the contract's mandatory core trait, and
 // stamps provenance from an explicit taint argument.
-use openhuman_core::openhuman::memory::api::provider::MemoryCore;
-use openhuman_core::openhuman::memory::api::types::MemoryTaint;
-// These request/record types are consumed directly by `openhuman_core::openhuman::memory::ops`
+use neppy_core::openhuman::memory::api::provider::MemoryCore;
+use neppy_core::openhuman::memory::api::types::MemoryTaint;
+// These request/record types are consumed directly by `neppy_core::openhuman::memory::ops`
 // and `openhuman::threads::ops` handlers below, which take the host's own `rpc_models` types,
 // not the engine crate's same-named ones — so they must come from the host, not `tinymemory_core`.
-use openhuman_core::openhuman::memory::rpc_models::{
+use neppy_core::openhuman::memory::rpc_models::{
     AppendConversationMessageRequest, ConversationMessageRecord, ConversationMessagesRequest,
     CreateConversationThreadRequest, DeleteConversationThreadRequest, DeleteDocumentRequest,
     EmptyRequest, GenerateConversationThreadTitleRequest, ListDocumentsRequest,
@@ -159,22 +159,22 @@ use tinymemory_core::{
     traits::{Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts},
     util::redact::{redact, redact_endpoint},
 };
-use openhuman_core::openhuman::security::{AutonomyLevel, SecurityPolicy};
-use openhuman_core::openhuman::threads::ops as thread_ops;
-use openhuman_core::openhuman::threads::title::{
+use neppy_core::openhuman::security::{AutonomyLevel, SecurityPolicy};
+use neppy_core::openhuman::threads::ops as thread_ops;
+use neppy_core::openhuman::threads::title::{
     build_title_prompt, collapse_whitespace, is_auto_generated_thread_title,
     sanitize_generated_title, title_from_user_message, title_log_fingerprint,
 };
-use openhuman_core::openhuman::threads::turn_state::{
+use neppy_core::openhuman::threads::turn_state::{
     self, ClearTurnStateRequest, GetTurnStateRequest, GetTurnStateResponse, ListTurnStatesResponse,
     SubagentActivity, SubagentToolCall, ToolTimelineEntry, ToolTimelineStatus, TurnLifecycle,
     TurnPhase, TurnState, TurnStateMirror, TurnStateStore,
 };
-use openhuman_core::openhuman::threads::ThreadsError;
-use openhuman_core::openhuman::threads::{
+use neppy_core::openhuman::threads::ThreadsError;
+use neppy_core::openhuman::threads::{
     all_threads_controller_schemas, all_threads_registered_controllers,
 };
-use openhuman_core::openhuman::tools::traits::{PermissionLevel, Tool, ToolCategory};
+use neppy_core::openhuman::tools::traits::{PermissionLevel, Tool, ToolCategory};
 use tinycortex::memory::ingest::canonicalize::chat::{
     canonicalise as canonicalise_chat, ChatBatch, ChatMessage,
 };
@@ -219,7 +219,7 @@ fn ensure_memory_seams() {
         .name("raw-coverage-memory-seams".to_string())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| {
-            openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
+            neppy_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
                 Config::default(),
             ));
         })
@@ -268,7 +268,7 @@ fn module_workspace() -> &'static Path {
         std::mem::forget(dir);
         ensure_memory_seams();
         #[cfg(feature = "modules")]
-        openhuman_core::openhuman::modules::memory::set_modules_policy(Arc::new(shared_config_at(
+        neppy_core::openhuman::modules::memory::set_modules_policy(Arc::new(shared_config_at(
             &path,
         )));
         path
@@ -588,7 +588,7 @@ Kitchen is north of Garden.
                 category: "core".into(),
                 session_id: Some("session-coverage".into()),
                 document_id: Some("doc-memory-raw-ingestion".into()),
-                taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+                taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
             },
             config: MemoryIngestionConfig::default(),
         })
@@ -658,10 +658,10 @@ Kitchen is north of Garden.
                 category: "core".into(),
                 session_id: None,
                 document_id: Some("doc-memory-raw-ingestion".into()),
-                taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+                taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
             },
             &MemoryIngestionConfig {
-                extraction_mode: openhuman_core::openhuman::memory::ExtractionMode::Chunk,
+                extraction_mode: neppy_core::openhuman::memory::ExtractionMode::Chunk,
                 ..Default::default()
             },
         )
@@ -864,7 +864,7 @@ async fn memory_thread_tree_and_sync_controller_schemas_execute_public_handlers(
     let thread_controllers = all_threads_registered_controllers();
     assert_eq!(thread_schemas.len(), thread_controllers.len());
     assert_eq!(
-        openhuman_core::openhuman::threads::schemas::schemas("missing").function,
+        neppy_core::openhuman::threads::schemas::schemas("missing").function,
         "unknown"
     );
     let expected_thread_functions = [
@@ -1088,7 +1088,7 @@ fn memory_schema_registries_and_query_tool_metadata_cover_public_surfaces() {
         "tool_rules_for_prompt",
         "tool_rules_json",
     ] {
-        let schema = openhuman_core::openhuman::memory::schemas::schemas(function);
+        let schema = neppy_core::openhuman::memory::schemas::schemas(function);
         assert_eq!(schema.namespace, "memory");
         assert_eq!(schema.function, function);
         assert!(memory_schemas
@@ -1096,13 +1096,13 @@ fn memory_schema_registries_and_query_tool_metadata_cover_public_surfaces() {
             .any(|candidate| candidate.function == function));
     }
     assert_eq!(
-        openhuman_core::openhuman::memory::schemas::schemas("missing").function,
+        neppy_core::openhuman::memory::schemas::schemas("missing").function,
         "unknown"
     );
 
-    let legacy_tree_schemas = openhuman_core::openhuman::memory::schema::all_controller_schemas();
+    let legacy_tree_schemas = neppy_core::openhuman::memory::schema::all_controller_schemas();
     let legacy_tree_controllers =
-        openhuman_core::openhuman::memory::schema::all_registered_controllers();
+        neppy_core::openhuman::memory::schema::all_registered_controllers();
     assert!(
         legacy_tree_schemas.len() >= 19,
         "expected at least 19 memory controller schemas, got {}",
@@ -1130,7 +1130,7 @@ fn memory_schema_registries_and_query_tool_metadata_cover_public_surfaces() {
         "pipeline_status",
         "set_enabled",
     ] {
-        let schema = openhuman_core::openhuman::memory::schema::schemas(function);
+        let schema = neppy_core::openhuman::memory::schema::schemas(function);
         assert_eq!(schema.namespace, "memory_tree");
         assert_eq!(schema.function, function);
         assert!(legacy_tree_schemas
@@ -1138,7 +1138,7 @@ fn memory_schema_registries_and_query_tool_metadata_cover_public_surfaces() {
             .any(|candidate| candidate.function == function));
     }
     assert_eq!(
-        openhuman_core::openhuman::memory::schema::schemas("missing").function,
+        neppy_core::openhuman::memory::schema::schemas("missing").function,
         "unknown"
     );
 
@@ -1492,7 +1492,7 @@ fn memory_tree_scoring_signal_helpers_cover_boundaries_and_serialization() {
     assert!(!EntityKind::Person.is_mechanical());
     assert!(EntityKind::parse("unknown").is_err());
 
-    let regex_entities = openhuman_core::openhuman::memory::tree::score::extract::regex::extract(
+    let regex_entities = neppy_core::openhuman::memory::tree::score::extract::regex::extract(
         "Alice emailed bob@example.com from https://example.test and mentioned #coverage.",
     );
     assert!(regex_entities
@@ -1778,12 +1778,12 @@ fn memory_tree_runtime_store_buffers_and_retrieval_wire_helpers() {
         0
     );
 
-    let source_factory = openhuman_core::openhuman::memory::tree::tree::TreeFactory::source(
+    let source_factory = neppy_core::openhuman::memory::tree::tree::TreeFactory::source(
         "gmail:alice@example.com|bob@example.com",
     );
     assert_eq!(
         source_factory.profile(),
-        openhuman_core::openhuman::memory::tree::tree::TreeProfile::Source
+        neppy_core::openhuman::memory::tree::tree::TreeProfile::Source
     );
     assert_eq!(
         source_factory.scope_slug(),
@@ -1793,10 +1793,10 @@ fn memory_tree_runtime_store_buffers_and_retrieval_wire_helpers() {
         .get_or_create(&config)
         .expect("source tree from factory");
     assert_eq!(
-        openhuman_core::openhuman::memory::tree::tree::TreeFactory::from_tree(&source_tree).kind(),
+        neppy_core::openhuman::memory::tree::tree::TreeFactory::from_tree(&source_tree).kind(),
         TreeKind::Source
     );
-    let topic_factory = openhuman_core::openhuman::memory::tree::tree::TreeFactory::topic(
+    let topic_factory = neppy_core::openhuman::memory::tree::tree::TreeFactory::topic(
         "email:alice@example.com",
     );
     assert!(matches!(
@@ -1808,12 +1808,12 @@ fn memory_tree_runtime_store_buffers_and_retrieval_wire_helpers() {
         .expect("topic tree from factory");
     assert_ne!(source_tree.id, topic_tree.id);
     assert!(
-        openhuman_core::openhuman::memory::tree::tree::new_tree_id(TreeKind::Global)
+        neppy_core::openhuman::memory::tree::tree::new_tree_id(TreeKind::Global)
             .starts_with("global:")
     );
-    assert!(openhuman_core::openhuman::memory::tree::tree::new_summary_id(2).contains(":L2-"));
+    assert!(neppy_core::openhuman::memory::tree::tree::new_summary_id(2).contains(":L2-"));
     assert!(
-        openhuman_core::openhuman::memory::tree::tree::registry::is_unique_violation(
+        neppy_core::openhuman::memory::tree::tree::registry::is_unique_violation(
             &anyhow::anyhow!("UNIQUE constraint failed: mem_trees.kind, mem_trees.scope")
         )
     );
@@ -1821,7 +1821,7 @@ fn memory_tree_runtime_store_buffers_and_retrieval_wire_helpers() {
         .archive(&config)
         .expect("archive source tree");
     assert_eq!(
-        openhuman_core::openhuman::memory::tree::tree::store::get_tree_by_scope(
+        neppy_core::openhuman::memory::tree::tree::store::get_tree_by_scope(
             &config,
             TreeKind::Source,
             "gmail:alice@example.com|bob@example.com"
@@ -2037,13 +2037,13 @@ async fn memory_read_rpc_score_index_and_summary_helpers_cover_dashboard_paths()
         ask: None,
     };
     let empty =
-        openhuman_core::openhuman::memory::tree::summarise::summarise(&config, &[], &empty_ctx)
+        neppy_core::openhuman::memory::tree::summarise::summarise(&config, &[], &empty_ctx)
             .await
             .expect("empty summarise avoids provider");
     assert_eq!(empty.token_count, 0);
 
     let embedder =
-        openhuman_core::openhuman::memory::tree::score::embed::factory::build_embedder_from_config(
+        neppy_core::openhuman::memory::tree::score::embed::factory::build_embedder_from_config(
             &config,
         )
         .expect("inert embedder");
@@ -2215,14 +2215,14 @@ async fn memory_preferences_remember_redaction_and_pipeline_traits_cover_public_
     // are host policy over a driver, not engine calls. `guarded_in_memory`
     // gives a real guard over a real store, so this still exercises the
     // decorator production uses rather than reaching past it.
-    let (_provider, memory) = openhuman_core::openhuman::memory::guard::in_memory::guarded_in_memory();
+    let (_provider, memory) = neppy_core::openhuman::memory::guard::in_memory::guarded_in_memory();
 
     memory
         .store(
             USER_PREF_GENERAL_NAMESPACE,
             "tone",
             "Prefer concise responses.",
-            openhuman_core::openhuman::memory::api::types::MemoryCategory::Core,
+            neppy_core::openhuman::memory::api::types::MemoryCategory::Core,
             None,
             MemoryTaint::Internal,
         )
@@ -2233,7 +2233,7 @@ async fn memory_preferences_remember_redaction_and_pipeline_traits_cover_public_
             USER_PREF_GENERAL_NAMESPACE,
             "empty",
             "   ",
-            openhuman_core::openhuman::memory::api::types::MemoryCategory::Core,
+            neppy_core::openhuman::memory::api::types::MemoryCategory::Core,
             None,
             MemoryTaint::Internal,
         )
@@ -2244,7 +2244,7 @@ async fn memory_preferences_remember_redaction_and_pipeline_traits_cover_public_
             USER_PREF_SITUATIONAL_NAMESPACE,
             "rust-tests",
             "When changing Rust code, run targeted tests first.",
-            openhuman_core::openhuman::memory::api::types::MemoryCategory::Core,
+            neppy_core::openhuman::memory::api::types::MemoryCategory::Core,
             None,
             MemoryTaint::Internal,
         )
@@ -2808,7 +2808,7 @@ async fn memory_source_sync_entrypoint_rejects_disabled_and_ingests_folder_items
 #[test]
 fn memory_tree_io_contract_types_round_trip_leaf_read_and_write_shapes() {
     let now = Utc.with_ymd_and_hms(2026, 5, 29, 16, 0, 0).unwrap();
-    let payload = openhuman_core::openhuman::memory::tree::TreeLeafPayload {
+    let payload = neppy_core::openhuman::memory::tree::TreeLeafPayload {
         chunk_id: "chunk-contract-1".into(),
         token_count: 42,
         timestamp: now,
@@ -2821,12 +2821,12 @@ fn memory_tree_io_contract_types_round_trip_leaf_read_and_write_shapes() {
     assert_eq!(leaf_ref.chunk_id, payload.chunk_id);
     assert_eq!(leaf_ref.entities, payload.entities);
     let round_trip =
-        openhuman_core::openhuman::memory::tree::TreeLeafPayload::from(leaf_ref.clone());
+        neppy_core::openhuman::memory::tree::TreeLeafPayload::from(leaf_ref.clone());
     assert_eq!(round_trip.content, payload.content);
     assert_eq!(round_trip.score, payload.score);
 
     let write_default_json =
-        serde_json::to_value(openhuman_core::openhuman::memory::tree::TreeWriteRequest {
+        serde_json::to_value(neppy_core::openhuman::memory::tree::TreeWriteRequest {
             tree_id: "tree-contract".into(),
             tree_kind: TreeKind::Source,
             leaf: round_trip.clone(),
@@ -2837,7 +2837,7 @@ fn memory_tree_io_contract_types_round_trip_leaf_read_and_write_shapes() {
     assert_eq!(write_default_json["label_strategy"], "inherit");
     assert_eq!(write_default_json["deferred"], false);
 
-    let decoded_write: openhuman_core::openhuman::memory::tree::TreeWriteRequest =
+    let decoded_write: neppy_core::openhuman::memory::tree::TreeWriteRequest =
         serde_json::from_value(json!({
             "tree_id": "tree-contract",
             "tree_kind": "global",
@@ -2854,12 +2854,12 @@ fn memory_tree_io_contract_types_round_trip_leaf_read_and_write_shapes() {
     assert_eq!(decoded_write.tree_kind, TreeKind::Global);
     assert_eq!(
         decoded_write.label_strategy,
-        openhuman_core::openhuman::memory::tree::TreeLabelStrategy::Empty
+        neppy_core::openhuman::memory::tree::TreeLabelStrategy::Empty
     );
     assert!(decoded_write.leaf.entities.is_empty());
     assert!(decoded_write.deferred);
 
-    let outcome = openhuman_core::openhuman::memory::tree::TreeWriteOutcome {
+    let outcome = neppy_core::openhuman::memory::tree::TreeWriteOutcome {
         new_summary_ids: vec!["summary-1".into()],
         seal_pending: true,
     };
@@ -2867,7 +2867,7 @@ fn memory_tree_io_contract_types_round_trip_leaf_read_and_write_shapes() {
     assert_eq!(outcome_json["new_summary_ids"][0], "summary-1");
     assert_eq!(outcome_json["seal_pending"], true);
 
-    let read_request: openhuman_core::openhuman::memory::tree::TreeReadRequest =
+    let read_request: neppy_core::openhuman::memory::tree::TreeReadRequest =
         serde_json::from_value(json!({
             "tree_id": "tree-contract",
             "max_depth": 2,
@@ -2879,14 +2879,14 @@ fn memory_tree_io_contract_types_round_trip_leaf_read_and_write_shapes() {
     assert_eq!(read_request.max_depth, 2);
     assert_eq!(read_request.limit, Some(3));
 
-    let hit = openhuman_core::openhuman::memory::tree::TreeReadHit {
+    let hit = neppy_core::openhuman::memory::tree::TreeReadHit {
         node_id: "summary-1".into(),
         node_kind: "summary".into(),
         level: 1,
         content: "Summary text".into(),
         score: 0.42,
     };
-    let result = openhuman_core::openhuman::memory::tree::TreeReadResult {
+    let result = neppy_core::openhuman::memory::tree::TreeReadResult {
         hits: vec![hit],
         total: 4,
         tree_id: "tree-contract".into(),
@@ -2906,7 +2906,7 @@ fn memory_tree_io_contract_types_round_trip_leaf_read_and_write_shapes() {
         created_at: now,
         last_sealed_at: None,
     };
-    let empty = openhuman_core::openhuman::memory::tree::TreeReadResult::empty(&tree);
+    let empty = neppy_core::openhuman::memory::tree::TreeReadResult::empty(&tree);
     assert_eq!(empty.tree_id, "empty-tree");
     assert!(empty.hits.is_empty());
 }
@@ -2995,7 +2995,7 @@ fn memory_sync_profile_identity_helpers_cover_public_no_client_paths_and_renderi
 #[test]
 fn gmail_post_processor_and_provider_registry_cover_public_edges() {
     let gmail_provider =
-        openhuman_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider::new();
+        neppy_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider::new();
     let mut raw_html_passthrough = json!({
         "messages": [{ "messageId": "m-raw", "messageText": "<b>keep raw</b>" }]
     });
@@ -3452,24 +3452,24 @@ fn memory_sync_profile_markdown_and_status_helpers_are_idempotent() {
 
     let now = 1_700_000_000_000_i64;
     assert_eq!(
-        openhuman_core::openhuman::memory::sync::sync_status::FreshnessLabel::from_age_ms(
+        neppy_core::openhuman::memory::sync::sync_status::FreshnessLabel::from_age_ms(
             Some(now - 30_000),
             now
         ),
-        openhuman_core::openhuman::memory::sync::sync_status::FreshnessLabel::Active
+        neppy_core::openhuman::memory::sync::sync_status::FreshnessLabel::Active
     );
     assert_eq!(
-        openhuman_core::openhuman::memory::sync::sync_status::FreshnessLabel::from_age_ms(
+        neppy_core::openhuman::memory::sync::sync_status::FreshnessLabel::from_age_ms(
             Some(now - 30_001),
             now
         ),
-        openhuman_core::openhuman::memory::sync::sync_status::FreshnessLabel::Recent
+        neppy_core::openhuman::memory::sync::sync_status::FreshnessLabel::Recent
     );
     assert_eq!(
-        openhuman_core::openhuman::memory::sync::sync_status::FreshnessLabel::from_age_ms(
+        neppy_core::openhuman::memory::sync::sync_status::FreshnessLabel::from_age_ms(
             None, now
         ),
-        openhuman_core::openhuman::memory::sync::sync_status::FreshnessLabel::Idle
+        neppy_core::openhuman::memory::sync::sync_status::FreshnessLabel::Idle
     );
 }
 
@@ -3934,7 +3934,7 @@ async fn memory_sources_registry_rpc_and_schema_handlers_cover_crud_edges() {
     );
     assert_eq!(schemas.len(), controllers.len());
     assert_eq!(
-        openhuman_core::openhuman::memory::sources::schemas::schemas("read_item").function,
+        neppy_core::openhuman::memory::sources::schemas::schemas("read_item").function,
         "read_item"
     );
 
@@ -4147,7 +4147,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     let tmp = TempDir::new().expect("tempdir");
     let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", module_workspace());
 
-    let init = openhuman_core::openhuman::memory::ops::memory_init(MemoryInitRequest {
+    let init = neppy_core::openhuman::memory::ops::memory_init(MemoryInitRequest {
         jwt_token: Some("ignored-token".into()),
     })
     .await
@@ -4159,8 +4159,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     assert!(init.memory_dir.ends_with("/memory"));
     let memory_dir = std::path::PathBuf::from(&init.memory_dir);
 
-    let sync_channel = openhuman_core::openhuman::memory::ops::memory_sync_channel(
-        openhuman_core::openhuman::memory::ops::SyncChannelParams {
+    let sync_channel = neppy_core::openhuman::memory::ops::memory_sync_channel(
+        neppy_core::openhuman::memory::ops::SyncChannelParams {
             channel_id: "conn-not-present".into(),
         },
     )
@@ -4169,18 +4169,18 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .value;
     assert!(sync_channel.requested);
     assert_eq!(sync_channel.channel_id, "conn-not-present");
-    let sync_all = openhuman_core::openhuman::memory::ops::memory_sync_all()
+    let sync_all = neppy_core::openhuman::memory::ops::memory_sync_all()
         .await
         .expect("sync all request")
         .value;
     assert!(sync_all.requested);
-    let ingestion = openhuman_core::openhuman::memory::ops::memory_ingestion_status()
+    let ingestion = neppy_core::openhuman::memory::ops::memory_ingestion_status()
         .await
         .expect("ingestion status")
         .value;
     assert_eq!(ingestion.queue_depth, 0);
-    let learn_none = openhuman_core::openhuman::memory::ops::memory_learn_all(
-        openhuman_core::openhuman::memory::ops::LearnAllParams {
+    let learn_none = neppy_core::openhuman::memory::ops::memory_learn_all(
+        neppy_core::openhuman::memory::ops::LearnAllParams {
             namespaces: Some(Vec::new()),
         },
     )
@@ -4191,7 +4191,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     assert!(learn_none.results.is_empty());
 
     let write =
-        openhuman_core::openhuman::memory::ops::ai_write_memory_file(WriteMemoryFileRequest {
+        neppy_core::openhuman::memory::ops::ai_write_memory_file(WriteMemoryFileRequest {
             relative_path: "notes/raw.md".into(),
             content: "Memory file coverage".into(),
         })
@@ -4203,7 +4203,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     assert!(write.written);
     assert_eq!(write.bytes_written, "Memory file coverage".len());
 
-    let read = openhuman_core::openhuman::memory::ops::ai_read_memory_file(ReadMemoryFileRequest {
+    let read = neppy_core::openhuman::memory::ops::ai_read_memory_file(ReadMemoryFileRequest {
         relative_path: "notes/raw.md".into(),
     })
     .await
@@ -4216,7 +4216,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     std::fs::write(memory_dir.join("root.md"), "root").expect("root note");
     std::fs::write(memory_dir.join("memory.db"), "hidden").expect("sqlite stub");
     let root_files =
-        openhuman_core::openhuman::memory::ops::ai_list_memory_files(ListMemoryFilesRequest {
+        neppy_core::openhuman::memory::ops::ai_list_memory_files(ListMemoryFilesRequest {
             relative_dir: "".into(),
         })
         .await
@@ -4227,7 +4227,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     assert_eq!(root_files.files, vec!["root.md"]);
 
     let listed =
-        openhuman_core::openhuman::memory::ops::ai_list_memory_files(ListMemoryFilesRequest {
+        neppy_core::openhuman::memory::ops::ai_list_memory_files(ListMemoryFilesRequest {
             relative_dir: "notes".into(),
         })
         .await
@@ -4237,7 +4237,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         .expect("list data");
     assert_eq!(listed.files, vec!["raw.md"]);
     assert!(
-        openhuman_core::openhuman::memory::ops::ai_list_memory_files(ListMemoryFilesRequest {
+        neppy_core::openhuman::memory::ops::ai_list_memory_files(ListMemoryFilesRequest {
             relative_dir: "../escape".into(),
         })
         .await
@@ -4246,8 +4246,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     );
 
     let namespace = "ops-raw-coverage";
-    let document_id = openhuman_core::openhuman::memory::ops::doc_put(
-        openhuman_core::openhuman::memory::ops::PutDocParams {
+    let document_id = neppy_core::openhuman::memory::ops::doc_put(
+        neppy_core::openhuman::memory::ops::PutDocParams {
             namespace: namespace.into(),
             key: "doc-1".into(),
             title: "Ops coverage document".into(),
@@ -4267,13 +4267,13 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .document_id;
     assert_eq!(document_id, "doc-ops-raw");
 
-    let namespaces = openhuman_core::openhuman::memory::ops::namespace_list()
+    let namespaces = neppy_core::openhuman::memory::ops::namespace_list()
         .await
         .expect("namespace list")
         .value;
     assert!(namespaces.iter().any(|candidate| candidate == namespace));
-    let learn_disabled = openhuman_core::openhuman::memory::ops::memory_learn_all(
-        openhuman_core::openhuman::memory::ops::LearnAllParams {
+    let learn_disabled = neppy_core::openhuman::memory::ops::memory_learn_all(
+        neppy_core::openhuman::memory::ops::LearnAllParams {
             namespaces: Some(vec![namespace.into(), namespace.into(), "missing".into()]),
         },
     )
@@ -4281,8 +4281,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .unwrap_err();
     assert!(learn_disabled.contains("local_ai.runtime_enabled=true"));
 
-    let direct_docs = openhuman_core::openhuman::memory::ops::doc_list(Some(
-        openhuman_core::openhuman::memory::ops::NamespaceOnlyParams {
+    let direct_docs = neppy_core::openhuman::memory::ops::doc_list(Some(
+        neppy_core::openhuman::memory::ops::NamespaceOnlyParams {
             namespace: namespace.into(),
         },
     ))
@@ -4296,7 +4296,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         .any(|doc| doc["documentId"] == "doc-ops-raw"));
 
     let envelope_docs =
-        openhuman_core::openhuman::memory::ops::memory_list_documents(ListDocumentsRequest {
+        neppy_core::openhuman::memory::ops::memory_list_documents(ListDocumentsRequest {
             namespace: Some(namespace.into()),
         })
         .await
@@ -4313,8 +4313,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         Some(&1)
     );
 
-    let query = openhuman_core::openhuman::memory::ops::context_query(
-        openhuman_core::openhuman::memory::ops::QueryNamespaceParams {
+    let query = neppy_core::openhuman::memory::ops::context_query(
+        neppy_core::openhuman::memory::ops::QueryNamespaceParams {
             namespace: namespace.into(),
             query: "who owns deterministic coverage".into(),
             limit: Some(5),
@@ -4324,8 +4324,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .expect("context query")
     .value;
     assert!(query.to_lowercase().contains("coverage"));
-    let recalled = openhuman_core::openhuman::memory::ops::context_recall(
-        openhuman_core::openhuman::memory::ops::RecallNamespaceParams {
+    let recalled = neppy_core::openhuman::memory::ops::context_recall(
+        neppy_core::openhuman::memory::ops::RecallNamespaceParams {
             namespace: namespace.into(),
             limit: Some(5),
         },
@@ -4336,8 +4336,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .expect("recall text");
     assert!(recalled.contains("Ops coverage document"));
 
-    openhuman_core::openhuman::memory::ops::kv_set(
-        openhuman_core::openhuman::memory::ops::KvSetParams {
+    neppy_core::openhuman::memory::ops::kv_set(
+        neppy_core::openhuman::memory::ops::KvSetParams {
             namespace: Some(namespace.into()),
             key: "state".into(),
             value: json!({ "covered": true }),
@@ -4345,8 +4345,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     )
     .await
     .expect("kv set");
-    let kv = openhuman_core::openhuman::memory::ops::kv_get(
-        openhuman_core::openhuman::memory::ops::KvGetDeleteParams {
+    let kv = neppy_core::openhuman::memory::ops::kv_get(
+        neppy_core::openhuman::memory::ops::KvGetDeleteParams {
             namespace: Some(namespace.into()),
             key: "state".into(),
         },
@@ -4355,8 +4355,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .expect("kv get")
     .value;
     assert_eq!(kv, Some(json!({ "covered": true })));
-    let kv_rows = openhuman_core::openhuman::memory::ops::kv_list_namespace(
-        openhuman_core::openhuman::memory::ops::NamespaceOnlyParams {
+    let kv_rows = neppy_core::openhuman::memory::ops::kv_list_namespace(
+        neppy_core::openhuman::memory::ops::NamespaceOnlyParams {
             namespace: namespace.into(),
         },
     )
@@ -4365,8 +4365,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .value;
     assert!(kv_rows.iter().any(|row| row["key"] == "state"));
     assert!(
-        openhuman_core::openhuman::memory::ops::kv_delete(
-            openhuman_core::openhuman::memory::ops::KvGetDeleteParams {
+        neppy_core::openhuman::memory::ops::kv_delete(
+            neppy_core::openhuman::memory::ops::KvGetDeleteParams {
                 namespace: Some(namespace.into()),
                 key: "state".into(),
             },
@@ -4376,8 +4376,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         .value
     );
 
-    openhuman_core::openhuman::memory::ops::graph_upsert(
-        openhuman_core::openhuman::memory::ops::GraphUpsertParams {
+    neppy_core::openhuman::memory::ops::graph_upsert(
+        neppy_core::openhuman::memory::ops::GraphUpsertParams {
             namespace: Some(namespace.into()),
             subject: "Alice".into(),
             predicate: "OWNS".into(),
@@ -4387,8 +4387,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     )
     .await
     .expect("graph upsert");
-    let relations = openhuman_core::openhuman::memory::ops::graph_query(
-        openhuman_core::openhuman::memory::ops::GraphQueryParams {
+    let relations = neppy_core::openhuman::memory::ops::graph_query(
+        neppy_core::openhuman::memory::ops::GraphQueryParams {
             namespace: Some(namespace.into()),
             subject: Some("Alice".into()),
             predicate: Some("OWNS".into()),
@@ -4399,8 +4399,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .value;
     assert_eq!(relations[0]["object"], "MEMORY OPS COVERAGE");
 
-    let tool_rule = openhuman_core::openhuman::memory::ops::tool_rule_put(
-        openhuman_core::openhuman::memory::ops::ToolRulePutParams {
+    let tool_rule = neppy_core::openhuman::memory::ops::tool_rule_put(
+        neppy_core::openhuman::memory::ops::ToolRulePutParams {
             tool_name: "shell".into(),
             rule: "Use dry-run flags before changing files.".into(),
             priority: Some(ApiToolMemoryPriority::High),
@@ -4414,8 +4414,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .value;
     assert_eq!(tool_rule.id, "ops-rule-1");
     assert_eq!(tool_rule.priority, ApiToolMemoryPriority::High);
-    let fetched_rule = openhuman_core::openhuman::memory::ops::tool_rule_get(
-        openhuman_core::openhuman::memory::ops::ToolRuleRefParams {
+    let fetched_rule = neppy_core::openhuman::memory::ops::tool_rule_get(
+        neppy_core::openhuman::memory::ops::ToolRuleRefParams {
             tool_name: "shell".into(),
             id: "ops-rule-1".into(),
         },
@@ -4428,8 +4428,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         fetched_rule.rule,
         "Use dry-run flags before changing files."
     );
-    let listed_rules = openhuman_core::openhuman::memory::ops::tool_rule_list(
-        openhuman_core::openhuman::memory::ops::ToolRuleListParams {
+    let listed_rules = neppy_core::openhuman::memory::ops::tool_rule_list(
+        neppy_core::openhuman::memory::ops::ToolRuleListParams {
             tool_name: "shell".into(),
         },
     )
@@ -4437,8 +4437,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .expect("tool rule list")
     .value;
     assert!(listed_rules.iter().any(|rule| rule.id == "ops-rule-1"));
-    let prompt_rules = openhuman_core::openhuman::memory::ops::tool_rules_for_prompt(
-        openhuman_core::openhuman::memory::ops::ToolRulesForPromptParams {
+    let prompt_rules = neppy_core::openhuman::memory::ops::tool_rules_for_prompt(
+        neppy_core::openhuman::memory::ops::ToolRulesForPromptParams {
             tools: vec!["shell".into()],
         },
     )
@@ -4447,8 +4447,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .value;
     assert!(prompt_rules.rendered.contains("Use dry-run flags"));
     assert_eq!(prompt_rules.rules[0].id, "ops-rule-1");
-    let tool_rules_json = openhuman_core::openhuman::memory::ops::tool_rules_json(
-        openhuman_core::openhuman::memory::ops::ToolRuleListParams {
+    let tool_rules_json = neppy_core::openhuman::memory::ops::tool_rules_json(
+        neppy_core::openhuman::memory::ops::ToolRuleListParams {
             tool_name: "shell".into(),
         },
     )
@@ -4461,8 +4461,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         .iter()
         .any(|rule| rule["id"] == "ops-rule-1" && rule["priority"] == "high"));
     assert!(
-        openhuman_core::openhuman::memory::ops::tool_rule_delete(
-            openhuman_core::openhuman::memory::ops::ToolRuleRefParams {
+        neppy_core::openhuman::memory::ops::tool_rule_delete(
+            neppy_core::openhuman::memory::ops::ToolRuleRefParams {
                 tool_name: "shell".into(),
                 id: "ops-rule-1".into(),
             },
@@ -4471,8 +4471,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         .expect("tool rule delete")
         .value
     );
-    assert!(openhuman_core::openhuman::memory::ops::tool_rule_get(
-        openhuman_core::openhuman::memory::ops::ToolRuleRefParams {
+    assert!(neppy_core::openhuman::memory::ops::tool_rule_get(
+        neppy_core::openhuman::memory::ops::ToolRuleRefParams {
             tool_name: "shell".into(),
             id: "ops-rule-1".into(),
         },
@@ -4483,7 +4483,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .is_none());
 
     let delete_missing =
-        openhuman_core::openhuman::memory::ops::memory_delete_document(DeleteDocumentRequest {
+        neppy_core::openhuman::memory::ops::memory_delete_document(DeleteDocumentRequest {
             namespace: namespace.into(),
             document_id: "missing".into(),
         })
@@ -4494,8 +4494,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
         .expect("delete missing data");
     assert_eq!(delete_missing.status, "not_found");
 
-    let deleted = openhuman_core::openhuman::memory::ops::doc_delete(
-        openhuman_core::openhuman::memory::ops::DeleteDocParams {
+    let deleted = neppy_core::openhuman::memory::ops::doc_delete(
+        neppy_core::openhuman::memory::ops::DeleteDocParams {
             namespace: namespace.into(),
             document_id,
         },
@@ -4504,8 +4504,8 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     .expect("doc delete")
     .value;
     assert_eq!(deleted["deleted"], true);
-    let cleared = openhuman_core::openhuman::memory::ops::clear_namespace(
-        openhuman_core::openhuman::memory::ops::ClearNamespaceParams {
+    let cleared = neppy_core::openhuman::memory::ops::clear_namespace(
+        neppy_core::openhuman::memory::ops::ClearNamespaceParams {
             namespace: namespace.into(),
         },
     )
@@ -4523,13 +4523,13 @@ async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_p
     let config = config_in(&tmp);
 
     let schemas =
-        openhuman_core::openhuman::memory::tree::retrieval::schemas::all_controller_schemas();
+        neppy_core::openhuman::memory::tree::retrieval::schemas::all_controller_schemas();
     let controllers =
-        openhuman_core::openhuman::memory::tree::retrieval::schemas::all_registered_controllers();
+        neppy_core::openhuman::memory::tree::retrieval::schemas::all_registered_controllers();
     assert_eq!(schemas.len(), 5);
     assert_eq!(schemas.len(), controllers.len());
     assert_eq!(
-        openhuman_core::openhuman::memory::tree::retrieval::schemas::schemas("missing").function,
+        neppy_core::openhuman::memory::tree::retrieval::schemas::schemas("missing").function,
         "unknown"
     );
     assert!(schemas
@@ -4539,9 +4539,9 @@ async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_p
         .description
         .contains("Batch-fetch"));
 
-    let source = openhuman_core::openhuman::memory::tree::retrieval::rpc::query_source_rpc(
+    let source = neppy_core::openhuman::memory::tree::retrieval::rpc::query_source_rpc(
         &config,
-        openhuman_core::openhuman::memory::tree::retrieval::rpc::QuerySourceRequest {
+        neppy_core::openhuman::memory::tree::retrieval::rpc::QuerySourceRequest {
             source_id: Some("slack:#raw".into()),
             source_kind: Some("chat".into()),
             time_window_days: Some(7),
@@ -4555,9 +4555,9 @@ async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_p
     assert!(source.logs[0].contains("has_source_id=true"));
     assert!(!source.logs[0].contains("slack:#raw"));
     assert!(
-        openhuman_core::openhuman::memory::tree::retrieval::rpc::query_source_rpc(
+        neppy_core::openhuman::memory::tree::retrieval::rpc::query_source_rpc(
             &config,
-            openhuman_core::openhuman::memory::tree::retrieval::rpc::QuerySourceRequest {
+            neppy_core::openhuman::memory::tree::retrieval::rpc::QuerySourceRequest {
                 source_id: None,
                 source_kind: Some("bogus".into()),
                 time_window_days: None,
@@ -4570,9 +4570,9 @@ async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_p
         .contains("unknown source kind")
     );
 
-    let search = openhuman_core::openhuman::memory::tree::retrieval::rpc::search_entities_rpc(
+    let search = neppy_core::openhuman::memory::tree::retrieval::rpc::search_entities_rpc(
         &config,
-        openhuman_core::openhuman::memory::tree::retrieval::rpc::SearchEntitiesRequest {
+        neppy_core::openhuman::memory::tree::retrieval::rpc::SearchEntitiesRequest {
             query: "alice".into(),
             kinds: Some(vec!["email".into()]),
             limit: Some(10),
@@ -4583,9 +4583,9 @@ async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_p
     assert!(search.value.matches.is_empty());
     assert!(search.logs[0].contains("has_kinds=true"));
     assert!(
-        openhuman_core::openhuman::memory::tree::retrieval::rpc::search_entities_rpc(
+        neppy_core::openhuman::memory::tree::retrieval::rpc::search_entities_rpc(
             &config,
-            openhuman_core::openhuman::memory::tree::retrieval::rpc::SearchEntitiesRequest {
+            neppy_core::openhuman::memory::tree::retrieval::rpc::SearchEntitiesRequest {
                 query: "alice".into(),
                 kinds: Some(vec!["missing".into()]),
                 limit: None,
@@ -4596,9 +4596,9 @@ async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_p
         .contains("unknown entity kind")
     );
 
-    let drill = openhuman_core::openhuman::memory::tree::retrieval::rpc::drill_down_rpc(
+    let drill = neppy_core::openhuman::memory::tree::retrieval::rpc::drill_down_rpc(
         &config,
-        openhuman_core::openhuman::memory::tree::retrieval::rpc::DrillDownRequest {
+        neppy_core::openhuman::memory::tree::retrieval::rpc::DrillDownRequest {
             node_id: "summary:source:redacted".into(),
             max_depth: None,
             query: None,
@@ -4611,9 +4611,9 @@ async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_p
     assert!(drill.logs[0].contains("node_kind=summary"));
     assert!(!drill.logs[0].contains("redacted"));
 
-    let fetch = openhuman_core::openhuman::memory::tree::retrieval::rpc::fetch_leaves_rpc(
+    let fetch = neppy_core::openhuman::memory::tree::retrieval::rpc::fetch_leaves_rpc(
         &config,
-        openhuman_core::openhuman::memory::tree::retrieval::rpc::FetchLeavesRequest {
+        neppy_core::openhuman::memory::tree::retrieval::rpc::FetchLeavesRequest {
             chunk_ids: vec!["missing-1".into(), "missing-2".into()],
         },
     )
@@ -4689,18 +4689,18 @@ async fn memory_query_backend_and_tree_flush_wrappers_cover_public_edges() {
     assert!(leaves.is_empty());
 
     let no_stale =
-        openhuman_core::openhuman::memory::tree::tree::flush::flush_stale_buffers_default(
+        neppy_core::openhuman::memory::tree::tree::flush::flush_stale_buffers_default(
             &config,
-            &openhuman_core::openhuman::memory::tree::tree::LabelStrategy::Empty,
+            &neppy_core::openhuman::memory::tree::tree::LabelStrategy::Empty,
         )
         .await
         .expect("flush empty buffers");
     assert_eq!(no_stale, 0);
-    let missing_flush = openhuman_core::openhuman::memory::tree::tree::flush::force_flush_tree(
+    let missing_flush = neppy_core::openhuman::memory::tree::tree::flush::force_flush_tree(
         &config,
         "tree:missing",
         None,
-        &openhuman_core::openhuman::memory::tree::tree::LabelStrategy::Empty,
+        &neppy_core::openhuman::memory::tree::tree::LabelStrategy::Empty,
     )
     .await
     .unwrap_err();
@@ -4714,7 +4714,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
     config.local_ai.runtime_enabled = false;
 
     let empty_content =
-        openhuman_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_ingest(
+        neppy_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_ingest(
             &config, "ops_ns", "   ", None, None,
         )
         .await
@@ -4723,7 +4723,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
 
     let ts = Utc.with_ymd_and_hms(2026, 5, 29, 17, 0, 0).unwrap();
     let ingest =
-        openhuman_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_ingest(
+        neppy_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_ingest(
             &config,
             " ops_ns ",
             "buffered raw content for summarizer ops",
@@ -4737,7 +4737,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
     assert_eq!(ingest.value["has_metadata"], true);
 
     let status =
-        openhuman_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_status(
+        neppy_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_status(
             &config, "ops_ns",
         )
         .await
@@ -4747,7 +4747,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
 
     let node = tree_node("ops_ns", "root", "Root summary from ops");
     tree_runtime_store::write_node(&config, &node).expect("write ops node");
-    let query = openhuman_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_query(
+    let query = neppy_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_query(
         &config, "ops_ns", None,
     )
     .await
@@ -4756,7 +4756,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
     assert!(query.logs[0].contains("queried node 'root'"));
 
     let missing =
-        openhuman_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_query(
+        neppy_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_query(
             &config,
             "ops_ns",
             Some("2026/05/29/17"),
@@ -4766,7 +4766,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
     assert!(missing.contains("node '2026/05/29/17' not found"));
 
     let provider_guard =
-        openhuman_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_run(
+        neppy_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_run(
             &config, "ops_ns",
         )
         .await
@@ -4775,7 +4775,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
     // local-AI remediation in user-facing prose ("enable local AI ...").
     assert!(provider_guard.contains("local AI"));
     let rebuild_guard =
-        openhuman_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_rebuild(
+        neppy_core::openhuman::memory::tree::tree_runtime::ops::tree_summarizer_rebuild(
             &config, "ops_ns",
         )
         .await
@@ -4789,7 +4789,7 @@ async fn memory_sources_types_registry_and_sync_state_cover_public_persistence_e
     let tmp = TempDir::new().expect("tempdir");
     let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
     let _config = Config::load_or_init().await.expect("init isolated config");
-    openhuman_core::openhuman::memory::sources::reconcile::ensure_composio_sources().await;
+    neppy_core::openhuman::memory::sources::reconcile::ensure_composio_sources().await;
 
     let decoded_default: MemorySourceEntry = serde_json::from_value(json!({
         "id": "src_default",
@@ -4980,7 +4980,7 @@ fn welcome_migration_public_entrypoint_covers_empty_marker_and_transcript_paths(
     std::fs::create_dir_all(markdown.parent().unwrap()).expect("markdown dir");
     std::fs::write(&markdown, "# Session transcript\n").expect("markdown");
 
-    let result = openhuman_core::openhuman::threads::migrate_welcome_agent_artifacts(workspace)
+    let result = neppy_core::openhuman::threads::migrate_welcome_agent_artifacts(workspace)
         .expect("migrate welcome artifacts");
     assert_eq!(result.threads_updated, 0);
     assert_eq!(result.transcripts_updated, 1);
@@ -4993,7 +4993,7 @@ fn welcome_migration_public_entrypoint_covers_empty_marker_and_transcript_paths(
         .join("sessions/2026_05_01/1715000000_orchestrator_thread-abc.md")
         .exists());
 
-    let second = openhuman_core::openhuman::threads::migrate_welcome_agent_artifacts(workspace)
+    let second = neppy_core::openhuman::threads::migrate_welcome_agent_artifacts(workspace)
         .expect("second migration");
     assert!(second.already_done);
 }

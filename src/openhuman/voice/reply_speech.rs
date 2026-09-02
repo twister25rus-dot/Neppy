@@ -37,7 +37,7 @@ const LOG_PREFIX: &str = "[voice_reply]";
 ///
 /// The env-var gate (rather than a `#[cfg(test)]` gate) is deliberate:
 /// integration tests in `tests/` are compiled against the production
-/// `openhuman_core` crate, so a unit-only `cfg(test)` block would not be
+/// `neppy_core` crate, so a unit-only `cfg(test)` block would not be
 /// visible from there. The observer module itself is always compiled,
 /// but its only producer is this env-gated branch and its only consumer
 /// is the test harness, so production callers never touch it.

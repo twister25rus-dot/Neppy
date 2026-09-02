@@ -142,8 +142,8 @@ On some Linux desktops, especially NVIDIA proprietary driver setups under Waylan
 When the core itself is healthy, you can keep developing by running the core and frontend separately:
 
 ```bash
-cargo build --bin openhuman-core
-./target/debug/openhuman-core run --port 7788
+cargo build --bin neppy-core
+./target/debug/neppy-core run --port 7788
 ```
 
 In another terminal:

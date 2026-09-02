@@ -47,7 +47,7 @@
 // Env vars (loaded from .env + app/.env.local):
 //   BACKEND_URL / VITE_BACKEND_URL — backend API base
 //   JWT_TOKEN                       — bearer JWT (optional, overrides
-//                                     the `openhuman-core auth get_session_token`
+//                                     the `neppy-core auth get_session_token`
 //                                     fallback)
 //   TRIGGER_SLUG                    — override via CLI flag `--trigger`
 // ──────────────────────────────────────────────────────────────────────
@@ -157,7 +157,7 @@ info('Debug', DEBUG);
 header('1. Authentication');
 
 function getSessionTokenFromCore() {
-  const coreBin = path.join(ROOT, 'target', 'debug', 'openhuman-core');
+  const coreBin = path.join(ROOT, 'target', 'debug', 'neppy-core');
   if (!existsSync(coreBin)) {
     if (DEBUG) console.debug(`[debug] core binary not found at ${coreBin}`);
     return null;
@@ -185,7 +185,7 @@ if (token) {
   info('Source', 'JWT_TOKEN env');
 } else {
   token = getSessionTokenFromCore();
-  if (token) info('Source', 'target/debug/openhuman-core auth get_session_token');
+  if (token) info('Source', 'target/debug/neppy-core auth get_session_token');
 }
 
 if (!token) {

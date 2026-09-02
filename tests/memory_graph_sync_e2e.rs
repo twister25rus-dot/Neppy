@@ -14,8 +14,8 @@ use std::time::Duration;
 use serde_json::json;
 use tempfile::tempdir;
 
-use openhuman_core::openhuman::inference::embeddings::NoopEmbedding;
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::inference::embeddings::NoopEmbedding;
+use neppy_core::openhuman::memory::{
     MemoryIngestionConfig, MemoryIngestionRequest, NamespaceDocumentInput,
 };
 // Engine handles named on the crate — see the note in `personality_e2e.rs`.
@@ -75,7 +75,7 @@ async fn ingest_document_populates_namespace_graph() {
                 category: "core".to_string(),
                 session_id: None,
                 document_id: None,
-                taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+                taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
             },
             config: ci_safe_config(),
         })
@@ -200,7 +200,7 @@ async fn put_doc_background_extraction_then_graph_query() {
             category: "core".to_string(),
             session_id: None,
             document_id: None,
-            taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+            taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
         })
         .await
         .expect("put_doc");

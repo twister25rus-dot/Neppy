@@ -160,7 +160,7 @@ describe('openUrl', () => {
     await expect(revealPath('/Users/me/Vault')).rejects.toThrow('reveal failed');
   });
 
-  // #4278: a shared openhuman-core on a different OS serves its own absolute
+  // #4278: a shared neppy-core on a different OS serves its own absolute
   // path; revealing it locally must fail with a clear error, not cryptically.
   it('revealPath rejects a foreign-OS path instead of revealing it (#4278)', async () => {
     isTauriMock.mockReturnValue(true);
@@ -168,7 +168,7 @@ describe('openUrl', () => {
     revealItemInDirMock.mockResolvedValue(undefined);
 
     const { revealPath } = await import('./openUrl');
-    await expect(revealPath('/home/leigh/OHvault')).rejects.toThrow(/openhuman-core host/);
+    await expect(revealPath('/home/leigh/OHvault')).rejects.toThrow(/neppy-core host/);
     expect(revealItemInDirMock).not.toHaveBeenCalled();
   });
 

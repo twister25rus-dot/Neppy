@@ -134,10 +134,10 @@ uuid = { version = "1", features = ["v4"] }
 
 # Core domain logic, embedded in-process so the core's HTTP/JSON-RPC server
 # runs as a tokio task inside the Tauri host. Avoids the orphan-sidecar class
-# of bugs (PR #1061: Cmd+Q leaving `openhuman-core` and CEF helpers behind)
+# of bugs (PR #1061: Cmd+Q leaving `neppy-core` and CEF helpers behind)
 # by tying the core's lifetime to the GUI process. The existing port-7788
 # probe in `core_process::ensure_running` still attaches to a running
-# `openhuman-core run` harness when one is already listening.
+# `neppy-core run` harness when one is already listening.
 #
 # `default-features = false` (set in #1061, before the compile-time domain
 # gates existed) means the embedded core does NOT inherit the root crate's
@@ -160,7 +160,7 @@ uuid = { version = "1", features = ["v4"] }
 #   desktop build while allowing slim builds to omit the crypto-only deps.
 # `scripts/ci/check-feature-forwarding.mjs` fails CI when this list drifts from
 # the core's `[features] default` (#4919) — do not hand-maintain it from memory.
-openhuman_core = { path = "../..", package = "openhuman", default-features = false, features = [
+neppy_core = { path = "../..", package = "neppy", default-features = false, features = [
     "channels",
     "media",
     "inference",
@@ -258,7 +258,7 @@ default = ["gateways"]
 # the tinybox crates that provision and reach those boxes.
 #
 # This is a **shell-local** gate, unrelated to the feature-forwarding rules in
-# AGENTS.md: those govern which `openhuman_core` gates the shell forwards, and
+# AGENTS.md: those govern which `neppy_core` gates the shell forwards, and
 # `scripts/ci/check-feature-forwarding.mjs` reads the core dependency's feature
 # list, not this table. Nothing here belongs in `scripts/ci/product-features.txt`.
 gateways = [
@@ -276,7 +276,7 @@ sandbox-bubblewrap = []
 # Forwarded to the core crate to expose `openhuman.test_reset`. Off by
 # default; the E2E build flips it on via `cargo tauri build --features
 # e2e-test-support`. See app/scripts/e2e-build.sh.
-e2e-test-support = ["openhuman_core/e2e-test-support"]
+e2e-test-support = ["neppy_core/e2e-test-support"]
 
 # The tinycortex vendored above takes `tinymemory-api` by git (it re-exports
 # the TinyMemory contract instead of duplicating it, tinymemory#18 §A1).
@@ -301,7 +301,7 @@ tinyagents = { path = "../../vendor/tinyagents" }
 # publishing.
 tinyflows = { path = "../../vendor/tinyflows" }
 tinycortex = { path = "../../vendor/tinycortex" }
-# `tinymemory-core` (pulled in transitively through `openhuman_core`) names
+# `tinymemory-core` (pulled in transitively through `neppy_core`) names
 # `tinycortex-api` by version requirement, same as the root Cargo world —
 # patch it onto the same checkout here too, or this independent Cargo world
 # tries to resolve it from crates.io and fails (it was never published).

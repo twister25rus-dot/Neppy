@@ -65,12 +65,12 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use tempfile::tempdir;
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::memory::ops::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::memory::ops::{
     doc_put, kv_get, kv_set, memory_recall_context, memory_recall_memories, KvGetDeleteParams,
     KvSetParams, PutDocParams,
 };
-use openhuman_core::openhuman::memory::rpc_models::{RecallContextRequest, RecallMemoriesRequest};
+use neppy_core::openhuman::memory::rpc_models::{RecallContextRequest, RecallMemoriesRequest};
 use tinymemory_core::tinycortex::memory_config_from;
 
 // ── Env isolation (mirrors memory_roundtrip_e2e) ─────────────────────────────
@@ -125,11 +125,11 @@ fn ensure_memory_seams(workspace: &Path) {
                     config_path: workspace.join("config.toml"),
                     ..Config::default()
                 });
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     config.clone(),
                 );
                 #[cfg(feature = "modules")]
-                openhuman_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::openhuman::modules::memory::set_modules_policy(config);
             })
             .expect("spawn golden parity memory seam installer")
             .join()

@@ -13,11 +13,11 @@ use axum::http::{header, HeaderMap, Response, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::agent::messages::ChatMessage;
-use openhuman_core::openhuman::inference::local::LocalAiService;
-use openhuman_core::openhuman::inference::provider::types::{ChatRequest, ProviderDelta};
-use openhuman_core::openhuman::tools::ToolSpec;
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::agent::messages::ChatMessage;
+use neppy_core::openhuman::inference::local::LocalAiService;
+use neppy_core::openhuman::inference::provider::types::{ChatRequest, ProviderDelta};
+use neppy_core::openhuman::tools::ToolSpec;
 use serde_json::{json, Value};
 use tempfile::{tempdir, TempDir};
 

@@ -59,7 +59,7 @@ else
 fi
 
 # 2) Build web bundle + core if needed.
-if [ ! -f "$APP_DIR/dist-web/index.html" ] || [ ! -x "$E2E_WEB_CORE_TARGET_DIR/debug/openhuman-core" ]; then
+if [ ! -f "$APP_DIR/dist-web/index.html" ] || [ ! -x "$E2E_WEB_CORE_TARGET_DIR/debug/neppy-core" ]; then
   log "building web e2e bundle (+ core if missing)…"
   ( cd "$OPENHUMAN_ROOT" && bash app/scripts/e2e-web-build.sh )
 fi

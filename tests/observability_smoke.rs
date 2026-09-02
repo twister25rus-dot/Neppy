@@ -8,7 +8,7 @@
 //! behaves as designed: transient events are dropped, permanent events
 //! and aggregate `all_exhausted` events still surface.
 
-use openhuman_core::core::observability::{
+use neppy_core::core::observability::{
     is_all_transient_provider_exhaustion_event, is_budget_event, is_session_expired_event,
     is_skill_install_user_fetch_failure, is_transient_backend_api_failure,
     is_transient_integrations_failure, is_transient_provider_http_failure,

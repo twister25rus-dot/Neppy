@@ -81,9 +81,9 @@ describe('coreModeSlice — sync-localStorage-derived initial state', () => {
     }
   });
 
-  it('hydrates to local when openhuman_core_mode=local', async () => {
+  it('hydrates to local when neppy_core_mode=local', async () => {
     localStorage.clear();
-    localStorage.setItem('openhuman_core_mode', 'local');
+    localStorage.setItem('neppy_core_mode', 'local');
     const mod = await freshImport();
     const state = mod.default(undefined, { type: '@@INIT' });
     expect(state.mode).toEqual({ kind: 'local' });
@@ -91,9 +91,9 @@ describe('coreModeSlice — sync-localStorage-derived initial state', () => {
 
   it('hydrates to cloud with url + token when all three keys are present', async () => {
     localStorage.clear();
-    localStorage.setItem('openhuman_core_mode', 'cloud');
-    localStorage.setItem('openhuman_core_rpc_url', 'https://core.example.com/rpc');
-    localStorage.setItem('openhuman_core_rpc_token', 'tok-abc');
+    localStorage.setItem('neppy_core_mode', 'cloud');
+    localStorage.setItem('neppy_core_rpc_url', 'https://core.example.com/rpc');
+    localStorage.setItem('neppy_core_rpc_token', 'tok-abc');
     const mod = await freshImport();
     const state = mod.default(undefined, { type: '@@INIT' });
     expect(state.mode).toEqual({
@@ -105,9 +105,9 @@ describe('coreModeSlice — sync-localStorage-derived initial state', () => {
 
   it('normalizes restored cloud base URLs to the /rpc endpoint', async () => {
     localStorage.clear();
-    localStorage.setItem('openhuman_core_mode', 'cloud');
-    localStorage.setItem('openhuman_core_rpc_url', 'https://example.trycloudflare.com/');
-    localStorage.setItem('openhuman_core_rpc_token', 'tok-abc');
+    localStorage.setItem('neppy_core_mode', 'cloud');
+    localStorage.setItem('neppy_core_rpc_url', 'https://example.trycloudflare.com/');
+    localStorage.setItem('neppy_core_rpc_token', 'tok-abc');
     const mod = await freshImport();
     const state = mod.default(undefined, { type: '@@INIT' });
     expect(state.mode).toEqual({
@@ -119,8 +119,8 @@ describe('coreModeSlice — sync-localStorage-derived initial state', () => {
 
   it('falls back to unset when cloud marker exists but URL or token is missing', async () => {
     localStorage.clear();
-    localStorage.setItem('openhuman_core_mode', 'cloud');
-    localStorage.setItem('openhuman_core_rpc_url', 'https://core.example.com/rpc');
+    localStorage.setItem('neppy_core_mode', 'cloud');
+    localStorage.setItem('neppy_core_rpc_url', 'https://core.example.com/rpc');
     // Token deliberately missing.
     const mod = await freshImport();
     const state = mod.default(undefined, { type: '@@INIT' });
@@ -136,7 +136,7 @@ describe('coreModeSlice — sync-localStorage-derived initial state', () => {
 
   it('keeps the synchronous local marker when redux-persist rehydrates stale unset state', async () => {
     localStorage.clear();
-    localStorage.setItem('openhuman_core_mode', 'local');
+    localStorage.setItem('neppy_core_mode', 'local');
 
     const mod = await freshImport();
     const { persistReducer } =
@@ -176,8 +176,8 @@ describe('coreModeSlice — gateway mode', () => {
     // the synchronous marker the app would fall back to the picker after every
     // restart even though the user had chosen a gateway.
     const mod = await freshImportWith({
-      openhuman_core_mode: 'gateway',
-      openhuman_core_gateway_id: 'builder',
+      neppy_core_mode: 'gateway',
+      neppy_core_gateway_id: 'builder',
     });
 
     const state = mod.default(undefined, { type: '@@INIT' });
@@ -186,15 +186,15 @@ describe('coreModeSlice — gateway mode', () => {
 
   it('falls through to unset when the id is missing', async () => {
     // There is nothing to activate, so asking again beats failing later.
-    const mod = await freshImportWith({ openhuman_core_mode: 'gateway' });
+    const mod = await freshImportWith({ neppy_core_mode: 'gateway' });
 
     expect(mod.default(undefined, { type: '@@INIT' }).mode).toEqual({ kind: 'unset' });
   });
 
   it('stores only an id, never a spec or a credential', async () => {
     const mod = await freshImportWith({
-      openhuman_core_mode: 'gateway',
-      openhuman_core_gateway_id: 'builder',
+      neppy_core_mode: 'gateway',
+      neppy_core_gateway_id: 'builder',
     });
     const state = mod.default(
       undefined,

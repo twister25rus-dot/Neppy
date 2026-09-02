@@ -173,7 +173,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': 'वॉल्ट कोर होस्ट पर है।',
   'crossHostVault.message':
-    'यह मेमोरी वॉल्ट openhuman-core होस्ट ({os}) पर संग्रहीत है। इसे केवल उसी मशीन पर खोला या दिखाया जा सकता है, इस डिवाइस से नहीं।',
+    'यह मेमोरी वॉल्ट neppy-core होस्ट ({os}) पर संग्रहीत है। इसे केवल उसी मशीन पर खोला या दिखाया जा सकता है, इस डिवाइस से नहीं।',
   'conversations.toolFailure.whyLabel': 'क्यों',
   'conversations.toolFailure.nextLabel': 'आगे क्या करें',
   'conversations.toolFailure.missingPermission.cause':
@@ -5178,7 +5178,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': 'नकल की गई!',
   'settings.mcpServer.openConfigFile': 'कॉन्फ़िग फ़ाइल खोलें',
   'settings.mcpServer.binaryPathNotFound':
-    'Neppy बाइनरी नहीं मिली. यदि स्रोत से चल रहा है, तो इसके साथ निर्माण करें: cargo build --bin openhuman-core',
+    'Neppy बाइनरी नहीं मिली. यदि स्रोत से चल रहा है, तो इसके साथ निर्माण करें: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'कॉन्फ़िग फ़ाइल खोलने में विफल',
   'settings.mcpServer.clientClaudeDesktop': 'क्लाउड डेस्कटॉप',
   'settings.mcpServer.clientCursor': 'कर्सर',
@@ -6866,7 +6866,7 @@ const messages: TranslationMap = {
     'ऐसी होस्ट कुंजी स्वीकार करता है जो पहले कभी नहीं देखी गई। बदली हुई कुंजी फिर भी अस्वीकार होती है, क्योंकि वही स्थिति बताती है कि कुछ गड़बड़ है।',
   'settings.gateway.containedLabel': 'इसे कंटेनर के अंदर चलाएँ',
   'settings.gateway.imageLabel': 'कंटेनर इमेज',
-  'settings.gateway.binaryLabel': 'openhuman-core का पथ',
+  'settings.gateway.binaryLabel': 'neppy-core का पथ',
   'settings.gateway.kind.desktop': 'इसी ऐप के अंदर',
   'settings.gateway.kind.remote': 'किसी URL पर मौजूद कोर',
   'settings.gateway.kind.docker': 'यहाँ एक कंटेनर में',
@@ -6877,7 +6877,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': 'वह नाम ऐप के अपने कोर के लिए सुरक्षित है।',
   'settings.gateway.destinationRequired': 'जिस मशीन से जुड़ना है वह बताएँ।',
   'settings.gateway.imageRequired': 'चलाने के लिए कंटेनर इमेज बताएँ।',
-  'settings.gateway.binaryRequired': 'उस मशीन पर openhuman-core का पथ बताएँ।',
+  'settings.gateway.binaryRequired': 'उस मशीन पर neppy-core का पथ बताएँ।',
   'settings.gateway.portInvalid': 'SSH पोर्ट एक संख्या होनी चाहिए।',
 
   'devOptions.gateway': 'स्थान',

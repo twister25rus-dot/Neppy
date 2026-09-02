@@ -11,8 +11,8 @@ Architecture docs: [`gitbooks/developing/architecture.md`](gitbooks/developing/a
 | Path                    | Role                                                                                                                          |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **`app/`**              | pnpm workspace `openhuman-app`: Vite + React (`app/src/`), Tauri desktop host (`app/src-tauri/`), Vitest tests                |
-| **`src/`** (root)       | Rust lib crate `openhuman` + `openhuman-core` CLI binary (`src/main.rs`) — `src/core/` (transport), `src/openhuman/*` domains |
-| **`Cargo.toml`** (root) | Core crate; `cargo build --bin openhuman-core`. Also `openhuman-fleet`, `rss-bench` and `library-profile` in `src/bin/`.                  |
+| **`src/`** (root)       | Rust lib crate `openhuman` + `neppy-core` CLI binary (`src/main.rs`) — `src/core/` (transport), `src/openhuman/*` domains |
+| **`Cargo.toml`** (root) | Core crate; `cargo build --bin neppy-core`. Also `neppy-fleet`, `rss-bench` and `library-profile` in `src/bin/`.                  |
 | **`docs/`**             | Deep internals. Public contributor docs in `gitbooks/developing/`.                                                            |
 
 Commands assume **repo root**. Root `package.json` is `openhuman-repo` (private, pnpm-enforced).
@@ -50,7 +50,7 @@ pnpm format:check         # Prettier check + cargo fmt --check
 
 # Rust
 cargo check --manifest-path Cargo.toml
-cargo build --manifest-path Cargo.toml --bin openhuman-core
+cargo build --manifest-path Cargo.toml --bin neppy-core
 cargo check --manifest-path app/src-tauri/Cargo.toml   # or: pnpm rust:check
 
 # macOS Apple Silicon workaround (llama.cpp)
@@ -61,7 +61,7 @@ GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml
 
 **Build speed**: both `Cargo.toml` files set `[profile.dev.package."*"] debug = false` — dependencies compile without DWARF in `dev`/`test` (faster builds + smaller `target/`); our own crates keep full debuginfo so panics/backtraces still resolve to file:line. Keep this stanza in sync across the root and `app/src-tauri/Cargo.toml` if you touch profiles.
 
-**Binary size**: both `[profile.release]` blocks set `lto = "thin"`, `codegen-units = 1` and `strip = "symbols"` (#5541) — measured at **116.9 MB → 67.1 MB** for `openhuman-core` on the product feature set, with no feature removed and no dependency dropped. The win is not about dependencies: `cargo bloat` puts **59.5% of `.text` in `openhuman_core` itself** and only ~15 MB across all 379 third-party packages, and there is no hotspot — it is ~110k monomorphized methods, of which the default 16 codegen units emitted many twice (`Config::load_or_init_with_env_lookup::{{closure}}` appeared 6× at ~40 KB, and it is not even generic). `strip` is safe because Sentry symbolicates **server-side** from the separate dSYM/PDB/DWP that `scripts/upload_sentry_symbols.sh` uploads, matched by a debug ID `strip` preserves; if that ever broke, the script hard-exits on zero DIFs (#1403) instead of shipping un-symbolicated. Do not drop `debug = "line-tables-only"` — that is what makes the dSYM useful. `[profile.ci]` deliberately overrides all three, so the fast CI lanes are unaffected; release builds are slower by design.
+**Binary size**: both `[profile.release]` blocks set `lto = "thin"`, `codegen-units = 1` and `strip = "symbols"` (#5541) — measured at **116.9 MB → 67.1 MB** for `neppy-core` on the product feature set, with no feature removed and no dependency dropped. The win is not about dependencies: `cargo bloat` puts **59.5% of `.text` in `neppy_core` itself** and only ~15 MB across all 379 third-party packages, and there is no hotspot — it is ~110k monomorphized methods, of which the default 16 codegen units emitted many twice (`Config::load_or_init_with_env_lookup::{{closure}}` appeared 6× at ~40 KB, and it is not even generic). `strip` is safe because Sentry symbolicates **server-side** from the separate dSYM/PDB/DWP that `scripts/upload_sentry_symbols.sh` uploads, matched by a debug ID `strip` preserves; if that ever broke, the script hard-exits on zero DIFs (#1403) instead of shipping un-symbolicated. Do not drop `debug = "line-tables-only"` — that is what makes the dSYM useful. `[profile.ci]` deliberately overrides all three, so the fast CI lanes are unaffected; release builds are slower by design.
 
 **Two-lane CI model**: **CI Lite** (`ci-lite.yml`, quick — pushes to `main` + PRs targeting `main` or `release`): quality checks per changed area plus unit tests **only for the changed files** — `vitest related` for `app/src` changes and domain-scoped `cargo llvm-cov` (libtest filter derived from `src/<a>/<b>/…`) for Rust — still gated at ≥ 80% diff coverage. Config-level changes (lockfile, Cargo.toml/lock, vitest config, `src/lib.rs`, …) fall back to the full suite (`scripts/ci/vitest-changed-coverage.sh`, `scripts/ci/rust-coverage-changed.sh`). **CI Full** (`ci-full.yml`, slow — PRs targeting the long-lived `release` branch + every push to it): complete unit suites, Rust mock-backend E2E, Playwright, and the full desktop E2E matrix on 3 OSes, aggregated by the `CI Full Gate` check (except the Playwright spec run — non-blocking signal while flaky, #3615). `release` advances when a maintainer dispatches `promote-main-to-release.yml` (pushes a merge commit from `main` into `release` — no standing PR) and when fix PRs opened directly against `release` merge (those run both lanes, with `CI Full Gate` blocking the merge; the post-merge push re-runs CI Full). Production releases are always cut from `release`; staging builds may be cut from `main` or `release` by selecting that workflow-dispatch ref. Release-source cuts back-merge `release` into `main` via `scripts/release/merge-release-into-main.sh`, and version-bump commits carry `[skip ci]`. Long build/test commands must run through `scripts/ci-cancel-aware.sh`, whose Actions-API watchdog stops cancelled builds inside container jobs (docker exec swallows runner signals).
 
@@ -343,7 +343,7 @@ backend through this crate, so every backend-bound request carries
 builds any backend client**:
 
 ```rust
-use openhuman_core::api::{set_product_identity, ProductIdentity};
+use neppy_core::api::{set_product_identity, ProductIdentity};
 
 if let Some(identity) = ProductIdentity::new("opencompany") {
     set_product_identity(identity);
@@ -553,7 +553,7 @@ Modules: `all`, `auth`, `cli`, `dispatch`, `event_bus/`, `jsonrpc`, `logging`, `
 
 ### Running a turn as a library call — `Harness`
 
-`CoreBuilder` composes a core and `embed::Core` gives it typed methods; **`openhuman_core::Harness` is the front door that turns a prompt into a reply**, with model/provider, workspace, access tier, MCP servers and skills as typed builder inputs.
+`CoreBuilder` composes a core and `embed::Core` gives it typed methods; **`neppy_core::Harness` is the front door that turns a prompt into a reply**, with model/provider, workspace, access tier, MCP servers and skills as typed builder inputs.
 
 ```rust
 let harness = Harness::builder()
@@ -595,7 +595,7 @@ Three independent runtime axes on `CoreBuilder` (`src/core/runtime/builder.rs`):
 
 - **`ToolGroups`** selects how each *tool group* reaches the model, one mode per compiled-in pack in `tools/toolpacks/registry.rs` (`src/openhuman/tools/toolpacks/groups.rs`). Presets: `packed()` (default — every group withheld, byte-identical to before the type existed), `advertised()`, `none()`, plus `.with(id, mode)`. Also on `Harness::builder()`.
 
-**The third axis exists because the pack table answers a compression question, and a library embedder is asking a capability question.** Packs were built for one host's problem — an orchestrator whose fixed per-turn cost is dominated by tool schemas — and membership is compiled in for a good reason: a pack that config or RPC could edit would let a caller move a dangerous tool out of the reviewed surface. But `openhuman_core` is also consumed as a library, and there the group id is the natural unit of *what this product has at all*. A host embedding the harness to summarise documents has no use for the crypto belt at any disclosure level; a host doing its own routing may want every schema on the wire because it does not pay the orchestrator's budget. Neither is expressible by membership, which only ever says "advertised or withheld".
+**The third axis exists because the pack table answers a compression question, and a library embedder is asking a capability question.** Packs were built for one host's problem — an orchestrator whose fixed per-turn cost is dominated by tool schemas — and membership is compiled in for a good reason: a pack that config or RPC could edit would let a caller move a dangerous tool out of the reviewed surface. But `neppy_core` is also consumed as a library, and there the group id is the natural unit of *what this product has at all*. A host embedding the harness to summarise documents has no use for the crypto belt at any disclosure level; a host doing its own routing may want every schema on the wire because it does not pay the orchestrator's budget. Neither is expressible by membership, which only ever says "advertised or withheld".
 
 So `GroupMode` has three states, not two:
 
@@ -657,7 +657,7 @@ Per-domain Cargo features drop whole domains **at compile time** (smaller binary
 What it *did* change: **a lane that relies on default features no longer covers the product.** Every CI lane that builds or tests the product passes `--features "$(bash scripts/ci/product-features.sh)"` — clippy, the unit lane, the coverage lane, `scripts/test-rust-with-mock.sh`. If you add a lane, decide which of the two sets it is testing and say so in a comment. Four `tests/*.rs` targets carry `required-features` for the same reason (`json_rpc_e2e`, `raw_coverage_all`, `observability_smoke`, `x402_twit_sh_live`); without those gates cargo **silently skips** them and the run still exits 0 — the same trap `--bins` without `bin-tools` already had.
 
 > **Adding a gate to either set? You must forward it to the desktop shell.**
-> `app/src-tauri/Cargo.toml` declares `openhuman_core` with `default-features = false` (set in #1061, before gates existed), so the shipped app does **not** inherit the core's `default` list. A gate in the product set but not in the shell's `features` list is **compiled out of the shipped desktop app** — with no build error and no failing test. This is not hypothetical: `voice` shipped missing from v0.58.19 to v0.61.x (56 users, ~93k Sentry events, #4901), and `tokenjuice-treesitter` was never forwarded once since #4123 and failed *soft*, silently degrading AST compression (#4918).
+> `app/src-tauri/Cargo.toml` declares `neppy_core` with `default-features = false` (set in #1061, before gates existed), so the shipped app does **not** inherit the core's `default` list. A gate in the product set but not in the shell's `features` list is **compiled out of the shipped desktop app** — with no build error and no failing test. This is not hypothetical: `voice` shipped missing from v0.58.19 to v0.61.x (56 users, ~93k Sentry events, #4901), and `tokenjuice-treesitter` was never forwarded once since #4123 and failed *soft*, silently degrading AST compression (#4918).
 > `scripts/ci/check-feature-forwarding.mjs` (the **Feature Forwarding Gate** lane) asserts three things: the shell forwards **exactly** `product-features.txt` (set equality, both directions), every name in that file is a real core gate, and every `default` gate is forwarded or allow-listed. The equality check is the load-bearing one — the old subset-of-`default` check would have passed **vacuously** once `default` stopped being the product set, silently re-arming #4901. If a gate genuinely must not ship, add it to `INTENTIONALLY_NOT_FORWARDED` **with a reason** — an explicit exclusion is the only way "deliberate" stays distinguishable from "forgotten".
 > A gate in **neither** set (today only `tui`) gets no compile coverage from the normal lanes at all, so the feature-gate-smoke lane checks it explicitly. Put new ones there too.
 
@@ -1106,7 +1106,7 @@ upstream  git@github.com:tinyhumansai/openhuman.git     (fetch-only)
 - **Vendored CEF-aware `tauri-cli`**: only the vendored CLI at `app/src-tauri/vendor/tauri-cef/crates/tauri-cli` bundles Chromium correctly. Stock `@tauri-apps/cli` produces broken bundles. Reinstall: `cargo install --locked --path app/src-tauri/vendor/tauri-cef/crates/tauri-cli`.
 - **macOS deep links**: require built `.app` bundle, not just `tauri dev`.
 - **Windows deep links**: `neppy://` registered via `tauri-plugin-deep-link::register_all`. Check in `app/src-tauri/src/deep_link_registration_check.rs`.
-- **Core standalone debugging**: `./target/debug/openhuman-core serve` (token at `{workspace}/core.token`). Public endpoints: `GET /health`, `GET /schema`, `GET /events`.
+- **Core standalone debugging**: `./target/debug/neppy-core serve` (token at `{workspace}/core.token`). Public endpoints: `GET /health`, `GET /schema`, `GET /events`.
 
 ---
 

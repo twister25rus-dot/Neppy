@@ -4,7 +4,7 @@
 #
 # 1. Resets `onboarding_completed` + `chat_onboarding_completed` to false
 #    in the staging user's config.toml (the path a source-built binary reads).
-# 2. Spawns a fresh `openhuman-core` binary on port 7789 with debug logs
+# 2. Spawns a fresh `neppy-core` binary on port 7789 with debug logs
 #    (non-default port so it doesn't fight a running `tauri dev` on 7788).
 # 3. Connects a Socket.IO client that logs every event it receives.
 # 4. Calls `openhuman.config_set_onboarding_completed` with value=true.
@@ -17,7 +17,7 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BIN="$REPO_ROOT/target/debug/openhuman-core"
+BIN="$REPO_ROOT/target/debug/neppy-core"
 PORT=7789
 USER_ID="69d9cb73e61f755583c3671f"
 # Source-built binaries default to `.neppy-staging`. Production
@@ -38,7 +38,7 @@ done
 log() { printf "[test] %s\n" "$*"; }
 fail() { printf "[test][FAIL] %s\n" "$*" >&2; exit 1; }
 
-[[ -f "$BIN" ]] || fail "binary not built: $BIN (run: cargo build --bin openhuman-core)"
+[[ -f "$BIN" ]] || fail "binary not built: $BIN (run: cargo build --bin neppy-core)"
 [[ -f "$CONFIG_PATH" ]] || fail "config not found: $CONFIG_PATH"
 
 # Flip the two onboarding keys to `false` in place, preserving any

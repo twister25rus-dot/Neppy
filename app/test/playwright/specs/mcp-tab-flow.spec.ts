@@ -274,9 +274,9 @@ async function setupMockRpc(page: Page, state: MockState) {
 
 async function seedLocalStorage(page: Page) {
   await page.addInitScript(() => {
-    window.localStorage.setItem('openhuman_core_mode', 'cloud');
-    window.localStorage.setItem('openhuman_core_rpc_url', 'http://127.0.0.1:17788/rpc');
-    window.localStorage.setItem('openhuman_core_rpc_token', 'test-token');
+    window.localStorage.setItem('neppy_core_mode', 'cloud');
+    window.localStorage.setItem('neppy_core_rpc_url', 'http://127.0.0.1:17788/rpc');
+    window.localStorage.setItem('neppy_core_rpc_token', 'test-token');
     window.localStorage.setItem('openhuman:walkthrough_completed', 'true');
     window.localStorage.removeItem('openhuman:walkthrough_pending');
   });

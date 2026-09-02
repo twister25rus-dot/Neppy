@@ -42,10 +42,10 @@ use std::sync::{Arc, OnceLock};
 use chrono::Utc;
 use tempfile::TempDir;
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::memory::sources::sync::sync_source;
-use openhuman_core::openhuman::memory::sources::types::{MemorySourceEntry, SourceKind};
-use openhuman_core::openhuman::memory::tree::ingest::{ingest_summary, SummaryIngestInput};
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::memory::sources::sync::sync_source;
+use neppy_core::openhuman::memory::sources::types::{MemorySourceEntry, SourceKind};
+use neppy_core::openhuman::memory::tree::ingest::{ingest_summary, SummaryIngestInput};
 use tinymemory_core::store::content::raw::{raw_kind_dir, raw_source_dir, RawKind};
 use tinymemory_core::store::trees::store as tree_store;
 use tinymemory_core::store::trees::types::SUMMARY_FANOUT;
@@ -64,7 +64,7 @@ fn ensure_memory_seams() {
             .name("memory-sync-pipeline-e2e-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
                     Config::default(),
                 ));
             })

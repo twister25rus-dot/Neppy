@@ -76,7 +76,7 @@ export const openUrl = async (url: string): Promise<void> => {
  * running this frontend — a Windows path (`C:\…` or a `\\UNC` share) on a POSIX
  * host, or a POSIX absolute path (`/…`) on Windows.
  *
- * This is the cross-host guard for issue #4278: `openhuman-core` can serve a
+ * This is the cross-host guard for issue #4278: `neppy-core` can serve a
  * path that lives on its own (possibly different-OS) host, and revealing such a
  * path locally would fail with a cryptic opener error. Returns `false` when the
  * OS is unknown so we never block a legitimate same-host reveal.
@@ -102,7 +102,7 @@ export const isForeignFsPath = (path: string, clientOs: string | undefined): boo
  * Outside Tauri this is a no-op — there's no OS shell to drive.
  *
  * Rejects with a clear error when `path` belongs to a different OS than this
- * device (issue #4278) — e.g. a shared `openhuman-core` running on another OS
+ * device (issue #4278) — e.g. a shared `neppy-core` running on another OS
  * served its own absolute path — instead of letting the opener fail cryptically.
  */
 export const revealPath = async (path: string): Promise<void> => {
@@ -115,7 +115,7 @@ export const revealPath = async (path: string): Promise<void> => {
   }
   if (isForeignFsPath(path, clientOs)) {
     throw new Error(
-      `Cannot reveal "${path}" on this device — it is a path on the openhuman-core host's filesystem (a different OS). Open it on the machine running the core.`
+      `Cannot reveal "${path}" on this device — it is a path on the neppy-core host's filesystem (a different OS). Open it on the machine running the core.`
     );
   }
   await revealItemInDir(path);

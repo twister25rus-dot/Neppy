@@ -1,7 +1,7 @@
 /**
  * Cross-host vault awareness (issue #4278).
  *
- * `openhuman-core` owns a single local filesystem. The memory-tree / Obsidian
+ * `neppy-core` owns a single local filesystem. The memory-tree / Obsidian
  * vault physically lives under the CORE host's filesystem, and the vault RPCs
  * return that host's absolute path (`content_root_abs`) plus the core's OS
  * (`host_os`). When a frontend attaches from a DIFFERENT OS than the core, that

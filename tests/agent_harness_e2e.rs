@@ -27,9 +27,9 @@ use futures_util::StreamExt;
 use serde_json::{json, Value};
 use tempfile::tempdir;
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
-use openhuman_core::openhuman::agent::harness::AgentDefinitionRegistry;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
+use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
 
 const TEST_RPC_TOKEN: &str = "json-rpc-e2e-local-token";
 
@@ -475,7 +475,7 @@ encrypt = false
     {
         write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
-    let _: openhuman_core::openhuman::config::Config =
+    let _: neppy_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
@@ -634,8 +634,8 @@ async fn boot_stack() -> Stack {
     // The transport-only router does not create a Core runtime context. Install
     // the explicit tinymemory host seams before handlers service memory-backed
     // agent turns, matching normal startup wiring.
-    openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
-        openhuman_core::openhuman::config::Config::default(),
+    neppy_core::openhuman::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
+        neppy_core::openhuman::config::Config::default(),
     ));
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -739,11 +739,11 @@ where
 {
     std::thread::Builder::new()
         .name(name.to_string())
-        .stack_size(openhuman_core::core::runtime::AGENT_WORKER_STACK_BYTES)
+        .stack_size(neppy_core::core::runtime::AGENT_WORKER_STACK_BYTES)
         .spawn(move || {
             let rt = tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(2)
-                .thread_stack_size(openhuman_core::core::runtime::AGENT_WORKER_STACK_BYTES)
+                .thread_stack_size(neppy_core::core::runtime::AGENT_WORKER_STACK_BYTES)
                 .enable_all()
                 .build()
                 .expect("build agent harness e2e runtime");
@@ -1221,15 +1221,15 @@ async fn subagent_clarification_flow_inner() {
 // restore it on drop via EnvVarGuard.
 
 async fn ensure_approval_gate() {
-    use openhuman_core::openhuman::security::approval::ApprovalGate;
+    use neppy_core::openhuman::security::approval::ApprovalGate;
 
     // The global bus must be initialized before registering subscribers.
     // `build_core_http_router` does NOT call `bootstrap_core_runtime`, so the
     // bus is not initialized by boot_stack. Standing it up is async now — it
     // connects to a broker — which is why this helper is too. Idempotent.
-    openhuman_core::core::bus::init().await.expect("bus init");
+    neppy_core::core::bus::init().await.expect("bus init");
 
-    let mut cfg: openhuman_core::openhuman::config::Config = toml::from_str(
+    let mut cfg: neppy_core::openhuman::config::Config = toml::from_str(
         r#"api_url = "http://127.0.0.1:1"
 default_model = "e2e-mock-model"
 default_temperature = 0.7
@@ -1278,7 +1278,7 @@ encrypt = false
 /// same binary lose the bridge silently. This per-test helper avoids the issue by
 /// registering a fresh subscription on each test's own runtime.
 fn register_approval_bridge() -> Option<tinybus::SubscriptionHandle> {
-    openhuman_core::openhuman::web_chat::fresh_approval_surface_subscription()
+    neppy_core::openhuman::web_chat::fresh_approval_surface_subscription()
 }
 
 /// Pre-create a file in the action_dir so file_write sees it as an existing
@@ -1308,7 +1308,7 @@ fn approval_gate_installed_after_ensure() {
 
 async fn approval_gate_installed_after_ensure_inner() {
     let _lock = env_lock();
-    use openhuman_core::openhuman::security::approval::ApprovalGate;
+    use neppy_core::openhuman::security::approval::ApprovalGate;
     ensure_approval_gate().await;
     assert!(
         ApprovalGate::try_global().is_some(),
@@ -2328,12 +2328,12 @@ async fn multi_hop_delegation_chain_inner() {
 
 mod streaming_support {
     use async_trait::async_trait;
-    use openhuman_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-    use openhuman_core::openhuman::agent::Agent;
-    use openhuman_core::openhuman::config::{AgentConfig, ContextConfig, MemoryConfig};
-    use openhuman_core::openhuman::memory::Memory;
-    use openhuman_core::openhuman::tools::traits::ToolCallOptions;
-    use openhuman_core::openhuman::tools::{
+    use neppy_core::openhuman::agent::dispatcher::NativeToolDispatcher;
+    use neppy_core::openhuman::agent::Agent;
+    use neppy_core::openhuman::config::{AgentConfig, ContextConfig, MemoryConfig};
+    use neppy_core::openhuman::memory::Memory;
+    use neppy_core::openhuman::tools::traits::ToolCallOptions;
+    use neppy_core::openhuman::tools::{
         PermissionLevel, Tool, ToolContent, ToolResult, ToolScope as RuntimeToolScope,
     };
     use serde_json::json;
@@ -2582,7 +2582,7 @@ mod streaming_support {
 ///   5. Final answer is "stream final".
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn streaming_tool_call_accumulation() {
-    use openhuman_core::openhuman::agent::progress::AgentProgress;
+    use neppy_core::openhuman::agent::progress::AgentProgress;
     use std::sync::Mutex;
     use streaming_support::{
         agent_with_s, native_tool_response_s, text_response_s, workspace_s, EchoTool,
@@ -2778,7 +2778,7 @@ async fn streaming_tool_call_accumulation() {
 }
 
 /// Needed for streaming_tool_call_accumulation.
-use openhuman_core::openhuman::config::AgentConfig;
+use neppy_core::openhuman::config::AgentConfig;
 
 // ─── Case 13 (provider-level): SSE tool-arg accumulation ──────────────────────
 //

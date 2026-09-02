@@ -76,7 +76,7 @@ The shell is a delivery vehicle (windowing, process lifecycle, IPC). All product
 ## Remote/headless usage
 
 Linux servers can host the Rust core without a desktop session. The production
-shape is a remote `openhuman-core` JSON-RPC service plus a local desktop client
+shape is a remote `neppy-core` JSON-RPC service plus a local desktop client
 configured with that core URL and bearer token.
 
 A private browser UI is possible for development/preview by serving the Vite

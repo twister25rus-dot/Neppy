@@ -178,7 +178,7 @@ for bin in "$APP_PATH/Contents/MacOS/"*; do
 done
 
 # Sign sidecars in Resources/ if any
-for bin in "$APP_PATH/Contents/Resources/"openhuman-core-*; do
+for bin in "$APP_PATH/Contents/Resources/"neppy-core-*; do
   [[ -f "$bin" ]] || continue
   echo "  Signing resource sidecar: $(basename "$bin")"
   codesign --force --options runtime \

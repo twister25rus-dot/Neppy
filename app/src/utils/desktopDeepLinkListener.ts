@@ -423,7 +423,7 @@ export const classifyAuthStoreFailure = (message: string): string => {
  *
  * `auth_store_session` makes the core validate the freshly minted session token
  * against the backend `GET /auth/me` before persisting it. In **cloud mode**
- * that validation runs on the user's *remote* `openhuman-core`, so the dominant
+ * that validation runs on the user's *remote* `neppy-core`, so the dominant
  * failure is the remote runtime being unable to reach/authenticate against the
  * backend (misconfigured `BACKEND_URL`, offline, or an older core that predates
  * `allowPendingBackendValidation`) — not a problem the desktop can retry away.

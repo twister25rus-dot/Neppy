@@ -38,7 +38,7 @@ Options:
   --rpc-timeout-ms <n>      Parent agent_chat timeout (default: 600000)
   --spawn-wait-ms <n>       Time to wait for a running durable session (default: 120000)
   --settle-wait-ms <n>      Time to wait for final session status after parent returns (default: 60000)
-  --spawn-core              Start openhuman-core run --jsonrpc-only for the audit
+  --spawn-core              Start neppy-core run --jsonrpc-only for the audit
   --isolated-workspace      With --spawn-core, use a temp workspace and custom audit agent definitions
   --keep-workspace          Do not remove an isolated temp workspace after the run; this can leave a temp config with a live API key
   --verbose                 Print response char counts and spawned core logs
@@ -715,7 +715,7 @@ async function startCore(opts) {
       "run",
       "--quiet",
       "--bin",
-      "openhuman-core",
+      "neppy-core",
       "--",
       "run",
       "--host",

@@ -7,7 +7,7 @@ Service-management domain for the Neppy core daemon. It installs/uninstalls the 
 - Install / uninstall the core daemon as a native per-user service and report its `ServiceStatus`.
 - Start / stop / query the installed service per OS (`launchctl`, `systemctl --user`, `schtasks`).
 - Accept restart/shutdown requests, publish them to the event bus, and (via subscribers) respawn or `process::exit(0)` the running core with a 150ms flush grace window.
-- Resolve the daemon executable to launch (env override `OPENHUMAN_CORE_BIN`, else sibling `openhuman-core[-*]` next to the current exe; macOS also searches `../Resources`).
+- Resolve the daemon executable to launch (env override `OPENHUMAN_CORE_BIN`, else sibling `neppy-core[-*]` next to the current exe; macOS also searches `../Resources`).
 - Persist and read daemon-host UI preferences (`show_tray`) next to the main config.
 - Provide a deterministic, file-backed **mock** service backend for E2E tests (`OPENHUMAN_SERVICE_MOCK`).
 - Expose `daemon_state.json` path helper consumed by doctor/health reporting.

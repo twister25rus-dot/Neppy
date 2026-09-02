@@ -171,7 +171,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': 'ভল্টটি কোর হোস্টে রয়েছে।',
   'crossHostVault.message':
-    'এই মেমরি ভল্টটি openhuman-core হোস্টে ({os}) সংরক্ষিত আছে। এটি কেবল সেই মেশিনেই খোলা বা দেখানো যায়, এই ডিভাইস থেকে নয়।',
+    'এই মেমরি ভল্টটি neppy-core হোস্টে ({os}) সংরক্ষিত আছে। এটি কেবল সেই মেশিনেই খোলা বা দেখানো যায়, এই ডিভাইস থেকে নয়।',
   'conversations.toolFailure.whyLabel': 'কেন',
   'conversations.toolFailure.nextLabel': 'এরপর কী করবেন',
   'conversations.toolFailure.missingPermission.cause': 'Neppy-এর এখনও এটি করার অনুমতি নেই।',
@@ -5169,7 +5169,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.title':
     'MCP সার্ভারের সাথে সংযোগ করতে বহিরাগত __BR1__ ক্লায়েন্ট কনফিগার করুন',
   'settings.mcpServer.toolsSectionTitle': 'উপলভ্য টুল',
-  'settings.mcpServer.toolsSectionDesc': 'উপলভ্য টুলস stdio সার্ভার যখন openhuman-core mcp',
+  'settings.mcpServer.toolsSectionDesc': 'উপলভ্য টুলস stdio সার্ভার যখন neppy-core mcp',
   'settings.mcpServer.configSectionTitle': 'ক্লায়েন্ট কনফিগারেশন চালায়',
   'settings.mcpServer.configSectionDesc':
     'সঠিক কনফিগারেশন স্নিপেট তৈরি করতে আপনার MCP ক্লায়েন্ট নির্বাচন করুন',
@@ -5177,7 +5177,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': 'কপি করা হয়েছে!',
   'settings.mcpServer.openConfigFile': 'কনফিগ ফাইল খুলুন',
   'settings.mcpServer.binaryPathNotFound':
-    'Neppy বাইনারি পাওয়া যায়নি। উৎস থেকে চললে, এর সাথে তৈরি করুন: cargo build --bin openhuman-core',
+    'Neppy বাইনারি পাওয়া যায়নি। উৎস থেকে চললে, এর সাথে তৈরি করুন: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'কনফিগার ফাইল খুলতে ব্যর্থ',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': 'কার্সার',
@@ -6869,7 +6869,7 @@ const messages: TranslationMap = {
     'আগে কখনও দেখা হয়নি এমন একটি হোস্ট কী গ্রহণ করে। বদলে যাওয়া কী তবুও প্রত্যাখ্যান করা হয়, কারণ সেটিই বোঝায় যে কিছু একটা গণ্ডগোল হয়েছে।',
   'settings.gateway.containedLabel': 'একটি কনটেইনারের ভিতরে চালান',
   'settings.gateway.imageLabel': 'কনটেইনার ইমেজ',
-  'settings.gateway.binaryLabel': 'openhuman-core-এর পথ',
+  'settings.gateway.binaryLabel': 'neppy-core-এর পথ',
   'settings.gateway.kind.desktop': 'এই অ্যাপের ভিতরে',
   'settings.gateway.kind.remote': 'কোনো URL-এ থাকা কোর',
   'settings.gateway.kind.docker': 'এখানে একটি কনটেইনারে',
@@ -6880,7 +6880,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': 'ওই নামটি অ্যাপের নিজস্ব কোরের জন্য সংরক্ষিত।',
   'settings.gateway.destinationRequired': 'কোন মেশিনে সংযোগ করবেন তা লিখুন।',
   'settings.gateway.imageRequired': 'কোন কনটেইনার ইমেজ চালাবেন তা লিখুন।',
-  'settings.gateway.binaryRequired': 'ওই মেশিনে openhuman-core-এর পথ লিখুন।',
+  'settings.gateway.binaryRequired': 'ওই মেশিনে neppy-core-এর পথ লিখুন।',
   'settings.gateway.portInvalid': 'SSH পোর্ট একটি সংখ্যা হতে হবে।',
 
   'devOptions.gateway': 'অবস্থান',

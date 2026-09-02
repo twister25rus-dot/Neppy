@@ -43,8 +43,8 @@ In the AgentBox console:
 Build and push from `main` using the existing `Dockerfile`:
 
 ```bash
-docker build -t <registry>/openhuman-core:<tag> .
-docker push <registry>/openhuman-core:<tag>
+docker build -t <registry>/neppy-core:<tag> .
+docker push <registry>/neppy-core:<tag>
 ```
 
 First deploy takes 10 to 25 minutes to reach `running`; later deploys are faster.
@@ -71,7 +71,7 @@ OPENHUMAN_AGENTBOX_MODE=1 \
 GMI_MAAS_BASE_URL=https://api.gmi-serving.com \
 GMI_MAAS_API_KEY=sk-... \
 GMI_MODELS=deepseek-ai/DeepSeek-V4-Pro \
-./target/debug/openhuman-core serve &
+./target/debug/neppy-core serve &
 
 curl -X POST http://127.0.0.1:7788/run \
   -H 'content-type: application/json' \

@@ -14,8 +14,8 @@ use axum::http::header::AUTHORIZATION;
 use serde_json::{json, Value};
 use tempfile::tempdir;
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
 
 const TEST_RPC_TOKEN: &str = "memory-sources-e2e-token";
 static AUTH_INIT: OnceLock<()> = OnceLock::new();
@@ -47,12 +47,12 @@ fn ensure_memory_seams() {
             .name("memory-sources-e2e-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                let config = Arc::new(openhuman_core::openhuman::config::Config::default());
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                let config = Arc::new(neppy_core::openhuman::config::Config::default());
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     config.clone(),
                 );
                 #[cfg(feature = "modules")]
-                openhuman_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::openhuman::modules::memory::set_modules_policy(config);
             })
             .expect("spawn memory sources seam installer")
             .join()

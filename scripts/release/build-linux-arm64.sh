@@ -15,19 +15,19 @@ VERSION="${TAG#v}"
 TARGET="aarch64-unknown-linux-gnu"
 UPLOAD_REPO="${UPLOAD_REPO:-tinyhumansai/openhuman}"
 
-echo "[linux-arm64] Building openhuman-core for $TARGET ..."
+echo "[linux-arm64] Building neppy-core for $TARGET ..."
 if command -v rustup >/dev/null 2>&1; then
   rustup target add "$TARGET"
 fi
-cargo build --release --bin openhuman-core --target "$TARGET"
+cargo build --release --bin neppy-core --target "$TARGET"
 
-TARBALL="openhuman-core-${VERSION}-${TARGET}.tar.gz"
+TARBALL="neppy-core-${VERSION}-${TARGET}.tar.gz"
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
-cp "target/${TARGET}/release/openhuman-core" "$WORK/"
-chmod +x "$WORK/openhuman-core"
-tar -czf "$TARBALL" -C "$WORK" openhuman-core
+cp "target/${TARGET}/release/neppy-core" "$WORK/"
+chmod +x "$WORK/neppy-core"
+tar -czf "$TARBALL" -C "$WORK" neppy-core
 openssl dgst -sha256 -r "$TARBALL" | awk '{print $1}' > "${TARBALL}.sha256"
 
 echo "[linux-arm64] Created $TARBALL (sha256: $(cat "${TARBALL}.sha256"))"

@@ -90,7 +90,7 @@ async function main() {
   const { platform, target } = getTarget();
   const isWin = platform === 'win32';
   const ext = isWin ? '.zip' : '.tar.gz';
-  const tarball = `openhuman-core-${VERSION}-${target}${ext}`;
+  const tarball = `neppy-core-${VERSION}-${target}${ext}`;
   const checksumFile = `${tarball}.sha256`;
   const baseUrl = `https://github.com/${REPO}/releases/download/v${VERSION}`;
 
@@ -139,11 +139,11 @@ async function main() {
       ],
       { stdio: 'inherit', env: { ...process.env, TC_SRC: tmpTarball, TC_DEST: binDir } }
     );
-    const extracted = path.join(binDir, 'openhuman-core.exe');
+    const extracted = path.join(binDir, 'neppy-core.exe');
     if (fs.existsSync(extracted)) fs.renameSync(extracted, binDest);
   } else {
     execFileSync('tar', ['-xzf', tmpTarball, '-C', binDir], { stdio: 'inherit' });
-    const extracted = path.join(binDir, 'openhuman-core');
+    const extracted = path.join(binDir, 'neppy-core');
     if (fs.existsSync(extracted)) {
       fs.renameSync(extracted, binDest);
       fs.chmodSync(binDest, 0o755);

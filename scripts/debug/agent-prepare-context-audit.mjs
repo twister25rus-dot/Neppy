@@ -79,7 +79,7 @@ Options:
                           a canary fact so the scout has past chat to search)
   --max-print-chars <n>   Truncate printed bundle/thought blocks (default: 4000)
   --rpc-timeout-ms <n>    Per-RPC timeout (default: 600000)
-  --spawn-core            Start \`cargo run --bin openhuman-core\` for the audit
+  --spawn-core            Start \`cargo run --bin neppy-core\` for the audit
   --keep-workspace        Keep any temp override files written for --scout-prompt-file
   --json                  Print a machine-readable JSON summary at the end
   --verbose               Stream spawned core logs
@@ -590,7 +590,7 @@ async function startCore(opts) {
   const args = ["run", "--host", "127.0.0.1", "--port", port, "--jsonrpc-only"];
   const child = spawn(
     "cargo",
-    ["run", "--quiet", "--bin", "openhuman-core", "--", ...args],
+    ["run", "--quiet", "--bin", "neppy-core", "--", ...args],
     {
       cwd: path.resolve(SCRIPT_DIR, "../.."),
       env,

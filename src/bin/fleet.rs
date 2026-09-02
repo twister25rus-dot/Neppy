@@ -1,12 +1,12 @@
-//! `openhuman-fleet` — a process-per-user supervisor + reverse proxy.
+//! `neppy-fleet` — a process-per-user supervisor + reverse proxy.
 //!
-//! Hosts one `openhuman-core` process per user/workspace and fronts them behind
+//! Hosts one `neppy-core` process per user/workspace and fronts them behind
 //! a single endpoint so a team server can manage many members' assistants while
 //! every existing client (`CloudHttpTransport`) keeps working unchanged. This is
 //! Phase 4 of the pluggable-core plan (`docs/plans/pluggable-core/phase-4-fleet-host.md`).
 //!
 //! Design (process-per-user, not in-process multi-tenancy):
-//! - Each tenant gets its own OS process (`openhuman-core run --headless-api`),
+//! - Each tenant gets its own OS process (`neppy-core run --headless-api`),
 //!   its own workspace volume (`OPENHUMAN_WORKSPACE`), and its own core bearer
 //!   (`OPENHUMAN_CORE_TOKEN`). This MVP does not yet run tenants under
 //!   distinct OS users or containers, so it is not a production multi-tenant
@@ -293,7 +293,7 @@ async fn rpc_proxy(
 // Core process lifecycle
 // ---------------------------------------------------------------------------
 
-/// Spawn one `openhuman-core run --headless-api` child bound to `instance.port`,
+/// Spawn one `neppy-core run --headless-api` child bound to `instance.port`,
 /// scoped to the tenant's workspace and core bearer. Returns the child handle.
 async fn spawn_core(
     core_bin: &Path,
@@ -431,7 +431,7 @@ fn readiness_body_succeeded(value: &serde_json::Value) -> bool {
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "openhuman-fleet",
+    name = "neppy-fleet",
     about = "Process-per-user Neppy core supervisor + reverse proxy"
 )]
 struct Args {
@@ -441,8 +441,8 @@ struct Args {
     /// Root directory under which each tenant's workspace is created.
     #[arg(long, default_value = "./fleet-workspaces")]
     workspaces_root: PathBuf,
-    /// Path to the `openhuman-core` binary to spawn per tenant.
-    #[arg(long, default_value = "openhuman-core")]
+    /// Path to the `neppy-core` binary to spawn per tenant.
+    #[arg(long, default_value = "neppy-core")]
     core_bin: PathBuf,
     /// First tenant core port; tenant N listens on `base_core_port + N`.
     #[arg(long, default_value_t = 7900)]

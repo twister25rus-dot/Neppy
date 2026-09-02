@@ -37,7 +37,7 @@ pub fn provenance_tag(session_id: &str) -> String {
 ///
 /// # Examples
 /// ```
-/// use openhuman_core::openhuman::util::truncate_with_ellipsis;
+/// use neppy_core::openhuman::util::truncate_with_ellipsis;
 ///
 /// // ASCII string - no truncation needed
 /// assert_eq!(truncate_with_ellipsis("hello", 10), "hello");

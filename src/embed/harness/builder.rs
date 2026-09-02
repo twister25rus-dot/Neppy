@@ -149,8 +149,8 @@ impl HarnessBuilder {
     /// product should not carry a family at all.
     ///
     /// ```no_run
-    /// # use openhuman_core::Harness;
-    /// # use openhuman_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
+    /// # use neppy_core::Harness;
+    /// # use neppy_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
     /// Harness::builder().tool_groups(
     ///     ToolGroups::none().with("documents", GroupMode::Advertised),
     /// );

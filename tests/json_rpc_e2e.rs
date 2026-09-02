@@ -20,10 +20,10 @@ use tempfile::tempdir;
 use tinyagents::harness::message::Message;
 use tinyagents::harness::model::ModelRequest;
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
-use openhuman_core::openhuman::memory::tree::all_memory_tree_registered_controllers;
-use openhuman_core::openhuman::platform::connectivity::rpc::pick_listen_port;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
+use neppy_core::openhuman::memory::tree::all_memory_tree_registered_controllers;
+use neppy_core::openhuman::platform::connectivity::rpc::pick_listen_port;
 
 const TEST_RPC_TOKEN: &str = "json-rpc-e2e-local-token";
 static JSON_RPC_AUTH_INIT: OnceLock<()> = OnceLock::new();
@@ -118,15 +118,15 @@ fn ensure_json_rpc_e2e_memory_seams() {
             .name("json-rpc-e2e-memory-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                let config = Arc::new(openhuman_core::openhuman::config::Config {
+                let config = Arc::new(neppy_core::openhuman::config::Config {
                     workspace_dir: json_rpc_e2e_shared_workspace().to_path_buf(),
                     ..neppy_core::openhuman::config::Config::default()
                 });
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     config.clone(),
                 );
                 #[cfg(feature = "modules")]
-                openhuman_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::openhuman::modules::memory::set_modules_policy(config);
             })
             .expect("spawn json_rpc e2e memory seam installer")
             .join()
@@ -141,11 +141,11 @@ where
 {
     std::thread::Builder::new()
         .name(name.to_string())
-        .stack_size(openhuman_core::core::runtime::AGENT_WORKER_STACK_BYTES)
+        .stack_size(neppy_core::core::runtime::AGENT_WORKER_STACK_BYTES)
         .spawn(move || {
             let rt = tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(2)
-                .thread_stack_size(openhuman_core::core::runtime::AGENT_WORKER_STACK_BYTES)
+                .thread_stack_size(neppy_core::core::runtime::AGENT_WORKER_STACK_BYTES)
                 .enable_all()
                 .build()
                 .expect("build json_rpc e2e runtime");
@@ -1027,11 +1027,11 @@ async fn wait_for_chat_completion_request_with_message(message: &str) -> Value {
 
 async fn encrypt_test_mnemonic() -> String {
     let _keyring_backend_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
-    let config = openhuman_core::openhuman::config::load_config_with_timeout()
+    let config = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load config for encrypted test mnemonic");
-    openhuman_core::openhuman::security::keyring::init_workspace(&config.workspace_dir);
-    openhuman_core::openhuman::security::encryption::rpc::encrypt_secret(
+    neppy_core::openhuman::security::keyring::init_workspace(&config.workspace_dir);
+    neppy_core::openhuman::security::encryption::rpc::encrypt_secret(
         &config,
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
     )
@@ -1128,7 +1128,7 @@ encrypt = false
         write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
 
-    let _: openhuman_core::openhuman::config::Config =
+    let _: neppy_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
@@ -1161,7 +1161,7 @@ enabled = false
         write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
 
-    let _: openhuman_core::openhuman::config::Config =
+    let _: neppy_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
@@ -3190,21 +3190,21 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     // Drop a snapshot directly through the store — this is exactly what
     // the web-channel progress mirror does mid-turn.
     let workspace_dir = {
-        let cfg = openhuman_core::openhuman::config::Config::load_or_init()
+        let cfg = neppy_core::openhuman::config::Config::load_or_init()
             .await
             .expect("load config");
         cfg.workspace_dir
     };
-    let mut state = openhuman_core::openhuman::threads::turn_state::TurnState::started(
+    let mut state = neppy_core::openhuman::threads::turn_state::TurnState::started(
         "thread-turn-1",
         "req-turn-1",
         25,
         chrono::Utc::now().to_rfc3339(),
     );
-    state.lifecycle = openhuman_core::openhuman::threads::turn_state::TurnLifecycle::Streaming;
+    state.lifecycle = neppy_core::openhuman::threads::turn_state::TurnLifecycle::Streaming;
     state.iteration = 2;
     state.streaming_text = "partial".into();
-    openhuman_core::openhuman::threads::turn_state::store::put(workspace_dir.clone(), &state)
+    neppy_core::openhuman::threads::turn_state::store::put(workspace_dir.clone(), &state)
         .expect("seed snapshot");
 
     // get → present
@@ -3254,15 +3254,15 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     // both instead of overwriting.
     // Far-future started_at guarantees turn-2 is the newest (turn-1 was seeded
     // with the real `now()`), so history ordering is deterministic.
-    let mut state2 = openhuman_core::openhuman::threads::turn_state::TurnState::started(
+    let mut state2 = neppy_core::openhuman::threads::turn_state::TurnState::started(
         "thread-turn-1",
         "req-turn-2",
         25,
         "2999-01-01T00:00:00Z",
     );
-    state2.lifecycle = openhuman_core::openhuman::threads::turn_state::TurnLifecycle::Completed;
+    state2.lifecycle = neppy_core::openhuman::threads::turn_state::TurnLifecycle::Completed;
     state2.updated_at = "2999-01-01T00:00:00Z".into();
-    openhuman_core::openhuman::threads::turn_state::store::put(workspace_dir.clone(), &state2)
+    neppy_core::openhuman::threads::turn_state::store::put(workspace_dir.clone(), &state2)
         .expect("seed snapshot 2");
 
     // history → both turns, newest first.
@@ -3377,7 +3377,7 @@ async fn json_rpc_run_ledger_lifecycle() {
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
 
-    let config = openhuman_core::openhuman::config::Config::load_or_init()
+    let config = neppy_core::openhuman::config::Config::load_or_init()
         .await
         .expect("load config");
 
@@ -3496,7 +3496,7 @@ async fn json_rpc_agent_work_list_groups_runs_by_bucket() {
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
 
-    let config = openhuman_core::openhuman::config::Config::load_or_init()
+    let config = neppy_core::openhuman::config::Config::load_or_init()
         .await
         .expect("load config");
 
@@ -3604,7 +3604,7 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
 
-    let config = openhuman_core::openhuman::config::Config::load_or_init()
+    let config = neppy_core::openhuman::config::Config::load_or_init()
         .await
         .expect("load config");
 
@@ -3709,7 +3709,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
 
-    let config = openhuman_core::openhuman::config::Config::load_or_init()
+    let config = neppy_core::openhuman::config::Config::load_or_init()
         .await
         .expect("load config");
 
@@ -5394,11 +5394,11 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
             .any(|e| e.get("slug").and_then(Value::as_str) == Some("proxy")),
         "user's auth-none 'proxy' entry must survive the update: {providers:?}"
     );
-    let loaded_config = openhuman_core::openhuman::config::load_config_with_timeout()
+    let loaded_config = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load_config after auth-none update");
     let (model, model_id) =
-        openhuman_core::openhuman::inference::provider::create_chat_model_with_model_id(
+        neppy_core::openhuman::inference::provider::create_chat_model_with_model_id(
             "chat",
             &loaded_config,
             0.0,
@@ -8990,7 +8990,7 @@ async fn rpc_update_apply_can_be_disabled_by_config_policy() {
     let tmp = tempdir().expect("tempdir");
     let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
 
-    let mut config = openhuman_core::openhuman::config::Config {
+    let mut config = neppy_core::openhuman::config::Config {
         workspace_dir: tmp.path().join("workspace"),
         action_dir: tmp.path().join("workspace"),
         config_path: tmp.path().join("config.toml"),
@@ -9015,7 +9015,7 @@ async fn rpc_update_apply_can_be_disabled_by_config_policy() {
             "method": "openhuman.update_apply",
             "params": {
                 "download_url": "https://github.com/owner/repo/releases/download/v1/x",
-                "asset_name": "openhuman-core-x86_64-unknown-linux-gnu"
+                "asset_name": "neppy-core-x86_64-unknown-linux-gnu"
             }
         }))
         .send()
@@ -9346,13 +9346,13 @@ async fn voice_cloud_transcribe_registered_e2e() {
 /// 3. Tool metadata (names/descriptions) is intact.
 #[tokio::test(flavor = "multi_thread")]
 async fn whatsapp_data_agent_tools_e2e_1341() {
-    use openhuman_core::core::bus::BUS;
-    use openhuman_core::openhuman::channels::whatsapp_data::methods;
-    use openhuman_core::openhuman::channels::whatsapp_data::types::{
+    use neppy_core::core::bus::BUS;
+    use neppy_core::openhuman::channels::whatsapp_data::methods;
+    use neppy_core::openhuman::channels::whatsapp_data::types::{
         ListChatsRequest, ListMessagesRequest, SearchMessagesRequest, WhatsAppChat, WhatsAppMessage,
     };
-    use openhuman_core::openhuman::tools::traits::Tool;
-    use openhuman_core::openhuman::tools::{
+    use neppy_core::openhuman::tools::traits::Tool;
+    use neppy_core::openhuman::tools::{
         WhatsAppDataListChatsTool, WhatsAppDataListMessagesTool, WhatsAppDataSearchMessagesTool,
     };
 
@@ -9405,7 +9405,7 @@ async fn whatsapp_data_agent_tools_e2e_1341() {
             },
         );
 
-    fn parse_tool_output(result: openhuman_core::openhuman::skills::types::ToolResult) -> Value {
+    fn parse_tool_output(result: neppy_core::openhuman::skills::types::ToolResult) -> Value {
         assert!(!result.is_error, "tool returned error: {result:?}");
         serde_json::from_str(&result.output()).expect("tool output is valid JSON")
     }
@@ -9666,10 +9666,10 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
             "exampleConfig": { "command": stub_path, "args": [] }
         }]
     });
-    let seed_config = openhuman_core::openhuman::config::load_config_with_timeout()
+    let seed_config = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load config for cache seed");
-    openhuman_core::openhuman::mcp::registry::store::set_cached(
+    neppy_core::openhuman::mcp::registry::store::set_cached(
         &seed_config,
         &format!("smithery:detail:{qualified_name}"),
         &detail.to_string(),
@@ -9854,10 +9854,10 @@ async fn mcp_clients_set_enabled_smoke() {
             "exampleConfig": { "command": stub_path, "args": [] }
         }]
     });
-    let seed_config = openhuman_core::openhuman::config::load_config_with_timeout()
+    let seed_config = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load config for cache seed");
-    openhuman_core::openhuman::mcp::registry::store::set_cached(
+    neppy_core::openhuman::mcp::registry::store::set_cached(
         &seed_config,
         &format!("smithery:detail:{qualified_name}"),
         &detail.to_string(),
@@ -9967,10 +9967,10 @@ async fn mcp_clients_install_idempotent_refresh_and_canonical_dedup() {
             "exampleConfig": { "command": stub_path, "args": [] }
         }]
     });
-    let seed_config = openhuman_core::openhuman::config::load_config_with_timeout()
+    let seed_config = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load config for cache seed");
-    openhuman_core::openhuman::mcp::registry::store::set_cached(
+    neppy_core::openhuman::mcp::registry::store::set_cached(
         &seed_config,
         &format!("smithery:detail:{qualified_name}"),
         &detail.to_string(),
@@ -10281,7 +10281,7 @@ encrypt = false
     //    next call to load_config_with_timeout reads the on-disk file, finds
     //    it broken, falls back to the .bak, and returns the backup sentinel
     //    temperature (1.2) without returning an error.
-    let recovered = openhuman_core::openhuman::config::load_config_with_timeout()
+    let recovered = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load_config_with_timeout must not error even with corrupt primary");
     assert!(
@@ -10384,7 +10384,7 @@ encrypt = false
     //    It should recover from the `.bak` (if save was called) or fall back
     //    to `Config::default()`.  Either outcome is acceptable — the contract
     //    is "no Err returned, no panic".
-    let recovered = openhuman_core::openhuman::config::load_config_with_timeout()
+    let recovered = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load_config_with_timeout must not return Err with corrupt primary");
 
@@ -10805,8 +10805,8 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
 
     // Restore the process-global timeout so later tests in this binary don't
     // inherit the 300s value set above (the AtomicU64 is per-process, not per-test).
-    openhuman_core::openhuman::tools::timeout::set_tool_timeout_secs(
-        openhuman_core::openhuman::tools::timeout::DEFAULT_TIMEOUT_SECS,
+    neppy_core::openhuman::tools::timeout::set_tool_timeout_secs(
+        neppy_core::openhuman::tools::timeout::DEFAULT_TIMEOUT_SECS,
     );
 
     mock_join.abort();
@@ -11073,7 +11073,7 @@ async fn json_rpc_task_sources_crud_and_status() {
 /// without a live Composio connection.
 mod task_sources_stub {
     use async_trait::async_trait;
-    use openhuman_core::openhuman::memory::sync::composio::providers::{
+    use neppy_core::openhuman::memory::sync::composio::providers::{
         ComposioProvider, NormalizedTask, ProviderContext, ProviderUserProfile, TaskFetchFilter,
     };
 
@@ -11135,7 +11135,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
 
     // Register the stub github provider BEFORE serving so the fetch RPC
     // resolves it from the global registry.
-    openhuman_core::openhuman::memory::sync::composio::providers::register_provider(Arc::new(
+    neppy_core::openhuman::memory::sync::composio::providers::register_provider(Arc::new(
         task_sources_stub::StubGithubProvider {
             tasks: vec![
                 task_sources_stub::task("101", "Fix flaky test", "2025-01-01T00:00:00Z"),
@@ -11256,7 +11256,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     // Restore the global provider registry so the stub "github" provider
     // does not leak into other tests in this binary (re-registers the
     // real built-in providers).
-    openhuman_core::openhuman::memory::sync::composio::providers::init_default_providers();
+    neppy_core::openhuman::memory::sync::composio::providers::init_default_providers();
 
     rpc_join.abort();
 }
@@ -11983,7 +11983,7 @@ compaction_enabled = false
     {
         write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
-    let _: openhuman_core::openhuman::config::Config =
+    let _: neppy_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
@@ -12641,17 +12641,15 @@ async fn json_rpc_flows_list_connections_aggregates_secret_free() {
 
     // Seed an HTTP credential through the same encrypted-at-rest store the op
     // reads (config resolves under the guarded HOME set by boot_flows_rpc_env).
-    let seed_config = openhuman_core::openhuman::config::load_config_with_timeout()
+    let seed_config = neppy_core::openhuman::config::load_config_with_timeout()
         .await
         .expect("load config to seed http_cred");
     const SECRET: &str = "sk_live_flows_list_connections_seed";
-    openhuman_core::openhuman::security::credentials::HttpCredentialsStore::from_config(
-        &seed_config,
-    )
-    .upsert(
-        &openhuman_core::openhuman::security::credentials::HttpCredential::bearer("stripe", SECRET),
-    )
-    .expect("seed http_cred");
+    neppy_core::openhuman::security::credentials::HttpCredentialsStore::from_config(&seed_config)
+        .upsert(
+            &neppy_core::openhuman::security::credentials::HttpCredential::bearer("stripe", SECRET),
+        )
+        .expect("seed http_cred");
 
     let resp = post_json_rpc(
         &rpc_base,
@@ -12717,11 +12715,11 @@ async fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech_inner()
     // Activate the reply_speech test seam so synthesize_reply records and
     // short-circuits instead of calling the hosted backend.
     let _seam_guard = EnvVarGuard::set(
-        openhuman_core::openhuman::voice::reply_speech::TEST_SEAM_ENV,
+        neppy_core::openhuman::voice::reply_speech::TEST_SEAM_ENV,
         "1",
     );
 
-    openhuman_core::openhuman::voice::reply_speech::test_seam::clear();
+    neppy_core::openhuman::voice::reply_speech::test_seam::clear();
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -12790,7 +12788,7 @@ async fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech_inner()
     // because the bridge task may finish slightly after chat_done.
     let mut observed: Vec<String> = Vec::new();
     for _ in 0..50 {
-        observed = openhuman_core::openhuman::voice::reply_speech::test_seam::observed();
+        observed = neppy_core::openhuman::voice::reply_speech::test_seam::observed();
         if !observed.is_empty() {
             break;
         }
@@ -13357,7 +13355,7 @@ api_key = "ck_e2e_test"
     {
         write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
-    let _: openhuman_core::openhuman::config::Config =
+    let _: neppy_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
@@ -14443,9 +14441,9 @@ async fn json_rpc_threads_transcript_get_projects_and_paginates() {
 /// 3. An unknown flavour slug is rejected.
 #[tokio::test]
 async fn memory_flavour_agent_tool_e2e_5172() {
-    use openhuman_core::openhuman::config::Config;
-    use openhuman_core::openhuman::tools::traits::Tool;
-    use openhuman_core::openhuman::tools::MemoryFlavourTool;
+    use neppy_core::openhuman::config::Config;
+    use neppy_core::openhuman::tools::traits::Tool;
+    use neppy_core::openhuman::tools::MemoryFlavourTool;
 
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");

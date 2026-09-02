@@ -8,7 +8,7 @@ Use an isolated spawned core when validating managed Neppy backend behavior with
 node scripts/debug/harness-subagent-rpc-audit.mjs --spawn-core --isolated-workspace --model agentic-v1 --scenario all
 ```
 
-`--isolated-workspace` defaults to `--provider-mode openhuman-backend`. It writes a temporary backend config, seeds the temp auth store from `JWT_TOKEN`, starts `openhuman-core`, and removes the temp workspace by default. Only pass `--keep-workspace` when you need to inspect artifacts locally.
+`--isolated-workspace` defaults to `--provider-mode openhuman-backend`. It writes a temporary backend config, seeds the temp auth store from `JWT_TOKEN`, starts `neppy-core`, and removes the temp workspace by default. Only pass `--keep-workspace` when you need to inspect artifacts locally.
 
 The optional `--provider-mode direct-openai` control path writes a temporary direct-provider config using `OPENAI_API_KEY` or `OPENAI_KEY`.
 

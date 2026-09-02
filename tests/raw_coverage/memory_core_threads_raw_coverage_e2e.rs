@@ -11,13 +11,13 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
-use openhuman_core::openhuman::agent::progress::AgentProgress;
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::memory::read_rpc::{
+use neppy_core::openhuman::agent::progress::AgentProgress;
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::memory::read_rpc::{
     self, ChunkFilter, GraphMode,
 };
 use tinymemory_core::tree_source::get_or_create_source_tree;
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::memory::{
     AppendConversationMessageRequest, ConversationMessageRecord, ConversationMessagesRequest,
     CreateConversationThreadRequest, DeleteConversationThreadRequest, EmptyRequest,
     GenerateConversationThreadTitleRequest, UpdateConversationMessageRequest,
@@ -31,17 +31,17 @@ use tinymemory_core::store::chunks::types::{
 use tinymemory_core::store::content;
 use tinymemory_core::store::trees::store as tree_store;
 use tinymemory_core::store::trees::types::{SummaryNode, TreeKind};
-use openhuman_core::openhuman::memory::tree::score::embed::pack_embedding;
-use openhuman_core::openhuman::memory::tree::score::extract::EntityKind;
-use openhuman_core::openhuman::memory::tree::score::resolver::CanonicalEntity;
-use openhuman_core::openhuman::memory::tree::score::signals::ScoreSignals;
-use openhuman_core::openhuman::memory::tree::score::store::{index_entity, upsert_score, ScoreRow};
-use openhuman_core::openhuman::threads::ops as thread_ops;
-use openhuman_core::openhuman::threads::turn_state::{
+use neppy_core::openhuman::memory::tree::score::embed::pack_embedding;
+use neppy_core::openhuman::memory::tree::score::extract::EntityKind;
+use neppy_core::openhuman::memory::tree::score::resolver::CanonicalEntity;
+use neppy_core::openhuman::memory::tree::score::signals::ScoreSignals;
+use neppy_core::openhuman::memory::tree::score::store::{index_entity, upsert_score, ScoreRow};
+use neppy_core::openhuman::threads::ops as thread_ops;
+use neppy_core::openhuman::threads::turn_state::{
     self, ClearTurnStateRequest, GetTurnStateRequest, TurnLifecycle, TurnStateMirror,
     TurnStateStore,
 };
-use openhuman_core::openhuman::threads::welcome_migration::migrate_welcome_agent_artifacts;
+use neppy_core::openhuman::threads::welcome_migration::migrate_welcome_agent_artifacts;
 
 struct EnvGuard {
     key: &'static str,
@@ -211,7 +211,7 @@ async fn memory_read_rpc_filters_graphs_scores_reset_and_wipe_seeded_rows() {
     // module lists must name the same store. No other case in this aggregated
     // binary routes through the module, so nothing contends for the slot.
     #[cfg(feature = "modules")]
-    openhuman_core::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(
+    neppy_core::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(
         cfg.clone(),
     ));
     let ts0 = Utc.with_ymd_and_hms(2026, 5, 20, 9, 0, 0).unwrap();

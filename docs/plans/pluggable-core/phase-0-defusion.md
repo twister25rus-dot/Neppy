@@ -57,6 +57,6 @@ prior `jsonrpc.rs` line range so the diff is auditable.
 ## Verification
 
 - `cargo check` both crates; `pnpm test:rust`.
-- Boot the desktop app and `openhuman-core serve`; diff the startup log
+- Boot the desktop app and `neppy-core serve`; diff the startup log
   sequence (grep-stable prefixes) against `main` — must be identical.
 - `rg 'rpc::try_dispatch|rpc/dispatch'` returns nothing.

@@ -384,7 +384,7 @@ mod imp {
     }
 }
 
-/// Linux implementation: use /proc/<pid>/cmdline to enumerate openhuman-core processes.
+/// Linux implementation: use /proc/<pid>/cmdline to enumerate neppy-core processes.
 #[cfg(target_os = "linux")]
 mod linux_imp {
     use crate::core_process;
@@ -550,7 +550,7 @@ mod linux_imp {
             .and_then(|n| n.to_str())
             .unwrap_or(argv0);
         let lower = filename.to_ascii_lowercase();
-        lower == "openhuman-core" || lower == "openhuman"
+        lower == "neppy-core" || lower == "openhuman"
     }
 
     #[cfg(test)]
@@ -559,9 +559,9 @@ mod linux_imp {
 
         #[test]
         fn is_neppy_executable_matches_core_binary() {
-            assert!(is_neppy_executable("/usr/local/bin/openhuman-core"));
-            assert!(is_neppy_executable("openhuman-core"));
-            assert!(is_neppy_executable("/opt/Neppy/openhuman-core"));
+            assert!(is_neppy_executable("/usr/local/bin/neppy-core"));
+            assert!(is_neppy_executable("neppy-core"));
+            assert!(is_neppy_executable("/opt/Neppy/neppy-core"));
         }
 
         #[test]
@@ -804,12 +804,12 @@ mod windows_imp {
     /// core, CEF helper). Used only for the diagnostics listing.
     fn is_neppy_process(argv0: &str) -> bool {
         let name = exe_file_name(argv0);
-        name == "openhuman.exe" || name == "openhuman-core.exe"
+        name == "openhuman.exe" || name == "neppy-core.exe"
     }
 
     /// True only for a wedged GUI browser process that is safe to reap: the
     /// desktop app binary (`Neppy.exe`, never the standalone
-    /// `openhuman-core.exe`), NOT a CEF helper re-exec (`--type=`), and NOT a
+    /// `neppy-core.exe`), NOT a CEF helper re-exec (`--type=`), and NOT a
     /// `core` / `mcp` / `mcp-server` CLI/MCP session — those never take the CEF
     /// mutex and may be an active user session, e.g. a Claude MCP client
     /// (issue #3900 P2; see `main.rs` for the subcommand routing).
@@ -983,8 +983,8 @@ ProcessId=9000\r\r\n";
             ));
             // The standalone core binary is never a GUI CEF-lock-holder.
             assert!(!is_reapable_gui_instance(
-                "C:\\p\\openhuman-core.exe",
-                "openhuman-core.exe run"
+                "C:\\p\\neppy-core.exe",
+                "neppy-core.exe run"
             ));
             // Unrelated processes.
             assert!(!is_reapable_gui_instance("C:\\chrome.exe", "chrome.exe"));
@@ -1042,7 +1042,7 @@ ProcessId=9000\r\r\n";
         #[test]
         fn is_neppy_process_matches_gui_and_core_only() {
             assert!(is_neppy_process("C:\\p\\Neppy.exe"));
-            assert!(is_neppy_process("C:\\p\\openhuman-core.exe"));
+            assert!(is_neppy_process("C:\\p\\neppy-core.exe"));
             assert!(is_neppy_process("Neppy.exe"));
             assert!(!is_neppy_process("C:\\Chrome\\chrome.exe"));
             assert!(!is_neppy_process("python.exe"));

@@ -2,7 +2,7 @@
 //!
 //! Tests the core binary resolution paths introduced in PR #3:
 //! - OPENHUMAN_CORE_BIN env override
-//! - Packaged Linux paths (/usr/bin/openhuman-core, /usr/lib/Neppy/openhuman-core)
+//! - Packaged Linux paths (/usr/bin/neppy-core, /usr/lib/Neppy/neppy-core)
 //! - Staged sidecar detection in dev builds
 //! - Fallback to self-subcommand
 //!
@@ -87,12 +87,12 @@ fn create_fake_core_binary(dir: &std::path::Path, name: &str) -> PathBuf {
 /// Test that OPENHUMAN_CORE_BIN override takes precedence when file exists.
 #[test]
 fn core_bin_env_override_takes_precedence_when_exists() {
-    let temp_dir = std::env::temp_dir().join("openhuman-core-test-override");
+    let temp_dir = std::env::temp_dir().join("neppy-core-test-override");
     let _ = fs::remove_dir_all(&temp_dir);
     fs::create_dir_all(&temp_dir).expect("create temp dir");
 
     // Create a fake core binary
-    let fake_core = create_fake_core_binary(&temp_dir, "openhuman-core");
+    let fake_core = create_fake_core_binary(&temp_dir, "neppy-core");
     let fake_core_str = fake_core.to_str().unwrap();
 
     // Set the env override
@@ -115,31 +115,31 @@ fn core_bin_env_override_takes_precedence_when_exists() {
 #[test]
 fn core_bin_env_override_graceful_when_nonexistent() {
     // Set env override to a non-existent path
-    let _guard = EnvGuard::set("OPENHUMAN_CORE_BIN", "/nonexistent/path/openhuman-core");
+    let _guard = EnvGuard::set("OPENHUMAN_CORE_BIN", "/nonexistent/path/neppy-core");
 
     // Verify the env var is set
     assert_eq!(
         std::env::var("OPENHUMAN_CORE_BIN").ok().as_deref(),
-        Some("/nonexistent/path/openhuman-core")
+        Some("/nonexistent/path/neppy-core")
     );
 
     // Verify the file doesn't exist
-    assert!(!std::path::Path::new("/nonexistent/path/openhuman-core").exists());
+    assert!(!std::path::Path::new("/nonexistent/path/neppy-core").exists());
 }
 
 /// Test packaged Linux paths are probed in correct order.
 #[test]
 fn core_bin_packaged_linux_paths_order() {
     // Document the expected search order for packaged Linux binaries
-    let expected_paths = ["/usr/bin/openhuman-core", "/usr/lib/Neppy/openhuman-core"];
+    let expected_paths = ["/usr/bin/neppy-core", "/usr/lib/Neppy/neppy-core"];
 
     // Verify these are valid absolute paths
     for path in &expected_paths {
         let p = std::path::Path::new(path);
         assert!(p.is_absolute(), "Path should be absolute: {}", path);
         assert!(
-            path.contains("openhuman-core"),
-            "Path should contain 'openhuman-core': {}",
+            path.contains("neppy-core"),
+            "Path should contain 'neppy-core': {}",
             path
         );
     }
@@ -219,15 +219,15 @@ fn core_bin_symlink_resolution() {
     {
         use std::os::unix::fs::symlink;
 
-        let temp_dir = std::env::temp_dir().join("openhuman-core-test-symlink");
+        let temp_dir = std::env::temp_dir().join("neppy-core-test-symlink");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).expect("create temp dir");
 
         // Create real file
-        let real_file = create_fake_core_binary(&temp_dir, "real-openhuman-core");
+        let real_file = create_fake_core_binary(&temp_dir, "real-neppy-core");
 
         // Create symlink
-        let symlink_path = temp_dir.join("symlink-openhuman-core");
+        let symlink_path = temp_dir.join("symlink-neppy-core");
         symlink(&real_file, &symlink_path).expect("create symlink");
 
         // Both paths should resolve to the same canonical path

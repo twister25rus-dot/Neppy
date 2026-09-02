@@ -56,8 +56,8 @@ async fn update_version_asset_prefix_contains_target_triple() {
         .and_then(|v| v.as_str())
         .expect("asset_prefix field");
     assert!(
-        prefix.starts_with("openhuman-core-"),
-        "asset_prefix must start with 'openhuman-core-', got: {prefix}"
+        prefix.starts_with("neppy-core-"),
+        "asset_prefix must start with 'neppy-core-', got: {prefix}"
     );
     assert!(
         prefix.contains(triple),
@@ -166,7 +166,7 @@ async fn supervisor_strategy_sets_restart_requested_false() {
     let info = sample_update_info("0.52.0", "0.51.0", true);
     let applied = UpdateApplyResult {
         installed_version: "0.52.0".to_owned(),
-        staged_path: "/tmp/openhuman-core-test".to_owned(),
+        staged_path: "/tmp/neppy-core-test".to_owned(),
         restart_required: true,
         restart_strategy: UpdateRestartStrategy::SelfReplace,
     };
@@ -185,7 +185,7 @@ async fn supervisor_strategy_staged_path_preserved() {
     let info = sample_update_info("0.52.0", "0.51.0", true);
     let applied = UpdateApplyResult {
         installed_version: "0.52.0".to_owned(),
-        staged_path: "/tmp/openhuman-core-x86_64".to_owned(),
+        staged_path: "/tmp/neppy-core-x86_64".to_owned(),
         restart_required: true,
         restart_strategy: UpdateRestartStrategy::SelfReplace,
     };
@@ -193,7 +193,7 @@ async fn supervisor_strategy_staged_path_preserved() {
         build_run_result_from_staged_update(info, applied, UpdateRestartStrategy::Supervisor).await;
     assert_eq!(
         result.staged_path.as_deref(),
-        Some("/tmp/openhuman-core-x86_64"),
+        Some("/tmp/neppy-core-x86_64"),
         "staged path must be forwarded"
     );
 }
@@ -203,7 +203,7 @@ async fn supervisor_strategy_message_mentions_supervisor() {
     let info = sample_update_info("0.52.0", "0.51.0", true);
     let applied = UpdateApplyResult {
         installed_version: "0.52.0".to_owned(),
-        staged_path: "/tmp/openhuman-core".to_owned(),
+        staged_path: "/tmp/neppy-core".to_owned(),
         restart_required: true,
         restart_strategy: UpdateRestartStrategy::SelfReplace,
     };

@@ -11,45 +11,45 @@ use async_trait::async_trait;
 use serde_json::{json, Map, Value};
 use tempfile::tempdir;
 
-use openhuman_core::openhuman::channels::controllers::{
+use neppy_core::openhuman::channels::controllers::{
     all_channel_definitions, all_channels_controller_schemas, all_channels_registered_controllers,
     find_channel_definition, ChannelAuthMode, ChannelCapability,
 };
-use openhuman_core::openhuman::channels::traits::{Channel, ChannelMessage, SendMessage};
-use openhuman_core::openhuman::channels::yuanbao::config::YuanbaoConfig;
-use openhuman_core::openhuman::channels::yuanbao::errors::{
+use neppy_core::openhuman::channels::traits::{Channel, ChannelMessage, SendMessage};
+use neppy_core::openhuman::channels::yuanbao::config::YuanbaoConfig;
+use neppy_core::openhuman::channels::yuanbao::errors::{
     AUTH_FAILED_CODES, AUTH_RETRYABLE_CODES, NO_RECONNECT_CLOSE_CODES,
 };
-use openhuman_core::openhuman::channels::yuanbao::media::{
+use neppy_core::openhuman::channels::yuanbao::media::{
     build_file_msg_body, build_image_msg_body, guess_mime_type, image_format_code, is_image,
     parse_image_size,
 };
-use openhuman_core::openhuman::channels::yuanbao::proto::{
+use neppy_core::openhuman::channels::yuanbao::proto::{
     decode_auth_bind_rsp, decode_conn_msg, decode_inbound_json, decode_inbound_push,
     decode_push_msg, encode_auth_bind, encode_conn_msg, encode_msg_body_element, encode_ping,
     encode_push_ack,
 };
-use openhuman_core::openhuman::channels::yuanbao::proto_constants::{cmd, cmd_type, module};
-use openhuman_core::openhuman::channels::yuanbao::splitter::split_markdown;
-use openhuman_core::openhuman::channels::yuanbao::types::{
+use neppy_core::openhuman::channels::yuanbao::proto_constants::{cmd, cmd_type, module};
+use neppy_core::openhuman::channels::yuanbao::splitter::split_markdown;
+use neppy_core::openhuman::channels::yuanbao::types::{
     ConnFrame as YuanbaoConnFrame, MsgBodyElement as YuanbaoMsgBodyElement,
     MsgContent as YuanbaoMsgContent,
 };
-use openhuman_core::openhuman::channels::yuanbao::wire::{
+use neppy_core::openhuman::channels::yuanbao::wire::{
     decode_varint, encode_field_bytes, encode_field_string, encode_field_varint, encode_varint,
     get_bytes, get_repeated_bytes, get_string, get_varint, next_seq_no, parse_fields, FieldValue,
 };
-use openhuman_core::openhuman::channels::{CliChannel, WhatsAppChannel};
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::channels::{CliChannel, WhatsAppChannel};
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use openhuman_core::openhuman::security::{AuditLogger, SecurityPolicy};
-use openhuman_core::openhuman::tools::generated::{
+use neppy_core::openhuman::security::{AuditLogger, SecurityPolicy};
+use neppy_core::openhuman::tools::generated::{
     admit_generated_tool_definitions, generated_tools_from_definitions, GeneratedToolAdapter,
     GeneratedToolAdmissionConfig, GeneratedToolDefinition, GeneratedToolRisk,
 };
-use openhuman_core::openhuman::tools::{
+use neppy_core::openhuman::tools::{
     all_tools, all_tools_controller_schemas, all_tools_registered_controllers,
     default_tools, DefaultToolPolicy, PermissionLevel, PolicyDecision, ToolCategory, ToolPolicy,
     ToolResult, ToolScope,

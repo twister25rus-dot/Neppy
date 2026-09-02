@@ -27,7 +27,7 @@ Channels that support it can show a typing indicator, stream progressive **draft
 
 ## Supported channels
 
-Neppy ships **18 channel provider modules** (16 built by default plus two behind Cargo feature flags), of which **17 are real messaging platforms**. The remaining one, `presentation`, is an internal response-rendering helper for the web chat, not a platform you connect to. A separate `cli` channel serves the `openhuman-core` terminal binary. Seven channels are exposed in the Settings UI; the rest are enabled through `config.toml`.
+Neppy ships **18 channel provider modules** (16 built by default plus two behind Cargo feature flags), of which **17 are real messaging platforms**. The remaining one, `presentation`, is an internal response-rendering helper for the web chat, not a platform you connect to. A separate `cli` channel serves the `neppy-core` terminal binary. Seven channels are exposed in the Settings UI; the rest are enabled through `config.toml`.
 
 | Channel            | Direction     | Inbound transport            | Credential mode                                                    | In Settings UI |
 | ------------------ | ------------- | ---------------------------- | ------------------------------------------------------------------ | -------------- |

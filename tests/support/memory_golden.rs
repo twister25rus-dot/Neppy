@@ -44,7 +44,7 @@
 //! `tinymemory_core::global::init` directly, so this file sits in the same
 //! dependency position as the code that drives it. Nothing else changed: the
 //! only edits are the four `crate::openhuman::` paths, rewritten to name the
-//! library from outside as `openhuman_core::openhuman::`.
+//! library from outside as `neppy_core::openhuman::`.
 //!
 //! Included as a module rather than being its own `tests/*.rs` file so cargo
 //! does not build it as a second test target — the same reason
@@ -85,12 +85,12 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result};
 use chrono::{DateTime, TimeZone, Utc};
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::memory::ops::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::memory::ops::{
     doc_list, doc_put, graph_query, graph_upsert, kv_get, memory_query_namespace, GraphQueryParams,
     GraphUpsertParams, KvGetDeleteParams, KvSetParams, NamespaceOnlyParams, PutDocParams,
 };
-use openhuman_core::openhuman::memory::rpc_models::QueryNamespaceRequest;
+use neppy_core::openhuman::memory::rpc_models::QueryNamespaceRequest;
 use tinymemory_api::chunks::{Chunk, Metadata, SourceKind, SourceRef};
 use tinymemory_core::store::chunks;
 use tinymemory_core::store::namespace_store::{events, fts5, profile, segments};
@@ -232,7 +232,7 @@ async fn seed_documents() -> Result<()> {
 async fn seed_kv() -> Result<()> {
     for namespace in [None, Some(NAMESPACE_PRIMARY.to_string())] {
         tracing::debug!(?namespace, key = KV_KEY, "[golden] seeding kv");
-        openhuman_core::openhuman::memory::ops::kv_set(KvSetParams {
+        neppy_core::openhuman::memory::ops::kv_set(KvSetParams {
             namespace: namespace.clone(),
             key: KV_KEY.to_string(),
             value: serde_json::json!({ "fixture": "golden", "v": 1 }),

@@ -1,4 +1,4 @@
-//! Core self-update logic: check GitHub Releases for a newer `openhuman-core` binary
+//! Core self-update logic: check GitHub Releases for a newer `neppy-core` binary
 //! and download + stage it for the Tauri shell to swap in.
 
 use std::io::Write;
@@ -53,10 +53,10 @@ pub fn platform_triple() -> &'static str {
 
 /// Find the right asset for this platform from a list of release assets.
 ///
-/// Convention: assets are named `openhuman-core-{triple}` (or `.exe` on Windows).
+/// Convention: assets are named `neppy-core-{triple}` (or `.exe` on Windows).
 fn find_platform_asset(assets: &[GitHubAsset]) -> Option<&GitHubAsset> {
     let triple = platform_triple();
-    let expected_name = format!("openhuman-core-{triple}");
+    let expected_name = format!("neppy-core-{triple}");
 
     log::debug!(
         "[update] looking for asset matching '{}' among {} assets",
@@ -85,7 +85,7 @@ fn is_newer(latest: &str, current: &str) -> bool {
     l > c
 }
 
-/// Check GitHub Releases for a newer version of openhuman-core.
+/// Check GitHub Releases for a newer version of neppy-core.
 pub async fn check_available() -> Result<UpdateInfo, String> {
     let current = current_version();
     log::info!(
@@ -96,7 +96,7 @@ pub async fn check_available() -> Result<UpdateInfo, String> {
     let url = format!("https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest");
 
     let client = reqwest::Client::builder()
-        .user_agent("openhuman-core-updater")
+        .user_agent("neppy-core-updater")
         .timeout(std::time::Duration::from_secs(15))
         .build()
         .map_err(|e| format!("failed to build HTTP client: {e}"))?;
@@ -227,7 +227,7 @@ pub async fn download_and_stage_with_version(
     );
 
     let client = reqwest::Client::builder()
-        .user_agent("openhuman-core-updater")
+        .user_agent("neppy-core-updater")
         .timeout(std::time::Duration::from_secs(300))
         .build()
         .map_err(|e| format!("failed to build HTTP client: {e}"))?;

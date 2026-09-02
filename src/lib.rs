@@ -40,7 +40,7 @@ pub use embed::McpServer;
 ///
 /// ```no_run
 /// # async fn demo() -> Result<(), Box<dyn std::error::Error>> {
-/// use openhuman_core::{Harness, Provider, Session, Workspace};
+/// use neppy_core::{Harness, Provider, Session, Workspace};
 ///
 /// let harness = Harness::builder()
 ///     .provider(Provider::openai_compatible("https://api.example/v1", "sk-…").model("gpt-5"))
@@ -72,7 +72,7 @@ pub use embed::{Session, Turn, TurnOutcome, TurnRequest};
 /// ```no_run
 /// # async fn demo() {
 /// let (tx, mut rx) = tokio::sync::mpsc::channel(256);
-/// openhuman_core::agent_progress::with_progress_sink(tx, async {
+/// neppy_core::agent_progress::with_progress_sink(tx, async {
 ///     // drive `agent_chat` here
 /// })
 /// .await;

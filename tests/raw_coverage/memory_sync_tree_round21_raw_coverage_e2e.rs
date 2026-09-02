@@ -15,8 +15,8 @@ use chrono::{TimeZone, Utc};
 use serde_json::{json, Value};
 use tempfile::TempDir;
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::security::credentials::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
 use tinymemory_core::global as memory_global;
@@ -24,20 +24,20 @@ use tinymemory_core::store::chunks::store::with_connection;
 use tinymemory_core::store::content::atomic::stage_summary;
 use tinymemory_core::store::content::{SummaryComposeInput, SummaryTreeKind};
 use tinymemory_core::store::trees::types::{SummaryNode, Tree, TreeKind};
-use openhuman_core::openhuman::memory::sync::composio::periodic::record_sync_success;
-use openhuman_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::linear::LinearProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::slack::rpc::{
+use neppy_core::openhuman::memory::sync::composio::periodic::record_sync_success;
+use neppy_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::linear::LinearProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::slack::rpc::{
     sync_status_rpc, SyncStatusRequest,
 };
-use openhuman_core::openhuman::memory::sync::composio::providers::sync_state::{PersistedSyncState, SyncState};
-use openhuman_core::openhuman::memory::sync::composio::providers::{
+use neppy_core::openhuman::memory::sync::composio::providers::sync_state::{PersistedSyncState, SyncState};
+use neppy_core::openhuman::memory::sync::composio::providers::{
     ComposioProvider, ProviderContext, SyncReason, TaskFetchFilter,
 };
-use openhuman_core::openhuman::memory::tree::retrieval::source::query_source;
+use neppy_core::openhuman::memory::tree::retrieval::source::query_source;
 use tinycortex::memory::score::embed::{pack_embedding, EMBEDDING_DIM};
-use openhuman_core::openhuman::memory::tree::tree::store as tree_store;
-use openhuman_core::openhuman::memory::tree::tree::TreeStatus;
+use neppy_core::openhuman::memory::tree::tree::store as tree_store;
+use neppy_core::openhuman::memory::tree::tree::TreeStatus;
 
 static ENV_LOCK: &OnceLock<Mutex<()>> = &crate::SHARED_ENV_LOCK;
 static MEMORY_SEAMS_INIT: OnceLock<()> = OnceLock::new();
@@ -48,7 +48,7 @@ fn ensure_memory_seams() {
             .name("memory-sync-tree-round21-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     Arc::new(Config::default()),
                 );
             })
@@ -457,7 +457,7 @@ async fn slack_sync_status_rpc_reads_mock_connections_and_persisted_state() {
     // state the module reads must name one store. This is the only
     // driver-routed case in this aggregated module, so nothing contends.
     #[cfg(feature = "modules")]
-    openhuman_core::openhuman::modules::memory::set_modules_policy(Arc::new(config.clone()));
+    neppy_core::openhuman::modules::memory::set_modules_policy(Arc::new(config.clone()));
 
     let outcome = sync_status_rpc(&config, SyncStatusRequest::default())
         .await

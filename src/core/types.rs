@@ -151,7 +151,7 @@ pub struct AppState {
 /// - [`HostKind::TauriShell`] — the desktop app shell embedded the core as an
 ///   in-process tokio task. Operator-supplied env-as-config is treated as
 ///   advisory only; the gate ALWAYS installs.
-/// - [`HostKind::Cli`] — `openhuman-core` standalone binary spawned by an
+/// - [`HostKind::Cli`] — `neppy-core` standalone binary spawned by an
 ///   operator on the command line. Env-as-config is the operator's chosen
 ///   override surface; the gate honours it.
 /// - [`HostKind::Docker`] — containerised deployment. Same env honour-rule as

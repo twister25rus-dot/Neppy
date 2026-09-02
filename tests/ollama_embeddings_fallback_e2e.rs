@@ -2,7 +2,7 @@
 //! fallback (PR #1555).
 //!
 //! Covers three scenarios exercised via the public API of
-//! `openhuman_core::openhuman::memory`:
+//! `neppy_core::openhuman::memory`:
 //!
 //! 1. Local embeddings enabled + Ollama unreachable  → falls back to cloud
 //!    provider with the correct cloud model dimensions.
@@ -14,7 +14,7 @@
 //! `pub(crate)`-private; the tests drive the observable behaviour through
 //! `effective_embedding_settings` (sync, for scenario 3) and
 //! `effective_embedding_settings_probed` (async, for scenarios 1–2), both of
-//! which are `pub` and re-exported at `openhuman_core::openhuman::memory`.
+//! which are `pub` and re-exported at `neppy_core::openhuman::memory`.
 //!
 //! Run with: `cargo test --test ollama_embeddings_fallback_e2e`
 
@@ -23,8 +23,8 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use axum::{routing::get, Json, Router};
 
-use openhuman_core::openhuman::config::{Config, MemoryConfig};
-use openhuman_core::openhuman::inference::embeddings::{
+use neppy_core::openhuman::config::{Config, MemoryConfig};
+use neppy_core::openhuman::inference::embeddings::{
     DEFAULT_CLOUD_EMBEDDING_DIMENSIONS, DEFAULT_CLOUD_EMBEDDING_MODEL, DEFAULT_OLLAMA_DIMENSIONS,
     DEFAULT_OLLAMA_MODEL,
 };
@@ -46,7 +46,7 @@ fn ensure_memory_seams() {
             .name("ollama-embeddings-fallback-e2e-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
                     Config::default(),
                 ));
             })

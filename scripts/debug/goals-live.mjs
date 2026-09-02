@@ -40,7 +40,7 @@ Options:
   --core-url <url>     JSON-RPC endpoint (default: OPENHUMAN_CORE_RPC_URL or ${DEFAULT_RPC_URL})
   --token <token>      RPC bearer (default: OPENHUMAN_CORE_TOKEN or <workspace>/core.token)
   --workspace <path>   Workspace whose MEMORY_GOALS.md + transcripts are used
-  --spawn-core         Start openhuman-core for the run (uses the real workspace unless --isolated-workspace)
+  --spawn-core         Start neppy-core for the run (uses the real workspace unless --isolated-workspace)
   --isolated-workspace With --spawn-core, use a throwaway temp workspace (needs provider creds in env to enrich)
   --keep-workspace     Do not delete the temp workspace afterwards
   --case <name>        Run only one case: ${ALL_CASES.join(", ")} (repeatable)
@@ -368,7 +368,7 @@ async function startCore(opts) {
   const args = ["run", "--host", "127.0.0.1", "--port", port, "--jsonrpc-only"];
   const child = spawn(
     "cargo",
-    ["run", "--quiet", "--bin", "openhuman-core", "--", ...args],
+    ["run", "--quiet", "--bin", "neppy-core", "--", ...args],
     {
       cwd: path.resolve(SCRIPT_DIR, "../.."),
       env,

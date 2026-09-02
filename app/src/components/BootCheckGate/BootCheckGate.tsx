@@ -643,7 +643,7 @@ export default function BootCheckGate({ children }: BootCheckGateProps) {
       // Persist URL + token for cloud mode so getCoreRpcUrl/Token resolve
       // correctly on the boot-check probe (and every subsequent RPC) without
       // waiting for redux-persist's async rehydrate to complete. Also write
-      // the synchronous `openhuman_core_mode` marker so a reload triggered
+      // the synchronous `neppy_core_mode` marker so a reload triggered
       // mid-flight (e.g. `handleIdentityFlip` → `restartApp`) recovers the
       // chosen mode from localStorage before redux-persist flushes. Clear
       // caches so any prior local-mode resolution doesn't leak into cloud.

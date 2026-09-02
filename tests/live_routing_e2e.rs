@@ -20,8 +20,8 @@ use serde_json::{json, Value};
 use tempfile::tempdir;
 use tokio::time::timeout;
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
 
 static LIVE_E2E_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 static LIVE_RPC_AUTH_INIT: OnceLock<()> = OnceLock::new();

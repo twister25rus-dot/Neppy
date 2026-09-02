@@ -51,9 +51,9 @@ async function resetCoreForWebUser(userId: string): Promise<void> {
 export async function seedBrowserCoreMode(page: Page): Promise<void> {
   await page.addInitScript(
     ({ rpcUrl, token }) => {
-      window.localStorage.setItem('openhuman_core_mode', 'cloud');
-      window.localStorage.setItem('openhuman_core_rpc_url', rpcUrl);
-      window.localStorage.setItem('openhuman_core_rpc_token', token);
+      window.localStorage.setItem('neppy_core_mode', 'cloud');
+      window.localStorage.setItem('neppy_core_rpc_url', rpcUrl);
+      window.localStorage.setItem('neppy_core_rpc_token', token);
       window.localStorage.setItem('openhuman:walkthrough_completed', 'true');
       window.localStorage.removeItem('openhuman:walkthrough_pending');
     },
@@ -64,9 +64,9 @@ export async function seedBrowserCoreMode(page: Page): Promise<void> {
 async function applyBrowserCoreModeInPage(page: Page): Promise<void> {
   await page.evaluate(
     ({ rpcUrl, token }) => {
-      window.localStorage.setItem('openhuman_core_mode', 'cloud');
-      window.localStorage.setItem('openhuman_core_rpc_url', rpcUrl);
-      window.localStorage.setItem('openhuman_core_rpc_token', token);
+      window.localStorage.setItem('neppy_core_mode', 'cloud');
+      window.localStorage.setItem('neppy_core_rpc_url', rpcUrl);
+      window.localStorage.setItem('neppy_core_rpc_token', token);
       window.localStorage.setItem('openhuman:walkthrough_completed', 'true');
       window.localStorage.removeItem('openhuman:walkthrough_pending');
     },

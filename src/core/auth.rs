@@ -164,7 +164,7 @@ const QUERY_TOKEN_PATHS: &[&str] = &["/events/webhooks", "/ws/dictation"];
 /// `OPENHUMAN_CORE_TOKEN` remains the canonical configuration surface for
 /// **standalone CLI / Docker / cloud** deployments only — where the bearer
 /// must come from `fly secrets set …`, `docker run -e …`, a systemd unit
-/// file, or a developer running `openhuman-core serve` from a shell with the
+/// file, or a developer running `neppy-core serve` from a shell with the
 /// env var pre-set. In those shapes there is no live host process to hand
 /// the token over in-memory, so env-as-config is the appropriate transport.
 ///
@@ -209,7 +209,7 @@ pub fn init_rpc_token(workspace_dir: &Path) -> anyhow::Result<()> {
 
     // Env-as-config path: bearer supplied by the operator via
     // OPENHUMAN_CORE_TOKEN. Used by Docker / cloud / systemd / a developer
-    // running `openhuman-core serve` from a pre-configured shell. Desktop
+    // running `neppy-core serve` from a pre-configured shell. Desktop
     // (Tauri) does NOT set this variable — it uses `init_rpc_token_with_value`
     // for an in-memory handoff instead.
     if let Ok(env_token) = std::env::var(CORE_TOKEN_ENV_VAR) {

@@ -12,13 +12,13 @@ use chrono::{TimeZone, Utc};
 use serde_json::{json, Map, Value};
 use tempfile::TempDir;
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::inference::embeddings::NoopEmbedding;
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::inference::embeddings::NoopEmbedding;
+use neppy_core::openhuman::memory::{
     ExtractionMode, MemoryIngestionConfig, MemoryIngestionRequest,
 };
 use tinymemory_core::store::{NamespaceDocumentInput, UnifiedMemory};
-use openhuman_core::openhuman::memory::tree::tree_runtime::{
+use neppy_core::openhuman::memory::tree::tree_runtime::{
     all_tree_summarizer_registered_controllers, engine, rpc as tree_runtime_rpc,
     store as tree_runtime_store,
 };
@@ -129,7 +129,7 @@ Bob Builder will review the memory tree recap.
                 category: "coverage".into(),
                 session_id: Some("round23-session".into()),
                 document_id: None,
-                taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+                taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
             },
             config: MemoryIngestionConfig {
                 model_name: "round23-heuristic".into(),

@@ -34,7 +34,7 @@ pub struct VersionInfo {
     /// Rust target triple this binary was built for.
     pub target_triple: String,
     /// The asset name prefix used by the GitHub release flow
-    /// (`openhuman-core-{target_triple}`). Frontends can match against
+    /// (`neppy-core-{target_triple}`). Frontends can match against
     /// this to find a compatible asset without re-deriving the triple.
     pub asset_prefix: String,
 }

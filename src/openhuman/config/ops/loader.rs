@@ -609,13 +609,13 @@ pub fn agent_server_status() -> RpcOutcome<serde_json::Value> {
 pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, String> {
     let request_id = uuid::Uuid::new_v4().to_string();
     tracing::debug!(
-        target: "openhuman_core::config",
+        target: "neppy_core::config",
         request_id = %request_id,
         method = "openhuman.config_get_dashboard_settings",
         "OPENHUMAN: get_dashboard_settings entry"
     );
     tracing::debug!(
-        target: "openhuman_core::config",
+        target: "neppy_core::config",
         request_id = %request_id,
         method = "openhuman.config_get_dashboard_settings",
         "OPENHUMAN: get_dashboard_settings loading config"
@@ -623,7 +623,7 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
 
     let config = load_config_with_timeout().await.map_err(|error| {
         tracing::warn!(
-            target: "openhuman_core::config",
+            target: "neppy_core::config",
             request_id = %request_id,
             method = "openhuman.config_get_dashboard_settings",
             error = %error,
@@ -633,7 +633,7 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
     })?;
 
     tracing::debug!(
-        target: "openhuman_core::config",
+        target: "neppy_core::config",
         request_id = %request_id,
         method = "openhuman.config_get_dashboard_settings",
         "OPENHUMAN: get_dashboard_settings serializing dashboard settings"
@@ -641,7 +641,7 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
     let result = serde_json::to_value(&config.dashboard).map_err(|error| {
         let message = error.to_string();
         tracing::warn!(
-            target: "openhuman_core::config",
+            target: "neppy_core::config",
             request_id = %request_id,
             method = "openhuman.config_get_dashboard_settings",
             error = %message,
@@ -651,7 +651,7 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
     })?;
 
     tracing::debug!(
-        target: "openhuman_core::config",
+        target: "neppy_core::config",
         request_id = %request_id,
         method = "openhuman.config_get_dashboard_settings",
         "OPENHUMAN: get_dashboard_settings exit"

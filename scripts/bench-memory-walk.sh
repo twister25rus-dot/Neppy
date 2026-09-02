@@ -94,10 +94,10 @@ else
 fi
 
 # Check if the core binary exists
-CORE_BIN="$REPO_ROOT/target/debug/openhuman-core"
+CORE_BIN="$REPO_ROOT/target/debug/neppy-core"
 if [[ ! -x "$CORE_BIN" ]]; then
-    echo "Building openhuman-core..."
-    cargo build --manifest-path "$REPO_ROOT/Cargo.toml" --bin openhuman-core 2>&1 | tail -3
+    echo "Building neppy-core..."
+    cargo build --manifest-path "$REPO_ROOT/Cargo.toml" --bin neppy-core 2>&1 | tail -3
     echo ""
 fi
 

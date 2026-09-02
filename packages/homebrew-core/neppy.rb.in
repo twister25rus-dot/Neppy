@@ -17,12 +17,12 @@ class Neppy < Formula
   def install
     ENV["OPENSSL_NO_VENDOR"] = "1" if OS.linux?
 
-    system "cargo", "install", "--bin", "openhuman-core", *std_cargo_args
-    bin.install_symlink "openhuman-core" => "openhuman"
+    system "cargo", "install", "--bin", "neppy-core", *std_cargo_args
+    bin.install_symlink "neppy-core" => "openhuman"
   end
 
   test do
     assert_match "Neppy core CLI", shell_output("#{bin}/openhuman --help")
-    assert_match "Neppy core CLI", shell_output("#{bin}/openhuman-core --help")
+    assert_match "Neppy core CLI", shell_output("#{bin}/neppy-core --help")
   end
 end

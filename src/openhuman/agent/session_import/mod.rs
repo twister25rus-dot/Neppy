@@ -6,7 +6,7 @@
 //! TinyAgents `Store`/`AppendStore` records under
 //! `{workspace}/tinyagents_store/`. Sources are never mutated; the command is
 //! idempotent (global marker + per-item fingerprint ledger) and exposed as
-//! `openhuman.session_import_run` (`openhuman-core session-import run`). It
+//! `openhuman.session_import_run` (`neppy-core session-import run`). It
 //! is an explicit command, never a boot hook.
 
 mod convert;

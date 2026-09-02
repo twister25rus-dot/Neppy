@@ -246,7 +246,7 @@ means running the same binary under real `cgroup` memory limits (e.g.
 `docker run --memory=2g`) on a Linux host and observing whether it survives
 or gets OOM-killed at the target instance count — not projecting from local
 sum-RSS. That is follow-up work, and it belongs on a Linux box: this repo's
-own `openhuman-core` Docker build is currently blocked on Apple Silicon (the
+own `neppy-core` Docker build is currently blocked on Apple Silicon (the
 `whisper-rs-sys`/whisper.cpp NEON fp16 intrinsics fail to compile under
 arm64-Linux emulation with GCC 12 — see the umbrella repo's root `CLAUDE.md`
 gotchas and `docs/resource-profiling-session-2026-07-21.md`). The path

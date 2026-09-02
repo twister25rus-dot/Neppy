@@ -4,7 +4,7 @@
 //
 // See scripts/lib/feature-forwarding.mjs for the three assertions and why they
 // are shaped this way (#4919). Short version: the shell sets
-// `default-features = false` on `openhuman_core`, so every gate the product
+// `default-features = false` on `neppy_core`, so every gate the product
 // needs must be forwarded by hand. When someone forgets, the domain vanishes
 // from the shipped app with no build error — that is how #4901 (voice, 56
 // users, ~93k Sentry events) and #4918 (tokenjuice-treesitter, silent soft

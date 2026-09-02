@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a .deb package for the openhuman-core CLI binary.
+# Build a .deb package for the neppy-core CLI binary.
 # Usage: build.sh <binary_path> <version> <arch>
 #   arch: amd64 | arm64
 set -euo pipefail

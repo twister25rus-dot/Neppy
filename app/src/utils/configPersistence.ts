@@ -15,7 +15,7 @@ export { redactRpcUrlForLog } from './redactRpcUrlForLog';
 const log = debug('config-persistence');
 
 // Storage key for RPC URL preference
-const RPC_URL_STORAGE_KEY = 'openhuman_core_rpc_url';
+const RPC_URL_STORAGE_KEY = 'neppy_core_rpc_url';
 
 // Storage key for cloud-mode bearer token. Pre-login and per-device, parallel
 // to the URL key. Held in plain localStorage because the cloud picker runs
@@ -29,7 +29,7 @@ const RPC_URL_STORAGE_KEY = 'openhuman_core_rpc_url';
 // command lands, migrate this key to it and scope the bearer's lifetime.
 // Defense-in-depth for the read path is handled by tightening the renderer CSP
 // (audit U1) so injected markup cannot exfiltrate it.
-const CORE_TOKEN_STORAGE_KEY = 'openhuman_core_rpc_token';
+const CORE_TOKEN_STORAGE_KEY = 'neppy_core_rpc_token';
 
 // Storage key for the user-chosen core mode ('local' | 'cloud'). Mirrors the
 // redux-persist `coreMode` blob synchronously so reloads (notably the dev-mode
@@ -37,12 +37,12 @@ const CORE_TOKEN_STORAGE_KEY = 'openhuman_core_rpc_token';
 // the chosen mode before redux-persist's async flush completes — without this
 // the BootCheckGate flips back to the picker after every reload, producing an
 // infinite picker → flip → reload loop in cloud mode.
-const CORE_MODE_STORAGE_KEY = 'openhuman_core_mode';
+const CORE_MODE_STORAGE_KEY = 'neppy_core_mode';
 
 // Which gateway record `coreMode.kind === 'gateway'` refers to. Mirrors
 // `GATEWAY_ID_STORAGE_KEY` in `store/coreModeSlice.ts`, for the same
 // synchronous-recovery reason as the mode marker above.
-const GATEWAY_ID_STORAGE_KEY = 'openhuman_core_gateway_id';
+const GATEWAY_ID_STORAGE_KEY = 'neppy_core_gateway_id';
 
 // Default RPC URL — canonical value from config.ts so they can never drift
 const DEFAULT_RPC_URL = CORE_RPC_URL;

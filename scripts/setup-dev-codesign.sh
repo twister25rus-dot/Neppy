@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time setup: create a stable local code-signing certificate for the
-# openhuman-core sidecar. Run this once per development machine.
+# neppy-core sidecar. Run this once per development machine.
 #
 # Why: macOS TCC identifies unsigned binaries by content hash (Mach-O UUID).
 # Every `pnpm core:stage` recompiles the sidecar, changing its hash, so TCC

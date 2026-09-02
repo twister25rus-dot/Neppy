@@ -7,7 +7,7 @@ icon: wrench
 
 This guide covers the full desktop/source install path and release installers.
 
-If you only need the repo-root Rust crate on a fresh machine, use [Building the Rust Core](building-rust-core.md). That page documents the pinned Rust toolchain, OS package prerequisites, and the exact `cargo` commands for `openhuman-core`.
+If you only need the repo-root Rust crate on a fresh machine, use [Building the Rust Core](building-rust-core.md). That page documents the pinned Rust toolchain, OS package prerequisites, and the exact `cargo` commands for `neppy-core`.
 
 This guide covers two paths:
 
@@ -214,7 +214,7 @@ Manual download links (all platforms):
 Quit the running instance and try again.
 Workaround:
   pkill -f "Neppy.app/Contents"
-  pkill -f "openhuman-core"
+  pkill -f "neppy-core"
 ```
 
 **Cause**
@@ -227,7 +227,7 @@ Quit the other Neppy instance and re-run. Fastest path:
 
 ```bash
 pkill -f "Neppy.app/Contents"
-pkill -f "openhuman-core"
+pkill -f "neppy-core"
 pnpm dev:app
 ```
 
@@ -241,7 +241,7 @@ Dev and release builds still share `com.neppy.app` as the cache identifier. Isol
 
 **Symptom**
 
-A previous Tauri build or `openhuman-core run` harness left a process listening on `OPENHUMAN_CORE_PORT` (default `7788`). Until issue #1130 the new Tauri build would silently attach to that listener, leading to version drift and 401s when the new build's `OPENHUMAN_CORE_TOKEN` didn't match.
+A previous Tauri build or `neppy-core run` harness left a process listening on `OPENHUMAN_CORE_PORT` (default `7788`). Until issue #1130 the new Tauri build would silently attach to that listener, leading to version drift and 401s when the new build's `OPENHUMAN_CORE_TOKEN` didn't match.
 
 **Current behavior (issue #1130)**
 
@@ -249,11 +249,11 @@ A previous Tauri build or `openhuman-core run` harness left a process listening 
 
 - If `GET /` identifies the listener as an Neppy core (JSON body with `"name": "openhuman"`), it is treated as a stale process from a previous run and proactively terminated (`SIGTERM`, then `SIGKILL` after 750ms on Unix; `taskkill /F /T /PID` on Windows). The Tauri host then spawns its own fresh embedded core.
 - If the listener is something else (or doesn't speak HTTP), startup fails loudly with the conflict surfaced in the log instead of silently attaching.
-- Set `OPENHUMAN_CORE_REUSE_EXISTING=1` to opt back into the legacy attach-to-anything behavior, useful when running `openhuman-core run` as a manual debugging harness.
+- Set `OPENHUMAN_CORE_REUSE_EXISTING=1` to opt back into the legacy attach-to-anything behavior, useful when running `neppy-core run` as a manual debugging harness.
 
 **Manual cleanup (still works)**
 
 ```bash
 pkill -f "Neppy.app/Contents"
-pkill -f "openhuman-core"
+pkill -f "neppy-core"
 ```

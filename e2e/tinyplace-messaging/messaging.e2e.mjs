@@ -1,7 +1,7 @@
 // End-to-end: openhuman ↔ tiny.place messaging, driven through the real
 // openhuman core JSON-RPC surface against a real tiny.place backend.
 //
-// Two independent `openhuman-core` processes (Alice, Bob), each with its own
+// Two independent `neppy-core` processes (Alice, Bob), each with its own
 // freshly-imported wallet identity, exercise the complete DM lifecycle exactly
 // as the desktop app would drive it over `core_rpc_relay`:
 //
@@ -17,7 +17,7 @@
 // opaque ciphertext.
 //
 // Requires: a reachable tiny.place backend (TINYPLACE_API_BASE_URL, default
-// http://localhost:18080) and a built `openhuman-core` binary. `run.sh` wires
+// http://localhost:18080) and a built `neppy-core` binary. `run.sh` wires
 // both up; see README.md.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
@@ -52,7 +52,7 @@ let bob;
 before(async () => {
   assert.ok(
     existsSync(DEFAULT_CORE_BIN),
-    `openhuman-core binary not found at ${DEFAULT_CORE_BIN}. Build it: cargo build --bin openhuman-core (or run run.sh).`,
+    `neppy-core binary not found at ${DEFAULT_CORE_BIN}. Build it: cargo build --bin neppy-core (or run run.sh).`,
   );
   assert.ok(
     await backendReachable(),

@@ -20,7 +20,7 @@
 #
 # Env:
 #   OPENHUMAN_WORKSPACE  — workspace dir (default: derive from active_user.toml)
-#   CORE_BIN             — path to openhuman-core (default: target/debug/openhuman-core)
+#   CORE_BIN             — path to neppy-core (default: target/debug/neppy-core)
 #   CORE_LOG             — core log to scrape for round-trip times (default: /tmp/oh-core.log)
 #
 set -euo pipefail
@@ -32,7 +32,7 @@ cd "$REPO_ROOT"
 INTERVAL=5
 DO_FLUSH=0
 ONCE=0
-CORE_BIN="${CORE_BIN:-target/debug/openhuman-core}"
+CORE_BIN="${CORE_BIN:-target/debug/neppy-core}"
 CORE_LOG="${CORE_LOG:-/tmp/oh-core.log}"
 
 while [ $# -gt 0 ]; do
@@ -78,7 +78,7 @@ echo
 
 if [ "$DO_FLUSH" = 1 ]; then
     if [ ! -x "$CORE_BIN" ]; then
-        echo "core binary not found: $CORE_BIN — build with 'cargo build --bin openhuman-core'" >&2
+        echo "core binary not found: $CORE_BIN — build with 'cargo build --bin neppy-core'" >&2
         exit 1
     fi
     echo "→ triggering memory_tree.flush_now"

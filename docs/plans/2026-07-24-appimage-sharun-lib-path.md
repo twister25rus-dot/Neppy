@@ -28,7 +28,7 @@ non-Linux workflow branches remain in place.
 This plan intentionally does **not** implement the broader generated triage plan
 currently embedded in issue #5037:
 
-- The unbundled `openhuman-core`/AUR failure remains a downstream packaging and
+- The unbundled `neppy-core`/AUR failure remains a downstream packaging and
   optional-`enigo` follow-up. Do not change `Cargo.toml`, feature gates, voice
   input, computer tools, `INSTALL.md`, or AUR metadata in this work.
 - Do not change bundled `libssl.so.3`/`libcrypto.so.3`, NSS exclusions, or claim

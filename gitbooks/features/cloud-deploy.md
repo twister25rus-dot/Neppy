@@ -1,11 +1,11 @@
 ---
-description: Hosting the headless openhuman-core in the cloud - DigitalOcean App Platform, Fly.io, or Docker Compose on any VPS.
+description: Hosting the headless neppy-core in the cloud - DigitalOcean App Platform, Fly.io, or Docker Compose on any VPS.
 icon: cloud
 ---
 
 # Cloud deployment
 
-Neppy is a desktop app, but its **Rust core** (`openhuman-core`) is a
+Neppy is a desktop app, but its **Rust core** (`neppy-core`) is a
 headless JSON-RPC server that can be hosted in the cloud. Deploying the core
 separately is useful for:
 
@@ -21,7 +21,7 @@ This guide covers four deploy paths, easiest first:
 4. [Fly.io](#4-flyio)
 
 What gets deployed in every path: a single container running
-`openhuman-core serve` on port `7788`. Public hosts should sit behind the
+`neppy-core serve` on port `7788`. Public hosts should sit behind the
 provider's TLS, for example `https://core.example.com/rpc`. Private-only hosts
 on localhost, RFC1918 networks, or tailnets such as Tailscale can use
 plain HTTP, for example `http://100.x.x.x:7788/rpc`, when the core is not
@@ -34,7 +34,7 @@ in `app/.env.local` and launch.
 ## Remote UI choices
 
 Neppy's supported remote deployment is **core remote, UI local**: run
-`openhuman-core` on a Linux server and point a desktop client at that RPC URL.
+`neppy-core` on a Linux server and point a desktop client at that RPC URL.
 The deployed core does not serve the full React/Tauri UI as a production web
 app yet. Desktop-only features still need the Tauri shell, including tray
 controls, native deep links, CEF account scanners, OS keychain integration, and
@@ -48,7 +48,7 @@ a development/preview surface against the remote core:
 export OPENHUMAN_CORE_HOST=0.0.0.0
 export OPENHUMAN_CORE_PORT=7788
 export OPENHUMAN_CORE_TOKEN="$(openssl rand -hex 32)"
-openhuman-core serve
+neppy-core serve
 
 # In another shell on the server, serve the UI only on loopback.
 pnpm --dir app dev -- --host 127.0.0.1 --port 1420
@@ -197,28 +197,28 @@ DigitalOcean Droplet, Hetzner, Linode, EC2, a home server.
 Each production release publishes a multi-tagged image to GHCR:
 
 ```bash
-docker pull ghcr.io/tinyhumansai/openhuman-core:latest        # tracks the latest prod cut
-docker pull ghcr.io/tinyhumansai/openhuman-core:v1.2.4        # pinned by GitHub Release tag
-docker pull ghcr.io/tinyhumansai/openhuman-core:1.2.4         # pinned by SemVer
+docker pull ghcr.io/tinyhumansai/neppy-core:latest        # tracks the latest prod cut
+docker pull ghcr.io/tinyhumansai/neppy-core:v1.2.4        # pinned by GitHub Release tag
+docker pull ghcr.io/tinyhumansai/neppy-core:1.2.4         # pinned by SemVer
 ```
 
 The image is `linux/amd64`. arm64 hosts pull the standalone tarball
-attached to the same GitHub Release (`openhuman-core-<version>-aarch64-unknown-linux-gnu.tar.gz`)
+attached to the same GitHub Release (`neppy-core-<version>-aarch64-unknown-linux-gnu.tar.gz`)
 or build the image from source on an arm64 builder.
 
 Quick run with a published image:
 
 ```bash
-docker run -d --name openhuman-core -p 7788:7788 \
+docker run -d --name neppy-core -p 7788:7788 \
   -e OPENHUMAN_CORE_TOKEN="$(openssl rand -hex 32)" \
   -e BACKEND_URL=https://api.tinyhumans.ai \
   -e OPENHUMAN_APP_ENV=production \
   -v openhuman-workspace:/home/openhuman/.neppy \
-  ghcr.io/tinyhumansai/openhuman-core:latest
+  ghcr.io/tinyhumansai/neppy-core:latest
 ```
 
 Or use the in-repo Compose file (still builds the image locally from
-`Dockerfile`; switch the `image:` field to `ghcr.io/tinyhumansai/openhuman-core:latest`
+`Dockerfile`; switch the `image:` field to `ghcr.io/tinyhumansai/neppy-core:latest`
 in `docker-compose.yml` to consume the published image instead):
 
 ```bash
@@ -255,12 +255,12 @@ case "$ARCH" in
   *) echo "Unsupported arch: $ARCH"; exit 1 ;;
 esac
 VERSION=1.2.4   # set to the release you want
-curl -fsSL "https://github.com/tinyhumansai/openhuman/releases/download/v${VERSION}/openhuman-core-${VERSION}-${TARGET}.tar.gz" \
+curl -fsSL "https://github.com/tinyhumansai/openhuman/releases/download/v${VERSION}/neppy-core-${VERSION}-${TARGET}.tar.gz" \
   | tar -xz -C /usr/local/bin
-openhuman-core --version
+neppy-core --version
 ```
 
-Then run `openhuman-core serve` under your service manager of choice
+Then run `neppy-core serve` under your service manager of choice
 (systemd, supervisord, …) with the same environment variables documented
 above.
 
@@ -331,7 +331,7 @@ rollouts through your existing image tag or package-management flow instead.
 ### Logs
 
 ```bash
-docker compose logs -f openhuman-core
+docker compose logs -f neppy-core
 ```
 
 ### Rotating the bearer token
@@ -346,10 +346,10 @@ sed -i.bak "s|^OPENHUMAN_CORE_TOKEN=.*|OPENHUMAN_CORE_TOKEN=$(cat /tmp/new-token
 rm /tmp/new-token .env.bak
 
 # 2. Restart the container so the new value reaches the core process.
-docker compose up -d --force-recreate openhuman-core
+docker compose up -d --force-recreate neppy-core
 
 # 3. Confirm the running container is using the new token (redacted).
-docker compose exec openhuman-core /bin/sh -c \
+docker compose exec neppy-core /bin/sh -c \
   'echo -n "$OPENHUMAN_CORE_TOKEN" | head -c 8; echo "…"'
 
 # 4. Update every desktop client (Switch mode → re-paste in the picker, or
@@ -441,7 +441,7 @@ The image ships a dedicated entrypoint at
 2. Runs `mkdir -p` + `chown openhuman:openhuman` on both `$OPENHUMAN_WORKSPACE`
    and `$HOME/.neppy` (the directory `core.token` is written to when
    `OPENHUMAN_CORE_TOKEN` is unset).
-3. Calls `exec gosu openhuman openhuman-core "$@"` to drop privileges and
+3. Calls `exec gosu openhuman neppy-core "$@"` to drop privileges and
    hand off to the binary.
 
 This is **idempotent**: on a freshly-created volume the chown heals the
@@ -457,7 +457,7 @@ unaffected.
 
 ## 4. Fly.io
 
-[Fly.io](https://fly.io) is a good fit for `openhuman-core`: it handles TLS
+[Fly.io](https://fly.io) is a good fit for `neppy-core`: it handles TLS
 automatically, supports persistent volumes on all tiers, and can auto-stop
 idle machines to cut costs.
 
@@ -597,7 +597,7 @@ on:
       - "scripts/docker-entrypoint-core.sh"
 jobs:
   deploy:
-    name: Deploy openhuman-core
+    name: Deploy neppy-core
     runs-on: ubuntu-latest
     concurrency: deploy-group
     steps:
@@ -625,7 +625,7 @@ redeploy:
 
 ```toml
 [build]
-  image = "ghcr.io/tinyhumansai/openhuman-core:v1.2.4"
+  image = "ghcr.io/tinyhumansai/neppy-core:v1.2.4"
 ```
 
 ### Logs
@@ -668,9 +668,9 @@ The Docker equivalent. Derive the ids from the container rather than hard-coding
 them, so this stays correct whichever image you are running:
 
 ```bash
-docker exec -u 0 openhuman-core sh -c \
+docker exec -u 0 neppy-core sh -c \
   'chown -Rh "$(id -u openhuman):$(id -g openhuman)" /home/openhuman/.neppy'
-docker restart openhuman-core
+docker restart neppy-core
 ```
 
 To see which UID owns what before repairing. Note `docker exec` defaults to
@@ -678,7 +678,7 @@ To see which UID owns what before repairing. Note `docker exec` defaults to
 `id`:
 
 ```bash
-docker exec openhuman-core sh -c 'id openhuman; ls -ln /home/openhuman/.neppy/config.toml'
+docker exec neppy-core sh -c 'id openhuman; ls -ln /home/openhuman/.neppy/config.toml'
 ```
 
 ---
@@ -698,16 +698,16 @@ Two failure modes guard the cloud deploy path:
 Run the smoke check locally:
 
 ```bash
-docker build -t openhuman-core:smoke .
+docker build -t neppy-core:smoke .
 
 # Optional: tune build profile and Cargo parallelism.
 # Keep CARGO_BUILD_JOBS=1 on constrained builders; raise it on larger machines.
-docker build --build-arg CARGO_PROFILE=release --build-arg CARGO_BUILD_JOBS=4 -t openhuman-core:release .
+docker build --build-arg CARGO_PROFILE=release --build-arg CARGO_BUILD_JOBS=4 -t neppy-core:release .
 
 # Token-set path (App Platform):
 docker run -d --name oh-smoke -p 7788:7788 \
   -e OPENHUMAN_CORE_TOKEN=smoke-test-token \
-  openhuman-core:smoke
+  neppy-core:smoke
 curl -fsS http://localhost:7788/health
 docker rm -f oh-smoke
 
@@ -715,7 +715,7 @@ docker rm -f oh-smoke
 docker volume create oh-vol-test
 docker run -d --name oh-vol-smoke -p 7789:7788 \
   -v oh-vol-test:/home/openhuman/.neppy \
-  openhuman-core:smoke
+  neppy-core:smoke
 curl -fsS http://localhost:7789/health
 docker rm -f oh-vol-smoke
 docker volume rm oh-vol-test

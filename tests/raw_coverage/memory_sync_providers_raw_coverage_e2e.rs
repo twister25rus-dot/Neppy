@@ -13,25 +13,25 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 use tempfile::TempDir;
 
-use openhuman_core::core::events::DomainEvent;
+use neppy_core::core::events::DomainEvent;
 use tinybus::EventHandler;
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::security::credentials::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
 use tinymemory_core::global as memory_global;
 use tinymemory_core::queue::drain_until_idle;
-use openhuman_core::openhuman::memory::sync::composio::bus::{
+use neppy_core::openhuman::memory::sync::composio::bus::{
     ComposioConfigChangedSubscriber, ComposioConnectionCreatedSubscriber, ComposioTriggerSubscriber,
 };
-use openhuman_core::openhuman::memory::sync::composio::providers::clickup::ClickUpProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::github::GitHubProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::linear::LinearProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::notion::NotionProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::slack::SlackProvider;
-use openhuman_core::openhuman::memory::sync::composio::providers::sync_state::{PersistedSyncState, SyncState};
-use openhuman_core::openhuman::memory::sync::composio::providers::{
+use neppy_core::openhuman::memory::sync::composio::providers::clickup::ClickUpProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::github::GitHubProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::linear::LinearProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::notion::NotionProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::slack::SlackProvider;
+use neppy_core::openhuman::memory::sync::composio::providers::sync_state::{PersistedSyncState, SyncState};
+use neppy_core::openhuman::memory::sync::composio::providers::{
     ComposioProvider, ProviderContext, SyncReason, TaskFetchFilter,
 };
 
@@ -44,7 +44,7 @@ fn ensure_memory_seams() {
             .name("memory-sync-providers-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     Arc::new(Config::default()),
                 );
             })

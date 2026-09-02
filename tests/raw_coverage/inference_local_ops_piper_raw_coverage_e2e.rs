@@ -15,9 +15,9 @@ use axum::routing::get;
 use axum::Router;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use openhuman_core::core::all::RegisteredController;
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::inference::local::{
+use neppy_core::core::all::RegisteredController;
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::inference::local::{
     all_local_inference_registered_controllers, local_ai_transcribe_bytes,
 };
 use serde_json::{json, Value};

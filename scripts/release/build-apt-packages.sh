@@ -38,7 +38,7 @@ echo "[apt] Downloading Linux CLI tarballs for $TAG ..."
 mkdir -p "$TMPDIR/tarballs" "$TMPDIR/bins"
 
 for target in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
-  TARBALL="openhuman-core-${VERSION}-${target}.tar.gz"
+  TARBALL="neppy-core-${VERSION}-${target}.tar.gz"
   gh release download "$TAG" \
     --pattern "$TARBALL" \
     --repo "$UPLOAD_REPO" \
@@ -47,20 +47,20 @@ for target in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
 done
 
 # ── Extract binaries ─────────────────────────────────────────────────────────
-tar -xzf "$TMPDIR/tarballs/openhuman-core-${VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
+tar -xzf "$TMPDIR/tarballs/neppy-core-${VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
   -C "$TMPDIR/bins"
-mv "$TMPDIR/bins/openhuman-core" "$TMPDIR/bins/openhuman-core-amd64"
+mv "$TMPDIR/bins/neppy-core" "$TMPDIR/bins/neppy-core-amd64"
 
-tar -xzf "$TMPDIR/tarballs/openhuman-core-${VERSION}-aarch64-unknown-linux-gnu.tar.gz" \
+tar -xzf "$TMPDIR/tarballs/neppy-core-${VERSION}-aarch64-unknown-linux-gnu.tar.gz" \
   -C "$TMPDIR/bins"
-mv "$TMPDIR/bins/openhuman-core" "$TMPDIR/bins/openhuman-core-arm64"
+mv "$TMPDIR/bins/neppy-core" "$TMPDIR/bins/neppy-core-arm64"
 
-chmod +x "$TMPDIR/bins/openhuman-core-amd64" "$TMPDIR/bins/openhuman-core-arm64"
+chmod +x "$TMPDIR/bins/neppy-core-amd64" "$TMPDIR/bins/neppy-core-arm64"
 
 # ── Build .deb packages ─────────────────────────────────────────────────────
 echo "[apt] Building .deb packages ..."
-bash "$REPO_ROOT/packages/deb/build.sh" "$TMPDIR/bins/openhuman-core-amd64" "${VERSION}" amd64
-bash "$REPO_ROOT/packages/deb/build.sh" "$TMPDIR/bins/openhuman-core-arm64" "${VERSION}" arm64
+bash "$REPO_ROOT/packages/deb/build.sh" "$TMPDIR/bins/neppy-core-amd64" "${VERSION}" amd64
+bash "$REPO_ROOT/packages/deb/build.sh" "$TMPDIR/bins/neppy-core-arm64" "${VERSION}" arm64
 
 ls -lh openhuman_*.deb
 

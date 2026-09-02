@@ -33,7 +33,7 @@
 //! GGML_NATIVE=OFF cargo run --example embed_kernel
 //! ```
 
-use openhuman_core::{CoreBuilder, DomainSet, HostKind, ServiceSet};
+use neppy_core::{CoreBuilder, DomainSet, HostKind, ServiceSet};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

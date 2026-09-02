@@ -173,7 +173,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': 'Хранилище находится на хосте ядра.',
   'crossHostVault.message':
-    'Это хранилище памяти размещено на хосте openhuman-core ({os}). Его можно открыть или показать только на той машине, но не с этого устройства.',
+    'Это хранилище памяти размещено на хосте neppy-core ({os}). Его можно открыть или показать только на той машине, но не с этого устройства.',
   'conversations.toolFailure.whyLabel': 'Почему',
   'conversations.toolFailure.nextLabel': 'Что делать дальше',
   'conversations.toolFailure.missingPermission.cause':
@@ -5221,7 +5221,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.title': 'MCP',
   'settings.mcpServer.toolsSectionTitle': 'Доступные инструменты',
   'settings.mcpServer.toolsSectionDesc':
-    'Инструменты, предоставляемые через сервер MCP stdio при запуске openhuman-core mcp',
+    'Инструменты, предоставляемые через сервер MCP stdio при запуске neppy-core mcp',
   'settings.mcpServer.configSectionTitle': 'Конфигурация клиента',
   'settings.mcpServer.configSectionDesc':
     'Выберите клиент MCP для создания правильного фрагмента конфигурации.',
@@ -5229,7 +5229,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': 'Скопировано!',
   'settings.mcpServer.openConfigFile': 'Открыть файл конфигурации.',
   'settings.mcpServer.binaryPathNotFound':
-    'Двоичный файл Neppy не найден. При запуске из исходного кода выполните сборку с помощью: Cargo build --bin openhuman-core',
+    'Двоичный файл Neppy не найден. При запуске из исходного кода выполните сборку с помощью: Cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'Не удалось открыть файл конфигурации',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Рабочий стол',
   'settings.mcpServer.clientCursor': 'Курсор',
@@ -6944,7 +6944,7 @@ const messages: TranslationMap = {
     'Принимает ключ хоста, который вы раньше не видели. Изменившийся ключ по-прежнему отклоняется, потому что именно это означает, что что-то не так.',
   'settings.gateway.containedLabel': 'Запускать внутри контейнера',
   'settings.gateway.imageLabel': 'Образ контейнера',
-  'settings.gateway.binaryLabel': 'Путь к openhuman-core',
+  'settings.gateway.binaryLabel': 'Путь к neppy-core',
   'settings.gateway.kind.desktop': 'Внутри этого приложения',
   'settings.gateway.kind.remote': 'Ядро по URL',
   'settings.gateway.kind.docker': 'В контейнере здесь',
@@ -6955,7 +6955,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': 'Это название зарезервировано за собственным ядром приложения.',
   'settings.gateway.destinationRequired': 'Укажите машину для подключения.',
   'settings.gateway.imageRequired': 'Укажите образ контейнера для запуска.',
-  'settings.gateway.binaryRequired': 'Укажите путь к openhuman-core на этой машине.',
+  'settings.gateway.binaryRequired': 'Укажите путь к neppy-core на этой машине.',
   'settings.gateway.portInvalid': 'Порт SSH должен быть числом.',
 
   'devOptions.gateway': 'Размещение',

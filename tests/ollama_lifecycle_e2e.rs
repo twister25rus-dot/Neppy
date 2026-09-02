@@ -27,8 +27,8 @@
 
 use std::sync::{Mutex, OnceLock};
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::inference::local::LocalAiService;
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::inference::local::LocalAiService;
 
 // ── Environment serialization lock ───────────────────────────────────────────
 //

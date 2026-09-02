@@ -25,8 +25,8 @@
 
 use std::path::PathBuf;
 
-use openhuman_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
-use openhuman_core::{Access, Harness, Provider, Session, Workspace};
+use neppy_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
+use neppy_core::{Access, Harness, Provider, Session, Workspace};
 
 fn main() -> anyhow::Result<()> {
     // Library embedders own logging. `RUST_LOG=debug` shows the `[embed]` and

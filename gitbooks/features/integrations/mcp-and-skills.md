@@ -25,7 +25,7 @@ Once connected, an MCP server's tools are available to the agent exactly like na
 
 ### Neppy as an MCP server
 
-Neppy can run the other way around, too. `openhuman-core mcp` exposes Neppy over stdio as an MCP server, offering read-only tools (memory search / recall, Memory Tree browsing, and optional web search) to clients like Claude Desktop. See [MCP Server](../../developing/mcp-server.md) for setup.
+Neppy can run the other way around, too. `neppy-core mcp` exposes Neppy over stdio as an MCP server, offering read-only tools (memory search / recall, Memory Tree browsing, and optional web search) to clients like Claude Desktop. See [MCP Server](../../developing/mcp-server.md) for setup.
 
 ---
 

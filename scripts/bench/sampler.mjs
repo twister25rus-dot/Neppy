@@ -2,7 +2,7 @@
 /**
  * Resource sampler for the agent-scale benchmark tier.
  *
- * Samples a running `openhuman-core` process from /proc and writes one JSON
+ * Samples a running `neppy-core` process from /proc and writes one JSON
  * object per line to stdout. The analyzer consumes that stream; keeping the two
  * apart means a run can be re-analyzed with different thresholds without
  * re-running the load.

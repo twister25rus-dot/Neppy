@@ -6,7 +6,7 @@
 
 use super::super::sqlite_retry::BUSY_TIMEOUT;
 use super::WhatsAppDataStore;
-use openhuman_core::openhuman::channels::whatsapp_data::types::{
+use neppy_core::openhuman::channels::whatsapp_data::types::{
     ChatMeta, IngestMessage, ListChatsRequest, ListMessagesRequest, SearchMessagesRequest,
 };
 use std::collections::HashMap;

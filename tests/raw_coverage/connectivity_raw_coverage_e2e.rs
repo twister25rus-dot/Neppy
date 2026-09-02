@@ -15,17 +15,17 @@ use serde_json::{json, Value};
 use tempfile::{tempdir, TempDir};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
-use openhuman_core::openhuman::platform::connectivity::ops::is_port_in_use;
-use openhuman_core::openhuman::platform::connectivity::rpc::{
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
+use neppy_core::openhuman::platform::connectivity::ops::is_port_in_use;
+use neppy_core::openhuman::platform::connectivity::rpc::{
     diag, pick_listen_port, pick_listen_port_for_host, PickListenPortError,
 };
-use openhuman_core::openhuman::platform::connectivity::{
+use neppy_core::openhuman::platform::connectivity::{
     all_connectivity_controller_schemas, all_connectivity_registered_controllers,
     connectivity_controller_schema,
 };
-use openhuman_core::openhuman::platform::socket::{set_global_socket_manager, SocketManager};
+use neppy_core::openhuman::platform::socket::{set_global_socket_manager, SocketManager};
 
 const TEST_RPC_TOKEN: &str = "connectivity-raw-coverage-e2e-token";
 
@@ -512,7 +512,7 @@ async fn pick_listen_port_detects_neppy_listener_for_takeover() {
             fingerprint,
         } => {
             assert_eq!(preferred, probe.port);
-            assert_eq!(fingerprint, "openhuman-core");
+            assert_eq!(fingerprint, "neppy-core");
         }
         other => panic!("expected takeover error, got {other:?}"),
     }
@@ -581,7 +581,7 @@ async fn pick_listen_port_identifies_ipv6_neppy_listener_when_supported() {
             fingerprint,
         } => {
             assert_eq!(preferred, probe.port);
-            assert_eq!(fingerprint, "openhuman-core");
+            assert_eq!(fingerprint, "neppy-core");
         }
         other => panic!("expected IPv6 takeover error, got {other:?}"),
     }

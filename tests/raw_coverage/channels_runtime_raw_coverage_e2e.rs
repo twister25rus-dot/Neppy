@@ -8,16 +8,16 @@ use axum::{
     routing::post,
     Router,
 };
-use openhuman_core::core::events::DomainEvent;
+use neppy_core::core::events::DomainEvent;
 use tinybus::EventHandler;
-use openhuman_core::openhuman::web_chat::{
+use neppy_core::openhuman::web_chat::{
     cancel_chat, start_chat, subscribe_web_channel_events, ChatRequestMetadata,
 };
-use openhuman_core::openhuman::channels::providers::yuanbao::{YuanbaoChannel, YuanbaoConfig};
-use openhuman_core::openhuman::channels::{
+use neppy_core::openhuman::channels::providers::yuanbao::{YuanbaoChannel, YuanbaoConfig};
+use neppy_core::openhuman::channels::{
     bus::ChannelInboundSubscriber, lark::LarkChannel, Channel, SendMessage, TelegramChannel,
 };
-use openhuman_core::openhuman::config::{schema::LarkConfig, StreamMode};
+use neppy_core::openhuman::config::{schema::LarkConfig, StreamMode};
 use serde_json::{json, Value};
 use tempfile::TempDir;
 

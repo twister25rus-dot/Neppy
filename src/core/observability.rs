@@ -1832,7 +1832,7 @@ fn is_provider_user_state_message(lower: &str) -> bool {
     // Cloudflare anti-bot challenge as `Backend returned 500 Internal
     // Server Error … 403 <!DOCTYPE html>…<title>Just a moment...</title>…`.
     // The CF interstitial is keyed by the user's network reputation /
-    // geo / cookie state — there is nothing in `openhuman_core` that
+    // geo / cookie state — there is nothing in `neppy_core` that
     // can act on it. Backend ops or the user's network is the
     // remediation path; Sentry has no signal.
     //

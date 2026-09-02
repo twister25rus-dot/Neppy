@@ -1,7 +1,7 @@
 # Agent-scale benchmark — findings
 
 Measured with `scripts/bench/run-agent-scale.sh` against a release
-`openhuman-core` on one Linux box, mocked LLM, concurrency 8, `fresh` thread
+`neppy-core` on one Linux box, mocked LLM, concurrency 8, `fresh` thread
 mode. Every number below is reproducible with the commands shown.
 
 ## Summary

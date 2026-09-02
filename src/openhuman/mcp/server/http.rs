@@ -392,7 +392,7 @@ mod tests {
 
         let init = client.initialize().await.expect("initialize");
         assert_eq!(init.protocol_version, protocol::LATEST_PROTOCOL_VERSION);
-        assert_eq!(init.server_info["name"], "openhuman-core");
+        assert_eq!(init.server_info["name"], "neppy-core");
 
         let tools = client.list_tools().await.expect("tools/list");
         assert!(tools.iter().any(|tool| tool.name == "memory.search"));

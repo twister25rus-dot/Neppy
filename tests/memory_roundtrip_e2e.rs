@@ -15,11 +15,11 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use tempfile::tempdir;
 
-use openhuman_core::openhuman::memory::ops::{
+use neppy_core::openhuman::memory::ops::{
     clear_namespace, doc_put, memory_recall_context, memory_recall_memories, ClearNamespaceParams,
     PutDocParams,
 };
-use openhuman_core::openhuman::memory::rpc_models::{RecallContextRequest, RecallMemoriesRequest};
+use neppy_core::openhuman::memory::rpc_models::{RecallContextRequest, RecallMemoriesRequest};
 
 // ── Env isolation ────────────────────────────────────────────────────
 
@@ -75,17 +75,17 @@ fn ensure_memory_seams(workspace: &Path) {
             .name("memory-roundtrip-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(move || {
-                let config = Arc::new(openhuman_core::openhuman::config::Config {
+                let config = Arc::new(neppy_core::openhuman::config::Config {
                     workspace_dir: workspace.clone(),
                     action_dir: workspace.clone(),
                     config_path: workspace.join("config.toml"),
                     ..neppy_core::openhuman::config::Config::default()
                 });
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     config.clone(),
                 );
                 #[cfg(feature = "modules")]
-                openhuman_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::openhuman::modules::memory::set_modules_policy(config);
             })
             .expect("spawn memory roundtrip seam installer")
             .join()

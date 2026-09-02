@@ -4,9 +4,9 @@
 //! a per-turn checkpoint so the plateau/leak curve is visible.
 
 use anyhow::Result;
-use openhuman_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use openhuman_core::openhuman::agent::Agent;
-use openhuman_core::openhuman::inference::provider::factory::test_provider_override;
+use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
+use neppy_core::openhuman::agent::Agent;
+use neppy_core::openhuman::inference::provider::factory::test_provider_override;
 
 use crate::harness::{fixture, measure, ProfileResult};
 use crate::mock::PlainTextMock;
@@ -29,8 +29,8 @@ pub async fn run() -> Result<ProfileResult> {
         .unwrap_or(DEFAULT_TURNS);
 
     let fixture = fixture()?;
-    openhuman_core::core::bus::init().await.expect("bus init");
-    openhuman_core::openhuman::agent::bus::register_agent_handlers();
+    neppy_core::core::bus::init().await.expect("bus init");
+    neppy_core::openhuman::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
     let mock = PlainTextMock::new("Phoenix migration is healthy; no action needed.");
     let _provider = test_provider_override::install_model(mock.clone());

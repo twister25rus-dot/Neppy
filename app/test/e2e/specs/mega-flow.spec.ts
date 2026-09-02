@@ -652,7 +652,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   // Scenario 12 — update.version RPC contract.
   // Calls `openhuman.update_version` and asserts the response contains a
   // semver-shaped `version` string, a non-empty `target_triple`, and an
-  // `asset_prefix` that starts with `openhuman-core-`.  No network call to
+  // `asset_prefix` that starts with `neppy-core-`.  No network call to
   // update.neppy.app (or github.com) is expected — the version RPC is
   // entirely local and must not appear in the mock request log.
   // -------------------------------------------------------------------------
@@ -695,10 +695,10 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     expect(triple.length).toBeGreaterThan(0);
     console.log(`${LOG} update.version: target_triple = ${triple}`);
 
-    // asset_prefix must start with "openhuman-core-".
+    // asset_prefix must start with "neppy-core-".
     const prefix: string = info?.asset_prefix ?? '';
     expect(typeof prefix).toBe('string');
-    expect(prefix.startsWith('openhuman-core-')).toBe(true);
+    expect(prefix.startsWith('neppy-core-')).toBe(true);
     console.log(`${LOG} update.version: asset_prefix = ${prefix}`);
 
     // No outbound HTTP call should have been made — version is purely local.

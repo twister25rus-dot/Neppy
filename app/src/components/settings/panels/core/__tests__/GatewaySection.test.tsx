@@ -15,8 +15,8 @@ function draft(overrides: Partial<Parameters<typeof draftToGateway>[0]> = {}) {
     label: 'Build server',
     where: 'here' as const,
     contained: true,
-    image: 'openhuman-core:latest',
-    binary: '/usr/local/bin/openhuman-core',
+    image: 'neppy-core:latest',
+    binary: '/usr/local/bin/neppy-core',
     destination: '',
     sshPort: '',
     identity: '',
@@ -34,7 +34,7 @@ describe('draftToGateway', () => {
     expect(built.gateway.spec).toMatchObject({
       kind: 'box',
       reach: { kind: 'ssh', destination: 'builder@example.com' },
-      confinement: { kind: 'docker', image: 'openhuman-core:latest' },
+      confinement: { kind: 'docker', image: 'neppy-core:latest' },
     });
   });
 
@@ -111,7 +111,7 @@ describe('draftToGateway', () => {
 
     if (!('gateway' in built)) throw new Error('expected a gateway');
     expect(built.gateway.spec).toMatchObject({
-      confinement: { kind: 'passthrough', binary: '/usr/local/bin/openhuman-core' },
+      confinement: { kind: 'passthrough', binary: '/usr/local/bin/neppy-core' },
     });
   });
 });

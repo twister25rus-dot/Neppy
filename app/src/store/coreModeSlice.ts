@@ -56,14 +56,14 @@ export interface CoreModeState {
 }
 
 /** Synchronous localStorage keys mirrored by `configPersistence.ts`. */
-const RPC_URL_STORAGE_KEY = 'openhuman_core_rpc_url';
-const CORE_TOKEN_STORAGE_KEY = 'openhuman_core_rpc_token';
-const CORE_MODE_STORAGE_KEY = 'openhuman_core_mode';
+const RPC_URL_STORAGE_KEY = 'neppy_core_rpc_url';
+const CORE_TOKEN_STORAGE_KEY = 'neppy_core_rpc_token';
+const CORE_MODE_STORAGE_KEY = 'neppy_core_mode';
 /**
  * Which gateway record `kind: 'gateway'` refers to.  An id, never a spec —
  * see the note at the top of this file.
  */
-const GATEWAY_ID_STORAGE_KEY = 'openhuman_core_gateway_id';
+const GATEWAY_ID_STORAGE_KEY = 'neppy_core_gateway_id';
 
 /**
  * Derive the initial mode synchronously from `localStorage`.
@@ -75,8 +75,8 @@ const GATEWAY_ID_STORAGE_KEY = 'openhuman_core_gateway_id';
  * Falling back to plain unset would put the user back on the picker even
  * though they just chose cloud, producing an infinite picker → reload loop.
  *
- * The picker writes `openhuman_core_rpc_url`, `openhuman_core_rpc_token`,
- * and `openhuman_core_mode` synchronously before any async dispatch, so we
+ * The picker writes `neppy_core_rpc_url`, `neppy_core_rpc_token`,
+ * and `neppy_core_mode` synchronously before any async dispatch, so we
  * can recover the exact mode on reload regardless of the persist flush race.
  */
 function deriveInitialMode(): CoreMode {

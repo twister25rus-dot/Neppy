@@ -15,13 +15,13 @@ use super::types::{Confinement, Reach, SshReach, CORE_PORT_IN_BOX};
 
 fn docker() -> Confinement {
     Confinement::Docker {
-        image: "openhuman-core:latest".to_owned(),
+        image: "neppy-core:latest".to_owned(),
     }
 }
 
 fn passthrough() -> Confinement {
     Confinement::Passthrough {
-        binary: "/usr/local/bin/openhuman-core".into(),
+        binary: "/usr/local/bin/neppy-core".into(),
         workspace: Some("/srv/openhuman".into()),
     }
 }
@@ -139,7 +139,7 @@ fn a_docker_box_runs_the_image_s_own_core_rather_than_a_named_path() {
     // Naming a path would tie the gateway to one image's layout.
     let request = core_command(&docker(), "t");
 
-    assert_eq!(request.program(), Some("openhuman-core"));
+    assert_eq!(request.program(), Some("neppy-core"));
     assert_eq!(request.argv.get(1).map(String::as_str), Some("serve"));
 }
 
@@ -147,7 +147,7 @@ fn a_docker_box_runs_the_image_s_own_core_rather_than_a_named_path() {
 fn a_passthrough_box_runs_the_binary_the_user_named() {
     let request = core_command(&passthrough(), "t");
 
-    assert_eq!(request.program(), Some("/usr/local/bin/openhuman-core"));
+    assert_eq!(request.program(), Some("/usr/local/bin/neppy-core"));
 }
 
 #[test]
@@ -166,7 +166,7 @@ fn an_unrelated_failure_is_not_mistaken_for_a_taken_port() {
     // Retrying a missing image seven more times would turn one clear error
     // into a slow, confusing one.
     assert!(!is_port_conflict(
-        "Unable to find image 'openhuman-core:latest' locally"
+        "Unable to find image 'neppy-core:latest' locally"
     ));
     assert!(!is_port_conflict("Cannot connect to the Docker daemon"));
 }
@@ -200,7 +200,7 @@ fn a_remote_gateway_resolves_to_its_url_without_provisioning() {
 /// created, a long-lived process is started in it and outlives the call that
 /// started it, the host is asked for reach, and the endpoint is polled until it
 /// answers. Only the program is substituted — a shell script that serves
-/// `/health`, because building `openhuman-core` to assert that a *gateway*
+/// `/health`, because building `neppy-core` to assert that a *gateway*
 /// works would test the wrong thing and take half an hour.
 ///
 /// `#[ignore]` because it spawns processes and binds a port. Run with:
@@ -218,7 +218,7 @@ mod provisioning {
     /// self-contained, and in `sh` because that is the one interpreter every
     /// box tinybox can host a server in already has.
     fn fake_core(dir: &std::path::Path) -> std::path::PathBuf {
-        let path = dir.join("fake-openhuman-core");
+        let path = dir.join("fake-neppy-core");
         std::fs::write(
             &path,
             "#!/bin/sh\n\

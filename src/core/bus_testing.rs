@@ -27,7 +27,7 @@
 //! it by providing a method name + a restore closure that re-registers the
 //! production handler.
 //!
-//! Tests in **any** module of `openhuman_core` can `use
+//! Tests in **any** module of `neppy_core` can `use
 //! crate::core::bus_testing::{mock_bus_stub, MockBusGuard,
 //! BUS_HANDLER_LOCK};` — this module is not gated on `#[cfg(test)]` at the
 //! module level so that `pub` items remain referenceable from integration

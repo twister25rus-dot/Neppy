@@ -1,8 +1,8 @@
 #!/bin/sh
-# docker-entrypoint-core.sh — runtime entrypoint for the openhuman-core container.
+# docker-entrypoint-core.sh — runtime entrypoint for the neppy-core container.
 #
 # Problem: Docker named volumes are created owned root:root, even when the image
-# has a non-root USER.  The first write openhuman-core makes after the banner
+# has a non-root USER.  The first write neppy-core makes after the banner
 # (init_rpc_token → write_token_file → create_dir_all) hits EACCES and the
 # process exits with code 1.
 #
@@ -150,7 +150,7 @@ if [ "$(id -u)" -ne 0 ]; then
         fi
     done
     echo "[docker-entrypoint] already running non-root — skipping heal, exec direct"
-    exec openhuman-core "$@"
+    exec neppy-core "$@"
 fi
 
 # Only the root path needs these: the heal chowns to them and gosu drops to
@@ -195,5 +195,5 @@ for _dir in ${CONFIG_DIRS}; do
     fi
 done
 
-echo "[docker-entrypoint] dropping privileges -> exec gosu ${OPENHUMAN_USER} openhuman-core"
-exec gosu "${OPENHUMAN_USER}" openhuman-core "$@"
+echo "[docker-entrypoint] dropping privileges -> exec gosu ${OPENHUMAN_USER} neppy-core"
+exec gosu "${OPENHUMAN_USER}" neppy-core "$@"

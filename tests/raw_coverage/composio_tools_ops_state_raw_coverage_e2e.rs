@@ -19,22 +19,22 @@ use chrono::{Duration as ChronoDuration, Utc};
 use serde_json::{json, Value};
 use tempfile::{Builder, TempDir};
 
-use openhuman_core::openhuman::desktop::app_state::{
+use neppy_core::openhuman::desktop::app_state::{
     snapshot, update_local_state, StoredAppStatePatch, StoredOnboardingTasks,
 };
-use openhuman_core::openhuman::integrations::composio::ops::{
+use neppy_core::openhuman::integrations::composio::ops::{
     composio_execute, composio_list_tools, composio_list_trigger_history,
 };
-use openhuman_core::openhuman::integrations::composio::trigger_history::ComposioTriggerHistoryStore;
-use openhuman_core::openhuman::integrations::composio::{
+use neppy_core::openhuman::integrations::composio::trigger_history::ComposioTriggerHistoryStore;
+use neppy_core::openhuman::integrations::composio::{
     init_composio_trigger_history, invalidate_connected_integrations_cache,
 };
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::security::credentials::profiles::{AuthProfile, AuthProfilesStore, TokenSet};
-use openhuman_core::openhuman::security::credentials::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::security::credentials::profiles::{AuthProfile, AuthProfilesStore, TokenSet};
+use neppy_core::openhuman::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use openhuman_core::openhuman::tools::{
+use neppy_core::openhuman::tools::{
     ComposioAuthorizeTool, ComposioExecuteTool, ComposioListConnectionsTool, ComposioListToolsTool,
     Tool, ToolCallOptions,
 };

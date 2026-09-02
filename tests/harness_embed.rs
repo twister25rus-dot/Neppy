@@ -16,9 +16,9 @@
 //! also what makes the routing assertion possible — if the turn had gone
 //! anywhere else, the mock would have recorded no request.
 
-use openhuman_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::{Access, Harness, Provider, Session, Workspace};
+use neppy_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
+use neppy_core::openhuman::config::Config;
+use neppy_core::{Access, Harness, Provider, Session, Workspace};
 use serde_json::json;
 use wiremock::matchers::{any, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -178,7 +178,7 @@ fn a_harness_runs_a_turn_against_the_provider_it_was_given() {
             .await
             .expect_err("a second harness must be refused");
         assert!(
-            matches!(err, openhuman_core::HarnessError::AlreadyRunning),
+            matches!(err, neppy_core::HarnessError::AlreadyRunning),
             "got {err:?}"
         );
 

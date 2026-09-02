@@ -38,7 +38,7 @@ for row in \
 do
   TARGET="${row%%:*}"
   VAR="${row##*:}"
-  TARBALL="openhuman-core-${VERSION}-${TARGET}.tar.gz"
+  TARBALL="neppy-core-${VERSION}-${TARGET}.tar.gz"
   echo "[homebrew]   Downloading $TARBALL ..."
   gh release download "$TAG" \
     --pattern "$TARBALL" \

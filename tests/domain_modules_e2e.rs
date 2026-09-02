@@ -15,8 +15,8 @@ use reqwest::StatusCode;
 use serde_json::{json, Value};
 use tempfile::{tempdir, TempDir};
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
 
 const TEST_RPC_TOKEN: &str = "domain-modules-e2e-token";
 
@@ -111,7 +111,7 @@ embedding_dimensions = 0
 embedding_strict = false
 "#;
     std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
-    let _: openhuman_core::openhuman::config::Config =
+    let _: neppy_core::openhuman::config::Config =
         toml::from_str(cfg).expect("test config must match schema");
 }
 
@@ -143,8 +143,8 @@ async fn setup() -> TestHarness {
     // The HTTP router is intentionally transport-only and does not construct a
     // Core runtime context. Memory-backed RPC reads still need the explicit
     // tinymemory host seams before they can load their configured provider.
-    openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
-        openhuman_core::openhuman::config::Config::default(),
+    neppy_core::openhuman::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
+        neppy_core::openhuman::config::Config::default(),
     ));
     // Same rule for the modules policy, which became load-bearing when the
     // status RPCs started reading diagnostics through the bound driver
@@ -155,8 +155,8 @@ async fn setup() -> TestHarness {
     // where none is present the binding degrades to its null placeholder and
     // the diagnostics answer empty, which is a round-trippable result rather
     // than a JSON-RPC error.
-    openhuman_core::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(
-        openhuman_core::openhuman::config::Config::default(),
+    neppy_core::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(
+        neppy_core::openhuman::config::Config::default(),
     ));
 
     let (addr, join) = serve_rpc().await;

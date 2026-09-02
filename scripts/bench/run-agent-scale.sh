@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Agent-scale benchmark: drive a real openhuman-core process at concurrency
+# Agent-scale benchmark: drive a real neppy-core process at concurrency
 # against a mocked LLM, sample its CPU/RSS, and report a leak verdict.
 #
 # This is the OUT-OF-PROCESS tier. It complements scripts/profile/, which
@@ -108,11 +108,11 @@ MOCK_PORT="${BENCH_MOCK_PORT:-18700}"
 CORE_PORT="${BENCH_CORE_PORT:-17788}"
 CORE_TOKEN="bench-$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 
-CORE_BIN="$REPO_ROOT/target/release/openhuman-core"
+CORE_BIN="$REPO_ROOT/target/release/neppy-core"
 if [[ ! -x "$CORE_BIN" ]]; then
   echo "error: $CORE_BIN not found." >&2
   echo "Build it first:" >&2
-  echo "  cargo build --release --bin openhuman-core \\" >&2
+  echo "  cargo build --release --bin neppy-core \\" >&2
   echo "    --no-default-features --features \"\$(bash scripts/ci/product-features.sh)\"" >&2
   exit 1
 fi
@@ -311,7 +311,7 @@ curl -fsS "http://127.0.0.1:$MOCK_PORT/health" >/dev/null || {
 }
 
 # ---------------------------------------------------------------- core
-echo "==> starting openhuman-core on :$CORE_PORT"
+echo "==> starting neppy-core on :$CORE_PORT"
 # BACKEND_URL is the whole redirect: it feeds both the inference base and the
 # backend base, so every outbound call lands on the mock.
 #

@@ -161,7 +161,7 @@ pub async fn update_version() -> RpcOutcome<Value> {
     let info = VersionInfo {
         version: update::current_version().to_string(),
         target_triple: update::platform_triple().to_string(),
-        asset_prefix: format!("openhuman-core-{}", update::platform_triple()),
+        asset_prefix: format!("neppy-core-{}", update::platform_triple()),
     };
     log::debug!(
         "[update:rpc] update_version → {} ({})",
@@ -328,9 +328,9 @@ fn validate_asset_name(name: &str) -> Result<(), String> {
             "asset_name must not contain path separators or '..', got '{name}'"
         ));
     }
-    if !name.starts_with("openhuman-core-") {
+    if !name.starts_with("neppy-core-") {
         return Err(format!(
-            "asset_name must start with 'openhuman-core-', got '{name}'"
+            "asset_name must start with 'neppy-core-', got '{name}'"
         ));
     }
     Ok(())
@@ -340,7 +340,7 @@ fn validate_asset_name(name: &str) -> Result<(), String> {
 ///
 /// Params:
 ///   - `download_url` (string, required): must be a GitHub release asset URL (HTTPS).
-///   - `asset_name` (string, required): must be a safe filename starting with `openhuman-core-`.
+///   - `asset_name` (string, required): must be a safe filename starting with `neppy-core-`.
 ///   - `staging_dir` (string, optional): ignored — always uses the default staging directory
 ///     for security (next to the running executable or Resources/).
 pub async fn update_apply(
@@ -456,7 +456,7 @@ mod tests {
 
     #[test]
     fn validate_asset_name_accepts_well_formed_core_asset() {
-        validate_asset_name("openhuman-core-aarch64-apple-darwin.tar.gz")
+        validate_asset_name("neppy-core-aarch64-apple-darwin.tar.gz")
             .expect("canonical asset name should be accepted");
     }
 
@@ -469,10 +469,10 @@ mod tests {
     #[test]
     fn validate_asset_name_rejects_path_separators_and_traversal() {
         for bad in [
-            "openhuman-core-../etc/passwd",
-            "../openhuman-core-x86.tar.gz",
-            "openhuman-core/x86.tar.gz",
-            "openhuman-core\\x86.tar.gz",
+            "neppy-core-../etc/passwd",
+            "../neppy-core-x86.tar.gz",
+            "neppy-core/x86.tar.gz",
+            "neppy-core\\x86.tar.gz",
         ] {
             let err = validate_asset_name(bad).unwrap_err();
             assert!(
@@ -485,10 +485,7 @@ mod tests {
     #[test]
     fn validate_asset_name_rejects_unprefixed_asset() {
         let err = validate_asset_name("malicious-binary.tar.gz").unwrap_err();
-        assert!(
-            err.contains("must start with 'openhuman-core-'"),
-            "got: {err}"
-        );
+        assert!(err.contains("must start with 'neppy-core-'"), "got: {err}");
     }
 
     // ── update_apply rejection paths ──────────────────────────────
@@ -509,7 +506,7 @@ mod tests {
         let _guard = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let outcome = update_apply(
             "https://evil.example.com/asset".to_string(),
-            "openhuman-core-x86_64.tar.gz".to_string(),
+            "neppy-core-x86_64.tar.gz".to_string(),
             None,
         )
         .await;
@@ -565,7 +562,7 @@ mod tests {
 
         let outcome = update_apply(
             "https://github.com/owner/repo/releases/download/v1/x".to_string(),
-            "openhuman-core-x86_64.tar.gz".to_string(),
+            "neppy-core-x86_64.tar.gz".to_string(),
             None,
         )
         .await;
@@ -583,15 +580,15 @@ mod tests {
             current_version: "1.0.0".into(),
             update_available: true,
             download_url: Some(
-                "https://github.com/owner/repo/releases/download/v9/openhuman-core".into(),
+                "https://github.com/owner/repo/releases/download/v9/neppy-core".into(),
             ),
-            asset_name: Some("openhuman-core-x86_64-unknown-linux-gnu".into()),
+            asset_name: Some("neppy-core-x86_64-unknown-linux-gnu".into()),
             release_notes: None,
             published_at: None,
         };
         let applied = UpdateApplyResult {
             installed_version: "9.9.9".into(),
-            staged_path: "/tmp/openhuman-core".into(),
+            staged_path: "/tmp/neppy-core".into(),
             restart_required: true,
             restart_strategy: UpdateRestartStrategy::SelfReplace,
         };

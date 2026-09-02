@@ -220,7 +220,7 @@ async fn fetch_catalog_uncached() -> Result<Vec<CatalogEntry>, String> {
 
     let response = client
         .get(&catalog_url)
-        .header("User-Agent", "openhuman-core")
+        .header("User-Agent", "neppy-core")
         .send()
         .await
         .map_err(|e| format!("catalog fetch failed: {e}"))?;

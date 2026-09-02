@@ -16,7 +16,7 @@
 //! worker-thread stack and aborts the whole process (SIGABRT:
 //! "thread 'tokio-rt-worker' has overflowed its stack").
 //!
-//! PR #3155 set this on the standalone `openhuman-core run` JSON-RPC server.
+//! PR #3155 set this on the standalone `neppy-core run` JSON-RPC server.
 //! Issue #3159 calls out that every other multi-thread runtime that can host
 //! an agent turn (the desktop Tauri host's runtime, `agent_cli`, the rest of
 //! `cli.rs`, …) shares the same exposure. Centralising the value keeps them
@@ -26,7 +26,7 @@ pub const AGENT_WORKER_STACK_BYTES: usize = 16 * 1024 * 1024;
 
 /// Upper bound on tokio's blocking-thread pool for the long-lived multi-thread
 /// runtimes tuned with [`AGENT_WORKER_STACK_BYTES`] (the desktop Tauri host and
-/// the `openhuman-core` JSON-RPC / `agent_cli` servers).
+/// the `neppy-core` JSON-RPC / `agent_cli` servers).
 ///
 /// Tokio defaults `max_blocking_threads` to **512**. That is doubly wasteful on
 /// these runtimes: `thread_stack_size` sizes *blocking* threads too, not just

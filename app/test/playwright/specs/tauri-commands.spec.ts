@@ -18,8 +18,8 @@ test.describe('Tauri commands', () => {
 
   test('browser lane exposes the core RPC URL and token bootstrap values', async ({ page }) => {
     const values = await page.evaluate(() => ({
-      rpcUrl: window.localStorage.getItem('openhuman_core_rpc_url'),
-      rpcToken: window.localStorage.getItem('openhuman_core_rpc_token'),
+      rpcUrl: window.localStorage.getItem('neppy_core_rpc_url'),
+      rpcToken: window.localStorage.getItem('neppy_core_rpc_token'),
     }));
     expect(String(values.rpcUrl)).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/rpc$/);
     expect((values.rpcToken ?? '').length).toBeGreaterThanOrEqual(16);

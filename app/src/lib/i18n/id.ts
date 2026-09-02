@@ -177,7 +177,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': 'Vault berada di host core.',
   'crossHostVault.message':
-    'Vault memori ini disimpan di host openhuman-core ({os}). Hanya dapat dibuka atau ditampilkan di mesin tersebut, bukan dari perangkat ini.',
+    'Vault memori ini disimpan di host neppy-core ({os}). Hanya dapat dibuka atau ditampilkan di mesin tersebut, bukan dari perangkat ini.',
   'conversations.toolFailure.whyLabel': 'Mengapa',
   'conversations.toolFailure.nextLabel': 'Yang harus dilakukan',
   'conversations.toolFailure.missingPermission.cause':
@@ -5195,7 +5195,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.title': 'Server MCP',
   'settings.mcpServer.toolsSectionTitle': 'Alat yang tersedia',
   'settings.mcpServer.toolsSectionDesc':
-    'Alat yang diekspos melalui server stdio MCP saat menjalankan openhuman-core mcp',
+    'Alat yang diekspos melalui server stdio MCP saat menjalankan neppy-core mcp',
   'settings.mcpServer.configSectionTitle': 'Konfigurasi Klien',
   'settings.mcpServer.configSectionDesc':
     'Pilih klien MCP Anda untuk membuat cuplikan konfigurasi yang tepat',
@@ -5203,7 +5203,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': 'Tersalin!',
   'settings.mcpServer.openConfigFile': 'Buka File Konfigurasi',
   'settings.mcpServer.binaryPathNotFound':
-    'Binary Neppy tidak ditemukan. Jika menjalankan dari source, build dengan: cargo build --bin openhuman-core',
+    'Binary Neppy tidak ditemukan. Jika menjalankan dari source, build dengan: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'Gagal membuka file konfigurasi',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': 'Kursor',
@@ -6902,7 +6902,7 @@ const messages: TranslationMap = {
     'Menerima kunci host yang belum pernah dilihat. Kunci yang berubah tetap ditolak, karena justru itulah tanda ada yang tidak beres.',
   'settings.gateway.containedLabel': 'Jalankan di dalam kontainer',
   'settings.gateway.imageLabel': 'Image kontainer',
-  'settings.gateway.binaryLabel': 'Path ke openhuman-core',
+  'settings.gateway.binaryLabel': 'Path ke neppy-core',
   'settings.gateway.kind.desktop': 'Di dalam aplikasi ini',
   'settings.gateway.kind.remote': 'Core di sebuah URL',
   'settings.gateway.kind.docker': 'Di kontainer di sini',
@@ -6913,7 +6913,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': 'Nama itu dipakai untuk core bawaan aplikasi.',
   'settings.gateway.destinationRequired': 'Isi mesin yang ingin disambungkan.',
   'settings.gateway.imageRequired': 'Isi image kontainer yang akan dijalankan.',
-  'settings.gateway.binaryRequired': 'Isi path ke openhuman-core di mesin itu.',
+  'settings.gateway.binaryRequired': 'Isi path ke neppy-core di mesin itu.',
   'settings.gateway.portInvalid': 'Port SSH harus berupa angka.',
 
   'devOptions.gateway': 'Lokasi',

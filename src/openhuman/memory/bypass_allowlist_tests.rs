@@ -56,7 +56,7 @@
 //!   Rust source with a line scanner is fragile, and getting it wrong silently
 //!   *hides* production sites. Four files are therefore allowlisted for a
 //!   match that lives only in an inline test module; each says so.
-//! - **`app/src-tauri/` is not scanned.** It links `openhuman_core` with
+//! - **`app/src-tauri/` is not scanned.** It links `neppy_core` with
 //!   `default-features = false` and cannot name `pub(crate)` items at all, so
 //!   there is nothing there to scan. The omission is deliberate, not an
 //!   oversight.

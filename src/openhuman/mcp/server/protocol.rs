@@ -280,7 +280,7 @@ fn initialize_result(params: Value) -> Value {
             }
         },
         "serverInfo": {
-            "name": "openhuman-core",
+            "name": "neppy-core",
             "version": env!("CARGO_PKG_VERSION")
         },
         "instructions": "Neppy MCP exposes first-level core integration: inspect the live tool catalog with core.list_tools or core.tool_instructions, inspect subagents with agent.list_subagents, run a standalone subagent with agent.run_subagent, use searxng_search when self-hosted search is enabled, and use memory.search or memory.recall plus tree.read_chunk for local memory reads."
@@ -369,7 +369,7 @@ mod tests {
         let resources_cap = &response["result"]["capabilities"]["resources"];
         assert_eq!(resources_cap["subscribe"], false);
         assert_eq!(resources_cap["listChanged"], false);
-        assert_eq!(response["result"]["serverInfo"]["name"], "openhuman-core");
+        assert_eq!(response["result"]["serverInfo"]["name"], "neppy-core");
     }
 
     #[tokio::test]

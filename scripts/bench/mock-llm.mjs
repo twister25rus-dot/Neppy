@@ -2,7 +2,7 @@
 /**
  * Mock LLM + backend endpoint for the agent-scale benchmark tier.
  *
- * This stands in for `api.tinyhumans.ai` so a NORMALLY-BUILT `openhuman-core`
+ * This stands in for `api.tinyhumans.ai` so a NORMALLY-BUILT `neppy-core`
  * can run real agent turns with no network and no special cargo features. The
  * core reaches it because `config.api_url` (or `BACKEND_URL`) feeds both
  * `effective_api_url` (inference, embeddings) and `effective_backend_api_url`

@@ -1,10 +1,10 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::config::rpc as config_rpc;
-use openhuman_core::openhuman::memory::sources::readers::SourceReader;
-use openhuman_core::openhuman::memory::sources::{
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::config::rpc as config_rpc;
+use neppy_core::openhuman::memory::sources::readers::SourceReader;
+use neppy_core::openhuman::memory::sources::{
     self as memory_sources, ContentType, MemorySourceEntry, MemorySourcePatch, SourceKind,
 };
 use tempfile::{Builder, TempDir};
@@ -18,7 +18,7 @@ fn ensure_memory_seams() {
             .name("round23-memory-source-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     Arc::new(Config::default()),
                 );
             })
@@ -69,7 +69,7 @@ struct Harness {
 }
 
 impl Harness {
-    async fn config(&self) -> openhuman_core::openhuman::config::Config {
+    async fn config(&self) -> neppy_core::openhuman::config::Config {
         config_rpc::load_config_with_timeout()
             .await
             .expect("isolated config should load")
@@ -255,7 +255,7 @@ async fn round23_memory_sources_status_registry_and_readers_cover_remaining_edge
     assert_eq!(enabled_composio[0].id, composio.id);
 
     let composio_reader =
-        openhuman_core::openhuman::memory::sources::readers::composio::ComposioReader;
+        neppy_core::openhuman::memory::sources::readers::composio::ComposioReader;
     let items = composio_reader
         .list_items(&composio, &config)
         .await
@@ -268,7 +268,7 @@ async fn round23_memory_sources_status_registry_and_readers_cover_remaining_edge
     assert_eq!(content.content_type, ContentType::Plaintext);
     assert!(content.body.contains("provider sync pipeline"));
 
-    let twitter_reader = openhuman_core::openhuman::memory::sources::readers::twitter::TwitterReader;
+    let twitter_reader = neppy_core::openhuman::memory::sources::readers::twitter::TwitterReader;
     let missing_query = twitter_reader
         .list_items(
             &source_entry("tw-missing", SourceKind::TwitterQuery),

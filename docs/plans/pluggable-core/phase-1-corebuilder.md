@@ -77,7 +77,7 @@ off.
 
 `AgentRuntime` as sketched above was **not** built. The same slice is delivered
 as `embed::Core::agent()` — a sub-facade in the shape the rest of `embed` uses —
-with `openhuman_core::Harness` above it composing the runtime, the config and
+with `neppy_core::Harness` above it composing the runtime, the config and
 the workspace lifetime. Two findings from building it are worth recording,
 because both invalidate the assumption that `ServiceSet::none()` is sufficient
 for a library host:

@@ -21,7 +21,7 @@ fn unreachable() -> Gateway {
                 ..Default::default()
             }),
             confinement: Confinement::Docker {
-                image: "openhuman-core:latest".to_owned(),
+                image: "neppy-core:latest".to_owned(),
             },
             env: Default::default(),
         },

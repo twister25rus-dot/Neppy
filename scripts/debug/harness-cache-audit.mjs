@@ -33,7 +33,7 @@ Options:
   --thread-id <id>        Stable backend thread_id to group audit inference/cache logs
   --rpc-timeout-ms <n>    Per-RPC timeout in milliseconds (default: 600000)
   --prompt <text>         Prompt to send each turn (default: cache-audit delegation prompt)
-  --spawn-core            Start openhuman-core serve --jsonrpc-only for the audit
+  --spawn-core            Start neppy-core serve --jsonrpc-only for the audit
   --isolated-workspace    With --spawn-core, use a temp workspace and custom audit agent definitions
   --keep-workspace        Do not remove an isolated temp workspace after the run
   --min-hit-rate <pct>    Fail if aggregate cached/input ratio is below this percent (default: 1)
@@ -494,7 +494,7 @@ async function startCore(opts) {
   const args = ["run", "--host", "127.0.0.1", "--port", port, "--jsonrpc-only"];
   const child = spawn(
     "cargo",
-    ["run", "--quiet", "--bin", "openhuman-core", "--", ...args],
+    ["run", "--quiet", "--bin", "neppy-core", "--", ...args],
     {
       cwd: path.resolve(SCRIPT_DIR, "../.."),
       env,

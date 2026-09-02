@@ -1,6 +1,6 @@
 //! MCP server for exposing a curated Neppy tool surface.
 //!
-//! Opt-in via `openhuman-core mcp` (stdio) or `openhuman-core mcp --transport http`.
+//! Opt-in via `neppy-core mcp` (stdio) or `neppy-core mcp --transport http`.
 //! Stdio mode writes newline-delimited JSON-RPC to stdout; HTTP mode speaks
 //! Streamable HTTP + SSE on a local bind address. Diagnostics go through stderr logging.
 //!

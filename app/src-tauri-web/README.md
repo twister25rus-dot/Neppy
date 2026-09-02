@@ -8,7 +8,7 @@ Scope:
 - No CEF runtime
 - No embedded provider webviews
 - No native windowing, tray, or deep-link plugins
-- Frontend talks to a standalone `openhuman-core` over HTTP JSON-RPC
+- Frontend talks to a standalone `neppy-core` over HTTP JSON-RPC
 
 Current entrypoints:
 

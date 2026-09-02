@@ -18,7 +18,7 @@
 //! for the scoring model.
 //!
 //! ```
-//! use openhuman_core::openhuman::security::pii::{scan, PiiCategory, RiskLevel};
+//! use neppy_core::openhuman::security::pii::{scan, PiiCategory, RiskLevel};
 //!
 //! let result = scan("patient John was diagnosed; SSN 123-45-6789");
 //! assert_eq!(result.level, RiskLevel::High);

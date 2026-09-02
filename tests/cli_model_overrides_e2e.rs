@@ -7,7 +7,7 @@ use serde_json::Value;
 #[test]
 fn cli_model_and_provider_flags_override_the_loaded_session_without_persisting() {
     let workspace = tempfile::tempdir().expect("temporary Neppy workspace");
-    let output = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
+    let output = Command::new(env!("CARGO_BIN_EXE_neppy-core"))
         .args([
             "--provider",
             "ollama",
@@ -57,7 +57,7 @@ fn cli_model_and_provider_flags_override_the_loaded_session_without_persisting()
 #[test]
 fn a_mutating_cli_command_does_not_persist_launch_overrides() {
     let workspace = tempfile::tempdir().expect("temporary Neppy workspace");
-    let initialize = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
+    let initialize = Command::new(env!("CARGO_BIN_EXE_neppy-core"))
         .args(["--no-tui", "config", "get"])
         .env("OPENHUMAN_WORKSPACE", workspace.path())
         .output()
@@ -66,7 +66,7 @@ fn a_mutating_cli_command_does_not_persist_launch_overrides() {
 
     let config_path = workspace.path().join("config.toml");
     let before = std::fs::read_to_string(&config_path).expect("initial config");
-    let mutate = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
+    let mutate = Command::new(env!("CARGO_BIN_EXE_neppy-core"))
         .args([
             "--provider",
             "ollama",
@@ -114,7 +114,7 @@ fn toml_field<'a>(document: &'a str, field: &str) -> Option<&'a str> {
 
 #[test]
 fn cli_rejects_a_missing_model_value() {
-    let output = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
+    let output = Command::new(env!("CARGO_BIN_EXE_neppy-core"))
         .arg("--model")
         .output()
         .expect("run Neppy CLI");

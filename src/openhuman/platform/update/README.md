@@ -1,10 +1,10 @@
 # update
 
-Self-update domain for the `openhuman-core` binary. Checks GitHub Releases (`tinyhumansai/openhuman`, "latest" endpoint) for a newer build of the platform-appropriate core binary, downloads + atomically stages it next to the running executable, and (depending on the configured restart strategy) publishes a self-restart so the Tauri shell/supervisor can swap it in. Also exposes a cheap no-network version probe and a periodic background checker. Network failures are classified so transient transport/HTTP problems don't spam Sentry.
+Self-update domain for the `neppy-core` binary. Checks GitHub Releases (`tinyhumansai/openhuman`, "latest" endpoint) for a newer build of the platform-appropriate core binary, downloads + atomically stages it next to the running executable, and (depending on the configured restart strategy) publishes a self-restart so the Tauri shell/supervisor can swap it in. Also exposes a cheap no-network version probe and a periodic background checker. Network failures are classified so transient transport/HTTP problems don't spam Sentry.
 
 ## Responsibilities
 - Query the GitHub Releases "latest" API and compare semver-ish tags against the compiled `CARGO_PKG_VERSION` (`is_newer`).
-- Select the release asset matching this platform's target triple (`openhuman-core-{triple}`, `.exe` on Windows).
+- Select the release asset matching this platform's target triple (`neppy-core-{triple}`, `.exe` on Windows).
 - Download the asset to a temp file, set `0o755` on Unix, and atomically rename it into the staging dir (current-exe dir by default).
 - Orchestrate the full `check → apply → restart` flow (`update_run`), publishing a service restart for the `SelfReplace` strategy or staging-only for `Supervisor`.
 - Run a periodic background checker (default 1h, floor 10 min) that logs availability and emits health events.
@@ -38,7 +38,7 @@ All under namespace `update` (i.e. `openhuman.update_*`):
 | `update.apply` | `download_url` (req), `asset_name` (req), `staging_dir` (optional, **ignored** — always default dir) | `apply_result` (`UpdateApplyResult`). |
 | `update.run` | none | `run_result` (`UpdateRunResult`) — orchestrated check→stage→restart. |
 
-`apply` and `run` are gated by `enforce_update_mutation_policy` (fail-closed if config can't load) and re-validate the URL (must be HTTPS GitHub host) and asset name (must start `openhuman-core-`, no path separators / `..`).
+`apply` and `run` are gated by `enforce_update_mutation_policy` (fail-closed if config can't load) and re-validate the URL (must be HTTPS GitHub host) and asset name (must start `neppy-core-`, no path separators / `..`).
 
 ## Agent tools
 Not owned here — the domain has no `tools.rs`. Two cross-cutting system tools wrap it: `src/openhuman/tools/impl/system/update_check.rs` (read-only, calls `update::rpc::update_check`) and `src/openhuman/tools/impl/system/update_apply.rs` (calls `update::rpc::update_run`).

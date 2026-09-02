@@ -1,7 +1,7 @@
-# Pluggable Core — `openhuman_core` as an Embeddable Library
+# Pluggable Core — `neppy_core` as an Embeddable Library
 
 **Status:** In progress — `CoreBuilder`, `CoreRuntime`, `CoreContext`, the
-first per-context store plumbing, and the `openhuman-fleet` MVP are implemented
+first per-context store plumbing, and the `neppy-fleet` MVP are implemented
 in this branch. Remaining production work is tracked in the phase docs.
 
 **Goal:** make the Rust core pluggable into arbitrary hosts — the Tauri shell
@@ -37,7 +37,7 @@ The hard parts of pluggability are, surprisingly, already done:
 | Pluggable client            | `app/src/services/transport/` — `CoreTransport` interface, `LocalTransport` / `LanHttpTransport` / `TunnelTransport` / `CloudHttpTransport`, `ConnectionProfile`, `TransportManager` | Any backend that answers `POST /rpc` JSON-RPC with a Bearer token is already reachable from every client, including cloud |
 | Agent loop as a crate       | `tinyagents` (vendored, `vendor/tinyagents`) via the seam `src/openhuman/agent/tinyagents/` (`run_turn_via_tinyagents_shared`)                                                             | Programmatic harness use does not require extracting the loop — it's extracted                                            |
 | Memory engine as a crate    | `tinycortex` via `src/openhuman/memory/tinycortex/`                                                                                                                                         | Same                                                                                                                      |
-| Headless server mode        | `openhuman-core run/serve` (`src/core/cli.rs:66`), `--jsonrpc-only`, Bearer token via `OPENHUMAN_CORE_TOKEN` (`src/core/auth.rs:160`)                                                | Cloud deployment of a _single_ core already works                                                                         |
+| Headless server mode        | `neppy-core run/serve` (`src/core/cli.rs:66`), `--jsonrpc-only`, Bearer token via `OPENHUMAN_CORE_TOKEN` (`src/core/auth.rs:160`)                                                | Cloud deployment of a _single_ core already works                                                                         |
 | Host discrimination         | `HostKind { TauriShell, Cli, Docker }` (`src/core/types.rs:167`) threaded into `bootstrap_core_runtime`                                                                              | The natural seam for the refactor already exists                                                                          |
 | Tools as trait objects      | `Box<dyn Tool>` on `Agent` (`src/openhuman/agent/harness/session/types.rs:31`)                                                                                                       | No handler-style fn-pointer problem in the tool layer                                                                     |
 
@@ -229,7 +229,7 @@ a refactor.
 | 1     | [phase-1-corebuilder.md](phase-1-corebuilder.md)     | `CoreBuilder`/`CoreRuntime`/`ServiceSet`; `run_server*` become shims; Tauri + CLI + MCP ported; embed examples                              | 0           |
 | 2     | [phase-2-corecontext.md](phase-2-corecontext.md)     | `CoreContext` Stage A + B; registry collapse to per-domain `DomainRegistration`; store traits + `StorageBackend::WorkspaceFs`; drift ledger | 1           |
 | 3     | [phase-3-multi-context.md](phase-3-multi-context.md) | Bounded Stage C; two-context isolation test; process-scoped inventory                                                                       | 2           |
-| 4     | [phase-4-fleet-host.md](phase-4-fleet-host.md)       | `openhuman-fleet` supervisor: per-user cores, token minting, `/:user/rpc` proxy, backend membership sync                                    | 1 (not 2/3) |
+| 4     | [phase-4-fleet-host.md](phase-4-fleet-host.md)       | `neppy-fleet` supervisor: per-user cores, token minting, `/:user/rpc` proxy, backend membership sync                                    | 1 (not 2/3) |
 
 **Value ordering:** phases 0+1 alone deliver the headline goal — embeddable
 builder, programmatic harness, thin CLI/Tauri. Phase 4 can start immediately

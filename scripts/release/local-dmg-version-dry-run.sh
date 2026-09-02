@@ -47,15 +47,15 @@ echo "[dry-run] Building frontend bundle"
   npm run build:app
 )
 
-echo "[dry-run] Building release openhuman-core for $HOST_TRIPLE"
-cargo build --release --manifest-path "$REPO_ROOT/Cargo.toml" --bin openhuman-core
+echo "[dry-run] Building release neppy-core for $HOST_TRIPLE"
+cargo build --release --manifest-path "$REPO_ROOT/Cargo.toml" --bin neppy-core
 
 echo "[dry-run] Staging sidecar"
 bash "$REPO_ROOT/scripts/release/stage-sidecar.sh" \
   "$HOST_TRIPLE" \
   "target/release" \
-  "openhuman-core" \
-  "openhuman-core"
+  "neppy-core" \
+  "neppy-core"
 
 TMP_TAURI_CONF="$(mktemp "${TMPDIR:-/tmp}/openhuman-tauri-dry-run.XXXXXX").json"
 node -e '
@@ -92,10 +92,10 @@ if [[ -z "$DMG_PATH" ]]; then
 fi
 
 CORE_BIN="$(
-  find "$APP_BUNDLE/Contents" -maxdepth 4 -type f -name 'openhuman-core*' ! -name '*.sig' | head -n 1
+  find "$APP_BUNDLE/Contents" -maxdepth 4 -type f -name 'neppy-core*' ! -name '*.sig' | head -n 1
 )"
 if [[ -z "$CORE_BIN" ]]; then
-  echo "[dry-run] ERROR: packaged openhuman-core binary not found in app bundle" >&2
+  echo "[dry-run] ERROR: packaged neppy-core binary not found in app bundle" >&2
   exit 1
 fi
 

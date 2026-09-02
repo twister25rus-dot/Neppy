@@ -5,7 +5,7 @@ icon: desktop
 
 # Tauri shell (`app/src-tauri/`)
 
-The desktop host for Neppy: Tauri v2 + WebView, IPC commands, window management, and bridging to the embedded `openhuman-core` Rust runtime (core JSON-RPC). It does **not** duplicate the full domain stack; that lives in the repo-root Rust crate (`openhuman_core`, `src/main.rs`).
+The desktop host for Neppy: Tauri v2 + WebView, IPC commands, window management, and bridging to the embedded `neppy-core` Rust runtime (core JSON-RPC). It does **not** duplicate the full domain stack; that lives in the repo-root Rust crate (`neppy_core`, `src/main.rs`).
 
 ## Responsibilities
 
@@ -17,7 +17,7 @@ The desktop host for Neppy: Tauri v2 + WebView, IPC commands, window management,
 
 ## Core process model
 
-`app/package.json` `core:stage` is intentionally a no-op kept for script compatibility. The desktop app links the core in-process, so local builds no longer need a staged `openhuman-core-*` sidecar under `app/src-tauri/binaries/`.
+`app/package.json` `core:stage` is intentionally a no-op kept for script compatibility. The desktop app links the core in-process, so local builds no longer need a staged `neppy-core-*` sidecar under `app/src-tauri/binaries/`.
 
 ## Stuck process recovery
 
@@ -85,7 +85,7 @@ React (fetch)
 
 The renderer talks to the local core **directly over HTTP** — `app/src/services/coreRpcClient.ts` invokes `core_rpc_url` / `core_rpc_token` once, then issues plain `fetch()` calls. The `relay_http_rpc` Tauri command is a host-side fallback used only when the RPC URL is **not** a trustworthy origin for the secure `tauri://localhost` webview (e.g. a self-hosted runtime on a LAN IP, blocked as mixed content — #3865): the Rust host performs the POST with `reqwest` and mirrors status + body back verbatim.
 
-`CoreProcessHandle` in `core_process.rs` owns the embedded server task (started via `openhuman_core::core::jsonrpc::run_server_embedded_with_ready` with a per-launch random bearer token) and handles stale-listener/port-conflict recovery.
+`CoreProcessHandle` in `core_process.rs` owns the embedded server task (started via `neppy_core::core::jsonrpc::run_server_embedded_with_ready` with a per-launch random bearer token) and handles stale-listener/port-conflict recovery.
 
 ### Window and tray behavior
 
@@ -159,7 +159,7 @@ install's data, and *this* machine's audio, so routing them to a remote gateway 
 wrong rather than incomplete.
 
 Gated by the shell-local `gateways` Cargo feature (default on). That gate is unrelated to
-the feature-forwarding rules in `AGENTS.md`, which govern which `openhuman_core` gates the
+the feature-forwarding rules in `AGENTS.md`, which govern which `neppy_core` gates the
 shell forwards; nothing here belongs in `scripts/ci/product-features.txt`.
 
 Frontend: **`app/src/services/gatewayService.ts`**, surfaced in Settings → Core connection
@@ -246,7 +246,7 @@ Registered in **`lib.rs`** (`ptt_hotkeys.rs` + `ptt_overlay.rs`). These commands
 
 Registered in **`lib.rs`** at startup under the event-bus native-request method
 `computer.input_on_main_thread` (`INPUT_ON_MAIN_THREAD_METHOD`, defined in
-`openhuman_core::openhuman::tools::computer::main_thread`). This is **not** a
+`neppy_core::openhuman::tools::computer::main_thread`). This is **not** a
 `@tauri-apps/api` `invoke` command. It is an in-process native request the
 **core** dispatches to the **shell** so synthetic input runs on the real app
 main thread.
@@ -291,7 +291,7 @@ The Tauri crate **does not** embed a duplicate Socket.io server or Telegram clie
 
 ### `CoreProcessHandle` (`core_process.rs`)
 
-- Runs the core's HTTP/JSON-RPC server as a **tokio task inside the Tauri host** via `openhuman_core::core::jsonrpc::run_server_embedded_with_ready` — no sidecar binary.
+- Runs the core's HTTP/JSON-RPC server as a **tokio task inside the Tauri host** via `neppy_core::core::jsonrpc::run_server_embedded_with_ready` — no sidecar binary.
 - Generates a per-launch 256-bit hex bearer token (`generate_rpc_token`) and hands it to the embedded server; the renderer reads it via the `core_rpc_token` command.
 - Stale-listener policy (#1130): if the core port is already occupied, probes whether the listener is an old Neppy core (terminate + respawn) or something foreign (surface the conflict). `OPENHUMAN_CORE_REUSE_EXISTING=1` opts back into attach-to-existing for debugging.
 - Managed as Tauri state in `lib.rs` (`app.manage(core_handle)`).

@@ -43,7 +43,7 @@ set -euo pipefail
 # ── Locate repo root + binary ─────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-BIN="${REPO_ROOT}/target/debug/openhuman-core"
+BIN="${REPO_ROOT}/target/debug/neppy-core"
 
 # Load the repo .env so staging/prod backend URLs, API keys, and the
 # Composio toggle reach the dumped prompts. `Config::load_or_init`
@@ -69,8 +69,8 @@ export RUST_LOG=error
 # check let a stale debug binary survive across agent-registry changes
 # (e.g. new entries in `agents::BUILTINS`), which made this script
 # silently skip newly added agents like `welcome`.
-echo "[debug-agent-prompts] building openhuman-core (no-op if up-to-date) …" >&2
-( cd "${REPO_ROOT}" && cargo build --manifest-path Cargo.toml --bin openhuman-core >&2 )
+echo "[debug-agent-prompts] building neppy-core (no-op if up-to-date) …" >&2
+( cd "${REPO_ROOT}" && cargo build --manifest-path Cargo.toml --bin neppy-core >&2 )
 
 # ── Parse flags ───────────────────────────────────────────────────────────
 OUT_DIR=""
@@ -202,7 +202,7 @@ if [[ -n "${OPENHUMAN_BASE_URL:-}" ]]; then
 fi
 echo >&2
 
-# ── Delegate to `openhuman-core agent dump-all` ──────────────────────────
+# ── Delegate to `neppy-core agent dump-all` ──────────────────────────
 # All the per-agent iteration + `integrations_agent`-per-toolkit
 # expansion now lives in Rust (`debug_dump::dump_all_agent_prompts`).
 # The shell script just supplies the output directory and passes

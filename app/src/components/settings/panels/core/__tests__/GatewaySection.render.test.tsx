@@ -94,8 +94,8 @@ describe('GatewaySection', () => {
     await waitFor(() => expect(hoisted.activateGateway).toHaveBeenCalledWith('builder'));
     expect(hoisted.clearCoreRpcUrlCache).toHaveBeenCalled();
     expect(hoisted.clearCoreRpcTokenCache).toHaveBeenCalled();
-    expect(localStorage.getItem('openhuman_core_mode')).toBe('gateway');
-    expect(localStorage.getItem('openhuman_core_gateway_id')).toBe('builder');
+    expect(localStorage.getItem('neppy_core_mode')).toBe('gateway');
+    expect(localStorage.getItem('neppy_core_gateway_id')).toBe('builder');
   });
 
   test('switching back to this computer records local mode, not a gateway id', async () => {
@@ -104,7 +104,7 @@ describe('GatewaySection', () => {
 
     fireEvent.click(await screen.findByTestId('gateway-use-desktop'));
 
-    await waitFor(() => expect(localStorage.getItem('openhuman_core_mode')).toBe('local'));
+    await waitFor(() => expect(localStorage.getItem('neppy_core_mode')).toBe('local'));
   });
 
   test('a failed activation is surfaced rather than swallowed', async () => {
@@ -213,6 +213,6 @@ describe('GatewaySection', () => {
     fireEvent.click(await screen.findByTestId('gateway-add'));
     fireEvent.click(screen.getByLabelText(/inside a container/i));
 
-    expect(screen.getByLabelText(/openhuman-core/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/neppy-core/i)).toBeInTheDocument();
   });
 });

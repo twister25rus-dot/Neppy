@@ -62,10 +62,10 @@ The src/openhuman/ -> src/neppy/ move is the largest diff in the whole rebrand
 hand so git tracks it as a rename:
 
   git mv src/openhuman src/neppy
-  rg -l 'crate::openhuman|openhuman_core|use openhuman' --glob '!vendor/**' \
+  rg -l 'crate::openhuman|neppy_core|use openhuman' --glob '!vendor/**' \
     | xargs sed -i '' \
         -e 's/crate::openhuman/crate::neppy/g' \
-        -e 's/openhuman_core/neppy_core/g'
+        -e 's/neppy_core/neppy_core/g'
   GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml
 
 Then fix the tests that hard-assert namespace strings. Fix the assertions, not

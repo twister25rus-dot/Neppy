@@ -159,7 +159,7 @@ where
 }
 
 fn print_help() {
-    eprintln!("Usage: openhuman-core mcp [options]");
+    eprintln!("Usage: neppy-core mcp [options]");
     eprintln!();
     eprintln!("Start an opt-in Model Context Protocol server.");
     eprintln!();

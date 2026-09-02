@@ -38,17 +38,17 @@ describe('gatewayKind', () => {
     const sshDocker: GatewaySpec = {
       kind: 'box',
       reach: { kind: 'ssh', destination: 'builder@example.com' },
-      confinement: { kind: 'docker', image: 'openhuman-core:latest' },
+      confinement: { kind: 'docker', image: 'neppy-core:latest' },
     };
     const localDocker: GatewaySpec = {
       kind: 'box',
       reach: { kind: 'local' },
-      confinement: { kind: 'docker', image: 'openhuman-core:latest' },
+      confinement: { kind: 'docker', image: 'neppy-core:latest' },
     };
     const sshBare: GatewaySpec = {
       kind: 'box',
       reach: { kind: 'ssh', destination: 'builder@example.com' },
-      confinement: { kind: 'passthrough', binary: '/usr/local/bin/openhuman-core' },
+      confinement: { kind: 'passthrough', binary: '/usr/local/bin/neppy-core' },
     };
 
     expect(gatewayKind(sshDocker)).toBe('ssh+docker');
@@ -117,7 +117,7 @@ describe('mutating and activating', () => {
       spec: {
         kind: 'box' as const,
         reach: { kind: 'local' as const },
-        confinement: { kind: 'docker' as const, image: 'openhuman-core:local' },
+        confinement: { kind: 'docker' as const, image: 'neppy-core:local' },
       },
     };
 

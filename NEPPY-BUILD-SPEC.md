@@ -49,7 +49,7 @@ now so it isn't a surprise in week three:
 | Path | Role | Source |
 |---|---|---|
 | `app/` | pnpm workspace, Vite + React UI, Tauri v2 desktop host | observed |
-| `src/` | Rust lib crate + `openhuman-core` CLI binary, `src/openhuman/*` domains | observed |
+| `src/` | Rust lib crate + `neppy-core` CLI binary, `src/openhuman/*` domains | observed |
 | `vendor/` | git submodules: `tinyhumans-sdk` and the `tiny*-bus` contract crates | observed |
 | `gitbooks/`, `docs/` | contributor and internals docs | observed |
 
@@ -200,10 +200,10 @@ Here is the split.
   says its own name, so it matters for "feels like the same app"
 - README, INSTALL, docs, gitbooks
 - `app/src-tauri/tauri.conf.json`: product name, window title, bundle identifier
-- Crate and package names: `openhuman` → `neppy`, bin `openhuman-core` →
-  `neppy-core`, `openhuman-fleet` → `neppy-fleet`, `openhuman-app`, `openhuman-repo`
+- Crate and package names: `openhuman` → `neppy`, bin `neppy-core` →
+  `neppy-core`, `neppy-fleet` → `neppy-fleet`, `openhuman-app`, `openhuman-repo`
 - The directory `src/openhuman/` → `src/neppy/`, and every `crate::openhuman::`
-  and `openhuman_core::` path with it
+  and `neppy_core::` path with it
 - Env vars `OPENHUMAN_*` → `NEPPY_*`, everywhere at once: `.env.example`,
   `app/.env.example`, `scripts/load-dotenv.sh`, CI workflows, docs
 - Filesystem roots: `~/.neppy` → `~/.neppy`, `~/Neppy/projects` →

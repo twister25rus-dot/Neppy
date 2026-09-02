@@ -12,18 +12,18 @@ use filetime::FileTime;
 use serde_json::Value;
 use tempfile::{Builder, TempDir};
 
-use openhuman_core::openhuman::desktop::app_state::{snapshot, update_local_state, StoredAppStatePatch};
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::security::credentials::profiles::{AuthProfile, AuthProfilesStore, TokenSet};
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::desktop::app_state::{snapshot, update_local_state, StoredAppStatePatch};
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::security::credentials::profiles::{AuthProfile, AuthProfilesStore, TokenSet};
+use neppy_core::openhuman::memory::{
     AppendConversationMessageRequest, ConversationMessageRecord, CreateConversationThreadRequest,
     GenerateConversationThreadTitleRequest, UpsertConversationThreadRequest,
 };
-use openhuman_core::openhuman::memory::sources::reconcile::ensure_composio_sources;
-use openhuman_core::openhuman::threads::ops::{
+use neppy_core::openhuman::memory::sources::reconcile::ensure_composio_sources;
+use neppy_core::openhuman::threads::ops::{
     message_append, thread_create_new, thread_generate_title, thread_upsert,
 };
-use openhuman_core::openhuman::threads::welcome_migration::migrate_welcome_agent_artifacts;
+use neppy_core::openhuman::threads::welcome_migration::migrate_welcome_agent_artifacts;
 
 static ENV_LOCK: &OnceLock<Mutex<()>> = &crate::SHARED_ENV_LOCK;
 

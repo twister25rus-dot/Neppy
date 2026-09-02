@@ -389,7 +389,7 @@ pub fn register_agent_handlers() {
 
 // ── Shared test helpers ──────────────────────────────────────────────────
 //
-// Any test in `openhuman_core` that needs to stub or exercise the real
+// Any test in `neppy_core` that needs to stub or exercise the real
 // `agent.run_turn` native handler should use these helpers rather than
 // touching `register_native_global`, `register_agent_handlers`, or the
 // shared `BUS_HANDLER_LOCK` directly. That keeps bus-stubbing consistent

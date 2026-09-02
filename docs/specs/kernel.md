@@ -13,7 +13,7 @@ mechanism** (permissions, namespaces, scheduling, lifecycle), and lets independe
 **drivers** implement the actual behaviour behind those contracts. A driver can be built in, a
 module, or absent; userspace never learns which.
 
-`openhuman-core` should be that kernel for a personal AI runtime. Today it is closer to a
+`neppy-core` should be that kernel for a personal AI runtime. Today it is closer to a
 monolith with one very good in-tree implementation per capability: memory *is* TinyCortex, agents
 *are* TinyAgents, channels *are* TinyChannels. Each already has a seam (`src/openhuman/tinycortex/`,
 `src/openhuman/tinyagents/`), which proves the shape works — but the seams are **bespoke per

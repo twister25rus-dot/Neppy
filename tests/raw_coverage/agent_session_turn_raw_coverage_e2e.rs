@@ -1,26 +1,26 @@
 use async_trait::async_trait;
-use openhuman_core::openhuman::agent::dispatcher::{NativeToolDispatcher, XmlToolDispatcher};
-use openhuman_core::openhuman::agent::harness::definition::AgentTier;
-use openhuman_core::openhuman::agent::harness::subagent_runner::run_subagent;
-use openhuman_core::openhuman::agent::harness::{
+use neppy_core::openhuman::agent::dispatcher::{NativeToolDispatcher, XmlToolDispatcher};
+use neppy_core::openhuman::agent::harness::definition::AgentTier;
+use neppy_core::openhuman::agent::harness::subagent_runner::run_subagent;
+use neppy_core::openhuman::agent::harness::{
     with_parent_context, AgentDefinition, DefinitionSource, ModelSpec, ParentExecutionContext,
     PromptSource, SandboxMode, SubagentRunError, SubagentRunOptions, ToolScope,
 };
-use openhuman_core::openhuman::agent::hooks::{PostTurnHook, TurnContext};
-use openhuman_core::openhuman::agent::progress::AgentProgress;
-use openhuman_core::openhuman::agent::tool_policy::{
+use neppy_core::openhuman::agent::hooks::{PostTurnHook, TurnContext};
+use neppy_core::openhuman::agent::progress::AgentProgress;
+use neppy_core::openhuman::agent::tool_policy::{
     ToolPolicy, ToolPolicyDecision, ToolPolicyRequest,
 };
-use openhuman_core::openhuman::agent::Agent;
-use openhuman_core::openhuman::config::{AgentConfig, Config, ContextConfig, MemoryConfig};
-use openhuman_core::openhuman::agent::messages::ConversationMessage;
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::agent::Agent;
+use neppy_core::openhuman::config::{AgentConfig, Config, ContextConfig, MemoryConfig};
+use neppy_core::openhuman::agent::messages::ConversationMessage;
+use neppy_core::openhuman::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
 use tinymemory_core::store as memory_store;
-use openhuman_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use openhuman_core::openhuman::tools::traits::ToolCallOptions;
-use openhuman_core::openhuman::tools::{
+use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::openhuman::tools::traits::ToolCallOptions;
+use neppy_core::openhuman::tools::{
     PermissionLevel, Tool, ToolContent, ToolResult, ToolScope as RuntimeToolScope,
 };
 use serde_json::json;
@@ -75,7 +75,7 @@ fn ensure_memory_seams() {
             .name("agent-session-turn-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     Arc::new(Config::default()),
                 );
             })
@@ -92,11 +92,11 @@ where
 {
     std::thread::Builder::new()
         .name(name.to_string())
-        .stack_size(openhuman_core::core::runtime::AGENT_WORKER_STACK_BYTES)
+        .stack_size(neppy_core::core::runtime::AGENT_WORKER_STACK_BYTES)
         .spawn(move || {
             tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(2)
-                .thread_stack_size(openhuman_core::core::runtime::AGENT_WORKER_STACK_BYTES)
+                .thread_stack_size(neppy_core::core::runtime::AGENT_WORKER_STACK_BYTES)
                 .enable_all()
                 .build()
                 .expect("build agent session turn raw coverage runtime")
@@ -627,7 +627,7 @@ fn agent_with(
     model: Arc<dyn ChatModel<()>>,
     tools: Vec<Box<dyn Tool>>,
     workspace_path: PathBuf,
-    dispatcher: Box<dyn openhuman_core::openhuman::agent::dispatcher::ToolDispatcher>,
+    dispatcher: Box<dyn neppy_core::openhuman::agent::dispatcher::ToolDispatcher>,
     config: AgentConfig,
     context_config: ContextConfig,
 ) -> Agent {
@@ -1119,7 +1119,7 @@ async fn subagent_runner_parent_context_filters_tools_caps_output_and_reports_er
         ]
         .into_iter()
         .collect(),
-        turn_model_source: openhuman_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
             provider.clone(),
         ),
         all_tools: Arc::new(all_tools),
@@ -1140,7 +1140,7 @@ async fn subagent_runner_parent_context_filters_tools_caps_output_and_reports_er
         session_id: "round17-parent-session".to_string(),
         channel: "round17-parent-channel".to_string(),
         connected_integrations: Vec::new(),
-        tool_call_format: openhuman_core::openhuman::agent::context::prompt::ToolCallFormat::Json,
+        tool_call_format: neppy_core::openhuman::agent::context::prompt::ToolCallFormat::Json,
         session_key: "123_parent".to_string(),
         session_parent_prefix: Some("root_ancestor".to_string()),
         on_progress: None,
@@ -1197,7 +1197,7 @@ async fn subagent_runner_parent_context_filters_tools_caps_output_and_reports_er
             && message.text().contains("delegate this")));
 
     let error_parent = ParentExecutionContext {
-        turn_model_source: openhuman_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
             ScriptedModel::failing("subagent provider offline"),
         ),
         ..parent

@@ -1,5 +1,5 @@
 [package]
-name = "openhuman"
+name = "neppy"
 version = "0.63.18"
 edition = "2021"
 description = "Neppy core business logic and RPC server"
@@ -35,7 +35,7 @@ build = "build.rs"
 ignored = ["tinymemory", "tinymemory-tinycortex"]
 
 [[bin]]
-name = "openhuman-core"
+name = "neppy-core"
 path = "src/main.rs"
 
 [[bin]]
@@ -43,7 +43,7 @@ name = "test-mcp-stub"
 path = "src/bin/test_mcp_stub.rs"
 
 [[bin]]
-name = "openhuman-fleet"
+name = "neppy-fleet"
 path = "src/bin/fleet.rs"
 # The fleet supervisor embeds the axum control-plane server, so it only builds
 # with the HTTP transport compiled in (#5048). Under `--no-default-features`
@@ -120,7 +120,7 @@ path = "tests/raw_coverage_all.rs"
 required-features = ["voice", "inference"]
 
 [lib]
-name = "openhuman_core"
+name = "neppy_core"
 crate-type = ["rlib"]
 
 [dependencies]
@@ -1071,7 +1071,7 @@ crash-reporting = ["dep:sentry"]
 
 # Tabbed terminal UI: the `openhuman tui` (alias `chat`) CLI subcommand, a
 # ratatui/crossterm front-end for logs, orchestrator chat, curated configuration,
-# and account settings. Default-ON for the standalone `openhuman-core` binary, but
+# and account settings. Default-ON for the standalone `neppy-core` binary, but
 # INTENTIONALLY NOT forwarded to the desktop shell (the desktop app ships its own
 # Tauri UI and never needs a terminal one) — see the allowlist entry in
 # `scripts/ci/check-feature-forwarding.mjs`. Slim / headless builds opt out via
@@ -1174,7 +1174,7 @@ e2e-test-support = []
 # part of the shipped desktop/library build and the feature-forwarding gate
 # (which only inspects the `default` list) never requires forwarding it.
 # CLI argument parsing + logger init for the developer/ops binaries under
-# `src/bin/` — today only `openhuman-fleet`. Default-OFF and NOT in `default`:
+# `src/bin/` — today only `neppy-fleet`. Default-OFF and NOT in `default`:
 # nothing in the library reaches `clap` or `env_logger` (the one hit in
 # `core/logging.rs` is a doc comment), so the shipped desktop build has no
 # reason to carry a 14-crate CLI stack. Each owning `[[bin]]` declares
@@ -1268,7 +1268,7 @@ tinyplace = { path = "vendor/tinyplace/sdk/rust" }
 debug = "line-tables-only"
 split-debuginfo = "packed"
 # Binary-size settings (#5541). Measured on the product feature set
-# (`scripts/ci/product-features.sh`), macOS arm64, `--bin openhuman-core`:
+# (`scripts/ci/product-features.sh`), macOS arm64, `--bin neppy-core`:
 # 116.9 MB -> 67.1 MB, a 42.6% cut with no feature removed and no dependency
 # dropped. The three settings do different jobs and are worth keeping
 # together:

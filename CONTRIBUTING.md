@@ -199,7 +199,7 @@ pnpm dev:app:win
 pnpm tauri dev
 
 # Standalone Rust core
-cargo run --manifest-path Cargo.toml --bin openhuman-core
+cargo run --manifest-path Cargo.toml --bin neppy-core
 ```
 
 Which mode to choose:
@@ -207,7 +207,7 @@ Which mode to choose:
 - `pnpm dev`: frontend-only iteration in the browser.
 - `pnpm --filter openhuman-app dev:app`: full desktop app flow with Tauri + CEF on macOS.
 - `pnpm dev:app:win`: full desktop app flow on native Windows. This invokes the repository's Git Bash bootstrap to configure MSVC, Ninja, the vendored Tauri CLI, and the Windows CEF runtime.
-- `cargo run --bin openhuman-core`: core/RPC work when you want the Rust server without the desktop shell.
+- `cargo run --bin neppy-core`: core/RPC work when you want the Rust server without the desktop shell.
 
 #### Windows desktop troubleshooting
 
@@ -287,7 +287,7 @@ openhuman/
 │   ├── src/
 │   ├── src-tauri/
 │   └── test/
-├── src/                    # Rust core crate and openhuman-core binary
+├── src/                    # Rust core crate and neppy-core binary
 ├── docs/                   # Internal and workflow docs
 ├── gitbooks/developing/    # Contributor-facing architecture and setup guides
 ├── scripts/                # Dev, test, debug, and automation scripts

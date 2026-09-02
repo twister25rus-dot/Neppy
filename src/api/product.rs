@@ -13,7 +13,7 @@
 //! the identity once during startup, before it builds any backend client:
 //!
 //! ```no_run
-//! use openhuman_core::api::{set_product_identity, ProductIdentity};
+//! use neppy_core::api::{set_product_identity, ProductIdentity};
 //!
 //! if let Some(identity) = ProductIdentity::new("opencompany") {
 //!     set_product_identity(identity);

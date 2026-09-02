@@ -61,7 +61,7 @@ const BOOT_CHECK_GATE_PICKER_HEADING_REGEX = /Select a Runtime|Connect to Your R
  * mega-flow sub-test would deep-link an app the user can't actually
  * interact with, no `/consume` request would ever fire, and the first
  * `waitForMockRequest` would time out. The OAuth auth-readiness gate added
- * in #2247 also blocks `consume_login_token` until `openhuman_core_mode` is
+ * in #2247 also blocks `consume_login_token` until `neppy_core_mode` is
  * persisted, which only happens after the user (or this helper) confirms
  * the picker.
  *

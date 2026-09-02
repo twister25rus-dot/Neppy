@@ -24,8 +24,8 @@ use std::process::{Command, Stdio};
     target_os = "macos",
     target_os = "windows"
 ))]
-use openhuman_core::openhuman::sandbox::cwd_jail::spawn;
-use openhuman_core::openhuman::sandbox::cwd_jail::{
+use neppy_core::openhuman::sandbox::cwd_jail::spawn;
+use neppy_core::openhuman::sandbox::cwd_jail::{
     default_backend, spawn_with, Jail, JailRegistry, NoopBackend,
 };
 

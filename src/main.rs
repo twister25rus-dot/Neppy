@@ -3,7 +3,7 @@
 //! This file is responsible for:
 //! - Initializing error tracking with Sentry.
 //! - Setting up secret scrubbing for outgoing error reports.
-//! - Dispatching command-line arguments to the core logic in `openhuman_core`.
+//! - Dispatching command-line arguments to the core logic in `neppy_core`.
 
 /// Main application entry point.
 ///
@@ -59,12 +59,10 @@ fn main() {
             // `openhuman::inference::provider::ops::should_report_provider_http_failure`
             // (transient codes excluded). This filter catches any future call
             // site that bypasses it.
-            if openhuman_core::core::observability::is_transient_provider_http_failure(&event) {
+            if neppy_core::core::observability::is_transient_provider_http_failure(&event) {
                 return None;
             }
-            if openhuman_core::core::observability::is_all_transient_provider_exhaustion_event(
-                &event,
-            ) {
+            if neppy_core::core::observability::is_all_transient_provider_exhaustion_event(&event) {
                 return None;
             }
             // Defense-in-depth: drop managed-backend `errorCode` events (#870)
@@ -73,7 +71,7 @@ fn main() {
             // re-report classifier. The malformed `BAD_REQUEST` carve-out
             // (F8) is excluded by the underlying decision, so a client-built
             // bad payload still pages.
-            if openhuman_core::core::observability::is_backend_error_code_event(&event) {
+            if neppy_core::core::observability::is_backend_error_code_event(&event) {
                 return None;
             }
             // Defense-in-depth: drop transient streaming transport blips
@@ -81,15 +79,14 @@ fn main() {
             // timeouts/resets recovered by retry/fallback (F7). The primary
             // gate lives at the `stream_chat` / `stream_chat_history` emit
             // sites.
-            if openhuman_core::core::observability::is_transient_provider_transport_failure(&event)
-            {
+            if neppy_core::core::observability::is_transient_provider_transport_failure(&event) {
                 return None;
             }
             // Defense-in-depth for budget-exhausted 400s. Emit sites demote the
             // known backend responses before they hit Sentry; this catches any
             // future non_2xx/status=400 event that carries the same tight body
             // phrases.
-            if openhuman_core::core::observability::is_budget_event(&event) {
+            if neppy_core::core::observability::is_budget_event(&event) {
                 return None;
             }
             // Defense-in-depth for insufficient-credits 402s. The native_chat
@@ -97,14 +94,14 @@ fn main() {
             // same out-of-balance 402 from chat_with_system / chat_with_history
             // / the streaming gates / api_error too; this is the single net
             // that catches every path (TAURI-RUST-C62).
-            if openhuman_core::core::observability::is_insufficient_credits_event(&event) {
+            if neppy_core::core::observability::is_insufficient_credits_event(&event) {
                 return None;
             }
             // Drop provider monthly-quota exhausted events — third-party plan
             // allotment spent (e.g. Kiro `MONTHLY_REQUEST_COUNT`, sometimes
             // wrapped in a 500 envelope so the 402-gated credits filter above
             // misses it). No local lever (TAURI-RUST-C9A).
-            if openhuman_core::core::observability::is_quota_exhausted_event(&event) {
+            if neppy_core::core::observability::is_quota_exhausted_event(&event) {
                 return None;
             }
             // Defense-in-depth for Ollama Cloud hosted-inference 500s. The
@@ -113,7 +110,7 @@ fn main() {
             // compatible provider can report the same `Internal Server Error
             // (ref: …)` body from other paths; this is the single net that
             // catches every path (TAURI-RUST-5MV).
-            if openhuman_core::core::observability::is_ollama_cloud_internal_500_event(&event) {
+            if neppy_core::core::observability::is_ollama_cloud_internal_500_event(&event) {
                 return None;
             }
             // Defense-in-depth: drop Windows `ERROR_FILE_SYSTEM_LIMITATION`
@@ -123,8 +120,7 @@ fn main() {
             // `ExpectedErrorKind::WindowsFileSystemLimitation`; this catches
             // any call site that uses `report_error` directly instead of
             // `report_error_or_expected` (TAURI-RUST-QT0: 6,050 events / 1 user).
-            if openhuman_core::core::observability::is_windows_file_system_limitation_event(&event)
-            {
+            if neppy_core::core::observability::is_windows_file_system_limitation_event(&event) {
                 log::debug!(
                     "[sentry-fs-limitation-filter] dropping Windows file-system-limitation event (os error 665) event_id={:?}",
                     event.event_id
@@ -139,13 +135,13 @@ fn main() {
             // deterministic agent-state outcome surfaced to the user via
             // the chat-rendered "Error: …" message — Sentry is the wrong
             // surface for it (OPENHUMAN-TAURI-99 / -98).
-            if openhuman_core::core::observability::is_max_iterations_event(&event) {
+            if neppy_core::core::observability::is_max_iterations_event(&event) {
                 return None;
             }
-            if openhuman_core::core::observability::is_transient_backend_api_failure(&event)
-                || openhuman_core::core::observability::is_transient_integrations_failure(&event)
-                || openhuman_core::core::observability::is_updater_transient_event(&event)
-                || openhuman_core::core::observability::is_skill_install_user_fetch_failure(&event)
+            if neppy_core::core::observability::is_transient_backend_api_failure(&event)
+                || neppy_core::core::observability::is_transient_integrations_failure(&event)
+                || neppy_core::core::observability::is_updater_transient_event(&event)
+                || neppy_core::core::observability::is_skill_install_user_fetch_failure(&event)
             {
                 return None;
             }
@@ -155,14 +151,14 @@ fn main() {
             // suppression lives at the `install_workflow_from_url_with_home`
             // emit site; this catches any future skills call site that reports
             // a 4xx. 5xx (genuine remote failure) still reports. TAURI-RUST-CGE.
-            if openhuman_core::core::observability::is_skills_install_client_error_event(&event) {
+            if neppy_core::core::observability::is_skills_install_client_error_event(&event) {
                 return None;
             }
             // Defense-in-depth: 404 on PATCH/DELETE to a channel-message path
             // is an expected state (provider-side delete or backend GC). Primary
             // suppression lives in `authed_json`; this catches any future call
             // site that bypasses it. Targets OPENHUMAN-TAURI-R7 (28 events).
-            if openhuman_core::core::observability::is_channel_message_not_found_event(&event) {
+            if neppy_core::core::observability::is_channel_message_not_found_event(&event) {
                 return None;
             }
             // Drop 401 "Session expired. Please log in again." bodies surfaced
@@ -183,7 +179,7 @@ fn main() {
             // future regression where a sibling call site collapses the
             // chain via `e.to_string()` and reproduces TAURI-RUST-10
             // (~409 events / 17 users).
-            if openhuman_core::core::observability::is_auth_get_me_opaque_transport_event(&event) {
+            if neppy_core::core::observability::is_auth_get_me_opaque_transport_event(&event) {
                 log::debug!(
                     "[sentry-auth-get-me-opaque-filter] dropping opaque transport event_id={:?}",
                     event.event_id
@@ -198,7 +194,7 @@ fn main() {
             // audit). Primary suppression lives at individual emit sites;
             // this catch-all net catches any future new path that bypasses
             // those gates.
-            if openhuman_core::core::observability::is_user_config_provider_event(&event) {
+            if neppy_core::core::observability::is_user_config_provider_event(&event) {
                 log::debug!(
                     "[sentry-user-config-filter] dropping user-config provider event event_id={:?}",
                     event.event_id
@@ -210,7 +206,7 @@ fn main() {
             // connection refused, gateway 502/504, HTTP 401 from frontend
             // connectivity. These are transient self-resolving conditions,
             // not actionable code defects (targets ~8 Sentry issues).
-            if openhuman_core::core::observability::is_connectivity_event(&event) {
+            if neppy_core::core::observability::is_connectivity_event(&event) {
                 log::debug!(
                     "[sentry-connectivity-filter] dropping connectivity event event_id={:?}",
                     event.event_id
@@ -221,14 +217,14 @@ fn main() {
             // more than 6 minor versions behind the current build). Errors
             // from ancient code are not actionable against the current
             // codebase (targets ~4 Sentry issues).
-            if openhuman_core::core::observability::is_stale_release_event(&event) {
+            if neppy_core::core::observability::is_stale_release_event(&event) {
                 log::debug!(
                     "[sentry-stale-release-filter] dropping stale release event event_id={:?}",
                     event.event_id
                 );
                 return None;
             }
-            if openhuman_core::core::observability::is_session_expired_event(&event) {
+            if neppy_core::core::observability::is_session_expired_event(&event) {
                 // Metadata-only log shape — `event.message` carries the raw
                 // backend response body (often a JSON envelope with the
                 // session JWT context attached) which CLAUDE.md forbids from
@@ -258,7 +254,7 @@ fn main() {
             // the cache is empty (root cause of the original userCount=0).
             if event.user.is_none() {
                 event.user =
-                    openhuman_core::openhuman::desktop::app_state::peek_cached_current_user_identity()
+                    neppy_core::openhuman::desktop::app_state::peek_cached_current_user_identity()
                         .and_then(|identity| identity.id)
                         .map(|id| sentry::User {
                             id: Some(id),
@@ -278,7 +274,7 @@ fn main() {
         })),
         sample_rate: 1.0,
         transport: Some(std::sync::Arc::new(
-            openhuman_core::core::sentry_transport::factory,
+            neppy_core::core::sentry_transport::factory,
         )),
         ..sentry::ClientOptions::default()
     });
@@ -287,7 +283,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
 
     // Delegate to the core library to handle the command.
-    if let Err(err) = openhuman_core::run_core_from_args(&args) {
+    if let Err(err) = neppy_core::run_core_from_args(&args) {
         eprintln!("{err}");
         std::process::exit(1);
     }
@@ -353,12 +349,12 @@ fn resolve_environment() -> String {
 // ---------------------------------------------------------------------------
 
 /// Sentry `before_send` secret scrubbing. Delegates to the shared, always-on
-/// [`openhuman_core::core::log_redaction::scrub_secrets`] so the redaction
+/// [`neppy_core::core::log_redaction::scrub_secrets`] so the redaction
 /// patterns stay a single source of truth (the same pass also runs on the
 /// always-on diagnostic logs in `core::observability`).
 #[cfg(feature = "crash-reporting")]
 fn scrub_secrets(input: &str) -> String {
-    openhuman_core::core::log_redaction::scrub_secrets(input)
+    neppy_core::core::log_redaction::scrub_secrets(input)
 }
 
 #[cfg(all(test, feature = "crash-reporting"))]

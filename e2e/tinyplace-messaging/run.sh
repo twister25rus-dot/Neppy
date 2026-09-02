@@ -7,12 +7,12 @@
 #      If not, and MANAGE_STACK != 0, bring one up from the umbrella
 #      docker-compose (mongo + redis + backend, static payment verifier) on an
 #      isolated compose project + ports, and tear it down on exit.
-#   2. Ensure the openhuman-core binary is built.
+#   2. Ensure the neppy-core binary is built.
 #   3. Run the node:test suite.
 #
 # Env knobs:
 #   TINYPLACE_API_BASE_URL   backend base URL          (default http://localhost:18080)
-#   OPENHUMAN_CORE_BIN       path to openhuman-core    (default target/debug/openhuman-core)
+#   OPENHUMAN_CORE_BIN       path to neppy-core    (default target/debug/neppy-core)
 #   MANAGE_STACK             1 = auto-manage backend   (default 1)
 #   BACKEND_PORT             host port for managed backend (default 18080)
 #   VERBOSE                  1 = stream core logs
@@ -24,7 +24,7 @@ UMBRELLA_ROOT="$(cd "$OPENHUMAN_ROOT/.." && pwd)"
 
 BACKEND_PORT="${BACKEND_PORT:-18080}"
 export TINYPLACE_API_BASE_URL="${TINYPLACE_API_BASE_URL:-http://localhost:${BACKEND_PORT}}"
-export OPENHUMAN_CORE_BIN="${OPENHUMAN_CORE_BIN:-$OPENHUMAN_ROOT/target/debug/openhuman-core}"
+export OPENHUMAN_CORE_BIN="${OPENHUMAN_CORE_BIN:-$OPENHUMAN_ROOT/target/debug/neppy-core}"
 MANAGE_STACK="${MANAGE_STACK:-1}"
 COMPOSE_PROJECT="tinyplace-ohe2e"
 
@@ -66,8 +66,8 @@ fi
 
 # 2) Core binary
 if [ ! -x "$OPENHUMAN_CORE_BIN" ]; then
-  log "building openhuman-core (this can take a while the first time)…"
-  ( cd "$OPENHUMAN_ROOT" && GGML_NATIVE=OFF cargo build --bin openhuman-core --manifest-path Cargo.toml )
+  log "building neppy-core (this can take a while the first time)…"
+  ( cd "$OPENHUMAN_ROOT" && GGML_NATIVE=OFF cargo build --bin neppy-core --manifest-path Cargo.toml )
 fi
 log "using core binary: $OPENHUMAN_CORE_BIN"
 

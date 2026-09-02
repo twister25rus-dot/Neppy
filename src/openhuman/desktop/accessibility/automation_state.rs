@@ -9,7 +9,7 @@
 //! `AEDeterminePermissionToAutomateTarget(askUserIfNeeded=false)` would
 //! be the principled silent-probe API but it SIGBUSes inside
 //! AE.framework's TCC client whenever called from any binary that links
-//! `openhuman_core` (PAC mismatch between arm64 Rust binaries and
+//! `neppy_core` (PAC mismatch between arm64 Rust binaries and
 //! arm64e Apple frameworks, mediated by `objc2-app-kit` transitive
 //! deps). Verified across seven workarounds during #985 plan validation.
 //! The osascript stderr `(-1743)` substring is a stable Apple-defined

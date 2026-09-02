@@ -4,7 +4,7 @@
 //! `/proc/self/smaps_rollup` + `/proc/self/status` and aggregates repeated
 //! samples into a [`RosterResult`] / [`BenchReport`]. Written for the
 //! `rss-bench` benchmark harness (#5046), which measures the steady-state RSS
-//! of an embedded `openhuman_core` agent roster against the 20–30 MiB budget,
+//! of an embedded `neppy_core` agent roster against the 20–30 MiB budget,
 //! but [`sample_self`] is a general capability: any caller wanting this
 //! process's RSS / peak-RSS figures can use it. Linux additionally reports PSS
 //! and private-page breakdowns; macOS leaves those Linux-only fields at zero.
@@ -395,7 +395,7 @@ fn kib_to_mib(kib: u64) -> f64 {
 pub fn human_summary(report: &BenchReport) -> String {
     use std::fmt::Write as _;
     let mut out = String::new();
-    let _ = writeln!(out, "### Embedded `openhuman_core` RSS benchmark (#5046)");
+    let _ = writeln!(out, "### Embedded `neppy_core` RSS benchmark (#5046)");
     let _ = writeln!(out);
     let _ = writeln!(
         out,

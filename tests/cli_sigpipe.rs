@@ -5,14 +5,14 @@ fn help_output_closed_pipe_does_not_panic() {
     use std::os::unix::process::ExitStatusExt;
     use std::process::{Command, Stdio};
 
-    let mut child = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_neppy-core"))
         .arg("--help")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .expect("spawn openhuman-core --help");
+        .expect("spawn neppy-core --help");
 
-    // Mirror the issue repro (`openhuman-core --help | head -n 1`): read a
+    // Mirror the issue repro (`neppy-core --help | head -n 1`): read a
     // single line, then drop the read end mid-stream so the child's next write
     // lands on a closed pipe. Closing before reading (as a naive test does)
     // lets the child buffer its entire few-KB `--help` output in one successful
@@ -26,7 +26,7 @@ fn help_output_closed_pipe_does_not_panic() {
         .expect("read first help line");
     drop(reader);
 
-    let output = child.wait_with_output().expect("wait for openhuman-core");
+    let output = child.wait_with_output().expect("wait for neppy-core");
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     assert!(

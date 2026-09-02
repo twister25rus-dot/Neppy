@@ -62,7 +62,7 @@ cat > "$README" <<EOF
 | Captured at commit | \`${SOURCE_SHA}\` |
 | Captured on | $(date -u +"%Y-%m-%dT%H:%M:%SZ") |
 | Generator | \`regenerate_golden_fixture\` in \`tests/memory_golden_fixture_e2e.rs\` |
-| Seeder | \`openhuman_core::openhuman::memory::store::golden::seed\` |
+| Seeder | \`neppy_core::openhuman::memory::store::golden::seed\` |
 
 ## Contents
 

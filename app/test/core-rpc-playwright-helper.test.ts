@@ -18,7 +18,7 @@ describe('Playwright core RPC helper', () => {
 
     await seedBrowserCoreMode(page);
 
-    expect(localStorage.getItem('openhuman_core_mode')).toBe('cloud');
+    expect(localStorage.getItem('neppy_core_mode')).toBe('cloud');
     expect(localStorage.getItem('openhuman:walkthrough_completed')).toBe('true');
     expect(localStorage.getItem('openhuman:walkthrough_pending')).toBeNull();
   });

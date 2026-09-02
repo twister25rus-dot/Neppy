@@ -25,7 +25,7 @@ fn main() {
     }
 
     // MCP clients (e.g. the Claude Code CLI provider) spawn this binary as
-    // `<bin> mcp` to get a stdio MCP server. The standalone `openhuman-core`
+    // `<bin> mcp` to get a stdio MCP server. The standalone `neppy-core`
     // binary already accepts `mcp` directly; route it here too so the desktop
     // app binary behaves the same instead of falling through to GUI startup.
     if matches!(sub, Some("mcp") | Some("mcp-server")) {

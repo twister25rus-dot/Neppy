@@ -55,7 +55,7 @@ default = ["voice"]
 
 test('parses the shell forwarded list across multiple lines', () => {
   const toml = `
-openhuman_core = { path = "../..", package = "openhuman", default-features = false, features = [
+neppy_core = { path = "../..", package = "openhuman", default-features = false, features = [
     "media",
     "voice",
 ] }
@@ -67,7 +67,7 @@ openhuman_core = { path = "../..", package = "openhuman", default-features = fal
 });
 
 test('detects when the shell inherits defaults instead of forwarding', () => {
-  const toml = 'openhuman_core = { path = "../..", package = "openhuman" }\n';
+  const toml = 'neppy_core = { path = "../..", package = "openhuman" }\n';
   assert.deepEqual(parseShellForwardedFeatures(toml), { defaultFeatures: true, features: [] });
 });
 
@@ -79,7 +79,7 @@ test('comment stripping does not truncate on a # inside a quoted value', () => {
 
 test('a commented-out gate does not count as forwarded', () => {
   const toml = `
-openhuman_core = { path = "../..", package = "openhuman", default-features = false, features = [
+neppy_core = { path = "../..", package = "openhuman", default-features = false, features = [
     # "voice",
     "media",
 ] }

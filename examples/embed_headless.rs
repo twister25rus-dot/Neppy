@@ -24,7 +24,7 @@
 //! the token is cancelled. Widen the runtime surface by swapping
 //! `DomainSet::harness()` for `DomainSet::full()`.
 
-use openhuman_core::{CoreBuilder, DomainSet, HostKind, ServiceSet};
+use neppy_core::{CoreBuilder, DomainSet, HostKind, ServiceSet};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -186,7 +186,7 @@ fn level_tag(level: &Level) -> &'static str {
     }
 }
 
-/// Shortens a Rust module path (e.g., `openhuman_core::rpc` -> `rpc`).
+/// Shortens a Rust module path (e.g., `neppy_core::rpc` -> `rpc`).
 fn short_target(target: &str) -> &str {
     target.rsplit("::").next().unwrap_or(target)
 }
@@ -690,7 +690,7 @@ mod tests {
 
     #[test]
     fn short_target_strips_module_path() {
-        assert_eq!(short_target("openhuman_core::core::rpc"), "rpc");
+        assert_eq!(short_target("neppy_core::core::rpc"), "rpc");
         // Non-namespaced target stays as-is.
         assert_eq!(short_target("plain"), "plain");
     }

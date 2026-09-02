@@ -16,7 +16,7 @@ fn ssh(destination: &str) -> Reach {
 
 fn docker() -> Confinement {
     Confinement::Docker {
-        image: "openhuman-core:latest".to_owned(),
+        image: "neppy-core:latest".to_owned(),
     }
 }
 

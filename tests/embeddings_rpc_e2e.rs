@@ -19,8 +19,8 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 use tempfile::tempdir;
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
 
 // ── Auth / token setup ────────────────────────────────────────────────────────
 
@@ -263,8 +263,8 @@ fn ensure_modules_policy() {
     #[cfg(feature = "modules")]
     {
         let workspace = root.path().to_path_buf();
-        openhuman_core::openhuman::modules::memory::set_modules_policy(Arc::new(
-            openhuman_core::openhuman::config::Config {
+        neppy_core::openhuman::modules::memory::set_modules_policy(Arc::new(
+            neppy_core::openhuman::config::Config {
                 workspace_dir: workspace.clone(),
                 action_dir: workspace.clone(),
                 config_path: workspace.join("config.toml"),

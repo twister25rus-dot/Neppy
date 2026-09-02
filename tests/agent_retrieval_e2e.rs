@@ -20,10 +20,8 @@
 //! it.
 
 use chrono::{TimeZone, Utc};
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::tools::{
-    MemoryTreeFetchLeavesTool, MemoryTreeSearchEntitiesTool, Tool,
-};
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::tools::{MemoryTreeFetchLeavesTool, MemoryTreeSearchEntitiesTool, Tool};
 use serde_json::{json, Value};
 use tempfile::TempDir;
 use tinycortex::memory::ingest::canonicalize::chat::{ChatBatch, ChatMessage};
@@ -52,11 +50,11 @@ fn ensure_memory_seams() {
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
                 let config = std::sync::Arc::new(Config::default());
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
                     config.clone(),
                 );
                 #[cfg(feature = "modules")]
-                openhuman_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::openhuman::modules::memory::set_modules_policy(config);
             })
             .expect("spawn agent retrieval seam installer")
             .join()

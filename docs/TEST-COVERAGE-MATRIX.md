@@ -619,7 +619,7 @@ End-to-end coverage of the agent harness via the web-chat RPC surface against an
 | 15.1.8 | Profile editor isolation UI (toggles, path rows)               | VU    | `app/src/components/settings/panels/ProfileEditorPage.test.tsx`                                   | ✅     | Default-off render, dispatch payload, hydration, path rows shown/hidden                                        |
 | 15.1.9 | Cron profile picker UI (assign, clear, deleted fallback)       | VU    | `app/src/components/settings/panels/cron/` tests, `app/src/services/api/agentProfilesApi.test.ts` | ✅     | Create with/without id, edit prefill, clear→null, deleted-profile preserved, list label fallback               |
 
-## 16. Embedded Library Harness (`openhuman_core::Harness`)
+## 16. Embedded Library Harness (`neppy_core::Harness`)
 
 ### 16.1 One-call agent turns for a host process
 

@@ -18,21 +18,21 @@ use std::sync::Arc;
 use serde_json::json;
 use tempfile::tempdir;
 
-use openhuman_core::openhuman::agent::profiles::{
+use neppy_core::openhuman::agent::profiles::{
     built_in_profiles, AgentProfile, AgentProfileStore, DEFAULT_PROFILE_ID,
 };
-use openhuman_core::openhuman::agent::profiles::{
+use neppy_core::openhuman::agent::profiles::{
     filter_integrations, memory_subdir_for_suffix, memory_tree_subdir_for_suffix,
     resolve_personality_memory_md, resolve_personality_soul, session_raw_subdir_for_suffix,
     HasToolkit, PersonalityContext,
 };
-use openhuman_core::openhuman::agent::prompts::types::LearnedContextData;
-use openhuman_core::openhuman::agent::prompts::{
+use neppy_core::openhuman::agent::prompts::types::LearnedContextData;
+use neppy_core::openhuman::agent::prompts::{
     IdentitySection, PersonalityRosterEntry, PersonalityRosterSection, PromptContext,
     PromptSection, ToolCallFormat, UserFilesSection,
 };
-use openhuman_core::openhuman::inference::embeddings::NoopEmbedding;
-use openhuman_core::openhuman::memory::NamespaceDocumentInput;
+use neppy_core::openhuman::inference::embeddings::NoopEmbedding;
+use neppy_core::openhuman::memory::NamespaceDocumentInput;
 // The engine handle is named on the crate rather than reached through the
 // memory module's public surface: it is an in-process engine type, not
 // contract vocabulary, and the alias that used to re-export it existed for
@@ -277,7 +277,7 @@ async fn two_personalities_have_isolated_sqlite_stores() {
             category: "core".to_string(),
             session_id: None,
             document_id: None,
-            taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+            taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
         })
         .await
         .expect("write default");
@@ -295,7 +295,7 @@ async fn two_personalities_have_isolated_sqlite_stores() {
             category: "core".to_string(),
             session_id: None,
             document_id: None,
-            taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+            taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
         })
         .await
         .expect("write alice");
@@ -351,7 +351,7 @@ async fn personality_memory_persists_across_reopens() {
             category: "core".to_string(),
             session_id: None,
             document_id: None,
-            taint: openhuman_core::openhuman::memory::MemoryTaint::Internal,
+            taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
         })
         .await
         .expect("write");

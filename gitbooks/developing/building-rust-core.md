@@ -10,8 +10,8 @@ This page is the contributor-facing reference for compiling the Rust core on a f
 It covers the **repo-root crate only**:
 
 - Cargo package: `openhuman`
-- Binary: `openhuman-core`
-- Library: `openhuman_core`
+- Binary: `neppy-core`
+- Library: `neppy_core`
 
 If you want the full desktop app (`pnpm dev`, Tauri, CEF, frontend tooling), use [Getting Set Up](getting-set-up.md). That path has extra JavaScript, submodule, and desktop-runtime requirements that are **not** needed for a core-only `cargo` workflow.
 
@@ -56,10 +56,10 @@ From the repository root:
 cargo check --manifest-path Cargo.toml
 
 # Debug build of the actual CLI / RPC binary
-cargo build --manifest-path Cargo.toml --bin openhuman-core
+cargo build --manifest-path Cargo.toml --bin neppy-core
 
 # Release build
-cargo build --manifest-path Cargo.toml --release --bin openhuman-core
+cargo build --manifest-path Cargo.toml --release --bin neppy-core
 
 # Rust tests
 cargo test --manifest-path Cargo.toml
@@ -67,9 +67,9 @@ cargo test --manifest-path Cargo.toml
 
 Notes:
 
-- The **package** name is `openhuman`, but the runnable binary is **`openhuman-core`**.
+- The **package** name is `openhuman`, but the runnable binary is **`neppy-core`**.
 - If you prefer package-oriented cargo commands for packager scripts, use `-p openhuman`.
-- The built binary lands at `target/debug/openhuman-core` or `target/release/openhuman-core`.
+- The built binary lands at `target/debug/neppy-core` or `target/release/neppy-core`.
 
 ### Faster local linking (optional)
 
@@ -200,7 +200,7 @@ Recommended commands after the Microsoft toolchain is installed:
 ```powershell
 rustup toolchain install 1.93.0 --component rustfmt --component clippy
 rustup target add x86_64-pc-windows-msvc
-cargo build --manifest-path Cargo.toml --bin openhuman-core
+cargo build --manifest-path Cargo.toml --bin neppy-core
 ```
 
 Windows note:

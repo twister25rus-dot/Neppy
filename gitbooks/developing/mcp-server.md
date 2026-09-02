@@ -9,7 +9,7 @@ Neppy Core can run as an opt-in stdio MCP server for local MCP clients such
 as Claude Desktop, Cursor, or Zed.
 
 ```bash
-openhuman-core mcp
+neppy-core mcp
 ```
 
 The command does not start the HTTP JSON-RPC server. It reads newline-delimited
@@ -129,7 +129,7 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","id":2,"method":"resources/list"}' \
   '{"jsonrpc":"2.0","id":3,"method":"resources/templates/list"}' \
   '{"jsonrpc":"2.0","id":4,"method":"resources/read","params":{"uri":"neppy://prompts/identity"}}' \
-  | openhuman-core mcp
+  | neppy-core mcp
 ```
 
 ## Tool Registry
@@ -177,7 +177,7 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-  | openhuman-core mcp
+  | neppy-core mcp
 ```
 
 The response should include `capabilities.tools` from `initialize` and the
@@ -186,6 +186,6 @@ JSON response lines to stdout; the `notifications/initialized` message is a
 notification and has no response.
 
 ```text
-{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{},"resources":{"subscribe":false,"listChanged":false}},"serverInfo":{"name":"openhuman-core","version":"<crate version>"},"instructions":"..."}}
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{},"resources":{"subscribe":false,"listChanged":false}},"serverInfo":{"name":"neppy-core","version":"<crate version>"},"instructions":"..."}}
 {"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"memory.search",...},{"name":"memory.recall",...},{"name":"tree.read_chunk",...},{"name":"tree.browse",...},{"name":"tree.top_entities",...},{"name":"tree.list_sources",...}]}}
 ```

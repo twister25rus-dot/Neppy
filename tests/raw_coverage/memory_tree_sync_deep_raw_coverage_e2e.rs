@@ -17,20 +17,20 @@ use chrono::{TimeZone, Utc};
 use serde_json::json;
 use tempfile::TempDir;
 
-use openhuman_core::openhuman::config::{Config, SchedulerGateMode};
-use openhuman_core::openhuman::memory::tree::score::embed::EMBEDDING_DIM;
-use openhuman_core::openhuman::memory::tree::score::extract::{
+use neppy_core::openhuman::config::{Config, SchedulerGateMode};
+use neppy_core::openhuman::memory::tree::score::embed::EMBEDDING_DIM;
+use neppy_core::openhuman::memory::tree::score::extract::{
     EntityExtractor, EntityKind, ExtractedEntities, LlmEntityExtractor, LlmExtractorConfig,
 };
-use openhuman_core::openhuman::memory::tree::score::resolver::{canonicalise, CanonicalEntity};
-use openhuman_core::openhuman::memory::tree::score::store::{index_entity, lookup_entity};
-use openhuman_core::openhuman::memory::tree::tree::rpc::{
+use neppy_core::openhuman::memory::tree::score::resolver::{canonicalise, CanonicalEntity};
+use neppy_core::openhuman::memory::tree::score::store::{index_entity, lookup_entity};
+use neppy_core::openhuman::memory::tree::tree::rpc::{
     get_chunk_rpc, ingest_rpc, list_chunks_rpc, set_enabled_rpc, GetChunkRequest, IngestRequest,
     ListChunksRequest, SetEnabledRequest,
 };
-use openhuman_core::openhuman::memory::tree::tree::set_summary_embedding;
-use openhuman_core::openhuman::memory::tree::tree::store as tree_store;
-use openhuman_core::openhuman::memory::tree::tree::TreeStatus;
+use neppy_core::openhuman::memory::tree::tree::set_summary_embedding;
+use neppy_core::openhuman::memory::tree::tree::store as tree_store;
+use neppy_core::openhuman::memory::tree::tree::TreeStatus;
 use tinymemory_core::chat::{ChatPrompt, ChatProvider};
 use tinymemory_core::store::chunks::store::{set_chunk_embedding, upsert_chunks, with_connection};
 use tinymemory_core::store::chunks::types::{chunk_id, Chunk, Metadata, SourceKind, SourceRef};
@@ -91,14 +91,14 @@ fn cli_workspace(tmp: &TempDir) -> PathBuf {
 }
 
 fn run_core_cli(workspace: &Path, args: &[&str]) -> std::process::Output {
-    let bin = env!("CARGO_BIN_EXE_openhuman-core");
+    let bin = env!("CARGO_BIN_EXE_neppy-core");
     Command::new(bin)
         .args(args)
         .env("OPENHUMAN_WORKSPACE", workspace)
         .env("OPENHUMAN_TRIGGER_TRIAGE_DISABLED", "1")
         .env("RUST_LOG", "warn")
         .output()
-        .expect("run openhuman-core")
+        .expect("run neppy-core")
 }
 
 fn assert_cli_ok(workspace: &Path, args: &[&str]) -> String {
@@ -478,7 +478,7 @@ async fn memory_tree_rpc_chunk_reads_set_enabled_and_ingest_errors() {
     // module lists must name one store. The only driver-routed case in this
     // aggregated module, so nothing contends for the slot.
     #[cfg(feature = "modules")]
-    openhuman_core::openhuman::modules::memory::set_modules_policy(Arc::new(cfg.clone()));
+    neppy_core::openhuman::modules::memory::set_modules_policy(Arc::new(cfg.clone()));
 
     let chunk = sample_chunk(
         &cfg,

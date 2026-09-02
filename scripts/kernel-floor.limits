@@ -234,7 +234,7 @@
 #                      (+2 packages / +2 names) became always-on via the
 #                      `add tinymemory-core dependency and patch tinycortex-api`
 #                      change (6bf080266), which wired the crate into
-#                      `openhuman_core` on the always-on memory path but did not
+#                      `neppy_core` on the always-on memory path but did not
 #                      update this ratchet — so `main` failed the Feature-Gate
 #                      Smoke lane. tinymemory-core is the concrete memory/
 #                      embedding core the always-on memory families consume; its

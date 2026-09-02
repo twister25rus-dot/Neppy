@@ -20,8 +20,8 @@ use tower::ServiceExt;
 use wiremock::matchers::{header as wm_header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
 use tinyagents::harness::message::Message;
 use tinyagents::harness::model::{ChatModel, ModelRequest, ModelStreamItem};
 use tinyagents::harness::providers::openai::{AuthStyle, OpenAiModel};
@@ -547,8 +547,8 @@ async fn openai_compat_bearer_auth_sends_authorization_header() {
 
 #[test]
 fn temperature_helper_suppresses_o1_by_default_config() {
-    use openhuman_core::openhuman::config::Config;
-    use openhuman_core::openhuman::inference::temperature::temperature_for_model;
+    use neppy_core::openhuman::config::Config;
+    use neppy_core::openhuman::inference::temperature::temperature_for_model;
 
     let config = Config::default();
 

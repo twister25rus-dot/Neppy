@@ -8,8 +8,8 @@
 //! ```no_run
 //! # async fn demo() -> Result<(), Box<dyn std::error::Error>> {
 //! use std::sync::Arc;
-//! use openhuman_core::embed::Core;
-//! use openhuman_core::{CoreBuilder, DomainSet, HostKind, ServiceSet};
+//! use neppy_core::embed::Core;
+//! use neppy_core::{CoreBuilder, DomainSet, HostKind, ServiceSet};
 //!
 //! let runtime = CoreBuilder::new(HostKind::detect_standalone())
 //!     .domains(DomainSet::full())

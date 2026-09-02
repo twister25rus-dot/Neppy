@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------
 # Neppy Core — multi-stage Docker build
-# Produces a minimal image running the `openhuman-core` binary (JSON-RPC server).
+# Produces a minimal image running the `neppy-core` binary (JSON-RPC server).
 #
-# Build:   docker build -t openhuman-core .
-# Run:     docker run -p 7788:7788 --env-file .env openhuman-core
+# Build:   docker build -t neppy-core .
+# Run:     docker run -p 7788:7788 --env-file .env neppy-core
 # ---------------------------------------------------------------------------
 
 # ==========================================================================
@@ -54,15 +54,15 @@ COPY vendor/ vendor/
 RUN mkdir -p src && \
     echo 'fn main() {}' > src/main.rs && \
     echo 'pub fn run_core_from_args(_: &[String]) -> anyhow::Result<()> { Ok(()) }' > src/lib.rs && \
-    cargo build --profile "${CARGO_PROFILE}" --bin openhuman-core 2>/dev/null || true && \
+    cargo build --profile "${CARGO_PROFILE}" --bin neppy-core 2>/dev/null || true && \
     rm -rf src
 
 # Copy actual source and build
 COPY src/ src/
 # Touch main.rs to force rebuild of our code (not deps)
 RUN touch src/main.rs src/lib.rs && \
-    cargo build --profile "${CARGO_PROFILE}" --bin openhuman-core && \
-    cp "target/${CARGO_PROFILE}/openhuman-core" /tmp/openhuman-core
+    cargo build --profile "${CARGO_PROFILE}" --bin neppy-core && \
+    cp "target/${CARGO_PROFILE}/neppy-core" /tmp/neppy-core
 
 # ==========================================================================
 # Stage 2: Minimal runtime image
@@ -96,7 +96,7 @@ RUN mkdir -p /home/openhuman/.neppy \
  && chown -R openhuman:openhuman /home/openhuman
 
 # Copy the built binary
-COPY --from=builder /tmp/openhuman-core /usr/local/bin/openhuman-core
+COPY --from=builder /tmp/neppy-core /usr/local/bin/neppy-core
 
 # Copy the entrypoint script that chowns the workspace volume before dropping
 # privileges.  The script is a separate file so the E2E entrypoint
@@ -112,10 +112,10 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint-core.sh \
 # gosu to drop to the openhuman user before starting the binary.
 #
 # CAUTION: because the image default user is root, `docker exec <ctr> ...` lands
-# as root and does NOT run the entrypoint — so running `openhuman-core` that way
+# as root and does NOT run the entrypoint — so running `neppy-core` that way
 # creates a root-owned `config.toml` (the core writes it at mode 0600), which
 # uid 10001 then cannot read on the next start. Use
-# `docker exec -u openhuman <ctr> openhuman-core ...` for any CLI poking around.
+# `docker exec -u openhuman <ctr> neppy-core ...` for any CLI poking around.
 # The entrypoint heals a workspace already in that state, but prevention is
 # cheaper than a restart loop.
 USER root

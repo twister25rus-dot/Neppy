@@ -1,24 +1,24 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use openhuman_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-use openhuman_core::openhuman::agent::harness::session::Agent;
-use openhuman_core::openhuman::agent::harness::{
+use neppy_core::openhuman::agent::dispatcher::NativeToolDispatcher;
+use neppy_core::openhuman::agent::harness::session::Agent;
+use neppy_core::openhuman::agent::harness::{
     run_subagent, with_parent_context, AgentDefinition, DefinitionSource, ModelSpec,
     ParentExecutionContext, PromptSource, SandboxMode, SubagentRunError, SubagentRunOptions,
     ToolScope,
 };
-use openhuman_core::openhuman::config::AgentConfig;
-use openhuman_core::openhuman::agent::context::prompt::{
+use neppy_core::openhuman::config::AgentConfig;
+use neppy_core::openhuman::agent::context::prompt::{
     render_ambient_environment, render_subagent_system_prompt, render_tools, render_user_files,
     ConnectedIntegration, CuratedMemoryPromptSnapshot, LearnedContextData, NamespaceSummary,
     PromptContext, PromptTool, SubagentRenderOptions, SystemPromptBuilder, ToolCallFormat,
     UserIdentity,
 };
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary as MemoryNamespaceSummary, RecallOpts,
 };
-use openhuman_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use openhuman_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
+use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::collections::{HashSet, VecDeque};
@@ -284,7 +284,7 @@ fn parent(workspace: PathBuf, model: Arc<ScriptedModel>) -> ParentExecutionConte
         ]
         .into_iter()
         .collect(),
-        turn_model_source: openhuman_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
             model,
         ),
         all_tools: Arc::new(tools),
@@ -378,7 +378,7 @@ fn prompt_sections_render_files_identity_memory_tools_and_ambient_blocks() -> Re
     let rendered = SystemPromptBuilder::with_defaults()
         .insert_section_before(
             "user_memory",
-            Box::new(openhuman_core::openhuman::agent::context::prompt::UserReflectionsSection),
+            Box::new(neppy_core::openhuman::agent::context::prompt::UserReflectionsSection),
         )
         .build(&ctx)?;
 

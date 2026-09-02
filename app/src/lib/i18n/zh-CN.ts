@@ -160,7 +160,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': '记忆库位于核心主机上。',
   'crossHostVault.message':
-    '此记忆库存储在 openhuman-core 主机（{os}）上。只能在该机器上打开或显示，无法从本设备访问。',
+    '此记忆库存储在 neppy-core 主机（{os}）上。只能在该机器上打开或显示，无法从本设备访问。',
   'conversations.toolFailure.whyLabel': '原因',
   'conversations.toolFailure.nextLabel': '接下来该怎么做',
   'conversations.toolFailure.missingPermission.cause': 'Neppy 目前还没有执行此操作的权限。',
@@ -4891,14 +4891,14 @@ const messages: TranslationMap = {
   'settings.mcpServer.title': 'MCP 服务器',
   'settings.mcpServer.toolsSectionTitle': '可用工具',
   'settings.mcpServer.toolsSectionDesc':
-    '运行 openhuman-core mcp 时通过 MCP stdio 服务器暴露的工具',
+    '运行 neppy-core mcp 时通过 MCP stdio 服务器暴露的工具',
   'settings.mcpServer.configSectionTitle': '客户端配置',
   'settings.mcpServer.configSectionDesc': '选择你的 MCP 客户端以生成对应的配置代码片段',
   'settings.mcpServer.copySnippet': '复制到剪贴板',
   'settings.mcpServer.copied': '已复制！',
   'settings.mcpServer.openConfigFile': '打开配置文件',
   'settings.mcpServer.binaryPathNotFound':
-    '未找到 Neppy 二进制文件。如果使用源码运行，请执行：cargo build --bin openhuman-core',
+    '未找到 Neppy 二进制文件。如果使用源码运行，请执行：cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': '打开配置文件失败',
   'settings.mcpServer.clientClaudeDesktop': '克劳德桌面',
   'settings.mcpServer.clientCursor': '光标',
@@ -6499,7 +6499,7 @@ const messages: TranslationMap = {
     '接受一个从未见过的主机密钥。已经变更的密钥仍会被拒绝，因为那种情况才说明确实出了问题。',
   'settings.gateway.containedLabel': '在容器中运行',
   'settings.gateway.imageLabel': '容器镜像',
-  'settings.gateway.binaryLabel': 'openhuman-core 的路径',
+  'settings.gateway.binaryLabel': 'neppy-core 的路径',
   'settings.gateway.kind.desktop': '在本应用内',
   'settings.gateway.kind.remote': '某个网址上的内核',
   'settings.gateway.kind.docker': '在本机的容器中',
@@ -6510,7 +6510,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': '该名称已保留给本应用自带的内核。',
   'settings.gateway.destinationRequired': '请填写要连接的机器。',
   'settings.gateway.imageRequired': '请填写要运行的容器镜像。',
-  'settings.gateway.binaryRequired': '请填写该机器上 openhuman-core 的路径。',
+  'settings.gateway.binaryRequired': '请填写该机器上 neppy-core 的路径。',
   'settings.gateway.portInvalid': 'SSH 端口必须是数字。',
 
   'devOptions.gateway': '位置',

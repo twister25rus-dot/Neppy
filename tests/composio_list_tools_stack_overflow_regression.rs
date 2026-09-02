@@ -108,13 +108,13 @@
 
 use anyhow::Result;
 use async_trait::async_trait;
-use openhuman_core::openhuman::agent::context::prompt::ToolCallFormat;
-use openhuman_core::openhuman::agent::harness::definition::{AgentDefinitionRegistry, ModelSpec};
-use openhuman_core::openhuman::agent::harness::{
+use neppy_core::openhuman::agent::context::prompt::ToolCallFormat;
+use neppy_core::openhuman::agent::harness::definition::{AgentDefinitionRegistry, ModelSpec};
+use neppy_core::openhuman::agent::harness::{
     run_subagent, with_parent_context, ParentExecutionContext, SubagentRunOptions,
 };
-use openhuman_core::openhuman::config::AgentConfig;
-use openhuman_core::openhuman::memory::{
+use neppy_core::openhuman::config::AgentConfig;
+use neppy_core::openhuman::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
 use parking_lot::Mutex;
@@ -339,8 +339,9 @@ async fn drive_subagent() {
     let parent = ParentExecutionContext {
         agent_definition_id: "orchestrator".into(),
         allowed_subagent_ids: ["integrations_agent".to_string()].into_iter().collect(),
-        turn_model_source:
-            openhuman_core::openhuman::agent::tinyagents::TurnModelSource::from_model(model),
+        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            model,
+        ),
         all_tools: Arc::new(vec![]),
         all_tool_specs: Arc::new(vec![]),
         visible_tool_names: std::collections::HashSet::new(),

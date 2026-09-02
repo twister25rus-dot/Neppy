@@ -14,7 +14,7 @@ use anyhow::{Context, Result};
 use rusqlite::{params, Connection};
 
 use super::sqlite_retry::{is_sqlite_corrupt, retry_on_sqlite_busy, BUSY_TIMEOUT};
-use openhuman_core::openhuman::channels::whatsapp_data::types::{
+use neppy_core::openhuman::channels::whatsapp_data::types::{
     ChatMeta, IngestMessage, ListChatsRequest, ListMessagesRequest, SearchMessagesRequest,
     WhatsAppChat, WhatsAppMessage,
 };
@@ -231,7 +231,7 @@ impl WhatsAppDataStore {
         // latch the scanner's 2–30s poll re-hits the wedged DB and re-pages on
         // every tick (TAURI-RUST-KNH: 1,813 events from one host).
         if !CORRUPT_REPORTED.swap(true, Ordering::Relaxed) {
-            openhuman_core::core::observability::report_error(
+            neppy_core::core::observability::report_error(
                 err,
                 "whatsapp_data",
                 "ingest_corrupt",

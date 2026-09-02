@@ -185,7 +185,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': 'Der Vault liegt auf dem Core-Host.',
   'crossHostVault.message':
-    'Dieser Memory-Vault wird auf dem openhuman-core-Host ({os}) gespeichert. Er kann nur auf diesem Rechner geöffnet oder angezeigt werden, nicht von diesem Gerät.',
+    'Dieser Memory-Vault wird auf dem neppy-core-Host ({os}) gespeichert. Er kann nur auf diesem Rechner geöffnet oder angezeigt werden, nicht von diesem Gerät.',
   'conversations.toolFailure.whyLabel': 'Warum',
   'conversations.toolFailure.nextLabel': 'Nächste Schritte',
   'conversations.toolFailure.missingPermission.cause':
@@ -5309,7 +5309,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.title': 'MCP-Server',
   'settings.mcpServer.toolsSectionTitle': 'Verfügbare Werkzeuge',
   'settings.mcpServer.toolsSectionDesc':
-    'Werkzeuge, die über den MCP-stdio-Server bereitgestellt werden, wenn openhuman-core mcp ausgeführt wird',
+    'Werkzeuge, die über den MCP-stdio-Server bereitgestellt werden, wenn neppy-core mcp ausgeführt wird',
   'settings.mcpServer.configSectionTitle': 'Client-Konfiguration',
   'settings.mcpServer.configSectionDesc':
     'Wähle deinen MCP-Client aus, um den passenden Konfigurationsausschnitt zu erzeugen',
@@ -5317,7 +5317,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': 'Kopiert!',
   'settings.mcpServer.openConfigFile': 'Konfigurationsdatei öffnen',
   'settings.mcpServer.binaryPathNotFound':
-    'Neppy-Binärdatei nicht gefunden. Wenn du aus dem Quellcode arbeitest, baue sie mit: cargo build --bin openhuman-core',
+    'Neppy-Binärdatei nicht gefunden. Wenn du aus dem Quellcode arbeitest, baue sie mit: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'Konfigurationsdatei konnte nicht geöffnet werden',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': 'Cursor',
@@ -7059,7 +7059,7 @@ const messages: TranslationMap = {
     'Akzeptiert einen noch nie gesehenen Hostschlüssel. Ein geänderter Schlüssel wird weiterhin abgelehnt, denn genau das deutet auf ein echtes Problem hin.',
   'settings.gateway.containedLabel': 'In einem Container ausführen',
   'settings.gateway.imageLabel': 'Container-Image',
-  'settings.gateway.binaryLabel': 'Pfad zu openhuman-core',
+  'settings.gateway.binaryLabel': 'Pfad zu neppy-core',
   'settings.gateway.kind.desktop': 'In dieser App',
   'settings.gateway.kind.remote': 'Ein Kern unter einer URL',
   'settings.gateway.kind.docker': 'In einem Container hier',
@@ -7070,7 +7070,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': 'Dieser Name ist für den eigenen Kern der App reserviert.',
   'settings.gateway.destinationRequired': 'Gib den Rechner an, zu dem verbunden werden soll.',
   'settings.gateway.imageRequired': 'Gib das Container-Image an, das laufen soll.',
-  'settings.gateway.binaryRequired': 'Gib den Pfad zu openhuman-core auf diesem Rechner an.',
+  'settings.gateway.binaryRequired': 'Gib den Pfad zu neppy-core auf diesem Rechner an.',
   'settings.gateway.portInvalid': 'Der SSH-Port muss eine Zahl sein.',
 
   'devOptions.gateway': 'Ort',

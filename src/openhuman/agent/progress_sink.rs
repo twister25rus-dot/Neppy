@@ -22,7 +22,7 @@
 //! ```no_run
 //! # async fn demo() {
 //! let (tx, mut rx) = tokio::sync::mpsc::channel(256);
-//! let turn = openhuman_core::agent_progress::with_progress_sink(tx, async {
+//! let turn = neppy_core::agent_progress::with_progress_sink(tx, async {
 //!     // any future that ends up in `agent_chat`
 //! });
 //! # let _ = (turn, rx.recv());

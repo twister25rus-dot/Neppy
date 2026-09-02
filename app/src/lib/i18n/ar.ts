@@ -164,7 +164,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': 'الخزنة موجودة على مضيف النواة.',
   'crossHostVault.message':
-    'يتم تخزين خزنة الذاكرة هذه على مضيف openhuman-core ({os}). لا يمكن فتحها أو عرضها إلا على ذلك الجهاز، وليس من هذا الجهاز.',
+    'يتم تخزين خزنة الذاكرة هذه على مضيف neppy-core ({os}). لا يمكن فتحها أو عرضها إلا على ذلك الجهاز، وليس من هذا الجهاز.',
   'conversations.toolFailure.whyLabel': 'لماذا',
   'conversations.toolFailure.nextLabel': 'ما الذي يجب فعله بعد ذلك',
   'conversations.toolFailure.missingPermission.cause': 'لا يملك Neppy الإذن للقيام بهذا بعد.',
@@ -5053,14 +5053,14 @@ const messages: TranslationMap = {
   'settings.mcpServer.title': 'Xqx0x',
   'settings.mcpServer.toolsSectionTitle': 'الأدوات المتاحة',
   'settings.mcpServer.toolsSectionDesc':
-    'الأدوات التي يتم كشفها عبر خادم MCP stdio عند تشغيل mcp openhuman-core',
+    'الأدوات التي يتم كشفها عبر خادم MCP stdio عند تشغيل mcp neppy-core',
   'settings.mcpServer.configSectionTitle': 'تكوين العميل',
   'settings.mcpServer.configSectionDesc': 'حدد عميل MCP الخاص بك لإنشاء مقتطف التكوين الصحيح',
   'settings.mcpServer.copySnippet': 'انسخ إلى الحافظة',
   'settings.mcpServer.copied': 'تم النسخ!',
   'settings.mcpServer.openConfigFile': 'فتح ملف التكوين',
   'settings.mcpServer.binaryPathNotFound':
-    'Neppy لم يتم العثور على الثنائي. في حالة التشغيل من المصدر، قم بالإنشاء باستخدام: cargo build --bin openhuman-core',
+    'Neppy لم يتم العثور على الثنائي. في حالة التشغيل من المصدر، قم بالإنشاء باستخدام: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'فشل في فتح ملف التكوين',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': 'المؤشر',
@@ -6714,7 +6714,7 @@ const messages: TranslationMap = {
     'يقبل مفتاح مضيف لم تره من قبل. أما المفتاح الذي تغيّر فيظل مرفوضًا، لأن تلك هي الحالة التي تعني أن هناك خطأ ما.',
   'settings.gateway.containedLabel': 'تشغيلها داخل حاوية',
   'settings.gateway.imageLabel': 'صورة الحاوية',
-  'settings.gateway.binaryLabel': 'مسار openhuman-core',
+  'settings.gateway.binaryLabel': 'مسار neppy-core',
   'settings.gateway.kind.desktop': 'داخل هذا التطبيق',
   'settings.gateway.kind.remote': 'نواة على رابط',
   'settings.gateway.kind.docker': 'في حاوية هنا',
@@ -6725,7 +6725,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': 'هذا الاسم محجوز لنواة التطبيق نفسه.',
   'settings.gateway.destinationRequired': 'أدخل الجهاز المراد الاتصال به.',
   'settings.gateway.imageRequired': 'أدخل صورة الحاوية المراد تشغيلها.',
-  'settings.gateway.binaryRequired': 'أدخل مسار openhuman-core على ذلك الجهاز.',
+  'settings.gateway.binaryRequired': 'أدخل مسار neppy-core على ذلك الجهاز.',
   'settings.gateway.portInvalid': 'يجب أن يكون منفذ SSH رقمًا.',
 
   'devOptions.gateway': 'الموقع',

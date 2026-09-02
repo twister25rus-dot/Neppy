@@ -1,4 +1,4 @@
-// Boot a real `openhuman-core` process and drive its tiny.place messaging RPCs.
+// Boot a real `neppy-core` process and drive its tiny.place messaging RPCs.
 //
 // openhuman is a Rust core exposing JSON-RPC over `POST /rpc`. All tiny.place
 // messaging lives in the core's `tinyplace` domain (methods
@@ -19,7 +19,7 @@ const HERE = resolve(fileURLToPath(import.meta.url), "..");
 const REPO_ROOT = resolve(HERE, "..", "..", "..");
 
 export const DEFAULT_CORE_BIN =
-  process.env.OPENHUMAN_CORE_BIN || join(REPO_ROOT, "target", "debug", "openhuman-core");
+  process.env.OPENHUMAN_CORE_BIN || join(REPO_ROOT, "target", "debug", "neppy-core");
 export const DEFAULT_BACKEND =
   process.env.TINYPLACE_API_BASE_URL || "http://localhost:18080";
 

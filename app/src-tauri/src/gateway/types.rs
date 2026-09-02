@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-/// The port `openhuman-core` serves RPC on inside a box.
+/// The port `neppy-core` serves RPC on inside a box.
 ///
 /// Fixed rather than configurable: it is an address in the box's own namespace,
 /// so it cannot collide with anything on this machine, and the port that
@@ -78,7 +78,7 @@ pub struct SshReach {
 pub enum Confinement {
     /// None. The core runs as an ordinary process on the target machine.
     Passthrough {
-        /// The `openhuman-core` binary over there.
+        /// The `neppy-core` binary over there.
         binary: PathBuf,
         /// The directory it runs in.
         #[serde(default, skip_serializing_if = "Option::is_none")]

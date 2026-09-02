@@ -213,7 +213,7 @@ pub(super) fn box_spec(
     Ok(spec)
 }
 
-/// The command that starts `openhuman-core` in a box.
+/// The command that starts `neppy-core` in a box.
 ///
 /// Pure and separate from running it, for the reason tinybox's own backends
 /// keep command construction in an `args` module: which binary is named and
@@ -225,7 +225,7 @@ pub(super) fn core_command(confinement: &Confinement, token: &str) -> ExecReques
         Confinement::Passthrough { binary, .. } => binary.display().to_string(),
         // The image's own core, on `PATH`. Naming a path here would tie the
         // gateway to one image's layout.
-        Confinement::Docker { .. } => "openhuman-core".to_owned(),
+        Confinement::Docker { .. } => "neppy-core".to_owned(),
     };
 
     ExecRequest::new([binary.as_str(), "serve"])
@@ -240,7 +240,7 @@ pub(super) fn core_command(confinement: &Confinement, token: &str) -> ExecReques
         .with_env("OPENHUMAN_CORE_PORT", CORE_PORT_IN_BOX.to_string())
 }
 
-/// Start `openhuman-core` in the box, detached, and return its handle.
+/// Start `neppy-core` in the box, detached, and return its handle.
 async fn start_core(
     sandbox: &dyn Sandbox,
     box_id: &BoxId,

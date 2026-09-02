@@ -173,7 +173,7 @@ const messages: TranslationMap = {
   // Cross-host vault (#4278)
   'crossHostVault.title': 'O vault está no host do core.',
   'crossHostVault.message':
-    'Este vault de memória fica armazenado no host openhuman-core ({os}). Só pode ser aberto ou exibido nessa máquina, não a partir deste dispositivo.',
+    'Este vault de memória fica armazenado no host neppy-core ({os}). Só pode ser aberto ou exibido nessa máquina, não a partir deste dispositivo.',
   'conversations.toolFailure.whyLabel': 'Por quê',
   'conversations.toolFailure.nextLabel': 'O que fazer a seguir',
   'conversations.toolFailure.missingPermission.cause':
@@ -5246,7 +5246,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.title': 'Servidor MCP',
   'settings.mcpServer.toolsSectionTitle': 'Ferramentas disponíveis',
   'settings.mcpServer.toolsSectionDesc':
-    'Ferramentas expostas por meio do servidor MCP stdio ao executar openhuman-core mcp',
+    'Ferramentas expostas por meio do servidor MCP stdio ao executar neppy-core mcp',
   'settings.mcpServer.configSectionTitle': 'Configuração do cliente',
   'settings.mcpServer.configSectionDesc':
     'Selecione seu cliente MCP para gerar o snippet de configuração correto',
@@ -5254,7 +5254,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': 'Copiado!',
   'settings.mcpServer.openConfigFile': 'Abra o arquivo de configuração',
   'settings.mcpServer.binaryPathNotFound':
-    'Neppy binário não encontrado. Se estiver executando a partir do código-fonte, crie com: cargo build --bin openhuman-core',
+    'Neppy binário não encontrado. Se estiver executando a partir do código-fonte, crie com: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'Falha ao abrir o arquivo de configuração',
   'settings.mcpServer.clientClaudeDesktop': 'Área de trabalho Claude',
   'settings.mcpServer.clientCursor': 'Cursor',
@@ -6983,7 +6983,7 @@ const messages: TranslationMap = {
     'Aceita uma chave de host nunca vista. Uma chave que mudou continua sendo recusada, porque é esse o caso que indica que algo está errado.',
   'settings.gateway.containedLabel': 'Executar dentro de um contêiner',
   'settings.gateway.imageLabel': 'Imagem do contêiner',
-  'settings.gateway.binaryLabel': 'Caminho para openhuman-core',
+  'settings.gateway.binaryLabel': 'Caminho para neppy-core',
   'settings.gateway.kind.desktop': 'Dentro desta aplicação',
   'settings.gateway.kind.remote': 'Um núcleo num URL',
   'settings.gateway.kind.docker': 'Em um contêiner neste computador',
@@ -6994,7 +6994,7 @@ const messages: TranslationMap = {
   'settings.gateway.idReserved': 'Esse nome está reservado para o núcleo da própria aplicação.',
   'settings.gateway.destinationRequired': 'Indique a máquina à qual deseja se conectar.',
   'settings.gateway.imageRequired': 'Indique a imagem de contêiner a executar.',
-  'settings.gateway.binaryRequired': 'Indique o caminho para openhuman-core nessa máquina.',
+  'settings.gateway.binaryRequired': 'Indique o caminho para neppy-core nessa máquina.',
   'settings.gateway.portInvalid': 'A porta SSH deve ser um número.',
 
   'devOptions.gateway': 'Local',

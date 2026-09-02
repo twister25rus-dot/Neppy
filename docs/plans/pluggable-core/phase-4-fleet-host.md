@@ -1,10 +1,10 @@
 # Phase 4 — Fleet supervisor: team/cloud hosting
 
-**Status:** MVP **DONE** — `openhuman-fleet` binary (`src/bin/fleet.rs`,
-`[[bin]] name = "openhuman-fleet"`). Remaining: backend membership sync,
+**Status:** MVP **DONE** — `neppy-fleet` binary (`src/bin/fleet.rs`,
+`[[bin]] name = "neppy-fleet"`). Remaining: backend membership sync,
 ready-file port discovery, admin API for edge tokens (see "MVP vs production").
 
-**Goal:** a supervisor (`openhuman-fleet`) that hosts one core per team member
+**Goal:** a supervisor (`neppy-fleet`) that hosts one core per team member
 and fronts them behind a single endpoint, so a team admin can
 provision/manage members' assistants while every existing client
 (`CloudHttpTransport`) keeps working unchanged.
@@ -15,7 +15,7 @@ provision/manage members' assistants while every existing client
 weight on the shipped desktop/lib build: it is gated behind the default-OFF
 `bin-tools` feature):
 
-- **Process-per-tenant MVP**: spawns `openhuman-core run --jsonrpc-only` per tenant
+- **Process-per-tenant MVP**: spawns `neppy-core run --jsonrpc-only` per tenant
   with a per-user `OPENHUMAN_WORKSPACE`, a minted `OPENHUMAN_CORE_TOKEN`, and
   `OPENHUMAN_DISABLE_CHANNEL_LISTENERS=1` (this is the `ServiceSet::headless_api`
   shape from Phase 1). Before keeping a tenant registered, probes the assigned
@@ -63,7 +63,7 @@ distinct OS users or containers, not from a same-user supervisor process.
 client (CloudHttpTransport, per-user base URL + Bearer)
    │
    ▼
-openhuman-fleet supervisor
+neppy-fleet supervisor
    ├─ edge auth: mint/validate per-tenant session tokens
    ├─ reverse proxy  /:user_id/rpc  →  127.0.0.1:<that user's core port>
    ├─ membership sync ⇄ tinyhumansai/backend  (teams stay backend-truth)
@@ -98,7 +98,7 @@ Key properties:
 
 ## Scope
 
-1. `openhuman-fleet` crate: tenant registry (backed by backend membership),
+1. `neppy-fleet` crate: tenant registry (backed by backend membership),
    lifecycle manager, token mint/validate, reverse proxy, health loop.
 2. Container image + deployment doc for `HostKind::Docker` cores
    (`ServiceSet::headless_api()`).

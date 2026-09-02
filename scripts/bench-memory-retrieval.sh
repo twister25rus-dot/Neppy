@@ -17,9 +17,9 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERBOSE=0
 [[ "${1:-}" == "--verbose" ]] && VERBOSE=1
 
-CORE_BIN="$REPO_ROOT/target/debug/openhuman-core"
+CORE_BIN="$REPO_ROOT/target/debug/neppy-core"
 if [[ ! -x "$CORE_BIN" ]]; then
-    echo "ERROR: Build openhuman-core first: cargo build --bin openhuman-core"
+    echo "ERROR: Build neppy-core first: cargo build --bin neppy-core"
     exit 1
 fi
 

@@ -5,10 +5,10 @@
 use std::process::Command;
 
 fn run(args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
+    Command::new(env!("CARGO_BIN_EXE_neppy-core"))
         .args(args)
         .output()
-        .expect("run openhuman-core")
+        .expect("run neppy-core")
 }
 
 #[test]

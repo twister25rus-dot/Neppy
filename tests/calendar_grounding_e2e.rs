@@ -1,8 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use openhuman_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-use openhuman_core::openhuman::agent::Agent;
-use openhuman_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
+use neppy_core::openhuman::agent::dispatcher::NativeToolDispatcher;
+use neppy_core::openhuman::agent::Agent;
+use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::sync::Arc;
@@ -154,13 +154,14 @@ async fn test_integrations_agent_has_current_date_context() -> Result<()> {
     let captured_messages = Arc::new(Mutex::new(Vec::new()));
     let model = calendar_model(captured_messages.clone());
 
-    let _ = openhuman_core::openhuman::agent::harness::definition::AgentDefinitionRegistry::init_global_builtins();
+    let _ = neppy_core::openhuman::agent::harness::definition::AgentDefinitionRegistry::init_global_builtins();
 
-    let parent = openhuman_core::openhuman::agent::harness::ParentExecutionContext {
+    let parent = neppy_core::openhuman::agent::harness::ParentExecutionContext {
         agent_definition_id: "orchestrator".into(),
         allowed_subagent_ids: ["integrations_agent".to_string()].into_iter().collect(),
-        turn_model_source:
-            openhuman_core::openhuman::agent::tinyagents::TurnModelSource::from_model(model),
+        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            model,
+        ),
         all_tools: Arc::new(vec![Box::new(MockCalendarTool)]),
         all_tool_specs: Arc::new(vec![MockCalendarTool.spec()]),
         visible_tool_names: std::collections::HashSet::new(),
@@ -170,14 +171,13 @@ async fn test_integrations_agent_has_current_date_context() -> Result<()> {
         workspace_dir: std::env::temp_dir(),
         workspace_descriptor: None,
         memory: Arc::new(StubMemory),
-        agent_config: openhuman_core::openhuman::config::AgentConfig::default(),
+        agent_config: neppy_core::openhuman::config::AgentConfig::default(),
         workflows: Arc::new(vec![]),
         memory_context: Arc::new(None),
         session_id: "test-session".into(),
         channel: "test".into(),
         connected_integrations: vec![],
-        tool_call_format:
-            openhuman_core::openhuman::agent::context::prompt::ToolCallFormat::PFormat,
+        tool_call_format: neppy_core::openhuman::agent::context::prompt::ToolCallFormat::PFormat,
         session_key: "0_test".into(),
         session_parent_prefix: None,
         on_progress: None,
@@ -185,7 +185,7 @@ async fn test_integrations_agent_has_current_date_context() -> Result<()> {
     };
 
     let mut def =
-        openhuman_core::openhuman::agent::harness::definition::AgentDefinitionRegistry::global()
+        neppy_core::openhuman::agent::harness::definition::AgentDefinitionRegistry::global()
             .unwrap()
             .get("integrations_agent")
             .unwrap()
@@ -200,13 +200,13 @@ async fn test_integrations_agent_has_current_date_context() -> Result<()> {
     // definition (prompt, tools, scope) while routing through the captured
     // mock provider. Provider *routing* for Hint sub-agents is covered by
     // `subagent_runner::ops::tests::resolve_subagent_provider_*`.
-    def.model = openhuman_core::openhuman::agent::harness::definition::ModelSpec::Inherit;
+    def.model = neppy_core::openhuman::agent::harness::definition::ModelSpec::Inherit;
 
-    let _ = openhuman_core::openhuman::agent::harness::with_parent_context(parent, async {
-        openhuman_core::openhuman::agent::harness::run_subagent(
+    let _ = neppy_core::openhuman::agent::harness::with_parent_context(parent, async {
+        neppy_core::openhuman::agent::harness::run_subagent(
             &def,
             "list my calendar events for today",
-            openhuman_core::openhuman::agent::harness::SubagentRunOptions::default(),
+            neppy_core::openhuman::agent::harness::SubagentRunOptions::default(),
         )
         .await
     })
@@ -233,13 +233,13 @@ async fn test_integrations_agent_has_current_date_context() -> Result<()> {
 struct StubMemory;
 
 #[async_trait]
-impl openhuman_core::openhuman::memory::Memory for StubMemory {
+impl neppy_core::openhuman::memory::Memory for StubMemory {
     async fn store(
         &self,
         _: &str,
         _: &str,
         _: &str,
-        _: openhuman_core::openhuman::memory::MemoryCategory,
+        _: neppy_core::openhuman::memory::MemoryCategory,
         _: Option<&str>,
     ) -> Result<()> {
         Ok(())
@@ -248,23 +248,23 @@ impl openhuman_core::openhuman::memory::Memory for StubMemory {
         &self,
         _: &str,
         _: usize,
-        _: openhuman_core::openhuman::memory::RecallOpts<'_>,
-    ) -> Result<Vec<openhuman_core::openhuman::memory::MemoryEntry>> {
+        _: neppy_core::openhuman::memory::RecallOpts<'_>,
+    ) -> Result<Vec<neppy_core::openhuman::memory::MemoryEntry>> {
         Ok(vec![])
     }
     async fn get(
         &self,
         _: &str,
         _: &str,
-    ) -> Result<Option<openhuman_core::openhuman::memory::MemoryEntry>> {
+    ) -> Result<Option<neppy_core::openhuman::memory::MemoryEntry>> {
         Ok(None)
     }
     async fn list(
         &self,
         _: Option<&str>,
-        _: Option<&openhuman_core::openhuman::memory::MemoryCategory>,
+        _: Option<&neppy_core::openhuman::memory::MemoryCategory>,
         _: Option<&str>,
-    ) -> Result<Vec<openhuman_core::openhuman::memory::MemoryEntry>> {
+    ) -> Result<Vec<neppy_core::openhuman::memory::MemoryEntry>> {
         Ok(vec![])
     }
     async fn forget(&self, _: &str, _: &str) -> Result<bool> {
@@ -272,7 +272,7 @@ impl openhuman_core::openhuman::memory::Memory for StubMemory {
     }
     async fn namespace_summaries(
         &self,
-    ) -> Result<Vec<openhuman_core::openhuman::memory::NamespaceSummary>> {
+    ) -> Result<Vec<neppy_core::openhuman::memory::NamespaceSummary>> {
         Ok(vec![])
     }
     async fn count(&self) -> Result<usize> {

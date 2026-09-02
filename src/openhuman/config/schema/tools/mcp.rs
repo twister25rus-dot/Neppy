@@ -163,7 +163,7 @@ pub struct McpClientIdentityConfig {
 }
 
 fn default_mcp_client_name() -> String {
-    "openhuman-core".into()
+    "neppy-core".into()
 }
 
 fn default_mcp_client_title() -> String {

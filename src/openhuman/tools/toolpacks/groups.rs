@@ -7,7 +7,7 @@
 //! membership must not be editable by config or RPC, or a caller could move a
 //! dangerous tool out of the reviewed surface.
 //!
-//! An embedder is a different question. `openhuman_core` is consumed as a
+//! An embedder is a different question. `neppy_core` is consumed as a
 //! library through [`Harness`](crate::Harness), and there the pack table is not
 //! a compression choice but a *capability* one: a host embedding the harness to
 //! summarise documents has no use for the crypto belt at any disclosure level,

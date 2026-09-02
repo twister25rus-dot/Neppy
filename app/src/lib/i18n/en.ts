@@ -1597,7 +1597,7 @@ const en: TranslationMap = {
     'Accepts a host key you have never seen. A key that has changed is still refused, because that is the case that means something is wrong.',
   'settings.gateway.containedLabel': 'Run it inside a container',
   'settings.gateway.imageLabel': 'Container image',
-  'settings.gateway.binaryLabel': 'Path to openhuman-core',
+  'settings.gateway.binaryLabel': 'Path to neppy-core',
   'settings.gateway.kind.desktop': 'Inside this app',
   'settings.gateway.kind.remote': 'A core at a URL',
   'settings.gateway.kind.docker': 'In a container here',
@@ -1608,7 +1608,7 @@ const en: TranslationMap = {
   'settings.gateway.idReserved': 'That name is reserved for this app’s own core.',
   'settings.gateway.destinationRequired': 'Enter the machine to connect to.',
   'settings.gateway.imageRequired': 'Enter the container image to run.',
-  'settings.gateway.binaryRequired': 'Enter the path to openhuman-core on that machine.',
+  'settings.gateway.binaryRequired': 'Enter the path to neppy-core on that machine.',
   'settings.gateway.portInvalid': 'The SSH port must be a number.',
   'settings.heartbeat.title': 'Heartbeat & loops',
   'settings.usage.title': 'Usage & Limits',
@@ -2961,7 +2961,7 @@ const en: TranslationMap = {
   // Cross-host vault (#4278): shared by VaultHealthChecklist + ObsidianVaultSection
   'crossHostVault.title': 'Vault is on the core host.',
   'crossHostVault.message':
-    'This memory vault is stored on the openhuman-core host ({os}). It can only be opened or revealed on that machine, not from this device.',
+    'This memory vault is stored on the neppy-core host ({os}). It can only be opened or revealed on that machine, not from this device.',
 
   // Memory data panel (storage explainer)
   'memoryData.howItWorks': 'How memory storage works',
@@ -5779,7 +5779,7 @@ const en: TranslationMap = {
   'settings.mcpServer.title': 'MCP Server',
   'settings.mcpServer.toolsSectionTitle': 'Available Tools',
   'settings.mcpServer.toolsSectionDesc':
-    'Tools exposed via the MCP stdio server when running openhuman-core mcp',
+    'Tools exposed via the MCP stdio server when running neppy-core mcp',
   'settings.mcpServer.configSectionTitle': 'Client Configuration',
   'settings.mcpServer.configSectionDesc':
     'Select your MCP client to generate the correct configuration snippet',
@@ -5787,7 +5787,7 @@ const en: TranslationMap = {
   'settings.mcpServer.copied': 'Copied!',
   'settings.mcpServer.openConfigFile': 'Open Config File',
   'settings.mcpServer.binaryPathNotFound':
-    'Neppy binary not found. If running from source, build with: cargo build --bin openhuman-core',
+    'Neppy binary not found. If running from source, build with: cargo build --bin neppy-core',
   'settings.mcpServer.openConfigError': 'Failed to open config file',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': 'Cursor',

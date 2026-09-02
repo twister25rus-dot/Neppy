@@ -1,13 +1,13 @@
 use async_trait::async_trait;
-use openhuman_core::core::bus::BUS;
-use openhuman_core::openhuman::agent::bus::{
+use neppy_core::core::bus::BUS;
+use neppy_core::openhuman::agent::bus::{
     register_agent_handlers, AgentTurnRequest, AgentTurnResponse, AGENT_RUN_TURN_METHOD,
 };
-use openhuman_core::openhuman::agent::progress::AgentProgress;
-use openhuman_core::openhuman::config::{MultimodalConfig, MultimodalFileConfig};
-use openhuman_core::openhuman::agent::messages::ChatMessage;
-use openhuman_core::openhuman::security::POLICY_BLOCKED_MARKER;
-use openhuman_core::openhuman::tools::{PermissionLevel, Tool, ToolContent, ToolResult, ToolScope};
+use neppy_core::openhuman::agent::progress::AgentProgress;
+use neppy_core::openhuman::config::{MultimodalConfig, MultimodalFileConfig};
+use neppy_core::openhuman::agent::messages::ChatMessage;
+use neppy_core::openhuman::security::POLICY_BLOCKED_MARKER;
+use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolContent, ToolResult, ToolScope};
 use serde_json::json;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -200,12 +200,12 @@ async fn run_turn(
     on_delta: Option<tokio::sync::mpsc::Sender<String>>,
     on_progress: Option<tokio::sync::mpsc::Sender<AgentProgress>>,
 ) -> Result<AgentTurnResponse, String> {
-    openhuman_core::core::bus::init().await.expect("bus init");
+    neppy_core::core::bus::init().await.expect("bus init");
     register_agent_handlers();
     BUS.native().request::<AgentTurnRequest, AgentTurnResponse>(
         AGENT_RUN_TURN_METHOD,
         AgentTurnRequest {
-            turn_model_source: openhuman_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
                 model,
             ),
             history: vec![
@@ -226,7 +226,7 @@ async fn run_turn(
             visible_tool_names: None,
             extra_tools: Vec::new(),
             on_progress,
-            origin: openhuman_core::openhuman::agent::turn_origin::AgentTurnOrigin::Cli,
+            origin: neppy_core::openhuman::agent::turn_origin::AgentTurnOrigin::Cli,
         },
     )
     .await

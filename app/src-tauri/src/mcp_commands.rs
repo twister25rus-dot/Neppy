@@ -1,7 +1,7 @@
 //! Tauri commands for MCP server configuration.
 //!
 //! Exposes two commands to the frontend:
-//! - `mcp_resolve_binary_path` — locate the `openhuman-core` binary on disk.
+//! - `mcp_resolve_binary_path` — locate the `neppy-core` binary on disk.
 //! - `mcp_open_client_config` — open a supported MCP client's config file in
 //!   the system default editor so the user can paste the generated snippet.
 
@@ -10,7 +10,7 @@ use std::path::PathBuf;
 /// Information returned to the frontend about the MCP server binary.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct McpBinaryInfo {
-    /// Absolute path to the `openhuman-core` binary.
+    /// Absolute path to the `neppy-core` binary.
     pub path: String,
     /// OS string: `"macos"` | `"windows"` | `"linux"`.
     pub os: String,
@@ -27,13 +27,13 @@ fn current_os() -> &'static str {
 }
 
 /// Walk up from `start` until we find a directory containing
-/// `target/debug/openhuman-core[.exe]`. Returns the full path to the binary
+/// `target/debug/neppy-core[.exe]`. Returns the full path to the binary
 /// when found, or `None` if the tree is exhausted.
 fn find_debug_binary_walking_up(start: &std::path::Path) -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
-    let bin_name = "openhuman-core.exe";
+    let bin_name = "neppy-core.exe";
     #[cfg(not(target_os = "windows"))]
-    let bin_name = "openhuman-core";
+    let bin_name = "neppy-core";
 
     let mut dir = start.to_path_buf();
     loop {
@@ -47,22 +47,22 @@ fn find_debug_binary_walking_up(start: &std::path::Path) -> Option<PathBuf> {
     }
 }
 
-/// Resolve the absolute path to the `openhuman-core` binary.
+/// Resolve the absolute path to the `neppy-core` binary.
 ///
 /// In dev builds (`cfg!(debug_assertions)`) we:
 /// 1. Check `OPENHUMAN_CORE_BINARY_PATH` env var first.
-/// 2. Walk up from `current_exe()` looking for `target/debug/openhuman-core`.
+/// 2. Walk up from `current_exe()` looking for `target/debug/neppy-core`.
 ///
 /// In release builds the binary is a sibling of the shell executable:
-/// - macOS: `../MacOS/openhuman-core` relative to the host exe.
+/// - macOS: `../MacOS/neppy-core` relative to the host exe.
 /// - Windows / Linux: same directory as the host exe.
 fn resolve_binary_path() -> Result<PathBuf, String> {
     log::debug!("[mcp_commands] mcp_resolve_binary_path: resolving binary path");
 
     #[cfg(target_os = "windows")]
-    let bin_name = "openhuman-core.exe";
+    let bin_name = "neppy-core.exe";
     #[cfg(not(target_os = "windows"))]
-    let bin_name = "openhuman-core";
+    let bin_name = "neppy-core";
 
     if cfg!(debug_assertions) {
         // Dev mode: env override takes priority.
@@ -106,7 +106,7 @@ fn resolve_binary_path() -> Result<PathBuf, String> {
 
     #[cfg(target_os = "macos")]
     let candidate = {
-        // macOS .app: Contents/MacOS/<host> → Contents/MacOS/openhuman-core
+        // macOS .app: Contents/MacOS/<host> → Contents/MacOS/neppy-core
         exe.parent()
             .map(|p| p.join(bin_name))
             .ok_or_else(|| "current_exe has no parent directory".to_string())?
@@ -120,7 +120,7 @@ fn resolve_binary_path() -> Result<PathBuf, String> {
 
     if !candidate.exists() {
         return Err(format!(
-            "openhuman-core binary not found at expected path: {}",
+            "neppy-core binary not found at expected path: {}",
             candidate.display()
         ));
     }
@@ -132,7 +132,7 @@ fn resolve_binary_path() -> Result<PathBuf, String> {
     Ok(candidate)
 }
 
-/// Tauri command — resolve the `openhuman-core` binary path and OS name.
+/// Tauri command — resolve the `neppy-core` binary path and OS name.
 ///
 /// The frontend uses the returned path to generate client config JSON snippets
 /// that tell MCP clients (Claude Desktop, Cursor, Codex, Zed) how to spawn the
@@ -362,26 +362,26 @@ mod tests {
 
     /// In debug builds (the only mode in which `cargo test` runs), the binary
     /// path resolver should either find `OPENHUMAN_CORE_BINARY_PATH` or locate
-    /// `target/debug/openhuman-core` by walking up from the test executable.
+    /// `target/debug/neppy-core` by walking up from the test executable.
     ///
-    /// We only assert the path *contains* `openhuman-core` — the binary may or
+    /// We only assert the path *contains* `neppy-core` — the binary may or
     /// may not exist on disk in a fresh checkout, so we don't assert `Ok` here;
     /// instead we verify the error message is sensible when the file is absent.
     #[test]
-    fn binary_path_result_contains_openhuman_core() {
+    fn binary_path_result_contains_neppy_core() {
         match resolve_binary_path() {
             Ok(p) => {
                 let s = p.display().to_string();
                 assert!(
-                    s.contains("openhuman-core"),
-                    "resolved path should contain 'openhuman-core', got: {s}"
+                    s.contains("neppy-core"),
+                    "resolved path should contain 'neppy-core', got: {s}"
                 );
             }
             Err(e) => {
                 // Acceptable in a clean CI checkout where the binary hasn't
                 // been built yet. The error must be descriptive.
                 assert!(
-                    e.contains("openhuman-core")
+                    e.contains("neppy-core")
                         || e.contains("current_exe")
                         || e.contains("target"),
                     "error message should reference the binary or path: {e}"
@@ -394,7 +394,7 @@ mod tests {
     fn find_debug_binary_returns_none_for_empty_dir() {
         let dir = tempfile::tempdir().expect("tempdir");
         // Walk up from a fresh tempdir in the system temp folder — no ancestor
-        // of /tmp (or equivalent) will contain target/debug/openhuman-core.
+        // of /tmp (or equivalent) will contain target/debug/neppy-core.
         let result = find_debug_binary_walking_up(dir.path());
         assert!(
             result.is_none(),

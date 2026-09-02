@@ -1,6 +1,6 @@
 # `scripts/bench/` — agent-scale benchmarks
 
-Drive a **real `openhuman-core` server process** at concurrency against a
+Drive a **real `neppy-core` server process** at concurrency against a
 mocked LLM, sample its CPU and memory from the outside, and report a leak
 verdict.
 
@@ -11,7 +11,7 @@ the reason this directory exists rather than another scenario in the old one.
 
 |                | `scripts/profile/`                      | `scripts/bench/` (here)                       |
 | -------------- | --------------------------------------- | --------------------------------------------- |
-| Core runs as   | a library, embedded in the bench binary | a normally-built `openhuman-core serve` process |
+| Core runs as   | a library, embedded in the bench binary | a normally-built `neppy-core serve` process |
 | Driven through | direct `Agent` calls                    | JSON-RPC over HTTP `/rpc`                      |
 | LLM mocked by  | a native `ChatModel` override           | an HTTP endpoint the core dials               |
 | Needs          | `--features rss-bench`                  | nothing — the shipped feature set             |
@@ -39,7 +39,7 @@ but attributes less precisely. Use `profile/` to find out *what* costs; use
 - A release core binary:
 
 ```bash
-cargo build --release --bin openhuman-core \
+cargo build --release --bin neppy-core \
   --no-default-features --features "$(bash scripts/ci/product-features.sh)"
 ```
 

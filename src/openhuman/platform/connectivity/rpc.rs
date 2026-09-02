@@ -83,7 +83,7 @@ enum ListenerFingerprint {
 impl ListenerFingerprint {
     fn as_human_readable(&self) -> String {
         match self {
-            Self::NeppyCore => "openhuman-core".to_string(),
+            Self::NeppyCore => "neppy-core".to_string(),
             Self::Other(reason) => reason.clone(),
         }
     }
@@ -921,7 +921,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_listen_port_prefers_openhuman_core_rpc_url() {
+    fn resolve_listen_port_prefers_neppy_core_rpc_url() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let prev_rpc = std::env::var("OPENHUMAN_CORE_RPC_URL").ok();
         let prev_port = std::env::var("OPENHUMAN_CORE_PORT").ok();

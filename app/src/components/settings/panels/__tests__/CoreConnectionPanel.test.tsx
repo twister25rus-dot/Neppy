@@ -135,9 +135,9 @@ describe('CoreConnectionPanel', () => {
     expect(mode.token).toBe('remote-token-xyz');
 
     // Persisted synchronously to localStorage (mirrors the cloud-mode picker).
-    expect(localStorage.getItem('openhuman_core_mode')).toBe('cloud');
-    expect(localStorage.getItem('openhuman_core_rpc_url')).toBe('https://core.example.com/rpc');
-    expect(localStorage.getItem('openhuman_core_rpc_token')).toBe('remote-token-xyz');
+    expect(localStorage.getItem('neppy_core_mode')).toBe('cloud');
+    expect(localStorage.getItem('neppy_core_rpc_url')).toBe('https://core.example.com/rpc');
+    expect(localStorage.getItem('neppy_core_rpc_token')).toBe('remote-token-xyz');
 
     // Caches cleared so the new endpoint takes effect on restart.
     expect(hoisted.clearCoreRpcUrlCache).toHaveBeenCalled();
@@ -243,9 +243,9 @@ describe('CoreConnectionPanel', () => {
   test('switching from remote back to local clears persistence, dispatches, and restarts', async () => {
     hoisted.testCoreRpcConnection.mockResolvedValue(okResponse());
     // Seed persisted cloud values so we can assert they are cleared.
-    localStorage.setItem('openhuman_core_mode', 'cloud');
-    localStorage.setItem('openhuman_core_rpc_url', 'https://core.example.com/rpc');
-    localStorage.setItem('openhuman_core_rpc_token', 'tok-123456');
+    localStorage.setItem('neppy_core_mode', 'cloud');
+    localStorage.setItem('neppy_core_rpc_url', 'https://core.example.com/rpc');
+    localStorage.setItem('neppy_core_rpc_token', 'tok-123456');
 
     const Panel = await importPanel();
     const { store } = renderWithProviders(<Panel />, { preloadedState: CLOUD_STATE });
@@ -259,8 +259,8 @@ describe('CoreConnectionPanel', () => {
     await waitFor(() => expect(hoisted.restartApp).toHaveBeenCalledTimes(1));
 
     expect(store.getState().coreMode.mode.kind).toBe('local');
-    expect(localStorage.getItem('openhuman_core_mode')).toBe('local');
-    expect(localStorage.getItem('openhuman_core_rpc_url')).toBeNull();
-    expect(localStorage.getItem('openhuman_core_rpc_token')).toBeNull();
+    expect(localStorage.getItem('neppy_core_mode')).toBe('local');
+    expect(localStorage.getItem('neppy_core_rpc_url')).toBeNull();
+    expect(localStorage.getItem('neppy_core_rpc_token')).toBeNull();
   });
 });

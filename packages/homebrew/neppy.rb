@@ -8,11 +8,11 @@ class Neppy < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/openhuman-core-@VERSION@-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/neppy-core-@VERSION@-aarch64-apple-darwin.tar.gz"
       sha256 "@SHA256_MACOS_ARM64@"
     end
     on_intel do
-      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/openhuman-core-@VERSION@-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/neppy-core-@VERSION@-x86_64-apple-darwin.tar.gz"
       sha256 "@SHA256_MACOS_X64@"
     end
   end
@@ -20,18 +20,18 @@ class Neppy < Formula
   on_linux do
     on_arm do
       # ARM64 (aarch64)
-      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/openhuman-core-@VERSION@-aarch64-unknown-linux-gnu.tar.gz"
+      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/neppy-core-@VERSION@-aarch64-unknown-linux-gnu.tar.gz"
       sha256 "@SHA256_LINUX_ARM64@"
     end
     on_intel do
-      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/openhuman-core-@VERSION@-x86_64-unknown-linux-gnu.tar.gz"
+      url "https://github.com/tinyhumansai/openhuman/releases/download/v@VERSION@/neppy-core-@VERSION@-x86_64-unknown-linux-gnu.tar.gz"
       sha256 "@SHA256_LINUX_X64@"
     end
   end
 
   def install
-    bin.install "openhuman-core"
-    mv bin/"openhuman-core", bin/"openhuman"
+    bin.install "neppy-core"
+    mv bin/"neppy-core", bin/"openhuman"
   end
 
   test do

@@ -7,8 +7,8 @@
  * - Tray setup on linux+cef (skipped without panicking)
  * - Grep-friendly logging patterns for diagnostics
  *
- * This spec validates that the Linux .deb package can find openhuman-core
- * in system paths like /usr/bin/openhuman-core when installed via .deb.
+ * This spec validates that the Linux .deb package can find neppy-core
+ * in system paths like /usr/bin/neppy-core when installed via .deb.
  *
  * Coverage:
  * - core_process::default_core_bin() resolution paths

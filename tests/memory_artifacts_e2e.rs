@@ -9,8 +9,8 @@ use tempfile::tempdir;
 
 use chrono::{TimeZone, Utc};
 
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::memory::tree::ingest::{ingest_summary, SummaryIngestInput};
+use neppy_core::openhuman::config::Config;
+use neppy_core::openhuman::memory::tree::ingest::{ingest_summary, SummaryIngestInput};
 use tinycortex::memory::ingest::canonicalize::chat::{ChatBatch, ChatMessage};
 use tinymemory_core::ingest_pipeline::ingest_chat;
 use tinymemory_core::queue::drain_until_idle;
@@ -29,7 +29,7 @@ fn ensure_memory_seams() {
             .name("memory-artifacts-e2e-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
+                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
                     Config::default(),
                 ));
             })

@@ -13,7 +13,7 @@
 # Options:
 #   -v, --verbose    Enable debug logging
 #   --workspace DIR  Override OPENHUMAN_WORKSPACE
-#   --binary PATH    Override the openhuman-core binary path
+#   --binary PATH    Override the neppy-core binary path
 
 set -euo pipefail
 
@@ -37,16 +37,16 @@ resolve_binary() {
     esac
 
     for bin in \
-        "$REPO_ROOT/app/src-tauri/binaries/openhuman-core-$arch" \
-        "$REPO_ROOT/target/debug/openhuman-core" \
-        "$REPO_ROOT/target/release/openhuman-core"; do
+        "$REPO_ROOT/app/src-tauri/binaries/neppy-core-$arch" \
+        "$REPO_ROOT/target/debug/neppy-core" \
+        "$REPO_ROOT/target/release/neppy-core"; do
         if [ -x "$bin" ]; then
             echo "$bin"
             return
         fi
     done
 
-    echo >&2 "error: could not find openhuman-core binary. Build with: cargo build --bin openhuman-core"
+    echo >&2 "error: could not find neppy-core binary. Build with: cargo build --bin neppy-core"
     exit 1
 }
 

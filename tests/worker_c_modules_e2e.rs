@@ -16,8 +16,8 @@ use reqwest::StatusCode;
 use serde_json::{json, Value};
 use tempfile::{tempdir, TempDir};
 
-use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
-use openhuman_core::core::jsonrpc::build_core_http_router;
+use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
+use neppy_core::core::jsonrpc::build_core_http_router;
 
 const TEST_RPC_TOKEN: &str = "worker-c-modules-e2e-token";
 
@@ -109,7 +109,7 @@ embedding_dimensions = 0
 embedding_strict = false
 "#;
     std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
-    let _: openhuman_core::openhuman::config::Config =
+    let _: neppy_core::openhuman::config::Config =
         toml::from_str(cfg).expect("test config must match schema");
 }
 
@@ -123,8 +123,8 @@ async fn setup() -> Harness {
         .name("worker-c-memory-seams".to_string())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| {
-            openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
-                openhuman_core::openhuman::config::Config::default(),
+            neppy_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
+                neppy_core::openhuman::config::Config::default(),
             ));
         })
         .expect("spawn worker-c memory seam installer")
@@ -853,8 +853,8 @@ async fn memory_tree_ingest_feeds_memory_sync_status() {
     // its workspace at load; this is the only case in the binary that reaches
     // the driver, so nothing else contends for the slot.
     #[cfg(feature = "modules")]
-    openhuman_core::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(
-        openhuman_core::openhuman::config::Config::load_or_init()
+    neppy_core::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(
+        neppy_core::openhuman::config::Config::load_or_init()
             .await
             .expect("load the harness config for the module policy"),
     ));

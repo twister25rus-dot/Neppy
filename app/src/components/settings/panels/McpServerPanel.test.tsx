@@ -39,7 +39,7 @@ vi.mock('../hooks/useSettingsNavigation', () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-const BINARY_PATH = '/usr/local/bin/openhuman-core';
+const BINARY_PATH = '/usr/local/bin/neppy-core';
 const DEFAULT_BINARY_INFO = { path: BINARY_PATH, os: 'macos' };
 
 async function importPanel() {

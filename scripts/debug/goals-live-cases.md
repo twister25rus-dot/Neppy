@@ -9,7 +9,7 @@ Run against a running core (attached) or let the script spawn one.
 
 ## Prereqs
 
-- A built core, or `--spawn-core` (which runs `cargo run --bin openhuman-core`).
+- A built core, or `--spawn-core` (which runs `cargo run --bin neppy-core`).
 - For `reflect`: a workspace with provider creds (use your real workspace —
   the default — not `--isolated-workspace`, which has none).
 

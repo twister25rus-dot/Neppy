@@ -2,7 +2,7 @@
 //!
 //! ```no_run
 //! # async fn demo() -> Result<(), Box<dyn std::error::Error>> {
-//! use openhuman_core::{Access, Harness, Provider, Session, Workspace};
+//! use neppy_core::{Access, Harness, Provider, Session, Workspace};
 //!
 //! let harness = Harness::builder()
 //!     .provider(Provider::openai_compatible("https://api.example/v1", "sk-…").model("gpt-5"))
@@ -69,7 +69,7 @@
 //! and [`MAX_BLOCKING_THREADS`](crate::core::runtime::MAX_BLOCKING_THREADS):
 //!
 //! ```no_run
-//! use openhuman_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
+//! use neppy_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
 //!
 //! let runtime = tokio::runtime::Builder::new_multi_thread()
 //!     .enable_all()

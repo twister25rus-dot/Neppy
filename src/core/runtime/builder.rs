@@ -66,7 +66,7 @@ pub struct ServiceSet {
 }
 
 impl ServiceSet {
-    /// Everything on — the desktop shell and the standalone `openhuman-core run`.
+    /// Everything on — the desktop shell and the standalone `neppy-core run`.
     pub fn desktop() -> Self {
         Self {
             rpc_http: true,
@@ -521,8 +521,8 @@ impl CoreBuilder {
     /// proxy, or not registered at all.
     ///
     /// ```no_run
-    /// # use openhuman_core::core::runtime::CoreBuilder;
-    /// # use openhuman_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
+    /// # use neppy_core::core::runtime::CoreBuilder;
+    /// # use neppy_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
     /// # fn f(b: CoreBuilder) -> CoreBuilder {
     /// b.tool_groups(
     ///     ToolGroups::none()
