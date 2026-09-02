@@ -31,9 +31,9 @@ import { isTauri as coreIsTauri } from './tauriCommands/common';
 const SESSION_TOKEN_UPDATED_EVENT = 'core-state:session-token-updated';
 
 /**
- * CSRF / session-fixation protection for `openhuman://auth` deep links (finding
- * C3). Because `openhuman://` is an OS-registered scheme, ANY web page the
- * victim visits can navigate to `openhuman://auth?token=<attacker_jwt>&key=auth`
+ * CSRF / session-fixation protection for `neppy://auth` deep links (finding
+ * C3). Because `neppy://` is an OS-registered scheme, ANY web page the
+ * victim visits can navigate to `neppy://auth?token=<attacker_jwt>&key=auth`
  * and silently log them into the attacker's account. We defend by binding every
  * auth deep link to a per-attempt `state` nonce that is generated *in-app*
  * before the login/OAuth flow starts, held only in memory, and required +
@@ -47,7 +47,7 @@ const pendingAuthDeepLinkStates = new Set<string>();
  * Register an auth deep-link `state` nonce as pending and return it so the
  * caller can carry it through the OAuth/login round-trip (the backend echoes it
  * back on the callback URL). Callers MUST invoke this before starting the flow
- * so the resulting `openhuman://auth?...&state=<nonce>` deep link can be
+ * so the resulting `neppy://auth?...&state=<nonce>` deep link can be
  * verified on return.
  *
  * Pass an existing `state` (e.g. the loopback handle's Rust-verified nonce) to
@@ -244,11 +244,11 @@ const applySessionToken = async (sessionToken: string): Promise<void> => {
 };
 
 /**
- * Handle an `openhuman://auth?token=...` deep link for login.
+ * Handle an `neppy://auth?token=...` deep link for login.
  *
  * `requireStateNonce` defaults to true for genuine OS-registered custom-scheme
  * deep links (the finding C3 vector — any external app can trigger
- * `openhuman://`). The same-origin web callback route (`WebCallbackPage`) passes
+ * `neppy://`). The same-origin web callback route (`WebCallbackPage`) passes
  * `false`: it is reached only through the app's own routing / the backend OAuth
  * redirect on the same origin, not via the OS scheme, so it is outside C3's scope.
  */
@@ -265,7 +265,7 @@ const handleAuthDeepLink = async (parsed: URL, requireStateNonce = true) => {
   // CSRF / session-fixation guard (finding C3): only honour an auth deep link
   // whose `state` matches a nonce this app generated before starting the flow.
   // This is what stops a hostile page from triggering the OS custom scheme
-  // `openhuman://auth?token=<attacker_jwt>&key=auth` and silently logging the
+  // `neppy://auth?token=<attacker_jwt>&key=auth` and silently logging the
   // victim into the attacker's account. The `key=auth` raw-JWT path in
   // particular is ONLY safe behind this check on the custom-scheme transport.
   if (requireStateNonce && !verifyAndConsumeAuthDeepLinkState(state)) {
@@ -474,7 +474,7 @@ export const authStoreFailureUserMessage = (
 };
 
 /**
- * Handle `openhuman://payment/success?session_id=...` deep links.
+ * Handle `neppy://payment/success?session_id=...` deep links.
  * Fired when a Stripe checkout session completes and the browser redirects
  * back to the desktop app.
  */
@@ -510,8 +510,8 @@ const handlePaymentDeepLink = async (parsed: URL) => {
 };
 
 /**
- * Handle `openhuman://oauth/success?...`
- * and `openhuman://oauth/error?error=...&provider=...` deep links.
+ * Handle `neppy://oauth/success?...`
+ * and `neppy://oauth/error?error=...&provider=...` deep links.
  */
 const handleOAuthDeepLink = async (parsed: URL) => {
   // pathname is "/success" or "/error" (hostname is "oauth")
@@ -602,7 +602,7 @@ const handleOAuthDeepLink = async (parsed: URL) => {
 };
 
 /**
- * `openhuman://waitlist?token=...` — the app was opened from a tokenmaxxxing
+ * `neppy://waitlist?token=...` — the app was opened from a tokenmaxxxing
  * download link.
  *
  * Unlike the auth and oauth hosts, there is nothing here to apply to the app:
@@ -657,12 +657,12 @@ const handleWaitlistDeepLink = async (parsed: URL) => {
 /**
  * Handle a list of deep link URLs delivered by the Tauri deep-link plugin.
  * Routes to the appropriate handler based on the URL hostname:
- *   - `openhuman://auth?token=...` → login flow
- *   - `openhuman://oauth/success?...` → OAuth completion
- *   - `openhuman://oauth/error?...` → OAuth failure
- *   - `openhuman://payment/success?session_id=...` → Stripe payment confirmation
- *   - `openhuman://payment/cancel` → Stripe payment cancellation
- *   - `openhuman://waitlist?token=...` → tokenmaxxxing download confirmation
+ *   - `neppy://auth?token=...` → login flow
+ *   - `neppy://oauth/success?...` → OAuth completion
+ *   - `neppy://oauth/error?...` → OAuth failure
+ *   - `neppy://payment/success?session_id=...` → Stripe payment confirmation
+ *   - `neppy://payment/cancel` → Stripe payment cancellation
+ *   - `neppy://waitlist?token=...` → tokenmaxxxing download confirmation
  */
 export const handleDeepLinkUrls = async (
   urls: string[] | null | undefined,
@@ -706,7 +706,7 @@ export const handleDeepLinkUrls = async (
 
 /**
  * Set up listeners for deep links so that when the desktop app is opened
- * via a URL like `openhuman://auth?token=...`, we can react to it.
+ * via a URL like `neppy://auth?token=...`, we can react to it.
  * Only works in Tauri desktop app environment.
  */
 export const setupDesktopDeepLinkListener = async () => {
@@ -726,12 +726,12 @@ export const setupDesktopDeepLinkListener = async () => {
     });
 
     if (typeof window !== 'undefined') {
-      // window.__simulateDeepLink('openhuman://auth?token=1234567890')
-      // window.__simulateDeepLink('openhuman://oauth/success?integrationId=69cafd0b103bd070232d3223&provider=notion')
-      // window.__simulateDeepLink('openhuman://oauth/success?integrationId=69cafd0b103bd070232d3223&skillId=discord')
+      // window.__simulateDeepLink('neppy://auth?token=1234567890')
+      // window.__simulateDeepLink('neppy://oauth/success?integrationId=69cafd0b103bd070232d3223&provider=notion')
+      // window.__simulateDeepLink('neppy://oauth/success?integrationId=69cafd0b103bd070232d3223&skillId=discord')
       const win = window as Window & { __simulateDeepLink?: (url: string) => Promise<void> };
       win.__simulateDeepLink = async (url: string) => {
-        // Dev/E2E convenience: simulated `openhuman://auth` links don't come from
+        // Dev/E2E convenience: simulated `neppy://auth` links don't come from
         // the real OAuth button, so they have no registered `state` nonce. Mint
         // and attach one here so the CSRF guard (finding C3) accepts them without
         // every spec having to script the button flow. This is safe because the

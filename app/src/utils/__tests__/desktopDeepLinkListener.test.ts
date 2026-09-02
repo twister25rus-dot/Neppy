@@ -29,12 +29,12 @@ vi.mock('../../services/coreRpcClient', () => ({
 vi.mock('../openUrl', () => ({ openUrl: vi.fn() }));
 vi.mock('../../services/api/waitlistApi', () => ({ confirmWaitlistDownload: vi.fn() }));
 
-// Build an `openhuman://auth` deep link bound to a freshly registered state
+// Build an `neppy://auth` deep link bound to a freshly registered state
 // nonce, mirroring how the real OAuth button registers the loopback/deep-link
 // state before the callback returns (finding C3 CSRF guard).
 const authDeepLinkWithState = (query: string): string => {
   const state = registerAuthDeepLinkState();
-  return `openhuman://auth?${query}&state=${state}`;
+  return `neppy://auth?${query}&state=${state}`;
 };
 
 const waitForAuthSettled = (): Promise<void> =>
@@ -100,20 +100,20 @@ describe('desktopDeepLinkListener', () => {
   });
 
   it('returns successful payment deep links to the billing dashboard', async () => {
-    await handleDeepLinkUrls(['openhuman://payment/success?session_id=checkout-session']);
+    await handleDeepLinkUrls(['neppy://payment/success?session_id=checkout-session']);
 
     expect(openUrl).toHaveBeenCalledWith(BILLING_DASHBOARD_URL);
     expect(BILLING_DASHBOARD_URL).toBe('https://tinyhumans.ai/dashboard');
   });
 
   it('returns cancelled payment deep links to the billing dashboard', async () => {
-    await handleDeepLinkUrls(['openhuman://payment/cancel']);
+    await handleDeepLinkUrls(['neppy://payment/cancel']);
 
     expect(openUrl).toHaveBeenCalledWith(BILLING_DASHBOARD_URL);
   });
 
   it('confirms the download and focuses the window for a waitlist deep link', async () => {
-    await handleDeepLinkUrls(['openhuman://waitlist?token=dl-token-123']);
+    await handleDeepLinkUrls(['neppy://waitlist?token=dl-token-123']);
 
     expect(confirmWaitlistDownload).toHaveBeenCalledWith('dl-token-123');
     expect(windowControls.setFocus).toHaveBeenCalled();
@@ -125,13 +125,13 @@ describe('desktopDeepLinkListener', () => {
     vi.mocked(confirmWaitlistDownload).mockRejectedValue({ success: false, error: 'offline' });
 
     await expect(
-      handleDeepLinkUrls(['openhuman://waitlist?token=dl-token-123'])
+      handleDeepLinkUrls(['neppy://waitlist?token=dl-token-123'])
     ).resolves.toBeUndefined();
     expect(windowControls.setFocus).toHaveBeenCalled();
   });
 
   it('does not call the backend when the waitlist link carries no token', async () => {
-    await handleDeepLinkUrls(['openhuman://waitlist']);
+    await handleDeepLinkUrls(['neppy://waitlist']);
 
     expect(confirmWaitlistDownload).not.toHaveBeenCalled();
     expect(windowControls.setFocus).toHaveBeenCalled();
@@ -142,7 +142,7 @@ describe('desktopDeepLinkListener', () => {
     // the credential, and `sanitizeError` would have preserved it.
     vi.mocked(confirmWaitlistDownload).mockRejectedValue(new Error('super-secret-token'));
 
-    await handleDeepLinkUrls(['openhuman://waitlist?token=super-secret-token']);
+    await handleDeepLinkUrls(['neppy://waitlist?token=super-secret-token']);
 
     // Reads the suite-wide console spy from `src/test/setup.ts` rather than
     // installing its own. A local spy would have to be restored, and restoring
@@ -158,7 +158,7 @@ describe('desktopDeepLinkListener', () => {
     // nothing and be swallowed as an ordinary failure.
     waitForOAuthAuthReadiness.mockResolvedValue({ ready: false, reason: 'core_unreachable' });
 
-    await handleDeepLinkUrls(['openhuman://waitlist?token=dl-token-123']);
+    await handleDeepLinkUrls(['neppy://waitlist?token=dl-token-123']);
 
     expect(confirmWaitlistDownload).not.toHaveBeenCalled();
     expect(windowControls.setFocus).toHaveBeenCalled();
@@ -171,7 +171,7 @@ describe('desktopDeepLinkListener', () => {
     });
 
     vi.mocked(getCurrent).mockResolvedValue([
-      'openhuman://oauth/error?provider=twitter&error=invalid_request&callback_url=https%3A%2F%2Fexample.test%2Fcb%3Ftoken%3Dsecret',
+      'neppy://oauth/error?provider=twitter&error=invalid_request&callback_url=https%3A%2F%2Fexample.test%2Fcb%3Ftoken%3Dsecret',
     ]);
 
     await setupDesktopDeepLinkListener();
@@ -236,9 +236,9 @@ describe('desktopDeepLinkListener', () => {
   });
 
   it('rejects an auth deep link with no state nonce (CSRF guard, finding C3)', async () => {
-    // A hostile page can fire `openhuman://auth?token=<attacker_jwt>&key=auth`
+    // A hostile page can fire `neppy://auth?token=<attacker_jwt>&key=auth`
     // with no state — it must never apply a session token.
-    vi.mocked(getCurrent).mockResolvedValue(['openhuman://auth?token=attacker&key=auth']);
+    vi.mocked(getCurrent).mockResolvedValue(['neppy://auth?token=attacker&key=auth']);
 
     await setupDesktopDeepLinkListener();
     await waitForAuthSettled();
@@ -251,9 +251,9 @@ describe('desktopDeepLinkListener', () => {
 
   it('accepts a same-origin web callback without a state nonce when requireStateNonce=false', async () => {
     // The web callback route (WebCallbackPage) is same-origin and not reachable
-    // via the OS `openhuman://` scheme, so it opts out of the C3 nonce guard.
+    // via the OS `neppy://` scheme, so it opts out of the C3 nonce guard.
     await import('../desktopDeepLinkListener').then(m =>
-      m.handleDeepLinkUrls(['openhuman://auth?token=web-token&key=auth'], {
+      m.handleDeepLinkUrls(['neppy://auth?token=web-token&key=auth'], {
         requireStateNonce: false,
       })
     );
@@ -273,7 +273,7 @@ describe('desktopDeepLinkListener', () => {
       .mockResolvedValueOnce(undefined);
 
     const state = registerAuthDeepLinkState();
-    const url = `openhuman://auth?token=retry-token&key=auth&state=${state}`;
+    const url = `neppy://auth?token=retry-token&key=auth&state=${state}`;
 
     vi.mocked(getCurrent).mockResolvedValue([url]);
     await setupDesktopDeepLinkListener();
@@ -287,7 +287,7 @@ describe('desktopDeepLinkListener', () => {
     vi.mocked(storeSession).mockReset().mockRejectedValueOnce(new Error('network down'));
 
     const state = registerAuthDeepLinkState();
-    const url = `openhuman://auth?token=no-retry-token&key=auth&state=${state}`;
+    const url = `neppy://auth?token=no-retry-token&key=auth&state=${state}`;
 
     vi.mocked(getCurrent).mockResolvedValue([url]);
     await setupDesktopDeepLinkListener();
@@ -301,7 +301,7 @@ describe('desktopDeepLinkListener', () => {
   it('rejects an auth deep link whose state nonce does not match a pending one', async () => {
     registerAuthDeepLinkState('the-real-nonce');
     vi.mocked(getCurrent).mockResolvedValue([
-      'openhuman://auth?token=attacker&key=auth&state=wrong-nonce',
+      'neppy://auth?token=attacker&key=auth&state=wrong-nonce',
     ]);
 
     await setupDesktopDeepLinkListener();
@@ -315,7 +315,7 @@ describe('desktopDeepLinkListener', () => {
 
   it('consumes a state nonce one-shot so a replayed deep link is rejected', async () => {
     const state = registerAuthDeepLinkState();
-    const url = `openhuman://auth?token=abc&key=auth&state=${state}`;
+    const url = `neppy://auth?token=abc&key=auth&state=${state}`;
 
     vi.mocked(getCurrent).mockResolvedValue([url]);
     await setupDesktopDeepLinkListener();
@@ -430,7 +430,7 @@ describe('desktopDeepLinkListener', () => {
 
     expect(simulateDeepLink).toBeTypeOf('function');
     await expect(
-      simulateDeepLink!('openhuman://auth?token=abc&key=auth&state=e2e-state-nonce')
+      simulateDeepLink!('neppy://auth?token=abc&key=auth&state=e2e-state-nonce')
     ).resolves.toBeUndefined();
     expect(storeSession).not.toHaveBeenCalled();
 
@@ -455,7 +455,7 @@ describe('desktopDeepLinkListener', () => {
     });
 
     vi.mocked(getCurrent).mockResolvedValue([
-      'openhuman://oauth/error?provider=twit%20ter&error=bad%20request',
+      'neppy://oauth/error?provider=twit%20ter&error=bad%20request',
     ]);
 
     await setupDesktopDeepLinkListener();

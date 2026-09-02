@@ -681,10 +681,7 @@ mod tests {
         assert!(!resources.is_empty(), "catalog must not be empty");
         for r in resources {
             assert_eq!(r["mimeType"], "text/markdown");
-            assert!(r["uri"]
-                .as_str()
-                .unwrap()
-                .starts_with("openhuman://prompts/"));
+            assert!(r["uri"].as_str().unwrap().starts_with("neppy://prompts/"));
         }
     }
 
@@ -694,7 +691,7 @@ mod tests {
             "jsonrpc": "2.0",
             "id": 11,
             "method": "resources/read",
-            "params": { "uri": "openhuman://prompts/identity" }
+            "params": { "uri": "neppy://prompts/identity" }
         }))
         .await;
 
@@ -718,7 +715,7 @@ mod tests {
             "jsonrpc": "2.0",
             "id": 12,
             "method": "resources/read",
-            "params": { "uri": "openhuman://prompts/agents/does_not_exist" }
+            "params": { "uri": "neppy://prompts/agents/does_not_exist" }
         }))
         .await;
 

@@ -71,7 +71,7 @@ function buildPairUrl(
     exp: String(overrides.exp ?? futureSecs),
   });
   if (overrides.rpc) params.set('rpc', overrides.rpc);
-  return `openhuman://pair?${params.toString()}`;
+  return `neppy://pair?${params.toString()}`;
 }
 
 function renderPairScreen() {
@@ -165,7 +165,7 @@ describe('PairScreen', () => {
 
   it('QR missing required fields -> shows error', async () => {
     // Missing pt (pairingToken)
-    const badUrl = 'openhuman://pair?cid=ABCDEF&cpk=testkey&exp=9999999999';
+    const badUrl = 'neppy://pair?cid=ABCDEF&cpk=testkey&exp=9999999999';
     mockScan.mockResolvedValueOnce({ content: badUrl });
 
     renderPairScreen();

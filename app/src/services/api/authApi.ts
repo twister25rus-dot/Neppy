@@ -9,7 +9,7 @@ const EMAIL_MAGIC_LINK_TIMEOUT_MS = 15_000;
  * POST /auth/email/send-link
  * @param email - The user's email address.
  * @param frontendRedirectUri - Where the backend should redirect after verification
- *   (e.g. "openhuman://" for desktop, or the web app origin for web).
+ *   (e.g. "neppy://" for desktop, or the web app origin for web).
  */
 export async function sendEmailMagicLink(
   email: string,

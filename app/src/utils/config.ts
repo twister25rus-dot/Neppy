@@ -213,7 +213,7 @@ export const SENTRY_RELEASE = BUILD_SHA
   : `openhuman@${APP_VERSION}`;
 
 /**
- * Minimum **desktop app** semver required for OAuth deep-link completion (`openhuman://oauth/success`).
+ * Minimum **desktop app** semver required for OAuth deep-link completion (`neppy://oauth/success`).
  *
  * **Build-time embedding:** This value is baked into each shipped installer. Raising the floor for
  * users already on an older build requires them to install a **new** release (or use in-app update

@@ -27,7 +27,7 @@
  *     5. Welcome shows OAuth provider buttons. We don't click them (that opens
  *        the system browser), instead we simulate the post-OAuth deep link
  *        callback — exactly the same code path the real providers exercise
- *        when the backend redirects back to `openhuman://auth?token=...&key=auth`.
+ *        when the backend redirects back to `neppy://auth?token=...&key=auth`.
  *     6. Walk onboarding (if shown) until we reach Home.
  *     7. Verify mock backend recorded the auth/me profile fetch.
  *

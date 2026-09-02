@@ -1,6 +1,6 @@
 //! Pre-CEF deep-link forwarding for Linux (issue #2359).
 //!
-//! On Linux, `openhuman://` OAuth callbacks launch a second OpenHuman
+//! On Linux, `neppy://` OAuth callbacks launch a second OpenHuman
 //! binary with the URL in argv. That secondary hits
 //! `cef_preflight::check_default_cache()` and exits before Builder::setup
 //! runs, so tauri-plugin-deep-link never gets a chance to forward the URL.
@@ -25,14 +25,14 @@ use std::{
 /// per-session tmpfs, cleaned on reboot), falls back to /tmp with UID.
 pub(crate) fn socket_path() -> PathBuf {
     if let Ok(dir) = std::env::var("XDG_RUNTIME_DIR") {
-        return PathBuf::from(dir).join("com.openhuman.app-deeplink.sock");
+        return PathBuf::from(dir).join("com.neppy.app-deeplink.sock");
     }
     // Fallback: include UID so multi-user machines don't collide.
     let uid = nix::unistd::getuid().as_raw();
     std::env::temp_dir().join(format!("com_openhuman_app_deeplink_{uid}.sock"))
 }
 
-/// Filter `openhuman://` URLs out of an argv-style iterator. Split out from
+/// Filter `neppy://` URLs out of an argv-style iterator. Split out from
 /// `extract_deep_link_urls` so the real filtering logic is unit-testable
 /// without mutating the process-global `std::env::args()` — mirrors the
 /// Windows sibling `collect_deep_link_urls_from_args`.
@@ -45,12 +45,12 @@ where
         .skip(1)
         .filter_map(|arg| {
             let arg = arg.as_ref();
-            arg.starts_with("openhuman://").then(|| arg.to_string())
+            arg.starts_with("neppy://").then(|| arg.to_string())
         })
         .collect()
 }
 
-/// Collect any `openhuman://` URLs from the process argv.
+/// Collect any `neppy://` URLs from the process argv.
 pub(crate) fn extract_deep_link_urls() -> Vec<String> {
     collect_deep_link_urls_from_args(std::env::args())
 }
@@ -65,7 +65,7 @@ pub(crate) enum ForwardResult {
     NoUrls,
 }
 
-/// Try to forward any `openhuman://` URLs in argv to the primary instance.
+/// Try to forward any `neppy://` URLs in argv to the primary instance.
 /// Call this BEFORE the CEF preflight check.
 pub(crate) fn try_forward_deep_links() -> ForwardResult {
     let urls = extract_deep_link_urls();
@@ -251,7 +251,7 @@ fn handle_connection(stream: UnixStream) {
     let reader = BufReader::new(stream);
     for line in reader.lines() {
         match line {
-            Ok(url) if url.starts_with("openhuman://") => {
+            Ok(url) if url.starts_with("neppy://") => {
                 log::info!(
                     "[deep-link-ipc] primary: received deep-link URL: {}",
                     redact_url_for_log(&url)
@@ -323,7 +323,7 @@ mod tests {
         let path = socket_path();
         assert_eq!(
             path,
-            PathBuf::from("/run/user/1234/com.openhuman.app-deeplink.sock")
+            PathBuf::from("/run/user/1234/com.neppy.app-deeplink.sock")
         );
     }
 
@@ -350,14 +350,14 @@ mod tests {
         // predicate inline — so a regression in the filter actually fails here.
         let urls = collect_deep_link_urls_from_args([
             "OpenHuman",
-            "openhuman://auth?token=abc",
+            "neppy://auth?token=abc",
             "--some-flag",
-            "openhuman://other",
+            "neppy://other",
             "https://example.com",
         ]);
         assert_eq!(
             urls,
-            vec!["openhuman://auth?token=abc", "openhuman://other"]
+            vec!["neppy://auth?token=abc", "neppy://other"]
         );
     }
 
@@ -379,7 +379,7 @@ mod tests {
                 stream.set_read_timeout(Some(Duration::from_secs(2))).ok();
                 let reader = BufReader::new(stream);
                 for line in reader.lines().flatten() {
-                    if line.starts_with("openhuman://") {
+                    if line.starts_with("neppy://") {
                         received_clone.lock().unwrap().push(line);
                     }
                 }
@@ -390,13 +390,13 @@ mod tests {
         std::thread::sleep(Duration::from_millis(50));
 
         let mut stream = UnixStream::connect(&sock_path).unwrap();
-        writeln!(stream, "openhuman://auth?token=testtoken123").unwrap();
+        writeln!(stream, "neppy://auth?token=testtoken123").unwrap();
         drop(stream);
 
         std::thread::sleep(Duration::from_millis(100));
         let got = received.lock().unwrap();
         assert_eq!(got.len(), 1);
-        assert_eq!(got[0], "openhuman://auth?token=testtoken123");
+        assert_eq!(got[0], "neppy://auth?token=testtoken123");
     }
 
     // NOTE: `no_primary_returns_appropriate_result` removed (plan.md §2.1) —

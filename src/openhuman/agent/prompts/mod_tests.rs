@@ -243,7 +243,7 @@ fn soul_template_carries_brand_voice_guardrail() {
     // validating FUD. Update only on an intentional brand-voice change.
     let soul = include_str!("SOUL.md");
     assert!(
-        soul.contains("## When OpenHuman is criticized"),
+        soul.contains("## When Neppy is criticized"),
         "SOUL.md must carry the brand-voice section (#3604)"
     );
     assert!(

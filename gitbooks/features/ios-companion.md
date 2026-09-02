@@ -50,7 +50,7 @@ Desktop core                         Backend relay              iOS app
      |   device appears in Devices list    |                        |
 ```
 
-The QR payload (carried as an `openhuman://pair?...` deep link) contains the channel id (`cid`), a single-use pairing token (`pt`), the core's public key (`cpk`), an optional LAN URL (`rpc`), and an expiry (`exp`). The pairing token is single-use, hashed at rest on the backend, and the QR is rejected client-side once `exp` has passed (the backend enforces the real ~10 minute TTL).
+The QR payload (carried as an `neppy://pair?...` deep link) contains the channel id (`cid`), a single-use pairing token (`pt`), the core's public key (`cpk`), an optional LAN URL (`rpc`), and an expiry (`exp`). The pairing token is single-use, hashed at rest on the backend, and the QR is rejected client-side once `exp` has passed (the backend enforces the real ~10 minute TTL).
 
 ---
 

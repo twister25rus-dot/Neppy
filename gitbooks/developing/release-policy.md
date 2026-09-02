@@ -19,7 +19,7 @@ Production web builds embed a **minimum supported app semver** at **build time**
 
 | Variable                             | Purpose                                                                                                               |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `VITE_MINIMUM_SUPPORTED_APP_VERSION` | e.g. `0.51.0` - desktop app must be **≥** this to finish `openhuman://oauth/success`.                                 |
+| `VITE_MINIMUM_SUPPORTED_APP_VERSION` | e.g. `0.51.0` - desktop app must be **≥** this to finish `neppy://oauth/success`.                                 |
 | `VITE_LATEST_APP_DOWNLOAD_URL`       | Optional; defaults to `https://github.com/tinyhumansai/openhuman/releases/latest`. Opened when the gate blocks OAuth. |
 
 Configure these as **GitHub Actions variables**. They must be present on **both** the standalone **`pnpm build`** step and the **`tauri-apps/tauri-action`** step env in `.github/workflows/build-desktop.yml` (the reusable matrix invoked by `release-production.yml` / `release-staging.yml`) so the Vite bundle embedded in shipped installers includes the gate. Leave `VITE_MINIMUM_SUPPORTED_APP_VERSION` **unset** for local dev (gate disabled).
@@ -29,7 +29,7 @@ Implementation: `app/src/utils/oauthAppVersionGate.ts`, `app/src/utils/desktopDe
 ## Gmail / Google Cloud OAuth
 
 - **Redirect URIs** in Google Cloud Console must match the **current** backend + tunnel callback paths.
-- The desktop scheme (`openhuman://`) is stable; the **installed binary** must meet the minimum version when `VITE_MINIMUM_SUPPORTED_APP_VERSION` is set.
+- The desktop scheme (`neppy://`) is stable; the **installed binary** must meet the minimum version when `VITE_MINIMUM_SUPPORTED_APP_VERSION` is set.
 
 ## Release checklist (avoid regressions)
 
@@ -85,7 +85,7 @@ Required GitHub Actions secrets:
 | `ANDROID_UPLOAD_KEY_ALIAS`         | Keystore alias for the upload key.                                                                |
 | `ANDROID_UPLOAD_KEYSTORE_PASSWORD` | Keystore password.                                                                                |
 | `ANDROID_UPLOAD_KEY_PASSWORD`      | Key password.                                                                                     |
-| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Raw JSON for the Play Console service account with release permissions for `com.openhuman.app`.   |
+| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Raw JSON for the Play Console service account with release permissions for `com.neppy.app`.   |
 
 Optional GitHub Actions variables:
 

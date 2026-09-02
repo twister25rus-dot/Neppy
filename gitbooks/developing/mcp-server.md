@@ -99,10 +99,10 @@ The `initialize` response includes:
 
 | URI                               | Content                                                |
 | --------------------------------- | ------------------------------------------------------ |
-| `openhuman://prompts/identity`    | `IDENTITY.md` (core agent identity)                    |
-| `openhuman://prompts/soul`        | `SOUL.md` (core agent personality and values)          |
-| `openhuman://prompts/user`        | `USER.md` (user-profile context)                       |
-| `openhuman://prompts/agents/<id>` | `<id>/prompt.md` for each of the 18 built-in subagents |
+| `neppy://prompts/identity`    | `IDENTITY.md` (core agent identity)                    |
+| `neppy://prompts/soul`        | `SOUL.md` (core agent personality and values)          |
+| `neppy://prompts/user`        | `USER.md` (user-profile context)                       |
+| `neppy://prompts/agents/<id>` | `<id>/prompt.md` for each of the 18 built-in subagents |
 
 All resources have `mimeType: "text/markdown"`.
 
@@ -128,7 +128,7 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"resources/list"}' \
   '{"jsonrpc":"2.0","id":3,"method":"resources/templates/list"}' \
-  '{"jsonrpc":"2.0","id":4,"method":"resources/read","params":{"uri":"openhuman://prompts/identity"}}' \
+  '{"jsonrpc":"2.0","id":4,"method":"resources/read","params":{"uri":"neppy://prompts/identity"}}' \
   | openhuman-core mcp
 ```
 

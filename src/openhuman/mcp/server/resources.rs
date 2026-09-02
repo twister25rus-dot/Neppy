@@ -8,10 +8,10 @@
 //!
 //! | Resource            | URI                                      |
 //! |---------------------|------------------------------------------|
-//! | `IDENTITY.md`       | `openhuman://prompts/identity`           |
-//! | `SOUL.md`           | `openhuman://prompts/soul`               |
-//! | `USER.md`           | `openhuman://prompts/user`               |
-//! | `<id>/prompt.md`    | `openhuman://prompts/agents/<id>`        |
+//! | `IDENTITY.md`       | `neppy://prompts/identity`           |
+//! | `SOUL.md`           | `neppy://prompts/soul`               |
+//! | `USER.md`           | `neppy://prompts/user`               |
+//! | `<id>/prompt.md`    | `neppy://prompts/agents/<id>`        |
 //!
 //! ## Catalog parity
 //!
@@ -31,229 +31,229 @@ struct PromptResource {
 const RESOURCE_CATALOG: &[PromptResource] = &[
     // ── Core prompts ──────────────────────────────────────────────────────
     PromptResource {
-        uri: "openhuman://prompts/identity",
+        uri: "neppy://prompts/identity",
         name: "Agent Identity",
         description: "Core agent identity definition (IDENTITY.md).",
         content: include_str!("../../agent/prompts/IDENTITY.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/soul",
+        uri: "neppy://prompts/soul",
         name: "Agent Soul",
         description: "Core agent personality and values (SOUL.md).",
         content: include_str!("../../agent/prompts/SOUL.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/user",
+        uri: "neppy://prompts/user",
         name: "User Context",
         description: "Core user-profile context injected into every session (USER.md).",
         content: include_str!("../../agent/prompts/USER.md"),
     },
     // ── Subagent prompt templates ─────────────────────────────────────────
     PromptResource {
-        uri: "openhuman://prompts/agents/orchestrator",
+        uri: "neppy://prompts/agents/orchestrator",
         name: "orchestrator",
         description: "Chat-tier orchestrator that routes tasks to specialist subagents.",
         content: include_str!("../../agent/registry/agents/orchestrator/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/planner",
+        uri: "neppy://prompts/agents/planner",
         name: "planner",
         description: "Reasoning-tier planner that grounds multi-step plans in integration data.",
         content: include_str!("../../agent/registry/agents/planner/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/code_executor",
+        uri: "neppy://prompts/agents/code_executor",
         name: "code_executor",
         description: "Sandboxed worker that writes and executes code.",
         content: include_str!("../../agent/registry/agents/code_executor/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/integrations_agent",
+        uri: "neppy://prompts/agents/integrations_agent",
         name: "integrations_agent",
         description: "Worker that executes Composio integration actions.",
         content: include_str!("../../agent/registry/agents/integrations_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/crypto_agent",
+        uri: "neppy://prompts/agents/crypto_agent",
         name: "crypto_agent",
         description: "Specialist worker for wallet and on-chain operations.",
         content: include_str!("../../agent/registry/agents/crypto_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/tools_agent",
+        uri: "neppy://prompts/agents/tools_agent",
         name: "tools_agent",
         description: "Generalist worker with access to the full tool surface.",
         content: include_str!("../../agent/registry/agents/tools_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/tool_maker",
+        uri: "neppy://prompts/agents/tool_maker",
         name: "tool_maker",
         description: "Sandboxed worker that creates new tools from descriptions.",
         content: include_str!("../../agent/registry/agents/tool_maker/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/skill_creator",
+        uri: "neppy://prompts/agents/skill_creator",
         name: "skill_creator",
         description: "Sandboxed worker that authors and publishes skill packages.",
         content: include_str!("../../agent/registry/agents/skill_creator/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/researcher",
+        uri: "neppy://prompts/agents/researcher",
         name: "researcher",
         description: "Worker that searches the web and synthesises research findings.",
         content: include_str!("../../agent/registry/agents/researcher/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/context_scout",
+        uri: "neppy://prompts/agents/context_scout",
         name: "context_scout",
         description: "Read-only pre-flight worker that gathers context (memory, transcripts, goals, skills, integrations, web) and returns a bounded context bundle.",
         content: include_str!("../../agent/registry/agents/context_scout/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/critic",
+        uri: "neppy://prompts/agents/critic",
         name: "critic",
         description: "Read-only worker that critiques plans and outputs.",
         content: include_str!("../../agent/registry/agents/critic/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/vision_agent",
+        uri: "neppy://prompts/agents/vision_agent",
         name: "vision_agent",
         description: "Multimodal worker that analyses attached images for the vision tier.",
         content: include_str!("../../agent/registry/agents/vision_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/image_agent",
+        uri: "neppy://prompts/agents/image_agent",
         name: "image_agent",
         description: "Worker that generates or edits images via GMI and saves them to the workspace.",
         content: include_str!("../../agent/registry/agents/image_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/video_agent",
+        uri: "neppy://prompts/agents/video_agent",
         name: "video_agent",
         description: "Worker that generates short videos via GMI and saves them to the workspace.",
         content: include_str!("../../agent/registry/agents/video_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/archivist",
+        uri: "neppy://prompts/agents/archivist",
         name: "archivist",
         description: "Background worker that distils conversations into persistent memory.",
         content: include_str!("../../agent/registry/agents/archivist/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/goals_agent",
+        uri: "neppy://prompts/agents/goals_agent",
         name: "goals_agent",
         description: "Background curator that keeps the user's long-term goals list fresh.",
         content: include_str!("../../agent/registry/agents/goals_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/trigger_triage",
+        uri: "neppy://prompts/agents/trigger_triage",
         name: "trigger_triage",
         description: "Read-only worker that classifies incoming automation triggers.",
         content: include_str!("../../agent/registry/agents/trigger_triage/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/trigger_reactor",
+        uri: "neppy://prompts/agents/trigger_reactor",
         name: "trigger_reactor",
         description: "Worker that executes actions in response to classified triggers.",
         content: include_str!("../../agent/registry/agents/trigger_reactor/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/morning_briefing",
+        uri: "neppy://prompts/agents/morning_briefing",
         name: "morning_briefing",
         description: "Read-only worker that assembles a personalised morning briefing.",
         content: include_str!("../../agent/registry/agents/morning_briefing/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/summarizer",
+        uri: "neppy://prompts/agents/summarizer",
         name: "summarizer",
         description: "Worker that condenses long documents or conversations.",
         content: include_str!("../../agent/registry/agents/summarizer/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/help",
+        uri: "neppy://prompts/agents/help",
         name: "help",
         description: "Read-only worker that answers questions from documentation.",
         content: include_str!("../../agent/registry/agents/help/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/scheduler_agent",
+        uri: "neppy://prompts/agents/scheduler_agent",
         name: "scheduler_agent",
         description: "Specialist worker for reminders, recurring jobs, and cron inspection.",
         content: include_str!("../../agent/registry/agents/scheduler_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/presentation_agent",
+        uri: "neppy://prompts/agents/presentation_agent",
         name: "presentation_agent",
         description: "Specialist worker for evidence-grounded presentation generation.",
         content: include_str!("../../agent/registry/agents/presentation_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/mcp_setup",
+        uri: "neppy://prompts/agents/mcp_setup",
         name: "mcp_setup",
         description: "Worker that guides the user through MCP client configuration.",
         content: include_str!("../../agent/registry/agents/mcp_setup/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/mcp_agent",
+        uri: "neppy://prompts/agents/mcp_agent",
         name: "mcp_agent",
         description: "Worker that discovers and calls tools on already-connected MCP servers.",
         content: include_str!("../../agent/registry/agents/mcp_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/task_manager_agent",
+        uri: "neppy://prompts/agents/task_manager_agent",
         name: "task_manager_agent",
         description: "Specialist worker for task planning, status, and task-board changes.",
         content: include_str!("../../agent/registry/agents/task_manager_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/settings_agent",
+        uri: "neppy://prompts/agents/settings_agent",
         name: "settings_agent",
         description: "Specialist worker for inspecting and updating OpenHuman settings.",
         content: include_str!("../../agent/registry/agents/settings_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/profile_memory_agent",
+        uri: "neppy://prompts/agents/profile_memory_agent",
         name: "profile_memory_agent",
         description: "Specialist worker for profile and long-term memory updates.",
         content: include_str!("../../agent/registry/agents/profile_memory_agent/prompt.md"),
     },
     #[cfg(feature = "flows")]
     PromptResource {
-        uri: "openhuman://prompts/agents/flow_discovery",
+        uri: "neppy://prompts/agents/flow_discovery",
         name: "flow_discovery",
         description: "Flow Scout — read-only workflow discovery agent that suggests automations from memory, threads, and integrations.",
         content: include_str!("../../flows/agents/flow_discovery/prompt.md"),
     },
     #[cfg(feature = "flows")]
     PromptResource {
-        uri: "openhuman://prompts/agents/workflow_builder",
+        uri: "neppy://prompts/agents/workflow_builder",
         name: "workflow_builder",
         description: "Workflow authoring specialist that builds tinyflows automation graphs and returns proposals for review.",
         content: include_str!("../../flows/agents/workflow_builder/prompt.md"),
     },
     #[cfg(feature = "flows")]
     PromptResource {
-        uri: "openhuman://prompts/agents/flow_memory_agent",
+        uri: "neppy://prompts/agents/flow_memory_agent",
         name: "flow_memory_agent",
         description: "Flow Memory Agent — read-only context and memory retrieval specialist a flow's `agent` node routes to for run-time context, style, history, or people lookups.",
         content: include_str!("../../agent/registry/agents/flow_memory_agent/prompt.md"),
     },
     PromptResource {
-        uri: "openhuman://prompts/agents/agent_memory",
+        uri: "neppy://prompts/agents/agent_memory",
         name: "agent_memory",
         description: "Dedicated memory retrieval subagent using smart-walk strategies.",
         content: include_str!("../../memory/agent/agent/prompt.md"),
     },
     #[cfg(feature = "skills")]
     PromptResource {
-        uri: "openhuman://prompts/agents/skill_setup",
+        uri: "neppy://prompts/agents/skill_setup",
         name: "skill_setup",
         description: "Worker that guides skill installation and backend configuration.",
         content: include_str!("../../skills/catalog/agent/skill_setup/prompt.md"),
     },
     #[cfg(feature = "skills")]
     PromptResource {
-        uri: "openhuman://prompts/agents/skill_executor",
+        uri: "neppy://prompts/agents/skill_executor",
         name: "skill_executor",
         description: "Sandboxed worker that runs installed skill packages.",
         content: include_str!("../../skills/runtime/agent/skill_executor/prompt.md"),
@@ -341,7 +341,7 @@ mod tests {
         use crate::openhuman::agent::registry::agents::BUILTINS;
 
         for b in BUILTINS {
-            let expected_uri = format!("openhuman://prompts/agents/{}", b.id);
+            let expected_uri = format!("neppy://prompts/agents/{}", b.id);
             assert!(
                 RESOURCE_CATALOG.iter().any(|r| r.uri == expected_uri),
                 "RESOURCE_CATALOG is missing an entry for built-in agent `{}` \
@@ -353,7 +353,7 @@ mod tests {
 
         let catalog_agent_count = RESOURCE_CATALOG
             .iter()
-            .filter(|r| r.uri.starts_with("openhuman://prompts/agents/"))
+            .filter(|r| r.uri.starts_with("neppy://prompts/agents/"))
             .count();
         assert_eq!(
             catalog_agent_count,
@@ -391,11 +391,11 @@ mod tests {
             .map(|r| r["uri"].as_str().unwrap())
             .collect();
         for expected in [
-            "openhuman://prompts/identity",
-            "openhuman://prompts/soul",
-            "openhuman://prompts/user",
-            "openhuman://prompts/agents/orchestrator",
-            "openhuman://prompts/agents/mcp_setup",
+            "neppy://prompts/identity",
+            "neppy://prompts/soul",
+            "neppy://prompts/user",
+            "neppy://prompts/agents/orchestrator",
+            "neppy://prompts/agents/mcp_setup",
         ] {
             assert!(uris.contains(&expected), "missing URI {expected}");
         }
@@ -403,18 +403,18 @@ mod tests {
 
     #[test]
     fn read_resource_returns_content_for_known_uri() {
-        let params = json!({ "uri": "openhuman://prompts/identity" });
+        let params = json!({ "uri": "neppy://prompts/identity" });
         let result = read_resource_result(&params).expect("should succeed");
         let contents = result["contents"].as_array().expect("contents array");
         assert_eq!(contents.len(), 1);
-        assert_eq!(contents[0]["uri"], "openhuman://prompts/identity");
+        assert_eq!(contents[0]["uri"], "neppy://prompts/identity");
         assert_eq!(contents[0]["mimeType"], "text/markdown");
         assert!(!contents[0]["text"].as_str().unwrap_or("").is_empty());
     }
 
     #[test]
     fn read_resource_returns_minus_32002_for_unknown_uri() {
-        let params = json!({ "uri": "openhuman://prompts/agents/nonexistent" });
+        let params = json!({ "uri": "neppy://prompts/agents/nonexistent" });
         let err = read_resource_result(&params).expect_err("should fail for unknown URI");
         assert_eq!(err.0, -32002);
         assert!(err.2.contains("nonexistent"));
@@ -431,7 +431,7 @@ mod tests {
     fn read_resource_returns_content_for_each_subagent() {
         use crate::openhuman::agent::registry::agents::BUILTINS;
         for b in BUILTINS {
-            let uri = format!("openhuman://prompts/agents/{}", b.id);
+            let uri = format!("neppy://prompts/agents/{}", b.id);
             let params = json!({ "uri": uri });
             let result = read_resource_result(&params)
                 .unwrap_or_else(|_| panic!("read_resource failed for agent `{}`", b.id));

@@ -201,19 +201,19 @@ sleep 1
 echo "[runner] Cleaning cached app data..."
 case "$OS" in
   Darwin)
-    rm -rf ~/Library/WebKit/com.openhuman.app
-    rm -rf ~/Library/Caches/com.openhuman.app
-    rm -rf "$HOME/Library/Application Support/com.openhuman.app"
-    rm -rf "$HOME/Library/Saved Application State/com.openhuman.app.savedState"
+    rm -rf ~/Library/WebKit/com.neppy.app
+    rm -rf ~/Library/Caches/com.neppy.app
+    rm -rf "$HOME/Library/Application Support/com.neppy.app"
+    rm -rf "$HOME/Library/Saved Application State/com.neppy.app.savedState"
     ;;
   Linux)
-    rm -rf "$HOME/.local/share/com.openhuman.app" 2>/dev/null || true
-    rm -rf "$HOME/.cache/com.openhuman.app" 2>/dev/null || true
-    rm -rf "$HOME/.config/com.openhuman.app" 2>/dev/null || true
+    rm -rf "$HOME/.local/share/com.neppy.app" 2>/dev/null || true
+    rm -rf "$HOME/.cache/com.neppy.app" 2>/dev/null || true
+    rm -rf "$HOME/.config/com.neppy.app" 2>/dev/null || true
     ;;
   MINGW*|MSYS*|CYGWIN*|Windows_NT)
-    rm -rf "${APPDATA:-$HOME/AppData/Roaming}/com.openhuman.app" 2>/dev/null || true
-    rm -rf "${LOCALAPPDATA:-$HOME/AppData/Local}/com.openhuman.app" 2>/dev/null || true
+    rm -rf "${APPDATA:-$HOME/AppData/Roaming}/com.neppy.app" 2>/dev/null || true
+    rm -rf "${LOCALAPPDATA:-$HOME/AppData/Local}/com.neppy.app" 2>/dev/null || true
     ;;
 esac
 

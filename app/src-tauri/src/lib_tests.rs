@@ -958,7 +958,7 @@ fn path_has_executable_returns_false_for_partial_xdg_utils_install() {
 
 /// Regression guard for issue #2228: `tauri-plugin-single-instance` must
 /// enable the `deep-link` feature so that second-launch deep-link payloads
-/// (e.g. `openhuman://oauth/...` callbacks from Windows/Linux system
+/// (e.g. `neppy://oauth/...` callbacks from Windows/Linux system
 /// browsers) are forwarded into the primary instance. Without it, hot OAuth
 /// callbacks silently no-op while only focusing the existing window.
 #[test]

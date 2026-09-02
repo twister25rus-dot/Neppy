@@ -1,8 +1,8 @@
-//! Read-back verification for the `openhuman://` URL-scheme registration.
+//! Read-back verification for the `neppy://` URL-scheme registration.
 //!
 //! `tauri-plugin-deep-link::register_all` writes
 //! `HKCU\Software\Classes\openhuman\shell\open\command` on Windows so the
-//! browser can hand `openhuman://auth?...` OAuth callbacks back to the running
+//! browser can hand `neppy://auth?...` OAuth callbacks back to the running
 //! desktop instance. When that write silently fails — or when the value
 //! becomes stale because the install was moved out from under itself — the
 //! Tauri plugin only surfaces a `warn` and the user is left with an OAuth
@@ -25,12 +25,12 @@
 
 use std::path::Path;
 
-/// Subkey under `HKEY_CURRENT_USER` that holds the `openhuman://` URL-scheme
+/// Subkey under `HKEY_CURRENT_USER` that holds the `neppy://` URL-scheme
 /// handler command. Matches what `tauri-plugin-deep-link::register_all`
 /// writes on Windows (HKCU, not HKLM, so no UAC elevation is involved).
 pub(crate) const HKCU_OPEN_COMMAND_SUBKEY: &str = r"Software\Classes\openhuman\shell\open\command";
 
-/// Outcome of inspecting the `openhuman://` protocol handler.
+/// Outcome of inspecting the `neppy://` protocol handler.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum RegistrationStatus {
     /// HKCU key exists and references the running executable.

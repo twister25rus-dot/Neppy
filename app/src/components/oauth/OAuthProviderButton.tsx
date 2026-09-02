@@ -25,7 +25,7 @@ interface OAuthProviderButtonProps {
 
 // Reset the loading state if the OAuth round-trip never completes — covers
 // the case where the user cancels in the system browser, or the backend
-// redirect fails so the `openhuman://` deep link never fires. Kept >= the
+// redirect fails so the `neppy://` deep link never fires. Kept >= the
 // loopback listener lifetime (`DEFAULT_TIMEOUT_SECS`, 300s) so the button
 // never re-enables while the loopback server is still legitimately waiting
 // for a slow (2FA / consent) sign-in to redirect back.
@@ -234,7 +234,7 @@ const OAuthProviderButton = ({
       // hit a Tauri IPC round-trip and the result hasn't changed within a
       // single click handler.
       const backendUrl = preflight.backendUrl;
-      // Prefer a loopback HTTP redirect (RFC 8252) over the openhuman:// deep
+      // Prefer a loopback HTTP redirect (RFC 8252) over the neppy:// deep
       // link: deep links are unpredictable on Linux/Windows and rely on
       // single-instance forwarding through a named pipe (#1130). If bind
       // fails (port in use, not in Tauri, etc.) we fall back to the legacy
@@ -249,14 +249,14 @@ const OAuthProviderButton = ({
       if (IS_DEV && !loopback) params.set('responseType', 'json');
       if (loopback) {
         params.set('redirectUri', loopback.redirectUri);
-        // Bind the inbound `openhuman://auth` deep link to a per-attempt state
+        // Bind the inbound `neppy://auth` deep link to a per-attempt state
         // nonce (finding C3). The loopback handle already carries a `state` the
         // Rust shell verifies AND the backend echoes back on the callback URL;
         // register it so `handleAuthDeepLink` accepts the rewritten callback and
         // rejects any unsolicited deep link.
         registerAuthDeepLinkState(loopback.state);
       } else {
-        // Fallback `openhuman://auth` deep-link path (Tauri without loopback) and
+        // Fallback `neppy://auth` deep-link path (Tauri without loopback) and
         // the web build (full-page navigation): mint an in-app nonce, pass it to
         // the backend so it is echoed back on the callback, then verify on
         // return. The web build navigates away and loses module memory, so the
@@ -280,14 +280,14 @@ const OAuthProviderButton = ({
       if (loopback) {
         // Race the loopback callback against the existing focus/timeout reset
         // path. Browser hits 127.0.0.1 -> shell emits event -> we feed the URL
-        // through the same handler the openhuman:// path uses, so token
+        // through the same handler the neppy:// path uses, so token
         // exchange and CoreStateProvider commit logic stays in one place.
         void loopback
           .awaitCallback()
           .then(callbackUrl => {
             const synthetic = callbackUrl.replace(
               /^https?:\/\/127\.0\.0\.1:\d+\/auth/,
-              'openhuman://auth'
+              'neppy://auth'
             );
             void handleDeepLinkUrls([synthetic]);
           })
@@ -305,7 +305,7 @@ const OAuthProviderButton = ({
         console.log(`[dev] OAuth debug mode enabled. OAuth URL: ${loginUrl}`);
         console.log('[dev] In debug mode, OAuth will return JSON response instead of redirect.');
         console.log(
-          '[dev] After OAuth completion, copy the loginToken and use: window.__simulateDeepLink("openhuman://auth?token=YOUR_TOKEN")'
+          '[dev] After OAuth completion, copy the loginToken and use: window.__simulateDeepLink("neppy://auth?token=YOUR_TOKEN")'
         );
       }
 

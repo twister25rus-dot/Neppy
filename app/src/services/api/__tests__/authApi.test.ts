@@ -13,13 +13,13 @@ describe('sendEmailMagicLink', () => {
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response('{}', { status: 200 }) as Response);
 
-    await sendEmailMagicLink('user@example.com', 'openhuman://');
+    await sendEmailMagicLink('user@example.com', 'neppy://');
 
     const backendUrl = process.env.VITEST_MOCK_API_URL ?? 'http://localhost:5005';
     expect(fetchSpy).toHaveBeenCalledWith(`${backendUrl}/auth/email/send-link`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-web-version': '0.0.0-test' },
-      body: JSON.stringify({ email: 'user@example.com', frontendRedirectUri: 'openhuman://' }),
+      body: JSON.stringify({ email: 'user@example.com', frontendRedirectUri: 'neppy://' }),
       signal: expect.any(AbortSignal),
     });
   });
@@ -36,7 +36,7 @@ describe('sendEmailMagicLink', () => {
       });
     });
 
-    const request = sendEmailMagicLink('user@example.com', 'openhuman://', 100);
+    const request = sendEmailMagicLink('user@example.com', 'neppy://', 100);
     const rejection = expect(request).rejects.toThrow('Request timed out. Please try again.');
 
     await vi.advanceTimersByTimeAsync(100);

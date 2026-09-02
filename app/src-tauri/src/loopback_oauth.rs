@@ -1,6 +1,6 @@
 //! Loopback HTTP listener for OAuth / magic-link callbacks (RFC 8252).
 //!
-//! Used as the preferred desktop redirect target ahead of the `openhuman://`
+//! Used as the preferred desktop redirect target ahead of the `neppy://`
 //! deep link: the frontend asks the shell to bind a one-shot HTTP server on a
 //! fixed loopback port, hands the resulting URL to the backend as
 //! `redirectUri`, and waits for the `loopback-oauth-callback` Tauri event.
@@ -61,7 +61,7 @@ pub struct StartResult {
 #[derive(Serialize, Clone)]
 struct CallbackPayload {
     /// Full callback URL including query string. Frontend re-uses the existing
-    /// `handleAuthDeepLink` parser by converting it to an `openhuman://` URL.
+    /// `handleAuthDeepLink` parser by converting it to an `neppy://` URL.
     url: String,
 }
 

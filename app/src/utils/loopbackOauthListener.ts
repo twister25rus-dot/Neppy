@@ -6,7 +6,7 @@ import { isTauri } from './tauriCommands/common';
 
 /**
  * Loopback OAuth listener — preferred desktop redirect target ahead of
- * `openhuman://` deep links (RFC 8252).
+ * `neppy://` deep links (RFC 8252).
  *
  * The Tauri shell binds `http://127.0.0.1:<port>/auth` on demand, returns the
  * redirect URI plus a state nonce, and emits a `loopback-oauth-callback` event
@@ -15,7 +15,7 @@ import { isTauri } from './tauriCommands/common';
  * cannot fake a callback.
  *
  * Falls back gracefully: any failure (not in Tauri, port already in use,
- * timeout) returns `null` so callers can take the `openhuman://` deep-link
+ * timeout) returns `null` so callers can take the `neppy://` deep-link
  * path instead.
  */
 
@@ -68,7 +68,7 @@ let activeUnlisten: UnlistenFn | null = null;
 /**
  * Start a one-shot loopback listener. Returns `null` if not running inside
  * Tauri, or if the shell fails to bind (port in use, etc) — the caller should
- * then fall back to the `openhuman://` deep-link redirect.
+ * then fall back to the `neppy://` deep-link redirect.
  */
 export const startLoopbackOauthListener = async (
   options: StartLoopbackOptions = {}

@@ -12,7 +12,7 @@
  *      scheme through Launch Services).
  *   3. macOS shell `open -a … "url"`.
  *
- * Linux has no shell fallback: `xdg-open openhuman://…` requires a
+ * Linux has no shell fallback: `xdg-open neppy://…` requires a
  * `.desktop` file registering the URL scheme, which the CI container does
  * not have, so attempting it just produces noise. If the WebView simulate
  * fails on Linux, `triggerDeepLink` throws immediately.
@@ -220,7 +220,7 @@ export async function triggerDeepLink(url: string): Promise<void> {
     // CEF/Appium-Chromium harness. If it succeeds we're done; if it throws
     // a dead-session error there's nothing more to try (the macOS extension
     // commands and shell fallback both require a live driver too, or in
-    // Linux's case a `.desktop` file registering the `openhuman://` scheme
+    // Linux's case a `.desktop` file registering the `neppy://` scheme
     // that the CI container doesn't have).
     try {
       if (await trySimulateDeepLinkInWebView(url)) {
@@ -246,7 +246,7 @@ export async function triggerDeepLink(url: string): Promise<void> {
     if (process.platform === 'darwin') {
       try {
         await browser.execute('macos: launchApp', {
-          bundleId: 'com.openhuman.app',
+          bundleId: 'com.neppy.app',
           arguments: [url],
         } as Record<string, unknown>);
         deepLinkDebug('macos: launchApp OK');
@@ -256,7 +256,7 @@ export async function triggerDeepLink(url: string): Promise<void> {
       }
       for (let attempt = 1; attempt <= 3; attempt += 1) {
         try {
-          await browser.execute('macos: deepLink', { url, bundleId: 'com.openhuman.app' } as Record<
+          await browser.execute('macos: deepLink', { url, bundleId: 'com.neppy.app' } as Record<
             string,
             unknown
           >);
@@ -277,7 +277,7 @@ export async function triggerDeepLink(url: string): Promise<void> {
 
   // Strategy 3: Shell fallback
   if (process.platform === 'linux') {
-    // The Linux CI container does not register `openhuman://` with
+    // The Linux CI container does not register `neppy://` with
     // xdg-mime, so `xdg-open` cannot dispatch the URL — it just errors
     // with `Command failed`. The only deep-link path that works under
     // CEF/Appium-Chromium on Linux is the in-WebView simulate above; if
@@ -329,7 +329,7 @@ export function triggerAuthDeepLink(token: string): Promise<void> {
   const envBypassToken = (process.env.OPENHUMAN_E2E_AUTH_BYPASS_TOKEN || '').trim();
   deepLinkDebug('triggerAuthDeepLink', { token, envBypassToken: envBypassToken || '(none)' });
   if (envBypassToken) {
-    return triggerDeepLink(`openhuman://auth?token=${encodeURIComponent(envBypassToken)}&key=auth`);
+    return triggerDeepLink(`neppy://auth?token=${encodeURIComponent(envBypassToken)}&key=auth`);
   }
 
   const authBypassEnabled = (process.env.OPENHUMAN_E2E_AUTH_BYPASS || '').trim() === '1';
@@ -339,7 +339,7 @@ export function triggerAuthDeepLink(token: string): Promise<void> {
     return triggerAuthDeepLinkBypass(userId || 'e2e-user');
   }
 
-  return triggerDeepLink(`openhuman://auth?token=${encodeURIComponent(token)}`);
+  return triggerDeepLink(`neppy://auth?token=${encodeURIComponent(token)}`);
 }
 
 function toBase64Url(value: string): string {
@@ -374,7 +374,7 @@ export async function triggerAuthDeepLinkBypass(userId: string = 'e2e-user'): Pr
     deepLinkDebug('pre-deep-link BootCheckGate dismiss failed (continuing):', err);
   });
   const token = buildBypassJwt(userId);
-  return triggerDeepLink(`openhuman://auth?token=${encodeURIComponent(token)}&key=auth`);
+  return triggerDeepLink(`neppy://auth?token=${encodeURIComponent(token)}&key=auth`);
 }
 
 /**

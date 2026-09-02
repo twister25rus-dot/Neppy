@@ -5,7 +5,7 @@
  * Architecture (per design discussion 2026-05-12):
  *   - One Appium Mac2 session, one app launch — no per-scenario restarts.
  *   - Drive the app through:
- *       1. Deep links (`openhuman://auth?…`, `openhuman://oauth/success?…`) —
+ *       1. Deep links (`neppy://auth?…`, `neppy://oauth/success?…`) —
  *          Mac2 supports these natively via `macos: deepLink`.
  *       2. Mock backend behavior knobs and the in-process request log.
  *       3. Core JSON-RPC for state inspection and `composio_*` calls.
@@ -174,7 +174,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     clearRequestLog();
     setMockBehavior('jwt', 'mega-login-1');
 
-    await triggerDeepLink('openhuman://auth?token=mega-login-token');
+    await triggerDeepLink('neppy://auth?token=mega-login-token');
 
     const consume = await waitForMockRequest('POST', '/auth/login-token/consume', 20_000);
     expect(consume).toBeDefined();
@@ -203,7 +203,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     ).toString('base64url');
     const bypassJwt = `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.${payload}.sig`;
 
-    await triggerDeepLink(`openhuman://auth?token=${encodeURIComponent(bypassJwt)}&key=auth`);
+    await triggerDeepLink(`neppy://auth?token=${encodeURIComponent(bypassJwt)}&key=auth`);
 
     const me = await waitForMockRequest('GET', '/auth/me', 15_000);
     expect(me).toBeDefined();
@@ -216,7 +216,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Scenario 3 — Gmail OAuth completion via `openhuman://oauth/success`.
+  // Scenario 3 — Gmail OAuth completion via `neppy://oauth/success`.
   // The deep-link handler dispatches a custom 'oauth:success' event and
   // navigates to /skills. The renderer does NOT fire a backend integrations
   // refresh call — there is no `GET /auth/integrations` listener wired to
@@ -232,12 +232,12 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     await resetEverything('after Scenario 2');
 
     // Login first — `oauth:success` is only meaningful for an authenticated user.
-    await triggerDeepLink('openhuman://auth?token=mega-gmail-token');
+    await triggerDeepLink('neppy://auth?token=mega-gmail-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     expect(await waitForMockRequest('GET', '/auth/me', 10_000)).toBeDefined();
     clearRequestLog();
 
-    await triggerDeepLink('openhuman://oauth/success?integrationId=mock-gmail-int&provider=google');
+    await triggerDeepLink('neppy://oauth/success?integrationId=mock-gmail-int&provider=google');
 
     // Give the handler a moment to dispatch the oauth:success event and
     // navigate to /skills; neither action produces a mock backend call.
@@ -327,11 +327,11 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   it('Gmail OAuth: error deep link does not crash the session', async () => {
     await resetEverything('after Scenario 4');
 
-    await triggerDeepLink('openhuman://auth?token=mega-error-token');
+    await triggerDeepLink('neppy://auth?token=mega-error-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
-    await triggerDeepLink('openhuman://oauth/error?provider=google&error=access_denied');
+    await triggerDeepLink('neppy://oauth/error?provider=google&error=access_denied');
 
     // Give the handler a moment to emit its error event.
     await browser.pause(2_000);
@@ -358,7 +358,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     await resetEverything('before stale-thread scenario');
 
     // Login so the RPC layer has an authenticated session.
-    await triggerDeepLink('openhuman://auth?token=mega-stale-thread-token');
+    await triggerDeepLink('neppy://auth?token=mega-stale-thread-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -394,7 +394,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     await resetEverything('before unknown-method scenario');
 
     // Login so the RPC relay is authenticated.
-    await triggerDeepLink('openhuman://auth?token=mega-unknown-method-token');
+    await triggerDeepLink('neppy://auth?token=mega-unknown-method-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -422,7 +422,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   it('post-reset: a fresh login still works end-to-end', async () => {
     await resetEverything('final');
 
-    await triggerDeepLink('openhuman://auth?token=mega-post-reset-token');
+    await triggerDeepLink('neppy://auth?token=mega-post-reset-token');
     const consume = await waitForMockRequest('POST', '/auth/login-token/consume', 20_000);
     expect(consume).toBeDefined();
     const me = await waitForMockRequest('GET', '/auth/me', 15_000);
@@ -438,7 +438,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   it('WhatsApp read-only: native list_chats returns expected shape', async () => {
     await resetEverything('after Scenario 6');
 
-    await triggerDeepLink('openhuman://auth?token=mega-whatsapp-token');
+    await triggerDeepLink('neppy://auth?token=mega-whatsapp-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -484,7 +484,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     await resetEverything('after Scenario 7');
 
     // ── User A login ──────────────────────────────────────────────────────
-    await triggerDeepLink('openhuman://auth?token=mega-acct-switch-user-a');
+    await triggerDeepLink('neppy://auth?token=mega-acct-switch-user-a');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -510,7 +510,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     // ── Switch to user B (mock-only reset — workspace is NOT wiped) ───────
     await resetEverything('account switch to user B');
 
-    await triggerDeepLink('openhuman://auth?token=mega-acct-switch-user-b');
+    await triggerDeepLink('neppy://auth?token=mega-acct-switch-user-b');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -531,7 +531,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     // still serves the RPC surface and the thread list starts empty again.
     await resetEverything('account switch back to user A');
 
-    await triggerDeepLink('openhuman://auth?token=mega-acct-switch-user-a');
+    await triggerDeepLink('neppy://auth?token=mega-acct-switch-user-a');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -660,7 +660,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     await resetEverything('before update-version scenario');
 
     // Login so the RPC relay is authenticated.
-    await triggerDeepLink('openhuman://auth?token=mega-update-version-token');
+    await triggerDeepLink('neppy://auth?token=mega-update-version-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -726,7 +726,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   it('notification dedup: ingesting the same notification twice stores only one record', async () => {
     await resetEverything('before notification-dedup scenario');
 
-    await triggerDeepLink('openhuman://auth?token=mega-notification-dedup-token');
+    await triggerDeepLink('neppy://auth?token=mega-notification-dedup-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
@@ -790,7 +790,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   it('thread CRUD smoke: create → append message → list messages roundtrip', async () => {
     await resetEverything('before thread-crud-smoke scenario');
 
-    await triggerDeepLink('openhuman://auth?token=mega-thread-crud-token');
+    await triggerDeepLink('neppy://auth?token=mega-thread-crud-token');
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 

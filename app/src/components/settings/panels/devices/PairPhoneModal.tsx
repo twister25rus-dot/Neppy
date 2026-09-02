@@ -68,7 +68,7 @@ function buildPairUrl(session: CreatePairingResponse): string {
   // expires_at is ISO 8601 — convert to unix timestamp for compact QR.
   const expUnix = Math.floor(new Date(session.expires_at).getTime() / 1_000);
   params.set('exp', String(expUnix));
-  return `openhuman://pair?${params.toString()}`;
+  return `neppy://pair?${params.toString()}`;
 }
 
 // ---------------------------------------------------------------------------

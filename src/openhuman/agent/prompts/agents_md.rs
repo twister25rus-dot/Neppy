@@ -1,9 +1,9 @@
-//! AGENTS.md instruction loading — OpenHuman's analog of Claude Code's
+//! AGENTS.md instruction loading — Neppy's analog of Claude Code's
 //! `CLAUDE.md` / Codex's `AGENTS.md`.
 //!
 //! Loads configurable instruction text from `AGENTS.md` files at two layers:
 //!
-//! 1. **Global** — `<workspace_dir>/AGENTS.md`: the user's OpenHuman workspace
+//! 1. **Global** — `<workspace_dir>/AGENTS.md`: the user's Neppy workspace
 //!    (where `SOUL.md` / `USER.md` already live). Applies to every run.
 //! 2. **Local / project** — `<effective action_dir>/AGENTS.md`: the folder the
 //!    agent is actually operating in. For sub-agent runs with a

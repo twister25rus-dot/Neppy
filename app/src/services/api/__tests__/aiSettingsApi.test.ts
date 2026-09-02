@@ -863,11 +863,11 @@ describe('OpenAI Codex OAuth helpers', () => {
   it('completes OAuth with a trimmed callback URL', async () => {
     mockCallCoreRpc.mockResolvedValue({ result: {} });
 
-    await completeOpenAiCodexOAuth('  openhuman://oauth/callback?code=abc  ');
+    await completeOpenAiCodexOAuth('  neppy://oauth/callback?code=abc  ');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.inference_openai_oauth_complete',
-      params: { callback_url: 'openhuman://oauth/callback?code=abc' },
+      params: { callback_url: 'neppy://oauth/callback?code=abc' },
     });
   });
 

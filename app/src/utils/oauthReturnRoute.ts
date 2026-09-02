@@ -1,4 +1,4 @@
-// Remembers which in-app route started an OAuth connect flow so the `openhuman://oauth/success`
+// Remembers which in-app route started an OAuth connect flow so the `neppy://oauth/success`
 // deep link can return the user there instead of always landing on the connections tab.
 //
 // The value is consumed only on `oauth/success`. A flow that is canceled, fails before

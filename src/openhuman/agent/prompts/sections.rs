@@ -80,7 +80,7 @@ pub struct ToolsSection;
 pub struct SafetySection;
 /// Injects the pre-loaded `AGENTS.md` instruction layers
 /// ([`PromptContext::agents_md_global`] + [`PromptContext::agents_md_local`])
-/// under a `## Project instructions (AGENTS.md)` heading — OpenHuman's analog
+/// under a `## Project instructions (AGENTS.md)` heading — Neppy's analog
 /// of Claude Code's `CLAUDE.md` / Codex's `AGENTS.md`.
 ///
 /// Global (workspace) content renders first, then the local (project) layer.

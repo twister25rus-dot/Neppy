@@ -344,7 +344,7 @@ Transport is selected by `ConnectionProfile` stored in secure storage. On pairin
 ### Pairing flow
 
 1. Desktop: `devices_create_pairing` RPC -> backend ACKs `tunnel:register` with `{channelId, pairingToken, pairingExpiresAt}`.
-2. Desktop shows QR: `openhuman://pair?cid=<>&pt=<>&cpk=<>&rpc=<>&exp=<>`.
+2. Desktop shows QR: `neppy://pair?cid=<>&pt=<>&cpk=<>&rpc=<>&exp=<>`.
 3. iOS scans QR, generates X25519 keypair, connects to backend (`tunnel:connect`, `role:client`, `pairingToken`).
 4. Backend consumes `pairingToken` (single-use) and returns iOS `sessionToken`.
 5. X25519 key agreement over `tunnel:frame` -> XChaCha20-Poly1305 symmetric key.

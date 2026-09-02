@@ -230,7 +230,7 @@ describe('OAuthProviderButton', () => {
 
   it('shows actionable Twitter diagnostics when OAuth startup fails', async () => {
     vi.mocked(openUrl).mockRejectedValue(
-      new Error('failed to open openhuman://oauth/error?provider=twitter&token=secret')
+      new Error('failed to open neppy://oauth/error?provider=twitter&token=secret')
     );
 
     render(<OAuthProviderButton provider={twitterProvider} />);
@@ -434,7 +434,7 @@ describe('OAuthProviderButton', () => {
       for (let i = 0; i < 4; i++) await Promise.resolve();
     });
 
-    expect(handleDeepLinkUrls).toHaveBeenCalledWith(['openhuman://auth?token=jwt&state=abc']);
+    expect(handleDeepLinkUrls).toHaveBeenCalledWith(['neppy://auth?token=jwt&state=abc']);
   });
 
   it('swallows loopback awaitCallback rejection without surfacing an error', async () => {

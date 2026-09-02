@@ -2,7 +2,7 @@
  * E2E auth via the loopback OAuth path.
  *
  * Replaces the old `triggerAuthDeepLinkBypass` helper (which fired
- * `openhuman://auth?token=...` directly through `window.__simulateDeepLink`)
+ * `neppy://auth?token=...` directly through `window.__simulateDeepLink`)
  * with a flow that mirrors what real OAuth does post PR #2550:
  *
  *   1. Spec asks the WebView to start the production loopback listener
@@ -10,7 +10,7 @@
  *      exposed on `window.__startLoopbackOauthListener` only in E2E builds).
  *      The Rust shell binds `http://127.0.0.1:<port>/auth` and hands back a
  *      `{ redirectUri, state }` pair; the WebView also wires the listener's
- *      `awaitCallback()` to convert the callback URL to `openhuman://auth?…`
+ *      `awaitCallback()` to convert the callback URL to `neppy://auth?…`
  *      and dispatch it through the same `__simulateDeepLink` path the
  *      production OAuth button uses.
  *
@@ -19,7 +19,7 @@
  *      state nonce, and emits the `loopback-oauth-callback` Tauri event.
  *
  *   3. The WebView's awaitCallback resolves, forwards the synthetic
- *      `openhuman://auth?…` URL through `__simulateDeepLink`, and
+ *      `neppy://auth?…` URL through `__simulateDeepLink`, and
  *      authentication proceeds the same way it does in production.
  *
  * This exercises the real Rust HTTP server + state-nonce validation +
@@ -87,14 +87,14 @@ async function startWebViewListener(port: number, timeoutSecs: number): Promise<
           // internal listen() unlisten fn don't get GC'd.
           w.__pendingLoopbackHandle = handle;
           // Wire the same conversion the production OAuth button uses:
-          //   http://127.0.0.1:<port>/auth?… → openhuman://auth?…
+          //   http://127.0.0.1:<port>/auth?… → neppy://auth?…
           // then dispatch through the existing deep-link handler.
           handle
             .awaitCallback()
             .then(url => {
               const synthetic = url.replace(
                 /^https?:\/\/127\.0\.0\.1:\d+\/auth/,
-                'openhuman://auth'
+                'neppy://auth'
               );
               const simulate = w.__simulateDeepLink;
               if (typeof simulate === 'function') {
@@ -181,7 +181,7 @@ export async function triggerAuthLoopbackBypass(userId: string = 'e2e-user'): Pr
 
   // `redirectUri` already carries `?state=…` from the production helper;
   // we append the bypass token + key (matching what `handleAuthDeepLink`
-  // expects after the URL is rewritten to openhuman://auth).
+  // expects after the URL is rewritten to neppy://auth).
   const sep = redirectUri.includes('?') ? '&' : '?';
   const callbackUrl = `${redirectUri}${sep}token=${encodeURIComponent(token)}&key=auth`;
 

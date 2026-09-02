@@ -14,11 +14,11 @@ function buildSyntheticDeepLink(
   search: string
 ): string | null {
   if (kind === 'auth') {
-    return `openhuman://auth${search}`;
+    return `neppy://auth${search}`;
   }
 
   if (kind === 'oauth' && status) {
-    return `openhuman://oauth/${status}${search}`;
+    return `neppy://oauth/${status}${search}`;
   }
 
   return null;
@@ -38,7 +38,7 @@ export default function WebCallbackPage({
     if (!synthetic) return;
 
     // This is the SAME-ORIGIN web callback route, reached only through the app's
-    // own routing / the backend OAuth redirect — not via the OS `openhuman://`
+    // own routing / the backend OAuth redirect — not via the OS `neppy://`
     // scheme that any external app can trigger. The C3 state-nonce CSRF guard
     // targets that custom-scheme transport, so it does not apply here; pass
     // requireStateNonce:false. (Web-build login-CSRF hardening — binding this

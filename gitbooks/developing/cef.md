@@ -114,7 +114,7 @@ for these details in the issue:
 
 - Windows edition and full build number, especially for Insider builds.
 - OpenHuman version and installer type (`.msi` or `.exe`).
-- Whether `%LOCALAPPDATA%\com.openhuman.app` was moved aside before retrying.
+- Whether `%LOCALAPPDATA%\com.neppy.app` was moved aside before retrying.
 - Startup log lines from `[startup]`, `[cef-profile]`, and `[cef-startup]`.
 - Any panic text that names `tauri-runtime-cef/src/lib.rs`.
 

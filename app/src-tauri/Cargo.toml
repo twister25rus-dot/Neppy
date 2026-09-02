@@ -1,10 +1,10 @@
 [package]
-name = "OpenHuman"
+name = "Neppy"
 version = "0.63.18"
-description = "OpenHuman - AI-powered Super Assistant"
-authors = ["OpenHuman"]
+description = "Neppy - AI-powered Super Assistant"
+authors = ["Neppy"]
 edition = "2021"
-default-run = "OpenHuman"
+default-run = "Neppy"
 autobins = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,11 +13,11 @@ autobins = false
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "openhuman"
+name = "neppy"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "OpenHuman"
+name = "Neppy"
 path = "src/main.rs"
 
 [build-dependencies]

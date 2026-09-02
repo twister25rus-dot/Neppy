@@ -2,7 +2,7 @@
 
 ## Target User Profiles
 
-OpenHuman serves communities, teams, and professionals. Each user type has distinct needs:
+Neppy serves communities, teams, and professionals. Each user type has distinct needs:
 
 ### Operators & fast-moving professionals
 

@@ -1,6 +1,6 @@
 //! Pre-CEF deep-link forwarding for Windows.
 //!
-//! `openhuman://` OAuth callbacks launch a second `OpenHuman.exe` with the
+//! `neppy://` OAuth callbacks launch a second `OpenHuman.exe` with the
 //! URL in argv. The Windows pre-CEF mutex guard exits secondaries before Tauri's
 //! single-instance/deep-link plugins can run, so the URL must be forwarded here.
 
@@ -28,7 +28,7 @@ use windows_sys::Win32::{
     },
 };
 
-const PIPE_NAME: &str = r"\\.\pipe\com.openhuman.app-deeplink";
+const PIPE_NAME: &str = r"\\.\pipe\com.neppy.app-deeplink";
 const FORWARD_RETRY_ATTEMPTS: usize = 40;
 const FORWARD_RETRY_DELAY: Duration = Duration::from_millis(50);
 
@@ -47,7 +47,7 @@ where
         .skip(1)
         .filter_map(|arg| {
             let arg = arg.as_ref();
-            arg.starts_with("openhuman://").then(|| arg.to_string())
+            arg.starts_with("neppy://").then(|| arg.to_string())
         })
         .collect()
 }
@@ -293,7 +293,7 @@ fn read_urls(handle: HANDLE) -> Vec<String> {
 
     String::from_utf8_lossy(&all)
         .lines()
-        .filter(|line| line.starts_with("openhuman://"))
+        .filter(|line| line.starts_with("neppy://"))
         .map(ToOwned::to_owned)
         .collect()
 }
@@ -343,17 +343,17 @@ mod tests {
     fn collect_deep_link_urls_filters_args() {
         let urls = collect_deep_link_urls_from_args([
             "OpenHuman.exe",
-            "openhuman://auth?token=secret&key=auth",
+            "neppy://auth?token=secret&key=auth",
             "--flag",
             "https://example.test",
-            "openhuman://oauth/success?integrationId=abc",
+            "neppy://oauth/success?integrationId=abc",
         ]);
 
         assert_eq!(
             urls,
             vec![
-                "openhuman://auth?token=secret&key=auth",
-                "openhuman://oauth/success?integrationId=abc"
+                "neppy://auth?token=secret&key=auth",
+                "neppy://oauth/success?integrationId=abc"
             ]
         );
     }
@@ -361,13 +361,13 @@ mod tests {
     #[test]
     fn redact_url_removes_query_and_fragment() {
         assert_eq!(
-            redact_url_for_log("openhuman://auth?token=secret&key=auth#frag"),
-            "openhuman://auth"
+            redact_url_for_log("neppy://auth?token=secret&key=auth#frag"),
+            "neppy://auth"
         );
     }
 
     #[test]
     fn pipe_name_is_stable_and_app_scoped() {
-        assert_eq!(PIPE_NAME, r"\\.\pipe\com.openhuman.app-deeplink");
+        assert_eq!(PIPE_NAME, r"\\.\pipe\com.neppy.app-deeplink");
     }
 }

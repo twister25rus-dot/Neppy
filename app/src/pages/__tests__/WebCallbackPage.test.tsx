@@ -33,7 +33,7 @@ describe('WebCallbackPage', () => {
     expect(screen.getByText('Completing sign-in')).toBeInTheDocument();
     await waitFor(() => {
       expect(handleDeepLinkUrls).toHaveBeenCalledWith(
-        ['openhuman://auth?token=jwt-token&key=auth'],
+        ['neppy://auth?token=jwt-token&key=auth'],
         { requireStateNonce: false }
       );
     });
@@ -45,7 +45,7 @@ describe('WebCallbackPage', () => {
     expect(screen.getByText('Completing sign-in')).toBeInTheDocument();
     await waitFor(() => {
       expect(handleDeepLinkUrls).toHaveBeenCalledWith(
-        ['openhuman://auth?token=jwt-token&key=auth'],
+        ['neppy://auth?token=jwt-token&key=auth'],
         { requireStateNonce: false }
       );
     });
@@ -56,7 +56,7 @@ describe('WebCallbackPage', () => {
 
     await waitFor(() => {
       expect(handleDeepLinkUrls).toHaveBeenCalledWith(
-        ['openhuman://oauth/success?provider=google&integrationId=int-1'],
+        ['neppy://oauth/success?provider=google&integrationId=int-1'],
         { requireStateNonce: false }
       );
     });

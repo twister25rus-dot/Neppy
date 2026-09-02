@@ -1329,7 +1329,7 @@ fn notch_window_hide(app: AppHandle<AppRuntime>) -> Result<(), String> {
 /// runtime returns a `cef::Window` internal handle that `ShowWindow` rejects,
 /// so we walk the OS window list instead (#1607). Empirically there is one
 /// matching top-level frame; the single-instance lock window uses class
-/// `com.openhuman.app-sic` and is excluded.
+/// `com.neppy.app-sic` and is excluded.
 ///
 /// `SW_HIDE` removes the frame from screen AND taskbar — full hide-to-tray as
 /// PR #1548 intended. On restore, the IsWindowVisible filter excludes hidden
@@ -2604,7 +2604,7 @@ pub fn run() {
     // Fix: acquire a named Win32 mutex at the very top of `run()` — before
     // any CEF or builder work — so any secondary instance sees
     // `ERROR_ALREADY_EXISTS` and exits immediately. If the secondary was
-    // launched for an `openhuman://` OAuth callback, forward that URL to the
+    // launched for an `neppy://` OAuth callback, forward that URL to the
     // primary through our pre-CEF pipe before exiting; the Tauri deep-link
     // plugin cannot run on this early secondary path.
     //
@@ -2618,7 +2618,7 @@ pub fn run() {
 
         // Must match the bundle identifier in tauri.conf.json.
         // Changing the app identifier requires updating this string too.
-        let mutex_name: Vec<u16> = "com.openhuman.app-cef-init\0".encode_utf16().collect();
+        let mutex_name: Vec<u16> = "com.neppy.app-cef-init\0".encode_utf16().collect();
 
         // SAFETY: mutex_name is null-terminated UTF-16; handle is checked below.
         let handle = unsafe { CreateMutexW(std::ptr::null(), 0, mutex_name.as_ptr()) };
@@ -2720,7 +2720,7 @@ pub fn run() {
     // against a locked cache. Analogous to the macOS reap above.
 
     // ── Linux pre-CEF deep-link forwarding guard (issue #2359) ────────────
-    // On Linux, a secondary instance with an openhuman:// URL in argv exits
+    // On Linux, a secondary instance with an neppy:// URL in argv exits
     // at the CEF preflight check before Builder::setup() runs, silently
     // dropping the OAuth callback. Detect and forward the URL here, before
     // CEF preflight can exit(1).
@@ -2956,7 +2956,7 @@ pub fn run() {
             #[cfg(windows)]
             {
                 // `register_all` writes HKCU\Software\Classes\openhuman so the
-                // browser can hand `openhuman://auth?...` callbacks back to
+                // browser can hand `neppy://auth?...` callbacks back to
                 // the running instance. The plugin only returns an Err — and
                 // it only logs at `warn` — when its single internal write
                 // fails outright; it does not verify what's on disk. Issue
@@ -2970,18 +2970,18 @@ pub fn run() {
                 let status = deep_link_registration_check::verify_protocol_registration();
                 let status_log = status.redacted();
                 if register_err.is_none() && status.is_healthy() {
-                    log::info!("[deep-link] openhuman:// scheme registered ({status_log})");
+                    log::info!("[deep-link] neppy:// scheme registered ({status_log})");
                 } else {
                     // Use the redacted form so per-user install paths
                     // (`C:\Users\<username>\...`) do not land in Sentry / user
                     // logs — basenames are kept so the diagnostic still
                     // identifies the registered exe.
                     log::error!(
-                        "[deep-link] openhuman:// scheme registration unhealthy — \
+                        "[deep-link] neppy:// scheme registration unhealthy — \
                          OAuth callbacks may never reach the app. \
                          register_all_error={register_err:?}, hkcu_status={status_log}. \
                          See gitbooks/overview/troubleshooting-sign-in.md \
-                         (\"Windows: openhuman:// handler not registered\") for the manual repair."
+                         (\"Windows: neppy:// handler not registered\") for the manual repair."
                     );
                 }
                 deep_link_ipc_windows::drain_pending_urls(app.app_handle());

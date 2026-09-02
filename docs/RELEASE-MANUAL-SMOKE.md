@@ -42,7 +42,7 @@ Applies to every release, all platforms.
 
 - [ ] **SmartScreen does not block install** — Run the installer from a fresh download. Expected: SmartScreen passes (signed binary). If `Windows protected your PC` appears, the EV signature is missing or the reputation has not built up — escalate before shipping.
 - [ ] **Installer creates Start Menu + Desktop shortcuts** — Defaults preserved. Expected: both shortcuts launch the app.
-- [ ] **App registers `openhuman://` URL scheme** — From a browser, click an `openhuman://oauth/success?...` link. Expected: OS prompts to open in OpenHuman; clicking through delivers the deep link.
+- [ ] **App registers `neppy://` URL scheme** — From a browser, click an `neppy://oauth/success?...` link. Expected: OS prompts to open in OpenHuman; clicking through delivers the deep link.
 
 ### Linux
 

@@ -3,7 +3,7 @@
  *
  * Flow:
  *   1. User taps "Scan QR code" → barcode scanner opens.
- *   2. App parses the openhuman://pair?... URL from the scan result.
+ *   2. App parses the neppy://pair?... URL from the scan result.
  *   3. Validates fields; rejects expired codes.
  *   4. Generates a fresh device X25519 keypair.
  *   5. Builds a ConnectionProfile and saves it via profileStore.
@@ -41,10 +41,10 @@ interface PairPayload {
 function parsePairUrl(raw: string): PairPayload | null {
   log('[ios] parsing pair URL len=%d', raw.length);
   try {
-    // Accept both the openhuman:// deep-link and a plain https:// fallback.
-    // Normalise openhuman:// → https:// so URL() can parse it.
-    const normalised = raw.startsWith('openhuman://')
-      ? raw.replace('openhuman://', 'https://openhuman.app/')
+    // Accept both the neppy:// deep-link and a plain https:// fallback.
+    // Normalise neppy:// → https:// so URL() can parse it.
+    const normalised = raw.startsWith('neppy://')
+      ? raw.replace('neppy://', 'https://openhuman.app/')
       : raw;
     const url = new URL(normalised);
     const p = url.searchParams;

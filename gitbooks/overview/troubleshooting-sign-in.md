@@ -35,20 +35,20 @@ A `401` response means the desktop token and remote core token do not match. Fix
 
 ## Check the deep-link callback
 
-Successful desktop OAuth ends with an `openhuman://auth?...` callback. If the browser shows that URL but the app stays on the welcome screen:
+Successful desktop OAuth ends with an `neppy://auth?...` callback. If the browser shows that URL but the app stays on the welcome screen:
 
 1. Make sure only one OpenHuman desktop instance is running.
 2. Restart the app, keep the same remote-core settings, and retry sign-in.
 3. If using a remote core, check whether the core receives `openhuman.auth_store_session`.
 
-## Windows: `openhuman://` handler not registered
+## Windows: `neppy://` handler not registered
 
-On Windows the `openhuman://` URL scheme is registered to the running executable via `HKEY_CURRENT_USER\Software\Classes\openhuman\shell\open\command` at first launch. If that registration silently failed, or if the install was moved/copied after first launch, the browser cannot hand the OAuth callback back to the app, and sign-in stalls after the provider step (issue #2699).
+On Windows the `neppy://` URL scheme is registered to the running executable via `HKEY_CURRENT_USER\Software\Classes\openhuman\shell\open\command` at first launch. If that registration silently failed, or if the install was moved/copied after first launch, the browser cannot hand the OAuth callback back to the app, and sign-in stalls after the provider step (issue #2699).
 
 The Tauri shell now emits a `log::error!` line at startup when this happens. Look for it in your log file (default `%USERPROFILE%\.openhuman\logs\openhuman.*.log`):
 
 ```
-[deep-link] openhuman:// scheme registration unhealthy — OAuth callbacks may never reach the app.
+[deep-link] neppy:// scheme registration unhealthy — OAuth callbacks may never reach the app.
 register_all_error=…, hkcu_status=NotRegistered|MissingCommand|Stale { … }|ReadError(…)
 ```
 
@@ -82,5 +82,5 @@ Do not paste real JWTs into public GitHub issues. Redact tokens and attach only 
 - Whether the core mode is local or remote.
 - The RPC URL host, redacted token status, and `core.ping` result.
 - The OAuth provider used.
-- Whether an `openhuman://auth` URL appeared in the browser.
+- Whether an `neppy://auth` URL appeared in the browser.
 - The first unauthorized log line, if present.

@@ -210,7 +210,7 @@ Manual download links (all platforms):
 `pnpm dev:app` (or any debug build of the Tauri shell) exits before the window appears with a message like:
 
 ```
-[openhuman] CEF cache at /Users/<you>/Library/Caches/com.openhuman.app/cef is held by another OpenHuman instance (host <hostname>, pid 12345).
+[openhuman] CEF cache at /Users/<you>/Library/Caches/com.neppy.app/cef is held by another OpenHuman instance (host <hostname>, pid 12345).
 Quit the running instance and try again.
 Workaround:
   pkill -f "OpenHuman.app/Contents"
@@ -219,7 +219,7 @@ Workaround:
 
 **Cause**
 
-CEF (Chromium Embedded Framework) holds an exclusive lock on its user-data directory via a `SingletonLock` symlink under `~/Library/Caches/com.openhuman.app/cef`. Both the installed `.app` bundle and the dev binary use the same identifier (`com.openhuman.app`), so they cannot run side-by-side. Without the preflight, `cef::initialize` returns failure and the vendored `tauri-runtime-cef` panics with a Rust backtrace and no actionable message (this was issue #864 before the preflight landed).
+CEF (Chromium Embedded Framework) holds an exclusive lock on its user-data directory via a `SingletonLock` symlink under `~/Library/Caches/com.neppy.app/cef`. Both the installed `.app` bundle and the dev binary use the same identifier (`com.neppy.app`), so they cannot run side-by-side. Without the preflight, `cef::initialize` returns failure and the vendored `tauri-runtime-cef` panics with a Rust backtrace and no actionable message (this was issue #864 before the preflight landed).
 
 **Fix**
 
@@ -235,7 +235,7 @@ If the lock is left behind by a crashed process (PID no longer alive), the prefl
 
 **Known limitation**
 
-Dev and release builds still share `com.openhuman.app` as the cache identifier. Isolating dev to a separate `com.openhuman.app.dev` cache requires changes to the vendored `tauri-runtime-cef` (cache path is built inside the runtime from the bundle identifier, not exposed to the openhuman shell). Tracked as a follow-up to #864.
+Dev and release builds still share `com.neppy.app` as the cache identifier. Isolating dev to a separate `com.neppy.app.dev` cache requires changes to the vendored `tauri-runtime-cef` (cache path is built inside the runtime from the bundle identifier, not exposed to the openhuman shell). Tracked as a follow-up to #864.
 
 ### Stale `openhuman` RPC process on the core port
 

@@ -10,7 +10,7 @@ import { behavior, MOCK_JWT } from "../state.mjs";
  *   2. App opens that URL in the system browser.
  *   3. User logs in at the provider, provider redirects back to the backend
  *      callback, the backend exchanges the code and finally redirects to the
- *      desktop deep link `openhuman://oauth/success?integrationId=…&provider=…`
+ *      desktop deep link `neppy://oauth/success?integrationId=…&provider=…`
  *      (see app/src/utils/desktopDeepLinkListener.ts).
  *   4. The Tauri shell receives the deep link, the app marks the integration
  *      connected.
@@ -64,10 +64,10 @@ export function handleOAuth(ctx) {
       : clampDelay(mockBehavior.oauthAutoRedirectMs, 50);
 
     const target = errorCode
-      ? `openhuman://oauth/error?provider=${encodeURIComponent(
+      ? `neppy://oauth/error?provider=${encodeURIComponent(
           params.provider || provider,
         )}&error=${encodeURIComponent(errorCode)}`
-      : `openhuman://oauth/success?integrationId=${encodeURIComponent(
+      : `neppy://oauth/success?integrationId=${encodeURIComponent(
           integrationId,
         )}&provider=${encodeURIComponent(params.provider || provider)}`;
 
@@ -96,7 +96,7 @@ export function handleOAuth(ctx) {
       // Redirect to the desktop error deep link.
       setCors(res);
       res.writeHead(302, {
-        Location: `openhuman://oauth/error?provider=${encodeURIComponent(
+        Location: `neppy://oauth/error?provider=${encodeURIComponent(
           provider,
         )}&error=${encodeURIComponent(errorCode)}`,
       });
@@ -110,7 +110,7 @@ export function handleOAuth(ctx) {
       `mock-${provider}-integration`;
     setCors(res);
     res.writeHead(302, {
-      Location: `openhuman://oauth/success?integrationId=${encodeURIComponent(
+      Location: `neppy://oauth/success?integrationId=${encodeURIComponent(
         integrationId,
       )}&provider=${encodeURIComponent(provider)}`,
     });

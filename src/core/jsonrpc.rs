@@ -940,7 +940,7 @@ async fn telegram_auth_handler(
 
 /// Handles the generic desktop login callback fallback.
 ///
-/// The preferred path is the `openhuman://auth?...` deep link handled in the
+/// The preferred path is the `neppy://auth?...` deep link handled in the
 /// renderer. On hosts where URL-scheme registration is broken, some login
 /// flows can fall back to the local core callback (`/auth`). This route is
 /// public because the callback carries its own one-time login token; raw

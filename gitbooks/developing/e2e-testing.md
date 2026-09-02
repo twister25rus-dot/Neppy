@@ -125,7 +125,7 @@ or macOS when touching CEF preflight, single-instance, or deep-link startup
 code:
 
 1. Launch OpenHuman normally and leave it running.
-2. Trigger `openhuman://auth?token=e2e-token&key=auth` through the OS opener.
+2. Trigger `neppy://auth?token=e2e-token&key=auth` through the OS opener.
 3. Confirm the already-running window receives the callback and does not start
    a second full CEF instance.
 4. Confirm the secondary process exits cleanly without a CEF cache-lock error.

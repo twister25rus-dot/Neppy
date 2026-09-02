@@ -497,7 +497,7 @@ import("./utils/desktopDeepLinkListener").then((m) => {
 });
 ```
 
-The listener intercepts `openhuman://` URLs (e.g. auth handoff), exchanges tokens through the Rust side (bypassing CORS), stores the session, and navigates to the right route. See `utils/desktopDeepLinkListener.ts`.
+The listener intercepts `neppy://` URLs (e.g. auth handoff), exchanges tokens through the Rust side (bypassing CORS), stores the session, and navigates to the right route. See `utils/desktopDeepLinkListener.ts`.
 
 ---
 
@@ -572,7 +572,7 @@ export const DEV_FORCE_ONBOARDING = /* dev-only VITE_DEV_FORCE_ONBOARDING */;
 
 #### Desktop Deep Link Listener (`utils/desktopDeepLinkListener.ts`)
 
-Handles incoming `openhuman://` deep links via the Tauri deep-link plugin: parses the URL, performs the Rust-side token exchange (bypasses CORS), stores the session, and navigates. Set up lazily from `main.tsx` so the Tauri IPC bridge is ready first.
+Handles incoming `neppy://` deep links via the Tauri deep-link plugin: parses the URL, performs the Rust-side token exchange (bypasses CORS), stores the session, and navigates. Set up lazily from `main.tsx` so the Tauri IPC bridge is ready first.
 
 #### URL Opener (`utils/openUrl.ts`)
 
