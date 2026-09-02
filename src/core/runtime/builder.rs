@@ -256,19 +256,31 @@ impl DomainSet {
         }
     }
 
-    /// Like [`full`](Self::full) but with the two TinyHumans-backend-coupled
+    /// Like [`full`](Self::full) but with the three TinyHumans-backend-coupled
     /// groups off: `hosted` (announcements, billing, orchestration, referral,
-    /// team — all thin proxies to the hosted backend) and `relay` (the
-    /// tiny.place agent social network). Neppy is a local-first fork with no
-    /// hosted backend, so these groups have nothing to talk to; disabling them
-    /// (rather than stubbing) makes their controllers report unknown-method,
-    /// their agent tools disappear, and their stores/subscribers never
-    /// initialise — which also stops the `SessionExpired` cascade that a failed
-    /// hosted 401 would otherwise trigger. See NEPPY-BUILD-SPEC.md §2.2.
+    /// team — all thin proxies to the hosted backend), `relay` (the tiny.place
+    /// agent social network), and `integrations` (the Composio OAuth proxy,
+    /// hosted file storage, and Composio-backed task sources). Neppy is a
+    /// local-first fork with no hosted backend, so these groups have nothing to
+    /// talk to; disabling them (rather than stubbing) makes their controllers
+    /// report unknown-method, their agent tools disappear, and their
+    /// stores/subscribers never initialise — which also stops the
+    /// `SessionExpired` cascade that a failed hosted 401 would otherwise
+    /// trigger. See NEPPY-BUILD-SPEC.md §2.2 and §2.10.
     pub fn full_local() -> Self {
         Self {
             hosted: false,
             relay: false,
+            // `Integrations` is the Composio OAuth proxy plus the two surfaces
+            // built on it: `file_storage` (backed by the hosted backend's
+            // `/agent-integrations/file-storage/*` S3 provider) and
+            // `task_sources` (which pulls work items *through* Composio's
+            // `fetch_tasks`). All three are hosted-backend-only, so the whole
+            // group is dead in a local-first fork — nothing local is lost.
+            // Replacement for the services you actually use is an MCP server
+            // with your own credentials; the `mcp` group stays on.
+            // See NEPPY-BUILD-SPEC.md §2.10.
+            integrations: false,
             ..Self::full()
         }
     }

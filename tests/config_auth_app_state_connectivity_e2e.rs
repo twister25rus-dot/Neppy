@@ -1068,7 +1068,10 @@ fn config_schema_defaults_cover_dashboard_capability_memory_and_security_shapes(
 
     let observability: openhuman_core::openhuman::config::schema::ObservabilityConfig =
         serde_json::from_value(json!({})).expect("observability defaults");
-    assert!(observability.analytics_enabled);
+    // Neppy: telemetry is off by default (upstream defaulted analytics on).
+    // See NEPPY-BUILD-SPEC.md §2.6.
+    assert!(!observability.analytics_enabled);
+    assert!(!observability.share_usage_data);
     assert!(observability.sentry_dsn.is_none());
     let scheduler_gate: openhuman_core::openhuman::config::schema::SchedulerGateConfig =
         serde_json::from_value(json!({})).expect("scheduler gate defaults");

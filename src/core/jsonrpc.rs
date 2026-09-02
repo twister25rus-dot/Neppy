@@ -1832,13 +1832,22 @@ async fn run_server_with_services(
         Some(token) => crate::core::runtime::TokenSource::Fixed(token),
         None => crate::core::runtime::TokenSource::EnvOrFile,
     };
+    // Neppy: the Composio integration sync (periodic connection sync + the
+    // one-shot memory-source reconcile) rides `services.integrations` and talks
+    // to the hosted backend. `DomainSet::full_local()` drops the Integrations
+    // domain, so the sync has nothing to sync — turn the background job off in
+    // lockstep rather than leaving it to no-op against a dead backend.
+    // See NEPPY-BUILD-SPEC.md §2.10.
+    let mut services = services;
+    services.integrations = false;
+
     let mut builder = crate::core::runtime::CoreBuilder::new(host_kind)
         .token(token)
         .services(services)
-        // Neppy: local-first fork with no hosted backend. Drop the `hosted`
-        // and `relay` domain groups so nothing proxies to TinyHumans and no
-        // failed hosted call can publish `SessionExpired`. See
-        // NEPPY-BUILD-SPEC.md §2.2.
+        // Neppy: local-first fork with no hosted backend. Drop the `hosted`,
+        // `relay` and `integrations` domain groups so nothing proxies to
+        // TinyHumans and no failed hosted call can publish `SessionExpired`.
+        // See NEPPY-BUILD-SPEC.md §2.2 and §2.10.
         .domains(crate::core::runtime::DomainSet::full_local());
     if let Some(host) = host {
         builder = builder.host(host);
