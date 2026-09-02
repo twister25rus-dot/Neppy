@@ -1,6 +1,6 @@
 # Core kernelization, part 2 — the domain-family reorg
 
-**Status:** structural half complete · **Date:** 2026-08-02 · **Scope:** `src/openhuman/**`
+**Status:** structural half complete · **Date:** 2026-08-02 · **Scope:** `src/neppy/**`
 **Companions:** `docs/specs/kernel.md` — the subsystem/driver model this feeds into, still an
 uncommitted design draft, so it is referenced by name rather than linked ·
 [`../plans/pluggable-core/README.md`](../plans/pluggable-core/README.md) (the host-side
@@ -45,7 +45,7 @@ only compare totals.
 
 ### In progress — the structural half
 
-At the start of this work `src/openhuman/` was **124 flat directories** plus two root-level
+At the start of this work `src/neppy/` was **124 flat directories** plus two root-level
 `*.rs` files (`util.rs`, `dev_paths.rs`) violating the AGENTS.md "no new root-level `*.rs`" rule,
 with only **12** carrying a module-level `#[cfg]`. A single capability was spread across sibling
 top-level dirs — `memory*` is 13, `agent*` is 6, `mcp_*` is 4, `runtime_*` was 3 — so every gate
@@ -97,7 +97,7 @@ paths** — directory layout and wire surface are independent axes.
 - One PR per family. `git mv` + a mechanical path rewrite. No logic change, no behaviour change.
   If a hunk isn't a path, it doesn't belong in the PR.
 - **No `pub use` transition shims.** The compiler catches 100% of intra-crate breakage.
-  `src/openhuman/heartbeat/` was the standing counter-example: a 10-line shim added "so external
+  `src/neppy/heartbeat/` was the standing counter-example: a 10-line shim added "so external
   paths keep compiling without a crate-wide rename", which then sat there indefinitely with live
   call sites. It had three real callers; step 3 retargeted them and deleted it. Worse than
   useless, a shim is an always-compiled `pub mod` re-exporting into a gated tree, which defeats
@@ -112,8 +112,8 @@ paths** — directory layout and wire surface are independent axes.
 ## 3. Pilot — `meet/` (landed)
 
 ```
-src/openhuman/meet_agent/     -> src/openhuman/meet/agent/
-src/openhuman/agent_meetings/ -> src/openhuman/meet/backend_bot/
+src/neppy/meet_agent/     -> src/neppy/meet/agent/
+src/neppy/agent_meetings/ -> src/neppy/meet/backend_bot/
 ```
 
 Chosen as the pilot because it is the smallest family that already has a gate *and* exercises all
@@ -143,20 +143,20 @@ renames.
 
 ### Gotchas the first two moves hit
 
-- **Braced imports.** `use crate::openhuman::{scheduler_gate, todos};` is invisible to a
-  `s/openhuman::scheduler_gate/…/` rewrite. There are only a handful crate-wide; the compiler
+- **Braced imports.** `use crate::neppy::{scheduler_gate, todos};` is invisible to a
+  `s/neppy::scheduler_gate/…/` rewrite. There are only a handful crate-wide; the compiler
   finds them immediately, but budget for a hand-fix per family.
 - **The rewrite loop must not word-split in zsh.** `sed -i … $files` passes the whole newline-
   separated list as *one* argument under zsh (which does not word-split unquoted parameters), so
   the rewrite silently does nothing and the greps still show old paths. Use
   `grep -rlZ … | xargs -0 sed -i …`.
 - **One observable string DID change, deliberately.** The tracing target in
-  `tools/agent_policy/engine.rs` went from `"openhuman::agent_tool_policy"` to
-  `"openhuman::tools::agent_policy"` (6 sites). Tracing targets mirror module paths by
-  convention — the other three `target: "openhuman::…"` literals in the crate all do — so
+  `tools/agent_policy/engine.rs` went from `"neppy::agent_tool_policy"` to
+  `"neppy::tools::agent_policy"` (6 sites). Tracing targets mirror module paths by
+  convention — the other three `target: "neppy::…"` literals in the crate all do — so
   leaving the old value would have pointed a log filter at a module that no longer exists.
   Nothing operator-facing referenced it (no docs, scripts, or CI). Recorded here because a
-  pure-move commit must never change an observable string *silently*; `RUST_LOG=openhuman::
+  pure-move commit must never change an observable string *silently*; `RUST_LOG=neppy::
   agent_tool_policy=debug` now matches nothing, and tracing's EnvFilter fails open.
 - **Pre-existing failures to not chase.** `cron::scheduler::tests::{run_agent_job_returns_error_without_provider_key,
   cron_agent_job_short_loopback_send_error_stays_retryable}` overflow the stack on `main`, before
@@ -226,11 +226,11 @@ goes to `platform/`.
 6. `tinyplace/` does **not** go under `web3/` — its signer works via ed25519 independently.
 7. Do not merge `migration/` into `migrations/` during a move (pure moves only).
 8. **`scripts/ci/orch-ip-gate.sh` hard-codes domain paths and fails *open* on a wrong path.**
-   Retargeted to `src/openhuman/hosted/orchestration/…` in step 3; its
-   `src/openhuman/subconscious/profiles/tinyplace.rs` reference is still valid because
+   Retargeted to `src/neppy/hosted/orchestration/…` in step 3; its
+   `src/neppy/subconscious/profiles/tinyplace.rs` reference is still valid because
    `subconscious/` stayed put. Re-check this script on any move that touches either path, and
    confirm the directory it names actually exists — a pass proves nothing on its own.
-9. `scripts/agent-batch/` specs use `owned_paths: ["src/openhuman/<dom>/"]` — sweep live specs.
+9. `scripts/agent-batch/` specs use `owned_paths: ["src/neppy/<dom>/"]` — sweep live specs.
 
 ### Order
 
@@ -325,7 +325,7 @@ RPCs are unregistered and the `MemoryDiffTool` is absent.
 
 ## 8. Definition of done
 
-1. `src/openhuman/` is ~30 directories, zero root-level `*.rs` besides `mod.rs`.
+1. `src/neppy/` is ~30 directories, zero root-level `*.rs` besides `mod.rs`.
 2. Every family directory maps 1:1 to a gate or is declared kernel in this document.
 3. `kernel-floor.limits` reaches 222 names / 2 native.
 4. Each gate has both-ways tests in `src/core/all_tests.rs` and `tools/ops_tests.rs`.

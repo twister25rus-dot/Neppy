@@ -18,11 +18,11 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 use tempfile::{Builder, TempDir};
 
-use neppy_core::openhuman::config::{Config, DelegateAgentConfig};
-use neppy_core::openhuman::cron::DeliveryConfig;
-use neppy_core::openhuman::memory::{Memory, MemoryCategory, MemoryEntry, NamespaceSummary};
-use neppy_core::openhuman::security::{AuditLogger, SecurityPolicy};
-use neppy_core::openhuman::tools::{
+use neppy_core::neppy::config::{Config, DelegateAgentConfig};
+use neppy_core::neppy::cron::DeliveryConfig;
+use neppy_core::neppy::memory::{Memory, MemoryCategory, MemoryEntry, NamespaceSummary};
+use neppy_core::neppy::security::{AuditLogger, SecurityPolicy};
+use neppy_core::neppy::tools::{
     all_tools, ComposioTool, CronAddTool, TodoTool, Tool, ToolCallOptions,
 };
 
@@ -95,7 +95,7 @@ impl Memory for StubMemory {
         &self,
         _query: &str,
         _limit: usize,
-        _opts: neppy_core::openhuman::memory::RecallOpts<'_>,
+        _opts: neppy_core::neppy::memory::RecallOpts<'_>,
     ) -> Result<Vec<MemoryEntry>> {
         Ok(Vec::new())
     }

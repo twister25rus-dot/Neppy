@@ -27,7 +27,7 @@ use crate::core::all::DomainGroup;
 use crate::core::jsonrpc::{self, EmbeddedReadySignal};
 use crate::core::runtime::context::CoreContext;
 use crate::core::types::HostKind;
-use crate::openhuman::config::Config;
+use crate::neppy::config::Config;
 
 /// Selects which background services and transports a [`CoreRuntime`] runs.
 ///
@@ -475,10 +475,10 @@ pub struct CoreBuilder {
     token: TokenSource,
     services: ServiceSet,
     domains: DomainSet,
-    tool_groups: crate::openhuman::tools::toolpacks::ToolGroups,
+    tool_groups: crate::neppy::tools::toolpacks::ToolGroups,
     host: Option<String>,
     port: Option<u16>,
-    config: Option<crate::openhuman::config::Config>,
+    config: Option<crate::neppy::config::Config>,
 }
 
 impl CoreBuilder {
@@ -522,7 +522,7 @@ impl CoreBuilder {
     ///
     /// ```no_run
     /// # use neppy_core::core::runtime::CoreBuilder;
-    /// # use neppy_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
+    /// # use neppy_core::neppy::tools::toolpacks::{GroupMode, ToolGroups};
     /// # fn f(b: CoreBuilder) -> CoreBuilder {
     /// b.tool_groups(
     ///     ToolGroups::none()
@@ -534,10 +534,7 @@ impl CoreBuilder {
     ///
     /// Narrowing only: a group set to `Advertised` whose tools are compiled
     /// out, or whose `DomainGroup` is off under `domains`, stays absent.
-    pub fn tool_groups(
-        mut self,
-        tool_groups: crate::openhuman::tools::toolpacks::ToolGroups,
-    ) -> Self {
+    pub fn tool_groups(mut self, tool_groups: crate::neppy::tools::toolpacks::ToolGroups) -> Self {
         self.tool_groups = tool_groups;
         self
     }
@@ -560,7 +557,7 @@ impl CoreBuilder {
         self
     }
 
-    /// Supply the [`Config`](crate::openhuman::config::Config) outright instead
+    /// Supply the [`Config`](crate::neppy::config::Config) outright instead
     /// of letting `build()` discover one from `config.toml` and the environment.
     ///
     /// Without this an embedder can only configure the core by setting
@@ -572,9 +569,9 @@ impl CoreBuilder {
     ///
     /// The config is used **verbatim**: no `config.toml` read and no env
     /// overlay. Call
-    /// [`apply_env_overrides`](crate::openhuman::config::Config::apply_env_overrides)
+    /// [`apply_env_overrides`](crate::neppy::config::Config::apply_env_overrides)
     /// yourself first if you want the environment to participate.
-    pub fn config(mut self, config: crate::openhuman::config::Config) -> Self {
+    pub fn config(mut self, config: crate::neppy::config::Config) -> Self {
         self.config = Some(config);
         self
     }
@@ -803,7 +800,7 @@ impl CoreRuntime {
         // and reachable from the network. See issue #1919. The self-generated
         // {workspace}/core.token does NOT count — remote clients cannot read it,
         // so treating it as "explicit" would be fail-open.
-        if crate::openhuman::security::pairing::is_public_bind(&resolved_host)
+        if crate::neppy::security::pairing::is_public_bind(&resolved_host)
             && !self.has_operator_token
         {
             log::error!(
@@ -829,7 +826,7 @@ impl CoreRuntime {
 
         let preferred_port = resolved_port;
         let host = resolved_host;
-        let pick = crate::openhuman::platform::connectivity::rpc::pick_listen_port_for_host(
+        let pick = crate::neppy::platform::connectivity::rpc::pick_listen_port_for_host(
             host.as_str(),
             preferred_port,
         )
@@ -903,8 +900,8 @@ impl CoreRuntime {
         // `ollama serve` openhuman itself spawned (no-op when externally
         // managed) so the next launch doesn't try to reclaim a dead daemon.
         // Bounded so a wedged Ollama can't hold up app shutdown.
-        if let Some(svc) = crate::openhuman::inference::local::try_global() {
-            let cfg = crate::openhuman::config::Config::load_or_init()
+        if let Some(svc) = crate::neppy::inference::local::try_global() {
+            let cfg = crate::neppy::config::Config::load_or_init()
                 .await
                 .unwrap_or_default();
             log::info!("[core] shutdown: cleaning up openhuman-owned ollama if any");

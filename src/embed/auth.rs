@@ -81,9 +81,7 @@ impl Session {
 
     /// Whether this is the offline form.
     pub fn is_local(&self) -> bool {
-        crate::openhuman::security::credentials::session_support::is_local_session_token(
-            &self.token,
-        )
+        crate::neppy::security::credentials::session_support::is_local_session_token(&self.token)
     }
 }
 

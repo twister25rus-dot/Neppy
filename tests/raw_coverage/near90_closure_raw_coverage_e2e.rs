@@ -10,17 +10,17 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration as StdDuration;
 
 use chrono::Utc;
-use neppy_core::openhuman::desktop::app_state::{
+use neppy_core::neppy::desktop::app_state::{
     snapshot, update_local_state, StoredAppStatePatch, StoredOnboardingTasks,
 };
-use neppy_core::openhuman::config::rpc as config_rpc;
-use neppy_core::openhuman::security::credentials::profiles::{
+use neppy_core::neppy::config::rpc as config_rpc;
+use neppy_core::neppy::security::credentials::profiles::{
     AuthProfile, AuthProfileKind, AuthProfilesStore,
 };
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::memory::{
     ai_list_memory_files, ai_read_memory_file, ai_write_memory_file, clear_namespace,
     context_query, context_recall, doc_delete, doc_list, doc_put, memory_delete_document,
     memory_init, memory_list_documents, memory_list_namespaces, memory_query_namespace,
@@ -29,11 +29,11 @@ use neppy_core::openhuman::memory::{
     PutDocParams, QueryNamespaceParams, QueryNamespaceRequest, ReadMemoryFileRequest,
     RecallContextRequest, RecallMemoriesRequest, RecallNamespaceParams, WriteMemoryFileRequest,
 };
-use neppy_core::openhuman::memory::sources::readers::SourceReader;
-use neppy_core::openhuman::memory::sources::sync::sync_source;
-use neppy_core::openhuman::memory::sources::{ContentType, MemorySourceEntry, SourceKind};
-use neppy_core::openhuman::threads::ops as thread_ops;
-use neppy_core::openhuman::threads::welcome_migration::migrate_welcome_agent_artifacts;
+use neppy_core::neppy::memory::sources::readers::SourceReader;
+use neppy_core::neppy::memory::sources::sync::sync_source;
+use neppy_core::neppy::memory::sources::{ContentType, MemorySourceEntry, SourceKind};
+use neppy_core::neppy::threads::ops as thread_ops;
+use neppy_core::neppy::threads::welcome_migration::migrate_welcome_agent_artifacts;
 use serde_json::{json, Value};
 use tempfile::{Builder, TempDir};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -79,7 +79,7 @@ struct Harness {
 }
 
 impl Harness {
-    async fn config(&self) -> neppy_core::openhuman::config::Config {
+    async fn config(&self) -> neppy_core::neppy::config::Config {
         config_rpc::load_config_with_timeout()
             .await
             .expect("isolated config should load")
@@ -105,16 +105,16 @@ fn env_lock() -> std::sync::MutexGuard<'static, ()> {
         .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
-fn ensure_memory_seams(config: Arc<neppy_core::openhuman::config::Config>) {
+fn ensure_memory_seams(config: Arc<neppy_core::neppy::config::Config>) {
     std::thread::Builder::new()
         .name("round20-memory-seams".to_string())
         .stack_size(8 * 1024 * 1024)
         .spawn(move || {
-            neppy_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::clone(
+            neppy_core::neppy::memory::host_impls::install_memory_host_seams(Arc::clone(
                 &config,
             ));
             #[cfg(feature = "modules")]
-            neppy_core::openhuman::modules::memory::set_modules_policy(config);
+            neppy_core::neppy::modules::memory::set_modules_policy(config);
         })
         .expect("spawn round20 memory seam installer")
         .join()
@@ -164,7 +164,7 @@ embedding_strict = false
 "#
     );
     std::fs::write(root.join("config.toml"), &cfg).expect("write config.toml");
-    let _: neppy_core::openhuman::config::Config =
+    let _: neppy_core::neppy::config::Config =
         toml::from_str(&cfg).expect("round20 config must match schema");
 }
 
@@ -412,7 +412,7 @@ async fn round20_memory_sources_readers_and_sync_cover_error_edges_without_netwo
     let harness = setup("http://127.0.0.1:9");
     let config = harness.config().await;
 
-    let rss = neppy_core::openhuman::memory::sources::readers::rss::RssReader::new();
+    let rss = neppy_core::neppy::memory::sources::readers::rss::RssReader::new();
     let mut missing_url = source_entry("rss-missing-url", SourceKind::RssFeed);
     assert_eq!(
         rss.list_items(&missing_url, &config)
@@ -461,7 +461,7 @@ async fn round20_memory_sources_readers_and_sync_cover_error_edges_without_netwo
     let old_path = std::env::var("PATH").unwrap_or_default();
     let _path = EnvGuard::set("PATH", format!("{}:{old_path}", bin.display()));
 
-    let github = neppy_core::openhuman::memory::sources::readers::github::GithubReader;
+    let github = neppy_core::neppy::memory::sources::readers::github::GithubReader;
     let mut entry = source_entry("github-round20", SourceKind::GithubRepo);
     entry.url = Some("git@github.com:tinyhumansai/openhuman.git".to_string());
     if !gh_available {
@@ -667,7 +667,7 @@ async fn round20_memory_documents_files_and_envelopes_cover_success_and_failure_
     assert!(!memories.memories.is_empty());
 
     let deleted =
-        memory_delete_document(neppy_core::openhuman::memory::DeleteDocumentRequest {
+        memory_delete_document(neppy_core::neppy::memory::DeleteDocumentRequest {
             namespace: namespace.clone(),
             document_id: "doc-round20".to_string(),
         })
@@ -700,7 +700,7 @@ async fn round20_threads_fallback_title_delete_missing_and_welcome_noop_paths() 
     let harness = setup("http://127.0.0.1:9");
 
     let created = thread_ops::thread_create_new(
-        neppy_core::openhuman::memory::CreateConversationThreadRequest {
+        neppy_core::neppy::memory::CreateConversationThreadRequest {
             labels: None,
             personality_id: None,
         },
@@ -711,7 +711,7 @@ async fn round20_threads_fallback_title_delete_missing_and_welcome_noop_paths() 
     .data
     .expect("created data");
 
-    let user_message = neppy_core::openhuman::memory::ConversationMessageRecord {
+    let user_message = neppy_core::neppy::memory::ConversationMessageRecord {
         id: "round20-user-msg".to_string(),
         content: "Please map the onboarding telemetry rollout across product analytics and QA."
             .to_string(),
@@ -721,7 +721,7 @@ async fn round20_threads_fallback_title_delete_missing_and_welcome_noop_paths() 
         created_at: Utc::now().to_rfc3339(),
     };
     thread_ops::message_append(
-        neppy_core::openhuman::memory::AppendConversationMessageRequest {
+        neppy_core::neppy::memory::AppendConversationMessageRequest {
             thread_id: created.id.clone(),
             message: user_message,
         },
@@ -730,7 +730,7 @@ async fn round20_threads_fallback_title_delete_missing_and_welcome_noop_paths() 
     .expect("append user");
 
     let fallback = thread_ops::thread_generate_title(
-        neppy_core::openhuman::memory::GenerateConversationThreadTitleRequest {
+        neppy_core::neppy::memory::GenerateConversationThreadTitleRequest {
             thread_id: created.id.clone(),
             assistant_message: None,
         },
@@ -744,7 +744,7 @@ async fn round20_threads_fallback_title_delete_missing_and_welcome_noop_paths() 
     assert_ne!(fallback.title, created.title);
 
     let missing_update = thread_ops::message_update(
-        neppy_core::openhuman::memory::UpdateConversationMessageRequest {
+        neppy_core::neppy::memory::UpdateConversationMessageRequest {
             thread_id: created.id.clone(),
             message_id: "missing-message".to_string(),
             extra_metadata: Some(json!({"x": true})),
@@ -755,7 +755,7 @@ async fn round20_threads_fallback_title_delete_missing_and_welcome_noop_paths() 
     assert!(missing_update.contains("message") || missing_update.contains("not found"));
 
     let missing_delete = thread_ops::thread_delete(
-        neppy_core::openhuman::memory::DeleteConversationThreadRequest {
+        neppy_core::neppy::memory::DeleteConversationThreadRequest {
             thread_id: "missing-thread-round20".to_string(),
             deleted_at: Utc::now().to_rfc3339(),
         },

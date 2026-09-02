@@ -3,12 +3,12 @@
 //! parsing. These paths need no backend, so they run in the plain integration
 //! crate (the root crate's `cfg(test)` build is gated elsewhere).
 
-use neppy_core::openhuman::hosted::orchestration::effect_executor::{
+use neppy_core::neppy::hosted::orchestration::effect_executor::{
     effect_result_frame, is_duplicate_call, parse_evict, release_call,
 };
-use neppy_core::openhuman::hosted::orchestration::store;
-use neppy_core::openhuman::hosted::orchestration::wire::OrchestrationEventEnvelopeWire;
-use neppy_core::openhuman::hosted::orchestration::world_model::observe_ingest_note;
+use neppy_core::neppy::hosted::orchestration::store;
+use neppy_core::neppy::hosted::orchestration::wire::OrchestrationEventEnvelopeWire;
+use neppy_core::neppy::hosted::orchestration::world_model::observe_ingest_note;
 
 // ── world_model: bounded, single-line, never leaks the body ───────────────────
 

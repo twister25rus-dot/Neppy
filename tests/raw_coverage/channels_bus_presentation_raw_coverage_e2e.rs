@@ -7,10 +7,10 @@ use std::time::Duration;
 
 use neppy_core::core::events::DomainEvent;
 use tinybus::EventHandler;
-use neppy_core::openhuman::memory::agent::memory_loader::MemoryCitation;
-use neppy_core::openhuman::channels::bus::ChannelInboundSubscriber;
-use neppy_core::openhuman::web_chat::presentation::test_support as presentation_test_support;
-use neppy_core::openhuman::web_chat::{
+use neppy_core::neppy::memory::agent::memory_loader::MemoryCitation;
+use neppy_core::neppy::channels::bus::ChannelInboundSubscriber;
+use neppy_core::neppy::web_chat::presentation::test_support as presentation_test_support;
+use neppy_core::neppy::web_chat::{
     subscribe_web_channel_events, test_support as web_test_support,
 };
 use serde_json::json;

@@ -14,18 +14,18 @@ The module architecture is finished and correct. This port is not building it �
 it is finishing a cutover that stopped half way.
 
 - `tinymemory-module` ships as a released `cdylib`, pinned with per-platform
-  digests in `src/openhuman/modules/registry.rs` (`TINYMEMORY`, v1.0.1).
-- `src/openhuman/modules/memory.rs` implements `MemoryProvider` by forwarding
+  digests in `src/neppy/modules/registry.rs` (`TINYMEMORY`, v1.0.1).
+- `src/neppy/modules/memory.rs` implements `MemoryProvider` by forwarding
   ~53 methods — the full thirteen-family contract — one for one over the bus,
   lazily, with `memory::api::wire` mapping errors on **both** ends.
 - The hard problem is solved. An out-of-crate engine still needs to embed,
   summarise and extract, so three reverse bus services carry those calls back:
   `ChatHost`, `EmbeddingHost` and `RuntimeHost`, served by
-  `src/openhuman/modules/memory_host.rs`. Credentials never cross —
+  `src/neppy/modules/memory_host.rs`. Credentials never cross —
   `BusEmbeddingHost::resolve_api_key` returns `None` by construction.
-- `src/openhuman/memory/binding.rs` already refuses embedded drivers outright
+- `src/neppy/memory/binding.rs` already refuses embedded drivers outright
   and aliases the legacy `tinycortex` driver id onto the module.
-- `src/openhuman/memory/api/` is a host-local copy of the contract, and the
+- `src/neppy/memory/api/` is a host-local copy of the contract, and the
   binding and the module client already compile against it rather than against
   `tinymemory-api`.
 
@@ -40,7 +40,7 @@ it is finishing a cutover that stopped half way.
 >                            tinycortex, tree_policy, tree_source, util, … };
 > ```
 >
-> So a call site written `crate::openhuman::memory::store::chunks::store::list_chunks(…)`
+> So a call site written `crate::neppy::memory::store::chunks::store::list_chunks(…)`
 > is engine access that looks exactly like host-local code, and never appears in
 > a `tinymemory_core` grep.
 >
@@ -117,7 +117,7 @@ of the bus services in `modules/memory_host.rs`.
 
 ## 3. The landmine: two live copies of the embedding signature
 
-`src/openhuman/memory/api/host/` is a near-duplicate of `tinymemory_api::host` —
+`src/neppy/memory/api/host/` is a near-duplicate of `tinymemory_api::host` —
 11 of 17 files byte-identical, 6 diverged. One divergence is dangerous.
 
 `format_embedding_signature` exists in **three** places with **two** behaviours:
@@ -131,7 +131,7 @@ of the bus services in `modules/memory_host.rs`.
 The host-local copy is a *correctness fix* — it stops two distinct
 (provider, model) pairs colliding onto one signature, and carries a regression
 test for exactly that. It is also, right now, **dormant**:
-`src/openhuman/inference/embeddings/provider_trait.rs:20` re-exports the **crate**
+`src/neppy/inference/embeddings/provider_trait.rs:20` re-exports the **crate**
 version, so every vector written today uses the naive form and matches the
 engine.
 
@@ -219,7 +219,7 @@ throughout the bug.
 
 **Verification.** TinyCortex: 34 people tests pass; default and `contacts`
 builds clean. Host: builds clean both ways; feature-forwarding gate passes;
-`openhuman::memory::` is 711 passed / 26 failed / 1 ignored against `main`'s
+`neppy::memory::` is 711 passed / 26 failed / 1 ignored against `main`'s
 710 / 26 / 0 — the 26 are pre-existing and identical on a clean `main`
 checkout (they need the module artifact, which is not fetched locally), so this
 adds one passing test and one deliberately ignored one, and no new failures.
@@ -261,8 +261,8 @@ across both copies; both were verified to actually fail by temporarily diverging
 a wire string, then to go green again. They are deleted with the
 `tinymemory-api` dependency in stage 5, when one copy remains.
 
-**Verification.** `openhuman::memory::api` 190 passed / 0 failed;
-`openhuman::memory::guard` 56 / 0; `core::all` 91 / 0; `openhuman::memory::`
+**Verification.** `neppy::memory::api` 190 passed / 0 failed;
+`neppy::memory::guard` 56 / 0; `core::all` 91 / 0; `neppy::memory::`
 back to exactly the 26 pre-existing failures with no new ones; `cargo fmt`
 clean. (The full `--lib` run aborts on a pre-existing stack overflow in
 `agent::harness::session::runtime`, identical on a clean `main` checkout.)
@@ -355,7 +355,7 @@ refused by name rather than truncated, since a short batch is indistinguishable
 from "those chunks have no vector".
 
 **Verification.** Module crate 34/0 · host `memory::api` 190/0 ·
-`memory::guard` 56/0 · `core::all` 91/0 · `openhuman::memory::` failing set
+`memory::guard` 56/0 · `core::all` 91/0 · `neppy::memory::` failing set
 byte-identical to the pre-existing 26 · `cargo fmt` clean across all four
 crates.
 
@@ -425,7 +425,7 @@ driver and the tool refuses — the correct answer, not a regression — so the 
 joins the module-backed set (`OPENHUMAN_MODULE_PATH`, own process), the same
 pattern the `tinydocs` tool tests use.
 
-**Verification.** `openhuman::memory::` 716 passed, failing set byte-identical
+**Verification.** `neppy::memory::` 716 passed, failing set byte-identical
 to the pre-existing 26; `memory::guard` 60/0 (four new).
 
 ### 2c. Second batch converted
@@ -582,7 +582,7 @@ tests and 4 binaries.
 
 This is not a conversion: **no behaviour changed**, because each rewritten path
 resolved to exactly the symbol it now names. What changed is visibility. Before,
-`crate::openhuman::memory::store::chunks::store::list_chunks(…)` was engine
+`crate::neppy::memory::store::chunks::store::list_chunks(…)` was engine
 access indistinguishable from host-local code; a `tinymemory_core` grep returned
 30 files and the truth was 100. Now `grep tinymemory_core src/` **is** the
 inventory: **127 production files**, plus 94 naming `tinycortex`.
@@ -971,7 +971,7 @@ and `build_memory_context` with it.
 namespaces the lanes use, how many standing preferences a prompt may carry, and
 the similarity floors for Lane-B recall and the contradiction check. A second
 engine would have had to reimplement all of it identically or the product would
-change underneath it. It is now `src/openhuman/memory/preferences.rs`.
+change underneath it. It is now `src/neppy/memory/preferences.rs`.
 
 **The move needed no new contract surface**, which is worth recording because
 the reflex was to add a `recall_relevant_by_vector` method. The engine's
@@ -1062,7 +1062,7 @@ That brings this port's total to **fifteen** (after `agent::learning::startup`,
 state as a rule: **a test that builds an agent, a memory client or a cron job
 must install the seam itself.** Relying on a sibling makes the test's own
 scoped run a false negative, which is exactly how these survived — nobody runs
-`cargo test --lib openhuman::cron` in CI, and the whole-lib run aborts (§2v)
+`cargo test --lib neppy::cron` in CI, and the whole-lib run aborts (§2v)
 before the counts print.
 
 ### 2x. The raw SQLite connection is gone — `Episodic`, the 18th family

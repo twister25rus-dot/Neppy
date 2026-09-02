@@ -47,7 +47,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use tempfile::tempdir;
 
 // The fixture seeder is a module of THIS test target, not of the library.
-// It used to be `openhuman::memory::store_golden`, declared `pub mod` and so
+// It used to be `neppy::memory::store_golden`, declared `pub mod` and so
 // compiled into the shipped binary — seven `tinymemory_core::` references that
 // kept the engine crate in the product dependency graph purely to seed a
 // fixture (#5560).
@@ -146,17 +146,15 @@ fn ensure_memory_seams(workspace: &Path) {
             .name("memory-golden-fixture-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(move || {
-                let config = Arc::new(neppy_core::openhuman::config::Config {
+                let config = Arc::new(neppy_core::neppy::config::Config {
                     workspace_dir: workspace.clone(),
                     action_dir: workspace.clone(),
                     config_path: workspace.join("config.toml"),
-                    ..neppy_core::openhuman::config::Config::default()
+                    ..neppy_core::neppy::config::Config::default()
                 });
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
-                    config.clone(),
-                );
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(config.clone());
                 #[cfg(feature = "modules")]
-                neppy_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::neppy::modules::memory::set_modules_policy(config);
             })
             .expect("spawn golden fixture memory seam installer")
             .join()

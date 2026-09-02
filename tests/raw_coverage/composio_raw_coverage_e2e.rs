@@ -15,30 +15,30 @@ use serde_json::{json, Value};
 use tempfile::tempdir;
 
 use neppy_core::core::all::RegisteredController;
-use neppy_core::openhuman::integrations::composio::client::{
+use neppy_core::neppy::integrations::composio::client::{
     create_composio_client, direct_execute, ComposioClientKind,
 };
-use neppy_core::openhuman::integrations::composio::error_mapping::{
+use neppy_core::neppy::integrations::composio::error_mapping::{
     classify_composio_error, format_provider_error, remap_transport_error, ComposioErrorClass,
 };
-use neppy_core::openhuman::integrations::composio::execute_dispatch::{
+use neppy_core::neppy::integrations::composio::execute_dispatch::{
     execute_composio_action, execute_composio_action_kind,
 };
-use neppy_core::openhuman::integrations::composio::execute_prepare::prepare_execute_arguments;
-use neppy_core::openhuman::integrations::composio::oauth_handoff::{
+use neppy_core::neppy::integrations::composio::execute_prepare::prepare_execute_arguments;
+use neppy_core::neppy::integrations::composio::oauth_handoff::{
     clear_non_active_connections, is_authorize_rate_limited, is_clearable_oauth_status,
     is_inflight_oauth_status, is_meta_oauth_toolkit, meta_oauth_rate_limit_message,
     wrap_authorize_rate_limit_error,
 };
-use neppy_core::openhuman::integrations::composio::providers::{
+use neppy_core::neppy::integrations::composio::providers::{
     classify_unknown, find_curated, toolkit_from_slug, CuratedTool, ToolScope, UserScopePref,
 };
-use neppy_core::openhuman::integrations::composio::tools::{
+use neppy_core::neppy::integrations::composio::tools::{
     ComposioAction, ComposioAuthorizeTool, ComposioConnectedAccount, ComposioExecuteTool,
     ComposioListConnectionsTool, ComposioListToolkitsTool, ComposioListToolsTool,
 };
-use neppy_core::openhuman::integrations::composio::trigger_history::ComposioTriggerHistoryStore;
-use neppy_core::openhuman::integrations::composio::types::{
+use neppy_core::neppy::integrations::composio::trigger_history::ComposioTriggerHistoryStore;
+use neppy_core::neppy::integrations::composio::types::{
     ComposioActiveTrigger, ComposioActiveTriggersResponse, ComposioAgentReadyToolkitsResponse,
     ComposioAuthorizeResponse, ComposioAvailableTrigger, ComposioAvailableTriggerRepo,
     ComposioAvailableTriggersResponse, ComposioCapabilitiesResponse, ComposioCapability,
@@ -48,21 +48,21 @@ use neppy_core::openhuman::integrations::composio::types::{
     ComposioToolSchema, ComposioToolkitsResponse, ComposioToolsResponse, ComposioTriggerEvent,
     ComposioTriggerHistoryEntry, ComposioTriggerHistoryResult, ComposioTriggerMetadata,
 };
-use neppy_core::openhuman::integrations::composio::{
+use neppy_core::neppy::integrations::composio::{
     all_composio_agent_tools, all_composio_controller_schemas, all_composio_registered_controllers,
     cached_active_integrations, connected_set_hash, connection_identity,
     fetch_connected_integrations, fetch_connected_integrations_status,
     init_composio_trigger_history, invalidate_connected_integrations_cache, ComposioActionTool,
     ComposioClient, FetchConnectedIntegrationsStatus,
 };
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::agent::context::prompt::ConnectedIntegration;
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::agent::context::prompt::ConnectedIntegration;
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use neppy_core::openhuman::integrations::IntegrationClient;
-use neppy_core::openhuman::security::{AutonomyLevel, SecurityPolicy};
-use neppy_core::openhuman::tools::{
+use neppy_core::neppy::integrations::IntegrationClient;
+use neppy_core::neppy::security::{AutonomyLevel, SecurityPolicy};
+use neppy_core::neppy::tools::{
     ComposioTool, PermissionLevel, Tool, ToolCallOptions, ToolCategory,
 };
 
@@ -372,7 +372,7 @@ async fn composio_ops_mode_and_trigger_history_are_local_and_deterministic() {
     };
     config.composio.mode = "direct".into();
 
-    let mode = neppy_core::openhuman::integrations::composio::ops::composio_get_mode(&config)
+    let mode = neppy_core::neppy::integrations::composio::ops::composio_get_mode(&config)
         .await
         .expect("get mode should not call backend")
         .into_cli_compatible_json()
@@ -382,7 +382,7 @@ async fn composio_ops_mode_and_trigger_history_are_local_and_deterministic() {
 
     init_composio_trigger_history(dir.path().to_path_buf())
         .expect("global trigger history initializes for temp workspace");
-    let store = neppy_core::openhuman::integrations::composio::global_composio_trigger_history()
+    let store = neppy_core::neppy::integrations::composio::global_composio_trigger_history()
         .expect("global history store");
     store
         .record_trigger(
@@ -395,7 +395,7 @@ async fn composio_ops_mode_and_trigger_history_are_local_and_deterministic() {
         .expect("record global trigger");
 
     let history =
-        neppy_core::openhuman::integrations::composio::ops::composio_list_trigger_history(&config, Some(0))
+        neppy_core::neppy::integrations::composio::ops::composio_list_trigger_history(&config, Some(0))
             .await
             .expect("history listing is local")
             .into_cli_compatible_json()
@@ -843,7 +843,7 @@ async fn composio_controller_registry_and_scope_handlers_cover_validation_edges(
             .starts_with("openhuman.composio_")
     }));
 
-    let unknown = neppy_core::openhuman::integrations::composio::schemas::schemas("not_real");
+    let unknown = neppy_core::neppy::integrations::composio::schemas::schemas("not_real");
     assert_eq!(unknown.function, "unknown");
     assert_eq!(unknown.inputs[0].name, "function");
 
@@ -939,7 +939,7 @@ fn composio_controller_schema_catalog_covers_all_declared_functions() {
     ];
 
     for (function, required_inputs, first_output) in expected {
-        let schema = neppy_core::openhuman::integrations::composio::schemas::schemas(function);
+        let schema = neppy_core::neppy::integrations::composio::schemas::schemas(function);
         assert_eq!(schema.namespace, "composio");
         assert_eq!(schema.function, function);
         let input_names: Vec<&str> = schema.inputs.iter().map(|f| f.name).collect();

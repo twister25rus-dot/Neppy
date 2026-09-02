@@ -16,12 +16,12 @@
 pub mod api;
 pub mod core;
 pub mod embed;
-pub mod openhuman;
+pub mod neppy;
 pub mod rpc;
 #[cfg(feature = "tui")]
 pub mod tui;
 
-pub use openhuman::config::DaemonConfig;
+pub use neppy::config::DaemonConfig;
 
 /// Embeddable core composition API. Host the Neppy core in any process —
 /// the Tauri shell, a CLI, a stdio MCP server, or a cloud/team server — via
@@ -83,8 +83,8 @@ pub use embed::{Session, Turn, TurnOutcome, TurnRequest};
 /// This is the whole public surface — nothing here requires reaching through
 /// private modules.
 pub mod agent_progress {
-    pub use crate::openhuman::agent::progress::AgentProgress;
-    pub use crate::openhuman::agent::progress_sink::{
+    pub use crate::neppy::agent::progress::AgentProgress;
+    pub use crate::neppy::agent::progress_sink::{
         current_progress_sink, with_progress_sink, ProgressSink, AGENT_PROGRESS_SINK,
     };
 }
@@ -103,7 +103,7 @@ pub mod agent_progress {
 /// Returns an error if command execution fails.
 pub fn run_core_from_args(args: &[String]) -> anyhow::Result<()> {
     core::cli::load_dotenv_for_cli()?;
-    openhuman::platform::service::apply_startup_restart_delay_from_env();
-    openhuman::security::keyring::init_master_key();
+    neppy::platform::service::apply_startup_restart_delay_from_env();
+    neppy::security::keyring::init_master_key();
     core::cli::run_from_cli_args(args)
 }

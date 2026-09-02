@@ -17,12 +17,12 @@ CLI emit these sessions). See [Out of scope](#out-of-scope).
 
 A coding agent sends a `SessionEnvelopeV1` over the tiny.place Signal relay with a
 `harness.provider` field (e.g. `"codex"`). Neppy's orchestration ingest
-(`src/openhuman/hosted/orchestration/ingest.rs`) decrypts it and copies that field
+(`src/neppy/hosted/orchestration/ingest.rs`) decrypts it and copies that field
 **verbatim** into the session's `source` — there is no provider allowlist at
 ingest (`ingest.rs:187`, `ingest.rs:213`).
 
 The single gate that decides whether a `source` is a *known* harness is
-`harness_type_for()` in `src/openhuman/hosted/orchestration/schemas.rs:276`:
+`harness_type_for()` in `src/neppy/hosted/orchestration/schemas.rs:276`:
 
 ```rust
 fn harness_type_for(source: &str) -> Option<String> {
@@ -60,7 +60,7 @@ and the two UI lookup tables it feeds.
 
 ## Changes
 
-### Rust core — `src/openhuman/hosted/orchestration/`
+### Rust core — `src/neppy/hosted/orchestration/`
 
 1. **`schemas.rs:277`** — widen the match:
    ```rust

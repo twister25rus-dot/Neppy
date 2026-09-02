@@ -23,7 +23,7 @@
 //! A build that never calls the setter sends [`DEFAULT_PRODUCT_IDENTITY`], so
 //! behaviour is unchanged for any host that does not opt in.
 //!
-//! The shape mirrors [`crate::openhuman::config::schema::proxy`]'s runtime
+//! The shape mirrors [`crate::neppy::config::schema::proxy`]'s runtime
 //! proxy config — a `OnceLock<RwLock<_>>` holding a defaulted value — rather
 //! than a bare `OnceLock<T>`, which could only ever be set once per process and
 //! would make the override untestable without poisoning the test binary.
@@ -153,8 +153,8 @@ pub fn product_identity_headers() -> HeaderMap {
 /// process-wide product identity.
 ///
 /// The identity is process state, so a module-local lock cannot prevent
-/// cross-module races: `api::product`, `api::rest`, `openhuman::medulla` and
-/// `openhuman::integrations` tests all touch it from parallel test threads, and
+/// cross-module races: `api::product`, `api::rest`, `neppy::medulla` and
+/// `neppy::integrations` tests all touch it from parallel test threads, and
 /// a test asserting the `openhuman` default would flake against a test that has
 /// installed an override. Every test that touches the identity must take THIS
 /// lock and restore the default before releasing it.

@@ -1,26 +1,26 @@
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::dispatcher::{NativeToolDispatcher, XmlToolDispatcher};
-use neppy_core::openhuman::agent::harness::definition::AgentTier;
-use neppy_core::openhuman::agent::harness::subagent_runner::run_subagent;
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::dispatcher::{NativeToolDispatcher, XmlToolDispatcher};
+use neppy_core::neppy::agent::harness::definition::AgentTier;
+use neppy_core::neppy::agent::harness::subagent_runner::run_subagent;
+use neppy_core::neppy::agent::harness::{
     with_parent_context, AgentDefinition, DefinitionSource, ModelSpec, ParentExecutionContext,
     PromptSource, SandboxMode, SubagentRunError, SubagentRunOptions, ToolScope,
 };
-use neppy_core::openhuman::agent::hooks::{PostTurnHook, TurnContext};
-use neppy_core::openhuman::agent::progress::AgentProgress;
-use neppy_core::openhuman::agent::tool_policy::{
+use neppy_core::neppy::agent::hooks::{PostTurnHook, TurnContext};
+use neppy_core::neppy::agent::progress::AgentProgress;
+use neppy_core::neppy::agent::tool_policy::{
     ToolPolicy, ToolPolicyDecision, ToolPolicyRequest,
 };
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::config::{AgentConfig, Config, ContextConfig, MemoryConfig};
-use neppy_core::openhuman::agent::messages::ConversationMessage;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::config::{AgentConfig, Config, ContextConfig, MemoryConfig};
+use neppy_core::neppy::agent::messages::ConversationMessage;
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
 use tinymemory_core::store as memory_store;
-use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use neppy_core::openhuman::tools::traits::ToolCallOptions;
-use neppy_core::openhuman::tools::{
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::traits::ToolCallOptions;
+use neppy_core::neppy::tools::{
     PermissionLevel, Tool, ToolContent, ToolResult, ToolScope as RuntimeToolScope,
 };
 use serde_json::json;
@@ -75,7 +75,7 @@ fn ensure_memory_seams() {
             .name("agent-session-turn-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(
                     Arc::new(Config::default()),
                 );
             })
@@ -627,7 +627,7 @@ fn agent_with(
     model: Arc<dyn ChatModel<()>>,
     tools: Vec<Box<dyn Tool>>,
     workspace_path: PathBuf,
-    dispatcher: Box<dyn neppy_core::openhuman::agent::dispatcher::ToolDispatcher>,
+    dispatcher: Box<dyn neppy_core::neppy::agent::dispatcher::ToolDispatcher>,
     config: AgentConfig,
     context_config: ContextConfig,
 ) -> Agent {
@@ -1119,7 +1119,7 @@ async fn subagent_runner_parent_context_filters_tools_caps_output_and_reports_er
         ]
         .into_iter()
         .collect(),
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             provider.clone(),
         ),
         all_tools: Arc::new(all_tools),
@@ -1140,7 +1140,7 @@ async fn subagent_runner_parent_context_filters_tools_caps_output_and_reports_er
         session_id: "round17-parent-session".to_string(),
         channel: "round17-parent-channel".to_string(),
         connected_integrations: Vec::new(),
-        tool_call_format: neppy_core::openhuman::agent::context::prompt::ToolCallFormat::Json,
+        tool_call_format: neppy_core::neppy::agent::context::prompt::ToolCallFormat::Json,
         session_key: "123_parent".to_string(),
         session_parent_prefix: Some("root_ancestor".to_string()),
         on_progress: None,
@@ -1197,7 +1197,7 @@ async fn subagent_runner_parent_context_filters_tools_caps_output_and_reports_er
             && message.text().contains("delegate this")));
 
     let error_parent = ParentExecutionContext {
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             ScriptedModel::failing("subagent provider offline"),
         ),
         ..parent

@@ -49,7 +49,7 @@ now so it isn't a surprise in week three:
 | Path | Role | Source |
 |---|---|---|
 | `app/` | pnpm workspace, Vite + React UI, Tauri v2 desktop host | observed |
-| `src/` | Rust lib crate + `neppy-core` CLI binary, `src/openhuman/*` domains | observed |
+| `src/` | Rust lib crate + `neppy-core` CLI binary, `src/neppy/*` domains | observed |
 | `vendor/` | git submodules: `tinyhumans-sdk` and the `tiny*-bus` contract crates | observed |
 | `gitbooks/`, `docs/` | contributor and internals docs | observed |
 
@@ -164,7 +164,7 @@ Default catalog points at `tinyhumansai/openhuman-skills`; override with
 
 ### 2.9 Native modules — decide your line here
 
-`src/openhuman/modules/registry.rs` is a compiled-in const table pinning module
+`src/neppy/modules/registry.rs` is a compiled-in const table pinning module
 releases by SHA-256, downloaded from TinyHumans' GitHub releases. `documents`
 depends on the `tinydocs` module; memory is half-migrated onto a `tinymemory`
 module. `observed`.
@@ -181,7 +181,7 @@ Two positions:
 
 ### 2.10 Integrations
 
-Composio-backed OAuth (`src/openhuman/integrations/composio`). This is the one
+Composio-backed OAuth (`src/neppy/integrations/composio`). This is the one
 that has no local replacement. Cut it and rebuild the services you need as MCP
 servers — the `mcp` domain already supports both config-declared static servers
 and dynamically installed ones. `observed`.
@@ -196,13 +196,13 @@ Here is the split.
 ### 3.1 Rename these
 
 - All user-visible strings, including the six locale files (en, zh, ja, ko, de, ur)
-- Agent prompts in `src/openhuman/agent/prompts/` — this is where the assistant
+- Agent prompts in `src/neppy/agent/prompts/` — this is where the assistant
   says its own name, so it matters for "feels like the same app"
 - README, INSTALL, docs, gitbooks
 - `app/src-tauri/tauri.conf.json`: product name, window title, bundle identifier
 - Crate and package names: `openhuman` → `neppy`, bin `neppy-core` →
   `neppy-core`, `neppy-fleet` → `neppy-fleet`, `openhuman-app`, `openhuman-repo`
-- The directory `src/openhuman/` → `src/neppy/`, and every `crate::openhuman::`
+- The directory `src/neppy/` → `src/neppy/`, and every `crate::neppy::`
   and `neppy_core::` path with it
 - Env vars `OPENHUMAN_*` → `NEPPY_*`, everywhere at once: `.env.example`,
   `app/.env.example`, `scripts/load-dotenv.sh`, CI workflows, docs
@@ -226,7 +226,7 @@ Here is the split.
 
 - `openhuman-skills` (the separate skills repo) is a different rename target than
   `openhuman` the crate. Handle it separately or your regex eats the wrong thing.
-- The `src/openhuman/` directory rename is the single biggest diff. Upstream
+- The `src/neppy/` directory rename is the single biggest diff. Upstream
   measured a comparable rename inside `memory/` at ~545 import rewrites. Do it
   with `cargo fix`-style mechanical care and its own commit.
 - Many tests hard-assert namespace and agent-id strings. Expect a red suite after

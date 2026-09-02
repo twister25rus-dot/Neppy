@@ -1,10 +1,10 @@
 use anyhow::Result;
-use neppy_core::openhuman::agent::messages::ChatMessage;
-use neppy_core::openhuman::agent::multimodal::{
+use neppy_core::neppy::agent::messages::ChatMessage;
+use neppy_core::neppy::agent::multimodal::{
     contains_image_markers, count_image_markers, extract_ollama_image_payload, parse_image_markers,
     prepare_messages_for_provider,
 };
-use neppy_core::openhuman::config::{MultimodalConfig, MultimodalFileConfig};
+use neppy_core::neppy::config::{MultimodalConfig, MultimodalFileConfig};
 
 #[test]
 fn marker_helpers_cover_mixed_content_and_payload_extraction() {

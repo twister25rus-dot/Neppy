@@ -1,10 +1,10 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::context::prompt::SystemPromptBuilder;
-use neppy_core::openhuman::agent::dispatcher::XmlToolDispatcher;
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::memory::{Memory, MemoryCategory, MemoryEntry};
-use neppy_core::openhuman::tools::{Tool, ToolResult};
+use neppy_core::neppy::agent::context::prompt::SystemPromptBuilder;
+use neppy_core::neppy::agent::dispatcher::XmlToolDispatcher;
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::memory::{Memory, MemoryCategory, MemoryEntry};
+use neppy_core::neppy::tools::{Tool, ToolResult};
 use std::collections::HashSet;
 use std::sync::Arc;
 use tinyagents::harness::model::{ChatModel, ModelRequest, ModelResponse};
@@ -67,7 +67,7 @@ impl Memory for StubMemory {
         &self,
         _query: &str,
         _limit: usize,
-        _opts: neppy_core::openhuman::memory::RecallOpts<'_>,
+        _opts: neppy_core::neppy::memory::RecallOpts<'_>,
     ) -> Result<Vec<MemoryEntry>> {
         Ok(Vec::new())
     }
@@ -91,7 +91,7 @@ impl Memory for StubMemory {
 
     async fn namespace_summaries(
         &self,
-    ) -> Result<Vec<neppy_core::openhuman::memory::NamespaceSummary>> {
+    ) -> Result<Vec<neppy_core::neppy::memory::NamespaceSummary>> {
         Ok(Vec::new())
     }
 
@@ -108,7 +108,7 @@ impl Memory for StubMemory {
     }
 }
 
-fn base_builder() -> neppy_core::openhuman::agent::AgentBuilder {
+fn base_builder() -> neppy_core::neppy::agent::AgentBuilder {
     Agent::builder()
         .chat_model(Arc::new(StubModel))
         .tools(vec![
@@ -160,10 +160,7 @@ fn builder_applies_defaults_and_exposes_public_accessors() {
 
     assert_eq!(agent.tools().len(), 2);
     assert_eq!(agent.tool_specs().len(), 2);
-    assert_eq!(
-        agent.model_name(),
-        neppy_core::openhuman::config::DEFAULT_MODEL
-    );
+    assert_eq!(agent.model_name(), neppy_core::neppy::config::DEFAULT_MODEL);
     assert_eq!(agent.temperature(), 0.7);
     assert_eq!(agent.workspace_dir(), std::path::Path::new("."));
     assert!(agent.workflows().is_empty());

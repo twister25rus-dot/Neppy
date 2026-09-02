@@ -17,7 +17,7 @@
 //! anywhere else, the mock would have recorded no request.
 
 use neppy_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
-use neppy_core::openhuman::config::Config;
+use neppy_core::neppy::config::Config;
 use neppy_core::{Access, Harness, Provider, Session, Workspace};
 use serde_json::json;
 use wiremock::matchers::{any, method, path};

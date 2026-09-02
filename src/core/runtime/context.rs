@@ -75,16 +75,16 @@ pub struct CoreContext {
     /// against `~/.neppy` anyway. Publishing it on the context — the seam
     /// phase 2 of `docs/plans/pluggable-core/` introduced for exactly this
     /// migration — lets that loader prefer it without any handler changing.
-    embedder_config: Option<crate::openhuman::config::Config>,
+    embedder_config: Option<crate::neppy::config::Config>,
     /// Per-tool-group disclosure for this context (see
-    /// [`ToolGroups`](crate::openhuman::tools::toolpacks::ToolGroups)).
+    /// [`ToolGroups`](crate::neppy::tools::toolpacks::ToolGroups)).
     ///
     /// The third narrowing axis, independent of `domains` the same way
     /// `DomainSet` is independent of `ServiceSet`: `DomainSet` decides which
     /// families *exist*, `ToolGroups` decides how the ones that exist reach
     /// the model. Defaults to every group withheld, which is what the
     /// compiled-in pack table meant before the type existed.
-    tool_groups: crate::openhuman::tools::toolpacks::ToolGroups,
+    tool_groups: crate::neppy::tools::toolpacks::ToolGroups,
 }
 
 /// The complete input to a workspace-scoped memory binding.
@@ -96,7 +96,7 @@ pub struct CoreContext {
 /// [`CoreContext::memory_binding`] stays synchronous and I/O-free.
 struct WorkspaceBinding {
     workspace_dir: Option<std::path::PathBuf>,
-    memory_subsystem: crate::openhuman::config::schema::MemorySubsystemConfig,
+    memory_subsystem: crate::neppy::config::schema::MemorySubsystemConfig,
 }
 
 impl CoreContext {
@@ -116,11 +116,7 @@ impl CoreContext {
         host_kind: HostKind,
         token: &TokenSource,
         domains: crate::core::runtime::DomainSet,
-    ) -> anyhow::Result<(
-        Arc<CoreContext>,
-        bool,
-        Option<crate::openhuman::config::Config>,
-    )> {
+    ) -> anyhow::Result<(Arc<CoreContext>, bool, Option<crate::neppy::config::Config>)> {
         Self::init_with_config(host_kind, token, domains, Default::default(), None).await
     }
 
@@ -139,13 +135,9 @@ impl CoreContext {
         host_kind: HostKind,
         token: &TokenSource,
         domains: crate::core::runtime::DomainSet,
-        tool_groups: crate::openhuman::tools::toolpacks::ToolGroups,
-        preloaded_config: Option<crate::openhuman::config::Config>,
-    ) -> anyhow::Result<(
-        Arc<CoreContext>,
-        bool,
-        Option<crate::openhuman::config::Config>,
-    )> {
+        tool_groups: crate::neppy::tools::toolpacks::ToolGroups,
+        preloaded_config: Option<crate::neppy::config::Config>,
+    ) -> anyhow::Result<(Arc<CoreContext>, bool, Option<crate::neppy::config::Config>)> {
         log::debug!(
             "[core-context] init: host_kind={host_kind:?} domains={domains:?} \
              tool_groups={tool_groups:?}"
@@ -156,7 +148,7 @@ impl CoreContext {
         // 2. Load the master encryption key before any config/credential op that
         //    needs to decrypt secrets. No-op if already called (e.g. from
         //    run_core_from_args for the CLI).
-        crate::openhuman::security::keyring::init_master_key();
+        crate::neppy::security::keyring::init_master_key();
 
         // 4. Seed the per-process RPC bearer. `Fixed` seeds the in-memory value
         //    directly (never touches the env); `EnvOrFile` reads
@@ -187,7 +179,7 @@ impl CoreContext {
                             .unwrap_or_else(|| cfg.config_path.clone())
                     })
                     .unwrap_or_else(|| {
-                        crate::openhuman::config::default_root_neppy_dir().unwrap_or_else(|_| {
+                        crate::neppy::config::default_root_neppy_dir().unwrap_or_else(|_| {
                             dirs::home_dir()
                                 .unwrap_or_else(|| std::path::PathBuf::from("."))
                                 .join(".neppy")
@@ -213,7 +205,7 @@ impl CoreContext {
                 log::debug!("[core-context] init: using caller-supplied config (scoped workspace)");
                 Ok(cfg)
             }
-            None => crate::openhuman::config::Config::load_or_init().await,
+            None => crate::neppy::config::Config::load_or_init().await,
         };
         let config = match loaded {
             Ok(cfg) => {
@@ -273,7 +265,7 @@ impl CoreContext {
     /// registry consults this (via [`CoreContext::current`]) to filter its
     /// schema/dispatch/tool surface. `full()` for desktop/CLI.
     /// Per-group tool disclosure for this context.
-    pub fn tool_groups(&self) -> crate::openhuman::tools::toolpacks::ToolGroups {
+    pub fn tool_groups(&self) -> crate::neppy::tools::toolpacks::ToolGroups {
         self.tool_groups.clone()
     }
 
@@ -316,7 +308,7 @@ impl CoreContext {
     /// `failed_bind_never_returns_previous_workspace_binding`.
     pub fn memory_binding(
         &self,
-    ) -> Result<Arc<crate::openhuman::memory::binding::MemoryBinding>, String> {
+    ) -> Result<Arc<crate::neppy::memory::binding::MemoryBinding>, String> {
         let binding = self
             .workspace_binding
             .read()
@@ -329,7 +321,7 @@ impl CoreContext {
              fix config.toml or OPENHUMAN_WORKSPACE and restart"
                 .to_string()
         })?;
-        crate::openhuman::memory::binding::for_workspace(&workspace_dir, &memory_subsystem)
+        crate::neppy::memory::binding::for_workspace(&workspace_dir, &memory_subsystem)
     }
 
     /// The bound driver's advertised capability set. Cheap (a `Copy` bitset
@@ -350,7 +342,7 @@ impl CoreContext {
     /// memory surface to be gone, and leaving the mandatory families registered
     /// would keep `memory_store` / `memory_recall` / `memory.list_documents`
     /// answering off the embedded store the guarded re-point has not yet
-    /// covered. See [`MemoryBinding::disables_memory`](crate::openhuman::memory::binding::MemoryBinding::disables_memory).
+    /// covered. See [`MemoryBinding::disables_memory`](crate::neppy::memory::binding::MemoryBinding::disables_memory).
     pub fn memory_capabilities(&self) -> tinymemory_api::capabilities::Capabilities {
         self.memory_binding()
             .map(|binding| {
@@ -360,7 +352,7 @@ impl CoreContext {
                     binding.capabilities()
                 }
             })
-            .unwrap_or_else(|_| crate::openhuman::memory::binding::unbound_default_capabilities())
+            .unwrap_or_else(|_| crate::neppy::memory::binding::unbound_default_capabilities())
     }
 
     /// The **guarded** memory driver for this context's workspace — the handle
@@ -382,7 +374,7 @@ impl CoreContext {
     ///
     /// As [`Self::memory_binding`]: only when the workspace dir cannot be
     /// resolved or the binding cache lock is poisoned.
-    pub fn memory(&self) -> Result<Arc<crate::openhuman::memory::guard::MemoryGuard>, String> {
+    pub fn memory(&self) -> Result<Arc<crate::neppy::memory::guard::MemoryGuard>, String> {
         Ok(self.memory_binding()?.guard())
     }
 
@@ -393,7 +385,7 @@ impl CoreContext {
     pub fn current_memory_capabilities() -> tinymemory_api::capabilities::Capabilities {
         Self::current()
             .map(|ctx| ctx.memory_capabilities())
-            .unwrap_or_else(crate::openhuman::memory::binding::unbound_default_capabilities)
+            .unwrap_or_else(crate::neppy::memory::binding::unbound_default_capabilities)
     }
 
     /// The context for the current dispatch: the one scoped by
@@ -406,14 +398,14 @@ impl CoreContext {
     /// supplied one.
     ///
     /// `None` means "discover it the usual way" — see the field docs.
-    pub fn embedder_config(&self) -> Option<&crate::openhuman::config::Config> {
+    pub fn embedder_config(&self) -> Option<&crate::neppy::config::Config> {
         self.embedder_config.as_ref()
     }
 
     /// The embedder-supplied config for the current dispatch, if there is one.
     ///
     /// The read path for `config::ops::load_config_with_timeout`.
-    pub fn current_embedder_config() -> Option<crate::openhuman::config::Config> {
+    pub fn current_embedder_config() -> Option<crate::neppy::config::Config> {
         Self::current().and_then(|ctx| ctx.embedder_config.clone())
     }
 
@@ -441,7 +433,7 @@ impl CoreContext {
     /// and are not the process default.
     pub fn rebind_default_workspace(
         workspace_dir: &std::path::Path,
-        memory_subsystem: crate::openhuman::config::schema::MemorySubsystemConfig,
+        memory_subsystem: crate::neppy::config::schema::MemorySubsystemConfig,
     ) -> Result<(), String> {
         let Some(ctx) = DEFAULT_CONTEXT.get() else {
             log::debug!(
@@ -456,7 +448,7 @@ impl CoreContext {
     fn rebind_workspace(
         &self,
         workspace_dir: &std::path::Path,
-        memory_subsystem: crate::openhuman::config::schema::MemorySubsystemConfig,
+        memory_subsystem: crate::neppy::config::schema::MemorySubsystemConfig,
     ) -> Result<(), String> {
         let mut binding = self
             .workspace_binding
@@ -507,7 +499,7 @@ impl CoreContext {
     pub(crate) fn for_test(
         domains: crate::core::runtime::DomainSet,
         workspace_dir: Option<std::path::PathBuf>,
-        memory_subsystem: Option<crate::openhuman::config::schema::MemorySubsystemConfig>,
+        memory_subsystem: Option<crate::neppy::config::schema::MemorySubsystemConfig>,
     ) -> Arc<CoreContext> {
         Arc::new(CoreContext {
             host_kind: HostKind::Cli,
@@ -526,7 +518,7 @@ impl CoreContext {
 /// workspace-bound stores.
 ///
 /// This no longer initializes an in-process `MemoryClient`: the memory
-/// subsystem is reached through [`crate::openhuman::memory::binding`], which is
+/// subsystem is reached through [`crate::neppy::memory::binding`], which is
 /// a workspace-keyed cache rather than a process-global slot (#5560). The
 /// engine handle that `memory::global` still hands out is a lazy singleton, so
 /// the remaining holders construct it on first use.
@@ -575,12 +567,12 @@ impl StoreInitPlan {
 }
 
 pub async fn init_stores(
-    cfg: &crate::openhuman::config::Config,
+    cfg: &crate::neppy::config::Config,
     domains: crate::core::runtime::DomainSet,
 ) {
     let plan = StoreInitPlan::for_domains(domains);
 
-    let keyring_dir = crate::openhuman::security::keyring::store::workspace_dir_for_file_backend();
+    let keyring_dir = crate::neppy::security::keyring::store::workspace_dir_for_file_backend();
     // Keyring path log + credentials Sentry bind (below) are unguarded — they
     // are core infra every DomainSet needs. Each workspace-bound store init is
     // gated on its owning DomainGroup so an excluded domain's store stays
@@ -590,7 +582,7 @@ pub async fn init_stores(
         cfg.config_path.display(),
         cfg.workspace_dir.display(),
         keyring_dir.display(),
-        crate::openhuman::security::keyring::backend_name(),
+        crate::neppy::security::keyring::backend_name(),
         domains,
     );
     if plan.memory {
@@ -611,14 +603,14 @@ pub async fn init_stores(
         // sets is invisible here.
         //
         // These go when the last in-process engine caller goes, not before.
-        crate::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(cfg.clone()));
+        crate::neppy::memory::host_impls::install_memory_host_seams(Arc::new(cfg.clone()));
         // Publish the config a module-backed memory driver should load
         // against, before the binding below can construct one. Boot-only and
         // idempotent (first call wins) — see `modules::memory::set_modules_policy`
         // for why this must be a process-global rather than threaded through
         // `MemoryBinding::for_workspace`.
         #[cfg(feature = "modules")]
-        crate::openhuman::modules::memory::set_modules_policy(Arc::new(cfg.clone()));
+        crate::neppy::modules::memory::set_modules_policy(Arc::new(cfg.clone()));
         // ── No second engine is booted here any more (#5560 phase F) ────────
         //
         // This block used to call `tinymemory_core::global::init(...)` directly
@@ -646,7 +638,7 @@ pub async fn init_stores(
         // than lazily so a bad `[subsystems.memory]` is loud at boot instead of
         // at the first recall. Infallible by design: an inadmissible driver
         // falls back, publishes `MemoryDriverBindFailed`, and records why.
-        match crate::openhuman::memory::binding::for_workspace(
+        match crate::neppy::memory::binding::for_workspace(
             &cfg.workspace_dir,
             &cfg.subsystems.memory,
         ) {
@@ -672,7 +664,7 @@ pub async fn init_stores(
     // of an in-memory FIFO (survives restarts + delegation hops).
     // Also fires a best-effort stale-file sweep.
     if plan.agent_attachments {
-        crate::openhuman::agent::multimodal::init_attachments_dir(
+        crate::neppy::agent::multimodal::init_attachments_dir(
             cfg.workspace_dir.join("attachments"),
         );
         log::info!(
@@ -696,7 +688,7 @@ pub async fn init_stores(
     // <workspace>/skills/. Neppy no longer ships bundled defaults;
     // this removes the stale dirs on upgrade. Idempotent.
     if plan.skills_prune {
-        crate::openhuman::skills::registry::prune_legacy_default_workflows(&cfg.workspace_dir);
+        crate::neppy::skills::registry::prune_legacy_default_workflows(&cfg.workspace_dir);
     } else {
         log::debug!("[boot] skills legacy-workflow prune SKIPPED — Skills domain disabled");
     }
@@ -706,10 +698,10 @@ pub async fn init_stores(
     // (Composio sync tick, heartbeat, etc.) fires its first event.
     // Reading from the store here means subsequent events carry
     // `user.id` even when no `app_state_snapshot` RPC has run yet.
-    match crate::openhuman::security::credentials::session_support::build_session_state(cfg) {
+    match crate::neppy::security::credentials::session_support::build_session_state(cfg) {
         Ok(state) => {
             if let Some(uid) = state.user_id.as_deref() {
-                crate::openhuman::security::credentials::sentry_scope::bind(uid);
+                crate::neppy::security::credentials::sentry_scope::bind(uid);
             }
         }
         Err(e) => {
@@ -751,7 +743,7 @@ mod tests {
     // context has to carry it, and the loader has to prefer it, or an embedder
     // configures boot and watches its turns run somewhere else entirely.
 
-    fn ctx_with_config(config: crate::openhuman::config::Config) -> Arc<CoreContext> {
+    fn ctx_with_config(config: crate::neppy::config::Config) -> Arc<CoreContext> {
         Arc::new(CoreContext {
             host_kind: HostKind::Cli,
             workspace_binding: RwLock::new(WorkspaceBinding {
@@ -773,7 +765,7 @@ mod tests {
 
     #[test]
     fn an_embedder_config_is_readable_from_the_context() {
-        let mut config = crate::openhuman::config::Config::default();
+        let mut config = crate::neppy::config::Config::default();
         config.workspace_dir = PathBuf::from("/tmp/embedder-ws");
         config.default_model = Some("embedder-model".into());
 
@@ -788,7 +780,7 @@ mod tests {
         // This is the read path `load_config_with_timeout` uses. If it resolved
         // to the process default instead of the scoped context, a second
         // embedder in the same process would silently serve the first's config.
-        let mut config = crate::openhuman::config::Config::default();
+        let mut config = crate::neppy::config::Config::default();
         config.workspace_dir = PathBuf::from("/tmp/scoped-ws");
         config.default_model = Some("scoped-model".into());
 
@@ -933,8 +925,8 @@ mod tests {
 
     // ---- memory driver binding (M2b) ----------------------------------------
 
-    fn untrusted_external_memory_cfg() -> crate::openhuman::config::schema::MemorySubsystemConfig {
-        use crate::openhuman::config::schema::{MemoryDriverConfig, MemorySubsystemConfig};
+    fn untrusted_external_memory_cfg() -> crate::neppy::config::schema::MemorySubsystemConfig {
+        use crate::neppy::config::schema::{MemoryDriverConfig, MemorySubsystemConfig};
         let mut cfg = MemorySubsystemConfig {
             driver: "supermemory".into(),
             ..Default::default()
@@ -1037,7 +1029,7 @@ mod tests {
         };
         assert_eq!(bind_a.class(), expected);
 
-        let null_cfg = crate::openhuman::config::schema::MemorySubsystemConfig {
+        let null_cfg = crate::neppy::config::schema::MemorySubsystemConfig {
             driver: "null".to_string(),
             ..Default::default()
         };
@@ -1125,7 +1117,7 @@ mod tests {
     #[test]
     fn current_memory_capabilities_defaults_open_without_a_context() {
         assert_eq!(
-            crate::openhuman::memory::binding::unbound_default_capabilities(),
+            crate::neppy::memory::binding::unbound_default_capabilities(),
             tinymemory_api::capabilities::Capabilities::all()
         );
         // And when a context *is* ambient, the call resolves through it rather

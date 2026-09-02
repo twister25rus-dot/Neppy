@@ -9,20 +9,20 @@ use axum::{
     Json, Router,
 };
 use neppy_core::core::socketio::WebChannelEvent;
-use neppy_core::openhuman::channels::providers::email_channel::{
+use neppy_core::neppy::channels::providers::email_channel::{
     test_support as email_support, EmailChannel, EmailConfig,
 };
-use neppy_core::openhuman::channels::providers::lark::test_support as lark_support;
-use neppy_core::openhuman::channels::providers::mattermost::{
+use neppy_core::neppy::channels::providers::lark::test_support as lark_support;
+use neppy_core::neppy::channels::providers::mattermost::{
     test_support as mattermost_support, MattermostChannel,
 };
-use neppy_core::openhuman::channels::providers::telegram::test_support as telegram_support;
-use neppy_core::openhuman::web_chat::{self as web, test_support as web_support};
-use neppy_core::openhuman::channels::test_support::{
+use neppy_core::neppy::channels::providers::telegram::test_support as telegram_support;
+use neppy_core::neppy::web_chat::{self as web, test_support as web_support};
+use neppy_core::neppy::channels::test_support::{
     build_channel_context_block_for_test, run_dispatch_harness,
     select_acknowledgment_reaction_for_test, DispatchHarnessOptions, TestMemoryEntry,
 };
-use neppy_core::openhuman::channels::traits::{Channel, ChannelMessage, SendMessage};
+use neppy_core::neppy::channels::traits::{Channel, ChannelMessage, SendMessage};
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast::error::RecvError;

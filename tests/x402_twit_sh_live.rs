@@ -3,8 +3,8 @@
 //! Run manually (requires a funded wallet):
 //!   GGML_NATIVE=OFF cargo test --test x402_twit_sh_live -- --ignored --nocapture
 
-use neppy_core::openhuman::tools::traits::Tool;
-use neppy_core::openhuman::web3::x402;
+use neppy_core::neppy::tools::traits::Tool;
+use neppy_core::neppy::web3::x402;
 use serde_json::json;
 
 #[tokio::test]
@@ -26,7 +26,7 @@ async fn x402_pay_twit_sh_for_hal_finney_tweet() {
 
     println!("=== x402 tool result ===");
     for content in &result.content {
-        if let neppy_core::openhuman::skills::types::ToolContent::Text { text } = content {
+        if let neppy_core::neppy::skills::types::ToolContent::Text { text } = content {
             println!("{text}");
         }
     }

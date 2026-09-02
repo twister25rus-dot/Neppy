@@ -19,8 +19,8 @@ use std::sync::OnceLock;
 use serde_json::json;
 use tempfile::tempdir;
 
-use neppy_core::openhuman::threads::ops::transcript_search;
-use neppy_core::openhuman::tools::traits::Tool;
+use neppy_core::neppy::threads::ops::transcript_search;
+use neppy_core::neppy::tools::traits::Tool;
 use tinycortex::memory::conversations::{
     ConversationMessage, ConversationStore, CreateConversationThread,
 };

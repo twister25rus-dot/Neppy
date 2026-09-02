@@ -14,7 +14,7 @@ Companion: [`per-turn-tool-timeline-history.md`](per-turn-tool-timeline-history.
 
 **How it stores & streams** — `ChatRuntimeProvider.tsx` (1,664 lines) merges ~28 snake_case socket events (`tool_call`, `subagent_*`, `chat_interim`, `text_delta`, …) via `store.getState()` + find-row + **full-array-replace** in ~10 handlers. **Two parallel dedup mechanisms** (provider-local `seenChatEventsRef` string-key TTL map + reducer-level id dedup in `hydrateRuntimeFromRunLedger`) with **divergent row-id schemes** (live: `${thread}:subagent:${task}:${tool}` vs ledger: `subagent:${runId}`), plus provider-local `segmentDeliveriesRef` and the `preserveLiveSubagentProse` graft — a documented live-only-state workaround.
 
-**Tab-switch context loss** — the Rust store persists **one** turn snapshot per thread (whole-file overwrite, `src/openhuman/threads/turn_state/store.rs`), so thread/tab switch rehydrates only the latest turn; live subagent prose, past-turn trails, and the streaming tail are lost.
+**Tab-switch context loss** — the Rust store persists **one** turn snapshot per thread (whole-file overwrite, `src/neppy/threads/turn_state/store.rs`), so thread/tab switch rehydrates only the latest turn; live subagent prose, past-turn trails, and the streaming tail are lost.
 
 **Reference patterns adopted** (from codex `codex-rs/protocol` + TUI research; hermes-agent confirmed as the minimal counter-example; vendored `tinychannels` is transport-only — its `ChannelOutputEvent` vocabulary and `RunLedger`/`ConversationStore` host traits stay compatible, the rich timeline model remains Neppy-owned):
 
@@ -150,6 +150,6 @@ Delete the `pages/Conversations.tsx` shim (point Accounts/HumanPage at `features
 - `app/src/store/chatRuntimeSlice.ts` (1,698 ln — reducer-side merges, per-turn shape)
 - `app/src/store/threadSlice.ts` (`addInferenceResponse` requestId stamping)
 - `app/src/types/turnState.ts`, `app/src/services/api/threadApi.ts` (wire types/RPCs)
-- `src/openhuman/threads/turn_state/{store.rs,mirror.rs,types.rs}` (ring store, seq)
-- `src/openhuman/channels/providers/web/progress_bridge.rs` (seq envelope)
+- `src/neppy/threads/turn_state/{store.rs,mirror.rs,types.rs}` (ring store, seq)
+- `src/neppy/channels/providers/web/progress_bridge.rs` (seq envelope)
 - `docs/plans/per-turn-tool-timeline-history.md` (adopted backend design)

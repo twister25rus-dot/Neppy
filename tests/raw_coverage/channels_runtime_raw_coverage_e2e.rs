@@ -10,14 +10,14 @@ use axum::{
 };
 use neppy_core::core::events::DomainEvent;
 use tinybus::EventHandler;
-use neppy_core::openhuman::web_chat::{
+use neppy_core::neppy::web_chat::{
     cancel_chat, start_chat, subscribe_web_channel_events, ChatRequestMetadata,
 };
-use neppy_core::openhuman::channels::providers::yuanbao::{YuanbaoChannel, YuanbaoConfig};
-use neppy_core::openhuman::channels::{
+use neppy_core::neppy::channels::providers::yuanbao::{YuanbaoChannel, YuanbaoConfig};
+use neppy_core::neppy::channels::{
     bus::ChannelInboundSubscriber, lark::LarkChannel, Channel, SendMessage, TelegramChannel,
 };
-use neppy_core::openhuman::config::{schema::LarkConfig, StreamMode};
+use neppy_core::neppy::config::{schema::LarkConfig, StreamMode};
 use serde_json::{json, Value};
 use tempfile::TempDir;
 

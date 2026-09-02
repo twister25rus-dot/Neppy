@@ -19,18 +19,18 @@ Companion docs in the tinychannels repo:
 
   | openhuman-4 file | tinychannels file |
   | --- | --- |
-  | `src/openhuman/channels/traits.rs` | re-exports `src/traits.rs` |
-  | `src/openhuman/channels/controllers/definitions.rs` | re-exports `src/controllers/definitions.rs` |
-  | `src/openhuman/channels/controllers/schemas.rs` schema declarations | converts from `src/controllers/schemas.rs` |
-  | `src/openhuman/channels/controllers/ops/connect.rs` allowlist/key helpers | calls `src/controllers/credentials.rs` |
-  | `src/openhuman/channels/controllers/ops/types.rs` | re-exports `src/controllers/types.rs` |
-  | `src/openhuman/config/schema/channels.rs` | re-exports provider config from `src/config.rs`, while keeping Neppy-owned security/sandbox config local |
-  | `src/openhuman/channels/context.rs` key/constants helpers | calls/re-exports `src/context.rs` where type-compatible |
-  | `src/openhuman/channels/runtime/supervision.rs` in-flight sizing | re-exports `src/runtime.rs::compute_max_in_flight_messages` |
+  | `src/neppy/channels/traits.rs` | re-exports `src/traits.rs` |
+  | `src/neppy/channels/controllers/definitions.rs` | re-exports `src/controllers/definitions.rs` |
+  | `src/neppy/channels/controllers/schemas.rs` schema declarations | converts from `src/controllers/schemas.rs` |
+  | `src/neppy/channels/controllers/ops/connect.rs` allowlist/key helpers | calls `src/controllers/credentials.rs` |
+  | `src/neppy/channels/controllers/ops/types.rs` | re-exports `src/controllers/types.rs` |
+  | `src/neppy/config/schema/channels.rs` | re-exports provider config from `src/config.rs`, while keeping Neppy-owned security/sandbox config local |
+  | `src/neppy/channels/context.rs` key/constants helpers | calls/re-exports `src/context.rs` where type-compatible |
+  | `src/neppy/channels/runtime/supervision.rs` in-flight sizing | re-exports `src/runtime.rs::compute_max_in_flight_messages` |
   | Telegram/Discord text splitting | calls `src/text.rs` chunker with UTF-16 measurement |
 
 - `NeppyChannelBackend` now lives in
-  `src/openhuman/channels/controllers/backend.rs` and implements
+  `src/neppy/channels/controllers/backend.rs` and implements
   `tinychannels::ChannelBackend` by delegating to the existing
   `channels/controllers/ops/{connect,messaging,discord,telegram}.rs` flows.
 - The crate-side Phase 5 relay contract now includes typed gateway/connector
@@ -77,11 +77,11 @@ Companion docs in the tinychannels repo:
 - **Landed for the first slice:** Delete the duplicated
   definitions/types/traits/config-schema/helper code and
   re-export from the old paths so the 100+ call sites keep compiling:
-  - `src/openhuman/channels/mod.rs`: `pub use tinychannels::{Channel,
+  - `src/neppy/channels/mod.rs`: `pub use tinychannels::{Channel,
     ChannelMessage, SendMessage, ...};`
-  - `src/openhuman/channels/controllers/...`: re-export `ChannelDefinition`,
+  - `src/neppy/channels/controllers/...`: re-export `ChannelDefinition`,
     `ChannelAuthMode`, response types.
-  - `src/openhuman/config/schema/channels.rs`: re-export `ChannelsConfig` and
+  - `src/neppy/config/schema/channels.rs`: re-export `ChannelsConfig` and
     provider config structs. Note tinychannels inlined `EmailConfig` and
     `YuanbaoConfig`, which this repo currently sources from
     `channels::email_channel` / `providers::yuanbao` — repoint those two to
@@ -97,7 +97,7 @@ Companion docs in the tinychannels repo:
 ## Step 2 — Implement `ChannelBackend`
 
 - **Landed:** New `NeppyChannelBackend` in
-  `src/openhuman/channels/controllers/backend.rs`, delegating each trait
+  `src/neppy/channels/controllers/backend.rs`, delegating each trait
   method to the existing ops functions:
   - `send_message` → `messaging.rs::channel_send_message` (already composes
     `effective_backend_api_url` + `jwt::get_session_token` +

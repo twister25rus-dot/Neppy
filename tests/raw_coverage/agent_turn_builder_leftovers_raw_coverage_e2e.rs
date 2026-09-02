@@ -1,14 +1,14 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::dispatcher::{NativeToolDispatcher, XmlToolDispatcher};
-use neppy_core::openhuman::agent::hooks::{PostTurnHook, TurnContext};
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::config::{AgentConfig, ContextConfig};
-use neppy_core::openhuman::agent::context::session_memory::SessionMemoryConfig;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::agent::dispatcher::{NativeToolDispatcher, XmlToolDispatcher};
+use neppy_core::neppy::agent::hooks::{PostTurnHook, TurnContext};
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::config::{AgentConfig, ContextConfig};
+use neppy_core::neppy::agent::context::session_memory::SessionMemoryConfig;
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolContent, ToolResult};
+use neppy_core::neppy::tools::{PermissionLevel, Tool, ToolContent, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::collections::VecDeque;

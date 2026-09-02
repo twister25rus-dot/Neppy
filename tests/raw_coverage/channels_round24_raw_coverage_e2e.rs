@@ -2,12 +2,12 @@
 //!
 //! Parser/state seams only: no real network traffic.
 
-use neppy_core::openhuman::channels::bus::test_support as bus_support;
-use neppy_core::openhuman::channels::providers::email_channel::test_support as email_support;
-use neppy_core::openhuman::channels::providers::lark::test_support as lark_support;
-use neppy_core::openhuman::channels::providers::telegram::test_support as telegram_support;
-use neppy_core::openhuman::channels::test_support as runtime_support;
-use neppy_core::openhuman::channels::traits::ChannelMessage;
+use neppy_core::neppy::channels::bus::test_support as bus_support;
+use neppy_core::neppy::channels::providers::email_channel::test_support as email_support;
+use neppy_core::neppy::channels::providers::lark::test_support as lark_support;
+use neppy_core::neppy::channels::providers::telegram::test_support as telegram_support;
+use neppy_core::neppy::channels::test_support as runtime_support;
+use neppy_core::neppy::channels::traits::ChannelMessage;
 use serde_json::json;
 
 fn channel_message(channel: &str, reply_target: &str, content: &str) -> ChannelMessage {

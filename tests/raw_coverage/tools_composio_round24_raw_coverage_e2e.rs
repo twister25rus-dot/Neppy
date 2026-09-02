@@ -13,8 +13,8 @@ use axum::routing::any;
 use axum::{Json, Router};
 use serde_json::{json, Value};
 
-use neppy_core::openhuman::security::{AutonomyLevel, SecurityPolicy};
-use neppy_core::openhuman::tools::{ComposioTool, Tool};
+use neppy_core::neppy::security::{AutonomyLevel, SecurityPolicy};
+use neppy_core::neppy::tools::{ComposioTool, Tool};
 
 #[derive(Clone, Debug)]
 struct RecordedRequest {

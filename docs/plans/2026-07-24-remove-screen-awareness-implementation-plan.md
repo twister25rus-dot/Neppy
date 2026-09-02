@@ -18,28 +18,28 @@ same atomic commit. Use `atomic-commit` with every listed path after validation.
 
 Files:
 
-- Delete `src/openhuman/screen_intelligence/` in full, including its CLI,
+- Delete `src/neppy/screen_intelligence/` in full, including its CLI,
   controller, engine, worker, vision, tool, and unit-test files.
-- Delete `src/openhuman/accessibility/capture.rs`; remove the screen-capture
-  exports from `src/openhuman/accessibility/mod.rs`.
-- In `src/openhuman/accessibility/{permissions.rs,permissions_tests.rs,types.rs,README.md}`
+- Delete `src/neppy/accessibility/capture.rs`; remove the screen-capture
+  exports from `src/neppy/accessibility/mod.rs`.
+- In `src/neppy/accessibility/{permissions.rs,permissions_tests.rs,types.rs,README.md}`
   remove Screen Recording permission support, the `screen_recording` status
   field, and their tests; retain focused-text, foreground-window, automation,
   Globe, input-monitoring, and microphone behavior for now. The companion still
   consumes the foreground-window types until step 5.
 - Remove the module/registry/CLI/legacy-alias entries from
-  `src/openhuman/{mod.rs}`, `src/core/{all.rs,cli.rs,legacy_aliases.rs}`, and
+  `src/neppy/{mod.rs}`, `src/core/{all.rs,cli.rs,legacy_aliases.rs}`, and
   delete the `screen_intelligence` namespace description in `all.rs`.
 - Remove `ScreenIntelligenceConfig` and its schema module/re-export/default
-  field from `src/openhuman/config/{mod.rs,schema/accessibility.rs,schema/mod.rs,schema/types.rs}`.
+  field from `src/neppy/config/{mod.rs,schema/accessibility.rs,schema/mod.rs,schema/types.rs}`.
   Remove its patch/update/controller/schema entries from
-  `src/openhuman/config/{ops/mod.rs,ops/ui.rs,ops_tests.rs,schemas/helpers.rs,schemas/controllers.rs,schemas/schema_defs.rs,schemas_tests.rs,README.md}`.
+  `src/neppy/config/{ops/mod.rs,ops/ui.rs,ops_tests.rs,schemas/helpers.rs,schemas/controllers.rs,schemas/schema_defs.rs,schemas_tests.rs,README.md}`.
   Do not add a TOML migration: deserializing a persisted unknown
   `[screen_intelligence]` table must remain accepted by serde and no longer
   produce a live config field.
 - Remove the runtime snapshot type/build/degraded data and tests from
-  `src/openhuman/app_state/{ops.rs,ops_tests.rs,README.md}` and the login/start/
-  stop hooks/tests/docs in `src/openhuman/security/credentials/{ops.rs,ops_tests.rs,README.md}`.
+  `src/neppy/app_state/{ops.rs,ops_tests.rs,README.md}` and the login/start/
+  stop hooks/tests/docs in `src/neppy/security/credentials/{ops.rs,ops_tests.rs,README.md}`.
 - Remove the screen-derived app-state/config RPC cases and replace the current
   positive integration assertions in
   `tests/{config_auth_app_state_connectivity_e2e.rs,json_rpc_e2e.rs}` with one
@@ -51,10 +51,10 @@ Files:
 - Remove only screen-intelligence assertions/fixtures from
   `tests/composio_list_tools_stack_overflow_regression.rs`,
   `tests/raw_coverage/tools_agent_credentials_state_raw_coverage_e2e.rs`, and
-  `src/openhuman/tools/{ops_tests.rs,user_filter.rs}`. Preserve unrelated
+  `src/neppy/tools/{ops_tests.rs,user_filter.rs}`. Preserve unrelated
   data-URL and user-image coverage.
 - Remove only the `screenshot-ref` local CLI wrapper/list entry/tests from
-  `src/openhuman/tools/local_cli.rs`, because it calls the deleted
+  `src/neppy/tools/local_cli.rs`, because it calls the deleted
   `screen_intelligence` module. Preserve the standalone `ScreenshotTool` wrapper
   for step 3.
 
@@ -81,26 +81,26 @@ Commit:
 
 Files:
 
-- Delete `src/openhuman/agent/registry/agents/screen_awareness_agent/` and
+- Delete `src/neppy/agent/registry/agents/screen_awareness_agent/` and
   remove its module and `BuiltinAgent` entry from
-  `src/openhuman/agent/registry/agents/{mod.rs,loader.rs}`.
+  `src/neppy/agent/registry/agents/{mod.rs,loader.rs}`.
 - Remove it from the orchestrator's allowed subagents in
-  `src/openhuman/agent/registry/agents/orchestrator/agent.toml`, from the
+  `src/neppy/agent/registry/agents/orchestrator/agent.toml`, from the
   built-in-definition assertion in
-  `src/openhuman/agent/harness/builtin_definitions.rs`, and from expected agent
-  counts/worker lists in `src/openhuman/agent/harness/definition_tests.rs` and
-  `src/openhuman/agent/registry/agents/loader.rs` tests.
+  `src/neppy/agent/harness/builtin_definitions.rs`, and from expected agent
+  counts/worker lists in `src/neppy/agent/harness/definition_tests.rs` and
+  `src/neppy/agent/registry/agents/loader.rs` tests.
 - Keep `vision_agent` but remove its two `screen_intelligence_*` tools and
-  revise `src/openhuman/agent/registry/agents/vision_agent/{agent.toml,prompt.md}`
+  revise `src/neppy/agent/registry/agents/vision_agent/{agent.toml,prompt.md}`
   to refer only to attached or on-disk user-provided images.
 - Delete the screen-awareness prompt resource from
-  `src/openhuman/mcp/server/resources.rs`.
+  `src/neppy/mcp/server/resources.rs`.
 - Delete `CapabilityCategory::ScreenIntelligence`, parsing/serialization tests,
   and all `screen_intelligence.*` catalog entries from
-  `src/openhuman/platform/about_app/{types.rs,catalog_data.rs,catalog_tests.rs,README.md}`.
+  `src/neppy/platform/about_app/{types.rs,catalog_data.rs,catalog_tests.rs,README.md}`.
   Also remove the stale `screen_intelligence` example in
-  `src/openhuman/overlay/types.rs` and screen-only mentions in
-  `src/openhuman/inference/README.md`.
+  `src/neppy/overlay/types.rs` and screen-only mentions in
+  `src/neppy/inference/README.md`.
 
 Tests and checks:
 
@@ -123,15 +123,15 @@ Commit:
 Files:
 
 - Delete the standalone native `ScreenshotTool` implementation and tests in
-  `src/openhuman/tools/impl/browser/screenshot.rs`; remove its module/re-export
-  from `src/openhuman/tools/impl/browser/mod.rs`, its registration from
-  `src/openhuman/tools/ops.rs`, and the remaining standalone screenshot
-  wrapper/tests in `src/openhuman/tools/local_cli.rs`.
-- In `src/openhuman/tools/impl/browser/{types.rs,action_parser.rs,browser.rs,browser_tests.rs}` remove the `BrowserAction::Screenshot` variant, parser,
+  `src/neppy/tools/impl/browser/screenshot.rs`; remove its module/re-export
+  from `src/neppy/tools/impl/browser/mod.rs`, its registration from
+  `src/neppy/tools/ops.rs`, and the remaining standalone screenshot
+  wrapper/tests in `src/neppy/tools/local_cli.rs`.
+- In `src/neppy/tools/impl/browser/{types.rs,action_parser.rs,browser.rs,browser_tests.rs}` remove the `BrowserAction::Screenshot` variant, parser,
   advertised action/schema option, and `screen_capture` computer-use action.
   Keep `snapshot` and all non-pixel browser/computer input actions.
 - Remove screenshot execution branches from
-  `src/openhuman/tools/impl/browser/{native_backend.rs,playwright_backend.rs,playwright_runner.mjs}`. Ensure every backend rejects `screenshot` and
+  `src/neppy/tools/impl/browser/{native_backend.rs,playwright_backend.rs,playwright_runner.mjs}`. Ensure every backend rejects `screenshot` and
   `screen_capture` as unsupported before sidecar dispatch.
 - Remove browser screenshot expectations from
   `tests/raw_coverage/{tools_agent_credentials_state_raw_coverage_e2e.rs,tools_approval_channels_raw_coverage_e2e.rs,tools_channels_raw_coverage_e2e.rs}`
@@ -145,7 +145,7 @@ Tests and checks:
    before the removal.
 2. Run `cargo fmt --check`.
 3. Run `GGML_NATIVE=OFF cargo test --lib
-   openhuman::tools::implementations::browser::browser::tests` and
+   neppy::tools::implementations::browser::browser::tests` and
    `GGML_NATIVE=OFF cargo test --lib tools::ops_tests` separately.
 4. Run `GGML_NATIVE=OFF cargo test --test tools_approval_channels_raw_coverage_e2e --test tools_channels_raw_coverage_e2e`.
 5. Run `GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml`.
@@ -209,7 +209,7 @@ Files:
   text/TTS/cancellation results without targets.
 - After removing the last companion consumer, delete `AppContext` and the
   frontmost-window/`foreground_context` helpers and tests from
-  `src/openhuman/accessibility/{types.rs,focus.rs,mod.rs,README.md}`. Preserve
+  `src/neppy/accessibility/{types.rs,focus.rs,mod.rs,README.md}`. Preserve
   independently used focused-text helpers in the same files.
 - In `app/src/store/{companionSlice.ts,companionSlice.test.ts}`, remove the
   `pointing` state and the two removed configuration fields.

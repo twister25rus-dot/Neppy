@@ -19,10 +19,10 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
-use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::inference::provider::factory::test_provider_override;
-use neppy_core::openhuman::platform::proc_metrics;
+use neppy_core::neppy::agent::harness::AgentDefinitionRegistry;
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::inference::provider::factory::test_provider_override;
+use neppy_core::neppy::platform::proc_metrics;
 
 use crate::harness::{fixture, measure, FleetBudget, ProfileResult, Recorder, TurnLatency};
 use crate::mock::LatencyMock;
@@ -108,7 +108,7 @@ fn latency_summary(mut samples: Vec<u128>) -> Option<TurnLatency> {
 /// mid-construction failure, records `construction-failed-<count>` and returns
 /// what was built rather than crashing.
 fn build_agents(
-    config: &neppy_core::openhuman::config::Config,
+    config: &neppy_core::neppy::config::Config,
     n: usize,
     rec: &Recorder,
 ) -> Result<Vec<Agent>> {
@@ -144,7 +144,7 @@ pub async fn run() -> Result<ProfileResult> {
 
     let fixture = fixture()?;
     neppy_core::core::bus::init().await.expect("bus init");
-    neppy_core::openhuman::agent::bus::register_agent_handlers();
+    neppy_core::neppy::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
     let mock = LatencyMock::from_env("Fleet agent: nothing needs your attention.");
     let _provider = test_provider_override::install_model(mock.clone());

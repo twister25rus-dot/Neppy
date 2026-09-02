@@ -23,8 +23,8 @@ already assumes.
 
 ## WHAT EXISTS TODAY
 
-Domain root: `src/openhuman/hosted/orchestration/` (declared in `mod.rs:16-34`; enabled behind
-`config.orchestration.enabled`, schema `src/openhuman/config/schema/orchestration.rs:39`).
+Domain root: `src/neppy/hosted/orchestration/` (declared in `mod.rs:16-34`; enabled behind
+`config.orchestration.enabled`, schema `src/neppy/config/schema/orchestration.rs:39`).
 Startup wiring: `src/core/jsonrpc.rs:2294-2300` (ingest subscriber, wake subscriber, drain
 supervisor).
 
@@ -242,7 +242,7 @@ with on-demand read tools the reasoning core calls, and reframes W5 as the send 
   envelope via `handle_tinyplace_signal_send_message`, records the outbound `role=owner`
   message + `notify_orchestration_message` (mirrors #4599's `persist_outgoing_reply`).
   `PermissionLevel::Write`. Added to the `reasoning_agent` allowlist + prompt.
-- Verified: `cargo test openhuman::orchestration` → 64/64 (6 new); loader 85/85; lib clean.
+- Verified: `cargo test neppy::orchestration` → 64/64 (6 new); loader 85/85; lib clean.
 
 **Shipped in this branch (reply-threading — W7, core-only):**
 
@@ -266,7 +266,7 @@ with on-demand read tools the reasoning core calls, and reframes W5 as the send 
 - ✅ Fire-and-forget: `orchestration_send_to_agent` returns an immediate ack and the `master_agent`
   prompt forbids polling/`read_session` for the reply, so W7 is the sole async reporter (no
   duplicate surfacing).
-- Verified: `cargo test openhuman::orchestration` green (incl. `outbound_ask_reply_threads_to_
+- Verified: `cargo test neppy::orchestration` green (incl. `outbound_ask_reply_threads_to_
   origin_and_skips_the_reply_graph`, `pending_ask_correlation_is_one_shot`,
   `master_origin_beacon_sets_and_clears`); full loop proven live on staging.
 - **Limitation (needs F3):** correlation is a pragmatic 1:1 request/response — it assumes the

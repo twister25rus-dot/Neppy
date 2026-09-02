@@ -11,7 +11,7 @@
 //! `cargo test` runs threads in parallel.
 
 use super::*;
-use crate::openhuman::config::Config;
+use crate::neppy::config::Config;
 
 /// Serializes the tests that claim the process-wide harness slot.
 ///
@@ -148,7 +148,7 @@ async fn an_inherited_workspace_still_applies_the_builder_knobs() {
     assert_eq!(config.api_url.as_deref(), Some("https://harness.example"));
     assert_eq!(
         config.autonomy.level,
-        crate::openhuman::security::AutonomyLevel::Full
+        crate::neppy::security::AutonomyLevel::Full
     );
     // `Provider::inherit()` states no model, so the operator's survives.
     assert_eq!(config.default_model.as_deref(), Some("operators-choice"));

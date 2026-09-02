@@ -1,18 +1,18 @@
 use async_trait::async_trait;
 use neppy_core::core::bus::BUS;
-use neppy_core::openhuman::agent::bus::{
+use neppy_core::neppy::agent::bus::{
     register_agent_handlers, AgentTurnRequest, AgentTurnResponse, AGENT_RUN_TURN_METHOD,
 };
-use neppy_core::openhuman::agent::debug::{dump_agent_prompt, DumpPromptOptions};
-use neppy_core::openhuman::agent::dispatcher::XmlToolDispatcher;
-use neppy_core::openhuman::agent::{Agent, AgentBuilder};
-use neppy_core::openhuman::config::{AgentConfig, MultimodalConfig, MultimodalFileConfig};
-use neppy_core::openhuman::agent::context::prompt::LearnedContextData;
-use neppy_core::openhuman::agent::messages::ChatMessage;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::agent::debug::{dump_agent_prompt, DumpPromptOptions};
+use neppy_core::neppy::agent::dispatcher::XmlToolDispatcher;
+use neppy_core::neppy::agent::{Agent, AgentBuilder};
+use neppy_core::neppy::config::{AgentConfig, MultimodalConfig, MultimodalFileConfig};
+use neppy_core::neppy::agent::context::prompt::LearnedContextData;
+use neppy_core::neppy::agent::messages::ChatMessage;
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolContent, ToolResult, ToolScope};
+use neppy_core::neppy::tools::{PermissionLevel, Tool, ToolContent, ToolResult, ToolScope};
 use serde_json::json;
 use std::collections::{HashSet, VecDeque};
 use std::path::PathBuf;
@@ -360,7 +360,7 @@ async fn run_bus_turn(
     BUS.native().request::<AgentTurnRequest, AgentTurnResponse>(
         AGENT_RUN_TURN_METHOD,
         AgentTurnRequest {
-            turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
                 model,
             ),
             history: vec![ChatMessage::system("system"), ChatMessage::user("run")],
@@ -378,7 +378,7 @@ async fn run_bus_turn(
             visible_tool_names,
             extra_tools: Vec::new(),
             on_progress: None,
-            origin: neppy_core::openhuman::agent::turn_origin::AgentTurnOrigin::Cli,
+            origin: neppy_core::neppy::agent::turn_origin::AgentTurnOrigin::Cli,
         },
     )
     .await

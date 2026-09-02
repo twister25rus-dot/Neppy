@@ -15,19 +15,19 @@ use serde_json::{json, Value};
 use tempfile::TempDir;
 
 use neppy_core::core::events::DomainEvent;
-use neppy_core::openhuman::config::Config;
+use neppy_core::neppy::config::Config;
 use tinymemory_core::global as memory_global;
-use neppy_core::openhuman::memory::sync::composio::bus::{
+use neppy_core::neppy::memory::sync::composio::bus::{
     ComposioConfigChangedSubscriber, ComposioConnectionCreatedSubscriber, ComposioTriggerSubscriber,
 };
-use neppy_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider;
-use neppy_core::openhuman::memory::sync::composio::providers::slack::{
+use neppy_core::neppy::memory::sync::composio::providers::gmail::GmailProvider;
+use neppy_core::neppy::memory::sync::composio::providers::slack::{
     run_backfill_via_search, SlackProvider,
 };
-use neppy_core::openhuman::memory::sync::composio::providers::{
+use neppy_core::neppy::memory::sync::composio::providers::{
     ComposioProvider, ProviderContext, SyncReason,
 };
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
 use tinybus::EventHandler;
@@ -41,11 +41,11 @@ fn ensure_memory_seams(config: Arc<Config>) {
             .name("memory-sync-slack-bus-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(move || {
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(
                     Arc::clone(&config),
                 );
                 #[cfg(feature = "modules")]
-                neppy_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::neppy::modules::memory::set_modules_policy(config);
             })
             .expect("spawn slack bus memory seam installer")
             .join()
@@ -328,8 +328,8 @@ async fn slack_full_sync_search_backfill_and_bus_use_loopback_composio() {
     assert_eq!(search.details["more_pending"], false);
     assert_eq!(search.details["actions_called"], 5);
 
-    let documents = neppy_core::openhuman::memory::ops::doc_list(Some(
-        neppy_core::openhuman::memory::ops::NamespaceOnlyParams {
+    let documents = neppy_core::neppy::memory::ops::doc_list(Some(
+        neppy_core::neppy::memory::ops::NamespaceOnlyParams {
             namespace: "skill-slack".into(),
         },
     ))

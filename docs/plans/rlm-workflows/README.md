@@ -25,7 +25,7 @@ wall-clock time, output bytes, call counts, and recursion depth.
 ```
 Orchestrator model turn
   └─ rlm tool call { script, session_id?, timeout_secs?, limits? }
-       └─ src/openhuman/rlm/  (new domain)
+       └─ src/neppy/rlm/  (new domain)
             ├─ session manager  (persistent ReplSession per rlm session_id)
             ├─ capability bridge (openhuman Tools/Subagents/Provider →
             │                     tinyagents CapabilityRegistry)
@@ -44,7 +44,7 @@ Two repos change:
    flag, live capability-call events on the `EventSink`, async-embedding
    documentation. Branch: `feat/repl-host-embedding`.
 2. **`openhuman`** (one gigantic PR against `tinyhumansai/openhuman`): the
-   `repl` feature flag, the new `src/openhuman/rlm/` domain, the `rlm` tool,
+   `repl` feature flag, the new `src/neppy/rlm/` domain, the `rlm` tool,
    prompt/docs surfacing, and tests. Branch: `feat/rlm-language-workflows`,
    including the submodule pointer bump once the tinyagents PR lands.
 
@@ -54,7 +54,7 @@ Two repos change:
 | ----- | ---- | ----------- |
 | 1 | [phase-1-research.md](phase-1-research.md) | Research findings: what tinyagents `repl` provides, what openhuman provides, the gaps |
 | 2 | [phase-2-tinyagents.md](phase-2-tinyagents.md) | TinyAgents-side changes (cancellation, live events) — separate PR |
-| 3 | [phase-3-rlm-domain.md](phase-3-rlm-domain.md) | `src/openhuman/rlm/` domain: sessions, capability bridge, policy |
+| 3 | [phase-3-rlm-domain.md](phase-3-rlm-domain.md) | `src/neppy/rlm/` domain: sessions, capability bridge, policy |
 | 4 | [phase-4-rlm-tool.md](phase-4-rlm-tool.md) | First-class `rlm` tool: schema, registration, prompt surfacing |
 | 5 | [phase-5-hardening.md](phase-5-hardening.md) | Error handling, timeouts, cancellation, limits, observability |
 | 6 | [phase-6-tests.md](phase-6-tests.md) | Tests (written last): unit, timeout/cancel/limit, RPC E2E |

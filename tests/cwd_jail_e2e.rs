@@ -1,4 +1,4 @@
-//! End-to-end tests for `openhuman::sandbox::cwd_jail`.
+//! End-to-end tests for `neppy::sandbox::cwd_jail`.
 //!
 //! Each test goes through the public surface only — `Jail`, `spawn`,
 //! `JailRegistry`, `default_backend` — and (where the platform allows it)
@@ -13,7 +13,7 @@
 //! - **macOS**: same shape, exercises Seatbelt via `/usr/bin/touch`.
 //! - **Windows**: AppContainer integration is marked `#[ignore]` until
 //!   the raw-`HANDLE` → `Child` bridge lands (see TODO in
-//!   `src/openhuman/cwd_jail/windows.rs`).
+//!   `src/neppy/cwd_jail/windows.rs`).
 
 use std::fs;
 use std::path::PathBuf;
@@ -24,8 +24,8 @@ use std::process::{Command, Stdio};
     target_os = "macos",
     target_os = "windows"
 ))]
-use neppy_core::openhuman::sandbox::cwd_jail::spawn;
-use neppy_core::openhuman::sandbox::cwd_jail::{
+use neppy_core::neppy::sandbox::cwd_jail::spawn;
+use neppy_core::neppy::sandbox::cwd_jail::{
     default_backend, spawn_with, Jail, JailRegistry, NoopBackend,
 };
 

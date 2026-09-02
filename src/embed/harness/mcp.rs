@@ -17,8 +17,8 @@
 
 use std::collections::HashMap;
 
-use crate::openhuman::config::schema::McpServerConfig;
-pub use crate::openhuman::config::schema::{HttpHeader, McpAuthConfig};
+use crate::neppy::config::schema::McpServerConfig;
+pub use crate::neppy::config::schema::{HttpHeader, McpAuthConfig};
 
 /// One MCP server the agent may call tools on.
 ///

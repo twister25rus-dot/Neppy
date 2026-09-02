@@ -5,7 +5,7 @@
 // Nine subsystems load as downloaded cdylib modules, and each is pinned TWICE,
 // independently: once as a git submodule (the source this repo compiles the
 // wire contract against) and once as a `version` + per-platform SHA-256 in
-// `src/openhuman/modules/registry.rs` (the artifact actually loaded at runtime).
+// `src/neppy/modules/registry.rs` (the artifact actually loaded at runtime).
 // Nothing compared the two. When they drift, the build compiles clean, every
 // lane is green, and a capability goes missing at runtime on a user's machine —
 // which is how #5598 (capability bitmask 8191 vs 262143), #5623 (missing
@@ -116,7 +116,7 @@ function readOrDie(path, what) {
 
 // ── Parse the registry ────────────────────────────────────────────────────────
 
-const registrySrc = readOrDie(join(ROOT, 'src/openhuman/modules/registry.rs'), 'registry');
+const registrySrc = readOrDie(join(ROOT, 'src/neppy/modules/registry.rs'), 'registry');
 const allNames = parseAllList(registrySrc);
 const records = parseRecords(registrySrc);
 
@@ -213,10 +213,10 @@ const memRec = active.find((r) => r.id === 'tinymemory');
 if (!memRec) {
   fail('modules::registry::ALL no longer has a "tinymemory" record; the tinymemory pin-set check cannot run');
 } else {
-  const memSrc = readOrDie(join(ROOT, 'src/openhuman/modules/memory.rs'), 'modules/memory.rs');
+  const memSrc = readOrDie(join(ROOT, 'src/neppy/modules/memory.rs'), 'modules/memory.rs');
   const pin = parseArtifactCapabilitiesPin(memSrc);
   if (!pin) {
-    fail('src/openhuman/modules/memory.rs: could not find ARTIFACT_CAPABILITIES_PIN');
+    fail('src/neppy/modules/memory.rs: could not find ARTIFACT_CAPABILITIES_PIN');
   } else if (pin !== memRec.version) {
     fail(
       `ARTIFACT_CAPABILITIES_PIN and the tinymemory registry record disagree.\n` +

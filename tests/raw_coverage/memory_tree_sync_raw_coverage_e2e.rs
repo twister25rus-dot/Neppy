@@ -15,7 +15,7 @@ use tempfile::TempDir;
 
 use neppy_core::core::events::DomainEvent;
 use tinybus::EventHandler;
-use neppy_core::openhuman::config::Config;
+use neppy_core::neppy::config::Config;
 use tinymemory_core::store::chunks::store::upsert_chunks;
 use tinymemory_core::store::chunks::types::{
     approx_token_count, chunk_id, Chunk, Metadata, SourceKind as ChunkSourceKind, SourceRef,
@@ -23,25 +23,25 @@ use tinymemory_core::store::chunks::types::{
 use tinymemory_core::store::content;
 use tinymemory_core::store::trees::types::TreeKind;
 use tinymemory_core::store::trees::types::INPUT_TOKEN_BUDGET;
-use neppy_core::openhuman::memory::sync::composio::bus::{
+use neppy_core::neppy::memory::sync::composio::bus::{
     ComposioConfigChangedSubscriber, ComposioTriggerSubscriber,
 };
-use neppy_core::openhuman::memory::sync::composio::providers::sync_state::{
+use neppy_core::neppy::memory::sync::composio::providers::sync_state::{
     extract_item_id, DailyBudget, SyncState,
 };
-use neppy_core::openhuman::memory::sync::composio::providers::{
+use neppy_core::neppy::memory::sync::composio::providers::{
     agent_ready_toolkits, capability_matrix, catalog_for_toolkit, classify_unknown, find_curated,
     is_action_visible_with_pref, toolkit_from_slug, toolkit_has_scope, ComposioProvider,
     CuratedTool, ProviderContext, ProviderUserProfile, SyncOutcome, SyncReason, TaskFetchFilter,
     ToolScope, UserScopePref,
 };
-use neppy_core::openhuman::memory::tree::score::extract::{EntityKind, ExtractedEntities};
-use neppy_core::openhuman::memory::tree::score::resolver::canonicalise;
-use neppy_core::openhuman::memory::tree::tree::bucket_seal::append_leaf;
-use neppy_core::openhuman::memory::tree::tree::{
+use neppy_core::neppy::memory::tree::score::extract::{EntityKind, ExtractedEntities};
+use neppy_core::neppy::memory::tree::score::resolver::canonicalise;
+use neppy_core::neppy::memory::tree::tree::bucket_seal::append_leaf;
+use neppy_core::neppy::memory::tree::tree::{
     append_leaf_deferred, get_or_create_tree, store as tree_store, LabelStrategy, LeafRef,
 };
-use neppy_core::openhuman::memory::tree::tree_runtime::{
+use neppy_core::neppy::memory::tree::tree_runtime::{
     engine, rpc as tree_runtime_rpc, store as runtime_store,
 };
 use tinyagents::harness::model::{ChatModel, ModelRequest, ModelResponse};
@@ -492,14 +492,14 @@ async fn default_composio_provider_hooks_cover_defaults_and_sync_preconditions()
 
     let extracted = ExtractedEntities {
         entities: vec![
-            neppy_core::openhuman::memory::tree::score::extract::ExtractedEntity {
+            neppy_core::neppy::memory::tree::score::extract::ExtractedEntity {
                 kind: EntityKind::Email,
                 text: "Round14@Example.COM".into(),
                 span_start: 0,
                 span_end: 19,
                 score: 0.9,
             },
-            neppy_core::openhuman::memory::tree::score::extract::ExtractedEntity {
+            neppy_core::neppy::memory::tree::score::extract::ExtractedEntity {
                 kind: EntityKind::Person,
                 text: "Round Fourteen".into(),
                 span_start: 20,

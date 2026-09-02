@@ -29,7 +29,7 @@ post-media field. Scope recorded in two doc comments.
   CTA (`data-testid="add-media-on-web-cta"`, `data-analytics-id="feed.addMediaOnWeb"`)
   at the bottom of `FeedComposer` that `void openUrl(ADD_MEDIA_ON_WEB_URL)`. Header
   docstring gains a "post media is web-only" note.
-- [x] **Task 2 — Rust scope note.** `src/openhuman/tinyplace/mod.rs`: add a
+- [x] **Task 2 — Rust scope note.** `src/neppy/tinyplace/mod.rs`: add a
   "Feed scope (post media is web-only)" doc-comment section after the marketplace
   one. Docs-only; `cargo fmt --check` verifies.
 - [x] **Task 3 — Tests.** `FeedSection.test.tsx`: mock `openUrl`; assert the note

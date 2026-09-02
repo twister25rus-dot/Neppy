@@ -149,7 +149,7 @@ const AUTH_EXPIRED_EVENT = 'core-rpc-auth-expired';
 /**
  * Classify an RPC error from its surfaced message and (when available) the
  * HTTP status the core returned. Patterns map to the Rust-side error shapes
- * produced by `src/openhuman/backend_api/*` (`authed_json`, rate limiter,
+ * produced by `src/neppy/backend_api/*` (`authed_json`, rate limiter,
  * budget guard) and `reqwest::Error`'s connect/timeout variants.
  */
 export function classifyRpcError(
@@ -243,7 +243,7 @@ export function classifyAuthExpiredReason(message: string, httpStatus?: number):
 function isThreadNotFoundRpcData(data: unknown): boolean {
   if (!data || typeof data !== 'object') return false;
   // The server only ever emits kind === 'ThreadNotFound' (see
-  // src/openhuman/threads/error.rs THREAD_NOT_FOUND_KIND). The snake_case
+  // src/neppy/threads/error.rs THREAD_NOT_FOUND_KIND). The snake_case
   // variant is not produced anywhere; keep only the canonical form.
   return (data as { kind?: unknown }).kind === 'ThreadNotFound';
 }

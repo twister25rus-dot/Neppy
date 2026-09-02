@@ -7,8 +7,8 @@
 
 use std::sync::Arc;
 
-use neppy_core::openhuman::channels::host::build_channel_host;
-use neppy_core::openhuman::config::Config;
+use neppy_core::neppy::channels::host::build_channel_host;
+use neppy_core::neppy::config::Config;
 use tinychannels::host::{ApprovalDecision, ConversationMessage, ReactionQuery};
 
 /// A config pinned to a throwaway workspace with the local runtime disabled,

@@ -547,8 +547,8 @@ async fn openai_compat_bearer_auth_sends_authorization_header() {
 
 #[test]
 fn temperature_helper_suppresses_o1_by_default_config() {
-    use neppy_core::openhuman::config::Config;
-    use neppy_core::openhuman::inference::temperature::temperature_for_model;
+    use neppy_core::neppy::config::Config;
+    use neppy_core::neppy::inference::temperature::temperature_for_model;
 
     let config = Config::default();
 

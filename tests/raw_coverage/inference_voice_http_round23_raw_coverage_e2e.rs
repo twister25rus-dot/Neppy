@@ -17,18 +17,18 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use futures_util::{SinkExt, StreamExt};
 use neppy_core::core::types::AppState;
-use neppy_core::openhuman::config::schema::cloud_providers::{
+use neppy_core::neppy::config::schema::cloud_providers::{
     AuthStyle as CloudAuthStyle, CloudProviderCreds,
 };
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use neppy_core::openhuman::inference::http;
-use neppy_core::openhuman::inference::local::{
+use neppy_core::neppy::inference::http;
+use neppy_core::neppy::inference::local::{
     local_ai_assets_status, local_ai_downloads_progress, LocalAiService,
 };
-use neppy_core::openhuman::inference::voice::streaming::handle_dictation_ws;
+use neppy_core::neppy::inference::voice::streaming::handle_dictation_ws;
 use serde_json::{json, Value};
 use tempfile::{tempdir, TempDir};
 use tokio_tungstenite::tungstenite::Message as WsMessage;

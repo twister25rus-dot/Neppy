@@ -11,12 +11,12 @@
 # written justification in the PR body and a reviewer who reads it.
 #
 # It has already come off once. This file briefly carried
-# `src/openhuman/hosting/{mod,tools}.rs`, because the gate was written before
+# `src/neppy/hosting/{mod,tools}.rs`, because the gate was written before
 # #5619 classified the `hosting` Cargo gate into `scripts/ci/product-features.txt`.
 # #5619 merged first, the lane now compiles the family, and the two lines were
 # deleted rather than left to rot into "excluded on purpose".
 #
-# src/openhuman/runtime/client/disabled.rs is the `modules`-OFF stand-in for
+# src/neppy/runtime/client/disabled.rs is the `modules`-OFF stand-in for
 # the runtime client facade (`#[cfg(not(feature = "modules"))] mod disabled;` in
 # runtime/client/mod.rs). `modules` is in BOTH `[features] default` and
 # product-features.txt, so the coverage lane (default + product-features.txt)
@@ -24,4 +24,4 @@
 # same shape as the `stub.rs` structural category, but this file is named
 # `disabled.rs` because it answers as a runtime that is "disabled", not as a
 # generic facade stub.
-src/openhuman/runtime/client/disabled.rs
+src/neppy/runtime/client/disabled.rs

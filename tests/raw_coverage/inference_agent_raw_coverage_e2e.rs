@@ -22,154 +22,154 @@ use tempfile::{tempdir, TempDir};
 use neppy_core::core::all::RegisteredController;
 use neppy_core::core::bus_testing::BUS_HANDLER_LOCK;
 use neppy_core::core::bus::BUS;
-use neppy_core::openhuman::agent::bus::{
+use neppy_core::neppy::agent::bus::{
     register_agent_handlers, AgentTurnRequest, AgentTurnResponse, AGENT_RUN_TURN_METHOD,
 };
-use neppy_core::openhuman::agent::debug::{
+use neppy_core::neppy::agent::debug::{
     write_prompt_dumps, DumpPromptOptions, DumpedPrompt,
 };
-use neppy_core::openhuman::agent::dispatcher::{
+use neppy_core::neppy::agent::dispatcher::{
     NativeToolDispatcher, PFormatToolDispatcher, ToolDispatcher, ToolExecutionResult,
     XmlToolDispatcher,
 };
-use neppy_core::openhuman::agent::error::{
+use neppy_core::neppy::agent::error::{
     is_context_limit_error, is_max_iterations_error, AgentError, MAX_ITERATIONS_ERROR_PREFIX,
 };
-use neppy_core::openhuman::agent::harness::definition::{
+use neppy_core::neppy::agent::harness::definition::{
     AgentTier, SkillsWildcard, SubagentEntry,
 };
-use neppy_core::openhuman::agent::harness::subagent_runner::{
+use neppy_core::neppy::agent::harness::subagent_runner::{
     autonomous_iter_cap, with_autonomous_iter_cap, SubagentMode, SubagentRunError,
     SubagentRunOptions, SubagentRunOutcome, SubagentRunStatus, SubagentUsage,
 };
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::harness::{
     current_sandbox_mode, with_current_sandbox_mode, SandboxMode,
 };
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::harness::{
     AgentDefinition, AgentDefinitionRegistry, DefinitionSource, ModelSpec, PromptSource, ToolScope,
 };
-use neppy_core::openhuman::agent::hooks::{
+use neppy_core::neppy::agent::hooks::{
     fire_hooks, sanitize_tool_output, PostTurnHook, ToolCallRecord, TurnContext,
 };
-use neppy_core::openhuman::agent::host_runtime::create_runtime;
-use neppy_core::openhuman::agent::multimodal::{
+use neppy_core::neppy::agent::host_runtime::create_runtime;
+use neppy_core::neppy::agent::multimodal::{
     contains_image_markers, count_image_markers, extract_ollama_image_payload, parse_image_markers,
     prepare_messages_for_provider, MultimodalError,
 };
-use neppy_core::openhuman::agent::messages::{
+use neppy_core::neppy::agent::messages::{
     ChatMessage, ConversationMessage, ToolResultMessage,
 };
-use neppy_core::openhuman::agent::pformat::{
+use neppy_core::neppy::agent::pformat::{
     build_registry, parse_call as parse_pformat_call, render_signature, render_signature_from_tool,
     PFormatParamType, PFormatRegistry, PFormatToolParams,
 };
-use neppy_core::openhuman::agent::prompts::{
+use neppy_core::neppy::agent::prompts::{
     render_ambient_environment, render_subagent_system_prompt, render_tools, ConnectedIntegration,
     GatedIntegrationTool, LearnedContextData, NamespaceSummary, PersonalityRosterEntry,
     PromptContext, PromptTool, SubagentRenderOptions, SystemPromptBuilder, ToolCallFormat,
     UserIdentity,
 };
-use neppy_core::openhuman::agent::stop_hooks::{
+use neppy_core::neppy::agent::stop_hooks::{
     current_stop_hooks, with_stop_hooks, BudgetStopHook, MaxIterationsStopHook, StopDecision,
     StopHook, TurnState,
 };
-use neppy_core::openhuman::agent::task_board::{
+use neppy_core::neppy::agent::task_board::{
     TaskApprovalMode, TaskBoard, TaskBoardCard, TaskBoardStore, TaskCardStatus,
 };
-use neppy_core::openhuman::agent::task_dispatcher::build_task_prompt;
-use neppy_core::openhuman::agent::tool_policy::{
+use neppy_core::neppy::agent::task_dispatcher::build_task_prompt;
+use neppy_core::neppy::agent::tool_policy::{
     AllowAllToolPolicy, GeneratedToolRuntimeContext, GeneratedToolRuntimePolicy,
     GeneratedToolRuntimePolicyConfig, GeneratedToolRuntimeRisk, RuntimeToolPolicyAction,
     ToolCallContext, ToolPolicy, ToolPolicyDecision, ToolPolicyRequest,
 };
-use neppy_core::openhuman::agent::tools::remember_preference::{
+use neppy_core::neppy::agent::tools::remember_preference::{
     pinned_content, pinned_key, FacetClass, RememberPreferenceTool, PINNED_PREFERENCES_NAMESPACE,
 };
-use neppy_core::openhuman::agent::tools::save_preference::{PrefScope, SavePreferenceTool};
-use neppy_core::openhuman::agent::tools::PlanExitTool;
-use neppy_core::openhuman::agent::triage::envelope::{TriggerEnvelope, TriggerSource};
-use neppy_core::openhuman::agent::triage::evaluator::{run_triage_with_arms, TriageOutcome};
-use neppy_core::openhuman::agent::triage::events::{
+use neppy_core::neppy::agent::tools::save_preference::{PrefScope, SavePreferenceTool};
+use neppy_core::neppy::agent::tools::PlanExitTool;
+use neppy_core::neppy::agent::triage::envelope::{TriggerEnvelope, TriggerSource};
+use neppy_core::neppy::agent::triage::evaluator::{run_triage_with_arms, TriageOutcome};
+use neppy_core::neppy::agent::triage::events::{
     publish_escalated, publish_evaluated, publish_failed,
 };
-use neppy_core::openhuman::agent::triage::routing::{
+use neppy_core::neppy::agent::triage::routing::{
     build_local_provider_with_config, ResolvedProvider,
 };
-use neppy_core::openhuman::agent::triage::{parse_triage_decision, ParseError, TriageAction};
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::agent::{
+use neppy_core::neppy::agent::triage::{parse_triage_decision, ParseError, TriageAction};
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::agent::{
     all_agent_controller_schemas, all_agent_registered_controllers,
 };
-use neppy_core::openhuman::memory::agent::memory_loader::collect_recall_citations;
-use neppy_core::openhuman::agent::registry::agents::BUILTINS;
-use neppy_core::openhuman::config::schema::cloud_providers::{
+use neppy_core::neppy::memory::agent::memory_loader::collect_recall_citations;
+use neppy_core::neppy::agent::registry::agents::BUILTINS;
+use neppy_core::neppy::config::schema::cloud_providers::{
     AuthStyle as CloudAuthStyle, CloudProviderCreds,
 };
-use neppy_core::openhuman::config::schema::LocalAiConfig;
-use neppy_core::openhuman::config::{
+use neppy_core::neppy::config::schema::LocalAiConfig;
+use neppy_core::neppy::config::{
     Config, DelegateAgentConfig, DockerRuntimeConfig, MultimodalConfig, MultimodalFileConfig,
     RuntimeConfig,
 };
-use neppy_core::openhuman::security::credentials::profiles::{AuthProfile, TokenSet};
-use neppy_core::openhuman::security::credentials::{AuthService, APP_SESSION_PROVIDER};
-use neppy_core::openhuman::inference::context_window_for_model;
-use neppy_core::openhuman::inference::local::{
+use neppy_core::neppy::security::credentials::profiles::{AuthProfile, TokenSet};
+use neppy_core::neppy::security::credentials::{AuthService, APP_SESSION_PROVIDER};
+use neppy_core::neppy::inference::context_window_for_model;
+use neppy_core::neppy::inference::local::{
     global as local_ai_global, model_artifact_path, try_global as local_ai_try_global,
     LocalAiService,
 };
-use neppy_core::openhuman::inference::openai_oauth::{
+use neppy_core::neppy::inference::openai_oauth::{
     lookup_openai_bearer_token, OPENAI_OAUTH_PROFILE_NAME, OPENAI_PROVIDER_KEY,
 };
-use neppy_core::openhuman::inference::presets::{
+use neppy_core::neppy::inference::presets::{
     all_presets, apply_preset_to_config, current_tier_from_config, device_supports_local_ai,
     mvp_presets, preset_for_tier, recommend_tier, should_default_to_cloud_fallback,
     supports_screen_summary, vision_mode_for_config, vision_mode_for_tier, ModelTier, VisionMode,
     MIN_RAM_GB_FOR_LOCAL_AI, MVP_MAX_TIER,
 };
-use neppy_core::openhuman::inference::provider::factory::{
+use neppy_core::neppy::inference::provider::factory::{
     auth_key_for_slug, create_chat_model_from_string_with_model_id, provider_for_role,
     BYOK_INCOMPLETE_SENTINEL,
 };
-use neppy_core::openhuman::inference::provider::NeppyBackendModel;
-use neppy_core::openhuman::inference::provider::{
+use neppy_core::neppy::inference::provider::NeppyBackendModel;
+use neppy_core::neppy::inference::provider::{
     format_anyhow_chain, is_budget_exhausted_message, is_openai_compatible_unknown_model_message,
     is_provider_config_rejection_message, sanitize_api_error, scrub_secret_patterns,
 };
-use neppy_core::openhuman::inference::provider::{
+use neppy_core::neppy::inference::provider::{
     ChatResponse, ProviderRuntimeOptions, ToolCall, UsageInfo,
 };
-use neppy_core::openhuman::inference::sentiment::local_ai_analyze_sentiment;
-use neppy_core::openhuman::inference::temperature::{glob_match, temperature_for_model};
-use neppy_core::openhuman::inference::voice::cloud_transcribe::{
+use neppy_core::neppy::inference::sentiment::local_ai_analyze_sentiment;
+use neppy_core::neppy::inference::temperature::{glob_match, temperature_for_model};
+use neppy_core::neppy::inference::voice::cloud_transcribe::{
     transcribe_cloud, CloudTranscribeOptions,
 };
-use neppy_core::openhuman::inference::voice::local_speech::{synthesize_piper, PiperOptions};
-use neppy_core::openhuman::modules::voice::{
+use neppy_core::neppy::inference::voice::local_speech::{synthesize_piper, PiperOptions};
+use neppy_core::neppy::modules::voice::{
     is_hallucinated, HallucinationMode, VoiceCallError,
 };
-use neppy_core::openhuman::inference::voice::postprocess::cleanup_transcription;
-use neppy_core::openhuman::inference::{
+use neppy_core::neppy::inference::voice::postprocess::cleanup_transcription;
+use neppy_core::neppy::inference::{
     all_inference_controller_schemas, all_inference_registered_controllers,
     all_local_inference_controller_schemas, all_local_inference_registered_controllers,
     DeviceProfile,
 };
-use neppy_core::openhuman::memory::{Memory, MemoryCategory, MemoryEntry, RecallOpts};
-use neppy_core::openhuman::agent::profiles::{
+use neppy_core::neppy::memory::{Memory, MemoryCategory, MemoryEntry, RecallOpts};
+use neppy_core::neppy::agent::profiles::{
     all_profiles_controller_schemas, all_profiles_registered_controllers,
 };
-use neppy_core::openhuman::agent::profiles::{
+use neppy_core::neppy::agent::profiles::{
     filter_integrations, memory_subdir_for_suffix, memory_tree_subdir_for_suffix,
     resolve_personality_memory_md, resolve_personality_soul, session_raw_subdir_for_suffix,
     HasToolkit, PersonalityContext,
 };
-use neppy_core::openhuman::agent::profiles::{
+use neppy_core::neppy::agent::profiles::{
     AgentProfile, AgentProfileStore, AgentProfilesState, DEFAULT_PROFILE_ID,
 };
-use neppy_core::openhuman::security::SecurityPolicy;
-use neppy_core::openhuman::agent::tinyagents::thread_context::{current_thread_id, with_thread_id};
-use neppy_core::openhuman::threads::todos::ops::BoardLocation;
-use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use neppy_core::openhuman::tools::{Tool, ToolResult, ToolSpec};
+use neppy_core::neppy::security::SecurityPolicy;
+use neppy_core::neppy::agent::tinyagents::thread_context::{current_thread_id, with_thread_id};
+use neppy_core::neppy::threads::todos::ops::BoardLocation;
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::{Tool, ToolResult, ToolSpec};
 use tinyagents::harness::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
 
 static ENV_LOCK: &std::sync::OnceLock<std::sync::Mutex<()>> = &crate::SHARED_ENV_LOCK;
@@ -338,7 +338,7 @@ impl Memory for ScriptedMemory {
 
     async fn namespace_summaries(
         &self,
-    ) -> anyhow::Result<Vec<neppy_core::openhuman::memory::NamespaceSummary>> {
+    ) -> anyhow::Result<Vec<neppy_core::neppy::memory::NamespaceSummary>> {
         Ok(Vec::new())
     }
 
@@ -464,7 +464,7 @@ impl Memory for RecordingMemory {
 
     async fn namespace_summaries(
         &self,
-    ) -> anyhow::Result<Vec<neppy_core::openhuman::memory::NamespaceSummary>> {
+    ) -> anyhow::Result<Vec<neppy_core::neppy::memory::NamespaceSummary>> {
         Ok(Vec::new())
     }
 
@@ -790,7 +790,7 @@ async fn call(controller: &RegisteredController, params: Value) -> Result<Value,
     (controller.handler)(params).await
 }
 
-fn base_agent_builder() -> neppy_core::openhuman::agent::AgentBuilder {
+fn base_agent_builder() -> neppy_core::neppy::agent::AgentBuilder {
     Agent::builder()
         .chat_model(Arc::new(EchoModel))
         .tools(vec![
@@ -925,9 +925,9 @@ async fn inference_registry_drives_config_oauth_models_and_provider_chat() {
     );
 
     let provider_schemas =
-        neppy_core::openhuman::inference::provider::schemas::all_controller_schemas();
+        neppy_core::neppy::inference::provider::schemas::all_controller_schemas();
     let provider_registered =
-        neppy_core::openhuman::inference::provider::schemas::all_registered_controllers();
+        neppy_core::neppy::inference::provider::schemas::all_registered_controllers();
     assert_eq!(provider_schemas.len(), provider_registered.len());
     assert_eq!(
         provider_registered[0].rpc_method_name(),
@@ -1233,7 +1233,7 @@ fn agent_builder_public_paths_cover_required_fields_defaults_and_filters() {
     assert_eq!(agent.tool_specs().len(), 2);
     assert_eq!(
         agent.model_name(),
-        neppy_core::openhuman::config::DEFAULT_MODEL
+        neppy_core::neppy::config::DEFAULT_MODEL
     );
     assert_eq!(agent.temperature(), 0.7);
     assert_eq!(agent.workspace_dir(), std::path::Path::new("."));
@@ -2042,7 +2042,7 @@ async fn inference_http_models_router_uses_isolated_config_and_dedupes_entries()
     });
     config.save().await.expect("save isolated config");
 
-    let app = neppy_core::openhuman::inference::http::router().with_state(
+    let app = neppy_core::neppy::inference::http::router().with_state(
         neppy_core::core::types::AppState {
             core_version: "coverage".to_string(),
         },
@@ -2091,7 +2091,7 @@ async fn inference_http_models_router_uses_isolated_config_and_dedupes_entries()
 #[tokio::test]
 async fn inference_voice_and_triage_parsers_cover_public_error_shapes() {
     // Hallucination detection moved behind the `tinyvoice` TinyBus module
-    // (see `openhuman::modules::voice`); this crate no longer has the
+    // (see `neppy::modules::voice`); this crate no longer has the
     // pure-string detection logic to test directly. Without a loaded module
     // the client must degrade to `Unavailable` rather than guess — that
     // contract is what stays testable from this crate, and it is asserted
@@ -2244,7 +2244,7 @@ async fn agent_runtime_policy_cost_and_triage_helpers_cover_public_edges() {
     assert_eq!(allow_all.check(&request).await, ToolPolicyDecision::Allow);
     assert_eq!(
         request.context.source,
-        neppy_core::openhuman::agent::tool_policy::ToolCallSource::Session
+        neppy_core::neppy::agent::tool_policy::ToolCallSource::Session
     );
 
     let generated = request
@@ -2424,7 +2424,7 @@ async fn agent_triage_evaluator_covers_native_dispatch_decision_and_deferred_pat
     let blocked = match BUS.native().request::<AgentTurnRequest, AgentTurnResponse>(
         AGENT_RUN_TURN_METHOD,
         AgentTurnRequest {
-            turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
                 Arc::new(EchoModel),
             ),
             history: vec![ChatMessage::user(
@@ -2444,7 +2444,7 @@ async fn agent_triage_evaluator_covers_native_dispatch_decision_and_deferred_pat
             visible_tool_names: Some(HashSet::new()),
             extra_tools: Vec::new(),
             on_progress: None,
-            origin: neppy_core::openhuman::agent::turn_origin::AgentTurnOrigin::Cli,
+            origin: neppy_core::neppy::agent::turn_origin::AgentTurnOrigin::Cli,
         },
     )
     .await
@@ -2472,7 +2472,7 @@ async fn agent_triage_evaluator_covers_native_dispatch_decision_and_deferred_pat
         },
     );
     let cloud = ResolvedProvider {
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             Arc::new(EchoModel),
         ),
         provider_name: "cloud-mock".into(),
@@ -2500,7 +2500,7 @@ async fn agent_triage_evaluator_covers_native_dispatch_decision_and_deferred_pat
     );
     let deferred = run_triage_with_arms(
         ResolvedProvider {
-            turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
                 Arc::new(EchoModel),
             ),
             provider_name: "cloud-mock".into(),
@@ -2542,7 +2542,7 @@ async fn agent_triage_evaluator_covers_native_dispatch_decision_and_deferred_pat
     );
     let fallback = run_triage_with_arms(
         ResolvedProvider {
-            turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
                 Arc::new(EchoModel),
             ),
             provider_name: "cloud-mock".into(),
@@ -2550,7 +2550,7 @@ async fn agent_triage_evaluator_covers_native_dispatch_decision_and_deferred_pat
             used_local: false,
         },
         Some(ResolvedProvider {
-            turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
                 Arc::new(EchoModel),
             ),
             provider_name: "local-mock".into(),
@@ -3031,11 +3031,11 @@ fn agent_builtin_prompt_builders_cover_all_registered_archetypes() {
 
 #[tokio::test]
 async fn agent_public_tools_cover_validation_and_metadata_paths() {
-    use neppy_core::openhuman::agent::tools::{
+    use neppy_core::neppy::agent::tools::{
         AskClarificationTool, DelegateToPersonalityTool, DelegateTool, RunWorkflowTool, TodoTool,
         RUN_WORKFLOW_TOOL_NAME,
     };
-    use neppy_core::openhuman::tools::{ArchetypeDelegationTool, SkillDelegationTool};
+    use neppy_core::neppy::tools::{ArchetypeDelegationTool, SkillDelegationTool};
 
     let ask = AskClarificationTool::new();
     assert_eq!(ask.name(), "ask_user_clarification");
@@ -3627,8 +3627,8 @@ fn inference_openai_oauth_store_covers_persist_lookup_and_empty_profiles() {
     AuthService::from_config(&config)
         .load_profiles()
         .expect("profiles load before upsert");
-    neppy_core::openhuman::security::credentials::profiles::AuthProfilesStore::new(
-        &neppy_core::openhuman::security::credentials::state_dir_from_config(&config),
+    neppy_core::neppy::security::credentials::profiles::AuthProfilesStore::new(
+        &neppy_core::neppy::security::credentials::state_dir_from_config(&config),
         config.secrets.encrypt,
     )
     .upsert_profile(profile.clone(), true)
@@ -3667,8 +3667,8 @@ fn inference_openai_oauth_store_covers_persist_lookup_and_empty_profiles() {
             scope: None,
         },
     );
-    neppy_core::openhuman::security::credentials::profiles::AuthProfilesStore::new(
-        &neppy_core::openhuman::security::credentials::state_dir_from_config(&config),
+    neppy_core::neppy::security::credentials::profiles::AuthProfilesStore::new(
+        &neppy_core::neppy::security::credentials::state_dir_from_config(&config),
         config.secrets.encrypt,
     )
     .upsert_profile(blank, true)
@@ -3955,7 +3955,7 @@ async fn agent_debug_prompt_dump_and_identity_rendering_cover_file_layouts() {
         dumps[1].tool_specs.as_slice()
     );
 
-    let identities = neppy_core::openhuman::agent::prompts::render_connected_identities();
+    let identities = neppy_core::neppy::agent::prompts::render_connected_identities();
     assert_eq!(identities, "");
 }
 

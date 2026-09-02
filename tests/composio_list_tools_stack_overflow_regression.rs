@@ -72,8 +72,8 @@
 //!     `run_subagent` to push 2 MB over.
 //!
 //! The actual stack-overflow fix is in
-//! [`src/openhuman/config/schema/load.rs`](`parse_config_with_recovery`)
-//! and [`src/openhuman/config/ops.rs`](`load_config_with_timeout`):
+//! [`src/neppy/config/schema/load.rs`](`parse_config_with_recovery`)
+//! and [`src/neppy/config/ops.rs`](`load_config_with_timeout`):
 //!
 //!   * `parse_config_with_recovery` runs `toml::from_str::<Config>` on
 //!     a blocking-pool thread via `spawn_blocking`. The blocking thread
@@ -108,13 +108,13 @@
 
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::context::prompt::ToolCallFormat;
-use neppy_core::openhuman::agent::harness::definition::{AgentDefinitionRegistry, ModelSpec};
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::context::prompt::ToolCallFormat;
+use neppy_core::neppy::agent::harness::definition::{AgentDefinitionRegistry, ModelSpec};
+use neppy_core::neppy::agent::harness::{
     run_subagent, with_parent_context, ParentExecutionContext, SubagentRunOptions,
 };
-use neppy_core::openhuman::config::AgentConfig;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::config::AgentConfig;
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
 use parking_lot::Mutex;
@@ -339,9 +339,7 @@ async fn drive_subagent() {
     let parent = ParentExecutionContext {
         agent_definition_id: "orchestrator".into(),
         allowed_subagent_ids: ["integrations_agent".to_string()].into_iter().collect(),
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
-            model,
-        ),
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(model),
         all_tools: Arc::new(vec![]),
         all_tool_specs: Arc::new(vec![]),
         visible_tool_names: std::collections::HashSet::new(),

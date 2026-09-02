@@ -263,12 +263,12 @@ fn ensure_modules_policy() {
     #[cfg(feature = "modules")]
     {
         let workspace = root.path().to_path_buf();
-        neppy_core::openhuman::modules::memory::set_modules_policy(Arc::new(
-            neppy_core::openhuman::config::Config {
+        neppy_core::neppy::modules::memory::set_modules_policy(Arc::new(
+            neppy_core::neppy::config::Config {
                 workspace_dir: workspace.clone(),
                 action_dir: workspace.clone(),
                 config_path: workspace.join("config.toml"),
-                ..neppy_core::openhuman::config::Config::default()
+                ..neppy_core::neppy::config::Config::default()
             },
         ));
     }

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-15 · **Scope:** how well the Workflows (Flows) product supports an AI agent
 creating, editing, saving, testing, and debugging automations — across the Rust core
-(`src/openhuman/flows/`, `tinyflows` engine seam), the agent tool belt
+(`src/neppy/flows/`, `tinyflows` engine seam), the agent tool belt
 (`flows/tools.rs`, `flows/builder_tools.rs`), and the frontend canvas
 (`app/src/pages/FlowCanvasPage.tsx` and friends).
 
@@ -13,7 +13,7 @@ creating, editing, saving, testing, and debugging automations — across the Rus
 - A flow is a typed JSON node graph (`tinyflows::model::WorkflowGraph` — nodes, edges, 12
   `NodeKind`s, jq `=`-expressions for bindings), persisted in SQLite
   (`{workspace}/flows/flows.db`, `flow_definitions.graph_json`).
-- 21 RPC controllers under `openhuman.flows_*` (`src/openhuman/flows/schemas.rs`).
+- 21 RPC controllers under `openhuman.flows_*` (`src/neppy/flows/schemas.rs`).
 - Agent surface: `propose_workflow` / `revise_workflow` (validate-only, never persist),
   `save_workflow` (update existing flows only), `dry_run_workflow` (mock capabilities),
   `run_flow` (saved flows, real effects), plus read tools (`list_flows`, `get_flow`,

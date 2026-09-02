@@ -6,13 +6,13 @@
 `tinyagents-drift-ledger.md` remains the row-level ledger but its anchors are
 behind — see §2).
 **Scope:** move the remaining generic inference + agent-framework code from
-`src/openhuman/` down into the vendored `tinyagents` crate
+`src/neppy/` down into the vendored `tinyagents` crate
 (`vendor/tinyagents`), delete the in-tree duplicates, migrate/retire the
 affected tests, and clean up every dangling doc/code reference left behind by
 earlier phases.
 **Method:** fresh four-way audit of (1) the crate surface, (2)
-`src/openhuman/inference/`, (3) the agent domains + the
-`src/openhuman/agent/tinyagents/` seam, (4) the existing docs/tests — all against the
+`src/neppy/inference/`, (3) the agent domains + the
+`src/neppy/agent/tinyagents/` seam, (4) the existing docs/tests — all against the
 working tree at `main` (`5b8a9f269`, 2026-07-22).
 
 **Execution status:** active on `feat/tinyagents-provider-cleanup`.
@@ -118,7 +118,7 @@ them (§4.3).
 
 ## 4. Audit: what remains host-side
 
-### 4.1 `src/openhuman/inference/` — 112 files, ~46.5k LOC
+### 4.1 `src/neppy/inference/` — 112 files, ~46.5k LOC
 
 The model-layer inversion (#4727 "Motion B") is scaffolded and mostly cut over,
 but the legacy `Provider` stack is still present and **still the default
@@ -165,7 +165,7 @@ bespoke `Provider`/`ChatModel` impls (`claude_code/` ~2.7k,
 host files (`schemas.rs`, `presets.rs`, `model_ids.rs`, `paths.rs`, `parse.rs`,
 `sentiment.rs`, `device.rs`).
 
-**Blast radius:** 187 files import `openhuman::inference`; 158 import
+**Blast radius:** 187 files import `neppy::inference`; 158 import
 `inference::provider` (grown from the old plan's 170/151). Top consumers:
 `agent/harness/session/tests.rs` (33 hits), `core/observability.rs` (31),
 `tinyagents/mod.rs` (15), `web_chat/web_errors.rs`, `routing/factory.rs`,
@@ -186,7 +186,7 @@ host files (`schemas.rs`, `presets.rs`, `model_ids.rs`, `paths.rs`, `parse.rs`,
 | `tool_registry/` | 7 / 1.8k | Read-only cross-surface discovery + RPC. Stays. |
 | `agent_registry/`, `agent_experience/`, `agent_memory/`, `agent_tool_policy/`, `agentbox/`, `orchestration/` | — | All host/product (definitions-as-data, RPC controllers, marketplace HTTP, remote-brain client — `orchestration/` talks to the hosted backend, not the local crate). Stay. `agent_tool_policy` overlaps crate `tool_policy` middleware mechanically but encodes host channel-permission policy — stays, mechanism may thin post-WP-4. |
 
-### 4.3 The seam — `src/openhuman/agent/tinyagents/` (25 files, ~17.1k LOC)
+### 4.3 The seam — `src/neppy/agent/tinyagents/` (25 files, ~17.1k LOC)
 
 The seam is healthy: 23/25 files use the crate; it implements `Middleware`
 (13×), `ToolMiddleware` (4×), `ModelMiddleware` (3×), `ChatModel` (2×),
@@ -216,7 +216,7 @@ The seam is healthy: 23/25 files use the crate; it implements `Middleware`
 
 WP-0 retargeted SDK-gap references to
 `vendor/tinyagents/docs/sdk-gaps.md`, made the provider schema
-`src/openhuman/config/schema/cloud_providers.rs` authoritative, created
+`src/neppy/config/schema/cloud_providers.rs` authoritative, created
 `docs/tinyagents-full-migration-plan/99-deletion-ledger.md`, replaced the
 phantom numbered-plan links with this plan's WP-5/C4 sections, and retargeted
 the TinyCortex analogy to this current audit. The three historical plans now

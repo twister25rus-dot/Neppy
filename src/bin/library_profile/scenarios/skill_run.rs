@@ -41,11 +41,11 @@
 //! per-child RSS), captured at the workload peak.
 
 use anyhow::{Context, Result};
-use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::inference::provider::factory::test_provider_override;
-use neppy_core::openhuman::security::AutonomyLevel;
+use neppy_core::neppy::agent::harness::AgentDefinitionRegistry;
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::inference::provider::factory::test_provider_override;
+use neppy_core::neppy::security::AutonomyLevel;
 
 use crate::harness::{fixture, measure_with_tree, EnvGuard, ProfileResult};
 use crate::mock::SkillRunMock;
@@ -127,7 +127,7 @@ pub async fn run() -> Result<ProfileResult> {
     let _approval_env = EnvGuard::set("OPENHUMAN_APPROVAL_GATE", "0");
 
     neppy_core::core::bus::init().await.expect("bus init");
-    neppy_core::openhuman::agent::bus::register_agent_handlers();
+    neppy_core::neppy::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
 
     let mock = SkillRunMock::new();

@@ -10,7 +10,7 @@
  *  - Admin HTTP helpers call mock server endpoints that are already wired by
  *    WS-A (see `app/test/e2e/mock-server.ts` and `scripts/mock-api/routes/telegram.mjs`).
  *  - RPC helpers forward to `callNeppyRpc` using the exact field names from
- *    `src/openhuman/channels/controllers/schemas.rs` (camelCase for the wire
+ *    `src/neppy/channels/controllers/schemas.rs` (camelCase for the wire
  *    format; the Rust serde layer translates).
  *
  * Key RPC shapes (verified from schemas.rs / ops.rs):

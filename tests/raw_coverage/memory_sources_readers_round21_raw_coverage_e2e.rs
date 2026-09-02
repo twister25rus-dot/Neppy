@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::memory::sources::readers::SourceReader;
-use neppy_core::openhuman::memory::sources::{ContentType, MemorySourceEntry, SourceKind};
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::memory::sources::readers::SourceReader;
+use neppy_core::neppy::memory::sources::{ContentType, MemorySourceEntry, SourceKind};
 use tempfile::{Builder, TempDir};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -118,7 +118,7 @@ async fn round21_rss_reader_rejects_private_hosts_before_fetching() {
     let _lock = env_lock();
     let tmp = tempdir();
     let config = config(&tmp);
-    let reader = neppy_core::openhuman::memory::sources::readers::rss::RssReader::new();
+    let reader = neppy_core::neppy::memory::sources::readers::rss::RssReader::new();
 
     let (status_url, status_server) =
         one_response_server("503 Service Unavailable", "", b"down".to_vec()).await;
@@ -151,7 +151,7 @@ async fn round21_github_reader_covers_commit_issue_comments_and_error_paths() {
     let old_path = std::env::var("PATH").unwrap_or_default();
     let _path = EnvGuard::set_path("PATH", Path::new(&format!("{}:{old_path}", bin.display())));
 
-    let reader = neppy_core::openhuman::memory::sources::readers::github::GithubReader;
+    let reader = neppy_core::neppy::memory::sources::readers::github::GithubReader;
     let entry = MemorySourceEntry {
         url: Some("https://github.com/tinyhumansai/openhuman".to_string()),
         ..source_entry("github-round21", SourceKind::GithubRepo)

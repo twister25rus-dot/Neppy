@@ -1,5 +1,5 @@
 use super::*;
-use crate::openhuman::config::Config;
+use crate::neppy::config::Config;
 
 /// The regression this whole type exists for.
 ///

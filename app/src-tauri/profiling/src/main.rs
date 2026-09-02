@@ -587,8 +587,8 @@ fn parse_rust_module_cpu(contents: &str) -> Vec<RustModuleCpu> {
 }
 
 fn own_rust_module(symbol: &str) -> Option<String> {
-    const CORE_PREFIX: &str = "neppy_core::openhuman::";
-    const TAURI_PREFIX: &str = "openhuman::";
+    const CORE_PREFIX: &str = "neppy_core::neppy::";
+    const TAURI_PREFIX: &str = "neppy::";
     if let Some(start) = symbol.find(CORE_PREFIX) {
         let tail = &symbol[start + CORE_PREFIX.len()..];
         let domain = tail
@@ -784,10 +784,10 @@ mod tests {
     fn parses_recursive_stack_counts_into_openhuman_modules() {
         let sample = r#"
 Total number in stack (recursive counted multiple, when >=5):
-        81 neppy_core::openhuman::agent::run  (in Neppy) + 10
-        34 <neppy_core::openhuman::agent::Tool as core::future::Future>::poll  (in Neppy) + 2
-        17 neppy_core::openhuman::memory::search  (in Neppy) + 4
-         9 openhuman::core_process::ensure_running  (in Neppy) + 1
+        81 neppy_core::neppy::agent::run  (in Neppy) + 10
+        34 <neppy_core::neppy::agent::Tool as core::future::Future>::poll  (in Neppy) + 2
+        17 neppy_core::neppy::memory::search  (in Neppy) + 4
+         9 neppy::core_process::ensure_running  (in Neppy) + 1
        200 tokio::runtime::park  (in Neppy) + 3
 
 Sort by top of stack, same collapsed (when >= 5):
@@ -796,15 +796,15 @@ Sort by top of stack, same collapsed (when >= 5):
             parse_rust_module_cpu(sample),
             vec![
                 RustModuleCpu {
-                    module: "neppy_core::openhuman::agent".into(),
+                    module: "neppy_core::neppy::agent".into(),
                     recursive_samples: 115,
                 },
                 RustModuleCpu {
-                    module: "neppy_core::openhuman::memory".into(),
+                    module: "neppy_core::neppy::memory".into(),
                     recursive_samples: 17,
                 },
                 RustModuleCpu {
-                    module: "openhuman::core_process".into(),
+                    module: "neppy::core_process".into(),
                     recursive_samples: 9,
                 },
             ]

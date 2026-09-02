@@ -29,7 +29,7 @@ use tempfile::tempdir;
 
 use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use neppy_core::core::jsonrpc::build_core_http_router;
-use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
+use neppy_core::neppy::agent::harness::AgentDefinitionRegistry;
 
 const TEST_RPC_TOKEN: &str = "json-rpc-e2e-local-token";
 
@@ -475,7 +475,7 @@ encrypt = false
     {
         write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
-    let _: neppy_core::openhuman::config::Config =
+    let _: neppy_core::neppy::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
@@ -634,8 +634,8 @@ async fn boot_stack() -> Stack {
     // The transport-only router does not create a Core runtime context. Install
     // the explicit tinymemory host seams before handlers service memory-backed
     // agent turns, matching normal startup wiring.
-    neppy_core::openhuman::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
-        neppy_core::openhuman::config::Config::default(),
+    neppy_core::neppy::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
+        neppy_core::neppy::config::Config::default(),
     ));
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -853,8 +853,8 @@ async fn multi_turn_state_persistence_inner() {
 
 // ─── Task 3: Subagent delegation happy path ───────────────────────────────────
 //
-// Tool surface (src/openhuman/tools/orchestrator_tools.rs,
-//   src/openhuman/agent/registry/agents/researcher/agent.toml):
+// Tool surface (src/neppy/tools/orchestrator_tools.rs,
+//   src/neppy/agent/registry/agents/researcher/agent.toml):
 //   - researcher has `delegate_name = "research"`, so the orchestrator LLM sees a
 //     tool named "research" synthesised by collect_orchestrator_tools.
 //   - The tool takes { "prompt": string, ... } per ArchetypeDelegationTool schema.
@@ -979,7 +979,7 @@ async fn subagent_delegation_happy_path_inner() {
 //
 // Exercises the ask_user_clarification path via scheduler_agent
 // (delegate_name = "schedule_task"), which has `ask_user_clarification` in its
-// [tools] named list (src/openhuman/agent/registry/agents/scheduler_agent/agent.toml:22).
+// [tools] named list (src/neppy/agent/registry/agents/scheduler_agent/agent.toml:22).
 //
 // Architecture note — why the full spawn_subagent→[SUBAGENT_AWAITING_USER] path
 // is not exercised here:
@@ -1024,7 +1024,7 @@ async fn subagent_delegation_happy_path_inner() {
 ///
 /// The full spawn_subagent → [SUBAGENT_AWAITING_USER] → continue_subagent path
 /// requires adding spawn_subagent to the orchestrator's named tools
-/// (src/openhuman/agent/registry/agents/orchestrator/agent.toml) — a src/ change
+/// (src/neppy/agent/registry/agents/orchestrator/agent.toml) — a src/ change
 /// outside the scope of this test file.
 #[test]
 fn subagent_clarification_flow() {
@@ -1200,7 +1200,7 @@ async fn subagent_clarification_flow_inner() {
 //
 // Architecture notes for file_write approval:
 //
-// `FileWriteTool::external_effect_with_args` (src/openhuman/tools/impl/filesystem/file_write.rs:65)
+// `FileWriteTool::external_effect_with_args` (src/neppy/tools/impl/filesystem/file_write.rs:65)
 // only returns `true` when the target file ALREADY EXISTS at `action_dir/path`.
 // Logic: "exists = edit → prompt; new = create → free". The default action_dir
 // is `~/Neppy/projects` (derived from the HOME env var that boot_stack
@@ -1221,7 +1221,7 @@ async fn subagent_clarification_flow_inner() {
 // restore it on drop via EnvVarGuard.
 
 async fn ensure_approval_gate() {
-    use neppy_core::openhuman::security::approval::ApprovalGate;
+    use neppy_core::neppy::security::approval::ApprovalGate;
 
     // The global bus must be initialized before registering subscribers.
     // `build_core_http_router` does NOT call `bootstrap_core_runtime`, so the
@@ -1229,7 +1229,7 @@ async fn ensure_approval_gate() {
     // connects to a broker — which is why this helper is too. Idempotent.
     neppy_core::core::bus::init().await.expect("bus init");
 
-    let mut cfg: neppy_core::openhuman::config::Config = toml::from_str(
+    let mut cfg: neppy_core::neppy::config::Config = toml::from_str(
         r#"api_url = "http://127.0.0.1:1"
 default_model = "e2e-mock-model"
 default_temperature = 0.7
@@ -1278,7 +1278,7 @@ encrypt = false
 /// same binary lose the bridge silently. This per-test helper avoids the issue by
 /// registering a fresh subscription on each test's own runtime.
 fn register_approval_bridge() -> Option<tinybus::SubscriptionHandle> {
-    neppy_core::openhuman::web_chat::fresh_approval_surface_subscription()
+    neppy_core::neppy::web_chat::fresh_approval_surface_subscription()
 }
 
 /// Pre-create a file in the action_dir so file_write sees it as an existing
@@ -1308,7 +1308,7 @@ fn approval_gate_installed_after_ensure() {
 
 async fn approval_gate_installed_after_ensure_inner() {
     let _lock = env_lock();
-    use neppy_core::openhuman::security::approval::ApprovalGate;
+    use neppy_core::neppy::security::approval::ApprovalGate;
     ensure_approval_gate().await;
     assert!(
         ApprovalGate::try_global().is_some(),
@@ -1393,7 +1393,7 @@ async fn approval_gate_approve_flow_inner() {
     .await;
 
     // Wait for the approval_request SSE event.
-    // Actual shape (src/openhuman/web_chat/event_bus.rs:195-224):
+    // Actual shape (src/neppy/web_chat/event_bus.rs:195-224):
     //   { "event": "approval_request", "data": { "request_id": "...", "tool_name": "...",
     //     "action_summary": "...", "args_redacted": {...} }, ... }
     let approval = wait_for_event(&mut events, "approval_request", Duration::from_secs(60)).await;
@@ -1551,7 +1551,7 @@ async fn approval_gate_deny_flow_inner() {
 //
 // Architecture: The approval gate fires for file_write inside a subagent context
 // only when the subagent run carries a WebChat turn origin. `dispatch_subagent`
-// (src/openhuman/agent/orchestration/tools/dispatch.rs) invokes `run_subagent`
+// (src/neppy/agent/orchestration/tools/dispatch.rs) invokes `run_subagent`
 // which runs the subagent's tool loop inside the SAME task that the orchestrator's
 // WebChat turn started in. Because `APPROVAL_CHAT_CONTEXT` and `turn_origin` are
 // tokio task-locals (not thread-locals), and `run_subagent` does NOT re-scope them,
@@ -1559,7 +1559,7 @@ async fn approval_gate_deny_flow_inner() {
 // Therefore file_write inside a ArchetypeDelegationTool subagent CAN trigger the
 // approval gate and publish approval_request events.
 //
-// code_executor has delegate_name = "run_code" (src/openhuman/agent/registry/
+// code_executor has delegate_name = "run_code" (src/neppy/agent/registry/
 // agents/code_executor/agent.toml:3). The orchestrator synthesizes a `run_code`
 // delegation tool from this. code_executor has file_write in its tool surface.
 // The researcher agent does NOT have file_write.
@@ -1627,8 +1627,8 @@ async fn subagent_with_approval_gate_inner() {
 
     // The approval gate fires because the subagent inherits the orchestrator's
     // WebChat task-local origin (turn_origin + APPROVAL_CHAT_CONTEXT are not
-    // re-scoped by dispatch_subagent/run_subagent — src/openhuman/agent/harness/
-    // subagent_runner/ and src/openhuman/agent/orchestration/tools/dispatch.rs).
+    // re-scoped by dispatch_subagent/run_subagent — src/neppy/agent/harness/
+    // subagent_runner/ and src/neppy/agent/orchestration/tools/dispatch.rs).
     // If approval_request never fires within 120s, the event JSON is dumped.
     let approval = wait_for_event(&mut events, "approval_request", Duration::from_secs(120)).await;
     let request_id = approval
@@ -2294,7 +2294,7 @@ async fn multi_hop_delegation_chain_inner() {
 //
 // HONESTY CHECK — where does accumulation actually live?
 //
-// Read src/openhuman/agent/harness/engine/core.rs:370-448:
+// Read src/neppy/agent/harness/engine/core.rs:370-448:
 //
 //   provider.chat(ChatRequest { stream: delta_tx_opt.as_ref(), … }).await
 //   // returns the COMPLETE ChatResponse — tool_calls already fully assembled
@@ -2328,12 +2328,12 @@ async fn multi_hop_delegation_chain_inner() {
 
 mod streaming_support {
     use async_trait::async_trait;
-    use neppy_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-    use neppy_core::openhuman::agent::Agent;
-    use neppy_core::openhuman::config::{AgentConfig, ContextConfig, MemoryConfig};
-    use neppy_core::openhuman::memory::Memory;
-    use neppy_core::openhuman::tools::traits::ToolCallOptions;
-    use neppy_core::openhuman::tools::{
+    use neppy_core::neppy::agent::dispatcher::NativeToolDispatcher;
+    use neppy_core::neppy::agent::Agent;
+    use neppy_core::neppy::config::{AgentConfig, ContextConfig, MemoryConfig};
+    use neppy_core::neppy::memory::Memory;
+    use neppy_core::neppy::tools::traits::ToolCallOptions;
+    use neppy_core::neppy::tools::{
         PermissionLevel, Tool, ToolContent, ToolResult, ToolScope as RuntimeToolScope,
     };
     use serde_json::json;
@@ -2560,7 +2560,7 @@ mod streaming_support {
 ///   Dispatch uses `resp.tool_calls` from the final `ModelResponse`, NOT from
 ///   accumulated stream deltas.  The `ModelStreamItem::ToolCallDelta` events
 ///   flow only to the progress channel (UI streaming) via `spawn_delta_forwarder`
-///   (src/openhuman/agent/harness/engine/progress.rs:329-370).
+///   (src/neppy/agent/harness/engine/progress.rs:329-370).
 ///
 ///   In the real HTTP providers (compatible_stream_native.rs:322,405-425) the
 ///   fragment accumulation buffer (`entry.arguments.push_str(args)`) IS what
@@ -2582,7 +2582,7 @@ mod streaming_support {
 ///   5. Final answer is "stream final".
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn streaming_tool_call_accumulation() {
-    use neppy_core::openhuman::agent::progress::AgentProgress;
+    use neppy_core::neppy::agent::progress::AgentProgress;
     use std::sync::Mutex;
     use streaming_support::{
         agent_with_s, native_tool_response_s, text_response_s, workspace_s, EchoTool,
@@ -2778,7 +2778,7 @@ async fn streaming_tool_call_accumulation() {
 }
 
 /// Needed for streaming_tool_call_accumulation.
-use neppy_core::openhuman::config::AgentConfig;
+use neppy_core::neppy::config::AgentConfig;
 
 // ─── Case 13 (provider-level): SSE tool-arg accumulation ──────────────────────
 //

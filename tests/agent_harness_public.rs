@@ -1,13 +1,13 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::harness::{
     current_parent, with_parent_context, ParentExecutionContext,
 };
-use neppy_core::openhuman::agent::hooks::{
+use neppy_core::neppy::agent::hooks::{
     fire_hooks, sanitize_tool_output, PostTurnHook, ToolCallRecord, TurnContext,
 };
-use neppy_core::openhuman::config::AgentConfig;
-use neppy_core::openhuman::memory::{Memory, MemoryCategory, MemoryEntry};
+use neppy_core::neppy::config::AgentConfig;
+use neppy_core::neppy::memory::{Memory, MemoryCategory, MemoryEntry};
 use parking_lot::Mutex;
 use std::sync::Arc;
 use tokio::sync::Notify;
@@ -31,7 +31,7 @@ impl Memory for StubMemory {
         &self,
         _query: &str,
         _limit: usize,
-        _opts: neppy_core::openhuman::memory::RecallOpts<'_>,
+        _opts: neppy_core::neppy::memory::RecallOpts<'_>,
     ) -> Result<Vec<MemoryEntry>> {
         Ok(Vec::new())
     }
@@ -55,7 +55,7 @@ impl Memory for StubMemory {
 
     async fn namespace_summaries(
         &self,
-    ) -> Result<Vec<neppy_core::openhuman::memory::NamespaceSummary>> {
+    ) -> Result<Vec<neppy_core::neppy::memory::NamespaceSummary>> {
         Ok(Vec::new())
     }
 
@@ -97,7 +97,7 @@ fn stub_parent_context() -> ParentExecutionContext {
         allowed_subagent_ids: ["test".to_string(), "researcher".to_string()]
             .into_iter()
             .collect(),
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             Arc::new(tinyagents::harness::testkit::ScriptedModel::replies(vec![
                 "ok",
             ])),
@@ -117,7 +117,7 @@ fn stub_parent_context() -> ParentExecutionContext {
         session_id: "test-session".into(),
         channel: "test-channel".into(),
         connected_integrations: vec![],
-        tool_call_format: neppy_core::openhuman::agent::context::prompt::ToolCallFormat::PFormat,
+        tool_call_format: neppy_core::neppy::agent::context::prompt::ToolCallFormat::PFormat,
         session_key: "test-session".into(),
         session_parent_prefix: None,
         on_progress: None,

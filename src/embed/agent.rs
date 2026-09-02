@@ -8,7 +8,7 @@
 //! # Why the params are a struct rather than `json!`
 //!
 //! The controller behind this method deserializes
-//! [`AgentChatParams`](crate::openhuman::inference::local::schemas) — which
+//! [`AgentChatParams`](crate::neppy::inference::local::schemas) — which
 //! carries no `#[serde(rename_all)]`, so its wire names are the Rust field names
 //! exactly as spelled. Every embedder that hand-writes that JSON is therefore
 //! depending on an unmarked, unversioned naming coincidence: rename a field
@@ -20,13 +20,13 @@
 //!
 //! A turn reads two `tokio` task-locals that no parameter can carry:
 //!
-//! - **origin** ([`turn_origin`](crate::openhuman::agent::turn_origin)) — the
+//! - **origin** ([`turn_origin`](crate::neppy::agent::turn_origin)) — the
 //!   caller's statement of authority. The approval gate is *fail-closed*: an
 //!   unlabelled call gets the `Cli` default, and a caller wanting anything
 //!   else — a workflow's blanket automation grant, say — must scope it around
 //!   the dispatch. Miss it and the turn still succeeds while every acting tool
 //!   quietly refuses, which reads as a bad model rather than a missing scope.
-//! - **progress** ([`progress_sink`](crate::openhuman::agent::progress_sink)) —
+//! - **progress** ([`progress_sink`](crate::neppy::agent::progress_sink)) —
 //!   the call resolves to one final string, so an embedder that wants tool
 //!   calls and deltas has to have installed the sink *before* awaiting.
 //!
@@ -41,9 +41,9 @@ use serde::{Deserialize, Serialize};
 use super::call::call;
 use super::error::CoreError;
 use crate::core::runtime::CoreRuntime;
-use crate::openhuman::agent::progress::AgentProgress;
-use crate::openhuman::agent::turn_origin::AgentTurnOrigin;
-use crate::openhuman::inference::INFERENCE_AGENT_CHAT as AGENT_CHAT;
+use crate::neppy::agent::progress::AgentProgress;
+use crate::neppy::agent::turn_origin::AgentTurnOrigin;
+use crate::neppy::inference::INFERENCE_AGENT_CHAT as AGENT_CHAT;
 
 /// The routed chat entry point.
 ///
@@ -349,17 +349,17 @@ impl Turn<'_> {
 
         let reply = match (self.origin, self.progress) {
             (Some(origin), Some(sink)) => {
-                crate::openhuman::agent::progress_sink::with_progress_sink(
+                crate::neppy::agent::progress_sink::with_progress_sink(
                     sink,
-                    crate::openhuman::agent::turn_origin::with_origin(origin, dispatch),
+                    crate::neppy::agent::turn_origin::with_origin(origin, dispatch),
                 )
                 .await
             }
             (Some(origin), None) => {
-                crate::openhuman::agent::turn_origin::with_origin(origin, dispatch).await
+                crate::neppy::agent::turn_origin::with_origin(origin, dispatch).await
             }
             (None, Some(sink)) => {
-                crate::openhuman::agent::progress_sink::with_progress_sink(sink, dispatch).await
+                crate::neppy::agent::progress_sink::with_progress_sink(sink, dispatch).await
             }
             (None, None) => dispatch.await,
         }

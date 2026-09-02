@@ -17,15 +17,15 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use neppy_core::core::jsonrpc::build_core_http_router;
-use neppy_core::openhuman::platform::connectivity::ops::is_port_in_use;
-use neppy_core::openhuman::platform::connectivity::rpc::{
+use neppy_core::neppy::platform::connectivity::ops::is_port_in_use;
+use neppy_core::neppy::platform::connectivity::rpc::{
     diag, pick_listen_port, pick_listen_port_for_host, PickListenPortError,
 };
-use neppy_core::openhuman::platform::connectivity::{
+use neppy_core::neppy::platform::connectivity::{
     all_connectivity_controller_schemas, all_connectivity_registered_controllers,
     connectivity_controller_schema,
 };
-use neppy_core::openhuman::platform::socket::{set_global_socket_manager, SocketManager};
+use neppy_core::neppy::platform::socket::{set_global_socket_manager, SocketManager};
 
 const TEST_RPC_TOKEN: &str = "connectivity-raw-coverage-e2e-token";
 

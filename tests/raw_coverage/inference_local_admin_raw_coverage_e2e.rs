@@ -16,18 +16,18 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 use tempfile::{tempdir, TempDir};
 
-use neppy_core::openhuman::config::schema::cloud_providers::{
+use neppy_core::neppy::config::schema::cloud_providers::{
     AuthStyle as CloudAuthStyle, CloudProviderCreds,
 };
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::security::credentials::{AuthService, DEFAULT_AUTH_PROFILE_NAME};
-use neppy_core::openhuman::inference::local::ops::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::security::credentials::{AuthService, DEFAULT_AUTH_PROFILE_NAME};
+use neppy_core::neppy::inference::local::ops::{
     local_ai_chat, local_ai_download_asset, local_ai_downloads_progress, local_ai_should_react,
     LocalAiChatMessage,
 };
-use neppy_core::openhuman::inference::local::LocalAiService;
-use neppy_core::openhuman::inference::provider::factory::auth_key_for_slug;
-use neppy_core::openhuman::inference::provider::list_configured_models;
+use neppy_core::neppy::inference::local::LocalAiService;
+use neppy_core::neppy::inference::provider::factory::auth_key_for_slug;
+use neppy_core::neppy::inference::provider::list_configured_models;
 
 #[derive(Clone, Default)]
 struct MockState {

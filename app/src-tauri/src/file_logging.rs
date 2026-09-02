@@ -41,7 +41,7 @@ pub(crate) fn resolve_data_dir() -> PathBuf {
             return PathBuf::from(workspace);
         }
     }
-    neppy_core::openhuman::config::default_root_neppy_dir().unwrap_or_else(|err| {
+    neppy_core::neppy::config::default_root_neppy_dir().unwrap_or_else(|err| {
         eprintln!(
             "[file_logging] default_root_neppy_dir failed ({err}); falling back to temp dir"
         );

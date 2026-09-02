@@ -1,28 +1,28 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::debug::{
+use neppy_core::neppy::agent::debug::{
     dump_agent_prompt, write_prompt_dumps, DumpPromptOptions, DumpedPrompt,
 };
-use neppy_core::openhuman::agent::harness::archivist::ArchivistHook;
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::harness::archivist::ArchivistHook;
+use neppy_core::neppy::agent::harness::{
     run_subagent, with_parent_context, AgentDefinition, DefinitionSource, ModelSpec,
     ParentExecutionContext, PromptSource, SandboxMode, SubagentRunError, SubagentRunOptions,
     ToolScope,
 };
-use neppy_core::openhuman::agent::hooks::{PostTurnHook, ToolCallRecord, TurnContext};
-use neppy_core::openhuman::config::AgentConfig;
-use neppy_core::openhuman::agent::context::prompt::ToolCallFormat;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::agent::hooks::{PostTurnHook, ToolCallRecord, TurnContext};
+use neppy_core::neppy::config::AgentConfig;
+use neppy_core::neppy::agent::context::prompt::ToolCallFormat;
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::memory::api::provider::MemoryProvider;
+use neppy_core::neppy::memory::api::provider::MemoryProvider;
 // Raw assertion reads against the engine the provider wraps — see the note in
 // `archivist_tests.rs`: production writes through the provider, the proof that
 // a row landed reads the store directly.
 use tinymemory_core::store::{events, fts5, profile, segments, MemoryClient};
 use tinymemory_tinycortex::engine::{EngineRuntimeConfig, TinycortexProvider};
-use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::{PermissionLevel, Tool, ToolResult};
 use parking_lot::Mutex;
 use rusqlite::Connection;
 use serde_json::json;
@@ -179,8 +179,8 @@ impl Tool for EchoTool {
 fn setup_provider() -> (TempDir, Arc<MemoryClient>, Arc<dyn MemoryProvider>) {
     // The cfg(test)-only installer is out of reach for an external test
     // target; the public boot-shaped seam does the same job here.
-    neppy_core::openhuman::memory::host_impls::install_memory_host_seams(Arc::new(
-        neppy_core::openhuman::config::Config::default(),
+    neppy_core::neppy::memory::host_impls::install_memory_host_seams(Arc::new(
+        neppy_core::neppy::config::Config::default(),
     ));
     let tmp = TempDir::new().expect("tempdir");
     let workspace = tmp.path().join("ws");
@@ -299,7 +299,7 @@ fn parent_context(workspace: &Path, model: Arc<ScriptedModel>) -> ParentExecutio
         ]
         .into_iter()
         .collect(),
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             model,
         ),
         all_tools: Arc::new(tools),

@@ -21,13 +21,13 @@ use tempfile::{tempdir, TempDir};
 
 use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use neppy_core::core::jsonrpc::build_core_http_router;
-use neppy_core::openhuman::agent::turn_origin::{self, AgentTurnOrigin};
-use neppy_core::openhuman::security::approval::gate::{
+use neppy_core::neppy::agent::turn_origin::{self, AgentTurnOrigin};
+use neppy_core::neppy::security::approval::gate::{
     ApprovalChatContext, ApprovalGate, APPROVAL_CHAT_CONTEXT,
 };
-use neppy_core::openhuman::security::approval::types::{ExecutionOutcome, GateOutcome};
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::security::approval::types::{ExecutionOutcome, GateOutcome};
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
 
@@ -258,7 +258,7 @@ async fn setup() -> TestHarness {
     ];
 
     let _ =
-        neppy_core::openhuman::agent::harness::AgentDefinitionRegistry::init_global_builtins();
+        neppy_core::neppy::agent::harness::AgentDefinitionRegistry::init_global_builtins();
 
     let (addr, rpc_join) = serve_rpc().await;
     TestHarness {

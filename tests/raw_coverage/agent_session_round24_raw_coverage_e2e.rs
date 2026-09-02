@@ -1,18 +1,18 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::dispatcher::XmlToolDispatcher;
-use neppy_core::openhuman::agent::hooks::{PostTurnHook, TurnContext};
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::config::{AgentConfig, ContextConfig};
-use neppy_core::openhuman::agent::context::prompt::{
+use neppy_core::neppy::agent::dispatcher::XmlToolDispatcher;
+use neppy_core::neppy::agent::hooks::{PostTurnHook, TurnContext};
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::config::{AgentConfig, ContextConfig};
+use neppy_core::neppy::agent::context::prompt::{
     ConnectedIntegration, LearnedContextData, PersonalityRosterEntry, PersonalityRosterSection,
     PromptContext, PromptSection, PromptTool, SubagentRenderOptions, SystemPromptBuilder,
     ToolCallFormat, UserIdentity, UserIdentitySection,
 };
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::tools::{
+use neppy_core::neppy::tools::{
     PermissionLevel, Tool, ToolContent, ToolResult, ToolScope as RuntimeToolScope,
 };
 use parking_lot::Mutex;
@@ -485,7 +485,7 @@ async fn max_iteration_checkpoint_uses_deterministic_fallback_and_hooks() {
     assert!(
         !streamed.iter().any(|event| matches!(
             event,
-            neppy_core::openhuman::agent::progress::AgentProgress::TextDelta {
+            neppy_core::neppy::agent::progress::AgentProgress::TextDelta {
                 iteration: 2,
                 ..
             }
@@ -611,7 +611,7 @@ fn prompt_sections_cover_dynamic_roster_identity_and_subagent_edges() {
     let parent_tools: Vec<Box<dyn Tool>> = vec![Box::new(Round24Tool {
         calls: Arc::new(AtomicUsize::new(0)),
     })];
-    let subagent_json = neppy_core::openhuman::agent::context::prompt::render_subagent_system_prompt(
+    let subagent_json = neppy_core::neppy::agent::context::prompt::render_subagent_system_prompt(
         &workspace_path,
         "round24-model",
         &[999, 0],

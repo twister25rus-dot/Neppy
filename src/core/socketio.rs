@@ -559,7 +559,7 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                 );
 
                     // Trigger the web channel's chat logic.
-                    match crate::openhuman::web_chat::start_chat(
+                    match crate::neppy::web_chat::start_chat(
                         &client_id,
                         &payload.thread_id,
                         &payload.message,
@@ -568,7 +568,7 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                         payload.profile_id,
                         payload.locale,
                         payload.queue_mode,
-                        crate::openhuman::web_chat::ChatRequestMetadata::default(),
+                        crate::neppy::web_chat::ChatRequestMetadata::default(),
                     )
                     .await
                     {
@@ -610,7 +610,7 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                         client_id,
                         payload.thread_id
                     );
-                    let _ = crate::openhuman::web_chat::cancel_chat_scoped(
+                    let _ = crate::neppy::web_chat::cancel_chat_scoped(
                         &client_id,
                         &payload.thread_id,
                         payload.request_id.as_deref(),
@@ -662,7 +662,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
     // 1. Web channel events → per-client rooms.
     let io_web = io.clone();
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::web_chat::subscribe_web_channel_events();
+        let mut rx = crate::neppy::web_chat::subscribe_web_channel_events();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -691,7 +691,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
 
     // 2. Dictation hotkey events → broadcast to all connected clients.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::voice::dictation_listener::subscribe_dictation_events();
+        let mut rx = crate::neppy::voice::dictation_listener::subscribe_dictation_events();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -741,7 +741,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
 
     // 3. Overlay attention events → broadcast to all clients.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::desktop::overlay::subscribe_attention_events();
+        let mut rx = crate::neppy::desktop::overlay::subscribe_attention_events();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -769,7 +769,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
     //    chat session is active. Pattern mirrors the overlay attention
     //    bridge above — fire-and-forget, no per-client routing.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::desktop::notifications::subscribe_core_notifications();
+        let mut rx = crate::neppy::desktop::notifications::subscribe_core_notifications();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -797,7 +797,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
     //     TinyPlaceOrchestrationTab targeted-refetches the affected chat live
     //     (stage 7). Mirrors the overlay/notification fire-and-forget pattern.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::hosted::orchestration::subscribe_orchestration_socket();
+        let mut rx = crate::neppy::hosted::orchestration::subscribe_orchestration_socket();
         loop {
             let payload = match rx.recv().await {
                 Ok(payload) => payload,
@@ -927,7 +927,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
 
     // 5. Transcription results → broadcast to all connected clients.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::voice::dictation_listener::subscribe_transcription_results();
+        let mut rx = crate::neppy::voice::dictation_listener::subscribe_transcription_results();
         loop {
             let text = match rx.recv().await {
                 Ok(text) => text,

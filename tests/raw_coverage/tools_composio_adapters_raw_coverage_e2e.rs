@@ -20,15 +20,15 @@ use axum::{Json, Router};
 use serde_json::{json, Map, Value};
 use tempfile::{Builder, TempDir};
 
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::security::{AuditLogger, SecurityPolicy};
-use neppy_core::openhuman::tools::{
+use neppy_core::neppy::security::{AuditLogger, SecurityPolicy};
+use neppy_core::neppy::tools::{
     all_tools, all_tools_registered_controllers, ComposioExecuteTool, Tool,
 };
 

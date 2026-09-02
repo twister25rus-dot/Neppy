@@ -1,22 +1,22 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use chrono::{TimeZone, Utc};
-use neppy_core::openhuman::agent::context::prompt::{
+use neppy_core::neppy::agent::context::prompt::{
     render_ambient_environment, render_safety, render_subagent_system_prompt_with_format,
     render_tools, ConnectedIntegration, CuratedMemoryPromptSnapshot, LearnedContextData,
     NamespaceSummary as PromptNamespaceSummary, PersonalityRosterEntry, PersonalityRosterSection,
     PromptContext, PromptTool, SubagentRenderOptions, SystemPromptBuilder, ToolCallFormat,
     UserIdentity,
 };
-use neppy_core::openhuman::agent::debug::{dump_agent_prompt, DumpPromptOptions};
-use neppy_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::config::AgentConfig;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::agent::debug::{dump_agent_prompt, DumpPromptOptions};
+use neppy_core::neppy::agent::dispatcher::NativeToolDispatcher;
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::config::AgentConfig;
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::skills::ops_types::Workflow;
-use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
+use neppy_core::neppy::skills::ops_types::Workflow;
+use neppy_core::neppy::tools::{PermissionLevel, Tool, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::collections::{HashSet, VecDeque};

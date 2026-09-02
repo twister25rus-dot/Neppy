@@ -82,23 +82,23 @@ async worker deadlocks a current-thread runtime.
 - **Dependency**: `tinyagents = { version = "1.5.0", features = ["sqlite"] }`
   patched to `path = "vendor/tinyagents"` (git submodule,
   `tinyhumansai/tinyagents`). We add the `"repl"` feature.
-- **Tool trait** (`src/openhuman/tools/traits.rs:255`): `name` /
+- **Tool trait** (`src/neppy/tools/traits.rs:255`): `name` /
   `description` / `parameters_schema` / `async execute` (+
   `execute_with_context`, `permission_level_with_args`, `external_effect`,
   `timeout_policy`, `display_label/detail`). Registered by adding one
   `Box::new(...)` line in `all_tools_with_runtime`
-  (`src/openhuman/tools/ops.rs`).
+  (`src/neppy/tools/ops.rs`).
 - **Tool→tinyagents bridge already exists**: `ToolAdapter`
-  (`src/openhuman/agent/tinyagents/tools.rs:78`) wraps `Arc<dyn openhuman Tool>`
+  (`src/neppy/agent/tinyagents/tools.rs:78`) wraps `Arc<dyn openhuman Tool>`
   and implements `tinyagents::Tool<()>` — we reuse it to project openhuman
   tools into the REPL's `CapabilityRegistry`.
 - **Model bridge already exists**: `ProviderModel`
-  (`src/openhuman/agent/tinyagents/model.rs`) implements the tinyagents model
+  (`src/neppy/agent/tinyagents/model.rs`) implements the tinyagents model
   trait over openhuman's `Provider`; `assemble_turn_harness`
-  (`src/openhuman/agent/tinyagents/mod.rs:1122`) already builds a
+  (`src/neppy/agent/tinyagents/mod.rs:1122`) already builds a
   `CapabilityRegistry<()>` per turn with models registered.
 - **Subagents**: `run_subagent(definition, prompt, options)`
-  (`src/openhuman/agent/harness/subagent_runner/`) + parent allowlist
+  (`src/neppy/agent/harness/subagent_runner/`) + parent allowlist
   (`allowed_subagent_ids`) + `MAX_SPAWN_DEPTH`. We wrap this in a
   `HarnessAgent` impl so `agent_query("researcher", ...)` spawns real
   openhuman subagents.
@@ -113,7 +113,7 @@ async worker deadlocks a current-thread runtime.
   `Workflow*` events).
 - **Prompt surfacing**: tool `description()` + `parameters_schema()` ride in
   the native tool-call API request; the orchestrator's narrative guide is
-  `src/openhuman/agent/registry/agents/orchestrator/prompt.md` + `agent.toml`.
+  `src/neppy/agent/registry/agents/orchestrator/prompt.md` + `agent.toml`.
 - **No existing rhai/RLM surface** in `src/` — this is net-new, but it sits
   beside `workflows/`, `flows/`, `tinyflows/`, `agent_orchestration/`.
 

@@ -56,7 +56,7 @@ fn main() {
             // still fires for genuine outages. Per-attempt reports flood
             // Sentry — see OPENHUMAN-TAURI-2E (~1393 events), -84 (~1050),
             // -T (~871). The primary fix lives in
-            // `openhuman::inference::provider::ops::should_report_provider_http_failure`
+            // `neppy::inference::provider::ops::should_report_provider_http_failure`
             // (transient codes excluded). This filter catches any future call
             // site that bypasses it.
             if neppy_core::core::observability::is_transient_provider_http_failure(&event) {
@@ -164,7 +164,7 @@ fn main() {
             // Drop 401 "Session expired. Please log in again." bodies surfaced
             // by llm_provider / backend_api, plus pre-flight "no session token
             // stored" guards from the rpc dispatcher. Primary suppression
-            // lives at the call sites (`openhuman::inference::provider::ops::api_error`
+            // lives at the call sites (`neppy::inference::provider::ops::api_error`
             // publishes a SessionExpired event_bus signal and short-circuits;
             // the rpc dispatcher's `is_session_expired_error` skip-path in
             // `src/core/jsonrpc.rs` redirects to a tracing::info). This
@@ -254,7 +254,7 @@ fn main() {
             // the cache is empty (root cause of the original userCount=0).
             if event.user.is_none() {
                 event.user =
-                    neppy_core::openhuman::desktop::app_state::peek_cached_current_user_identity()
+                    neppy_core::neppy::desktop::app_state::peek_cached_current_user_identity()
                         .and_then(|identity| identity.id)
                         .map(|id| sentry::User {
                             id: Some(id),

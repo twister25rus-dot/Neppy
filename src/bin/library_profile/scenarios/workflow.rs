@@ -4,10 +4,10 @@
 //! The agent node's LLM routes through the plain-text mock provider.
 
 use anyhow::Result;
-use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use neppy_core::openhuman::flows::ops::{flows_create, flows_run};
-use neppy_core::openhuman::flows::FlowRunTrigger;
-use neppy_core::openhuman::inference::provider::factory::test_provider_override;
+use neppy_core::neppy::agent::harness::AgentDefinitionRegistry;
+use neppy_core::neppy::flows::ops::{flows_create, flows_run};
+use neppy_core::neppy::flows::FlowRunTrigger;
+use neppy_core::neppy::inference::provider::factory::test_provider_override;
 use serde_json::json;
 
 use crate::harness::{fixture, measure, ProfileResult};
@@ -16,7 +16,7 @@ use crate::mock::PlainTextMock;
 pub async fn run() -> Result<ProfileResult> {
     let fixture = fixture()?;
     neppy_core::core::bus::init().await.expect("bus init");
-    neppy_core::openhuman::agent::bus::register_agent_handlers();
+    neppy_core::neppy::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
     let mock = PlainTextMock::new("Phoenix migration status: healthy, ramp on Friday.");
     let _provider = test_provider_override::install_model(mock.clone());

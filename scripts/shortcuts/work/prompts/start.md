@@ -25,7 +25,7 @@ Ground the change in the existing codebase before writing any code:
 
 ## 2. Implement in Rust (if core logic is involved)
 
-- New functionality goes in a **dedicated subdirectory** under `src/openhuman/<domain>/`. Do **not** add new standalone `*.rs` files at the `src/openhuman/` root.
+- New functionality goes in a **dedicated subdirectory** under `src/neppy/<domain>/`. Do **not** add new standalone `*.rs` files at the `src/neppy/` root.
 - Domain `mod.rs` is export-focused; operational code in `ops.rs` / `store.rs` / `types.rs` / `schemas.rs`.
 - Expose features through the controller registry — never add domain branches in `src/core/cli.rs` / `src/core/jsonrpc.rs`.
 - Use the event bus singletons (`publish_global` / `subscribe_global` / `register_native_global` / `request_native_global`); never construct `EventBus` / `NativeRegistry` directly.
@@ -56,7 +56,7 @@ Add verbose diagnostics on new/changed flows: entry/exit, branches, retries, tim
 
 ## 7. Capability catalog
 
-If this adds, removes, or renames a user-facing feature, update `src/openhuman/platform/about_app/` in the same change.
+If this adds, removes, or renames a user-facing feature, update `src/neppy/platform/about_app/` in the same change.
 
 ## 8. Pre-merge quality checks
 

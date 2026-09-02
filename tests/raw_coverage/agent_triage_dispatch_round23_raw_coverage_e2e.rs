@@ -1,11 +1,11 @@
 use neppy_core::core::bus::init as init_global;
-use neppy_core::openhuman::agent::debug::DumpPromptOptions;
-use neppy_core::openhuman::agent::task_board::{TaskBoardCard, TaskCardStatus};
-use neppy_core::openhuman::agent::task_dispatcher::{dispatch_card, DispatchOutcome};
-use neppy_core::openhuman::agent::triage::{
+use neppy_core::neppy::agent::debug::DumpPromptOptions;
+use neppy_core::neppy::agent::task_board::{TaskBoardCard, TaskCardStatus};
+use neppy_core::neppy::agent::task_dispatcher::{dispatch_card, DispatchOutcome};
+use neppy_core::neppy::agent::triage::{
     apply_decision, TriageAction, TriageDecision, TriageResolutionPath, TriageRun, TriggerEnvelope,
 };
-use neppy_core::openhuman::threads::todos::ops::{self, BoardLocation, CardPatch};
+use neppy_core::neppy::threads::todos::ops::{self, BoardLocation, CardPatch};
 use serde_json::json;
 use std::path::Path;
 use std::sync::Mutex;

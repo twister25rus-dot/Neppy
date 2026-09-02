@@ -23,37 +23,37 @@ use neppy_core::core::events::DomainEvent;
 use tinybus::EventHandler;
 use neppy_core::core::jsonrpc::build_core_http_router;
 use neppy_core::core::socketio::WebChannelEvent;
-use neppy_core::openhuman::agent::harness::definition::{
+use neppy_core::neppy::agent::harness::definition::{
     AgentDefinition, AgentDefinitionRegistry, AgentTier, DefinitionSource, ModelSpec, PromptSource,
     SandboxMode, SkillsWildcard, SubagentEntry, ToolScope as AgentToolScope,
 };
-use neppy_core::openhuman::agent::host_runtime::NativeRuntime;
-use neppy_core::openhuman::channels::email_channel::EmailConfig;
-use neppy_core::openhuman::channels::irc::IrcChannelConfig;
-use neppy_core::openhuman::channels::proactive::ProactiveMessageSubscriber;
-use neppy_core::openhuman::channels::traits::ChannelMessage;
-use neppy_core::openhuman::channels::yuanbao::config::YuanbaoConfig;
-use neppy_core::openhuman::channels::yuanbao::errors::{
+use neppy_core::neppy::agent::host_runtime::NativeRuntime;
+use neppy_core::neppy::channels::email_channel::EmailConfig;
+use neppy_core::neppy::channels::irc::IrcChannelConfig;
+use neppy_core::neppy::channels::proactive::ProactiveMessageSubscriber;
+use neppy_core::neppy::channels::traits::ChannelMessage;
+use neppy_core::neppy::channels::yuanbao::config::YuanbaoConfig;
+use neppy_core::neppy::channels::yuanbao::errors::{
     AUTH_FAILED_CODES, AUTH_RETRYABLE_CODES, NO_RECONNECT_CLOSE_CODES,
 };
-use neppy_core::openhuman::channels::yuanbao::inbound::{
+use neppy_core::neppy::channels::yuanbao::inbound::{
     InboundPipeline, PipelineOutcome, PipelineState,
 };
-use neppy_core::openhuman::channels::yuanbao::media::{
+use neppy_core::neppy::channels::yuanbao::media::{
     build_file_msg_body, build_image_msg_body, guess_mime_type, image_format_code, is_image,
     parse_image_size,
 };
-use neppy_core::openhuman::channels::yuanbao::proto::{
+use neppy_core::neppy::channels::yuanbao::proto::{
     decode_auth_bind_rsp, decode_conn_msg, decode_inbound_json, decode_inbound_push,
     decode_push_msg, encode_auth_bind, encode_conn_msg, encode_msg_body_element, encode_ping,
     encode_push_ack,
 };
-use neppy_core::openhuman::channels::yuanbao::proto_constants::{cmd, cmd_type, module};
-use neppy_core::openhuman::channels::yuanbao::sign::{
+use neppy_core::neppy::channels::yuanbao::proto_constants::{cmd, cmd_type, module};
+use neppy_core::neppy::channels::yuanbao::sign::{
     build_timestamp, compute_signature, generate_nonce, SignManager,
 };
-use neppy_core::openhuman::channels::yuanbao::splitter::split_markdown;
-use neppy_core::openhuman::channels::yuanbao::types::{
+use neppy_core::neppy::channels::yuanbao::splitter::split_markdown;
+use neppy_core::neppy::channels::yuanbao::types::{
     Account as YuanbaoAccount, ConnFrame as YuanbaoConnFrame,
     ConnectionState as YuanbaoConnectionState, GroupInfo as YuanbaoGroupInfo,
     GroupMember as YuanbaoGroupMember, GroupMemberListPage as YuanbaoGroupMemberListPage,
@@ -62,45 +62,45 @@ use neppy_core::openhuman::channels::yuanbao::types::{
     MsgBodyElement as YuanbaoMsgBodyElement, MsgContent as YuanbaoMsgContent,
     Source as YuanbaoSource,
 };
-use neppy_core::openhuman::channels::yuanbao::wire::{
+use neppy_core::neppy::channels::yuanbao::wire::{
     decode_varint, encode_field_bytes, encode_field_string, encode_field_varint, encode_varint,
     get_bytes, get_repeated_bytes, get_string, get_varint, next_seq_no, parse_fields, FieldValue,
 };
-use neppy_core::openhuman::channels::yuanbao::YuanbaoChannel;
-use neppy_core::openhuman::channels::{
+use neppy_core::neppy::channels::yuanbao::YuanbaoChannel;
+use neppy_core::neppy::channels::{
     doctor_channels, Channel, CliChannel, DingTalkChannel, EmailChannel, IMessageChannel,
     IrcChannel, LinqChannel, MattermostChannel, QQChannel, SendMessage, SignalChannel,
     SlackChannel, WhatsAppChannel,
 };
-use neppy_core::openhuman::integrations::composio::all_composio_agent_tools;
-use neppy_core::openhuman::config::schema::{
+use neppy_core::neppy::integrations::composio::all_composio_agent_tools;
+use neppy_core::neppy::config::schema::{
     CapabilityProviderConfig, CapabilityProviderTrustState, NodeConfig, WhatsAppConfig,
 };
-use neppy_core::openhuman::config::{Config, IMessageConfig, WebhookConfig};
-use neppy_core::openhuman::agent::context::prompt::ConnectedIntegration;
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::config::{Config, IMessageConfig, WebhookConfig};
+use neppy_core::neppy::agent::context::prompt::ConnectedIntegration;
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use neppy_core::openhuman::runtime::javascript::NodeBootstrap;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::runtime::javascript::NodeBootstrap;
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::security::{AuditLogger, AutonomyLevel, SecurityPolicy};
-use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use neppy_core::openhuman::tools::registry::ops::diagnostics_for_config;
-use neppy_core::openhuman::tools::registry::{
+use neppy_core::neppy::security::{AuditLogger, AutonomyLevel, SecurityPolicy};
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::registry::ops::diagnostics_for_config;
+use neppy_core::neppy::tools::registry::{
     all_tool_registry_controller_schemas, all_tool_registry_registered_controllers,
     capability_provider_by_id, capability_provider_diagnostics, capability_provider_registry,
     denials, get_tool, is_capability_provider_trusted_enabled, list_capability_providers,
     list_tools, normalize_capability_provider_id, registry_entries,
     CapabilityProviderRegistryError,
 };
-use neppy_core::openhuman::tools::generated::{
+use neppy_core::neppy::tools::generated::{
     admit_generated_tool_definitions, generated_tools_from_definitions, GeneratedToolAdapter,
     GeneratedToolAdmissionConfig, GeneratedToolDefinition, GeneratedToolRisk,
 };
-use neppy_core::openhuman::tools::orchestrator_tools::collect_orchestrator_tools;
-use neppy_core::openhuman::tools::{
+use neppy_core::neppy::tools::orchestrator_tools::collect_orchestrator_tools;
+use neppy_core::neppy::tools::{
     all_tools, all_tools_controller_schemas, all_tools_registered_controllers,
     default_tools, ApplyPatchTool, BrowserTool, CleaningStrategy,
     ComputerUseConfig, CsvExportTool, CurrentTimeTool, DefaultToolPolicy, DetectToolsTool,
@@ -330,7 +330,7 @@ fn coverage_connected_integration(
 struct DefaultPathTool;
 
 #[async_trait]
-impl neppy_core::openhuman::tools::Tool for DefaultPathTool {
+impl neppy_core::neppy::tools::Tool for DefaultPathTool {
     fn name(&self) -> &str {
         "default_path_tool"
     }
@@ -2023,8 +2023,8 @@ async fn channel_provider_public_paths_cover_pre_network_errors_and_utilities() 
 
 #[tokio::test]
 async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
-    let mut rx = neppy_core::openhuman::web_chat::subscribe_web_channel_events();
-    neppy_core::openhuman::web_chat::publish_web_channel_event(WebChannelEvent {
+    let mut rx = neppy_core::neppy::web_chat::subscribe_web_channel_events();
+    neppy_core::neppy::web_chat::publish_web_channel_event(WebChannelEvent {
         event: "coverage_event".to_string(),
         client_id: "client-1".to_string(),
         thread_id: "thread-1".to_string(),
@@ -2042,7 +2042,7 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
     assert_eq!(event.message.as_deref(), Some("hello web channel"));
 
     assert_eq!(
-        neppy_core::openhuman::web_chat::start_chat(
+        neppy_core::neppy::web_chat::start_chat(
             "",
             "thread-1",
             "hello",
@@ -2051,14 +2051,14 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
             None,
             None,
             None,
-            neppy_core::openhuman::web_chat::ChatRequestMetadata::default(),
+            neppy_core::neppy::web_chat::ChatRequestMetadata::default(),
         )
         .await
         .expect_err("blank client_id"),
         "client_id is required"
     );
     assert_eq!(
-        neppy_core::openhuman::web_chat::start_chat(
+        neppy_core::neppy::web_chat::start_chat(
             "client-1",
             "",
             "hello",
@@ -2067,14 +2067,14 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
             None,
             None,
             None,
-            neppy_core::openhuman::web_chat::ChatRequestMetadata::default(),
+            neppy_core::neppy::web_chat::ChatRequestMetadata::default(),
         )
         .await
         .expect_err("blank thread_id"),
         "thread_id is required"
     );
     assert_eq!(
-        neppy_core::openhuman::web_chat::start_chat(
+        neppy_core::neppy::web_chat::start_chat(
             "client-1",
             "thread-1",
             "   ",
@@ -2083,7 +2083,7 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
             None,
             None,
             None,
-            neppy_core::openhuman::web_chat::ChatRequestMetadata::default(),
+            neppy_core::neppy::web_chat::ChatRequestMetadata::default(),
         )
         .await
         .expect_err("blank message"),
@@ -2091,26 +2091,26 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
     );
 
     assert_eq!(
-        neppy_core::openhuman::web_chat::cancel_chat("", "thread-1")
+        neppy_core::neppy::web_chat::cancel_chat("", "thread-1")
             .await
             .expect_err("blank cancel client_id"),
         "client_id is required"
     );
     assert_eq!(
-        neppy_core::openhuman::web_chat::cancel_chat("client-1", "")
+        neppy_core::neppy::web_chat::cancel_chat("client-1", "")
             .await
             .expect_err("blank cancel thread_id"),
         "thread_id is required"
     );
     assert!(
-        neppy_core::openhuman::web_chat::cancel_chat("client-1", "thread-1")
+        neppy_core::neppy::web_chat::cancel_chat("client-1", "thread-1")
             .await
             .expect("cancel with no in-flight request")
             .is_none()
     );
-    neppy_core::openhuman::web_chat::invalidate_thread_sessions("thread-1").await;
+    neppy_core::neppy::web_chat::invalidate_thread_sessions("thread-1").await;
     assert!(
-        neppy_core::openhuman::web_chat::in_flight_entries_for_test()
+        neppy_core::neppy::web_chat::in_flight_entries_for_test()
             .await
             .is_empty()
     );
@@ -2137,7 +2137,7 @@ async fn proactive_subscriber_routes_web_and_active_external_channel_without_net
         }
     }
 
-    let mut rx = neppy_core::openhuman::web_chat::subscribe_web_channel_events();
+    let mut rx = neppy_core::neppy::web_chat::subscribe_web_channel_events();
     let capture = Arc::new(CapturingChannel::default());
     let mut channels: HashMap<String, Arc<dyn Channel>> = HashMap::new();
     channels.insert("capture".into(), capture.clone());
@@ -3152,7 +3152,7 @@ async fn proxy_config_tool_covers_temp_config_runtime_env_and_validation_paths()
         config_path: dir.path().join("config.toml"),
         ..Config::default()
     };
-    config.autonomy.level = neppy_core::openhuman::security::AutonomyLevel::Full;
+    config.autonomy.level = neppy_core::neppy::security::AutonomyLevel::Full;
     config.save().await.expect("write temp config");
 
     let security = Arc::new(SecurityPolicy::from_config(
@@ -3529,7 +3529,7 @@ async fn node_and_npm_exec_tools_cover_validation_policy_and_disabled_runtime_pa
         &config.workspace_dir,
     ));
     let readonly_security = Arc::new(SecurityPolicy::from_config(
-        &neppy_core::openhuman::config::AutonomyConfig {
+        &neppy_core::neppy::config::AutonomyConfig {
             level: AutonomyLevel::ReadOnly,
             ..config.autonomy.clone()
         },
@@ -3543,7 +3543,7 @@ async fn node_and_npm_exec_tools_cover_validation_policy_and_disabled_runtime_pa
         full_security.clone(),
         runtime.clone(),
         bootstrap.clone(),
-        neppy_core::openhuman::config::RuntimePoolConfig {
+        neppy_core::neppy::config::RuntimePoolConfig {
             enabled: false,
             ..Default::default()
         },
@@ -3575,7 +3575,7 @@ async fn node_and_npm_exec_tools_cover_validation_policy_and_disabled_runtime_pa
         readonly_security.clone(),
         runtime.clone(),
         bootstrap.clone(),
-        neppy_core::openhuman::config::RuntimePoolConfig {
+        neppy_core::neppy::config::RuntimePoolConfig {
             enabled: false,
             ..Default::default()
         },
@@ -3651,13 +3651,13 @@ async fn node_and_npm_exec_tools_cover_validation_policy_and_disabled_runtime_pa
 #[tokio::test]
 async fn doctor_channels_covers_no_channel_and_local_validation_paths() {
     let mut empty = Config::default();
-    empty.channels_config = neppy_core::openhuman::config::ChannelsConfig::default();
+    empty.channels_config = neppy_core::neppy::config::ChannelsConfig::default();
     doctor_channels(empty)
         .await
         .expect("empty channel doctor is ok");
 
     let mut config = Config::default();
-    config.channels_config = neppy_core::openhuman::config::ChannelsConfig::default();
+    config.channels_config = neppy_core::neppy::config::ChannelsConfig::default();
     config.channels_config.imessage = Some(IMessageConfig {
         allowed_contacts: Vec::new(),
     });

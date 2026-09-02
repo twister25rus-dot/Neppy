@@ -5,7 +5,7 @@ Per the feature brief, tests are back-filled **after** the behavior lands
 gate) for the openhuman side. TinyAgents-side tests ship inside Phase 2
 (that crate's convention does not defer tests).
 
-## 6.1 Unit tests — `src/openhuman/rlm/`
+## 6.1 Unit tests — `src/neppy/rlm/`
 
 Use tinyagents testkit stubs (`ScriptedModel`, `FakeTool`, `StubAgent`) so
 no network and no real provider is needed.

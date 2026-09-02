@@ -52,7 +52,7 @@ This resolves #4920 not by building the full seller stack (SDK → core handler 
    - Extend the `IdentitiesSection.tsx` header docstring to state that seller-side
      (list-for-sale, accept/reject offer) is **web-only by design**, with the reason.
    - Add a one-line pointer in the tinyplace domain module doc
-     (`src/openhuman/tinyplace/mod.rs`).
+     (`src/neppy/tinyplace/mod.rs`).
 
 3. **Test** — co-located Vitest test asserting the Trading tab renders the seller note and
    the CTA invokes `openUrl` with `https://tiny.place/identities` (mock `openUrl`). Covers

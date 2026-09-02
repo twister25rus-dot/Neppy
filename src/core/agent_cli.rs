@@ -23,10 +23,10 @@
 use anyhow::{anyhow, Result};
 use std::path::PathBuf;
 
-use crate::openhuman::agent::debug::{
+use crate::neppy::agent::debug::{
     dump_agent_prompt, dump_all_agent_prompts, write_prompt_dumps, DumpPromptOptions, DumpedPrompt,
 };
-use crate::openhuman::agent::harness::definition::AgentDefinitionRegistry;
+use crate::neppy::agent::harness::definition::AgentDefinitionRegistry;
 
 /// Entry point for `openhuman agent <subcommand>`.
 pub fn run_agent_command(args: &[String]) -> Result<()> {

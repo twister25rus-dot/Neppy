@@ -46,7 +46,7 @@ The crate exposes every seam the plan expects, plus more. Host implements these:
 
 | Trait | Path | Host adapter (W1) |
 | --- | --- | --- |
-| `EmbeddingBackend` | `store/vectors/embedding.rs:32` | `tinycortex/embeddings.rs` over `openhuman::embeddings` *(amended: bridged to `tinyagents::harness::embeddings::EmbeddingModel` in W-EMB, plan §8.2)* |
+| `EmbeddingBackend` | `store/vectors/embedding.rs:32` | `tinycortex/embeddings.rs` over `neppy::embeddings` *(amended: bridged to `tinyagents::harness::embeddings::EmbeddingModel` in W-EMB, plan §8.2)* |
 | `Embedder` (retrieval/summarise) | `score/embed.rs:28` | same seam file |
 | `ChatProvider` | `score/extract/llm.rs:70` | `tinycortex/chat.rs` over `memory::chat` / `inference` |
 | `Summariser` (bucket-seal, structured) | `tree/summarise.rs:70` | `tinycortex/chat.rs` |

@@ -11,18 +11,18 @@ use chrono::{Duration as ChronoDuration, Utc};
 use serde_json::{json, Value};
 use tempfile::{Builder, TempDir};
 
-use neppy_core::openhuman::desktop::app_state::{
+use neppy_core::neppy::desktop::app_state::{
     snapshot, update_local_state, StoredAppStatePatch, StoredOnboardingTasks,
 };
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::security::credentials::profiles::{AuthProfile, AuthProfilesStore, TokenSet};
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::security::credentials::profiles::{AuthProfile, AuthProfilesStore, TokenSet};
+use neppy_core::neppy::memory::{
     AppendConversationMessageRequest, ConversationMessageRecord, ConversationMessagesRequest,
     CreateConversationThreadRequest, DeleteConversationThreadRequest, EmptyRequest,
     UpdateConversationMessageRequest, UpdateConversationThreadLabelsRequest,
     UpdateConversationThreadTitleRequest,
 };
-use neppy_core::openhuman::threads::ops::{
+use neppy_core::neppy::threads::ops::{
     message_append, message_update, messages_list, thread_create_new, thread_delete,
     thread_update_labels, thread_update_title, threads_list, threads_purge,
 };

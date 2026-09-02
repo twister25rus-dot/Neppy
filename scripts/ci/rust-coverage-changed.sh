@@ -107,7 +107,7 @@ integration_test_targets() {
 # tested, and wrong for domains whose contract lives in an integration target:
 # such a gate never runs on a PR that touches only the domain's `src/`.
 #
-#   src/openhuman/memory/** → the golden-workspace schema gates. They stand
+#   src/neppy/memory/** → the golden-workspace schema gates. They stand
 #   between a memory-store schema change and a corrupted user workspace, and
 #   they are `tests/` targets, so `--lib` scoping alone skips them entirely.
 #
@@ -115,7 +115,7 @@ integration_test_targets() {
 # empty result.
 domain_integration_targets() {
   case "$1" in
-    src/openhuman/memory/*)
+    src/neppy/memory/*)
       printf '%s\n' memory_golden_fixture_e2e memory_golden_parity_e2e
       ;;
   esac
@@ -251,7 +251,7 @@ for f in "${files[@]}"; do
       ;;
     src/*/*)
       # Non-.rs asset embedded in a domain (e.g. agent prompt markdown under
-      # src/openhuman/agent/prompts/) — scope to that domain's tests.
+      # src/neppy/agent/prompts/) — scope to that domain's tests.
       p="${f#src/}"
       IFS='/' read -r -a segs <<<"${p}"
       n="${#segs[@]}"

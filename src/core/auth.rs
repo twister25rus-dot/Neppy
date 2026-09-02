@@ -53,7 +53,7 @@
 //! - `POST /rpc` requires the per-launch core bearer token.
 //! - `GET /v1/models` and `POST /v1/chat/completions` accept either that
 //!   internal bearer or a stable user-managed external API key stored under
-//!   `openhuman::inference::http::EXTERNAL_OPENAI_COMPAT_PROVIDER`.
+//!   `neppy::inference::http::EXTERNAL_OPENAI_COMPAT_PROVIDER`.
 
 use std::io::Write as _;
 use std::path::Path;
@@ -80,11 +80,11 @@ use axum::Json;
 use serde_json::json;
 
 #[cfg(feature = "http-server")]
-use crate::openhuman::config::Config;
+use crate::neppy::config::Config;
 #[cfg(feature = "http-server")]
-use crate::openhuman::inference::http::EXTERNAL_OPENAI_COMPAT_PROVIDER;
+use crate::neppy::inference::http::EXTERNAL_OPENAI_COMPAT_PROVIDER;
 #[cfg(feature = "http-server")]
-use crate::openhuman::security::credentials::AuthService;
+use crate::neppy::security::credentials::AuthService;
 
 static RPC_TOKEN: OnceLock<String> = OnceLock::new();
 

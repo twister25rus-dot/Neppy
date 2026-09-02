@@ -20,8 +20,8 @@
 //! it.
 
 use chrono::{TimeZone, Utc};
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::tools::{MemoryTreeFetchLeavesTool, MemoryTreeSearchEntitiesTool, Tool};
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::tools::{MemoryTreeFetchLeavesTool, MemoryTreeSearchEntitiesTool, Tool};
 use serde_json::{json, Value};
 use tempfile::TempDir;
 use tinycortex::memory::ingest::canonicalize::chat::{ChatBatch, ChatMessage};
@@ -50,11 +50,9 @@ fn ensure_memory_seams() {
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
                 let config = std::sync::Arc::new(Config::default());
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
-                    config.clone(),
-                );
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(config.clone());
                 #[cfg(feature = "modules")]
-                neppy_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::neppy::modules::memory::set_modules_policy(config);
             })
             .expect("spawn agent retrieval seam installer")
             .join()
@@ -159,7 +157,7 @@ fn set_workspace_env(tmp: &TempDir) -> EnvGuard {
 /// most turns don't need a deep tree walk).
 #[test]
 fn orchestrator_reaches_memory_agent_on_demand() {
-    let toml = include_str!("../src/openhuman/agent/registry/agents/orchestrator/agent.toml");
+    let toml = include_str!("../src/neppy/agent/registry/agents/orchestrator/agent.toml");
     // Eager pre-fetch must be gone.
     assert!(
         !toml

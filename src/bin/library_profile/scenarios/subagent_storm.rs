@@ -34,9 +34,9 @@
 //! The workload asserts all K researcher subagents actually executed.
 
 use anyhow::Result;
-use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::inference::provider::factory::test_provider_override;
+use neppy_core::neppy::agent::harness::AgentDefinitionRegistry;
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::inference::provider::factory::test_provider_override;
 
 use crate::harness::{fixture, measure, ProfileResult, TurnLatency};
 use crate::mock::{subagent_marker, SubagentMock};
@@ -92,7 +92,7 @@ pub async fn run() -> Result<ProfileResult> {
     // spawns instead of erroring back to a re-spawn loop.
     fixture.config.agent.max_parallel_tools = width.max(4);
     neppy_core::core::bus::init().await.expect("bus init");
-    neppy_core::openhuman::agent::bus::register_agent_handlers();
+    neppy_core::neppy::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
 
     let mock = SubagentMock::with_width(width);

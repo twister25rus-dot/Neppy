@@ -171,11 +171,9 @@ pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
         // billing) would 400/404 against the inference host — TAURI-RUST-HW1
         // (4932 `GET /teams/me/usage` 400s from `openrouter.ai`). Cloud analogue
         // of the local-AI guard (OPENHUMAN-TAURI-51/-80/-7Z, Ollama).
-        let is_cloud_inference =
-            crate::openhuman::config::schema::cloud_providers::endpoint_host(u).is_some_and(|h| {
-                crate::openhuman::config::schema::cloud_providers::host_is_builtin_cloud_provider(
-                    &h,
-                )
+        let is_cloud_inference = crate::neppy::config::schema::cloud_providers::endpoint_host(u)
+            .is_some_and(|h| {
+                crate::neppy::config::schema::cloud_providers::host_is_builtin_cloud_provider(&h)
             });
 
         tracing::debug!(
@@ -984,7 +982,7 @@ mod tests {
         // `.neppy-staging` process-wide, which breaks any concurrent test
         // resolving the root openhuman dir. Hold the crate-wide env lock too,
         // in the established order (TEST_ENV_LOCK before the backend lock).
-        let _env_guard = crate::openhuman::config::TEST_ENV_LOCK
+        let _env_guard = crate::neppy::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let _guard = env_lock();
@@ -1001,7 +999,7 @@ mod tests {
     #[test]
     fn app_env_empty_primary_falls_through_to_secondary() {
         // Same staging-root hazard as `app_env_from_env_reads_runtime_var`.
-        let _env_guard = crate::openhuman::config::TEST_ENV_LOCK
+        let _env_guard = crate::neppy::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let _guard = env_lock();

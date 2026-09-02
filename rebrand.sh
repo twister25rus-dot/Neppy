@@ -12,7 +12,7 @@
 #   paths     ~/.neppy -> ~/.neppy, ~/Neppy/projects -> ~/Neppy/projects
 #   tauri     product name, window title, bundle identifier
 #   crates    crate + package names (openhuman -> neppy)
-#   moddir    src/openhuman/ -> src/neppy/ and every import path (do this LAST)
+#   moddir    src/neppy/ -> src/neppy/ and every import path (do this LAST)
 #
 # Everything in PROTECTED below is never touched. See §3.2 of NEPPY-BUILD-SPEC.md
 # for why each one is on the list. Do not "simplify" this script by dropping it.
@@ -45,7 +45,7 @@ EXCLUDES=(
 PROTECTED='tinyagents|tinycortex|tinyflows|tinychannels|tinybus|tinymcp|tinymemory|tinydocs|tinyvoice|tinyjuice|tinyruntime|tinywallet|tinyhumans-sdk|tinyjuice_retrieve|tokenjuice_retrieve|x-sdk-name|openhuman-skills|VITE_SKILLS_GITHUB_REPO|retire_local_whisper_stt|INFERENCE_COMPILED_IN'
 
 case "$CATEGORY" in
-  docs)   PATTERN='Neppy' ;      REPLACE='Neppy' ;      SCOPE=(README.md INSTALL.md CONTRIBUTING.md docs gitbooks app/src/locales src/openhuman/agent/prompts) ;;
+  docs)   PATTERN='Neppy' ;      REPLACE='Neppy' ;      SCOPE=(README.md INSTALL.md CONTRIBUTING.md docs gitbooks app/src/locales src/neppy/agent/prompts) ;;
   env)    PATTERN='OPENHUMAN_' ;     REPLACE='NEPPY_' ;     SCOPE=(.) ;;
   paths)  PATTERN='\.neppy' ;    REPLACE='.neppy' ;     SCOPE=(.) ;;
   tauri)  PATTERN='Neppy' ;      REPLACE='Neppy' ;      SCOPE=(app/src-tauri/tauri.conf.json app/src-tauri/Cargo.toml) ;;
@@ -57,14 +57,14 @@ esac
 if [[ "${MODDIR:-}" == "1" ]]; then
   cat <<'EOF'
 
-The src/openhuman/ -> src/neppy/ move is the largest diff in the whole rebrand
+The src/neppy/ -> src/neppy/ move is the largest diff in the whole rebrand
 (upstream measured a comparable in-tree move at ~545 import rewrites). Do it by
 hand so git tracks it as a rename:
 
   git mv src/openhuman src/neppy
-  rg -l 'crate::openhuman|neppy_core|use openhuman' --glob '!vendor/**' \
+  rg -l 'crate::neppy|neppy_core|use openhuman' --glob '!vendor/**' \
     | xargs sed -i '' \
-        -e 's/crate::openhuman/crate::neppy/g' \
+        -e 's/crate::neppy/crate::neppy/g' \
         -e 's/neppy_core/neppy_core/g'
   GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml
 

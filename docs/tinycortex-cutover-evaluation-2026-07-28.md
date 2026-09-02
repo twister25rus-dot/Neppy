@@ -7,7 +7,7 @@ authority for chunks, content and vector primitives, trees, retrieval, scoring,
 queue jobs, ingest, source readers, sync pipelines, diffs, goals, graph
 primitives, conversations, and tool memory.
 
-The remaining `src/openhuman/memory*` modules must not be moved wholesale. They
+The remaining `src/neppy/memory*` modules must not be moved wholesale. They
 are product adapters or compatibility paths, not a second memory engine:
 
 - RPC schemas and controller registration
@@ -24,8 +24,8 @@ and runtime composition.
 
 ## Audit result
 
-The audit covered `src/openhuman/memory/`, every `memory_*` domain, the
-`src/openhuman/memory/tinycortex/` seam, and `vendor/tinycortex/src/memory/`.
+The audit covered `src/neppy/memory/`, every `memory_*` domain, the
+`src/neppy/memory/tinycortex/` seam, and `vendor/tinycortex/src/memory/`.
 
 | Host area | Disposition |
 | --- | --- |
@@ -62,7 +62,7 @@ those files would create broad source churn without changing runtime ownership.
 - New generic memory behavior belongs in `vendor/tinycortex`.
 - Neppy may add adapters, policy, RPC, tools, lifecycle, and product
   projections, but must not fork TinyCortex engine logic.
-- Persisted format parity tests in `openhuman::memory::tinycortex::parity` remain the
+- Persisted format parity tests in `neppy::memory::tinycortex::parity` remain the
   cutover guard for existing workspaces.
 - `MemoryTaint`, redaction, and source-scope behavior remain security-sensitive
   review points.

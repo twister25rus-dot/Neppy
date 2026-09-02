@@ -22,7 +22,7 @@ the extraction phases (2, 3) inherit most coverage from ported tests.
 
 ## 5.2 Docs
 
-- `src/openhuman/subconscious/README.md` — rewrite around the factory: the
+- `src/neppy/subconscious/README.md` — rewrite around the factory: the
   generic tick skeleton, the profile table (memory / tinyplace), per-instance
   persistence keys, RPC additions. Keep the gotchas list (post-login
   bootstrap, status-never-locks, state-advances-on-success, quiet-tick

@@ -1,4 +1,4 @@
-# Migrating `src/openhuman/inference/` onto `vendor/tinyagents/`
+# Migrating `src/neppy/inference/` onto `vendor/tinyagents/`
 
 **Status:** superseded on 2026-07-22 by
 [`tinyagents-migration-plan-2026-07-22.md`](tinyagents-migration-plan-2026-07-22.md).
@@ -14,7 +14,7 @@ status, and present-tense inventory are not current.
 
 ## 1. Why
 
-The agent loop already runs on tinyagents; `run_turn_via_tinyagents_shared` drives every turn. But the **model layer underneath it is still entirely in-house**: the harness reaches a crate `ChatModel` only through the `ProviderModel` adapter (`src/openhuman/agent/tinyagents/model.rs`), which wraps openhuman's own `Box<dyn Provider>` stack from `src/openhuman/inference/provider/` — ~29.6k lines that re-implement what tinyagents 1.7 now ships natively:
+The agent loop already runs on tinyagents; `run_turn_via_tinyagents_shared` drives every turn. But the **model layer underneath it is still entirely in-house**: the harness reaches a crate `ChatModel` only through the `ProviderModel` adapter (`src/neppy/agent/tinyagents/model.rs`), which wraps openhuman's own `Box<dyn Provider>` stack from `src/neppy/inference/provider/` — ~29.6k lines that re-implement what tinyagents 1.7 now ships natively:
 
 | openhuman (`inference/provider/`, etc.)                                  | tinyagents 1.7 equivalent                                                                              |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
@@ -34,7 +34,7 @@ Maintaining both stacks means every fix (streaming edge case, retry policy, cont
 
 ### Blast radius
 
-- 170 files outside `inference/` import `openhuman::inference`; 151 import `inference::provider` specifically. Top consumers: agent harness/session/tools/triage, `context`, `voice`, `routing`, `memory_tree`, `learning`, `channels`, `embeddings`, `subconscious`, `threads`, `migrations`, `config/schema`.
+- 170 files outside `inference/` import `neppy::inference`; 151 import `inference::provider` specifically. Top consumers: agent harness/session/tools/triage, `context`, `voice`, `routing`, `memory_tree`, `learning`, `channels`, `embeddings`, `subconscious`, `threads`, `migrations`, `config/schema`.
 - Module sizes: `provider/` ≈ 29.6k lines, `local/` ≈ 13.7k, `voice/` + `http/` + `openai_oauth/` ≈ 4.4k, root files ≈ 5.5k. Only `provider/` + parts of the root files migrate; the rest stays.
 
 ---
@@ -56,7 +56,7 @@ Maintaining both stacks means every fix (streaming edge case, retry policy, cont
 | `provider/factory.rs` | **shrinks, stays**: resolves openhuman provider strings (`openhuman`, `cloud`, `ollama:<model>`, `<slug>:<model>[@temp]`) + config + credentials → crate `ProviderSpec`/`Arc<dyn ChatModel>` | This is the host↔crate boundary after migration. `BYOK_INCOMPLETE_SENTINEL` stays. |
 | `provider/ops.rs` (`list_configured_models`, SessionExpired publishing) | **stays**, retargeted to crate types | SessionExpired needs an auth-failure signal from the crate client (gap G3). |
 | embeddings dispatch | crate `harness::embeddings` traits (seam `tinyagents/embeddings.rs` already exists — finish it) | Local (Ollama) embedding stays a host impl of the crate trait. |
-| `provider/thread_context.rs`, `resolved_route.rs`, `auth_error_registry.rs` | **re-home** into `src/openhuman/agent/tinyagents/` (they're seam concerns, not provider concerns) | `thread_context` task-locals already consumed by `model.rs`. |
+| `provider/thread_context.rs`, `resolved_route.rs`, `auth_error_registry.rs` | **re-home** into `src/neppy/agent/tinyagents/` (they're seam concerns, not provider concerns) | `thread_context` task-locals already consumed by `model.rs`. |
 
 ### Stays in `inference/` (host concerns, out of scope for the crate)
 
@@ -81,7 +81,7 @@ Verified against 1.7.1 source; re-audit at Phase 0 since the crate moves fast.
 - **G4 — Request dump / wire observability**: `compatible_dump.rs` writes raw request/response dumps for debugging. Upstream a transport-level hook (or confirm the crate's observability exporters cover it) before deleting.
 - **G5 — Per-request timeout policy**: `compatible_timeout.rs` semantics vs. what the crate transport exposes. Upstream a per-call timeout on `ModelRequest`/`ProviderSpec` if missing.
 - **G6 — BYOK auth styles**: the authoritative provider catalog
-  (`src/openhuman/config/schema/cloud_providers.rs`) supports multiple
+  (`src/neppy/config/schema/cloud_providers.rs`) supports multiple
   `AuthStyle`s (headers etc.). Confirm crate `ProviderSpec` can express every
   style in the catalog; upstream what's missing.
 - **G7 — Repeat-output guard**: `compatible_repeat.rs` (degenerate-repetition detection). Decide: upstream as an optional stream guard, or accept the loss (note #4463 already tracks deleted repeat guards).
@@ -131,10 +131,10 @@ Each phase compiles green in both Cargo worlds, keeps ≥80% diff coverage, and 
 
 ### Phase 5 — Seam shrink
 - Delete `ProviderModel`, `ThinkingForwarder` remnants, `ProviderUsageCarry`, and the `ChatMessage`↔crate-message conversion layer in `tinyagents/convert.rs` (the harness now receives crate types natively).
-- Re-home `thread_context.rs` / `resolved_route.rs` / `auth_error_registry.rs` into `src/openhuman/agent/tinyagents/`.
+- Re-home `thread_context.rs` / `resolved_route.rs` / `auth_error_registry.rs` into `src/neppy/agent/tinyagents/`.
 - `inference/provider/` collapses to: `factory.rs` (string grammar → `ChatModel`), bespoke impls, host error classifier, `ops.rs`, `schemas.rs`.
 
-**Exit:** `src/openhuman/agent/tinyagents/model.rs` deleted; adapter inventory test updated.
+**Exit:** `src/neppy/agent/tinyagents/model.rs` deleted; adapter inventory test updated.
 
 ### Phase 6 — One-shot inference ops onto the crate
 - `sentiment.rs`, `should_react`, `summarize`, vision prompts, triage-style single calls: rewrite onto `ChatModel` + crate structured output (`harness/structured`) instead of hand-rolled parse (`parse.rs` shrinks or dies).
@@ -145,7 +145,7 @@ Each phase compiles green in both Cargo worlds, keeps ≥80% diff coverage, and 
 ### Phase 7 — Cleanup, docs, deletion ledger
 - Update `inference/README.md`,
   `gitbooks/developing/architecture/agent-harness.md`, and the authoritative
-  provider catalog in `src/openhuman/config/schema/cloud_providers.rs`; add
+  provider catalog in `src/neppy/config/schema/cloud_providers.rs`; add
   deletions to `docs/tinyagents-full-migration-plan/99-deletion-ledger.md`;
   refresh `docs/tinyagents-drift-ledger.md`.
 - Remove dead re-exports from `inference/mod.rs`; keep temporary `pub use` shims only where a follow-up PR is already open.

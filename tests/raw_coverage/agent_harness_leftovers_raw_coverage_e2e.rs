@@ -1,24 +1,24 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-use neppy_core::openhuman::agent::harness::definition::AgentTier;
-use neppy_core::openhuman::agent::harness::session::Agent;
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::dispatcher::NativeToolDispatcher;
+use neppy_core::neppy::agent::harness::definition::AgentTier;
+use neppy_core::neppy::agent::harness::session::Agent;
+use neppy_core::neppy::agent::harness::{
     run_subagent, with_parent_context, AgentDefinition, DefinitionSource, ModelSpec,
     ParentExecutionContext, PromptSource, SandboxMode, SubagentRunOptions, ToolScope,
 };
-use neppy_core::openhuman::config::AgentConfig;
-use neppy_core::openhuman::agent::context::prompt::{
+use neppy_core::neppy::config::AgentConfig;
+use neppy_core::neppy::agent::context::prompt::{
     render_ambient_environment, render_subagent_system_prompt, render_tools, render_user_files,
     ConnectedIntegration, CuratedMemoryPromptSnapshot, LearnedContextData, NamespaceSummary,
     PersonalityRosterEntry, PromptContext, PromptTool, SubagentRenderOptions, SystemPromptBuilder,
     ToolCallFormat, UserIdentity,
 };
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary as MemoryNamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolContent, ToolResult};
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::{PermissionLevel, Tool, ToolContent, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::collections::{HashSet, VecDeque};
@@ -364,7 +364,7 @@ fn parent_context(workspace: PathBuf, provider: Arc<ScriptedModel>) -> ParentExe
         ]
         .into_iter()
         .collect(),
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             provider,
         ),
         all_tools: Arc::new(tools),
@@ -402,7 +402,7 @@ async fn turn_rejects_empty_final_response_and_keeps_history_nonfinal() -> Resul
     assert!(agent
         .history()
         .iter()
-        .any(|message| matches!(message, neppy_core::openhuman::agent::messages::ConversationMessage::Chat(chat) if chat.role == "user")));
+        .any(|message| matches!(message, neppy_core::neppy::agent::messages::ConversationMessage::Chat(chat) if chat.role == "user")));
     Ok(())
 }
 

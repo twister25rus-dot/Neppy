@@ -30,8 +30,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, TimeZone, Utc};
 use tempfile::tempdir;
 
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::memory::tree::tree_runtime::{engine, store};
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::memory::tree::tree_runtime::{engine, store};
 use tinyagents::harness::model::{ChatModel, ModelRequest, ModelResponse};
 use tinyagents::TinyAgentsError;
 

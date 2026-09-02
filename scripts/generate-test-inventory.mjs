@@ -13,7 +13,7 @@
 //       check — the orphans the audit found all live under `scripts/`.
 //
 //   (b) CONTROLLER-DOMAIN CHECK — every controller domain registered in
-//       `src/core/all.rs` (via `crate::openhuman::<domain>::all_*_controllers`)
+//       `src/core/all.rs` (via `crate::neppy::<domain>::all_*_controllers`)
 //       is referenced by >=1 file under `tests/`. Catches RPC domains that
 //       ship with zero integration/E2E coverage (recall_calendar, tinyplace,
 //       devices, …).
@@ -183,9 +183,9 @@ function computeOrphans(scriptTests) {
 function discoverControllerDomains() {
   const allRs = read(path.join(ROOT, 'src', 'core', 'all.rs'));
   const domains = new Set();
-  // crate::openhuman::<domain>[::<sub>...]::all_<name>_(registered|internal)_controllers
+  // crate::neppy::<domain>[::<sub>...]::all_<name>_(registered|internal)_controllers
   const re =
-    /crate::openhuman::([a-z0-9_]+)(?:::[a-z0-9_]+)*::all_[a-z0-9_]+_(?:registered|internal)_controllers/g;
+    /crate::neppy::([a-z0-9_]+)(?:::[a-z0-9_]+)*::all_[a-z0-9_]+_(?:registered|internal)_controllers/g;
   for (const m of allRs.matchAll(re)) domains.add(m[1]);
   return [...domains].sort();
 }

@@ -11,11 +11,11 @@ supersedes the *status/phasing* in `tinycortex-memory-migration-plan.md`,
 parity dimensions remain the reference detail. `tinycortex-drift-ledger.md`
 stays the row-level ledger but its anchors are stale — see §2).
 **Scope:** finish moving the remaining generic memory-engine code from
-`src/openhuman/` into the vendored `tinycortex` crate (`vendor/tinycortex`),
+`src/neppy/` into the vendored `tinycortex` crate (`vendor/tinycortex`),
 delete the in-tree duplicates and staging code, migrate/retire the affected
 tests, and clean up every dangling doc/code reference.
 **Method:** fresh four-way audit — (1) the crate surface, (2) the core memory
-domains, (3) the periphery + the `src/openhuman/memory/tinycortex/` seam, (4) the
+domains, (3) the periphery + the `src/neppy/memory/tinycortex/` seam, (4) the
 docs/tests/git history — against the working tree at `main` (`5b8a9f269`,
 2026-07-22).
 
@@ -143,7 +143,7 @@ these are context, not deletion blockers): `memory::` 166 files,
 `memory_store::` 132, `memory_tree::` 67, `memory_queue::` 18,
 `memory_tools::` 11, `memory_search::` 3.
 
-### 4.2 The seam — `src/openhuman/memory/tinycortex/` (11 files, ~3.2k LOC)
+### 4.2 The seam — `src/neppy/memory/tinycortex/` (11 files, ~3.2k LOC)
 
 `config.rs`, `embeddings.rs`, `chat.rs`, `summariser.rs`, `ingest.rs`,
 `seal.rs`, `sync.rs` (679), `queue_driver.rs` (1,007), `persona.rs` (446),
@@ -176,7 +176,7 @@ WP-1/WP-3 shims retire.
 | Wrong agent-harness documentation path | Pointed at the architecture subdirectory. |
 | Never-landed golden-workspace generator | Removed after the post-cutover parity decision descoped synthetic pre-cutover fixtures. |
 | Wrong raw-coverage test path | Corrected to the `tests/raw_coverage/` location. |
-| Stale line anchors `Cargo.toml:82`, `src/openhuman/mod.rs:130` | `tinycortex-migration-spec.md` §0.4 (actual: `Cargo.toml:116`, `mod.rs:140`) |
+| Stale line anchors `Cargo.toml:82`, `src/neppy/mod.rs:130` | `tinycortex-migration-spec.md` §0.4 (actual: `Cargo.toml:116`, `mod.rs:140`) |
 | Never-created seam sibling names | Replaced with the adapters that actually landed. |
 | Developer-specific absolute path in crate docs | Replaced with repository-relative paths. |
 
@@ -304,7 +304,7 @@ orchestration/product glue; D4 rows CLOSED; no duplicated provider parsing.
 Two host clusters now duplicate `tinyagents::harness::embeddings` (post-#58:
 openai/cohere/voyage/ollama/cloud + rate-limit/retry-after):
 
-1. `src/openhuman/inference/embeddings/` adapters (`openai/voyage/cohere/ollama/
+1. `src/neppy/inference/embeddings/` adapters (`openai/voyage/cohere/ollama/
    cloud_adapter.rs`, `provider_trait.rs`) → construct crate
    `EmbeddingModel`s directly; host keeps `rpc.rs` (1,479), `schemas.rs`,
    `catalog.rs`, `factory.rs` (config/BYOK selection, #4056 dimension
@@ -350,7 +350,7 @@ re-export except deliberate facades recorded in the spec.
   `pnpm rust:check`.
 - Drift ledger: D4 CLOSED; new rows for every WP-1/WP-2 deletion; the spec's
   §2 deletion-ledger skeleton filled in with actuals.
-- Docs: the five tinycortex docs + `src/openhuman/memory*/README.md` files +
+- Docs: the five tinycortex docs + `src/neppy/memory*/README.md` files +
   `gitbooks/developing/architecture.md` reflect the post-flip reality; this
   plan stamped done.
 
@@ -413,5 +413,5 @@ re-export except deliberate facades recorded in the spec.
 | `memory/` (orchestration/RPC/tools/tree-policy) | STAYS |
 | `memory_sources/` | STAYS (product registry over crate readers) |
 | `agent_memory/`, `subconscious/`, `learning/` | STAYS (consumers, no duplication) |
-| Seam `src/openhuman/memory/tinycortex/` | STAYS, shrinks; fix stale module docs (WP-0), thin `queue_driver.rs` (WP-4) |
+| Seam `src/neppy/memory/tinycortex/` | STAYS, shrinks; fix stale module docs (WP-0), thin `queue_driver.rs` (WP-4) |
 | Golden-parity harness | FINISH or DESCOPE by decision (WP-0); `MemoryTaint`/format pins KEEP |

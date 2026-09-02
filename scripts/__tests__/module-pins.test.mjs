@@ -69,7 +69,7 @@ function submodulesPresent() {
 // ── Registry parsing ──────────────────────────────────────────────────────────
 
 test('parses every record `ALL` lists out of the real registry', () => {
-  const src = readFileSync(join(REPO_ROOT, 'src/openhuman/modules/registry.rs'), 'utf8');
+  const src = readFileSync(join(REPO_ROOT, 'src/neppy/modules/registry.rs'), 'utf8');
   const names = parseAllList(src);
   const records = parseRecords(src);
   assert.ok(names.length >= 9, `expected at least 9 records in ALL, got ${names.length}`);
@@ -82,7 +82,7 @@ test('parses every record `ALL` lists out of the real registry', () => {
 });
 
 test('parses per-platform assets, digests included', () => {
-  const src = readFileSync(join(REPO_ROOT, 'src/openhuman/modules/registry.rs'), 'utf8');
+  const src = readFileSync(join(REPO_ROOT, 'src/neppy/modules/registry.rs'), 'utf8');
   const mem = [...parseRecords(src).values()].find((r) => r.id === 'tinymemory');
   assert.ok(mem, 'tinymemory record not found');
   assert.ok(mem.assets.length > 0, 'tinymemory publishes no assets?');
@@ -98,7 +98,7 @@ test('reading a registry with no ALL block throws rather than returning empty', 
 });
 
 test('finds ARTIFACT_CAPABILITIES_PIN and the workflow memory blocks', () => {
-  const memSrc = readFileSync(join(REPO_ROOT, 'src/openhuman/modules/memory.rs'), 'utf8');
+  const memSrc = readFileSync(join(REPO_ROOT, 'src/neppy/modules/memory.rs'), 'utf8');
   assert.match(parseArtifactCapabilitiesPin(memSrc), /^\d+\.\d+\.\d+$/);
   const wf = readFileSync(join(REPO_ROOT, '.github/workflows/ci-lite.yml'), 'utf8');
   const blocks = parseWorkflowMemoryBlocks(wf);
@@ -238,8 +238,8 @@ const MINIMAL_WORKFLOW = 'jobs:\n  x:\n    steps:\n      - run: |\n          mem
 
 test('an unparseable registry fails the gate instead of passing', () => {
   const root = fixtureRoot({
-    'src/openhuman/modules/registry.rs': '// everything here got deleted\n',
-    'src/openhuman/modules/memory.rs': 'pub(crate) const ARTIFACT_CAPABILITIES_PIN: &str = "9.9.9";\n',
+    'src/neppy/modules/registry.rs': '// everything here got deleted\n',
+    'src/neppy/modules/memory.rs': 'pub(crate) const ARTIFACT_CAPABILITIES_PIN: &str = "9.9.9";\n',
     '.github/workflows/ci-full.yml': MINIMAL_WORKFLOW,
     '.github/workflows/ci-lite.yml': MINIMAL_WORKFLOW,
     '.github/workflows/e2e-reusable.yml': MINIMAL_WORKFLOW,
@@ -283,8 +283,8 @@ test('records with no checked-out submodule fail the gate instead of being skipp
     '',
   ].join('\n');
   const root = fixtureRoot({
-    'src/openhuman/modules/registry.rs': registry,
-    'src/openhuman/modules/memory.rs': 'pub(crate) const ARTIFACT_CAPABILITIES_PIN: &str = "1.12.0";\n',
+    'src/neppy/modules/registry.rs': registry,
+    'src/neppy/modules/memory.rs': 'pub(crate) const ARTIFACT_CAPABILITIES_PIN: &str = "1.12.0";\n',
     '.github/workflows/ci-full.yml': MINIMAL_WORKFLOW,
     '.github/workflows/ci-lite.yml': MINIMAL_WORKFLOW,
     '.github/workflows/e2e-reusable.yml': MINIMAL_WORKFLOW,

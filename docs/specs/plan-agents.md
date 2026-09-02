@@ -3,7 +3,7 @@
 **Status:** spec + plan. Direction decided by the maintainer on 2026-07-28
 after two rounds of pushback; this document plans the move rather than
 re-arguing it. The open questions below are *how*, not *whether*.
-**Scope:** relocate `src/openhuman/agent/` (152 files, 70,530 LOC) into
+**Scope:** relocate `src/neppy/agent/` (152 files, 70,530 LOC) into
 `vendor/tinyagents` as a generic agent runtime, with Neppy's coupling
 expressed as trait injection.
 **Supersedes:** the "permanent host" dispositions for `builder/`, `turn/`,
@@ -31,7 +31,7 @@ pub trait Middleware<State: Send + Sync, Ctx: Send + Sync = ()>: Send + Sync { �
 ```
 
 `State` is the injection vehicle. A relocated agent runtime does not import
-`crate::openhuman::memory` — it is generic over a `State` that *provides*
+`crate::neppy::memory` — it is generic over a `State` that *provides*
 memory, and Neppy supplies the impl. The crate already ships **18 extension
 traits** on exactly this pattern (`ChatModel`, `Tool`, `ChatHistory`, `Store`,
 `AppendStore`, `Summarizer`, `EmbeddingModel`, `VectorStore`, `ResponseCache`,
@@ -185,7 +185,7 @@ resume must keep working. Phase 2 exists solely to de-risk it.
 > **Corrected 2026-08-03.** This section previously said the decision was
 > "**Option B** of the transcript spec: the `session_raw` JSONL format becomes
 > crate-owned public API". It is not. The in-flight migration (issue #4249,
-> `src/openhuman/session_import/`) converges on the crate's **`Store` /
+> `src/neppy/session_import/`) converges on the crate's **`Store` /
 > `AppendStore` journal**, not on promoting the legacy JSONL layout to crate
 > API. The legacy `session_raw/*.jsonl` format stays a host implementation
 > detail and is retired once readers move; it never becomes public crate
@@ -235,7 +235,7 @@ shadow-read parity, mismatch logged never panicked, legacy `DDMMYYYY/` and
 > would have introduced a **third** store alongside the legacy JSONL and the
 > one being migrated to.
 >
-> **2. It was ~2/3 done before this phase opened.** `src/openhuman/session_import/`
+> **2. It was ~2/3 done before this phase opened.** `src/neppy/session_import/`
 > (2,452 LOC) already implements:
 >
 > | Slice | State |
@@ -283,7 +283,7 @@ shipped with the probe on.
 **Phase 3 — Config mapping (§4.1 Option A).** — *in progress (2026-08-02)*
 Introduce crate config structs + a host `session_config_from(&Config)` mapper.
 Repoint `agent/` internals to the crate structs *in place*, before moving.
-*Exit:* zero `crate::openhuman::config::` references inside the code slated to
+*Exit:* zero `crate::neppy::config::` references inside the code slated to
 move.
 
 Landed so far — foundation only, nothing repointed yet:
@@ -291,7 +291,7 @@ Landed so far — foundation only, nothing repointed yet:
 - `tinyagents::harness::config` — `SessionConfig`, `TurnConfig`, `ToolConfig`,
   `MemoryLimits`, `RequiredOutput`, `ToolDispatcher`. Inert (serde + std only),
   defaults pinned to Neppy's current values.
-- `src/openhuman/tinyagents/config.rs` — `session_config_from` plus
+- `src/neppy/tinyagents/config.rs` — `session_config_from` plus
   `apply_team_models` / `apply_delegate`, following the
   `tinycortex::config::memory_config_from` precedent. Split three ways because
   Neppy's model pins are **not global**: `Config::teams` is keyed by team
@@ -412,7 +412,7 @@ limits.
 3. After Phase 4: `factory.rs`, and the Composio fetch in `session/turn/tools.rs`.
 4. Split §3's `task_dispatcher/` + `dispatcher.rs` row — only the latter moves.
 
-> **Test note.** `openhuman::agent::` needs `RUST_MIN_STACK=16777216` or
+> **Test note.** `neppy::agent::` needs `RUST_MIN_STACK=16777216` or
 > `session::tests::turn_dispatches_spawn_subagent_through_full_path` overflows
 > the stack (already flagged in §6). With it set, the suite is 1080 pass / 1 fail
 > — `builder_tests::profile_allowed_tools_restrict_shared_session_builder` fails
@@ -428,14 +428,14 @@ reaching into domains directly. **This phase delivers most of the architectural
 value with none of the relocation risk** — after it, `agent/`'s outbound
 coupling is ~10 traits instead of 45 domains, and the program can legitimately
 stop here.
-*Exit:* `grep -c "crate::openhuman::" src/openhuman/agent/harness/session/` down
+*Exit:* `grep -c "crate::neppy::" src/neppy/agent/harness/session/` down
 from its baseline to the adapter layer only.
 
 > **Exit-criterion baseline corrected.** The figure above read "~2,000 refs".
 > Measured: **295** in `session/` production code (548 including tests). The
 > larger number counted a wider tree. 295 is the number to drive down.
 
-**Landed: all ten adapters** in `src/openhuman/tinyagents/host/`
+**Landed: all ten adapters** in `src/neppy/tinyagents/host/`
 (~6,000 LOC, 140 tests). Each wires one crate trait to the real Neppy
 domains, with policy enforced adapter-side. `agent/` **does not call them yet**,
 so the exit criterion is still at 295 — writing the adapters and repointing the
@@ -605,7 +605,7 @@ family's tests live upstream.
 >    by omission.
 
 **Phase 6 — Collapse the seam and the adapter.**
-`src/openhuman/tinyagents/` dissolves into the host adapter layer. Delete the
+`src/neppy/tinyagents/` dissolves into the host adapter layer. Delete the
 compatibility re-exports.
 *Exit:* `agent/` is the adapter layer only; parent spec's DS-0 re-export gate
 allowlist is seam-free.

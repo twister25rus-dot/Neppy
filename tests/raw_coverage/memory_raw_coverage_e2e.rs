@@ -8,13 +8,13 @@ use chrono::{TimeZone, Utc};
 use serde_json::json;
 use tempfile::TempDir;
 
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::memory::{
     ExtractionMode, IngestionState, MemoryIngestionConfig, MemoryIngestionRequest,
     NamespaceDocumentInput,
 };
-use neppy_core::openhuman::memory::sources::status::{source_status, FreshnessLabel};
-use neppy_core::openhuman::memory::sources::{MemorySourceEntry, SourceKind};
+use neppy_core::neppy::memory::sources::status::{source_status, FreshnessLabel};
+use neppy_core::neppy::memory::sources::{MemorySourceEntry, SourceKind};
 use tinymemory_core::store::chunks::store::upsert_chunks;
 use tinymemory_core::store::chunks::types::{
     approx_token_count, chunk_id, Chunk, Metadata, SourceKind as ChunkSourceKind, SourceRef,
@@ -28,18 +28,18 @@ use tinycortex::memory::ingest::canonicalize::document::{
 use tinycortex::memory::ingest::canonicalize::email::{
     canonicalise as canonicalise_email, EmailMessage, EmailThread,
 };
-use neppy_core::openhuman::memory::sync::composio::providers::{
+use neppy_core::neppy::memory::sync::composio::providers::{
     classify_unknown, find_curated, toolkit_from_slug, CuratedTool, ToolScope,
 };
 use tinycortex::memory::sync::{SyncOutcome, SyncPipelineKind};
-use neppy_core::openhuman::memory::tree::summarise::{
+use neppy_core::neppy::memory::tree::summarise::{
     fallback_summary, SummaryContext, SummaryInput,
 };
-use neppy_core::openhuman::memory::tree::tree_runtime::store as tree_store;
-use neppy_core::openhuman::memory::tree::tree_runtime::{
+use neppy_core::neppy::memory::tree::tree_runtime::store as tree_store;
+use neppy_core::neppy::memory::tree::tree_runtime::{
     derive_node_ids, estimate_tokens, level_from_node_id, node_id_to_path, NodeLevel, TreeNode,
 };
-use neppy_core::openhuman::threads::turn_state::{
+use neppy_core::neppy::threads::turn_state::{
     SubagentActivity, SubagentToolCall, ToolTimelineEntry, ToolTimelineStatus, TurnLifecycle,
     TurnPhase, TurnState, TurnStateStore,
 };
@@ -83,7 +83,7 @@ fn tree_node(namespace: &str, node_id: &str, summary: &str) -> TreeNode {
         node_id: node_id.to_string(),
         namespace: namespace.to_string(),
         level: level_from_node_id(node_id),
-        parent_id: neppy_core::openhuman::memory::tree::tree_runtime::derive_parent_id(node_id),
+        parent_id: neppy_core::neppy::memory::tree::tree_runtime::derive_parent_id(node_id),
         summary: summary.to_string(),
         token_count: estimate_tokens(summary),
         child_count: 0,
@@ -565,7 +565,7 @@ async fn memory_ingestion_state_and_request_models_report_edges() {
             category: "core".into(),
             session_id: Some("session-1".into()),
             document_id: Some("doc-1".into()),
-            taint: neppy_core::openhuman::memory::MemoryTaint::Internal,
+            taint: neppy_core::neppy::memory::MemoryTaint::Internal,
         },
         config: cfg.clone(),
     };

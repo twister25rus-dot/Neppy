@@ -24,7 +24,7 @@ use tokio::sync::broadcast;
 
 use crate::core::runtime::CoreRuntime;
 use crate::core::socketio::WebChannelEvent;
-use crate::openhuman::web_chat;
+use crate::neppy::web_chat;
 
 use super::cockpit::{
     array_at, row_from_value, Overlay, OverlayKind, OverlayRow, PendingApproval, PendingPlanReview,

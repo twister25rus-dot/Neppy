@@ -14,13 +14,13 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 use tempfile::{Builder, TempDir};
 
-use neppy_core::openhuman::integrations::composio::ops::{composio_authorize, composio_list_tools};
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::integrations::composio::ops::{composio_authorize, composio_list_tools};
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
-use neppy_core::openhuman::security::SecurityPolicy;
-use neppy_core::openhuman::tools::{
+use neppy_core::neppy::security::SecurityPolicy;
+use neppy_core::neppy::tools::{
     ComposioAuthorizeTool, ComposioListConnectionsTool, ComposioListToolkitsTool,
     ComposioListToolsTool, ComposioTool, SpawnSubagentTool, Tool, ToolCallOptions,
 };

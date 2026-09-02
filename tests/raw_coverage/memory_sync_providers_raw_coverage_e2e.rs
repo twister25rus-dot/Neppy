@@ -15,23 +15,23 @@ use tempfile::TempDir;
 
 use neppy_core::core::events::DomainEvent;
 use tinybus::EventHandler;
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::security::credentials::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::security::credentials::{
     AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
 };
 use tinymemory_core::global as memory_global;
 use tinymemory_core::queue::drain_until_idle;
-use neppy_core::openhuman::memory::sync::composio::bus::{
+use neppy_core::neppy::memory::sync::composio::bus::{
     ComposioConfigChangedSubscriber, ComposioConnectionCreatedSubscriber, ComposioTriggerSubscriber,
 };
-use neppy_core::openhuman::memory::sync::composio::providers::clickup::ClickUpProvider;
-use neppy_core::openhuman::memory::sync::composio::providers::github::GitHubProvider;
-use neppy_core::openhuman::memory::sync::composio::providers::gmail::GmailProvider;
-use neppy_core::openhuman::memory::sync::composio::providers::linear::LinearProvider;
-use neppy_core::openhuman::memory::sync::composio::providers::notion::NotionProvider;
-use neppy_core::openhuman::memory::sync::composio::providers::slack::SlackProvider;
-use neppy_core::openhuman::memory::sync::composio::providers::sync_state::{PersistedSyncState, SyncState};
-use neppy_core::openhuman::memory::sync::composio::providers::{
+use neppy_core::neppy::memory::sync::composio::providers::clickup::ClickUpProvider;
+use neppy_core::neppy::memory::sync::composio::providers::github::GitHubProvider;
+use neppy_core::neppy::memory::sync::composio::providers::gmail::GmailProvider;
+use neppy_core::neppy::memory::sync::composio::providers::linear::LinearProvider;
+use neppy_core::neppy::memory::sync::composio::providers::notion::NotionProvider;
+use neppy_core::neppy::memory::sync::composio::providers::slack::SlackProvider;
+use neppy_core::neppy::memory::sync::composio::providers::sync_state::{PersistedSyncState, SyncState};
+use neppy_core::neppy::memory::sync::composio::providers::{
     ComposioProvider, ProviderContext, SyncReason, TaskFetchFilter,
 };
 
@@ -44,7 +44,7 @@ fn ensure_memory_seams() {
             .name("memory-sync-providers-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(
                     Arc::new(Config::default()),
                 );
             })

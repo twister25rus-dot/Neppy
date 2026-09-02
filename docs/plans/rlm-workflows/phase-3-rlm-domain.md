@@ -1,10 +1,10 @@
-# Phase 3 — The `rlm` domain (`src/openhuman/rlm/`)
+# Phase 3 — The `rlm` domain (`src/neppy/rlm/`)
 
 New domain following the canonical module shape. Cargo change: root
 `Cargo.toml` gains `features = ["sqlite", "repl"]` on the tinyagents dep.
 
 ```
-src/openhuman/rlm/
+src/neppy/rlm/
 ├── mod.rs        # exports only + controller schema pair (none in v1)
 ├── types.rs      # RlmSessionId, RlmRunSummary, RlmLimitsOverride, serde types
 ├── policy.rs     # autonomy tier + tool_timeout → tinyagents ReplPolicy
@@ -34,7 +34,7 @@ Builds a `tinyagents::registry::CapabilityRegistry<()>` for a session:
 
 - **Tools**: take the turn's `Vec<Arc<dyn openhuman Tool>>` (the same list
   the harness registered, minus exclusions), wrap each in the existing
-  `crate::openhuman::agent::tinyagents::tools::ToolAdapter`, and
+  `crate::neppy::agent::tinyagents::tools::ToolAdapter`, and
   `registry.replace_tool(name, adapter)`. **Exclusions** (recursion +
   duplication guards): `rlm` itself, `spawn_subagent`/`spawn_parallel_agents`
   (use `agent_query` instead), `run_workflow`/`await_workflow`. Because
@@ -91,6 +91,6 @@ Builds a `tinyagents::registry::CapabilityRegistry<()>` for a session:
 
 ## 3.5 Wiring
 
-- `src/openhuman/mod.rs` (domain list): add `pub mod rlm;`.
+- `src/neppy/mod.rs` (domain list): add `pub mod rlm;`.
 - Debug logging throughout with `[rlm]` prefix, correlation fields
   `session_id`, `cell_index`, `thread_id`.

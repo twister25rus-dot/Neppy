@@ -30,7 +30,7 @@ import NotificationCard from './NotificationCard';
 
 /**
  * A paused `tinyflows` run's approval prompt (issue B3a) — id set by
- * `notify_pending_approval` in `src/openhuman/flows/ops.rs`. Routed to
+ * `notify_pending_approval` in `src/neppy/flows/ops.rs`. Routed to
  * `FlowApprovalCard` instead of the generic `CoreNotificationCard`, which is
  * hardcoded to the meeting auto-join RPC.
  */

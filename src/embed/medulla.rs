@@ -22,11 +22,11 @@ use super::call::call;
 use super::error::CoreError;
 use crate::core::runtime::CoreRuntime;
 
-pub use crate::openhuman::medulla::client::{
+pub use crate::neppy::medulla::client::{
     AbortResult, EventEnvelope, Message, RosterWorker, SendResult, SessionCreated, SessionDetail,
     SessionSummary,
 };
-pub use crate::openhuman::medulla::ops::MedullaStatus;
+pub use crate::neppy::medulla::ops::MedullaStatus;
 
 /// Typed access to the Medulla backend.
 ///
@@ -162,7 +162,7 @@ impl Medulla<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::openhuman::medulla::all_medulla_registered_controllers;
+    use crate::neppy::medulla::all_medulla_registered_controllers;
 
     /// Every method this facade dispatches must name a registered controller.
     ///

@@ -9,19 +9,19 @@ deleting the `ProviderDelta` bridge and `progress_tracing`.
 ## 1. Corrected architecture (what the map found)
 
 - **There is no crate `SpanCollector`.** The only span state machine is
-  Neppy's `SpanCollector` in `src/openhuman/agent/progress_tracing.rs`
+  Neppy's `SpanCollector` in `src/neppy/agent/progress_tracing.rs`
   (1272 lines). The crate does **not** build spans — it journals raw
   `AgentObservation`s and lets exporters project.
 - **The journal/status/persistence stack already exists and is attached to
   every run.** `run_turn_via_tinyagents_shared`
-  (`src/openhuman/agent/tinyagents/mod.rs:420`) mints a run id, seeds the `EventSink`
-  with it, and `attach_turn_journal` (`src/openhuman/agent/tinyagents/journal.rs:304`)
+  (`src/neppy/agent/tinyagents/mod.rs:420`) mints a run id, seeds the `EventSink`
+  with it, and `attach_turn_journal` (`src/neppy/agent/tinyagents/journal.rs:304`)
   installs `StoreEventJournal` (over `JsonlAppendStore`) via a
   `JournalSink → RedactingSink → FanOutSink`, plus a durable `FileStatusStore`.
   Every run already durably records the crate `AgentEvent` stream as
   `AgentObservation`s.
 - **Two producers of `AgentProgress`:**
-  - Crate path: `NeppyEventBridge` (`src/openhuman/agent/tinyagents/observability.rs:464`)
+  - Crate path: `NeppyEventBridge` (`src/neppy/agent/tinyagents/observability.rs:464`)
     maps `AgentEvent` → `AgentProgress` live (stateful: iteration cursor,
     subagent `scope`, `tool_names` recovery, display labels, failure class).
   - Legacy path: `session/tool_progress.rs` `TurnProgress` +

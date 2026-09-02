@@ -188,7 +188,7 @@ Two candidate sources, both real:
    cases (see the comment there) — decide what the meter shows then, rather than
    dividing by zero.
 4. Cost for a _thread_ may want `openhuman.cost_get_summary` from
-   `src/openhuman/platform/cost/` instead of a per-turn sum. Check `README.md` in
+   `src/neppy/platform/cost/` instead of a per-turn sum. Check `README.md` in
    that directory before choosing.
 
 ### Watch for
@@ -207,7 +207,7 @@ goal, end to end:
   — "Set goal" when empty, status + objective when set, click to edit.
 - Client: [`app/src/services/api/threadGoalApi.ts`](../../app/src/services/api/threadGoalApi.ts)
   — `openhuman.thread_goals_get` / `_set` / `_complete`.
-- Core: `src/openhuman/threads/goals/` — set, get, complete, pause, resume,
+- Core: `src/neppy/threads/goals/` — set, get, complete, pause, resume,
   clear, with `objective`, `token_budget`, `result`. Persisted per thread under
   `<workspace>/thread_goals/<hex(thread_id)>.json`.
 

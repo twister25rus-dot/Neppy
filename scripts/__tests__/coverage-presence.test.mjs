@@ -196,15 +196,15 @@ test("skips families that are uncovered by design", () => {
   const res = run(
     {
       "src/tui/app.rs": WITH_FN,
-      "src/openhuman/test_support/reset.rs": WITH_FN,
-      "src/openhuman/tools/impl/browser/native_backend.rs": WITH_FN,
+      "src/neppy/test_support/reset.rs": WITH_FN,
+      "src/neppy/tools/impl/browser/native_backend.rs": WITH_FN,
     },
     [],
     [
       "--files",
       "src/tui/app.rs",
-      "src/openhuman/test_support/reset.rs",
-      "src/openhuman/tools/impl/browser/native_backend.rs",
+      "src/neppy/test_support/reset.rs",
+      "src/neppy/tools/impl/browser/native_backend.rs",
     ],
   );
   assert.equal(res.status, 0);

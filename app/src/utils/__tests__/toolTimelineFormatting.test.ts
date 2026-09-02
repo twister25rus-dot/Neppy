@@ -254,7 +254,7 @@ describe('formatTimelineEntry', () => {
       formatTimelineEntry(
         entry({
           name: 'file_read',
-          argsBuffer: JSON.stringify({ path: 'src/openhuman/agent/progress.rs' }),
+          argsBuffer: JSON.stringify({ path: 'src/neppy/agent/progress.rs' }),
         })
       )
     ).toEqual({ title: 'Reading file', detail: '…/agent/progress.rs' });
@@ -298,9 +298,9 @@ describe('formatTimelineEntry', () => {
   it('formats list with directory path', () => {
     expect(
       formatTimelineEntry(
-        entry({ name: 'list', argsBuffer: JSON.stringify({ path: 'src/openhuman/tools' }) })
+        entry({ name: 'list', argsBuffer: JSON.stringify({ path: 'src/neppy/tools' }) })
       )
-    ).toEqual({ title: 'Listing directory', detail: 'src/openhuman/tools' });
+    ).toEqual({ title: 'Listing directory', detail: 'src/neppy/tools' });
   });
 
   it('formats browser_open with hostname', () => {

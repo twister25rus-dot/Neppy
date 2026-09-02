@@ -370,8 +370,8 @@ impl CoreProcessHandle {
                                     .to_string())
                             }
                             Ok(Err(err)) => {
-                                if let Some(neppy_core::openhuman::platform::connectivity::rpc::PickListenPortError::WouldTakeOver { preferred, .. }) = err
-                                    .downcast_ref::<neppy_core::openhuman::platform::connectivity::rpc::PickListenPortError>()
+                                if let Some(neppy_core::neppy::platform::connectivity::rpc::PickListenPortError::WouldTakeOver { preferred, .. }) = err
+                                    .downcast_ref::<neppy_core::neppy::platform::connectivity::rpc::PickListenPortError>()
                                 {
                                     if startup_attempt == 0 {
                                         log::warn!(

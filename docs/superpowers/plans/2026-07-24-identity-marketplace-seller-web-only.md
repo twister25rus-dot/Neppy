@@ -13,7 +13,7 @@
 - **No i18n:** `IdentitiesSection.tsx` is entirely hardcoded English (e.g. `"Commitment submitted."` line 854, `"Purchased {name}"` line 887). New strings are hardcoded English to match. **No locale-file edits** — do NOT add `useT()` here.
 - **Web URL is a hardcoded prod constant:** `https://tiny.place/identities`. Mirrors `FUND_PAGE_URL = 'https://tiny.place/fund'` in `X402ConfirmDialog.tsx`. The tiny.place *web* frontend has no per-env base in `config.ts`.
 - **External links go through `openUrl`** from `app/src/utils/openUrl.ts` — never a raw `window.open` or `<a target="_blank">` for the CTA (the `<a>` explorer links elsewhere in the file are read-only tx links, a different case).
-- **Out of scope (do not touch):** `vendor/tinyplace/sdk/**`, `src/openhuman/tinyplace/manifest.rs`, `app/src/lib/agentworld/invokeApiClient.ts`, buy/bid/offer flows.
+- **Out of scope (do not touch):** `vendor/tinyplace/sdk/**`, `src/neppy/tinyplace/manifest.rs`, `app/src/lib/agentworld/invokeApiClient.ts`, buy/bid/offer flows.
 - **Run commands from repo root** unless noted. The worktree root is `.claude/worktrees/fix-4920`.
 
 ---
@@ -151,13 +151,13 @@ git commit -m "feat(tinyplace): point sellers to tiny.place web from Trading tab
 ### Task 2: Record web-only scope in the tinyplace core domain doc
 
 **Files:**
-- Modify: `src/openhuman/tinyplace/mod.rs` (module doc comment, after the `## Seed derivation` block ending line 26)
+- Modify: `src/neppy/tinyplace/mod.rs` (module doc comment, after the `## Seed derivation` block ending line 26)
 
 Docs-only; no test (Rust doc comment). Folded into a single commit.
 
 - [ ] **Step 1: Add a scoping note to the module doc**
 
-In `src/openhuman/tinyplace/mod.rs`, insert this doc-comment section immediately after line 26 (`//! The seed is never logged…`) and before the blank line preceding `pub(crate) mod agent;`:
+In `src/neppy/tinyplace/mod.rs`, insert this doc-comment section immediately after line 26 (`//! The seed is never logged…`) and before the blank line preceding `pub(crate) mod agent;`:
 
 ```rust
 //!
@@ -183,7 +183,7 @@ Expected: no diff on the doc-comment lines (doc comments are not reflowed).
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/openhuman/tinyplace/mod.rs
+git add src/neppy/tinyplace/mod.rs
 git commit -m "docs(tinyplace): note identity marketplace is buyer-side only, selling is web-only (#4920)"
 ```
 
@@ -196,7 +196,7 @@ git commit -m "docs(tinyplace): note identity marketplace is buyer-side only, se
 - [ ] **Step 1: Comment the resolution on #4920**
 
 ```bash
-gh issue comment 4920 --repo tinyhumansai/openhuman --body "Resolved as **web-only by design**: the tiny.place backend exposes no seller routes and the vendored SDK is a buyer-side compatibility wrapper, so listing a handle / accepting-rejecting offers stays on the tiny.place web app. The desktop Trading tab now points sellers there instead of dead-ending. Scope recorded in \`IdentitiesSection.tsx\` and \`src/openhuman/tinyplace/mod.rs\`. See PR <PR_URL>."
+gh issue comment 4920 --repo tinyhumansai/openhuman --body "Resolved as **web-only by design**: the tiny.place backend exposes no seller routes and the vendored SDK is a buyer-side compatibility wrapper, so listing a handle / accepting-rejecting offers stays on the tiny.place web app. The desktop Trading tab now points sellers there instead of dead-ending. Scope recorded in \`IdentitiesSection.tsx\` and \`src/neppy/tinyplace/mod.rs\`. See PR <PR_URL>."
 ```
 
 - [ ] **Step 2: Mark #4776 §9 seller items N/A**

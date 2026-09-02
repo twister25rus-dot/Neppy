@@ -1,19 +1,19 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-use neppy_core::openhuman::agent::harness::definition::AgentDefinitionRegistry;
-use neppy_core::openhuman::agent::harness::session::Agent;
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::dispatcher::NativeToolDispatcher;
+use neppy_core::neppy::agent::harness::definition::AgentDefinitionRegistry;
+use neppy_core::neppy::agent::harness::session::Agent;
+use neppy_core::neppy::agent::harness::{
     run_subagent, with_parent_context, AgentDefinition, ParentExecutionContext, PromptSource,
     SandboxMode, SubagentRunOptions, ToolScope,
 };
-use neppy_core::openhuman::agent::progress::AgentProgress;
-use neppy_core::openhuman::config::AgentConfig;
-use neppy_core::openhuman::agent::context::prompt::ToolCallFormat;
-use neppy_core::openhuman::memory::{Memory, MemoryCategory, MemoryEntry, NamespaceSummary};
-use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use neppy_core::openhuman::tools::SpawnSubagentTool;
-use neppy_core::openhuman::tools::{Tool, ToolResult};
+use neppy_core::neppy::agent::progress::AgentProgress;
+use neppy_core::neppy::config::AgentConfig;
+use neppy_core::neppy::agent::context::prompt::ToolCallFormat;
+use neppy_core::neppy::memory::{Memory, MemoryCategory, MemoryEntry, NamespaceSummary};
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::SpawnSubagentTool;
+use neppy_core::neppy::tools::{Tool, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::path::{Path, PathBuf};
@@ -87,7 +87,7 @@ impl Memory for StubMemory {
         &self,
         _query: &str,
         _limit: usize,
-        _opts: neppy_core::openhuman::memory::RecallOpts<'_>,
+        _opts: neppy_core::neppy::memory::RecallOpts<'_>,
     ) -> Result<Vec<MemoryEntry>> {
         Ok(Vec::new())
     }
@@ -271,7 +271,7 @@ fn parent_context(workspace: PathBuf, provider: Arc<ScriptedModel>) -> ParentExe
         ]
         .into_iter()
         .collect(),
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             provider,
         ),
         all_tools: Arc::new(tools),
@@ -495,7 +495,7 @@ async fn repeated_subagent_spawns_keep_cacheable_prefix_and_record_provider_cach
             },
         )
         .await?;
-        Ok::<_, neppy_core::openhuman::agent::harness::SubagentRunError>((first, second))
+        Ok::<_, neppy_core::neppy::agent::harness::SubagentRunError>((first, second))
     })
     .await?;
 

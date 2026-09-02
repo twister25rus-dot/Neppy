@@ -30,7 +30,7 @@ build = "build.rs"
 # deliberately. Dropping either would compile clean and fail at runtime.
 #
 # `tinymemory-api` and `tinymemory-core` are NOT listed: they are named
-# directly by `src/openhuman/memory/`, so machete is already satisfied.
+# directly by `src/neppy/memory/`, so machete is already satisfied.
 [package.metadata.cargo-machete]
 ignored = ["tinymemory", "tinymemory-tinycortex"]
 
@@ -140,7 +140,7 @@ tinyhumans-sdk = { path = "vendor/tinyhumans-sdk", default-features = false }
 tinyplace = "2.0"
 # tinyflows — host-agnostic workflow engine (typed node graph → validate → compile →
 # run on tinyagents). Powers the "Workflows" feature via the seam in
-# `src/openhuman/tinyflows/` + the `flows::` domain. Pulls tinyagents 2.1 transitively
+# `src/neppy/tinyflows/` + the `flows::` domain. Pulls tinyagents 2.1 transitively
 # (same version Neppy uses directly, preserving one trait identity). Published
 # on crates.io and patched below to the vendored submodule.
 #
@@ -155,7 +155,7 @@ tinyflows = { version = "0.8", features = ["mock"], optional = true }
 # TinyAgents — Rust LLM orchestration framework (LangGraph/LangChain-style):
 # durable state graphs, agent-loop harness, model/tool registries, REPL +
 # `.rag` workflow language. openhuman's agent engine + orchestration run on this
-# crate's primitives via the adapter seam in `src/openhuman/agent/tinyagents/` (issue
+# crate's primitives via the adapter seam in `src/neppy/agent/tinyagents/` (issue
 # #4249): every turn drives through the harness; the workflow phase DAG, team
 # member runtime, parallel fan-out, and multi-stage delegation run on graphs.
 # We wire openhuman's own Provider/Tool, not the removed bundled openai client.
@@ -164,7 +164,7 @@ tinyflows = { version = "0.8", features = ["mock"], optional = true }
 # Durable graph checkpoints still use `SqlRunLedgerCheckpointer` until the
 # migration re-points those rows to the crate checkpointer.
 # The `repl` feature (embedded Rhai `.ragsh` session runtime powering the
-# `rhai_workflows` language-workflow tool, `src/openhuman/rhai_workflows/`) is
+# `rhai_workflows` language-workflow tool, `src/neppy/rhai_workflows/`) is
 # NOT enabled here — the default-ON `flows` feature turns it on via
 # `tinyagents/repl` (#4797), so a slim build without `flows` sheds `rhai`.
 # The crate itself can never be dropped: 26+ domains consume tinyagents.
@@ -178,7 +178,7 @@ tinyagents = { version = "2.1", features = ["sqlite", "multimodal"] }
 # TinyCortex — Rust core for the memory engine (store/chunks/tree/retrieval/
 # queue/ingest/score + long tail), vendored as a git submodule and patched
 # below to `vendor/tinycortex`. Neppy's memory subsystem migrates onto this
-# crate through the adapter seam in `src/openhuman/tinycortex/` (mirroring the
+# crate through the adapter seam in `src/neppy/tinycortex/` (mirroring the
 # tinyagents seam): engine logic (including provider sync pipelines) in the
 # crate; RPC, agent tools, sync scheduling/credentials/events, security gating,
 # and the global singleton stay host-side. rusqlite is aligned to the host pin
@@ -247,17 +247,17 @@ tinymemory-api = { path = "vendor/tinymemory/crates/tinymemory-api" }
 tinymemory-bus = { path = "vendor/tinymemory/crates/tinymemory-bus" }
 tinymemory-tinycortex = { path = "vendor/tinymemory/crates/tinymemory-tinycortex" }
 # `tinymemory-core` is the *substance* of the memory subsystem, extracted out of
-# `src/openhuman/memory/` — the SQLite/vector store, the markdown summary tree,
+# `src/neppy/memory/` — the SQLite/vector store, the markdown summary tree,
 # the provider sync pipelines, ingestion, recall/query/search, the ingest queue,
 # conversations, people, goals and the tool-memory rules.
 #
-# What deliberately stayed behind in `src/openhuman/memory/` is the *host layer*
+# What deliberately stayed behind in `src/neppy/memory/` is the *host layer*
 # per the tinymemory README split: the RPC surface (`schemas/`, `read_rpc/`),
 # agent tools (`tools/`), the security/taint guard (`guard/`), the driver
 # binding (`driver/`), the memory agent, and the config mapping. Those reach
 # into this crate; this crate never names an Neppy type. Everything it needs
 # from the host arrives through the seam traits in `tinymemory_api::host`, whose
-# implementations live in `src/openhuman/memory/host.rs`.
+# implementations live in `src/neppy/memory/host.rs`.
 #
 # The `schemars` feature is enabled because the memory config *section* structs
 # (`MemoryConfig`, `MemoryTreeConfig`, …) now live in `tinymemory_api::host` and
@@ -277,7 +277,7 @@ tinymemory-core = { path = "vendor/tinymemory/crates/tinymemory-core" }
 # rather than from a hand-kept copy.
 #
 # The path dependency on `tinymcp` itself is still the step-one arrangement. The
-# registry entry step two calls for now exists — `src/openhuman/modules/registry.rs`
+# registry entry step two calls for now exists — `src/neppy/modules/registry.rs`
 # pins the v0.3.1 release — but the host still calls the library directly, because
 # `tinymcp-bus` v0.3.1 does not yet publish everything this host reaches for:
 # `OAuthComplete`, a member returning the already-exported `ConnectedServerOverview`,
@@ -347,7 +347,7 @@ dhat = { version = "0.3", optional = true }
 # headless embedding target (#5046) — link a single TLS stack + cert set
 # (Mozilla webpki-roots). Windows re-adds `native-tls` via the
 # `[target.'cfg(windows)'.dependencies]` block below (Cargo unions features
-# per target), because `src/openhuman/tls/mod.rs` deliberately routes the
+# per target), because `src/neppy/tls/mod.rs` deliberately routes the
 # Windows client through the SChannel/OS cert store for corporate MITM +
 # AV root CAs. So the two TLS backends coexist only on Windows, never on
 # the RAM-sensitive platforms.
@@ -460,7 +460,7 @@ rdev = { version = "0.5", optional = true }
 fs2 = "0.4"
 # Cross-platform battery probe for the scheduler gate. Maintained fork of
 # the abandoned `battery` crate; same `use battery::*;` API surface. Used
-# only by `openhuman::scheduler_gate::signals` to decide when to throttle
+# only by `neppy::scheduler_gate::signals` to decide when to throttle
 # background LLM work on laptops.
 starship-battery = { version = "0.10", optional = true }
 # Multi-chain wallet signing.
@@ -498,7 +498,7 @@ unicode-width = { version = "0.2", optional = true }
 # the validation rules, the PNG/JPEG header reader, the error vocabulary and
 # the member names. It is `serde` + `thiserror` and nothing else — no writer,
 # no `tinybus`, no runtime. Synthesis happens in the `tinydocs` TinyBus module
-# (`src/openhuman/modules/`), so this build carries the shape of a document
+# (`src/neppy/modules/`), so this build carries the shape of a document
 # without carrying the code that produces one, which is why `docx-rs`,
 # `ppt-rs` and `pdf-extract` are absent from the graph entirely rather than
 # merely gated.
@@ -508,7 +508,7 @@ unicode-width = { version = "0.2", optional = true }
 # against; two definitions of that would drift, and the drift would be a tool
 # description promising limits the module does not enforce. This crate carried
 # a verbatim copy of the contract for exactly that reason and paid exactly that
-# risk — `src/openhuman/tools/impl/document/format/` was 1,873 lines that
+# risk — `src/neppy/tools/impl/document/format/` was 1,873 lines that
 # differed from `crates/tinydocs-bus/src/` only in doc-link paths.
 #
 # Vendored as a path dependency like `tinyhumans-sdk`: the crate is not
@@ -527,7 +527,7 @@ tinydocs-bus = { path = "vendor/tinydocs/crates/tinydocs-bus", optional = true }
 # Same arrangement as `tinydocs-bus`: member names, the payload types the
 # module answers with, and the contract version, at a cost of `serde`. The
 # processing lives in the `tinyvoice` TinyBus module, so nothing here decodes
-# audio. `src/openhuman/modules/voice.rs` used to redeclare these types with a
+# audio. `src/neppy/modules/voice.rs` used to redeclare these types with a
 # comment saying it did so because this crate did not depend on TinyVoice;
 # it does now.
 #
@@ -544,7 +544,7 @@ tinyvoice-bus = { path = "vendor/tinyvoice/crates/tinyvoice-bus", optional = tru
 # a cost of `serde`. The router, the compressors, the CCR cache and the rule
 # engine all live in the `tinyjuice` module and are not in this build.
 #
-# `src/openhuman/inference/tokenjuice/types.rs` was a 259-line hand-copy of
+# `src/neppy/inference/tokenjuice/types.rs` was a 259-line hand-copy of
 # these types headed "Stable wire types shared with the separately compiled
 # TinyJuice module" — shared by convention and checked by nobody. It is a
 # re-export now.
@@ -577,7 +577,7 @@ tinyhosts = { path = "vendor/tinyhosts", default-features = false, features = ["
 # formats themselves: parsing, validation, and the conversions between their
 # encodings for Bitcoin, EVM chains, Solana and Tron. Nothing about "is this a
 # well-formed Solana address" is Neppy-specific, so the rules live where
-# any host can reach them. What stays in `src/openhuman/web3/` is everything
+# any host can reach them. What stays in `src/neppy/web3/` is everything
 # the crate deliberately refuses to own: RPC endpoint resolution, transaction
 # assembly and broadcast, and key custody.
 #
@@ -623,7 +623,7 @@ tokio-tungstenite = { version = "0.29", default-features = false, features = ["c
 # above. Cargo unions these features with the base rustls decl, so on Windows
 # reqwest carries both backends; Linux/macOS keep rustls only.
 reqwest = { version = "0.12", default-features = false, features = ["native-tls"] }
-# AppContainer / process-jail backend in `openhuman::cwd_jail`.
+# AppContainer / process-jail backend in `neppy::cwd_jail`.
 # Feature list mirrors the Win32 surface used by cwd_jail/windows.rs:
 # AppContainer profile APIs, ACL editing, STARTUPINFOEXW process spawn,
 # and the GENERIC_* file access masks.
@@ -745,7 +745,7 @@ default = ["media", "skills", "flows", "mcp", "channels", "medulla", "http-serve
 # HTTP + Socket.IO server transport (#5048): the `/rpc` JSON-RPC endpoint and
 # its auth middleware/CORS layer (`core::jsonrpc`, `core::auth`), the `/v1`
 # OpenAI-compatible router (`inference::http`), the ad-hoc static-dir file
-# server (`openhuman::http_host`), the AgentBox `/run` HTTP surface
+# server (`neppy::http_host`), the AgentBox `/run` HTTP surface
 # (`agentbox::http`), the WebSocket dictation stream
 # (`inference::voice::streaming`), the `openhuman text-input run` dev server,
 # the MCP Streamable-HTTP transport (`mcp::server::http`, additionally gated by
@@ -764,7 +764,7 @@ default = ["media", "skills", "flows", "mcp", "channels", "medulla", "http-serve
 # socketioxide/axum-touching bodies are gated. Likewise `inference::http::types`
 # and `EXTERNAL_OPENAI_COMPAT_PROVIDER` stay compiled for `core::auth`.
 # Git-backed memory diff: snapshots as commits, checkpoints as tags, read
-# markers as refs, diffs as git tree diffs (`openhuman::memory::diff`), plus the
+# markers as refs, diffs as git tree diffs (`neppy::memory::diff`), plus the
 # git-backed wiki content format in `memory::store::content::wiki_git`.
 # Default-OFF, product-ON.
 #
@@ -812,7 +812,7 @@ inference = ["dep:cpal"]
 # Default-ON.
 #
 # The synthesis is NOT in this build. All three run in the `tinydocs` TinyBus
-# module, downloaded and verified at first use (`src/openhuman/modules/`), so
+# module, downloaded and verified at first use (`src/neppy/modules/`), so
 # this gate turns on the tools and the host policy around them — the artifact
 # pipeline, the deadlines, image resolution under the security policy — and
 # `tinydocs` is here for the wire contract only. `docx-rs`, `ppt-rs` and
@@ -831,13 +831,13 @@ documents = ["modules", "dep:tinydocs-bus"]
 # an agent that can deploy to the internet is authority a headless embedding
 # should have to ask for.
 #
-# Leaf gate: when off, `openhuman::hosting` is not compiled and the tools are
+# Leaf gate: when off, `neppy::hosting` is not compiled and the tools are
 # absent from the registry rather than degraded to an error. When on, they are
 # still only registered once a credential actually resolves — from
 # `[hosting].api_key` or the provider's environment variable — because a tool
 # that cannot work is worse than a tool that is not there.
 hosting = ["dep:tinyhosts"]
-# The dynamic module host (`openhuman::modules`): the loader that admits a
+# The dynamic module host (`neppy::modules`): the loader that admits a
 # compiled `cdylib` through tinybus's ABI descriptor, manifest, dependency and
 # SHA-256 gates, plus the `modules` RPC namespace and the registry of modules
 # this build trusts. Default-ON, and implied by every gate whose work happens in
@@ -850,7 +850,7 @@ hosting = ["dep:tinyhosts"]
 # should not carry `ureq` and an archive stack to support a loader it cannot use.
 #
 # A loaded module is trusted in-process code with this process's privileges, and
-# tinybus never unloads one. See `src/openhuman/modules/` before adding an entry
+# tinybus never unloads one. See `src/neppy/modules/` before adding an entry
 # to the registry.
 modules = ["tinybus/modules"]
 # Voice + audio_toolkit domains: STT/TTS providers, the standalone dictation
@@ -875,7 +875,7 @@ voice = [
     # Wake-word gating, command routing and hallucination detection run in the
     # `tinyvoice` module, so the voice domain needs the module host the same way
     # `documents` needs it for `tinydocs`. Without this, `--features voice`
-    # alone fails to resolve `openhuman::modules` — which the product build
+    # alone fails to resolve `neppy::modules` — which the product build
     # hides, because `documents` turns `modules` on anyway.
     "modules",
     # The member names and payload types the module answers with. Contract
@@ -889,7 +889,7 @@ voice = [
     # EmailChannel, so the provider has to exist even in a channels-less build.
     "tinychannels/email",
 ]
-# Web3 family: openhuman::web3 + web3::wallet + web3::x402 — the
+# Web3 family: neppy::web3 + web3::wallet + web3::x402 — the
 # crypto wallet (multi-chain sign/broadcast), the high-level swap/bridge/dapp
 # surface, and the x402 machine-payment protocol. Default-ON — the desktop app
 # always ships with the wallet. Slim / headless builds opt out via
@@ -979,7 +979,7 @@ runtime-node = []
 # fails if this is ever flattened back into local `dep:` entries.
 contacts = ["tinymemory-core/contacts"]
 # Media-generation + image domains: the `media_generate_*` agent tools
-# (image/video via GMI through the backend) and the `openhuman::image` tool
+# (image/video via GMI through the backend) and the `neppy::image` tool
 # contracts scaffold. Default-ON. Slim builds opt out via
 # `--no-default-features --features "<explicit list without media>"`.
 # Composes with the runtime `DomainSet::media` flag (#4796).
@@ -987,7 +987,7 @@ contacts = ["tinymemory-core/contacts"]
 # backend-proxied (reqwest, shared). It is a surface-only gate (drops the tool
 # code + module from the compile), not a dependency-shedding one. There are no
 # controllers / stores / subscribers tagged `Media` (agent tools only), and
-# `openhuman::image` is currently unwired scaffold (added #2997).
+# `neppy::image` is currently unwired scaffold (added #2997).
 media = []
 # Flows domains: the `flows::` automation surface (saved tinyflows graphs —
 # create/run/schedule + the workflow_builder / flow_discovery agents), the
@@ -1001,9 +1001,9 @@ media = []
 # surface, `DomainSet` gates it at runtime.
 # NOTE: this gate does NOT drop `tinyagents` itself — 26+ domains consume it.
 flows = ["dep:tinyflows"]
-# Skills domains: `openhuman::skills` (metadata/discovery/install),
-# `openhuman::skill_runtime` (SKILL.md execution + the skill_executor agent),
-# and `openhuman::skill_registry` (remote catalogs + the skill_setup agent).
+# Skills domains: `neppy::skills` (metadata/discovery/install),
+# `neppy::skill_runtime` (SKILL.md execution + the skill_executor agent),
+# and `neppy::skill_registry` (remote catalogs + the skill_setup agent).
 # Default-ON — the desktop app always ships with skills. Slim / headless builds
 # opt out via `--no-default-features --features "<explicit list without skills>"`.
 # Composes with the runtime `DomainSet::skills` flag (#4796): the feature
@@ -1016,11 +1016,11 @@ flows = ["dep:tinyflows"]
 # Flows / Memory too. This gate's value is tool-surface + prompt-bloat +
 # startup cost, NOT binary size.
 #
-# NOTE: `openhuman::skills::types` and `::ops_types` stay compiled even when
+# NOTE: `neppy::skills::types` and `::ops_types` stay compiled even when
 # this feature is OFF — `tools::traits` re-exports `ToolResult`/`ToolContent`
 # out of `skills::types` and ~236 files consume them, so those inert serde
 # types are a type carve-out, not part of the gated behaviour. See
-# `src/openhuman/skills/stub.rs`.
+# `src/neppy/skills/stub.rs`.
 skills = []
 # MCP domains, all under the `mcp/` family: `mcp::server` (the `openhuman mcp`
 # stdio/HTTP server exposing our tool surface), `mcp::registry` (dynamic
@@ -1083,7 +1083,7 @@ crash-reporting = ["dep:sentry"]
 tui = ["dep:ratatui", "dep:crossterm", "dep:unicode-width"]
 
 # Medulla integration: the HTTP/SSE client for the Medulla orchestration backend
-# (`openhuman::medulla::client`) — durable sessions, event streaming, worker
+# (`neppy::medulla::client`) — durable sessions, event streaming, worker
 # routing + roster, the operator task ledger and its GitHub sources, one-shot
 # orchestration runs, the public feedback board, and the onboarding history
 # reward. This is the real Medulla surface; it replaced the `medulla-local`
@@ -1109,7 +1109,7 @@ tui = ["dep:ratatui", "dep:crossterm", "dep:unicode-width"]
 #   cargo tree -i reqwest --no-default-features
 medulla = []
 
-# Channels domain: `openhuman::channels` (external-messaging providers — Telegram,
+# Channels domain: `neppy::channels` (external-messaging providers — Telegram,
 # Discord, Slack, Signal, WhatsApp, iMessage, IRC, … — plus the channel runtime,
 # controllers, host, proactive messaging and inbound dispatch) together with the
 # `webview_accounts` / `webview_apis` / `webview_notifications` / `whatsapp_data`
@@ -1128,7 +1128,7 @@ medulla = []
 # tree. (`whatsapp-web` refines this gate — see below — forwarding to the
 # `tinychannels/whatsapp-web` provider feature.)
 #
-# NOTE: the in-app web chat (`openhuman::web_chat`, RPC namespace `channel`) is
+# NOTE: the in-app web chat (`neppy::web_chat`, RPC namespace `channel`) is
 # NOT gated by this feature even though its runtime tag is
 # `DomainGroup::Channels` — it is core product surface and stays always
 # compiled (decoupled from `channels/` in #5002). The `channels::{traits, cli}`

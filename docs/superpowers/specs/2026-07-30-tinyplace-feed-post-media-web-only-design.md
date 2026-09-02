@@ -41,7 +41,7 @@ the web app via the existing `openUrl()` helper.
    `FeedComposer`, which uses no `useT()` (same rationale as #5193).
 
 2. **Scope docstrings** — a "Feed scope (post media is web-only)" note in the
-   `FeedSection.tsx` header and in `src/openhuman/tinyplace/mod.rs`, next to the
+   `FeedSection.tsx` header and in `src/neppy/tinyplace/mod.rs`, next to the
    existing marketplace web-only note.
 
 3. **Test** (`FeedSection.test.tsx`) — two co-located Vitest cases: the note

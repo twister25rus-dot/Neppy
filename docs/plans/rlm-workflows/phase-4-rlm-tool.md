@@ -1,8 +1,8 @@
 # Phase 4 — The first-class `rlm` tool
 
-## 4.1 Tool definition (`src/openhuman/rlm/tools.rs`)
+## 4.1 Tool definition (`src/neppy/rlm/tools.rs`)
 
-`RlmTool` implementing `crate::openhuman::tools::Tool`:
+`RlmTool` implementing `crate::neppy::tools::Tool`:
 
 - `name()` → `"rlm"`.
 - `description()` — teaches the model the surface in one screen: what a
@@ -52,9 +52,9 @@
 
 ## 4.2 Registration
 
-- Re-export from `src/openhuman/rlm/mod.rs`; glob re-export via
-  `src/openhuman/tools/mod.rs` like other domains.
-- Add to `all_tools_with_runtime` (`src/openhuman/tools/ops.rs`), gated:
+- Re-export from `src/neppy/rlm/mod.rs`; glob re-export via
+  `src/neppy/tools/mod.rs` like other domains.
+- Add to `all_tools_with_runtime` (`src/neppy/tools/ops.rs`), gated:
   **not registered** when the autonomy tier is `readonly`, or when
   `OPENHUMAN_RLM=0`. Env/config default: **on** for `supervised`/`full`.
 - The tool needs the turn's tool list + provider to build its bridge, so it
@@ -68,10 +68,10 @@
 - Native tool-call format carries `description()` + schema automatically —
   the primary model documentation.
 - Add a "Language workflows (rlm)" section to
-  `src/openhuman/agent/registry/agents/orchestrator/prompt.md`: when to
+  `src/neppy/agent/registry/agents/orchestrator/prompt.md`: when to
   prefer `rlm` over `spawn_parallel_agents` (ad-hoc control flow, loops,
   dedup/verify pipelines), the one-cell-per-call model, and session reuse.
-- Update `src/openhuman/platform/about_app/` feature inventory (new user-facing
+- Update `src/neppy/platform/about_app/` feature inventory (new user-facing
   capability).
 - `docs`/gitbooks: extend
   `gitbooks/developing/architecture/agent-harness.md` with the RLM section.

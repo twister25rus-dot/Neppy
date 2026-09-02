@@ -2,7 +2,7 @@
 //!
 //! Exposes the connector APIs that live in the Tauri shell (future:
 //! Notion, Slack, …) to the core sidecar over a local WebSocket on
-//! `127.0.0.1`. Core-side handlers in `src/openhuman/webview_apis/`
+//! `127.0.0.1`. Core-side handlers in `src/neppy/webview_apis/`
 //! connect as a client and proxy JSON-RPC calls through this bridge
 //! so curl against the core's RPC port reaches the live webview
 //! session. The bridge currently has no registered methods; the

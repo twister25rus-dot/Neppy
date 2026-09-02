@@ -1,5 +1,5 @@
-use neppy_core::openhuman::config::schema::{Config, StreamMode, TelegramConfig};
-use neppy_core::openhuman::security::keyring;
+use neppy_core::neppy::config::schema::{Config, StreamMode, TelegramConfig};
+use neppy_core::neppy::security::keyring;
 use std::sync::{Mutex, OnceLock};
 
 fn env_lock() -> std::sync::MutexGuard<'static, ()> {
@@ -71,7 +71,7 @@ async fn config_secrets_create_master_key_in_keyring_on_fresh_install() {
         config_path: config_path.clone(),
         workspace_dir: workspace_dir.clone(),
         api_key: Some("sk-fresh-secret".into()),
-        channels_config: neppy_core::openhuman::config::schema::ChannelsConfig {
+        channels_config: neppy_core::neppy::config::schema::ChannelsConfig {
             telegram: Some(TelegramConfig {
                 bot_token: "fresh-tg-secret".into(),
                 chat_id: None,

@@ -3,7 +3,7 @@
 Every place in the tree that still reaches memory **without** going through
 `MemoryGuard`, and why. Produced by M4b; consumed by M4c.
 
-Pinned by the ratchet in `src/openhuman/memory/bypass_allowlist_tests.rs`
+Pinned by the ratchet in `src/neppy/memory/bypass_allowlist_tests.rs`
 (M4c), which fails **both ways** — when a new unguarded call site appears
 (`no_new_memory_driver_bypasses`), and when an allowlisted one is cleaned up
 without being struck from the list (`bypass_allowlist_has_no_stale_entries`).
@@ -51,7 +51,7 @@ login / active-user-switch / boot / CLI-entry lifecycle event
 
 ## What M4b re-pointed
 
-Four RPC handlers, all in `src/openhuman/memory/ops/`, each of whose contract
+Four RPC handlers, all in `src/neppy/memory/ops/`, each of whose contract
 twin is a literal one-line delegation to the same host method on the same
 store:
 

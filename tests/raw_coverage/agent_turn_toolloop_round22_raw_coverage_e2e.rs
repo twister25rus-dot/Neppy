@@ -1,13 +1,13 @@
 use async_trait::async_trait;
 use neppy_core::core::bus::BUS;
-use neppy_core::openhuman::agent::bus::{
+use neppy_core::neppy::agent::bus::{
     register_agent_handlers, AgentTurnRequest, AgentTurnResponse, AGENT_RUN_TURN_METHOD,
 };
-use neppy_core::openhuman::agent::progress::AgentProgress;
-use neppy_core::openhuman::config::{MultimodalConfig, MultimodalFileConfig};
-use neppy_core::openhuman::agent::messages::ChatMessage;
-use neppy_core::openhuman::security::POLICY_BLOCKED_MARKER;
-use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolContent, ToolResult, ToolScope};
+use neppy_core::neppy::agent::progress::AgentProgress;
+use neppy_core::neppy::config::{MultimodalConfig, MultimodalFileConfig};
+use neppy_core::neppy::agent::messages::ChatMessage;
+use neppy_core::neppy::security::POLICY_BLOCKED_MARKER;
+use neppy_core::neppy::tools::{PermissionLevel, Tool, ToolContent, ToolResult, ToolScope};
 use serde_json::json;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -205,7 +205,7 @@ async fn run_turn(
     BUS.native().request::<AgentTurnRequest, AgentTurnResponse>(
         AGENT_RUN_TURN_METHOD,
         AgentTurnRequest {
-            turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+            turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
                 model,
             ),
             history: vec![
@@ -226,7 +226,7 @@ async fn run_turn(
             visible_tool_names: None,
             extra_tools: Vec::new(),
             on_progress,
-            origin: neppy_core::openhuman::agent::turn_origin::AgentTurnOrigin::Cli,
+            origin: neppy_core::neppy::agent::turn_origin::AgentTurnOrigin::Cli,
         },
     )
     .await

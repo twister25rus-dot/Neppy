@@ -15,7 +15,7 @@ use anyhow::Result;
 use std::io::Read;
 use std::path::PathBuf;
 
-use crate::openhuman::memory::api::types::NamespaceDocumentInput;
+use crate::neppy::memory::api::types::NamespaceDocumentInput;
 
 /// Entry point for `openhuman memory <subcommand>`.
 pub fn run_memory_command(args: &[String]) -> Result<()> {
@@ -169,7 +169,7 @@ fn run_ingest(args: &[String]) -> Result<()> {
             category: "core".to_string(),
             session_id: None,
             document_id: None,
-            taint: crate::openhuman::memory::MemoryTaint::Internal,
+            taint: crate::neppy::memory::MemoryTaint::Internal,
         };
 
         documents
@@ -499,7 +499,7 @@ fn read_input(path: &str) -> Result<String> {
 /// Resolve the bound memory driver for a subcommand, refusing first when it
 /// does not advertise the family the subcommand needs.
 ///
-/// Returns the whole [`MemoryBinding`](crate::openhuman::memory::binding::MemoryBinding)
+/// Returns the whole [`MemoryBinding`](crate::neppy::memory::binding::MemoryBinding)
 /// rather than the provider alone, so a missing family can be refused by name
 /// *and* by driver id — the same shape as the capability diagnostic, and the
 /// only way an operator can tell "this driver has no documents tier" from "this
@@ -519,8 +519,8 @@ fn read_input(path: &str) -> Result<String> {
 /// a driver has actually answered `capabilities()`.
 async fn create_memory_binding(
     subcommand: &str,
-) -> Result<std::sync::Arc<crate::openhuman::memory::binding::MemoryBinding>> {
-    let config = crate::openhuman::config::Config::load_or_init()
+) -> Result<std::sync::Arc<crate::neppy::memory::binding::MemoryBinding>> {
+    let config = crate::neppy::config::Config::load_or_init()
         .await
         .unwrap_or_default();
 
@@ -550,23 +550,20 @@ async fn create_memory_binding(
     // because this process does still embed the engine — see the note in
     // `runtime::context::init_stores`; a `memory` subcommand that reached one
     // unwired would report a broken subsystem rather than a missing one.
-    crate::openhuman::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
+    crate::neppy::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
         config.clone(),
     ));
     #[cfg(feature = "modules")]
-    crate::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(config.clone()));
+    crate::neppy::modules::memory::set_modules_policy(std::sync::Arc::new(config.clone()));
 
-    crate::openhuman::memory::binding::for_workspace(
-        &config.workspace_dir,
-        &config.subsystems.memory,
-    )
-    .map_err(|error| anyhow::anyhow!(error))
+    crate::neppy::memory::binding::for_workspace(&config.workspace_dir, &config.subsystems.memory)
+        .map_err(|error| anyhow::anyhow!(error))
 }
 
 /// The documents family on a bound driver, or a refusal naming the driver.
 fn documents_family(
-    binding: &crate::openhuman::memory::binding::MemoryBinding,
-) -> Result<&dyn crate::openhuman::memory::api::provider::MemoryDocuments> {
+    binding: &crate::neppy::memory::binding::MemoryBinding,
+) -> Result<&dyn crate::neppy::memory::api::provider::MemoryDocuments> {
     binding.provider().as_documents().ok_or_else(|| {
         anyhow::anyhow!(
             "memory driver `{}` does not support the documents family",

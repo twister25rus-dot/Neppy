@@ -22,7 +22,7 @@ use tokio_tungstenite::tungstenite::Message;
 use super::router;
 
 /// Env var the Tauri host writes (before spawning core) and core reads
-/// (in `src/openhuman/webview_apis/client.rs`) so both agree on the
+/// (in `src/neppy/webview_apis/client.rs`) so both agree on the
 /// port without a discovery round-trip.
 pub const PORT_ENV: &str = "OPENHUMAN_WEBVIEW_APIS_PORT";
 

@@ -109,7 +109,7 @@ embedding_dimensions = 0
 embedding_strict = false
 "#;
     std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
-    let _: neppy_core::openhuman::config::Config =
+    let _: neppy_core::neppy::config::Config =
         toml::from_str(cfg).expect("test config must match schema");
 }
 
@@ -141,7 +141,7 @@ async fn setup() -> TestHarness {
         EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
     ];
 
-    let _ = neppy_core::openhuman::agent::harness::AgentDefinitionRegistry::init_global_builtins();
+    let _ = neppy_core::neppy::agent::harness::AgentDefinitionRegistry::init_global_builtins();
 
     let (addr, join) = serve_rpc().await;
     TestHarness {

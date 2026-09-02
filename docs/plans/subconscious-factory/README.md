@@ -1,6 +1,6 @@
 # Subconscious factory — one reflection engine, many worlds
 
-Redesign `src/openhuman/subconscious/` around the split-brain spec
+Redesign `src/neppy/subconscious/` around the split-brain spec
 (`state (1).md`, "Autonomous Closed-Loop LangGraph Harness"): the subconscious
 is the **Deep Reflection Layer** — an offline, cron-driven loop that consumes a
 compressed view of how a world changed and emits short, dense outputs that

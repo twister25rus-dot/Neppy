@@ -16,15 +16,15 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 use tempfile::{Builder, TempDir};
 
-use neppy_core::openhuman::integrations::composio::ops::{
+use neppy_core::neppy::integrations::composio::ops::{
     cached_active_integrations, composio_authorize, composio_execute, composio_list_connections,
     composio_list_toolkits, composio_list_tools, fetch_connected_integrations_status,
 };
-use neppy_core::openhuman::integrations::composio::{
+use neppy_core::neppy::integrations::composio::{
     invalidate_connected_integrations_cache, FetchConnectedIntegrationsStatus,
 };
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::tools::{ComposioListToolsTool, Tool, ToolCallOptions};
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::tools::{ComposioListToolsTool, Tool, ToolCallOptions};
 
 static ENV_LOCK: &OnceLock<Mutex<()>> = &crate::SHARED_ENV_LOCK;
 

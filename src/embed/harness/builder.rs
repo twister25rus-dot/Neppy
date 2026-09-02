@@ -16,7 +16,7 @@ use super::{Harness, HARNESS_LIVE};
 use crate::core::runtime::{CoreBuilder, DomainSet, ServiceSet, TokenSource};
 use crate::core::types::HostKind;
 use crate::embed::{Core, Session};
-use crate::openhuman::config::Config;
+use crate::neppy::config::Config;
 
 /// Builder for a [`Harness`]. Obtain with [`Harness::builder`].
 pub struct HarnessBuilder {
@@ -29,7 +29,7 @@ pub struct HarnessBuilder {
     mcp_servers: Vec<super::mcp::McpServer>,
     services: Option<ServiceSet>,
     domains: Option<DomainSet>,
-    tool_groups: Option<crate::openhuman::tools::toolpacks::ToolGroups>,
+    tool_groups: Option<crate::neppy::tools::toolpacks::ToolGroups>,
     host_kind: HostKind,
     config: Option<Config>,
     session: Option<Session>,
@@ -150,19 +150,16 @@ impl HarnessBuilder {
     ///
     /// ```no_run
     /// # use neppy_core::Harness;
-    /// # use neppy_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
+    /// # use neppy_core::neppy::tools::toolpacks::{GroupMode, ToolGroups};
     /// Harness::builder().tool_groups(
     ///     ToolGroups::none().with("documents", GroupMode::Advertised),
     /// );
     /// ```
     ///
-    /// [`ToolGroups::advertised`]: crate::openhuman::tools::toolpacks::ToolGroups::advertised
-    /// [`ToolGroups::none`]: crate::openhuman::tools::toolpacks::ToolGroups::none
-    /// [`ToolGroups::with`]: crate::openhuman::tools::toolpacks::ToolGroups::with
-    pub fn tool_groups(
-        mut self,
-        tool_groups: crate::openhuman::tools::toolpacks::ToolGroups,
-    ) -> Self {
+    /// [`ToolGroups::advertised`]: crate::neppy::tools::toolpacks::ToolGroups::advertised
+    /// [`ToolGroups::none`]: crate::neppy::tools::toolpacks::ToolGroups::none
+    /// [`ToolGroups::with`]: crate::neppy::tools::toolpacks::ToolGroups::with
+    pub fn tool_groups(mut self, tool_groups: crate::neppy::tools::toolpacks::ToolGroups) -> Self {
         self.tool_groups = Some(tool_groups);
         self
     }
@@ -266,7 +263,7 @@ impl HarnessBuilder {
         let mut config = match (&self.workspace, self.config) {
             (Workspace::Inherit, Some(config)) => Some(config),
             (Workspace::Inherit, None) => Some(
-                crate::openhuman::config::Config::load_or_init()
+                crate::neppy::config::Config::load_or_init()
                     .await
                     .map_err(HarnessError::Build)?,
             ),

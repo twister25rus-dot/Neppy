@@ -7,16 +7,16 @@
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
-use neppy_core::openhuman::channels::start_channels;
-use neppy_core::openhuman::channels::test_support::{
+use neppy_core::neppy::channels::start_channels;
+use neppy_core::neppy::channels::test_support::{
     lock_agent_handler, run_dispatch_harness, DispatchHarnessOptions, TestMemoryEntry,
 };
-use neppy_core::openhuman::web_chat::{
+use neppy_core::neppy::web_chat::{
     all_web_channel_controller_schemas, all_web_channel_registered_controllers, channel_web_cancel,
     channel_web_chat, schemas, start_chat, subscribe_web_channel_events,
     test_support as web_test_support, ChatRequestMetadata,
 };
-use neppy_core::openhuman::config::Config;
+use neppy_core::neppy::config::Config;
 use tempfile::tempdir;
 use tokio::time::timeout;
 
@@ -28,7 +28,7 @@ fn ensure_memory_seams() {
             .name("channels-web-startup-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(
                     Arc::new(Config::default()),
                 );
             })

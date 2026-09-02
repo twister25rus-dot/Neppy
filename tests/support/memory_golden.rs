@@ -6,7 +6,7 @@
 //!
 //! # Why it is a test-target module and not a library one (#5560)
 //!
-//! It used to be `src/openhuman/memory/store_golden.rs`, declared
+//! It used to be `src/neppy/memory/store_golden.rs`, declared
 //! `pub mod store_golden;` — **not** `#[cfg(test)]` — so it compiled into the
 //! shipped library and its seven `tinymemory_core::` references were production
 //! references, keeping the engine crate in the product dependency graph for the
@@ -43,8 +43,8 @@
 //! as they link `tinymemory-api`; `memory_golden_fixture_e2e.rs` already calls
 //! `tinymemory_core::global::init` directly, so this file sits in the same
 //! dependency position as the code that drives it. Nothing else changed: the
-//! only edits are the four `crate::openhuman::` paths, rewritten to name the
-//! library from outside as `neppy_core::openhuman::`.
+//! only edits are the four `crate::neppy::` paths, rewritten to name the
+//! library from outside as `neppy_core::neppy::`.
 //!
 //! Included as a module rather than being its own `tests/*.rs` file so cargo
 //! does not build it as a second test target — the same reason
@@ -85,12 +85,12 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result};
 use chrono::{DateTime, TimeZone, Utc};
 
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::memory::ops::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::memory::ops::{
     doc_list, doc_put, graph_query, graph_upsert, kv_get, memory_query_namespace, GraphQueryParams,
     GraphUpsertParams, KvGetDeleteParams, KvSetParams, NamespaceOnlyParams, PutDocParams,
 };
-use neppy_core::openhuman::memory::rpc_models::QueryNamespaceRequest;
+use neppy_core::neppy::memory::rpc_models::QueryNamespaceRequest;
 use tinymemory_api::chunks::{Chunk, Metadata, SourceKind, SourceRef};
 use tinymemory_core::store::chunks;
 use tinymemory_core::store::namespace_store::{events, fts5, profile, segments};
@@ -232,7 +232,7 @@ async fn seed_documents() -> Result<()> {
 async fn seed_kv() -> Result<()> {
     for namespace in [None, Some(NAMESPACE_PRIMARY.to_string())] {
         tracing::debug!(?namespace, key = KV_KEY, "[golden] seeding kv");
-        neppy_core::openhuman::memory::ops::kv_set(KvSetParams {
+        neppy_core::neppy::memory::ops::kv_set(KvSetParams {
             namespace: namespace.clone(),
             key: KV_KEY.to_string(),
             value: serde_json::json!({ "fixture": "golden", "v": 1 }),

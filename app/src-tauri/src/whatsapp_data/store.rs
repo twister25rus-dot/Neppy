@@ -14,7 +14,7 @@ use anyhow::{Context, Result};
 use rusqlite::{params, Connection};
 
 use super::sqlite_retry::{is_sqlite_corrupt, retry_on_sqlite_busy, BUSY_TIMEOUT};
-use neppy_core::openhuman::channels::whatsapp_data::types::{
+use neppy_core::neppy::channels::whatsapp_data::types::{
     ChatMeta, IngestMessage, ListChatsRequest, ListMessagesRequest, SearchMessagesRequest,
     WhatsAppChat, WhatsAppMessage,
 };

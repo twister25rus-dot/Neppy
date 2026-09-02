@@ -36,7 +36,7 @@ The status RPC is on the existing inference namespace:
 neppy-core rpc openhuman.inference_claude_code_status
 ```
 
-Returns one of (`CliStatus` in [`src/openhuman/inference/provider/claude_code/types.rs`](../../../src/openhuman/inference/provider/claude_code/types.rs)):
+Returns one of (`CliStatus` in [`src/neppy/inference/provider/claude_code/types.rs`](../../../src/neppy/inference/provider/claude_code/types.rs)):
 
 - `{"status":"ok","version":"2.0.4","path":"/usr/local/bin/claude"}`: ready
 - `{"status":"not_installed"}`: `claude` not on `PATH`
@@ -74,7 +74,7 @@ The `openhuman.inference_claude_code_auth_status` RPC probes sources 1 and 3 wit
 
 ## Tool surface exposed to the CLI
 
-The CLI sees these tools as `mcp__openhuman__<name>` (delivered by the existing stdio MCP server in [`src/openhuman/mcp/server/`](../../../src/openhuman/mcp/server/)):
+The CLI sees these tools as `mcp__openhuman__<name>` (delivered by the existing stdio MCP server in [`src/neppy/mcp/server/`](../../../src/neppy/mcp/server/)):
 
 - `core.list_tools`, `core.tool_instructions`
 - `memory.search`, `memory.recall`
@@ -88,4 +88,4 @@ The MCP server enforces `SecurityPolicy::ToolOperation` checks; all tools except
 
 - Vision input is not forwarded. Set the `vision_provider` to a different provider when you need images.
 - `agentic` runs share the same `Semaphore(4)`; under load a CC turn waits in queue rather than failing fast.
-- Cost accounting from the CLI's `result.total_cost_usd` is captured in the mapper but not yet wired into Neppy's billing layer ([`src/openhuman/platform/cost/`](../../../src/openhuman/platform/cost/)).
+- Cost accounting from the CLI's `result.total_cost_usd` is captured in the mapper but not yet wired into Neppy's billing layer ([`src/neppy/platform/cost/`](../../../src/neppy/platform/cost/)).

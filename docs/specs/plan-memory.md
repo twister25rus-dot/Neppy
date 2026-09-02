@@ -1,6 +1,6 @@
 # Memory Subsystem — Pluggable Provider API & TinyCortex Consolidation
 
-**Status:** proposed · **Date:** 2026-07-28 · **Scope:** `src/openhuman/memory*`, `src/openhuman/tinycortex/`, `vendor/tinycortex`
+**Status:** proposed · **Date:** 2026-07-28 · **Scope:** `src/neppy/memory*`, `src/neppy/tinycortex/`, `vendor/tinycortex`
 **Depends on:** [`kernel.md`](kernel.md)
 **Supersedes (in disposition only):** `docs/tinycortex-cutover-evaluation-2026-07-28.md` §"Audit result" — see §6.1.
 
@@ -67,7 +67,7 @@ moves.
 - 74k LOC across `memory` (18.3k), `memory_store` (17.4k), `memory_sync` (17.2k), `memory_tree`
   (9.9k), `memory_sources` (5.0k), `memory_diff` (2.0k), `memory_queue` (1.4k), `memory_tools`
   (1.3k), `memory_goals` (0.9k), `memory_conversations` (0.9k), `memory_search` (0.7k), plus a
-  3.2k-LOC seam at `src/openhuman/tinycortex/`.
+  3.2k-LOC seam at `src/neppy/tinycortex/`.
 - The engine cutover is **complete**: TinyCortex is already the implementation authority for
   chunks, content, vectors, trees, retrieval, scoring, queue, ingest, readers, sync, diffs, goals,
   graph, conversations, and tool memory.
@@ -194,14 +194,14 @@ engine owns one step.
 
 ### 4.1 `tinycortex` — embedded default
 
-`src/openhuman/memory_adapter/embedded/` implements every family over the existing seam
-(`src/openhuman/tinycortex/`). Zero new engine logic: it is a re-shaping of the current direct
+`src/neppy/memory_adapter/embedded/` implements every family over the existing seam
+(`src/neppy/tinycortex/`). Zero new engine logic: it is a re-shaping of the current direct
 calls into contract methods. Advertises all 13 families. This is the compatibility anchor — the
 parity harness compares it against pre-change behaviour.
 
 ### 4.2 `http` — the external transport adapter
 
-`src/openhuman/memory_adapter/http/` implements every family by translating to a documented
+`src/neppy/memory_adapter/http/` implements every family by translating to a documented
 JSON wire contract, so a third-party backend never depends on Rust or on this repo:
 
 ```
@@ -308,7 +308,7 @@ schedulers (`memory_sync/periodic.rs`), bus subscribers · config mapping · **n
 
 ### 6.4 How much actually moves (measured, 2026-07-28)
 
-Measured over `src/openhuman/memory*`, classifying RPC/schema/ops/tools/bus/policy files as
+Measured over `src/neppy/memory*`, classifying RPC/schema/ops/tools/bus/policy files as
 kernel-side and everything else as engine:
 
 | Module | Total | Kernel-side | Engine (movable) | Tests |
@@ -355,7 +355,7 @@ one signature.
 read the task-local, but those are agent tools — kernel-side, staying put. No change needed.)*
 
 **(b) Config/event-bus reach-backs from `memory_tree`.** ~20 files under `memory_tree/{tree,score,
-graph,health,retrieval}` import `crate::openhuman::config::` or `crate::core::event_bus`.
+graph,health,retrieval}` import `crate::neppy::config::` or `crate::core::event_bus`.
 **Fix:** pass the derived options in (the `MemoryConfig` mapping the seam's `config.rs` already
 does) and emit through the existing sink traits instead of the bus directly. Mechanical, but
 broader than (a) — this is the bulk of `memory_tree`'s move cost.
@@ -388,8 +388,8 @@ thin. Thin is what a good syscall table looks like.
 
 ~74k LOC of host `memory*` reduces to a kernel-side surface dominated by RPC + tools + policy +
 adapters. **Line count is not the goal and not the success metric** — the metric is that
-`grep -rn "tinycortex::" src/openhuman/ --include=*.rs` returns hits only under
-`memory_adapter/embedded/` and `src/openhuman/tinycortex/`.
+`grep -rn "tinycortex::" src/neppy/ --include=*.rs` returns hits only under
+`memory_adapter/embedded/` and `src/neppy/tinycortex/`.
 
 ---
 
@@ -427,7 +427,7 @@ tinycortex` → host cutover PR, host tests in the same PR for the ≥80% diff-c
 | **M5** | Capability degradation | Filter controller registration + tool assembly by capability set; both-ways tests per family | `null` driver ⇒ memory RPC unknown-method, tools absent, core boots |
 | **M6** | HTTP adapter + wire contract | `memory_adapter/http/`, handshake, `501`→`Unsupported`, egress/trust/redaction path | Conformance Tiers 1–3 against a mock backend |
 | **M7** | Portability | `memory_export`/`memory_import` NDJSON + approval gate; `mirror` driver | Export→import round-trip; Tier 4 differential |
-| **M8a** | Reach-back inversion (§6.5) | `scope` predicate parameter through retrieval; config/bus reach-backs replaced by injected options + sink traits | Existing `source_scope` seam test green; no `crate::openhuman::` import remains in the movable set |
+| **M8a** | Reach-back inversion (§6.5) | `scope` predicate parameter through retrieval; config/bus reach-backs replaced by injected options + sink traits | Existing `source_scope` seam test green; no `crate::neppy::` import remains in the movable set |
 | **M8b** | Bulk consolidation | The §6.2 moves — `memory_store`, `memory_sync`, `memory_tree`, `memory_queue` first (90% of the mass), one module per PR | Parity green per move; the `grep` invariant in §6.7 holds |
 | **M8c** | Facade collapse | `memory_conversations`, `memory_search`, `memory_diff`, `memory_goals` reduce to kernel-side surface; re-export files deleted | Import paths land on `tinycortex::memory::*` |
 | **M9** | Reference driver + docs | `supermemory` profile, conformance report, `gitbooks/developing/architecture/memory.md`, AGENTS.md checklist | Tiers 1–3 green for advertised set |

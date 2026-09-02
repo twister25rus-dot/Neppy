@@ -47,12 +47,10 @@ fn ensure_memory_seams() {
             .name("memory-sources-e2e-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                let config = Arc::new(neppy_core::openhuman::config::Config::default());
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
-                    config.clone(),
-                );
+                let config = Arc::new(neppy_core::neppy::config::Config::default());
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(config.clone());
                 #[cfg(feature = "modules")]
-                neppy_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::neppy::modules::memory::set_modules_policy(config);
             })
             .expect("spawn memory sources seam installer")
             .join()

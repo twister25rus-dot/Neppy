@@ -22,7 +22,7 @@ gated behind a Cargo feature `tui`.
      `#[cfg(not(feature = "tui"))] mod stub;` exposing the same `run_from_cli`.
    - `stub.rs` `run_from_cli` bails with
      `"tui feature disabled at compile time … rebuild with --features tui"`
-     (mirror `src/openhuman/mcp/server/stub.rs:42`).
+     (mirror `src/neppy/mcp/server/stub.rs:42`).
    - No controllers, no agent tools, no `all.rs` changes (leaf client, like `flows`'
      philosophy: absence, not degraded registration — but here the only outside
      touch-point is the CLI arm, which uses the stub for a build-fact error).
@@ -39,9 +39,9 @@ gated behind a Cargo feature `tui`.
    - Threads via `runtime.invoke("threads.list"| "threads.create_new", …)`;
      CLI flags: `--thread <id>`, `--new` (default: create new thread).
    - Send turn: `runtime.invoke("channel.web_chat", {client_id, thread_id, message, …})`
-     (schema: `src/openhuman/web_chat/schemas.rs:45`; ops entry `ops.rs:1199`/`start_chat` at 391).
+     (schema: `src/neppy/web_chat/schemas.rs:45`; ops entry `ops.rs:1199`/`start_chat` at 391).
    - Stream: drain `web_chat::subscribe_web_channel_events()` (broadcast bus,
-     `src/openhuman/web_chat/event_bus.rs:14`), filter by our `client_id`.
+     `src/neppy/web_chat/event_bus.rs:14`), filter by our `client_id`.
      Render `text_delta`/`thinking_delta` (`delta`, `delta_kind` fields on
      `WebChannelEvent`, `src/core/socketio.rs:98`), show `tool_call`/`tool_result`
      as status lines, finish on `chat_done` (use `full_response` as authoritative
@@ -86,7 +86,7 @@ gated behind a Cargo feature `tui`.
 
 - AGENTS.md: add `tui` row to the feature table + a short gate section
   (leaf-ish gate, sheds `ratatui`+`crossterm`, intentionally not forwarded to desktop).
-- `src/openhuman/platform/about_app/`: add user-facing feature entry for the terminal chat UI.
+- `src/neppy/platform/about_app/`: add user-facing feature entry for the terminal chat UI.
 
 ## Non-goals (v1)
 

@@ -19,9 +19,9 @@
 use std::time::Duration;
 
 use anyhow::Result;
-use neppy_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use neppy_core::openhuman::agent::Agent;
-use neppy_core::openhuman::inference::provider::factory::test_provider_override;
+use neppy_core::neppy::agent::harness::AgentDefinitionRegistry;
+use neppy_core::neppy::agent::Agent;
+use neppy_core::neppy::inference::provider::factory::test_provider_override;
 use tinymemory_core::store::MemoryClient;
 
 use crate::harness::{fixture, measure, ProfileResult};
@@ -41,7 +41,7 @@ pub async fn run() -> Result<ProfileResult> {
 
         // b. event-bus (plus agent-handler registration so turns can run).
         neppy_core::core::bus::init().await.expect("bus init");
-        neppy_core::openhuman::agent::bus::register_agent_handlers();
+        neppy_core::neppy::agent::bus::register_agent_handlers();
         rec.checkpoint("event-bus")?;
 
         // c. agent-registry.
@@ -49,8 +49,8 @@ pub async fn run() -> Result<ProfileResult> {
         rec.checkpoint("agent-registry")?;
 
         // d. detectors — force the lazy PII + prompt-injection statics.
-        let _ = neppy_core::openhuman::security::pii::scan("");
-        let _ = neppy_core::openhuman::security::prompt_injection::scan_tool_definition("x", "");
+        let _ = neppy_core::neppy::security::pii::scan("");
+        let _ = neppy_core::neppy::security::prompt_injection::scan_tool_definition("x", "");
         rec.checkpoint("detectors")?;
 
         // e. memory-store — build and hold a unified-memory client until teardown.

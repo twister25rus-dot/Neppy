@@ -1,5 +1,5 @@
 /**
- * In-process replacement for the removed `openhuman::ai_memory` core RPC surface.
+ * In-process replacement for the removed `neppy::ai_memory` core RPC surface.
  * Keeps session + memory index behavior in RAM for the desktop UI (no disk persistence).
  */
 interface ChunkRecordRust {

@@ -35,7 +35,7 @@ const log = createDebug('app:flows:canvas:agentInspector');
 
 /**
  * The managed capability tiers offered for an agent node's `model`. Mirrors the
- * Rust `MODEL_*_V1` constants (`src/openhuman/config/schema/types.rs`) and the
+ * Rust `MODEL_*_V1` constants (`src/neppy/config/schema/types.rs`) and the
  * slugs `NeppyAgentRunner`/`resolve_model_for_hint` accept as bare tier
  * names — so the value written here runs unchanged in the flow engine.
  */

@@ -52,7 +52,7 @@ The following remain:
 
 ## Core and Configuration
 
-Delete `src/openhuman/screen_intelligence/` and remove its module registration,
+Delete `src/neppy/screen_intelligence/` and remove its module registration,
 controller schemas, CLI dispatch, legacy aliases, startup/shutdown hooks,
 application snapshot data, built-in agents, agent tools, user-tool filters, MCP
 prompt resources, and capability catalog entries.

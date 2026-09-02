@@ -17,7 +17,7 @@
 // (openhuman#5560 — see `start_bootstrap_jobs`); every remaining `config.…` in
 // this file is plain field access on Neppy's own `Config`.
 use crate::core::runtime::ServiceSet;
-use crate::openhuman::config::Config;
+use crate::neppy::config::Config;
 
 /// Background bootstrap for login-gated services (local AI, voice, screen
 /// intelligence, autocomplete) plus the subconscious engine + heartbeat.
@@ -28,7 +28,7 @@ use crate::openhuman::config::Config;
 /// hook is registered unconditionally.
 pub fn spawn_login_gated_services(embedded_core: bool) {
     tokio::spawn(async move {
-        match crate::openhuman::config::Config::load_or_init().await {
+        match crate::neppy::config::Config::load_or_init().await {
             Ok(config) => {
                 if embedded_core {
                     log::debug!("[core] embedded core startup");
@@ -37,18 +37,16 @@ pub fn spawn_login_gated_services(embedded_core: bool) {
                 }
 
                 // Check if a user is already logged in from a previous session.
-                let already_logged_in = crate::openhuman::config::default_root_neppy_dir()
+                let already_logged_in = crate::neppy::config::default_root_neppy_dir()
                     .ok()
-                    .and_then(|root| crate::openhuman::config::read_active_user_id(&root))
+                    .and_then(|root| crate::neppy::config::read_active_user_id(&root))
                     .is_some();
 
                 if already_logged_in {
                     // User has an active session — start all services now.
                     log::info!("[services] existing session found, starting services");
-                    crate::openhuman::security::credentials::ops::start_login_gated_services(
-                        &config,
-                    )
-                    .await;
+                    crate::neppy::security::credentials::ops::start_login_gated_services(&config)
+                        .await;
                 } else {
                     log::info!(
                         "[services] no active session — deferring service startup until login"
@@ -65,9 +63,9 @@ pub fn spawn_login_gated_services(embedded_core: bool) {
 /// Periodic self-update checker (default: every 1 hour).
 pub fn spawn_update_scheduler() {
     tokio::spawn(async {
-        match crate::openhuman::config::Config::load_or_init().await {
+        match crate::neppy::config::Config::load_or_init().await {
             Ok(config) => {
-                crate::openhuman::platform::update::scheduler::run(config.update).await;
+                crate::neppy::platform::update::scheduler::run(config.update).await;
             }
             Err(err) => {
                 log::warn!("[core] config load failed, skipping update scheduler: {err}");
@@ -97,10 +95,10 @@ pub fn spawn_flows_boot_reconcile() {
         log::debug!("[flows] boot reconcile: scheduling orphaned-run sweep");
         tokio::spawn(async {
             log::debug!("[flows] boot reconcile: loading config");
-            match crate::openhuman::config::Config::load_or_init().await {
+            match crate::neppy::config::Config::load_or_init().await {
                 Ok(config) => {
                     let swept =
-                        crate::openhuman::flows::ops::sweep_orphaned_running_runs_on_boot(&config)
+                        crate::neppy::flows::ops::sweep_orphaned_running_runs_on_boot(&config)
                             .await;
                     // Logged unconditionally: a silent success and a task that
                     // never ran are otherwise indistinguishable in a boot log.
@@ -125,7 +123,7 @@ pub fn spawn_flows_boot_reconcile() {
 /// automatically. Gated by `config.cron.enabled`.
 pub fn spawn_cron_service() {
     tokio::spawn(async {
-        match crate::openhuman::config::Config::load_or_init().await {
+        match crate::neppy::config::Config::load_or_init().await {
             Ok(config) => {
                 if !config.cron.enabled {
                     log::info!("[cron] scheduler disabled via config; skipping");
@@ -139,13 +137,13 @@ pub fn spawn_cron_service() {
                 // Gated with flows — absent entirely from a slim build.
                 #[cfg(feature = "flows")]
                 if let Err(e) =
-                    crate::openhuman::flows::ops::reconcile_schedule_triggers_on_boot(&config).await
+                    crate::neppy::flows::ops::reconcile_schedule_triggers_on_boot(&config).await
                 {
                     log::warn!(
                         "[flows] boot reconciliation of schedule-trigger cron jobs failed: {e}"
                     );
                 }
-                if let Err(e) = crate::openhuman::cron::scheduler::run(config).await {
+                if let Err(e) = crate::neppy::cron::scheduler::run(config).await {
                     log::error!("[cron] scheduler loop ended with error: {e}");
                 }
             }
@@ -173,7 +171,7 @@ pub fn spawn_channels_service() {
         .is_none()
     {
         tokio::spawn(async move {
-            let config = match crate::openhuman::config::Config::load_or_init().await {
+            let config = match crate::neppy::config::Config::load_or_init().await {
                 Ok(c) => c,
                 Err(e) => {
                     log::warn!("[channels] could not load config for listeners: {e}");
@@ -187,7 +185,7 @@ pub fn spawn_channels_service() {
                 return;
             }
             log::info!("[channels] spawning in-process realtime listeners (Telegram, Discord, …)");
-            if let Err(e) = crate::openhuman::channels::start_channels(config).await {
+            if let Err(e) = crate::neppy::channels::start_channels(config).await {
                 log::error!("[channels] start_channels ended with error: {e}");
             }
         });
@@ -311,7 +309,7 @@ pub fn start_bootstrap_jobs(services: ServiceSet, _config: &Config) {
         log::debug!("[runtime.bootstrap] starting composio source reconcile");
         tokio::spawn(async {
             log::debug!("[runtime.bootstrap] composio source reconcile started");
-            crate::openhuman::memory::sources::reconcile::ensure_composio_sources().await;
+            crate::neppy::memory::sources::reconcile::ensure_composio_sources().await;
             log::debug!("[runtime.bootstrap] composio source reconcile completed");
         });
     } else {
@@ -341,15 +339,15 @@ pub fn start_bootstrap_jobs(services: ServiceSet, _config: &Config) {
     // Orchestration — relay-mailbox drain supervisor.
     if plan.orchestration_drain {
         log::debug!("[runtime.bootstrap] starting orchestration message drain supervisor");
-        crate::openhuman::hosted::orchestration::start_message_drain_supervisor();
+        crate::neppy::hosted::orchestration::start_message_drain_supervisor();
     } else {
         log::debug!("[runtime.bootstrap] message drain supervisor disabled by ServiceSet");
     }
 
     if plan.proactive_task_pollers {
         log::debug!("[runtime.bootstrap] starting proactive task pollers (task sources + board)");
-        crate::openhuman::integrations::task_sources::start_periodic_poll();
-        crate::openhuman::agent::task_dispatcher::start_board_poller();
+        crate::neppy::integrations::task_sources::start_periodic_poll();
+        crate::neppy::agent::task_dispatcher::start_board_poller();
     } else {
         log::debug!("[runtime.bootstrap] proactive task pollers disabled by ServiceSet");
     }
@@ -369,14 +367,14 @@ pub async fn start_boot_once_jobs(services: ServiceSet, config: &Config) {
     if services.harness_init {
         let cfg_for_init = config.clone();
         tokio::spawn(async move {
-            crate::openhuman::agent::harness_init::run_harness_init(cfg_for_init).await;
+            crate::neppy::agent::harness_init::run_harness_init(cfg_for_init).await;
         });
     } else {
         log::debug!("[runtime] harness init disabled by ServiceSet");
     }
 
     if services.skill_catalog_refresh {
-        crate::openhuman::skills::catalog::ops::start_boot_catalog_refresh();
+        crate::neppy::skills::catalog::ops::start_boot_catalog_refresh();
     } else {
         log::debug!("[runtime] boot catalog refresh disabled by ServiceSet");
     }
@@ -388,7 +386,7 @@ pub async fn start_boot_once_jobs(services: ServiceSet, config: &Config) {
         // brings the domain up when it enables it. Repeated here because the
         // two are gated separately: a `ServiceSet` that boots MCP is entitled
         // to a service whether or not the RPC domain was turned on.
-        crate::openhuman::mcp::start_boot_jobs(config);
+        crate::neppy::mcp::start_boot_jobs(config);
     } else {
         log::debug!("[runtime] MCP boot-spawn disabled by ServiceSet");
         log::debug!("[runtime] MCP reconnect supervisor disabled by ServiceSet");
@@ -403,8 +401,7 @@ async fn run_legacy_migrations(config: &Config) {
     //
     // Both copies are idempotent and must run for each workspace so an
     // in-process restart with a different workspace migrates that workspace.
-    match crate::openhuman::threads::goals::migration::migrate_legacy_goals(&config.workspace_dir)
-        .await
+    match crate::neppy::threads::goals::migration::migrate_legacy_goals(&config.workspace_dir).await
     {
         Ok(report) if report.total > 0 => {
             log::info!(
@@ -423,10 +420,8 @@ async fn run_legacy_migrations(config: &Config) {
     // `graph.todos` store, which is now authoritative. Idempotent and returns
     // fast on an empty/absent legacy dir. As above, each core boot must inspect
     // its own workspace.
-    match crate::openhuman::agent::tinyagents::todos::migrate_legacy_task_boards(
-        &config.workspace_dir,
-    )
-    .await
+    match crate::neppy::agent::tinyagents::todos::migrate_legacy_task_boards(&config.workspace_dir)
+        .await
     {
         Ok(report) if report.total > 0 => {
             log::info!(
@@ -445,8 +440,7 @@ async fn run_legacy_migrations(config: &Config) {
     // store, so a board and its run log cannot drift apart across a restart.
     // Left behind, an in-flight claim would be invisible to the reclaim sweep
     // and its card would stay wedged at `in_progress` forever.
-    match crate::openhuman::threads::todos::runs::migrate_legacy_task_runs(&config.workspace_dir)
-        .await
+    match crate::neppy::threads::todos::runs::migrate_legacy_task_runs(&config.workspace_dir).await
     {
         Ok(report) if report.total > 0 => {
             log::info!(
@@ -464,7 +458,7 @@ async fn run_legacy_migrations(config: &Config) {
 /// Auto-connect Socket.IO to the backend when enabled by the service selection.
 pub fn spawn_socket_auto_connect(
     services: ServiceSet,
-    socket_mgr: std::sync::Arc<crate::openhuman::platform::socket::SocketManager>,
+    socket_mgr: std::sync::Arc<crate::neppy::platform::socket::SocketManager>,
     _flows_enabled: bool,
 ) {
     if services.socketio {
@@ -506,12 +500,10 @@ pub fn spawn_socket_auto_connect(
             }
             #[cfg(feature = "flows")]
             if _flows_enabled {
-                crate::openhuman::flows::medulla_bridge::install(std::sync::Arc::clone(&config));
+                crate::neppy::flows::medulla_bridge::install(std::sync::Arc::clone(&config));
             }
             let provider =
-                crate::openhuman::platform::socket::token_provider::token_provider_from_config(
-                    config,
-                );
+                crate::neppy::platform::socket::token_provider::token_provider_from_config(config);
             if let Err(e) = socket_mgr.connect_with_provider(&api_url, provider).await {
                 log::error!("[socket] Auto-connect failed: {e}");
             } else {

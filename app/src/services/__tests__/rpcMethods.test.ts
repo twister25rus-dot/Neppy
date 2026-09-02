@@ -125,44 +125,44 @@ describe('rpcMethods catalog', () => {
   test('catalog canonical methods exist in core schema registry (drift guard)', () => {
     const schemaSources = [
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/config/schemas/schema_defs.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/config/schemas/schema_defs.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/inference/provider/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/inference/provider/schemas.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/inference/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/inference/schemas.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/inference/local/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/inference/local/schemas.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/inference/embeddings/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/inference/embeddings/schemas.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/mcp/registry/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/mcp/registry/schemas.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/tools/registry/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/tools/registry/schemas.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/platform/health/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/platform/health/schemas.rs'),
         'utf8'
       ),
       fs.readFileSync(
-        path.resolve(__dirname, '../../../../src/openhuman/channels/controllers/schemas.rs'),
+        path.resolve(__dirname, '../../../../src/neppy/channels/controllers/schemas.rs'),
         'utf8'
       ),
       // The channels_* namespace/function literals now live in the vendored
       // tinychannels crate (`ChannelControllerSchema`), not in the thin
-      // `src/openhuman/channels/controllers/schemas.rs` adapter above, which
+      // `src/neppy/channels/controllers/schemas.rs` adapter above, which
       // only converts from it (#4557 "Use tinychannels provider
       // implementations") — read both so this drift guard still sees them.
       fs.readFileSync(

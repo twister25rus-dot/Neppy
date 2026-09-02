@@ -84,7 +84,7 @@ Key properties:
   the existing `EmbeddedReadySignal` (child-process variant: ready line on
   stdout or a ready file — decide during implementation).
 - **Teams**: membership/roles/invites remain in `tinyhumansai/backend`
-  (`src/openhuman/team/` proxy untouched). The supervisor consumes the same
+  (`src/neppy/team/` proxy untouched). The supervisor consumes the same
   backend API to decide _which_ cores exist and who may reach them; it adds
   hosting, not authorization semantics.
 - **Secrets**: per-tenant token + per-tenant keyfile/env in the child's

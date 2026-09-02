@@ -1,18 +1,18 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use neppy_core::openhuman::agent::harness::{
+use neppy_core::neppy::agent::harness::{
     run_subagent, with_parent_context, AgentDefinition, DefinitionSource, ModelSpec,
     ParentExecutionContext, PromptSource, SandboxMode, SubagentRunOptions, ToolScope,
 };
-use neppy_core::openhuman::config::AgentConfig;
-use neppy_core::openhuman::agent::context::prompt::{
+use neppy_core::neppy::config::AgentConfig;
+use neppy_core::neppy::agent::context::prompt::{
     ConnectedIntegration, ConnectedIntegrationTool, ToolCallFormat,
 };
-use neppy_core::openhuman::memory::{
+use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use neppy_core::openhuman::inference::tokenjuice::AgentTokenjuiceCompression;
-use neppy_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::{PermissionLevel, Tool, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::collections::VecDeque;
@@ -322,7 +322,7 @@ fn parent(workspace_dir: PathBuf, model: Arc<ScriptedModel>) -> ParentExecutionC
         ]
         .into_iter()
         .collect(),
-        turn_model_source: neppy_core::openhuman::agent::tinyagents::TurnModelSource::from_model(
+        turn_model_source: neppy_core::neppy::agent::tinyagents::TurnModelSource::from_model(
             model,
         ),
         all_tools: Arc::new(tools),

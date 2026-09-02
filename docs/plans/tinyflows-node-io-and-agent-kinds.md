@@ -41,7 +41,7 @@ Rules: `=item.text` always resolves (or is explicitly `null`); `=item.json.<fiel
 ### A1. Normalize the `agent` node output — _highest leverage, do first_
 
 - **Crate** (`vendor/tinyflows/src/nodes/integration/agent.rs:115`): wrap the completion in the envelope instead of `Item::new(value)`. If `output_parser` ran, the coerced value goes in `json`; the completion text (when present) in `text`; the untouched response in `raw`; a model-elected tool result stays under `json.tool_result` **and** mirrors to a stable `tool_result` accessor (see A2).
-- **Host** (`src/openhuman/flows/tinyflows/caps.rs` `NeppyLlm::complete`): return `{ json: <parsed-or-null>, text: <response.text>, raw: <full response> }` rather than either the bare parsed object _or_ the `{text}` fallback. Removes the runtime shape-flip (audit M1).
+- **Host** (`src/neppy/flows/tinyflows/caps.rs` `NeppyLlm::complete`): return `{ json: <parsed-or-null>, text: <response.text>, raw: <full response> }` rather than either the bare parsed object _or_ the `{text}` fallback. Removes the runtime shape-flip (audit M1).
 - **Tests**: update `agent.rs` unit tests + `caps.rs` seam tests; add an e2e asserting `=item.text` resolves on both a JSON-emitting and a prose-emitting model (mock both).
 
 ### A2. Unify inline-tool vs `tool_call`-node result shape (audit M2)
@@ -104,7 +104,7 @@ Let an `agent` node declare **which agent** runs it, by referencing an Neppy reg
 }
 ```
 
-When `agent_ref` is set, the host runs that **registered agent** — with _its_ curated toolset, model hint, sandbox mode, and iteration policy — as a full multi-turn agent loop, instead of the current single `provider.chat` call. A coding step gets coding tools; a research step gets `web_search`/`web_fetch`; a crypto step gets market tools. This is exactly the registry's existing contract (`src/openhuman/agent/registry/agents/*/agent.toml`).
+When `agent_ref` is set, the host runs that **registered agent** — with _its_ curated toolset, model hint, sandbox mode, and iteration policy — as a full multi-turn agent loop, instead of the current single `provider.chat` call. A coding step gets coding tools; a research step gets `web_search`/`web_fetch`; a crypto step gets market tools. This is exactly the registry's existing contract (`src/neppy/agent/registry/agents/*/agent.toml`).
 
 ### B1. Crate seam — new `AgentRunner` capability (host-agnostic)
 
@@ -126,20 +126,20 @@ pub trait AgentRunner: Send + Sync {
 
 ### B2. Host adapter — implement `AgentRunner` over the registry + delegate runtime
 
-- `src/openhuman/flows/tinyflows/caps.rs`: new `NeppyAgentRunner` implementing `AgentRunner`.
+- `src/neppy/flows/tinyflows/caps.rs`: new `NeppyAgentRunner` implementing `AgentRunner`.
 - `run_agent(agent_ref, request, conn)`:
   1. `agent_registry::ops::get_agent(agent_ref)` → resolve the entry (tools, model hint, sandbox, `max_iterations`, `iteration_policy`).
   2. Apply optional per-node overrides (`model`, `max_iterations`, and a **narrowing-only** `tools_allow` — a node may _subset_ the agent's tools, never add).
-  3. Drive the existing delegate runtime (`src/openhuman/agent/tools/delegate.rs`) with a `TurnOrigin` of the flow run (`src/openhuman/agent/turn_origin.rs` already has a flow origin variant).
+  3. Drive the existing delegate runtime (`src/neppy/agent/tools/delegate.rs`) with a `TurnOrigin` of the flow run (`src/neppy/agent/turn_origin.rs` already has a flow origin variant).
   4. Return `{ json, text, raw }` (A1 envelope): final structured output in `json`, final message text in `text`.
 - **Autonomy/security**: the agent kind's tools are still gated by `SecurityPolicy` / autonomy tier; a `sandboxed` agent (e.g. `code_executor`) runs sandboxed; the flow's own approval gate still parks outbound actions. No new privilege path.
 - **Depth/cost guard**: an agent node running a full agent loop inside a flow can fan out cost — bound it (reuse `MAX_SUB_WORKFLOW_DEPTH`-style counter or a per-run agent-invocation cap) and thread cancellation into the delegate run (today's sub-workflow path drops the token — BUG-5 — fix here too).
 
 ### B3. Authoring surface — ground the choice for the builder agent
 
-- **Builder tool** `list_agent_profiles` in `src/openhuman/flows/builder_tools.rs`, backed by `agent_registry::ops::list_agents(false)`, returning `{ id, display_name, when_to_use, tools, sandbox_mode }`. Mirrors the existing `search_tool_catalog` pattern so the `workflow_builder` sub-agent picks a real `agent_ref` instead of hallucinating one.
+- **Builder tool** `list_agent_profiles` in `src/neppy/flows/builder_tools.rs`, backed by `agent_registry::ops::list_agents(false)`, returning `{ id, display_name, when_to_use, tools, sandbox_mode }`. Mirrors the existing `search_tool_catalog` pattern so the `workflow_builder` sub-agent picks a real `agent_ref` instead of hallucinating one.
 - **Validation** (`vendor/tinyflows/src/validate.rs` + host): an `agent` node with an `agent_ref` that doesn't resolve is a structured validation error (needs the host to pass the known-agent set into validation, or validate host-side in `flows::ops::validate`).
-- **workflow_builder prompt** (`src/openhuman/agent/registry/agents/workflow_builder/prompt.md`): document `agent_ref` and when to prefer a specialized agent over a bare completion.
+- **workflow_builder prompt** (`src/neppy/agent/registry/agents/workflow_builder/prompt.md`): document `agent_ref` and when to prefer a specialized agent over a bare completion.
 
 ### B4. UI — agent-kind picker
 

@@ -47,7 +47,7 @@ pub fn run_from_cli_args(args: &[String]) -> Result<()> {
     load_dotenv_for_cli()?;
 
     let launch = parse_launch_options(args)?;
-    crate::openhuman::config::set_cli_inference_overrides(
+    crate::neppy::config::set_cli_inference_overrides(
         launch.provider.as_deref(),
         launch.model.as_deref(),
     );
@@ -87,15 +87,13 @@ pub fn run_from_cli_args(args: &[String]) -> Result<()> {
     // Match on the first argument to determine the subcommand.
     match args[0].as_str() {
         "run" | "serve" => run_server_command(&args[1..]),
-        "mcp" | "mcp-server" => crate::openhuman::mcp::server::run_stdio_from_cli(&args[1..]),
+        "mcp" | "mcp-server" => crate::neppy::mcp::server::run_stdio_from_cli(&args[1..]),
         // Keep the command present in slim builds so users get a build-fact
         // diagnostic rather than a misleading "unknown namespace" error.
         "tui" | "chat" => run_tui_from_cli(&args[1..]),
         "call" => run_call_command(&args[1..]),
         "tree-summarizer" => {
-            crate::openhuman::memory::tree::tree_runtime::cli::run_tree_summarizer_command(
-                &args[1..],
-            )
+            crate::neppy::memory::tree::tree_runtime::cli::run_tree_summarizer_command(&args[1..])
         }
         "memory" => crate::core::memory_cli::run_memory_command(&args[1..]),
         "agent" => {

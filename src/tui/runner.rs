@@ -129,15 +129,15 @@ async fn async_main(
     // ServiceSet::none intentionally skips channel startup. The TUI is itself
     // an interactive surface, so bridge approval, plan-review, artifact, and
     // agent progress events onto the same in-process web-channel stream.
-    crate::openhuman::web_chat::register_approval_surface_subscriber();
-    crate::openhuman::web_chat::register_artifact_surface_subscriber();
+    crate::neppy::web_chat::register_approval_surface_subscriber();
+    crate::neppy::web_chat::register_artifact_surface_subscriber();
 
     let client_id = format!("tui-{}", short_hex());
     let thread_id = resolve_thread(&runtime, thread_flag, force_new, prefer_existing).await?;
     log::info!("[tui] resolved thread={thread_id} client_id={client_id}");
 
     // Subscribe BEFORE the first turn so no streamed event is missed.
-    let web_rx = crate::openhuman::web_chat::subscribe_web_channel_events();
+    let web_rx = crate::neppy::web_chat::subscribe_web_channel_events();
 
     super::app::run(runtime, client_id, thread_id, web_rx, options).await
 }
@@ -204,7 +204,7 @@ fn resolve_data_dir() -> PathBuf {
             return PathBuf::from(workspace);
         }
     }
-    crate::openhuman::config::default_root_neppy_dir()
+    crate::neppy::config::default_root_neppy_dir()
         .unwrap_or_else(|_| std::env::temp_dir().join("openhuman"))
 }
 

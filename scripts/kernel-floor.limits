@@ -65,7 +65,7 @@
 #                      first — per-dependency intuition over-counts exactly the
 #                      way per-dependency arithmetic does.
 #                      What this PR does land: `TINYMCP` in
-#                      `src/openhuman/modules/registry.rs`, pinning the v0.3.1
+#                      `src/neppy/modules/registry.rs`, pinning the v0.3.1
 #                      release so the module can be downloaded and verified. The
 #                      path dependency stays until `tinymcp-bus` publishes the
 #                      members and types the host reaches for (see the Cargo.toml
@@ -388,7 +388,7 @@
 #                      to a single 0.29 there). Call-site fix: tungstenite
 #                      0.29's `Message::Text` now wraps `Utf8Bytes` instead of
 #                      `String` — `.into()` at each send call site in
-#                      src/openhuman/platform/socket/ws_loop.rs (+ its test
+#                      src/neppy/platform/socket/ws_loop.rs (+ its test
 #                      double server in ws_loop_tests.rs) and
 #                      vendor/tinyplace/sdk/rust/src/websocket.rs.
 #                      NOTE: the DEFAULT (full-feature) profile still shows

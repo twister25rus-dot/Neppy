@@ -31,7 +31,7 @@ pub type Tag<'a> = (&'a str, &'a str);
 /// - **504** Gateway Timeout
 ///
 /// Single source of truth for both the call-site classifier
-/// (`openhuman::inference::provider::ops::should_report_provider_http_failure`) and the
+/// (`neppy::inference::provider::ops::should_report_provider_http_failure`) and the
 /// `before_send` filter (`is_transient_provider_http_failure`). Update here
 /// and both sites pick it up — keeps the two layers from drifting.
 pub const TRANSIENT_PROVIDER_HTTP_STATUSES: &[u16] = &[408, 429, 502, 503, 504, 520];
@@ -103,7 +103,7 @@ pub enum ExpectedErrorKind {
     /// Deterministic user-config state surfaced in the UI — Sentry has no
     /// remediation path (OPENHUMAN-TAURI-WJ / -QW / -HB / -NH, ~273
     /// events). See
-    /// [`crate::openhuman::inference::provider::is_provider_config_rejection_message`]
+    /// [`crate::neppy::inference::provider::is_provider_config_rejection_message`]
     /// for the polarity contract and exact body shapes.
     ProviderConfigRejection,
     LocalAiCapabilityUnavailable,
@@ -168,7 +168,7 @@ pub enum ExpectedErrorKind {
     /// /Users/<user>/Documents/<vault>`, observed on
     /// `openhuman@0.56.0`) and preempts the symmetric
     /// `hosted path is not a directory:` shape from
-    /// `openhuman::http_host::path_utils` once it starts surfacing.
+    /// `neppy::http_host::path_utils` once it starts surfacing.
     /// See [`is_filesystem_user_path_invalid_message`] for the polarity
     /// contract — the safety-guard variant in `skills::ops_install`
     /// (`{path} is not a directory — refusing to remove`) is
@@ -281,7 +281,7 @@ pub enum ExpectedErrorKind {
     /// Drops Sentry TAURI-RUST-83A (~430 events / 40 users on
     /// `openhuman@0.57.13`). Anchored to the `codex cli auth` /
     /// `.codex/auth.json` envelope produced by
-    /// [`crate::openhuman::inference::openai_oauth::store::import_codex_cli_auth_from_path`]
+    /// [`crate::neppy::inference::openai_oauth::store::import_codex_cli_auth_from_path`]
     /// — a genuine keyring/persist failure in `upsert_profile` carries neither
     /// anchor, so a real defect in the import code still reaches Sentry.
     CodexCliAuthUnavailable,
@@ -300,7 +300,7 @@ pub enum ExpectedErrorKind {
     /// The single exception — a backend-flagged **malformed** `BAD_REQUEST` —
     /// is NOT classified here (it is a client-built payload the backend
     /// couldn't parse, and the FE *does* page for it, F8). See
-    /// [`crate::openhuman::inference::provider::backend_error_code_skips_sentry`].
+    /// [`crate::neppy::inference::provider::backend_error_code_skips_sentry`].
     BackendErrorCodeOwned,
     /// A provider embedding call (Cohere `/v2/embed`, OpenAI/Voyage embed,
     /// custom OpenAI-compatible embed) returned a **403/Forbidden gateway
@@ -323,7 +323,7 @@ pub enum ExpectedErrorKind {
     /// openhuman@0.57.53, `Cohere embed API error (403 Forbidden):
     /// <!doctype html>…<title>403</title>…`).
     UpstreamEdgeBlock,
-    /// `approval_decide` (`src/openhuman/security/approval/rpc.rs`) resolved a request_id
+    /// `approval_decide` (`src/neppy/security/approval/rpc.rs`) resolved a request_id
     /// whose pending row was **already decided, lazily expired, or superseded**
     /// — `store::decide` updated 0 rows because `decided_at` was already set,
     /// and `store::get_decision` confirms a persisted decision exists. The
@@ -343,7 +343,7 @@ pub enum ExpectedErrorKind {
     ApprovalNoPendingRace,
     /// A remote MCP server answered the connect handshake with HTTP 401 — it
     /// needs OAuth sign-in, not a code fix. `McpHttpClient::read_response`
-    /// (`src/openhuman/mcp/http_client/client.rs`) raises the typed
+    /// (`src/neppy/mcp/http_client/client.rs`) raises the typed
     /// `tinymcp::Error::Unauthorized`, and
     /// `mcp::registry::connections::connect` already classifies it and stores a
     /// `needs_auth` flag so the UI prompts the user to authenticate (the
@@ -381,7 +381,7 @@ pub enum ExpectedErrorKind {
     /// nesting depth, on any reporting path that goes through
     /// [`report_error_or_expected`] — not just the RPC boundary, and not just
     /// the one method that happened to be observed. Matched against the shared
-    /// [`crate::openhuman::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE`]
+    /// [`crate::neppy::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE`]
     /// constant so producer and classifier cannot drift.
     WalletNotConfigured,
     /// The memory store refused a write because the caller-supplied
@@ -425,7 +425,7 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
     // decision is gated on the managed-backend envelope so a BYO payload
     // carrying an `errorCode`-shaped field is not wrongly suppressed
     // (CodeRabbit).
-    if crate::openhuman::inference::provider::managed_error_skips_sentry(message) {
+    if crate::neppy::inference::provider::managed_error_skips_sentry(message) {
         return Some(ExpectedErrorKind::BackendErrorCodeOwned);
     }
     // A managed-backend client-guard-leak code (`PAYLOAD_TOO_LARGE` /
@@ -438,8 +438,8 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
     // `ContextWindowExceeded` bucket (CodeRabbit). Gated on the managed envelope
     // so a BYO provider's own context-overflow — genuine user-state, not our
     // guard — still flows to that matcher and stays demoted.
-    if crate::openhuman::inference::provider::is_managed_backend_envelope(message)
-        && crate::openhuman::inference::provider::is_backend_client_guard_leak(message)
+    if crate::neppy::inference::provider::is_managed_backend_envelope(message)
+        && crate::neppy::inference::provider::is_backend_client_guard_leak(message)
     {
         return None;
     }
@@ -577,7 +577,7 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
     // — recovery is reconnecting OpenAI; Sentry has no remediation path. The
     // markers are distinct from the backend "invalid token" session-expiry
     // wording matched below, so this does not shadow that arm.
-    if crate::openhuman::inference::provider::is_openai_oauth_session_expired_message(message) {
+    if crate::neppy::inference::provider::is_openai_oauth_session_expired_message(message) {
         return Some(ExpectedErrorKind::ProviderUserState);
     }
     // TAURI-RUST-5MV — ollama.com hosted-inference 500 (`Internal Server Error
@@ -591,7 +591,7 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
     // reliable-provider layer retries + falls back over, with no client lever.
     // Delegates to the single-source provider matcher so the phrasing can't
     // drift. Distinct anchor from the matchers above, so it shadows nothing.
-    if crate::openhuman::inference::provider::is_ollama_cloud_internal_500_message(message) {
+    if crate::neppy::inference::provider::is_ollama_cloud_internal_500_message(message) {
         return Some(ExpectedErrorKind::TransientUpstreamHttp);
     }
     if is_backend_user_error_message(&lower) {
@@ -644,13 +644,13 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
     // backend never emits these phrases. See the predicate's polarity
     // contract. Drops OPENHUMAN-TAURI-WJ / -QW / -HB / -NH re-reports
     // (#2079 / #2076 / #2202).
-    if crate::openhuman::inference::provider::is_provider_config_rejection_message(message) {
+    if crate::neppy::inference::provider::is_provider_config_rejection_message(message) {
         return Some(ExpectedErrorKind::ProviderConfigRejection);
     }
     if is_local_ai_capability_unavailable_message(&lower) {
         return Some(ExpectedErrorKind::LocalAiCapabilityUnavailable);
     }
-    if crate::openhuman::inference::provider::is_budget_exhausted_message(message) {
+    if crate::neppy::inference::provider::is_budget_exhausted_message(message) {
         return Some(ExpectedErrorKind::BudgetExhausted);
     }
     if is_prompt_injection_blocked_message(&lower) {
@@ -661,7 +661,7 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
     // emit; this catches the re-raise. Delegates to the single-source
     // provider matcher so the phrasing can't drift. Runs last so a more
     // specific matcher always wins.
-    if crate::openhuman::inference::provider::is_context_window_exceeded_message(message) {
+    if crate::neppy::inference::provider::is_context_window_exceeded_message(message) {
         return Some(ExpectedErrorKind::ContextWindowExceeded);
     }
     if is_memory_store_breaker_open(&lower) {
@@ -816,8 +816,8 @@ fn is_windows_file_system_limitation_message(lower: &str) -> bool {
 }
 
 /// Detect the literal `"Config loading timed out"` string produced by
-/// [`crate::openhuman::config::ops::load_config_with_timeout`] /
-/// [`crate::openhuman::config::ops::reload_config_snapshot_with_timeout`]
+/// [`crate::neppy::config::ops::load_config_with_timeout`] /
+/// [`crate::neppy::config::ops::reload_config_snapshot_with_timeout`]
 /// when `tokio::time::timeout` elapses around `Config::load_or_init` /
 /// `Config::load_from_config_path`.
 fn is_config_load_timed_out_message(lower: &str) -> bool {
@@ -877,7 +877,7 @@ fn is_config_read_io_failure_message(lower: &str) -> bool {
     // Referencing the loader's constant (rather than a copied literal) makes
     // the producer/consumer coupling a compile-time one: the marker is already
     // lowercase, so it matches `lower` verbatim.
-    if lower.contains(crate::openhuman::config::schema::CONFIG_OWNER_MISMATCH_MARKER) {
+    if lower.contains(crate::neppy::config::schema::CONFIG_OWNER_MISMATCH_MARKER) {
         return false;
     }
     lower.contains("access is denied")
@@ -921,7 +921,7 @@ fn is_embedding_backend_auth_failure(lower: &str) -> bool {
 /// Detect a custom embeddings endpoint that exposes **no embeddings API** —
 /// the `OpenAiEmbedding` client POSTed `/embeddings` and the host answered
 /// `404 Not Found` (route absent) or `405 Method Not Allowed`. Canonical wire
-/// shape from `src/openhuman/inference/embeddings/openai.rs`:
+/// shape from `src/neppy/inference/embeddings/openai.rs`:
 ///
 /// ```text
 /// Embedding API error (404 Not Found): <body>
@@ -949,7 +949,7 @@ pub(crate) fn is_embedding_endpoint_absent(lower: &str) -> bool {
 /// Detect a custom/cloud embeddings endpoint that IS an embeddings API but
 /// **rejected the configured model id** — the user pasted a non-embedding
 /// (chat/reasoning) model into the embeddings model field. Canonical wire shape
-/// from `src/openhuman/inference/embeddings/openai.rs` (TAURI-RUST-9SK, ~2205 events):
+/// from `src/neppy/inference/embeddings/openai.rs` (TAURI-RUST-9SK, ~2205 events):
 ///
 /// ```text
 /// Embedding API error (400 Bad Request): {"error":{"message":"Model nvidia/nemotron-3-super-120b-a12b does not exist","code":400}}
@@ -1035,7 +1035,7 @@ fn is_memory_store_breaker_open(lower: &str) -> bool {
 /// - `"Embedding API error (401 Unauthorized): {…\"error\":\"Invalid token\"…}"`
 ///   — TAURI-RUST-4K5 (~118 events, escalating on 0.56.0). Same Neppy
 ///   backend session-expired envelope as 4P0, but the embedding client at
-///   `src/openhuman/inference/embeddings/openai.rs:139` wraps it with the
+///   `src/neppy/inference/embeddings/openai.rs:139` wraps it with the
 ///   `"Embedding API error"` prefix instead of `"Neppy API error"`.
 ///   Uses the same conjunctive-anchor pattern so BYO-key embedding 401s
 ///   from third-party providers (OpenAI / Voyage / Cohere) still escalate
@@ -1078,7 +1078,7 @@ pub fn is_session_expired_message(msg: &str) -> bool {
         || (msg.contains("Neppy API error (401")
             && msg.contains("\"error\":\"Invalid token\""))
         // TAURI-RUST-4K5 — same Neppy backend "Invalid token" envelope
-        // wrapped by `src/openhuman/inference/embeddings/openai.rs:139` with the
+        // wrapped by `src/neppy/inference/embeddings/openai.rs:139` with the
         // `"Embedding API error"` prefix instead of `"Neppy API error"`.
         // Same conjunctive-anchor pattern as 4P0: the embedding-scoped
         // prefix gates the match so a third-party BYO-key embedding 401
@@ -1150,7 +1150,7 @@ fn is_mcp_server_needs_auth_message(lower: &str) -> bool {
 /// it can be compared against the pre-lowercased haystack without allocating.
 /// See [`ExpectedErrorKind::WalletNotConfigured`].
 fn is_wallet_not_configured_message(lower: &str) -> bool {
-    lower.contains(crate::openhuman::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE)
+    lower.contains(crate::neppy::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE)
 }
 
 /// Detect a memory-store **identifier** rejection: the caller's namespace/key
@@ -1618,8 +1618,8 @@ fn is_upstream_edge_block_message(lower: &str) -> bool {
 /// bugs Sentry can act on.
 ///
 /// The canonical wire format from
-/// [`crate::openhuman::integrations::client::IntegrationClient::post`] / `get`
-/// and [`crate::openhuman::integrations::composio::client::ComposioClient`] is:
+/// [`crate::neppy::integrations::client::IntegrationClient::post`] / `get`
+/// and [`crate::neppy::integrations::composio::client::ComposioClient`] is:
 /// `"Backend returned <status> <reason> for <METHOD> <url>: <detail>"` — e.g.
 /// `"Backend returned 400 Bad Request for POST https://api.tinyhumans.ai/agent-integrations/composio/authorize: Composio authorization failed: 400 …"`
 /// (OPENHUMAN-TAURI-BC: user submitted SharePoint authorize without filling in
@@ -1640,7 +1640,7 @@ fn is_upstream_edge_block_message(lower: &str) -> bool {
 /// 5xx is intentionally **not** classified here — server-side failures from
 /// our backend are real bugs that should reach Sentry. The transient
 /// 502/503/504 deduplication is handled by the threshold logic in callers
-/// (see e.g. `openhuman::platform::socket::ws_loop::FAIL_ESCALATE_THRESHOLD`).
+/// (see e.g. `neppy::platform::socket::ws_loop::FAIL_ESCALATE_THRESHOLD`).
 fn is_backend_user_error_message(lower: &str) -> bool {
     let Some(rest) = lower.split_once("backend returned ").map(|(_, r)| r) else {
         return false;
@@ -1689,7 +1689,7 @@ fn is_provider_user_state_message(lower: &str) -> bool {
     // in `expected_error_kind`, before this matcher runs, so this arm only ever
     // sees direct-provider TPM rejections. Shared matcher (single source of
     // truth with the subconscious circuit breaker) so the wording can't drift.
-    if crate::openhuman::inference::provider::is_provider_rate_cap_exceeded_message(lower) {
+    if crate::neppy::inference::provider::is_provider_rate_cap_exceeded_message(lower) {
         return true;
     }
 
@@ -1772,7 +1772,7 @@ fn is_provider_user_state_message(lower: &str) -> bool {
     // personal Composio v3 tenant rejected with a 401 because the stored
     // API key is invalid / revoked / has the wrong prefix. The canonical
     // wire shape rendered by
-    // `src/openhuman/integrations/composio/tools/impl/network/composio.rs::response_error`
+    // `src/neppy/integrations/composio/tools/impl/network/composio.rs::response_error`
     // and the various direct-mode op wrappers is:
     //
     //   `[composio-direct] list_connections failed: Composio v3
@@ -1822,7 +1822,7 @@ fn is_provider_user_state_message(lower: &str) -> bool {
     // `demotes_composio_set_key_invalid_key_rejection` so a reword that drops the
     // phrase fails CI instead of silently re-opening the leak.
     if lower.contains(
-        crate::openhuman::integrations::composio::direct_auth::COMPOSIO_INVALID_API_KEY_ANCHOR,
+        crate::neppy::integrations::composio::direct_auth::COMPOSIO_INVALID_API_KEY_ANCHOR,
     ) {
         return true;
     }
@@ -1924,7 +1924,7 @@ fn is_local_ai_capability_unavailable_message(lower: &str) -> bool {
 /// (score ≥ 0.70) and `ReviewBlocked` (score ≥ 0.55) — share a unique
 /// prefix that cannot appear in any other error path. Anchored to the exact
 /// strings emitted by `prompt_guard_user_message` in
-/// `src/openhuman/inference/local/ops.rs`.
+/// `src/neppy/inference/local/ops.rs`.
 fn is_prompt_injection_blocked_message(lower: &str) -> bool {
     lower.contains("prompt flagged for security review")
         || lower.contains("prompt blocked by security policy")
@@ -1941,7 +1941,7 @@ fn is_prompt_injection_blocked_message(lower: &str) -> bool {
 ///   didn't exist or pointed at a file (Sentry TAURI-RUST-4QH). Kept as a
 ///   classifier fixture since the wire shape may recur from other callers.
 /// - `"hosted path is not a directory: <path>"` —
-///   [`crate::openhuman::http_host::path_utils`] when an HTTP host config
+///   [`crate::neppy::http_host::path_utils`] when an HTTP host config
 ///   references a missing directory. Not yet observed in Sentry but
 ///   shares the same user-input failure mode; preempts a future ID.
 ///
@@ -2478,9 +2478,8 @@ fn report_expected_message(kind: ExpectedErrorKind, message: &str, domain: &str,
             // The FE surfaces actionable copy via `classify_inference_error`;
             // Sentry must not double-report (F2/F4). Demote at `warn!` so the
             // breadcrumb retains the code for triage without spawning an event.
-            let code =
-                crate::openhuman::inference::provider::extract_backend_error_code_token(message)
-                    .unwrap_or_default();
+            let code = crate::neppy::inference::provider::extract_backend_error_code_token(message)
+                .unwrap_or_default();
             tracing::warn!(
                 domain = domain,
                 operation = operation,
@@ -2542,7 +2541,7 @@ fn report_expected_message(kind: ExpectedErrorKind, message: &str, domain: &str,
 /// `sentry::capture_message` synchronously routes through the active hub
 /// and is deterministic, which keeps both production reporting and tests
 /// honest.
-pub const REPORT_ERROR_TRACING_TARGET: &str = "openhuman::observability::report_error";
+pub const REPORT_ERROR_TRACING_TARGET: &str = "neppy::observability::report_error";
 
 /// Cooldown period for rate-limiting repeated filesystem-limit errors.
 /// Within this window, the same (domain, operation) pair that carries
@@ -2724,7 +2723,7 @@ pub(crate) fn report_warning_message(
 /// that the reliable-provider layer already handles via retry + fallback.
 ///
 /// The primary suppression lives at the call site
-/// (`openhuman::inference::provider::ops::should_report_provider_http_failure`),
+/// (`neppy::inference::provider::ops::should_report_provider_http_failure`),
 /// which short-circuits transient codes before `report_error` ever fires.
 /// This helper is intended for use inside the `sentry::ClientOptions`
 /// `before_send` hook as defense-in-depth — it catches any future call
@@ -2762,7 +2761,7 @@ pub fn is_transient_provider_http_failure(event: &sentry::protocol::Event<'_>) -
 /// classifier (`expected_error_kind` → [`ExpectedErrorKind::BackendErrorCodeOwned`]).
 /// This catches any future call site that re-emits the same flattened error
 /// without routing through those funnels. Delegates the decision to the
-/// single-source [`crate::openhuman::inference::provider::managed_error_skips_sentry`]
+/// single-source [`crate::neppy::inference::provider::managed_error_skips_sentry`]
 /// (managed-envelope gated, so a BYO payload carrying an `errorCode`-shaped
 /// field is not wrongly dropped) so the layers can't drift.
 #[cfg(feature = "crash-reporting")]
@@ -2773,7 +2772,7 @@ pub fn is_backend_error_code_event(event: &sentry::protocol::Event<'_>) -> bool 
     [direct, from_logentry, from_exception]
         .into_iter()
         .flatten()
-        .any(crate::openhuman::inference::provider::managed_error_skips_sentry)
+        .any(crate::neppy::inference::provider::managed_error_skips_sentry)
 }
 
 /// Defense-in-depth `before_send` filter for transient streaming **transport**
@@ -2855,7 +2854,7 @@ fn all_provider_attempts_are_transient(message: &str) -> bool {
 
 /// Returns true when a Sentry event's message/exception text contains the
 /// canonical max-tool-iterations cap phrase (see
-/// `openhuman::agent::error::MAX_ITERATIONS_ERROR_PREFIX`).
+/// `neppy::agent::error::MAX_ITERATIONS_ERROR_PREFIX`).
 ///
 /// Defense-in-depth filter for the Sentry `before_send` hook: the primary
 /// suppression lives at the call sites in `agent::harness::session::
@@ -2879,7 +2878,7 @@ pub fn is_max_iterations_event(event: &sentry::protocol::Event<'_>) -> bool {
     [direct, from_exception]
         .into_iter()
         .flatten()
-        .any(crate::openhuman::agent::error::is_max_iterations_error)
+        .any(crate::neppy::agent::error::is_max_iterations_error)
 }
 
 /// Tag + body classifier for the `before_send` chain — drops Sentry events
@@ -2936,7 +2935,7 @@ pub fn is_session_expired_event(event: &sentry::protocol::Event<'_>) -> bool {
 /// RPC failures whose message body has been collapsed to just the bare
 /// HTTP method + path (`"GET /auth/me"`) with no underlying transport error.
 ///
-/// Pairs with the primary fix at `openhuman::security::credentials::ops::auth_get_me`,
+/// Pairs with the primary fix at `neppy::security::credentials::ops::auth_get_me`,
 /// which replaced `e.to_string()` with `format!("{e:#}")` so the full
 /// `anyhow` context chain reaches the rpc dispatcher. Before that
 /// fix, every transient network failure under this RPC — reqwest timeout,
@@ -3103,10 +3102,10 @@ pub fn is_skill_install_user_fetch_failure(event: &sentry::protocol::Event<'_>) 
 /// gateway hiccups).
 ///
 /// Accepts both `domain="integrations"` (the shared
-/// [`crate::openhuman::integrations::IntegrationClient`] HTTP wrapper that
+/// [`crate::neppy::integrations::IntegrationClient`] HTTP wrapper that
 /// fronts every backend-proxied integration) and `domain="composio"` (errors
 /// reported from the Composio op layer in
-/// [`crate::openhuman::integrations::composio::ops`]). Composio routes through the same
+/// [`crate::neppy::integrations::composio::ops`]). Composio routes through the same
 /// `IntegrationClient`, so the failure shape is identical — but op-level
 /// reporters that wrap and re-emit those errors with their own domain tag
 /// would otherwise escape the integrations-scoped filter (OPENHUMAN-TAURI-35
@@ -3210,7 +3209,7 @@ pub fn is_transient_message_failure(msg: &str) -> bool {
 }
 
 /// Sentinel prefix stamped on a `/teams/me/usage` probe error that the
-/// failure-backoff in `crate::openhuman::hosted::team::ops` short-circuited — i.e. an
+/// failure-backoff in `crate::neppy::hosted::team::ops` short-circuited — i.e. an
 /// already-reported repeat within the backoff window. The FIRST failure of a
 /// streak propagates its real error string and reports normally; only the
 /// suppressed repeats carry this prefix so the JSON-RPC boundary can demote
@@ -3260,7 +3259,7 @@ pub fn is_budget_event(event: &sentry::protocol::Event<'_>) -> bool {
 /// digits `402`) is not swallowed and keeps reaching Sentry.
 ///
 /// Single source of truth shared by the message-level cron halt
-/// (`openhuman::cron::scheduler`'s `is_insufficient_credits_failure`, which
+/// (`neppy::cron::scheduler`'s `is_insufficient_credits_failure`, which
 /// stops retrying a permanent 402 and skips its `report_error`) and the
 /// event-level `before_send` filter [`is_insufficient_credits_event`] — the
 /// same split as [`is_session_expired_message`] ↔ [`is_session_expired_event`].
@@ -3287,7 +3286,7 @@ pub fn is_insufficient_credits_message(text: &str) -> bool {
     let body = lower
         .split_once("): ")
         .map_or(lower.as_str(), |(_, body)| body);
-    crate::openhuman::inference::provider::body_indicates_insufficient_credits(body)
+    crate::neppy::inference::provider::body_indicates_insufficient_credits(body)
 }
 
 /// Defense-in-depth `before_send` filter for **insufficient-credits 402**
@@ -3330,11 +3329,11 @@ pub fn is_insufficient_credits_event(event: &sentry::protocol::Event<'_>) -> boo
 /// [`is_insufficient_credits_message`] it does NOT anchor on a 402 status,
 /// because the Kiro IDE proxy wraps its 402 inside a 500 envelope
 /// (TAURI-RUST-C9A). Delegates to the single-source quota-phrase set in
-/// [`crate::openhuman::inference::provider::body_indicates_quota_exhausted`], so
+/// [`crate::neppy::inference::provider::body_indicates_quota_exhausted`], so
 /// the emit-site guard and this `before_send` net can't drift. Shared with the
 /// event-level filter [`is_quota_exhausted_event`].
 pub fn is_quota_exhausted_message(text: &str) -> bool {
-    crate::openhuman::inference::provider::body_indicates_quota_exhausted(text)
+    crate::neppy::inference::provider::body_indicates_quota_exhausted(text)
 }
 
 /// Defense-in-depth `before_send` filter for provider **monthly-quota
@@ -3375,7 +3374,7 @@ pub fn is_quota_exhausted_event(event: &sentry::protocol::Event<'_>) -> bool {
 /// generic 500 from another provider, or a local Ollama daemon crash (which
 /// carries no `ref:` UUID), still reaches Sentry.
 pub fn is_ollama_cloud_internal_500_message_any(text: &str) -> bool {
-    if crate::openhuman::inference::provider::is_ollama_cloud_internal_500_message(text) {
+    if crate::neppy::inference::provider::is_ollama_cloud_internal_500_message(text) {
         return true;
     }
     let lower = text.to_ascii_lowercase();
@@ -3499,7 +3498,7 @@ fn event_contains_budget_exhausted_message(event: &sentry::protocol::Event<'_>) 
     if event
         .message
         .as_deref()
-        .is_some_and(crate::openhuman::inference::provider::is_budget_exhausted_message)
+        .is_some_and(crate::neppy::inference::provider::is_budget_exhausted_message)
     {
         return true;
     }
@@ -3508,7 +3507,7 @@ fn event_contains_budget_exhausted_message(event: &sentry::protocol::Event<'_>) 
         exception
             .value
             .as_deref()
-            .is_some_and(crate::openhuman::inference::provider::is_budget_exhausted_message)
+            .is_some_and(crate::neppy::inference::provider::is_budget_exhausted_message)
     })
 }
 
@@ -3908,7 +3907,7 @@ mod tests {
     /// `report_error_or_expected`. The cases below pin exactly that.
     #[test]
     fn classifies_wallet_not_configured_as_expected_however_it_is_wrapped() {
-        let sentinel = crate::openhuman::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE;
+        let sentinel = crate::neppy::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE;
         for msg in [
             // Bare, as the wallet layer produces it.
             sentinel.to_string(),
@@ -3961,7 +3960,7 @@ mod tests {
     /// capital, this fails here rather than silently ending the demotion.
     #[test]
     fn wallet_not_configured_sentinel_is_ascii_lowercase() {
-        let sentinel = crate::openhuman::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE;
+        let sentinel = crate::neppy::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE;
         assert_eq!(
             sentinel,
             sentinel.to_ascii_lowercase(),
@@ -4650,7 +4649,7 @@ mod tests {
     #[test]
     fn classifies_vault_create_root_path_not_a_directory_as_filesystem_user_path_invalid() {
         // TAURI-RUST-4QH: verbatim wire shape from
-        // `openhuman::vault::ops::vault_create` line 37 when the
+        // `neppy::vault::ops::vault_create` line 37 when the
         // user-picked vault folder doesn't resolve to an existing
         // directory. Bubbles up as the RPC dispatcher's
         // `display_message` and reaches `report_error_or_expected` —
@@ -4677,7 +4676,7 @@ mod tests {
     #[test]
     fn classifies_http_host_hosted_path_not_a_directory_as_filesystem_user_path_invalid() {
         // Preempt the symmetric shape from
-        // `openhuman::http_host::path_utils:23` —
+        // `neppy::http_host::path_utils:23` —
         // `"hosted path is not a directory: <path>"`. Not yet observed
         // in Sentry but shares the same RPC validation polarity as
         // vault_create's `root_path` check. Anchoring on
@@ -4946,7 +4945,7 @@ mod tests {
     fn classifies_config_load_timed_out() {
         // Canonical wire string emitted by `load_config_with_timeout` and
         // `reload_config_snapshot_with_timeout` in
-        // `src/openhuman/config/ops.rs`. Drops TAURI-RUST-5X.
+        // `src/neppy/config/ops.rs`. Drops TAURI-RUST-5X.
         assert_eq!(
             expected_error_kind("Config loading timed out"),
             Some(ExpectedErrorKind::ConfigLoadTimedOut),
@@ -5024,7 +5023,7 @@ mod tests {
     /// nothing. It must keep paging.
     #[test]
     fn does_not_demote_config_read_denial_on_owner_mismatch() {
-        let marker = crate::openhuman::config::schema::CONFIG_OWNER_MISMATCH_MARKER;
+        let marker = crate::neppy::config::schema::CONFIG_OWNER_MISMATCH_MARKER;
         assert_ne!(
             expected_error_kind(&format!(
                 "Failed to read config file: /home/openhuman/.neppy/config.toml {marker} \
@@ -5455,7 +5454,7 @@ mod tests {
     #[test]
     fn integrations_post_composio_timeout_dropped() {
         // OPENHUMAN-TAURI-18 / -G regression guard. The integrations
-        // client at `crate::openhuman::integrations::client::IntegrationClient::post`
+        // client at `crate::neppy::integrations::client::IntegrationClient::post`
         // builds the reqwest error chain and routes it through
         // `report_error_or_expected(.., "integrations", "post", &[("failure",
         // "transport")])`. The chain text contains the
@@ -6051,7 +6050,7 @@ mod tests {
     fn classifies_embedding_endpoint_absent_as_config_rejection() {
         // TAURI-RUST-5JR — custom embeddings provider pointed at a chat-only
         // base URL (DeepSeek) that has no `/embeddings` route. Verbatim shape
-        // produced by `src/openhuman/inference/embeddings/openai.rs` (prefix preserved
+        // produced by `src/neppy/inference/embeddings/openai.rs` (prefix preserved
         // even after the actionable-hint suffix is appended).
         assert_eq!(
             expected_error_kind(
@@ -6257,7 +6256,7 @@ mod tests {
         // instead of silently re-opening the TAURI-RUST-K27 leak.
         assert_eq!(
             expected_error_kind(
-                crate::openhuman::integrations::composio::direct_auth::COMPOSIO_INVALID_API_KEY_USER_MESSAGE
+                crate::neppy::integrations::composio::direct_auth::COMPOSIO_INVALID_API_KEY_USER_MESSAGE
             ),
             Some(ExpectedErrorKind::ProviderUserState),
             "composio_set_api_key invalid-key rejection must demote to ProviderUserState"
@@ -6270,7 +6269,7 @@ mod tests {
         // `COMPOSIO_INVALID_API_KEY_ANCHOR`; it is only correct if that anchor is a
         // genuine lowercase substring of the message the probe returns. Assert the
         // two consts stay in sync so neither can be reworded independently.
-        use crate::openhuman::integrations::composio::direct_auth::{
+        use crate::neppy::integrations::composio::direct_auth::{
             COMPOSIO_INVALID_API_KEY_ANCHOR, COMPOSIO_INVALID_API_KEY_USER_MESSAGE,
         };
         assert!(
@@ -6638,11 +6637,11 @@ mod tests {
     /// matcher is caught for the whole family, not just the SG instance.
     #[test]
     fn session_expired_sibling_family_factory_strings_match() {
-        // src/openhuman/inference/provider/factory.rs:247
+        // src/neppy/inference/provider/factory.rs:247
         // (verify_session_active — scheduler_gate signed-out path)
         let custom_providers_variant =
             "SESSION_EXPIRED: backend session not active — sign in to use custom providers";
-        // src/openhuman/inference/provider/factory.rs:266
+        // src/neppy/inference/provider/factory.rs:266
         // (verify_session_active — empty auth-profile JWT path)
         let no_backend_session_variant =
             "SESSION_EXPIRED: no backend session — sign in to use Neppy";
@@ -6691,7 +6690,7 @@ mod tests {
     }
 
     /// TAURI-RUST-4K5 (118 events, escalating on 0.56.0): the embedding
-    /// client at `src/openhuman/inference/embeddings/openai.rs:139` wraps the same
+    /// client at `src/neppy/inference/embeddings/openai.rs:139` wraps the same
     /// Neppy backend `{"success":false,"error":"Invalid token"}` 401
     /// envelope as 4P0, but with the `"Embedding API error"` prefix
     /// instead of `"Neppy API error"` (different emit-site format
@@ -7392,7 +7391,7 @@ mod tests {
     fn updater_real_panic_still_reported() {
         let event = event_with_tags_and_message(
             &[("domain", "update"), ("operation", "check_releases")],
-            "thread 'main' panicked at src/openhuman/platform/update/core.rs: index out of bounds",
+            "thread 'main' panicked at src/neppy/platform/update/core.rs: index out of bounds",
         );
         assert!(
             !is_updater_transient_event(&event),
@@ -7751,7 +7750,7 @@ mod tests {
         // demote to `TransientUpstreamHttp` when re-reported at the agent / RPC
         // boundary (`provider_chat` → `report_error_or_expected`), so the
         // `domain=agent` half of the flood is suppressed too.
-        let reraise = crate::openhuman::inference::provider::ollama_cloud_internal_500_user_message(
+        let reraise = crate::neppy::inference::provider::ollama_cloud_internal_500_user_message(
             Some("minimax-m3:cloud"),
             reqwest::StatusCode::INTERNAL_SERVER_ERROR,
         );
@@ -7773,7 +7772,7 @@ mod tests {
             &event_with_exception_value(raw)
         ));
 
-        let reraise = crate::openhuman::inference::provider::ollama_cloud_internal_500_user_message(
+        let reraise = crate::neppy::inference::provider::ollama_cloud_internal_500_user_message(
             None,
             reqwest::StatusCode::INTERNAL_SERVER_ERROR,
         );
@@ -8316,7 +8315,7 @@ mod tests {
         // bypass `expected_error_kind` would have re-demoted it to the
         // suppressed `ContextWindowExceeded` bucket.
         assert!(
-            crate::openhuman::inference::provider::is_context_window_exceeded_message(context),
+            crate::neppy::inference::provider::is_context_window_exceeded_message(context),
             "test body must actually trigger the matcher the bypass guards against"
         );
     }
@@ -8509,7 +8508,7 @@ mod tests {
     // `operation=invoke_method`, `method=openhuman.auth_get_me`, message
     // body = exactly "GET /auth/me" (no underlying chain). See the
     // function docstring + the `auth_get_me` fix in
-    // `openhuman::security::credentials::ops::auth_get_me` for the broader
+    // `neppy::security::credentials::ops::auth_get_me` for the broader
     // context.
 
     #[cfg(feature = "crash-reporting")]

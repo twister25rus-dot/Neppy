@@ -2,7 +2,7 @@
 
 **Status:** spec + plan, awaiting a shape decision (§4). Written 2026-07-28
 against `main` (`ce6c3e9b5`).
-**Scope:** `src/openhuman/agent/harness/session/` — specifically the durable
+**Scope:** `src/neppy/agent/harness/session/` — specifically the durable
 transcript layer. Everything else in `session/` is out of scope and stays.
 **Superseded in part (2026-07-28):** the maintainer has since decided to move
 `agent/` wholesale into TinyAgents — see
@@ -48,7 +48,7 @@ The transcript layer is:
 
 ### 2.2 Why only these three
 
-Measured host-domain fan-out (`grep -o "crate::openhuman::[a-z_]*" | sort -u`):
+Measured host-domain fan-out (`grep -o "crate::neppy::[a-z_]*" | sort -u`):
 
 | File | Prod LOC | Host domains | In scope? |
 | --- | ---: | ---: | --- |

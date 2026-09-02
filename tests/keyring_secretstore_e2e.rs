@@ -1,5 +1,5 @@
-use neppy_core::openhuman::config::schema::{Config, StreamMode, TelegramConfig};
-use neppy_core::openhuman::security::keyring;
+use neppy_core::neppy::config::schema::{Config, StreamMode, TelegramConfig};
+use neppy_core::neppy::security::keyring;
 use std::sync::OnceLock;
 
 async fn env_lock() -> tokio::sync::MutexGuard<'static, ()> {
@@ -69,14 +69,14 @@ async fn config_secrets_roundtrip_via_keyring_backed_master_key_migration() {
         config_path: config_path.clone(),
         workspace_dir: workspace_dir.clone(),
         api_key: Some("sk-direct-secret".into()),
-        search: neppy_core::openhuman::config::schema::SearchConfig {
-            parallel: neppy_core::openhuman::config::schema::SearchEngineCredentials {
+        search: neppy_core::neppy::config::schema::SearchConfig {
+            parallel: neppy_core::neppy::config::schema::SearchEngineCredentials {
                 api_key: Some("parallel-secret".into()),
                 ..Default::default()
             },
             ..Default::default()
         },
-        channels_config: neppy_core::openhuman::config::schema::ChannelsConfig {
+        channels_config: neppy_core::neppy::config::schema::ChannelsConfig {
             telegram: Some(TelegramConfig {
                 bot_token: "tg-bot-secret".into(),
                 chat_id: None,

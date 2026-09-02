@@ -1,7 +1,7 @@
 //! Layer-2 golden-workspace schema-parity harness (migration spec §0.3, parity
 //! checklist "Layer 2").
 //!
-//! The Layer-1 asserters (`src/openhuman/tinycortex/parity.rs`) pin pure on-disk
+//! The Layer-1 asserters (`src/neppy/tinycortex/parity.rs`) pin pure on-disk
 //! *format* contracts (chunk ids, vector encoding, vault paths, signatures).
 //! This is the Layer-2 **differential** guard: it stands up a real workspace
 //! through the host's production memory surface (`memory::ops`) and asserts that
@@ -65,12 +65,12 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use tempfile::tempdir;
 
-use neppy_core::openhuman::config::Config;
-use neppy_core::openhuman::memory::ops::{
+use neppy_core::neppy::config::Config;
+use neppy_core::neppy::memory::ops::{
     doc_put, kv_get, kv_set, memory_recall_context, memory_recall_memories, KvGetDeleteParams,
     KvSetParams, PutDocParams,
 };
-use neppy_core::openhuman::memory::rpc_models::{RecallContextRequest, RecallMemoriesRequest};
+use neppy_core::neppy::memory::rpc_models::{RecallContextRequest, RecallMemoriesRequest};
 use tinymemory_core::tinycortex::memory_config_from;
 
 // ── Env isolation (mirrors memory_roundtrip_e2e) ─────────────────────────────
@@ -125,11 +125,9 @@ fn ensure_memory_seams(workspace: &Path) {
                     config_path: workspace.join("config.toml"),
                     ..Config::default()
                 });
-                neppy_core::openhuman::memory::host_impls::install_memory_host_seams(
-                    config.clone(),
-                );
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(config.clone());
                 #[cfg(feature = "modules")]
-                neppy_core::openhuman::modules::memory::set_modules_policy(config);
+                neppy_core::neppy::modules::memory::set_modules_policy(config);
             })
             .expect("spawn golden parity memory seam installer")
             .join()

@@ -11,7 +11,7 @@ compile_error!("src-tauri host supports desktop (Windows/macOS/Linux) only. Mobi
 // method" and the UI blames a stale sidecar (#4901). Keep `voice` in the
 // `neppy_core` feature list in Cargo.toml to satisfy this.
 const _: () = assert!(
-    neppy_core::openhuman::voice::VOICE_COMPILED_IN,
+    neppy_core::neppy::voice::VOICE_COMPILED_IN,
     "neppy_core must be built with the `voice` feature: the desktop app ships voice, \
      and without it every openhuman.voice_* controller is unregistered (#4901). \
      Add \"voice\" to the neppy_core `features` list in app/src-tauri/Cargo.toml."
@@ -476,9 +476,9 @@ async fn restart_app(app: tauri::AppHandle<AppRuntime>) -> Result<(), String> {
 /// `OPENHUMAN_WORKSPACE` overrides used in test harnesses. (#900)
 #[tauri::command]
 fn get_active_user_id() -> Result<Option<String>, String> {
-    let root = neppy_core::openhuman::config::default_root_neppy_dir()
+    let root = neppy_core::neppy::config::default_root_neppy_dir()
         .map_err(|err| format!("resolve active-user state directory: {err}"))?;
-    Ok(neppy_core::openhuman::config::read_active_user_id(
+    Ok(neppy_core::neppy::config::read_active_user_id(
         &root,
     ))
 }
@@ -2287,7 +2287,7 @@ pub fn run() {
     // `SIGBUS / KERN_PROTECTION_FAILURE`.
     //
     // The structural fix (`spawn_blocking` for the TOML parse + cache in
-    // `src/openhuman/config/{schema/load.rs, ops.rs}`) moves the largest
+    // `src/neppy/config/{schema/load.rs, ops.rs}`) moves the largest
     // contributor off the worker. An initial 8 MiB bump shipped here was
     // enough for that single tower, but sub-agent delegation (issue #3159
     // / PR #3155) re-tipped the scale: the standalone `neppy-core`
@@ -2501,7 +2501,7 @@ pub fn run() {
             // (the original userCount=0 root cause).
             if event.user.is_none() {
                 event.user =
-                    neppy_core::openhuman::desktop::app_state::peek_cached_current_user_identity()
+                    neppy_core::neppy::desktop::app_state::peek_cached_current_user_identity()
                         .and_then(|identity| identity.id)
                         .map(|id| sentry::User {
                             id: Some(id),
@@ -3093,7 +3093,7 @@ pub fn run() {
                             // after the <key>ProgramArguments</key> marker. The
                             // service installer always writes it as an absolute
                             // path to the neppy-core binary (see
-                            // src/openhuman/platform/service/macos.rs).
+                            // src/neppy/platform/service/macos.rs).
                             let after_key = contents.split("<key>ProgramArguments</key>").nth(1)?;
                             let start = after_key.find("<string>")? + "<string>".len();
                             let rest = &after_key[start..];

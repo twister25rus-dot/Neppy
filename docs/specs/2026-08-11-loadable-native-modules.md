@@ -33,7 +33,7 @@ compilation: the capability present, the dependencies absent.
 
 ## Behaviour
 
-`openhuman::modules` owns a private in-process broker, a tinybus `ModuleHost`, and
+`neppy::modules` owns a private in-process broker, a tinybus `ModuleHost`, and
 a compiled-in registry. A registry entry names a module's id, the interfaces it
 claims, its release tag, and one SHA-256 per published artifact.
 

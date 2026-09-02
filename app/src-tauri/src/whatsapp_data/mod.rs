@@ -11,14 +11,14 @@
 //!
 //! - **The scanner** (`whatsapp_scanner`) writes via the `whatsapp_data.ingest`
 //!   native request (see [`register_native_handlers`]).
-//! - **The core agent tools** (`openhuman::channels::whatsapp_data::tools`) query via the
+//! - **The core agent tools** (`neppy::channels::whatsapp_data::tools`) query via the
 //!   `whatsapp_data.{list_chats,list_messages,search_messages}` native requests.
 //! - **The frontend** reads via the Tauri commands
 //!   [`whatsapp_data_list_chats`] / [`whatsapp_data_list_messages`] /
 //!   [`whatsapp_data_search_messages`].
 //!
 //! The shared DTOs (request/response/row types) are defined once in the core
-//! crate (`neppy_core::openhuman::channels::whatsapp_data::types`) so both sides agree
+//! crate (`neppy_core::neppy::channels::whatsapp_data::types`) so both sides agree
 //! on a single definition and the native-request `TypeId` checks line up.
 
 mod global;
@@ -28,8 +28,8 @@ mod store;
 
 use std::sync::Arc;
 
-use neppy_core::openhuman::channels::whatsapp_data::methods;
-use neppy_core::openhuman::channels::whatsapp_data::types::{
+use neppy_core::neppy::channels::whatsapp_data::methods;
+use neppy_core::neppy::channels::whatsapp_data::types::{
     IngestRequest, IngestResult, ListChatsRequest, ListMessagesRequest, SearchMessagesRequest,
     WhatsAppChat, WhatsAppMessage,
 };
@@ -43,7 +43,7 @@ use store::WhatsAppDataStore;
 /// the active workspace; [`global::init`] reuses the store only when that path
 /// still matches, and atomically reopens it after user/reset workspace changes.
 pub async fn ensure_store() -> Result<Arc<WhatsAppDataStore>, String> {
-    let cfg = neppy_core::openhuman::config::Config::load_or_init()
+    let cfg = neppy_core::neppy::config::Config::load_or_init()
         .await
         .map_err(|e| format!("[whatsapp_data] config load failed: {e:#}"))?;
     log::debug!(
@@ -57,7 +57,7 @@ pub async fn ensure_store() -> Result<Arc<WhatsAppDataStore>, String> {
 /// tools + scanner) to this shell store. Call once during Tauri `setup`.
 ///
 /// Keyed by the method-name constants the core owns
-/// (`neppy_core::openhuman::channels::whatsapp_data::methods`) so the two sides never
+/// (`neppy_core::neppy::channels::whatsapp_data::methods`) so the two sides never
 /// drift on the string key.
 pub fn register_native_handlers() {
     use neppy_core::core::bus::BUS;

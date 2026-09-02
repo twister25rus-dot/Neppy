@@ -1,6 +1,6 @@
 # Neppy as a Kernel — Subsystem & Driver Model
 
-**Status:** proposed · **Date:** 2026-07-28 · **Scope:** `src/` (core crate), all `src/openhuman/*` domains
+**Status:** proposed · **Date:** 2026-07-28 · **Scope:** `src/` (core crate), all `src/neppy/*` domains
 **Companion spec:** [`plan-memory.md`](plan-memory.md) — memory is the first subsystem cut to this model.
 
 ---
@@ -15,8 +15,8 @@ module, or absent; userspace never learns which.
 
 `neppy-core` should be that kernel for a personal AI runtime. Today it is closer to a
 monolith with one very good in-tree implementation per capability: memory *is* TinyCortex, agents
-*are* TinyAgents, channels *are* TinyChannels. Each already has a seam (`src/openhuman/tinycortex/`,
-`src/openhuman/tinyagents/`), which proves the shape works — but the seams are **bespoke per
+*are* TinyAgents, channels *are* TinyChannels. Each already has a seam (`src/neppy/tinycortex/`,
+`src/neppy/tinyagents/`), which proves the shape works — but the seams are **bespoke per
 domain**, the contracts are **not versioned**, and there is **no way for a third implementation to
 be bound at runtime**.
 
@@ -40,7 +40,7 @@ requires unsafe dynamic linking.
 | IPC | `event_bus/` broadcast + native request/response | Fine as-is; becomes the kernel's internal bus |
 | Policy | `SecurityPolicy`, approval gate, `MemoryTaint`, `source_scope`, redaction | Enforced *inside* domains, so a swapped implementation could bypass it |
 | Trust metadata | `CapabilityProviderConfig` (`config/schema/capability_providers.rs`) | Already the right shape; unused by domains |
-| Seams | `src/openhuman/tinycortex/`, `src/openhuman/tinyagents/` | Adapter to *one* crate, not to a trait a second crate could also satisfy |
+| Seams | `src/neppy/tinycortex/`, `src/neppy/tinyagents/` | Adapter to *one* crate, not to a trait a second crate could also satisfy |
 
 The kernel model is mostly **naming and enforcing** the above, plus one genuinely new piece: the
 **subsystem registry with a bound driver per slot**.
