@@ -13,13 +13,16 @@ pub struct ObservabilityConfig {
     pub sentry_dsn: Option<String>,
 
     /// Whether anonymized analytics and error reporting is enabled.
-    /// Defaults to `true`. Users can disable via settings or CLI.
+    /// **Neppy: defaults to `false`** (upstream defaulted to `true`) — this
+    /// fork has no hosted analytics backend. Users can enable via settings or
+    /// CLI. See NEPPY-BUILD-SPEC.md §2.6.
     #[serde(default = "default_analytics_enabled")]
     pub analytics_enabled: bool,
 
     /// User consent to share agent-run usage data (structured trace spans)
-    /// with the OpenHuman backend's Langfuse. On by default; opting out stops
-    /// the export. Spans always carry metadata (names/kinds/timings/token &
+    /// with the hosted backend's Langfuse. **Neppy: off by default** (upstream
+    /// was on) — there is no hosted backend to receive the push; opting in
+    /// enables the export. Spans always carry metadata (names/kinds/timings/token &
     /// cost figures); prompt/reply text and tool I/O ride along only while
     /// [`AgentTracingConfig::capture_content`] is on (its default). Distinct
     /// from [`Self::analytics_enabled`] (Sentry / product analytics) so users
@@ -152,7 +155,10 @@ mod tests {
     #[test]
     fn deserialize_missing_optional_fields_uses_defaults() {
         let cfg: ObservabilityConfig = serde_json::from_value(json!({})).unwrap();
-        assert!(!cfg.analytics_enabled, "analytics default must be false (Neppy)");
+        assert!(
+            !cfg.analytics_enabled,
+            "analytics default must be false (Neppy)"
+        );
         assert!(
             !cfg.share_usage_data,
             "usage-data sharing is off by default (Neppy: no hosted Langfuse push)"

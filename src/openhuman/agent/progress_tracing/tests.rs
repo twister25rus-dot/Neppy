@@ -40,9 +40,15 @@ fn local_tracing_exporter_is_off_by_default() {
 }
 
 #[test]
-fn observability_default_shares_usage_but_keeps_local_exporter_off() {
+fn observability_default_shares_no_usage_and_keeps_local_exporter_off() {
+    // Neppy: usage-data sharing is OFF by default (upstream had it on) — there
+    // is no hosted backend to receive the Langfuse push. See
+    // NEPPY-BUILD-SPEC.md §2.6.
     let obs = ObservabilityConfig::default();
-    assert!(obs.share_usage_data, "usage-data sharing is on by default");
+    assert!(
+        !obs.share_usage_data,
+        "usage-data sharing is off by default (Neppy)"
+    );
     assert!(!obs.agent_tracing.enabled, "local exporter stays opt-in");
 }
 
