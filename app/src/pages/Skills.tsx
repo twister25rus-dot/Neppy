@@ -55,7 +55,7 @@ import type { ChannelConnectionStatus, ChannelDefinition, ChannelType } from '..
 import type { ToastNotification } from '../types/intelligence';
 import { IS_DEV } from '../utils/config';
 import { isLocalSessionToken } from '../utils/localSession';
-import { openhumanComposioGetMode } from '../utils/tauriCommands';
+import { neppyComposioGetMode } from '../utils/tauriCommands';
 
 /** Small inline icon helper for the Connections sidebar nav. */
 const navIcon = (d: string) => (
@@ -615,7 +615,7 @@ export default function Skills() {
       return;
     }
     let cancelled = false;
-    void openhumanComposioGetMode()
+    void neppyComposioGetMode()
       .then(res => {
         if (!cancelled) {
           setHasComposioApiKey(Boolean(res.result?.api_key_set));

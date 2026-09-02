@@ -190,17 +190,17 @@ function parsePositiveInt(raw, label) {
 
 function defaultNeppyDir() {
   if (process.env.OPENHUMAN_APP_ENV === "staging") {
-    return path.join(homedir(), ".openhuman-staging");
+    return path.join(homedir(), ".neppy-staging");
   }
   if (process.env.OPENHUMAN_APP_ENV) {
-    return path.join(homedir(), ".openhuman");
+    return path.join(homedir(), ".neppy");
   }
   // APP_ENV unset: the core (launched from a shell that may export
   // OPENHUMAN_APP_ENV=staging) and this script can disagree. Auto-pick the
   // dir whose active_user.toml was touched most recently so transcript reads
   // land in the same env the core actually uses. Falls back to prod.
-  const prod = path.join(homedir(), ".openhuman");
-  const staging = path.join(homedir(), ".openhuman-staging");
+  const prod = path.join(homedir(), ".neppy");
+  const staging = path.join(homedir(), ".neppy-staging");
   const mtime = (p) => {
     try {
       return statSync(path.join(p, "active_user.toml")).mtimeMs;
@@ -578,9 +578,9 @@ async function startCore(opts) {
   const env = { ...process.env, OPENHUMAN_CORE_TOKEN: token };
   // Only pin OPENHUMAN_WORKSPACE when the user explicitly asked for one.
   // Setting it to the auto-resolved active-user workspace makes the core
-  // create a *nested* `.openhuman/` config dir without the signed-in
+  // create a *nested* `.neppy/` config dir without the signed-in
   // session (→ SESSION_EXPIRED). Leaving it unset lets the core resolve the
-  // active user from ~/.openhuman/active_user.toml and load its live session;
+  // active user from ~/.neppy/active_user.toml and load its live session;
   // transcripts then land in that same workspace the script reads.
   if (opts.workspaceExplicit && opts.workspace)
     env.OPENHUMAN_WORKSPACE = opts.workspace;

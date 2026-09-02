@@ -6,10 +6,10 @@ import {
   type AgentPaths,
   type AutonomySettings,
   isTauri,
-  openhumanGetAgentPaths,
-  openhumanGetAutonomySettings,
-  openhumanUpdateAgentPaths,
-  openhumanUpdateAutonomySettings,
+  neppyGetAgentPaths,
+  neppyGetAutonomySettings,
+  neppyUpdateAgentPaths,
+  neppyUpdateAutonomySettings,
 } from '../../../../utils/tauriCommands';
 import PermissionsPanel from '../PermissionsPanel';
 
@@ -27,7 +27,7 @@ const autonomy = (overrides: Partial<AutonomySettings> = {}): AutonomySettings =
 
 const agentPaths = (overrides: Partial<AgentPaths> = {}): AgentPaths => ({
   action_dir: '/home/test/Neppy/projects',
-  workspace_dir: '/home/test/.openhuman/users/u1/workspace',
+  workspace_dir: '/home/test/.neppy/users/u1/workspace',
   projects_dir: '/home/test/Neppy/projects',
   action_dir_source: 'default',
   ...overrides,
@@ -48,17 +48,17 @@ vi.mock('../../../../utils/tauriCommands', async () => {
   return {
     ...actual,
     isTauri: vi.fn(() => true),
-    openhumanGetAutonomySettings: vi.fn(),
-    openhumanUpdateAutonomySettings: vi.fn(),
-    openhumanGetAgentPaths: vi.fn(),
-    openhumanUpdateAgentPaths: vi.fn(),
+    neppyGetAutonomySettings: vi.fn(),
+    neppyUpdateAutonomySettings: vi.fn(),
+    neppyGetAgentPaths: vi.fn(),
+    neppyUpdateAgentPaths: vi.fn(),
   };
 });
 
-const mockGet = vi.mocked(openhumanGetAutonomySettings);
-const mockUpdate = vi.mocked(openhumanUpdateAutonomySettings);
-const mockGetPaths = vi.mocked(openhumanGetAgentPaths);
-const mockUpdatePaths = vi.mocked(openhumanUpdateAgentPaths);
+const mockGet = vi.mocked(neppyGetAutonomySettings);
+const mockUpdate = vi.mocked(neppyUpdateAutonomySettings);
+const mockGetPaths = vi.mocked(neppyGetAgentPaths);
+const mockUpdatePaths = vi.mocked(neppyUpdateAgentPaths);
 
 describe('PermissionsPanel', () => {
   beforeEach(() => {
@@ -144,7 +144,7 @@ describe('PermissionsPanel', () => {
     expect(screen.queryByTestId('permissions-action-dir-env-locked')).not.toBeInTheDocument();
   });
 
-  it('saving a new action_dir calls openhumanUpdateAgentPaths and updates the display', async () => {
+  it('saving a new action_dir calls neppyUpdateAgentPaths and updates the display', async () => {
     mockGetPaths.mockResolvedValue({
       result: agentPaths({ action_dir: '/Users/sample/old', action_dir_source: 'default' }),
       logs: [],

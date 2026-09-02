@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { callCoreRpc } from '../../../services/coreRpcClient';
 import { isTauri } from '../../../utils/tauriCommands/common';
-import { type CoreCronJob, openhumanCronList } from '../../../utils/tauriCommands/cron';
+import { type CoreCronJob, neppyCronList } from '../../../utils/tauriCommands/cron';
 import {
   memorySyncStatusList,
   type MemorySyncStatusRow,
@@ -75,7 +75,7 @@ export function useBackgroundActivity(open: boolean): BackgroundActivity {
     }
 
     const [cronRes, ingestRes, providerRes] = await Promise.allSettled([
-      openhumanCronList(),
+      neppyCronList(),
       callCoreRpc<IngestionStatusEnvelope>({ method: 'openhuman.memory_ingestion_status' }),
       memorySyncStatusList(),
     ]);

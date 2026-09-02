@@ -31,9 +31,9 @@ import { readdirSync } from 'fs';
 
 const OPENHUMAN_HOME = process.env.OPENHUMAN_WORKSPACE
   ? path.join(process.env.OPENHUMAN_WORKSPACE)
-  : path.join(homedir(), '.openhuman');
+  : path.join(homedir(), '.neppy');
 
-// Config lives in a per-user subdirectory (e.g. ~/.openhuman/users/<id>/config.toml)
+// Config lives in a per-user subdirectory (e.g. ~/.neppy/users/<id>/config.toml)
 // when authenticated, or at the root for fresh installs. Find the right one.
 // Set OPENHUMAN_USER_ID to pin to a specific user directory deterministically.
 function findConfigPath() {

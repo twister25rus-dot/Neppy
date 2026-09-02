@@ -647,7 +647,7 @@ fn sentry_release_tag_is_nonempty() {
 // -------------------------------------------------------------------------
 
 #[test]
-fn sentry_environment_reads_openhuman_app_env() {
+fn sentry_environment_reads_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
     let key = "OPENHUMAN_APP_ENV";
     let original = std::env::var(key).ok();
@@ -661,7 +661,7 @@ fn sentry_environment_reads_openhuman_app_env() {
 }
 
 #[test]
-fn sentry_environment_trims_whitespace_from_openhuman_app_env() {
+fn sentry_environment_trims_whitespace_from_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
     let key = "OPENHUMAN_APP_ENV";
     let original = std::env::var(key).ok();
@@ -675,7 +675,7 @@ fn sentry_environment_trims_whitespace_from_openhuman_app_env() {
 }
 
 #[test]
-fn sentry_environment_skips_empty_openhuman_app_env() {
+fn sentry_environment_skips_empty_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
     let key = "OPENHUMAN_APP_ENV";
     let original = std::env::var(key).ok();
@@ -690,7 +690,7 @@ fn sentry_environment_skips_empty_openhuman_app_env() {
 }
 
 #[test]
-fn sentry_environment_skips_whitespace_only_openhuman_app_env() {
+fn sentry_environment_skips_whitespace_only_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
     let key = "OPENHUMAN_APP_ENV";
     let original = std::env::var(key).ok();
@@ -711,7 +711,7 @@ fn sentry_environment_defaults_to_production_when_unset() {
     let _g = ENV_LOCK.lock().unwrap();
     if option_env!("VITE_OPENHUMAN_APP_ENV").is_some() {
         // A compile-time override is baked in; skip — the fallback path is
-        // exercised by sentry_environment_skips_empty_openhuman_app_env.
+        // exercised by sentry_environment_skips_empty_neppy_app_env.
         return;
     }
     let key = "OPENHUMAN_APP_ENV";

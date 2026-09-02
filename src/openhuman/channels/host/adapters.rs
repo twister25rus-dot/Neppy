@@ -272,7 +272,7 @@ impl ConversationStore for ConversationHistoryStore {
 
 /// Persists newly-authorized identities into the on-disk channel allowlist,
 /// replicating Telegram's former `persist_allowed_identity` (load
-/// `~/.openhuman/config.toml`, append to the channel's `allowed_users`, save).
+/// `~/.neppy/config.toml`, append to the channel's `allowed_users`, save).
 pub struct ConfigAllowlistStore;
 
 #[async_trait]
@@ -287,15 +287,15 @@ impl AllowlistStore for ConfigAllowlistStore {
         let home = directories::UserDirs::new()
             .map(|u| u.home_dir().to_path_buf())
             .context("could not find home directory")?;
-        let openhuman_dir = home.join(".openhuman");
-        let config_path = openhuman_dir.join("config.toml");
+        let neppy_dir = home.join(".neppy");
+        let config_path = neppy_dir.join("config.toml");
         let contents = tokio::fs::read_to_string(&config_path)
             .await
             .with_context(|| format!("failed to read config file: {}", config_path.display()))?;
         let mut config: Config =
             toml::from_str(&contents).context("failed to parse config.toml for allowlist")?;
         config.config_path = config_path;
-        config.workspace_dir = openhuman_dir.join("workspace");
+        config.workspace_dir = neppy_dir.join("workspace");
 
         match channel {
             "telegram" => {

@@ -3,16 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { callCoreRpc } from '../../../services/coreRpcClient';
 import { isTauri } from '../../../utils/tauriCommands/common';
-import { openhumanCronList } from '../../../utils/tauriCommands/cron';
+import { neppyCronList } from '../../../utils/tauriCommands/cron';
 import { memorySyncStatusList } from '../../../utils/tauriCommands/memoryTree';
 import { useBackgroundActivity, useMemorySyncActive } from './useBackgroundActivity';
 
 vi.mock('../../../utils/tauriCommands/common', () => ({ isTauri: vi.fn(() => true) }));
-vi.mock('../../../utils/tauriCommands/cron', () => ({ openhumanCronList: vi.fn() }));
+vi.mock('../../../utils/tauriCommands/cron', () => ({ neppyCronList: vi.fn() }));
 vi.mock('../../../utils/tauriCommands/memoryTree', () => ({ memorySyncStatusList: vi.fn() }));
 vi.mock('../../../services/coreRpcClient', () => ({ callCoreRpc: vi.fn() }));
 
-const mockCron = vi.mocked(openhumanCronList);
+const mockCron = vi.mocked(neppyCronList);
 const mockSyncList = vi.mocked(memorySyncStatusList);
 const mockRpc = vi.mocked(callCoreRpc);
 const mockIsTauri = vi.mocked(isTauri);

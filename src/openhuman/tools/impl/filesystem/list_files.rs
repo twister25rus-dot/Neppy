@@ -156,7 +156,7 @@ mod tests {
 
     #[tokio::test]
     async fn list_lists_files_and_dirs() {
-        let dir = std::env::temp_dir().join("openhuman_test_list");
+        let dir = std::env::temp_dir().join("neppy_test_list");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(dir.join("sub")).await.unwrap();
         tokio::fs::write(dir.join("a.txt"), "x").await.unwrap();
@@ -181,7 +181,7 @@ mod tests {
 
     #[tokio::test]
     async fn list_missing_dir() {
-        let dir = std::env::temp_dir().join("openhuman_test_list_missing");
+        let dir = std::env::temp_dir().join("neppy_test_list_missing");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         let tool = ListFilesTool::new(test_security(dir.clone()));

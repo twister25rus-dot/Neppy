@@ -532,12 +532,9 @@ fn refresh_workflows_picks_up_skill_installed_on_disk() {
     // Isolated, trusted workspace with one project-scope skill on disk.
     let ws = tempfile::TempDir::new().expect("temp workspace");
     let wsp = ws.path().to_path_buf();
-    std::fs::create_dir_all(wsp.join(".openhuman")).unwrap();
-    std::fs::write(wsp.join(".openhuman").join(TRUST_MARKER), "").unwrap();
-    let skill_dir = wsp
-        .join(".openhuman")
-        .join("skills")
-        .join("zz-refresh-test");
+    std::fs::create_dir_all(wsp.join(".neppy")).unwrap();
+    std::fs::write(wsp.join(".neppy").join(TRUST_MARKER), "").unwrap();
+    let skill_dir = wsp.join(".neppy").join("skills").join("zz-refresh-test");
     std::fs::create_dir_all(&skill_dir).unwrap();
     std::fs::write(
         skill_dir.join(SKILL_MD),
@@ -603,14 +600,11 @@ fn refresh_workflows_retracts_skill_removed_from_disk() {
 
     let ws = tempfile::TempDir::new().expect("temp workspace");
     let wsp = ws.path().to_path_buf();
-    std::fs::create_dir_all(wsp.join(".openhuman")).unwrap();
-    std::fs::write(wsp.join(".openhuman").join(TRUST_MARKER), "").unwrap();
+    std::fs::create_dir_all(wsp.join(".neppy")).unwrap();
+    std::fs::write(wsp.join(".neppy").join(TRUST_MARKER), "").unwrap();
 
     // Write a skill to disk.
-    let skill_dir = wsp
-        .join(".openhuman")
-        .join("skills")
-        .join("zz-retract-test");
+    let skill_dir = wsp.join(".neppy").join("skills").join("zz-retract-test");
     std::fs::create_dir_all(&skill_dir).unwrap();
     std::fs::write(
         skill_dir.join(SKILL_MD),
@@ -1544,14 +1538,14 @@ fn seed_resume_from_thread_transcript_preserves_tool_calls_and_reasoning() {
             m.role == "assistant"
                 && m.extra_metadata
                     .as_ref()
-                    .and_then(|v| v.get("openhuman_turn_usage"))
+                    .and_then(|v| v.get("neppy_turn_usage"))
                     .is_some()
         })
         .expect("resumed context must include the assistant tool-call turn");
     let usage_value = tool_call_carrier
         .extra_metadata
         .as_ref()
-        .and_then(|v| v.get("openhuman_turn_usage"))
+        .and_then(|v| v.get("neppy_turn_usage"))
         .cloned()
         .expect("turn usage metadata present");
     let parsed: TurnUsage = serde_json::from_value(usage_value).expect("turn usage deserializes");

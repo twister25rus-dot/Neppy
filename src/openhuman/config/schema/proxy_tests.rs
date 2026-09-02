@@ -272,7 +272,7 @@ fn should_apply_environment_scope_always_false() {
 }
 
 #[test]
-fn should_apply_openhuman_scope_always_true() {
+fn should_apply_neppy_scope_always_true() {
     let c = ProxyConfig {
         enabled: true,
         http_proxy: Some("http://p:8080".into()),

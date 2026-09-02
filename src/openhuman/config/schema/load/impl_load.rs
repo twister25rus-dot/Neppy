@@ -260,25 +260,20 @@ async fn describe_config_ownership(_path: &Path) -> String {
 
 impl Config {
     pub async fn load_or_init() -> Result<Self> {
-        let (default_openhuman_dir, default_workspace_dir) = default_config_and_workspace_dirs()?;
-        Self::load_or_init_with_env_lookup(
-            &default_openhuman_dir,
-            &default_workspace_dir,
-            &ProcessEnv,
-        )
-        .await
+        let (default_neppy_dir, default_workspace_dir) = default_config_and_workspace_dirs()?;
+        Self::load_or_init_with_env_lookup(&default_neppy_dir, &default_workspace_dir, &ProcessEnv)
+            .await
     }
 
     pub(crate) async fn load_or_init_with_env_lookup(
-        default_openhuman_dir: &Path,
+        default_neppy_dir: &Path,
         default_workspace_dir: &Path,
         env: &(dyn EnvLookup + Send + Sync),
     ) -> Result<Self> {
-        let (openhuman_dir, workspace_dir, resolution_source) =
-            resolve_runtime_config_dirs_with(default_openhuman_dir, default_workspace_dir, env)
-                .await?;
+        let (neppy_dir, workspace_dir, resolution_source) =
+            resolve_runtime_config_dirs_with(default_neppy_dir, default_workspace_dir, env).await?;
 
-        let config_path = openhuman_dir.join("config.toml");
+        let config_path = neppy_dir.join("config.toml");
 
         if resolution_source == ConfigResolutionSource::DefaultConfigDir && !config_path.exists() {
             let mut config = Config {
@@ -300,7 +295,7 @@ impl Config {
             return Ok(config);
         }
 
-        fs::create_dir_all(&openhuman_dir)
+        fs::create_dir_all(&neppy_dir)
             .await
             .context("Failed to create config directory")?;
         fs::create_dir_all(&workspace_dir)
@@ -467,7 +462,7 @@ impl Config {
                 "Config loaded"
             );
             crate::openhuman::config::migrations::run_pending(&mut config).await;
-            let migrated_legacy_secrets = decrypt_config_secrets(&mut config, &openhuman_dir)?;
+            let migrated_legacy_secrets = decrypt_config_secrets(&mut config, &neppy_dir)?;
             if migrated_legacy_secrets {
                 // One-time forced migration: a legacy `enc:` (XOR) secret was
                 // upgraded to `enc2:` on read. Persist immediately so the
@@ -519,11 +514,10 @@ impl Config {
     /// for auth token resolution when the dump script overrides
     /// `OPENHUMAN_WORKSPACE` to a throwaway temp directory.
     pub async fn load_from_default_paths() -> Result<Self> {
-        let (default_openhuman_dir, default_workspace_dir) = default_config_and_workspace_dirs()?;
-        let (openhuman_dir, workspace_dir, _source) =
-            resolve_config_dirs_ignoring_env(&default_openhuman_dir, &default_workspace_dir)
-                .await?;
-        let config_path = openhuman_dir.join("config.toml");
+        let (default_neppy_dir, default_workspace_dir) = default_config_and_workspace_dirs()?;
+        let (neppy_dir, workspace_dir, _source) =
+            resolve_config_dirs_ignoring_env(&default_neppy_dir, &default_workspace_dir).await?;
+        let config_path = neppy_dir.join("config.toml");
 
         if !config_path.exists() {
             let mut config = Config {
@@ -549,7 +543,7 @@ impl Config {
         config.apply_env_overrides();
         // Debug-dump path is read-only; ignore the migration signal (the
         // authoritative `load_or_init` path persists upgraded secrets).
-        let _ = decrypt_config_secrets(&mut config, &openhuman_dir)?;
+        let _ = decrypt_config_secrets(&mut config, &neppy_dir)?;
         Ok(config)
     }
 

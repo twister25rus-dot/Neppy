@@ -90,7 +90,7 @@ fn marker_path(venv_dir: &Path, model_id: &str) -> PathBuf {
             }
         })
         .collect();
-    venv_dir.join(format!(".openhuman-kompress-ready-{safe_model}"))
+    venv_dir.join(format!(".neppy-kompress-ready-{safe_model}"))
 }
 
 /// Cheap, network-free probe: are torch + transformers + the model provisioned?

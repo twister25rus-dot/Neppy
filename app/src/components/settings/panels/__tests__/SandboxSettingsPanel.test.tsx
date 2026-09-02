@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../../../test/test-utils';
 import {
   isTauri,
-  openhumanGetSandboxSettings,
-  openhumanUpdateSandboxSettings,
+  neppyGetSandboxSettings,
+  neppyUpdateSandboxSettings,
   type SandboxSettings,
 } from '../../../../utils/tauriCommands';
 import SandboxSettingsPanel from '../SandboxSettingsPanel';
@@ -37,13 +37,13 @@ vi.mock('../../../../utils/tauriCommands', async () => {
   return {
     ...actual,
     isTauri: vi.fn(() => true),
-    openhumanGetSandboxSettings: vi.fn(),
-    openhumanUpdateSandboxSettings: vi.fn(),
+    neppyGetSandboxSettings: vi.fn(),
+    neppyUpdateSandboxSettings: vi.fn(),
   };
 });
 
-const mockGet = vi.mocked(openhumanGetSandboxSettings);
-const mockUpdate = vi.mocked(openhumanUpdateSandboxSettings);
+const mockGet = vi.mocked(neppyGetSandboxSettings);
+const mockUpdate = vi.mocked(neppyUpdateSandboxSettings);
 
 describe('SandboxSettingsPanel', () => {
   beforeEach(() => {

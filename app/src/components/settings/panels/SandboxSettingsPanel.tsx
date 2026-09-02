@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useT } from '../../../lib/i18n/I18nContext';
 import {
   isTauri,
-  openhumanGetSandboxSettings,
-  openhumanUpdateSandboxSettings,
+  neppyGetSandboxSettings,
+  neppyUpdateSandboxSettings,
   type SandboxBackendId,
 } from '../../../utils/tauriCommands';
 import {
@@ -52,7 +52,7 @@ const SandboxSettingsPanel = () => {
     const load = async () => {
       if (!isTauri()) return;
       try {
-        const resp = await openhumanGetSandboxSettings();
+        const resp = await neppyGetSandboxSettings();
         if (cancelled) return;
         const s = resp.result;
         setEnabled(s.enabled);
@@ -76,14 +76,14 @@ const SandboxSettingsPanel = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const persist = async (patch: Parameters<typeof openhumanUpdateSandboxSettings>[0]) => {
+  const persist = async (patch: Parameters<typeof neppyUpdateSandboxSettings>[0]) => {
     const seq = ++persistSeqRef.current;
     if (!isTauri()) return;
     setError(null);
     setSavedNote(null);
     setIsSaving(true);
     try {
-      await openhumanUpdateSandboxSettings(patch);
+      await neppyUpdateSandboxSettings(patch);
       if (seq !== persistSeqRef.current) return;
       setSavedNote(t('settings.sandbox.saved'));
     } catch (e) {

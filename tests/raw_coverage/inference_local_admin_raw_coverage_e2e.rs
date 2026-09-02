@@ -604,7 +604,7 @@ fn auth_header(headers: &HeaderMap) -> Option<String> {
 }
 
 fn temp_config(tmp: &TempDir) -> Config {
-    let root = tmp.path().join(".openhuman");
+    let root = tmp.path().join(".neppy");
     std::fs::create_dir_all(root.join("workspace")).expect("workspace dir");
     let mut config = Config::default();
     config.config_path = root.join("config.toml");

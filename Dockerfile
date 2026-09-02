@@ -92,7 +92,7 @@ RUN groupadd --gid 10001 openhuman \
 # entrypoint chown is a no-op on a fresh (root-owned) named volume and on
 # first-time anonymous volume mounts.
 ENV HOME=/home/openhuman
-RUN mkdir -p /home/openhuman/.openhuman \
+RUN mkdir -p /home/openhuman/.neppy \
  && chown -R openhuman:openhuman /home/openhuman
 
 # Copy the built binary
@@ -121,7 +121,7 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint-core.sh \
 USER root
 
 # Default workspace directory
-ENV OPENHUMAN_WORKSPACE=/home/openhuman/.openhuman
+ENV OPENHUMAN_WORKSPACE=/home/openhuman/.neppy
 # Bind to all interfaces so the container is reachable
 ENV OPENHUMAN_CORE_HOST=0.0.0.0
 ENV OPENHUMAN_CORE_PORT=7788

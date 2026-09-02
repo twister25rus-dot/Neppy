@@ -363,7 +363,7 @@ mod tests {
 
     #[tokio::test]
     async fn glob_matches_extension() {
-        let dir = std::env::temp_dir().join("openhuman_test_glob_ext");
+        let dir = std::env::temp_dir().join("neppy_test_glob_ext");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(dir.join("src/sub"))
             .await
@@ -389,7 +389,7 @@ mod tests {
 
     #[tokio::test]
     async fn glob_invalid_pattern() {
-        let dir = std::env::temp_dir().join("openhuman_test_glob_invalid");
+        let dir = std::env::temp_dir().join("neppy_test_glob_invalid");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         let tool = GlobTool::new(test_security(dir.clone()));
@@ -401,7 +401,7 @@ mod tests {
 
     #[tokio::test]
     async fn glob_skips_node_modules() {
-        let dir = std::env::temp_dir().join("openhuman_test_glob_skip");
+        let dir = std::env::temp_dir().join("neppy_test_glob_skip");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(dir.join("node_modules"))
             .await
@@ -424,7 +424,7 @@ mod tests {
     /// and never surfaces files living under the internal workspace_dir.
     #[tokio::test]
     async fn glob_roots_at_action_dir_and_excludes_workspace() {
-        let root = std::env::temp_dir().join("openhuman_test_glob_split");
+        let root = std::env::temp_dir().join("neppy_test_glob_split");
         let action = root.join("action");
         let workspace = root.join("workspace");
         let _ = tokio::fs::remove_dir_all(&root).await;
@@ -463,7 +463,7 @@ mod tests {
     /// the `path` arg, returning absolute paths that the readers accept as-is.
     #[tokio::test]
     async fn glob_searches_named_trusted_root() {
-        let root = std::env::temp_dir().join("openhuman_test_glob_trusted");
+        let root = std::env::temp_dir().join("neppy_test_glob_trusted");
         let action = root.join("action");
         let workspace = root.join("workspace");
         let granted = root.join("granted");
@@ -498,7 +498,7 @@ mod tests {
     /// A search root the policy disallows yields a clear error, not ENOENT.
     #[tokio::test]
     async fn glob_rejects_disallowed_search_path() {
-        let root = std::env::temp_dir().join("openhuman_test_glob_reject");
+        let root = std::env::temp_dir().join("neppy_test_glob_reject");
         let action = root.join("action");
         let workspace = root.join("workspace");
         let _ = tokio::fs::remove_dir_all(&root).await;
@@ -533,7 +533,7 @@ mod tests {
     #[cfg(unix)]
     #[tokio::test]
     async fn glob_does_not_leak_symlink_escape() {
-        let root = std::env::temp_dir().join("openhuman_test_glob_symlink");
+        let root = std::env::temp_dir().join("neppy_test_glob_symlink");
         let action = root.join("action");
         let workspace = root.join("workspace");
         let outside = root.join("outside");
@@ -580,7 +580,7 @@ mod tests {
     /// "not a directory" error rather than a misleading "0 match(es)".
     #[tokio::test]
     async fn glob_rejects_file_search_path() {
-        let dir = std::env::temp_dir().join("openhuman_test_glob_file_root");
+        let dir = std::env::temp_dir().join("neppy_test_glob_file_root");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("file.txt"), "x").await.unwrap();

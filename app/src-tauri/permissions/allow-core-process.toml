@@ -51,7 +51,7 @@ allow = [
     # Tauri capabilities and webviews keep the prior user's third-party
     # cookies.
     "restart_app",
-    # `get_active_user_id` reads `~/.openhuman/active_user.toml` so the
+    # `get_active_user_id` reads `~/.neppy/active_user.toml` so the
     # frontend can prime `userScopedStorage` from the Rust source of truth
     # BEFORE redux-persist hydrates — the prior `localStorage`-only seed
     # was bound to the per-user CEF profile dir and went stale across

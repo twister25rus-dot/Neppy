@@ -72,7 +72,7 @@ fn preserves_temperature_suffix_on_valid_slug() {
 }
 
 #[test]
-fn normalizes_openhuman_colon_to_none() {
+fn normalizes_neppy_colon_to_none() {
     let mut config = Config::default();
     config.memory_provider = Some("openhuman:".to_string());
     config.embeddings_provider = Some("openhuman:reasoning-v1".to_string());
@@ -147,7 +147,7 @@ fn scrubs_every_orphaned_workload() {
 #[test]
 fn clears_dangling_primary_cloud() {
     let mut config = Config::default();
-    config.primary_cloud = Some("p_openhuman_missing".to_string());
+    config.primary_cloud = Some("p_neppy_missing".to_string());
     config.cloud_providers = vec![provider("p_openai_1", "openai")];
 
     let stats = run(&mut config).expect("migration should succeed");

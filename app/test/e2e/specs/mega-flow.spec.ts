@@ -13,7 +13,7 @@
  *     the CEF WebView accessibility tree (which exposes zero DOM to XCUITest).
  *   - Between scenarios, reset state in-app via `openhuman.config_reset_local_data`
  *     (mirrors the production "Clear app data + log out" flow) + mock admin reset.
- *     Then re-write `~/.openhuman/config.toml` so the mock URL persists across
+ *     Then re-write `~/.neppy/config.toml` so the mock URL persists across
  *     the reset and the next scenario starts pointing at the mock.
  *
  * What this covers (the "major user flows" set):
@@ -47,7 +47,7 @@ import {
 const LOG = '[MegaFlow]';
 const MOCK_PORT = Number(process.env.E2E_MOCK_PORT || 18473);
 const HOME = process.env.HOME || os.homedir();
-const CONFIG_DIR = path.join(HOME, '.openhuman');
+const CONFIG_DIR = path.join(HOME, '.neppy');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.toml');
 const MOCK_URL = `http://127.0.0.1:${MOCK_PORT}`;
 
@@ -85,7 +85,7 @@ async function resetEverything(label: string): Promise<void> {
   // `openhuman.config_reset_local_data` call this used to make was
   // killing the CEF/WDIO session on Linux mid-spec — `reset_local_data`
   // does `remove_dir_all($OPENHUMAN_WORKSPACE)` plus
-  // `remove_dir_all(~/.openhuman)` while CEF is still mid-flight,
+  // `remove_dir_all(~/.neppy)` while CEF is still mid-flight,
   // and the renderer doesn't survive that on Linux/CEF (every
   // sub-test after the first then fails with `invalid session id`).
   //
@@ -653,7 +653,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
   // Calls `openhuman.update_version` and asserts the response contains a
   // semver-shaped `version` string, a non-empty `target_triple`, and an
   // `asset_prefix` that starts with `openhuman-core-`.  No network call to
-  // update.openhuman.app (or github.com) is expected — the version RPC is
+  // update.neppy.app (or github.com) is expected — the version RPC is
   // entirely local and must not appear in the mock request log.
   // -------------------------------------------------------------------------
   it('update.version: returns version, target_triple, and asset_prefix without a network call', async () => {
@@ -705,7 +705,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     const outbound = getRequestLog().find(r => {
       try {
         const url = new URL(r.url, 'http://mock.local');
-        return url.hostname === 'github.com' || url.hostname === 'update.openhuman.app';
+        return url.hostname === 'github.com' || url.hostname === 'update.neppy.app';
       } catch {
         return false;
       }

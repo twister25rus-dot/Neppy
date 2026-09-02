@@ -268,7 +268,7 @@ fn ensure_modules_policy() {
                 workspace_dir: workspace.clone(),
                 action_dir: workspace.clone(),
                 config_path: workspace.join("config.toml"),
-                ..openhuman_core::openhuman::config::Config::default()
+                ..neppy_core::openhuman::config::Config::default()
             },
         ));
     }
@@ -285,11 +285,11 @@ async fn setup_embeddings_test() -> (
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path().to_path_buf();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
-    write_min_config(&openhuman_home);
+    write_min_config(&neppy_home);
     // Also write user-local config so that post-login config loads succeed.
-    write_min_config(&openhuman_home.join("users").join("local"));
+    write_min_config(&neppy_home.join("users").join("local"));
 
     let home_guard = EnvVarGuard::set_to_path("HOME", &home);
     let workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");

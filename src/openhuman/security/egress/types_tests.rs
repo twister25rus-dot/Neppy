@@ -36,7 +36,7 @@ fn composio_shape_is_external_toolcall() {
 #[test]
 fn integration_shape_targets_backend() {
     let d = EgressDescriptor::integration("/agent-integrations/composio/tools");
-    assert_eq!(d.provider_slug, "openhuman_backend");
+    assert_eq!(d.provider_slug, "neppy_backend");
     assert_eq!(d.service, "/agent-integrations/composio/tools");
     assert!(d.is_external);
     assert_eq!(d.reason, EgressReason::Integration);

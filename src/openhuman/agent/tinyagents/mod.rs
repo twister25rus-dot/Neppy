@@ -217,7 +217,7 @@ fn run_policy_for(max_iterations: usize, response_cache_enabled: bool) -> RunPol
         retry_on: None,
     };
     // Unknown-tool recovery (01.2 / C3): the crate policy owns this end to end —
-    // the `__openhuman_unknown_tool__` sentinel tool + `UnknownToolRewriteMiddleware`
+    // the `__neppy_unknown_tool__` sentinel tool + `UnknownToolRewriteMiddleware`
     // were already deleted. We deliberately keep `ReturnToolError` rather than
     // `Rewrite { tool_name }`: Rewrite requires a real catch-all target tool (the
     // deleted sentinel was exactly that) and, when it hits, *silently* executes
@@ -1876,7 +1876,7 @@ fn assemble_turn_harness(
     } else {
         orchestration::SteeringRunClass::Interactive
     };
-    let handle = Some(orchestration::openhuman_steering_handle(steering_run_class));
+    let handle = Some(orchestration::neppy_steering_handle(steering_run_class));
 
     // Memory protocol (issue #4116): observe the read → dedupe → write →
     // update-index cycle and append a corrective note when a write skips the
@@ -2281,7 +2281,7 @@ fn assemble_turn_harness(
     // Phase 1): an external-effect tool intercepts through the global
     // `ApprovalGate`, a denial short-circuits with a model-consumable result, and
     // an approved call records a terminal audit row. Replaces the inline approval
-    // block that used to live in `execute_openhuman_tool`.
+    // block that used to live in `execute_neppy_tool`.
     harness.push_tool_middleware(Arc::new(middleware::ApprovalSecurityMiddleware::new(
         tool_sets.clone(),
     )));

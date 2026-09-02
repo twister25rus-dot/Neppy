@@ -1,7 +1,7 @@
 use crate::openhuman::tools::PermissionLevel;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-const NO_TOOLS_ALLOWED_SENTINEL: &str = "__openhuman_no_policy_allowed_tools__";
+const NO_TOOLS_ALLOWED_SENTINEL: &str = "__neppy_no_policy_allowed_tools__";
 
 /// Coarse task risk derived from the highest permission level allowed for the
 /// session.

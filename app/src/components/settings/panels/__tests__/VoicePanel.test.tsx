@@ -16,10 +16,10 @@ import {
 } from '../../../../services/api/voiceSettingsApi';
 import { renderWithProviders } from '../../../../test/test-utils';
 import {
-  openhumanGetVoiceServerSettings,
-  openhumanUpdateVoiceServerSettings,
-  openhumanVoiceSetProviders,
-  openhumanVoiceStatus,
+  neppyGetVoiceServerSettings,
+  neppyUpdateVoiceServerSettings,
+  neppyVoiceSetProviders,
+  neppyVoiceStatus,
   syncNotchVisibility,
   type VoiceServerSettings,
   type VoiceStatus,
@@ -27,10 +27,10 @@ import {
 import VoicePanel from '../VoicePanel';
 
 vi.mock('../../../../utils/tauriCommands', () => ({
-  openhumanGetVoiceServerSettings: vi.fn(),
-  openhumanUpdateVoiceServerSettings: vi.fn(),
-  openhumanVoiceSetProviders: vi.fn(),
-  openhumanVoiceStatus: vi.fn(),
+  neppyGetVoiceServerSettings: vi.fn(),
+  neppyUpdateVoiceServerSettings: vi.fn(),
+  neppyVoiceSetProviders: vi.fn(),
+  neppyVoiceStatus: vi.fn(),
   syncNotchVisibility: vi.fn(),
 }));
 
@@ -145,19 +145,19 @@ describe('VoicePanel', () => {
       voiceSettings: makeVoiceSettings(),
     };
 
-    vi.mocked(openhumanGetVoiceServerSettings).mockImplementation(async () => ({
+    vi.mocked(neppyGetVoiceServerSettings).mockImplementation(async () => ({
       result: { ...runtime.settings },
       logs: [],
     }));
-    vi.mocked(openhumanVoiceStatus).mockImplementation(async () => ({ ...runtime.voiceStatus }));
+    vi.mocked(neppyVoiceStatus).mockImplementation(async () => ({ ...runtime.voiceStatus }));
     // The toggle handler ignores the resolved value (it updates React state
     // optimistically before awaiting), so a minimal cast is enough here.
-    vi.mocked(openhumanUpdateVoiceServerSettings).mockResolvedValue({
+    vi.mocked(neppyUpdateVoiceServerSettings).mockResolvedValue({
       result: {},
       logs: [],
     } as never);
     vi.mocked(syncNotchVisibility).mockResolvedValue(undefined);
-    vi.mocked(openhumanVoiceSetProviders).mockImplementation(async update => {
+    vi.mocked(neppyVoiceSetProviders).mockImplementation(async update => {
       if (update.stt_provider) runtime.voiceStatus.stt_engine = update.stt_provider;
       if (update.tts_provider) runtime.voiceStatus.tts_provider = update.tts_provider;
       if (update.stt_model) runtime.voiceStatus.stt_model_id = update.stt_model;
@@ -202,14 +202,14 @@ describe('VoicePanel', () => {
     fireEvent.click(toggle);
 
     await waitFor(() =>
-      expect(openhumanUpdateVoiceServerSettings).toHaveBeenCalledWith({ always_on_enabled: true })
+      expect(neppyUpdateVoiceServerSettings).toHaveBeenCalledWith({ always_on_enabled: true })
     );
     await waitFor(() => expect(syncNotchVisibility).toHaveBeenCalledWith(true));
     expect(toggle).toHaveAttribute('aria-checked', 'true');
   });
 
   it('restores the always-on toggle when persistence fails', async () => {
-    vi.mocked(openhumanUpdateVoiceServerSettings).mockRejectedValueOnce(
+    vi.mocked(neppyUpdateVoiceServerSettings).mockRejectedValueOnce(
       new Error('settings unavailable')
     );
     renderWithProviders(<VoicePanel />);
@@ -285,10 +285,10 @@ describe('VoicePanel', () => {
     await waitFor(() => expect(sttSelect.value).toBe('cloud'));
 
     // No RPC call yet — user must click Save.
-    expect(vi.mocked(openhumanVoiceSetProviders)).not.toHaveBeenCalled();
+    expect(vi.mocked(neppyVoiceSetProviders)).not.toHaveBeenCalled();
   });
 
-  it('persists STT provider changes through openhumanVoiceSetProviders when Save is clicked', async () => {
+  it('persists STT provider changes through neppyVoiceSetProviders when Save is clicked', async () => {
     runtime.voiceSettings = makeVoiceSettings({
       voiceProviders: [ELEVENLABS_PROVIDER],
       sttProvider: { kind: 'external', providerSlug: 'elevenlabs', model: 'scribe_v1' },
@@ -308,14 +308,14 @@ describe('VoicePanel', () => {
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
-      expect(vi.mocked(openhumanVoiceSetProviders)).toHaveBeenCalledWith(
+      expect(vi.mocked(neppyVoiceSetProviders)).toHaveBeenCalledWith(
         expect.objectContaining({ stt_provider: 'cloud' })
       )
     );
     expect(await screen.findByText(/Voice providers saved/i)).toBeInTheDocument();
   });
 
-  it('persists TTS provider changes through openhumanVoiceSetProviders when Save is clicked', async () => {
+  it('persists TTS provider changes through neppyVoiceSetProviders when Save is clicked', async () => {
     runtime.voiceSettings = makeVoiceSettings({
       sttProvider: { kind: 'cloud' },
       ttsProvider: { kind: 'local', engine: 'piper', model: '' },
@@ -333,7 +333,7 @@ describe('VoicePanel', () => {
     fireEvent.click(saveBtn);
 
     await waitFor(() =>
-      expect(vi.mocked(openhumanVoiceSetProviders)).toHaveBeenCalledWith(
+      expect(vi.mocked(neppyVoiceSetProviders)).toHaveBeenCalledWith(
         expect.objectContaining({ tts_provider: 'cloud' })
       )
     );
@@ -354,7 +354,7 @@ describe('VoicePanel', () => {
       ttsProvider: { kind: 'cloud' },
     });
 
-    vi.mocked(openhumanVoiceSetProviders).mockRejectedValueOnce(new Error('RPC timeout'));
+    vi.mocked(neppyVoiceSetProviders).mockRejectedValueOnce(new Error('RPC timeout'));
 
     renderWithProviders(<VoicePanel />, { initialEntries: ['/settings/voice'] });
 
@@ -365,7 +365,7 @@ describe('VoicePanel', () => {
     // Freeze subsequent loadData calls so the error set by persistProviders is
     // not cleared by the automatic reload that fires in saveRouting after
     // persistProviders() returns (without re-throwing).
-    vi.mocked(openhumanGetVoiceServerSettings).mockImplementation(
+    vi.mocked(neppyGetVoiceServerSettings).mockImplementation(
       () => new Promise(() => {}) // hang — prevents error being wiped by reload
     );
 
@@ -393,7 +393,7 @@ describe('VoicePanel', () => {
     fireEvent.change(voiceSelect, { target: { value: 'en_US-ryan-medium' } });
 
     await waitFor(() =>
-      expect(vi.mocked(openhumanVoiceSetProviders)).toHaveBeenCalledWith(
+      expect(vi.mocked(neppyVoiceSetProviders)).toHaveBeenCalledWith(
         expect.objectContaining({ tts_voice: 'en_US-ryan-medium' })
       )
     );
@@ -512,8 +512,8 @@ describe('VoicePanel', () => {
 
   // ─── Error / notice display ─────────────────────────────────────────────
 
-  it('shows an error banner when openhumanGetVoiceServerSettings rejects', async () => {
-    vi.mocked(openhumanGetVoiceServerSettings).mockRejectedValueOnce(new Error('core offline'));
+  it('shows an error banner when neppyGetVoiceServerSettings rejects', async () => {
+    vi.mocked(neppyGetVoiceServerSettings).mockRejectedValueOnce(new Error('core offline'));
 
     renderWithProviders(<VoicePanel />, { initialEntries: ['/settings/voice'] });
 
@@ -653,14 +653,14 @@ describe('VoicePanel', () => {
     renderWithProviders(<VoicePanel />, { initialEntries: ['/settings/voice'] });
 
     const ttsVoiceSelect = (await screen.findByTestId('tts-voice-select')) as HTMLSelectElement;
-    const beforeCallCount = vi.mocked(openhumanVoiceSetProviders).mock.calls.length;
+    const beforeCallCount = vi.mocked(neppyVoiceSetProviders).mock.calls.length;
 
     // Selecting __custom__ should not trigger persistProviders
     fireEvent.change(ttsVoiceSelect, { target: { value: '__custom__' } });
 
     // Give async effects time to fire
     await new Promise(r => setTimeout(r, 50));
-    expect(vi.mocked(openhumanVoiceSetProviders).mock.calls.length).toBe(beforeCallCount);
+    expect(vi.mocked(neppyVoiceSetProviders).mock.calls.length).toBe(beforeCallCount);
   });
 
   // ─── Modal: install button (piper in the API-key modal) ────────────────────
@@ -700,7 +700,7 @@ describe('VoicePanel', () => {
     fireEvent.click(enableBtn);
 
     expect(screen.getByTestId('voice-provider-key-modal')).toBeInTheDocument();
-    expect(vi.mocked(openhumanVoiceSetProviders)).not.toHaveBeenCalled();
+    expect(vi.mocked(neppyVoiceSetProviders)).not.toHaveBeenCalled();
   });
 
   it('allows Enable in the Piper modal when voice_status reports local TTS ready', async () => {

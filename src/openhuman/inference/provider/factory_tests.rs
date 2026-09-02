@@ -46,7 +46,7 @@ fn oh_entry(id: &str) -> CloudProviderCreds {
         slug: "openhuman".to_string(),
         label: "Neppy".to_string(),
         endpoint: "https://api.openhuman.ai/v1".to_string(),
-        auth_style: AuthStyle::NeppyJwt,
+        auth_style: AuthStyle::OpenhumanJwt,
         ..Default::default()
     }
 }
@@ -353,7 +353,7 @@ fn resolve_model_for_hint_extracts_model_from_byok_provider() {
 }
 
 #[test]
-fn resolve_model_for_hint_falls_through_openhuman_and_cloud_sentinels() {
+fn resolve_model_for_hint_falls_through_neppy_and_cloud_sentinels() {
     let mut config = Config::default();
     config.reasoning_provider = Some("openhuman".to_string());
     assert_eq!(
@@ -738,7 +738,7 @@ fn enforce_local_only_inference_errors_on_external_when_local_only() {
         .unwrap_or_else(|e| e.into_inner());
     use crate::openhuman::config::PrivacyMode;
     use crate::openhuman::security::SecurityPolicy;
-    let ws = std::env::temp_dir().join("openhuman_factory_privacy_test");
+    let ws = std::env::temp_dir().join("neppy_factory_privacy_test");
     let policy = std::sync::Arc::new(
         SecurityPolicy {
             workspace_dir: ws.clone(),
@@ -1069,7 +1069,7 @@ fn create_chat_model_routes_anthropic_auth_cloud_slug_to_crate_native() {
 }
 
 #[test]
-fn configured_openhuman_jwt_slug_routes_to_managed_chat_model() {
+fn configured_neppy_jwt_slug_routes_to_managed_chat_model() {
     let _guard = crate::openhuman::inference::inference_test_guard();
     let mut config = Config::default();
     config.cloud_providers.push(oh_entry("p_oh"));
@@ -1090,7 +1090,7 @@ fn configured_openhuman_jwt_slug_routes_to_managed_chat_model() {
 }
 
 #[tokio::test]
-async fn openhuman_jwt_slug_discloses_pinned_model() {
+async fn neppy_jwt_slug_discloses_pinned_model() {
     use crate::core::events::DomainEvent;
     use crate::openhuman::security::egress::{EgressDescriptor, EgressReason};
     use std::time::Duration;
@@ -1214,7 +1214,7 @@ async fn native_claude_turn_routes_disclose_pinned_models() {
 }
 
 #[test]
-fn openhuman_jwt_slug_preserves_forced_text_mode() {
+fn neppy_jwt_slug_preserves_forced_text_mode() {
     let _guard = crate::openhuman::inference::inference_test_guard();
     let mut config = Config::default();
     config.cloud_providers.push(oh_entry("p_oh"));
@@ -1237,7 +1237,7 @@ fn openhuman_jwt_slug_preserves_forced_text_mode() {
 }
 
 #[test]
-fn openhuman_jwt_slug_without_model_preserves_managed_role_tier() {
+fn neppy_jwt_slug_without_model_preserves_managed_role_tier() {
     let _guard = crate::openhuman::inference::inference_test_guard();
     let mut config = Config::default();
     config.cloud_providers.push(oh_entry("p_oh"));

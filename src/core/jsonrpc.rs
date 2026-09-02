@@ -2421,7 +2421,7 @@ pub async fn bootstrap_core_runtime(
         }
 
         // --- Detached sub-agent TaskStore reconciliation -------------------
-        // The durable orchestration TaskStore (`<workspace>/.openhuman/
+        // The durable orchestration TaskStore (`<workspace>/.neppy/
         // orchestration_tasks.jsonl`) can hold non-terminal sub-agent records left
         // by a previous process — their detached executor (abort handle +
         // cooperative CancellationToken) died with that process, so they cannot be

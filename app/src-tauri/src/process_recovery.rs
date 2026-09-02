@@ -45,7 +45,7 @@ mod imp {
         }
     }
 
-    pub(crate) fn reap_stale_openhuman_processes() {
+    pub(crate) fn reap_stale_neppy_processes() {
         if core_process::reuse_existing_listener_enabled() {
             log::info!(
                 "[startup-recovery] OPENHUMAN_CORE_REUSE_EXISTING=1; skipping stale process reap"
@@ -53,7 +53,7 @@ mod imp {
             return;
         }
 
-        let initial = match enumerate_openhuman_processes() {
+        let initial = match enumerate_neppy_processes() {
             Ok(processes) => processes,
             Err(err) => {
                 log::warn!("[startup-recovery] failed to enumerate Neppy processes: {err}");
@@ -83,7 +83,7 @@ mod imp {
 
         std::thread::sleep(TERM_GRACE);
 
-        let after_term = match enumerate_openhuman_processes() {
+        let after_term = match enumerate_neppy_processes() {
             Ok(processes) => processes,
             Err(err) => {
                 log::warn!(
@@ -110,7 +110,7 @@ mod imp {
         }
     }
 
-    pub(crate) fn enumerate_openhuman_processes() -> Result<Vec<ProcessInfo>, String> {
+    pub(crate) fn enumerate_neppy_processes() -> Result<Vec<ProcessInfo>, String> {
         let Some((contents_dir, main_exe)) = current_bundle_contents_dir() else {
             log::debug!("[startup-recovery] current executable is not inside a .app bundle");
             return Ok(Vec::new());
@@ -395,7 +395,7 @@ mod linux_imp {
 
     const TERM_GRACE: Duration = Duration::from_millis(500);
 
-    pub(crate) fn reap_stale_openhuman_processes() {
+    pub(crate) fn reap_stale_neppy_processes() {
         if core_process::reuse_existing_listener_enabled() {
             log::info!(
                 "[startup-recovery] OPENHUMAN_CORE_REUSE_EXISTING=1; skipping stale process reap"
@@ -406,7 +406,7 @@ mod linux_imp {
         let self_pid = std::process::id();
         log::debug!("[startup-recovery] linux: scanning /proc for stale Neppy processes (self_pid={self_pid})");
 
-        let stale = match enumerate_openhuman_processes() {
+        let stale = match enumerate_neppy_processes() {
             Ok(procs) => procs,
             Err(err) => {
                 log::warn!("[startup-recovery] linux: failed to enumerate processes: {err}");
@@ -439,7 +439,7 @@ mod linux_imp {
 
         std::thread::sleep(TERM_GRACE);
 
-        let after_term = match enumerate_openhuman_processes() {
+        let after_term = match enumerate_neppy_processes() {
             Ok(procs) => procs,
             Err(err) => {
                 log::warn!("[startup-recovery] linux: failed to re-enumerate after SIGTERM: {err}");
@@ -476,7 +476,7 @@ mod linux_imp {
         );
     }
 
-    pub(crate) fn enumerate_openhuman_processes() -> Result<Vec<ProcessInfo>, String> {
+    pub(crate) fn enumerate_neppy_processes() -> Result<Vec<ProcessInfo>, String> {
         let self_pid = std::process::id();
         let mut results = Vec::new();
 
@@ -511,7 +511,7 @@ mod linux_imp {
                 None => continue,
             };
 
-            if !is_openhuman_executable(&argv0) {
+            if !is_neppy_executable(&argv0) {
                 continue;
             }
 
@@ -544,7 +544,7 @@ mod linux_imp {
         parts.next()?.parse().ok()
     }
 
-    fn is_openhuman_executable(argv0: &str) -> bool {
+    fn is_neppy_executable(argv0: &str) -> bool {
         let filename = std::path::Path::new(argv0)
             .file_name()
             .and_then(|n| n.to_str())
@@ -558,30 +558,30 @@ mod linux_imp {
         use super::*;
 
         #[test]
-        fn is_openhuman_executable_matches_core_binary() {
-            assert!(is_openhuman_executable("/usr/local/bin/openhuman-core"));
-            assert!(is_openhuman_executable("openhuman-core"));
-            assert!(is_openhuman_executable("/opt/Neppy/openhuman-core"));
+        fn is_neppy_executable_matches_core_binary() {
+            assert!(is_neppy_executable("/usr/local/bin/openhuman-core"));
+            assert!(is_neppy_executable("openhuman-core"));
+            assert!(is_neppy_executable("/opt/Neppy/openhuman-core"));
         }
 
         #[test]
-        fn is_openhuman_executable_matches_app_binary() {
-            assert!(is_openhuman_executable("/opt/Neppy/Neppy"));
-            assert!(is_openhuman_executable("openhuman"));
+        fn is_neppy_executable_matches_app_binary() {
+            assert!(is_neppy_executable("/opt/Neppy/Neppy"));
+            assert!(is_neppy_executable("openhuman"));
         }
 
         #[test]
-        fn is_openhuman_executable_rejects_unrelated() {
-            assert!(!is_openhuman_executable("bash"));
-            assert!(!is_openhuman_executable("/usr/bin/python3"));
-            assert!(!is_openhuman_executable("node"));
+        fn is_neppy_executable_rejects_unrelated() {
+            assert!(!is_neppy_executable("bash"));
+            assert!(!is_neppy_executable("/usr/bin/python3"));
+            assert!(!is_neppy_executable("node"));
         }
 
         #[test]
-        fn enumerate_openhuman_processes_returns_no_self() {
+        fn enumerate_neppy_processes_returns_no_self() {
             // Enumerate and confirm self is not in the result.
             let self_pid = std::process::id();
-            let result = enumerate_openhuman_processes().expect("enumerate");
+            let result = enumerate_neppy_processes().expect("enumerate");
             assert!(
                 result.iter().all(|p| p.pid != self_pid),
                 "self pid {self_pid} must not appear in enumerated list"
@@ -607,7 +607,7 @@ mod windows_imp {
 
     const TERM_GRACE: Duration = Duration::from_millis(500);
 
-    pub(crate) fn reap_stale_openhuman_processes() {
+    pub(crate) fn reap_stale_neppy_processes() {
         if core_process::reuse_existing_listener_enabled() {
             log::info!(
                 "[startup-recovery] OPENHUMAN_CORE_REUSE_EXISTING=1; skipping stale process reap"
@@ -710,12 +710,12 @@ mod windows_imp {
     /// standalone core, and CEF helpers), excluding the current process. Backs
     /// the `process_diagnostics_list_owned` command — this is a *listing*, not a
     /// kill list; the reap uses [`select_reapable_gui_instances`].
-    pub(crate) fn enumerate_openhuman_processes() -> Result<Vec<ProcessInfo>, String> {
+    pub(crate) fn enumerate_neppy_processes() -> Result<Vec<ProcessInfo>, String> {
         let self_pid = std::process::id();
         Ok(enumerate_all_processes()?
             .into_iter()
             .filter(|p| p.pid != self_pid)
-            .filter(|p| is_openhuman_process(&p.argv0))
+            .filter(|p| is_neppy_process(&p.argv0))
             .collect())
     }
 
@@ -802,7 +802,7 @@ mod windows_imp {
 
     /// True for Neppy-owned processes of any role (GUI, CLI, standalone
     /// core, CEF helper). Used only for the diagnostics listing.
-    fn is_openhuman_process(argv0: &str) -> bool {
+    fn is_neppy_process(argv0: &str) -> bool {
         let name = exe_file_name(argv0);
         name == "openhuman.exe" || name == "openhuman-core.exe"
     }
@@ -1040,21 +1040,21 @@ ProcessId=9000\r\r\n";
         }
 
         #[test]
-        fn is_openhuman_process_matches_gui_and_core_only() {
-            assert!(is_openhuman_process("C:\\p\\Neppy.exe"));
-            assert!(is_openhuman_process("C:\\p\\openhuman-core.exe"));
-            assert!(is_openhuman_process("Neppy.exe"));
-            assert!(!is_openhuman_process("C:\\Chrome\\chrome.exe"));
-            assert!(!is_openhuman_process("python.exe"));
+        fn is_neppy_process_matches_gui_and_core_only() {
+            assert!(is_neppy_process("C:\\p\\Neppy.exe"));
+            assert!(is_neppy_process("C:\\p\\openhuman-core.exe"));
+            assert!(is_neppy_process("Neppy.exe"));
+            assert!(!is_neppy_process("C:\\Chrome\\chrome.exe"));
+            assert!(!is_neppy_process("python.exe"));
         }
     }
 }
 
 #[cfg(target_os = "macos")]
-pub(crate) use imp::{enumerate_openhuman_processes, reap_stale_openhuman_processes};
+pub(crate) use imp::{enumerate_neppy_processes, reap_stale_neppy_processes};
 
 #[cfg(target_os = "linux")]
-pub(crate) use linux_imp::{enumerate_openhuman_processes, reap_stale_openhuman_processes};
+pub(crate) use linux_imp::{enumerate_neppy_processes, reap_stale_neppy_processes};
 
 #[cfg(target_os = "windows")]
-pub(crate) use windows_imp::{enumerate_openhuman_processes, reap_stale_openhuman_processes};
+pub(crate) use windows_imp::{enumerate_neppy_processes, reap_stale_neppy_processes};

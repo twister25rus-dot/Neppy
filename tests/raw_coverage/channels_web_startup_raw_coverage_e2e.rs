@@ -69,7 +69,7 @@ fn web_error_debug_export_covers_provider_config_and_retry_branches() {
         "Rate limit exceeded: action budget exhausted while running web_fetch",
     );
     assert_eq!(action_budget.error_type, "action_budget_exceeded");
-    assert_eq!(action_budget.source, "openhuman_budget");
+    assert_eq!(action_budget.source, "neppy_budget");
     assert!(action_budget.provider.is_none());
 
     let non_retryable = web_test_support::classify_error_for_test(

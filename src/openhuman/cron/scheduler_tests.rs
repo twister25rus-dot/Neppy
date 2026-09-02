@@ -228,7 +228,7 @@ fn cron_alert_body_rewrites_morning_briefing_failure() {
 }
 
 #[test]
-fn cron_alert_body_strips_openhuman_link_markup() {
+fn cron_alert_body_strips_neppy_link_markup() {
     let job = test_job("");
     let body = cron_alert_body(
         &job,
@@ -606,7 +606,7 @@ async fn execute_job_with_retry_exhausts_attempts() {
 // classifier so the cron retry loop halts on the first occurrence instead of
 // retrying N times and reporting `failure=retries_exhausted` to Sentry.
 #[test]
-fn is_session_expired_failure_matches_openhuman_backend_401_in_agent_error() {
+fn is_session_expired_failure_matches_neppy_backend_401_in_agent_error() {
     let wire = r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
     assert!(
         is_session_expired_failure(&JobType::Agent, Some(wire), AGENT_JOB_USER_FAILURE_MESSAGE),

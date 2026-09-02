@@ -49,7 +49,7 @@ rpc() {
 
 # Write HEARTBEAT.md to the workspace
 echo "[setup] Writing HEARTBEAT.md to workspace..."
-WORKSPACE="$HOME/.openhuman/workspace"
+WORKSPACE="$HOME/.neppy/workspace"
 mkdir -p "$WORKSPACE"
 cp "$FIXTURES/heartbeat.md" "$WORKSPACE/HEARTBEAT.md"
 echo "[setup] HEARTBEAT.md written: $(cat "$WORKSPACE/HEARTBEAT.md" | grep "^- " | wc -l) tasks"

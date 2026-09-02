@@ -462,11 +462,11 @@ pub fn skills_schemas(function: &str) -> ControllerSchema {
         "skills_uninstall" => ControllerSchema {
             namespace: "skills",
             function: "uninstall",
-            description: "Remove an installed user-scope SKILL.md skill from `~/.openhuman/skills/<name>/`. Only user-scope installs are supported; project-scope and legacy skills are read-only. Rejects path separators and traversal; canonicalises before delete.",
+            description: "Remove an installed user-scope SKILL.md skill from `~/.neppy/skills/<name>/`. Only user-scope installs are supported; project-scope and legacy skills are read-only. Rejects path separators and traversal; canonicalises before delete.",
             inputs: vec![FieldSchema {
                 name: "name",
                 ty: TypeSchema::String,
-                comment: "Exact on-disk slug of the installed skill — matches WorkflowSummary.id (the directory under ~/.openhuman/skills/), which may differ from the frontmatter display name in Workflow.name.",
+                comment: "Exact on-disk slug of the installed skill — matches WorkflowSummary.id (the directory under ~/.neppy/skills/), which may differ from the frontmatter display name in Workflow.name.",
                 required: true,
             }],
             outputs: vec![

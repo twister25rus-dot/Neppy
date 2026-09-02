@@ -20,8 +20,8 @@ The guiding rule of this guide: **your configuration and memory are preserved by
 
   | Platform      | Data folder                 |
   | ------------- | --------------------------- |
-  | macOS / Linux | `~/.openhuman/`             |
-  | Windows       | `%USERPROFILE%\.openhuman\` |
+  | macOS / Linux | `~/.neppy/`             |
+  | Windows       | `%USERPROFILE%\.neppy\` |
 
   Leave that folder alone unless a step here explicitly says to touch it.
 
@@ -37,7 +37,7 @@ The guiding rule of this guide: **your configuration and memory are preserved by
 Almost every failure names itself in the log. Get to the logs first; it turns guessing into fixing.
 
 - **In the app (if it opens):** **Settings → About → App Logs Folder**. There's a button to reveal the folder in your file manager.
-- **On disk:** logs are under your data folder, e.g. `~/.openhuman/logs/openhuman.<date>.log` (Windows: `%USERPROFILE%\.openhuman\logs\openhuman.*.log`). They rotate daily.
+- **On disk:** logs are under your data folder, e.g. `~/.neppy/logs/openhuman.<date>.log` (Windows: `%USERPROFILE%\.neppy\logs\openhuman.*.log`). They rotate daily.
 
 Open the most recent log and read the last error lines. Match the message to the tables below.
 
@@ -58,7 +58,7 @@ Reinstalling the **application** does not delete your **data folder**; they're s
 
 - Download the current build from [tinyhumans.ai/openhuman](https://tinyhumans.ai/openhuman) and install over the top.
 - On macOS, install the real `.app` bundle (some features need the bundle, not a dev build).
-- Reopen. Your memory, personas, and settings are still there because they live in `~/.openhuman/`, which you didn't touch.
+- Reopen. Your memory, personas, and settings are still there because they live in `~/.neppy/`, which you didn't touch.
 
 ### Rung 3: Fix the specific error
 
@@ -81,12 +81,12 @@ Quit Neppy completely before moving its folder.
 
 ```bash
 # macOS / Linux
-mv ~/.openhuman ~/.openhuman.backup-$(date +%Y%m%d)
+mv ~/.neppy ~/.neppy.backup-$(date +%Y%m%d)
 ```
 
 ```powershell
 # Windows (PowerShell)
-Rename-Item "$env:USERPROFILE\.openhuman" ".openhuman.backup"
+Rename-Item "$env:USERPROFILE\.neppy" ".neppy.backup"
 ```
 
 Relaunch. Neppy recreates a fresh data folder and you sign in again.
@@ -107,7 +107,7 @@ You've recovered when:
 
 ## What "preserved by default" means here
 
-At no point in Rungs 1 to 3 do you delete anything. Rung 4 **renames** your data folder; it never removes it. Even the most aggressive step is fully reversible. Reinstalling the app and reinstalling the OS-level runtime never target your `~/.openhuman/` data.
+At no point in Rungs 1 to 3 do you delete anything. Rung 4 **renames** your data folder; it never removes it. Even the most aggressive step is fully reversible. Reinstalling the app and reinstalling the OS-level runtime never target your `~/.neppy/` data.
 
 ## If you're still stuck
 

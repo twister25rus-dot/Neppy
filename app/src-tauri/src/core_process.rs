@@ -726,7 +726,7 @@ impl CoreProcessHandle {
             self.preferred_port
         );
 
-        tokio::task::spawn_blocking(crate::process_recovery::reap_stale_openhuman_processes)
+        tokio::task::spawn_blocking(crate::process_recovery::reap_stale_neppy_processes)
             .await
             .unwrap_or_else(|e| {
                 log::warn!("[core_process] recover_port_conflict: reap task panicked: {e}")
@@ -931,7 +931,7 @@ async fn identify_listener(port: u16) -> ListenerKind {
             };
         }
     };
-    if is_openhuman_root_body(&body) {
+    if is_neppy_root_body(&body) {
         log::info!("[core] listener on port {port} identified as openhuman core");
         ListenerKind::Neppy
     } else {
@@ -944,7 +944,7 @@ async fn identify_listener(port: u16) -> ListenerKind {
 
 /// Pure parse of the root-handler JSON. Public-by-test so the fingerprinting
 /// logic stays unit-testable without standing up an HTTP server.
-fn is_openhuman_root_body(body: &str) -> bool {
+fn is_neppy_root_body(body: &str) -> bool {
     let value: serde_json::Value = match serde_json::from_str(body) {
         Ok(v) => v,
         Err(_) => return false,

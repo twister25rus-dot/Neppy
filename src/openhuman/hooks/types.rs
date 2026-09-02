@@ -260,7 +260,7 @@ pub struct HookInput {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub agent_id: Option<String>,
     /// Core version string, so a hook can gate on host capability.
-    pub openhuman_version: String,
+    pub neppy_version: String,
     /// Filesystem roots the agent may act in — `action_dir` plus any turn
     /// workspace. First entry is the primary root.
     pub workspace_roots: Vec<String>,

@@ -19,9 +19,9 @@ import { useCoreState } from '../../../providers/CoreStateProvider';
 import { isLocalSessionToken } from '../../../utils/localSession';
 import {
   type ComposioModeStatus,
-  openhumanComposioClearApiKey,
-  openhumanComposioGetMode,
-  openhumanComposioSetApiKey,
+  neppyComposioClearApiKey,
+  neppyComposioGetMode,
+  neppyComposioSetApiKey,
 } from '../../../utils/tauriCommands';
 import PanelPage from '../../layout/PanelPage';
 import Alert, { AlertDescription, AlertTitle } from '../../ui/Alert';
@@ -89,7 +89,7 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
   // ── load current mode status on mount ────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    openhumanComposioGetMode()
+    neppyComposioGetMode()
       .then(res => {
         if (!isMounted) return;
         const status: ComposioModeStatus | undefined = res.result;
@@ -158,7 +158,7 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
     try {
       if (mode === 'direct' && trimmed.length > 0) {
         // [composio-direct] persist new key + flip mode to direct.
-        await openhumanComposioSetApiKey(trimmed, true);
+        await neppyComposioSetApiKey(trimmed, true);
         // Mask the field after a successful save so the secret is not
         // left dangling in the DOM. The Rust side has the source of
         // truth in the encrypted keychain.
@@ -168,7 +168,7 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
         flashSaved('saved');
       } else if (mode === 'backend') {
         // Switching to backend — clear the stored key and reset mode.
-        await openhumanComposioClearApiKey();
+        await neppyComposioClearApiKey();
         setApiKey('');
         setApiKeyStored(false);
         setPersistedMode('backend');

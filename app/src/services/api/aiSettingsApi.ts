@@ -28,18 +28,18 @@ import {
   type CloudProviderCreds,
   type ModelRegistryEntry,
   type ModelSettingsUpdate,
-  openhumanGetClientConfig,
-  openhumanUpdateLocalAiSettings,
-  openhumanUpdateModelSettings,
+  neppyGetClientConfig,
+  neppyUpdateLocalAiSettings,
+  neppyUpdateModelSettings,
 } from '../../utils/tauriCommands/config';
 import {
   type InstalledModelInfo,
   type LocalAiDiagnostics,
   type LocalAiStatus,
-  openhumanLocalAiApplyPreset,
-  openhumanLocalAiDiagnostics,
-  openhumanLocalAiPresets,
-  openhumanLocalAiStatus,
+  neppyLocalAiApplyPreset,
+  neppyLocalAiDiagnostics,
+  neppyLocalAiPresets,
+  neppyLocalAiStatus,
   type PresetsResponse,
 } from '../../utils/tauriCommands/localAi';
 
@@ -282,7 +282,7 @@ function authKeyForSlug(slug: string): string {
  */
 export async function loadAISettings(): Promise<AISettings> {
   const [configRes, profilesRes] = await Promise.all([
-    openhumanGetClientConfig(),
+    neppyGetClientConfig(),
     authListProviderCredentials().catch((): { result: AuthProfileSummary[] } => ({ result: [] })),
   ]);
   const config: ClientConfig = configRes.result;
@@ -419,7 +419,7 @@ export async function saveAISettings(prev: AISettings, next: AISettings): Promis
   if (Object.keys(patch).length === 0) {
     return;
   }
-  await openhumanUpdateModelSettings(patch);
+  await neppyUpdateModelSettings(patch);
 }
 
 /** Order-insensitive structural equality for two model registries. */
@@ -753,7 +753,7 @@ export async function importOpenAiCodexCliAuth(): Promise<void> {
  */
 export async function flushCloudProviders(providers: CloudProviderCreds[]): Promise<void> {
   if (!isTauri()) return;
-  await openhumanUpdateModelSettings({ cloud_providers: providers });
+  await neppyUpdateModelSettings({ cloud_providers: providers });
 }
 
 /**
@@ -834,9 +834,9 @@ export interface LocalProviderSnapshot {
 
 export async function loadLocalProviderSnapshot(): Promise<LocalProviderSnapshot> {
   const [statusRes, diag, presets] = await Promise.all([
-    openhumanLocalAiStatus().catch((): { result: LocalAiStatus | null } => ({ result: null })),
-    openhumanLocalAiDiagnostics().catch((): LocalAiDiagnostics | null => null),
-    openhumanLocalAiPresets().catch((): PresetsResponse | null => null),
+    neppyLocalAiStatus().catch((): { result: LocalAiStatus | null } => ({ result: null })),
+    neppyLocalAiDiagnostics().catch((): LocalAiDiagnostics | null => null),
+    neppyLocalAiPresets().catch((): PresetsResponse | null => null),
   ]);
   return {
     status: statusRes.result,
@@ -855,11 +855,11 @@ export async function loadLocalProviderSnapshot(): Promise<LocalProviderSnapshot
  * Critically: this flips BOTH `runtime_enabled` AND `opt_in_confirmed`.
  */
 export async function setLocalRuntimeEnabled(enabled: boolean): Promise<void> {
-  await openhumanUpdateLocalAiSettings({ runtime_enabled: enabled, opt_in_confirmed: enabled });
+  await neppyUpdateLocalAiSettings({ runtime_enabled: enabled, opt_in_confirmed: enabled });
 }
 
 /** Convenience helpers re-exported so the panel imports from one place. */
 export const localProvider = {
-  applyPreset: (tier: string) => openhumanLocalAiApplyPreset(tier),
+  applyPreset: (tier: string) => neppyLocalAiApplyPreset(tier),
   setEnabled: (enabled: boolean) => setLocalRuntimeEnabled(enabled),
 };

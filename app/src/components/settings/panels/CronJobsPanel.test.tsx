@@ -70,12 +70,12 @@ const cronRunMock = vi.fn();
 const cronRunsMock = vi.fn();
 
 vi.mock('../../../utils/tauriCommands', () => ({
-  openhumanCronAdd: (...args: unknown[]) => cronAddMock(...args),
-  openhumanCronList: () => cronListMock(),
-  openhumanCronUpdate: (...args: unknown[]) => cronUpdateMock(...args),
-  openhumanCronRemove: (...args: unknown[]) => cronRemoveMock(...args),
-  openhumanCronRun: (...args: unknown[]) => cronRunMock(...args),
-  openhumanCronRuns: (...args: unknown[]) => cronRunsMock(...args),
+  neppyCronAdd: (...args: unknown[]) => cronAddMock(...args),
+  neppyCronList: () => cronListMock(),
+  neppyCronUpdate: (...args: unknown[]) => cronUpdateMock(...args),
+  neppyCronRemove: (...args: unknown[]) => cronRemoveMock(...args),
+  neppyCronRun: (...args: unknown[]) => cronRunMock(...args),
+  neppyCronRuns: (...args: unknown[]) => cronRunsMock(...args),
 }));
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ describe('<CronJobsPanel />', () => {
     expect(screen.getByTestId('cron-form-modal-create')).toBeInTheDocument();
   });
 
-  it('onCreate triggers openhumanCronAdd and refresh', async () => {
+  it('onCreate triggers neppyCronAdd and refresh', async () => {
     const Panel = await importPanel();
     render(<Panel />);
     await waitFor(() => expect(cronListMock).toHaveBeenCalled());
@@ -174,7 +174,7 @@ describe('<CronJobsPanel />', () => {
     expect(screen.getByTestId('modal-job-id')).toHaveTextContent('job-1');
   });
 
-  it('onUpdate triggers openhumanCronUpdate and refresh', async () => {
+  it('onUpdate triggers neppyCronUpdate and refresh', async () => {
     const Panel = await importPanel();
     render(<Panel />);
     await waitFor(() => expect(cronListMock).toHaveBeenCalled());
@@ -192,7 +192,7 @@ describe('<CronJobsPanel />', () => {
     expect(cronListMock.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('surfaces errorLoadList when openhumanCronList rejects', async () => {
+  it('surfaces errorLoadList when neppyCronList rejects', async () => {
     cronListMock.mockRejectedValueOnce(new Error('boom'));
     const Panel = await importPanel();
     render(<Panel />);
@@ -201,7 +201,7 @@ describe('<CronJobsPanel />', () => {
     });
   });
 
-  it('surfaces errorToggle when openhumanCronUpdate rejects on toggle', async () => {
+  it('surfaces errorToggle when neppyCronUpdate rejects on toggle', async () => {
     cronUpdateMock.mockRejectedValueOnce(new Error('nope'));
     const Panel = await importPanel();
     render(<Panel />);

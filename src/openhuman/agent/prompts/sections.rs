@@ -485,7 +485,7 @@ impl PromptSection for WorkspaceSection {
         // `SecurityPolicy::from_config`. Otherwise fall back to env-var/working-dir
         // wording so we never point file I/O at a location the sandbox would block.
         // Read-only check (no fs side effects in prompt rendering).
-        let scratch = crate::openhuman::security::openhuman_scratch_dir();
+        let scratch = crate::openhuman::security::neppy_scratch_dir();
         let scratch_granted = std::fs::symlink_metadata(&scratch)
             .map(|m| !m.file_type().is_symlink() && m.is_dir())
             .unwrap_or(false);

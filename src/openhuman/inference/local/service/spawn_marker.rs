@@ -25,7 +25,7 @@ pub(crate) struct OllamaSpawnMarker {
     pub pid: u32,
     pub started_at_unix: u64,
     pub binary_path: String,
-    pub openhuman_pid: u32,
+    pub neppy_pid: u32,
 }
 
 impl OllamaSpawnMarker {
@@ -38,12 +38,12 @@ impl OllamaSpawnMarker {
             pid,
             started_at_unix,
             binary_path: binary_path.display().to_string(),
-            openhuman_pid: std::process::id(),
+            neppy_pid: std::process::id(),
         }
     }
 }
 
-// ---- Path-keyed helpers (testable without touching ~/.openhuman/) -------
+// ---- Path-keyed helpers (testable without touching ~/.neppy/) -------
 
 /// Write `marker` to `path`, replacing any existing file. Creates the
 /// parent directory if needed. Uses a tmp-and-rename so a crash mid-write
@@ -145,7 +145,7 @@ mod tests {
             pid: 4242,
             started_at_unix: 1_700_000_000,
             binary_path: "C:\\fake\\ollama.exe".to_string(),
-            openhuman_pid: 9001,
+            neppy_pid: 9001,
         };
 
         write_marker_at(&path, &m).expect("write marker");
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn new_marker_captures_current_process_id() {
         let m = OllamaSpawnMarker::new(4242, std::path::Path::new("ollama"));
-        assert_eq!(m.openhuman_pid, std::process::id());
+        assert_eq!(m.neppy_pid, std::process::id());
         assert_eq!(m.pid, 4242);
         assert_eq!(m.binary_path, "ollama");
     }

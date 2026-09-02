@@ -85,7 +85,7 @@ fn unscoped_test_workspace_is_not_the_developer_keychain() {
     let resolved = workspace_dir_for_file_backend();
 
     if let Some(home) = dirs::home_dir() {
-        for candidate in [home.join(".openhuman"), home.join(".openhuman-staging")] {
+        for candidate in [home.join(".neppy"), home.join(".neppy-staging")] {
             assert_ne!(
                 resolved, candidate,
                 "test builds must not write the developer's real dev-keychain.json"

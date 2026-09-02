@@ -26,14 +26,14 @@ for either host runs on the other unchanged.
   "hooks": {
     "beforeShellExecution": [
       {
-        "command": "./.openhuman/deny-destructive.sh",
+        "command": "./.neppy/deny-destructive.sh",
         "matcher": "^\\s*(rm|dd|mkfs)\\b",
         "timeout": 5,
         "failClosed": true
       }
     ],
     "afterFileEdit": [
-      { "command": "./.openhuman/format.sh", "matcher": "\\.rs$" }
+      { "command": "./.neppy/format.sh", "matcher": "\\.rs$" }
     ]
   }
 }
@@ -45,9 +45,9 @@ remove a broader one's rules**:
 | Layer | Path |
 | ----- | ---- |
 | System | `/etc/openhuman/hooks.json` · `/Library/Application Support/Neppy/hooks.json` · `%ProgramData%\Neppy\hooks.json` |
-| User | `~/.openhuman/hooks.json` |
+| User | `~/.neppy/hooks.json` |
 | Workspace | `<workspace_dir>/hooks.json` |
-| Project | `<action_dir>/.openhuman/hooks.json` |
+| Project | `<action_dir>/.neppy/hooks.json` |
 
 Concatenation is safe because the **strictest verdict wins**: across every hook
 that ran, deny beats ask beats allow. Adding a hook can never loosen a policy
@@ -220,26 +220,26 @@ default_timeout_secs = 30 # for hooks that name no timeout of their own
 
 ## Example
 
-`.openhuman/hooks.json`:
+`.neppy/hooks.json`:
 
 ```json
 {
   "version": 1,
   "hooks": {
-    "beforeReadFile": [{ "command": "./.openhuman/no-secrets.sh", "matcher": "\\.env" }],
-    "afterFileEdit": [{ "command": "./.openhuman/fmt.sh", "matcher": "\\.rs$" }]
+    "beforeReadFile": [{ "command": "./.neppy/no-secrets.sh", "matcher": "\\.env" }],
+    "afterFileEdit": [{ "command": "./.neppy/fmt.sh", "matcher": "\\.rs$" }]
   }
 }
 ```
 
-`.openhuman/no-secrets.sh`:
+`.neppy/no-secrets.sh`:
 
 ```sh
 #!/bin/sh
 echo '{"permission":"deny","agent_message":"Secrets files are off limits. Ask the user for the value you need."}'
 ```
 
-`.openhuman/fmt.sh`:
+`.neppy/fmt.sh`:
 
 ```sh
 #!/bin/sh

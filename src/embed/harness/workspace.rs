@@ -28,7 +28,7 @@ pub enum Workspace {
     Dir(PathBuf),
     /// The machine's configured Neppy workspace — the one the desktop app
     /// and CLI use, resolved the usual way (`OPENHUMAN_WORKSPACE`,
-    /// `active_user.toml`, `~/.openhuman/...`).
+    /// `active_user.toml`, `~/.neppy/...`).
     ///
     /// Reuses an existing signed-in install, and equally can disturb it. The
     /// harness will not copy skills into an inherited workspace for that reason.
@@ -69,7 +69,7 @@ pub(super) struct ResolvedWorkspace {
     /// state directory the credential store, the auth profiles and the keyring
     /// file backend all resolve against. Leave it at the default while pointing
     /// `workspace_dir` at a temp dir and the harness reads and writes the
-    /// operator's real `~/.openhuman` credentials while looking hermetic.
+    /// operator's real `~/.neppy` credentials while looking hermetic.
     pub(super) config_path: PathBuf,
     /// `None` for `Dir` / `Inherit`; those directories outlive the harness.
     pub(super) _temp: Option<tempfile::TempDir>,

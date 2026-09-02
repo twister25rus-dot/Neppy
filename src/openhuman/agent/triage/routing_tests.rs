@@ -31,7 +31,7 @@ fn build_remote_provider_managed_uses_backend_id_and_chat_tier() {
 #[test]
 fn build_remote_provider_managed_pins_chat_tier_regardless_of_default_model() {
     // Triage's managed arm now resolves its model via the subconscious registry
-    // (make_openhuman_backend -> managed_tier_for_role = chat-v1), NOT
+    // (make_neppy_backend -> managed_tier_for_role = chat-v1), NOT
     // `default_model` — consistent with the subconscious tick. A heavy
     // `default_model` must not drag triage off the lightweight chat tier.
     let mut config = test_config();

@@ -35,7 +35,7 @@ static WALLET_STATE_FILE_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 /// Uses the same strategy as credentials/profiles.rs: take the last meaningful
 /// path component of the workspace directory.
 fn wallet_user_id(config: &Config) -> String {
-    // workspace_dir is typically `{openhuman_dir}/workspace` — take the parent
+    // workspace_dir is typically `{neppy_dir}/workspace` — take the parent
     // (the user's openhuman dir) and then the last component.
     let candidate = config
         .workspace_dir

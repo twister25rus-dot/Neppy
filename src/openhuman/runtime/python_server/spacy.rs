@@ -29,7 +29,7 @@ fn spacy_pip_install_args() -> Vec<&'static str> {
 }
 
 /// Filename of the marker dropped in a fully provisioned venv.
-const SPACY_READY_MARKER_NAME: &str = ".openhuman-spacy-ready";
+const SPACY_READY_MARKER_NAME: &str = ".neppy-spacy-ready";
 
 /// Schema version recorded on the first line of the ready marker. Bump this
 /// whenever the provisioned package set changes so existing venvs are

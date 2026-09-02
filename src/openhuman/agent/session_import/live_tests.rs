@@ -120,7 +120,7 @@ async fn live_dual_write_matches_legacy_jsonl_render() {
 
     // Parity: the store journal must equal the importer's read-back of the
     // legacy JSONL, field for field (including reconstructed
-    // `openhuman_turn_usage` metadata and the tool-call id).
+    // `neppy_turn_usage` metadata and the tool-call id).
     let expected: Vec<JournalMessage> = read_transcript(&jsonl_path)
         .expect("read legacy transcript")
         .messages
@@ -141,7 +141,7 @@ async fn live_dual_write_matches_legacy_jsonl_render() {
     let tool_id = assistant
         .extra_metadata
         .as_ref()
-        .and_then(|m| m.get("openhuman_turn_usage"))
+        .and_then(|m| m.get("neppy_turn_usage"))
         .and_then(|u| u.get("tool_calls"))
         .and_then(|t| t.get(0))
         .and_then(|c| c.get("id"))

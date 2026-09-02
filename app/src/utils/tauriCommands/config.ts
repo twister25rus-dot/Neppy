@@ -209,7 +209,7 @@ export interface AIPreview {
   };
 }
 
-export async function openhumanGetConfig(): Promise<CommandResponse<ConfigSnapshot>> {
+export async function neppyGetConfig(): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -263,7 +263,7 @@ export interface ClientConfig {
   subconscious_provider: string | null;
 }
 
-export async function openhumanGetClientConfig(): Promise<CommandResponse<ClientConfig>> {
+export async function neppyGetClientConfig(): Promise<CommandResponse<ClientConfig>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -289,7 +289,7 @@ export type ClaudeCodeStatus =
  * install + version status; never throws on a missing binary — the
  * `not_installed` variant signals that case explicitly.
  */
-export async function openhumanClaudeCodeStatus(): Promise<CommandResponse<ClaudeCodeStatus>> {
+export async function neppyClaudeCodeStatus(): Promise<CommandResponse<ClaudeCodeStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -324,7 +324,7 @@ export type ClaudeCodeAuthStatus =
  * stores), or `ANTHROPIC_API_KEY` env. Spawns the CLI — call on-demand /
  * Recheck, not on a tight loop.
  */
-export async function openhumanClaudeCodeAuthStatus(): Promise<ClaudeCodeAuthStatus> {
+export async function neppyClaudeCodeAuthStatus(): Promise<ClaudeCodeAuthStatus> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -343,7 +343,7 @@ export async function openhumanClaudeCodeAuthStatus(): Promise<ClaudeCodeAuthSta
  * CLI with `--permission-mode bypassPermissions` + its full native toolset
  * (Bash/network/subagents); `false` (default) is the safer `acceptEdits`
  * posture (auto-apply file edits, gate the rest). On macOS the Seatbelt jail
- * still walls off `~/.openhuman` in either mode.
+ * still walls off `~/.neppy` in either mode.
  */
 export interface ClaudeCodeSettings {
   full_access: boolean;
@@ -351,9 +351,9 @@ export interface ClaudeCodeSettings {
 
 /**
  * Read the persisted Claude Code full-access toggle. Bare value (no
- * `{ result, logs }` envelope) — see {@link openhumanClaudeCodeAuthStatus}.
+ * `{ result, logs }` envelope) — see {@link neppyClaudeCodeAuthStatus}.
  */
-export async function openhumanClaudeCodeSettings(): Promise<ClaudeCodeSettings> {
+export async function neppyClaudeCodeSettings(): Promise<ClaudeCodeSettings> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -366,7 +366,7 @@ export async function openhumanClaudeCodeSettings(): Promise<ClaudeCodeSettings>
  * Persist the Claude Code full-access toggle. Returns the saved settings.
  * Takes effect on the next chat turn (the driver reads the file per-turn).
  */
-export async function openhumanClaudeCodeSetFullAccess(
+export async function neppyClaudeCodeSetFullAccess(
   enabled: boolean
 ): Promise<ClaudeCodeSettings> {
   if (!isTauri()) {
@@ -386,14 +386,14 @@ export async function openhumanClaudeCodeSetFullAccess(
  *
  * Returns the name of the terminal emulator that was launched.
  */
-export async function openhumanClaudeCodeLoginLaunch(): Promise<string> {
+export async function neppyClaudeCodeLoginLaunch(): Promise<string> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
   return await invoke<string>('claude_code_login_launch');
 }
 
-export async function openhumanUpdateModelSettings(
+export async function neppyUpdateModelSettings(
   update: ModelSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -405,7 +405,7 @@ export async function openhumanUpdateModelSettings(
   });
 }
 
-export async function openhumanUpdateMemorySettings(
+export async function neppyUpdateMemorySettings(
   update: MemorySettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -417,7 +417,7 @@ export async function openhumanUpdateMemorySettings(
   });
 }
 
-export async function openhumanUpdateRuntimeSettings(
+export async function neppyUpdateRuntimeSettings(
   update: RuntimeSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -429,7 +429,7 @@ export async function openhumanUpdateRuntimeSettings(
   });
 }
 
-export async function openhumanUpdateBrowserSettings(
+export async function neppyUpdateBrowserSettings(
   update: BrowserSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -490,7 +490,7 @@ export interface AutonomySettingsUpdate {
   auto_approve_all?: boolean;
 }
 
-export async function openhumanGetAutonomySettings(): Promise<CommandResponse<AutonomySettings>> {
+export async function neppyGetAutonomySettings(): Promise<CommandResponse<AutonomySettings>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -521,7 +521,7 @@ export interface AgentPaths {
   action_dir_source: 'env' | 'override' | 'default';
 }
 
-export async function openhumanGetAgentPaths(): Promise<CommandResponse<AgentPaths>> {
+export async function neppyGetAgentPaths(): Promise<CommandResponse<AgentPaths>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -535,7 +535,7 @@ export interface AgentPathsUpdate {
   action_dir?: string;
 }
 
-export async function openhumanUpdateAgentPaths(
+export async function neppyUpdateAgentPaths(
   update: AgentPathsUpdate
 ): Promise<CommandResponse<AgentPaths>> {
   if (!isTauri()) {
@@ -547,7 +547,7 @@ export async function openhumanUpdateAgentPaths(
   });
 }
 
-export async function openhumanUpdateAutonomySettings(
+export async function neppyUpdateAutonomySettings(
   update: AutonomySettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -585,7 +585,7 @@ export interface SandboxSettingsUpdate {
   env_passthrough?: string[];
 }
 
-export async function openhumanGetSandboxSettings(): Promise<CommandResponse<SandboxSettings>> {
+export async function neppyGetSandboxSettings(): Promise<CommandResponse<SandboxSettings>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -594,7 +594,7 @@ export async function openhumanGetSandboxSettings(): Promise<CommandResponse<San
   });
 }
 
-export async function openhumanUpdateSandboxSettings(
+export async function neppyUpdateSandboxSettings(
   update: SandboxSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -630,7 +630,7 @@ export interface MemorySyncSettingsUpdate {
   sync_interval_secs?: number | null;
 }
 
-export async function openhumanGetMemorySyncSettings(): Promise<
+export async function neppyGetMemorySyncSettings(): Promise<
   CommandResponse<MemorySyncSettings>
 > {
   if (!isTauri()) {
@@ -641,7 +641,7 @@ export async function openhumanGetMemorySyncSettings(): Promise<
   });
 }
 
-export async function openhumanUpdateMemorySyncSettings(
+export async function neppyUpdateMemorySyncSettings(
   update: MemorySyncSettingsUpdate
 ): Promise<CommandResponse<MemorySyncSettings>> {
   if (!isTauri()) {
@@ -674,7 +674,7 @@ export interface AgentSettingsUpdate {
   agent_timeout_secs?: number;
 }
 
-export async function openhumanGetAgentSettings(): Promise<CommandResponse<AgentSettings>> {
+export async function neppyGetAgentSettings(): Promise<CommandResponse<AgentSettings>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -683,7 +683,7 @@ export async function openhumanGetAgentSettings(): Promise<CommandResponse<Agent
   });
 }
 
-export async function openhumanUpdateAgentSettings(
+export async function neppyUpdateAgentSettings(
   update: AgentSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -695,7 +695,7 @@ export async function openhumanUpdateAgentSettings(
   });
 }
 
-export async function openhumanUpdateLocalAiSettings(
+export async function neppyUpdateLocalAiSettings(
   update: LocalAiSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -707,7 +707,7 @@ export async function openhumanUpdateLocalAiSettings(
   });
 }
 
-export async function openhumanUpdateAnalyticsSettings(update: {
+export async function neppyUpdateAnalyticsSettings(update: {
   enabled?: boolean;
 }): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -719,7 +719,7 @@ export async function openhumanUpdateAnalyticsSettings(update: {
   });
 }
 
-export async function openhumanGetAnalyticsSettings(): Promise<
+export async function neppyGetAnalyticsSettings(): Promise<
   CommandResponse<{ enabled: boolean }>
 > {
   if (!isTauri()) {
@@ -787,7 +787,7 @@ export interface DashboardSettings {
   diagram_viewer: DiagramViewerSettings;
 }
 
-export async function openhumanGetDashboardSettings(): Promise<CommandResponse<DashboardSettings>> {
+export async function neppyGetDashboardSettings(): Promise<CommandResponse<DashboardSettings>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -796,7 +796,7 @@ export async function openhumanGetDashboardSettings(): Promise<CommandResponse<D
   });
 }
 
-export async function openhumanGetSearchSettings(): Promise<CommandResponse<SearchSettings>> {
+export async function neppyGetSearchSettings(): Promise<CommandResponse<SearchSettings>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -805,7 +805,7 @@ export async function openhumanGetSearchSettings(): Promise<CommandResponse<Sear
   });
 }
 
-export async function openhumanUpdateSearchSettings(
+export async function neppyUpdateSearchSettings(
   update: SearchSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -827,7 +827,7 @@ export interface ComposioTriggerSettings {
   triage_disabled_toolkits: string[];
 }
 
-export async function openhumanUpdateComposioTriggerSettings(
+export async function neppyUpdateComposioTriggerSettings(
   update: ComposioTriggerSettingsUpdate
 ): Promise<CommandResponse<ConfigSnapshot>> {
   if (!isTauri()) {
@@ -850,7 +850,7 @@ export async function openhumanUpdateComposioTriggerSettings(
   }
 }
 
-export async function openhumanGetComposioTriggerSettings(): Promise<
+export async function neppyGetComposioTriggerSettings(): Promise<
   CommandResponse<ComposioTriggerSettings>
 > {
   if (!isTauri()) {
@@ -872,7 +872,7 @@ export async function openhumanGetComposioTriggerSettings(): Promise<
   }
 }
 
-export async function openhumanGetRuntimeFlags(): Promise<CommandResponse<RuntimeFlags>> {
+export async function neppyGetRuntimeFlags(): Promise<CommandResponse<RuntimeFlags>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -881,7 +881,7 @@ export async function openhumanGetRuntimeFlags(): Promise<CommandResponse<Runtim
   });
 }
 
-export async function openhumanSetBrowserAllowAll(
+export async function neppySetBrowserAllowAll(
   enabled: boolean
 ): Promise<CommandResponse<RuntimeFlags>> {
   if (!isTauri()) {

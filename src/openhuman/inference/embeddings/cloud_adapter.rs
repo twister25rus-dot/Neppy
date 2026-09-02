@@ -23,12 +23,12 @@ pub struct NeppyCloudEmbedding {
 impl NeppyCloudEmbedding {
     pub fn new(
         api_url: Option<String>,
-        openhuman_dir: Option<PathBuf>,
+        neppy_dir: Option<PathBuf>,
         secrets_encrypt: bool,
         model: impl Into<String>,
         dimensions: usize,
     ) -> Self {
-        let state_dir = openhuman_dir.unwrap_or_else(default_state_dir);
+        let state_dir = neppy_dir.unwrap_or_else(default_state_dir);
         let bearer: BearerResolver = Arc::new(move || {
             let auth = AuthService::new(&state_dir, secrets_encrypt);
             auth.get_provider_bearer_token(APP_SESSION_PROVIDER, None)
@@ -52,13 +52,13 @@ impl NeppyCloudEmbedding {
     }
 }
 
-/// Credential scope used when the caller passes `openhuman_dir = None`.
+/// Credential scope used when the caller passes `neppy_dir = None`.
 ///
 /// `None` means "wherever this process keeps its credentials", and on a shipped
-/// desktop that is **not** the root `~/.openhuman`. Sign-in stores the
+/// desktop that is **not** the root `~/.neppy`. Sign-in stores the
 /// `app-session` token through `AuthService::from_config`, whose state dir is
 /// `config.config_path.parent()` — the user-scoped
-/// `~/.openhuman/users/<user_id>/`. This function previously returned the root,
+/// `~/.neppy/users/<user_id>/`. This function previously returned the root,
 /// so every keyless managed embedder resolved a directory with no
 /// `auth-profiles.json` in it and a signed-in user's embeds failed with
 /// "No backend session for cloud embeddings" on every call.
@@ -67,7 +67,7 @@ impl NeppyCloudEmbedding {
 /// 1. `OPENHUMAN_WORKSPACE` when set — resolved through the **same**
 ///    workspace→config-dir mapping `config::load` uses
 ///    (`resolve_config_dir_for_workspace`), not the raw env value. A legacy
-///    `.../workspace` override maps back to its sibling `.openhuman` root, which
+///    `.../workspace` override maps back to its sibling `.neppy` root, which
 ///    is where `auth-profiles.json` actually lives; returning the workspace dir
 ///    itself would reintroduce the "No backend session" failure for that
 ///    deployment.
@@ -92,12 +92,12 @@ fn default_state_dir() -> PathBuf {
         return env_workspace_state_dir(&workspace);
     }
 
-    let root = crate::openhuman::config::default_root_openhuman_dir().unwrap_or_else(|error| {
+    let root = crate::openhuman::config::default_root_neppy_dir().unwrap_or_else(|error| {
         log::warn!(
             "[embeddings::cloud] could not resolve the openhuman root dir ({error}); \
-             falling back to a relative .openhuman path"
+             falling back to a relative .neppy path"
         );
-        PathBuf::from(".openhuman")
+        PathBuf::from(".neppy")
     });
 
     // Never log the resolved path or the user id: both identify the user.
@@ -115,7 +115,7 @@ fn default_state_dir() -> PathBuf {
 ///
 /// Mirrors `config::load`: the credential scope for a workspace override is the
 /// config dir [`resolve_config_dir_for_workspace`] derives from it — for a
-/// legacy `.../workspace` path that is the sibling `.openhuman` root (which
+/// legacy `.../workspace` path that is the sibling `.neppy` root (which
 /// holds `auth-profiles.json`), **not** the workspace dir (which holds none).
 fn env_workspace_state_dir(workspace: &std::path::Path) -> PathBuf {
     let (config_dir, _workspace_dir) =
@@ -127,7 +127,7 @@ fn env_workspace_state_dir(workspace: &std::path::Path) -> PathBuf {
 /// user-scoping invariant is unit-testable without a home directory or a real
 /// `active_user.toml`.
 fn user_scoped_state_dir(root: &std::path::Path, active_user_id: Option<&str>) -> PathBuf {
-    crate::openhuman::config::user_openhuman_dir(
+    crate::openhuman::config::user_neppy_dir(
         root,
         active_user_id.unwrap_or(crate::openhuman::config::PRE_LOGIN_USER_ID),
     )
@@ -181,7 +181,7 @@ mod tests {
         );
         let provider = NeppyCloudEmbedding::new(
             Some("http://127.0.0.1:0".into()),
-            Some(std::env::temp_dir().join("openhuman_embeddings_localonly_state")),
+            Some(std::env::temp_dir().join("neppy_embeddings_localonly_state")),
             false,
             DEFAULT_CLOUD_EMBEDDING_MODEL,
             DEFAULT_CLOUD_EMBEDDING_DIMENSIONS,
@@ -239,7 +239,7 @@ mod tests {
     /// `OPENHUMAN_WORKSPACE` must resolve through the same workspace→config-dir
     /// mapping `config::load` uses, not return the raw workspace path. A legacy
     /// `<X>/workspace` override keeps its credentials in the sibling
-    /// `<X>/.openhuman` dir; returning the workspace dir itself would send the
+    /// `<X>/.neppy` dir; returning the workspace dir itself would send the
     /// keyless embedder to a directory with no `auth-profiles.json` and
     /// reintroduce "No backend session" for that deployment.
     #[test]
@@ -252,8 +252,8 @@ mod tests {
 
         assert_eq!(
             resolved,
-            std::path::Path::new("/nonexistent-openhuman-test-root/.openhuman"),
-            "a `.../workspace` override must resolve to its sibling .openhuman config dir"
+            std::path::Path::new("/nonexistent-openhuman-test-root/.neppy"),
+            "a `.../workspace` override must resolve to its sibling .neppy config dir"
         );
         assert_ne!(
             resolved, workspace,

@@ -95,9 +95,9 @@ pub struct CreateWorkflowParams {
 /// so the author has somewhere to drop bundled resources.
 ///
 /// Scope resolution:
-/// * [`WorkflowScope::User`] → `~/.openhuman/skills/`
-/// * [`WorkflowScope::Project`] → `<workspace>/.openhuman/skills/`. Requires the
-///   trust marker at `<workspace>/.openhuman/trust` to be present; otherwise
+/// * [`WorkflowScope::User`] → `~/.neppy/skills/`
+/// * [`WorkflowScope::Project`] → `<workspace>/.neppy/skills/`. Requires the
+///   trust marker at `<workspace>/.neppy/trust` to be present; otherwise
 ///   rejected with an error.
 /// * [`WorkflowScope::Legacy`] → rejected. Callers must pick one of the
 ///   above; the legacy `<workspace>/skills/` layout is read-only going
@@ -141,12 +141,12 @@ fn legacy_workflow_dir(
         WorkflowScope::User => {
             let home = home_dir?;
             vec![
-                home.join(".openhuman").join("skills"),
+                home.join(".neppy").join("skills"),
                 home.join(".agents").join("skills"),
             ]
         }
         WorkflowScope::Project => vec![
-            workspace_dir.join(".openhuman").join("skills"),
+            workspace_dir.join(".neppy").join("skills"),
             workspace_dir.join(".agents").join("skills"),
         ],
         // Profile-local skills are placed by hand under
@@ -205,17 +205,17 @@ pub(crate) fn create_workflow_inner(
         WorkflowScope::User => {
             let home =
                 home_dir.ok_or_else(|| "could not resolve user home directory".to_string())?;
-            home.join(".openhuman").join("workflows")
+            home.join(".neppy").join("workflows")
         }
         WorkflowScope::Project => {
             if !is_workspace_trusted(workspace_dir) {
                 return Err(format!(
-                    "workspace {} is not trusted; create {}/.openhuman/trust to enable project-scope workflows",
+                    "workspace {} is not trusted; create {}/.neppy/trust to enable project-scope workflows",
                     workspace_dir.display(),
                     workspace_dir.display(),
                 ));
             }
-            workspace_dir.join(".openhuman").join("workflows")
+            workspace_dir.join(".neppy").join("workflows")
         }
         WorkflowScope::Legacy | WorkflowScope::Profile => {
             return Err(
@@ -245,7 +245,7 @@ pub(crate) fn create_workflow_inner(
     }
 
     // On edit (overwrite) the target may predate the skills→workflows rename and
-    // still live under a legacy compat root (`~/.openhuman/skills/`,
+    // still live under a legacy compat root (`~/.neppy/skills/`,
     // `~/.agents/skills/`, or their project equivalents) — the same roots
     // discovery scans (see ops_discover::user_roots/project_roots). When it
     // isn't at the primary `workflows/` path, resolve it from those legacy

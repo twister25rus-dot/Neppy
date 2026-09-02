@@ -13,7 +13,7 @@ platform :ios do
 
     deliver(
       api_key: api_key,
-      app_identifier: "com.tinyhumansai.openhuman",
+      app_identifier: "com.tinyhumansai.neppy",
       app_version: ENV.fetch("ASC_APP_VERSION", "1.0"),
       platform: "ios",
       metadata_path: "fastlane/metadata",
@@ -40,7 +40,7 @@ platform :ios do
 
     deliver(
       api_key: api_key,
-      app_identifier: "com.tinyhumansai.openhuman",
+      app_identifier: "com.tinyhumansai.neppy",
       app_version: ENV.fetch("ASC_APP_VERSION", "1.0"),
       platform: "ios",
       metadata_path: "fastlane/metadata",

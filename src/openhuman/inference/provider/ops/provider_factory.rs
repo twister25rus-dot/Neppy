@@ -6,7 +6,7 @@ pub const INFERENCE_BACKEND_ID: &str = "openhuman";
 #[derive(Debug, Clone)]
 pub struct ProviderRuntimeOptions {
     pub auth_profile_override: Option<String>,
-    pub openhuman_dir: Option<PathBuf>,
+    pub neppy_dir: Option<PathBuf>,
     pub secrets_encrypt: bool,
     pub reasoning_enabled: Option<bool>,
 }
@@ -15,7 +15,7 @@ impl Default for ProviderRuntimeOptions {
     fn default() -> Self {
         Self {
             auth_profile_override: None,
-            openhuman_dir: None,
+            neppy_dir: None,
             secrets_encrypt: true,
             reasoning_enabled: None,
         }

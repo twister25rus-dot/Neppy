@@ -8,8 +8,8 @@ use std::process::{Command, Stdio};
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
-pub(crate) const SERVICE_LABEL: &str = "com.openhuman.core";
-pub(crate) const LEGACY_SERVICE_LABEL: &str = "com.openhuman.daemon";
+pub(crate) const SERVICE_LABEL: &str = "com.neppy.core";
+pub(crate) const LEGACY_SERVICE_LABEL: &str = "com.neppy.daemon";
 pub(crate) const LEGACY_APP_LABEL: &str = "com.neppy.app";
 
 pub(crate) fn resolve_daemon_executable() -> Result<PathBuf> {

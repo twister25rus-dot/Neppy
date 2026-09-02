@@ -123,7 +123,7 @@ fn is_morning_briefing_job(job: &CronJob) -> bool {
         || job.agent_id.as_deref() == Some(MORNING_BRIEFING_AGENT_ID)
 }
 
-fn strip_openhuman_link_markup(input: &str) -> String {
+fn strip_neppy_link_markup(input: &str) -> String {
     const OPEN_TAG: &str = "<openhuman-link";
     const CLOSE_TAG: &str = "</openhuman-link>";
 
@@ -162,7 +162,7 @@ fn cron_alert_body(job: &CronJob, output: &str) -> String {
         return MORNING_BRIEFING_FAILURE_NOTIFICATION.to_string();
     }
 
-    let body = strip_openhuman_link_markup(output);
+    let body = strip_neppy_link_markup(output);
     crate::openhuman::util::truncate_with_ellipsis(&body, 512)
 }
 

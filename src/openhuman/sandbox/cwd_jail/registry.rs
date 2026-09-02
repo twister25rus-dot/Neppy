@@ -1,7 +1,7 @@
 //! Jail registry — manage many jailed workspaces side-by-side.
 //!
 //! A [`JailRegistry`] is rooted at a single base directory (typically
-//! `~/.openhuman/jails/` or `<workspace>/jails/`) and owns every active
+//! `~/.neppy/jails/` or `<workspace>/jails/`) and owns every active
 //! jail underneath it. Each jail has:
 //!
 //! - A stable **id** (UUID-ish, used in paths and the index).

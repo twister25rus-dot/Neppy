@@ -18,7 +18,7 @@ pub(super) struct WorkflowsListParams {
     /// When `true`, also include capability skills (under the `skills/` roots)
     /// in the listing — not just `workflows/`-root automations. The Skills
     /// Explorer passes this so registry-installed skills (which land under
-    /// `~/.openhuman/skills/`) appear in its Installed tab and flip the catalog
+    /// `~/.neppy/skills/`) appear in its Installed tab and flip the catalog
     /// Install button to Installed. Omitted (defaults `false`) by the
     /// Automations UI, which keeps the automations-only view.
     #[serde(default)]

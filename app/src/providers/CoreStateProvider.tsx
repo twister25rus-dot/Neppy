@@ -35,7 +35,7 @@ import { getActiveUserId, setActiveUserId } from '../store/userScopedStorage';
 import { isLocalSessionToken } from '../utils/localSession';
 import {
   getSessionToken,
-  openhumanUpdateAnalyticsSettings,
+  neppyUpdateAnalyticsSettings,
   restartApp,
   setOnboardingCompleted,
   storeSession,
@@ -632,7 +632,7 @@ export default function CoreStateProvider({ children }: { children: ReactNode })
 
   const setAnalyticsEnabled = useCallback(
     async (enabled: boolean) => {
-      await openhumanUpdateAnalyticsSettings({ enabled });
+      await neppyUpdateAnalyticsSettings({ enabled });
       // Optimistic local commit for instant UI feedback, then re-pull the
       // authoritative snapshot so the frontend cache matches the core.
       commitState(previous => ({

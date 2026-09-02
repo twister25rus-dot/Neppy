@@ -1003,7 +1003,7 @@ pub(crate) fn spawn_progress_bridge(
                     );
                     let checkpoint_path = config
                         .workspace_dir
-                        .join(".openhuman/subagent_checkpoints")
+                        .join(".neppy/subagent_checkpoints")
                         .join(format!("{task_id}.json"));
                     ledger_upsert_agent_run(
                         &config,

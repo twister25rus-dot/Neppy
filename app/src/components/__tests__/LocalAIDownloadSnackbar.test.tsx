@@ -8,8 +8,8 @@ import LocalAIDownloadSnackbar from '../LocalAIDownloadSnackbar';
 // Default: isTauri returns false, so snackbar should not render
 vi.mock('../../utils/tauriCommands', () => ({
   isTauri: vi.fn(() => false),
-  openhumanLocalAiStatus: vi.fn().mockResolvedValue({ result: null }),
-  openhumanLocalAiDownloadsProgress: vi.fn().mockResolvedValue({ result: null }),
+  neppyLocalAiStatus: vi.fn().mockResolvedValue({ result: null }),
+  neppyLocalAiDownloadsProgress: vi.fn().mockResolvedValue({ result: null }),
 }));
 
 /**
@@ -46,8 +46,8 @@ describe('LocalAIDownloadSnackbar', () => {
   it('does not poll or render when core state reports no active download', async () => {
     const tauriCommands = await import('../../utils/tauriCommands');
     vi.mocked(tauriCommands.isTauri).mockReturnValue(true);
-    vi.mocked(tauriCommands.openhumanLocalAiStatus).mockClear();
-    vi.mocked(tauriCommands.openhumanLocalAiDownloadsProgress).mockClear();
+    vi.mocked(tauriCommands.neppyLocalAiStatus).mockClear();
+    vi.mocked(tauriCommands.neppyLocalAiDownloadsProgress).mockClear();
     seedLocalAiState('ready');
 
     renderWithProviders(<LocalAIDownloadSnackbar />);
@@ -56,8 +56,8 @@ describe('LocalAIDownloadSnackbar', () => {
       expect(screen.queryByText('Downloading')).not.toBeInTheDocument();
     });
     // Idle → zero inference polls (the fold's whole point).
-    expect(tauriCommands.openhumanLocalAiStatus).not.toHaveBeenCalled();
-    expect(tauriCommands.openhumanLocalAiDownloadsProgress).not.toHaveBeenCalled();
+    expect(tauriCommands.neppyLocalAiStatus).not.toHaveBeenCalled();
+    expect(tauriCommands.neppyLocalAiDownloadsProgress).not.toHaveBeenCalled();
 
     vi.mocked(tauriCommands.isTauri).mockReturnValue(false);
   });
@@ -65,7 +65,7 @@ describe('LocalAIDownloadSnackbar', () => {
   it('polls and renders when core state reports an active download', async () => {
     const tauriCommands = await import('../../utils/tauriCommands');
     vi.mocked(tauriCommands.isTauri).mockReturnValue(true);
-    vi.mocked(tauriCommands.openhumanLocalAiStatus).mockResolvedValue({
+    vi.mocked(tauriCommands.neppyLocalAiStatus).mockResolvedValue({
       result: {
         state: 'loading',
         download_progress: 0.42,
@@ -75,7 +75,7 @@ describe('LocalAIDownloadSnackbar', () => {
       } as never,
       logs: [],
     });
-    vi.mocked(tauriCommands.openhumanLocalAiDownloadsProgress).mockResolvedValue({
+    vi.mocked(tauriCommands.neppyLocalAiDownloadsProgress).mockResolvedValue({
       result: { state: 'idle', progress: null } as never,
       logs: [],
     });

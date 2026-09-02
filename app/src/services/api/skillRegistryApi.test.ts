@@ -32,7 +32,7 @@ describe('skillRegistryApi', () => {
   it('calls skill_registry_uninstall and normalizes removed_path', async () => {
     mockCallCoreRpc.mockResolvedValue({
       name: 'demo',
-      removed_path: '/Users/test/.openhuman/skills/demo',
+      removed_path: '/Users/test/.neppy/skills/demo',
       scope: 'user',
     });
 
@@ -42,7 +42,7 @@ describe('skillRegistryApi', () => {
       method: 'openhuman.skill_registry_uninstall',
       params: { name: 'demo' },
     });
-    expect(result.removedPath).toBe('/Users/test/.openhuman/skills/demo');
+    expect(result.removedPath).toBe('/Users/test/.neppy/skills/demo');
   });
 
   it('fetches skill_registry schemas for smoke script generation', async () => {

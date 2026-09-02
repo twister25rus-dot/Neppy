@@ -2,7 +2,7 @@
 //!
 //! When the in-process `remove_dir_all` step fails because a third-party
 //! process (anti-virus, file-indexer, sibling Neppy window) still holds
-//! an open handle inside the `.openhuman` tree, Windows returns
+//! an open handle inside the `.neppy` tree, Windows returns
 //! `ERROR_SHARING_VIOLATION` (os error 32) / `ERROR_LOCK_VIOLATION` (33)
 //! and the user is stuck — see PR #2395 / #1811, which surface a "close all
 //! Neppy windows" prompt but cannot break a foreign lock.

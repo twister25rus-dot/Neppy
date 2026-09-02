@@ -10,11 +10,11 @@ import Card from '../../../components/ui/Card';
 import { useT } from '../../../lib/i18n/I18nContext';
 import {
   isTauri,
-  openhumanTaskSourcesFetch,
-  openhumanTaskSourcesList,
-  openhumanTaskSourcesStatus,
-  openhumanTaskSourcesSync,
-  openhumanTaskSourcesUpdate,
+  neppyTaskSourcesFetch,
+  neppyTaskSourcesList,
+  neppyTaskSourcesStatus,
+  neppyTaskSourcesSync,
+  neppyTaskSourcesUpdate,
   type TaskSource,
   type TaskSourcesStatus,
 } from '../../../utils/tauriCommands';
@@ -54,8 +54,8 @@ export function TaskSourceControls({ disabled, compact }: { disabled: boolean; c
     setError(null);
     try {
       const [nextSources, nextStatus] = await Promise.all([
-        openhumanTaskSourcesList(),
-        openhumanTaskSourcesStatus(),
+        neppyTaskSourcesList(),
+        neppyTaskSourcesStatus(),
       ]);
       log('load ok sources=%d enabled=%s', nextSources.length, nextStatus.enabled);
       setSources(nextSources);
@@ -84,7 +84,7 @@ export function TaskSourceControls({ disabled, compact }: { disabled: boolean; c
     setError(null);
     setNotice(null);
     try {
-      const updated = await openhumanTaskSourcesUpdate(source.id, { enabled: !source.enabled });
+      const updated = await neppyTaskSourcesUpdate(source.id, { enabled: !source.enabled });
       setSources(prev => prev.map(item => (item.id === updated.id ? updated : item)));
     } catch (err) {
       log('toggle failed source=%s err=%o', source.id, err);
@@ -101,7 +101,7 @@ export function TaskSourceControls({ disabled, compact }: { disabled: boolean; c
     setError(null);
     setNotice(null);
     try {
-      const outcome = await openhumanTaskSourcesFetch(source.id);
+      const outcome = await neppyTaskSourcesFetch(source.id);
       await load();
       if (outcome.error) {
         log('fetch source=%s returned an error outcome', source.id);
@@ -124,7 +124,7 @@ export function TaskSourceControls({ disabled, compact }: { disabled: boolean; c
     setError(null);
     setNotice(null);
     try {
-      const outcomes = await openhumanTaskSourcesSync();
+      const outcomes = await neppyTaskSourcesSync();
       await load();
       const firstError = outcomes.find(outcome => outcome.error)?.error;
       if (firstError) {

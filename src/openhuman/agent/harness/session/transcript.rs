@@ -140,7 +140,7 @@ pub struct TurnUsage {
     pub iteration: u32,
 }
 
-const TURN_USAGE_METADATA_KEY: &str = "openhuman_turn_usage";
+const TURN_USAGE_METADATA_KEY: &str = "neppy_turn_usage";
 
 /// `extra_metadata` key carrying a tool-result message's failure marker. The
 /// harness folds a tool result into a `role:"tool"` message that drops the
@@ -150,7 +150,7 @@ const TURN_USAGE_METADATA_KEY: &str = "openhuman_turn_usage";
 /// [`ChatMessage`], so this never reaches the provider; the transcript writer
 /// lifts it onto the additive [`MessageLine::failure`] / `failure_detail` line
 /// fields and strips it from the persisted `extra_metadata`.
-const TOOL_FAILURE_METADATA_KEY: &str = "openhuman_tool_failure";
+const TOOL_FAILURE_METADATA_KEY: &str = "neppy_tool_failure";
 
 /// Stamp a tool-result [`ChatMessage`] with its failure outcome so the
 /// transcript writer can persist an explicit failure flag. `detail` is an

@@ -219,21 +219,21 @@ vi.mock('../utils/tauriCommands', () => ({
   getAuthState: vi.fn().mockResolvedValue({ is_authenticated: false }),
   logout: vi.fn().mockResolvedValue(undefined),
   syncMemoryClientToken: vi.fn().mockResolvedValue(undefined),
-  openhumanServiceInstall: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
-  openhumanServiceStart: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
-  openhumanServiceStop: vi.fn().mockResolvedValue({ result: { state: 'Stopped' }, logs: [] }),
-  openhumanServiceStatus: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
-  openhumanServiceUninstall: vi
+  neppyServiceInstall: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
+  neppyServiceStart: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
+  neppyServiceStop: vi.fn().mockResolvedValue({ result: { state: 'Stopped' }, logs: [] }),
+  neppyServiceStatus: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
+  neppyServiceUninstall: vi
     .fn()
     .mockResolvedValue({ result: { state: 'NotInstalled' }, logs: [] }),
-  openhumanAgentServerStatus: vi.fn().mockResolvedValue({ result: { running: true }, logs: [] }),
-  openhumanUpdateMeetSettings: vi
+  neppyAgentServerStatus: vi.fn().mockResolvedValue({ result: { running: true }, logs: [] }),
+  neppyUpdateMeetSettings: vi
     .fn()
     .mockResolvedValue({
       result: { config: {}, workspace_dir: '/tmp', config_path: '/tmp/cfg.toml' },
       logs: [],
     }),
-  openhumanGetMeetSettings: vi
+  neppyGetMeetSettings: vi
     .fn()
     .mockResolvedValue({
       result: {

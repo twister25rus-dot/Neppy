@@ -221,7 +221,7 @@ export interface LocalAiDiagnostics {
   ok: boolean;
 }
 
-export async function openhumanAgentChat(
+export async function neppyAgentChat(
   message: string,
   modelOverride?: string,
   temperature?: number
@@ -235,7 +235,7 @@ export async function openhumanAgentChat(
   });
 }
 
-export async function openhumanLocalAiStatus(): Promise<CommandResponse<LocalAiStatus>> {
+export async function neppyLocalAiStatus(): Promise<CommandResponse<LocalAiStatus>> {
   try {
     return await callCoreRpc<CommandResponse<LocalAiStatus>>({
       method: 'openhuman.inference_status',
@@ -251,7 +251,7 @@ export async function openhumanLocalAiStatus(): Promise<CommandResponse<LocalAiS
   }
 }
 
-export async function openhumanLocalAiSummarize(
+export async function neppyLocalAiSummarize(
   text: string,
   maxTokens?: number
 ): Promise<CommandResponse<string>> {
@@ -261,7 +261,7 @@ export async function openhumanLocalAiSummarize(
   });
 }
 
-export async function openhumanLocalAiPrompt(
+export async function neppyLocalAiPrompt(
   prompt: string,
   maxTokens?: number,
   noThink?: boolean
@@ -272,7 +272,7 @@ export async function openhumanLocalAiPrompt(
   });
 }
 
-export async function openhumanLocalAiVisionPrompt(
+export async function neppyLocalAiVisionPrompt(
   prompt: string,
   imageRefs: string[],
   maxTokens?: number
@@ -283,7 +283,7 @@ export async function openhumanLocalAiVisionPrompt(
   });
 }
 
-export async function openhumanLocalAiEmbed(
+export async function neppyLocalAiEmbed(
   inputs: string[]
 ): Promise<CommandResponse<LocalAiEmbeddingResult>> {
   return await callCoreRpc<CommandResponse<LocalAiEmbeddingResult>>({
@@ -292,7 +292,7 @@ export async function openhumanLocalAiEmbed(
   });
 }
 
-export async function openhumanLocalAiTranscribe(
+export async function neppyLocalAiTranscribe(
   audioPath: string
 ): Promise<CommandResponse<LocalAiSpeechResult>> {
   return await callCoreRpc<CommandResponse<LocalAiSpeechResult>>({
@@ -301,7 +301,7 @@ export async function openhumanLocalAiTranscribe(
   });
 }
 
-export async function openhumanLocalAiTranscribeBytes(
+export async function neppyLocalAiTranscribeBytes(
   audioBytes: number[],
   extension?: string
 ): Promise<CommandResponse<LocalAiSpeechResult>> {
@@ -311,7 +311,7 @@ export async function openhumanLocalAiTranscribeBytes(
   });
 }
 
-export async function openhumanLocalAiTts(
+export async function neppyLocalAiTts(
   text: string,
   outputPath?: string
 ): Promise<CommandResponse<LocalAiTtsResult>> {
@@ -325,7 +325,7 @@ export async function openhumanLocalAiTts(
  * Ask the configured inference provider whether the assistant should react to
  * a user message with an emoji.
  */
-export async function openhumanLocalAiShouldReact(
+export async function neppyLocalAiShouldReact(
   message: string,
   channelType: string
 ): Promise<CommandResponse<ReactionDecision>> {
@@ -339,7 +339,7 @@ export async function openhumanLocalAiShouldReact(
  * Classify the emotion and sentiment of a user message via the configured
  * inference provider.
  */
-export async function openhumanLocalAiAnalyzeSentiment(
+export async function neppyLocalAiAnalyzeSentiment(
   message: string
 ): Promise<CommandResponse<SentimentResult>> {
   return await callCoreRpc<CommandResponse<SentimentResult>>({
@@ -348,7 +348,7 @@ export async function openhumanLocalAiAnalyzeSentiment(
   });
 }
 
-export async function openhumanLocalAiAssetsStatus(): Promise<
+export async function neppyLocalAiAssetsStatus(): Promise<
   CommandResponse<LocalAiAssetsStatus>
 > {
   return await callCoreRpc<CommandResponse<LocalAiAssetsStatus>>({
@@ -356,7 +356,7 @@ export async function openhumanLocalAiAssetsStatus(): Promise<
   });
 }
 
-export async function openhumanLocalAiDownloadsProgress(): Promise<
+export async function neppyLocalAiDownloadsProgress(): Promise<
   CommandResponse<LocalAiDownloadsProgress>
 > {
   return await callCoreRpc<CommandResponse<LocalAiDownloadsProgress>>({
@@ -364,7 +364,7 @@ export async function openhumanLocalAiDownloadsProgress(): Promise<
   });
 }
 
-export async function openhumanLocalAiDownloadAsset(
+export async function neppyLocalAiDownloadAsset(
   capability: 'chat' | 'vision' | 'embedding' | 'stt' | 'tts'
 ): Promise<CommandResponse<LocalAiAssetsStatus>> {
   return await callCoreRpc<CommandResponse<LocalAiAssetsStatus>>({
@@ -373,22 +373,22 @@ export async function openhumanLocalAiDownloadAsset(
   });
 }
 
-export async function openhumanLocalAiDeviceProfile(): Promise<DeviceProfileResult> {
+export async function neppyLocalAiDeviceProfile(): Promise<DeviceProfileResult> {
   return await callCoreRpc<DeviceProfileResult>({ method: 'openhuman.inference_device_profile' });
 }
 
-export async function openhumanLocalAiPresets(): Promise<PresetsResponse> {
+export async function neppyLocalAiPresets(): Promise<PresetsResponse> {
   return await callCoreRpc<PresetsResponse>({ method: 'openhuman.inference_presets' });
 }
 
-export async function openhumanLocalAiApplyPreset(tier: string): Promise<ApplyPresetResult> {
+export async function neppyLocalAiApplyPreset(tier: string): Promise<ApplyPresetResult> {
   return await callCoreRpc<ApplyPresetResult>({
     method: 'openhuman.inference_apply_preset',
     params: { tier },
   });
 }
 
-export async function openhumanLocalAiDiagnostics(): Promise<LocalAiDiagnostics> {
+export async function neppyLocalAiDiagnostics(): Promise<LocalAiDiagnostics> {
   return await callCoreRpc<LocalAiDiagnostics>({
     method: 'openhuman.inference_diagnostics',
     params: {},
@@ -401,7 +401,7 @@ export interface OllamaConnectionTestResult {
   models_count?: number | null;
 }
 
-export async function openhumanLocalAiTestConnection(
+export async function neppyLocalAiTestConnection(
   url: string
 ): Promise<OllamaConnectionTestResult> {
   return await callCoreRpc<OllamaConnectionTestResult>({

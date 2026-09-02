@@ -712,7 +712,7 @@ impl Agent {
 
         // Rebuild the exact message shape the importer sees after a JSONL
         // round-trip: attach this turn's usage to the last assistant message so
-        // its `openhuman_turn_usage` metadata matches an imported record.
+        // its `neppy_turn_usage` metadata matches an imported record.
         let mut msgs = messages.to_vec();
         if let Some(usage) = turn_usage {
             if let Some(idx) = msgs.iter().rposition(|m| m.role == "assistant") {

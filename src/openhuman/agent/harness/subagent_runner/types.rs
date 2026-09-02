@@ -56,7 +56,7 @@ pub struct SubagentRunOptions {
 
     /// Directory for writing/reading checkpoint files when the
     /// sub-agent pauses for user input. Defaults to
-    /// `{workspace_dir}/.openhuman/subagent_checkpoints/`.
+    /// `{workspace_dir}/.neppy/subagent_checkpoints/`.
     pub checkpoint_dir: Option<PathBuf>,
 
     /// Per-worker isolated checkout for git-worktree isolation.

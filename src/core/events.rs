@@ -1192,7 +1192,7 @@ pub enum DomainEvent {
     /// method. Subscribers tear down the session and pause background
     /// LLM-bound work until the user signs back in.
     ///
-    /// `source` is a short slug (e.g. `"llm_provider.openhuman_backend"`,
+    /// `source` is a short slug (e.g. `"llm_provider.neppy_backend"`,
     /// `"jsonrpc.invoke_method"`) so subscribers and logs can attribute
     /// the trigger. `reason` is the sanitized error message that caused
     /// detection (already redacted by the call site) — surfaced to logs,

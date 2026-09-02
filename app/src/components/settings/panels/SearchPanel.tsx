@@ -4,8 +4,8 @@ import { useT } from '../../../lib/i18n/I18nContext';
 import { useCoreState } from '../../../providers/CoreStateProvider';
 import { isLocalSessionToken } from '../../../utils/localSession';
 import {
-  openhumanGetSearchSettings,
-  openhumanUpdateSearchSettings,
+  neppyGetSearchSettings,
+  neppyUpdateSearchSettings,
   type SearchEngineId,
   type SearchSettings,
   type SearchSettingsUpdate,
@@ -135,7 +135,7 @@ const SearchPanel = ({ embedded = false }: { embedded?: boolean }) => {
 
   useEffect(() => {
     let cancelled = false;
-    openhumanGetSearchSettings()
+    neppyGetSearchSettings()
       .then(res => {
         if (cancelled) return;
         setSettings(res.result);
@@ -167,8 +167,8 @@ const SearchPanel = ({ embedded = false }: { embedded?: boolean }) => {
     setSettings({ ...settings, engine: next });
     setStatus({ kind: 'saving' });
     try {
-      await openhumanUpdateSearchSettings({ engine: next });
-      const refreshed = await openhumanGetSearchSettings();
+      await neppyUpdateSearchSettings({ engine: next });
+      const refreshed = await neppyGetSearchSettings();
       setSettings(refreshed.result);
       setStatus({ kind: 'saved' });
     } catch (err) {
@@ -189,8 +189,8 @@ const SearchPanel = ({ embedded = false }: { embedded?: boolean }) => {
     if (!settings) return;
     setStatus({ kind: 'saving' });
     try {
-      await openhumanUpdateSearchSettings({ [BYOK_KEY_FIELD[engine]]: rawKey });
-      const refreshed = await openhumanGetSearchSettings();
+      await neppyUpdateSearchSettings({ [BYOK_KEY_FIELD[engine]]: rawKey });
+      const refreshed = await neppyGetSearchSettings();
       setSettings(refreshed.result);
       clearDraftKey[engine]();
       setStatus({ kind: 'saved' });
@@ -203,8 +203,8 @@ const SearchPanel = ({ embedded = false }: { embedded?: boolean }) => {
     if (!settings || status.kind === 'saving') return;
     setStatus({ kind: 'saving' });
     try {
-      await openhumanUpdateSearchSettings(update);
-      const refreshed = await openhumanGetSearchSettings();
+      await neppyUpdateSearchSettings(update);
+      const refreshed = await neppyGetSearchSettings();
       setSettings(refreshed.result);
       setStatus({ kind: 'saved' });
     } catch (err) {

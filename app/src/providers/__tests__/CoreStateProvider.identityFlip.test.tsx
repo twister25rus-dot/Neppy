@@ -16,7 +16,7 @@ import CoreStateProvider, { useCoreState } from '../CoreStateProvider';
 vi.mock('../../services/coreStateApi');
 vi.mock('../../services/analytics', () => ({ syncAnalyticsConsent: vi.fn() }));
 vi.mock('../../utils/tauriCommands', () => ({
-  openhumanUpdateAnalyticsSettings: vi.fn(),
+  neppyUpdateAnalyticsSettings: vi.fn(),
   restartApp: vi.fn().mockResolvedValue(undefined),
   setOnboardingCompleted: vi.fn(),
   storeSession: vi.fn().mockResolvedValue(undefined),

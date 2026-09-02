@@ -64,7 +64,7 @@ vi.mock('../../utils/tauriCommands', async () => {
   );
   return {
     ...actual,
-    openhumanComposioGetMode: vi.fn(async () => ({
+    neppyComposioGetMode: vi.fn(async () => ({
       result: { mode: 'backend', api_key_set: true },
       logs: [],
     })),

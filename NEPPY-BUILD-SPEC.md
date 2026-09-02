@@ -206,7 +206,7 @@ Here is the split.
   and `openhuman_core::` path with it
 - Env vars `OPENHUMAN_*` → `NEPPY_*`, everywhere at once: `.env.example`,
   `app/.env.example`, `scripts/load-dotenv.sh`, CI workflows, docs
-- Filesystem roots: `~/.openhuman` → `~/.neppy`, `~/Neppy/projects` →
+- Filesystem roots: `~/.neppy` → `~/.neppy`, `~/Neppy/projects` →
   `~/Neppy/projects`
 
 ### 3.2 Do NOT rename these

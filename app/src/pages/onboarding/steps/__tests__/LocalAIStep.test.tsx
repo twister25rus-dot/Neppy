@@ -9,7 +9,7 @@ vi.mock('../../../../utils/localAiBootstrap', () => ({
 }));
 
 vi.mock('../../../../utils/tauriCommands', () => ({
-  openhumanLocalAiPresets: vi
+  neppyLocalAiPresets: vi
     .fn()
     .mockResolvedValue({
       recommend_disabled: false,
@@ -106,8 +106,8 @@ describe('LocalAIStep', () => {
   });
 
   it('shows cloud fallback UI when device is below RAM floor', async () => {
-    const { openhumanLocalAiPresets } = await import('../../../../utils/tauriCommands');
-    vi.mocked(openhumanLocalAiPresets).mockResolvedValue({
+    const { neppyLocalAiPresets } = await import('../../../../utils/tauriCommands');
+    vi.mocked(neppyLocalAiPresets).mockResolvedValue({
       recommend_disabled: true,
       presets: [],
       recommended_tier: 'ram_2_4gb',
@@ -135,10 +135,10 @@ describe('LocalAIStep', () => {
   });
 
   it('allows force-enabling local AI on low-RAM device', async () => {
-    const { openhumanLocalAiPresets } = await import('../../../../utils/tauriCommands');
+    const { neppyLocalAiPresets } = await import('../../../../utils/tauriCommands');
     const { bootstrapLocalAiWithRecommendedPreset } =
       await import('../../../../utils/localAiBootstrap');
-    vi.mocked(openhumanLocalAiPresets).mockResolvedValue({
+    vi.mocked(neppyLocalAiPresets).mockResolvedValue({
       recommend_disabled: true,
       presets: [],
       recommended_tier: 'ram_2_4gb',

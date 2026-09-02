@@ -615,7 +615,7 @@ fn config_dir_for_workspace_env() -> Option<PathBuf> {
     }
 
     if let Some(parent) = workspace_dir.parent() {
-        let legacy_dir = parent.join(".openhuman");
+        let legacy_dir = parent.join(".neppy");
         if legacy_dir.join("config.toml").exists()
             || workspace_dir
                 .file_name()
@@ -638,10 +638,10 @@ fn config_is_workspace_env_scoped(config: &Config) -> bool {
 }
 
 async fn activate_revalidated_user_dir(user_id: &str) -> Result<Config, String> {
-    let root_dir = crate::openhuman::config::default_root_openhuman_dir()
+    let root_dir = crate::openhuman::config::default_root_neppy_dir()
         .map_err(|error| format!("failed to locate default root: {error}"))?;
     let previous_active = crate::openhuman::config::read_active_user_id(&root_dir);
-    let user_dir = crate::openhuman::config::user_openhuman_dir(&root_dir, user_id);
+    let user_dir = crate::openhuman::config::user_neppy_dir(&root_dir, user_id);
     fs::create_dir_all(&user_dir).map_err(|error| {
         format!("failed to create user directory for revalidated pending session user_id={user_id}: {error}")
     })?;
@@ -805,7 +805,7 @@ async fn clear_deferred_session_after_backend_rejection(
     clear_current_user_failure();
     crate::openhuman::cron::scheduler_gate::set_signed_out(true);
 
-    match crate::openhuman::config::default_root_openhuman_dir() {
+    match crate::openhuman::config::default_root_neppy_dir() {
         Ok(root_dir) => {
             let active_user = crate::openhuman::config::read_active_user_id(&root_dir);
             let should_clear_active_user = if workspace_env_scoped {

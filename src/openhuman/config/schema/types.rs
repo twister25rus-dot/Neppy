@@ -767,25 +767,24 @@ impl Config {
 
 impl Default for Config {
     fn default() -> Self {
-        let openhuman_dir =
-            crate::openhuman::config::default_root_openhuman_dir().unwrap_or_else(|_| {
-                let home = UserDirs::new()
-                    .map_or_else(|| PathBuf::from("."), |u| u.home_dir().to_path_buf());
-                let dir_name = if crate::api::config::is_staging_app_env(
-                    crate::api::config::app_env_from_env().as_deref(),
-                ) {
-                    ".openhuman-staging"
-                } else {
-                    ".openhuman"
-                };
-                home.join(dir_name)
-            });
+        let neppy_dir = crate::openhuman::config::default_root_neppy_dir().unwrap_or_else(|_| {
+            let home =
+                UserDirs::new().map_or_else(|| PathBuf::from("."), |u| u.home_dir().to_path_buf());
+            let dir_name = if crate::api::config::is_staging_app_env(
+                crate::api::config::app_env_from_env().as_deref(),
+            ) {
+                ".neppy-staging"
+            } else {
+                ".neppy"
+            };
+            home.join(dir_name)
+        });
 
         Self {
-            workspace_dir: openhuman_dir.join("workspace"),
+            workspace_dir: neppy_dir.join("workspace"),
             action_dir: crate::openhuman::config::default_action_dir(),
             action_dir_override: None,
-            config_path: openhuman_dir.join("config.toml"),
+            config_path: neppy_dir.join("config.toml"),
             cli_inference_snapshot: None,
             recovered_from_corruption: false,
             schema_version: 0,

@@ -623,7 +623,7 @@ mod tests {
     ///
     /// `shared_root_dir` only honours `config.workspace_dir` when
     /// `OPENHUMAN_WORKSPACE` is set; without it every write below lands in the
-    /// developer's real `~/.openhuman/bin/piper` and the cleanup deletes their
+    /// developer's real `~/.neppy/bin/piper` and the cleanup deletes their
     /// installed Piper (CodeRabbit, #5253). Setting the variable for the
     /// duration keeps writes *and* cleanup inside the `TempDir`, so the
     /// `TempDir`'s own `Drop` is the cleanup and it runs on unwind too: a
@@ -674,7 +674,7 @@ mod tests {
         // `workspace_piper_binary_candidates` resolves through
         // `paths::shared_root_dir`, which ignores `config.workspace_dir` unless
         // OPENHUMAN_WORKSPACE is set and otherwise returns the real
-        // `~/.openhuman/bin/piper`. `SharedRootOverride` sets it to this test's
+        // `~/.neppy/bin/piper`. `SharedRootOverride` sets it to this test's
         // TempDir so the stub written below, and its cleanup, stay inside the
         // TempDir instead of touching a developer's installed Piper.
         use std::os::unix::fs::PermissionsExt;
@@ -783,7 +783,7 @@ mod tests {
         }
     }
 
-    /// Serialise tests that write into the shared `~/.openhuman/bin/piper/`
+    /// Serialise tests that write into the shared `~/.neppy/bin/piper/`
     /// directory; reuses the module-wide `local_ai_test_guard` so paths +
     /// sibling installer tests are serialised through the same lock.
     fn shared_install_lock() -> std::sync::MutexGuard<'static, ()> {

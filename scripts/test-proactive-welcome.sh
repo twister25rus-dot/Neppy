@@ -20,9 +20,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BIN="$REPO_ROOT/target/debug/openhuman-core"
 PORT=7789
 USER_ID="69d9cb73e61f755583c3671f"
-# Source-built binaries default to `.openhuman-staging`. Production
-# staged binary reads `.openhuman`. We point at staging here.
-CONFIG_ROOT="${OPENHUMAN_CONFIG_ROOT:-$HOME/.openhuman-staging}"
+# Source-built binaries default to `.neppy-staging`. Production
+# staged binary reads `.neppy`. We point at staging here.
+CONFIG_ROOT="${OPENHUMAN_CONFIG_ROOT:-$HOME/.neppy-staging}"
 CONFIG_PATH="$CONFIG_ROOT/users/$USER_ID/config.toml"
 LOG_FILE="$(mktemp -t openhuman-proactive-welcome-XXXXXX).log"
 SIO_LOG="$(mktemp -t openhuman-sio-XXXXXX).log"

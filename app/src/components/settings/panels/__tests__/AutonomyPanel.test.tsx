@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../../../test/test-utils';
 import {
   type AutonomySettings,
-  openhumanGetAutonomySettings,
-  openhumanUpdateAutonomySettings,
+  neppyGetAutonomySettings,
+  neppyUpdateAutonomySettings,
 } from '../../../../utils/tauriCommands/config';
 import AutonomyRateLimitSection from '../AutonomyPanel';
 
@@ -29,13 +29,13 @@ vi.mock('../../../../utils/tauriCommands/config', async () => {
   );
   return {
     ...actual,
-    openhumanGetAutonomySettings: vi.fn(),
-    openhumanUpdateAutonomySettings: vi.fn(),
+    neppyGetAutonomySettings: vi.fn(),
+    neppyUpdateAutonomySettings: vi.fn(),
   };
 });
 
-const mockGet = vi.mocked(openhumanGetAutonomySettings);
-const mockUpdate = vi.mocked(openhumanUpdateAutonomySettings);
+const mockGet = vi.mocked(neppyGetAutonomySettings);
+const mockUpdate = vi.mocked(neppyUpdateAutonomySettings);
 
 describe('AutonomyRateLimitSection', () => {
   beforeEach(() => {

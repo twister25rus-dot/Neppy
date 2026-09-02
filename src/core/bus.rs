@@ -49,7 +49,7 @@ pub const EVENTS_ROOT: &str = "/ai/tinyhumans/openhuman/events";
 ///
 /// A breaking change to the catalog ships as a **new interface name**
 /// (`Events2`), never as a redefinition — see `tinybus`'s protocol rules.
-pub const EVENTS_INTERFACE: &str = "ai.tinyhumans.openhuman.Events";
+pub const EVENTS_INTERFACE: &str = "ai.tinyhumans.neppy.Events";
 
 /// The version of the event catalog this build speaks.
 ///

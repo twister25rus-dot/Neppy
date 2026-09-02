@@ -66,7 +66,7 @@ vi.mock('../../utils/tauriCommands', async () => {
   const actual = await vi.importActual<typeof import('../../utils/tauriCommands')>(
     '../../utils/tauriCommands'
   );
-  return { ...actual, openhumanComposioGetMode: vi.fn(async () => composioModeStatus) };
+  return { ...actual, neppyComposioGetMode: vi.fn(async () => composioModeStatus) };
 });
 
 describe('Skills page — Composio catalog fallback', () => {

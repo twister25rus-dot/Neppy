@@ -38,7 +38,7 @@ pub struct WebhookRouter {
     routes: RwLock<HashMap<String, TunnelRegistration>>,
     /// Recent webhook request/response activity for developer tooling.
     debug_logs: RwLock<VecDeque<WebhookDebugLogEntry>>,
-    /// Path to the persistence file (e.g. `~/.openhuman/webhook_routes.json`).
+    /// Path to the persistence file (e.g. `~/.neppy/webhook_routes.json`).
     persist_path: Option<PathBuf>,
     /// Monotonic generation counter — stale writes are dropped when a newer
     /// snapshot has already been queued.

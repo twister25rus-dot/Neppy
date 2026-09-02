@@ -67,18 +67,18 @@ export interface VoiceServerSettings {
 /** Hosted speech-to-text engines, mirroring `config::schema::SttEngine`. */
 export type SttEngine = 'backend' | 'elevenlabs' | 'openai';
 
-export async function openhumanVoiceStatus(): Promise<VoiceStatus> {
+export async function neppyVoiceStatus(): Promise<VoiceStatus> {
   return await callCoreRpc<VoiceStatus>({ method: 'openhuman.voice_status', params: {} });
 }
 
-export async function openhumanVoiceServerStatus(): Promise<VoiceServerStatus> {
+export async function neppyVoiceServerStatus(): Promise<VoiceServerStatus> {
   return await callCoreRpc<VoiceServerStatus>({
     method: 'openhuman.voice_server_status',
     params: {},
   });
 }
 
-export async function openhumanVoiceServerStart(params?: {
+export async function neppyVoiceServerStart(params?: {
   hotkey?: string;
   activation_mode?: 'tap' | 'push';
   skip_cleanup?: boolean;
@@ -89,14 +89,14 @@ export async function openhumanVoiceServerStart(params?: {
   });
 }
 
-export async function openhumanVoiceServerStop(): Promise<VoiceServerStatus> {
+export async function neppyVoiceServerStop(): Promise<VoiceServerStatus> {
   return await callCoreRpc<VoiceServerStatus>({
     method: 'openhuman.voice_server_stop',
     params: {},
   });
 }
 
-export async function openhumanGetVoiceServerSettings(): Promise<
+export async function neppyGetVoiceServerSettings(): Promise<
   CommandResponse<VoiceServerSettings>
 > {
   return await callCoreRpc<CommandResponse<VoiceServerSettings>>({
@@ -105,7 +105,7 @@ export async function openhumanGetVoiceServerSettings(): Promise<
   });
 }
 
-export async function openhumanUpdateVoiceServerSettings(update: {
+export async function neppyUpdateVoiceServerSettings(update: {
   auto_start?: boolean;
   hotkey?: string;
   activation_mode?: 'tap' | 'push';
@@ -143,7 +143,7 @@ export interface VoiceProvidersSnapshot {
  * `openhuman.voice_set_providers` RPC, which validates each value against
  * the supported provider list and rejects unknown ids server-side.
  */
-export async function openhumanVoiceSetProviders(
+export async function neppyVoiceSetProviders(
   update: VoiceProvidersUpdate
 ): Promise<VoiceProvidersSnapshot> {
   return await callCoreRpc<VoiceProvidersSnapshot>({
@@ -152,7 +152,7 @@ export async function openhumanVoiceSetProviders(
   });
 }
 
-export async function openhumanVoiceTranscribe(
+export async function neppyVoiceTranscribe(
   audioPath: string,
   context?: string,
   skipCleanup?: boolean
@@ -163,7 +163,7 @@ export async function openhumanVoiceTranscribe(
   });
 }
 
-export async function openhumanVoiceTranscribeBytes(
+export async function neppyVoiceTranscribeBytes(
   audioBytes: number[],
   extension?: string,
   context?: string,
@@ -175,7 +175,7 @@ export async function openhumanVoiceTranscribeBytes(
   });
 }
 
-export async function openhumanVoiceTts(
+export async function neppyVoiceTts(
   text: string,
   outputPath?: string
 ): Promise<VoiceTtsResult> {

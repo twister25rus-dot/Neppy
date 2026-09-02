@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import {
-  openhumanGetAutonomySettings,
-  openhumanUpdateAutonomySettings,
+  neppyGetAutonomySettings,
+  neppyUpdateAutonomySettings,
 } from '../../../utils/tauriCommands/config';
 import Button from '../../ui/Button';
 import { SettingsNumberField, SettingsRow, SettingsSection, SettingsStatusLine } from '../controls';
@@ -35,8 +35,8 @@ type Status =
  * Headerless section for editing the agent's max_actions_per_hour rate-limit,
  * rendered inside AgentAccessPanel (formerly the standalone /settings/autonomy
  * page — that slug now redirects to /settings/agent-access). Loads the current
- * value via openhumanGetAutonomySettings on mount; saving writes through
- * openhumanUpdateAutonomySettings and persists to the user's config.toml.
+ * value via neppyGetAutonomySettings on mount; saving writes through
+ * neppyUpdateAutonomySettings and persists to the user's config.toml.
  * New value applies to the next agent session.
  */
 const AutonomyRateLimitSection = () => {
@@ -49,7 +49,7 @@ const AutonomyRateLimitSection = () => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await openhumanGetAutonomySettings();
+        const res = await neppyGetAutonomySettings();
         if (cancelled) return;
         const value = res.result.max_actions_per_hour;
         setCommitted(value);
@@ -83,7 +83,7 @@ const AutonomyRateLimitSection = () => {
     if (!canSave) return;
     setStatus({ kind: 'saving' });
     try {
-      await openhumanUpdateAutonomySettings({ max_actions_per_hour: parsed });
+      await neppyUpdateAutonomySettings({ max_actions_per_hour: parsed });
       setCommitted(parsed);
       setStatus({ kind: 'saved' });
     } catch (err) {

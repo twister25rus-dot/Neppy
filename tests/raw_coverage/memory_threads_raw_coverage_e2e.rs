@@ -279,7 +279,7 @@ fn module_workspace() -> &'static Path {
 ///
 /// `config_path` matters as much as `workspace_dir`: the module reads its
 /// source registry from the file the host names there, and `Config::default()`
-/// names the developer's real `~/.openhuman/config.toml`. Pointing it beside
+/// names the developer's real `~/.neppy/config.toml`. Pointing it beside
 /// the shared workspace is also where `Config::load_or_init` resolves it from
 /// `OPENHUMAN_WORKSPACE`, so env-driven cases and config-driven cases write and
 /// read one registry. Embeddings are off so no case asks the host to embed.

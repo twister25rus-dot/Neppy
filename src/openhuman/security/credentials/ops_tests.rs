@@ -114,9 +114,9 @@ async fn spawn_auth_me_hang() -> String {
 /// would additionally need `/auth/me` to succeed first, and re-scopes the profile
 /// to the resolved user directory as a side effect.
 fn store_live_session(user_id: &str) -> Config {
-    let root_dir = default_root_openhuman_dir().unwrap();
+    let root_dir = default_root_neppy_dir().unwrap();
     write_active_user_id(&root_dir, user_id).unwrap();
-    let user_dir = user_openhuman_dir(&root_dir, user_id);
+    let user_dir = user_neppy_dir(&root_dir, user_id);
     std::fs::create_dir_all(user_dir.join("workspace")).unwrap();
     let config = Config {
         config_path: user_dir.join("config.toml"),
@@ -543,10 +543,10 @@ async fn deferred_session_without_user_id_does_not_replace_active_user_profile()
         .unwrap_or_else(|e| e.into_inner());
     let tmp = TempDir::new().unwrap();
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
-    let root_dir = default_root_openhuman_dir().unwrap();
+    let root_dir = default_root_neppy_dir().unwrap();
     let active_user_id = "existing-active-user";
     write_active_user_id(&root_dir, active_user_id).unwrap();
-    let active_user_dir = user_openhuman_dir(&root_dir, active_user_id);
+    let active_user_dir = user_neppy_dir(&root_dir, active_user_id);
     std::fs::create_dir_all(active_user_dir.join("workspace")).unwrap();
     let mut config = Config {
         config_path: active_user_dir.join("config.toml"),
@@ -808,7 +808,7 @@ fn normalize_local_session_user_overwrites_id_fields() {
 #[tokio::test]
 async fn clear_session_on_empty_store_reports_removed_false() {
     // `clear_session` clears the active-user marker under
-    // `default_root_openhuman_dir()`, which is derived from the *process-global*
+    // `default_root_neppy_dir()`, which is derived from the *process-global*
     // HOME. Without pinning HOME to this test's tempdir (under the shared env
     // lock) it deletes whichever concurrently-running test currently owns HOME —
     // e.g. `deferred_session_without_user_id_does_not_replace_active_user_profile`,

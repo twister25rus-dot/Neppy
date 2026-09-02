@@ -60,18 +60,18 @@ resolve_workspace() {
     fi
 
     # Try the active user workspace
-    local active_user_file="$HOME/.openhuman/active_user.toml"
+    local active_user_file="$HOME/.neppy/active_user.toml"
     if [ -f "$active_user_file" ]; then
         local user_id
         user_id=$(sed -n 's/^user_id *= *"\([^"]*\)".*/\1/p' "$active_user_file" 2>/dev/null || true)
-        if [ -n "$user_id" ] && [ -d "$HOME/.openhuman/users/$user_id/workspace" ]; then
-            echo "$HOME/.openhuman/users/$user_id/workspace"
+        if [ -n "$user_id" ] && [ -d "$HOME/.neppy/users/$user_id/workspace" ]; then
+            echo "$HOME/.neppy/users/$user_id/workspace"
             return
         fi
     fi
 
     # Fallback: first user directory with a workspace
-    for user_dir in "$HOME"/.openhuman/users/*/; do
+    for user_dir in "$HOME"/.neppy/users/*/; do
         if [ -d "${user_dir}workspace" ]; then
             echo "${user_dir}workspace"
             return

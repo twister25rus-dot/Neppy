@@ -13,8 +13,8 @@ import { useT } from '../../lib/i18n/I18nContext';
 import type { ToastNotification } from '../../types/intelligence';
 import {
   type MemorySyncSettings,
-  openhumanGetMemorySyncSettings,
-  openhumanUpdateMemorySyncSettings,
+  neppyGetMemorySyncSettings,
+  neppyUpdateMemorySyncSettings,
 } from '../../utils/tauriCommands/config';
 import Button from '../ui/Button';
 import { relativeTimestamp } from './memorySourcesRowHelpers';
@@ -49,7 +49,7 @@ export function MemorySyncSchedule({ lastSyncMs, onToast }: MemorySyncSchedulePr
     let active = true;
     const loadSettings = async () => {
       try {
-        const resp = await openhumanGetMemorySyncSettings();
+        const resp = await neppyGetMemorySyncSettings();
         if (active) setSettings(resp.result);
       } catch (err) {
         log('get settings failed: %O', err);
@@ -65,7 +65,7 @@ export function MemorySyncSchedule({ lastSyncMs, onToast }: MemorySyncSchedulePr
     async (secs: number) => {
       setSaving(true);
       try {
-        const resp = await openhumanUpdateMemorySyncSettings({ sync_interval_secs: secs });
+        const resp = await neppyUpdateMemorySyncSettings({ sync_interval_secs: secs });
         setSettings(resp.result);
       } catch (err) {
         onToast?.({

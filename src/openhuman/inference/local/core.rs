@@ -24,7 +24,7 @@ pub fn try_global() -> Option<Arc<LocalAiService>> {
 }
 
 pub fn model_artifact_path(config: &Config) -> PathBuf {
-    let root = crate::openhuman::config::default_root_openhuman_dir().unwrap_or_else(|_| {
+    let root = crate::openhuman::config::default_root_neppy_dir().unwrap_or_else(|_| {
         config
             .config_path
             .parent()

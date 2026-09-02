@@ -79,8 +79,8 @@ fn round13_env_lock() -> std::sync::MutexGuard<'static, ()> {
     base_coverage::env_lock()
 }
 
-fn write_round13_min_config(openhuman_dir: &Path) {
-    std::fs::create_dir_all(openhuman_dir).expect("create openhuman config dir");
+fn write_round13_min_config(neppy_dir: &Path) {
+    std::fs::create_dir_all(neppy_dir).expect("create openhuman config dir");
     let cfg = r#"api_url = "http://127.0.0.1:9"
 default_model = "round13-raw-coverage-model"
 default_temperature = 0.2
@@ -105,7 +105,7 @@ auto_save = false
 [memory_tree]
 embedding_strict = false
 "#;
-    std::fs::write(openhuman_dir.join("config.toml"), cfg).expect("write config.toml");
+    std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
     let _: openhuman_core::openhuman::config::Config =
         toml::from_str(cfg).expect("test config must match schema");
 }
@@ -414,7 +414,7 @@ async fn spawn_probe_listener(
 }
 
 #[tokio::test]
-async fn raw_round13_connectivity_picker_identifies_openhuman_probe_listener() {
+async fn raw_round13_connectivity_picker_identifies_neppy_probe_listener() {
     let Some((preferred, task, shutdown_tx)) =
         spawn_probe_listener("127.0.0.1", "200 OK", r#"{"name":"openhuman","ok":true}"#).await
     else {

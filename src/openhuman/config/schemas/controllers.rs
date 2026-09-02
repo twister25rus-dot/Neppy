@@ -321,11 +321,11 @@ fn handle_update_model_settings(params: Map<String, Value>) -> ControllerFuture 
                             {
                                 "bearer" => AuthStyle::Bearer,
                                 "anthropic" => AuthStyle::Anthropic,
-                                "openhuman_jwt" | "openhumanjwt" => AuthStyle::NeppyJwt,
+                                "neppy_jwt" | "openhumanjwt" => AuthStyle::OpenhumanJwt,
                                 "none" => AuthStyle::None,
                                 other => {
                                     return Err(format!(
-                                        "unknown auth_style '{}'; valid: bearer, anthropic, openhuman_jwt, none",
+                                        "unknown auth_style '{}'; valid: bearer, anthropic, neppy_jwt, none",
                                         other
                                     ))
                                 }
@@ -909,9 +909,9 @@ mod tests {
         // `get_data_paths_for_user` attaches a log, so the outcome is wrapped as
         // `{ "result": <paths>, "logs": [...] }`.
         let current = value
-            .pointer("/result/current_openhuman_dir")
+            .pointer("/result/current_neppy_dir")
             .and_then(Value::as_str)
-            .expect("current_openhuman_dir present");
+            .expect("current_neppy_dir present");
         assert!(
             current.replace('\\', "/").ends_with("users/clear-me-4950"),
             "current dir must be scoped to the explicit user id, got {current}"

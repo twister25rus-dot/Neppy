@@ -4,7 +4,7 @@
 //! URL so it can reach Neppy's memory/tools over loopback **without** the
 //! MCP server inheriting CC's OS jail — the server runs here, in the trusted
 //! (unjailed) core process, with full workspace access, while CC's own raw
-//! tools are denied any access to `~/.openhuman`.
+//! tools are denied any access to `~/.neppy`.
 //!
 //! Loopback alone is NOT treated as sufficient isolation: any *other* local
 //! process could otherwise open sessions against Neppy tools/memory. The

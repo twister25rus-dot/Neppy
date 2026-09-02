@@ -42,9 +42,9 @@ use openhuman_core::openhuman::config::settings_cli::{
 };
 use openhuman_core::openhuman::config::{
     clear_active_user, default_projects_dir, output_language_directive, pre_login_user_dir,
-    read_active_user_id, user_openhuman_dir, write_active_user_id, AgentConfig, ChannelsConfig,
-    Config, DaemonConfig, DelegateAgentConfig, DictationActivationMode, LlmBackend,
-    ReflectionSource, TeamModelConfig, UpdateRestartStrategy,
+    read_active_user_id, user_neppy_dir, write_active_user_id, AgentConfig, ChannelsConfig, Config,
+    DaemonConfig, DelegateAgentConfig, DictationActivationMode, LlmBackend, ReflectionSource,
+    TeamModelConfig, UpdateRestartStrategy,
 };
 use openhuman_core::openhuman::desktop::app_state::app_state_schemas;
 use openhuman_core::openhuman::platform::connectivity::{
@@ -479,8 +479,8 @@ async fn mock_revoke_integration(AxumPath(_integration_id): AxumPath<String>) ->
     Json(json!({ "success": true, "data": { "revoked": true } }))
 }
 
-fn write_min_config(openhuman_dir: &Path) {
-    std::fs::create_dir_all(openhuman_dir).expect("create .openhuman");
+fn write_min_config(neppy_dir: &Path) {
+    std::fs::create_dir_all(neppy_dir).expect("create .neppy");
     let cfg = r#"api_url = "http://127.0.0.1:9"
 default_model = "worker-a-model"
 default_temperature = 0.2
@@ -503,7 +503,7 @@ auto_save = false
 [memory_tree]
 embedding_strict = false
 "#;
-    std::fs::write(openhuman_dir.join("config.toml"), cfg).expect("write config.toml");
+    std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
     let _: openhuman_core::openhuman::config::Config =
         toml::from_str(cfg).expect("test config must match schema");
 }
@@ -519,8 +519,8 @@ struct TestHarness {
 async fn setup() -> TestHarness {
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path().to_path_buf();
-    let openhuman_home = home.join(".openhuman");
-    write_min_config(&openhuman_home);
+    let neppy_home = home.join(".neppy");
+    write_min_config(&neppy_home);
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", &home),
@@ -648,16 +648,16 @@ fn config_schema_helpers_cover_provider_voice_agent_and_channel_defaults() {
     assert_eq!(provider.label, "Anthropic");
     assert_eq!(provider.endpoint, "https://api.anthropic.com/v1");
     assert_eq!(provider.auth_style, AuthStyle::Anthropic);
-    let mut openhuman_legacy = CloudProviderCreds {
+    let mut neppy_legacy = CloudProviderCreds {
         id: "provider-openhuman".to_string(),
         legacy_type: Some("openhuman".to_string()),
         ..CloudProviderCreds::default()
     };
-    migrate_legacy_fields(&mut openhuman_legacy);
-    assert_eq!(openhuman_legacy.slug, "openhuman");
-    assert_eq!(openhuman_legacy.label, "Neppy");
-    assert_eq!(openhuman_legacy.endpoint, "https://api.openhuman.ai/v1");
-    assert_eq!(openhuman_legacy.auth_style, AuthStyle::NeppyJwt);
+    migrate_legacy_fields(&mut neppy_legacy);
+    assert_eq!(neppy_legacy.slug, "openhuman");
+    assert_eq!(neppy_legacy.label, "Neppy");
+    assert_eq!(neppy_legacy.endpoint, "https://api.openhuman.ai/v1");
+    assert_eq!(neppy_legacy.auth_style, AuthStyle::NeppyJwt);
     let mut custom_legacy = CloudProviderCreds {
         id: "provider-custom".to_string(),
         legacy_type: Some("unknown-provider".to_string()),
@@ -688,7 +688,7 @@ fn config_schema_helpers_cover_provider_voice_agent_and_channel_defaults() {
     // the legacy `type=minimax` migration fills from the corrected catalog.
     assert_eq!(minimax_legacy.endpoint, "https://api.minimax.io/v1");
     assert_eq!(minimax_legacy.auth_style, AuthStyle::Bearer);
-    assert_eq!(AuthStyle::NeppyJwt.as_str(), "openhuman_jwt");
+    assert_eq!(AuthStyle::NeppyJwt.as_str(), "neppy_jwt");
     assert_eq!(AuthStyle::Anthropic.as_str(), "anthropic");
     assert_eq!(AuthStyle::None.as_str(), "none");
     assert_eq!(
@@ -1187,7 +1187,7 @@ fn config_schema_defaults_cover_dashboard_capability_memory_and_security_shapes(
 #[test]
 fn config_active_user_and_daemon_public_helpers_cover_path_branches() {
     let tmp = tempdir().expect("tempdir");
-    let root = tmp.path().join(".openhuman");
+    let root = tmp.path().join(".neppy");
 
     assert_eq!(read_active_user_id(&root), None);
     std::fs::create_dir_all(&root).expect("create root");
@@ -1201,7 +1201,7 @@ fn config_active_user_and_daemon_public_helpers_cover_path_branches() {
     write_active_user_id(&root, "user-77").expect("write active user");
     assert_eq!(read_active_user_id(&root).as_deref(), Some("user-77"));
     assert_eq!(
-        user_openhuman_dir(&root, "user-77"),
+        user_neppy_dir(&root, "user-77"),
         root.join("users").join("user-77")
     );
     assert_eq!(pre_login_user_dir(&root), root.join("users").join("local"));
@@ -1352,17 +1352,17 @@ fn config_proxy_public_paths_normalize_validate_and_apply_scope() {
     assert!(std::env::var("ALL_PROXY").is_err());
     assert!(std::env::var("all_proxy").is_err());
 
-    let openhuman_scope = ProxyConfig {
+    let neppy_scope = ProxyConfig {
         enabled: true,
         scope: ProxyScope::Neppy,
         http_proxy: Some("https://proxy.example".into()),
         no_proxy: vec![" local.test ".into()],
         ..ProxyConfig::default()
     };
-    assert!(openhuman_scope.has_any_proxy_url());
-    assert!(openhuman_scope.should_apply_to_service("provider.openai"));
-    assert_eq!(openhuman_scope.normalized_no_proxy(), vec!["local.test"]);
-    openhuman_scope.apply_to_process_env();
+    assert!(neppy_scope.has_any_proxy_url());
+    assert!(neppy_scope.should_apply_to_service("provider.openai"));
+    assert_eq!(neppy_scope.normalized_no_proxy(), vec!["local.test"]);
+    neppy_scope.apply_to_process_env();
     assert_eq!(
         std::env::var("HTTP_PROXY").as_deref(),
         Ok("https://proxy.example")
@@ -1662,13 +1662,13 @@ async fn config_loaders_resolve_user_workspace_markers_and_ignore_workspace_when
     let _lock = env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path().join("home");
-    let root = home.join(".openhuman");
+    let root = home.join(".neppy");
     let user_dir = root.join("users").join("user-42");
     let explicit_config_dir = tmp.path().join("explicit");
     let explicit_workspace = tmp.path().join("explicit-workspace");
     let env_workspace = tmp.path().join("env-workspace");
     let legacy_parent = tmp.path().join("legacy-parent");
-    let legacy_config_dir = legacy_parent.join(".openhuman");
+    let legacy_config_dir = legacy_parent.join(".neppy");
     let legacy_workspace = legacy_parent.join("workspace");
 
     let _guards = vec![
@@ -1832,7 +1832,7 @@ async fn config_default_path_loader_ignores_workspace_override_and_projects_dir_
     let _lock = env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path().join("home");
-    let root = home.join(".openhuman");
+    let root = home.join(".neppy");
     let user_dir = root.join("users").join("default-loader-user");
     let workspace_override = tmp.path().join("workspace-override");
     let _guards = vec![
@@ -2081,7 +2081,7 @@ async fn config_save_and_load_encrypts_channel_secret_fields() {
         EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
     ];
     let config_path = home
-        .join(".openhuman")
+        .join(".neppy")
         .join("users")
         .join("local")
         .join("config.toml");
@@ -3546,7 +3546,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
                     "slug": "openhuman",
                     "label": "Reserved Neppy",
                     "endpoint": "https://api.openhuman.ai/v1",
-                    "auth_style": "openhuman_jwt"
+                    "auth_style": "neppy_jwt"
                 },
                 {
                     "slug": "worker-a-valid-cloud",

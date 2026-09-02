@@ -611,7 +611,7 @@ impl Tool for WorkflowInstallFromUrlTool {
 
     fn description(&self) -> &str {
         "Install a user workflow from a remote `url` (https, must point at a \
-         SKILL.md). Fetches and writes it under `~/.openhuman/skills/`. \
+         SKILL.md). Fetches and writes it under `~/.neppy/skills/`. \
          Optional `timeout_secs`. Collisions are rejected. Only use when the \
          user explicitly asks to install a workflow from a URL."
     }
@@ -658,7 +658,7 @@ impl Tool for WorkflowUninstallTool {
 
     fn description(&self) -> &str {
         "Uninstall a user-scope workflow by `name`, deleting its directory under \
-         `~/.openhuman/skills/`. Irreversible; project/legacy workflows are \
+         `~/.neppy/skills/`. Irreversible; project/legacy workflows are \
          read-only and cannot be removed. Only use when the user asks to remove \
          a specific workflow."
     }

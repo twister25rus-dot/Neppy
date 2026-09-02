@@ -42,7 +42,7 @@
 //! core JSON-RPC server so port allocation is independent. The env-var lock
 //! from `json_rpc_e2e.rs` is replicated here (the two test binaries run in
 //! separate processes so they do not share the same OnceLock). Config is
-//! written to a tempdir so nothing touches the developer's `~/.openhuman`.
+//! written to a tempdir so nothing touches the developer's `~/.neppy`.
 //!
 //! The mock backend requires a valid Bearer JWT (`e2e-composio-jwt`) on the
 //! `/settings` / `/auth/me` probe that `auth_store_session` triggers. The
@@ -234,7 +234,7 @@ async fn serve_ephemeral(app: Router) -> (SocketAddr, tokio::task::JoinHandle<()
     (addr, handle)
 }
 
-fn write_test_config(openhuman_dir: &Path, api_origin: &str) {
+fn write_test_config(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
 default_model = "e2e-mock-model"
@@ -249,13 +249,13 @@ encrypt = false
         std::fs::create_dir_all(dir).expect("mkdir config dir");
         std::fs::write(dir.join("config.toml"), cfg).expect("write config.toml");
     }
-    write_cfg(openhuman_dir, &cfg);
+    write_cfg(neppy_dir, &cfg);
     // Pre-login user directory: config resolution uses `users/local` before an
     // active user is established (same pattern as write_min_config in
     // json_rpc_e2e.rs). Without this, auth_store_session hits the real backend.
-    write_cfg(&openhuman_dir.join("users").join("local"), &cfg);
+    write_cfg(&neppy_dir.join("users").join("local"), &cfg);
     // Post-login user-scoped directory.
-    write_cfg(&openhuman_dir.join("users").join("composio-e2e-user"), &cfg);
+    write_cfg(&neppy_dir.join("users").join("composio-e2e-user"), &cfg);
 }
 
 async fn post_json_rpc(rpc_base: &str, id: i64, method: &str, params: Value) -> Value {
@@ -315,7 +315,7 @@ async fn post_oauth_gap_retries_and_returns_real_data() {
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvGuard::set_to_path("HOME", home);
     let _ws_guard = EnvGuard::unset("OPENHUMAN_WORKSPACE");
@@ -353,7 +353,7 @@ async fn post_oauth_gap_retries_and_returns_real_data() {
 
     let (mock_addr, mock_join) = serve_ephemeral(mock_backend_router(execute_state)).await;
     let mock_origin = format!("http://{mock_addr}");
-    write_test_config(&openhuman_home, &mock_origin);
+    write_test_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -454,7 +454,7 @@ async fn revoked_token_surfaces_without_retry() {
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvGuard::set_to_path("HOME", home);
     let _ws_guard = EnvGuard::unset("OPENHUMAN_WORKSPACE");
@@ -478,7 +478,7 @@ async fn revoked_token_surfaces_without_retry() {
 
     let (mock_addr, mock_join) = serve_ephemeral(mock_backend_router(execute_state)).await;
     let mock_origin = format!("http://{mock_addr}");
-    write_test_config(&openhuman_home, &mock_origin);
+    write_test_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");

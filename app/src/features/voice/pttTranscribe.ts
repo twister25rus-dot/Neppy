@@ -9,7 +9,7 @@
  * The `extension` hint comes from `pttAudio.lastRecordedExtension()` —
  * MediaRecorder negotiates webm/opus on every modern desktop browser.
  */
-import { openhumanVoiceTranscribeBytes } from '../../utils/tauriCommands/voice';
+import { neppyVoiceTranscribeBytes } from '../../utils/tauriCommands/voice';
 import { lastRecordedExtension } from './pttAudio';
 
 /**
@@ -34,7 +34,7 @@ export async function transcribePttAudio(buf: ArrayBuffer): Promise<string> {
   if (buf.byteLength === 0) return '';
   const extension = lastRecordedExtension();
   const bytes = bufferToByteArray(buf);
-  const result = await openhumanVoiceTranscribeBytes(
+  const result = await neppyVoiceTranscribeBytes(
     bytes,
     extension,
     /* context */ undefined,

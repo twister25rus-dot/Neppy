@@ -49,22 +49,22 @@ impl Drop for EnvGuard {
 async fn config_secrets_roundtrip_via_keyring_backed_master_key_migration() {
     let _guard = env_lock().await;
     let tmp = tempfile::tempdir().expect("tempdir");
-    let openhuman_dir = tmp.path().join("user-123");
-    let workspace_dir = openhuman_dir.join("workspace");
+    let neppy_dir = tmp.path().join("user-123");
+    let workspace_dir = neppy_dir.join("workspace");
     std::fs::create_dir_all(&workspace_dir).expect("workspace dir");
 
     let _keyring_backend = EnvGuard::set_str("OPENHUMAN_KEYRING_BACKEND", "file");
-    let _workspace_override = EnvGuard::set("OPENHUMAN_WORKSPACE", &openhuman_dir);
+    let _workspace_override = EnvGuard::set("OPENHUMAN_WORKSPACE", &neppy_dir);
     keyring::init_workspace(&workspace_dir);
 
-    let legacy_key_path = openhuman_dir.join(".secret_key");
+    let legacy_key_path = neppy_dir.join(".secret_key");
     std::fs::write(
         &legacy_key_path,
         "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
     )
     .expect("legacy key file");
 
-    let config_path = openhuman_dir.join("config.toml");
+    let config_path = neppy_dir.join("config.toml");
     let config = Config {
         config_path: config_path.clone(),
         workspace_dir: workspace_dir.clone(),

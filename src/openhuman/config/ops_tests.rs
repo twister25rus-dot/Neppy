@@ -4,14 +4,14 @@ use tempfile::tempdir;
 #[tokio::test]
 async fn reset_local_data_removes_active_user_and_markers_only() {
     let temp = tempdir().unwrap();
-    let default_openhuman_dir = temp.path().join("default-openhuman");
+    let default_neppy_dir = temp.path().join("default-openhuman");
     // Active user lives under the shared root's `users/` tree, mirroring the
-    // real layout (`~/.openhuman/users/<id>`).
-    let current_openhuman_dir = default_openhuman_dir.join("users").join("active-user");
-    let workspace_marker = active_workspace_marker_path(&default_openhuman_dir);
-    let user_marker = crate::openhuman::config::active_user_marker_path(&default_openhuman_dir);
+    // real layout (`~/.neppy/users/<id>`).
+    let current_neppy_dir = default_neppy_dir.join("users").join("active-user");
+    let workspace_marker = active_workspace_marker_path(&default_neppy_dir);
+    let user_marker = crate::openhuman::config::active_user_marker_path(&default_neppy_dir);
 
-    tokio::fs::create_dir_all(current_openhuman_dir.join("workspace"))
+    tokio::fs::create_dir_all(current_neppy_dir.join("workspace"))
         .await
         .unwrap();
     tokio::fs::write(&workspace_marker, "config_dir = 'users/active-user'\n")
@@ -21,16 +21,16 @@ async fn reset_local_data_removes_active_user_and_markers_only() {
         .await
         .unwrap();
 
-    let outcome = reset_local_data_for_paths(&current_openhuman_dir, &default_openhuman_dir)
+    let outcome = reset_local_data_for_paths(&current_neppy_dir, &default_neppy_dir)
         .await
         .unwrap();
 
     // Active user's slice and both shared markers are gone …
-    assert!(!current_openhuman_dir.exists());
+    assert!(!current_neppy_dir.exists());
     assert!(!workspace_marker.exists());
     assert!(!user_marker.exists());
     // … but the shared root itself survives.
-    assert!(default_openhuman_dir.exists());
+    assert!(default_neppy_dir.exists());
     assert!(outcome
         .value
         .get("removed_paths")
@@ -41,12 +41,12 @@ async fn reset_local_data_removes_active_user_and_markers_only() {
 #[tokio::test]
 async fn reset_local_data_preserves_sibling_users() {
     let temp = tempdir().unwrap();
-    let default_openhuman_dir = temp.path().join("default-openhuman");
-    let current_openhuman_dir = default_openhuman_dir.join("users").join("active-user");
-    let sibling_user_dir = default_openhuman_dir.join("users").join("other-user");
+    let default_neppy_dir = temp.path().join("default-openhuman");
+    let current_neppy_dir = default_neppy_dir.join("users").join("active-user");
+    let sibling_user_dir = default_neppy_dir.join("users").join("other-user");
     let sibling_file = sibling_user_dir.join("config.toml");
 
-    tokio::fs::create_dir_all(current_openhuman_dir.join("workspace"))
+    tokio::fs::create_dir_all(current_neppy_dir.join("workspace"))
         .await
         .unwrap();
     tokio::fs::create_dir_all(&sibling_user_dir).await.unwrap();
@@ -54,13 +54,13 @@ async fn reset_local_data_preserves_sibling_users() {
         .await
         .unwrap();
 
-    reset_local_data_for_paths(&current_openhuman_dir, &default_openhuman_dir)
+    reset_local_data_for_paths(&current_neppy_dir, &default_neppy_dir)
         .await
         .unwrap();
 
     // The active user is wiped; the sibling account is untouched — this is the
     // regression this fix addresses.
-    assert!(!current_openhuman_dir.exists());
+    assert!(!current_neppy_dir.exists());
     assert!(sibling_user_dir.exists());
     assert!(sibling_file.exists());
 }
@@ -68,18 +68,16 @@ async fn reset_local_data_preserves_sibling_users() {
 #[tokio::test]
 async fn reset_local_data_tolerates_absent_paths() {
     let temp = tempdir().unwrap();
-    let default_openhuman_dir = temp.path().join("default-openhuman");
-    let current_openhuman_dir = default_openhuman_dir.join("users").join("active-user");
-    tokio::fs::create_dir_all(&default_openhuman_dir)
-        .await
-        .unwrap();
+    let default_neppy_dir = temp.path().join("default-openhuman");
+    let current_neppy_dir = default_neppy_dir.join("users").join("active-user");
+    tokio::fs::create_dir_all(&default_neppy_dir).await.unwrap();
 
     // No current user dir, no markers — a fresh / already-cleared install.
-    let outcome = reset_local_data_for_paths(&current_openhuman_dir, &default_openhuman_dir)
+    let outcome = reset_local_data_for_paths(&current_neppy_dir, &default_neppy_dir)
         .await
         .unwrap();
 
-    assert!(default_openhuman_dir.exists());
+    assert!(default_neppy_dir.exists());
     assert!(outcome
         .value
         .get("removed_paths")
@@ -142,16 +140,13 @@ fn core_rpc_url_from_env_uses_override_when_set() {
 fn fallback_workspace_dir_ends_in_workspace_under_openhuman() {
     let p = fallback_workspace_dir();
     assert!(p.ends_with("workspace"));
-    assert!(p
-        .parent()
-        .map(|d| d.ends_with(".openhuman"))
-        .unwrap_or(false));
+    assert!(p.parent().map(|d| d.ends_with(".neppy")).unwrap_or(false));
 }
 
 #[test]
-fn default_openhuman_dir_ends_in_dot_openhuman() {
-    let p = default_openhuman_dir();
-    assert!(p.ends_with(".openhuman"));
+fn default_neppy_dir_ends_in_dot_openhuman() {
+    let p = default_neppy_dir();
+    assert!(p.ends_with(".neppy"));
 }
 
 #[test]
@@ -162,18 +157,17 @@ fn active_workspace_marker_path_is_under_default_dir() {
 }
 
 #[test]
-fn config_openhuman_dir_returns_config_path_parent() {
+fn config_neppy_dir_returns_config_path_parent() {
     let mut cfg = Config::default();
     cfg.config_path = PathBuf::from("/tmp/xyz/config.toml");
-    assert_eq!(config_openhuman_dir(&cfg), PathBuf::from("/tmp/xyz"));
+    assert_eq!(config_neppy_dir(&cfg), PathBuf::from("/tmp/xyz"));
 }
 
 #[cfg(windows)]
 #[test]
 fn reset_local_data_remove_error_explains_windows_file_locks() {
     let err = std::io::Error::from_raw_os_error(32);
-    let msg =
-        reset_local_data_remove_error(std::path::Path::new("C:\\Users\\me\\.openhuman"), &err);
+    let msg = reset_local_data_remove_error(std::path::Path::new("C:\\Users\\me\\.neppy"), &err);
 
     assert!(msg.contains("locked by another Neppy window or process"));
     assert!(msg.contains("Close all Neppy windows and try again"));
@@ -183,8 +177,7 @@ fn reset_local_data_remove_error_explains_windows_file_locks() {
 #[test]
 fn reset_local_data_remove_error_explains_windows_lock_violation() {
     let err = std::io::Error::from_raw_os_error(33);
-    let msg =
-        reset_local_data_remove_error(std::path::Path::new("C:\\Users\\me\\.openhuman"), &err);
+    let msg = reset_local_data_remove_error(std::path::Path::new("C:\\Users\\me\\.neppy"), &err);
 
     assert!(msg.contains("locked by another Neppy window or process"));
     assert!(msg.contains("Close all Neppy windows and try again"));
@@ -853,7 +846,7 @@ async fn apply_model_settings_preserves_existing_reserved_slug_cloud_providers()
             slug: "openhuman".into(),
             label: "Neppy".into(),
             endpoint: "https://api.tinyhumans.ai".into(),
-            auth_style: AuthStyle::NeppyJwt,
+            auth_style: AuthStyle::OpenhumanJwt,
             default_model: Some("reasoning-v1".into()),
             ..Default::default()
         },
@@ -920,7 +913,7 @@ async fn apply_model_settings_does_not_double_add_reserved_entries() {
         slug: "openhuman".into(),
         label: "Neppy (stored)".into(),
         endpoint: "https://api.tinyhumans.ai".into(),
-        auth_style: AuthStyle::NeppyJwt,
+        auth_style: AuthStyle::OpenhumanJwt,
         default_model: Some("reasoning-v1".into()),
         ..Default::default()
     }];
@@ -931,7 +924,7 @@ async fn apply_model_settings_does_not_double_add_reserved_entries() {
             slug: "openhuman".into(),
             label: "Neppy (from patch)".into(),
             endpoint: "https://api.tinyhumans.ai".into(),
-            auth_style: AuthStyle::NeppyJwt,
+            auth_style: AuthStyle::OpenhumanJwt,
             default_model: Some("reasoning-v1".into()),
             ..Default::default()
         }]),

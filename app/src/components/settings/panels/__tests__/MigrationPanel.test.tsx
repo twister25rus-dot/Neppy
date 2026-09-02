@@ -13,8 +13,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../../../test/test-utils';
 import {
   type MigrationReport,
-  openhumanMigrateHermes,
-  openhumanMigrateOpenclaw,
+  neppyMigrateHermes,
+  neppyMigrateOpenclaw,
 } from '../../../../utils/tauriCommands/core';
 import MigrationPanel from '../MigrationPanel';
 
@@ -22,7 +22,7 @@ vi.mock('../../../../utils/tauriCommands/core', async () => {
   const actual = await vi.importActual<typeof import('../../../../utils/tauriCommands/core')>(
     '../../../../utils/tauriCommands/core'
   );
-  return { ...actual, openhumanMigrateOpenclaw: vi.fn(), openhumanMigrateHermes: vi.fn() };
+  return { ...actual, neppyMigrateOpenclaw: vi.fn(), neppyMigrateHermes: vi.fn() };
 });
 
 vi.mock('../../hooks/useSettingsNavigation', () => ({
@@ -35,7 +35,7 @@ function makeReport(
 ): MigrationReport {
   return {
     source_workspace: '/home/u/.openclaw/workspace',
-    target_workspace: '/home/u/.openhuman/workspace',
+    target_workspace: '/home/u/.neppy/workspace',
     dry_run: true,
     stats: {
       from_sqlite: 4,
@@ -52,8 +52,8 @@ function makeReport(
 
 describe('MigrationPanel (#1440)', () => {
   beforeEach(() => {
-    vi.mocked(openhumanMigrateOpenclaw).mockReset();
-    vi.mocked(openhumanMigrateHermes).mockReset();
+    vi.mocked(neppyMigrateOpenclaw).mockReset();
+    vi.mocked(neppyMigrateHermes).mockReset();
   });
 
   it('renders OpenClaw as the default vendor and Hermes as selectable', () => {
@@ -67,7 +67,7 @@ describe('MigrationPanel (#1440)', () => {
   });
 
   it('selecting Hermes and clicking Preview calls the Hermes RPC', async () => {
-    vi.mocked(openhumanMigrateHermes).mockResolvedValueOnce({
+    vi.mocked(neppyMigrateHermes).mockResolvedValueOnce({
       result: makeReport(
         { source_workspace: '/home/u/.hermes' },
         { from_sqlite: 0, from_markdown: 1 }
@@ -81,12 +81,12 @@ describe('MigrationPanel (#1440)', () => {
     fireEvent.click(screen.getByTestId('migration-preview-button'));
 
     await waitFor(() => expect(screen.getByTestId('migration-report-preview')).toBeInTheDocument());
-    expect(openhumanMigrateHermes).toHaveBeenCalledWith(undefined, true);
-    expect(openhumanMigrateOpenclaw).not.toHaveBeenCalled();
+    expect(neppyMigrateHermes).toHaveBeenCalledWith(undefined, true);
+    expect(neppyMigrateOpenclaw).not.toHaveBeenCalled();
   });
 
   it('calls the RPC with dry_run=true on Preview and renders the report', async () => {
-    vi.mocked(openhumanMigrateOpenclaw).mockResolvedValueOnce({
+    vi.mocked(neppyMigrateOpenclaw).mockResolvedValueOnce({
       result: makeReport({}, { from_sqlite: 7, from_markdown: 3 }),
       logs: [],
     });
@@ -95,7 +95,7 @@ describe('MigrationPanel (#1440)', () => {
     fireEvent.click(screen.getByTestId('migration-preview-button'));
 
     await waitFor(() => expect(screen.getByTestId('migration-report-preview')).toBeInTheDocument());
-    expect(openhumanMigrateOpenclaw).toHaveBeenCalledWith(undefined, true);
+    expect(neppyMigrateOpenclaw).toHaveBeenCalledWith(undefined, true);
     expect(screen.getByTestId('migration-report-source').textContent).toContain(
       '/home/u/.openclaw/workspace'
     );
@@ -107,18 +107,18 @@ describe('MigrationPanel (#1440)', () => {
   });
 
   it('passes the user-supplied source path through to the RPC', async () => {
-    vi.mocked(openhumanMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
+    vi.mocked(neppyMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
     renderWithProviders(<MigrationPanel />);
     const input = screen.getByTestId('migration-source-input') as HTMLInputElement;
     fireEvent.change(input, { target: { value: '  /opt/legacy/openclaw  ' } });
     fireEvent.click(screen.getByTestId('migration-preview-button'));
     await waitFor(() =>
-      expect(openhumanMigrateOpenclaw).toHaveBeenCalledWith('/opt/legacy/openclaw', true)
+      expect(neppyMigrateOpenclaw).toHaveBeenCalledWith('/opt/legacy/openclaw', true)
     );
   });
 
   it('requires window.confirm before Apply and calls the RPC with dry_run=false on yes', async () => {
-    vi.mocked(openhumanMigrateOpenclaw)
+    vi.mocked(neppyMigrateOpenclaw)
       .mockResolvedValueOnce({ result: makeReport(), logs: [] })
       .mockResolvedValueOnce({
         result: makeReport({ dry_run: false }, { from_sqlite: 4, from_markdown: 2, imported: 6 }),
@@ -132,7 +132,7 @@ describe('MigrationPanel (#1440)', () => {
 
     fireEvent.click(screen.getByTestId('migration-apply-button'));
     await waitFor(() =>
-      expect(openhumanMigrateOpenclaw).toHaveBeenNthCalledWith(2, undefined, false)
+      expect(neppyMigrateOpenclaw).toHaveBeenNthCalledWith(2, undefined, false)
     );
     expect(confirmSpy).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.getByTestId('migration-report-applied')).toBeInTheDocument());
@@ -140,7 +140,7 @@ describe('MigrationPanel (#1440)', () => {
   });
 
   it('skips Apply when the user cancels the confirm dialog', async () => {
-    vi.mocked(openhumanMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
+    vi.mocked(neppyMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
     renderWithProviders(<MigrationPanel />);
     fireEvent.click(screen.getByTestId('migration-preview-button'));
@@ -149,7 +149,7 @@ describe('MigrationPanel (#1440)', () => {
     fireEvent.click(screen.getByTestId('migration-apply-button'));
     // Only the Preview call should have fired — Apply must not call the RPC
     // when the operator says no.
-    expect(openhumanMigrateOpenclaw).toHaveBeenCalledTimes(1);
+    expect(neppyMigrateOpenclaw).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('migration-report-applied')).toBeNull();
     confirmSpy.mockRestore();
   });
@@ -158,7 +158,7 @@ describe('MigrationPanel (#1440)', () => {
     // CodeRabbit regression guard on PR #2087: previously the Apply button
     // stayed unlocked after any prior preview, so editing the source path
     // could run Apply against a workspace that was never previewed.
-    vi.mocked(openhumanMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
+    vi.mocked(neppyMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
     renderWithProviders(<MigrationPanel />);
     const input = screen.getByTestId('migration-source-input') as HTMLInputElement;
     const apply = screen.getByTestId('migration-apply-button');
@@ -174,7 +174,7 @@ describe('MigrationPanel (#1440)', () => {
   });
 
   it('re-disables Apply when vendor is switched after a preview', async () => {
-    vi.mocked(openhumanMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
+    vi.mocked(neppyMigrateOpenclaw).mockResolvedValueOnce({ result: makeReport(), logs: [] });
     renderWithProviders(<MigrationPanel />);
     const apply = screen.getByTestId('migration-apply-button');
 
@@ -187,7 +187,7 @@ describe('MigrationPanel (#1440)', () => {
   });
 
   it('renders inline error on RPC failure without removing the form', async () => {
-    vi.mocked(openhumanMigrateOpenclaw).mockRejectedValueOnce(
+    vi.mocked(neppyMigrateOpenclaw).mockRejectedValueOnce(
       new Error('OpenClaw workspace not found at /opt/legacy/openclaw')
     );
     renderWithProviders(<MigrationPanel />);

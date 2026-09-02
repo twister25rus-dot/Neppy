@@ -1,7 +1,7 @@
 import debug from 'debug';
 import { useEffect, useRef } from 'react';
 
-import { openhumanGetVoiceServerSettings, syncNotchVisibility } from '../utils/tauriCommands';
+import { neppyGetVoiceServerSettings, syncNotchVisibility } from '../utils/tauriCommands';
 
 const log = debug('notch:boot');
 
@@ -21,7 +21,7 @@ export function useNotchBootSync(isBootstrapping: boolean): void {
     notchSyncedRef.current = true;
     void (async () => {
       try {
-        const res = await openhumanGetVoiceServerSettings();
+        const res = await neppyGetVoiceServerSettings();
         await syncNotchVisibility(res.result.always_on_enabled);
       } catch (err) {
         log('boot visibility sync failed: %o', err);

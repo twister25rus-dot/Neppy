@@ -45,7 +45,7 @@ fn chat_provider_cloud_sentinel_resolves_to_cloud() {
 }
 
 #[test]
-fn chat_provider_openhuman_sentinel_resolves_to_cloud() {
+fn chat_provider_neppy_sentinel_resolves_to_cloud() {
     let config = config_with_chat_provider(Some("openhuman"));
     assert!(matches!(
         resolve_chat_workload(&config),

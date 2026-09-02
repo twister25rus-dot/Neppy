@@ -1812,7 +1812,7 @@ fn checklist_default_forbidden_paths_comprehensive() {
 
 #[test]
 fn resolved_path_blocks_outside_workspace() {
-    let workspace = std::env::temp_dir().join("openhuman_test_resolved_path");
+    let workspace = std::env::temp_dir().join("neppy_test_resolved_path");
     let _ = std::fs::create_dir_all(&workspace);
 
     // Use the canonicalized workspace so starts_with checks match
@@ -1848,7 +1848,7 @@ fn resolved_path_blocks_outside_workspace() {
 #[test]
 fn resolved_path_blocks_root_escape() {
     let policy = SecurityPolicy {
-        workspace_dir: PathBuf::from("/home/openhuman_user/project"),
+        workspace_dir: PathBuf::from("/home/neppy_user/project"),
         ..SecurityPolicy::default()
     };
 
@@ -1867,7 +1867,7 @@ fn resolved_path_blocks_root_escape() {
 fn resolved_path_blocks_symlink_escape() {
     use std::os::unix::fs::symlink;
 
-    let root = std::env::temp_dir().join("openhuman_test_symlink_escape");
+    let root = std::env::temp_dir().join("neppy_test_symlink_escape");
     let workspace = root.join("workspace");
     let outside = root.join("outside_target");
 
@@ -2219,7 +2219,7 @@ async fn validate_path_expands_tilde_before_workspace_join() {
     // indicate the literal ~/... was appended to workspace_dir and canonicalize failed there).
     let workspace = tempfile::tempdir().unwrap();
     let home = dirs::home_dir().unwrap();
-    let target = home.join("openhuman_tilde_validate_path_test.txt");
+    let target = home.join("neppy_tilde_validate_path_test.txt");
     std::fs::write(&target, "test").unwrap();
     let policy = SecurityPolicy {
         workspace_dir: workspace.path().to_path_buf(),
@@ -2229,7 +2229,7 @@ async fn validate_path_expands_tilde_before_workspace_join() {
         ..SecurityPolicy::default()
     };
     let err = policy
-        .validate_path("~/openhuman_tilde_validate_path_test.txt")
+        .validate_path("~/neppy_tilde_validate_path_test.txt")
         .await
         .unwrap_err();
     let _ = std::fs::remove_file(&target);
@@ -2254,7 +2254,7 @@ async fn validate_parent_path_expands_tilde_before_workspace_join() {
         ..SecurityPolicy::default()
     };
     let err = policy
-        .validate_parent_path("~/openhuman_tilde_validate_parent_test.txt")
+        .validate_parent_path("~/neppy_tilde_validate_parent_test.txt")
         .await
         .unwrap_err();
     assert!(

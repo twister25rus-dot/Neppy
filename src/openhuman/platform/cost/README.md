@@ -55,7 +55,7 @@ None. The module has no `bus.rs` and no `DomainEvent` publishers/subscribers.
 ## Persistence
 
 - Append-only JSONL at `<workspace>/state/costs.jsonl`, one `CostRecord` per line.
-- Legacy migration: a pre-existing `<workspace>/.openhuman/costs.db` is moved (rename, copy-fallback) to the new path on first `CostTracker::new`.
+- Legacy migration: a pre-existing `<workspace>/.neppy/costs.db` is moved (rename, copy-fallback) to the new path on first `CostTracker::new`.
 - In-memory caches in `CostStorage`: `daily_cost_usd` / `monthly_cost_usd` plus the cached day/year/month they pertain to; rebuilt by full file scan on construction and on period rollover. Malformed lines are skipped with a `warn`.
 - Per-session in-memory `Vec<CostRecord>` (`session_costs`) backs the session figures in `get_summary`.
 

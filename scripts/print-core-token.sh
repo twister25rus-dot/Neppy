@@ -6,7 +6,7 @@
 #
 # Resolution order (matches src/core/auth.rs::init_rpc_token):
 #   1. $OPENHUMAN_CORE_TOKEN if set and non-empty   (Tauri / Docker / cloud)
-#   2. ${OPENHUMAN_WORKSPACE:-$HOME/.openhuman}/core.token   (standalone CLI)
+#   2. ${OPENHUMAN_WORKSPACE:-$HOME/.neppy}/core.token   (standalone CLI)
 #
 # Usage:
 #   scripts/print-core-token.sh           # print full token to stdout
@@ -45,7 +45,7 @@ for arg in "$@"; do
 done
 
 env_token="${OPENHUMAN_CORE_TOKEN:-}"
-workspace_dir="${OPENHUMAN_WORKSPACE:-$HOME/.openhuman}"
+workspace_dir="${OPENHUMAN_WORKSPACE:-$HOME/.neppy}"
 file_path="$workspace_dir/core.token"
 
 source="" # one of: env | file

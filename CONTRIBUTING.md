@@ -268,8 +268,8 @@ Merge-gate context:
 
 Useful local paths during development:
 
-- `~/.openhuman/`: default workspace for the Rust core and local app data.
-- `~/.openhuman-staging/`: staging workspace when `OPENHUMAN_APP_ENV=staging`.
+- `~/.neppy/`: default workspace for the Rust core and local app data.
+- `~/.neppy-staging/`: staging workspace when `OPENHUMAN_APP_ENV=staging`.
 - `app/.env.local`: browser-facing `VITE_*` overrides.
 - `.env`: Rust core, Tauri shell, and shared runtime overrides.
 

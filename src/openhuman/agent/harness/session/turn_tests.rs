@@ -330,7 +330,7 @@ impl PostTurnHook for RecordingHook {
 /// (`subagent_runner::ops::runner::try_deterministic_memory_retrieval`, #4677)
 /// loads the **host** config and queries the real memory tree behind it, not
 /// the `Memory` handed to the `Agent` under test. Without this the test reads
-/// the developer's own `~/.openhuman`: on a populated machine `fast_retrieve`
+/// the developer's own `~/.neppy`: on a populated machine `fast_retrieve`
 /// returns hits, the fast path short-circuits with zero provider calls, and the
 /// mock provider's queued responses land on the wrong turns. CI has an empty
 /// home, so the failure only ever reproduces locally.

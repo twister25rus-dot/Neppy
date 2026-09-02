@@ -415,7 +415,7 @@ impl ShellTool {
         // (`/tmp/openhuman`, a ReadWrite trusted root — see SecurityPolicy
         // `from_config`) so `python3 tempfile` / `mktemp` / `$TMPDIR` writes land
         // in a sandboxed, readable location instead of the world-shared /tmp.
-        let scratch_dir = crate::openhuman::security::openhuman_scratch_dir();
+        let scratch_dir = crate::openhuman::security::neppy_scratch_dir();
         if scratch_dir.is_dir() {
             tracing::debug!(
                 scratch_dir = %scratch_dir.display(),

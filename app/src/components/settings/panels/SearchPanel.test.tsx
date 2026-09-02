@@ -20,8 +20,8 @@ import SearchPanel from './SearchPanel';
 const hoisted = vi.hoisted(() => ({ getSearchSettings: vi.fn(), updateSearchSettings: vi.fn() }));
 
 vi.mock('../../../utils/tauriCommands/config', () => ({
-  openhumanGetSearchSettings: (...a: unknown[]) => hoisted.getSearchSettings(...a),
-  openhumanUpdateSearchSettings: (...a: unknown[]) => hoisted.updateSearchSettings(...a),
+  neppyGetSearchSettings: (...a: unknown[]) => hoisted.getSearchSettings(...a),
+  neppyUpdateSearchSettings: (...a: unknown[]) => hoisted.updateSearchSettings(...a),
 }));
 
 // Identity translator so we can query by the stable i18n keys.

@@ -356,7 +356,7 @@ describe('desktopDeepLinkListener', () => {
   it('surfaces an unreadable core config as a translatable key, not a retry prompt', async () => {
     vi.mocked(storeSession).mockRejectedValueOnce(
       new Error(
-        'Failed to read config file: /home/openhuman/.openhuman/config.toml ' +
+        'Failed to read config file: /home/openhuman/.neppy/config.toml ' +
           '[config owner mismatch] (file uid=0 gid=0 mode=0600; process euid=10001 egid=10001): ' +
           'Permission denied (os error 13)'
       )
@@ -558,7 +558,7 @@ describe('classifyAuthStoreFailure', () => {
   // try again." for a fault no amount of retrying clears.
   it('classifies an unreadable core config as its own permanent kind', () => {
     const reported =
-      'Failed to read config file: /home/openhuman/.openhuman/config.toml ' +
+      'Failed to read config file: /home/openhuman/.neppy/config.toml ' +
       '[config owner mismatch] (file uid=0 gid=0 mode=0600; process euid=10001 egid=10001): ' +
       'Permission denied (os error 13)';
 

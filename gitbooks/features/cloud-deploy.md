@@ -129,7 +129,7 @@ Endpoints exposed by the running container:
 - `POST /rpc`, bearer-protected JSON-RPC entrypoint.
 - `GET /events`, `GET /ws/dictation`, public streaming channels.
 
-The `OPENHUMAN_WORKSPACE` directory (`/home/openhuman/.openhuman` inside the
+The `OPENHUMAN_WORKSPACE` directory (`/home/openhuman/.neppy` inside the
 container) holds the core's config, sqlite databases, and skill state. **Mount
 it on a persistent volume** in every production deploy or you will lose data on
 restart.
@@ -213,7 +213,7 @@ docker run -d --name openhuman-core -p 7788:7788 \
   -e OPENHUMAN_CORE_TOKEN="$(openssl rand -hex 32)" \
   -e BACKEND_URL=https://api.tinyhumans.ai \
   -e OPENHUMAN_APP_ENV=production \
-  -v openhuman-workspace:/home/openhuman/.openhuman \
+  -v openhuman-workspace:/home/openhuman/.neppy \
   ghcr.io/tinyhumansai/openhuman-core:latest
 ```
 
@@ -439,7 +439,7 @@ The image ships a dedicated entrypoint at
 
 1. Starts as `root`.
 2. Runs `mkdir -p` + `chown openhuman:openhuman` on both `$OPENHUMAN_WORKSPACE`
-   and `$HOME/.openhuman` (the directory `core.token` is written to when
+   and `$HOME/.neppy` (the directory `core.token` is written to when
    `OPENHUMAN_CORE_TOKEN` is unset).
 3. Calls `exec gosu openhuman openhuman-core "$@"` to drop privileges and
    hand off to the binary.
@@ -491,12 +491,12 @@ primary_region = '<your-region>'
 [env]
   OPENHUMAN_CORE_HOST = "0.0.0.0"
   OPENHUMAN_CORE_PORT = "7788"
-  OPENHUMAN_WORKSPACE = "/home/openhuman/.openhuman"
+  OPENHUMAN_WORKSPACE = "/home/openhuman/.neppy"
   RUST_LOG = "info"
 
 [[mounts]]
   source = "openhuman_workspace"
-  destination = "/home/openhuman/.openhuman"
+  destination = "/home/openhuman/.neppy"
 
 [http_service]
   internal_port = 7788
@@ -659,7 +659,7 @@ Fix an older container by SSH-ing in and re-owning the workspace:
 
 ```bash
 fly ssh console --config .fly/fly.toml
-chown -R openhuman:openhuman /home/openhuman/.openhuman/
+chown -R openhuman:openhuman /home/openhuman/.neppy/
 exit
 fly machine restart --config .fly/fly.toml
 ```
@@ -669,7 +669,7 @@ them, so this stays correct whichever image you are running:
 
 ```bash
 docker exec -u 0 openhuman-core sh -c \
-  'chown -Rh "$(id -u openhuman):$(id -g openhuman)" /home/openhuman/.openhuman'
+  'chown -Rh "$(id -u openhuman):$(id -g openhuman)" /home/openhuman/.neppy'
 docker restart openhuman-core
 ```
 
@@ -678,7 +678,7 @@ To see which UID owns what before repairing. Note `docker exec` defaults to
 `id`:
 
 ```bash
-docker exec openhuman-core sh -c 'id openhuman; ls -ln /home/openhuman/.openhuman/config.toml'
+docker exec openhuman-core sh -c 'id openhuman; ls -ln /home/openhuman/.neppy/config.toml'
 ```
 
 ---
@@ -691,7 +691,7 @@ Two failure modes guard the cloud deploy path:
   Protects the DigitalOcean App Platform path (`.do/app.yaml`) where the
   token is always pre-set and no persistent volume is used.
 - **`docker-volume-permissions`**: omits `OPENHUMAN_CORE_TOKEN` and mounts
-  a fresh anonymous volume at `/home/openhuman/.openhuman`. Reproduces the
+  a fresh anonymous volume at `/home/openhuman/.neppy`. Reproduces the
   exact failure mode of issue #2065 and asserts that `/health` returns 200
   and that `Permission denied (os error 13)` is absent from the logs.
 
@@ -714,7 +714,7 @@ docker rm -f oh-smoke
 # Fresh-volume / no-token path (Docker Compose, VPS):
 docker volume create oh-vol-test
 docker run -d --name oh-vol-smoke -p 7789:7788 \
-  -v oh-vol-test:/home/openhuman/.openhuman \
+  -v oh-vol-test:/home/openhuman/.neppy \
   openhuman-core:smoke
 curl -fsS http://localhost:7789/health
 docker rm -f oh-vol-smoke

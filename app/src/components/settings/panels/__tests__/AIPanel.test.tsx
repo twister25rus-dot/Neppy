@@ -25,7 +25,7 @@ import { renderWithProviders } from '../../../../test/test-utils';
 import { connectOpenRouterViaOAuth } from '../../../../utils/openrouterOAuth';
 import { openUrl } from '../../../../utils/openUrl';
 // Lazy import so the typed mock is available to individual tests.
-import { openhumanUpdateLocalAiSettings as openhumanUpdateLocalAiSettingsMock } from '../../../../utils/tauriCommands/config';
+import { neppyUpdateLocalAiSettings as neppyUpdateLocalAiSettingsMock } from '../../../../utils/tauriCommands/config';
 import AIPanel, {
   BackgroundLoopControls,
   buildRoutingDiffSummary,
@@ -101,7 +101,7 @@ vi.mock('../../../../utils/tauriCommands/config', async () => {
   );
   return {
     ...actual,
-    openhumanUpdateLocalAiSettings: vi
+    neppyUpdateLocalAiSettings: vi
       .fn()
       .mockResolvedValue({ result: { config: {}, workspace_dir: '', config_path: '' }, logs: [] }),
   };
@@ -1739,7 +1739,7 @@ describe('AIPanel', () => {
     await waitFor(() =>
       expect(within(dialog).getByText(/must start with http/i)).toBeInTheDocument()
     );
-    expect(vi.mocked(openhumanUpdateLocalAiSettingsMock)).not.toHaveBeenCalled();
+    expect(vi.mocked(neppyUpdateLocalAiSettingsMock)).not.toHaveBeenCalled();
   });
 
   it('Ollama save normalizes the endpoint and persists local_ai.base_url', async () => {
@@ -1755,8 +1755,8 @@ describe('AIPanel', () => {
     });
     fireEvent.click(within(dialog).getByRole('button', { name: /^Save$/i }));
 
-    await waitFor(() => expect(openhumanUpdateLocalAiSettingsMock).toHaveBeenCalled());
-    const [arg] = vi.mocked(openhumanUpdateLocalAiSettingsMock).mock.calls[0];
+    await waitFor(() => expect(neppyUpdateLocalAiSettingsMock).toHaveBeenCalled());
+    const [arg] = vi.mocked(neppyUpdateLocalAiSettingsMock).mock.calls[0];
     expect(arg).toMatchObject({
       base_url: 'http://10.0.0.4:11434',
       provider: 'ollama',
@@ -1776,8 +1776,8 @@ describe('AIPanel', () => {
     });
     fireEvent.click(within(dialog).getByRole('button', { name: /^Save$/i }));
 
-    await waitFor(() => expect(openhumanUpdateLocalAiSettingsMock).toHaveBeenCalled());
-    const [arg] = vi.mocked(openhumanUpdateLocalAiSettingsMock).mock.calls[0];
+    await waitFor(() => expect(neppyUpdateLocalAiSettingsMock).toHaveBeenCalled());
+    const [arg] = vi.mocked(neppyUpdateLocalAiSettingsMock).mock.calls[0];
     expect(arg).toMatchObject({ base_url: 'http://0.0.0.0:11434' });
   });
 
@@ -1814,8 +1814,8 @@ describe('AIPanel', () => {
     });
     fireEvent.click(within(dialog).getByRole('button', { name: /^Save$/i }));
 
-    await waitFor(() => expect(openhumanUpdateLocalAiSettingsMock).toHaveBeenCalled());
-    const [arg] = vi.mocked(openhumanUpdateLocalAiSettingsMock).mock.calls[0];
+    await waitFor(() => expect(neppyUpdateLocalAiSettingsMock).toHaveBeenCalled());
+    const [arg] = vi.mocked(neppyUpdateLocalAiSettingsMock).mock.calls[0];
     expect(arg).toMatchObject({
       base_url: 'http://127.0.0.1:1234/v1',
       provider: 'lm_studio',

@@ -43,10 +43,10 @@ pub const MAX_WORKFLOW_RESOURCE_BYTES: u64 = 128 * 1024;
 #[serde(rename_all = "lowercase")]
 #[derive(Default)]
 pub enum WorkflowScope {
-    /// Workflow shipped with the user's global config (`~/.openhuman/skills/...`).
+    /// Workflow shipped with the user's global config (`~/.neppy/skills/...`).
     #[default]
     User,
-    /// Workflow shipped with the current workspace (`<ws>/.openhuman/skills/...`).
+    /// Workflow shipped with the current workspace (`<ws>/.neppy/skills/...`).
     /// Requires the trust marker to be loaded.
     Project,
     /// Workflow discovered under the legacy `<workspace>/skills/` layout.
@@ -209,7 +209,7 @@ pub(crate) fn detect_source_format(fm: &WorkflowFrontmatter) -> String {
 pub struct Workflow {
     /// Display name (from frontmatter, falls back to directory name).
     pub name: String,
-    /// On-disk slug — the directory name under `~/.openhuman/skills/` (user
+    /// On-disk slug — the directory name under `~/.neppy/skills/` (user
     /// scope) or the workspace skills directory (project scope). This is the
     /// identifier the uninstall RPC resolves against; it may differ from
     /// [`Workflow::name`] when frontmatter declares a mismatched display name.

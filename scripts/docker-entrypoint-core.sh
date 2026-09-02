@@ -19,7 +19,7 @@
 # seeded by an older image, restored from a backup, or written by a root
 # `docker exec` therefore produced:
 #
-#   Failed to read config file: /home/openhuman/.openhuman/config.toml:
+#   Failed to read config file: /home/openhuman/.neppy/config.toml:
 #   Permission denied (os error 13)
 #
 # on every config-dependent RPC (sign-in included) while the container kept
@@ -42,10 +42,10 @@ OPENHUMAN_GID="$(id -g "${OPENHUMAN_USER}" 2>/dev/null || echo '')"
 
 # The workspace path the core will actually write to.
 # Prefer the env var if set; otherwise fall back to the image default.
-WORKSPACE_DIR="${OPENHUMAN_WORKSPACE:-/home/openhuman/.openhuman}"
+WORKSPACE_DIR="${OPENHUMAN_WORKSPACE:-/home/openhuman/.neppy}"
 # The home directory (where core.token is written when OPENHUMAN_CORE_TOKEN is
 # unset — see src/core/auth.rs default_root_openhuman_dir()).
-HOME_OPENHUMAN_DIR="/home/openhuman/.openhuman"
+HOME_OPENHUMAN_DIR="/home/openhuman/.neppy"
 
 echo "[docker-entrypoint] uid=$(id -u), gid=$(id -g), user=$(id -un 2>/dev/null || echo unknown)"
 echo "[docker-entrypoint] target user=${OPENHUMAN_USER} uid=${OPENHUMAN_UID} gid=${OPENHUMAN_GID}"
@@ -95,11 +95,11 @@ heal_dir() {
 # Every directory the core may resolve a config.toml out of, deduplicated.
 #
 #   WORKSPACE_DIR        OPENHUMAN_WORKSPACE, the primary candidate.
-#   HOME_OPENHUMAN_DIR   core.token always lands in $HOME/.openhuman, whatever
+#   HOME_OPENHUMAN_DIR   core.token always lands in $HOME/.neppy, whatever
 #                        OPENHUMAN_WORKSPACE says.
 #   LEGACY_DIR           `resolve_config_dir_for_workspace`
 #                        (src/openhuman/config/schema/load/dirs.rs) falls back to
-#                        `<parent-of-workspace>/.openhuman` when the workspace
+#                        `<parent-of-workspace>/.neppy` when the workspace
 #                        itself holds no config.toml. For the image default the
 #                        three collapse to one path; a custom OPENHUMAN_WORKSPACE
 #                        makes them diverge, and healing only the first left the
@@ -126,9 +126,9 @@ add_config_dir "${WORKSPACE_DIR}"
 add_config_dir "${HOME_OPENHUMAN_DIR}"
 # The legacy candidate is DERIVED, not configured, so it is only a candidate
 # when it already exists: `heal_dir` runs `mkdir -p`, and materializing an empty
-# sibling `.openhuman` that the core may never resolve into is a side effect a
+# sibling `.neppy` that the core may never resolve into is a side effect a
 # healthy start should not have.
-LEGACY_DIR="$(dirname "${WORKSPACE_DIR}")/.openhuman"
+LEGACY_DIR="$(dirname "${WORKSPACE_DIR}")/.neppy"
 if [ -d "${LEGACY_DIR}" ]; then
     add_config_dir "${LEGACY_DIR}"
 fi

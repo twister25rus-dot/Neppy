@@ -35,7 +35,7 @@ pub async fn run() -> Result<ProfileResult> {
     measure("cold-phases", PHASE_COUNT, None, |rec| async move {
         // a. config — hermetic fixture parse (see deviation note in the report:
         //    kept as fixture parsing rather than `Config::load_or_init` to
-        //    guarantee we never touch the real ~/.openhuman).
+        //    guarantee we never touch the real ~/.neppy).
         let fixture = fixture()?;
         rec.checkpoint("config-parse")?;
 

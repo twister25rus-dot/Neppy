@@ -214,7 +214,7 @@ impl Tool for ContinueSubagentTool {
         };
 
         // Load checkpoint
-        let checkpoint_dir = parent.workspace_dir.join(".openhuman/subagent_checkpoints");
+        let checkpoint_dir = parent.workspace_dir.join(".neppy/subagent_checkpoints");
         let checkpoint_path = checkpoint_dir.join(format!("{task_id}.json"));
 
         let checkpoint_json = match std::fs::read_to_string(&checkpoint_path) {

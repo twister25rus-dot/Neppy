@@ -40,7 +40,7 @@ function builtSkill(overrides: Partial<WorkflowSummary> = {}): WorkflowSummary {
     sourceFormat: 'openhuman',
     tools: [],
     prompts: [],
-    location: '/home/u/.openhuman/skills/my-skill/SKILL.md',
+    location: '/home/u/.neppy/skills/my-skill/SKILL.md',
     resources: [],
     scope: 'user',
     legacy: false,

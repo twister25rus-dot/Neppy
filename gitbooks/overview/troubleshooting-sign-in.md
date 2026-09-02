@@ -45,7 +45,7 @@ Successful desktop OAuth ends with an `neppy://auth?...` callback. If the browse
 
 On Windows the `neppy://` URL scheme is registered to the running executable via `HKEY_CURRENT_USER\Software\Classes\openhuman\shell\open\command` at first launch. If that registration silently failed, or if the install was moved/copied after first launch, the browser cannot hand the OAuth callback back to the app, and sign-in stalls after the provider step (issue #2699).
 
-The Tauri shell now emits a `log::error!` line at startup when this happens. Look for it in your log file (default `%USERPROFILE%\.openhuman\logs\openhuman.*.log`):
+The Tauri shell now emits a `log::error!` line at startup when this happens. Look for it in your log file (default `%USERPROFILE%\.neppy\logs\openhuman.*.log`):
 
 ```
 [deep-link] neppy:// scheme registration unhealthy — OAuth callbacks may never reach the app.

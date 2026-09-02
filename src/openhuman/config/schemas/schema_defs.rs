@@ -558,14 +558,14 @@ pub fn schemas(function: &str) -> ControllerSchema {
             namespace: "config",
             function: "get_data_paths",
             description:
-                "Resolve the Neppy data directories (current workspace, default ~/.openhuman, active workspace marker) that reset_local_data would remove. Read-only — performs no filesystem changes.",
+                "Resolve the Neppy data directories (current workspace, default ~/.neppy, active workspace marker) that reset_local_data would remove. Read-only — performs no filesystem changes.",
             inputs: vec![optional_string(
                 "user_id",
                 "Resolve paths for this specific user id (users/<id>) instead of the active-user marker. Clear App Data passes this because it signs the user out — removing the marker — before deleting the data.",
             )],
             outputs: vec![json_output(
                 "paths",
-                "Resolved data paths: current_openhuman_dir, default_openhuman_dir, active_workspace_marker_path.",
+                "Resolved data paths: current_neppy_dir, default_neppy_dir, active_workspace_marker_path.",
             )],
         },
         "get_agent_paths" => ControllerSchema {

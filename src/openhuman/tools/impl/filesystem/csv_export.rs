@@ -292,7 +292,7 @@ mod tests {
 
     #[tokio::test]
     async fn csv_export_formats_simple_array() {
-        let dir = std::env::temp_dir().join("openhuman_test_csv_export_simple");
+        let dir = std::env::temp_dir().join("neppy_test_csv_export_simple");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
 
@@ -337,7 +337,7 @@ mod tests {
 
     #[tokio::test]
     async fn csv_export_handles_missing_keys() {
-        let dir = std::env::temp_dir().join("openhuman_test_csv_export_missing_keys");
+        let dir = std::env::temp_dir().join("neppy_test_csv_export_missing_keys");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
 
@@ -379,7 +379,7 @@ mod tests {
 
     #[tokio::test]
     async fn csv_export_respects_column_order() {
-        let dir = std::env::temp_dir().join("openhuman_test_csv_export_column_order");
+        let dir = std::env::temp_dir().join("neppy_test_csv_export_column_order");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
 
@@ -417,7 +417,7 @@ mod tests {
 
     #[tokio::test]
     async fn csv_export_rejects_non_array_input() {
-        let dir = std::env::temp_dir().join("openhuman_test_csv_export_non_array");
+        let dir = std::env::temp_dir().join("neppy_test_csv_export_non_array");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
 
@@ -444,7 +444,7 @@ mod tests {
 
     #[tokio::test]
     async fn csv_export_handles_nested_values() {
-        let dir = std::env::temp_dir().join("openhuman_test_csv_export_nested");
+        let dir = std::env::temp_dir().join("neppy_test_csv_export_nested");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
 

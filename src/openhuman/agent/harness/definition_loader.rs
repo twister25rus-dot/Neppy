@@ -1,7 +1,7 @@
 //! Loads custom [`AgentDefinition`] files from disk.
 //!
 //! Custom definitions live as TOML files under `<workspace>/agents/*.toml`,
-//! with a fallback to `~/.openhuman/agents/*.toml` for user-global
+//! with a fallback to `~/.neppy/agents/*.toml` for user-global
 //! specialists. Each file defines exactly one definition.
 //!
 //! TOML (rather than YAML) is used for consistency with the rest of
@@ -18,7 +18,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Load all custom definitions from `<workspace>/agents/` and the
-/// `~/.openhuman/agents/` fallback. Returns an empty Vec when neither
+/// `~/.neppy/agents/` fallback. Returns an empty Vec when neither
 /// directory exists.
 pub fn load_from_workspace(workspace: &Path) -> Result<Vec<AgentDefinition>> {
     let mut out = Vec::new();
@@ -119,11 +119,11 @@ pub fn load_file(path: &Path) -> Result<AgentDefinition> {
 }
 
 fn user_home_agents_dir() -> Option<PathBuf> {
-    // Honour OPENHUMAN_HOME first if set; otherwise ~/.openhuman.
+    // Honour OPENHUMAN_HOME first if set; otherwise ~/.neppy.
     if let Ok(custom) = std::env::var("OPENHUMAN_HOME") {
         return Some(PathBuf::from(custom).join("agents"));
     }
-    match crate::openhuman::config::default_root_openhuman_dir() {
+    match crate::openhuman::config::default_root_neppy_dir() {
         Ok(dir) => Some(dir.join("agents")),
         Err(error) => {
             tracing::debug!(

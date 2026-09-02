@@ -390,7 +390,7 @@ describe('Welcome — local login', () => {
   it('replaces an unreadable-core-config error with actionable, path-free copy', async () => {
     mockStoreSessionToken.mockRejectedValueOnce(
       new Error(
-        'Failed to read config file: /home/openhuman/.openhuman/config.toml ' +
+        'Failed to read config file: /home/openhuman/.neppy/config.toml ' +
           '[config owner mismatch] (file uid=0 gid=0 mode=0600; process euid=10001 egid=10001): ' +
           'Permission denied (os error 13)'
       )

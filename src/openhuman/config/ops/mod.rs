@@ -36,7 +36,7 @@ pub(crate) use crate::openhuman::config::Config;
 pub(crate) use loader::reset_local_data_remove_error;
 #[cfg(test)]
 pub(crate) use loader::{
-    active_workspace_marker_path, config_openhuman_dir, default_openhuman_dir, env_flag_enabled,
+    active_workspace_marker_path, config_neppy_dir, default_neppy_dir, env_flag_enabled,
     fallback_workspace_dir, reset_local_data_for_paths, BROWSER_ALLOW_ALL_ENV,
     BROWSER_ALLOW_ALL_RPC_ENABLE_ENV,
 };

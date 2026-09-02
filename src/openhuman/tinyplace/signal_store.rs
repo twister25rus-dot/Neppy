@@ -613,14 +613,14 @@ async fn init_signal_store() -> std::result::Result<Arc<FileSessionStore>, Strin
     let store_dir = config.workspace_dir.join("tinyplace").join("signal");
 
     // 3. Build a SecretStore backed by the same keychain master key that
-    //    protects wallet credentials. The `openhuman_dir` is the parent
-    //    of `config_path` (e.g. `~/.openhuman/users/<id>/`).
-    let openhuman_dir = config
+    //    protects wallet credentials. The `neppy_dir` is the parent
+    //    of `config_path` (e.g. `~/.neppy/users/<id>/`).
+    let neppy_dir = config
         .config_path
         .parent()
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    let secret_store = SecretStore::new(&openhuman_dir, true);
+    let secret_store = SecretStore::new(&neppy_dir, true);
 
     // 4. Construct and wrap in Arc (warms the cache).
     let store = FileSessionStore::new(identity, store_dir, secret_store).await?;

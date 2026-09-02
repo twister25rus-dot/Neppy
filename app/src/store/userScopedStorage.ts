@@ -53,7 +53,7 @@ let activeUserId: string | null = safeGetActiveUserIdSync();
 })();
 
 // Gate redux-persist's rehydrate on the boot prime from main.tsx
-// (which reads the authoritative id from `~/.openhuman/active_user.toml`
+// (which reads the authoritative id from `~/.neppy/active_user.toml`
 // via the Rust core). The localStorage value used at module load is
 // bound to the per-user CEF profile dir and goes stale across
 // restart-driven user flips, so storage reads must wait for the
@@ -70,7 +70,7 @@ let primed = false;
  * Called once by `main.tsx` after `getActiveUserIdFromCore()` returns.
  * Pass `null` for "core couldn't tell us who's active" — most commonly:
  *
- *   1. fresh device with no local `~/.openhuman/active_user.toml`
+ *   1. fresh device with no local `~/.neppy/active_user.toml`
  *   2. cloud-mode boot where the local Rust core isn't running at all
  *   3. transient `getActiveUserIdFromCore` failure (`.catch(() => prime(null))`)
  *

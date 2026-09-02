@@ -105,7 +105,7 @@ The `[autonomy]` block (`src/openhuman/config/schema/autonomy.rs`) drives `Secur
 **Two path roots** (`src/openhuman/config/schema/types.rs`):
 
 - **`action_dir`** — agent's read/write root. Acting tools resolve relative paths here. Default: `~/Neppy/projects` (`OPENHUMAN_ACTION_DIR`).
-- **`workspace_dir`** — internal state (`~/.openhuman/users/<id>/workspace`). Agent tools **cannot** write here — enforced by `is_workspace_internal_path` fail-closed regardless of tier/trusted_roots.
+- **`workspace_dir`** — internal state (`~/.neppy/users/<id>/workspace`). Agent tools **cannot** write here — enforced by `is_workspace_internal_path` fail-closed regardless of tier/trusted_roots.
 
 **Command permission model**: `classify_command` → `CommandClass` (`Read`/`Write`/`Network`/`Install`/`Destructive`); unrecognized = `Write`. `gate_decision(class, tier)` → `Allow`/`Prompt`/`Block`. System/credential dirs unconditionally blocked (`is_always_forbidden`).
 
@@ -574,7 +574,7 @@ Layering: `embed::Core::agent()` is the typed turn surface for a host that alrea
 
 **Five things that bite, each of which cost a debugging session to find:**
 
-- **`CoreBuilder::config(..)` alone configures boot and nothing else.** RPC handlers do not receive it — they call `config::ops::load_config_with_timeout()` per dispatch, which re-runs `Config::load_or_init()` and re-resolves the process-global workspace. The config is published on `CoreContext::embedder_config` and that loader prefers it; without that branch an embedder watches its turns run against `~/.openhuman` while believing otherwise.
+- **`CoreBuilder::config(..)` alone configures boot and nothing else.** RPC handlers do not receive it — they call `config::ops::load_config_with_timeout()` per dispatch, which re-runs `Config::load_or_init()` and re-resolves the process-global workspace. The config is published on `CoreContext::embedder_config` and that loader prefers it; without that branch an embedder watches its turns run against `~/.neppy` while believing otherwise.
 - **`config_path` is not cosmetic — set it with `workspace_dir`.** Credential state, auth profiles and the keyring file backend resolve against its *parent*, not against the workspace. Setting only `workspace_dir` yields a harness that looks hermetic and reads the operator's real credentials. `Harness` puts it beside the workspace (`<root>/config.toml` next to `<root>/workspace`), the same shape `load_or_init` produces.
 - **A custom provider is gated on an active app session** (`verify_session_active`), even for a host that supplied the endpoint and key itself — the gate exists to stop an unregistered *desktop* user routing around registration and cannot tell the two apart. `Session::local(..)` satisfies it without asserting anything at the backend.
 - **Point `backend_url` somewhere real or stubbed.** The core makes non-inference backend calls regardless of where inference goes. Signed out of the hosted backend, those are rejected, a rejection publishes `SessionExpired`, and the *next* turn then fails the provider gate for reasons unrelated to the turn.

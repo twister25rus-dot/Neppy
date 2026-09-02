@@ -168,7 +168,7 @@ pub struct SessionDescriptor {
 /// `ChatMessage` marks `id`/`extra_metadata` `skip_serializing` (they must
 /// not reach providers), so the journal carries its own full-fidelity record
 /// of what `read_transcript()` returns — including the reconstructed
-/// `openhuman_turn_usage` metadata.
+/// `neppy_turn_usage` metadata.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct JournalMessage {
     #[serde(default, skip_serializing_if = "Option::is_none")]

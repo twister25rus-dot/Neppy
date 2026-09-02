@@ -5,7 +5,7 @@
  * Three source shapes:
  *   1. Mascot/notch native windows — no Tauri IPC, cannot invoke commands.
  *   2. Any remote core mode — cloud, or a gateway this app provisioned in a
- *      container or on another machine. The local `~/.openhuman/active_user.toml`
+ *      container or on another machine. The local `~/.neppy/active_user.toml`
  *      is either empty (no prior local session) or bound to a prior LOCAL
  *      session's user id. In both cases it doesn't match the REMOTE core's
  *      authenticated user, and priming from it overwrites the correct

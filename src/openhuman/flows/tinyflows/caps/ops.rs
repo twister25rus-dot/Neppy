@@ -2443,7 +2443,7 @@ mod tests {
             },
             usage: Some(usage),
             finish_reason: Some("tool_calls".to_string()),
-            raw: crate::openhuman::agent::tinyagents::model::merge_openhuman_usage_meta(
+            raw: crate::openhuman::agent::tinyagents::model::merge_neppy_usage_meta(
                 None, 0.125, 128_000,
             ),
             resolved_model: None,

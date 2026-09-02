@@ -942,7 +942,7 @@ const messages: TranslationMap = {
   'skills.channels': 'Wiadomości',
   'skills.explorer.emptyCta': 'Zainstaluj z URL',
   'skills.explorer.emptyDescription':
-    'Zainstaluj pakiet SKILL.md albo umieść foldery w stylu Hermes w ~/.openhuman/skills.',
+    'Zainstaluj pakiet SKILL.md albo umieść foldery w stylu Hermes w ~/.neppy/skills.',
   'skills.explorer.emptyTitle': 'Nie znaleziono skilli',
   'skills.explorer.sourceFilterAria': 'Filtruj według źródła',
   'skills.explorer.installFromUrl': 'Zainstaluj z URL',
@@ -3152,66 +3152,66 @@ const messages: TranslationMap = {
   'app.errorFallback.tryRecover': 'Spróbuj odzyskać',
   'app.localAiDownload.installing': 'Instalowanie...',
   'app.localAiDownload.preparing': 'Przygotowanie...',
-  'app.openhumanLink.accounts.continueWith': 'Kontynuuj z logowaniem {label}',
-  'app.openhumanLink.accounts.done': 'Gotowe',
-  'app.openhumanLink.accounts.intro': 'Podłącz konta, których używasz na co dzień.',
-  'app.openhumanLink.accounts.webviewNote': 'Każde konto otwiera się we własnym oknie webview.',
-  'app.openhumanLink.billing.openDashboard': 'Otwórz panel',
-  'app.openhumanLink.billing.stayOnTrial': 'Zostań w wersji próbnej',
-  'app.openhumanLink.billing.trialCredit': 'Kredyty za rejestrację',
-  'app.openhumanLink.billing.trialDesc':
+  'app.neppyLink.accounts.continueWith': 'Kontynuuj z logowaniem {label}',
+  'app.neppyLink.accounts.done': 'Gotowe',
+  'app.neppyLink.accounts.intro': 'Podłącz konta, których używasz na co dzień.',
+  'app.neppyLink.accounts.webviewNote': 'Każde konto otwiera się we własnym oknie webview.',
+  'app.neppyLink.billing.openDashboard': 'Otwórz panel',
+  'app.neppyLink.billing.stayOnTrial': 'Zostań w wersji próbnej',
+  'app.neppyLink.billing.trialCredit': 'Kredyty za rejestrację',
+  'app.neppyLink.billing.trialDesc':
     'Oferty kredytów mogą się różnić w zależności od promocji i kwalifikacji konta.',
-  'app.openhumanLink.defaultBody':
+  'app.neppyLink.defaultBody':
     'Jeszcze nie gotowe w popupie. Otwórz pełną stronę ustawień, gdy będziesz potrzebować.',
-  'app.openhumanLink.discord.intro':
+  'app.neppyLink.discord.intro':
     'Dołącz do społeczności, dziel się opiniami i bądź na bieżąco.',
-  'app.openhumanLink.discord.openInvite': 'Otwórz zaproszenie',
-  'app.openhumanLink.discord.perk1': 'Pomoc bezpośrednio od twórców',
-  'app.openhumanLink.discord.perk2': 'Wczesny dostęp do nowych funkcji',
-  'app.openhumanLink.discord.perk3': 'Wymiana skryptów i przepisów',
-  'app.openhumanLink.discord.perk4': 'Możliwość wpływu na priorytety',
-  'app.openhumanLink.discordReport.intro':
+  'app.neppyLink.discord.openInvite': 'Otwórz zaproszenie',
+  'app.neppyLink.discord.perk1': 'Pomoc bezpośrednio od twórców',
+  'app.neppyLink.discord.perk2': 'Wczesny dostęp do nowych funkcji',
+  'app.neppyLink.discord.perk3': 'Wymiana skryptów i przepisów',
+  'app.neppyLink.discord.perk4': 'Możliwość wpływu na priorytety',
+  'app.neppyLink.discordReport.intro':
     'Przepraszamy: coś poszło nie tak po naszej stronie. Staramy się rejestrować takie błędy automatycznie, ale udostępnienie szczegółów na Discord pomaga nam szybciej je naprawić.',
-  'app.openhumanLink.discordReport.openDiscord': 'Otwórz Discord',
-  'app.openhumanLink.done': 'Gotowe',
-  'app.openhumanLink.notifications.desktopOnly':
+  'app.neppyLink.discordReport.openDiscord': 'Otwórz Discord',
+  'app.neppyLink.done': 'Gotowe',
+  'app.neppyLink.notifications.desktopOnly':
     'Natywne powiadomienia są dostępne tylko w aplikacji desktopowej (uruchom `pnpm dev:app`).',
-  'app.openhumanLink.notifications.permissionOff':
+  'app.neppyLink.notifications.permissionOff':
     'Uprawnienie do powiadomień jest wyłączone. Włącz Neppy w Ustawieniach systemu → Powiadomienia, a następnie spróbuj ponownie.',
-  'app.openhumanLink.notifications.triggerFailed':
+  'app.neppyLink.notifications.triggerFailed':
     'Neppy nie mógł wywołać powiadomienia systemowego. Sprawdź ustawienia powiadomień systemu operacyjnego i spróbuj ponownie.',
-  'app.openhumanLink.notifications.welcomeBody':
+  'app.neppyLink.notifications.welcomeBody':
     'Otrzymasz tutaj powiadomienia, gdy coś będzie wymagać Twojej uwagi.',
-  'app.openhumanLink.notifications.welcomeTitle': 'Neppy jest gotowy do pracy',
-  'app.openhumanLink.status.closed': 'Zamknięte',
-  'app.openhumanLink.status.connected': 'Połączono',
-  'app.openhumanLink.status.error': 'Błąd',
-  'app.openhumanLink.status.loading': 'Ładowanie…',
-  'app.openhumanLink.status.needsSignIn': 'Wymagane logowanie',
-  'app.openhumanLink.status.timedOut': 'Przekroczono czas',
-  'app.openhumanLink.loadingChannelSetup': 'Wczytywanie konfiguracji kanału',
-  'app.openhumanLink.maybeLater': 'Może później',
-  'app.openhumanLink.notifications.asking': 'Pytanie systemu operacyjnego…',
-  'app.openhumanLink.notifications.blocked': 'Zablokowane',
-  'app.openhumanLink.notifications.blockedStep1': 'Otwórz Ustawienia systemowe → Powiadomienia.',
-  'app.openhumanLink.notifications.blockedStep2': 'Znajdź Neppy na liście aplikacji.',
-  'app.openhumanLink.notifications.blockedStep3': 'Włącz „Zezwalaj na powiadomienia” i wróć tutaj.',
-  'app.openhumanLink.notifications.intro':
+  'app.neppyLink.notifications.welcomeTitle': 'Neppy jest gotowy do pracy',
+  'app.neppyLink.status.closed': 'Zamknięte',
+  'app.neppyLink.status.connected': 'Połączono',
+  'app.neppyLink.status.error': 'Błąd',
+  'app.neppyLink.status.loading': 'Ładowanie…',
+  'app.neppyLink.status.needsSignIn': 'Wymagane logowanie',
+  'app.neppyLink.status.timedOut': 'Przekroczono czas',
+  'app.neppyLink.loadingChannelSetup': 'Wczytywanie konfiguracji kanału',
+  'app.neppyLink.maybeLater': 'Może później',
+  'app.neppyLink.notifications.asking': 'Pytanie systemu operacyjnego…',
+  'app.neppyLink.notifications.blocked': 'Zablokowane',
+  'app.neppyLink.notifications.blockedStep1': 'Otwórz Ustawienia systemowe → Powiadomienia.',
+  'app.neppyLink.notifications.blockedStep2': 'Znajdź Neppy na liście aplikacji.',
+  'app.neppyLink.notifications.blockedStep3': 'Włącz „Zezwalaj na powiadomienia” i wróć tutaj.',
+  'app.neppyLink.notifications.intro':
     'Włącz powiadomienia, aby otrzymywać alerty od agenta i kanałów.',
-  'app.openhumanLink.notifications.promptHint': 'Twój system zapyta o zgodę za chwilę.',
-  'app.openhumanLink.notifications.retry': 'Ponów powiadomienie testowe',
-  'app.openhumanLink.notifications.send': 'Wyślij powiadomienie testowe',
-  'app.openhumanLink.notifications.sendFailed': 'Nie udało się wysłać: {error}',
-  'app.openhumanLink.notifications.sent':
+  'app.neppyLink.notifications.promptHint': 'Twój system zapyta o zgodę za chwilę.',
+  'app.neppyLink.notifications.retry': 'Ponów powiadomienie testowe',
+  'app.neppyLink.notifications.send': 'Wyślij powiadomienie testowe',
+  'app.neppyLink.notifications.sendFailed': 'Nie udało się wysłać: {error}',
+  'app.neppyLink.notifications.sent':
     'Wysłano powiadomienie testowe. Jeśli go nie otrzymałeś(aś), przejdź do Ustawienia systemowe → Powiadomienia → Neppy, włącz „Zezwalaj na powiadomienia” i ustaw styl banera na „Trwały”.',
-  'app.openhumanLink.skipForNow': 'Pomiń na razie',
-  'app.openhumanLink.telegramUnavailable': 'Telegram niedostępny',
-  'app.openhumanLink.title.accounts': 'Podłącz swoje aplikacje',
-  'app.openhumanLink.title.billing': 'Rozliczenia i kredyty',
-  'app.openhumanLink.title.discord': 'Dołącz do społeczności',
-  'app.openhumanLink.title.discordReport': 'Zgłoś ten błąd',
-  'app.openhumanLink.title.messaging': 'Podłącz kanał komunikacji',
-  'app.openhumanLink.title.notifications': 'Zezwól na powiadomienia',
+  'app.neppyLink.skipForNow': 'Pomiń na razie',
+  'app.neppyLink.telegramUnavailable': 'Telegram niedostępny',
+  'app.neppyLink.title.accounts': 'Podłącz swoje aplikacje',
+  'app.neppyLink.title.billing': 'Rozliczenia i kredyty',
+  'app.neppyLink.title.discord': 'Dołącz do społeczności',
+  'app.neppyLink.title.discordReport': 'Zgłoś ten błąd',
+  'app.neppyLink.title.messaging': 'Podłącz kanał komunikacji',
+  'app.neppyLink.title.notifications': 'Zezwól na powiadomienia',
   'app.persistRehydration.body':
     'Trwa odzyskiwanie stanu. Jeśli widzisz ten ekran zbyt długo, zresetuj aplikację.',
   'app.persistRehydration.heading': 'Przywracanie sesji',
@@ -4616,7 +4616,7 @@ const messages: TranslationMap = {
   'settings.ai.claudeCode.fullAccessOff':
     'Akceptuj tylko zmiany: automatycznie stosuje zmiany w plikach, ogranicza polecenia i sieć.',
   'settings.ai.claudeCode.sandboxNoteMac':
-    'W systemie macOS katalog ~/.openhuman pozostaje chroniony przez piaskownicę w obu trybach.',
+    'W systemie macOS katalog ~/.neppy pozostaje chroniony przez piaskownicę w obu trybach.',
   'settings.ai.claudeCode.sandboxNoteOther':
     'Pełny dostęp nie jest ograniczony na tej platformie: włącz go tylko, jeśli ufasz przestrzeni roboczej.',
   'settings.ai.claudeCode.enableToCheck': 'Włącz Claude Code, aby sprawdzić logowanie.',
@@ -4673,7 +4673,7 @@ const messages: TranslationMap = {
   'settings.ai.noSpendRows': 'Brak załadowanych wierszy wydatków.',
   'settings.ai.topHours': 'Najczęstsze godziny',
   'settings.ai.noHourlySpend': 'Brak wydatków godzinowych.',
-  'settings.ai.openhumanDefault': 'Neppy (domyślny)',
+  'settings.ai.neppyDefault': 'Neppy (domyślny)',
   'settings.ai.localModelResolved': 'Ollama · {model}',
   'settings.ai.customRoutingForWorkload': 'Niestandardowy routing dla {label}',
   'settings.ai.loadingModels': 'Ładowanie modeli...',
@@ -5742,9 +5742,9 @@ const messages: TranslationMap = {
   'skills.create.name': 'Nazwa',
   'skills.create.namePlaceholder': 'np. Dziennik transakcji',
   'skills.create.scope': 'Zakres',
-  'skills.create.scopeProjectHint': '/.openhuman/skills/',
+  'skills.create.scopeProjectHint': '/.neppy/skills/',
   'skills.create.scopeUserHint':
-    'Zapisane do ~/.openhuman/skills/<slug>/SKILL.md: dostępne we wszystkich przestrzeniach roboczych.',
+    'Zapisane do ~/.neppy/skills/<slug>/SKILL.md: dostępne we wszystkich przestrzeniach roboczych.',
   'skills.create.slugLabel': 'Etykieta slug',
   'skills.create.subtitle': 'SKILL.md',
   'skills.create.tags': 'Tagi',
@@ -5790,7 +5790,7 @@ const messages: TranslationMap = {
     'Działają tylko bezpośrednie linki `.md`. Dla GitHuba linkuj do pliku (github.com/owner/repo/blob/.../SKILL.md): drzewa i korzenie repo nie są instalowane.',
   'skills.install.errors.unsupportedUrlTitle': 'Forma URL nieobsługiwana',
   'skills.install.errors.writeFailedHint':
-    'Katalog umiejętności w przestrzeni roboczej nie był zapisywalny. Sprawdź uprawnienia systemu plików dla `<workspace>/.openhuman/skills/`.',
+    'Katalog umiejętności w przestrzeni roboczej nie był zapisywalny. Sprawdź uprawnienia systemu plików dla `<workspace>/.neppy/skills/`.',
   'skills.install.errors.writeFailedTitle': 'Nie udało się zapisać SKILL.md',
   'skills.install.fetchLog': 'Dziennik pobierania',
   'skills.install.fetchingPrefix': 'Pobieranie',

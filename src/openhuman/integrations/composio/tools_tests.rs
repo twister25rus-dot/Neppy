@@ -928,7 +928,7 @@ async fn execute_tool_per_call_factory_means_no_baked_client() {
     // backend `ComposioClient` and ignored the mode entirely.
     //
     // Production `.execute(..)` calls `load_config_with_timeout()`
-    // per call which reads from `~/.openhuman/config.toml` (or the
+    // per call which reads from `~/.neppy/config.toml` (or the
     // workspace pointed at by `OPENHUMAN_WORKSPACE`). To isolate the
     // test from the dev's real config we hold `TEST_ENV_LOCK`, point
     // `OPENHUMAN_WORKSPACE` at a tempdir, and persist the test's

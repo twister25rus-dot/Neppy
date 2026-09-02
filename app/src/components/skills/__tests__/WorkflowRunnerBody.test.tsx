@@ -10,8 +10,8 @@
  * Covered here:
  *  - Mount with one saved schedule for the picked skill (mocking
  *    skills_list, skills_describe, cron_list, recent_runs).
- *  - Toggle flips enabled → false via openhumanCronUpdate(id, { enabled }).
- *  - The list re-loads after toggle (openhumanCronList called again).
+ *  - Toggle flips enabled → false via neppyCronUpdate(id, { enabled }).
+ *  - The list re-loads after toggle (neppyCronList called again).
  *  - aria-checked reflects the new state once the list refreshes.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -43,12 +43,12 @@ const hoisted = vi.hoisted(() => ({
 }));
 
 vi.mock('../../../utils/tauriCommands/cron', () => ({
-  openhumanCronAdd: hoisted.cronAdd,
-  openhumanCronList: hoisted.cronList,
-  openhumanCronRemove: hoisted.cronRemove,
-  openhumanCronRun: hoisted.cronRun,
-  openhumanCronUpdate: hoisted.cronUpdate,
-  openhumanCronRuns: hoisted.cronRuns,
+  neppyCronAdd: hoisted.cronAdd,
+  neppyCronList: hoisted.cronList,
+  neppyCronRemove: hoisted.cronRemove,
+  neppyCronRun: hoisted.cronRun,
+  neppyCronUpdate: hoisted.cronUpdate,
+  neppyCronRuns: hoisted.cronRuns,
 }));
 
 vi.mock('../../../services/api/skillsApi', () => ({
@@ -191,7 +191,7 @@ describe('WorkflowRunnerBody — saved-schedule toggle', () => {
     expect(screen.getByText('common.enabled')).toBeInTheDocument();
   });
 
-  it('calls openhumanCronUpdate with { enabled: false } when toggled on→off', async () => {
+  it('calls neppyCronUpdate with { enabled: false } when toggled on→off', async () => {
     const Body = await importBody();
     renderBody(Body);
 
@@ -410,7 +410,7 @@ describe('WorkflowRunnerBody — schedule frequency + save', () => {
     hoisted.cronRuns.mockResolvedValue({ result: { runs: [] } });
   });
 
-  it('changes schedule frequency and calls openhumanCronAdd on save', async () => {
+  it('changes schedule frequency and calls neppyCronAdd on save', async () => {
     const Body = await importBody();
     renderBody(Body);
     await waitFor(() => expect(hoisted.listWorkflows).toHaveBeenCalled());
@@ -1053,7 +1053,7 @@ describe('WorkflowRunnerBody — handleRemoveJob', () => {
     hoisted.cronRuns.mockResolvedValue({ result: { runs: [] } });
   });
 
-  it('calls openhumanCronRemove when the Remove button is clicked', async () => {
+  it('calls neppyCronRemove when the Remove button is clicked', async () => {
     hoisted.cronList
       .mockResolvedValueOnce({ result: [makeJob({ enabled: true })] })
       .mockResolvedValue({ result: [] });

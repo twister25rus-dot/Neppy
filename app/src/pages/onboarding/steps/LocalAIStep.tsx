@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../../../components/ui/Button';
 import { useT } from '../../../lib/i18n/I18nContext';
 import { bootstrapLocalAiWithRecommendedPreset } from '../../../utils/localAiBootstrap';
-import { openhumanLocalAiPresets } from '../../../utils/tauriCommands';
+import { neppyLocalAiPresets } from '../../../utils/tauriCommands';
 import OnboardingNextButton from '../components/OnboardingNextButton';
 
 /* ---------- component ---------- */
@@ -23,7 +23,7 @@ const LocalAIStep = ({ onNext, onBack: _onBack, onDownloadError }: LocalAIStepPr
     let cancelled = false;
     // Read-only probe: never apply/persist a preset from the mount effect.
     // Preset application lives in handleConsent via bootstrapLocalAiWithRecommendedPreset.
-    openhumanLocalAiPresets()
+    neppyLocalAiPresets()
       .then(presets => {
         if (!cancelled) {
           setRecommendDisabled(presets.recommend_disabled ?? false);

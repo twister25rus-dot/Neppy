@@ -36,8 +36,8 @@ If you'd rather open it manually, point Obsidian at the `wiki/` folder inside yo
 
 | Platform      | Vault path                         |
 | ------------- | ---------------------------------- |
-| macOS / Linux | `~/.openhuman/…/wiki/`             |
-| Windows       | `%USERPROFILE%\.openhuman\…\wiki\` |
+| macOS / Linux | `~/.neppy/…/wiki/`             |
+| Windows       | `%USERPROFILE%\.neppy\…\wiki\` |
 
 ### 2. Explore the structure
 

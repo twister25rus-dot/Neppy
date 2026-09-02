@@ -10,8 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import type { VoiceSkillStatus } from '../../features/voice/useVoiceSkillStatus';
 import { useT } from '../../lib/i18n/I18nContext';
 import {
-  openhumanUpdateVoiceServerSettings,
-  openhumanVoiceServerStart,
+  neppyUpdateVoiceServerSettings,
+  neppyVoiceServerStart,
 } from '../../utils/tauriCommands/voice';
 import { CheckIcon, WarningIcon } from '../ui';
 import Button from '../ui/Button';
@@ -43,9 +43,9 @@ export default function VoiceSetupModal({ onClose, skillStatus }: Props) {
     setEnableError(null);
     try {
       // Enable auto-start in settings
-      await openhumanUpdateVoiceServerSettings({ auto_start: true });
+      await neppyUpdateVoiceServerSettings({ auto_start: true });
       // Start the voice server
-      await openhumanVoiceServerStart();
+      await neppyVoiceServerStart();
       setStep('success');
     } catch (error) {
       setEnableError(error instanceof Error ? error.message : t('skills.setup.voice.startError'));

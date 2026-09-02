@@ -20,7 +20,7 @@
 # connection state.
 #
 # The dumper runs against the currently-logged-in user's workspace
-# (`$OPENHUMAN_WORKSPACE`, falling back to `~/.openhuman/workspace`) so
+# (`$OPENHUMAN_WORKSPACE`, falling back to `~/.neppy/workspace`) so
 # onboarding-generated files like `PROFILE.md` appear in the dump. Export
 # `OPENHUMAN_WORKSPACE=<path>` before running if you want to target a
 # different workspace.
@@ -170,7 +170,7 @@ rm -rf "${OUT_DIR}"
 mkdir -p "${OUT_DIR}"
 
 # Workspace resolution is owned by `Config::load_or_init` inside the
-# binary: it reads `~/.openhuman/active_user.toml`, falls back to the
+# binary: it reads `~/.neppy/active_user.toml`, falls back to the
 # persisted workspace marker, then to the pre-login user directory. We
 # only pass `--workspace` when the caller has explicitly exported one
 # (an empty `OPENHUMAN_WORKSPACE=` in `.env` counts as unset — the
@@ -178,7 +178,7 @@ mkdir -p "${OUT_DIR}"
 #
 # Previously this script duplicated the resolution in shell and guessed
 # wrong when the user's active install used a multi-user layout under
-# `~/.openhuman/users/<user_id>/workspace` without a top-level
+# `~/.neppy/users/<user_id>/workspace` without a top-level
 # `active_user.toml`, causing the dumper to bail with "workspace not
 # found". Delegating to the binary removes that divergence and makes
 # `.env` (including `OPENHUMAN_APP_ENV=staging`) take effect

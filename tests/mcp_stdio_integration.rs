@@ -16,7 +16,7 @@ use tinymcp_bus::McpClientIdentityConfig;
 const LATEST_PROTOCOL_VERSION: &str = "2025-11-25";
 
 #[tokio::test]
-async fn stdio_client_talks_to_openhuman_mcp_server() {
+async fn stdio_client_talks_to_neppy_mcp_server() {
     let client = McpStdioClient::new(
         env!("CARGO_BIN_EXE_openhuman-core").to_string(),
         vec!["mcp".into()],

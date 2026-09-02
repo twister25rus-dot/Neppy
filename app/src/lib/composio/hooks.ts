@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { isLocalSessionToken } from '../../utils/localSession';
-import { openhumanComposioGetMode } from '../../utils/tauriCommands';
+import { neppyComposioGetMode } from '../../utils/tauriCommands';
 import { getCoreStateSnapshot } from '../coreState/store';
 import { getToolkitCatalog, invalidateToolkitCatalogCache } from './catalogCache';
 import { COMPOSIO_FETCH_TIMEOUT_MS, listAgentReadyToolkits, listConnections } from './composioApi';
@@ -136,7 +136,7 @@ export function useComposioIntegrations(pollIntervalMs = 5_000): UseComposioInte
       return true;
     }
     try {
-      const res = await openhumanComposioGetMode();
+      const res = await neppyComposioGetMode();
       const enabled = Boolean(res.result?.api_key_set);
       if (mountedRef.current) setFetchEnabled(enabled);
       return enabled;

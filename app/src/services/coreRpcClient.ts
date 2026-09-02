@@ -471,7 +471,7 @@ export async function getCoreRpcUrl(): Promise<string> {
  *      local-sidecar token would be wrong. Takes priority so cloud mode
  *      always sends the user's own token.
  *   2. Tauri `core_rpc_token` command — the embedded sidecar's per-process
- *      token, written by the core binary to `~/.openhuman/core.token` at
+ *      token, written by the core binary to `~/.neppy/core.token` at
  *      startup. Cached for the lifetime of the frontend process.
  *   3. `null` in non-Tauri environments (e.g. Vitest, web preview) when no
  *      stored token is set so existing tests remain unaffected.

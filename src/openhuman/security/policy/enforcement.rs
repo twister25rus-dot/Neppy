@@ -132,7 +132,7 @@ impl SecurityPolicy {
         // is ever trusted — never `/tmp` itself. Created here with restrictive
         // perms and refused if it exists as a symlink (TOCTOU hardening, since
         // `/tmp` is world-writable and the name is predictable).
-        match ensure_openhuman_scratch_dir() {
+        match ensure_neppy_scratch_dir() {
             Some(scratch) => {
                 let scratch_str = scratch.to_string_lossy().to_string();
                 if trusted_roots.iter().any(|r| r.path == scratch_str) {
@@ -249,7 +249,7 @@ impl SecurityPolicy {
 /// natural `/tmp/...` temp-file habit lands in a sandboxed, trusted location
 /// rather than the world-shared `/tmp`. Only this subdir is ever trusted —
 /// never `/tmp` itself. On Windows, falls back to the per-user temp dir.
-pub fn openhuman_scratch_dir() -> std::path::PathBuf {
+pub fn neppy_scratch_dir() -> std::path::PathBuf {
     #[cfg(windows)]
     {
         std::env::temp_dir().join("openhuman")
@@ -260,12 +260,12 @@ pub fn openhuman_scratch_dir() -> std::path::PathBuf {
     }
 }
 
-/// Create [`openhuman_scratch_dir`] with restrictive perms, best-effort.
+/// Create [`neppy_scratch_dir`] with restrictive perms, best-effort.
 /// Returns `None` (and grants nothing) if the path already exists as a
 /// symlink — TOCTOU hardening, since the parent `/tmp` is world-writable and
 /// the name is predictable. Idempotent: safe to call on every policy build.
-pub fn ensure_openhuman_scratch_dir() -> Option<std::path::PathBuf> {
-    let dir = openhuman_scratch_dir();
+pub fn ensure_neppy_scratch_dir() -> Option<std::path::PathBuf> {
+    let dir = neppy_scratch_dir();
     if let Err(e) = std::fs::create_dir_all(&dir) {
         tracing::warn!(path = %dir.display(), error = %e, "[security][scratch] failed to create scratch dir");
         return None;
@@ -330,13 +330,13 @@ pub fn validate_path_within_root(
 
 #[cfg(test)]
 mod scratch_dir_tests {
-    use super::{ensure_openhuman_scratch_dir, openhuman_scratch_dir};
+    use super::{ensure_neppy_scratch_dir, neppy_scratch_dir};
 
     #[test]
     fn scratch_dir_is_namespaced_on_every_platform() {
         // Always the dedicated `openhuman` scratch namespace — never a bare
         // temp root, so only this subdir is ever granted as a trusted root.
-        let dir = openhuman_scratch_dir();
+        let dir = neppy_scratch_dir();
         assert_eq!(dir.file_name().and_then(|s| s.to_str()), Some("openhuman"));
         #[cfg(not(windows))]
         assert_eq!(dir, std::path::PathBuf::from("/tmp/openhuman"));
@@ -345,8 +345,8 @@ mod scratch_dir_tests {
     #[test]
     fn ensure_scratch_dir_creates_and_returns_it() {
         // Idempotent: creates the dir, returns its path, and it exists after.
-        let ensured = ensure_openhuman_scratch_dir();
-        let expected = openhuman_scratch_dir();
+        let ensured = ensure_neppy_scratch_dir();
+        let expected = neppy_scratch_dir();
         assert_eq!(ensured.as_deref(), Some(expected.as_path()));
         assert!(expected.is_dir());
     }

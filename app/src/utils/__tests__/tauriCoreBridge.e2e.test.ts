@@ -10,15 +10,15 @@ vi.mock('../../services/coreRpcClient', () => ({ callCoreRpc: vi.fn() }));
 describe('Web → frontend JSON-RPC → Core bridge', () => {
   const mockIsTauri = isTauri as Mock;
   const mockCallCoreRpc = callCoreRpc as Mock;
-  let openhumanServiceStatus: typeof import('../tauriCommands').openhumanServiceStatus;
-  let openhumanAgentServerStatus: typeof import('../tauriCommands').openhumanAgentServerStatus;
+  let neppyServiceStatus: typeof import('../tauriCommands').neppyServiceStatus;
+  let neppyAgentServerStatus: typeof import('../tauriCommands').neppyAgentServerStatus;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     mockIsTauri.mockReturnValue(true);
     const actual = await vi.importActual<typeof import('../tauriCommands')>('../tauriCommands');
-    openhumanServiceStatus = actual.openhumanServiceStatus;
-    openhumanAgentServerStatus = actual.openhumanAgentServerStatus;
+    neppyServiceStatus = actual.neppyServiceStatus;
+    neppyAgentServerStatus = actual.neppyAgentServerStatus;
   });
 
   test('routes service status via JSON-RPC client and returns core payload', async () => {
@@ -27,7 +27,7 @@ describe('Web → frontend JSON-RPC → Core bridge', () => {
 
     mockCallCoreRpc.mockResolvedValueOnce(rpcResponse);
 
-    const response = await openhumanServiceStatus();
+    const response = await neppyServiceStatus();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.service_status' });
     expect(response).toEqual(rpcResponse);
@@ -42,7 +42,7 @@ describe('Web → frontend JSON-RPC → Core bridge', () => {
 
     mockCallCoreRpc.mockResolvedValueOnce(rpcResponse);
 
-    const response = await openhumanAgentServerStatus();
+    const response = await neppyAgentServerStatus();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.agent_server_status' });
     expect(response.result.running).toBe(true);
@@ -52,7 +52,7 @@ describe('Web → frontend JSON-RPC → Core bridge', () => {
   test('fails fast in web-only mode without Tauri runtime', async () => {
     mockIsTauri.mockReturnValue(false);
 
-    await expect(openhumanServiceStatus()).rejects.toThrow('Not running in Tauri');
+    await expect(neppyServiceStatus()).rejects.toThrow('Not running in Tauri');
     expect(mockCallCoreRpc).not.toHaveBeenCalled();
   });
 });

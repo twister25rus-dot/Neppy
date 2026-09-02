@@ -30,14 +30,14 @@ mod tests {
     }
 
     #[test]
-    fn build_chat_runtime_defaults_to_openhuman_resolved_model() {
+    fn build_chat_runtime_defaults_to_neppy_resolved_model() {
         // These assert the *real* seam implementations, so they need them
         // installed — that is the whole point of living on this side.
         crate::openhuman::memory::host_impls::install_for_tests();
         let cfg = Config::default();
         let (_provider, model) = tinymemory_core::chat::build_chat_runtime(&cfg).unwrap();
         // The managed "summarization" tier is fixed at `summarization-v1`
-        // inside `make_openhuman_backend`. DEFAULT_CLOUD_LLM_MODEL is that same
+        // inside `make_neppy_backend`. DEFAULT_CLOUD_LLM_MODEL is that same
         // constant — asserted here only as the expected value, not because
         // `cloud_llm_model` is consumed (it isn't; see the test below).
         assert_eq!(model, DEFAULT_CLOUD_LLM_MODEL);

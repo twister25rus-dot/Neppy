@@ -12,11 +12,11 @@
 //!   per call.
 //! * **`thread_id`** — injected into `ModelRequest.provider_options` so the crate
 //!   flattens it into the request body as the top-level `thread_id` field (parity
-//!   with the host `with_openhuman_thread_id`).
+//!   with the host `with_neppy_thread_id`).
 //! * **Billing envelope** — the crate `parse_response` preserves the full response
 //!   JSON on `ModelResponse.raw` but has no field for the managed backend's
 //!   charged USD, so [`project_managed_usage`] re-projects the
-//!   `openhuman.{billing,usage}` envelope into the `openhuman_usage_meta` shape +
+//!   `openhuman.{billing,usage}` envelope into the `neppy_usage_meta` shape +
 //!   crate `Usage` cache tokens the seam's `usage_info_from_response` reads —
 //!   without it the crate-native managed path would report `$0` charged.
 //!
@@ -98,10 +98,10 @@ impl NeppyBackendModel {
     }
 
     fn state_dir(&self) -> PathBuf {
-        self.options.openhuman_dir.clone().unwrap_or_else(|| {
+        self.options.neppy_dir.clone().unwrap_or_else(|| {
             directories::UserDirs::new()
-                .map(|dirs| dirs.home_dir().join(".openhuman"))
-                .unwrap_or_else(|| PathBuf::from(".openhuman"))
+                .map(|dirs| dirs.home_dir().join(".neppy"))
+                .unwrap_or_else(|| PathBuf::from(".neppy"))
         })
     }
 
@@ -342,7 +342,7 @@ struct ManagedEnvelopeBilling {
 
 /// Re-project the managed `openhuman.{billing,usage}` envelope — which the crate
 /// `OpenAiModel` leaves only on `ModelResponse.raw` — into the metadata the host
-/// cost bridge reads: `openhuman_usage_meta` (charged USD + context window) plus a
+/// cost bridge reads: `neppy_usage_meta` (charged USD + context window) plus a
 /// crate `Usage.cache_read_tokens` reconciliation when the crate missed the
 /// envelope's cached count. Parity with the legacy model-adapter path's
 /// `usage_info_from_response`; without it the crate-native managed turn reports
@@ -377,7 +377,7 @@ fn project_managed_usage(mut response: ModelResponse) -> ModelResponse {
         }
     }
 
-    response.raw = crate::openhuman::agent::tinyagents::model::merge_openhuman_usage_meta(
+    response.raw = crate::openhuman::agent::tinyagents::model::merge_neppy_usage_meta(
         response.raw,
         charged_amount_usd,
         context_window,
@@ -387,7 +387,7 @@ fn project_managed_usage(mut response: ModelResponse) -> ModelResponse {
 
 /// Inject the ambient `thread_id` (when set) into the request's
 /// `provider_options` so the crate emits it as a top-level `thread_id` body field
-/// — parity with the host `with_openhuman_thread_id` extension.
+/// — parity with the host `with_neppy_thread_id` extension.
 fn with_thread_id(mut request: ModelRequest) -> ModelRequest {
     let Some(thread_id) = thread_context::current_thread_id() else {
         return request;
@@ -419,7 +419,7 @@ fn maybe_publish_local_session_expiry() {
          publishing SessionExpired before any inference request"
     );
     crate::core::bus::BUS.publish(crate::core::events::DomainEvent::SessionExpired {
-        source: "openhuman_backend_model.resolve_bearer".to_string(),
+        source: "neppy_backend_model.resolve_bearer".to_string(),
         reason: "backend session token expired locally — re-authentication required".to_string(),
     });
 }
@@ -435,7 +435,7 @@ fn maybe_publish_session_expired(err: &TinyAgentsError, operation: &str) {
                 crate::openhuman::inference::provider::ops::sanitize_api_error(&pe.message);
             crate::core::bus::BUS.publish(crate::core::events::DomainEvent::SessionExpired {
                 source: format!(
-                    "openhuman_backend_model.{}({})",
+                    "neppy_backend_model.{}({})",
                     operation,
                     pe.status.unwrap_or(0)
                 ),
@@ -652,7 +652,7 @@ mod tests {
             .raw
             .as_ref()
             .unwrap()
-            .get("openhuman_usage_meta")
+            .get("neppy_usage_meta")
             .is_none());
         let usage = usage_info_from_response(&projected).expect("usage present");
         assert_eq!(usage.charged_amount_usd, 0.0);
@@ -790,7 +790,7 @@ mod tests {
         NeppyBackendModel::new(
             Some(&format!("http://{addr}")),
             &ProviderRuntimeOptions {
-                openhuman_dir: Some(dir.to_path_buf()),
+                neppy_dir: Some(dir.to_path_buf()),
                 secrets_encrypt: false,
                 ..ProviderRuntimeOptions::default()
             },

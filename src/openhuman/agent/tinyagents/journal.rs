@@ -138,7 +138,7 @@ async fn resolve_workspace() -> anyhow::Result<PathBuf> {
 /// alone. Minimal but real: it does not persist raw secrets, and structural
 /// prompt/PII stripping is a follow-up if the event vocabulary grows to carry
 /// full prompts.
-fn openhuman_redaction_secrets() -> Vec<String> {
+fn neppy_redaction_secrets() -> Vec<String> {
     const MARKERS: [&str; 7] = [
         "KEY",
         "TOKEN",
@@ -358,7 +358,7 @@ pub(crate) async fn attach_turn_journal(
     // observation's `event_id` is the stable `{run_id}-evt-{offset}`.
     let journal: Arc<dyn HarnessEventJournal> = Arc::new(StoreEventJournal::new(stores.journal));
     let journal_sink = JournalSink::new(journal, run_id.clone());
-    let redacting = RedactingSink::new(Arc::new(journal_sink), openhuman_redaction_secrets());
+    let redacting = RedactingSink::new(Arc::new(journal_sink), neppy_redaction_secrets());
 
     // FanOutSink is the durable-observer composition seam (05.2 adds graph sinks
     // here). Subscribing it as its own listener leaves the bridge subscription

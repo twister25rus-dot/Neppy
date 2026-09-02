@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { openhumanMigrateHermes } from '../core';
+import { neppyMigrateHermes } from '../core';
 
-describe('openhumanMigrateHermes', () => {
+describe('neppyMigrateHermes', () => {
   it('throws when not running in Tauri', async () => {
-    await expect(openhumanMigrateHermes()).rejects.toThrow('Not running in Tauri');
+    await expect(neppyMigrateHermes()).rejects.toThrow('Not running in Tauri');
   });
 });

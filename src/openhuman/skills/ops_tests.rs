@@ -51,8 +51,8 @@ fn load_skills_parses_skill_md_frontmatter() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
     // Trust marker enables project-scope loading.
-    write(&ws.join(".openhuman").join("trust"), "");
-    let skill_dir = ws.join(".openhuman").join("skills").join("hello-world");
+    write(&ws.join(".neppy").join("trust"), "");
+    let skill_dir = ws.join(".neppy").join("skills").join("hello-world");
     write(
         &skill_dir.join("SKILL.md"),
         "---\nname: hello-world\ndescription: Say hi\nmetadata:\n  version: 0.1.0\n  tags: [demo, greeting]\n---\n\nSay hello to the user.\n",
@@ -73,8 +73,8 @@ fn load_skills_parses_skill_md_frontmatter() {
 fn deprecated_top_level_fields_load_with_migration_warning() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join("trust"), "");
-    let skill_dir = ws.join(".openhuman").join("skills").join("legacy-fm");
+    write(&ws.join(".neppy").join("trust"), "");
+    let skill_dir = ws.join(".neppy").join("skills").join("legacy-fm");
     write(
         &skill_dir.join("SKILL.md"),
         "---\nname: legacy-fm\ndescription: uses deprecated top-level fields\nversion: 0.2.0\nauthor: Jane\ntags: [old, school]\n---\n",
@@ -118,7 +118,7 @@ fn project_skills_skipped_when_not_trusted() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
     // No trust marker.
-    let skill_dir = ws.join(".openhuman").join("skills").join("unsafe");
+    let skill_dir = ws.join(".neppy").join("skills").join("unsafe");
     write(
         &skill_dir.join("SKILL.md"),
         "---\nname: unsafe\ndescription: should not load\n---\n",
@@ -131,8 +131,8 @@ fn project_skills_skipped_when_not_trusted() {
 fn frontmatter_missing_name_warns_and_falls_back() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join("trust"), "");
-    let skill_dir = ws.join(".openhuman").join("skills").join("mystery");
+    write(&ws.join(".neppy").join("trust"), "");
+    let skill_dir = ws.join(".neppy").join("skills").join("mystery");
     write(
         &skill_dir.join("SKILL.md"),
         "---\ndescription: no name here\n---\n\nbody\n",
@@ -150,8 +150,8 @@ fn frontmatter_missing_name_warns_and_falls_back() {
 fn frontmatter_missing_description_uses_first_body_line() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join("trust"), "");
-    let skill_dir = ws.join(".openhuman").join("skills").join("s");
+    write(&ws.join(".neppy").join("trust"), "");
+    let skill_dir = ws.join(".neppy").join("skills").join("s");
     write(
         &skill_dir.join("SKILL.md"),
         "---\nname: s\n---\n\n# Heading\n\nActual first line.\n",
@@ -164,8 +164,8 @@ fn frontmatter_missing_description_uses_first_body_line() {
 fn directory_name_mismatch_warns_but_loads() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join("trust"), "");
-    let skill_dir = ws.join(".openhuman").join("skills").join("dir-name");
+    write(&ws.join(".neppy").join("trust"), "");
+    let skill_dir = ws.join(".neppy").join("skills").join("dir-name");
     write(
         &skill_dir.join("SKILL.md"),
         "---\nname: other-name\ndescription: mismatch\n---\n",
@@ -183,23 +183,15 @@ fn directory_name_mismatch_warns_but_loads() {
 fn project_scope_shadows_user_scope_on_collision() {
     let user_dir = tempfile::tempdir().unwrap();
     let ws_dir = tempfile::tempdir().unwrap();
-    write(&ws_dir.path().join(".openhuman").join("trust"), "");
+    write(&ws_dir.path().join(".neppy").join("trust"), "");
 
-    let user_skill = user_dir
-        .path()
-        .join(".openhuman")
-        .join("skills")
-        .join("greet");
+    let user_skill = user_dir.path().join(".neppy").join("skills").join("greet");
     write(
         &user_skill.join("SKILL.md"),
         "---\nname: greet\ndescription: USER COPY\n---\n",
     );
 
-    let proj_skill = ws_dir
-        .path()
-        .join(".openhuman")
-        .join("skills")
-        .join("greet");
+    let proj_skill = ws_dir.path().join(".neppy").join("skills").join("greet");
     write(
         &proj_skill.join("SKILL.md"),
         "---\nname: greet\ndescription: PROJECT COPY\n---\n",
@@ -257,9 +249,9 @@ fn inventory_resources_lists_hermes_resource_dirs() {
 fn nested_hermes_skill_tree_discovers_metadata_and_resources() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join("trust"), "");
+    write(&ws.join(".neppy").join("trust"), "");
     let skill_dir = ws
-        .join(".openhuman")
+        .join(".neppy")
         .join("skills")
         .join("creative")
         .join("concept-diagrams");
@@ -312,7 +304,7 @@ fn symlinked_skill_dirs_are_skipped() {
 
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join("trust"), "");
+    write(&ws.join(".neppy").join("trust"), "");
 
     // A real out-of-tree skill that would load fine if linked.
     let external = tempfile::tempdir().unwrap();
@@ -322,8 +314,8 @@ fn symlinked_skill_dirs_are_skipped() {
         "---\nname: evil\ndescription: should not load via symlink\n---\n",
     );
 
-    // Symlink <ws>/.openhuman/skills/evil -> external/evil
-    let skills_root = ws.join(".openhuman").join("skills");
+    // Symlink <ws>/.neppy/skills/evil -> external/evil
+    let skills_root = ws.join(".neppy").join("skills");
     std::fs::create_dir_all(&skills_root).unwrap();
     symlink(&external_skill, skills_root.join("evil")).unwrap();
 
@@ -373,7 +365,7 @@ fn load_skills_surfaces_user_scope() {
 
     let user_skill = user_dir
         .path()
-        .join(".openhuman")
+        .join(".neppy")
         .join("skills")
         .join("user-only");
     write(
@@ -395,8 +387,8 @@ fn load_skills_surfaces_user_scope() {
 fn hidden_dirs_are_skipped() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join("trust"), "");
-    let hidden = ws.join(".openhuman").join("skills").join(".hidden");
+    write(&ws.join(".neppy").join("trust"), "");
+    let hidden = ws.join(".neppy").join("skills").join(".hidden");
     write(
         &hidden.join("SKILL.md"),
         "---\nname: hidden\ndescription: nope\n---\n",
@@ -667,7 +659,7 @@ fn create_skill_user_scope_scaffolds_skill_md_and_resource_dirs() {
 
     let skill_root = home
         .path()
-        .join(".openhuman")
+        .join(".neppy")
         .join("workflows")
         .join("my-demo-workflow");
     assert!(skill_root.join(WORKFLOW_MD).is_file());
@@ -707,16 +699,16 @@ fn create_skill_rejects_slug_collision() {
 #[test]
 fn edit_updates_workflow_that_still_lives_under_legacy_skills_root() {
     // Regression: a workflow created before the skills→workflows rename lives
-    // at `~/.openhuman/skills/<slug>/SKILL.md`. Editing it (overwrite=true)
+    // at `~/.neppy/skills/<slug>/SKILL.md`. Editing it (overwrite=true)
     // must resolve that legacy location and update it in place — NOT fail with
     // "cannot update workflow '<slug>': it does not exist at
-    // ~/.openhuman/workflows/<slug>" (which only checked the new root).
+    // ~/.neppy/workflows/<slug>" (which only checked the new root).
     let home = tempfile::tempdir().unwrap();
     let ws = tempfile::tempdir().unwrap();
 
     let legacy_dir = home
         .path()
-        .join(".openhuman")
+        .join(".neppy")
         .join("skills")
         .join("slack-to-notion");
     write(
@@ -764,7 +756,7 @@ fn edit_updates_workflow_that_still_lives_under_legacy_skills_root() {
     assert!(
         !home
             .path()
-            .join(".openhuman")
+            .join(".neppy")
             .join("workflows")
             .join("slack-to-notion")
             .exists(),
@@ -855,7 +847,7 @@ fn create_skill_rejects_project_scope_without_trust_marker() {
     // Confirm nothing was written.
     assert!(!ws
         .path()
-        .join(".openhuman")
+        .join(".neppy")
         .join("skills")
         .join("project-skill")
         .exists());
@@ -865,7 +857,7 @@ fn create_skill_rejects_project_scope_without_trust_marker() {
 fn create_skill_project_scope_writes_under_workspace_when_trusted() {
     let home = tempfile::tempdir().unwrap();
     let ws = tempfile::tempdir().unwrap();
-    write(&ws.path().join(".openhuman").join(TRUST_MARKER), "");
+    write(&ws.path().join(".neppy").join(TRUST_MARKER), "");
 
     let params = CreateWorkflowParams {
         name: "ws-skill".to_string(),
@@ -881,7 +873,7 @@ fn create_skill_project_scope_writes_under_workspace_when_trusted() {
     assert_eq!(created.scope, WorkflowScope::Project);
     assert!(ws
         .path()
-        .join(".openhuman")
+        .join(".neppy")
         .join("workflows")
         .join("ws-skill")
         .join(WORKFLOW_MD)
@@ -1252,7 +1244,7 @@ fn uninstall_skill_removes_user_scope_dir() {
     let home = tempfile::tempdir().unwrap();
     let skill_dir = home
         .path()
-        .join(".openhuman")
+        .join(".neppy")
         .join("skills")
         .join("weather-helper");
     write(
@@ -1277,7 +1269,7 @@ fn uninstall_skill_removes_user_scope_dir() {
     assert!(after.is_empty(), "discovery should no longer see it");
 }
 
-/// The current user-scope layout is `~/.openhuman/workflows/<id>/SKILL.md`
+/// The current user-scope layout is `~/.neppy/workflows/<id>/SKILL.md`
 /// (create writes here post skills→workflows rename). Discovery must surface
 /// it as a User-scope workflow.
 #[test]
@@ -1286,18 +1278,14 @@ fn discover_reads_user_scope_workflows_dir() {
     write(
         &home
             .path()
-            .join(".openhuman")
+            .join(".neppy")
             .join("workflows")
             .join("inbox-triage")
             .join("SKILL.md"),
         "---\nname: inbox-triage\ndescription: triage the inbox\n---\n\nbody\n",
     );
     let found = discover_workflows(Some(home.path()), None, false);
-    assert_eq!(
-        found.len(),
-        1,
-        "workflow under .openhuman/workflows/ must load"
-    );
+    assert_eq!(found.len(), 1, "workflow under .neppy/workflows/ must load");
     assert_eq!(found[0].name, "inbox-triage");
     assert_eq!(found[0].scope, WorkflowScope::User);
     assert!(!found[0].legacy);
@@ -1308,7 +1296,7 @@ fn discover_reads_user_scope_workflows_dir() {
 #[test]
 fn uninstall_skill_rejects_path_traversal_names() {
     let home = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(home.path().join(".openhuman").join("skills")).unwrap();
+    std::fs::create_dir_all(home.path().join(".neppy").join("skills")).unwrap();
     for bad in ["../etc", "foo/bar", "foo\\bar", "..", "foo/../bar"] {
         let err = uninstall_workflow(
             UninstallWorkflowParams { name: bad.into() },
@@ -1326,7 +1314,7 @@ fn uninstall_skill_rejects_path_traversal_names() {
 #[test]
 fn uninstall_skill_rejects_empty_name() {
     let home = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(home.path().join(".openhuman").join("skills")).unwrap();
+    std::fs::create_dir_all(home.path().join(".neppy").join("skills")).unwrap();
     for bad in ["", "   ", "\t"] {
         let err = uninstall_workflow(
             UninstallWorkflowParams { name: bad.into() },
@@ -1342,7 +1330,7 @@ fn uninstall_skill_rejects_empty_name() {
 #[test]
 fn uninstall_skill_missing_skill_errors_cleanly() {
     let home = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(home.path().join(".openhuman").join("skills")).unwrap();
+    std::fs::create_dir_all(home.path().join(".neppy").join("skills")).unwrap();
     let err = uninstall_workflow(
         UninstallWorkflowParams {
             name: "ghost".into(),
@@ -1359,7 +1347,7 @@ fn uninstall_skill_missing_skill_errors_cleanly() {
 #[test]
 fn uninstall_skill_refuses_dir_without_skill_md() {
     let home = tempfile::tempdir().unwrap();
-    let bogus = home.path().join(".openhuman").join("skills").join("bogus");
+    let bogus = home.path().join(".neppy").join("skills").join("bogus");
     std::fs::create_dir_all(&bogus).unwrap();
     std::fs::write(bogus.join("random.txt"), "not a skill").unwrap();
     let err = uninstall_workflow(
@@ -1374,12 +1362,12 @@ fn uninstall_skill_refuses_dir_without_skill_md() {
 }
 
 /// Delete must work for workflows authored post-rename, i.e. under
-/// `~/.openhuman/workflows/<id>/WORKFLOW.md` (the regression that left delete
+/// `~/.neppy/workflows/<id>/WORKFLOW.md` (the regression that left delete
 /// looking only in the legacy `skills/` root).
 #[test]
 fn uninstall_workflow_removes_new_workflows_dir() {
     let home = tempfile::tempdir().unwrap();
-    let dir = home.path().join(".openhuman").join("workflows").join("wf");
+    let dir = home.path().join(".neppy").join("workflows").join("wf");
     write(
         &dir.join(WORKFLOW_MD),
         "---\nname: wf\ndescription: d\n---\n\nbody\n",
@@ -1402,7 +1390,7 @@ fn uninstall_workflow_removes_new_workflows_dir() {
 #[test]
 fn uninstall_skill_rejects_symlink_escape() {
     let home = tempfile::tempdir().unwrap();
-    let skills_root = home.path().join(".openhuman").join("skills");
+    let skills_root = home.path().join(".neppy").join("skills");
     std::fs::create_dir_all(&skills_root).unwrap();
     let outside = tempfile::tempdir().unwrap();
     let target = outside.path().join("real");
@@ -1435,7 +1423,7 @@ fn uninstall_skill_rejects_symlink_escape() {
 #[test]
 fn uninstall_skill_rejects_symlinked_alias_in_tree() {
     let home = tempfile::tempdir().unwrap();
-    let skills_root = home.path().join(".openhuman").join("skills");
+    let skills_root = home.path().join(".neppy").join("skills");
     std::fs::create_dir_all(&skills_root).unwrap();
     let real_dir = skills_root.join("real");
     write(
@@ -1460,7 +1448,7 @@ fn uninstall_skill_rejects_symlinked_alias_in_tree() {
     );
 }
 
-/// A symlinked skills *root* (`~/.openhuman/skills -> elsewhere`) must
+/// A symlinked skills *root* (`~/.neppy/skills -> elsewhere`) must
 /// be refused before canonicalisation, since `canonicalize` would
 /// resolve it to the target and the `starts_with` guard would then
 /// compare against the resolved target, not the nominal root.
@@ -1475,9 +1463,8 @@ fn uninstall_skill_rejects_symlinked_skills_root() {
         &real_skills.join("real").join("SKILL.md"),
         "---\nname: real\ndescription: in real root\n---\n",
     );
-    std::fs::create_dir_all(home.path().join(".openhuman")).unwrap();
-    std::os::unix::fs::symlink(&real_skills, home.path().join(".openhuman").join("skills"))
-        .unwrap();
+    std::fs::create_dir_all(home.path().join(".neppy")).unwrap();
+    std::os::unix::fs::symlink(&real_skills, home.path().join(".neppy").join("skills")).unwrap();
     let err = uninstall_workflow(
         UninstallWorkflowParams {
             name: "real".into(),
@@ -1639,11 +1626,7 @@ fn edit_refuses_to_overwrite_an_unparseable_body() {
     // rather than silently replace the user's instructions with the scaffold.
     let home = tempfile::tempdir().unwrap();
     let ws = tempfile::tempdir().unwrap();
-    let dir = home
-        .path()
-        .join(".openhuman")
-        .join("skills")
-        .join("broken-wf");
+    let dir = home.path().join(".neppy").join("skills").join("broken-wf");
     // `---` opened but never closed → parse_workflow_md returns None.
     write(
         &dir.join(SKILL_MD),
@@ -1706,8 +1689,8 @@ fn symlinked_manifest_file_is_rejected() {
     // otherwise be ingested into the catalog/prompt flow. Discovery must skip it.
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    write(&ws.join(".openhuman").join(TRUST_MARKER), "");
-    let skill_dir = ws.join(".openhuman").join("skills").join("sneaky");
+    write(&ws.join(".neppy").join(TRUST_MARKER), "");
+    let skill_dir = ws.join(".neppy").join("skills").join("sneaky");
     std::fs::create_dir_all(&skill_dir).unwrap();
     let external = dir.path().join("secret.md");
     write(
@@ -1732,21 +1715,21 @@ fn symlinked_manifest_file_is_rejected() {
 #[test]
 fn discover_automations_excludes_user_skill_root_but_keeps_workflows() {
     let home = tempfile::tempdir().unwrap();
-    // A capability skill installed under ~/.openhuman/skills/.
+    // A capability skill installed under ~/.neppy/skills/.
     write(
         &home
             .path()
-            .join(".openhuman")
+            .join(".neppy")
             .join("skills")
             .join("ascii-art")
             .join(SKILL_MD),
         "---\nname: ascii-art\ndescription: ASCII art\n---\n",
     );
-    // A real automation authored under ~/.openhuman/workflows/.
+    // A real automation authored under ~/.neppy/workflows/.
     write(
         &home
             .path()
-            .join(".openhuman")
+            .join(".neppy")
             .join("workflows")
             .join("deploy")
             .join(WORKFLOW_MD),
@@ -1814,10 +1797,10 @@ fn discover_automations_excludes_legacy_workspace_skills_root() {
 #[test]
 fn discover_automations_includes_project_workflows_when_trusted() {
     let ws = tempfile::tempdir().unwrap();
-    write(&ws.path().join(".openhuman").join(TRUST_MARKER), "");
+    write(&ws.path().join(".neppy").join(TRUST_MARKER), "");
     write(
         &ws.path()
-            .join(".openhuman")
+            .join(".neppy")
             .join("workflows")
             .join("proj-flow")
             .join(WORKFLOW_MD),
@@ -1826,7 +1809,7 @@ fn discover_automations_includes_project_workflows_when_trusted() {
     // A sibling project skill must NOT leak into the automations list.
     write(
         &ws.path()
-            .join(".openhuman")
+            .join(".neppy")
             .join("skills")
             .join("proj-skill")
             .join(SKILL_MD),

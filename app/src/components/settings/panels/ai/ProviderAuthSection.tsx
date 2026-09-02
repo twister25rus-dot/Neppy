@@ -264,7 +264,7 @@ export const ProviderAuthSection = ({
           <ProviderListRow
             slug="openhuman"
             label={t('settings.ai.routing.managed')}
-            tone={BUILTIN_PROVIDER_META.openhuman?.tone ?? ''}
+            tone={BUILTIN_PROVIDER_META.neppy?.tone ?? ''}
             detail={t('settings.ai.providers.managedDetail')}
             control={<Badge variant="success">{t('settings.ai.routing.managedAlwaysOn')}</Badge>}
             data-testid="provider-row-openhuman"

@@ -72,7 +72,7 @@ pub struct CoreContext {
     /// `config::ops::load_config_with_timeout()` per dispatch, which re-runs
     /// `Config::load_or_init()` and re-resolves the process-global workspace.
     /// An embedder that supplied a config would therefore watch its turns run
-    /// against `~/.openhuman` anyway. Publishing it on the context — the seam
+    /// against `~/.neppy` anyway. Publishing it on the context — the seam
     /// phase 2 of `docs/plans/pluggable-core/` introduced for exactly this
     /// migration — lets that loader prefer it without any handler changing.
     embedder_config: Option<crate::openhuman::config::Config>,
@@ -174,7 +174,7 @@ impl CoreContext {
             TokenSource::EnvOrFile => {
                 // A caller-supplied config scopes the core's state, so a
                 // self-generated bearer must land beside it rather than under
-                // the operator's real `~/.openhuman` root — otherwise an
+                // the operator's real `~/.neppy` root — otherwise an
                 // "ephemeral" harness still writes a `core.token` into the
                 // operator's install. Fall back to the default root only when
                 // no config was supplied.
@@ -187,13 +187,11 @@ impl CoreContext {
                             .unwrap_or_else(|| cfg.config_path.clone())
                     })
                     .unwrap_or_else(|| {
-                        crate::openhuman::config::default_root_openhuman_dir().unwrap_or_else(
-                            |_| {
-                                dirs::home_dir()
-                                    .unwrap_or_else(|| std::path::PathBuf::from("."))
-                                    .join(".openhuman")
-                            },
-                        )
+                        crate::openhuman::config::default_root_neppy_dir().unwrap_or_else(|_| {
+                            dirs::home_dir()
+                                .unwrap_or_else(|| std::path::PathBuf::from("."))
+                                .join(".neppy")
+                        })
                     });
                 crate::core::auth::init_rpc_token(&token_dir)?;
                 std::env::var(crate::core::auth::CORE_TOKEN_ENV_VAR)

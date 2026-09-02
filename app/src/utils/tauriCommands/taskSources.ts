@@ -132,17 +132,17 @@ function ensureTauri(): void {
   }
 }
 
-export async function openhumanTaskSourcesList(): Promise<TaskSource[]> {
+export async function neppyTaskSourcesList(): Promise<TaskSource[]> {
   ensureTauri();
   return await callCoreRpc<TaskSource[]>({ method: 'openhuman.task_sources_list' });
 }
 
-export async function openhumanTaskSourcesGet(id: string): Promise<TaskSource> {
+export async function neppyTaskSourcesGet(id: string): Promise<TaskSource> {
   ensureTauri();
   return await callCoreRpc<TaskSource>({ method: 'openhuman.task_sources_get', params: { id } });
 }
 
-export async function openhumanTaskSourcesAdd(params: TaskSourceAddParams): Promise<TaskSource> {
+export async function neppyTaskSourcesAdd(params: TaskSourceAddParams): Promise<TaskSource> {
   ensureTauri();
   return await callCoreRpc<TaskSource>({
     method: 'openhuman.task_sources_add',
@@ -150,7 +150,7 @@ export async function openhumanTaskSourcesAdd(params: TaskSourceAddParams): Prom
   });
 }
 
-export async function openhumanTaskSourcesUpdate(
+export async function neppyTaskSourcesUpdate(
   id: string,
   patch: TaskSourcePatch
 ): Promise<TaskSource> {
@@ -161,7 +161,7 @@ export async function openhumanTaskSourcesUpdate(
   });
 }
 
-export async function openhumanTaskSourcesRemove(
+export async function neppyTaskSourcesRemove(
   id: string
 ): Promise<{ id: string; removed: boolean; pruned?: number }> {
   ensureTauri();
@@ -171,7 +171,7 @@ export async function openhumanTaskSourcesRemove(
   });
 }
 
-export async function openhumanTaskSourcesFetch(id: string): Promise<FetchOutcome> {
+export async function neppyTaskSourcesFetch(id: string): Promise<FetchOutcome> {
   ensureTauri();
   return await callCoreRpc<FetchOutcome>({
     method: 'openhuman.task_sources_fetch',
@@ -179,12 +179,12 @@ export async function openhumanTaskSourcesFetch(id: string): Promise<FetchOutcom
   });
 }
 
-export async function openhumanTaskSourcesSync(): Promise<FetchOutcome[]> {
+export async function neppyTaskSourcesSync(): Promise<FetchOutcome[]> {
   ensureTauri();
   return await callCoreRpc<FetchOutcome[]>({ method: 'openhuman.task_sources_sync' });
 }
 
-export async function openhumanTaskSourcesListTasks(
+export async function neppyTaskSourcesListTasks(
   id: string,
   limit = 50
 ): Promise<NormalizedTask[]> {
@@ -195,7 +195,7 @@ export async function openhumanTaskSourcesListTasks(
   });
 }
 
-export async function openhumanTaskSourcesPreviewFilter(
+export async function neppyTaskSourcesPreviewFilter(
   provider: TaskSourceProvider,
   filter: TaskSourceFilter,
   connectionId?: string,
@@ -211,7 +211,7 @@ export async function openhumanTaskSourcesPreviewFilter(
 /** List the selectable containers (e.g. Notion databases) a provider exposes
  *  for the given connection, so the create form can offer a picker instead of
  *  a raw-id text field. */
-export async function openhumanTaskSourcesListDatabases(
+export async function neppyTaskSourcesListDatabases(
   provider: TaskSourceProvider,
   connectionId?: string
 ): Promise<TaskContainer[]> {
@@ -222,7 +222,7 @@ export async function openhumanTaskSourcesListDatabases(
   });
 }
 
-export async function openhumanTaskSourcesStatus(): Promise<TaskSourcesStatus> {
+export async function neppyTaskSourcesStatus(): Promise<TaskSourcesStatus> {
   ensureTauri();
   return await callCoreRpc<TaskSourcesStatus>({ method: 'openhuman.task_sources_status' });
 }

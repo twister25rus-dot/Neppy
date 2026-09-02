@@ -11,15 +11,15 @@ struct ActiveUserState {
 }
 
 /// Returns the path to the active-user marker:
-/// `{default_openhuman_dir}/active_user.toml`.
+/// `{default_neppy_dir}/active_user.toml`.
 ///
 /// This marker is **shared across all users** — it lives at the root
-/// `~/.openhuman` dir, not inside any per-user directory — so it records
+/// `~/.neppy` dir, not inside any per-user directory — so it records
 /// *which* user is currently active. Clearing one user's data must remove
 /// this marker (to sign that user out) without touching the sibling
 /// `users/<other>` directories.
-pub fn active_user_marker_path(default_openhuman_dir: &Path) -> PathBuf {
-    default_openhuman_dir.join(ACTIVE_USER_STATE_FILE)
+pub fn active_user_marker_path(default_neppy_dir: &Path) -> PathBuf {
+    default_neppy_dir.join(ACTIVE_USER_STATE_FILE)
 }
 
 /// Reads the active user id, distinguishing a legitimately signed-out state
@@ -43,8 +43,8 @@ pub fn active_user_marker_path(default_openhuman_dir: &Path) -> PathBuf {
 /// and memory sit intact under `users/<id>`. The `config.toml` read is already
 /// retry-guarded (`read_config_with_recovery_or_default`); the marker that
 /// decides *which* config to load must be at least as resilient.
-pub fn read_active_user_id_checked(default_openhuman_dir: &Path) -> Result<Option<String>> {
-    let path = active_user_marker_path(default_openhuman_dir);
+pub fn read_active_user_id_checked(default_neppy_dir: &Path) -> Result<Option<String>> {
+    let path = active_user_marker_path(default_neppy_dir);
     // `retry_with_backoff` bails immediately on a non-transient error (incl.
     // `NotFound`), and only re-attempts the Windows file-lock class of faults —
     // exactly the resilience the config-file read already has. This variant is
@@ -67,10 +67,8 @@ pub fn read_active_user_id_checked(default_openhuman_dir: &Path) -> Result<Optio
 /// (`read_config_with_recovery_or_default`). The outcome classification
 /// (missing → `Ok(None)`, other read fault → `Err`, unparseable → `Ok(None)`)
 /// is shared with the sync variant so the two cannot drift.
-pub async fn read_active_user_id_checked_async(
-    default_openhuman_dir: &Path,
-) -> Result<Option<String>> {
-    let path = active_user_marker_path(default_openhuman_dir);
+pub async fn read_active_user_id_checked_async(default_neppy_dir: &Path) -> Result<Option<String>> {
+    let path = active_user_marker_path(default_neppy_dir);
     let read =
         crate::openhuman::util::retry_with_backoff_async("read active_user.toml", 4, 20, || {
             let path = path.clone();
@@ -141,27 +139,27 @@ fn interpret_active_user_marker(path: &Path, read: Result<String>) -> Result<Opt
 /// fault. The **directory-resolution** path must use
 /// [`read_active_user_id_checked`] instead so it never silently orphans a
 /// signed-in user's data (#5334).
-pub fn read_active_user_id(default_openhuman_dir: &Path) -> Option<String> {
-    read_active_user_id_checked(default_openhuman_dir)
+pub fn read_active_user_id(default_neppy_dir: &Path) -> Option<String> {
+    read_active_user_id_checked(default_neppy_dir)
         .ok()
         .flatten()
 }
 
-/// Writes the active user id to `{default_openhuman_dir}/active_user.toml`.
-pub fn write_active_user_id(default_openhuman_dir: &Path, user_id: &str) -> Result<()> {
-    std::fs::create_dir_all(default_openhuman_dir).with_context(|| {
+/// Writes the active user id to `{default_neppy_dir}/active_user.toml`.
+pub fn write_active_user_id(default_neppy_dir: &Path, user_id: &str) -> Result<()> {
+    std::fs::create_dir_all(default_neppy_dir).with_context(|| {
         format!(
             "Failed to create active user state directory: {}",
-            default_openhuman_dir.display()
+            default_neppy_dir.display()
         )
     })?;
 
-    let path = default_openhuman_dir.join(ACTIVE_USER_STATE_FILE);
+    let path = default_neppy_dir.join(ACTIVE_USER_STATE_FILE);
     let state = ActiveUserState {
         user_id: user_id.to_string(),
     };
     let toml_str = toml::to_string_pretty(&state).context("serialize active_user.toml")?;
-    let temp_path = default_openhuman_dir.join(format!(
+    let temp_path = default_neppy_dir.join(format!(
         ".{ACTIVE_USER_STATE_FILE}.tmp-{}",
         uuid::Uuid::new_v4()
     ));
@@ -192,15 +190,15 @@ pub fn write_active_user_id(default_openhuman_dir: &Path, user_id: &str) -> Resu
         );
     }
 
-    sync_directory(default_openhuman_dir)?;
+    sync_directory(default_neppy_dir)?;
     tracing::debug!(user_id = %user_id, path = %path.display(), "active user written");
     Ok(())
 }
 
 /// Removes the active user marker.  After this, the next config load will
 /// use the default (unauthenticated) openhuman directory.
-pub fn clear_active_user(default_openhuman_dir: &Path) -> Result<()> {
-    let path = active_user_marker_path(default_openhuman_dir);
+pub fn clear_active_user(default_neppy_dir: &Path) -> Result<()> {
+    let path = active_user_marker_path(default_neppy_dir);
     if path.exists() {
         std::fs::remove_file(&path)
             .with_context(|| format!("Failed to remove active user state: {}", path.display()))?;
@@ -210,24 +208,24 @@ pub fn clear_active_user(default_openhuman_dir: &Path) -> Result<()> {
 }
 
 /// Returns the user-scoped openhuman directory for the given user id:
-/// `{default_openhuman_dir}/users/{user_id}`.
-pub fn user_openhuman_dir(default_openhuman_dir: &Path, user_id: &str) -> PathBuf {
-    default_openhuman_dir.join("users").join(user_id)
+/// `{default_neppy_dir}/users/{user_id}`.
+pub fn user_neppy_dir(default_neppy_dir: &Path, user_id: &str) -> PathBuf {
+    default_neppy_dir.join("users").join(user_id)
 }
 
 /// Stable id used to scope the openhuman directory before any user has
 /// logged in.  All memory, state, config, sessions and workspace files
 /// created on first init land under `{root}/users/{PRE_LOGIN_USER_ID}`
-/// so nothing is ever written directly at the root `.openhuman` path.
+/// so nothing is ever written directly at the root `.neppy` path.
 ///
 /// On first successful login, this directory is migrated into the real
 /// user-scoped directory (see `credentials::ops::store_session`).
 pub const PRE_LOGIN_USER_ID: &str = "local";
 
 /// Returns the pre-login (unauthenticated) user directory:
-/// `{default_openhuman_dir}/users/local`.
-pub fn pre_login_user_dir(default_openhuman_dir: &Path) -> PathBuf {
-    user_openhuman_dir(default_openhuman_dir, PRE_LOGIN_USER_ID)
+/// `{default_neppy_dir}/users/local`.
+pub fn pre_login_user_dir(default_neppy_dir: &Path) -> PathBuf {
+    user_neppy_dir(default_neppy_dir, PRE_LOGIN_USER_ID)
 }
 
 #[cfg(unix)]

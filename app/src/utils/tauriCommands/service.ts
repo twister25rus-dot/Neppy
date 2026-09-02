@@ -30,7 +30,7 @@ export interface RestartStatus {
   reason: string;
 }
 
-export async function openhumanServiceInstall(): Promise<CommandResponse<ServiceStatus>> {
+export async function neppyServiceInstall(): Promise<CommandResponse<ServiceStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -44,7 +44,7 @@ export async function openhumanServiceInstall(): Promise<CommandResponse<Service
   }
 }
 
-export async function openhumanServiceStart(): Promise<CommandResponse<ServiceStatus>> {
+export async function neppyServiceStart(): Promise<CommandResponse<ServiceStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -56,7 +56,7 @@ export async function openhumanServiceStart(): Promise<CommandResponse<ServiceSt
   }
 }
 
-export async function openhumanServiceStop(): Promise<CommandResponse<ServiceStatus>> {
+export async function neppyServiceStop(): Promise<CommandResponse<ServiceStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -68,7 +68,7 @@ export async function openhumanServiceStop(): Promise<CommandResponse<ServiceSta
   }
 }
 
-export async function openhumanServiceStatus(): Promise<CommandResponse<ServiceStatus>> {
+export async function neppyServiceStatus(): Promise<CommandResponse<ServiceStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -82,7 +82,7 @@ export async function openhumanServiceStatus(): Promise<CommandResponse<ServiceS
   }
 }
 
-export async function openhumanServiceUninstall(): Promise<CommandResponse<ServiceStatus>> {
+export async function neppyServiceUninstall(): Promise<CommandResponse<ServiceStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -96,7 +96,7 @@ export async function openhumanServiceUninstall(): Promise<CommandResponse<Servi
   }
 }
 
-export async function openhumanServiceRestart(
+export async function neppyServiceRestart(
   source?: string,
   reason?: string
 ): Promise<CommandResponse<RestartStatus>> {
@@ -109,7 +109,7 @@ export async function openhumanServiceRestart(
   });
 }
 
-export async function openhumanAgentServerStatus(): Promise<CommandResponse<AgentServerStatus>> {
+export async function neppyAgentServerStatus(): Promise<CommandResponse<AgentServerStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -118,7 +118,7 @@ export async function openhumanAgentServerStatus(): Promise<CommandResponse<Agen
   });
 }
 
-export async function openhumanGetDaemonHostConfig(): Promise<CommandResponse<DaemonHostConfig>> {
+export async function neppyGetDaemonHostConfig(): Promise<CommandResponse<DaemonHostConfig>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -127,7 +127,7 @@ export async function openhumanGetDaemonHostConfig(): Promise<CommandResponse<Da
   });
 }
 
-export async function openhumanSetDaemonHostConfig(
+export async function neppySetDaemonHostConfig(
   showTray: boolean
 ): Promise<CommandResponse<DaemonHostConfig>> {
   if (!isTauri()) {

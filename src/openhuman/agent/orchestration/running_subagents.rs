@@ -60,15 +60,15 @@ use tinyagents::CancellationToken;
 /// given, and this is where Neppy keeps it.
 fn task_store_path(workspace_dir: &Path) -> PathBuf {
     workspace_dir
-        .join(".openhuman")
+        .join(".neppy")
         .join("orchestration_tasks.jsonl")
 }
 
 #[cfg(test)]
 fn default_task_store_workspace() -> PathBuf {
-    crate::openhuman::config::default_root_openhuman_dir()
+    crate::openhuman::config::default_root_neppy_dir()
         .map(|root| root.join("workspace"))
-        .unwrap_or_else(|_| PathBuf::from(".openhuman").join("workspace"))
+        .unwrap_or_else(|_| PathBuf::from(".neppy").join("workspace"))
 }
 
 /// Process-wide typed lifecycle ledger for detached sub-agents (issue #4249),
@@ -1283,7 +1283,7 @@ fn now_ms() -> u64 {
 mod tests {
     use super::*;
     use crate::openhuman::agent::tinyagents::orchestration::{
-        openhuman_steering_handle, OrchestrationTaskStatus, SteeringHandle, SteeringPolicy,
+        neppy_steering_handle, OrchestrationTaskStatus, SteeringHandle, SteeringPolicy,
         SteeringRunClass,
     };
     use std::sync::MutexGuard;
@@ -1735,7 +1735,7 @@ mod tests {
         let rq = RunQueue::new();
         let tx = register_test("task-directive", "session-A", rq.clone());
         // A background sub-agent handle accepts Cancel/Redirect/Resume.
-        let handle = openhuman_steering_handle(SteeringRunClass::Background);
+        let handle = neppy_steering_handle(SteeringRunClass::Background);
         let task_id = TaskId::new("task-directive");
         shared_steering_registry().register(task_id.clone(), handle.clone());
 

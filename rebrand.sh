@@ -9,7 +9,7 @@
 # Categories, run them in this order, commit + `cargo check` between each:
 #   docs      user-facing text, README, gitbooks, locales, prompts
 #   env       OPENHUMAN_* -> NEPPY_* environment variables
-#   paths     ~/.openhuman -> ~/.neppy, ~/Neppy/projects -> ~/Neppy/projects
+#   paths     ~/.neppy -> ~/.neppy, ~/Neppy/projects -> ~/Neppy/projects
 #   tauri     product name, window title, bundle identifier
 #   crates    crate + package names (openhuman -> neppy)
 #   moddir    src/openhuman/ -> src/neppy/ and every import path (do this LAST)
@@ -47,7 +47,7 @@ PROTECTED='tinyagents|tinycortex|tinyflows|tinychannels|tinybus|tinymcp|tinymemo
 case "$CATEGORY" in
   docs)   PATTERN='Neppy' ;      REPLACE='Neppy' ;      SCOPE=(README.md INSTALL.md CONTRIBUTING.md docs gitbooks app/src/locales src/openhuman/agent/prompts) ;;
   env)    PATTERN='OPENHUMAN_' ;     REPLACE='NEPPY_' ;     SCOPE=(.) ;;
-  paths)  PATTERN='\.openhuman' ;    REPLACE='.neppy' ;     SCOPE=(.) ;;
+  paths)  PATTERN='\.neppy' ;    REPLACE='.neppy' ;     SCOPE=(.) ;;
   tauri)  PATTERN='Neppy' ;      REPLACE='Neppy' ;      SCOPE=(app/src-tauri/tauri.conf.json app/src-tauri/Cargo.toml) ;;
   crates) PATTERN='openhuman' ;      REPLACE='neppy' ;      SCOPE=(Cargo.toml app/src-tauri/Cargo.toml package.json app/package.json) ;;
   moddir) echo "moddir is a manual step, see below"; MODDIR=1 ;;

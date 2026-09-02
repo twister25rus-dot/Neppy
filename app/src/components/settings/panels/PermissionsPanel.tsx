@@ -5,10 +5,10 @@ import {
   type AgentPaths,
   type AutonomyLevel,
   isTauri,
-  openhumanGetAgentPaths,
-  openhumanGetAutonomySettings,
-  openhumanUpdateAgentPaths,
-  openhumanUpdateAutonomySettings,
+  neppyGetAgentPaths,
+  neppyGetAutonomySettings,
+  neppyUpdateAgentPaths,
+  neppyUpdateAutonomySettings,
 } from '../../../utils/tauriCommands';
 import Button from '../../ui/Button';
 import { SettingsStatusLine, SettingsTextField } from '../controls';
@@ -83,7 +83,7 @@ const PermissionsPanel = () => {
         return;
       }
       try {
-        const autonomyResp = await openhumanGetAutonomySettings();
+        const autonomyResp = await neppyGetAutonomySettings();
         if (cancelled) return;
         setLevel(autonomyResp.result.level);
         setWorkspaceOnly(autonomyResp.result.workspace_only);
@@ -94,7 +94,7 @@ const PermissionsPanel = () => {
           setError(e instanceof Error ? e.message : t('settings.agentAccess.loadError'));
       }
       try {
-        const pathsResp = await openhumanGetAgentPaths();
+        const pathsResp = await neppyGetAgentPaths();
         if (cancelled) return;
         setAgentPaths(pathsResp.result);
         setActionDirInput(pathsResp.result.action_dir);
@@ -120,7 +120,7 @@ const PermissionsPanel = () => {
     setSavedNote(null);
     setIsSaving(true);
     try {
-      await openhumanUpdateAutonomySettings({
+      await neppyUpdateAutonomySettings({
         level: nextLevel,
         workspace_only: workspaceOnly,
         trusted_roots: trustedRoots,
@@ -169,7 +169,7 @@ const PermissionsPanel = () => {
     setActionDirError(null);
     setActionDirSaved(null);
     try {
-      const resp = await openhumanUpdateAgentPaths({ action_dir: actionDirInput.trim() });
+      const resp = await neppyUpdateAgentPaths({ action_dir: actionDirInput.trim() });
       if (dirSeqRef.current === seq) {
         setAgentPaths(resp.result);
         setActionDirEditing(false);

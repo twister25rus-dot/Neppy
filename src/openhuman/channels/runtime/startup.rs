@@ -235,7 +235,7 @@ pub async fn start_channels(mut config: Config) -> Result<()> {
 
     let provider_runtime_options = provider::ProviderRuntimeOptions {
         auth_profile_override: None,
-        openhuman_dir: config.config_path.parent().map(std::path::PathBuf::from),
+        neppy_dir: config.config_path.parent().map(std::path::PathBuf::from),
         secrets_encrypt: config.secrets.encrypt,
         reasoning_enabled: config.runtime.reasoning_enabled,
     };

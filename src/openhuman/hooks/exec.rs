@@ -290,7 +290,7 @@ pub fn ambient_env(input: &HookInput) -> BTreeMap<String, String> {
         env.insert("CLAUDE_PROJECT_DIR".into(), root.clone());
         env.insert("CURSOR_PROJECT_DIR".into(), root.clone());
     }
-    env.insert("OPENHUMAN_VERSION".into(), input.openhuman_version.clone());
+    env.insert("OPENHUMAN_VERSION".into(), input.neppy_version.clone());
     env.insert("OPENHUMAN_HOOK_EVENT".into(), input.hook_event_name.clone());
     if let Some(session) = &input.session_id {
         env.insert("OPENHUMAN_SESSION_ID".into(), session.clone());

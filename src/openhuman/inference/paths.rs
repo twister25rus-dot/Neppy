@@ -18,7 +18,7 @@ pub(crate) fn config_root_dir(config: &Config) -> PathBuf {
 /// Returns the root directory under which local-AI artifacts (binaries,
 /// model files) are written and resolved.
 ///
-/// Default callers see the shared `~/.openhuman/` root, which avoids
+/// Default callers see the shared `~/.neppy/` root, which avoids
 /// duplicating multi-GB model files across users on a single machine.
 ///
 /// When `OPENHUMAN_WORKSPACE` is **explicitly** set (test/dev parallel
@@ -30,8 +30,7 @@ fn shared_root_dir(config: &Config) -> PathBuf {
     if std::env::var_os("OPENHUMAN_WORKSPACE").is_some() {
         return config_root_dir(config);
     }
-    crate::openhuman::config::default_root_openhuman_dir()
-        .unwrap_or_else(|_| config_root_dir(config))
+    crate::openhuman::config::default_root_neppy_dir().unwrap_or_else(|_| config_root_dir(config))
 }
 
 pub(crate) fn workspace_ollama_dir(config: &Config) -> PathBuf {
@@ -135,7 +134,7 @@ pub(crate) fn resolve_piper_binary() -> Option<PathBuf> {
     // workspace install path is the canonical drop-zone populated by
     // `install_piper::install_piper`; checking it first means a user who just
     // clicked Install in the VoicePanel doesn't also have to export PIPER_BIN.
-    if let Ok(shared) = crate::openhuman::config::default_root_openhuman_dir() {
+    if let Ok(shared) = crate::openhuman::config::default_root_neppy_dir() {
         let root = shared.join("bin").join("piper");
         let bin_name = if cfg!(windows) { "piper.exe" } else { "piper" };
         for candidate in [
@@ -391,7 +390,7 @@ mod tests {
     fn resolve_tts_voice_path_appends_onnx_for_voice_ids() {
         // The installer drop-zone (`bin/piper/voices/<id>.onnx`) is probed
         // FIRST by `resolve_tts_voice_path`, and lives under the shared
-        // root (`~/.openhuman/`) — not the temp config. If a sibling
+        // root (`~/.neppy/`) — not the temp config. If a sibling
         // install_piper test runs in parallel with the default voice id
         // and leaves a stub there, this test sees that file and the
         // assertion fails. Serialise via the shared install guard and
@@ -494,7 +493,7 @@ mod tests {
     }
 
     /// Serialise with sibling install_piper tests that
-    /// write into the same shared `~/.openhuman/bin/...` directory. Uses
+    /// write into the same shared `~/.neppy/bin/...` directory. Uses
     /// the existing module-wide guard so all readers/writers go through
     /// one critical section.
     fn shared_install_lock() -> std::sync::MutexGuard<'static, ()> {

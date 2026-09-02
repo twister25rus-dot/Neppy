@@ -31,7 +31,7 @@ const EXCLUDED_SKILL_DIRS: &[&str] = &[
 ///
 /// Creates `<workspace>/skills/` and a placeholder `README.md` so the folder
 /// is visible to the user. New-style skills should live under
-/// `<workspace>/.openhuman/skills/` instead, but this directory is kept for
+/// `<workspace>/.neppy/skills/` instead, but this directory is kept for
 /// backward compatibility.
 pub fn init_workflows_dir(workspace_dir: &Path) -> Result<(), String> {
     let skills_dir = workspace_dir.join("skills");
@@ -55,7 +55,7 @@ pub fn init_workflows_dir(workspace_dir: &Path) -> Result<(), String> {
 /// Backwards-compatible shim for callers that only have a workspace path.
 ///
 /// Delegates to [`discover_workflows`] with the current user's home directory
-/// so user-scope skills (`~/.openhuman/skills/`, `~/.agents/skills/`) are
+/// so user-scope skills (`~/.neppy/skills/`, `~/.agents/skills/`) are
 /// surfaced for existing production callers (`agent::harness::session::builder`,
 /// `channels::runtime::startup`). Previously this shim passed `None` for the
 /// home directory, which silently dropped user-installed skills from the
@@ -95,7 +95,7 @@ pub fn load_workflow_metadata_for_profile(
 /// Discover skills from every supported location.
 ///
 /// * `home_dir` — user home (typically `dirs::home_dir()`), scanned for
-///   `~/.openhuman/skills/` and `~/.agents/skills/`.
+///   `~/.neppy/skills/` and `~/.agents/skills/`.
 /// * `workspace_dir` — current workspace, scanned for project-scope paths.
 /// * `trusted` — whether the caller has verified the project trust marker.
 ///   Project-scope skills are silently skipped when `false`.
@@ -131,16 +131,16 @@ pub fn discover_workflows_with_profile(
 
 /// Whether the workspace has opted into loading project-scope skills.
 ///
-/// Looks for `<workspace>/.openhuman/trust`. The marker file's contents are
+/// Looks for `<workspace>/.neppy/trust`. The marker file's contents are
 /// ignored — presence is sufficient.
 pub fn is_workspace_trusted(workspace_dir: &Path) -> bool {
-    workspace_dir.join(".openhuman").join(TRUST_MARKER).exists()
+    workspace_dir.join(".neppy").join(TRUST_MARKER).exists()
 }
 
 /// Which on-disk root category a bundle was discovered under.
 ///
-/// `Workflow` roots (`.openhuman/workflows/`) hold task *automations* authored
-/// via "New workflow". `Skill` roots (`.openhuman/skills/`, `.agents/skills/`,
+/// `Workflow` roots (`.neppy/workflows/`) hold task *automations* authored
+/// via "New workflow". `Skill` roots (`.neppy/skills/`, `.agents/skills/`,
 /// and the legacy `<workspace>/skills/`) hold capability *skills*. Both are the
 /// same on-disk primitive (SKILL.md / WORKFLOW.md bundles) and the agent
 /// harness loads both — but the Automations UI lists only `Workflow`-root
@@ -180,7 +180,7 @@ pub(crate) fn discover_workflows_inner(
 ///
 /// Note: bundles authored *before* the skills→workflows rename live under the
 /// `skills/` roots and will therefore not appear in this automations-only view;
-/// new automations created via "New workflow" land in `~/.openhuman/workflows/`.
+/// new automations created via "New workflow" land in `~/.neppy/workflows/`.
 pub fn discover_automations(
     home_dir: Option<&Path>,
     workspace_dir: Option<&Path>,
@@ -300,21 +300,18 @@ fn user_roots(home: &Path) -> Vec<(PathBuf, RootKind)> {
     // skills→workflows rename. Order matters: `workflows/` is scanned last so a
     // same-named entry there wins over a legacy `skills/` one.
     vec![
-        (home.join(".openhuman").join("skills"), RootKind::Skill),
+        (home.join(".neppy").join("skills"), RootKind::Skill),
         (home.join(".agents").join("skills"), RootKind::Skill),
-        (
-            home.join(".openhuman").join("workflows"),
-            RootKind::Workflow,
-        ),
+        (home.join(".neppy").join("workflows"), RootKind::Workflow),
     ]
 }
 
 fn project_roots(workspace: &Path) -> Vec<(PathBuf, RootKind)> {
     vec![
-        (workspace.join(".openhuman").join("skills"), RootKind::Skill),
+        (workspace.join(".neppy").join("skills"), RootKind::Skill),
         (workspace.join(".agents").join("skills"), RootKind::Skill),
         (
-            workspace.join(".openhuman").join("workflows"),
+            workspace.join(".neppy").join("workflows"),
             RootKind::Workflow,
         ),
     ]
@@ -485,7 +482,7 @@ fn load_skill_dir(dir: &Path, dir_name: &str, scope: WorkflowScope) -> Option<Wo
 /// `dir_name` slug — the same identifiers surfaced in the UI summary. The
 /// skill is resolved by running the standard
 /// discovery pipeline (`dirs::home_dir()` + `workspace_dir`, honoring the
-/// `.openhuman/trust` marker) and locating the matching entry; this keeps the
+/// `.neppy/trust` marker) and locating the matching entry; this keeps the
 /// read scoped to legitimately installed skills and reuses all the symlink /
 /// traversal hardening already baked into discovery.
 ///
@@ -731,15 +728,15 @@ mod include_skills_tests {
     fn automations_excludes_skill_roots_but_full_discover_includes_them() {
         let home = tempfile::TempDir::new().unwrap();
         let home_path = home.path();
-        // A registry-style install lands under `~/.openhuman/skills/`.
+        // A registry-style install lands under `~/.neppy/skills/`.
         seed_bundle(
-            &home_path.join(".openhuman").join("skills"),
+            &home_path.join(".neppy").join("skills"),
             "installed-skill",
             "SKILL.md",
         );
-        // A "New workflow" automation lands under `~/.openhuman/workflows/`.
+        // A "New workflow" automation lands under `~/.neppy/workflows/`.
         seed_bundle(
-            &home_path.join(".openhuman").join("workflows"),
+            &home_path.join(".neppy").join("workflows"),
             "my-automation",
             "WORKFLOW.md",
         );
@@ -791,10 +788,7 @@ mod profile_scope_tests {
     fn profile_local_skills_scoped_to_their_owner() {
         let home = tempfile::TempDir::new().unwrap();
         // A global user-scope skill everyone sees.
-        seed_bundle(
-            &home.path().join(".openhuman").join("skills"),
-            "global-skill",
-        );
+        seed_bundle(&home.path().join(".neppy").join("skills"), "global-skill");
 
         // Two distinct profile roots (alice / bob), each with a private skill.
         let alice_root = tempfile::TempDir::new().unwrap();
@@ -842,10 +836,7 @@ mod profile_scope_tests {
     #[test]
     fn profile_local_wins_same_name_collision() {
         let home = tempfile::TempDir::new().unwrap();
-        seed_bundle(
-            &home.path().join(".openhuman").join("skills"),
-            "shared-name",
-        );
+        seed_bundle(&home.path().join(".neppy").join("skills"), "shared-name");
         let profile_root = tempfile::TempDir::new().unwrap();
         seed_bundle(profile_root.path(), "shared-name");
 
@@ -884,7 +875,7 @@ mod profile_scope_tests {
     fn profile_local_wins_same_runnable_id_with_different_display_name() {
         let home = tempfile::TempDir::new().unwrap();
         seed_bundle_with_name(
-            &home.path().join(".openhuman").join("skills"),
+            &home.path().join(".neppy").join("skills"),
             "shared-slug",
             "Global display name",
         );
@@ -1010,7 +1001,7 @@ mod profile_scope_tests {
     #[test]
     fn none_profile_root_matches_plain_discovery() {
         let home = tempfile::TempDir::new().unwrap();
-        seed_bundle(&home.path().join(".openhuman").join("skills"), "a-skill");
+        seed_bundle(&home.path().join(".neppy").join("skills"), "a-skill");
         let with_none = discover_workflows_with_profile(Some(home.path()), None, None, false);
         let plain = discover_workflows(Some(home.path()), None, false);
         let names: Vec<&str> = with_none.iter().map(|w| w.name.as_str()).collect();

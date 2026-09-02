@@ -1,7 +1,7 @@
 //! Tauri shell side of file-based logging.
 //!
 //! Resolves the Neppy data directory the same way the core does
-//! (`~/.openhuman` or `OPENHUMAN_WORKSPACE` override) and hands it to
+//! (`~/.neppy` or `OPENHUMAN_WORKSPACE` override) and hands it to
 //! [`openhuman_core::core::logging::init_for_embedded`], which installs a
 //! daily-rotated file appender so packaged GUI builds — where stderr is
 //! invisible — still produce a log users can share for support.
@@ -31,9 +31,9 @@ pub fn init() {
 /// own resolution so log files sit next to `active_user.toml`, the per-user
 /// `users/` tree, and the CEF caches a support engineer would also need.
 ///
-/// If `default_root_openhuman_dir` fails (very unusual — it requires
+/// If `default_root_neppy_dir` fails (very unusual — it requires
 /// `dirs::home_dir` to return `None`), falls back to `<temp>/openhuman`
-/// rather than a relative `.openhuman` whose final location depends on the
+/// rather than a relative `.neppy` whose final location depends on the
 /// shell's CWD at launch time.
 pub(crate) fn resolve_data_dir() -> PathBuf {
     if let Ok(workspace) = std::env::var("OPENHUMAN_WORKSPACE") {
@@ -41,9 +41,9 @@ pub(crate) fn resolve_data_dir() -> PathBuf {
             return PathBuf::from(workspace);
         }
     }
-    openhuman_core::openhuman::config::default_root_openhuman_dir().unwrap_or_else(|err| {
+    openhuman_core::openhuman::config::default_root_neppy_dir().unwrap_or_else(|err| {
         eprintln!(
-            "[file_logging] default_root_openhuman_dir failed ({err}); falling back to temp dir"
+            "[file_logging] default_root_neppy_dir failed ({err}); falling back to temp dir"
         );
         std::env::temp_dir().join("openhuman")
     })
@@ -77,7 +77,7 @@ mod tests {
         let prior = std::env::var("OPENHUMAN_WORKSPACE").ok();
         std::env::set_var("OPENHUMAN_WORKSPACE", "");
         // Empty string must NOT short-circuit — fall through to the
-        // default resolver so the user's real `~/.openhuman` is used.
+        // default resolver so the user's real `~/.neppy` is used.
         let dir = resolve_data_dir();
         assert_ne!(dir, PathBuf::from(""));
         assert!(dir.is_absolute(), "expected absolute fallback, got {dir:?}");

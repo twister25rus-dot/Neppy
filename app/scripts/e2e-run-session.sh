@@ -220,8 +220,8 @@ esac
 # Mock URL must reach the core sidecar — XCUITest doesn't inherit env,
 # and CEF child processes won't either. Pinning via config.toml works
 # on every platform. The runner always sets OPENHUMAN_WORKSPACE above;
-# Config::load_or_init gives that path precedence over $HOME/.openhuman.
-E2E_CONFIG_DIR="${OPENHUMAN_WORKSPACE:-$HOME/.openhuman}"
+# Config::load_or_init gives that path precedence over $HOME/.neppy.
+E2E_CONFIG_DIR="${OPENHUMAN_WORKSPACE:-$HOME/.neppy}"
 E2E_CONFIG_FILE="$E2E_CONFIG_DIR/config.toml"
 mkdir -p "$E2E_CONFIG_DIR"
 if [ -f "$E2E_CONFIG_FILE" ]; then

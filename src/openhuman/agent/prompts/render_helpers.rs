@@ -526,7 +526,7 @@ pub fn sync_workspace_file(workspace_dir: &Path, filename: &str) {
         return;
     }
 
-    // A real workspace is always an absolute path (`~/.openhuman/users/<id>/
+    // A real workspace is always an absolute path (`~/.neppy/users/<id>/
     // workspace`, or a temp dir under test). A relative one means the caller
     // never had a workspace to begin with — overwhelmingly `Path::new(".")`
     // from the ~20 prompt-test fixtures — and joining onto it seeds SOUL.md,

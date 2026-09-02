@@ -4,14 +4,14 @@ import { useT } from '../../../lib/i18n/I18nContext';
 import {
   type AutonomyLevel,
   isTauri,
-  openhumanGetAgentSettings,
-  openhumanGetAutonomySettings,
-  openhumanUpdateAgentSettings,
-  openhumanUpdateAutonomySettings,
+  neppyGetAgentSettings,
+  neppyGetAutonomySettings,
+  neppyUpdateAgentSettings,
+  neppyUpdateAutonomySettings,
   type TrustedAccess,
   type TrustedRoot,
 } from '../../../utils/tauriCommands';
-import { openhumanCronList, openhumanCronUpdate } from '../../../utils/tauriCommands/cron';
+import { neppyCronList, neppyCronUpdate } from '../../../utils/tauriCommands/cron';
 import Button from '../../ui/Button';
 import {
   SettingsBadge,
@@ -97,7 +97,7 @@ const AgentAccessPanel = () => {
         return;
       }
       try {
-        const autonomyResp = await openhumanGetAutonomySettings();
+        const autonomyResp = await neppyGetAutonomySettings();
         if (cancelled) return;
         setLevel(autonomyResp.result.level);
         setWorkspaceOnly(autonomyResp.result.workspace_only);
@@ -113,7 +113,7 @@ const AgentAccessPanel = () => {
         // Resolve the seeded tinyplace_autopilot cron job by name so the toggle
         // below can flip its enabled flag. Non-fatal: the section just stays
         // hidden if the job isn't present or the list call fails.
-        const cronResp = await openhumanCronList();
+        const cronResp = await neppyCronList();
         if (cancelled) return;
         const autopilot = cronResp.result.find(j => j.name === 'tinyplace_autopilot');
         if (autopilot) {
@@ -124,7 +124,7 @@ const AgentAccessPanel = () => {
         // Non-fatal — bounty-worker toggle stays hidden.
       }
       try {
-        const agentResp = await openhumanGetAgentSettings();
+        const agentResp = await neppyGetAgentSettings();
         if (cancelled) return;
         setTimeoutInput(String(agentResp.result.agent_timeout_secs));
         setSavedTimeoutSecs(agentResp.result.agent_timeout_secs);
@@ -179,7 +179,7 @@ const AgentAccessPanel = () => {
     setSavedNote(null);
     setIsSaving(true);
     try {
-      await openhumanUpdateAutonomySettings({
+      await neppyUpdateAutonomySettings({
         level,
         workspace_only: next.workspaceOnly,
         trusted_roots: next.trustedRoots,
@@ -240,7 +240,7 @@ const AgentAccessPanel = () => {
     setError(null);
     setSavedNote(null);
     try {
-      await openhumanCronUpdate(autopilotJobId, { enabled: next });
+      await neppyCronUpdate(autopilotJobId, { enabled: next });
       if (autopilotSeqRef.current === seq) {
         setSavedNote(t('settings.agentAccess.saved'));
       }
@@ -307,7 +307,7 @@ const AgentAccessPanel = () => {
     setTimeoutError(null);
     setTimeoutSavedNote(null);
     try {
-      await openhumanUpdateAgentSettings({ agent_timeout_secs: parsed });
+      await neppyUpdateAgentSettings({ agent_timeout_secs: parsed });
       if (timeoutSeqRef.current === seq) {
         setSavedTimeoutSecs(parsed);
         // Only snap the field value back if the user hasn't typed further.

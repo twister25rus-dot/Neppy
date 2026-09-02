@@ -329,7 +329,7 @@ mod tests {
     /// `sync_workspace_file`, which **writes** `SOUL.md` / `IDENTITY.md` /
     /// `HEARTBEAT.md` into `workspace_dir`. Composing against
     /// `Config::default()` would scribble into the developer's real
-    /// `~/.openhuman` workspace.
+    /// `~/.neppy` workspace.
     fn config_in(dir: &std::path::Path) -> Arc<Config> {
         let mut config = Config::default();
         config.workspace_dir = dir.to_path_buf();

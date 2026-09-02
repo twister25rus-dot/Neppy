@@ -325,7 +325,7 @@ fn skips_sentry_report_for_transient_upstream_statuses() {
 
 #[test]
 fn backend_error_code_owned_gates_managed_errors_except_malformed_bad_request() {
-    use crate::openhuman::inference::provider::openhuman_backend_model::PROVIDER_LABEL;
+    use crate::openhuman::inference::provider::neppy_backend_model::PROVIDER_LABEL;
 
     // F2/F4: backend-owned / expected-user-state errorCodes must NOT page the
     // provider HTTP layer.
@@ -506,7 +506,7 @@ mod provider_config_rejection_suppression {
     }
 
     #[test]
-    fn openhuman_backend_same_body_is_not_suppressed() {
+    fn neppy_backend_same_body_is_not_suppressed() {
         // Inverted polarity: for tier-leak / temperature / litellm /
         // OpenRouter-style phrases, the Neppy backend never
         // emits them, so the same body from our OWN backend would
@@ -515,18 +515,18 @@ mod provider_config_rejection_suppression {
         // rule.)
         assert!(!is_provider_config_rejection_http(
             reqwest::StatusCode::BAD_REQUEST,
-            openhuman_backend_model::PROVIDER_LABEL,
+            neppy_backend_model::PROVIDER_LABEL,
             TIER_LEAK_BODY,
         ));
         assert!(!is_provider_config_rejection_http(
             reqwest::StatusCode::BAD_REQUEST,
-            openhuman_backend_model::PROVIDER_LABEL,
+            neppy_backend_model::PROVIDER_LABEL,
             TEMP_BODY,
         ));
     }
 
     #[test]
-    fn openhuman_backend_openai_compatible_unknown_model_is_suppressed() {
+    fn neppy_backend_openai_compatible_unknown_model_is_suppressed() {
         // TAURI-RUST-2Z1 — the Neppy backend DOES emit the
         // OpenAI-compatible "Model 'X' is not available. Use GET
         // /openai/v1/models …" wire body for user-configured unknown
@@ -545,7 +545,7 @@ mod provider_config_rejection_suppression {
             assert!(
                 is_provider_config_rejection_http(
                     reqwest::StatusCode::BAD_REQUEST,
-                    openhuman_backend_model::PROVIDER_LABEL,
+                    neppy_backend_model::PROVIDER_LABEL,
                     body,
                 ),
                 "TAURI-RUST-2Z1 body must be suppressed for openhuman backend: {body:?}"
@@ -605,7 +605,7 @@ mod provider_config_rejection_suppression {
     }
 
     #[test]
-    fn openhuman_backend_403_subscription_phrase_is_not_suppressed() {
+    fn neppy_backend_403_subscription_phrase_is_not_suppressed() {
         // Polarity guard: if our own backend somehow returned a 403 with
         // the subscription phrase, that would be an unexpected regression
         // and must still reach Sentry. The phrase does not appear in any
@@ -614,7 +614,7 @@ mod provider_config_rejection_suppression {
         assert!(
             !is_provider_config_rejection_http(
                 reqwest::StatusCode::FORBIDDEN,
-                openhuman_backend_model::PROVIDER_LABEL,
+                neppy_backend_model::PROVIDER_LABEL,
                 body,
             ),
             "backend 403 subscription phrase must NOT be suppressed (polarity guard)"
@@ -1128,9 +1128,9 @@ fn parse_models_response_handles_non_object_body() {
 /// Sentry). Getting this wrong in either direction is a regression:
 /// over-matching silences real misconfig; under-matching is TAURI-RUST-N.
 #[test]
-fn is_backend_auth_failure_only_matches_openhuman_backend_401_403() {
+fn is_backend_auth_failure_only_matches_neppy_backend_401_403() {
     use reqwest::StatusCode;
-    let backend = crate::openhuman::inference::provider::openhuman_backend_model::PROVIDER_LABEL;
+    let backend = crate::openhuman::inference::provider::neppy_backend_model::PROVIDER_LABEL;
 
     assert!(is_backend_auth_failure(backend, StatusCode::UNAUTHORIZED));
     assert!(is_backend_auth_failure(backend, StatusCode::FORBIDDEN));
@@ -1208,9 +1208,9 @@ fn byo_provider_auth_failure_demotes_authentication_error_bodies() {
 /// a backend 401 with an auth-error body must NOT be swallowed here, or the
 /// session-expiry reauth path (and its existing test) would silently break.
 #[test]
-fn byo_provider_auth_failure_excludes_openhuman_backend() {
+fn byo_provider_auth_failure_excludes_neppy_backend() {
     use reqwest::StatusCode;
-    let backend = crate::openhuman::inference::provider::openhuman_backend_model::PROVIDER_LABEL;
+    let backend = crate::openhuman::inference::provider::neppy_backend_model::PROVIDER_LABEL;
     let body = r#"{"error":{"type":"authentication_error"}}"#;
     assert!(!is_byo_provider_auth_failure_http(
         backend,
@@ -1350,7 +1350,7 @@ async fn publish_backend_session_expired_emits_sanitized_session_expired() {
     );
     publish_backend_session_expired(
         "chat_completions",
-        crate::openhuman::inference::provider::openhuman_backend_model::PROVIDER_LABEL,
+        crate::openhuman::inference::provider::neppy_backend_model::PROVIDER_LABEL,
         reqwest::StatusCode::UNAUTHORIZED,
         &msg,
     );
@@ -1359,7 +1359,7 @@ async fn publish_backend_session_expired_emits_sanitized_session_expired() {
     loop {
         match rx.try_recv() {
             Ok(DomainEvent::SessionExpired { source, reason }) => {
-                if source == "llm_provider.openhuman_backend" && reason.contains("TEST_MARKER_A") {
+                if source == "llm_provider.neppy_backend" && reason.contains("TEST_MARKER_A") {
                     reason_seen = Some(reason);
                     break;
                 }
@@ -1370,7 +1370,7 @@ async fn publish_backend_session_expired_emits_sanitized_session_expired() {
         }
     }
     let reason = reason_seen.expect(
-        "publish_backend_session_expired must emit SessionExpired(source=llm_provider.openhuman_backend) carrying TEST_MARKER_A",
+        "publish_backend_session_expired must emit SessionExpired(source=llm_provider.neppy_backend) carrying TEST_MARKER_A",
     );
     assert!(
         reason.contains("[REDACTED]"),

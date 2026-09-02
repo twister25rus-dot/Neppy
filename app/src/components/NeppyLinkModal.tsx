@@ -128,7 +128,7 @@ const MessagingSetupBridge = ({ onClose }: { onClose: () => void }) => {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
         <div className="rounded-2xl bg-surface px-6 py-4 text-sm text-content-secondary shadow-xl">
-          {t('app.openhumanLink.loadingChannelSetup')}
+          {t('app.neppyLink.loadingChannelSetup')}
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ const MessagingSetupBridge = ({ onClose }: { onClose: () => void }) => {
         <div
           className="rounded-2xl bg-surface p-6 text-sm text-content-secondary shadow-xl max-w-sm"
           onClick={e => e.stopPropagation()}>
-          <p>{t('app.openhumanLink.telegramUnavailable')}</p>
+          <p>{t('app.neppyLink.telegramUnavailable')}</p>
           <div className="mt-3 flex justify-end">
             <Button variant="secondary" size="sm" onClick={onClose}>
               {t('common.close')}
@@ -159,17 +159,17 @@ const MessagingSetupBridge = ({ onClose }: { onClose: () => void }) => {
 function titleForPath(path: AllowedPath, t: (k: string) => string): string {
   switch (path) {
     case 'settings/notifications':
-      return t('app.openhumanLink.title.notifications');
+      return t('app.neppyLink.title.notifications');
     case 'settings/billing':
-      return t('app.openhumanLink.title.billing');
+      return t('app.neppyLink.title.billing');
     case 'settings/messaging':
-      return t('app.openhumanLink.title.messaging');
+      return t('app.neppyLink.title.messaging');
     case 'community/discord':
-      return t('app.openhumanLink.title.discord');
+      return t('app.neppyLink.title.discord');
     case 'community/discord-report':
-      return t('app.openhumanLink.title.discordReport');
+      return t('app.neppyLink.title.discordReport');
     case 'accounts/setup':
-      return t('app.openhumanLink.title.accounts');
+      return t('app.neppyLink.title.accounts');
   }
 }
 
@@ -223,7 +223,7 @@ const NotificationsBody = ({ close }: { close: () => void }) => {
     try {
       if (!isTauri()) {
         setStatus('error');
-        setError(t('app.openhumanLink.notifications.desktopOnly'));
+        setError(t('app.neppyLink.notifications.desktopOnly'));
         return;
       }
 
@@ -232,17 +232,17 @@ const NotificationsBody = ({ close }: { close: () => void }) => {
         const nextState = await getNotificationPermissionState({ requestIfNeeded: false });
         setPermissionState(nextState);
         setStatus('error');
-        setError(t('app.openhumanLink.notifications.permissionOff'));
+        setError(t('app.neppyLink.notifications.permissionOff'));
         return;
       }
       const sendResult = await showNativeNotification({
-        title: t('app.openhumanLink.notifications.welcomeTitle'),
-        body: t('app.openhumanLink.notifications.welcomeBody'),
+        title: t('app.neppyLink.notifications.welcomeTitle'),
+        body: t('app.neppyLink.notifications.welcomeBody'),
         tag: 'welcome-notification-test',
       });
       if (!sendResult.delivered) {
         setStatus('error');
-        setError(sendResult.error ?? t('app.openhumanLink.notifications.triggerFailed'));
+        setError(sendResult.error ?? t('app.neppyLink.notifications.triggerFailed'));
         return;
       }
       setPermissionState('granted');
@@ -255,36 +255,36 @@ const NotificationsBody = ({ close }: { close: () => void }) => {
 
   return (
     <div className="space-y-4 text-sm text-content-secondary">
-      <p>{t('app.openhumanLink.notifications.intro')}</p>
+      <p>{t('app.neppyLink.notifications.intro')}</p>
       {permissionState === 'denied' && (
         <div className="rounded-xl border border-coral-200 bg-coral-50 dark:bg-coral-500/15 p-3 text-xs text-coral-700 dark:text-coral-300">
-          {t('app.openhumanLink.notifications.blocked')}
+          {t('app.neppyLink.notifications.blocked')}
           <br />
-          {t('app.openhumanLink.notifications.blockedStep1')}
+          {t('app.neppyLink.notifications.blockedStep1')}
           <br />
-          {t('app.openhumanLink.notifications.blockedStep2')}
+          {t('app.neppyLink.notifications.blockedStep2')}
           <br />
-          {t('app.openhumanLink.notifications.blockedStep3')}
+          {t('app.neppyLink.notifications.blockedStep3')}
         </div>
       )}
       {(permissionState === 'prompt' || permissionState === 'unknown') && (
         <div className="rounded-xl border border-line bg-surface-muted p-3 text-xs text-content-secondary">
-          {t('app.openhumanLink.notifications.promptHint')}
+          {t('app.neppyLink.notifications.promptHint')}
         </div>
       )}
       <Button onClick={() => void handleAllow()} disabled={status === 'sending'} className="w-full">
         {status === 'sending'
-          ? t('app.openhumanLink.notifications.asking')
+          ? t('app.neppyLink.notifications.asking')
           : status === 'error'
-            ? t('app.openhumanLink.notifications.retry')
-            : t('app.openhumanLink.notifications.send')}
+            ? t('app.neppyLink.notifications.retry')
+            : t('app.neppyLink.notifications.send')}
       </Button>
       {status === 'sent' && (
-        <p className="text-xs text-sage-700">{t('app.openhumanLink.notifications.sent')}</p>
+        <p className="text-xs text-sage-700">{t('app.neppyLink.notifications.sent')}</p>
       )}
       {status === 'error' && (
         <p className="text-xs text-coral-600">
-          {t('app.openhumanLink.notifications.sendFailed').replace('{error}', error ?? '')}
+          {t('app.neppyLink.notifications.sendFailed').replace('{error}', error ?? '')}
         </p>
       )}
       <DoneFooter close={close} />
@@ -300,13 +300,13 @@ const BillingBody = ({ close }: { close: () => void }) => {
     <div className="space-y-4 text-sm text-content-secondary">
       <div className="rounded-xl border border-line bg-surface-muted p-4">
         <p className="text-xs uppercase tracking-wide text-content-muted">
-          {t('app.openhumanLink.billing.trialCredit')}
+          {t('app.neppyLink.billing.trialCredit')}
         </p>
         <p className="mt-1 text-2xl font-semibold text-content">
           {t('onboarding.runtimeChoice.cloud.creditHighlight')}
         </p>
         <p className="mt-1 text-xs text-content-muted">
-          {t('app.openhumanLink.billing.trialDesc')}
+          {t('app.neppyLink.billing.trialDesc')}
         </p>
       </div>
       <Button
@@ -314,9 +314,9 @@ const BillingBody = ({ close }: { close: () => void }) => {
           void openUrl(BILLING_DASHBOARD_URL).catch(() => {});
         }}
         className="w-full">
-        {t('app.openhumanLink.billing.openDashboard')}
+        {t('app.neppyLink.billing.openDashboard')}
       </Button>
-      <DoneFooter close={close} skipLabel={t('app.openhumanLink.billing.stayOnTrial')} />
+      <DoneFooter close={close} skipLabel={t('app.neppyLink.billing.stayOnTrial')} />
     </div>
   );
 };
@@ -327,23 +327,23 @@ const DiscordBody = ({ close }: { close: () => void }) => {
   const { t } = useT();
   return (
     <div className="space-y-4 text-sm text-content-secondary">
-      <p>{t('app.openhumanLink.discord.intro')}</p>
+      <p>{t('app.neppyLink.discord.intro')}</p>
       <ul className="space-y-1.5 text-xs text-content-secondary pl-1">
         <li className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-primary-400 shrink-0" />
-          {t('app.openhumanLink.discord.perk1')}
+          {t('app.neppyLink.discord.perk1')}
         </li>
         <li className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-primary-400 shrink-0" />
-          {t('app.openhumanLink.discord.perk2')}
+          {t('app.neppyLink.discord.perk2')}
         </li>
         <li className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-primary-400 shrink-0" />
-          {t('app.openhumanLink.discord.perk3')}
+          {t('app.neppyLink.discord.perk3')}
         </li>
         <li className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-primary-400 shrink-0" />
-          {t('app.openhumanLink.discord.perk4')}
+          {t('app.neppyLink.discord.perk4')}
         </li>
       </ul>
       <Button
@@ -355,9 +355,9 @@ const DiscordBody = ({ close }: { close: () => void }) => {
           }
         }}
         className="w-full">
-        {t('app.openhumanLink.discord.openInvite')}
+        {t('app.neppyLink.discord.openInvite')}
       </Button>
-      <DoneFooter close={close} skipLabel={t('app.openhumanLink.maybeLater')} />
+      <DoneFooter close={close} skipLabel={t('app.neppyLink.maybeLater')} />
     </div>
   );
 };
@@ -375,7 +375,7 @@ const DiscordReportBody = ({ close }: { close: () => void }) => {
 
   return (
     <div className="space-y-4 text-sm text-content-secondary">
-      <p>{t('app.openhumanLink.discordReport.intro')}</p>
+      <p>{t('app.neppyLink.discordReport.intro')}</p>
       <Button
         onClick={async () => {
           try {
@@ -385,7 +385,7 @@ const DiscordReportBody = ({ close }: { close: () => void }) => {
           }
         }}
         className="w-full">
-        {t('app.openhumanLink.discordReport.openDiscord')}
+        {t('app.neppyLink.discordReport.openDiscord')}
       </Button>
     </div>
   );
@@ -428,17 +428,17 @@ function makeAccountId(): string {
 export function statusDisplay(status: AccountStatus): { labelKey: string; dotClass: string } {
   switch (status) {
     case 'open':
-      return { labelKey: 'app.openhumanLink.status.connected', dotClass: 'bg-emerald-500' };
+      return { labelKey: 'app.neppyLink.status.connected', dotClass: 'bg-emerald-500' };
     case 'loading':
-      return { labelKey: 'app.openhumanLink.status.loading', dotClass: 'bg-amber-400' };
+      return { labelKey: 'app.neppyLink.status.loading', dotClass: 'bg-amber-400' };
     case 'pending':
-      return { labelKey: 'app.openhumanLink.status.needsSignIn', dotClass: 'bg-amber-400' };
+      return { labelKey: 'app.neppyLink.status.needsSignIn', dotClass: 'bg-amber-400' };
     case 'timeout':
-      return { labelKey: 'app.openhumanLink.status.timedOut', dotClass: 'bg-red-400' };
+      return { labelKey: 'app.neppyLink.status.timedOut', dotClass: 'bg-red-400' };
     case 'error':
-      return { labelKey: 'app.openhumanLink.status.error', dotClass: 'bg-red-400' };
+      return { labelKey: 'app.neppyLink.status.error', dotClass: 'bg-red-400' };
     case 'closed':
-      return { labelKey: 'app.openhumanLink.status.closed', dotClass: 'bg-stone-300' };
+      return { labelKey: 'app.neppyLink.status.closed', dotClass: 'bg-stone-300' };
   }
 }
 
@@ -506,12 +506,12 @@ const AccountsSetupBody = ({ close }: { close: () => void }) => {
   // Dynamic CTA based on what's been toggled on
   const firstNewLabel = [...newlyAdded.values()][0];
   const doneLabel = firstNewLabel
-    ? t('app.openhumanLink.accounts.continueWith').replace('{label}', firstNewLabel)
-    : t('app.openhumanLink.accounts.done');
+    ? t('app.neppyLink.accounts.continueWith').replace('{label}', firstNewLabel)
+    : t('app.neppyLink.accounts.done');
 
   return (
     <div className="space-y-4 text-sm text-content-secondary">
-      <p>{t('app.openhumanLink.accounts.intro')}</p>
+      <p>{t('app.neppyLink.accounts.intro')}</p>
       <div className="space-y-2">
         {providerDescriptors.map(p => {
           const acct = accountByProvider.get(p.id);
@@ -556,7 +556,7 @@ const AccountsSetupBody = ({ close }: { close: () => void }) => {
           );
         })}
       </div>
-      <p className="text-xs text-content-faint">{t('app.openhumanLink.accounts.webviewNote')}</p>
+      <p className="text-xs text-content-faint">{t('app.neppyLink.accounts.webviewNote')}</p>
       <DoneFooter close={close} onDone={handleDone} doneLabel={doneLabel} />
     </div>
   );
@@ -576,8 +576,8 @@ const DoneFooter = ({
   skipLabel?: string;
 }) => {
   const { t } = useT();
-  const resolvedDone = doneLabel ?? t('app.openhumanLink.done');
-  const resolvedSkip = skipLabel ?? t('app.openhumanLink.skipForNow');
+  const resolvedDone = doneLabel ?? t('app.neppyLink.done');
+  const resolvedSkip = skipLabel ?? t('app.neppyLink.skipForNow');
   return (
     <div className="flex items-center justify-between gap-3 pt-1">
       <Button variant="tertiary" size="sm" onClick={close}>

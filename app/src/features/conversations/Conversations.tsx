@@ -114,9 +114,9 @@ import { chatThreadPath } from '../../utils/chatRoutes';
 import { CHAT_ATTACHMENTS_ENABLED } from '../../utils/config';
 import {
   notifyOverlaySttState,
-  openhumanVoiceStatus,
-  openhumanVoiceTranscribeBytes,
-  openhumanVoiceTts,
+  neppyVoiceStatus,
+  neppyVoiceTranscribeBytes,
+  neppyVoiceTts,
 } from '../../utils/tauriCommands';
 import { useChatSurfaceRegistration } from './hooks/useChatSurfaceRegistration';
 import { ThreadList } from './threadList/ThreadList';
@@ -922,7 +922,7 @@ const Conversations = ({
     let cancelled = false;
     void (async () => {
       try {
-        const status = await openhumanVoiceStatus();
+        const status = await neppyVoiceStatus();
         if (cancelled) return;
         if (!status.stt_available) {
           setVoiceStatus(
@@ -1473,7 +1473,7 @@ const Conversations = ({
           ? recentMessages.map(m => `${m.sender}: ${m.content}`).join('\n')
           : undefined;
 
-      const result = await openhumanVoiceTranscribeBytes(audioBytes, extension, context);
+      const result = await neppyVoiceTranscribeBytes(audioBytes, extension, context);
       const transcript = result.text.trim();
 
       if (!transcript) {
@@ -1590,7 +1590,7 @@ const Conversations = ({
 
     void (async () => {
       try {
-        const ttsResult = await openhumanVoiceTts(latestAgentMessage.content);
+        const ttsResult = await neppyVoiceTts(latestAgentMessage.content);
         if (cancelled) return;
 
         const audioSrc = convertFileSrc(ttsResult.output_path);

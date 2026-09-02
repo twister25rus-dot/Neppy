@@ -16,7 +16,7 @@ use crate::rpc::RpcOutcome;
 
 use super::{AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME};
 use crate::openhuman::config::{
-    default_root_openhuman_dir, pre_login_user_dir, read_active_user_id, user_openhuman_dir,
+    default_root_neppy_dir, pre_login_user_dir, read_active_user_id, user_neppy_dir,
     write_active_user_id,
 };
 use tinycortex::memory::conversations;
@@ -49,7 +49,7 @@ const AUTH_ME_STORE_VALIDATION_BUDGET_ENV: &str = "OPENHUMAN_AUTH_ME_STORE_TIMEO
 /// An embedder supplies its own scoped [`Config`] via `CoreBuilder::config`,
 /// so its `auth_store_session` must keep activation and credential state under
 /// that config's path and never touch the operator's global
-/// `~/.openhuman/active_user.toml` / `users/` tree.
+/// `~/.neppy/active_user.toml` / `users/` tree.
 fn is_embedder_host() -> bool {
     crate::core::runtime::context::CoreContext::current_embedder_config().is_some()
 }
@@ -456,9 +456,9 @@ async fn store_session_inner(
     // Determine user_id so we can scope the openhuman directory to this user.
     let resolved_user_id = metadata.get("user_id").cloned();
     if pending_backend_validation && resolved_user_id.is_none() && !is_embedder_host() {
-        if let Ok(root_dir) = default_root_openhuman_dir() {
+        if let Ok(root_dir) = default_root_neppy_dir() {
             if let Some(active_user_id) = read_active_user_id(&root_dir) {
-                let active_user_dir = user_openhuman_dir(&root_dir, &active_user_id);
+                let active_user_dir = user_neppy_dir(&root_dir, &active_user_id);
                 if config.config_path.parent() == Some(active_user_dir.as_path()) {
                     tracing::warn!(
                         domain = "credentials",
@@ -485,7 +485,7 @@ async fn store_session_inner(
 
     // An embedder host (the harness) keeps session state under its own
     // `config_path` scope and must never touch the operator's global
-    // `~/.openhuman/active_user.toml` or `users/` tree. Writing it would change
+    // `~/.neppy/active_user.toml` or `users/` tree. Writing it would change
     // which user the operator's real install believes is active purely by
     // virtue of running a library call — the exact global side effect an
     // ephemeral harness exists to avoid. The scoped auth profile is still
@@ -496,11 +496,11 @@ async fn store_session_inner(
         .as_ref()
         .filter(|_| operator_user_activation)
     {
-        if let Ok(root_dir) = default_root_openhuman_dir() {
+        if let Ok(root_dir) = default_root_neppy_dir() {
             // Snapshot before we overwrite `active_user.toml` so we can tell
             // first activation from signed-out vs an in-place account switch.
             let previous_active = read_active_user_id(&root_dir);
-            let user_dir = user_openhuman_dir(&root_dir, uid);
+            let user_dir = user_neppy_dir(&root_dir, uid);
             if let Err(e) = std::fs::create_dir_all(&user_dir) {
                 tracing::warn!(
                     user_id = %uid,
@@ -824,7 +824,7 @@ pub async fn clear_session(config: &Config) -> Result<RpcOutcome<serde_json::Val
 
     // Clear the active user marker so subsequent config loads fall back to the
     // default (unauthenticated) openhuman directory.
-    if let Ok(root_dir) = default_root_openhuman_dir() {
+    if let Ok(root_dir) = default_root_neppy_dir() {
         if let Err(e) = crate::openhuman::config::clear_active_user(&root_dir) {
             tracing::warn!(error = %e, "failed to clear active_user.toml on logout");
         }

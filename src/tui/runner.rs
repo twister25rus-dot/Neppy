@@ -196,7 +196,7 @@ pub(super) fn extract_thread_id(value: &Value) -> Option<String> {
 }
 
 /// Resolve the Neppy data dir (host of `logs/`), mirroring the shell's
-/// resolution: `OPENHUMAN_WORKSPACE` override, else `~/.openhuman`, else a temp
+/// resolution: `OPENHUMAN_WORKSPACE` override, else `~/.neppy`, else a temp
 /// fallback. No `eprintln!` — the TUI is about to take the terminal.
 fn resolve_data_dir() -> PathBuf {
     if let Ok(workspace) = std::env::var("OPENHUMAN_WORKSPACE") {
@@ -204,7 +204,7 @@ fn resolve_data_dir() -> PathBuf {
             return PathBuf::from(workspace);
         }
     }
-    crate::openhuman::config::default_root_openhuman_dir()
+    crate::openhuman::config::default_root_neppy_dir()
         .unwrap_or_else(|_| std::env::temp_dir().join("openhuman"))
 }
 

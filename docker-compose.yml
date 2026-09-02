@@ -54,12 +54,12 @@ services:
       # it explicit so an inherited shell value cannot override it.
       OPENHUMAN_CORE_HOST: 0.0.0.0
       OPENHUMAN_CORE_PORT: "7788"
-      OPENHUMAN_WORKSPACE: /home/openhuman/.openhuman
-      XDG_CACHE_HOME: /home/openhuman/.openhuman/cache
+      OPENHUMAN_WORKSPACE: /home/openhuman/.neppy
+      XDG_CACHE_HOME: /home/openhuman/.neppy/cache
       TMPDIR: /tmp
       RUST_LOG: ${RUST_LOG:-info}
     volumes:
-      - openhuman-workspace:/home/openhuman/.openhuman
+      - openhuman-workspace:/home/openhuman/.neppy
     mem_limit: ${OPENHUMAN_CORE_MEM_LIMIT:-4g}
     cpus: ${OPENHUMAN_CORE_CPUS:-2.0}
     healthcheck:

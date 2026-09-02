@@ -72,7 +72,7 @@ The router also runs a separate `tokio::sync::broadcast` channel of `WebhookDebu
 
 ## Persistence
 
-`WebhookRouter` serializes its registrations to a JSON file (`PersistedRoutes`) at the `persist_path` passed to `new()` (e.g. `~/.openhuman/webhook_routes.json`). Writes are best-effort and fire-and-forget: offloaded to `spawn_blocking` inside a tokio runtime (inline otherwise), guarded by a monotonic generation counter so stale writes under rapid churn are dropped. Routes are reloaded from this file on startup. Debug logs are **not** persisted — they live only in an in-memory `VecDeque` capped at 250 entries.
+`WebhookRouter` serializes its registrations to a JSON file (`PersistedRoutes`) at the `persist_path` passed to `new()` (e.g. `~/.neppy/webhook_routes.json`). Writes are best-effort and fire-and-forget: offloaded to `spawn_blocking` inside a tokio runtime (inline otherwise), guarded by a monotonic generation counter so stale writes under rapid churn are dropped. Routes are reloaded from this file on startup. Debug logs are **not** persisted — they live only in an in-memory `VecDeque` capped at 250 entries.
 
 ## Dependencies
 

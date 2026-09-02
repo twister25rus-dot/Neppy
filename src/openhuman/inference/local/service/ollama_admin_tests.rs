@@ -1001,8 +1001,8 @@ async fn shutdown_owned_ollama_clears_marker_and_kills_child() {
     let _guard = crate::openhuman::inference::inference_test_guard();
 
     // Redirect the workspace root to a tempdir so the marker file doesn't
-    // touch the real `~/.openhuman/`. Per `paths::shared_root_dir`, when
-    // `default_root_openhuman_dir()` errors, it falls back to
+    // touch the real `~/.neppy/`. Per `paths::shared_root_dir`, when
+    // `default_root_neppy_dir()` errors, it falls back to
     // `config_root_dir(config)` — which is `config.config_path.parent()`.
     let tmp = tempfile::tempdir().unwrap();
     let mut config = Config::default();
@@ -1031,11 +1031,11 @@ async fn shutdown_owned_ollama_clears_marker_and_kills_child() {
     // on a successful spawn) so we can verify shutdown clears it.
     //
     // NOTE: This test only verifies the shutdown path itself; it does not
-    // assert the marker survives the `default_root_openhuman_dir()`
+    // assert the marker survives the `default_root_neppy_dir()`
     // resolution on every CI environment. On hosts where the fallback
     // resolves to a writable temp path, the write is exercised. On hosts
-    // where `default_root_openhuman_dir()` succeeds against the real home
-    // dir, we skip the marker assertion to avoid touching `~/.openhuman/`.
+    // where `default_root_neppy_dir()` succeeds against the real home
+    // dir, we skip the marker assertion to avoid touching `~/.neppy/`.
     let marker_path = crate::openhuman::inference::paths::ollama_spawn_marker_path(&config);
     let marker_writable = marker_path.starts_with(tmp.path());
     if marker_writable {

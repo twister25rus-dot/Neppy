@@ -10,7 +10,7 @@ impl SubagentSessionStore {
 
     pub fn path(&self) -> PathBuf {
         self.workspace_dir
-            .join(".openhuman")
+            .join(".neppy")
             .join("subagent_sessions.json")
     }
 

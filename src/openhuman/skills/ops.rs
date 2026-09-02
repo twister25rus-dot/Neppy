@@ -6,12 +6,12 @@
 //! `assets/`).
 //!
 //! Skills can be installed at two scopes:
-//! - **User**: `~/.openhuman/skills/<name>/` or `~/.agents/skills/<name>/`
-//! - **Project**: `<workspace>/.openhuman/skills/<name>/` or
+//! - **User**: `~/.neppy/skills/<name>/` or `~/.agents/skills/<name>/`
+//! - **Project**: `<workspace>/.neppy/skills/<name>/` or
 //!   `<workspace>/.agents/skills/<name>/`
 //!
 //! Project-scope skills are only loaded when a trust marker
-//! (`<workspace>/.openhuman/trust`) is present. When a skill name collides
+//! (`<workspace>/.neppy/trust`) is present. When a skill name collides
 //! across scopes, the project-scope copy wins.
 //!
 //! Legacy `skill.json` manifests and the flat `<workspace>/skills/<name>/`

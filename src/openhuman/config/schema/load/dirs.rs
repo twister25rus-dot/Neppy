@@ -7,7 +7,7 @@ use tokio::fs;
 
 pub use load_user_state::{
     active_user_marker_path, clear_active_user, pre_login_user_dir, read_active_user_id,
-    read_active_user_id_checked_async, user_openhuman_dir, write_active_user_id, PRE_LOGIN_USER_ID,
+    read_active_user_id_checked_async, user_neppy_dir, write_active_user_id, PRE_LOGIN_USER_ID,
 };
 // Sync variant is consumed only by the `read_active_user_id` wrapper (in
 // load_user_state) and the load_tests module; the async resolver below uses
@@ -40,9 +40,9 @@ pub const MEMORY_SYNC_INTERVAL_SECS_ENV_VAR: &str = "OPENHUMAN_MEMORY_SYNC_INTER
 
 fn default_root_dir_name() -> &'static str {
     if crate::api::config::is_staging_app_env(crate::api::config::app_env_from_env().as_deref()) {
-        ".openhuman-staging"
+        ".neppy-staging"
     } else {
-        ".openhuman"
+        ".neppy"
     }
 }
 
@@ -51,10 +51,10 @@ pub(crate) fn default_root_dir_name_pub() -> &'static str {
     default_root_dir_name()
 }
 
-/// Returns the root openhuman directory (`~/.openhuman`), independent of any
+/// Returns the root openhuman directory (`~/.neppy`), independent of any
 /// per-user scoping.  Used to locate `active_user.toml` and the shared
 /// `users/` tree.
-pub fn default_root_openhuman_dir() -> Result<PathBuf> {
+pub fn default_root_neppy_dir() -> Result<PathBuf> {
     let home = UserDirs::new()
         .map(|u| u.home_dir().to_path_buf())
         .context("Could not find home directory")?;
@@ -62,7 +62,7 @@ pub fn default_root_openhuman_dir() -> Result<PathBuf> {
 }
 
 pub(super) fn default_config_dir() -> Result<PathBuf> {
-    default_root_openhuman_dir()
+    default_root_neppy_dir()
 }
 
 pub(super) fn default_config_and_workspace_dirs() -> Result<(PathBuf, PathBuf)> {
@@ -72,7 +72,7 @@ pub(super) fn default_config_and_workspace_dirs() -> Result<(PathBuf, PathBuf)> 
 
 /// The agent's default **projects home** — a visible, read-write directory
 /// (`~/Neppy/projects`) where the coding agent creates and saves projects,
-/// kept distinct from the hidden internal state dir (`~/.openhuman/workspace`,
+/// kept distinct from the hidden internal state dir (`~/.neppy/workspace`,
 /// which also holds `memory_tree` etc.). Overridable via `OPENHUMAN_PROJECTS_DIR`;
 /// falls back to `./Neppy/projects` only when the home dir can't be resolved.
 pub fn default_projects_dir() -> PathBuf {
@@ -249,9 +249,7 @@ pub(crate) fn resolve_config_dir_for_workspace(workspace_dir: &Path) -> (PathBuf
         );
     }
 
-    let legacy_config_dir = workspace_dir
-        .parent()
-        .map(|parent| parent.join(".openhuman"));
+    let legacy_config_dir = workspace_dir.parent().map(|parent| parent.join(".neppy"));
     if let Some(legacy_dir) = legacy_config_dir {
         if legacy_dir.join("config.toml").exists() {
             return (legacy_dir, workspace_config_dir);
@@ -291,34 +289,33 @@ impl ConfigResolutionSource {
 }
 
 pub(crate) async fn resolve_runtime_config_dirs(
-    default_openhuman_dir: &Path,
+    default_neppy_dir: &Path,
     default_workspace_dir: &Path,
 ) -> Result<(PathBuf, PathBuf, ConfigResolutionSource)> {
-    resolve_runtime_config_dirs_with(default_openhuman_dir, default_workspace_dir, &ProcessEnv)
-        .await
+    resolve_runtime_config_dirs_with(default_neppy_dir, default_workspace_dir, &ProcessEnv).await
 }
 
 /// Env-injectable variant of [`resolve_runtime_config_dirs`]. Accepts any
 /// [`EnvLookup`] so unit tests can exercise the `OPENHUMAN_WORKSPACE`
 /// override path without mutating the process environment.
 pub(crate) async fn resolve_runtime_config_dirs_with(
-    default_openhuman_dir: &Path,
+    default_neppy_dir: &Path,
     default_workspace_dir: &Path,
     env: &(dyn EnvLookup + Send + Sync),
 ) -> Result<(PathBuf, PathBuf, ConfigResolutionSource)> {
     if let Some(custom_workspace) = env.get("OPENHUMAN_WORKSPACE") {
         if !custom_workspace.is_empty() {
-            let (openhuman_dir, workspace_dir) =
+            let (neppy_dir, workspace_dir) =
                 resolve_config_dir_for_workspace(&PathBuf::from(custom_workspace));
             return Ok((
-                openhuman_dir,
+                neppy_dir,
                 workspace_dir,
                 ConfigResolutionSource::EnvWorkspace,
             ));
         }
     }
 
-    resolve_config_dirs_ignoring_env(default_openhuman_dir, default_workspace_dir).await
+    resolve_config_dirs_ignoring_env(default_neppy_dir, default_workspace_dir).await
 }
 
 /// Same as [`resolve_runtime_config_dirs`] but skips the
@@ -326,7 +323,7 @@ pub(crate) async fn resolve_runtime_config_dirs_with(
 /// [`Config::load_from_default_paths`] so callers can reliably load
 /// the real user config without mutating the process environment.
 pub(super) async fn resolve_config_dirs_ignoring_env(
-    default_openhuman_dir: &Path,
+    default_neppy_dir: &Path,
     default_workspace_dir: &Path,
 ) -> Result<(PathBuf, PathBuf, ConfigResolutionSource)> {
     // `read_active_user_id_checked_async` (not the lossy `read_active_user_id`):
@@ -338,8 +335,8 @@ pub(super) async fn resolve_config_dirs_ignoring_env(
     // loudly (and retrying on the next launch, once the file lock clears) keeps
     // the data intact. The async variant is used so the transient-lock backoff
     // does not block a tokio worker with `std::thread::sleep`.
-    if let Some(user_id) = read_active_user_id_checked_async(default_openhuman_dir).await? {
-        let user_dir = user_openhuman_dir(default_openhuman_dir, &user_id);
+    if let Some(user_id) = read_active_user_id_checked_async(default_neppy_dir).await? {
+        let user_dir = user_neppy_dir(default_neppy_dir, &user_id);
         let user_workspace = user_dir.join("workspace");
         tracing::debug!(
             user_id = %user_id,
@@ -349,17 +346,17 @@ pub(super) async fn resolve_config_dirs_ignoring_env(
         return Ok((user_dir, user_workspace, ConfigResolutionSource::ActiveUser));
     }
 
-    if let Some((openhuman_dir, workspace_dir)) =
-        load_persisted_workspace_dirs(default_openhuman_dir).await?
+    if let Some((neppy_dir, workspace_dir)) =
+        load_persisted_workspace_dirs(default_neppy_dir).await?
     {
         return Ok((
-            openhuman_dir,
+            neppy_dir,
             workspace_dir,
             ConfigResolutionSource::ActiveWorkspaceMarker,
         ));
     }
 
-    let user_dir = pre_login_user_dir(default_openhuman_dir);
+    let user_dir = pre_login_user_dir(default_neppy_dir);
     let user_workspace = user_dir.join("workspace");
     tracing::debug!(
         user_id = %PRE_LOGIN_USER_ID,

@@ -197,7 +197,7 @@ fn overlay_parent_rpc_url() -> Option<String> {
 
 #[tauri::command]
 fn process_diagnostics_list_owned() -> Result<Vec<process_recovery::ProcessInfo>, String> {
-    match process_recovery::enumerate_openhuman_processes() {
+    match process_recovery::enumerate_neppy_processes() {
         Ok(processes) => {
             log::info!(
                 "[startup-recovery] diagnostics listed {} owned Neppy processes",
@@ -472,11 +472,11 @@ async fn restart_app(app: tauri::AppHandle<AppRuntime>) -> Result<(), String> {
 /// a restart loop. The Rust core writes `active_user.toml` atomically as part
 /// of `auth_store_session`, so it's the only profile-independent source of
 /// truth available to the UI at boot. Reuses
-/// `config::default_root_openhuman_dir()` so the lookup honors
+/// `config::default_root_neppy_dir()` so the lookup honors
 /// `OPENHUMAN_WORKSPACE` overrides used in test harnesses. (#900)
 #[tauri::command]
 fn get_active_user_id() -> Result<Option<String>, String> {
-    let root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let root = openhuman_core::openhuman::config::default_root_neppy_dir()
         .map_err(|err| format!("resolve active-user state directory: {err}"))?;
     Ok(openhuman_core::openhuman::config::read_active_user_id(
         &root,
@@ -2707,7 +2707,7 @@ pub fn run() {
     // single-instance guarantee and a bare reap could kill a legitimate
     // peer. Linux needs the macOS-style live-lock-holder guard first.
     #[cfg(target_os = "windows")]
-    process_recovery::reap_stale_openhuman_processes();
+    process_recovery::reap_stale_neppy_processes();
 
     // ── Windows pre-CEF cache-lock wait (Sentry TAURI-RUST-F) ─────────────
     // The Win32 mutex above stops a *concurrent* second launch, but on a
@@ -3078,7 +3078,7 @@ pub fn run() {
             //     i.e. a sibling worktree's stale binary, not us.
             #[cfg(target_os = "macos")]
             if cfg!(debug_assertions) && !daemon_mode {
-                const STALE_LABEL: &str = "com.openhuman.core";
+                const STALE_LABEL: &str = "com.neppy.core";
 
                 if let Ok(home) = std::env::var("HOME") {
                     let plist = std::path::PathBuf::from(&home)

@@ -218,7 +218,7 @@ fn classify_inference_error_managed_insufficient_budget_400_is_budget_exhausted(
     let classified = classify_inference_error(raw);
     assert_eq!(classified.error_type, "budget_exhausted");
     assert_eq!(
-        classified.source, "openhuman_billing",
+        classified.source, "neppy_billing",
         "the Neppy backend's own credit system is the origin"
     );
     assert!(
@@ -563,7 +563,7 @@ fn classify_inference_error_turn_timeout_gets_dedicated_branch() {
         "must reassure same-thread recovery: {message}"
     );
     assert!(
-        !message.contains("openhuman_turn_wall_clock_timeout"),
+        !message.contains("neppy_turn_wall_clock_timeout"),
         "internal marker must not leak into user copy: {message}"
     );
 }
@@ -788,7 +788,7 @@ fn classify_inference_error_rate_limited_parses_quoted_json_retry_after() {
 // needs to render a countdown / retry / fallback UI without having
 // to regex the message string:
 //   - retry_after_ms — raw, milliseconds, machine-readable
-//   - source         — "provider" | "openhuman_budget" | "agent_loop"
+//   - source         — "provider" | "neppy_budget" | "agent_loop"
 //   - provider       — name extracted from upstream string when present
 //   - retryable      — same-thread retry safe? (false for non-retryable 429)
 //   - fallback_available — Some(false) once the reliable provider has
@@ -813,7 +813,7 @@ fn classify_inference_error_rate_limited_returns_structured_retry_after_ms() {
     );
     assert_eq!(
         classified.source, "provider",
-        "upstream 429 must classify source=provider, not openhuman_budget"
+        "upstream 429 must classify source=provider, not neppy_budget"
     );
     assert_eq!(
         classified.retryable, true,
@@ -1006,7 +1006,7 @@ async fn start_chat_emits_structured_rate_limit_metadata_on_chat_error_event() {
 }
 
 #[test]
-fn classify_inference_error_action_budget_marks_source_openhuman_not_provider() {
+fn classify_inference_error_action_budget_marks_source_neppy_not_provider() {
     // Neppy's SecurityPolicy per-hour cap is NOT a provider 429 —
     // it's a local safety cap. The structured payload must reflect
     // that so the FE doesn't tell the user to switch providers, and
@@ -1015,7 +1015,7 @@ fn classify_inference_error_action_budget_marks_source_openhuman_not_provider() 
     let classified = classify_inference_error(raw);
     assert_eq!(classified.error_type, "action_budget_exceeded");
     assert_eq!(
-        classified.source, "openhuman_budget",
+        classified.source, "neppy_budget",
         "Neppy's own per-hour cap must NOT be tagged as a provider source"
     );
     assert!(
@@ -1161,18 +1161,18 @@ fn classify_inference_error_billing_402_distinguished_from_provider_429() {
     let classified = classify_inference_error(raw);
     assert_eq!(classified.error_type, "budget_exhausted");
     assert_eq!(
-        classified.source, "openhuman_billing",
+        classified.source, "neppy_billing",
         "402 must NOT share source with provider 429"
     );
     assert!(!classified.retryable);
 }
 
 #[test]
-fn classify_inference_error_upstream_provider_402_is_not_openhuman_billing() {
+fn classify_inference_error_upstream_provider_402_is_not_neppy_billing() {
     // Regression for the inverse of the #2606 acceptance criterion: a
     // 402 carrying an upstream provider envelope must be attributed to
     // that provider, NOT to Neppy's own billing surface. Tagging it
-    // openhuman_billing misled the FE into pointing the user at Neppy
+    // neppy_billing misled the FE into pointing the user at Neppy
     // credits when in fact their provider plan / balance is the issue.
     let cases: &[&str] = &[
         "openrouter API error (402 Payment Required): insufficient balance",
@@ -1552,7 +1552,7 @@ fn classify_inference_error_user_insufficient_credits_is_the_only_top_up_case() 
     let classified = classify_inference_error(&raw);
     assert_eq!(classified.error_type, "budget_exhausted");
     assert!(!classified.retryable, "out of credits is non-retryable");
-    assert_eq!(classified.source, "openhuman_billing");
+    assert_eq!(classified.source, "neppy_billing");
     assert!(
         classified.message.contains("out of credits")
             && classified.message.contains("Use Your Own Models"),
@@ -2367,7 +2367,7 @@ async fn wedged_turn_hits_wall_clock_backstop_and_emits_turn_timeout_chat_error(
     );
     let message = recv.message.unwrap_or_default();
     assert!(
-        !message.contains("openhuman_turn_wall_clock_timeout"),
+        !message.contains("neppy_turn_wall_clock_timeout"),
         "internal marker must not leak into user copy: {message}"
     );
 

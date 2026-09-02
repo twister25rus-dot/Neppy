@@ -10,7 +10,7 @@ import Tauri
 import UIKit
 import WebKit
 
-private let log = Logger(subsystem: "ai.openhuman.ptt", category: "PTTPlugin")
+private let log = Logger(subsystem: "ai.neppy.ptt", category: "PTTPlugin")
 
 // MARK: - Codable payload types (mirror models.rs)
 

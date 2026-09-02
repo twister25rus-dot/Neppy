@@ -565,7 +565,7 @@ fn workspace_probe_path(workspace_dir: &Path) -> std::path::PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |duration| duration.as_nanos());
     workspace_dir.join(format!(
-        ".openhuman_doctor_probe_{}_{}",
+        ".neppy_doctor_probe_{}_{}",
         std::process::id(),
         nanos
     ))

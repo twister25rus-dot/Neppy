@@ -238,7 +238,7 @@ pub struct SessionInfoPayload {
 pub struct UserPromptPayload {
     #[serde(default)]
     pub text: String,
-    /// `"human"` | `"openhuman_inject"`.
+    /// `"human"` | `"neppy_inject"`.
     #[serde(default)]
     pub source: String,
 }

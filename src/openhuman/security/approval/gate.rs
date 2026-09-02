@@ -1662,7 +1662,7 @@ mod tests {
         // A tool name unique to this test so leaving it in the global allowlist
         // afterwards can't make a sibling gate test (which use "composio" /
         // "pushover") skip its expected prompt.
-        let tool = "openhuman_test_always_allow_tool";
+        let tool = "neppy_test_always_allow_tool";
         let policy = crate::openhuman::security::SecurityPolicy {
             auto_approve: vec![tool.into()],
             ..crate::openhuman::security::SecurityPolicy::default()
@@ -1715,7 +1715,7 @@ mod tests {
 
         let outcome = turn_origin::with_origin(
             web_origin(),
-            gate.intercept("openhuman_test_aaa_webchat", "noop", serde_json::json!({})),
+            gate.intercept("neppy_test_aaa_webchat", "noop", serde_json::json!({})),
         )
         .await;
 
@@ -1752,7 +1752,7 @@ mod tests {
                 web_origin(),
                 APPROVAL_CHAT_CONTEXT.scope(
                     chat_ctx(),
-                    g.intercept("openhuman_test_aaa_off", "noop", serde_json::json!({})),
+                    g.intercept("neppy_test_aaa_off", "noop", serde_json::json!({})),
                 ),
             )
             .await
@@ -1805,7 +1805,7 @@ mod tests {
         };
         let outcome = turn_origin::with_origin(
             origin,
-            gate.intercept("openhuman_test_aaa_tainted", "noop", serde_json::json!({})),
+            gate.intercept("neppy_test_aaa_tainted", "noop", serde_json::json!({})),
         )
         .await;
 
@@ -1836,7 +1836,7 @@ mod tests {
         // No `with_origin` scope at all — mirrors an unlabelled call site,
         // which `turn_origin::current()` maps to `AgentTurnOrigin::Unknown`.
         let outcome = gate
-            .intercept("openhuman_test_aaa_unknown", "noop", serde_json::json!({}))
+            .intercept("neppy_test_aaa_unknown", "noop", serde_json::json!({}))
             .await;
 
         match outcome {
@@ -1878,7 +1878,7 @@ mod tests {
         };
         let outcome = turn_origin::with_origin(
             origin,
-            gate.intercept("openhuman_test_aaa_goal", "noop", serde_json::json!({})),
+            gate.intercept("neppy_test_aaa_goal", "noop", serde_json::json!({})),
         )
         .await;
 
@@ -1916,7 +1916,7 @@ mod tests {
         };
         let outcome = turn_origin::with_origin(
             origin,
-            gate.intercept("openhuman_test_aaa_workflow", "noop", serde_json::json!({})),
+            gate.intercept("neppy_test_aaa_workflow", "noop", serde_json::json!({})),
         )
         .await;
 

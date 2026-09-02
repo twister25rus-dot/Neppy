@@ -70,7 +70,7 @@ function resolveTarget(
   // selected" for a workload that does route somewhere. A stacked list of
   // sub-labels hid it; a Provider column full of "No model selected" does not.
   if (ref_.kind === 'openhuman' || ref_.kind === 'default') {
-    return { provider: t('settings.ai.openhumanDefault'), providerSlug: 'openhuman', model: null };
+    return { provider: t('settings.ai.neppyDefault'), providerSlug: 'openhuman', model: null };
   }
   return { provider: null, providerSlug: null, model: null };
 }

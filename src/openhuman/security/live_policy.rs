@@ -378,7 +378,7 @@ mod tests {
         let _env = crate::openhuman::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        let workspace = std::env::temp_dir().join("openhuman_scoped_policy_test");
+        let workspace = std::env::temp_dir().join("neppy_scoped_policy_test");
         install(
             Arc::new(SecurityPolicy::default()),
             workspace.clone(),
@@ -420,7 +420,7 @@ mod tests {
         let _env = crate::openhuman::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        let workspace = std::env::temp_dir().join("openhuman_live_policy_test");
+        let workspace = std::env::temp_dir().join("neppy_live_policy_test");
         let initial = Arc::new(SecurityPolicy {
             autonomy: AutonomyLevel::Supervised,
             workspace_dir: workspace.clone(),
@@ -455,7 +455,7 @@ mod tests {
         let _env = crate::openhuman::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        let workspace = std::env::temp_dir().join("openhuman_privacy_live_test");
+        let workspace = std::env::temp_dir().join("neppy_privacy_live_test");
         let initial = Arc::new(SecurityPolicy {
             autonomy: AutonomyLevel::Supervised,
             privacy_mode: PrivacyMode::Standard,
@@ -509,8 +509,8 @@ mod tests {
         let _env = crate::openhuman::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        let workspace = std::env::temp_dir().join("openhuman_set_action_dir_test_ws");
-        let action = std::env::temp_dir().join("openhuman_set_action_dir_test_action_a");
+        let workspace = std::env::temp_dir().join("neppy_set_action_dir_test_ws");
+        let action = std::env::temp_dir().join("neppy_set_action_dir_test_action_a");
         let initial = Arc::new(SecurityPolicy {
             autonomy: AutonomyLevel::Full,
             workspace_dir: workspace.clone(),
@@ -526,7 +526,7 @@ mod tests {
         );
 
         let before = generation();
-        let new_action = std::env::temp_dir().join("openhuman_set_action_dir_test_action_b");
+        let new_action = std::env::temp_dir().join("neppy_set_action_dir_test_action_b");
         set_action_dir(new_action.clone());
 
         assert!(

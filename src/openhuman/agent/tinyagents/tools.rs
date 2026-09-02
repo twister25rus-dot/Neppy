@@ -104,11 +104,11 @@ impl Tool<()> for ToolAdapter {
     }
 
     fn policy(&self) -> ToolPolicy {
-        tool_policy_from_openhuman_tool(self.inner.as_ref())
+        tool_policy_from_neppy_tool(self.inner.as_ref())
     }
 
     async fn call(&self, _state: &(), call: TaToolCall) -> tinyagents::Result<TaToolResult> {
-        Ok(execute_openhuman_tool(self.inner.as_ref(), call, None).await)
+        Ok(execute_neppy_tool(self.inner.as_ref(), call, None).await)
     }
 
     async fn call_with_context(
@@ -117,13 +117,11 @@ impl Tool<()> for ToolAdapter {
         call: TaToolCall,
         context: ToolExecutionContext,
     ) -> tinyagents::Result<TaToolResult> {
-        Ok(execute_openhuman_tool(self.inner.as_ref(), call, Some(&context)).await)
+        Ok(execute_neppy_tool(self.inner.as_ref(), call, Some(&context)).await)
     }
 }
 
-pub(crate) fn tool_policy_from_openhuman_tool(
-    tool: &dyn crate::openhuman::tools::Tool,
-) -> ToolPolicy {
+pub(crate) fn tool_policy_from_neppy_tool(tool: &dyn crate::openhuman::tools::Tool) -> ToolPolicy {
     use crate::openhuman::tools::traits::ToolTimeout;
     use crate::openhuman::tools::PermissionLevel;
 
@@ -188,7 +186,7 @@ const TINYAGENTS_TOOL_SESSION: &str = "tinyagents";
 /// Execute an openhuman [`Tool`](crate::openhuman::tools::Tool) for a harness
 /// [`TaToolCall`] and render the [`TaToolResult`] the way the LLM should see it
 /// (mirrors the live-path `HarnessToolExecutor`).
-pub(crate) async fn execute_openhuman_tool(
+pub(crate) async fn execute_neppy_tool(
     tool: &dyn crate::openhuman::tools::Tool,
     call: TaToolCall,
     context: Option<&ToolExecutionContext>,
@@ -338,7 +336,7 @@ impl SharedToolAdapter {
             .iter()
             .flat_map(|set| set.iter())
             .find(|t| t.name() == name)
-            .map(|t| (t.spec(), tool_policy_from_openhuman_tool(t.as_ref())))?;
+            .map(|t| (t.spec(), tool_policy_from_neppy_tool(t.as_ref())))?;
         Some(Self {
             sets,
             name: spec.name.clone(),
@@ -376,7 +374,7 @@ impl Tool<()> for SharedToolAdapter {
     }
 
     async fn call(&self, _state: &(), call: TaToolCall) -> tinyagents::Result<TaToolResult> {
-        self.call_openhuman_tool(call, None).await
+        self.call_neppy_tool(call, None).await
     }
 
     async fn call_with_context(
@@ -385,12 +383,12 @@ impl Tool<()> for SharedToolAdapter {
         call: TaToolCall,
         context: ToolExecutionContext,
     ) -> tinyagents::Result<TaToolResult> {
-        self.call_openhuman_tool(call, Some(&context)).await
+        self.call_neppy_tool(call, Some(&context)).await
     }
 }
 
 impl SharedToolAdapter {
-    async fn call_openhuman_tool(
+    async fn call_neppy_tool(
         &self,
         call: TaToolCall,
         context: Option<&ToolExecutionContext>,
@@ -402,7 +400,7 @@ impl SharedToolAdapter {
             .find(|t| t.name() == self.name);
         match found {
             Some(tool) => {
-                let result = execute_openhuman_tool(tool.as_ref(), call, context).await;
+                let result = execute_neppy_tool(tool.as_ref(), call, context).await;
                 // Early-exit (e.g. `ask_user_clarification`): on a successful
                 // call, record the question and pause so the runner can
                 // checkpoint and surface the prompt — matching the legacy seam.
@@ -490,7 +488,7 @@ mod tests {
     #[tokio::test]
     async fn tool_execution_respects_the_per_call_timeout() {
         let result =
-            execute_openhuman_tool(&HangingTool, call("hang", serde_json::json!({})), None).await;
+            execute_neppy_tool(&HangingTool, call("hang", serde_json::json!({})), None).await;
         assert!(
             result
                 .error
@@ -504,7 +502,7 @@ mod tests {
 
     #[tokio::test]
     async fn fast_tool_runs_to_completion() {
-        let result = execute_openhuman_tool(
+        let result = execute_neppy_tool(
             &EchoTool,
             call("echo", serde_json::json!({ "msg": "hi" })),
             None,

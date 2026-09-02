@@ -19,7 +19,7 @@ Authoritative TOML-backed configuration layer. Owns the `Config` schema (every d
 
 - Std + serde TOML for serialization.
 - `src/openhuman/security/encryption/` indirectly when secrets sections need at-rest crypto (read direction only).
-- Filesystem under `~/.openhuman/<user-id>/` via `schema/identity_cost.rs`.
+- Filesystem under `~/.neppy/<user-id>/` via `schema/identity_cost.rs`.
 
 ## Called by
 

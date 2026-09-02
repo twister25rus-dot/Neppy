@@ -394,7 +394,7 @@ async fn identify_listener(host: &str, port: u16) -> ListenerFingerprint {
         }
     };
 
-    if is_openhuman_root_body(&body) {
+    if is_neppy_root_body(&body) {
         ListenerFingerprint::NeppyCore
     } else {
         let preview: String = body.chars().take(80).collect();
@@ -404,7 +404,7 @@ async fn identify_listener(host: &str, port: u16) -> ListenerFingerprint {
     }
 }
 
-fn is_openhuman_root_body(body: &str) -> bool {
+fn is_neppy_root_body(body: &str) -> bool {
     let value: serde_json::Value = match serde_json::from_str(body) {
         Ok(v) => v,
         Err(_) => return false,
@@ -532,7 +532,7 @@ mod tests {
         std::net::TcpListener::bind("127.0.0.1:0").expect("bind ephemeral test port")
     }
 
-    async fn spawn_openhuman_probe_listener(
+    async fn spawn_neppy_probe_listener(
         port: u16,
     ) -> (
         tokio::task::JoinHandle<()>,
@@ -592,12 +592,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn pick_listen_port_openhuman_listener_requests_takeover() {
+    async fn pick_listen_port_neppy_listener_requests_takeover() {
         let holder = reserve_port();
         let preferred = holder.local_addr().expect("preferred local addr").port();
         drop(holder);
 
-        let (server_task, shutdown_tx) = spawn_openhuman_probe_listener(preferred).await;
+        let (server_task, shutdown_tx) = spawn_neppy_probe_listener(preferred).await;
 
         let result = pick_listen_port_with_policy(
             "127.0.0.1",

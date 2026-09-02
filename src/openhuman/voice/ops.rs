@@ -158,7 +158,7 @@ pub async fn voice_transcribe_bytes(
 
     let service = local_ai::global(config);
 
-    let voice_dir = std::env::temp_dir().join("openhuman_voice_input");
+    let voice_dir = std::env::temp_dir().join("neppy_voice_input");
     tokio::fs::create_dir_all(&voice_dir)
         .await
         .map_err(|e| format!("failed to create voice input directory: {e}"))?;

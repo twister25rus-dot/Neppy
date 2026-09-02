@@ -198,7 +198,7 @@ pub(super) const WORKSPACE_INTERNAL_DIRS: &[&str] = &[
     // The codegraph domain was removed, but upgraded workspaces can retain its
     // internal index. Keep legacy state inaccessible to agent file tools.
     "codegraph",
-    ".openhuman",
+    ".neppy",
     "tinyplace", // Signal session store + future tinyplace state; agent-write forbidden
 ];
 

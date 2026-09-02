@@ -79,7 +79,7 @@ pub async fn load_config_with_timeout() -> Result<Config, String> {
 /// The config file is looked for beside the workspace, in the two layouts the
 /// resolver itself can produce: `<workspace>/config.toml` (a workspace root
 /// that carries its own config) and `<workspace>/../config.toml` (the
-/// `~/.openhuman/users/<id>/{config.toml,workspace}` layout). When neither
+/// `~/.neppy/users/<id>/{config.toml,workspace}` layout). When neither
 /// exists there is nothing workspace-specific to read, so this falls back to
 /// the process-global load with `workspace_dir` re-anchored — the previous
 /// behaviour, and still correct for a single-workspace host.
@@ -215,16 +215,16 @@ fn seed_and_enrich_model_registry(config: &mut Config) {
     }
 }
 
-/// Returns the default workspace directory fallback (~/.openhuman/workspace).
+/// Returns the default workspace directory fallback (~/.neppy/workspace).
 pub(crate) fn fallback_workspace_dir() -> PathBuf {
-    crate::openhuman::config::default_root_openhuman_dir()
+    crate::openhuman::config::default_root_neppy_dir()
         .unwrap_or_else(|_| env_scoped_fallback_root_dir())
         .join("workspace")
 }
 
-/// Returns the default Neppy configuration directory (~/.openhuman).
-pub(crate) fn default_openhuman_dir() -> PathBuf {
-    crate::openhuman::config::default_root_openhuman_dir()
+/// Returns the default Neppy configuration directory (~/.neppy).
+pub(crate) fn default_neppy_dir() -> PathBuf {
+    crate::openhuman::config::default_root_neppy_dir()
         .unwrap_or_else(|_| env_scoped_fallback_root_dir())
 }
 
@@ -236,16 +236,16 @@ pub(crate) fn env_scoped_fallback_root_dir() -> PathBuf {
     } else {
         ""
     };
-    PathBuf::from(format!(".openhuman{suffix}"))
+    PathBuf::from(format!(".neppy{suffix}"))
 }
 
 /// Returns the path to the active workspace marker file.
-pub(crate) fn active_workspace_marker_path(default_openhuman_dir: &Path) -> PathBuf {
-    default_openhuman_dir.join("active_workspace.toml")
+pub(crate) fn active_workspace_marker_path(default_neppy_dir: &Path) -> PathBuf {
+    default_neppy_dir.join("active_workspace.toml")
 }
 
 /// Returns the parent directory of the config file.
-pub(crate) fn config_openhuman_dir(config: &Config) -> PathBuf {
+pub(crate) fn config_neppy_dir(config: &Config) -> PathBuf {
     config
         .config_path
         .parent()
@@ -301,26 +301,25 @@ pub(crate) fn reset_local_data_marker_remove_error(path: &Path, error: &std::io:
 
 /// Internal helper to reset local data for the **active user only**.
 ///
-/// Removes the current user's data directory (`~/.openhuman/users/<id>`) plus
+/// Removes the current user's data directory (`~/.neppy/users/<id>`) plus
 /// the two shared marker files at the root — `active_workspace.toml` and
 /// `active_user.toml` — so the next launch boots signed-out into the
 /// pre-login (`users/local`) scope.
 ///
-/// It deliberately does **not** delete the shared root `~/.openhuman`
+/// It deliberately does **not** delete the shared root `~/.neppy`
 /// directory: that root holds every user's `users/<other>` subtree, and
 /// wiping it during a single user's "Clear App Data" destroyed sibling
 /// accounts' data (the scoping bug this replaces). The root is left in place;
 /// only the current user's slice and the active markers are removed.
 pub(crate) async fn reset_local_data_for_paths(
-    current_openhuman_dir: &Path,
-    default_openhuman_dir: &Path,
+    current_neppy_dir: &Path,
+    default_neppy_dir: &Path,
 ) -> Result<RpcOutcome<serde_json::Value>, String> {
-    let active_workspace_marker = active_workspace_marker_path(default_openhuman_dir);
-    let active_user_marker =
-        crate::openhuman::config::active_user_marker_path(default_openhuman_dir);
+    let active_workspace_marker = active_workspace_marker_path(default_neppy_dir);
+    let active_user_marker = crate::openhuman::config::active_user_marker_path(default_neppy_dir);
     tracing::debug!(
-        current_dir = %current_openhuman_dir.display(),
-        default_dir = %default_openhuman_dir.display(),
+        current_dir = %current_neppy_dir.display(),
+        default_dir = %default_neppy_dir.display(),
         workspace_marker = %active_workspace_marker.display(),
         user_marker = %active_user_marker.display(),
         "[config] reset_local_data: starting (user-scoped)"
@@ -346,18 +345,18 @@ pub(crate) async fn reset_local_data_for_paths(
 
     // Remove only the active user's directory — NOT the shared root, which
     // contains other users' `users/<id>` subtrees.
-    if current_openhuman_dir.exists() {
-        if let Err(error) = tokio::fs::remove_dir_all(current_openhuman_dir).await {
-            return Err(reset_local_data_remove_error(current_openhuman_dir, &error));
+    if current_neppy_dir.exists() {
+        if let Err(error) = tokio::fs::remove_dir_all(current_neppy_dir).await {
+            return Err(reset_local_data_remove_error(current_neppy_dir, &error));
         }
         tracing::debug!(
-            dir = %current_openhuman_dir.display(),
+            dir = %current_neppy_dir.display(),
             "[config] reset_local_data: removed current user directory"
         );
-        removed_paths.push(current_openhuman_dir.display().to_string());
+        removed_paths.push(current_neppy_dir.display().to_string());
     } else {
         tracing::debug!(
-            dir = %current_openhuman_dir.display(),
+            dir = %current_neppy_dir.display(),
             "[config] reset_local_data: current user directory already absent"
         );
     }
@@ -365,13 +364,13 @@ pub(crate) async fn reset_local_data_for_paths(
     Ok(RpcOutcome::new(
         json!({
             "removed_paths": removed_paths,
-            "current_openhuman_dir": current_openhuman_dir.display().to_string(),
-            "default_openhuman_dir": default_openhuman_dir.display().to_string(),
+            "current_neppy_dir": current_neppy_dir.display().to_string(),
+            "default_neppy_dir": default_neppy_dir.display().to_string(),
         }),
         vec![format!(
             "reset local data for active user dir {} (shared root {} preserved)",
-            current_openhuman_dir.display(),
-            default_openhuman_dir.display()
+            current_neppy_dir.display(),
+            default_neppy_dir.display()
         )],
     ))
 }
@@ -679,16 +678,16 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
 /// without the core attached, so no handle is in the way).
 pub async fn reset_local_data() -> Result<RpcOutcome<serde_json::Value>, String> {
     let config = load_config_with_timeout().await?;
-    let current_openhuman_dir = config_openhuman_dir(&config);
-    let default_openhuman_dir = default_openhuman_dir();
-    reset_local_data_for_paths(&current_openhuman_dir, &default_openhuman_dir).await
+    let current_neppy_dir = config_neppy_dir(&config);
+    let default_neppy_dir = default_neppy_dir();
+    reset_local_data_for_paths(&current_neppy_dir, &default_neppy_dir).await
 }
 
 /// Reports the resolved paths that `reset_local_data` would remove, without
 /// performing any filesystem changes.
 ///
 /// Lets the Tauri-side `reset_local_data` command discover the active
-/// workspace dir, the default `~/.openhuman` dir (which can differ when
+/// workspace dir, the default `~/.neppy` dir (which can differ when
 /// `OPENHUMAN_WORKSPACE` is set or a staging build is in use), and the
 /// active workspace marker file **before** the core sidecar is shut down —
 /// after which the Tauri shell removes them while no process holds open
@@ -696,32 +695,31 @@ pub async fn reset_local_data() -> Result<RpcOutcome<serde_json::Value>, String>
 /// that motivated the split.
 pub async fn get_data_paths() -> Result<RpcOutcome<serde_json::Value>, String> {
     let config = load_config_with_timeout().await?;
-    let current_openhuman_dir = config_openhuman_dir(&config);
-    let default_openhuman_dir = default_openhuman_dir();
-    let active_workspace_marker = active_workspace_marker_path(&default_openhuman_dir);
-    // The active-user marker lives at the *shared* root `~/.openhuman`, not
+    let current_neppy_dir = config_neppy_dir(&config);
+    let default_neppy_dir = default_neppy_dir();
+    let active_workspace_marker = active_workspace_marker_path(&default_neppy_dir);
+    // The active-user marker lives at the *shared* root `~/.neppy`, not
     // inside the per-user dir. A clear removes it (to sign the current user
     // out) but must leave the sibling `users/<other>` dirs and the root
     // itself intact — see `reset_local_data_for_paths`.
-    let active_user_marker =
-        crate::openhuman::config::active_user_marker_path(&default_openhuman_dir);
+    let active_user_marker = crate::openhuman::config::active_user_marker_path(&default_neppy_dir);
     Ok(RpcOutcome::new(
         json!({
-            "current_openhuman_dir": current_openhuman_dir.display().to_string(),
-            "default_openhuman_dir": default_openhuman_dir.display().to_string(),
+            "current_neppy_dir": current_neppy_dir.display().to_string(),
+            "default_neppy_dir": default_neppy_dir.display().to_string(),
             "active_workspace_marker_path": active_workspace_marker.display().to_string(),
             "active_user_marker_path": active_user_marker.display().to_string(),
         }),
         vec![format!(
             "data paths resolved (current={}, default={})",
-            current_openhuman_dir.display(),
-            default_openhuman_dir.display()
+            current_neppy_dir.display(),
+            default_neppy_dir.display()
         )],
     ))
 }
 
 /// Like [`get_data_paths`], but resolves the current data dir directly from an
-/// explicit `user_id` (`~/.openhuman/users/<user_id>`) instead of the
+/// explicit `user_id` (`~/.neppy/users/<user_id>`) instead of the
 /// active-user marker.
 ///
 /// Root cause of #4950 ("Clear App Data does nothing"): the GUI clear flow
@@ -739,7 +737,7 @@ pub async fn get_data_paths() -> Result<RpcOutcome<serde_json::Value>, String> {
 ///
 /// **Security:** `user_id` is caller-controlled (it arrives over `/rpc` and via
 /// the Tauri `reset_local_data` command, whose renderer runs untrusted webview
-/// content), and the returned `current_openhuman_dir` is handed straight to
+/// content), and the returned `current_neppy_dir` is handed straight to
 /// `remove_dir_all`. An absolute id (`/etc`) or one with `..` / separators would
 /// let `Path::join` resolve a delete target OUTSIDE `<root>/users/<id>`. We
 /// therefore reject anything that isn't a single plain path segment and, as
@@ -752,24 +750,22 @@ pub async fn get_data_paths_for_user(
             "refusing to resolve data paths for unsafe user id {user_id:?}: must be a single path segment with no separators, `.` or `..`"
         ));
     }
-    let default_openhuman_dir = default_openhuman_dir();
-    let current_openhuman_dir =
-        crate::openhuman::config::user_openhuman_dir(&default_openhuman_dir, user_id);
+    let default_neppy_dir = default_neppy_dir();
+    let current_neppy_dir = crate::openhuman::config::user_neppy_dir(&default_neppy_dir, user_id);
     // Defense in depth: the resolved user dir MUST be a direct child of
     // `<root>/users`. Catches any platform-specific `join` quirk (e.g. a
     // Windows drive-relative id) that slipped past the string check above,
     // before the path reaches `remove_dir_all`.
-    let users_root = default_openhuman_dir.join("users");
-    if current_openhuman_dir.parent() != Some(users_root.as_path()) {
+    let users_root = default_neppy_dir.join("users");
+    if current_neppy_dir.parent() != Some(users_root.as_path()) {
         return Err(format!(
             "refusing to resolve data paths: resolved dir {} is not a direct child of {}",
-            current_openhuman_dir.display(),
+            current_neppy_dir.display(),
             users_root.display()
         ));
     }
-    let active_workspace_marker = active_workspace_marker_path(&default_openhuman_dir);
-    let active_user_marker =
-        crate::openhuman::config::active_user_marker_path(&default_openhuman_dir);
+    let active_workspace_marker = active_workspace_marker_path(&default_neppy_dir);
+    let active_user_marker = crate::openhuman::config::active_user_marker_path(&default_neppy_dir);
     // Content-free logging only: the user id and the user-scoped paths are PII
     // (AGENTS.md: never log secrets/PII), so emit a boolean indicator instead of
     // the id or the resolved dirs. The paths are still returned in the JSON
@@ -777,8 +773,8 @@ pub async fn get_data_paths_for_user(
     log::debug!("[config] get_data_paths_for_user: explicit_user_id=true");
     Ok(RpcOutcome::new(
         json!({
-            "current_openhuman_dir": current_openhuman_dir.display().to_string(),
-            "default_openhuman_dir": default_openhuman_dir.display().to_string(),
+            "current_neppy_dir": current_neppy_dir.display().to_string(),
+            "default_neppy_dir": default_neppy_dir.display().to_string(),
             "active_workspace_marker_path": active_workspace_marker.display().to_string(),
             "active_user_marker_path": active_user_marker.display().to_string(),
         }),
@@ -863,7 +859,7 @@ mod loader_io_chain_tests {
     // signs the user out — removing `active_user.toml` — *before* it asks which
     // directory to delete, so a marker-based resolution falls back to the
     // pre-login `users/local` dir and leaves the real user's data behind.
-    // `get_data_paths_for_user` must pin `current_openhuman_dir` to the explicit
+    // `get_data_paths_for_user` must pin `current_neppy_dir` to the explicit
     // id's `users/<id>` slice, independent of any marker/env state.
     #[tokio::test]
     async fn get_data_paths_for_user_scopes_current_dir_to_explicit_id() {
@@ -871,9 +867,9 @@ mod loader_io_chain_tests {
 
         let current = outcome
             .value
-            .get("current_openhuman_dir")
+            .get("current_neppy_dir")
             .and_then(|v| v.as_str())
-            .expect("current_openhuman_dir present");
+            .expect("current_neppy_dir present");
         // Normalize Windows separators so the suffix check is platform-agnostic.
         assert!(
             current.replace('\\', "/").ends_with("users/clear-me-4950"),
@@ -884,9 +880,9 @@ mod loader_io_chain_tests {
         // reset must never `remove_dir_all` the root that holds sibling users.
         let default = outcome
             .value
-            .get("default_openhuman_dir")
+            .get("default_neppy_dir")
             .and_then(|v| v.as_str())
-            .expect("default_openhuman_dir present");
+            .expect("default_neppy_dir present");
         assert_ne!(
             current, default,
             "current dir must differ from the shared root"

@@ -56,7 +56,7 @@ _resolve_rpc_token() {
     return
   fi
 
-  local workspace="${OPENHUMAN_WORKSPACE:-$HOME/.openhuman}"
+  local workspace="${OPENHUMAN_WORKSPACE:-$HOME/.neppy}"
   local workspace_token_file="$workspace/core.token"
   local e2e_token_file="${TMPDIR:-/tmp}/openhuman-e2e-rpc-token"
   e2e_token_file="${e2e_token_file%/}"

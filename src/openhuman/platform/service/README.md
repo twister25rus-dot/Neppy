@@ -24,7 +24,7 @@ Service-management domain for the Neppy core daemon. It installs/uninstalls the 
 | `src/openhuman/platform/service/shutdown.rs` | Graceful-shutdown orchestration: `service_shutdown` (publishes event), `ShutdownStatus`. |
 | `src/openhuman/platform/service/bus.rs` | Event-bus subscribers `RestartSubscriber` / `ShutdownSubscriber` (filter domain `system`) and idempotent `register_*_subscriber` helpers; one-shot atomic gates so only the first request acts. |
 | `src/openhuman/platform/service/common.rs` | Shared OS helpers: service labels, `resolve_daemon_executable`, `daemon_program_args` (`["run"]`), `xml_escape`, command runners (`run_checked`/`run_capture`/`run_best_effort`/`run_check_silent`), Windows `CREATE_NO_WINDOW` suppression. |
-| `src/openhuman/platform/service/macos.rs` | LaunchAgent (`com.openhuman.core.plist`) install/start/stop/status/uninstall via `launchctl`; migrates legacy labels. |
+| `src/openhuman/platform/service/macos.rs` | LaunchAgent (`com.neppy.core.plist`) install/start/stop/status/uninstall via `launchctl`; migrates legacy labels. |
 | `src/openhuman/platform/service/linux.rs` | systemd user-unit install/lifecycle via `systemctl --user`. |
 | `src/openhuman/platform/service/windows.rs` | Scheduled-task install/lifecycle via `schtasks`. |
 | `src/openhuman/platform/service/daemon.rs` | `state_file_path(config)` → `<config_dir>/daemon_state.json`, used by doctor/health. |

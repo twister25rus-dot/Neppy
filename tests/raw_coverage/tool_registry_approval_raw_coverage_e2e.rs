@@ -116,8 +116,8 @@ async fn serve_rpc() -> (
     (addr, join)
 }
 
-fn write_config(openhuman_dir: &Path, capability_providers: &str) {
-    std::fs::create_dir_all(openhuman_dir).expect("create .openhuman");
+fn write_config(neppy_dir: &Path, capability_providers: &str) {
+    std::fs::create_dir_all(neppy_dir).expect("create .neppy");
     let cfg = format!(
         r#"api_url = "http://127.0.0.1:9"
 default_model = "e2e-model"
@@ -160,7 +160,7 @@ disallowed_tools = ["write_file"]
 {capability_providers}
 "#
     );
-    std::fs::write(openhuman_dir.join("config.toml"), cfg).expect("write config.toml");
+    std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
 }
 
 async fn setup(capability_providers: &str) -> TestHarness {
@@ -168,7 +168,7 @@ async fn setup(capability_providers: &str) -> TestHarness {
     let home = tmp.path();
     let workspace = home.join("openhuman-workspace");
     write_config(&workspace, capability_providers);
-    write_config(&home.join(".openhuman"), capability_providers);
+    write_config(&home.join(".neppy"), capability_providers);
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),

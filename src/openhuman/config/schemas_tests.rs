@@ -400,7 +400,7 @@ fn agent_paths_rpc_is_registered() {
 async fn handle_get_agent_paths_returns_action_workspace_and_projects() {
     // Regression guard for #3237. AgentAccessPanel calls this RPC to render
     // the action sandbox / internal workspace paths instead of the hard-coded
-    // `~/Neppy/projects` / `~/.openhuman/workspace` strings that drift
+    // `~/Neppy/projects` / `~/.neppy/workspace` strings that drift
     // when an operator sets OPENHUMAN_ACTION_DIR.
     let _g = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().unwrap();
@@ -446,7 +446,7 @@ async fn handle_get_agent_paths_returns_action_workspace_and_projects() {
 }
 
 #[tokio::test]
-async fn handle_get_agent_paths_reflects_openhuman_action_dir_env_override() {
+async fn handle_get_agent_paths_reflects_neppy_action_dir_env_override() {
     // #3237 acceptance criterion: setting OPENHUMAN_ACTION_DIR and restarting
     // must show that override in the panel. The override is honoured by
     // default_action_dir() at Config load time; this test verifies the RPC

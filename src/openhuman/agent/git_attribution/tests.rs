@@ -1,6 +1,6 @@
 #[cfg(unix)]
 #[test]
-fn hook_adds_openhuman_trailer_without_disabling_repository_hook() {
+fn hook_adds_neppy_trailer_without_disabling_repository_hook() {
     use std::os::unix::fs::PermissionsExt;
     use std::process::Command;
 
@@ -33,7 +33,7 @@ fn hook_adds_openhuman_trailer_without_disabling_repository_hook() {
     git(&["add", "a"]);
 
     let hook_env = super::hook::test_hook_env(Some(std::ffi::OsStr::new(
-        "'test.openhuman-inherited'='kept' 'core.hooksPath'='/definitely-not-the-openhuman-hook'",
+        "'test.neppy-inherited'='kept' 'core.hooksPath'='/definitely-not-the-openhuman-hook'",
     )));
     let output = Command::new("git")
         .args(["commit", "-q", "-m", "subject"])
@@ -56,7 +56,7 @@ fn hook_adds_openhuman_trailer_without_disabling_repository_hook() {
     assert!(message.contains(super::hook::TRAILER), "{message:?}");
 
     let inherited = Command::new("git")
-        .args(["config", "--get", "test.openhuman-inherited"])
+        .args(["config", "--get", "test.neppy-inherited"])
         .current_dir(&repo)
         .envs(&hook_env)
         .output()
@@ -70,7 +70,7 @@ fn hook_adds_openhuman_trailer_without_disabling_repository_hook() {
 fn hook_env_does_not_drop_inherited_parameters_containing_non_utf8() {
     use std::os::unix::ffi::{OsStrExt, OsStringExt};
 
-    let inherited_bytes = b"'test.openhuman-inherited'='before-\xff-after' 'test.second'='kept'";
+    let inherited_bytes = b"'test.neppy-inherited'='before-\xff-after' 'test.second'='kept'";
     let inherited = std::ffi::OsStr::from_bytes(inherited_bytes);
     let hook_env = super::hook::test_hook_env(Some(inherited));
     let parameters = hook_env
@@ -85,7 +85,7 @@ fn hook_env_does_not_drop_inherited_parameters_containing_non_utf8() {
     assert!(parameters.contains(&0xff));
 
     let output = std::process::Command::new("git")
-        .args(["config", "--get", "test.openhuman-inherited"])
+        .args(["config", "--get", "test.neppy-inherited"])
         .envs(&hook_env)
         .output()
         .unwrap();

@@ -185,9 +185,9 @@ pub fn create_embedding_provider_with_credentials(
 /// uses to **store** the `app-session` token at sign-in.
 ///
 /// The keyless constructors hardcode `(None, true)`, which resolves to
-/// `default_state_dir()` (`~/.openhuman` root) with encryption forced on. On a
+/// `default_state_dir()` (`~/.neppy` root) with encryption forced on. On a
 /// shipped desktop `OPENHUMAN_WORKSPACE` is unset and the session token lives
-/// under the user-scoped `~/.openhuman/users/<uid>/auth-profiles.json`, so that
+/// under the user-scoped `~/.neppy/users/<uid>/auth-profiles.json`, so that
 /// hardcode reads the *wrong* file and a signed-in user's managed "Test
 /// connection" / embed falsely reports "No backend session" (#5356). Callers
 /// that hold a `&Config` must route managed construction through here.
@@ -277,7 +277,7 @@ pub fn default_embedding_provider_with_config(config: &Config) -> Arc<dyn Embedd
 ///
 /// **Keyless — prefer [`default_embedding_provider_with_config`].** This hardcodes
 /// `(None, true)` for the credential scope, resolving `default_state_dir()`
-/// (`~/.openhuman` root, or `users/<active>` post-#5427) with encryption forced
+/// (`~/.neppy` root, or `users/<active>` post-#5427) with encryption forced
 /// on. That reads the wrong store whenever the caller's config disables secret
 /// encryption or roots the workspace/user elsewhere than the process default
 /// (#5356 / #5501). Only callers that genuinely hold no `&Config` should use it.
@@ -317,7 +317,7 @@ mod tests {
     /// `AuthService::from_config`; the managed/cloud embedder must derive its
     /// credential scope from that SAME `(config.config_path.parent(),
     /// config.secrets.encrypt)`. The pre-fix hardcode `(None, true)` resolved to
-    /// `default_state_dir()` (`~/.openhuman` root) with encryption forced on —
+    /// `default_state_dir()` (`~/.neppy` root) with encryption forced on —
     /// the wrong file — so a signed-in user got "No backend session". Setting
     /// `encrypt=false` also proves the flag is read from config, not hardcoded.
     #[test]
@@ -370,7 +370,7 @@ mod tests {
         );
 
         // Isolation: a DIFFERENT scope — what the old `(None, true)` hardcode
-        // resolved to via `default_state_dir()` (root `~/.openhuman`) instead of
+        // resolved to via `default_state_dir()` (root `~/.neppy`) instead of
         // the user-scoped config dir — must NOT see the token. This is the half
         // that fails if managed construction ignores `config`.
         let default_like = TempDir::new().unwrap();

@@ -4,10 +4,10 @@ import { LuKeyRound } from 'react-icons/lu';
 import { useT } from '../../../../lib/i18n/I18nContext';
 import {
   type ClaudeCodeAuthStatus,
-  openhumanClaudeCodeAuthStatus,
-  openhumanClaudeCodeLoginLaunch,
-  openhumanClaudeCodeSetFullAccess,
-  openhumanClaudeCodeSettings,
+  neppyClaudeCodeAuthStatus,
+  neppyClaudeCodeLoginLaunch,
+  neppyClaudeCodeSetFullAccess,
+  neppyClaudeCodeSettings,
 } from '../../../../utils/tauriCommands/config';
 import Button from '../../../ui/Button';
 import Card from '../../../ui/Card';
@@ -49,7 +49,7 @@ export function ClaudeCodeConnect({
     try {
       // Resolves to the BARE AuthStatus (no `{ result }` envelope) — see the
       // wrapper in tauriCommands/config.ts.
-      const resp = await openhumanClaudeCodeAuthStatus();
+      const resp = await neppyClaudeCodeAuthStatus();
       setAuth(resp);
     } catch {
       setAuth(null);
@@ -224,7 +224,7 @@ function ClaudeCodeModal({
     let cancelled = false;
     void (async () => {
       try {
-        const s = await openhumanClaudeCodeSettings();
+        const s = await neppyClaudeCodeSettings();
         if (!cancelled) setFullAccess(s.full_access);
       } catch {
         // Fail safe to OFF (acceptEdits) if the read fails.
@@ -240,7 +240,7 @@ function ClaudeCodeModal({
     setSavingAccess(true);
     setFullAccess(next); // optimistic
     try {
-      const s = await openhumanClaudeCodeSetFullAccess(next);
+      const s = await neppyClaudeCodeSetFullAccess(next);
       setFullAccess(s.full_access);
     } catch {
       setFullAccess(!next); // revert on failure
@@ -253,7 +253,7 @@ function ClaudeCodeModal({
     setLaunching(true);
     setLaunchError(null);
     try {
-      await openhumanClaudeCodeLoginLaunch();
+      await neppyClaudeCodeLoginLaunch();
     } catch {
       // Surface the failure inline rather than leaving an unhandled rejection.
       setLaunchError(t('settings.ai.claudeCode.loginError'));

@@ -11,9 +11,9 @@ import { renderWithProviders } from '../../../../test/test-utils';
 const hoisted = vi.hoisted(() => ({ getMode: vi.fn(), setApiKey: vi.fn(), clearApiKey: vi.fn() }));
 
 vi.mock('../../../../utils/tauriCommands', () => ({
-  openhumanComposioGetMode: hoisted.getMode,
-  openhumanComposioSetApiKey: hoisted.setApiKey,
-  openhumanComposioClearApiKey: hoisted.clearApiKey,
+  neppyComposioGetMode: hoisted.getMode,
+  neppyComposioSetApiKey: hoisted.setApiKey,
+  neppyComposioClearApiKey: hoisted.clearApiKey,
 }));
 
 const coreStateMock = vi.fn(() => ({ snapshot: { sessionToken: 'cloud.jwt.remote' } }));

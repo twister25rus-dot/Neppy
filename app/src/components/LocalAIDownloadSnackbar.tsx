@@ -15,8 +15,8 @@ import {
   isTauri,
   type LocalAiDownloadsProgress,
   type LocalAiStatus,
-  openhumanLocalAiDownloadsProgress,
-  openhumanLocalAiStatus,
+  neppyLocalAiDownloadsProgress,
+  neppyLocalAiStatus,
 } from '../utils/tauriCommands';
 import Button from './ui/Button';
 
@@ -98,8 +98,8 @@ const LocalAIDownloadSnackbar = () => {
       let settled = false;
       try {
         const [statusRes, downloadsRes] = await Promise.all([
-          openhumanLocalAiStatus(),
-          openhumanLocalAiDownloadsProgress(),
+          neppyLocalAiStatus(),
+          neppyLocalAiDownloadsProgress(),
         ]);
         if (statusRes.result) setStatus(statusRes.result);
         if (downloadsRes.result) setDownloads(downloadsRes.result);

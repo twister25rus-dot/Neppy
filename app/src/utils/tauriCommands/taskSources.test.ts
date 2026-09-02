@@ -11,16 +11,16 @@ import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from 'vi
 import { callCoreRpc } from '../../services/coreRpcClient';
 import { isTauri } from './common';
 import {
-  openhumanTaskSourcesAdd,
-  openhumanTaskSourcesFetch,
-  openhumanTaskSourcesGet,
-  openhumanTaskSourcesList,
-  openhumanTaskSourcesListTasks,
-  openhumanTaskSourcesPreviewFilter,
-  openhumanTaskSourcesRemove,
-  openhumanTaskSourcesStatus,
-  openhumanTaskSourcesSync,
-  openhumanTaskSourcesUpdate,
+  neppyTaskSourcesAdd,
+  neppyTaskSourcesFetch,
+  neppyTaskSourcesGet,
+  neppyTaskSourcesList,
+  neppyTaskSourcesListTasks,
+  neppyTaskSourcesPreviewFilter,
+  neppyTaskSourcesRemove,
+  neppyTaskSourcesStatus,
+  neppyTaskSourcesSync,
+  neppyTaskSourcesUpdate,
 } from './taskSources';
 
 vi.mock('../../services/coreRpcClient', () => ({ callCoreRpc: vi.fn() }));
@@ -42,12 +42,12 @@ describe('tauriCommands/taskSources', () => {
 
   test('list forwards the list method with no params', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
-    await openhumanTaskSourcesList();
+    await neppyTaskSourcesList();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_list' });
   });
 
   test('get forwards id', async () => {
-    await openhumanTaskSourcesGet('s-1');
+    await neppyTaskSourcesGet('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.task_sources_get',
       params: { id: 's-1' },
@@ -60,12 +60,12 @@ describe('tauriCommands/taskSources', () => {
       filter: { provider: 'github' as const, repo: 'o/r', assignee_is_me: true },
       name: 'My issues',
     };
-    await openhumanTaskSourcesAdd(params);
+    await neppyTaskSourcesAdd(params);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_add', params });
   });
 
   test('update forwards id + patch', async () => {
-    await openhumanTaskSourcesUpdate('s-1', { enabled: false });
+    await neppyTaskSourcesUpdate('s-1', { enabled: false });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.task_sources_update',
       params: { id: 's-1', patch: { enabled: false } },
@@ -73,7 +73,7 @@ describe('tauriCommands/taskSources', () => {
   });
 
   test('remove forwards id', async () => {
-    await openhumanTaskSourcesRemove('s-1');
+    await neppyTaskSourcesRemove('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.task_sources_remove',
       params: { id: 's-1' },
@@ -81,7 +81,7 @@ describe('tauriCommands/taskSources', () => {
   });
 
   test('fetch forwards id', async () => {
-    await openhumanTaskSourcesFetch('s-1');
+    await neppyTaskSourcesFetch('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.task_sources_fetch',
       params: { id: 's-1' },
@@ -90,13 +90,13 @@ describe('tauriCommands/taskSources', () => {
 
   test('sync forwards the sync method with no params', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
-    await openhumanTaskSourcesSync();
+    await neppyTaskSourcesSync();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_sync' });
   });
 
   test('listTasks forwards id + default limit', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
-    await openhumanTaskSourcesListTasks('s-1');
+    await neppyTaskSourcesListTasks('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.task_sources_list_tasks',
       params: { id: 's-1', limit: 50 },
@@ -105,7 +105,7 @@ describe('tauriCommands/taskSources', () => {
 
   test('listTasks forwards an explicit limit', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
-    await openhumanTaskSourcesListTasks('s-1', 10);
+    await neppyTaskSourcesListTasks('s-1', 10);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.task_sources_list_tasks',
       params: { id: 's-1', limit: 10 },
@@ -114,7 +114,7 @@ describe('tauriCommands/taskSources', () => {
 
   test('previewFilter forwards provider/filter/connection/max', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
-    await openhumanTaskSourcesPreviewFilter(
+    await neppyTaskSourcesPreviewFilter(
       'notion',
       { provider: 'notion', database_id: 'db-1', assigned_to_me: true },
       'conn-1',
@@ -132,26 +132,26 @@ describe('tauriCommands/taskSources', () => {
   });
 
   test('status forwards the status method', async () => {
-    await openhumanTaskSourcesStatus();
+    await neppyTaskSourcesStatus();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_status' });
   });
 
   test('every wrapper throws and skips RPC when not in Tauri', async () => {
     mockIsTauri.mockReturnValue(false);
-    await expect(openhumanTaskSourcesList()).rejects.toThrow('Not running in Tauri');
-    await expect(openhumanTaskSourcesGet('x')).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesList()).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesGet('x')).rejects.toThrow('Not running in Tauri');
     await expect(
-      openhumanTaskSourcesAdd({ provider: 'github', filter: { provider: 'github' } })
+      neppyTaskSourcesAdd({ provider: 'github', filter: { provider: 'github' } })
     ).rejects.toThrow('Not running in Tauri');
-    await expect(openhumanTaskSourcesUpdate('x', {})).rejects.toThrow('Not running in Tauri');
-    await expect(openhumanTaskSourcesRemove('x')).rejects.toThrow('Not running in Tauri');
-    await expect(openhumanTaskSourcesFetch('x')).rejects.toThrow('Not running in Tauri');
-    await expect(openhumanTaskSourcesSync()).rejects.toThrow('Not running in Tauri');
-    await expect(openhumanTaskSourcesListTasks('x')).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesUpdate('x', {})).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesRemove('x')).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesFetch('x')).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesSync()).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesListTasks('x')).rejects.toThrow('Not running in Tauri');
     await expect(
-      openhumanTaskSourcesPreviewFilter('github', { provider: 'github' })
+      neppyTaskSourcesPreviewFilter('github', { provider: 'github' })
     ).rejects.toThrow('Not running in Tauri');
-    await expect(openhumanTaskSourcesStatus()).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesStatus()).rejects.toThrow('Not running in Tauri');
     expect(mockCallCoreRpc).not.toHaveBeenCalled();
   });
 });

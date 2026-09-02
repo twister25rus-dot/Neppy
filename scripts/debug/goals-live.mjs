@@ -140,8 +140,8 @@ function parseArgs(argv) {
 
 function defaultNeppyDir() {
   return process.env.OPENHUMAN_APP_ENV === "staging"
-    ? path.join(homedir(), ".openhuman-staging")
-    : path.join(homedir(), ".openhuman");
+    ? path.join(homedir(), ".neppy-staging")
+    : path.join(homedir(), ".neppy");
 }
 
 async function defaultWorkspace() {

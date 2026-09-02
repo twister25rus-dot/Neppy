@@ -160,8 +160,8 @@ pub struct WebChannelEvent {
     /// retry-button, and fallback-CTA UI without regexing the message.
     ///
     /// Where the limit originated:
-    /// `"provider"` | `"openhuman_budget"` | `"agent_loop"`
-    /// | `"openhuman_billing"` | `"transport"` | `"config"`.
+    /// `"provider"` | `"neppy_budget"` | `"agent_loop"`
+    /// | `"neppy_billing"` | `"transport"` | `"config"`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_source: Option<String>,
     /// Whether the same prompt can be retried in this same thread.

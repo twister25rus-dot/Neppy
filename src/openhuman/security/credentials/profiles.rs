@@ -198,7 +198,7 @@ const KEYCHAIN_AUTH_PREFIX: &str = "auth:";
 
 /// Derive a stable keychain user-id from a state directory path.
 ///
-/// For a typical path like `/home/alice/.openhuman/users/uid-123` this
+/// For a typical path like `/home/alice/.neppy/users/uid-123` this
 /// returns `"uid-123"`.  Falls back to a hash of the full path string so
 /// the function always returns a non-empty value even for unusual layouts.
 fn user_id_from_state_dir(state_dir: &Path) -> String {

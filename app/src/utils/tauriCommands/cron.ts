@@ -69,7 +69,7 @@ export interface CronAddParams {
   delete_after_run?: boolean;
 }
 
-export async function openhumanCronAdd(
+export async function neppyCronAdd(
   params: CronAddParams
 ): Promise<CommandResponse<CoreCronJob>> {
   if (!isTauri()) {
@@ -78,14 +78,14 @@ export async function openhumanCronAdd(
   return await callCoreRpc<CommandResponse<CoreCronJob>>({ method: 'openhuman.cron_add', params });
 }
 
-export async function openhumanCronList(): Promise<CommandResponse<CoreCronJob[]>> {
+export async function neppyCronList(): Promise<CommandResponse<CoreCronJob[]>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<CoreCronJob[]>>({ method: 'openhuman.cron_list' });
 }
 
-export async function openhumanCronUpdate(
+export async function neppyCronUpdate(
   jobId: string,
   patch: Record<string, unknown>
 ): Promise<CommandResponse<CoreCronJob>> {
@@ -98,7 +98,7 @@ export async function openhumanCronUpdate(
   });
 }
 
-export async function openhumanCronRemove(
+export async function neppyCronRemove(
   jobId: string
 ): Promise<CommandResponse<{ job_id: string; removed: boolean }>> {
   if (!isTauri()) {
@@ -110,7 +110,7 @@ export async function openhumanCronRemove(
   });
 }
 
-export async function openhumanCronRun(
+export async function neppyCronRun(
   jobId: string
 ): Promise<
   CommandResponse<{
@@ -133,7 +133,7 @@ export async function openhumanCronRun(
   >({ method: 'openhuman.cron_run', params: { job_id: jobId } });
 }
 
-export async function openhumanCronRuns(
+export async function neppyCronRuns(
   jobId: string,
   limit = 20
 ): Promise<CommandResponse<CoreCronRun[]>> {

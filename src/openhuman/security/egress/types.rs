@@ -93,7 +93,7 @@ pub enum IdentificationRisk {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EgressDescriptor {
     /// Short, stable provider slug — the "to where" (e.g. `"openai"`,
-    /// `"composio"`, `"openhuman_backend"`, `"network"`).
+    /// `"composio"`, `"neppy_backend"`, `"network"`).
     pub provider_slug: String,
     /// Specific service / endpoint within the provider (e.g. a model id, a
     /// toolkit/tool slug, a backend path, or a destination host).
@@ -172,7 +172,7 @@ impl EgressDescriptor {
     /// the backend is off-device). `service` is the request path.
     pub fn integration(service: impl Into<String>) -> Self {
         Self::new(
-            "openhuman_backend",
+            "neppy_backend",
             service,
             true,
             EgressReason::Integration,

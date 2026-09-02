@@ -216,7 +216,7 @@ struct IsolatedEnv {
     _home_guard: EnvVarGuard,
     _workspace_guard: EnvVarGuard,
     _config_guard: EnvVarGuard,
-    _openhuman_dir_guard: EnvVarGuard,
+    _neppy_dir_guard: EnvVarGuard,
 }
 
 #[derive(Clone)]
@@ -504,14 +504,14 @@ fn isolated_env() -> IsolatedEnv {
     let home_guard = EnvVarGuard::set("HOME", home.path());
     let workspace_guard = EnvVarGuard::set("OPENHUMAN_WORKSPACE", workspace.path());
     let config_guard = EnvVarGuard::unset("OPENHUMAN_CONFIG_PATH");
-    let openhuman_dir_guard = EnvVarGuard::unset("OPENHUMAN_DIR");
+    let neppy_dir_guard = EnvVarGuard::unset("OPENHUMAN_DIR");
     IsolatedEnv {
         _home: home,
         _workspace: workspace,
         _home_guard: home_guard,
         _workspace_guard: workspace_guard,
         _config_guard: config_guard,
-        _openhuman_dir_guard: openhuman_dir_guard,
+        _neppy_dir_guard: neppy_dir_guard,
     }
 }
 
@@ -1923,14 +1923,14 @@ async fn inference_provider_factory_and_classifiers_cover_user_state_edges() {
     // silently collapsing it onto `reasoning-v1`, so the selected model actually
     // reaches the backend (which validates it).
     config.default_model = Some("stale-provider-model".into());
-    let (_, openhuman_model) = create_chat_model_from_string_with_model_id(
+    let (_, neppy_model) = create_chat_model_from_string_with_model_id(
         "chat",
         "openhuman",
         &config,
         0.0,
     )
     .expect("openhuman model");
-    assert_eq!(openhuman_model, "stale-provider-model");
+    assert_eq!(neppy_model, "stale-provider-model");
 
     let byok_err = provider_factory_error("chat", BYOK_INCOMPLETE_SENTINEL, &config);
     assert!(byok_err.contains("BYOK_INCOMPLETE"));
@@ -1963,7 +1963,7 @@ async fn inference_provider_factory_and_classifiers_cover_user_state_edges() {
 }
 
 #[tokio::test]
-async fn inference_openhuman_backend_provider_covers_authless_and_streaming_edges() {
+async fn inference_neppy_backend_provider_covers_authless_and_streaming_edges() {
     use tinyagents::harness::message::Message;
     use tinyagents::harness::model::{ChatModel, ModelRequest};
 
@@ -1971,7 +1971,7 @@ async fn inference_openhuman_backend_provider_covers_authless_and_streaming_edge
     let provider = NeppyBackendModel::new(
         Some(" https://api.example.test/ "),
         &ProviderRuntimeOptions {
-            openhuman_dir: Some(state_dir.path().to_path_buf()),
+            neppy_dir: Some(state_dir.path().to_path_buf()),
             secrets_encrypt: false,
             ..ProviderRuntimeOptions::default()
         },

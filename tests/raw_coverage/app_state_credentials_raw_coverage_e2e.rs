@@ -170,7 +170,7 @@ fn setup_default_paths(api_url: &str) -> Harness {
         EnvGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
         EnvGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
     ];
-    let default_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let default_root = openhuman_core::openhuman::config::default_root_neppy_dir()
         .expect("default openhuman root");
     let root = openhuman_core::openhuman::config::pre_login_user_dir(&default_root);
     write_min_config(&root, api_url);
@@ -535,7 +535,7 @@ async fn snapshot_clears_pending_backend_validation_after_successful_revalidatio
     .await;
     let harness = setup(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::openhuman::config::default_root_neppy_dir()
         .expect("default openhuman root");
 
     let mut metadata = HashMap::new();
@@ -710,7 +710,7 @@ async fn snapshot_activates_user_dir_after_pending_revalidation_without_initial_
     .await;
     let harness = setup_default_paths(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::openhuman::config::default_root_neppy_dir()
         .expect("default openhuman root");
     assert_eq!(
         openhuman_core::openhuman::config::read_active_user_id(&active_user_root),
@@ -724,7 +724,7 @@ async fn snapshot_activates_user_dir_after_pending_revalidation_without_initial_
     })
     .await
     .expect("seed pre-login local state");
-    let activated_user_dir = openhuman_core::openhuman::config::user_openhuman_dir(
+    let activated_user_dir = openhuman_core::openhuman::config::user_neppy_dir(
         &active_user_root,
         "fresh-activated-user",
     );
@@ -834,7 +834,7 @@ async fn snapshot_errors_without_clearing_pending_session_when_active_user_marke
     .await;
     let harness = setup_default_paths(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::openhuman::config::default_root_neppy_dir()
         .expect("default openhuman root");
     assert_eq!(
         openhuman_core::openhuman::config::read_active_user_id(&active_user_root),
@@ -952,7 +952,7 @@ async fn snapshot_preserves_default_active_user_when_env_scoped_revalidation_is_
     let (api_url, server_task, shutdown_tx) = auth_me_rejected_server().await;
     let harness = setup(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::openhuman::config::default_root_neppy_dir()
         .expect("default openhuman root");
     openhuman_core::openhuman::config::write_active_user_id(&active_user_root, "desktop-user")
         .expect("seed default active user");
@@ -1075,7 +1075,7 @@ async fn snapshot_clears_supplied_user_pending_session_after_revalidation_reject
     let harness = setup(&api_url);
     let config = harness.config().await;
     let user_id = "callback-user";
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::openhuman::config::default_root_neppy_dir()
         .expect("default openhuman root");
     openhuman_core::openhuman::config::write_active_user_id(&active_user_root, user_id)
         .expect("seed active user marker for supplied pending session");

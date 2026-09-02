@@ -15,8 +15,8 @@ describe('tauriCommands', () => {
   let getAuthState: typeof import('../tauriCommands').getAuthState;
   let resetNeppyDataAndRestartCore: typeof import('../tauriCommands').resetNeppyDataAndRestartCore;
   let storeSession: typeof import('../tauriCommands').storeSession;
-  let openhumanLocalAiStatus: typeof import('../tauriCommands').openhumanLocalAiStatus;
-  let openhumanServiceStatus: typeof import('../tauriCommands').openhumanServiceStatus;
+  let neppyLocalAiStatus: typeof import('../tauriCommands').neppyLocalAiStatus;
+  let neppyServiceStatus: typeof import('../tauriCommands').neppyServiceStatus;
   let prevInternals: TauriInternalsHolder['__TAURI_INTERNALS__'];
 
   beforeEach(async () => {
@@ -35,8 +35,8 @@ describe('tauriCommands', () => {
     getAuthState = actual.getAuthState;
     resetNeppyDataAndRestartCore = actual.resetNeppyDataAndRestartCore;
     storeSession = actual.storeSession;
-    openhumanLocalAiStatus = actual.openhumanLocalAiStatus;
-    openhumanServiceStatus = actual.openhumanServiceStatus;
+    neppyLocalAiStatus = actual.neppyLocalAiStatus;
+    neppyServiceStatus = actual.neppyServiceStatus;
   });
 
   afterEach(() => {
@@ -116,18 +116,18 @@ describe('tauriCommands', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('openhumanLocalAiStatus returns upgrade hint on unknown method', async () => {
+  test('neppyLocalAiStatus returns upgrade hint on unknown method', async () => {
     mockCallCoreRpc.mockRejectedValueOnce(new Error('unknown method: openhuman.inference_status'));
 
-    await expect(openhumanLocalAiStatus()).rejects.toThrow(
+    await expect(neppyLocalAiStatus()).rejects.toThrow(
       'Local model runtime is unavailable in this core build. Restart app after updating to the latest build.'
     );
   });
 
-  test('openhumanServiceStatus throws when not running in Tauri', async () => {
+  test('neppyServiceStatus throws when not running in Tauri', async () => {
     mockIsTauri.mockReturnValue(false);
 
-    await expect(openhumanServiceStatus()).rejects.toThrow('Not running in Tauri');
+    await expect(neppyServiceStatus()).rejects.toThrow('Not running in Tauri');
     expect(mockCallCoreRpc).not.toHaveBeenCalled();
   });
 });

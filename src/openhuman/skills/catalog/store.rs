@@ -1,6 +1,6 @@
 //! Persistence for the skill registry: cached catalog entries.
 //!
-//! The cache lives at `~/.openhuman/skill-registry/cache.json` with a 1-hour
+//! The cache lives at `~/.neppy/skill-registry/cache.json` with a 1-hour
 //! TTL. Past the TTL the cache is kept (not deleted) so callers can serve it
 //! stale-while-revalidate; see [`load_cached_catalog_state`]. Set
 //! `OPENHUMAN_SKILL_REGISTRY_CACHE_DIR` to relocate the cache (used by tests).
@@ -37,7 +37,7 @@ fn registry_dir() -> Option<PathBuf> {
             return Some(PathBuf::from(trimmed));
         }
     }
-    dirs::home_dir().map(|h| h.join(".openhuman").join(CACHE_DIR))
+    dirs::home_dir().map(|h| h.join(".neppy").join(CACHE_DIR))
 }
 
 fn now_epoch() -> u64 {

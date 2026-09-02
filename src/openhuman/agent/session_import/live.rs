@@ -72,7 +72,7 @@ fn kill_switch_engaged() -> bool {
 /// the crate `FileStore` name sanitizer. This is a forward-looking,
 /// harness-visible handle to the same `tinyagents_store` KV tree the live
 /// dual-write mirrors into; readers stay legacy until 04.2.
-pub const TINYAGENTS_SESSION_KV_STORE: &str = "openhuman_sessions";
+pub const TINYAGENTS_SESSION_KV_STORE: &str = "neppy_sessions";
 
 /// Whether the live session-store dual-write is enabled for this turn.
 ///

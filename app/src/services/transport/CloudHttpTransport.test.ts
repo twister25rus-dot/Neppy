@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CloudHttpTransport } from './CloudHttpTransport';
 
-const URL = 'https://cloud.openhuman.app/rpc';
+const URL = 'https://cloud.neppy.app/rpc';
 
 function mockFetchOnce(
   body: unknown,

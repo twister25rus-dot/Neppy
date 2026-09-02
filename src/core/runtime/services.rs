@@ -37,7 +37,7 @@ pub fn spawn_login_gated_services(embedded_core: bool) {
                 }
 
                 // Check if a user is already logged in from a previous session.
-                let already_logged_in = crate::openhuman::config::default_root_openhuman_dir()
+                let already_logged_in = crate::openhuman::config::default_root_neppy_dir()
                     .ok()
                     .and_then(|root| crate::openhuman::config::read_active_user_id(&root))
                     .is_some();

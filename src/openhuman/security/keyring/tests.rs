@@ -5,7 +5,7 @@
 //! 1. **OS backend tests** — use the real OS keychain.  On macOS / Windows
 //!    these run unconditionally; on Linux they are skipped when the Secret
 //!    Service daemon is not available.  All test keys are prefixed with
-//!    `__openhuman_test__` to make cleanup easy.
+//!    `__neppy_test__` to make cleanup easy.
 //!
 //! 2. **FileBackend tests** — run against a temp directory.  Always run,
 //!    no OS dependency.
@@ -35,7 +35,7 @@ fn os_keychain_available() -> bool {
         return false;
     }
     let b = backend::OsBackend;
-    let probe_key = "__openhuman_probe_test__";
+    let probe_key = "__neppy_probe_test__";
     let probe_val = "__probe_ok__";
     if b.set(probe_key, probe_val).is_err() {
         return false;
@@ -393,7 +393,7 @@ fn os_round_trip_get_set_delete() {
         return;
     }
     let b = backend::OsBackend;
-    let nk = "__openhuman_test__rtgsd:round_trip_key_001";
+    let nk = "__neppy_test__rtgsd:round_trip_key_001";
     let _ = b.delete(nk);
 
     assert!(b.get(nk).unwrap().is_none(), "absent before set");
@@ -410,7 +410,7 @@ fn os_delete_nonexistent_is_ok() {
         return;
     }
     backend::OsBackend
-        .delete("__openhuman_test__del_ne:__nonexistent__")
+        .delete("__neppy_test__del_ne:__nonexistent__")
         .expect("idempotent delete");
 }
 
@@ -421,8 +421,8 @@ fn os_user_id_isolation() {
         return;
     }
     let b = backend::OsBackend;
-    let nk_a = "__openhuman_test__user_a_iso:__shared_key_iso__";
-    let nk_b = "__openhuman_test__user_b_iso:__shared_key_iso__";
+    let nk_a = "__neppy_test__user_a_iso:__shared_key_iso__";
+    let nk_b = "__neppy_test__user_b_iso:__shared_key_iso__";
     let _ = b.delete(nk_a);
     let _ = b.delete(nk_b);
 
@@ -516,7 +516,7 @@ impl KeyringBackend for StrictSetBackend {
 /// Run the OLD (broken) probe logic against any backend.
 /// Returns `true` only if the round-trip succeeded.
 fn old_probe<B: KeyringBackend>(b: &B) -> bool {
-    const KEY: &str = "__probe__:__openhuman_keyring_probe__";
+    const KEY: &str = "__probe__:__neppy_keyring_probe__";
     const VAL: &str = "__probe_value__";
     if b.set(KEY, VAL).is_err() {
         return false;
@@ -529,7 +529,7 @@ fn old_probe<B: KeyringBackend>(b: &B) -> bool {
 /// Run the NEW (fixed) probe logic against any backend.
 /// Deletes any residue before writing, making the probe idempotent.
 fn new_probe<B: KeyringBackend>(b: &B) -> bool {
-    const KEY: &str = "__probe__:__openhuman_keyring_probe__";
+    const KEY: &str = "__probe__:__neppy_keyring_probe__";
     const VAL: &str = "__probe_value__";
     let _ = b.delete(KEY);
     if b.set(KEY, VAL).is_err() {
@@ -554,7 +554,7 @@ fn probe_old_logic_fails_when_key_preexists() {
     // previous launch (e.g. the app was force-quit after writing but before
     // the delete could run, or a previous `is_available` call left it behind).
     b.inner
-        .set("__probe__:__openhuman_keyring_probe__", "stale")
+        .set("__probe__:__neppy_keyring_probe__", "stale")
         .unwrap();
 
     // Second probe with residue: `set` hits "already exists" → returns false.
@@ -575,7 +575,7 @@ fn probe_new_logic_succeeds_even_when_key_preexists() {
 
     // Re-seed to simulate a leftover key (same scenario as the bug test).
     b.inner
-        .set("__probe__:__openhuman_keyring_probe__", "stale")
+        .set("__probe__:__neppy_keyring_probe__", "stale")
         .unwrap();
 
     assert!(
@@ -607,7 +607,7 @@ fn is_available_returns_true_on_repeated_calls_os_backend() {
     }
     // Use the OsBackend directly to simulate the cross-launch residue.
     let b = backend::OsBackend;
-    let probe_key = "__probe__:__openhuman_keyring_probe__";
+    let probe_key = "__probe__:__neppy_keyring_probe__";
     // Pre-seed to mimic a leftover from a previous app launch.
     let _ = b.set(probe_key, "__probe_value__");
     // `is_available()` must still return true.
@@ -633,7 +633,7 @@ fn migrate_from_file_happy_path_os() {
         return;
     }
     let b = backend::OsBackend;
-    let user_id = "__openhuman_test__mig_hp";
+    let user_id = "__neppy_test__mig_hp";
     let key = "__migrate_key_hp__";
     let nk = format!("{user_id}:{key}");
     let _ = b.delete(&nk);

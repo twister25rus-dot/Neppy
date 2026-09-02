@@ -411,7 +411,7 @@ export const skillsApi = {
   /**
    * Remove an installed user-scope SKILL.md skill via `openhuman.skill_registry_uninstall`.
    *
-   * Only user-scope installs (`~/.openhuman/skills/<name>/`) are supported.
+   * Only user-scope installs (`~/.neppy/skills/<name>/`) are supported.
    * Project-scope and legacy skills are read-only — trying to uninstall one
    * returns a backend error surfaced as a rejected promise. The Rust side
    * canonicalises paths and refuses names with separators / traversal

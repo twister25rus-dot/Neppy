@@ -9,7 +9,7 @@ import AVFoundation
 import os.log
 import Speech
 
-private let log = Logger(subsystem: "ai.openhuman.ptt", category: "PTTRecorder")
+private let log = Logger(subsystem: "ai.neppy.ptt", category: "PTTRecorder")
 
 /// Single-session AVAudioEngine + SFSpeechRecognizer recorder.
 /// One `startListening` call creates one recognition task; `stopListening`

@@ -8,7 +8,7 @@
 //! thin wrapper in [`super::builtin_definitions`] loads them and appends
 //! the synthetic `fork` definition. Users can ship custom definitions as
 //! TOML files under `$OPENHUMAN_WORKSPACE/agents/*.toml` (with a fallback
-//! to `~/.openhuman/agents/*.toml` for user-global specialists) which
+//! to `~/.neppy/agents/*.toml` for user-global specialists) which
 //! override built-ins on id collision. See [`super::definition_loader`]
 //! for the directory scan + TOML parsing contract.
 //!
@@ -737,7 +737,7 @@ impl AgentDefinitionRegistry {
 
     /// Build a registry containing built-ins plus any custom TOML
     /// definitions found under `<workspace>/agents/*.toml` (and the
-    /// `~/.openhuman/agents/*.toml` fallback). Custom definitions
+    /// `~/.neppy/agents/*.toml` fallback). Custom definitions
     /// override built-ins on `id` collision. Files that fail to parse
     /// are logged and skipped rather than aborting startup.
     pub fn load(workspace: &Path) -> Result<Self> {

@@ -150,7 +150,7 @@ fn ensure_memory_seams(workspace: &Path) {
                     workspace_dir: workspace.clone(),
                     action_dir: workspace.clone(),
                     config_path: workspace.join("config.toml"),
-                    ..openhuman_core::openhuman::config::Config::default()
+                    ..neppy_core::openhuman::config::Config::default()
                 });
                 openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
                     config.clone(),

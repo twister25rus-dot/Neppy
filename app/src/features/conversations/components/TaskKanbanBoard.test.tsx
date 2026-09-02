@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TaskBoard, TaskBoardCard } from '../../../types/turnState';
 import {
   isTauri,
-  openhumanTaskSourcesFetch,
-  openhumanTaskSourcesList,
-  openhumanTaskSourcesStatus,
-  openhumanTaskSourcesSync,
-  openhumanTaskSourcesUpdate,
+  neppyTaskSourcesFetch,
+  neppyTaskSourcesList,
+  neppyTaskSourcesStatus,
+  neppyTaskSourcesSync,
+  neppyTaskSourcesUpdate,
 } from '../../../utils/tauriCommands';
 import { TaskKanbanBoard } from './TaskKanbanBoard';
 
@@ -16,11 +16,11 @@ import { TaskKanbanBoard } from './TaskKanbanBoard';
 vi.mock('../../../lib/i18n/I18nContext', () => ({ useT: () => ({ t: (key: string) => key }) }));
 vi.mock('../../../utils/tauriCommands', () => ({
   isTauri: vi.fn(),
-  openhumanTaskSourcesFetch: vi.fn(),
-  openhumanTaskSourcesList: vi.fn(),
-  openhumanTaskSourcesStatus: vi.fn(),
-  openhumanTaskSourcesSync: vi.fn(),
-  openhumanTaskSourcesUpdate: vi.fn(),
+  neppyTaskSourcesFetch: vi.fn(),
+  neppyTaskSourcesList: vi.fn(),
+  neppyTaskSourcesStatus: vi.fn(),
+  neppyTaskSourcesSync: vi.fn(),
+  neppyTaskSourcesUpdate: vi.fn(),
 }));
 
 // TaskSourceControls navigates to the settings page via useNavigate(); these
@@ -54,7 +54,7 @@ describe('TaskKanbanBoard approval surface', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(isTauri).mockReturnValue(true);
-    vi.mocked(openhumanTaskSourcesList).mockResolvedValue([
+    vi.mocked(neppyTaskSourcesList).mockResolvedValue([
       {
         id: 'src-1',
         provider: 'github',
@@ -67,13 +67,13 @@ describe('TaskKanbanBoard approval surface', () => {
         createdAt: '2026-06-02T00:00:00Z',
       },
     ]);
-    vi.mocked(openhumanTaskSourcesStatus).mockResolvedValue({
+    vi.mocked(neppyTaskSourcesStatus).mockResolvedValue({
       enabled: true,
       defaultIntervalSecs: 600,
       sourceCount: 1,
       enabledSourceCount: 1,
     });
-    vi.mocked(openhumanTaskSourcesFetch).mockResolvedValue({
+    vi.mocked(neppyTaskSourcesFetch).mockResolvedValue({
       sourceId: 'src-1',
       provider: 'github',
       fetched: 3,
@@ -81,10 +81,10 @@ describe('TaskKanbanBoard approval surface', () => {
       skippedDupe: 1,
       pruned: 0,
     });
-    vi.mocked(openhumanTaskSourcesSync).mockResolvedValue([
+    vi.mocked(neppyTaskSourcesSync).mockResolvedValue([
       { sourceId: 'src-1', provider: 'github', fetched: 3, routed: 2, skippedDupe: 1, pruned: 1 },
     ]);
-    vi.mocked(openhumanTaskSourcesUpdate).mockResolvedValue({
+    vi.mocked(neppyTaskSourcesUpdate).mockResolvedValue({
       id: 'src-1',
       provider: 'github',
       name: 'Open issues',
@@ -194,14 +194,14 @@ describe('TaskKanbanBoard approval surface', () => {
     expect(await screen.findByText('Open issues')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('settings.taskSources.fetchNow'));
-    await waitFor(() => expect(openhumanTaskSourcesFetch).toHaveBeenCalledWith('src-1'));
+    await waitFor(() => expect(neppyTaskSourcesFetch).toHaveBeenCalledWith('src-1'));
 
     fireEvent.click(screen.getByText('settings.taskSources.syncAll'));
-    await waitFor(() => expect(openhumanTaskSourcesSync).toHaveBeenCalled());
+    await waitFor(() => expect(neppyTaskSourcesSync).toHaveBeenCalled());
 
     fireEvent.click(screen.getByText('settings.taskSources.disable'));
     await waitFor(() =>
-      expect(openhumanTaskSourcesUpdate).toHaveBeenCalledWith('src-1', { enabled: false })
+      expect(neppyTaskSourcesUpdate).toHaveBeenCalledWith('src-1', { enabled: false })
     );
 
     // "Manage sources" jumps to the merged Integrations settings page

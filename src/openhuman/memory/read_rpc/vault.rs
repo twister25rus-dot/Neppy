@@ -138,7 +138,7 @@ fn probe_directory_writable(dir: &std::path::Path) -> bool {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let probe = dir.join(format!(
-        ".openhuman-vault-writecheck-{}-{ts}.tmp",
+        ".neppy-vault-writecheck-{}-{ts}.tmp",
         std::process::id()
     ));
     match std::fs::OpenOptions::new()

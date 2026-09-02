@@ -53,7 +53,7 @@ Where your data physically lives on disk:
 
 | Platform      | Data folder                 |
 | ------------- | --------------------------- |
-| macOS / Linux | `~/.openhuman/`             |
-| Windows       | `%USERPROFILE%\.openhuman\` |
+| macOS / Linux | `~/.neppy/`             |
+| Windows       | `%USERPROFILE%\.neppy\` |
 
 Almost everything in this section (backups, recovery, migration) comes back to that one folder.

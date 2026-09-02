@@ -6,15 +6,15 @@ import {
   type AgentSettings,
   type AutonomySettings,
   isTauri,
-  openhumanGetAgentSettings,
-  openhumanGetAutonomySettings,
-  openhumanUpdateAgentSettings,
-  openhumanUpdateAutonomySettings,
+  neppyGetAgentSettings,
+  neppyGetAutonomySettings,
+  neppyUpdateAgentSettings,
+  neppyUpdateAutonomySettings,
 } from '../../../../utils/tauriCommands';
 import {
   type CoreCronJob,
-  openhumanCronList,
-  openhumanCronUpdate,
+  neppyCronList,
+  neppyCronUpdate,
 } from '../../../../utils/tauriCommands/cron';
 import AgentAccessPanel from '../AgentAccessPanel';
 
@@ -63,26 +63,26 @@ vi.mock('../../../../utils/tauriCommands', async () => {
   return {
     ...actual,
     isTauri: vi.fn(() => true),
-    openhumanGetAutonomySettings: vi.fn(),
-    openhumanUpdateAutonomySettings: vi.fn(),
-    openhumanGetAgentSettings: vi.fn(),
-    openhumanUpdateAgentSettings: vi.fn(),
+    neppyGetAutonomySettings: vi.fn(),
+    neppyUpdateAutonomySettings: vi.fn(),
+    neppyGetAgentSettings: vi.fn(),
+    neppyUpdateAgentSettings: vi.fn(),
     // The advanced panel no longer calls the agent-paths RPCs (action-dir
     // moved to PermissionsPanel) — no mock needed, but keep the import clean.
   };
 });
 
 vi.mock('../../../../utils/tauriCommands/cron', () => ({
-  openhumanCronList: vi.fn(),
-  openhumanCronUpdate: vi.fn(),
+  neppyCronList: vi.fn(),
+  neppyCronUpdate: vi.fn(),
 }));
 
-const mockGet = vi.mocked(openhumanGetAutonomySettings);
-const mockUpdate = vi.mocked(openhumanUpdateAutonomySettings);
-const mockGetAgent = vi.mocked(openhumanGetAgentSettings);
-const mockUpdateAgent = vi.mocked(openhumanUpdateAgentSettings);
-const mockCronList = vi.mocked(openhumanCronList);
-const mockCronUpdate = vi.mocked(openhumanCronUpdate);
+const mockGet = vi.mocked(neppyGetAutonomySettings);
+const mockUpdate = vi.mocked(neppyUpdateAutonomySettings);
+const mockGetAgent = vi.mocked(neppyGetAgentSettings);
+const mockUpdateAgent = vi.mocked(neppyUpdateAgentSettings);
+const mockCronList = vi.mocked(neppyCronList);
+const mockCronUpdate = vi.mocked(neppyCronUpdate);
 
 // Minimal CoreCronJob for the seeded, disabled tinyplace_autopilot job.
 const autopilotJob = (overrides: Partial<CoreCronJob> = {}): CoreCronJob =>

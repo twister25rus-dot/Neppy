@@ -192,13 +192,13 @@ pub struct AuditLogger {
 static WORKSPACE_AUDIT_LOGGERS: OnceLock<Mutex<HashMap<PathBuf, Arc<AuditLogger>>>> =
     OnceLock::new();
 
-/// Return the shared [`AuditLogger`] for `openhuman_dir`, creating it on first
+/// Return the shared [`AuditLogger`] for `neppy_dir`, creating it on first
 /// use. All callers targeting the same workspace receive the same `Arc`, so log
 /// rotation and appends coordinate through one logger. The `config` of the first
 /// caller for a given workspace wins; later callers reuse the cached logger.
 pub fn get_or_create_workspace_audit_logger(
     config: AuditConfig,
-    openhuman_dir: PathBuf,
+    neppy_dir: PathBuf,
 ) -> Result<Arc<AuditLogger>> {
     // Normalize the key: `PathBuf` equality is lexical, so `/ws` vs `/ws/` vs a
     // symlinked spelling would otherwise cache distinct loggers for one physical
@@ -209,30 +209,30 @@ pub fn get_or_create_workspace_audit_logger(
     // workspace dir not created yet) is expected and logged at debug; other
     // errors (permission, I/O) are unexpected and logged at warn so real
     // filesystem problems stay observable.
-    let openhuman_dir = match std::fs::canonicalize(&openhuman_dir) {
+    let neppy_dir = match std::fs::canonicalize(&neppy_dir) {
         Ok(path) => path,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
             log::debug!(
                 "[openhuman:audit] workspace path not yet created; keying registry on raw path: {}",
-                openhuman_dir.display()
+                neppy_dir.display()
             );
-            openhuman_dir
+            neppy_dir
         }
         Err(err) => {
             log::warn!(
                 "[openhuman:audit] failed to canonicalize workspace path {} ({err}); keying registry on raw path",
-                openhuman_dir.display()
+                neppy_dir.display()
             );
-            openhuman_dir
+            neppy_dir
         }
     };
     let registry = WORKSPACE_AUDIT_LOGGERS.get_or_init(|| Mutex::new(HashMap::new()));
     let mut map = registry.lock();
-    if let Some(existing) = map.get(&openhuman_dir) {
+    if let Some(existing) = map.get(&neppy_dir) {
         return Ok(Arc::clone(existing));
     }
-    let logger = Arc::new(AuditLogger::new(config, openhuman_dir.clone())?);
-    map.insert(openhuman_dir, Arc::clone(&logger));
+    let logger = Arc::new(AuditLogger::new(config, neppy_dir.clone())?);
+    map.insert(neppy_dir, Arc::clone(&logger));
     Ok(logger)
 }
 
@@ -283,8 +283,8 @@ impl AuditLogger {
     }
 
     /// Create a new audit logger
-    pub fn new(config: AuditConfig, openhuman_dir: PathBuf) -> Result<Self> {
-        let log_path = openhuman_dir.join(&config.log_path);
+    pub fn new(config: AuditConfig, neppy_dir: PathBuf) -> Result<Self> {
+        let log_path = neppy_dir.join(&config.log_path);
         log::info!(
             "[openhuman:audit] Logger initialized: enabled={}, path={}",
             config.enabled,

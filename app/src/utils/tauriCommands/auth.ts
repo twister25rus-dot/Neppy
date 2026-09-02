@@ -81,7 +81,7 @@ export async function storeSession(
   });
 }
 
-export async function openhumanEncryptSecret(plaintext: string): Promise<CommandResponse<string>> {
+export async function neppyEncryptSecret(plaintext: string): Promise<CommandResponse<string>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -91,7 +91,7 @@ export async function openhumanEncryptSecret(plaintext: string): Promise<Command
   });
 }
 
-export async function openhumanDecryptSecret(ciphertext: string): Promise<CommandResponse<string>> {
+export async function neppyDecryptSecret(ciphertext: string): Promise<CommandResponse<string>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }

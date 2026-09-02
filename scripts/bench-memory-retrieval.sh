@@ -23,7 +23,7 @@ if [[ ! -x "$CORE_BIN" ]]; then
     exit 1
 fi
 
-WORKSPACE_DIR="${OPENHUMAN_WORKSPACE:-$HOME/.openhuman-staging}"
+WORKSPACE_DIR="${OPENHUMAN_WORKSPACE:-$HOME/.neppy-staging}"
 USERS_DIR="$WORKSPACE_DIR/users"
 
 if [[ ! -d "$USERS_DIR" ]]; then

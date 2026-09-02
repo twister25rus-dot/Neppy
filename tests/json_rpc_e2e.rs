@@ -120,7 +120,7 @@ fn ensure_json_rpc_e2e_memory_seams() {
             .spawn(|| {
                 let config = Arc::new(openhuman_core::openhuman::config::Config {
                     workspace_dir: json_rpc_e2e_shared_workspace().to_path_buf(),
-                    ..openhuman_core::openhuman::config::Config::default()
+                    ..neppy_core::openhuman::config::Config::default()
                 });
                 openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
                     config.clone(),
@@ -1096,7 +1096,7 @@ fn tool_call_is_error(v: &Value) -> Option<bool> {
         .and_then(Value::as_bool)
 }
 
-fn write_min_config(openhuman_dir: &Path, api_origin: &str) {
+fn write_min_config(neppy_dir: &Path, api_origin: &str) {
     // `chat_onboarding_completed = true` is retained for backward compatibility
     // with existing config.toml files. All chat turns now route to the
     // orchestrator directly regardless of this flag.
@@ -1116,23 +1116,23 @@ encrypt = false
         std::fs::write(&path, cfg).expect("write config");
     }
 
-    write_config_file(openhuman_dir, &cfg);
+    write_config_file(neppy_dir, &cfg);
 
     // Runtime config resolution is user-scoped before login, so tests that seed
-    // the root `~/.openhuman` directory also need the equivalent pre-login
-    // config under `~/.openhuman/users/local`.
-    if openhuman_dir
+    // the root `~/.neppy` directory also need the equivalent pre-login
+    // config under `~/.neppy/users/local`.
+    if neppy_dir
         .file_name()
-        .is_some_and(|name| name == std::ffi::OsStr::new(".openhuman"))
+        .is_some_and(|name| name == std::ffi::OsStr::new(".neppy"))
     {
-        write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
+        write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
 
     let _: openhuman_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
-fn write_min_config_with_local_ai_disabled(openhuman_dir: &Path, api_origin: &str) {
+fn write_min_config_with_local_ai_disabled(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
 default_model = "e2e-mock-model"
@@ -1152,13 +1152,13 @@ enabled = false
         std::fs::write(&path, cfg).expect("write config");
     }
 
-    write_config_file(openhuman_dir, &cfg);
+    write_config_file(neppy_dir, &cfg);
 
-    if openhuman_dir
+    if neppy_dir
         .file_name()
-        .is_some_and(|name| name == std::ffi::OsStr::new(".openhuman"))
+        .is_some_and(|name| name == std::ffi::OsStr::new(".neppy"))
     {
-        write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
+        write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
 
     let _: openhuman_core::openhuman::config::Config =
@@ -1227,14 +1227,14 @@ async fn json_rpc_config_update_browser_settings_persists_backend() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:9");
+    write_min_config(&neppy_home, "http://127.0.0.1:9");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -1549,14 +1549,14 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:9");
+    write_min_config(&neppy_home, "http://127.0.0.1:9");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -2151,7 +2151,7 @@ async fn json_rpc_protocol_auth_and_agent_hello_inner() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2164,12 +2164,12 @@ async fn json_rpc_protocol_auth_and_agent_hello_inner() {
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
 
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     // Pre-create the user-scoped config directory so that when store_session
     // activates user "e2e-user" and reloads config, it finds the correct
     // api_url and secrets.encrypt=false (rather than defaults).
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -2281,7 +2281,7 @@ async fn json_rpc_prompt_injection_is_rejected_before_model_call() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2291,8 +2291,8 @@ async fn json_rpc_prompt_injection_is_rejected_before_model_call() {
 
     let (api_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    write_min_config(neppy_home.as_path(), &api_origin);
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config(&user_scoped_dir, &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -2374,7 +2374,7 @@ async fn json_rpc_thread_labels_create_and_update() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2384,7 +2384,7 @@ async fn json_rpc_thread_labels_create_and_update() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -2480,7 +2480,7 @@ async fn json_rpc_todos_crud_on_personal_board() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2490,7 +2490,7 @@ async fn json_rpc_todos_crud_on_personal_board() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -2598,7 +2598,7 @@ async fn json_rpc_todos_revise_plan_rejects_awaiting() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2608,7 +2608,7 @@ async fn json_rpc_todos_revise_plan_rejects_awaiting() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -2669,7 +2669,7 @@ async fn json_rpc_plan_review_decide_unknown_and_invalid() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2679,7 +2679,7 @@ async fn json_rpc_plan_review_decide_unknown_and_invalid() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -2728,7 +2728,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2738,7 +2738,7 @@ async fn json_rpc_thread_goal_lifecycle() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -2885,7 +2885,7 @@ async fn json_rpc_thread_title_create_and_update() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2895,7 +2895,7 @@ async fn json_rpc_thread_title_create_and_update() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -2979,7 +2979,7 @@ async fn json_rpc_thread_not_found_errors_are_structured() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -2989,7 +2989,7 @@ async fn json_rpc_thread_not_found_errors_are_structured() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -3046,7 +3046,7 @@ async fn json_rpc_thread_generate_title_falls_back_when_provider_path_is_unavail
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -3059,7 +3059,7 @@ async fn json_rpc_thread_generate_title_falls_back_when_provider_path_is_unavail
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -3155,7 +3155,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -3165,7 +3165,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -3362,7 +3362,7 @@ async fn json_rpc_run_ledger_lifecycle() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -3372,7 +3372,7 @@ async fn json_rpc_run_ledger_lifecycle() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -3481,7 +3481,7 @@ async fn json_rpc_agent_work_list_groups_runs_by_bucket() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -3491,7 +3491,7 @@ async fn json_rpc_agent_work_list_groups_runs_by_bucket() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -3589,7 +3589,7 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -3599,7 +3599,7 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -3694,7 +3694,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -3704,7 +3704,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -4016,7 +4016,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -4026,7 +4026,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -4225,7 +4225,7 @@ async fn json_rpc_memory_sync_and_learn() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     // Share the module's workspace: this case ingests through the memory
@@ -4241,7 +4241,7 @@ async fn json_rpc_memory_sync_and_learn() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -4429,7 +4429,7 @@ async fn json_rpc_memory_tree_end_to_end() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -4446,7 +4446,7 @@ async fn json_rpc_memory_tree_end_to_end() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let controllers = all_memory_tree_registered_controllers();
     // Sampled methods this test exercises end-to-end. Don't pin
@@ -4619,7 +4619,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     // Share the module's workspace: this case ingests through the memory
@@ -4636,7 +4636,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -4847,7 +4847,7 @@ async fn json_rpc_memory_tree_cover_window_end_to_end() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -4860,7 +4860,7 @@ async fn json_rpc_memory_tree_cover_window_end_to_end() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -4970,14 +4970,14 @@ async fn json_rpc_web_chat_routing_cases_use_expected_backend_models_inner() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     // Keep this router on its own fixture even if a previous test's server
     // still has an active-user marker while it winds down.
     let _workspace_guard = EnvVarGuard::set_to_path(
         "OPENHUMAN_WORKSPACE",
-        &openhuman_home.join("users").join("routing-e2e-user"),
+        &neppy_home.join("users").join("routing-e2e-user"),
     );
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
@@ -4985,8 +4985,8 @@ async fn json_rpc_web_chat_routing_cases_use_expected_backend_models_inner() {
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
 
-    write_min_config_with_local_ai_disabled(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("routing-e2e-user");
+    write_min_config_with_local_ai_disabled(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("routing-e2e-user");
     write_min_config_with_local_ai_disabled(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -5079,16 +5079,14 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     // Keep this router on its own fixture even if a previous test's server
     // still has an active-user marker while it winds down.
     let _workspace_guard = EnvVarGuard::set_to_path(
         "OPENHUMAN_WORKSPACE",
-        &openhuman_home
-            .join("users")
-            .join("custom-provider-e2e-user"),
+        &neppy_home.join("users").join("custom-provider-e2e-user"),
     );
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
@@ -5096,10 +5094,8 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
 
-    write_min_config_with_local_ai_disabled(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home
-        .join("users")
-        .join("custom-provider-e2e-user");
+    write_min_config_with_local_ai_disabled(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("custom-provider-e2e-user");
     write_min_config_with_local_ai_disabled(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -5326,7 +5322,7 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -5336,8 +5332,8 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
 
-    write_min_config_with_local_ai_disabled(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    write_min_config_with_local_ai_disabled(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config_with_local_ai_disabled(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -5493,7 +5489,7 @@ async fn json_rpc_rejects_non_object_params_with_clear_error() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -5502,7 +5498,7 @@ async fn json_rpc_rejects_non_object_params_with_clear_error() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -5534,7 +5530,7 @@ async fn json_rpc_removed_screen_intelligence_methods_are_not_found() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -5543,7 +5539,7 @@ async fn json_rpc_removed_screen_intelligence_methods_are_not_found() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -5567,7 +5563,7 @@ async fn json_rpc_app_state_snapshot_returns_runtime_shape() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -5576,7 +5572,7 @@ async fn json_rpc_app_state_snapshot_returns_runtime_shape() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -5654,7 +5650,7 @@ async fn json_rpc_app_state_update_local_state_round_trips_into_snapshot() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -5663,7 +5659,7 @@ async fn json_rpc_app_state_update_local_state_round_trips_into_snapshot() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -5719,7 +5715,7 @@ async fn json_rpc_wallet_setup_round_trips_status() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -5728,7 +5724,7 @@ async fn json_rpc_wallet_setup_round_trips_status() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -5827,7 +5823,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -5844,7 +5840,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6059,7 +6055,7 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6073,7 +6069,7 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6485,7 +6481,7 @@ async fn json_rpc_wallet_evm_base_network_prepare_execute_round_trips() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6496,7 +6492,7 @@ async fn json_rpc_wallet_evm_base_network_prepare_execute_round_trips() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6570,7 +6566,7 @@ async fn json_rpc_wallet_btc_prepare_execute_round_trips() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6580,7 +6576,7 @@ async fn json_rpc_wallet_btc_prepare_execute_round_trips() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6662,7 +6658,7 @@ async fn json_rpc_wallet_solana_prepare_execute_round_trips() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6672,7 +6668,7 @@ async fn json_rpc_wallet_solana_prepare_execute_round_trips() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6732,7 +6728,7 @@ async fn json_rpc_wallet_tron_prepare_execute_round_trips() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6742,7 +6738,7 @@ async fn json_rpc_wallet_tron_prepare_execute_round_trips() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6821,7 +6817,7 @@ async fn json_rpc_wallet_tron_trc20_prepare_execute_round_trips() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6831,7 +6827,7 @@ async fn json_rpc_wallet_tron_trc20_prepare_execute_round_trips() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6911,7 +6907,7 @@ async fn json_rpc_wallet_network_defaults_lists_all_chains() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6920,7 +6916,7 @@ async fn json_rpc_wallet_network_defaults_lists_all_chains() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -6976,7 +6972,7 @@ async fn json_rpc_app_state_snapshot_chat_onboarding_defaults_false() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -6997,14 +6993,11 @@ default_temperature = 0.7
 encrypt = false
 "#
     );
-    std::fs::create_dir_all(&openhuman_home).expect("mkdir openhuman");
-    std::fs::write(openhuman_home.join("config.toml"), &cfg).expect("write config");
-    std::fs::create_dir_all(openhuman_home.join("users").join("local")).expect("mkdir users/local");
+    std::fs::create_dir_all(&neppy_home).expect("mkdir openhuman");
+    std::fs::write(neppy_home.join("config.toml"), &cfg).expect("write config");
+    std::fs::create_dir_all(neppy_home.join("users").join("local")).expect("mkdir users/local");
     std::fs::write(
-        openhuman_home
-            .join("users")
-            .join("local")
-            .join("config.toml"),
+        neppy_home.join("users").join("local").join("config.toml"),
         &cfg,
     )
     .expect("write user config");
@@ -7036,7 +7029,7 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -7046,7 +7039,7 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -7181,7 +7174,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -7191,7 +7184,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -7399,7 +7392,7 @@ async fn json_rpc_local_ai_lm_studio_config_diagnostics_and_prompt() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -7411,7 +7404,7 @@ async fn json_rpc_local_ai_lm_studio_config_diagnostics_and_prompt() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let lm_app = Router::new()
         .route(
@@ -7551,7 +7544,7 @@ async fn json_rpc_local_ai_ollama_endpoint_normalizes_bind_address_and_clears() 
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -7560,7 +7553,7 @@ async fn json_rpc_local_ai_ollama_endpoint_normalizes_bind_address_and_clears() 
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -7611,7 +7604,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -7623,7 +7616,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let lm_app = Router::new()
         .route(
@@ -7781,7 +7774,7 @@ async fn json_rpc_inference_prompt_requires_external_ollama_runtime_when_unreach
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -7792,7 +7785,7 @@ async fn json_rpc_inference_prompt_requires_external_ollama_runtime_when_unreach
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -7850,7 +7843,7 @@ async fn billing_rpc_e2e() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -7859,10 +7852,10 @@ async fn billing_rpc_e2e() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     // Pre-create the user-scoped config so store_session finds correct settings.
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -8000,7 +7993,7 @@ async fn team_rpc_e2e() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -8009,10 +8002,10 @@ async fn team_rpc_e2e() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     // Pre-create the user-scoped config so store_session finds correct settings.
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -8131,7 +8124,7 @@ async fn about_app_rpc_list_lookup_and_search() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -8140,7 +8133,7 @@ async fn about_app_rpc_list_lookup_and_search() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -8240,7 +8233,7 @@ async fn voice_status_returns_availability() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -8250,7 +8243,7 @@ async fn voice_status_returns_availability() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -8305,7 +8298,7 @@ async fn notification_settings_roundtrip_and_disabled_ingest_skip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -8314,7 +8307,7 @@ async fn notification_settings_roundtrip_and_disabled_ingest_skip() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -8396,7 +8389,7 @@ async fn credentials_crud_roundtrip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -8407,7 +8400,7 @@ async fn credentials_crud_roundtrip() {
     // well-formed, even though provider-credential calls don't hit the network.
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -8531,7 +8524,7 @@ async fn credentials_crud_roundtrip() {
 ///
 /// Validates that the RPC method is registered, wire-decodes
 /// `UninstallSkillParams`, resolves the slug against
-/// `~/.openhuman/skills/<slug>/`, removes the directory on success, and
+/// `~/.neppy/skills/<slug>/`, removes the directory on success, and
 /// forwards the core error message verbatim for the two documented
 /// failure modes (missing SKILL.md and path traversal). Previously only
 /// the `uninstall_skill(...)` helper was tested — the wire layer
@@ -8545,7 +8538,7 @@ async fn skills_uninstall_rpc_e2e() {
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
 
-    let skills_root = home.join(".openhuman").join("skills");
+    let skills_root = home.join(".neppy").join("skills");
     std::fs::create_dir_all(&skills_root).expect("mkdir skills root");
 
     // Seed a skill whose on-disk slug differs from its frontmatter name —
@@ -9001,7 +8994,7 @@ async fn rpc_update_apply_can_be_disabled_by_config_policy() {
         workspace_dir: tmp.path().join("workspace"),
         action_dir: tmp.path().join("workspace"),
         config_path: tmp.path().join("config.toml"),
-        ..openhuman_core::openhuman::config::Config::default()
+        ..neppy_core::openhuman::config::Config::default()
     };
     config.update.rpc_mutations_enabled = false;
     config
@@ -9065,7 +9058,7 @@ async fn channels_status_reflects_managed_dm_credential_e2e() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -9074,7 +9067,7 @@ async fn channels_status_reflects_managed_dm_credential_e2e() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -9158,7 +9151,7 @@ async fn whatsapp_memory_doc_ingest_e2e() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -9174,7 +9167,7 @@ async fn whatsapp_memory_doc_ingest_e2e() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -9277,7 +9270,7 @@ async fn voice_cloud_transcribe_registered_e2e() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -9286,7 +9279,7 @@ async fn voice_cloud_transcribe_registered_e2e() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -9494,7 +9487,7 @@ async fn mcp_clients_lifecycle() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -9503,8 +9496,8 @@ async fn mcp_clients_lifecycle() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("local");
+    write_min_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("local");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -9644,7 +9637,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -9653,8 +9646,8 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("local");
+    write_min_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("local");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     // Seed the registry detail cache so `registry_get` resolves offline to a
@@ -9832,7 +9825,7 @@ async fn mcp_clients_set_enabled_smoke() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -9841,8 +9834,8 @@ async fn mcp_clients_set_enabled_smoke() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("local");
+    write_min_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("local");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     // Seed the registry detail cache so install resolves offline to the stub.
@@ -9946,7 +9939,7 @@ async fn mcp_clients_install_idempotent_refresh_and_canonical_dedup() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -9955,8 +9948,8 @@ async fn mcp_clients_install_idempotent_refresh_and_canonical_dedup() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("local");
+    write_min_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("local");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     // Seed the smithery detail cache so the FIRST (prefixed) install resolves
@@ -10088,7 +10081,7 @@ async fn mcp_clients_registry_settings_roundtrip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -10097,8 +10090,8 @@ async fn mcp_clients_registry_settings_roundtrip() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
-    write_min_config(&openhuman_home.join("users").join("local"), &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
+    write_min_config(&neppy_home.join("users").join("local"), &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -10218,7 +10211,7 @@ async fn json_rpc_proxy_config_corruption_recovery() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -10242,7 +10235,7 @@ encrypt = false
     // Config resolution is user-scoped: the runtime reads from users/local, not
     // the workspace root. Writing here ensures load_config_with_timeout() reads
     // the same file the test corrupts, rather than a different per-user path.
-    let config_dir = openhuman_home.join("users").join("local");
+    let config_dir = neppy_home.join("users").join("local");
     std::fs::create_dir_all(&config_dir).expect("mkdir openhuman users/local");
     let config_path = config_dir.join("config.toml");
     std::fs::write(&config_path, valid_toml.as_bytes()).expect("write valid config");
@@ -10324,7 +10317,7 @@ async fn json_rpc_config_bak_recovery_after_primary_corruption() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -10348,7 +10341,7 @@ encrypt = false
 "#
     );
     // Seed the pre-login user directory where the runtime will resolve config.
-    let user_dir = openhuman_home.join("users").join("local");
+    let user_dir = neppy_home.join("users").join("local");
     std::fs::create_dir_all(&user_dir).expect("mkdir users/local");
     let config_path = user_dir.join("config.toml");
     std::fs::write(&config_path, initial_toml.as_bytes()).expect("write initial config");
@@ -10433,7 +10426,7 @@ async fn json_rpc_stale_auth_profile_lock_auto_recovered() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -10442,12 +10435,12 @@ async fn json_rpc_stale_auth_profile_lock_auto_recovered() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
 
     // Plant a stale lock file with a dead PID before the RPC server starts.
     // The pre-login user directory (`users/local`) is where the runtime
     // resolves auth profiles, so the lock must live there.
-    let user_dir = openhuman_home.join("users").join("local");
+    let user_dir = neppy_home.join("users").join("local");
     std::fs::create_dir_all(&user_dir).expect("mkdir users/local for stale lock");
     let lock_path = user_dir.join("auth-profiles.lock");
     // PID 0 is the idle/swapper process on POSIX systems and is never a
@@ -10505,7 +10498,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -10514,7 +10507,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config_with_local_ai_disabled(&openhuman_home, &mock_origin);
+    write_min_config_with_local_ai_disabled(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -10702,7 +10695,7 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -10713,7 +10706,7 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
-    write_min_config_with_local_ai_disabled(&openhuman_home, &mock_origin);
+    write_min_config_with_local_ai_disabled(&neppy_home, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -10931,14 +10924,14 @@ async fn json_rpc_task_sources_crud_and_status() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:1");
+    write_min_config(&neppy_home, "http://127.0.0.1:1");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -11131,14 +11124,14 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:1");
+    write_min_config(&neppy_home, "http://127.0.0.1:1");
 
     // Register the stub github provider BEFORE serving so the fetch RPC
     // resolves it from the global registry.
@@ -11270,14 +11263,14 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
 
 /// Full lifecycle over JSON-RPC for the `workflows` namespace:
 /// create → list → read → phase → uninstall. Workflows are scaffolded under
-/// the user-scope root (`$HOME/.openhuman/workflows/<slug>/`), which the temp
+/// the user-scope root (`$HOME/.neppy/workflows/<slug>/`), which the temp
 /// `HOME` isolates per-test.
 #[tokio::test]
 async fn json_rpc_workflows_lifecycle_round_trip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -11287,7 +11280,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -11390,7 +11383,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
 // These exercise the tinyflows `flows_*` controller surface end-to-end over
 // HTTP JSON-RPC (distinct from the legacy markdown `workflows_*` namespace
 // covered above). Flows persist to a SQLite store + durable checkpoint under
-// the temp `$HOME/.openhuman` workspace, so each test isolates `HOME`.
+// the temp `$HOME/.neppy` workspace, so each test isolates `HOME`.
 //
 // All flows ops wrap their value with a log line, so `into_cli_compatible_json`
 // emits `{ "result": <value>, "logs": [...] }` — peel that envelope with
@@ -11409,7 +11402,7 @@ async fn boot_flows_rpc_env() -> (
 ) {
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
@@ -11421,7 +11414,7 @@ async fn boot_flows_rpc_env() -> (
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
-    write_min_config(openhuman_home.as_path(), &api_origin);
+    write_min_config(neppy_home.as_path(), &api_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -11960,7 +11953,7 @@ async fn json_rpc_flows_suggestion_lifecycle_methods_are_wired() {
 /// resolves to `reasoning-v1` — letting the full-arc test assert the two nodes
 /// routed to distinct managed tiers.
 #[cfg(feature = "flows")]
-fn write_flows_tier_config(openhuman_dir: &Path, api_origin: &str) {
+fn write_flows_tier_config(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
 default_model = "chat-v1"
@@ -11983,12 +11976,12 @@ compaction_enabled = false
         std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
-    write_config_file(openhuman_dir, &cfg);
-    if openhuman_dir
+    write_config_file(neppy_dir, &cfg);
+    if neppy_dir
         .file_name()
-        .is_some_and(|name| name == std::ffi::OsStr::new(".openhuman"))
+        .is_some_and(|name| name == std::ffi::OsStr::new(".neppy"))
     {
-        write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
+        write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
     let _: openhuman_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
@@ -12092,7 +12085,7 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
     let _fifo_guard = ScriptedFifoGuard;
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -12102,8 +12095,8 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{mock_addr}");
-    write_flows_tier_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    write_flows_tier_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_flows_tier_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -12715,7 +12708,7 @@ async fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech_inner()
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -12733,8 +12726,8 @@ async fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech_inner()
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
 
-    write_min_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    write_min_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -12834,14 +12827,14 @@ async fn json_rpc_voice_server_settings_roundtrip_always_on_and_wake_word() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:9");
+    write_min_config(&neppy_home, "http://127.0.0.1:9");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -12915,7 +12908,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -12924,7 +12917,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     // The global override would mask the persisted value; keep it unset here.
     let _interval_guard = EnvVarGuard::unset("OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:9");
+    write_min_config(&neppy_home, "http://127.0.0.1:9");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -13048,7 +13041,7 @@ async fn json_rpc_memory_sync_settings_env_override_is_reflected() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -13057,7 +13050,7 @@ async fn json_rpc_memory_sync_settings_env_override_is_reflected() {
     // Operator sets an 8h cadence via the environment (not a UI write).
     let _interval_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS", "28800");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:9");
+    write_min_config(&neppy_home, "http://127.0.0.1:9");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{}", rpc_addr);
@@ -13338,7 +13331,7 @@ fn mock_composio_connected_accounts_router() -> Router {
 /// Write a minimal config that selects Composio **direct** mode with an inline
 /// API key, so `scan_active_sync_targets` resolves a direct client that hits the
 /// loopback mock pointed at by `OPENHUMAN_COMPOSIO_DIRECT_BASE_V3`.
-fn write_composio_direct_config(openhuman_dir: &Path, api_origin: &str) {
+fn write_composio_direct_config(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
 default_model = "e2e-mock-model"
@@ -13357,12 +13350,12 @@ api_key = "ck_e2e_test"
         std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
-    write_config_file(openhuman_dir, &cfg);
-    if openhuman_dir
+    write_config_file(neppy_dir, &cfg);
+    if neppy_dir
         .file_name()
-        .is_some_and(|name| name == std::ffi::OsStr::new(".openhuman"))
+        .is_some_and(|name| name == std::ffi::OsStr::new(".neppy"))
     {
-        write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
+        write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
     let _: openhuman_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
@@ -13421,7 +13414,7 @@ async fn json_rpc_memory_sources_list_filters_to_active_connections() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -13435,7 +13428,7 @@ async fn json_rpc_memory_sources_list_filters_to_active_connections() {
     let _v2_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &composio_base);
     let _v3_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &composio_base);
 
-    write_composio_direct_config(&openhuman_home, "http://127.0.0.1:1");
+    write_composio_direct_config(&neppy_home, "http://127.0.0.1:1");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -13507,7 +13500,7 @@ async fn json_rpc_memory_sources_list_shows_all_when_scan_unavailable() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -13520,7 +13513,7 @@ async fn json_rpc_memory_sources_list_shows_all_when_scan_unavailable() {
     let _v2_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", dead_base);
     let _v3_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", dead_base);
 
-    write_composio_direct_config(&openhuman_home, "http://127.0.0.1:1");
+    write_composio_direct_config(&neppy_home, "http://127.0.0.1:1");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -13575,7 +13568,7 @@ async fn json_rpc_memory_sources_list_keeps_multiple_active_connections_per_tool
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -13589,7 +13582,7 @@ async fn json_rpc_memory_sources_list_keeps_multiple_active_connections_per_tool
     let _v2_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &composio_base);
     let _v3_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &composio_base);
 
-    write_composio_direct_config(&openhuman_home, "http://127.0.0.1:1");
+    write_composio_direct_config(&neppy_home, "http://127.0.0.1:1");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -13653,7 +13646,7 @@ async fn json_rpc_workflow_run_engine_executes_builtin_to_completion_inner() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -13663,8 +13656,8 @@ async fn json_rpc_workflow_run_engine_executes_builtin_to_completion_inner() {
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
 
-    write_min_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    write_min_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -13798,7 +13791,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
     let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -13808,8 +13801,8 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
 
-    write_min_config(&openhuman_home, &mock_origin);
-    let user_scoped_dir = openhuman_home.join("users").join("e2e-user");
+    write_min_config(&neppy_home, &mock_origin);
+    let user_scoped_dir = neppy_home.join("users").join("e2e-user");
     write_min_config(&user_scoped_dir, &mock_origin);
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -14103,7 +14096,7 @@ async fn json_rpc_threads_token_usage_reads_persisted_thread_totals() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
     let workspace = home.join("workspace");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
@@ -14111,7 +14104,7 @@ async fn json_rpc_threads_token_usage_reads_persisted_thread_totals() {
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_min_config(&openhuman_home, "http://127.0.0.1:9");
+    write_min_config(&neppy_home, "http://127.0.0.1:9");
 
     // Plant a root session transcript for thread "thr-e2e": a `_meta` header with
     // the cumulative totals + an assistant message carrying last-turn usage/model.

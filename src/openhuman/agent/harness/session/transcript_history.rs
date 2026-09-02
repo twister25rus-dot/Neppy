@@ -101,7 +101,7 @@
 //! TAURI-RUST-7 trailing strip in
 //! [`bound_cached_transcript_messages`][super::types::Agent::bound_cached_transcript_messages],
 //! which sniffs that envelope out of `ChatMessage.content`. Two lesser losses
-//! ride along and are inert on this path: the `openhuman_turn_usage`
+//! ride along and are inert on this path: the `neppy_turn_usage`
 //! `extra_metadata` (re-attached by `read_transcript`, never re-serialised from
 //! the cached prefix) and `AssistantMessage.id` (no reader anywhere).
 //!

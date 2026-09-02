@@ -452,7 +452,7 @@ fn assert_no_jsonrpc_error<'a>(v: &'a Value, context: &str) -> &'a Value {
         .unwrap_or_else(|| panic!("{context}: missing result: {v}"))
 }
 
-fn write_min_config(openhuman_dir: &Path, api_origin: &str) {
+fn write_min_config(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
 default_model = "e2e-mock-model"
@@ -468,12 +468,12 @@ encrypt = false
         std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
-    write_config_file(openhuman_dir, &cfg);
-    if openhuman_dir
+    write_config_file(neppy_dir, &cfg);
+    if neppy_dir
         .file_name()
-        .is_some_and(|name| name == std::ffi::OsStr::new(".openhuman"))
+        .is_some_and(|name| name == std::ffi::OsStr::new(".neppy"))
     {
-        write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
+        write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
     let _: openhuman_core::openhuman::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
@@ -618,7 +618,7 @@ async fn boot_stack() -> Stack {
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path().to_path_buf();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let home_guard = EnvVarGuard::set_to_path("HOME", &home);
     let workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
@@ -627,9 +627,9 @@ async fn boot_stack() -> Stack {
 
     let (mock_addr, mock_join) = serve_on_ephemeral(scripted_upstream_router()).await;
     let mock_origin = format!("http://{mock_addr}");
-    write_min_config(&openhuman_home, &mock_origin);
+    write_min_config(&neppy_home, &mock_origin);
     // Pre-write user-scoped config so it's found after auth_store_session activates "e2e-user".
-    write_min_config(&openhuman_home.join("users").join("e2e-user"), &mock_origin);
+    write_min_config(&neppy_home.join("users").join("e2e-user"), &mock_origin);
 
     // The transport-only router does not create a Core runtime context. Install
     // the explicit tinymemory host seams before handlers service memory-backed

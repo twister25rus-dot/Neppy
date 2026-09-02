@@ -34,8 +34,8 @@ mod learning;
 mod load;
 pub use load::{
     action_dir_env_override, active_user_marker_path, clear_active_user, default_action_dir,
-    default_projects_dir, default_root_openhuman_dir, pre_login_user_dir, read_active_user_id,
-    resolve_action_dir, user_openhuman_dir, write_active_user_id, PRE_LOGIN_USER_ID,
+    default_projects_dir, default_root_neppy_dir, pre_login_user_dir, read_active_user_id,
+    resolve_action_dir, user_neppy_dir, write_active_user_id, PRE_LOGIN_USER_ID,
 };
 // Crate-internal: the workspace→config-dir resolver, reused by the cloud
 // embedder's keyless credential-scope resolution (mirrors `config::load`).

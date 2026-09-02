@@ -33,7 +33,7 @@ use openhuman_core::openhuman::inference::local::LocalAiService;
 // ── Environment serialization lock ───────────────────────────────────────────
 //
 // Each test temporarily sets OPENHUMAN_WORKSPACE to redirect the marker path
-// away from ~/.openhuman/. The mutex prevents parallel tests from stomping
+// away from ~/.neppy/. The mutex prevents parallel tests from stomping
 // each other's env state.
 
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -95,7 +95,7 @@ fn write_marker(path: &std::path::Path, pid: u32) {
         std::fs::create_dir_all(parent).expect("create marker dir");
     }
     let json = format!(
-        r#"{{"pid":{pid},"started_at_unix":1700000000,"binary_path":"test-stub","openhuman_pid":{my_pid}}}"#,
+        r#"{{"pid":{pid},"started_at_unix":1700000000,"binary_path":"test-stub","neppy_pid":{my_pid}}}"#,
         pid = pid,
         my_pid = std::process::id(),
     );

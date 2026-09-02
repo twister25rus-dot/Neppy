@@ -134,7 +134,7 @@ fn is_local_cli_route(provider_string: &str) -> bool {
 /// **`subconscious`** background workload so the Connections → API keys → LLM
 /// "Subconscious" provider control governs triage classification.
 ///
-/// The managed model id comes from `make_openhuman_backend` →
+/// The managed model id comes from `make_neppy_backend` →
 /// [`managed_tier_for_role`]`("subconscious")` (i.e. `chat-v1`), the same
 /// registry the subconscious tick and the agent harness use — NOT from
 /// `default_model`. So triage stays consistent with the tick: one place pins
@@ -174,7 +174,7 @@ fn build_remote_provider(config: &Config) -> anyhow::Result<ResolvedProvider> {
     }
 
     // Build through the per-workload factory: managed routes resolve their model
-    // id via `make_openhuman_backend` → `managed_tier_for_role`, BYOK cloud routes
+    // id via `make_neppy_backend` → `managed_tier_for_role`, BYOK cloud routes
     // via the slug's configured model.
     let build = |provider_string: &str| -> anyhow::Result<ResolvedProvider> {
         let (_chat_model, model) = create_chat_model_from_string_with_model_id(

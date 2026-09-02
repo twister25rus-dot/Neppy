@@ -20,7 +20,7 @@ use crate::openhuman::security::{AutonomyLevel, SecurityPolicy, TrustedAccess, T
 use tinyagents::harness::artifacts::ArtifactPathPolicy;
 
 /// Policy with disjoint action/workspace roots, the shipped default layout
-/// (`~/Neppy/projects` vs `~/.openhuman/users/<id>/workspace`).
+/// (`~/Neppy/projects` vs `~/.neppy/users/<id>/workspace`).
 ///
 /// `action_dir` is granted as a read-write trusted root, because that is what
 /// production does: `SecurityPolicy::from_config` grants the projects dir

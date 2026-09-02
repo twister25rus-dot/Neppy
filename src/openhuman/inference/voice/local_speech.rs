@@ -36,7 +36,7 @@
 //! Providers`. That triggers
 //! [`crate::openhuman::inference::local::install_piper`] which downloads the
 //! Piper binary archive (`.zip` on Windows, `.tar.gz` on macOS / Linux)
-//! into `~/.openhuman/bin/piper/`, extracts it, and stages the bundled
+//! into `~/.neppy/bin/piper/`, extracts it, and stages the bundled
 //! `en_US-lessac-medium` voice (`.onnx` + `.onnx.json`) alongside via a
 //! `.part` file + atomic rename. After install the `resolve_piper_binary`
 //! helper in `inference/paths.rs` picks it up automatically.
@@ -133,7 +133,7 @@ pub async fn synthesize_piper(
         .to_string();
     debug!("{LOG_PREFIX} voice={voice_id} model_path={voice_path}");
 
-    let out_dir = std::env::temp_dir().join("openhuman_voice_output");
+    let out_dir = std::env::temp_dir().join("neppy_voice_output");
     tokio::fs::create_dir_all(&out_dir)
         .await
         .map_err(|e| format!("{LOG_PREFIX} failed to create voice output directory: {e}"))?;

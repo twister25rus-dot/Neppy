@@ -135,7 +135,7 @@ pub async fn apply_model_settings(
             Some(trimmed.to_string())
         };
         if let Some(ref m) = config.default_model {
-            if !crate::openhuman::inference::provider::factory::is_known_openhuman_tier(m) {
+            if !crate::openhuman::inference::provider::factory::is_known_neppy_tier(m) {
                 log::warn!(
                     "[config][model-settings] default_model '{}' is not a recognized \
                      Neppy backend tier — it will be replaced with the platform \

@@ -1043,7 +1043,7 @@ pub fn all_tools_with_runtime(
             security.clone(),
             crate::openhuman::inference::provider::ProviderRuntimeOptions {
                 auth_profile_override: None,
-                openhuman_dir: root_config
+                neppy_dir: root_config
                     .config_path
                     .parent()
                     .map(std::path::PathBuf::from),

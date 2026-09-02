@@ -139,12 +139,12 @@ pub fn prune_legacy_default_workflows(workspace_dir: &Path) {
 
 /// Load the runnable workflow registry: compile-time builtins (no declared
 /// inputs) + every workflow `discover_workflows` surfaces — user
-/// (`~/.openhuman/skills`), project (`<ws>/.openhuman/skills`, trusted), and
+/// (`~/.neppy/skills`), project (`<ws>/.neppy/skills`, trusted), and
 /// legacy (`<ws>/skills`) — loaded into a runnable [`WorkflowDefinition`].
 ///
 /// This is the unification fix: the RUN path now reads the SAME roots the
 /// create/list path writes to, so a workflow authored on the Intelligence tab
-/// (which lands in `.openhuman/skills`) is runnable, not just listable.
+/// (which lands in `.neppy/skills`) is runnable, not just listable.
 /// Previously this scanned only `<ws>/skills`, so `get_workflow` (and thus
 /// `run_workflow`) returned "unknown workflow" for anything created via the UI.
 ///
@@ -418,7 +418,7 @@ mod tests {
     /// session, and leaves global-only skills resolvable everywhere.
     #[test]
     fn get_workflow_with_profile_resolution_matrix() {
-        // Unique-ish ids so a developer's real ~/.openhuman/skills can't collide.
+        // Unique-ish ids so a developer's real ~/.neppy/skills can't collide.
         let ws = tempfile::TempDir::new().unwrap();
         let profile_root = tempfile::TempDir::new().unwrap();
         let other_root = tempfile::TempDir::new().unwrap(); // a different profile

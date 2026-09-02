@@ -65,16 +65,16 @@ vi.mock('../../../utils/tauriCommands/auth', () => ({
 }));
 
 vi.mock('../../../utils/tauriCommands/config', () => ({
-  openhumanGetClientConfig: () => mockNeppyGetClientConfig(),
-  openhumanUpdateModelSettings: (a: unknown) => mockNeppyUpdateModelSettings(a),
-  openhumanUpdateLocalAiSettings: (a: unknown) => mockNeppyUpdateLocalAiSettings(a),
+  neppyGetClientConfig: () => mockNeppyGetClientConfig(),
+  neppyUpdateModelSettings: (a: unknown) => mockNeppyUpdateModelSettings(a),
+  neppyUpdateLocalAiSettings: (a: unknown) => mockNeppyUpdateLocalAiSettings(a),
 }));
 
 vi.mock('../../../utils/tauriCommands/localAi', () => ({
-  openhumanLocalAiStatus: (...args: unknown[]) => mockNeppyLocalAiStatus(...args),
-  openhumanLocalAiDiagnostics: (...args: unknown[]) => mockNeppyLocalAiDiagnostics(...args),
-  openhumanLocalAiPresets: (...args: unknown[]) => mockNeppyLocalAiPresets(...args),
-  openhumanLocalAiApplyPreset: (...args: unknown[]) => mockNeppyLocalAiApplyPreset(...args),
+  neppyLocalAiStatus: (...args: unknown[]) => mockNeppyLocalAiStatus(...args),
+  neppyLocalAiDiagnostics: (...args: unknown[]) => mockNeppyLocalAiDiagnostics(...args),
+  neppyLocalAiPresets: (...args: unknown[]) => mockNeppyLocalAiPresets(...args),
+  neppyLocalAiApplyPreset: (...args: unknown[]) => mockNeppyLocalAiApplyPreset(...args),
 }));
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

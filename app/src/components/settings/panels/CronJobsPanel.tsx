@@ -8,12 +8,12 @@ import {
   type CoreCronJob,
   type CoreCronRun,
   type CronAddParams,
-  openhumanCronAdd,
-  openhumanCronList,
-  openhumanCronRemove,
-  openhumanCronRun,
-  openhumanCronRuns,
-  openhumanCronUpdate,
+  neppyCronAdd,
+  neppyCronList,
+  neppyCronRemove,
+  neppyCronRun,
+  neppyCronRuns,
+  neppyCronUpdate,
 } from '../../../utils/tauriCommands';
 import Button from '../../ui/Button';
 import { SettingsSection, SettingsStatusLine } from '../controls';
@@ -45,7 +45,7 @@ const CronJobsPanel = () => {
   const [editingJob, setEditingJob] = useState<CoreCronJob | null>(null);
 
   const loadCoreCronJobs = useCallback(async () => {
-    const response = await openhumanCronList();
+    const response = await neppyCronList();
     const sorted = [...response.result].sort((a, b) => {
       const aTs = new Date(a.next_run).getTime();
       const bTs = new Date(b.next_run).getTime();
@@ -85,7 +85,7 @@ const CronJobsPanel = () => {
     setCoreBusyKey(key);
     setCoreError(null);
     try {
-      const response = await openhumanCronUpdate(job.id, { enabled: !job.enabled });
+      const response = await neppyCronUpdate(job.id, { enabled: !job.enabled });
       const updated = response.result;
       setCoreJobs(prev => prev.map(item => (item.id === updated.id ? updated : item)));
     } catch (err) {
@@ -102,8 +102,8 @@ const CronJobsPanel = () => {
     setCoreError(null);
 
     try {
-      await openhumanCronRun(jobId);
-      const runs = await openhumanCronRuns(jobId, 10);
+      await neppyCronRun(jobId);
+      const runs = await neppyCronRuns(jobId, 10);
       setCoreRunsByJob(prev => ({ ...prev, [jobId]: runs.result }));
       await loadCoreCronJobs();
     } catch (err) {
@@ -120,7 +120,7 @@ const CronJobsPanel = () => {
     setCoreError(null);
 
     try {
-      const runs = await openhumanCronRuns(jobId, 10);
+      const runs = await neppyCronRuns(jobId, 10);
       setCoreRunsByJob(prev => ({ ...prev, [jobId]: runs.result }));
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -139,7 +139,7 @@ const CronJobsPanel = () => {
       deleteAfterRun: params.delete_after_run,
     });
     try {
-      await openhumanCronAdd(params);
+      await neppyCronAdd(params);
       await loadCoreCronJobs();
       setFormOpen(false);
       loadCronJobsLog('handleCreate success');
@@ -161,7 +161,7 @@ const CronJobsPanel = () => {
       deleteAfterRun: patch.delete_after_run,
     });
     try {
-      await openhumanCronUpdate(jobId, patch);
+      await neppyCronUpdate(jobId, patch);
       await loadCoreCronJobs();
       setEditingJob(null);
       loadCronJobsLog('handleUpdate success');
@@ -179,7 +179,7 @@ const CronJobsPanel = () => {
     setCoreError(null);
 
     try {
-      await openhumanCronRemove(jobId);
+      await neppyCronRemove(jobId);
       setCoreJobs(prev => prev.filter(job => job.id !== jobId));
       setCoreRunsByJob(prev => {
         const next = { ...prev };

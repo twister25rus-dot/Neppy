@@ -118,10 +118,10 @@ async fn serve_rpc() -> (
     (addr, join)
 }
 
-fn write_min_config(openhuman_dir: &Path) {
-    std::fs::create_dir_all(openhuman_dir).expect("create .openhuman");
+fn write_min_config(neppy_dir: &Path) {
+    std::fs::create_dir_all(neppy_dir).expect("create .neppy");
     std::fs::write(
-        openhuman_dir.join("config.toml"),
+        neppy_dir.join("config.toml"),
         r#"api_url = "http://127.0.0.1:9"
 default_model = "e2e-model"
 
@@ -143,10 +143,10 @@ embedding_dimensions = 0
 
 async fn setup() -> TestHarness {
     let tmp = tempdir().expect("tempdir");
-    let openhuman_dir = tmp.path().join(".openhuman");
-    write_min_config(&openhuman_dir);
+    let neppy_dir = tmp.path().join(".neppy");
+    write_min_config(&neppy_dir);
     let guards = vec![
-        EnvVarGuard::set_to_path("OPENHUMAN_HOME", &openhuman_dir),
+        EnvVarGuard::set_to_path("OPENHUMAN_HOME", &neppy_dir),
         EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path()),
         EnvVarGuard::set("OPENHUMAN_API_URL", "http://127.0.0.1:9"),
         EnvVarGuard::set("OPENHUMAN_SECRETS_ENCRYPT", "false"),
@@ -498,7 +498,7 @@ async fn pick_listen_port_covers_preferred_free_wrapper_retry_and_bind_failure()
 }
 
 #[tokio::test]
-async fn pick_listen_port_detects_openhuman_listener_for_takeover() {
+async fn pick_listen_port_detects_neppy_listener_for_takeover() {
     let _lock = env_lock();
     let probe = spawn_probe_listener("200 OK", r#"{"name":"openhuman","ok":true}"#).await;
 
@@ -519,7 +519,7 @@ async fn pick_listen_port_detects_openhuman_listener_for_takeover() {
 }
 
 #[tokio::test]
-async fn pick_listen_port_falls_back_for_non_openhuman_and_status_fingerprints() {
+async fn pick_listen_port_falls_back_for_non_neppy_and_status_fingerprints() {
     let _lock = env_lock();
     let probe = spawn_probe_listener("200 OK", r#"{"name":"not-openhuman"}"#).await;
 
@@ -563,7 +563,7 @@ async fn pick_listen_port_falls_back_for_non_openhuman_and_status_fingerprints()
 }
 
 #[tokio::test]
-async fn pick_listen_port_identifies_ipv6_openhuman_listener_when_supported() {
+async fn pick_listen_port_identifies_ipv6_neppy_listener_when_supported() {
     let _lock = env_lock();
     let Some(probe) =
         try_spawn_probe_listener_on("::1", "200 OK", r#"{"name":"openhuman","ok":true}"#).await

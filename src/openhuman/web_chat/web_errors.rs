@@ -54,7 +54,7 @@ pub(crate) fn generic_inference_error_user_message() -> &'static str {
 /// exceeds its wall-clock backstop (`OPENHUMAN_WEB_TURN_TIMEOUT_SECS`). Kept as
 /// a grep-friendly anchor so [`classify_inference_error`] routes it to the
 /// dedicated `turn_timeout` branch instead of the generic catch-all.
-pub(crate) const TURN_TIMEOUT_MARKER: &str = "openhuman_turn_wall_clock_timeout";
+pub(crate) const TURN_TIMEOUT_MARKER: &str = "neppy_turn_wall_clock_timeout";
 
 /// Build the synthetic error string a wedged web turn raises when its
 /// wall-clock backstop fires. Carries [`TURN_TIMEOUT_MARKER`] so the error
@@ -202,9 +202,9 @@ pub(crate) struct ClassifiedError {
     pub(crate) message: String,
     /// Where the limit originated. One of:
     /// - `"provider"`         — upstream LLM provider 429 / rate limit
-    /// - `"openhuman_budget"` — local SecurityPolicy per-hour action cap
+    /// - `"neppy_budget"` — local SecurityPolicy per-hour action cap
     /// - `"agent_loop"`       — agent ran out of tool iterations
-    /// - `"openhuman_billing"` — Neppy credit/quota exhaustion
+    /// - `"neppy_billing"` — Neppy credit/quota exhaustion
     /// - `"transport"`        — network / DNS / TLS / timeout
     /// - `"config"`           — auth, model, context, generic
     pub(crate) source: &'static str,
@@ -422,7 +422,7 @@ fn classify_by_backend_error_code(
             message: "You're out of credits. Top up, or switch to 'Use Your Own Models' \
                  in Settings."
                 .to_string(),
-            source: "openhuman_billing",
+            source: "neppy_billing",
             retryable: false,
             retry_after_ms: None,
             provider,
@@ -600,7 +600,7 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
                  this thread and tool-heavy steps will resume as the budget refills.",
                 err,
             ),
-            source: "openhuman_budget",
+            source: "neppy_budget",
             // The window decays gradually so the same thread CAN recover
             // — we just can't predict the exact wait.
             retryable: true,
@@ -804,14 +804,14 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
         // top-up / switch-to-your-own-model guidance instead.
         || is_inference_budget_exceeded_error(err)
     {
-        // `openhuman_billing` means Neppy's own credit/quota system —
+        // `neppy_billing` means Neppy's own credit/quota system —
         // a 402 carrying the "openhuman" envelope (or no envelope at all,
         // since Neppy's backend is the only origin without one in
         // practice). When the 402 comes from an upstream provider envelope
         // (`<provider> API error (402)`), the limit belongs to that
         // provider, not Neppy billing, so tag the source as `provider`.
         let source: &'static str = match provider.as_deref() {
-            Some("openhuman") | None => "openhuman_billing",
+            Some("openhuman") | None => "neppy_billing",
             Some(_) => "provider",
         };
         ClassifiedError {

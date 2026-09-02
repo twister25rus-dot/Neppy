@@ -1365,7 +1365,7 @@ fn resolve_subagent_source_hint_with_config_routes_via_factory() {
     // Regression (#hint-routing): the managed backend used to ignore the
     // workload role and return `default_model`, so `hint = "agentic"`
     // silently ran on whatever `default_model` was (here `chat-v1`).
-    // `make_openhuman_backend` now pins specialised roles to their tier,
+    // `make_neppy_backend` now pins specialised roles to their tier,
     // so `agentic` resolves to `agentic-v1` regardless of `default_model`.
     use crate::openhuman::config::Config;
     let mut config = Config::default();

@@ -249,7 +249,7 @@ mod tests {
 
     #[tokio::test]
     async fn edit_replaces_unique_match() {
-        let dir = std::env::temp_dir().join("openhuman_test_edit_unique");
+        let dir = std::env::temp_dir().join("neppy_test_edit_unique");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("f.txt"), "alpha bravo")
@@ -270,7 +270,7 @@ mod tests {
 
     #[tokio::test]
     async fn edit_rejects_ambiguous_match() {
-        let dir = std::env::temp_dir().join("openhuman_test_edit_ambig");
+        let dir = std::env::temp_dir().join("neppy_test_edit_ambig");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("f.txt"), "x x x").await.unwrap();
@@ -288,7 +288,7 @@ mod tests {
 
     #[tokio::test]
     async fn edit_replace_all() {
-        let dir = std::env::temp_dir().join("openhuman_test_edit_all");
+        let dir = std::env::temp_dir().join("neppy_test_edit_all");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("f.txt"), "x x x").await.unwrap();
@@ -309,7 +309,7 @@ mod tests {
 
     #[tokio::test]
     async fn edit_no_match() {
-        let dir = std::env::temp_dir().join("openhuman_test_edit_nomatch");
+        let dir = std::env::temp_dir().join("neppy_test_edit_nomatch");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("f.txt"), "alpha").await.unwrap();
@@ -327,7 +327,7 @@ mod tests {
 
     #[tokio::test]
     async fn edit_blocks_readonly_mode() {
-        let dir = std::env::temp_dir().join("openhuman_test_edit_ro");
+        let dir = std::env::temp_dir().join("neppy_test_edit_ro");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("f.txt"), "abc").await.unwrap();
@@ -345,7 +345,7 @@ mod tests {
 
     #[tokio::test]
     async fn edit_rejects_empty_old_string() {
-        let dir = std::env::temp_dir().join("openhuman_test_edit_empty_old");
+        let dir = std::env::temp_dir().join("neppy_test_edit_empty_old");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("f.txt"), "abc").await.unwrap();
@@ -362,7 +362,7 @@ mod tests {
 
     #[tokio::test]
     async fn edit_rejects_identical_strings() {
-        let dir = std::env::temp_dir().join("openhuman_test_edit_same");
+        let dir = std::env::temp_dir().join("neppy_test_edit_same");
         let _ = tokio::fs::remove_dir_all(&dir).await;
         tokio::fs::create_dir_all(&dir).await.unwrap();
         tokio::fs::write(dir.join("f.txt"), "abc").await.unwrap();

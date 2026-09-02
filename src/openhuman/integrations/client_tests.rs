@@ -110,7 +110,7 @@ fn backend_egress_descriptor_strips_query_and_targets_backend() {
         desc.reason,
         crate::openhuman::security::EgressReason::Integration
     );
-    assert_eq!(desc.provider_slug, "openhuman_backend");
+    assert_eq!(desc.provider_slug, "neppy_backend");
     // Query stripped — only the endpoint is disclosed, never carried data.
     assert_eq!(desc.service, "/agent-integrations/composio/execute");
     assert!(desc.is_external);

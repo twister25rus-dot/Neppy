@@ -202,7 +202,7 @@ pub fn workspace_dir_for_file_backend() -> PathBuf {
 /// deleted. Test builds therefore ignore both and use
 /// [`test_scope::current_workspace`], which defaults to a stable per-process
 /// directory under the system temp dir and never touches the developer's real
-/// `~/.openhuman/dev-keychain.json`.
+/// `~/.neppy/dev-keychain.json`.
 ///
 /// A test that needs its own private store binds one with
 /// [`test_scope::ScopedWorkspace`].
@@ -227,11 +227,11 @@ fn resolve_workspace_dir_from_process_state() -> PathBuf {
     let home = dirs::home_dir().unwrap_or_else(|| {
         PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string()))
     });
-    let openhuman_dir = match std::env::var("OPENHUMAN_APP_ENV").as_deref() {
-        Ok("staging") => home.join(".openhuman-staging"),
-        _ => home.join(".openhuman"),
+    let neppy_dir = match std::env::var("OPENHUMAN_APP_ENV").as_deref() {
+        Ok("staging") => home.join(".neppy-staging"),
+        _ => home.join(".neppy"),
     };
-    openhuman_dir
+    neppy_dir
 }
 
 // ── Test-only workspace scoping ──────────────────────────────────────────────

@@ -6,8 +6,8 @@ import {
   isTauri,
   MEMORY_CONTEXT_WINDOWS,
   type MemoryContextWindow,
-  openhumanGetConfig,
-  openhumanUpdateMemorySettings,
+  neppyGetConfig,
+  neppyUpdateMemorySettings,
 } from '../../../utils/tauriCommands';
 import Card from '../../ui/Card';
 import { RadioGroupItem, RadioGroupRoot } from '../../ui/RadioGroup';
@@ -82,7 +82,7 @@ const MemoryWindowControl = ({ onError, onSaved }: Props) => {
     let cancelled = false;
     const load = async () => {
       try {
-        const response = await openhumanGetConfig();
+        const response = await neppyGetConfig();
         if (cancelled) return;
         setCurrent(extractCurrentWindow(response.result));
       } catch (err) {
@@ -104,7 +104,7 @@ const MemoryWindowControl = ({ onError, onSaved }: Props) => {
     setSaving(next);
     try {
       if (isTauri()) {
-        await openhumanUpdateMemorySettings({ memory_window: next });
+        await neppyUpdateMemorySettings({ memory_window: next });
       }
       setCurrent(next);
       onSaved?.(next);

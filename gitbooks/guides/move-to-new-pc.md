@@ -25,8 +25,8 @@ Everything Neppy persists is in a single folder:
 
 | Platform      | Data folder                 |
 | ------------- | --------------------------- |
-| macOS / Linux | `~/.openhuman/`             |
-| Windows       | `%USERPROFILE%\.openhuman\` |
+| macOS / Linux | `~/.neppy/`             |
+| Windows       | `%USERPROFILE%\.neppy\` |
 
 Inside it, the things you care about migrating:
 
@@ -57,8 +57,8 @@ Fully close the app so nothing is mid-write to the database. A clean copy needs 
 
 Copy the **entire** data folder from the old machine to the same location on the new one:
 
-- macOS / Linux: copy `~/.openhuman/` → `~/.openhuman/`
-- Windows: copy `%USERPROFILE%\.openhuman\` → `%USERPROFILE%\.openhuman\`
+- macOS / Linux: copy `~/.neppy/` → `~/.neppy/`
+- Windows: copy `%USERPROFILE%\.neppy\` → `%USERPROFILE%\.neppy\`
 
 Copy the whole folder rather than cherry-picking. It keeps memory, persona, config, and history consistent with each other.
 
@@ -104,7 +104,7 @@ The migration worked when:
 
 | Symptom                                     | Cause                                                                     | Fix                                                                                          |
 | ------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| New machine starts fresh, no memory         | Data folder wasn't in the right place, or app was running during the copy | Quit the app, place the folder at `~/.openhuman/` (or `%USERPROFILE%\.openhuman\`), relaunch |
+| New machine starts fresh, no memory         | Data folder wasn't in the right place, or app was running during the copy | Quit the app, place the folder at `~/.neppy/` (or `%USERPROFILE%\.neppy\`), relaunch |
 | Signed in but integrations are disconnected | Integration access is account/backend-scoped, not in the folder           | Reconnect each integration in Settings (one OAuth click each)                                |
 | Local model doesn't work on the new PC      | Ollama/LM Studio and the weights aren't on the new machine                | Install the runtime and let models re-pull; see [local model guide](local-model.md)          |
 | Assistant lost its personality              | `SOUL.md` / `IDENTITY.md` weren't copied                                  | Copy the **whole** data folder, not just the database                                        |

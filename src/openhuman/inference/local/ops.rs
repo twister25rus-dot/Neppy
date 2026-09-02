@@ -461,7 +461,7 @@ pub async fn local_ai_transcribe_bytes(
         return Err("Invalid audio extension".to_string());
     }
 
-    let voice_dir = std::env::temp_dir().join("openhuman_voice_input");
+    let voice_dir = std::env::temp_dir().join("neppy_voice_input");
     tokio::fs::create_dir_all(&voice_dir)
         .await
         .map_err(|e| format!("Failed to create voice input directory: {e}"))?;

@@ -8,7 +8,7 @@
  * Until the keyring test-isolation fix, `cfg(test)` builds resolved their
  * credential store from process-global state (`OPENHUMAN_WORKSPACE` / the
  * `WORKSPACE_DIR` OnceLock). When no test held a workspace guard, that resolved
- * to the developer's real `~/.openhuman`, so every `cargo test` run appended
+ * to the developer's real `~/.neppy`, so every `cargo test` run appended
  * entries keyed by the basename of a `TempDir` that no longer exists. These
  * accumulate forever and are never read again.
  *
@@ -60,8 +60,8 @@ function defaultKeychainPath() {
   if (workspace) return path.join(workspace, "dev-keychain.json");
   const dir =
     process.env.OPENHUMAN_APP_ENV === "staging"
-      ? ".openhuman-staging"
-      : ".openhuman";
+      ? ".neppy-staging"
+      : ".neppy";
   return path.join(os.homedir(), dir, "dev-keychain.json");
 }
 

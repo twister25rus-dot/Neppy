@@ -19,7 +19,7 @@ import {
   type ProviderAuthError,
   setCloudProviderKey,
 } from '../../../../services/api/aiSettingsApi';
-import { openhumanUpdateLocalAiSettings } from '../../../../utils/tauriCommands/config';
+import { neppyUpdateLocalAiSettings } from '../../../../utils/tauriCommands/config';
 import { presentProviderSetupError } from '../ProviderSetupErrorNotice';
 import {
   type AISettings,
@@ -140,14 +140,14 @@ export function useProviderConnect({
           await setCloudProviderKey(slug, trimmed);
         } else if (isLocalRuntime && slug === 'ollama') {
           const baseUrl = endpoint.replace(/\/v1\/?$/, '');
-          await openhumanUpdateLocalAiSettings({
+          await neppyUpdateLocalAiSettings({
             base_url: baseUrl,
             provider: 'ollama',
             runtime_enabled: true,
             opt_in_confirmed: true,
           });
         } else if (isLocalRuntime && slug === 'lmstudio') {
-          await openhumanUpdateLocalAiSettings({
+          await neppyUpdateLocalAiSettings({
             base_url: endpoint,
             provider: 'lm_studio',
             runtime_enabled: true,
@@ -157,7 +157,7 @@ export function useProviderConnect({
           // OMLX: OpenAI-compatible local runtime that also requires a Bearer
           // key. Persist both the endpoint and the key into local_ai (the Rust
           // factory's omlx branch reads `local_ai.api_key` as the Bearer token).
-          await openhumanUpdateLocalAiSettings({
+          await neppyUpdateLocalAiSettings({
             base_url: endpoint,
             api_key: trimmed,
             provider: 'omlx',

@@ -28,11 +28,11 @@ import {
 import {
   type CoreCronJob,
   type CoreCronRun,
-  openhumanCronAdd,
-  openhumanCronList,
-  openhumanCronRemove,
-  openhumanCronRuns,
-  openhumanCronUpdate,
+  neppyCronAdd,
+  neppyCronList,
+  neppyCronRemove,
+  neppyCronRuns,
+  neppyCronUpdate,
 } from '../../utils/tauriCommands/cron';
 import { Badge, type BadgeVariant, Checkbox, NativeSelect, TextField } from '../ui';
 import Button from '../ui/Button';
@@ -647,7 +647,7 @@ const WorkflowRunnerBody = ({ headerText, className }: SkillsRunnerBodyProps) =>
     }
     setScheduledJobsLoading(true);
     try {
-      const resp = await openhumanCronList();
+      const resp = await neppyCronList();
       const allJobs = (resp.result ?? []) as CoreCronJob[];
       const wanted = `${CRON_NAME_PREFIX}${selectedSkillId}`;
       // For the special dev-workflow skill, also surface legacy crons
@@ -691,7 +691,7 @@ const WorkflowRunnerBody = ({ headerText, className }: SkillsRunnerBodyProps) =>
       const name = buildCronJobName(description.id, inputs);
       const prompt = buildAgentPrompt(description.id, inputs);
       log('saveSchedule name=%s schedule=%s', name, schedule);
-      await openhumanCronAdd({
+      await neppyCronAdd({
         name,
         schedule: { kind: 'cron', expr: schedule },
         job_type: 'agent',
@@ -835,7 +835,7 @@ const WorkflowRunnerBody = ({ headerText, className }: SkillsRunnerBodyProps) =>
   const handleRemoveJob = useCallback(
     async (jobId: string) => {
       try {
-        await openhumanCronRemove(jobId);
+        await neppyCronRemove(jobId);
         await loadScheduledJobs();
       } catch (err: unknown) {
         log('removeJob error: %s', err instanceof Error ? err.message : String(err));
@@ -850,7 +850,7 @@ const WorkflowRunnerBody = ({ headerText, className }: SkillsRunnerBodyProps) =>
   const handleToggleJob = useCallback(
     async (job: CoreCronJob) => {
       try {
-        await openhumanCronUpdate(job.id, { enabled: !job.enabled });
+        await neppyCronUpdate(job.id, { enabled: !job.enabled });
         await loadScheduledJobs();
       } catch (err: unknown) {
         log('toggleJob error: %s', err instanceof Error ? err.message : String(err));
@@ -876,7 +876,7 @@ const WorkflowRunnerBody = ({ headerText, className }: SkillsRunnerBodyProps) =>
       },
     }));
     try {
-      const res = await openhumanCronRuns(jobId, 5);
+      const res = await neppyCronRuns(jobId, 5);
       const raw = (res as { result?: { runs?: CoreCronRun[] } | CoreCronRun[] }).result;
       const runs = Array.isArray(raw) ? raw : (raw?.runs ?? []);
       setHistoryState(prev => ({

@@ -72,7 +72,7 @@ pub fn build_input(event: HookEvent, identity: TurnIdentity, payload: HookPayloa
         session_id: identity.session_id,
         model: identity.model,
         agent_id: identity.agent_id,
-        openhuman_version: if host.version.is_empty() {
+        neppy_version: if host.version.is_empty() {
             env!("CARGO_PKG_VERSION").to_string()
         } else {
             host.version

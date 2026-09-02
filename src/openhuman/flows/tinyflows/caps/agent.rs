@@ -267,7 +267,7 @@ pub(crate) fn resolve_node_model(request: &Value, entry_model: Option<&str>) -> 
 /// wrapping it in `hint:chat` would collapse the user's explicit per-node model
 /// onto the managed `chat-v1` tier (issue #4598). Left verbatim, it flows through
 /// the session builder's generic `chat` role — which inherits
-/// `config.default_model` — to `make_openhuman_backend`, which forwards non-tier
+/// `config.default_model` — to `make_neppy_backend`, which forwards non-tier
 /// ids to the backend unchanged. Mirrors the per-node routing
 /// [`NeppyLlm::complete`] applies via [`resolve_completion_model`].
 pub(crate) fn harness_model_default_override(node_model: &str) -> String {

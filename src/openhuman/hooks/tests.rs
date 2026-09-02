@@ -23,7 +23,7 @@ fn input(event: HookEvent, payload: HookPayload) -> HookInput {
         session_id: Some("sess-test".into()),
         model: None,
         agent_id: None,
-        openhuman_version: "test".into(),
+        neppy_version: "test".into(),
         workspace_roots: vec!["/tmp".into()],
         cwd: None,
         payload,

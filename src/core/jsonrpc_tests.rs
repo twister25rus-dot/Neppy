@@ -478,7 +478,7 @@ async fn invoke_migrate_hermes_rejects_unknown_param() {
 
 #[test]
 #[cfg(feature = "http-server")]
-fn http_schema_dump_includes_openhuman_and_core_methods() {
+fn http_schema_dump_includes_neppy_and_core_methods() {
     let dump = build_http_schema_dump();
     let methods = dump.methods;
     assert!(
@@ -828,7 +828,7 @@ fn is_session_expired_error_does_not_match_partial_auth_text() {
 }
 
 #[test]
-fn is_session_expired_error_matches_openhuman_backend_path_401() {
+fn is_session_expired_error_matches_neppy_backend_path_401() {
     // Neppy backend calls via authed_json use the format:
     // "{METHOD} /path failed (401 Unauthorized): {body}"
     assert!(is_session_expired_error(
@@ -904,7 +904,7 @@ fn is_session_expired_error_does_not_match_invalid_token_case_insensitive() {
 }
 
 #[test]
-fn is_session_expired_error_matches_openhuman_session_expired_body() {
+fn is_session_expired_error_matches_neppy_session_expired_body() {
     // Even without an HTTP-method prefix, an explicit "Session expired" body
     // text triggers session expiry via the shared observability classifier.
     assert!(is_session_expired_error(

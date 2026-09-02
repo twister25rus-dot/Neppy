@@ -2,8 +2,8 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import {
-  openhumanGetComposioTriggerSettings,
-  openhumanUpdateComposioTriggerSettings,
+  neppyGetComposioTriggerSettings,
+  neppyUpdateComposioTriggerSettings,
 } from '../../../utils/tauriCommands';
 import Button from '../../ui/Button';
 import {
@@ -33,7 +33,7 @@ const ComposioTriagePanel = ({ embedded = false }: ComposioTriagePanelProps = {}
 
   useEffect(() => {
     let isMounted = true;
-    openhumanGetComposioTriggerSettings()
+    neppyGetComposioTriggerSettings()
       .then(res => {
         if (!isMounted) return;
         const settings = res.result;
@@ -64,7 +64,7 @@ const ComposioTriagePanel = ({ embedded = false }: ComposioTriagePanelProps = {}
         .split(',')
         .map(e => e.trim().toLowerCase())
         .filter(Boolean);
-      await openhumanUpdateComposioTriggerSettings({
+      await neppyUpdateComposioTriggerSettings({
         triage_disabled: triageDisabled,
         triage_disabled_toolkits: toolkitList,
       });

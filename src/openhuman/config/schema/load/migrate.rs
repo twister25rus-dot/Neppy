@@ -11,9 +11,9 @@ pub(crate) fn migrate_legacy_inference_url(config: &mut Config) {
     if !trimmed.ends_with("/chat/completions") {
         return;
     }
-    let is_openhuman_backend = trimmed.starts_with("https://api.tinyhumans.ai/")
+    let is_neppy_backend = trimmed.starts_with("https://api.tinyhumans.ai/")
         || trimmed.starts_with("https://staging-api.tinyhumans.ai/");
-    let moved = if is_openhuman_backend {
+    let moved = if is_neppy_backend {
         None
     } else {
         Some(trimmed.to_string())
@@ -79,14 +79,14 @@ pub(crate) fn migrate_cloud_provider_slugs(config: &mut Config) {
         .inference_url
         .as_deref()
         .map(str::trim)
-        .filter(|url| !url.is_empty() && !looks_like_openhuman_provider_endpoint(url))
+        .filter(|url| !url.is_empty() && !looks_like_neppy_provider_endpoint(url))
         .and_then(|url| {
             let normalized = normalize_provider_endpoint(url);
             config
                 .cloud_providers
                 .iter()
                 .find(|entry| {
-                    !is_openhuman_provider_entry(entry)
+                    !is_neppy_provider_entry(entry)
                         && normalize_provider_endpoint(&entry.endpoint) == normalized
                 })
                 .map(|entry| entry.slug.clone())
@@ -116,7 +116,7 @@ pub(crate) fn migrate_cloud_provider_slugs(config: &mut Config) {
                         config
                             .cloud_providers
                             .iter()
-                            .find(|entry| !is_openhuman_provider_entry(entry))
+                            .find(|entry| !is_neppy_provider_entry(entry))
                             .map(|entry| entry.slug.clone())
                     }),
                 };
@@ -173,7 +173,7 @@ pub(crate) fn migrate_cloud_provider_slugs(config: &mut Config) {
         url.trim().trim_end_matches('/').to_ascii_lowercase()
     }
 
-    fn looks_like_openhuman_provider_endpoint(url: &str) -> bool {
+    fn looks_like_neppy_provider_endpoint(url: &str) -> bool {
         let lower = url.trim().to_ascii_lowercase();
         let without_scheme = lower.split("://").nth(1).unwrap_or(&lower);
         let authority = without_scheme.split('/').next().unwrap_or("");
@@ -186,11 +186,9 @@ pub(crate) fn migrate_cloud_provider_slugs(config: &mut Config) {
             || host_no_port.ends_with(".tinyhumans.ai")
     }
 
-    fn is_openhuman_provider_entry(
-        entry: &super::super::cloud_providers::CloudProviderCreds,
-    ) -> bool {
+    fn is_neppy_provider_entry(entry: &super::super::cloud_providers::CloudProviderCreds) -> bool {
         entry.slug == "openhuman"
-            || matches!(entry.auth_style, AuthStyle::NeppyJwt)
-            || looks_like_openhuman_provider_endpoint(&entry.endpoint)
+            || matches!(entry.auth_style, AuthStyle::OpenhumanJwt)
+            || looks_like_neppy_provider_endpoint(&entry.endpoint)
     }
 }

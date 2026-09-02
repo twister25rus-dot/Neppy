@@ -627,8 +627,8 @@ async fn mock_backend(request: Request) -> Response {
     (StatusCode::OK, axum::Json(payload)).into_response()
 }
 
-fn write_config(openhuman_dir: &Path, api_url: &str) {
-    std::fs::create_dir_all(openhuman_dir).expect("create config dir");
+fn write_config(neppy_dir: &Path, api_url: &str) {
+    std::fs::create_dir_all(neppy_dir).expect("create config dir");
     let cfg = format!(
         r#"api_url = "{api_url}"
 default_model = "e2e-model"
@@ -674,7 +674,7 @@ allowed_tools = ["read_file"]
 disallowed_tools = ["write_file"]
 "#
     );
-    std::fs::write(openhuman_dir.join("config.toml"), cfg).expect("write config.toml");
+    std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
 }
 
 async fn setup() -> Harness {
@@ -685,7 +685,7 @@ async fn setup() -> Harness {
     let api_url = format!("http://{backend_addr}");
 
     write_config(&workspace, &api_url);
-    write_config(&home.join(".openhuman"), &api_url);
+    write_config(&home.join(".neppy"), &api_url);
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),

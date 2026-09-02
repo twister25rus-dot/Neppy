@@ -92,13 +92,13 @@ fn encrypt_optional_secret(
 /// force-migrated to `enc2:` during this pass. The caller should persist the
 /// config (e.g. `config.save()`) when this is `true` so the upgraded ciphertext
 /// is written to disk and the legacy XOR value stops persisting (audit C8).
-pub(super) fn decrypt_config_secrets(config: &mut Config, openhuman_dir: &Path) -> Result<bool> {
+pub(super) fn decrypt_config_secrets(config: &mut Config, neppy_dir: &Path) -> Result<bool> {
     if !config.secrets.encrypt {
         return Ok(false);
     }
     // Reset the per-pass migration flag before decrypting any field.
     migration_flag().store(false, Ordering::Relaxed);
-    let store = crate::openhuman::security::keyring::SecretStore::new(openhuman_dir, true);
+    let store = crate::openhuman::security::keyring::SecretStore::new(neppy_dir, true);
 
     decrypt_optional_secret(&store, &mut config.api_key, "api_key")?;
 

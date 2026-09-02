@@ -43,11 +43,11 @@ pub const HOOKS_FILE_NAME: &str = "hooks.json";
 pub enum HookLayer {
     /// Machine-wide, operator-managed.
     System,
-    /// The user's own `~/.openhuman/hooks.json`.
+    /// The user's own `~/.neppy/hooks.json`.
     User,
     /// The core's workspace directory.
     Workspace,
-    /// `<project>/.openhuman/hooks.json` inside the action dir.
+    /// `<project>/.neppy/hooks.json` inside the action dir.
     Project,
 }
 
@@ -292,10 +292,7 @@ pub fn layer_paths(
         paths.push((HookLayer::System, system.join(HOOKS_FILE_NAME)));
     }
     if let Some(home) = dirs::home_dir() {
-        paths.push((
-            HookLayer::User,
-            home.join(".openhuman").join(HOOKS_FILE_NAME),
-        ));
+        paths.push((HookLayer::User, home.join(".neppy").join(HOOKS_FILE_NAME)));
     }
     if let Some(workspace) = workspace_dir {
         paths.push((HookLayer::Workspace, workspace.join(HOOKS_FILE_NAME)));
@@ -303,7 +300,7 @@ pub fn layer_paths(
     if let Some(project) = project_dir {
         paths.push((
             HookLayer::Project,
-            project.join(".openhuman").join(HOOKS_FILE_NAME),
+            project.join(".neppy").join(HOOKS_FILE_NAME),
         ));
     }
     paths

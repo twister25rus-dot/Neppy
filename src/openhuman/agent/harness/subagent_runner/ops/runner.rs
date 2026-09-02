@@ -1624,7 +1624,7 @@ async fn run_typed_mode(
         let checkpoint_dir = options
             .checkpoint_dir
             .clone()
-            .unwrap_or_else(|| parent.workspace_dir.join(".openhuman/subagent_checkpoints"));
+            .unwrap_or_else(|| parent.workspace_dir.join(".neppy/subagent_checkpoints"));
         if let Err(e) = std::fs::create_dir_all(&checkpoint_dir) {
             tracing::warn!(
                 task_id = %task_id,

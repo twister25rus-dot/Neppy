@@ -27,8 +27,8 @@ const hoisted = vi.hoisted(() => ({
 
 vi.mock('../../../../utils/tauriCommands', () => ({
   isTauri: hoisted.mockIsTauri,
-  openhumanGetConfig: hoisted.mockGetConfig,
-  openhumanUpdateMemorySettings: hoisted.mockUpdateMemorySettings,
+  neppyGetConfig: hoisted.mockGetConfig,
+  neppyUpdateMemorySettings: hoisted.mockUpdateMemorySettings,
   MEMORY_CONTEXT_WINDOWS: ['minimal', 'balanced', 'extended', 'maximum'],
   memoryTreeListChunks: hoisted.mockMemoryTreeListChunks,
   memoryTreeListSources: hoisted.mockMemoryTreeListSources,

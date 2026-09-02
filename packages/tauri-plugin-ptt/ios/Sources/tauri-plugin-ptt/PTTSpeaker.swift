@@ -4,7 +4,7 @@
 import AVFoundation
 import os.log
 
-private let log = Logger(subsystem: "ai.openhuman.ptt", category: "PTTSpeaker")
+private let log = Logger(subsystem: "ai.neppy.ptt", category: "PTTSpeaker")
 
 // AVSpeechSynthesizer is not Sendable; PTT operations are serialized by the
 // plugin's command actor above, so the unchecked conformance is sound here.

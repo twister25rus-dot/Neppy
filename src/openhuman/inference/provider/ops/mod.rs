@@ -53,9 +53,9 @@ pub use provider_factory::{
 // ── test re-exports for ops_tests.rs ──
 
 #[cfg(test)]
-pub(crate) use super::openai_codex::openai_codex_client_version;
+pub(crate) use super::neppy_backend_model;
 #[cfg(test)]
-pub(crate) use super::openhuman_backend_model;
+pub(crate) use super::openai_codex::openai_codex_client_version;
 
 // ── test companion ──
 

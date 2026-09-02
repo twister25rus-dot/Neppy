@@ -91,7 +91,7 @@ fn seed_cloud_providers(config: &mut Config, stats: &mut MigrationStats) {
         .api_url
         .clone()
         .filter(|s| !s.trim().is_empty())
-        .unwrap_or_else(|| CloudProviderType::Neppy.default_endpoint().to_string());
+        .unwrap_or_else(|| CloudProviderType::Openhuman.default_endpoint().to_string());
     let oh_default_model = config
         .default_model
         .clone()
@@ -102,7 +102,7 @@ fn seed_cloud_providers(config: &mut Config, stats: &mut MigrationStats) {
         slug: "openhuman".to_string(),
         label: "Neppy".to_string(),
         endpoint: oh_endpoint,
-        auth_style: AuthStyle::NeppyJwt,
+        auth_style: AuthStyle::OpenhumanJwt,
         default_model: Some(oh_default_model),
         ..Default::default()
     });

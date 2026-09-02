@@ -12,13 +12,13 @@ const setFullAccess = vi.fn();
 vi.mock('../../../../../utils/tauriCommands/config', () => ({
   // Resolves to the BARE AuthStatus (no `{ result }` envelope), matching the
   // real wrapper.
-  openhumanClaudeCodeAuthStatus: () => authProbe(),
-  openhumanClaudeCodeLoginLaunch: () => loginLaunch(),
+  neppyClaudeCodeAuthStatus: () => authProbe(),
+  neppyClaudeCodeLoginLaunch: () => loginLaunch(),
   // The modal reads the persisted full-access toggle on open and writes it
   // when toggled — mock both so the modal tests exercise real UI instead of
   // throwing on a missing export.
-  openhumanClaudeCodeSettings: () => getSettings(),
-  openhumanClaudeCodeSetFullAccess: (enabled: boolean) => setFullAccess(enabled),
+  neppyClaudeCodeSettings: () => getSettings(),
+  neppyClaudeCodeSetFullAccess: (enabled: boolean) => setFullAccess(enabled),
 }));
 
 const noop = () => {};

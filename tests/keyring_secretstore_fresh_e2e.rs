@@ -51,22 +51,22 @@ fn parse_keyring_payload(json: &str) -> serde_json::Value {
 async fn config_secrets_create_master_key_in_keyring_on_fresh_install() {
     let _guard = env_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
-    let openhuman_dir = tmp.path().join("fresh-user");
-    let workspace_dir = openhuman_dir.join("workspace");
+    let neppy_dir = tmp.path().join("fresh-user");
+    let workspace_dir = neppy_dir.join("workspace");
     std::fs::create_dir_all(&workspace_dir).expect("workspace dir");
 
     let _keyring_backend = EnvGuard::set_str("OPENHUMAN_KEYRING_BACKEND", "file");
-    let _workspace_override = EnvGuard::set("OPENHUMAN_WORKSPACE", &openhuman_dir);
+    let _workspace_override = EnvGuard::set("OPENHUMAN_WORKSPACE", &neppy_dir);
     keyring::init_workspace(&workspace_dir);
 
-    let legacy_key_path = openhuman_dir.join(".secret_key");
+    let legacy_key_path = neppy_dir.join(".secret_key");
     assert!(
         !legacy_key_path.exists(),
         "fresh install should not start with legacy key file"
     );
 
-    let config_path = openhuman_dir.join("config.toml");
-    let backup_path = openhuman_dir.join("config.toml.bak");
+    let config_path = neppy_dir.join("config.toml");
+    let backup_path = neppy_dir.join("config.toml.bak");
     let config = Config {
         config_path: config_path.clone(),
         workspace_dir: workspace_dir.clone(),

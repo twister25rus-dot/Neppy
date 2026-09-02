@@ -175,14 +175,14 @@ fn ok(v: &Value, ctx: &str) -> Value {
 async fn memory_sources_crud_and_folder_read_flow() {
     let _guard = env_lock();
     let home = test_home();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
     let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_config(&openhuman_home);
+    write_config(&neppy_home);
 
     // Create a folder with test markdown files.
     let notes_dir = home.join("test-notes");
@@ -447,14 +447,14 @@ async fn memory_sources_crud_and_folder_read_flow() {
 async fn memory_sources_validation_rejects_bad_input() {
     let _guard = env_lock();
     let home = test_home();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
     let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_config(&openhuman_home);
+    write_config(&neppy_home);
 
     let (rpc_base, rpc_join) = serve().await;
     tokio::time::sleep(Duration::from_millis(100)).await;
@@ -527,14 +527,14 @@ async fn memory_sources_github_repo_activity_flow() {
     }
     let _guard = env_lock();
     let home = test_home();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
     let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_config(&openhuman_home);
+    write_config(&neppy_home);
 
     let (rpc_base, rpc_join) = serve().await;
     tokio::time::sleep(Duration::from_millis(100)).await;
@@ -707,14 +707,14 @@ async fn memory_sources_github_repo_activity_flow() {
 async fn memory_sources_composio_registry_flow() {
     let _guard = env_lock();
     let home = test_home();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
     let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
-    write_config(&openhuman_home);
+    write_config(&neppy_home);
 
     let (rpc_base, rpc_join) = serve().await;
     tokio::time::sleep(Duration::from_millis(100)).await;

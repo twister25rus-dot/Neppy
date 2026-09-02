@@ -13,7 +13,7 @@ use serde::Serialize;
 use serde_json::json;
 
 use crate::openhuman::config::Config;
-use crate::openhuman::config::{clear_active_user, default_root_openhuman_dir};
+use crate::openhuman::config::{clear_active_user, default_root_neppy_dir};
 use crate::openhuman::cron;
 use crate::openhuman::memory::read_rpc;
 use crate::rpc::RpcOutcome;
@@ -102,7 +102,7 @@ pub async fn reset() -> Result<RpcOutcome<ResetSummary>, String> {
     log::debug!("[test_reset] step=clear_config_fields ok");
 
     log::debug!("[test_reset] step=clear_active_user start");
-    let root = default_root_openhuman_dir()
+    let root = default_root_neppy_dir()
         .map_err(|e| format!("test_reset: failed to resolve default root dir: {e:#}"))?;
     clear_active_user(&root)
         .map_err(|e| format!("test_reset: failed to clear active user: {e:#}"))?;

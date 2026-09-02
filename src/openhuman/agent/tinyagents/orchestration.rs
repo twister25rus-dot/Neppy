@@ -78,7 +78,7 @@ pub(crate) enum SteeringRunClass {
 /// call). A command whose kind is not in the allowlist is *rejected* by the
 /// crate and aborts the run with `TinyAgentsError::Steering`, so callers must
 /// only enqueue kinds this policy permits (see `running_subagents::steer_directive`).
-pub(crate) fn openhuman_steering_handle(run_class: SteeringRunClass) -> SteeringHandle {
+pub(crate) fn neppy_steering_handle(run_class: SteeringRunClass) -> SteeringHandle {
     let mut policy = SteeringPolicy::new()
         .allow(SteeringCommandKind::InjectMessage)
         .allow(SteeringCommandKind::Pause);
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn steering_registry_reexport_registers_task_handles() {
         let registry = shared_steering_registry();
-        let handle = openhuman_steering_handle(SteeringRunClass::Background);
+        let handle = neppy_steering_handle(SteeringRunClass::Background);
         let task_id = TaskId::new("task-steer");
 
         registry.register(task_id.clone(), handle);
@@ -142,7 +142,7 @@ mod tests {
         // Interactive: only the two long-standing kinds; control-flow steering
         // stays closed so the user's live turn can't be cancelled/redirected
         // out from under it via a rogue steer.
-        let interactive = openhuman_steering_handle(SteeringRunClass::Interactive);
+        let interactive = neppy_steering_handle(SteeringRunClass::Interactive);
         let policy = interactive.policy();
         assert!(policy.is_allowed(SteeringCommandKind::InjectMessage));
         assert!(policy.is_allowed(SteeringCommandKind::Pause));
@@ -152,7 +152,7 @@ mod tests {
         assert!(!policy.is_allowed(SteeringCommandKind::SetMetadata));
 
         // Background: additionally accepts graceful control-flow steering.
-        let background = openhuman_steering_handle(SteeringRunClass::Background);
+        let background = neppy_steering_handle(SteeringRunClass::Background);
         let policy = background.policy();
         assert!(policy.is_allowed(SteeringCommandKind::InjectMessage));
         assert!(policy.is_allowed(SteeringCommandKind::Pause));

@@ -54,8 +54,8 @@ done
 # ── Resolve workspace + DB path ─────────────────────────────────────────────
 
 if [ -z "${OPENHUMAN_WORKSPACE:-}" ]; then
-    DEFAULT_DIR="$HOME/.openhuman-staging"
-    [ -d "$DEFAULT_DIR" ] || DEFAULT_DIR="$HOME/.openhuman"
+    DEFAULT_DIR="$HOME/.neppy-staging"
+    [ -d "$DEFAULT_DIR" ] || DEFAULT_DIR="$HOME/.neppy"
     ACTIVE_USER_FILE="$DEFAULT_DIR/active_user.toml"
     if [ -f "$ACTIVE_USER_FILE" ]; then
         USER_ID=$(awk -F'"' '/user_id/ {print $2; exit}' "$ACTIVE_USER_FILE")

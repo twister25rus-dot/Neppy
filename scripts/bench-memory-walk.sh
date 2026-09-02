@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Defaults
-CONTENT_ROOT="${OPENHUMAN_MEMORY_CONTENT_ROOT:-$HOME/.openhuman-staging/users/69d9cb73e61f755583c3671f/workspace/memory_tree/content}"
+CONTENT_ROOT="${OPENHUMAN_MEMORY_CONTENT_ROOT:-$HOME/.neppy-staging/users/69d9cb73e61f755583c3671f/workspace/memory_tree/content}"
 MAX_TURNS=12
 NAMESPACE="default"
 MODEL=""

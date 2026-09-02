@@ -174,7 +174,7 @@ fn grounding_contract_requires_exact_numeric_evidence() {
 #[test]
 fn identity_section_creates_missing_workspace_files() {
     let workspace =
-        std::env::temp_dir().join(format!("openhuman_prompt_create_{}", uuid::Uuid::new_v4()));
+        std::env::temp_dir().join(format!("neppy_prompt_create_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
 
     let tools: Vec<Box<dyn Tool>> = vec![];
@@ -734,10 +734,8 @@ fn user_memory_section_returns_empty_when_no_summaries() {
 
 #[test]
 fn render_subagent_system_prompt_renders_workspace_tail() {
-    let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_subagent_{}",
-        uuid::Uuid::new_v4()
-    ));
+    let workspace =
+        std::env::temp_dir().join(format!("neppy_prompt_subagent_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
 
     let tools: Vec<Box<dyn Tool>> = vec![Box::new(TestTool)];
@@ -796,7 +794,7 @@ fn subagent_render_options_invert_definition_flags() {
 #[test]
 fn render_subagent_system_prompt_honors_identity_safety_and_skills_flags() {
     let workspace =
-        std::env::temp_dir().join(format!("openhuman_prompt_opts_{}", uuid::Uuid::new_v4()));
+        std::env::temp_dir().join(format!("neppy_prompt_opts_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
     std::fs::write(workspace.join("SOUL.md"), "# Soul\nContext").unwrap();
     std::fs::write(workspace.join("IDENTITY.md"), "# Identity\nContext").unwrap();
@@ -869,7 +867,7 @@ fn render_subagent_system_prompt_injects_profile_md_even_when_identity_omitted()
     // PROFILE.md is gated on its own flag so agents can opt in without
     // pulling SOUL/IDENTITY back in.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_profile_nosoul_{}",
+        "neppy_prompt_profile_nosoul_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -932,7 +930,7 @@ fn render_subagent_system_prompt_skips_profile_md_when_include_profile_false() {
     // otherwise every sub-agent pays the token cost of onboarding
     // enrichment output that is irrelevant to their task.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_profile_opt_out_{}",
+        "neppy_prompt_profile_opt_out_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -975,7 +973,7 @@ fn render_subagent_system_prompt_frames_memory_md_as_background() {
     // otherwise a fresh thread reads the bare `### MEMORY.md` block as prior
     // in-thread conversation and asserts continuity that isn't there.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_subagent_memory_framing_{}",
+        "neppy_subagent_memory_framing_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -1029,7 +1027,7 @@ fn render_subagent_system_prompt_omits_memory_framing_when_no_memory_content() {
     // NOT appear — emitting a "background memory" note pointing at nothing
     // would itself imply phantom history.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_subagent_memory_noframe_{}",
+        "neppy_subagent_memory_noframe_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -1066,7 +1064,7 @@ fn render_subagent_system_prompt_injects_profile_md_when_identity_included() {
     // When identity is on, PROFILE.md must still be injected alongside
     // SOUL/IDENTITY — the split must not regress the non-welcome path.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_profile_with_identity_{}",
+        "neppy_prompt_profile_with_identity_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -1109,7 +1107,7 @@ fn render_subagent_system_prompt_silently_skips_missing_profile_md() {
     // an orphan "### PROFILE.md" header — the subagent prompt stays
     // focused on tools.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_profile_missing_{}",
+        "neppy_prompt_profile_missing_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -1146,7 +1144,7 @@ fn narrow_agent_with_omit_identity_still_loads_profile_md() {
     // This exercises the SubagentRenderOptions::from_definition_flags path for agents
     // that want PROFILE.md without the full SOUL/IDENTITY preamble.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_narrow_agent_flags_{}",
+        "neppy_prompt_narrow_agent_flags_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -1197,7 +1195,7 @@ fn narrow_subagent_definition_flags_skip_profile_md() {
     // injected even when present on disk — the narrow runner is
     // task-focused and should not pay the token cost.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_narrow_flags_{}",
+        "neppy_prompt_narrow_flags_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -1239,10 +1237,8 @@ fn narrow_subagent_definition_flags_skip_profile_md() {
 fn render_subagent_system_prompt_injects_memory_md_when_enabled() {
     // Opt-in agents with `omit_memory_md = false` must see MEMORY.md
     // (archivist-curated long-term memory) in their rendered prompt.
-    let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_memory_on_{}",
-        uuid::Uuid::new_v4()
-    ));
+    let workspace =
+        std::env::temp_dir().join(format!("neppy_prompt_memory_on_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
     std::fs::write(
         workspace.join("MEMORY.md"),
@@ -1285,10 +1281,8 @@ fn render_subagent_system_prompt_injects_memory_md_when_enabled() {
 fn render_subagent_system_prompt_skips_memory_md_when_disabled() {
     // Narrow specialists with `omit_memory_md = true` (the default)
     // must NOT see MEMORY.md even when it exists on disk.
-    let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_memory_off_{}",
-        uuid::Uuid::new_v4()
-    ));
+    let workspace =
+        std::env::temp_dir().join(format!("neppy_prompt_memory_off_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
     std::fs::write(
         workspace.join("MEMORY.md"),
@@ -1327,10 +1321,8 @@ fn profile_md_and_memory_md_are_capped_at_user_file_max_chars() {
     // grow over time. Injection caps them at USER_FILE_MAX_CHARS
     // (~1000 tokens each) so the system prompt footprint stays
     // bounded. Test both files at once to pin the shared budget.
-    let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_user_cap_{}",
-        uuid::Uuid::new_v4()
-    ));
+    let workspace =
+        std::env::temp_dir().join(format!("neppy_prompt_user_cap_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
     let big = "x".repeat(USER_FILE_MAX_CHARS + 500);
     std::fs::write(workspace.join("PROFILE.md"), &big).unwrap();
@@ -1379,10 +1371,8 @@ fn rendered_subagent_system_prompt_is_byte_stable_across_repeat_calls() {
     // different-typed truncation path, or if either cap drifts, the
     // bytes differ and the backend's automatic prefix cache busts.
     // This test pins the invariant end-to-end.
-    let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_byte_stable_{}",
-        uuid::Uuid::new_v4()
-    ));
+    let workspace =
+        std::env::temp_dir().join(format!("neppy_prompt_byte_stable_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
     std::fs::write(workspace.join("PROFILE.md"), "# User Profile\nJane Doe").unwrap();
     std::fs::write(workspace.join("MEMORY.md"), "# Memory\nRecent: shipped v1").unwrap();
@@ -1443,7 +1433,7 @@ fn for_subagent_builder_injects_user_files_even_when_identity_omitted() {
     // opted in via PromptContext) and pins that the rendered prompt
     // contains both files.
     let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_for_subagent_user_files_{}",
+        "neppy_prompt_for_subagent_user_files_{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&workspace).unwrap();
@@ -1638,10 +1628,8 @@ fn memory_md_framing_absent_when_no_memory_content() {
 
 #[test]
 fn sync_workspace_file_updates_hash_and_inject_workspace_file_truncates() {
-    let workspace = std::env::temp_dir().join(format!(
-        "openhuman_prompt_workspace_{}",
-        uuid::Uuid::new_v4()
-    ));
+    let workspace =
+        std::env::temp_dir().join(format!("neppy_prompt_workspace_{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&workspace).unwrap();
 
     sync_workspace_file(&workspace, "SOUL.md");

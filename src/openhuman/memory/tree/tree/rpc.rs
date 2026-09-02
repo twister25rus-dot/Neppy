@@ -2815,7 +2815,7 @@ mod tests {
     /// `changed=true`; calling it again with the same value is a no-op
     /// reporting `changed=false`. Uses an isolated `config_path` under
     /// the workspace tempdir so `config.save()` doesn't touch the
-    /// host's real ~/.openhuman directory.
+    /// host's real ~/.neppy directory.
     #[tokio::test]
     async fn set_enabled_toggles_scheduler_gate_mode() {
         use tinymemory_api::host::SchedulerGateMode;

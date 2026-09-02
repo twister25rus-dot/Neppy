@@ -13,8 +13,8 @@ import { CoreStateContext, type CoreStateContextValue } from '../../../providers
 import type { MemorySourceEntry } from '../../../services/memorySourcesService';
 import { createTestStore, renderWithProviders } from '../../../test/test-utils';
 import {
-  openhumanGetMemorySyncSettings,
-  openhumanUpdateMemorySyncSettings,
+  neppyGetMemorySyncSettings,
+  neppyUpdateMemorySyncSettings,
 } from '../../../utils/tauriCommands/config';
 import {
   memoryTreePipelineStatus,
@@ -59,16 +59,16 @@ vi.mock('../../../utils/tauriCommands/memoryTree', () => ({
 
 // Mock the memory-sync schedule config RPCs (#3302).
 vi.mock('../../../utils/tauriCommands/config', () => ({
-  openhumanGetMemorySyncSettings: vi.fn(),
-  openhumanUpdateMemorySyncSettings: vi.fn(),
+  neppyGetMemorySyncSettings: vi.fn(),
+  neppyUpdateMemorySyncSettings: vi.fn(),
 }));
 
 const mockedList = vi.mocked(service.listMemorySources);
 const mockedStatus = vi.mocked(service.memorySourcesStatusList);
 const mockedUpdate = vi.mocked(service.updateMemorySource);
 const mockedApplyAllIn = vi.mocked(service.applyAllIn);
-const mockedGetSync = vi.mocked(openhumanGetMemorySyncSettings);
-const mockedUpdateSync = vi.mocked(openhumanUpdateMemorySyncSettings);
+const mockedGetSync = vi.mocked(neppyGetMemorySyncSettings);
+const mockedUpdateSync = vi.mocked(neppyUpdateMemorySyncSettings);
 const mockedPipeline = vi.mocked(memoryTreePipelineStatus);
 
 /** A healthy `memory_tree_pipeline_status` snapshot (no degradation). */

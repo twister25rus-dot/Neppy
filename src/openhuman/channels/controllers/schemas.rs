@@ -266,7 +266,7 @@ fn handle_connect(params: Map<String, Value>) -> ControllerFuture {
             .parse()
             .map_err(|e: String| format!("invalid authMode: {e}"))?;
         let creds = p.credentials.unwrap_or(Value::Object(Map::new()));
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .connect(channel, mode, creds)
             .await
@@ -285,7 +285,7 @@ fn handle_disconnect(params: Map<String, Value>) -> ControllerFuture {
             .auth_mode
             .parse()
             .map_err(|e: String| format!("invalid authMode: {e}"))?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .disconnect(channel, mode, p.clear_memory)
             .await
@@ -313,7 +313,7 @@ fn handle_status(params: Map<String, Value>) -> ControllerFuture {
             .as_deref()
             .map(str::trim)
             .filter(|s| !s.is_empty());
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager.status(filter).await.map_err(|e| e.to_string())?;
         to_json(RpcOutcome::new(result, vec![]))
     })
@@ -324,7 +324,7 @@ fn handle_set_default(params: Map<String, Value>) -> ControllerFuture {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<SetDefaultParams>(params)?;
         let channel = p.channel.trim();
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         manager
             .set_default_channel(channel)
             .await
@@ -340,7 +340,7 @@ fn handle_set_default(params: Map<String, Value>) -> ControllerFuture {
 fn handle_get_default(_params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let active = manager
             .get_default_channel()
             .await
@@ -361,7 +361,7 @@ fn handle_test(params: Map<String, Value>) -> ControllerFuture {
             .auth_mode
             .parse()
             .map_err(|e: String| format!("invalid authMode: {e}"))?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .test(p.channel.trim(), mode, p.credentials)
             .await
@@ -373,7 +373,7 @@ fn handle_test(params: Map<String, Value>) -> ControllerFuture {
 fn handle_telegram_login_start(_params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .telegram_login_start()
             .await
@@ -386,7 +386,7 @@ fn handle_telegram_login_check(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<TelegramLoginCheckParams>(params)?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .telegram_login_check(p.link_token.trim())
             .await
@@ -398,7 +398,7 @@ fn handle_telegram_login_check(params: Map<String, Value>) -> ControllerFuture {
 fn handle_discord_link_start(_params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .discord_link_start()
             .await
@@ -411,7 +411,7 @@ fn handle_discord_link_check(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<DiscordLinkCheckParams>(params)?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .discord_link_check(p.link_token.trim())
             .await
@@ -423,7 +423,7 @@ fn handle_discord_link_check(params: Map<String, Value>) -> ControllerFuture {
 fn handle_discord_list_guilds(_params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .discord_list_guilds()
             .await
@@ -440,7 +440,7 @@ fn handle_discord_list_channels(params: Map<String, Value>) -> ControllerFuture 
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<DiscordListChannelsParams>(params)?;
         let guild_id = p.guild_id.trim();
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .discord_list_channels(guild_id)
             .await
@@ -458,7 +458,7 @@ fn handle_discord_check_permissions(params: Map<String, Value>) -> ControllerFut
         let p = deserialize_params::<DiscordCheckPermissionsParams>(params)?;
         let guild_id = p.guild_id.trim();
         let channel_id = p.channel_id.trim();
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .discord_check_permissions(guild_id, channel_id)
             .await
@@ -474,7 +474,7 @@ fn handle_send_message(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<SendMessageParams>(params)?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .send_message_value(p.channel.trim(), p.message)
             .await
@@ -490,7 +490,7 @@ fn handle_send_reaction(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<SendReactionParams>(params)?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .send_reaction(p.channel.trim(), p.reaction)
             .await
@@ -506,7 +506,7 @@ fn handle_create_thread(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<CreateThreadParams>(params)?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .create_thread(p.channel.trim(), p.title.trim())
             .await
@@ -522,7 +522,7 @@ fn handle_update_thread(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<UpdateThreadParams>(params)?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .update_thread(p.channel.trim(), p.thread_id.trim(), p.action.trim())
             .await
@@ -538,7 +538,7 @@ fn handle_list_threads(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let config = config_rpc::load_config_with_timeout().await?;
         let p = deserialize_params::<ListThreadsParams>(params)?;
-        let manager = openhuman_channel_manager(config);
+        let manager = neppy_channel_manager(config);
         let result = manager
             .list_threads(p.channel.trim(), p.active)
             .await
@@ -558,7 +558,7 @@ fn deserialize_params<T: DeserializeOwned>(params: Map<String, Value>) -> Result
     serde_json::from_value(Value::Object(params)).map_err(|e| format!("invalid params: {e}"))
 }
 
-fn openhuman_channel_manager(config: Config) -> ChannelManager<NeppyChannelBackend> {
+fn neppy_channel_manager(config: Config) -> ChannelManager<NeppyChannelBackend> {
     ChannelManager::new(
         config.channels_config.clone(),
         NeppyChannelBackend::new(config),

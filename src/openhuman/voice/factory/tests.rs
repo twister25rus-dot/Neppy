@@ -44,7 +44,7 @@ fn stt_factory_removed_local_engine_errors_rather_than_falling_back() {
 }
 
 #[test]
-fn stt_factory_openhuman_sentinel() {
+fn stt_factory_neppy_sentinel() {
     let p = create_stt_provider("openhuman", "ignored", &cfg()).unwrap();
     assert_eq!(p.name(), "cloud");
 }
@@ -299,7 +299,7 @@ fn tts_factory_slug_colon_voice_reaches_provider() {
 }
 
 #[test]
-fn tts_factory_openhuman_sentinel() {
+fn tts_factory_neppy_sentinel() {
     let p = create_tts_provider("openhuman", "alloy", &cfg()).unwrap();
     assert_eq!(p.name(), "cloud");
 }

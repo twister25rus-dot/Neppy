@@ -331,7 +331,7 @@ async fn web_channel_validation_cancel_and_classifier_snapshots_are_publicly_exe
             "rate limit exceeded: action budget exhausted",
         );
     assert_eq!(action_budget.error_type, "action_budget_exceeded");
-    assert_eq!(action_budget.source, "openhuman_budget");
+    assert_eq!(action_budget.source, "neppy_budget");
     assert_eq!(action_budget.provider, None);
 
     let exhausted = openhuman_core::openhuman::web_chat::test_support::classify_error_for_test(

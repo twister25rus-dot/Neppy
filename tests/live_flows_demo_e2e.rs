@@ -73,7 +73,7 @@ fn required_env(name: &str) -> String {
 /// Seed a config that routes agent-node/chat workloads to the live managed
 /// backend. `default_model = "chat-v1"` so the chat-tier `drafter` node resolves
 /// to `chat-v1` while the reasoning-tier `planner` node pins `reasoning-v1`.
-fn write_live_config(openhuman_dir: &Path, api_origin: &str) {
+fn write_live_config(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
 default_model = "chat-v1"
@@ -90,12 +90,12 @@ encrypt = false
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
 
-    write_config_file(openhuman_dir, &cfg);
-    if openhuman_dir
+    write_config_file(neppy_dir, &cfg);
+    if neppy_dir
         .file_name()
-        .is_some_and(|name| name == std::ffi::OsStr::new(".openhuman"))
+        .is_some_and(|name| name == std::ffi::OsStr::new(".neppy"))
     {
-        write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
+        write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
 }
 
@@ -237,11 +237,11 @@ async fn live_flows_demo_discover_build_save_run() {
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
 
-    write_live_config(&openhuman_home, &api_url);
-    write_live_config(&openhuman_home.join("users").join(&user_id), &api_url);
+    write_live_config(&neppy_home, &api_url);
+    write_live_config(&neppy_home.join("users").join(&user_id), &api_url);
 
     let (rpc_addr, rpc_join) = serve_rpc().await;
     let rpc_base = format!("http://{rpc_addr}");

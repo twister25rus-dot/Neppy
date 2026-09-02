@@ -23,7 +23,7 @@ fn make_legacy_config_local_on() -> Config {
 }
 
 #[test]
-fn empty_config_seeds_openhuman_entry() {
+fn empty_config_seeds_neppy_entry() {
     let mut c = Config::default();
     let stats = run(&mut c).expect("migration must succeed");
 
@@ -34,7 +34,7 @@ fn empty_config_seeds_openhuman_entry() {
 }
 
 #[test]
-fn primary_cloud_defaults_to_openhuman_id() {
+fn primary_cloud_defaults_to_neppy_id() {
     let mut c = Config::default();
     let stats = run(&mut c).expect("migration must succeed");
 
@@ -70,7 +70,7 @@ fn legacy_inference_url_becomes_custom_entry() {
 }
 
 #[test]
-fn openhuman_inference_url_does_not_seed_custom() {
+fn neppy_inference_url_does_not_seed_custom() {
     let mut c = Config::default();
     c.inference_url = Some("https://api.openhuman.ai/v1".into());
     let _ = run(&mut c).expect("migration must succeed");

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../services/coreRpcClient', () => ({ callCoreRpc: vi.fn() }));
 
-describe('openhumanLocalAiTestConnection', () => {
+describe('neppyLocalAiTestConnection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -12,8 +12,8 @@ describe('openhumanLocalAiTestConnection', () => {
     const mockCallCoreRpc = callCoreRpc as ReturnType<typeof vi.fn>;
     mockCallCoreRpc.mockResolvedValueOnce({ reachable: true, models_count: 4 });
 
-    const { openhumanLocalAiTestConnection } = await import('./localAi');
-    const result = await openhumanLocalAiTestConnection('http://localhost:11434');
+    const { neppyLocalAiTestConnection } = await import('./localAi');
+    const result = await neppyLocalAiTestConnection('http://localhost:11434');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
       method: 'openhuman.inference_test_connection',
@@ -27,8 +27,8 @@ describe('openhumanLocalAiTestConnection', () => {
     const mockCallCoreRpc = callCoreRpc as ReturnType<typeof vi.fn>;
     mockCallCoreRpc.mockRejectedValueOnce(new Error('rpc down'));
 
-    const { openhumanLocalAiTestConnection } = await import('./localAi');
-    await expect(openhumanLocalAiTestConnection('http://localhost:11434')).rejects.toThrow(
+    const { neppyLocalAiTestConnection } = await import('./localAi');
+    await expect(neppyLocalAiTestConnection('http://localhost:11434')).rejects.toThrow(
       'rpc down'
     );
   });

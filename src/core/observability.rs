@@ -1050,7 +1050,7 @@ fn is_memory_store_breaker_open(lower: &str) -> bool {
 ///   `does_not_classify_streaming_byo_key_401_as_session_expired`.
 /// - `"SESSION_EXPIRED: backend session not active — sign in to resume LLM work"`
 ///   — the `scheduler_gate::is_signed_out` sentinel from
-///   `providers::openhuman_backend::resolve_bearer`.
+///   `providers::neppy_backend::resolve_bearer`.
 /// - `"no backend session token; run auth_store_session first"` and
 ///   `"session JWT required"` — local pre-flight guards that fire when the
 ///   stored profile is empty (`#1465`-ish onboarding spam) or has been
@@ -4797,13 +4797,13 @@ mod tests {
         // context so the substring matcher must survive that prefix.
         for raw in [
             // Canonical wire shape from `get_or_init_connection`.
-            "[memory_tree] circuit breaker open for /home/u/.openhuman/workspace/memory_tree/chunks.db: too many consecutive init failures",
+            "[memory_tree] circuit breaker open for /home/u/.neppy/workspace/memory_tree/chunks.db: too many consecutive init failures",
             // Canonical wire shape wrapped by the RPC handler's
             // `format!("chunk aggregates: {e:#}")` context.
-            r"chunk aggregates: [memory_tree] circuit breaker open for C:\Users\u\.openhuman\users\6a09\workspace\memory_tree\chunks.db: too many consecutive init failures",
+            r"chunk aggregates: [memory_tree] circuit breaker open for C:\Users\u\.neppy\users\6a09\workspace\memory_tree\chunks.db: too many consecutive init failures",
             // Wrapped further by the JSON-RPC dispatch layer before reaching
             // `report_error_or_expected`.
-            r"rpc.invoke_method failed: chunk aggregates: [memory_tree] circuit breaker open for /home/u/.openhuman/workspace/memory_tree/chunks.db: too many consecutive init failures",
+            r"rpc.invoke_method failed: chunk aggregates: [memory_tree] circuit breaker open for /home/u/.neppy/workspace/memory_tree/chunks.db: too many consecutive init failures",
         ] {
             assert_eq!(
                 expected_error_kind(raw),
@@ -4986,7 +4986,7 @@ mod tests {
         // (#3962): Windows access-denied on an existing config.toml.
         assert_eq!(
             expected_error_kind(
-                "Failed to read config file: C:\\Users\\u\\.openhuman\\users\\local-wb\\config.toml: Access is denied. (os error 5)"
+                "Failed to read config file: C:\\Users\\u\\.neppy\\users\\local-wb\\config.toml: Access is denied. (os error 5)"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
@@ -4994,14 +4994,14 @@ mod tests {
         // backup agent).
         assert_eq!(
             expected_error_kind(
-                "Failed to read config file: C:\\Users\\u\\.openhuman\\users\\local-wb\\config.toml: The process cannot access the file because it is being used by another process. (os error 32)"
+                "Failed to read config file: C:\\Users\\u\\.neppy\\users\\local-wb\\config.toml: The process cannot access the file because it is being used by another process. (os error 32)"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
         // Unix permission-denied wording.
         assert_eq!(
             expected_error_kind(
-                "Failed to read config file: /home/u/.openhuman/users/local/config.toml: Permission denied (os error 13)"
+                "Failed to read config file: /home/u/.neppy/users/local/config.toml: Permission denied (os error 13)"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
@@ -5009,7 +5009,7 @@ mod tests {
         // the same OS-denial family so a long-lived reloader can't leak either.
         assert_eq!(
             expected_error_kind(
-                "reading config.toml from C:\\Users\\u\\.openhuman\\users\\local-wb\\config.toml: Access is denied. (os error 5)"
+                "reading config.toml from C:\\Users\\u\\.neppy\\users\\local-wb\\config.toml: Access is denied. (os error 5)"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
@@ -5027,7 +5027,7 @@ mod tests {
         let marker = crate::openhuman::config::schema::CONFIG_OWNER_MISMATCH_MARKER;
         assert_ne!(
             expected_error_kind(&format!(
-                "Failed to read config file: /home/openhuman/.openhuman/config.toml {marker} \
+                "Failed to read config file: /home/openhuman/.neppy/config.toml {marker} \
                  (file uid=0 gid=0 mode=0600; process euid=10001 egid=10001): \
                  Permission denied (os error 13)"
             )),
@@ -5043,7 +5043,7 @@ mod tests {
     fn still_demotes_config_read_denial_without_owner_mismatch() {
         assert_eq!(
             expected_error_kind(
-                "Failed to read config file: /home/u/.openhuman/users/local/config.toml \
+                "Failed to read config file: /home/u/.neppy/users/local/config.toml \
                  (file uid=501 gid=20 mode=0000; process euid=501 egid=20): \
                  Permission denied (os error 13)"
             ),
@@ -5057,7 +5057,7 @@ mod tests {
         // it MUST keep paging, never demote.
         assert_ne!(
             expected_error_kind(
-                "Failed to read config file: C:\\Users\\u\\.openhuman\\users\\local-wb\\config.toml: The system cannot find the file specified. (os error 2)"
+                "Failed to read config file: C:\\Users\\u\\.neppy\\users\\local-wb\\config.toml: The system cannot find the file specified. (os error 2)"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
@@ -5065,7 +5065,7 @@ mod tests {
         // kind we have not enumerated) must NOT demote — fail open to paging.
         assert_ne!(
             expected_error_kind(
-                "Failed to read config file: C:\\Users\\u\\.openhuman\\users\\local-wb\\config.toml"
+                "Failed to read config file: C:\\Users\\u\\.neppy\\users\\local-wb\\config.toml"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
@@ -5081,13 +5081,13 @@ mod tests {
         // excluded by the `is a directory` / `not a file` guard.
         assert_ne!(
             expected_error_kind(
-                "Failed to read config file: /home/u/.openhuman/users/local/config.toml: Is a directory (os error 21)"
+                "Failed to read config file: /home/u/.neppy/users/local/config.toml: Is a directory (os error 21)"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
         assert_ne!(
             expected_error_kind(
-                "Config path is a directory, not a file: C:\\Users\\u\\.openhuman\\users\\local-wb\\config.toml: Access is denied. (os error 5)"
+                "Config path is a directory, not a file: C:\\Users\\u\\.neppy\\users\\local-wb\\config.toml: Access is denied. (os error 5)"
             ),
             Some(ExpectedErrorKind::ConfigReadIoFailure),
         );
@@ -5101,7 +5101,7 @@ mod tests {
             // SQLITE_CANTOPEN (14) — sibling variant from the user report.
             "failed to run subconscious schema DDL: unable to open database file: Error code 14: Unable to open the database file",
             // Failure surfaced at the open step rather than the DDL step.
-            "failed to open subconscious DB: /home/u/.openhuman/subconscious/subconscious.db: unable to open the database file",
+            "failed to open subconscious DB: /home/u/.neppy/subconscious/subconscious.db: unable to open the database file",
             // Wrapped in outer RPC context — classifier runs on the full chain.
             "rpc.invoke_method failed: failed to run subconscious schema DDL: disk I/O error: Error code 4618",
         ] {
@@ -6582,7 +6582,7 @@ mod tests {
             Some(ExpectedErrorKind::SessionExpired)
         );
 
-        // Sentinel raised by `providers::openhuman_backend::resolve_bearer`
+        // Sentinel raised by `providers::neppy_backend::resolve_bearer`
         // when the scheduler-gate signed-out override is set
         // (OPENHUMAN-TAURI-1T's cascade dampener returns this so callers
         // get the same teardown path as a real backend 401).
@@ -6631,7 +6631,7 @@ mod tests {
     /// `providers::factory::verify_session_active` emit different message
     /// suffixes but the same sentinel prefix. They route through the same
     /// classifier as the run_single bail at
-    /// `providers::openhuman_backend::resolve_bearer`, and any matcher
+    /// `providers::neppy_backend::resolve_bearer`, and any matcher
     /// tweak that breaks the family (e.g. moving from `contains` to a
     /// stricter prefix/suffix match) would re-leak ALL of them. Pin every
     /// variant the codebase actually emits so a future regression on the
@@ -6669,7 +6669,7 @@ mod tests {
     /// preserved — `does_not_classify_byo_key_provider_401_as_session_expired`
     /// pins that and must stay green.
     #[test]
-    fn classifies_openhuman_invalid_token_401_as_session_expired() {
+    fn classifies_neppy_invalid_token_401_as_session_expired() {
         // Verbatim wire shape from the OPENHUMAN-TAURI-4P0 event payload.
         let msg = r#"run_chat_task failed client_id=lssXhQidBfzGXG9k thread_id=thread-743193ba-f0c1-4008-b665-64d3030d1453 request_id=00696b71-fa05-4574-bcdb-5744a5dac6ea error=Neppy API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
         assert_eq!(
@@ -6741,7 +6741,7 @@ mod tests {
     /// (`"Neppy API error (401"`) does not match it, so it needs its
     /// own prefix arm.
     #[test]
-    fn classifies_openhuman_streaming_invalid_token_401_as_session_expired() {
+    fn classifies_neppy_streaming_invalid_token_401_as_session_expired() {
         // Verbatim wire shape from the TAURI-RUST-1EE event payload
         // (domain=llm_provider operation=streaming_chat status=401
         // provider=Neppy model=reasoning-v1).
@@ -6851,7 +6851,7 @@ mod tests {
         );
         // Lowercase sentinel must NOT match — the SESSION_EXPIRED sentinel
         // is case-sensitive by design (matches the sentinel emitted by
-        // `providers::openhuman_backend::resolve_bearer` exactly).
+        // `providers::neppy_backend::resolve_bearer` exactly).
         assert_eq!(expected_error_kind("session_expired lowercase"), None);
     }
 

@@ -33,7 +33,7 @@ CREDENTIAL_ID="${CREDENTIAL_ID:-}"
 
 # Read credential ID from oauth_credential.json if not set
 if [ -z "$CREDENTIAL_ID" ]; then
-    CRED_FILE="$HOME/.openhuman/skills_data/notion/oauth_credential.json"
+    CRED_FILE="$HOME/.neppy/skills_data/notion/oauth_credential.json"
     if [ -f "$CRED_FILE" ]; then
         CREDENTIAL_ID=$(python3 -c "import json; print(json.load(open('$CRED_FILE')).get('credentialId',''))" 2>/dev/null || echo "")
     fi

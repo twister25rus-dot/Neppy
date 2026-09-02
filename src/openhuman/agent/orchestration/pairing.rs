@@ -368,7 +368,7 @@ pub(crate) async fn linked_agent_ids(workspace_dir: &Path) -> std::collections::
     }
 }
 
-/// One entry in the local co-location handshake file (`~/.openhuman/local-agents.json`).
+/// One entry in the local co-location handshake file (`~/.neppy/local-agents.json`).
 /// A tiny.place CLI wrapper writes its own agent id + the Neppy owner it is
 /// connecting to, moments before it sends its contact request. Because a contact
 /// request carries NO owner declaration on the wire, this same-machine file is
@@ -396,10 +396,10 @@ struct LocalAgentsFile {
     agents: Vec<LocalAgentEntry>,
 }
 
-/// Path of the local co-location handshake file, `~/.openhuman/local-agents.json`.
+/// Path of the local co-location handshake file, `~/.neppy/local-agents.json`.
 /// `None` when the home dir is unresolvable (never trust anything in that case).
 fn local_agents_path() -> Option<PathBuf> {
-    dirs::home_dir().map(|home| home.join(".openhuman").join("local-agents.json"))
+    dirs::home_dir().map(|home| home.join(".neppy").join("local-agents.json"))
 }
 
 /// Fail-closed ownership/permission gate for a handshake path (issue #4777
@@ -453,7 +453,7 @@ fn load_local_agents_from(path: &Path) -> LocalAgentsFile {
         }
     };
     // Trust proof (fail-closed): require the handshake file AND its parent
-    // `.openhuman` dir to be privately owned by us and not writable by others.
+    // `.neppy` dir to be privately owned by us and not writable by others.
     // On a multi-user host with a group/world-writable home (permissive umask,
     // shared box), another local account could otherwise inject a fresh
     // owner-matching entry and open a DM/orchestration channel to this brain

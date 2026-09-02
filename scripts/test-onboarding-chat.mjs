@@ -41,7 +41,7 @@ const CORE_URL = `http://${CORE_HOST}:${CORE_PORT}`;
 
 const OPENHUMAN_HOME = process.env.OPENHUMAN_WORKSPACE
   ? path.join(process.env.OPENHUMAN_WORKSPACE)
-  : path.join(homedir(), '.openhuman');
+  : path.join(homedir(), '.neppy');
 
 // Set OPENHUMAN_USER_ID to pin to a specific user directory deterministically.
 function findConfigPath() {

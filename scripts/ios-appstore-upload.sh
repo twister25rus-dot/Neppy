@@ -19,7 +19,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-APP_IDENTIFIER="com.tinyhumansai.openhuman"
+APP_IDENTIFIER="com.tinyhumansai.neppy"
 MOBILE_DIR="$REPO_ROOT/app/src-tauri-mobile"
 APPLE_DIR="$MOBILE_DIR/gen/apple"
 ARCHIVE_PATH="$APPLE_DIR/build/openhuman-mobile_iOS.xcarchive"

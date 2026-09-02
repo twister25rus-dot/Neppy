@@ -23,7 +23,7 @@ pub(super) struct CloudProviderUpdate {
     #[serde(default)]
     pub(super) label: Option<String>,
     pub(super) endpoint: String,
-    /// Auth style: "bearer" | "anthropic" | "openhuman_jwt" | "none".
+    /// Auth style: "bearer" | "anthropic" | "neppy_jwt" | "none".
     #[serde(default)]
     pub(super) auth_style: Option<String>,
     /// Legacy field — tolerated on read for back-compat but not required.

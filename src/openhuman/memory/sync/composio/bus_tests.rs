@@ -25,7 +25,7 @@ use super::toolkit_is_memory_source_registrable;
 /// `cfg(test)` arm loads `TINYMEMORY_TEST_MODULE`, which CI sets to the pinned
 /// module, so the test could reach the module's real `SourceSync` and pass
 /// while pinning nothing. It also used `Config::default()`, whose workspace is
-/// the developer's own `~/.openhuman`.
+/// the developer's own `~/.neppy`.
 ///
 /// So bind `NullMemoryProvider` — which serves no `SourceSync` family — against
 /// a workspace this test owns. The cannot-answer branch is then the branch

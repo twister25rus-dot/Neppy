@@ -42,7 +42,7 @@ Free functions in `mod.rs`:
 
 ## Persistence
 
-`JailRegistry` is rooted at a base directory (e.g. `~/.openhuman/jails/` or `<workspace>/jails/`). Each jail is a `<base>/<id>/` directory; metadata for all jails lives in `<base>/index.json`.
+`JailRegistry` is rooted at a base directory (e.g. `~/.neppy/jails/` or `<workspace>/jails/`). Each jail is a `<base>/<id>/` directory; metadata for all jails lives in `<base>/index.json`.
 
 - `JailRecord` fields: `id`, `label`, `dir`, `backend_at_create`, `created_at_unix`, `updated_at_unix`, optional `notes`.
 - The on-disk index is the source of truth; in-memory state (`Index`, a `BTreeMap` for deterministic ordering) is rebuilt on every `open()`.

@@ -10,7 +10,7 @@ vi.mock('../../services/walletApi', () => ({
 }));
 
 vi.mock('../../utils/tauriCommands/auth', () => ({
-  openhumanEncryptSecret: (...args: unknown[]) => mockEncryptSecret(...args),
+  neppyEncryptSecret: (...args: unknown[]) => mockEncryptSecret(...args),
 }));
 
 describe('persistLocalWalletFromMnemonic', () => {

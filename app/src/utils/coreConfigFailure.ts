@@ -4,7 +4,7 @@
  * `config.toml`.
  *
  * The Rust chain looks like
- *   `Failed to read config file: /home/openhuman/.openhuman/config.toml
+ *   `Failed to read config file: /home/openhuman/.neppy/config.toml
  *    [config owner mismatch] (file uid=0 …): Permission denied (os error 13)`
  * and, before this module existed, was painted verbatim into the Welcome
  * screen (absolute path included) with no classification and no recovery hint,

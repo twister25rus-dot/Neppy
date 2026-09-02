@@ -749,7 +749,7 @@ mod tests {
     }
 
     #[test]
-    fn ollama_base_url_uses_ollama_host_when_openhuman_var_unset() {
+    fn ollama_base_url_uses_ollama_host_when_neppy_var_unset() {
         let _lock = test_lock();
         let _g1 = OllamaEnvGuard::clear();
         let _g2 = OllamaEnvGuard::set_var(OLLAMA_HOST_VAR, "192.168.1.5:11434");
@@ -773,7 +773,7 @@ mod tests {
     }
 
     #[test]
-    fn ollama_base_url_openhuman_var_takes_priority_over_ollama_host() {
+    fn ollama_base_url_neppy_var_takes_priority_over_ollama_host() {
         let _lock = test_lock();
         let _g1 = OllamaEnvGuard::set("http://127.0.0.1:55555");
         let _g2 = OllamaEnvGuard::set_var(OLLAMA_HOST_VAR, "192.168.1.5:11434");

@@ -8,7 +8,7 @@ mod policy_command;
 mod types;
 
 pub use enforcement::validate_path_within_root;
-pub use enforcement::{ensure_openhuman_scratch_dir, openhuman_scratch_dir};
+pub use enforcement::{ensure_neppy_scratch_dir, neppy_scratch_dir};
 pub use types::{
     ActionTracker, ActiveProfileGuard, AutonomyLevel, CommandClass, CommandRiskLevel, GateDecision,
     SecurityPolicy, ToolOperation, TrustedAccess, TrustedRoot, POLICY_BLOCKED_MARKER,

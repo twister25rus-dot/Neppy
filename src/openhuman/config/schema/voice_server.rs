@@ -67,7 +67,7 @@ impl SttEngine {
     /// already used for the backend proxy.
     pub fn parse(s: &str) -> Option<Self> {
         match s.trim().to_ascii_lowercase().as_str() {
-            "backend" | "cloud" | "openhuman" => Some(Self::Backend),
+            "backend" | "cloud" | "openhuman" | "neppy" => Some(Self::Backend),
             "elevenlabs" => Some(Self::Elevenlabs),
             "openai" => Some(Self::Openai),
             _ => None,

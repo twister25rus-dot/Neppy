@@ -684,7 +684,7 @@ const PROFILE_MEMORY_NAMESPACE: &str = "skill-user-profile";
 /// The guarded memory driver's documents family, for profile persistence.
 ///
 /// Deliberately **not** an engine constructor. `MemoryClient::new_local()`
-/// resolved `~/.openhuman/workspace` from the home directory and never
+/// resolved `~/.neppy/workspace` from the home directory and never
 /// consulted `OPENHUMAN_WORKSPACE`, so on any host that scopes its workspace —
 /// every hosted tenant, and any local run with the variable set — the scraped
 /// profile was written to a store nothing else reads. It failed by

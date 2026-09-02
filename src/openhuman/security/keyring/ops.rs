@@ -130,7 +130,7 @@ pub fn backend_name() -> String {
 
 fn probe_availability() -> bool {
     const PROBE_USER: &str = "__probe__";
-    const PROBE_KEY: &str = "__openhuman_keyring_probe__";
+    const PROBE_KEY: &str = "__neppy_keyring_probe__";
     const PROBE_VALUE: &str = "__probe_value__";
 
     log::debug!(

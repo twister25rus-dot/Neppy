@@ -85,12 +85,12 @@ fn final_text(text: &str) -> ModelResponse {
 }
 
 /// Seed a trusted project-scope workflow directly on disk (the discovery tools
-/// scan `<ws>/.openhuman/skills` for project workflows when the trust marker is
+/// scan `<ws>/.neppy/skills` for project workflows when the trust marker is
 /// present — hermetic, independent of the real home dir).
 fn seed_project_workflow(ws: &std::path::Path, slug: &str, description: &str) {
-    std::fs::create_dir_all(ws.join(".openhuman")).unwrap();
-    std::fs::write(ws.join(".openhuman").join("trust"), "").unwrap();
-    let dir = ws.join(".openhuman").join("skills").join(slug);
+    std::fs::create_dir_all(ws.join(".neppy")).unwrap();
+    std::fs::write(ws.join(".neppy").join("trust"), "").unwrap();
+    let dir = ws.join(".neppy").join("skills").join(slug);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(
         dir.join("SKILL.md"),
@@ -102,7 +102,7 @@ fn seed_project_workflow(ws: &std::path::Path, slug: &str, description: &str) {
 // ── A. create → registry round-trip (the combo persists + is RUNNABLE) ───
 
 // Regression guard for the create→run unification: a workflow authored via the
-// create path (`create_workflow_inner` → `.openhuman/skills`) must be found by the
+// create path (`create_workflow_inner` → `.neppy/skills`) must be found by the
 // RUN path's `get_workflow` (→ `load_workflows`, now reading the same roots as
 // `discover_workflows`), with its `when_to_use` trigger + declared inputs intact.
 // Before the loader unification this failed ("unknown workflow") because the
@@ -111,8 +111,8 @@ fn seed_project_workflow(ws: &std::path::Path, slug: &str, description: &str) {
 fn create_then_registry_roundtrip_preserves_when_to_use_and_inputs() {
     let ws = tempfile::tempdir().unwrap();
     // Project scope keeps it hermetic (writes under the workspace, not $HOME).
-    std::fs::create_dir_all(ws.path().join(".openhuman")).unwrap();
-    std::fs::write(ws.path().join(".openhuman").join("trust"), "").unwrap();
+    std::fs::create_dir_all(ws.path().join(".neppy")).unwrap();
+    std::fs::write(ws.path().join(".neppy").join("trust"), "").unwrap();
 
     let params = CreateWorkflowParams {
         name: "Triage Inbox".to_string(),

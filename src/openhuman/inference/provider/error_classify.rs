@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn preserves_openhuman_terminal_account_rules() {
+    fn preserves_neppy_terminal_account_rules() {
         assert!(is_non_retryable(&anyhow::anyhow!(
             "provider returned: you have reached the limit on your monthly requests"
         )));

@@ -87,8 +87,8 @@ fn ensure_rpc_auth() {
     });
 }
 
-fn write_config(openhuman_dir: &Path) {
-    std::fs::create_dir_all(openhuman_dir).expect("create .openhuman");
+fn write_config(neppy_dir: &Path) {
+    std::fs::create_dir_all(neppy_dir).expect("create .neppy");
     let cfg = r#"api_url = "http://127.0.0.1:9"
 default_model = "worker-c-e2e-model"
 default_temperature = 0.2
@@ -108,7 +108,7 @@ embedding_dimensions = 0
 [memory_tree]
 embedding_strict = false
 "#;
-    std::fs::write(openhuman_dir.join("config.toml"), cfg).expect("write config.toml");
+    std::fs::write(neppy_dir.join("config.toml"), cfg).expect("write config.toml");
     let _: openhuman_core::openhuman::config::Config =
         toml::from_str(cfg).expect("test config must match schema");
 }
@@ -133,7 +133,7 @@ async fn setup() -> Harness {
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    write_config(&home.join(".openhuman"));
+    write_config(&home.join(".neppy"));
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),

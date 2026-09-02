@@ -24,7 +24,7 @@ use crate::reset_reboot_schedule;
 ///    SQLite pool, log writer, etc. — releasing every Windows file handle.
 /// 4. Remove the **active user's** slice from this process: the current data
 ///    dir plus the two shared root markers (`active_workspace.toml` and
-///    `active_user.toml`). The shared root `~/.openhuman` is left in place so
+///    `active_user.toml`). The shared root `~/.neppy` is left in place so
 ///    other users' `users/<id>` subtrees survive. Missing entries are
 ///    non-fatal.
 /// 5. Restart the embedded core via `ensure_running`.
@@ -59,8 +59,8 @@ pub async fn reset_local_data(
     let paths = fetch_data_paths(user_id).await?;
     log::info!(
         "[core] reset_local_data: paths resolved current={} default={} workspace_marker={} user_marker={}",
-        paths.current_openhuman_dir.display(),
-        paths.default_openhuman_dir.display(),
+        paths.current_neppy_dir.display(),
+        paths.default_neppy_dir.display(),
         paths.active_workspace_marker_path.display(),
         paths.active_user_marker_path.display()
     );
@@ -85,7 +85,7 @@ pub async fn reset_local_data(
     // The daily-rotating log appender at `<data_dir>/logs/openhuman-*.log`
     // is owned by *this* Tauri host process, not by the embedded core
     // tokio task — so `shutdown()` above does not release it. On Windows
-    // that lingering OS file handle causes `remove_dir_all(.openhuman)`
+    // that lingering OS file handle causes `remove_dir_all(.neppy)`
     // below to fail with `ERROR_SHARING_VIOLATION` (os error 32). Drop
     // the writer guard now so the background flushing thread exits and
     // the file handle is closed before the removal walks the tree.
@@ -103,12 +103,12 @@ pub async fn reset_local_data(
     // surfaced after the restart attempt.
     //
     // Scoping (issue: "Clear App Data" wiped every user, not just the active
-    // one): all user data lives under `~/.openhuman/users/<id>` and the shared
-    // root `~/.openhuman` holds every user's subtree. So we remove ONLY:
+    // one): all user data lives under `~/.neppy/users/<id>` and the shared
+    // root `~/.neppy` holds every user's subtree. So we remove ONLY:
     //   * the two shared root-level marker files — `active_workspace.toml`
     //     (workspace pointer) and `active_user.toml` (sign-out), and
-    //   * the active user's own directory (`current_openhuman_dir`).
-    // We must NOT `remove_dir_all` the shared root `default_openhuman_dir`:
+    //   * the active user's own directory (`current_neppy_dir`).
+    // We must NOT `remove_dir_all` the shared root `default_neppy_dir`:
     // that destroyed sibling accounts' `users/<other>` data. Removing the
     // active-user marker is what now signs the user out (previously this only
     // happened as a side effect of nuking the root).
@@ -119,7 +119,7 @@ pub async fn reset_local_data(
         )
         .await?;
         remove_path_if_exists(&paths.active_user_marker_path, "active user marker").await?;
-        remove_dir_if_exists(&paths.current_openhuman_dir, "current openhuman dir").await?;
+        remove_dir_if_exists(&paths.current_neppy_dir, "current openhuman dir").await?;
         Ok(())
     }
     .await;
@@ -150,13 +150,13 @@ pub async fn reset_local_data(
 
 /// Resolved data paths returned by `config_get_data_paths`.
 struct ResolvedDataPaths {
-    current_openhuman_dir: std::path::PathBuf,
-    /// The shared root `~/.openhuman`. Retained for logging/diagnostics only —
+    current_neppy_dir: std::path::PathBuf,
+    /// The shared root `~/.neppy`. Retained for logging/diagnostics only —
     /// the reset must NOT delete it, because it holds every user's
     /// `users/<id>` subtree (deleting it wiped sibling accounts' data).
-    default_openhuman_dir: std::path::PathBuf,
+    default_neppy_dir: std::path::PathBuf,
     active_workspace_marker_path: std::path::PathBuf,
-    /// `~/.openhuman/active_user.toml` — the shared active-user marker. Removed
+    /// `~/.neppy/active_user.toml` — the shared active-user marker. Removed
     /// to sign the current user out so the next launch boots pre-login.
     active_user_marker_path: std::path::PathBuf,
 }
@@ -333,13 +333,13 @@ async fn fetch_data_paths(user_id: Option<String>) -> Result<ResolvedDataPaths, 
         .pointer("/result/result")
         .ok_or_else(|| "config_get_data_paths missing /result/result".to_string())?;
     let current = inner
-        .get("current_openhuman_dir")
+        .get("current_neppy_dir")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| "config_get_data_paths missing current_openhuman_dir".to_string())?;
+        .ok_or_else(|| "config_get_data_paths missing current_neppy_dir".to_string())?;
     let default = inner
-        .get("default_openhuman_dir")
+        .get("default_neppy_dir")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| "config_get_data_paths missing default_openhuman_dir".to_string())?;
+        .ok_or_else(|| "config_get_data_paths missing default_neppy_dir".to_string())?;
     let marker = inner
         .get("active_workspace_marker_path")
         .and_then(|v| v.as_str())
@@ -349,8 +349,8 @@ async fn fetch_data_paths(user_id: Option<String>) -> Result<ResolvedDataPaths, 
         .and_then(|v| v.as_str())
         .ok_or_else(|| "config_get_data_paths missing active_user_marker_path".to_string())?;
     Ok(ResolvedDataPaths {
-        current_openhuman_dir: std::path::PathBuf::from(current),
-        default_openhuman_dir: std::path::PathBuf::from(default),
+        current_neppy_dir: std::path::PathBuf::from(current),
+        default_neppy_dir: std::path::PathBuf::from(default),
         active_workspace_marker_path: std::path::PathBuf::from(marker),
         active_user_marker_path: std::path::PathBuf::from(user_marker),
     })

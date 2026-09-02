@@ -1,6 +1,6 @@
 import {
-  openhumanLocalAiApplyPreset,
-  openhumanLocalAiPresets,
+  neppyLocalAiApplyPreset,
+  neppyLocalAiPresets,
   type PresetsResponse,
 } from './tauriCommands';
 
@@ -55,7 +55,7 @@ export const ensureRecommendedLocalAiPresetIfNeeded = async (
 ): Promise<LocalAiPresetResolution> => {
   const presets = await retryLocalAiCommand(
     'load local AI presets',
-    () => openhumanLocalAiPresets(),
+    () => neppyLocalAiPresets(),
     logPrefix
   );
   const selectedTier = normalizeSelectedTier(presets.selected_tier);
@@ -72,7 +72,7 @@ export const ensureRecommendedLocalAiPresetIfNeeded = async (
   // No selected tier yet: persist the recommended tier so the Rust-side
   // `config_with_recommended_tier_if_unselected()` honors the user's
   // opt-in instead of defaulting a low-RAM device back to disabled.
-  // The mount-time probe in LocalAIStep uses `openhumanLocalAiPresets()`
+  // The mount-time probe in LocalAIStep uses `neppyLocalAiPresets()`
   // directly, so this apply only runs when the user has explicitly
   // chosen to proceed with local AI (consent flow).
   console.debug(
@@ -81,7 +81,7 @@ export const ensureRecommendedLocalAiPresetIfNeeded = async (
   );
   await retryLocalAiCommand(
     'apply recommended local AI preset',
-    () => openhumanLocalAiApplyPreset(recommendedTier),
+    () => neppyLocalAiApplyPreset(recommendedTier),
     logPrefix
   );
 

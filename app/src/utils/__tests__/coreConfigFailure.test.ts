@@ -6,7 +6,7 @@ import { CORE_CONFIG_UNREADABLE_I18N_KEY, isCoreConfigUnreadableError } from '..
 // The verbatim chain a container core emits when its workspace volume carries a
 // config.toml owned by a different uid than the runtime process.
 const REPORTED =
-  'Failed to read config file: /home/openhuman/.openhuman/config.toml ' +
+  'Failed to read config file: /home/openhuman/.neppy/config.toml ' +
   '[config owner mismatch] (file uid=0 gid=0 mode=0600; process euid=10001 egid=10001): ' +
   'Permission denied (os error 13)';
 
@@ -18,7 +18,7 @@ describe('isCoreConfigUnreadableError', () => {
   it('matches the pre-ownership-diagnostics shape still shipping in older cores', () => {
     expect(
       isCoreConfigUnreadableError(
-        'Failed to read config file: /home/openhuman/.openhuman/config.toml: Permission denied (os error 13)'
+        'Failed to read config file: /home/openhuman/.neppy/config.toml: Permission denied (os error 13)'
       )
     ).toBe(true);
   });
@@ -26,12 +26,12 @@ describe('isCoreConfigUnreadableError', () => {
   it('matches the Windows denial and the snapshot-reload context line', () => {
     expect(
       isCoreConfigUnreadableError(
-        'Failed to read config file: C:\\Users\\u\\.openhuman\\users\\local\\config.toml: Access is denied. (os error 5)'
+        'Failed to read config file: C:\\Users\\u\\.neppy\\users\\local\\config.toml: Access is denied. (os error 5)'
       )
     ).toBe(true);
     expect(
       isCoreConfigUnreadableError(
-        'reading config.toml from /home/openhuman/.openhuman/config.toml: Permission denied (os error 13)'
+        'reading config.toml from /home/openhuman/.neppy/config.toml: Permission denied (os error 13)'
       )
     ).toBe(true);
   });
@@ -43,7 +43,7 @@ describe('isCoreConfigUnreadableError', () => {
     for (const errno of ['os error 130', 'os error 50', 'os error 512']) {
       expect(
         isCoreConfigUnreadableError(
-          `Failed to read config file: /home/openhuman/.openhuman/config.toml: Some other failure (${errno})`
+          `Failed to read config file: /home/openhuman/.neppy/config.toml: Some other failure (${errno})`
         )
       ).toBe(false);
     }
@@ -56,7 +56,7 @@ describe('isCoreConfigUnreadableError', () => {
     // different fault with a different remedy.
     expect(
       isCoreConfigUnreadableError(
-        'Failed to read config file: /home/openhuman/.openhuman/config.toml: No such file or directory (os error 2)'
+        'Failed to read config file: /home/openhuman/.neppy/config.toml: No such file or directory (os error 2)'
       )
     ).toBe(false);
   });

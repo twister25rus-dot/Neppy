@@ -158,7 +158,7 @@ fn response_to_model_response(
         // managed backend's charged amount + window via
         // [`usage_info_from_response`], no crate change required. Omitted when the
         // provider reported neither (keeps non-managed responses byte-clean).
-        raw: openhuman_usage_meta_raw(response.usage.as_ref()),
+        raw: neppy_usage_meta_raw(response.usage.as_ref()),
         resolved_model: None,
         continue_turn: None,
         served_from_cache: false,
@@ -218,7 +218,7 @@ pub(crate) fn prompt_guided_text_response(text: String, request: &ModelRequest) 
 /// JSON key under which the model adapter stashes the provider-reported
 /// billing/context metadata that the crate [`Usage`] has no field for
 /// (gap G1). Consumed by [`usage_info_from_response`].
-const OPENHUMAN_USAGE_META_KEY: &str = "openhuman_usage_meta";
+const OPENHUMAN_USAGE_META_KEY: &str = "neppy_usage_meta";
 
 /// The two host [`UsageInfo`] fields with no crate [`Usage`] home, ferried
 /// through [`ModelResponse::raw`] so a standalone `invoke` stays usage-faithful.
@@ -235,7 +235,7 @@ struct NeppyUsageMeta {
 /// Build the `ModelResponse.raw` value carrying charged-USD + context-window
 /// metadata, or `None` when the provider reported neither (so responses from
 /// providers that don't surface billing stay `raw: None`).
-fn openhuman_usage_meta_raw(usage: Option<&UsageInfo>) -> Option<serde_json::Value> {
+fn neppy_usage_meta_raw(usage: Option<&UsageInfo>) -> Option<serde_json::Value> {
     let u = usage?;
     if u.charged_amount_usd <= 0.0 && u.context_window == 0 {
         return None;
@@ -262,7 +262,7 @@ fn openhuman_usage_meta_raw(usage: Option<&UsageInfo>) -> Option<serde_json::Val
 /// No-op when both values are zero (keeps billing-free responses `raw`-clean);
 /// otherwise inserts the meta key into the existing raw object (preserving the
 /// wire JSON) or creates a fresh object.
-pub(crate) fn merge_openhuman_usage_meta(
+pub(crate) fn merge_neppy_usage_meta(
     raw: Option<serde_json::Value>,
     charged_amount_usd: f64,
     context_window: u64,

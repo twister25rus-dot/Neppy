@@ -27,11 +27,11 @@ use crate::openhuman::config::schema::cloud_providers::AuthStyle;
 use crate::openhuman::config::Config;
 use crate::openhuman::inference::provider::auth::AuthStyle as CompatAuthStyle;
 use crate::openhuman::inference::provider::claude_agent_sdk::subprocess::ClaudeAgentSdkProvider;
+use crate::openhuman::inference::provider::neppy_backend_model::NeppyBackendModel;
 use crate::openhuman::inference::provider::openai_codex::{
     openai_codex_client_version, openai_codex_user_agent, resolve_openai_codex_routing,
     OPENAI_CODEX_ACCOUNT_HEADER, OPENAI_CODEX_ORIGINATOR, OPENAI_CODEX_ORIGINATOR_HEADER,
 };
-use crate::openhuman::inference::provider::openhuman_backend_model::NeppyBackendModel;
 use crate::openhuman::inference::provider::ProviderRuntimeOptions;
 use crate::openhuman::security::credentials::AuthService;
 use std::sync::Arc;
@@ -222,11 +222,11 @@ pub fn role_for_model_tier(hint_or_tier: &str) -> &'static str {
 /// Used to guard against stale `default_model` values (e.g. set by older UI
 /// versions) that the backend would reject with HTTP 400.  The known tiers are
 /// the constants in `crate::openhuman::config`; the four `hint:*` strings that
-/// `make_openhuman_backend` actually translates are also accepted.  An
+/// `make_neppy_backend` actually translates are also accepted.  An
 /// unrecognized `hint:*` value is intentionally rejected so the factory falls
 /// back to the platform default instead of forwarding an untranslated string
 /// to the backend.
-pub(crate) fn is_known_openhuman_tier(model: &str) -> bool {
+pub(crate) fn is_known_neppy_tier(model: &str) -> bool {
     use crate::openhuman::config::{
         MODEL_AGENTIC_V1, MODEL_BURST_V1, MODEL_CHAT_V1, MODEL_CODING_V1, MODEL_REASONING_QUICK_V1,
         MODEL_REASONING_V1, MODEL_SUMMARIZATION_V1, MODEL_VISION_V1,
@@ -255,7 +255,7 @@ pub(crate) fn is_known_openhuman_tier(model: &str) -> bool {
 /// **verbatim** to provider construction rather than mapped onto a managed tier.
 ///
 /// A raw passthrough id is any **non-empty** string that is neither a `hint:*`
-/// alias nor a known managed tier ([`is_known_openhuman_tier`]) — i.e. the model
+/// alias nor a known managed tier ([`is_known_neppy_tier`]) — i.e. the model
 /// ids a user pins directly on an agent/node (e.g. `"claude-opus-4"`). The
 /// Neppy backend preserves such ids verbatim
 /// (the managed model's blank-id normalization) and is authoritative over
@@ -264,7 +264,7 @@ pub(crate) fn is_known_openhuman_tier(model: &str) -> bool {
 /// `false` so their existing resolution is untouched.
 pub(crate) fn is_raw_passthrough_model(model: &str) -> bool {
     let trimmed = model.trim();
-    !trimmed.is_empty() && !trimmed.starts_with("hint:") && !is_known_openhuman_tier(trimmed)
+    !trimmed.is_empty() && !trimmed.starts_with("hint:") && !is_known_neppy_tier(trimmed)
 }
 
 /// Per-tier vision (image-input) capability for the managed Neppy backend.
@@ -739,7 +739,7 @@ fn create_chat_model_with_model_id_inner(
     };
     if !test_override_active {
         if resolves_to_managed_backend(role, config) {
-            return make_openhuman_backend_model(role, config);
+            return make_neppy_backend_model(role, config);
         }
         if let Some(result) = try_create_claude_agent_sdk_chat_model(role, config) {
             return result;
@@ -895,7 +895,7 @@ fn create_chat_model_from_string_with_model_id_inner(
             resolved = resolve_primary_cloud_provider_string(config);
         }
         if resolved == PROVIDER_OPENHUMAN {
-            return make_openhuman_backend_model(role, config);
+            return make_neppy_backend_model(role, config);
         }
         if let Some(result) =
             try_create_claude_agent_sdk_chat_model_from_string(role, &resolved, config)
@@ -1054,7 +1054,7 @@ fn unresolved_chat_model_error(role: &str, provider: &str, config: &Config) -> a
 /// per-workload provider is unset would silently inherit the global default —
 /// e.g. the `code_executor` sub-agent (`hint = "coding"`) would run on `chat-v1`
 /// instead of the dedicated `coding-v1` tier, defeating the whole point of the
-/// hint. The `hint:<tier>` translation in [`make_openhuman_backend`] only fires
+/// hint. The `hint:<tier>` translation in [`make_neppy_backend`] only fires
 /// when the *model string itself* is `hint:coding`; here the model originates
 /// from `default_model`, so the workload role is the only signal left and must
 /// be mapped explicitly.
@@ -1069,7 +1069,7 @@ fn unresolved_chat_model_error(role: &str, provider: &str, config: &Config) -> a
 ///   `chat` role (see the session builder) and rely on `default_model` driving
 ///   the model — pinning `chat` here would regress them.
 /// - `summarization` / `memory`, which are pinned in a dedicated branch of
-///   [`make_openhuman_backend`] via [`summarization_tier_model`] (fixed at
+///   [`make_neppy_backend`] via [`summarization_tier_model`] (fixed at
 ///   `summarization-v1`) rather than here, only so the `memory` alias and the
 ///   role string share one resolution site. They do **not** fall through to
 ///   `default_model`.
@@ -1112,7 +1112,7 @@ fn managed_tier_for_role(role: &str) -> Option<&'static str> {
 /// The **managed-backend** summarization tier model — fixed at
 /// [`MODEL_SUMMARIZATION_V1`] (`summarization-v1`).
 ///
-/// Read **only** on the managed Neppy path (inside [`make_openhuman_backend`]),
+/// Read **only** on the managed Neppy path (inside [`make_neppy_backend`]),
 /// so it is consumed iff the `summarization`/`memory` role actually resolves to
 /// the managed backend — BYOK and local routes carry their own model in the
 /// provider string and never reach here.
@@ -1140,8 +1140,8 @@ pub(crate) fn summarization_tier_model() -> &'static str {
 /// Resolve the managed Neppy backend for `role` — the model id (tier /
 /// summarization / default, with `hint:<tier>` translation) plus a configured
 /// [`NeppyBackendModel`]. Shared by both the `Provider` path
-/// ([`make_openhuman_backend`]) and the crate `ChatModel` path
-/// ([`make_openhuman_backend_model`], issue #4727 Motion B).
+/// ([`make_neppy_backend`]) and the crate `ChatModel` path
+/// ([`make_neppy_backend_model`], issue #4727 Motion B).
 fn resolve_managed_backend(
     role: &str,
     config: &Config,
@@ -1186,20 +1186,20 @@ fn resolve_managed_backend_with_model_override(
     // Critical: pass the *config's* workspace directory through so the
     // provider's `AuthService` reads `auth-profiles.json` from the
     // same dir login wrote to. Without this, `ProviderRuntimeOptions::default()`
-    // leaves `openhuman_dir = None`, the provider falls back to
-    // `~/.openhuman`, and reads an unrelated (or empty)
+    // leaves `neppy_dir = None`, the provider falls back to
+    // `~/.neppy`, and reads an unrelated (or empty)
     // profile store — surfacing as "No backend session: store a JWT
     // via auth (app-session)" even though login just succeeded in the
     // user's actual workspace (e.g. test workspaces under OPENHUMAN_WORKSPACE).
     let options = ProviderRuntimeOptions {
-        openhuman_dir: config.config_path.parent().map(std::path::PathBuf::from),
+        neppy_dir: config.config_path.parent().map(std::path::PathBuf::from),
         secrets_encrypt: config.secrets.encrypt,
         ..ProviderRuntimeOptions::default()
     };
     log::debug!(
         "[providers][chat-factory] building openhuman backend provider model={} state_dir={:?} secrets_encrypt={}",
         model,
-        options.openhuman_dir,
+        options.neppy_dir,
         options.secrets_encrypt
     );
     // Translate `hint:<tier>` model strings into the Neppy backend's
@@ -1228,7 +1228,7 @@ fn resolve_managed_backend_with_model_override(
             // constants. So a non-`hint:` id is either a known canonical tier or a
             // raw/BYOK id the user pinned — both forward verbatim; only the log
             // line differs.
-            if is_known_openhuman_tier(&model) {
+            if is_known_neppy_tier(&model) {
                 model
             } else {
                 // Unrecognised NON-empty model id — a raw/BYOK model the user
@@ -1273,7 +1273,7 @@ fn resolve_managed_backend_with_model_override(
 /// for the `Provider` path. Same resolution; wraps the backend so the harness
 /// holds a crate `ChatModel` and the dynamic JWT + `thread_id` + billing envelope
 /// are bridged onto the crate wire client per call.
-pub(crate) fn make_openhuman_backend_model(
+pub(crate) fn make_neppy_backend_model(
     role: &str,
     config: &Config,
 ) -> anyhow::Result<(
@@ -1293,7 +1293,7 @@ pub(crate) fn make_openhuman_backend_model(
 /// [`TurnModelSource`](crate::openhuman::agent::tinyagents::TurnModelSource) to construct
 /// the primary + each workload-tier route directly.
 ///
-/// - **Managed** → [`NeppyBackendModel`](super::openhuman_backend_model::NeppyBackendModel)
+/// - **Managed** → [`NeppyBackendModel`](super::neppy_backend_model::NeppyBackendModel)
 ///   pinned to `model`; the backend resolves the tier from `request.model`, so a
 ///   tier alias / agent-model pin dispatches directly.
 /// - **Local / cloud** → the crate builders; the model rides the role's resolved
@@ -1920,8 +1920,8 @@ pub(crate) fn verify_session_active(config: &Config) -> anyhow::Result<()> {
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
             directories::UserDirs::new()
-                .map(|d| d.home_dir().join(".openhuman"))
-                .unwrap_or_else(|| std::path::PathBuf::from(".openhuman"))
+                .map(|d| d.home_dir().join(".neppy"))
+                .unwrap_or_else(|| std::path::PathBuf::from(".neppy"))
         });
     let auth = AuthService::new(&state_dir, config.secrets.encrypt);
     let has_session = auth
@@ -1943,7 +1943,7 @@ fn resolve_primary_cloud_provider_string(config: &Config) -> String {
         .as_deref()
         .and_then(|id| config.cloud_providers.iter().find(|entry| entry.id == id));
 
-    if primary.is_some_and(is_openhuman_cloud_entry) {
+    if primary.is_some_and(is_neppy_cloud_entry) {
         if let Some(legacy) = legacy_custom_inference_provider_string(config) {
             return legacy;
         }
@@ -2020,7 +2020,7 @@ fn has_custom_inference_intent(config: &Config) -> bool {
         .as_deref()
         .map(str::trim)
         .filter(|url| !url.is_empty())
-        .is_some_and(|url| !looks_like_openhuman_backend(url))
+        .is_some_and(|url| !looks_like_neppy_backend(url))
 }
 
 fn legacy_custom_inference_provider_string(config: &Config) -> Option<String> {
@@ -2030,7 +2030,7 @@ fn legacy_custom_inference_provider_string(config: &Config) -> Option<String> {
         .map(str::trim)
         .filter(|url| !url.is_empty())?;
 
-    if looks_like_openhuman_backend(inference_url) {
+    if looks_like_neppy_backend(inference_url) {
         return None;
     }
 
@@ -2039,7 +2039,7 @@ fn legacy_custom_inference_provider_string(config: &Config) -> Option<String> {
         .cloud_providers
         .iter()
         .find(|entry| {
-            !is_openhuman_cloud_entry(entry)
+            !is_neppy_cloud_entry(entry)
                 && normalize_endpoint_for_compare(&entry.endpoint) == normalized_inference
         })
         .map(|entry| cloud_entry_provider_string(entry, config))
@@ -2060,7 +2060,7 @@ fn legacy_inference_slug(config: &Config) -> Option<&str> {
         .map(str::trim)
         .filter(|url| !url.is_empty())?;
 
-    if looks_like_openhuman_backend(inference_url) {
+    if looks_like_neppy_backend(inference_url) {
         return None;
     }
 
@@ -2069,7 +2069,7 @@ fn legacy_inference_slug(config: &Config) -> Option<&str> {
         .cloud_providers
         .iter()
         .find(|entry| {
-            !is_openhuman_cloud_entry(entry)
+            !is_neppy_cloud_entry(entry)
                 && normalize_endpoint_for_compare(&entry.endpoint) == normalized_inference
         })
         .map(|entry| entry.slug.as_str())
@@ -2079,7 +2079,7 @@ fn cloud_entry_provider_string(
     entry: &crate::openhuman::config::schema::cloud_providers::CloudProviderCreds,
     config: &Config,
 ) -> String {
-    if is_openhuman_cloud_entry(entry) {
+    if is_neppy_cloud_entry(entry) {
         return PROVIDER_OPENHUMAN.to_string();
     }
 
@@ -2100,19 +2100,19 @@ fn cloud_entry_provider_string(
     format!("{}:{model}", entry.slug)
 }
 
-fn is_openhuman_cloud_entry(
+fn is_neppy_cloud_entry(
     entry: &crate::openhuman::config::schema::cloud_providers::CloudProviderCreds,
 ) -> bool {
     entry.slug == PROVIDER_OPENHUMAN
-        || matches!(entry.auth_style, AuthStyle::NeppyJwt)
-        || looks_like_openhuman_backend(&entry.endpoint)
+        || matches!(entry.auth_style, AuthStyle::OpenhumanJwt)
+        || looks_like_neppy_backend(&entry.endpoint)
 }
 
 fn normalize_endpoint_for_compare(url: &str) -> String {
     url.trim().trim_end_matches('/').to_ascii_lowercase()
 }
 
-fn looks_like_openhuman_backend(url: &str) -> bool {
+fn looks_like_neppy_backend(url: &str) -> bool {
     let lower = url.trim().to_ascii_lowercase();
     let without_scheme = lower.split("://").nth(1).unwrap_or(&lower);
     let authority = without_scheme.split('/').next().unwrap_or("");
@@ -2197,9 +2197,9 @@ fn resolve_cloud_slug<'a>(
     // See https://github.com/tinyhumansai/openhuman/issues/2784.
     //
     // NeppyJwt entries are exempt: they always delegate to
-    // make_openhuman_backend which derives the model from config.default_model,
+    // make_neppy_backend which derives the model from config.default_model,
     // ignoring whatever effective_model we computed here.
-    if entry.auth_style != AuthStyle::NeppyJwt && effective_model.trim().is_empty() {
+    if entry.auth_style != AuthStyle::OpenhumanJwt && effective_model.trim().is_empty() {
         log::warn!(
             "[nvidia-nim][chat-factory] role={} slug={} resolved to empty model — \
              provider string must include a model id (e.g. '{}:<model-id>') or \
@@ -2217,7 +2217,7 @@ fn resolve_cloud_slug<'a>(
         );
     }
 
-    if entry.auth_style != AuthStyle::NeppyJwt && is_abstract_tier_model(&effective_model) {
+    if entry.auth_style != AuthStyle::OpenhumanJwt && is_abstract_tier_model(&effective_model) {
         if let Some(default_model) = entry
             .default_model
             .as_deref()
@@ -2438,7 +2438,7 @@ fn try_create_cloud_slug_chat_model_from_string_with_native_tools(
     let auth = match entry.auth_style {
         AuthStyle::Anthropic => CompatAuthStyle::Anthropic,
         AuthStyle::None => CompatAuthStyle::None,
-        AuthStyle::NeppyJwt => {
+        AuthStyle::OpenhumanJwt => {
             let model_override =
                 (!effective_model.trim().is_empty()).then_some(effective_model.as_str());
             let (backend, pinned_model) =

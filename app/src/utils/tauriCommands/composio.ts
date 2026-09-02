@@ -16,7 +16,7 @@ export interface ComposioTriggerHistoryResult {
   entries: ComposioTriggerHistoryEntry[];
 }
 
-export async function openhumanComposioListTriggerHistory(
+export async function neppyComposioListTriggerHistory(
   limit = 100
 ): Promise<CommandResponse<{ result: ComposioTriggerHistoryResult }>> {
   if (!isTauri()) {
@@ -43,7 +43,7 @@ export interface ComposioModeStatus {
 
 /// Read the current Composio routing mode and whether a direct-mode API
 /// key is stored. The key itself is never returned.
-export async function openhumanComposioGetMode(): Promise<CommandResponse<ComposioModeStatus>> {
+export async function neppyComposioGetMode(): Promise<CommandResponse<ComposioModeStatus>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -59,7 +59,7 @@ export interface ComposioSetApiKeyResult {
 
 /// Persist a Composio API key for direct mode and (optionally) flip the
 /// routing mode to "direct".
-export async function openhumanComposioSetApiKey(
+export async function neppyComposioSetApiKey(
   apiKey: string,
   activateDirect = true
 ): Promise<CommandResponse<ComposioSetApiKeyResult>> {
@@ -74,7 +74,7 @@ export async function openhumanComposioSetApiKey(
 
 /// Remove the stored direct-mode API key and reset the routing mode to
 /// "backend".
-export async function openhumanComposioClearApiKey(): Promise<
+export async function neppyComposioClearApiKey(): Promise<
   CommandResponse<{ cleared: boolean; mode: string }>
 > {
   if (!isTauri()) {

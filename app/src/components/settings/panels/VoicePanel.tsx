@@ -17,10 +17,10 @@ import {
   type VoiceSettings,
 } from '../../../services/api/voiceSettingsApi';
 import {
-  openhumanGetVoiceServerSettings,
-  openhumanUpdateVoiceServerSettings,
-  openhumanVoiceSetProviders,
-  openhumanVoiceStatus,
+  neppyGetVoiceServerSettings,
+  neppyUpdateVoiceServerSettings,
+  neppyVoiceSetProviders,
+  neppyVoiceStatus,
   syncNotchVisibility,
   type VoiceProvidersSnapshot,
   type VoiceServerSettings,
@@ -70,7 +70,7 @@ const VoicePanel = ({ embedded = false, scrollable = true }: VoicePanelProps = {
   const [savedSettings, setSavedSettings] = useState<VoiceServerSettings | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus | null>(null);
   // Local provider selectors — initialised from voice_status, persisted via
-  // openhumanVoiceSetProviders on change. Empty string until first load.
+  // neppyVoiceSetProviders on change. Empty string until first load.
   const [sttProvider, setSttProvider] = useState<string>('');
   const [ttsProvider, setTtsProvider] = useState<string>('');
   const [savedSttProvider, setSavedSttProvider] = useState<string>('');
@@ -118,8 +118,8 @@ const VoicePanel = ({ embedded = false, scrollable = true }: VoicePanelProps = {
   const loadData = async (forceSettings = false) => {
     try {
       const [settingsResponse, voiceResponse, piperStatusResponse] = await Promise.all([
-        openhumanGetVoiceServerSettings(),
-        openhumanVoiceStatus(),
+        neppyGetVoiceServerSettings(),
+        neppyVoiceStatus(),
         piperInstallStatus().catch(err => {
           // Status polls happen on a 2s loop; a single transient error
           // shouldn't blow up the entire settings panel. Log + keep the
@@ -251,7 +251,7 @@ const VoicePanel = ({ embedded = false, scrollable = true }: VoicePanelProps = {
     setIsSavingProviders(true);
     setError(null);
     try {
-      const snapshot = await openhumanVoiceSetProviders({
+      const snapshot = await neppyVoiceSetProviders({
         stt_provider: update.stt_provider,
         tts_provider: update.tts_provider,
         stt_model: update.stt_model,
@@ -312,7 +312,7 @@ const VoicePanel = ({ embedded = false, scrollable = true }: VoicePanelProps = {
       setSettings(current => (current ? { ...current, always_on_enabled: next } : current));
 
       try {
-        await openhumanUpdateVoiceServerSettings({ always_on_enabled: next });
+        await neppyUpdateVoiceServerSettings({ always_on_enabled: next });
         setSavedSettings(current => (current ? { ...current, always_on_enabled: next } : current));
         setNotice(t('voice.settingsSaved'));
       } catch (err) {

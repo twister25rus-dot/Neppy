@@ -47,7 +47,7 @@ pub(crate) static ENV_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(()
 /// Resolve the workspace directory the Claude Code provider operates against
 /// (where session state and [`settings`] live). Derived from the config file's
 /// parent so the RPC layer and the chat factory agree on the exact path. Falls
-/// back to `~/.openhuman` (then `./.openhuman`) when the config path has no
+/// back to `~/.neppy` (then `./.neppy`) when the config path has no
 /// parent.
 pub fn workspace_dir_from_config(config: &crate::openhuman::config::Config) -> PathBuf {
     config
@@ -56,8 +56,8 @@ pub fn workspace_dir_from_config(config: &crate::openhuman::config::Config) -> P
         .map(PathBuf::from)
         .unwrap_or_else(|| {
             directories::UserDirs::new()
-                .map(|d| d.home_dir().join(".openhuman"))
-                .unwrap_or_else(|| PathBuf::from(".openhuman"))
+                .map(|d| d.home_dir().join(".neppy"))
+                .unwrap_or_else(|| PathBuf::from(".neppy"))
         })
 }
 

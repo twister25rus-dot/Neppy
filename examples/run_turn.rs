@@ -69,7 +69,7 @@ async fn run() -> anyhow::Result<()> {
             .provider(Provider::inherit())
     } else {
         // A throwaway workspace, removed when the harness drops, and an
-        // explicitly named endpoint. Nothing here touches ~/.openhuman.
+        // explicitly named endpoint. Nothing here touches ~/.neppy.
         let base_url = std::env::var("OPENHUMAN_EXAMPLE_BASE_URL").map_err(|_| {
             anyhow::anyhow!(
                 "set OPENHUMAN_EXAMPLE_BASE_URL + OPENHUMAN_EXAMPLE_API_KEY, \

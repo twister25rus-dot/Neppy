@@ -496,7 +496,7 @@ fn print_dump_prompt_help() {
     println!("                       `notion`). Must match a currently-connected integration —");
     println!("                       run `composio list_connection` to see the active slugs.");
     println!("  --workspace, -w <p>  Override the workspace directory (defaults to");
-    println!("                       Config::workspace_dir / ~/.openhuman/workspace).");
+    println!("                       Config::workspace_dir / ~/.neppy/workspace).");
     println!("  --model, -m <name>   Override the resolved model name (affects only the");
     println!("                       `## Runtime` section).");
     println!("  --with-tools         Also print the full list of tool names the agent sees.");

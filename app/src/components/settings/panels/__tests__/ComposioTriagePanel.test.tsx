@@ -6,8 +6,8 @@ import { renderWithProviders } from '../../../../test/test-utils';
 const hoisted = vi.hoisted(() => ({ getSettings: vi.fn(), updateSettings: vi.fn() }));
 
 vi.mock('../../../../utils/tauriCommands', () => ({
-  openhumanGetComposioTriggerSettings: hoisted.getSettings,
-  openhumanUpdateComposioTriggerSettings: hoisted.updateSettings,
+  neppyGetComposioTriggerSettings: hoisted.getSettings,
+  neppyUpdateComposioTriggerSettings: hoisted.updateSettings,
 }));
 
 vi.mock('../../hooks/useSettingsNavigation', () => ({

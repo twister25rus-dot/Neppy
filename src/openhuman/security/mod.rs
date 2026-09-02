@@ -56,7 +56,7 @@ pub use policy::validate_path_within_root;
 pub use policy::AutonomyLevel;
 pub use policy::SecurityPolicy;
 pub use policy::ToolOperation;
-pub use policy::{ensure_openhuman_scratch_dir, openhuman_scratch_dir};
+pub use policy::{ensure_neppy_scratch_dir, neppy_scratch_dir};
 #[allow(unused_imports)]
 pub use policy::{CommandClass, GateDecision};
 #[allow(unused_imports)]

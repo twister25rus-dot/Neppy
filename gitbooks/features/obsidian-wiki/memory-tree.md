@@ -54,7 +54,7 @@ Retrieval can target any scope: search a single source, drill down a topic, or p
 
 ## Where it lives on disk
 
-Inside your workspace (default `~/.openhuman`, or whatever `OPENHUMAN_WORKSPACE` points at):
+Inside your workspace (default `~/.neppy`, or whatever `OPENHUMAN_WORKSPACE` points at):
 
 | Path                    | What's there                                           |
 | ----------------------- | ------------------------------------------------------ |

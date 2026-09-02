@@ -147,7 +147,7 @@ pub fn effective_api_url(api_url: &Option<String>) -> String {
 /// # Key difference from [`effective_api_url`]
 ///
 /// The user override is **skipped** when it [`looks_like_local_ai_endpoint`]
-/// **and** does not [`looks_like_openhuman_backend_endpoint`]. In that case
+/// **and** does not [`looks_like_neppy_backend_endpoint`]. In that case
 /// the function falls through to the env / default chain so backend requests
 /// still reach the hosted API.
 ///
@@ -163,7 +163,7 @@ pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
     if let Some(u) = non_empty_str(api_url) {
         let is_local_ai = looks_like_local_ai_endpoint(u);
         let is_inference_provider = looks_like_inference_provider_endpoint(u);
-        let is_openhuman = looks_like_openhuman_backend_endpoint(u);
+        let is_openhuman = looks_like_neppy_backend_endpoint(u);
         // A public third-party inference host (openrouter.ai, api.openai.com, …)
         // set to its canonical base (`https://openrouter.ai/api/v1`) is neither
         // local-AI nor an Neppy backend, so without this check the override
@@ -315,7 +315,7 @@ pub fn looks_like_local_ai_endpoint(url: &str) -> bool {
 /// Kept tight to genuinely managed inference hosts; an unknown custom backend
 /// is still honored unless it carries the OpenAI-compatible `/v1` base shape
 /// below. `tinyhumans.ai` is deliberately ABSENT — our own hosted backend is
-/// recognised by [`looks_like_openhuman_backend_endpoint`] and must route.
+/// recognised by [`looks_like_neppy_backend_endpoint`] and must route.
 const INFERENCE_PROVIDER_DOMAINS: &[&str] = &[
     "openrouter.ai",
     "openmodel.ai",
@@ -365,7 +365,7 @@ pub fn looks_like_inference_provider_endpoint(url: &str) -> bool {
     }
 
     // Our own hosted backend is a backend, never a "foreign" inference base.
-    if looks_like_openhuman_backend_endpoint(trimmed) {
+    if looks_like_neppy_backend_endpoint(trimmed) {
         return false;
     }
 
@@ -402,7 +402,7 @@ pub fn looks_like_inference_provider_endpoint(url: &str) -> bool {
 /// Used in [`effective_backend_api_url`] to short-circuit the local-AI check:
 /// a user who set `api_url` to `https://api.tinyhumans.ai/openai/v1/chat/completions`
 /// must still reach the real backend (not fall back to the default chain).
-fn looks_like_openhuman_backend_endpoint(url: &str) -> bool {
+fn looks_like_neppy_backend_endpoint(url: &str) -> bool {
     let trimmed = url.trim();
     let redacted = redact_url_for_log(trimmed);
 
@@ -981,7 +981,7 @@ mod tests {
     #[test]
     fn app_env_from_env_reads_runtime_var() {
         // Setting APP_ENV to "staging" flips `default_root_dir_name()` to
-        // `.openhuman-staging` process-wide, which breaks any concurrent test
+        // `.neppy-staging` process-wide, which breaks any concurrent test
         // resolving the root openhuman dir. Hold the crate-wide env lock too,
         // in the established order (TEST_ENV_LOCK before the backend lock).
         let _env_guard = crate::openhuman::config::TEST_ENV_LOCK
@@ -1147,20 +1147,20 @@ mod tests {
         ));
     }
 
-    // ── openhuman_backend detection ───────────────────────────────────────────
+    // ── neppy_backend detection ───────────────────────────────────────────
 
     #[test]
-    fn openhuman_backend_detection_accepts_hosted_api_paths() {
-        assert!(looks_like_openhuman_backend_endpoint(
+    fn neppy_backend_detection_accepts_hosted_api_paths() {
+        assert!(looks_like_neppy_backend_endpoint(
             "https://api.tinyhumans.ai/openai/v1/chat/completions"
         ));
-        assert!(looks_like_openhuman_backend_endpoint(
+        assert!(looks_like_neppy_backend_endpoint(
             "https://staging-api.tinyhumans.ai/openai/v1/chat/completions"
         ));
-        assert!(!looks_like_openhuman_backend_endpoint(
+        assert!(!looks_like_neppy_backend_endpoint(
             "https://openrouter.ai/api/v1/chat/completions"
         ));
-        assert!(!looks_like_openhuman_backend_endpoint(
+        assert!(!looks_like_neppy_backend_endpoint(
             "http://localhost:1234/v1/chat/completions"
         ));
     }
@@ -1317,7 +1317,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_provider_excludes_openhuman_backend_and_plain_hosts() {
+    fn inference_provider_excludes_neppy_backend_and_plain_hosts() {
         // Our own hosted backend is a backend, even though it serves inference.
         assert!(!looks_like_inference_provider_endpoint(
             "https://api.tinyhumans.ai/openai/v1/chat/completions"

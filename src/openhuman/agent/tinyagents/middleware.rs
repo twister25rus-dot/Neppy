@@ -367,7 +367,7 @@ fn estimate_output_tokens(bytes: usize) -> u64 {
 #[async_trait]
 impl Middleware<()> for NeppyToolExposureShadowMiddleware {
     fn name(&self) -> &str {
-        "openhuman_tool_exposure_shadow"
+        "neppy_tool_exposure_shadow"
     }
 
     async fn before_model(
@@ -915,7 +915,7 @@ impl Middleware<()> for ToolOutputMiddleware {
 /// once the tool resolves.
 ///
 /// This replaces the inline approval block that used to live in
-/// `execute_openhuman_tool`, giving approval a stable middleware name and
+/// `execute_neppy_tool`, giving approval a stable middleware name and
 /// letting it short-circuit cleanly. Tool-*internal* security (path/command
 /// policy via `live_policy`) stays inside each tool — it needs tool-specific
 /// operation semantics the harness boundary can't reconstruct generically.
@@ -1094,7 +1094,7 @@ impl ToolMiddleware<()> for CliRpcOnlyMiddleware {
 /// RAW tool result first and scrubs it before any outer wrap, the `after_tool`
 /// chain (summarization/caps in [`ToolOutputMiddleware`]), the transcript push,
 /// or the [`ToolOutcomeCaptureMiddleware`] sink can see the unredacted content.
-/// Scrubbing here — rather than inside `execute_openhuman_tool` — covers the
+/// Scrubbing here — rather than inside `execute_neppy_tool` — covers the
 /// parent chat path, sub-agent paths, the persisted transcript, and
 /// `ToolCallOutcome` records by construction, since every path runs the same
 /// `assemble_turn_harness` seam.
@@ -4256,7 +4256,7 @@ mod tests {
     #[tokio::test]
     async fn repeated_tool_failure_nudges_change_of_strategy_before_the_halt() {
         use crate::openhuman::agent::tinyagents::orchestration::{
-            openhuman_steering_handle, SteeringRunClass,
+            neppy_steering_handle, SteeringRunClass,
         };
         use tinyagents::harness::steering::SteeringCommandKind;
 
@@ -4300,7 +4300,7 @@ mod tests {
         // user's *interactive* turn permits. `Redirect` is Background-only, so a
         // Redirect nudge aborted interactive turns; `InjectMessage` is permitted
         // on both classes. Assert the interactive policy accepts the lane we use.
-        let interactive = openhuman_steering_handle(SteeringRunClass::Interactive);
+        let interactive = neppy_steering_handle(SteeringRunClass::Interactive);
         assert!(
             interactive
                 .policy()

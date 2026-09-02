@@ -30,7 +30,7 @@ Options:
   --scenario <name>        async-steer, parallel-research-code, reuse-parent-comm, or all (default: async-steer)
   --core-url <url>          JSON-RPC endpoint (default: OPENHUMAN_CORE_RPC_URL or ${DEFAULT_RPC_URL})
   --token <token>           RPC bearer (default: OPENHUMAN_CORE_TOKEN or <workspace>/core.token)
-  --workspace <path>        Workspace containing .openhuman/subagent_sessions.json
+  --workspace <path>        Workspace containing .neppy/subagent_sessions.json
   --task-key <key>          Durable task key (default: audit-subagent-rpc-<timestamp>)
   --agent-id <id>           Subagent id to request (default: researcher)
   --model <model>           Optional model_override for openhuman.agent_chat
@@ -167,8 +167,8 @@ function parsePositiveInt(raw, label) {
 
 function defaultNeppyDir() {
   return process.env.OPENHUMAN_APP_ENV === "staging"
-    ? path.join(homedir(), ".openhuman-staging")
-    : path.join(homedir(), ".openhuman");
+    ? path.join(homedir(), ".neppy-staging")
+    : path.join(homedir(), ".neppy");
 }
 
 async function defaultWorkspace() {
@@ -246,7 +246,7 @@ async function rpc(coreUrl, token, method, params, timeoutMs = 600_000) {
 }
 
 function sessionStorePath(workspace) {
-  return path.join(workspace, ".openhuman", "subagent_sessions.json");
+  return path.join(workspace, ".neppy", "subagent_sessions.json");
 }
 
 async function readSessions(workspace, taskKey) {

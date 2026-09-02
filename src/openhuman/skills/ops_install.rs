@@ -76,10 +76,10 @@ pub struct InstallWorkflowFromUrlOutcome {
 }
 
 /// Install a skill by fetching its `SKILL.md` directly over HTTPS and writing
-/// it to `<workspace>/.openhuman/skills/<slug>/SKILL.md`.
+/// it to `<workspace>/.neppy/skills/<slug>/SKILL.md`.
 ///
 /// Design rationale: openhuman's skill discovery scans
-/// `<workspace>/.openhuman/skills/` (plus `~/.openhuman/skills/` and legacy
+/// `<workspace>/.neppy/skills/` (plus `~/.neppy/skills/` and legacy
 /// paths), **not** the per-agent subdirectories that the vercel-labs `skills`
 /// CLI writes to (`./claude-code/skills/`, `./cursor/skills/`, …). The CLI's
 /// agent ecosystem is incompatible with openhuman's skill layout, so we fetch
@@ -283,13 +283,13 @@ pub(crate) async fn install_workflow_from_url_with_home(
 
     let slug = derive_install_slug(&frontmatter)?;
 
-    // Install to user scope (`~/.openhuman/skills/<slug>`), which `discover_workflows`
-    // scans unconditionally. Project scope (`<ws>/.openhuman/skills/`) is gated on
-    // a `<ws>/.openhuman/trust` marker and would render the install invisible to the
+    // Install to user scope (`~/.neppy/skills/<slug>`), which `discover_workflows`
+    // scans unconditionally. Project scope (`<ws>/.neppy/skills/`) is gated on
+    // a `<ws>/.neppy/trust` marker and would render the install invisible to the
     // skills list until the user opts the workspace into trust.
     let skills_root = home
         .ok_or_else(|| "write failed: unable to resolve home directory".to_string())?
-        .join(".openhuman")
+        .join(".neppy")
         .join("skills");
     let target_dir = skills_root.join(&slug);
     if target_dir.exists() {
@@ -412,7 +412,7 @@ pub(crate) async fn install_workflow_from_url_with_home(
 #[derive(Debug, Clone, Deserialize)]
 pub struct UninstallWorkflowParams {
     /// On-disk slug of the installed skill — the directory name under
-    /// `~/.openhuman/skills/<slug>/`. Retained as `name` for wire-format
+    /// `~/.neppy/skills/<slug>/`. Retained as `name` for wire-format
     /// back-compat with pre-existing clients; semantics are slug-only.
     pub name: String,
 }
@@ -428,7 +428,7 @@ pub struct UninstallWorkflowOutcome {
     pub scope: WorkflowScope,
 }
 
-/// Remove an installed user-scope SKILL.md skill from `~/.openhuman/skills/`.
+/// Remove an installed user-scope SKILL.md skill from `~/.neppy/skills/`.
 ///
 /// Only user-scope uninstalls are supported. Resolution is defensive:
 /// canonicalises paths, refuses symlinks, requires SKILL.md to be present.
@@ -466,16 +466,16 @@ pub fn uninstall_workflow(
         None => return Err("could not resolve user home directory".to_string()),
     };
 
-    // Workflows created post-rename live under `~/.openhuman/workflows/`; older
-    // ones under `~/.openhuman/skills/` or the legacy `~/.agents/skills/` root.
+    // Workflows created post-rename live under `~/.neppy/workflows/`; older
+    // ones under `~/.neppy/skills/` or the legacy `~/.agents/skills/` root.
     // Resolve whichever root actually holds this id so delete works regardless
     // of when/where it was authored — and matches every user root
     // discover_workflows_inner surfaces (else a listed workflow can't be
     // uninstalled).
-    let openhuman_dir = home.join(".openhuman");
+    let neppy_dir = home.join(".neppy");
     let root = [
-        openhuman_dir.join("workflows"),
-        openhuman_dir.join("skills"),
+        neppy_dir.join("workflows"),
+        neppy_dir.join("skills"),
         home.join(".agents").join("skills"),
     ]
     .into_iter()

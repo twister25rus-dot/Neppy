@@ -146,7 +146,7 @@ mod tests {
 
         for budget in [42_u32, 0_u32] {
             // Point the loader at a throwaway workspace so the test does not
-            // read (or mutate) the developer's real `~/.openhuman/` config.
+            // read (or mutate) the developer's real `~/.neppy/` config.
             // A fresh workspace per iteration keeps the two cases independent.
             let workspace = tempfile::tempdir().expect("tempdir for OPENHUMAN_WORKSPACE");
             let _workspace_guard = EnvGuard::set("OPENHUMAN_WORKSPACE", workspace.path());

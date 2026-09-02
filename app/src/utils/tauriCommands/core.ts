@@ -98,7 +98,7 @@ export async function restartApp(): Promise<void> {
 }
 
 /**
- * Read the active user id from `~/.openhuman/active_user.toml` via Rust.
+ * Read the active user id from `~/.neppy/active_user.toml` via Rust.
  * Used at startup (before redux-persist hydrates) to seed
  * `userScopedStorage` from the profile-independent source of truth so
  * the UI always lands on the right user namespace, regardless of any
@@ -314,14 +314,14 @@ export async function setOnboardingCompleted(value: boolean): Promise<boolean> {
   return false;
 }
 
-export async function openhumanDoctorReport(): Promise<CommandResponse<DoctorReport>> {
+export async function neppyDoctorReport(): Promise<CommandResponse<DoctorReport>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<DoctorReport>>({ method: 'openhuman.doctor_report' });
 }
 
-export async function openhumanDoctorModels(
+export async function neppyDoctorModels(
   useCache = true
 ): Promise<CommandResponse<ModelProbeReport>> {
   if (!isTauri()) {
@@ -333,7 +333,7 @@ export async function openhumanDoctorModels(
   });
 }
 
-export async function openhumanMigrateOpenclaw(
+export async function neppyMigrateOpenclaw(
   sourceWorkspace?: string,
   dryRun = true
 ): Promise<CommandResponse<MigrationReport>> {
@@ -346,7 +346,7 @@ export async function openhumanMigrateOpenclaw(
   });
 }
 
-export async function openhumanMigrateHermes(
+export async function neppyMigrateHermes(
   sourceWorkspace?: string,
   dryRun = true
 ): Promise<CommandResponse<MigrationReport>> {

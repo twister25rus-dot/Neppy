@@ -59,9 +59,9 @@ pub struct SecretStore {
 
 impl SecretStore {
     /// Create a new secret store rooted at the given directory.
-    pub fn new(openhuman_dir: &Path, enabled: bool) -> Self {
+    pub fn new(neppy_dir: &Path, enabled: bool) -> Self {
         Self {
-            key_path: openhuman_dir.join(".secret_key"),
+            key_path: neppy_dir.join(".secret_key"),
             enabled,
         }
     }
@@ -306,9 +306,9 @@ impl SecretStore {
                 #[cfg(windows)]
                 let msg = format!(
                     "{msg}\n\nThis is often caused by incorrect file permissions on Windows. \
-                     Try repairing ACLs on the .openhuman directory:\n\
-                     icacls \"%USERPROFILE%\\.openhuman\" /reset /t /c\n\
-                     icacls \"%USERPROFILE%\\.openhuman\\.secret_key\" /reset /c"
+                     Try repairing ACLs on the .neppy directory:\n\
+                     icacls \"%USERPROFILE%\\.neppy\" /reset /t /c\n\
+                     icacls \"%USERPROFILE%\\.neppy\\.secret_key\" /reset /c"
                 );
                 msg
             })?;
@@ -454,14 +454,14 @@ impl SecretStore {
     }
 }
 
-fn keyring_user_id_from_dir(openhuman_dir: &Path) -> String {
-    if let Some(id) = openhuman_dir.file_name().and_then(|s| s.to_str()) {
+fn keyring_user_id_from_dir(neppy_dir: &Path) -> String {
+    if let Some(id) = neppy_dir.file_name().and_then(|s| s.to_str()) {
         if !id.is_empty() {
             return id.to_string();
         }
     }
 
-    let path_str = openhuman_dir.to_string_lossy();
+    let path_str = neppy_dir.to_string_lossy();
     let mut hash: u64 = 14695981039346656037u64;
     for b in path_str.as_bytes() {
         hash ^= u64::from(*b);

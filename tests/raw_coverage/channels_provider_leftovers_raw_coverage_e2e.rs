@@ -339,7 +339,7 @@ async fn web_round19_covers_classifier_variants_and_cancel_cleanup() {
         "inference budget exceeded: monthly limit reached",
     );
     assert_eq!(budget.error_type, "budget_exhausted");
-    assert_eq!(budget.source, "openhuman_billing");
+    assert_eq!(budget.source, "neppy_billing");
 
     // #3714: a DNS / transport drop now classifies as the dedicated `network`
     // arm (was the generic `inference` catch-all), still retryable.

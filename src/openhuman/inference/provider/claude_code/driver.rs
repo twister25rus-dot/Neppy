@@ -82,7 +82,7 @@ fn seatbelt_available() -> bool {
 
 /// Render a Seatbelt profile that lets Claude Code do **everything** the user
 /// can — read/write anywhere, run subprocesses, use the network — EXCEPT touch
-/// Neppy's internal workspace (`~/.openhuman*`: memory DB, sessions, auth
+/// Neppy's internal workspace (`~/.neppy*`: memory DB, sessions, auth
 /// tokens, config). That is the one hard wall: CC's raw tools must not be able
 /// to corrupt Neppy's own state. This mirrors Neppy's existing
 /// `is_workspace_internal_path` invariant (its native tools already can't write
@@ -97,12 +97,12 @@ fn seatbelt_available() -> bool {
 #[cfg(target_os = "macos")]
 fn seatbelt_profile(workspace_dir: &std::path::Path) -> String {
     let esc = |p: String| p.replace('\\', "\\\\").replace('"', "\\\"");
-    // Deny the ENTIRE `~/.openhuman[-staging]` tree, not just the per-user
-    // workspace subdir. `workspace_dir` is `…/.openhuman-staging/users/<id>/…`,
+    // Deny the ENTIRE `~/.neppy[-staging]` tree, not just the per-user
+    // workspace subdir. `workspace_dir` is `…/.neppy-staging/users/<id>/…`,
     // but sensitive files (core.token, credentials) also live at the root — so
-    // denying only the subdir leaves them readable. Walk up to the `.openhuman*`
+    // denying only the subdir leaves them readable. Walk up to the `.neppy*`
     // ancestor and deny that whole tree.
-    let root = openhuman_internal_root(workspace_dir);
+    let root = neppy_internal_root(workspace_dir);
     let root = esc(std::fs::canonicalize(&root)
         .unwrap_or(root)
         .to_string_lossy()
@@ -114,17 +114,17 @@ fn seatbelt_profile(workspace_dir: &std::path::Path) -> String {
     )
 }
 
-/// Resolve the Neppy internal root (`~/.openhuman` / `~/.openhuman-staging`)
-/// from a path inside it by walking up to the first `.openhuman*` ancestor.
+/// Resolve the Neppy internal root (`~/.neppy` / `~/.neppy-staging`)
+/// from a path inside it by walking up to the first `.neppy*` ancestor.
 /// Falls back to the input path when no such ancestor exists.
 #[cfg(target_os = "macos")]
-fn openhuman_internal_root(workspace_dir: &std::path::Path) -> std::path::PathBuf {
+fn neppy_internal_root(workspace_dir: &std::path::Path) -> std::path::PathBuf {
     let mut cur = workspace_dir;
     loop {
         if cur
             .file_name()
             .and_then(|n| n.to_str())
-            .map(|n| n.starts_with(".openhuman"))
+            .map(|n| n.starts_with(".neppy"))
             .unwrap_or(false)
         {
             return cur.to_path_buf();
@@ -158,7 +158,7 @@ pub struct TurnContext<'a> {
 /// Write a CC `--mcp-config` JSON pointing at Neppy's in-process HTTP MCP
 /// server (running in the unjailed core). CC connects over loopback, so the
 /// MCP server is NOT a child of the sandboxed `claude` and keeps full access
-/// to `~/.openhuman` for memory — while CC's own raw tools are denied that dir
+/// to `~/.neppy` for memory — while CC's own raw tools are denied that dir
 /// by the jail. Returns the on-disk path; caller cleans up.
 fn write_mcp_http_config(
     dir: &std::path::Path,
@@ -250,7 +250,7 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
         .tempdir()
         .map_err(|e| anyhow::anyhow!("create scratch dir: {e}"))?;
     // Point CC at Neppy's in-process HTTP MCP server (unjailed core), so
-    // the memory bridge survives CC's `.openhuman` jail deny.
+    // the memory bridge survives CC's `.neppy` jail deny.
     let mut mcp_config_path: Option<PathBuf> = None;
     match crate::openhuman::mcp::server::ensure_local_http().await {
         Ok(endpoint) => match write_mcp_http_config(scratch.path(), endpoint.addr, &endpoint.token) {
@@ -273,7 +273,7 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
 
     // The user explicitly opts into Claude Code, so we do NOT limit its toolset
     // on any platform — CC always gets its full tools + `bypassPermissions`.
-    // The jail (macOS Seatbelt, below) is purely the `.openhuman` wall: it
+    // The jail (macOS Seatbelt, below) is purely the `.neppy` wall: it
     // doesn't restrict CC, it just protects Neppy's internal data where the
     // OS supports it. On Linux/Windows there's no OS wall yet, so CC runs
     // unconfined there (user's machine, user's call).
@@ -284,7 +284,7 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
 
     // Permission posture is a USER choice. Default `acceptEdits` (file edits
     // only); the user opts into `bypassPermissions` (full toolset incl. bash)
-    // explicitly. On macOS the Seatbelt jail walls off `~/.openhuman` in either
+    // explicitly. On macOS the Seatbelt jail walls off `~/.neppy` in either
     // mode; on Linux/Windows full access is unconfined.
     let full_access = claude_code_full_access(&ctx.workspace_dir);
     let permission_mode = if full_access {
@@ -559,11 +559,11 @@ mod tests {
 
     #[cfg(target_os = "macos")]
     #[test]
-    fn seatbelt_profile_denies_whole_openhuman_root_not_just_subdir() {
+    fn seatbelt_profile_denies_whole_neppy_root_not_just_subdir() {
         // Driver passes the per-user subdir; the jail must deny the WHOLE
-        // `.openhuman-staging` tree (so root-level core.token/credentials are
+        // `.neppy-staging` tree (so root-level core.token/credentials are
         // protected), not just the subdir.
-        let ws = std::path::Path::new("/Users/test/.openhuman-staging/users/abc/workspace");
+        let ws = std::path::Path::new("/Users/test/.neppy-staging/users/abc/workspace");
         let p = seatbelt_profile(ws);
         assert!(
             p.contains("(allow default)"),
@@ -576,8 +576,8 @@ mod tests {
         );
         // Denied path is the ROOT, not the per-user subdir.
         assert!(
-            p.contains("/Users/test/.openhuman-staging\""),
-            "deny subpath must be the .openhuman root: {p}"
+            p.contains("/Users/test/.neppy-staging\""),
+            "deny subpath must be the .neppy root: {p}"
         );
         assert!(
             !p.contains("users/abc"),
@@ -587,13 +587,13 @@ mod tests {
 
     #[cfg(target_os = "macos")]
     #[test]
-    fn openhuman_internal_root_walks_up_to_dotopenhuman() {
-        let r = openhuman_internal_root(std::path::Path::new(
-            "/Users/x/.openhuman/users/id/workspace/memory",
+    fn neppy_internal_root_walks_up_to_dotopenhuman() {
+        let r = neppy_internal_root(std::path::Path::new(
+            "/Users/x/.neppy/users/id/workspace/memory",
         ));
-        assert_eq!(r, std::path::Path::new("/Users/x/.openhuman"));
-        // Fallback: no `.openhuman*` ancestor → returns the input.
-        let r2 = openhuman_internal_root(std::path::Path::new("/tmp/custom/ws"));
+        assert_eq!(r, std::path::Path::new("/Users/x/.neppy"));
+        // Fallback: no `.neppy*` ancestor → returns the input.
+        let r2 = neppy_internal_root(std::path::Path::new("/tmp/custom/ws"));
         assert_eq!(r2, std::path::Path::new("/tmp/custom/ws"));
     }
 

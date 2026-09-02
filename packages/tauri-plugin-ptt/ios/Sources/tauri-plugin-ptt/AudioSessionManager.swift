@@ -8,7 +8,7 @@
 import AVFoundation
 import os.log
 
-private let log = Logger(subsystem: "ai.openhuman.ptt", category: "AudioSessionManager")
+private let log = Logger(subsystem: "ai.neppy.ptt", category: "AudioSessionManager")
 
 /// Centralises AVAudioSession lifecycle so PTTRecorder and PTTSpeaker
 /// share a single category configuration. Activating the session once

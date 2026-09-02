@@ -29,7 +29,7 @@ pub(crate) fn socket_path() -> PathBuf {
     }
     // Fallback: include UID so multi-user machines don't collide.
     let uid = nix::unistd::getuid().as_raw();
-    std::env::temp_dir().join(format!("com_openhuman_app_deeplink_{uid}.sock"))
+    std::env::temp_dir().join(format!("com_neppy_app_deeplink_{uid}.sock"))
 }
 
 /// Filter `neppy://` URLs out of an argv-style iterator. Split out from
@@ -333,7 +333,7 @@ mod tests {
         let path = socket_path();
         let name = path.file_name().unwrap().to_string_lossy();
         assert!(
-            name.contains("com_openhuman_app_deeplink"),
+            name.contains("com_neppy_app_deeplink"),
             "path {path:?} should contain identifier"
         );
         // Should NOT be inside /run/user since XDG_RUNTIME_DIR is unset.

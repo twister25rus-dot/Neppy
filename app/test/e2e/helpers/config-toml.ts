@@ -18,7 +18,7 @@ function workspaceRoot(): string {
   const ws = process.env.OPENHUMAN_WORKSPACE?.trim();
   if (ws && ws.length > 0) return ws;
   const home = process.env.HOME || '';
-  return path.join(home, '.openhuman');
+  return path.join(home, '.neppy');
 }
 
 function configTomlPath(): string {

@@ -66,7 +66,7 @@ fn required_env(name: &str) -> String {
     std::env::var(name).unwrap_or_else(|_| panic!("missing required env var: {name}"))
 }
 
-fn write_live_config(openhuman_dir: &Path, api_origin: &str) {
+fn write_live_config(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
 default_model = "reasoning-v1"
@@ -84,14 +84,14 @@ encrypt = false
         std::fs::write(&path, cfg).expect("write config");
     }
 
-    write_config_file(openhuman_dir, &cfg);
+    write_config_file(neppy_dir, &cfg);
     // Match runtime config resolution order used during pre-login auth flows.
-    // If we seed ~/.openhuman, also seed ~/.openhuman/users/local.
-    if openhuman_dir
+    // If we seed ~/.neppy, also seed ~/.neppy/users/local.
+    if neppy_dir
         .file_name()
-        .is_some_and(|name| name == std::ffi::OsStr::new(".openhuman"))
+        .is_some_and(|name| name == std::ffi::OsStr::new(".neppy"))
     {
-        write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
+        write_config_file(&neppy_dir.join("users").join("local"), &cfg);
     }
 }
 
@@ -207,11 +207,11 @@ async fn live_channel_web_chat_routing_cases_trigger_real_backend() {
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
-    let openhuman_home = home.join(".openhuman");
+    let neppy_home = home.join(".neppy");
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
 
-    write_live_config(&openhuman_home, &api_url);
-    write_live_config(&openhuman_home.join("users").join(&user_id), &api_url);
+    write_live_config(&neppy_home, &api_url);
+    write_live_config(&neppy_home.join("users").join(&user_id), &api_url);
 
     let (rpc_addr, rpc_join) = serve_rpc().await;
     let rpc_base = format!("http://{}", rpc_addr);

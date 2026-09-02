@@ -30,7 +30,7 @@ In the AgentBox console:
    - (optional) `OPENHUMAN_AGENTBOX_JOB_TIMEOUT_SECS` (default 600)
    - `GMI_MODELS` to the marketplace-approved model id (e.g.
      `deepseek-ai/DeepSeek-V4-Pro`).
-   - `OPENHUMAN_WORKSPACE` to a writable container path (e.g. `/home/openhuman/.openhuman`).
+   - `OPENHUMAN_WORKSPACE` to a writable container path (e.g. `/home/openhuman/.neppy`).
    - `RUST_LOG=info` (or `debug` while shaking out the first deploy).
 4. **Review & Register**: confirm and test from the console panel.
 

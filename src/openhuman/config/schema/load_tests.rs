@@ -94,10 +94,10 @@ async fn resolve_dirs_errors_instead_of_pre_login_when_marker_unreadable() {
 }
 
 #[test]
-fn user_openhuman_dir_builds_correct_path() {
-    let root = PathBuf::from("/home/test/.openhuman");
-    let dir = user_openhuman_dir(&root, "user-123");
-    assert_eq!(dir, PathBuf::from("/home/test/.openhuman/users/user-123"));
+fn user_neppy_dir_builds_correct_path() {
+    let root = PathBuf::from("/home/test/.neppy");
+    let dir = user_neppy_dir(&root, "user-123");
+    assert_eq!(dir, PathBuf::from("/home/test/.neppy/users/user-123"));
 }
 
 #[tokio::test]
@@ -133,11 +133,11 @@ async fn resolve_dirs_uses_active_user_when_present() {
 
 #[test]
 fn pre_login_user_dir_is_under_users_tree() {
-    let root = PathBuf::from("/home/test/.openhuman");
+    let root = PathBuf::from("/home/test/.neppy");
     let dir = pre_login_user_dir(&root);
     assert_eq!(
         dir,
-        PathBuf::from("/home/test/.openhuman/users").join(PRE_LOGIN_USER_ID)
+        PathBuf::from("/home/test/.neppy/users").join(PRE_LOGIN_USER_ID)
     );
 }
 
@@ -146,7 +146,7 @@ fn default_root_dir_name_uses_staging_suffix_for_staging_env() {
     // APP_ENV is process-global and `default_root_dir_name()` reads it on every
     // call, so flipping it here races any concurrent test that resolves the root
     // openhuman dir (e.g. the credentials active-session guard, which silently
-    // stops finding `active_user.toml` once the root becomes `.openhuman-staging`).
+    // stops finding `active_user.toml` once the root becomes `.neppy-staging`).
     // Take the same lock those tests hold.
     let _env_guard = crate::openhuman::config::TEST_ENV_LOCK
         .lock()
@@ -155,10 +155,10 @@ fn default_root_dir_name_uses_staging_suffix_for_staging_env() {
 
     std::env::set_var(crate::api::config::APP_ENV_VAR, "staging");
     assert!(crate::api::config::is_staging_app_env(Some("staging")));
-    assert_eq!(default_root_dir_name(), ".openhuman-staging");
+    assert_eq!(default_root_dir_name(), ".neppy-staging");
 
     std::env::set_var(crate::api::config::APP_ENV_VAR, "production");
-    assert_eq!(default_root_dir_name(), ".openhuman");
+    assert_eq!(default_root_dir_name(), ".neppy");
 
     match prior {
         Some(value) => std::env::set_var(crate::api::config::APP_ENV_VAR, value),
@@ -587,12 +587,10 @@ async fn missing_env_workspace_uses_pre_login_default() {
 
 #[test]
 fn resolve_config_dir_for_workspace_returns_parent_and_workspace() {
-    let ws = PathBuf::from("/home/test/.openhuman/workspace");
+    let ws = PathBuf::from("/home/test/.neppy/workspace");
     let (config_dir, workspace_dir) = resolve_config_dir_for_workspace(&ws);
     // Config dir is the parent of workspace.
-    assert!(
-        config_dir.ends_with(".openhuman") || config_dir == PathBuf::from("/home/test/.openhuman")
-    );
+    assert!(config_dir.ends_with(".neppy") || config_dir == PathBuf::from("/home/test/.neppy"));
     assert!(workspace_dir.ends_with("workspace"));
 }
 
@@ -2174,7 +2172,7 @@ fn migrate_legacy_inference_url_moves_external_chat_completions() {
 }
 
 #[test]
-fn migrate_legacy_inference_url_clears_openhuman_backend_form() {
+fn migrate_legacy_inference_url_clears_neppy_backend_form() {
     let mut cfg = Config::default();
     cfg.api_url = Some("https://api.tinyhumans.ai/openai/v1/chat/completions".to_string());
     cfg.inference_url = None;
@@ -2215,7 +2213,7 @@ fn migrate_cloud_provider_slugs_routes_cloud_to_legacy_custom_when_primary_is_op
             slug: "openhuman".into(),
             label: "Neppy".into(),
             endpoint: "https://api.openhuman.ai/v1".into(),
-            auth_style: crate::openhuman::config::schema::AuthStyle::NeppyJwt,
+            auth_style: crate::openhuman::config::schema::AuthStyle::OpenhumanJwt,
             ..Default::default()
         },
         crate::openhuman::config::schema::CloudProviderCreds {
@@ -2240,7 +2238,7 @@ fn migrate_cloud_provider_slugs_routes_cloud_to_legacy_custom_when_primary_is_op
 }
 
 #[test]
-fn migrate_cloud_provider_slugs_keeps_cloud_on_openhuman_without_legacy_custom() {
+fn migrate_cloud_provider_slugs_keeps_cloud_on_neppy_without_legacy_custom() {
     let mut cfg = Config::default();
     cfg.primary_cloud = Some("p_oh".into());
     cfg.memory_provider = Some("cloud".into());
@@ -2249,7 +2247,7 @@ fn migrate_cloud_provider_slugs_keeps_cloud_on_openhuman_without_legacy_custom()
         slug: "openhuman".into(),
         label: "Neppy".into(),
         endpoint: "https://api.tinyhumans.ai/v1".into(),
-        auth_style: crate::openhuman::config::schema::AuthStyle::NeppyJwt,
+        auth_style: crate::openhuman::config::schema::AuthStyle::OpenhumanJwt,
         ..Default::default()
     }];
 
@@ -2270,7 +2268,7 @@ fn migrate_cloud_provider_slugs_does_not_pick_unmatched_custom_provider() {
             slug: "openhuman".into(),
             label: "Neppy".into(),
             endpoint: "https://api.openhuman.ai/v1".into(),
-            auth_style: crate::openhuman::config::schema::AuthStyle::NeppyJwt,
+            auth_style: crate::openhuman::config::schema::AuthStyle::OpenhumanJwt,
             ..Default::default()
         },
         crate::openhuman::config::schema::CloudProviderCreds {

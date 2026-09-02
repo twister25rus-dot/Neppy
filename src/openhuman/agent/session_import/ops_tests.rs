@@ -135,7 +135,7 @@ async fn imports_flat_native_jsonl_with_parity() {
     let usage = assistant
         .extra_metadata
         .as_ref()
-        .and_then(|m| m.get("openhuman_turn_usage"))
+        .and_then(|m| m.get("neppy_turn_usage"))
         .expect("turn usage metadata");
     assert_eq!(usage["tool_calls"][0]["id"], "tc1");
     assert_eq!(

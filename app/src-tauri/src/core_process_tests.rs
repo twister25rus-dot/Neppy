@@ -1,6 +1,6 @@
 use super::{
     current_rpc_token, default_core_port, generate_rpc_token, is_expected_port_clash,
-    is_openhuman_root_body, parse_lsof_pid, parse_netstat_pid, parse_ps_comm, parse_tasklist_name,
+    is_neppy_root_body, parse_lsof_pid, parse_netstat_pid, parse_ps_comm, parse_tasklist_name,
     validate_kill_target, CoreProcessHandle, PortOwner, RecoveryOutcome,
 };
 use std::sync::{Mutex, MutexGuard, OnceLock};
@@ -250,24 +250,24 @@ fn ensure_running_reuses_unknown_listener_when_override_set() {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn is_openhuman_root_body_matches_canonical_root_response() {
+fn is_neppy_root_body_matches_canonical_root_response() {
     // Mirrors the JSON shape produced by `core/jsonrpc.rs::root_handler`.
     let body = r#"{
         "name": "openhuman",
         "ok": true,
         "endpoints": {"health": "/health", "rpc": "/rpc"}
     }"#;
-    assert!(is_openhuman_root_body(body));
+    assert!(is_neppy_root_body(body));
 }
 
 #[test]
-fn is_openhuman_root_body_rejects_other_services() {
-    assert!(!is_openhuman_root_body(r#"{"name": "something-else"}"#));
-    assert!(!is_openhuman_root_body(r#"{"ok": true}"#));
-    assert!(!is_openhuman_root_body("not json at all"));
-    assert!(!is_openhuman_root_body(""));
+fn is_neppy_root_body_rejects_other_services() {
+    assert!(!is_neppy_root_body(r#"{"name": "something-else"}"#));
+    assert!(!is_neppy_root_body(r#"{"ok": true}"#));
+    assert!(!is_neppy_root_body("not json at all"));
+    assert!(!is_neppy_root_body(""));
     // Wrong type for `name`.
-    assert!(!is_openhuman_root_body(r#"{"name": 42}"#));
+    assert!(!is_neppy_root_body(r#"{"name": 42}"#));
 }
 
 #[test]

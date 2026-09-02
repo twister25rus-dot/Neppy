@@ -97,7 +97,7 @@ fn the_default_workspace_is_ephemeral() {
 #[test]
 fn the_config_path_sits_beside_the_workspace_not_at_the_default() {
     // Credential state, auth profiles and the keyring file backend resolve
-    // against `config_path`'s parent. If it stayed at `~/.openhuman/config.toml`
+    // against `config_path`'s parent. If it stayed at `~/.neppy/config.toml`
     // while `workspace_dir` pointed at a temp dir, an "ephemeral" harness would
     // quietly read and write the operator's real credentials.
     let resolved = ResolvedWorkspace::resolve(&Workspace::Ephemeral, None).expect("resolve");
@@ -108,7 +108,7 @@ fn the_config_path_sits_beside_the_workspace_not_at_the_default() {
 
     assert_eq!(state_dir, resolved.workspace_dir.parent().expect("parent"));
     assert!(
-        !state_dir.starts_with(dirs::home_dir().unwrap_or_default().join(".openhuman")),
+        !state_dir.starts_with(dirs::home_dir().unwrap_or_default().join(".neppy")),
         "ephemeral credential state leaked into the operator's install: {}",
         state_dir.display()
     );
