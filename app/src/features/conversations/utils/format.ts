@@ -35,7 +35,7 @@ export function isAllowedExternalHref(rawHref: string): boolean {
  * Path is the hash route under HashRouter (e.g. `settings/notifications`
  * → `#/settings/notifications`). Leading/trailing slashes are tolerated.
  */
-interface OpenhumanLinkSegment {
+interface NeppyLinkSegment {
   kind: 'link';
   path: string;
   label: string;
@@ -46,7 +46,7 @@ interface TextSegment {
   text: string;
 }
 
-type BubbleSegment = TextSegment | OpenhumanLinkSegment;
+type BubbleSegment = TextSegment | NeppyLinkSegment;
 
 const OPENHUMAN_LINK_RE =
   /<openhuman-link\s+path=(?:"([^"]+)"|'([^']+)')\s*>([\s\S]*?)<\/openhuman-link>/gi;

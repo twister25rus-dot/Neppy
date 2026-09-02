@@ -1,12 +1,12 @@
 //! End-to-end tests proving the `memory` node round-trips through the REAL
 //! stack: the `tinyflows` engine executing a *compiled graph*, dispatching
-//! through the real [`OpenHumanMemory`](super::memory_adapter::OpenHumanMemory)
+//! through the real [`NeppyMemory`](super::memory_adapter::NeppyMemory)
 //! host adapter — wired via [`build_capabilities`], NOT
 //! `tinyflows::caps::mock::MockMemory` — against a real, on-disk `Memory`
 //! store.
 //!
 //! **The gap this closes.** Two layers of unit coverage already exist:
-//! - `memory_adapter_tests.rs` calls `OpenHumanMemory`'s methods directly
+//! - `memory_adapter_tests.rs` calls `NeppyMemory`'s methods directly
 //!   (scope lockdown, tier gate, trust boundary) but never through a compiled
 //!   graph or the engine, and never against the real store (every test there
 //!   uses a fresh empty `Config::workspace_dir` and only exercises the
@@ -21,7 +21,7 @@
 //! [`build_capabilities`] for a real `Capabilities` bundle, and hands both to
 //! `tinyflows::engine::run`. This file reproduces exactly that path (see
 //! [`trigger_to_memory`] / [`workflow_origin`]) so a regression in the
-//! engine → `Capabilities::memory` → `OpenHumanMemory` → `Memory` store chain
+//! engine → `Capabilities::memory` → `NeppyMemory` → `Memory` store chain
 //! fails a test, not just a live flow run.
 //!
 //! **Layer entered: full engine-run**, not a node-executor shortcut. Every
@@ -82,7 +82,7 @@ async fn lock_shared_memory() -> tokio::sync::MutexGuard<'static, ()> {
 /// `Full`.
 ///
 /// `remember`/`forget` are `CommandClass::Write` in
-/// `OpenHumanMemory::tier_gate_write`, which needs a non-`Block` tier
+/// `NeppyMemory::tier_gate_write`, which needs a non-`Block` tier
 /// decision to clear `enforce_node_tier_gate` at all. `Full` also keeps the
 /// write from depending on whether some earlier test in this shared binary
 /// has installed a global `ApprovalGate` — see [`workflow_origin`]'s doc for
@@ -100,7 +100,7 @@ fn full_autonomy_config() -> (tempfile::TempDir, Arc<Config>) {
 }
 
 /// A trusted, saved-flow run origin for `flow_id` — the ONLY source
-/// `OpenHumanMemory::trusted_flow_id` (and `flow_memory_recall`/
+/// `NeppyMemory::trusted_flow_id` (and `flow_memory_recall`/
 /// `flow_memory_remember`'s own `trusted_flow_id`) accepts for
 /// `scope: "flow"`/`"flows"`. Mirrors what `flows::ops::flows_run` scopes
 /// around a real run.
@@ -145,7 +145,7 @@ fn edge(from: &str, to: &str) -> Edge {
 /// A minimal `trigger -> memory` graph — the same two-node shape
 /// `vendor/tinyflows/src/nodes/integration/memory.rs`'s own tests use, kept
 /// identical here so any behavioral difference between running against
-/// `MockMemory` and running against the real `OpenHumanMemory` adapter is
+/// `MockMemory` and running against the real `NeppyMemory` adapter is
 /// attributable to the adapter, not to graph-shape differences.
 fn trigger_to_memory(config: Value) -> WorkflowGraph {
     WorkflowGraph {
@@ -176,7 +176,7 @@ async fn memory_node_remember_then_recall_round_trips_through_the_real_engine_an
 
     // ── remember: a real graph, compiled by the real validator/compiler and
     // run through the real engine, dispatching through the real
-    // OpenHumanMemory adapter (build_capabilities' `memory` slot). ──
+    // NeppyMemory adapter (build_capabilities' `memory` slot). ──
     let remember_graph = trigger_to_memory(json!({
         "operation": "remember",
         "scope": "flow",
@@ -297,7 +297,7 @@ async fn memory_node_remember_user_scope_is_rejected_and_never_touches_user_memo
 
     // ── (b) defense-in-depth: even bypassing tinyflows' validator entirely
     // and calling straight through to the adapter build_capabilities wired
-    // (the exact instance a real run would dispatch to), OpenHumanMemory's
+    // (the exact instance a real run would dispatch to), NeppyMemory's
     // own remember() hard-refuses anything but scope: "flow". ──
     let direct_err = turn_origin::with_origin(
         workflow_origin(&flow_id),

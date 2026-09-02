@@ -1,12 +1,12 @@
 # TinyCortex Drift Ledger (Phase 0.1)
 
-**Purpose.** The `tinycortex` port was taken at a point in time; the OpenHuman host
+**Purpose.** The `tinycortex` port was taken at a point in time; the Neppy host
 engine has continued to evolve since. This ledger enumerates every host commit that
 touched an engine-mapping memory module after the port line, and classifies each as:
 
 - **DRIFT → tinycortex PR** — a real engine behavior change absent from the crate; must be
   re-applied upstream (submodule PR against `tinyhumansai/tinycortex`) before that module cuts over.
-- **HOST-OWNED** — the change lives in a layer that stays in OpenHuman (RPC, agent tools,
+- **HOST-OWNED** — the change lives in a layer that stays in Neppy (RPC, agent tools,
   event bus, embedding *compute*, live sync). No upstream needed.
 - **HOST-RETAINED (crate excludes)** — an engine-adjacent feature the crate *deliberately*
   does not own (declared in its own module docs). Stays host; may imply a **seam gap** (see
@@ -26,7 +26,7 @@ touched an engine-mapping memory module after the port line, and classifies each
 | TinyCortex submodule | `vendor/tinycortex` → `tinyhumansai/tinycortex` |
 | TinyCortex audit SHA | `d1a8c7be2babc8fff7a72ed93861f459f3d6fa58` |
 | TinyCortex historical cutover SHA | `a8e10f7dd8ebdb9b0905e1380fefcc6bf5a65207` — audit SHA **+ #59** (native-dep alignment, §0.4) **+ #63/#64** (D2/D1 drift ports) merged |
-| **TinyCortex reviewed gitlink (2026-07-22)** | `daaaf6ba5f02635c08deae2b2b2ed7fcc8c06b6a` — includes OpenHuman #4794/#4820/#4863-era crate work; upstream currently has no tags |
+| **TinyCortex reviewed gitlink (2026-07-22)** | `daaaf6ba5f02635c08deae2b2b2ed7fcc8c06b6a` — includes Neppy #4794/#4820/#4863-era crate work; upstream currently has no tags |
 | **TinyCortex migration branch (current)** | `7b4b115` — TinyAgents 2.1 dependency alignment, standalone patch configuration, and corrected sync ownership docs |
 | TinyCortex crate version | `0.1.1` |
 | **Port line (derived)** | **after 2026-06-25, before 2026-06-28** (see below) |
@@ -87,7 +87,7 @@ all small and independent, **now all CLOSED** (gitlink `a8e10f7`).
 - D2 gates **W4** (queue). ✅ **CLOSED** — merged as tinycortex#63.
 - D3 gates **W3** (store + chunks). ✅ **CLOSED** — already in the crate via #59.
 
-### HOST-OWNED — same commits, layers that stay in OpenHuman (no upstream)
+### HOST-OWNED — same commits, layers that stay in Neppy (no upstream)
 
 | Host commit | File(s) | Layer | Why host |
 | --- | --- | --- | --- |

@@ -1,4 +1,4 @@
-//! OpenHuman runtime adapters for tinyagents thread-goal accounting and the
+//! Neppy runtime adapters for tinyagents thread-goal accounting and the
 //! host-specific mid-turn budget stop hook.
 //!
 //! These are the pieces that make a stored goal actually steer the agent
@@ -120,7 +120,7 @@ fn is_goal_continuation_turn() -> bool {
 /// the one-shot continuation suppression (a continuation turn must not clear
 /// its own, see [`super::continuation`]).
 ///
-/// What is OpenHuman's here: reading the ambient thread from the turn scope,
+/// What is Neppy's here: reading the ambient thread from the turn scope,
 /// classifying the turn as user-initiated vs. continuation from its origin, and
 /// emitting `ThreadGoalUpdated` when the status changes (e.g. →
 /// `budget_limited`) so the UI chip refreshes. Best-effort throughout: a
@@ -172,7 +172,7 @@ pub async fn account_turn_against_goal(workspace_dir: &Path, input: u64, output:
 ///
 /// The decision is the crate's
 /// [`GoalBudgetGuard`](tinyagents::graph::goals::GoalBudgetGuard); this is the
-/// adapter that votes it into OpenHuman's [`StopHook`] chain. #4469 item 1: the
+/// adapter that votes it into Neppy's [`StopHook`] chain. #4469 item 1: the
 /// stop is a graceful *pause*, not an instantaneous abort — the vote fires in
 /// the stop-hook middleware's `after_model`, and the harness drains the pause
 /// at the **top of the next iteration**, so the tool round for the model call

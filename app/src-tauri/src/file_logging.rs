@@ -1,6 +1,6 @@
 //! Tauri shell side of file-based logging.
 //!
-//! Resolves the OpenHuman data directory the same way the core does
+//! Resolves the Neppy data directory the same way the core does
 //! (`~/.openhuman` or `OPENHUMAN_WORKSPACE` override) and hands it to
 //! [`openhuman_core::core::logging::init_for_embedded`], which installs a
 //! daily-rotated file appender so packaged GUI builds — where stderr is

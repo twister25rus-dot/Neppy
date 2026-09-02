@@ -1,4 +1,4 @@
-//! The `oh:` namespace — native OpenHuman tools.
+//! The `oh:` namespace — native Neppy tools.
 //!
 //! A "Tool" node in a flow, as opposed to an "App action" node. The slug names
 //! a tool in the same agent registry the assistant itself uses, so a flow
@@ -59,7 +59,7 @@ impl ToolBackend for NativeToolBackend {
             %tool_name,
             ?class,
             ?tier_decision,
-            "[flows] tool_call: dispatching NATIVE OpenHuman tool"
+            "[flows] tool_call: dispatching NATIVE Neppy tool"
         );
         let exec_result =
             crate::openhuman::runtime::node::ops::execute_tool(ctx.config, tool_name, args, false)

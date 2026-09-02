@@ -11,7 +11,7 @@ Use this checklist when social sign-in hangs, returns to the welcome screen, or 
 
 ## Check backend reachability
 
-From the same network as the desktop app, verify the public OpenHuman endpoints:
+From the same network as the desktop app, verify the public Neppy endpoints:
 
 ```bash
 curl -I https://tinyhumans.ai/
@@ -37,7 +37,7 @@ A `401` response means the desktop token and remote core token do not match. Fix
 
 Successful desktop OAuth ends with an `neppy://auth?...` callback. If the browser shows that URL but the app stays on the welcome screen:
 
-1. Make sure only one OpenHuman desktop instance is running.
+1. Make sure only one Neppy desktop instance is running.
 2. Restart the app, keep the same remote-core settings, and retry sign-in.
 3. If using a remote core, check whether the core receives `openhuman.auth_store_session`.
 
@@ -52,18 +52,18 @@ The Tauri shell now emits a `log::error!` line at startup when this happens. Loo
 register_all_error=…, hkcu_status=NotRegistered|MissingCommand|Stale { … }|ReadError(…)
 ```
 
-To repair manually, open PowerShell **as the same user that runs OpenHuman** (no admin required; HKCU is per-user) and replace the path with your actual install location:
+To repair manually, open PowerShell **as the same user that runs Neppy** (no admin required; HKCU is per-user) and replace the path with your actual install location:
 
 ```powershell
-$exe = 'C:\Path\To\OpenHuman.exe'   # update this
+$exe = 'C:\Path\To\Neppy.exe'   # update this
 New-Item -Path 'HKCU:\Software\Classes\openhuman' -Force | Out-Null
-Set-ItemProperty -Path 'HKCU:\Software\Classes\openhuman' -Name '(Default)' -Value 'URL:OpenHuman Protocol'
+Set-ItemProperty -Path 'HKCU:\Software\Classes\openhuman' -Name '(Default)' -Value 'URL:Neppy Protocol'
 New-ItemProperty -Path 'HKCU:\Software\Classes\openhuman' -Name 'URL Protocol' -Value '' -Force | Out-Null
 New-Item -Path 'HKCU:\Software\Classes\openhuman\shell\open\command' -Force | Out-Null
 Set-ItemProperty -Path 'HKCU:\Software\Classes\openhuman\shell\open\command' -Name '(Default)' -Value ('"' + $exe + '" "%1"')
 ```
 
-Restart OpenHuman afterwards and retry sign-in. If `register_all_error` is non-`None` in the log (for example because antivirus or a locked-down image is blocking writes to `HKCU\Software\Classes`), fixing the underlying policy is required; the manual script above will hit the same block.
+Restart Neppy afterwards and retry sign-in. If `register_all_error` is non-`None` in the log (for example because antivirus or a locked-down image is blocking writes to `HKCU\Software\Classes`), fixing the underlying policy is required; the manual script above will hit the same block.
 
 For a remote core, a temporary manual injection can confirm the core is otherwise healthy:
 

@@ -13,7 +13,7 @@
  * `openhuman.voice_status` RPC contract assertions below.
  */
 import { waitForApp, waitForAppReady } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLink } from '../helpers/deep-link-helpers';
 import {
   clickButton,
@@ -153,7 +153,7 @@ describe('Voice mode — hosted STT contract (voice_status RPC)', () => {
   });
 
   it('5.1 — voice_status RPC returns a well-formed response', async () => {
-    const result = await callOpenhumanRpc('openhuman.voice_status', {});
+    const result = await callNeppyRpc('openhuman.voice_status', {});
     expect(result).toBeDefined();
     expect(typeof result).toBe('object');
     const status = (result as any).result ?? result;
@@ -164,7 +164,7 @@ describe('Voice mode — hosted STT contract (voice_status RPC)', () => {
   });
 
   it('5.2 — voice_status reports the resolved STT engine', async () => {
-    const result = await callOpenhumanRpc('openhuman.voice_status', {});
+    const result = await callNeppyRpc('openhuman.voice_status', {});
     const status = (result as any).result ?? result;
 
     expect(status.stt_engine.length).toBeGreaterThan(0);
@@ -352,7 +352,7 @@ describe.skip('Voice mode — Human tab capture & error mapping (#1610)', () => 
   // /openai/v1/audio/transcriptions — so the cloud STT path returns
   // "Mock transcription from the E2E server." The test uses
   // `setMockBehavior('audioTranscriptionText', ...)` to set a known value,
-  // then calls the RPC directly over HTTP using callOpenhumanRpc. No actual
+  // then calls the RPC directly over HTTP using callNeppyRpc. No actual
   // microphone or MediaRecorder is involved.
   // ---------------------------------------------------------------------------
   it('6.2 — voice_stt_dispatch RPC returns well-formed result with mock transcription payload', async () => {
@@ -397,7 +397,7 @@ describe.skip('Voice mode — Human tab capture & error mapping (#1610)', () => 
       return btoa(binary);
     });
 
-    const result = await callOpenhumanRpc('openhuman.voice_stt_dispatch', {
+    const result = await callNeppyRpc('openhuman.voice_stt_dispatch', {
       audio_base64: silentWavBase64,
       mime_type: 'audio/wav',
       file_name: 'test.wav',

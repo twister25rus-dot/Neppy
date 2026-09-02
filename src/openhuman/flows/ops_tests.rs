@@ -530,7 +530,7 @@ async fn flows_run_rejects_legacy_nested_conditional_fan_in_before_execution() {
     let tmp = TempDir::new().unwrap();
     let config = test_config(&tmp);
     // Bypass the current author-time gate to simulate a definition persisted
-    // by an older OpenHuman build. Reads remain supported; execution does not.
+    // by an older Neppy build. Reads remain supported; execution does not.
     let graph = structurally_valid_graph(nested_conditional_fan_in_graph());
     let flow = store::create_flow(&config, "legacy".to_string(), graph, false, true).unwrap();
 
@@ -4147,7 +4147,7 @@ fn binding_to_agent_with_matching_schema_is_accepted() {
 #[tokio::test]
 async fn agent_ref_plain_node_without_ref_is_accepted() {
     // A plain `agent` node carries NO `agent_ref` — it runs on the default LLM
-    // completion and never touches `OpenHumanAgentRunner`'s routing at all, so
+    // completion and never touches `NeppyAgentRunner`'s routing at all, so
     // this gate must never reject it. This is the exact invariant #5114 must
     // preserve: only an UNKNOWN `agent_ref` is rejected, never a plain node.
     let tmp = TempDir::new().unwrap();
@@ -4437,7 +4437,7 @@ fn agent_node_role_prefers_custom_registry_entry_model_pin_over_default() {
     // Finding A/B: a node with no per-node `config.model` but a STATIC
     // (non-`=`) `agent_ref` naming a custom registry entry that itself pins a
     // model (e.g. `hint:reasoning`) must resolve to THAT role — the same
-    // precedence `OpenHumanAgentRunner::run_via_harness` applies via
+    // precedence `NeppyAgentRunner::run_via_harness` applies via
     // `resolve_node_model(&request, entry_model)`, reusing the same sync,
     // config-only accessor (`find_custom_in_config`) it calls.
     use crate::openhuman::agent::registry::types::{AgentRegistryEntry, AgentRegistrySource};
@@ -5488,7 +5488,7 @@ async fn validate_tool_contracts_rejects_a_real_but_uncurated_action_on_a_static
             output_schema: None,
             primary_array_path: None,
             // Real (a live catalog fetch found it), but NOT one of
-            // OpenHuman's curated Notion actions.
+            // Neppy's curated Notion actions.
             is_curated: false,
         }],
     );

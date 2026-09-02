@@ -508,7 +508,7 @@ mod provider_config_rejection_suppression {
     #[test]
     fn openhuman_backend_same_body_is_not_suppressed() {
         // Inverted polarity: for tier-leak / temperature / litellm /
-        // OpenRouter-style phrases, the OpenHuman backend never
+        // OpenRouter-style phrases, the Neppy backend never
         // emits them, so the same body from our OWN backend would
         // mean we sent it a bad request — a real regression that
         // must still reach Sentry. (Mirror of the 401/403 backend
@@ -527,7 +527,7 @@ mod provider_config_rejection_suppression {
 
     #[test]
     fn openhuman_backend_openai_compatible_unknown_model_is_suppressed() {
-        // TAURI-RUST-2Z1 — the OpenHuman backend DOES emit the
+        // TAURI-RUST-2Z1 — the Neppy backend DOES emit the
         // OpenAI-compatible "Model 'X' is not available. Use GET
         // /openai/v1/models …" wire body for user-configured unknown
         // model ids (here `MiniMax-M2.7-highspeed` and two
@@ -539,8 +539,8 @@ mod provider_config_rejection_suppression {
         // `expected_error_kind` via the broader message-only
         // classifier.)
         for body in [
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
         ] {
             assert!(
                 is_provider_config_rejection_http(
@@ -1123,7 +1123,7 @@ fn parse_models_response_handles_non_object_body() {
 }
 
 /// `is_backend_auth_failure` is the polarity guard that decides whether a
-/// 401/403 is the OpenHuman backend's expired session (silence + drive
+/// 401/403 is the Neppy backend's expired session (silence + drive
 /// reauth) or a third-party BYO-key rejection (actionable, must reach
 /// Sentry). Getting this wrong in either direction is a regression:
 /// over-matching silences real misconfig; under-matching is TAURI-RUST-N.
@@ -1346,7 +1346,7 @@ async fn publish_backend_session_expired_emits_sanitized_session_expired() {
     // of the SessionExpired reason rather than just emitting the event.
     let secret = "sk-LIVEA0123456789abcdefSECRET";
     let msg = format!(
-        r#"OpenHuman API error (401 Unauthorized): {{"success":false,"error":"TEST_MARKER_A Invalid token {secret}"}}"#
+        r#"Neppy API error (401 Unauthorized): {{"success":false,"error":"TEST_MARKER_A Invalid token {secret}"}}"#
     );
     publish_backend_session_expired(
         "chat_completions",

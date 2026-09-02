@@ -1,5 +1,5 @@
 //! Agent-facing media-generation tools (image + video) backed by GMI via the
-//! OpenHuman backend's `media_generation` provider.
+//! Neppy backend's `media_generation` provider.
 //!
 //! **Endpoints** (see `backend/docs/media-generation.md`):
 //!   - `POST /agent-integrations/media-generation/images`

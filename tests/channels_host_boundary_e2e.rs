@@ -1,6 +1,6 @@
 //! End-to-end coverage for the ChannelHost capability boundary.
 //!
-//! Builds the *real* OpenHuman `ChannelHost` via `build_channel_host` and
+//! Builds the *real* Neppy `ChannelHost` via `build_channel_host` and
 //! drives each capability through the `dyn ChannelHost` trait objects exactly
 //! as a ported channel provider would — proving the assembled host works
 //! across the portable boundary, not just the concrete adapters in isolation.

@@ -38,15 +38,15 @@ const OAUTH_LOADING_TIMEOUT_MS = 300_000;
 const OAUTH_PREFLIGHT_TIMEOUT_MS = 4_000;
 
 const BACKEND_UNAVAILABLE_MESSAGE =
-  'OpenHuman cloud sign-in is temporarily unavailable. Please try again in a few minutes.';
+  'Neppy cloud sign-in is temporarily unavailable. Please try again in a few minutes.';
 
 const log = debug('oauth:button');
 const warnLog = debug('oauth:button:warn');
 const errorLog = debug('oauth:button:error');
 
 const SAFE_READINESS_STARTUP_MESSAGE_PREFIXES = [
-  'Finish choosing how OpenHuman runs',
-  'OpenHuman could not reach its local runtime',
+  'Finish choosing how Neppy runs',
+  'Neppy could not reach its local runtime',
 ];
 
 const getSafeReadinessStartupMessage = (error: unknown): string | null => {
@@ -71,7 +71,7 @@ const getOAuthStartupFailureMessage = (provider: OAuthProviderConfig, error?: un
   }
 
   if (provider.id === 'twitter') {
-    return 'Twitter/X sign-in could not start. Check that the Twitter OAuth app callback URL, client ID/secret, and requested scopes match the OpenHuman backend, then try again.';
+    return 'Twitter/X sign-in could not start. Check that the Twitter OAuth app callback URL, client ID/secret, and requested scopes match the Neppy backend, then try again.';
   }
 
   return `${provider.name} sign-in could not start. Please try again.`;

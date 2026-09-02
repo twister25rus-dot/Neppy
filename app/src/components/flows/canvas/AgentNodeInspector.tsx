@@ -14,7 +14,7 @@
  *  - `model` — a MANAGED capability tier (`reasoning-v1` ≈ Opus-class,
  *    `chat-v1` ≈ Sonnet-class, `agentic-v1`, `burst-v1`) the workspace resolves
  *    to a concrete model, with a free-form escape hatch for a raw BYOK model id.
- *    Matches the bare tier slugs Phase A's `OpenHumanAgentRunner` resolves and
+ *    Matches the bare tier slugs Phase A's `NeppyAgentRunner` resolves and
  *    the Opus+Sonnet demo template (Phase C) hard-codes.
  *
  * Presentational + controlled: every edit calls `onChange` with a shallow-merge
@@ -36,7 +36,7 @@ const log = createDebug('app:flows:canvas:agentInspector');
 /**
  * The managed capability tiers offered for an agent node's `model`. Mirrors the
  * Rust `MODEL_*_V1` constants (`src/openhuman/config/schema/types.rs`) and the
- * slugs `OpenHumanAgentRunner`/`resolve_model_for_hint` accept as bare tier
+ * slugs `NeppyAgentRunner`/`resolve_model_for_hint` accept as bare tier
  * names — so the value written here runs unchanged in the flow engine.
  */
 const AGENT_MANAGED_TIERS = ['reasoning-v1', 'chat-v1', 'agentic-v1', 'burst-v1'] as const;

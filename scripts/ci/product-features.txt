@@ -1,6 +1,6 @@
 # DESKTOP_PRODUCT_FEATURES — the core Cargo gates the shipped desktop app has.
 #
-# This file is the single source of truth for "what OpenHuman the product is",
+# This file is the single source of truth for "what Neppy the product is",
 # as distinct from `[features] default` in Cargo.toml, which is now only the
 # CONTRIBUTOR set (what a bare `cargo check` / rust-analyzer compiles).
 #

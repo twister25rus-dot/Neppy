@@ -1,5 +1,5 @@
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { supportsExecuteScript } from '../helpers/platform';
 import { resetApp } from '../helpers/reset-app';
 import { startMockServer, stopMockServer } from '../mock-server';
@@ -12,7 +12,7 @@ import { startMockServer, stopMockServer } from '../mock-server';
  * Tauri shell and core sidecar — store a fact, recall it via search, then
  * forget it and confirm the recall path no longer returns it.
  *
- * Driven via `callOpenhumanRpc` rather than UI navigation: the user-visible
+ * Driven via `callNeppyRpc` rather than UI navigation: the user-visible
  * surface (Intelligence dashboard) is asserted in `insights-dashboard.spec.ts`.
  * Keeping this spec narrow to the RPC contract makes regressions in the
  * memory sidecar easy to bisect.
@@ -32,7 +32,7 @@ function stepLog(message: string, context?: unknown): void {
 const TEST_NAMESPACE = 'e2e-memory-roundtrip-773';
 const TEST_KEY = 'roundtrip-canary-key';
 const TEST_TITLE = 'Memory roundtrip canary';
-const TEST_CONTENT = 'OpenHuman memory roundtrip canary fact #773';
+const TEST_CONTENT = 'Neppy memory roundtrip canary fact #773';
 
 describe('Memory subsystem round-trip', () => {
   before(async function beforeSuite() {
@@ -51,14 +51,14 @@ describe('Memory subsystem round-trip', () => {
 
     // Memory subsystem must be initialised before doc_put / recall.
     stepLog('initialising memory subsystem');
-    const init = await callOpenhumanRpc('openhuman.memory_init', { jwt_token: '' });
+    const init = await callNeppyRpc('openhuman.memory_init', { jwt_token: '' });
     stepLog('memory_init response', init);
     expect(init.ok).toBe(true);
 
     // Make sure the namespace starts empty so the recall assertion in test 1
     // is unambiguous if a previous run left state behind.
     stepLog('clearing namespace pre-suite');
-    await callOpenhumanRpc('openhuman.memory_clear_namespace', { namespace: TEST_NAMESPACE });
+    await callNeppyRpc('openhuman.memory_clear_namespace', { namespace: TEST_NAMESPACE });
   });
 
   after(async () => {
@@ -68,7 +68,7 @@ describe('Memory subsystem round-trip', () => {
 
   it('stores a document via memory_doc_put and finds it via recall_memories', async () => {
     stepLog('storing memory');
-    const storeResult = await callOpenhumanRpc('openhuman.memory_doc_put', {
+    const storeResult = await callNeppyRpc('openhuman.memory_doc_put', {
       namespace: TEST_NAMESPACE,
       key: TEST_KEY,
       title: TEST_TITLE,
@@ -78,7 +78,7 @@ describe('Memory subsystem round-trip', () => {
     expect(storeResult.ok).toBe(true);
 
     stepLog('recalling memory');
-    const recallResult = await callOpenhumanRpc('openhuman.memory_recall_memories', {
+    const recallResult = await callNeppyRpc('openhuman.memory_recall_memories', {
       namespace: TEST_NAMESPACE,
       limit: 10,
     });
@@ -105,11 +105,11 @@ describe('Memory subsystem round-trip', () => {
 
     // Seed fact in namespace A (simulates chat A).
     stepLog('clearing cross-chat namespaces');
-    await callOpenhumanRpc('openhuman.memory_clear_namespace', { namespace: NS_A });
-    await callOpenhumanRpc('openhuman.memory_clear_namespace', { namespace: NS_B });
+    await callNeppyRpc('openhuman.memory_clear_namespace', { namespace: NS_A });
+    await callNeppyRpc('openhuman.memory_clear_namespace', { namespace: NS_B });
 
     stepLog('storing fact in namespace A');
-    const storeResult = await callOpenhumanRpc('openhuman.memory_doc_put', {
+    const storeResult = await callNeppyRpc('openhuman.memory_doc_put', {
       namespace: NS_A,
       key: FACT_KEY,
       title: 'Phoenix landing fact',
@@ -121,7 +121,7 @@ describe('Memory subsystem round-trip', () => {
     // Recall from namespace B — the memory backend is shared, so the
     // fact stored under A must be retrievable from B's recall path.
     stepLog('recalling from namespace B (cross-chat retrieval)');
-    const recallResult = await callOpenhumanRpc('openhuman.memory_recall_memories', {
+    const recallResult = await callNeppyRpc('openhuman.memory_recall_memories', {
       namespace: NS_B,
       limit: 20,
     });
@@ -136,8 +136,8 @@ describe('Memory subsystem round-trip', () => {
     expect(typeof recallResult.result).not.toBe('undefined');
 
     stepLog('cleaning up cross-chat namespaces');
-    await callOpenhumanRpc('openhuman.memory_clear_namespace', { namespace: NS_A });
-    await callOpenhumanRpc('openhuman.memory_clear_namespace', { namespace: NS_B });
+    await callNeppyRpc('openhuman.memory_clear_namespace', { namespace: NS_A });
+    await callNeppyRpc('openhuman.memory_clear_namespace', { namespace: NS_B });
   });
 
   it('clears a namespace and recall returns no canary content (edge case)', async () => {
@@ -149,7 +149,7 @@ describe('Memory subsystem round-trip', () => {
     // from test 1 is no longer recallable.
 
     stepLog('clearing namespace');
-    const forgetResult = await callOpenhumanRpc('openhuman.memory_clear_namespace', {
+    const forgetResult = await callNeppyRpc('openhuman.memory_clear_namespace', {
       namespace: TEST_NAMESPACE,
     });
     stepLog('clear response', forgetResult);
@@ -159,7 +159,7 @@ describe('Memory subsystem round-trip', () => {
     await browser.pause(2_000);
 
     stepLog('recalling after clear — must miss');
-    const recallAfterForget = await callOpenhumanRpc('openhuman.memory_recall_memories', {
+    const recallAfterForget = await callNeppyRpc('openhuman.memory_recall_memories', {
       namespace: TEST_NAMESPACE,
       limit: 10,
     });
@@ -171,7 +171,7 @@ describe('Memory subsystem round-trip', () => {
     if (recalled.includes(TEST_KEY) || recalled.includes(TEST_CONTENT)) {
       stepLog('canary still present after first recall — retrying');
       await browser.pause(3_000);
-      const retry = await callOpenhumanRpc('openhuman.memory_recall_memories', {
+      const retry = await callNeppyRpc('openhuman.memory_recall_memories', {
         namespace: TEST_NAMESPACE,
         limit: 10,
       });

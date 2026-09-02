@@ -66,7 +66,7 @@ pub(crate) async fn build_remote_command_response(
 
 fn build_help_response() -> String {
     [
-        "OpenHuman Telegram remote control (phase 1):",
+        "Neppy Telegram remote control (phase 1):",
         "",
         &format!("• `{TELEGRAM_CMD_STATUS}` — active thread, model, and turn state"),
         &format!("• `{TELEGRAM_CMD_SESSIONS}` — recent conversation threads"),

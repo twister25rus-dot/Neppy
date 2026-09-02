@@ -1228,7 +1228,7 @@ fn model_call_with_content(subagent_task_id: Option<&str>) -> AgentProgress {
         provider_id: "managed".to_string(),
         subagent_task_id: subagent_task_id.map(str::to_string),
         input: Some(serde_json::json!([
-            {"role": "system", "content": "You are OpenHuman."},
+            {"role": "system", "content": "You are Neppy."},
             {"role": "user", "content": "hi"}
         ])),
         output: Some(serde_json::json!({"role": "assistant", "content": "hello"})),
@@ -1252,7 +1252,7 @@ fn generation_records_request_messages_and_completion_when_capture_on() {
     let generation = find(c.spans(), "llm.chat-v1");
     let input = generation.input.as_ref().expect("generation input");
     assert!(
-        input.to_string().contains("You are OpenHuman."),
+        input.to_string().contains("You are Neppy."),
         "system prompt must land in the generation input: {input}"
     );
     assert!(generation

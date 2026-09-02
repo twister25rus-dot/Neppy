@@ -1,7 +1,7 @@
 # C4 — Journal-backed progress projection & `progress_tracing` deletion
 
 Status: execution plan (2026-07-04), written after a ground-truth code map of
-both the OpenHuman progress surface and the vendored crate observability
+both the Neppy progress surface and the vendored crate observability
 primitives. This is the actionable plan for the C4 workstream's July 2026
 continuation notes, and it is the gated prerequisite for **S6 below** —
 deleting the `ProviderDelta` bridge and `progress_tracing`.
@@ -9,7 +9,7 @@ deleting the `ProviderDelta` bridge and `progress_tracing`.
 ## 1. Corrected architecture (what the map found)
 
 - **There is no crate `SpanCollector`.** The only span state machine is
-  OpenHuman's `SpanCollector` in `src/openhuman/agent/progress_tracing.rs`
+  Neppy's `SpanCollector` in `src/openhuman/agent/progress_tracing.rs`
   (1272 lines). The crate does **not** build spans — it journals raw
   `AgentObservation`s and lets exporters project.
 - **The journal/status/persistence stack already exists and is attached to
@@ -21,7 +21,7 @@ deleting the `ProviderDelta` bridge and `progress_tracing`.
   Every run already durably records the crate `AgentEvent` stream as
   `AgentObservation`s.
 - **Two producers of `AgentProgress`:**
-  - Crate path: `OpenhumanEventBridge` (`src/openhuman/agent/tinyagents/observability.rs:464`)
+  - Crate path: `NeppyEventBridge` (`src/openhuman/agent/tinyagents/observability.rs:464`)
     maps `AgentEvent` → `AgentProgress` live (stateful: iteration cursor,
     subagent `scope`, `tool_names` recovery, display labels, failure class).
   - Legacy path: `session/tool_progress.rs` `TurnProgress` +
@@ -41,7 +41,7 @@ deleting the `ProviderDelta` bridge and `progress_tracing`.
 ## 2a. BLOCKER found during S1 (2026-07-04): the mapping is not journal-replayable
 
 The S1 attempt to extract a pure `event_to_progress` revealed that the live
-`OpenhumanEventBridge` mapping **depends on live side-channels absent from the
+`NeppyEventBridge` mapping **depends on live side-channels absent from the
 journal**, so "parity by construction via journal replay" (§2 below) does
 **not** hold as written:
 
@@ -61,18 +61,18 @@ cost) — which cannot pass the S3/S5 parity gate.
 ### Corrected prerequisite — S0: make the journal self-sufficient (crate work)
 
 Before any journal projection can hit parity, the enriching data must live in
-the journalled `AgentEvent`s, not in OpenHuman side-channels:
+the journalled `AgentEvent`s, not in Neppy side-channels:
 
 1. **Enrich `AgentEvent::ToolCompleted`** in the crate with the outcome:
    `success: bool`, `duration_ms`, `output_bytes` (and an optional structured
    failure), populated in `tools.rs::finish_tool_call` from the `ToolResult`
-   and the `started_at_ms` it already tracks. OpenHuman's bridge then reads them
+   and the `started_at_ms` it already tracks. Neppy's bridge then reads them
    from the event; `failure_map`/`ToolOutcomeCaptureMiddleware` shrink to the
    product-specific `ToolFailureClass` mapping (or that too moves onto the
    event). This is a V-series crate PR (additive event fields).
 2. **Usage accounting**: decide whether charged-USD/provider-cost belongs on a
    crate event (e.g. a `provider_cost`/`cache_creation` extension on
-   `UsageRecorded`/`Usage`) or stays a documented, accepted OpenHuman-only trace
+   `UsageRecorded`/`Usage`) or stays a documented, accepted Neppy-only trace
    attribute filled at export time from the status/cost store rather than the
    live side-channel. (The cost roll-up is already persisted per-run; the trace
    can read it from there instead of `usage_carry`.)
@@ -94,7 +94,7 @@ Concretely:
 1. **Extract the bridge mapping into a pure, reusable function**
    `event_to_progress(event: &AgentEvent, state: &mut BridgeState, scope) -> Vec<AgentProgress>`
    (state = iteration cursor + `tool_names` + scope). The live
-   `OpenhumanEventBridge::on_event` becomes a thin driver over it (refactor, **no
+   `NeppyEventBridge::on_event` becomes a thin driver over it (refactor, **no
    behavior change** — guarded by the existing bridge tests). This makes the
    AgentEvent→AgentProgress mapping a single source of truth.
 2. **Journal projection**
@@ -165,7 +165,7 @@ span-projection slice.
    web bridge can read a durable run journal for S3 shadow comparison, the
    remote `share_usage_data` push now sends those `AgentObservation`s through
    the crate `LangfuseClient`; live spans remain the local tracing sink and
-   fallback until S3 shadow parity is release-proven. The OpenHuman wrapper also
+   fallback until S3 shadow parity is release-proven. The Neppy wrapper also
    injects aggregate `run.total` usage/cost from the durable run ledger so
    journal-backed Langfuse export preserves the top-level cost signal while
    per-call charged USD awaits a journal-native event. Later delete
@@ -188,7 +188,7 @@ span-projection slice.
 
 ## 6. Key file references
 
-Producer/bridge: `tinyagents/observability.rs:464` (`OpenhumanEventBridge`),
+Producer/bridge: `tinyagents/observability.rs:464` (`NeppyEventBridge`),
 `tinyagents/journal.rs:304` (`attach_turn_journal`), `tinyagents/mod.rs:420`
 (`run_turn_via_tinyagents_shared`). Span machine:
 `agent/progress_tracing.rs` (`SpanCollector:307`, `record:686`, `finish:1087`,

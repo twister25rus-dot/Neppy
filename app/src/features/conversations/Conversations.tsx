@@ -501,7 +501,7 @@ const Conversations = ({
   // Display name for share cards (#5006): the active agent profile, or the
   // product name when no named profile is selected.
   const shareAgentName =
-    agentProfiles.find(p => p.id === selectedAgentProfileId)?.name ?? 'OpenHuman';
+    agentProfiles.find(p => p.id === selectedAgentProfileId)?.name ?? 'Neppy';
 
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const composerFooterRef = useRef<HTMLDivElement>(null);
@@ -2284,7 +2284,7 @@ const Conversations = ({
               // Idle-composer shortcut to the full-bleed mascot stage. Chat and
               // Human share one mascot (mascotSlice), so this is a change of
               // venue for the same conversation partner, not a second one.
-              onOpenHumanMode={() => navigate('/human')}
+              onNeppyMode={() => navigate('/human')}
               textInputRef={textInputRef}
               fileInputRef={fileInputRef}
               composerInteractionBlocked={composerInteractionBlocked}
@@ -2524,7 +2524,7 @@ const Conversations = ({
         // Idle-composer shortcut to the full-bleed mascot stage. Chat and Human
         // share one mascot (mascotSlice), so this is a change of venue for the
         // same conversation partner, not a second one.
-        onOpenHumanMode={() => navigate('/human')}
+        onNeppyMode={() => navigate('/human')}
         onSwitchToMicCloud={() => setComposerOverride('mic-cloud')}
         onModelChange={(value, contextWindow) => {
           setComposerModelOverride(value);

@@ -123,8 +123,8 @@ fn issue_1041_transcript_preserves_bullets_and_trailing_paragraphs() {
     let text = "here's the full message with a sharper CTA:\n\n\
         ---\n\n\
         hey [name], great meeting you at Startup Grind SF last week. really enjoyed our conversation about [insert 1 specific detail if you remember, otherwise remove this line].\n\n\
-        i'm reaching out to share what we're building at TinyHumans. we just launched OpenHuman, and the insight is simple: AI agents are incredibly powerful, but today they're locked behind developer workflows. setup, API keys, terminals. the 99% who can't code are completely left out.\n\n\
-        OpenHuman fixes that. it's AI agents that work out of the box. no setup, no API keys, no copy-paste. just plain English.\n\n\
+        i'm reaching out to share what we're building at TinyHumans. we just launched Neppy, and the insight is simple: AI agents are incredibly powerful, but today they're locked behind developer workflows. setup, API keys, terminals. the 99% who can't code are completely left out.\n\n\
+        Neppy fixes that. it's AI agents that work out of the box. no setup, no API keys, no copy-paste. just plain English.\n\n\
         we launched a week ago and the response has been strong:\n\n\
         - 100+ paying users\n- 200+ GitHub stars, growing ~150% week over week\n- 50+ outside PRs merged\n\n\
         attaching a screenshot of our growth curve since day one.\n\n\

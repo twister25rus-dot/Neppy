@@ -1,6 +1,6 @@
 //! Shared orchestration helpers on the `tinyagents` graph layer (issue #4249).
 //!
-//! OpenHuman's control plane historically hand-rolled fan-out
+//! Neppy's control plane historically hand-rolled fan-out
 //! ([`futures_util::future::join_all`]) and a bespoke detached-sub-agent registry
 //! (raw `tokio` `AbortHandle`s, `watch` status channels, tombstone sets). This
 //! module is the shared seam that re-expresses that work on `tinyagents`
@@ -12,7 +12,7 @@
 //!   Completed/Failed/Cancelled/…) instead of bespoke status enums + watch
 //!   channels + tombstones. The store tracks durable lifecycle while
 //!   [`DetachedTaskRegistry`] owns the process-local status, cancellation,
-//!   hard-abort, ownership, and steering mechanics. OpenHuman retains its
+//!   hard-abort, ownership, and steering mechanics. Neppy retains its
 //!   product metadata and `RunQueue` compatibility fallback.
 //!
 //! Graph lifecycle events are mirrored onto tracing via the shared
@@ -41,7 +41,7 @@ pub(crate) use tinyagents::harness::steering::{
 static STEERING_REGISTRY: OnceLock<SteeringRegistry> = OnceLock::new();
 
 /// Process-local registry for TinyAgents steering handles keyed by detached
-/// task id. The current product control path still uses OpenHuman's `RunQueue`;
+/// task id. The current product control path still uses Neppy's `RunQueue`;
 /// this registry is the crate-native lookup seam for the next control-plane
 /// migration slice.
 pub(crate) fn shared_steering_registry() -> &'static SteeringRegistry {
@@ -66,7 +66,7 @@ pub(crate) enum SteeringRunClass {
     Background,
 }
 
-/// Steering handle policy for OpenHuman's shared TinyAgents turn path, tightened
+/// Steering handle policy for Neppy's shared TinyAgents turn path, tightened
 /// per [`SteeringRunClass`].
 ///
 /// Interactive turns send `InjectMessage` for user/orchestrator steering and

@@ -202,7 +202,7 @@ fn classify_request(head: &str, expected_state: &str, bound_port: u16) -> Reques
 const SUCCESS_BODY: &str = "<!doctype html><meta charset=utf-8><title>Signed in</title>\
 <body style=\"font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#1c1c1e;background:#f5f5f7\">\
 <div style=\"text-align:center\"><h2 style=\"margin:0 0 8px\">You're signed in.</h2>\
-<p style=\"margin:0;color:#6e6e73\">You can close this tab and return to OpenHuman.</p></div>\
+<p style=\"margin:0;color:#6e6e73\">You can close this tab and return to Neppy.</p></div>\
 <script>setTimeout(function(){window.close()},250)</script></body>";
 
 fn http_response(status: &str, body: &str) -> Vec<u8> {

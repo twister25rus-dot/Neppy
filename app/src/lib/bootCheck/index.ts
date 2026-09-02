@@ -25,7 +25,7 @@ const logError = debug('boot-check:error');
 // Result types
 // ---------------------------------------------------------------------------
 
-/** A non-OpenHuman process holding the core RPC port, surfaced so the user can
+/** A non-Neppy process holding the core RPC port, surfaced so the user can
  * see what to free (and consent to force-quitting it). */
 export interface PortOwner {
   pid: number;

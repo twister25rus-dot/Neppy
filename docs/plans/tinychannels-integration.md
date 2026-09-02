@@ -24,25 +24,25 @@ Companion docs in the tinychannels repo:
   | `src/openhuman/channels/controllers/schemas.rs` schema declarations | converts from `src/controllers/schemas.rs` |
   | `src/openhuman/channels/controllers/ops/connect.rs` allowlist/key helpers | calls `src/controllers/credentials.rs` |
   | `src/openhuman/channels/controllers/ops/types.rs` | re-exports `src/controllers/types.rs` |
-  | `src/openhuman/config/schema/channels.rs` | re-exports provider config from `src/config.rs`, while keeping OpenHuman-owned security/sandbox config local |
+  | `src/openhuman/config/schema/channels.rs` | re-exports provider config from `src/config.rs`, while keeping Neppy-owned security/sandbox config local |
   | `src/openhuman/channels/context.rs` key/constants helpers | calls/re-exports `src/context.rs` where type-compatible |
   | `src/openhuman/channels/runtime/supervision.rs` in-flight sizing | re-exports `src/runtime.rs::compute_max_in_flight_messages` |
   | Telegram/Discord text splitting | calls `src/text.rs` chunker with UTF-16 measurement |
 
-- `OpenHumanChannelBackend` now lives in
+- `NeppyChannelBackend` now lives in
   `src/openhuman/channels/controllers/backend.rs` and implements
   `tinychannels::ChannelBackend` by delegating to the existing
   `channels/controllers/ops/{connect,messaging,discord,telegram}.rs` flows.
 - The crate-side Phase 5 relay contract now includes typed gateway/connector
   relay frames, the request/response frame transport loop, a feature-gated
   WebSocket dialer with reconnect supervision, and a portable relay runtime
-  config shape under `channels_config.relay`. OpenHuman now enables the
+  config shape under `channels_config.relay`. Neppy now enables the
   crate's relay WebSocket feature and starts the relay runtime for complete
   relay config.
 - The metadata controllers (`channels.list` / `channels.describe`) now use
   `ChannelManager` for definition lookup. The `channels.status` and
   `channels.test` controllers now route through
-  `ChannelManager<OpenHumanChannelBackend>`, preserving the existing no-log
+  `ChannelManager<NeppyChannelBackend>`, preserving the existing no-log
   JSON response shapes while using the crate manager for definition lookup and
   credential validation where applicable. `channels.get_default` also routes
   through the manager while preserving the public `{ active_channel }` response,
@@ -60,7 +60,7 @@ Companion docs in the tinychannels repo:
   `memory_chunks_deleted`. Discord guild/channel/permission discovery dispatches
   through the manager while restoring the old log strings and top-level provider
   JSON. Outbound sends now use the live relay transport for configured relay
-  identities. The remaining OpenHuman work is still full session identity
+  identities. The remaining Neppy work is still full session identity
   switchover, provider extraction, and the planned test split below; the first
   envelope slice is landed because the runtime now publishes a TinyChannels
   `ChannelInboundEnvelope` on `ChannelMessageReceived` events, memory
@@ -96,12 +96,12 @@ Companion docs in the tinychannels repo:
 
 ## Step 2 — Implement `ChannelBackend`
 
-- **Landed:** New `OpenHumanChannelBackend` in
+- **Landed:** New `NeppyChannelBackend` in
   `src/openhuman/channels/controllers/backend.rs`, delegating each trait
   method to the existing ops functions:
   - `send_message` → `messaging.rs::channel_send_message` (already composes
     `effective_backend_api_url` + `jwt::get_session_token` +
-    `BackendOAuthClient`), with `send_message_value` preserving OpenHuman's
+    `BackendOAuthClient`), with `send_message_value` preserving Neppy's
     arbitrary rich-message JSON for the public RPC controller.
   - `connect_channel` / `disconnect_channel` → `connect.rs` flows plus
     `credentials::ops::{store,remove}_provider_credentials` (keyed
@@ -112,7 +112,7 @@ Companion docs in the tinychannels repo:
   - Telegram login and Discord link/guild/permission methods → the existing
     `telegram.rs` / `discord.rs` ops.
 - **Landed:** The current `channels.*` controller entry points dispatch through
-  `ChannelManager<OpenHumanChannelBackend>` where they cross this crate seam,
+  `ChannelManager<NeppyChannelBackend>` where they cross this crate seam,
   while preserving the legacy public JSON/log envelopes.
 - The event bus, health bus, and dispatch engine stay app-side and *drive*
   tinychannels. Never add a tinychannels → openhuman dependency; the
@@ -130,7 +130,7 @@ copies):
    preservation.
 2. **Landed for existing helper semantics: Telegram history keys.**
    `channels/context.rs` now delegates to the crate helper, preserving
-   OpenHuman's current Telegram topic behavior. Runtime received-message events
+   Neppy's current Telegram topic behavior. Runtime received-message events
    now also carry the crate's normalized inbound envelope, with Telegram
    `thread_ts` projected as `topic_id`; conversation persistence records the
    TinyChannels session key when an event carries an envelope. Relay inbound now
@@ -183,7 +183,7 @@ copies):
   and the harness-driven `tests/` integration files (prompt, telegram/discord
   integration, runtime tool calls, health, identity).
 - The REST-wiring halves of `ops_tests.rs` become the test bed for
-  `OpenHumanChannelBackend` (Step 2).
+  `NeppyChannelBackend` (Step 2).
 
 ## Step 5 — Provider extraction ladder (later, tracks crate Phase 6)
 

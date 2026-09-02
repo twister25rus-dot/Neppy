@@ -105,7 +105,7 @@ type TronTransferVerification = tinywallet_bus::wire::TronTransfer;
 /// which parses `raw_data` structurally. The protobuf reader, the contract
 /// unwrapping and the per-contract field checks used to be hand-rolled here;
 /// they are the same rules for every host, so they moved into the crate. What
-/// stays is the part that is OpenHuman's: the fee limit this client pins, and
+/// stays is the part that is Neppy's: the fee limit this client pins, and
 /// the [`tinywallet_bus::wire::TransactionSpec`] handed to the wallet module.
 fn tron_transaction_spec(
     raw_tx: &CreateTransactionResponse,

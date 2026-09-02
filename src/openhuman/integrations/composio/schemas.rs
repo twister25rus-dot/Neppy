@@ -201,7 +201,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
         "list_capabilities" => ControllerSchema {
             namespace: "composio",
             function: "list_capabilities",
-            description: "List OpenHuman's built-in Composio capability matrix without requiring a signed-in Composio session.",
+            description: "List Neppy's built-in Composio capability matrix without requiring a signed-in Composio session.",
             inputs: vec![],
             outputs: vec![FieldSchema {
                 name: "capabilities",

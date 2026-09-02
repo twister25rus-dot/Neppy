@@ -1,6 +1,6 @@
 # Subconscious orchestration layer
 
-The orchestration layer is OpenHuman's **split-brain** coordinator for wrapped
+The orchestration layer is Neppy's **split-brain** coordinator for wrapped
 Claude Code / Codex sessions that talk to the owner agent over tiny.place
 Signal-encrypted DMs. It turns each inbound session DM into one autonomous
 **wake cycle** driven by a single `tinyagents` graph, keeps a durable per-session
@@ -84,7 +84,7 @@ the owner steer the front-end agent from the Master composer.
 
 The `openhuman.orchestration_run` renderer RPC is the direct request/response
 entry point for the backend's paid Medulla engine. It performs a paid-plan
-preflight, advertises OpenHuman's local contact, session-history, and
+preflight, advertises Neppy's local contact, session-history, and
 send-to-agent tools, and executes requested calls on the device. Tool results
 are returned through `/orchestration/v1/run/continue` until Medulla produces a
 final reply. The backend repeats authentication, entitlement, and resource

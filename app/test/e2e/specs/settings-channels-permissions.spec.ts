@@ -11,7 +11,7 @@
  *   - 13.2.2 Privacy panel renders + analytics toggle is present
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { clickSelector, textExists, waitForText } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -53,7 +53,7 @@ describe('Settings - Channels & Permissions', () => {
     // (the built-in chat), so we make Telegram the default first — that turns
     // Web into a connected, non-default tile that exposes the control — then
     // switch the default to Web through the UI.
-    await callOpenhumanRpc('openhuman.channels_set_default', { channel: 'telegram' });
+    await callNeppyRpc('openhuman.channels_set_default', { channel: 'telegram' });
 
     // Navigate away and back so the messaging panel re-seeds the default from
     // the core (it reads the persisted default when the page mounts).

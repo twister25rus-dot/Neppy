@@ -1,4 +1,4 @@
-//! Generic, subsystem-agnostic driver vocabulary for the OpenHuman kernel.
+//! Generic, subsystem-agnostic driver vocabulary for the Neppy kernel.
 //!
 //! Specified by `docs/specs/kernel.md` §3.1 (driver classes), §3.3 (degradation
 //! by absence), §3.7 (fallback is never silent), and §6 item 1.

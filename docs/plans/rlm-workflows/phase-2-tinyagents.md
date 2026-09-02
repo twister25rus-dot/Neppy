@@ -10,7 +10,7 @@ Phase 1 that cannot be worked around from openhuman.
 ## 2.1 External cancellation (`ReplCancelFlag`)
 
 **Problem:** a running cell can only be stopped by its wall-clock timeout.
-OpenHuman needs to abort an in-flight RLM cell when the user cancels a run
+Neppy needs to abort an in-flight RLM cell when the user cancels a run
 (`workflows::run_log::cancel_run`) or the agent turn aborts.
 
 **Change:** add a shared cancellation flag to the session:

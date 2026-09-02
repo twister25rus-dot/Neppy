@@ -1,10 +1,10 @@
 # Design: Recognize Cursor & Windsurf as first-class harnesses
 
-> Status: **approved** — 2026-07-09. Scope locked to OpenHuman-side recognition only.
+> Status: **approved** — 2026-07-09. Scope locked to Neppy-side recognition only.
 
 ## Goal
 
-Teach OpenHuman's orchestration engine to recognize `cursor` and `windsurf` as
+Teach Neppy's orchestration engine to recognize `cursor` and `windsurf` as
 harness providers, so their sessions render with a proper roster group, a brand
 glyph, and a typed `harnessType` instead of falling into the generic **"Other"**
 catch-all group.
@@ -16,7 +16,7 @@ CLI emit these sessions). See [Out of scope](#out-of-scope).
 ## Background: how harness recognition works today
 
 A coding agent sends a `SessionEnvelopeV1` over the tiny.place Signal relay with a
-`harness.provider` field (e.g. `"codex"`). OpenHuman's orchestration ingest
+`harness.provider` field (e.g. `"codex"`). Neppy's orchestration ingest
 (`src/openhuman/hosted/orchestration/ingest.rs`) decrypts it and copies that field
 **verbatim** into the session's `source` — there is no provider allowlist at
 ingest (`ingest.rs:187`, `ingest.rs:213`).

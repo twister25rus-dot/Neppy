@@ -7,7 +7,7 @@ icon: gift
 
 # Rewards & Referrals
 
-OpenHuman bundles three loosely related growth mechanics behind one surface: a **referral program** (share a code, earn credit when friends convert), **promo coupons** (redeem a code for promotional credit), and a **community rewards** track (link Discord, unlock roles as you hit usage milestones). Invite-code management lives on its own screen.
+Neppy bundles three loosely related growth mechanics behind one surface: a **referral program** (share a code, earn credit when friends convert), **promo coupons** (redeem a code for promotional credit), and a **community rewards** track (link Discord, unlock roles as you hit usage milestones). Invite-code management lives on its own screen.
 
 All of this requires a signed-in backend session. On a local-only session the Rewards page shows an empty state prompting you to sign in - none of these features work offline.
 

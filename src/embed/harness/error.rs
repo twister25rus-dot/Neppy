@@ -42,7 +42,7 @@ pub enum HarnessError {
     /// separate workspaces, which corrupts state quietly rather than loudly.
     /// Failing here is the loud version.
     #[error(
-        "an OpenHuman harness is already running in this process; \
+        "an Neppy harness is already running in this process; \
          core state (keyring, event bus, domain subscribers) is process-scoped, \
          so a second one would share it. Reuse the existing harness."
     )]

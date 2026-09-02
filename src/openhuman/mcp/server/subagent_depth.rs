@@ -7,7 +7,7 @@
 //! actually matters — the loopback MCP HTTP hop between a `claude` process and
 //! the core.
 //!
-//! Flow (all within a single OpenHuman call chain):
+//! Flow (all within a single Neppy call chain):
 //! 1. The Claude Code driver stamps the current depth onto every spawned
 //!    `claude`'s MCP config as the [`HEADER_SUBAGENT_DEPTH`] header (top-level
 //!    chat = 0).
@@ -26,11 +26,11 @@ use std::future::Future;
 /// by the Claude Code driver from [`current_depth`]; read by the MCP HTTP
 /// handler. Transport-level (set from the MCP config file, not by the model),
 /// so it is trustworthy for bounding recursion.
-pub const HEADER_SUBAGENT_DEPTH: &str = "X-OpenHuman-Subagent-Depth";
+pub const HEADER_SUBAGENT_DEPTH: &str = "X-Neppy-Subagent-Depth";
 
 /// Delegation-chain cap for the MCP `run_subagent` path.
 ///
-/// Keep this as an alias to the harness limit so MCP, OpenHuman subagent
+/// Keep this as an alias to the harness limit so MCP, Neppy subagent
 /// execution, and TinyAgents `RunLimits.max_depth` all reject at the same
 /// nesting boundary.
 pub const MAX_SUBAGENT_DEPTH: usize = crate::openhuman::agent::harness::MAX_SPAWN_DEPTH;

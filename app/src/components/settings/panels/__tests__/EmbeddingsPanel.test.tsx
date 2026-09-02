@@ -133,15 +133,15 @@ describe('EmbeddingsPanel', () => {
     expect(screen.getByText('Custom')).toBeInTheDocument();
   });
 
-  it('marks Managed embeddings as requiring OpenHuman sign-in for local sessions', async () => {
+  it('marks Managed embeddings as requiring Neppy sign-in for local sessions', async () => {
     setCoreSession({ sessionToken: 'header.payload.local', userId: 'local', profileId: null });
 
     renderWithProviders(<EmbeddingsPanel />);
 
     expect(await screen.findByText('Managed')).toBeInTheDocument();
-    expect(screen.getByText(/requires OpenHuman sign-in/i)).toBeInTheDocument();
+    expect(screen.getByText(/requires Neppy sign-in/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Managed embeddings route through the OpenHuman backend/i)
+      screen.getByText(/Managed embeddings route through the Neppy backend/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Test Connection/i })).toBeDisabled();
   });
@@ -165,10 +165,10 @@ describe('EmbeddingsPanel', () => {
     fireEvent.click(screen.getByRole('radio', { name: /managed/i }));
 
     await waitFor(() =>
-      expect(screen.getByText(/Managed embeddings require OpenHuman sign-in/i)).toBeInTheDocument()
+      expect(screen.getByText(/Managed embeddings require Neppy sign-in/i)).toBeInTheDocument()
     );
     expect(
-      screen.getByText(/Managed embeddings route through the OpenHuman backend/i)
+      screen.getByText(/Managed embeddings route through the Neppy backend/i)
     ).toBeInTheDocument();
     expect(vi.mocked(updateEmbeddingsSettings)).not.toHaveBeenCalled();
   });
@@ -738,7 +738,7 @@ describe('EmbeddingsPanel', () => {
   });
 
   it.each([
-    ['missing backend session', 'No backend session for cloud embeddings: log in to OpenHuman'],
+    ['missing backend session', 'No backend session for cloud embeddings: log in to Neppy'],
     ['session-expired sentinel', 'SESSION_EXPIRED: backend session not active'],
     [
       'backend invalid token',
@@ -775,10 +775,10 @@ describe('EmbeddingsPanel', () => {
     fireEvent.click(await screen.findByRole('button', { name: /test connection/i }));
 
     await waitFor(() =>
-      expect(screen.getByText(/Managed embeddings require OpenHuman sign-in/i)).toBeInTheDocument()
+      expect(screen.getByText(/Managed embeddings require Neppy sign-in/i)).toBeInTheDocument()
     );
     expect(
-      screen.getByText(/Managed embeddings route through the OpenHuman backend/i)
+      screen.getByText(/Managed embeddings route through the Neppy backend/i)
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /sign in again/i }));
   });

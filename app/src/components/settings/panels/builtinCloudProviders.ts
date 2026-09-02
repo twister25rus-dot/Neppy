@@ -165,7 +165,7 @@ export const BUILTIN_CLOUD_PROVIDERS: BuiltinCloudProvider[] = [
     label: 'MiniMax',
     // OpenAI-compatible surface (`/v1/chat/completions`, `/v1/models`). The
     // prior `/anthropic` base + anthropic auth hit MiniMax's Messages API,
-    // which OpenHuman doesn't speak — both chat and model-listing 404'd
+    // which Neppy doesn't speak — both chat and model-listing 404'd
     // (Sentry TAURI-RUST-8X3). Keep in sync with the Rust catalog.
     endpoint: 'https://api.minimax.io/v1',
     authStyle: 'bearer',

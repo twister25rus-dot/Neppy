@@ -28,7 +28,7 @@ Should `agent/harness/session/` become a `tinyagents::sessions` module?
 implementation of an abstraction the crate already ships, and that part should
 converge. This document draws the line precisely, because drawing it wrong in
 either direction is expensive: too aggressive and a GPL crate ends up importing
-Composio; too timid and OpenHuman keeps two conversation-history models forever.
+Composio; too timid and Neppy keeps two conversation-history models forever.
 
 ---
 
@@ -66,7 +66,7 @@ Measured host-domain fan-out (`grep -o "crate::openhuman::[a-z_]*" | sort -u`):
 | `turn/mod.rs`, `turn/graph.rs`, `builder/*`, `mod.rs`, `tool_progress.rs` | ~840 | 3–7 each | no (see §6) |
 
 **~8,600 of 11,073 production lines are host wiring.** `builder/factory.rs`
-reaches 21 OpenHuman domains; its job is literally "assemble OpenHuman's product
+reaches 21 Neppy domains; its job is literally "assemble Neppy's product
 surface into a harness". Moving it down inverts the dependency and violates the
 port plan's standing GPL/crates.io rule: only genuinely generic code goes into a
 publicly redistributed crate.
@@ -146,12 +146,12 @@ that contract, not just to one module.
 | `InMemoryStore`, `FileStore`, `StoreRegistry` | `harness::store` | Backends |
 | `Checkpointer`, `FileCheckpointer`, `SqliteCheckpointer`, `DurabilityMode` | `graph::checkpoint` | Superstep state snapshots — **different concern**, not a transcript |
 
-**So OpenHuman is not missing a home; it has a second implementation.** That is
+**So Neppy is not missing a home; it has a second implementation.** That is
 the whole argument for this work.
 
 ### 3.1 Gap table — what crate `ChatHistory` cannot express today
 
-| OpenHuman semantic | Crate equivalent | Gap |
+| Neppy semantic | Crate equivalent | Gap |
 | --- | --- | --- |
 | Append-only log, never rewrite | `Store::append`/`read_from` (stream API) | present on `Store`, **absent from `ChatHistory`** (`replace` is a bulk overwrite) |
 | Compaction record with `replacement` set | — | **missing** |
@@ -160,10 +160,10 @@ the whole argument for this work.
 | Cumulative `_meta` totals appended per turn | — | **missing** |
 | Schema versioning + unknown-line tolerance | — | **missing** (a policy, easily added) |
 | `.md` companion render | — | **host** — product surface, never upstream |
-| Stem naming, latest/resume discovery, legacy dir fallback | — | **host** — OpenHuman workspace layout |
+| Stem naming, latest/resume discovery, legacy dir fallback | — | **host** — Neppy workspace layout |
 | Thread/subagent usage rollups | `harness::usage`, `harness::cost` | partial; the archetype rollup is product |
 
-`ChatHistory` is a **strictly weaker interface** than what OpenHuman needs. A
+`ChatHistory` is a **strictly weaker interface** than what Neppy needs. A
 naive "just implement `ChatHistory`" that routes reads through `messages()`
 would silently drop compaction and interrupted-partial semantics — i.e. corrupt
 the model context on any compacted thread. This is the single most important
@@ -202,7 +202,7 @@ define it are not execution config at all:
   `subagent_tool_ceiling_names`, `visible_tool_names`.
 - **Event identity:** `event_session_id`, `event_channel`.
 
-`Agent` is OpenHuman's **session-state + turn-result object**; `AgentHarness` is
+`Agent` is Neppy's **session-state + turn-result object**; `AgentHarness` is
 the crate's execution configuration. They are different things that both happen
 to hold tools and a model. That single overlap is already bridged by
 `SharedToolAdapter`, which the WP-4 decision fixed as a permanent boundary. And
@@ -214,13 +214,13 @@ struct.
 **So there are not two builders competing.** There are two builders in series
 (host `Agent::from_config` → seam → crate `AgentHarness`), building two
 different objects. Moving `factory.rs` down would require the crate to import
-Composio, OpenHuman `SecurityPolicy`, `memory_store`, `skills`, `profiles`, and
+Composio, Neppy `SecurityPolicy`, `memory_store`, `skills`, `profiles`, and
 `subconscious` — the exact GPL/crates.io boundary violation the port plan
 forbids.
 
 ### 3.5.2 `turn/core.rs` is preparation, and the engine already left
 
-WP-3 established that `turn/core.rs` "performs OpenHuman turn preparation and
+WP-3 established that `turn/core.rs` "performs Neppy turn preparation and
 calls the TinyAgents session path" — it contains no turn engine. Reading it
 confirms that: `impl Agent` starts at line 432, and everything above it is
 product gating. What `turn()` actually does before delegating:
@@ -245,7 +245,7 @@ manipulation over roles and tool-call ids. Those are candidates for crate
 `with_native_tool_calling(bool)` and internally computes
 `prompt_guided_tools = !self.profile.tool_calling && !request.tools.is_empty()`
 (`providers/openai/transport.rs:951`), replaying calls and results as text when
-prompt-guided — that is #55. So OpenHuman decides native-vs-prompt-guided at the
+prompt-guided — that is #55. So Neppy decides native-vs-prompt-guided at the
 session-build layer, and the crate decides it again at the model layer.
 
 This is the **same subsystem** as the parent spec's DS-5b (`harness/parse.rs`
@@ -253,7 +253,7 @@ duplicating #55/#57 parsing). Dispatcher selection, tool-call rendering, and
 tool-call parsing are one concern split across two layers and two owners. They
 should be resolved together, and the answer is almost certainly: the crate owns
 the native-vs-prompt-guided decision and both directions of the wire format;
-OpenHuman keeps only the `integrations_agent` override as an explicit policy
+Neppy keeps only the `integrations_agent` override as an explicit policy
 input, and the durable `to_provider_messages` serialization.
 
 ### 3.5.4 The generalizable conclusion
@@ -265,7 +265,7 @@ seam — so every product enrichment (experience, citations, and announcements)
 is hand-written into one `turn()` body instead of registered.
 
 If the crate grew a `ContextEnricher` / `TurnPreparation` pipeline —
-ordered, fallible, each returning prompt fragments plus metadata — OpenHuman's
+ordered, fallible, each returning prompt fragments plus metadata — Neppy's
 enrichment becomes registrations rather than a bespoke method, and the *shape*
 moves down while the *wiring* stays up. That is worth designing (S6), and it is
 what "enrich it as a library" should mean here. It is explicitly **not** a
@@ -280,7 +280,7 @@ licence to relocate 3,900 lines of host wiring.
 Keep `ChatMessage`, the `session_raw` format, and every host-only helper exactly
 as they are. Add `impl tinyagents::harness::memory::ChatHistory for
 SessionTranscriptHistory`, converting at the boundary via the existing
-`agent/message_convert.rs`. The harness talks to the crate trait; OpenHuman owns
+`agent/message_convert.rs`. The harness talks to the crate trait; Neppy owns
 the format. Host-only semantics (display read, compaction markers, usage
 rollups, path resolution) stay on the concrete type, reached directly by the 24
 consumers that need them.
@@ -341,12 +341,12 @@ has already happened twice in this migration.
 
 ### S1 — `migration.rs` disposition
 
-Zero host imports, but it migrates *OpenHuman's* directory layout
+Zero host imports, but it migrates *Neppy's* directory layout
 (`session_raw/DDMMYYYY/` → flat). Generic code for a host-specific format.
 
 Expected outcome: **stays host**, recorded with that reason. Do the 10-minute
 check rather than assuming; if it turns out to be a general "flatten a
-date-bucketed log dir" utility with no OpenHuman naming, it can go down.
+date-bucketed log dir" utility with no Neppy naming, it can go down.
 
 **Exit:** one ledger row, either way.
 
@@ -461,7 +461,7 @@ verbatim. What landed instead:
 - **`SessionHistoryLocator`** (`latest_for_agent` / `root_for_thread` /
   `open_stem`), with `FileTranscriptLocator` as the default. Discovery *is* the
   thing `ChatHistory` cannot express — it is `thread_id`-keyed and returns
-  messages, never a location — so it belongs on an OpenHuman-side object.
+  messages, never a location — so it belongs on an Neppy-side object.
   Leaving it as free functions was what kept the read half on the filesystem no
   matter what handle was injected.
 
@@ -585,7 +585,7 @@ transcript decision.
 1. **Unify dispatcher selection with the model layer** (§3.5.3). Merge with the
    parent spec's DS-5b — dispatcher choice, tool-call rendering, and tool-call
    parsing are one concern. Deliverable: the crate owns native-vs-prompt-guided;
-   OpenHuman passes the `integrations_agent` override as policy and keeps
+   Neppy passes the `integrations_agent` override as policy and keeps
    `to_provider_messages` for the durable envelope. Est. host LOC removed when
    combined with DS-5b: **~2,400**.
 2. **Upstream the message-list helpers** (§3.5.2): `tool_records_from_conversation`,
@@ -596,7 +596,7 @@ transcript decision.
    `TurnPreparation` pipeline — ordered, fallible, returning prompt fragments +
    metadata — so product enrichment registers instead of being hand-written into
    `turn()`. This is a **crate roadmap proposal, not a refactor**: write the
-   design, get it accepted upstream, then migrate OpenHuman's enrichers
+   design, get it accepted upstream, then migrate Neppy's enrichers
    (agent experience, recall citations, and announcements) onto it.
    Do not start by moving code.
 4. **Continue adopting crate types field-by-field on `Agent`**, following the
@@ -651,7 +651,7 @@ Recorded so a later audit does not re-litigate:
 - **`GGML_NATIVE=OFF`** for local root-crate `cargo` runs on Apple Silicon.
 - **GPL/crates.io boundary** — under Option B, the `session_raw` format becomes
   public API of a redistributed crate. Nothing product-specific (agent ids,
-  OpenHuman path conventions, `.md` rendering) may cross.
+  Neppy path conventions, `.md` rendering) may cross.
 
 ---
 
@@ -660,9 +660,9 @@ Recorded so a later audit does not re-litigate:
 | | |
 | --- | --- |
 | Proposed | move `harness/session/` → `tinyagents::sessions` |
-| Verdict | **rejected as a unit** — ~8,600 of 11,073 prod LOC is host wiring; `builder/factory.rs` alone imports 21 OpenHuman domains |
+| Verdict | **rejected as a unit** — ~8,600 of 11,073 prod LOC is host wiring; `builder/factory.rs` alone imports 21 Neppy domains |
 | In scope | `transcript.rs` (1,997), `turn_checkpoint.rs` (105), `migration.rs` (373) — ≤ 2 host imports each |
-| Key finding | the crate already ships `harness::memory::ChatHistory` + `harness::store` stream API; OpenHuman has a **second implementation**, not a missing home |
+| Key finding | the crate already ships `harness::memory::ChatHistory` + `harness::store` stream API; Neppy has a **second implementation**, not a missing home |
 | Key constraint | crate `ChatHistory` cannot express compaction records, interrupted partials, or dual read paths — a naive impl corrupts model context |
 | Recommendation | **Option A** — host backend behind the crate trait; zero on-disk change, reversible. Ledger is ≈ **−15 / +90 LOC** (S2–S4 overall +782 / −0), *not* the "~400 LOC removed" originally claimed — see §5 S4, [Where "~400 LOC" came from](#where-400-loc-came-from-and-why-it-is-struck) |
 | Escalation | **Option B** (upstream `JsonlChatHistory`, ~2,100 LOC) only as a deliberate crate-roadmap decision |

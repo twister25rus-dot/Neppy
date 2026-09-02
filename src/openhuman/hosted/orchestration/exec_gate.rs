@@ -4,7 +4,7 @@
 //! device-declared tools. Some of those tools (`run_local_agent` → the local
 //! `code_executor` / workspace workers) execute code and read files on the
 //! user's machine. Those must run **only** for a Master-chat cycle (the human
-//! talking to their own OpenHuman), never for an A2A cycle driven by another
+//! talking to their own Neppy), never for an A2A cycle driven by another
 //! agent's DM — otherwise a prompt-injected reasoning turn could induce local
 //! code execution / file exfiltration (confused deputy).
 //!

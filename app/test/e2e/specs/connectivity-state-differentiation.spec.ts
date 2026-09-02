@@ -65,7 +65,7 @@ const USER_ID = 'e2e-connectivity-state-differentiation';
  */
 const _STATUS_TEXT = {
   internetOffline: 'Your device is offline right now',
-  coreUnreachable: "The OpenHuman core isn't responding",
+  coreUnreachable: "The Neppy core isn't responding",
   // Full value ends with "… your agent will be available again shortly."
   backendOnly: 'Reconnecting to backend',
   // The indicator renders "Reconnecting…" (with Unicode ellipsis U+2026)
@@ -248,7 +248,7 @@ describe('Connectivity state differentiation (issue #1527)', () => {
     //   2. Wait for the core health-monitor poll to fire and update connectivity.core.
     //   3. Assert `textExists('Core offline')` === true.
     //   4. Assert `textExists('Offline')` === false (not device-offline copy).
-    //   5. Assert `textExists("The OpenHuman core isn't responding")` === true.
+    //   5. Assert `textExists("The Neppy core isn't responding")` === true.
     //   6. Restart the core and assert the indicator recovers.
     await waitForAppReady(5_000);
   });

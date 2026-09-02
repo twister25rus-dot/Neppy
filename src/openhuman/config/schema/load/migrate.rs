@@ -190,7 +190,7 @@ pub(crate) fn migrate_cloud_provider_slugs(config: &mut Config) {
         entry: &super::super::cloud_providers::CloudProviderCreds,
     ) -> bool {
         entry.slug == "openhuman"
-            || matches!(entry.auth_style, AuthStyle::OpenhumanJwt)
+            || matches!(entry.auth_style, AuthStyle::NeppyJwt)
             || looks_like_openhuman_provider_endpoint(&entry.endpoint)
     }
 }

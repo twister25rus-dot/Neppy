@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
 import { createCodeBlockPre } from '../../../components/markdown/CodeBlock';
-import { OPENHUMAN_LINK_EVENT } from '../../../components/OpenhumanLinkModal';
+import { OPENHUMAN_LINK_EVENT } from '../../../components/NeppyLinkModal';
 import { parseMarkdownTable } from '../../../utils/agentMessageBubbles';
 import { hasLatexContent, normalizeLatexDelimiters } from '../../../utils/latex';
 import { openUrl } from '../../../utils/openUrl';
@@ -31,9 +31,9 @@ type ParsedMarkdownTable = NonNullable<ReturnType<typeof parseMarkdownTable>>;
  * Pill rendered below an agent bubble for each
  * `<openhuman-link path="...">label</openhuman-link>` tag the agent
  * emits. Click dispatches an `OPENHUMAN_LINK_EVENT` window event that
- * `OpenhumanLinkModal` listens for, so the chat stays in view.
+ * `NeppyLinkModal` listens for, so the chat stays in view.
  */
-function OpenhumanLinkPill({ path, label }: { path: string; label: string }) {
+function NeppyLinkPill({ path, label }: { path: string; label: string }) {
   return (
     <button
       type="button"
@@ -225,7 +225,7 @@ export function AgentMessageBubble({
       {linkSegments.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {linkSegments.map((segment, idx) => (
-            <OpenhumanLinkPill
+            <NeppyLinkPill
               key={`pill-${idx}-${segment.path}`}
               path={segment.path}
               label={segment.label}
@@ -259,7 +259,7 @@ export function AgentMessageText({ content }: { content: string }) {
       {linkSegments.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {linkSegments.map((segment, idx) => (
-            <OpenhumanLinkPill
+            <NeppyLinkPill
               key={`pill-${idx}-${segment.path}`}
               path={segment.path}
               label={segment.label}

@@ -1,4 +1,4 @@
-//! `gitbooks` — answer questions about OpenHuman by talking to the
+//! `gitbooks` — answer questions about Neppy by talking to the
 //! GitBook MCP server through the shared `openhuman::mcp::http_client` path.
 
 use crate::openhuman::mcp::http_client::{redact_endpoint, McpHttpClient};
@@ -38,8 +38,8 @@ impl Tool for GitbooksSearchTool {
     }
 
     fn description(&self) -> &str {
-        "Search the OpenHuman product documentation. Use this to answer questions about how \
-        OpenHuman works, find features, look up configuration, or locate guides. Returns \
+        "Search the Neppy product documentation. Use this to answer questions about how \
+        Neppy works, find features, look up configuration, or locate guides. Returns \
         excerpts with page titles and links — follow up with `gitbooks_get_page` for the \
         full markdown of a page."
     }
@@ -50,7 +50,7 @@ impl Tool for GitbooksSearchTool {
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Natural-language question or keyword query about OpenHuman."
+                    "description": "Natural-language question or keyword query about Neppy."
                 }
             },
             "required": ["query"]
@@ -119,7 +119,7 @@ impl Tool for GitbooksGetPageTool {
     }
 
     fn description(&self) -> &str {
-        "Fetch the full markdown of a specific OpenHuman documentation page by URL. Pair this \
+        "Fetch the full markdown of a specific Neppy documentation page by URL. Pair this \
         with `gitbooks_search` — search returns partial excerpts; use this to get the \
         complete page when more detail is needed."
     }
@@ -130,7 +130,7 @@ impl Tool for GitbooksGetPageTool {
             "properties": {
                 "url": {
                     "type": "string",
-                    "description": "The full URL of the OpenHuman documentation page (e.g. https://tinyhumans.gitbook.io/openhuman/getting-started)."
+                    "description": "The full URL of the Neppy documentation page (e.g. https://tinyhumans.gitbook.io/openhuman/getting-started)."
                 }
             },
             "required": ["url"]

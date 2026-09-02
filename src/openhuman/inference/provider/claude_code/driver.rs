@@ -82,16 +82,16 @@ fn seatbelt_available() -> bool {
 
 /// Render a Seatbelt profile that lets Claude Code do **everything** the user
 /// can — read/write anywhere, run subprocesses, use the network — EXCEPT touch
-/// OpenHuman's internal workspace (`~/.openhuman*`: memory DB, sessions, auth
+/// Neppy's internal workspace (`~/.openhuman*`: memory DB, sessions, auth
 /// tokens, config). That is the one hard wall: CC's raw tools must not be able
-/// to corrupt OpenHuman's own state. This mirrors OpenHuman's existing
+/// to corrupt Neppy's own state. This mirrors Neppy's existing
 /// `is_workspace_internal_path` invariant (its native tools already can't write
 /// there) and now enforces the same boundary for the CC subprocess at the OS
 /// level. Everything else is the user's call.
 ///
-/// Denies BOTH reads and writes of the OpenHuman workspace: CC's raw tools
-/// can neither corrupt nor exfiltrate OpenHuman's internal state (memory DB,
-/// sessions, auth tokens, config). CC still reaches OpenHuman memory — but only
+/// Denies BOTH reads and writes of the Neppy workspace: CC's raw tools
+/// can neither corrupt nor exfiltrate Neppy's internal state (memory DB,
+/// sessions, auth tokens, config). CC still reaches Neppy memory — but only
 /// through the MCP HTTP server, which runs in the unjailed core (not as CC's
 /// child), so this full deny is safe.
 #[cfg(target_os = "macos")]
@@ -114,7 +114,7 @@ fn seatbelt_profile(workspace_dir: &std::path::Path) -> String {
     )
 }
 
-/// Resolve the OpenHuman internal root (`~/.openhuman` / `~/.openhuman-staging`)
+/// Resolve the Neppy internal root (`~/.openhuman` / `~/.openhuman-staging`)
 /// from a path inside it by walking up to the first `.openhuman*` ancestor.
 /// Falls back to the input path when no such ancestor exists.
 #[cfg(target_os = "macos")]
@@ -142,7 +142,7 @@ pub struct TurnContext<'a> {
     pub workspace_dir: PathBuf,
     /// The user's project root (`config.action_dir`). Claude Code runs here
     /// (cwd + `--add-dir`) so its file tools act on the user's code, not the
-    /// internal OpenHuman workspace.
+    /// internal Neppy workspace.
     pub project_dir: PathBuf,
     pub thread_id: String,
     pub model: String,
@@ -155,7 +155,7 @@ pub struct TurnContext<'a> {
     pub anthropic_api_key: Option<String>,
 }
 
-/// Write a CC `--mcp-config` JSON pointing at OpenHuman's in-process HTTP MCP
+/// Write a CC `--mcp-config` JSON pointing at Neppy's in-process HTTP MCP
 /// server (running in the unjailed core). CC connects over loopback, so the
 /// MCP server is NOT a child of the sandboxed `claude` and keeps full access
 /// to `~/.openhuman` for memory — while CC's own raw tools are denied that dir
@@ -168,7 +168,7 @@ fn write_mcp_http_config(
     let path = dir.join("openhuman-mcp-config.json");
     // The loopback MCP server is authenticated — carry the per-process bearer
     // token so only this `claude` launch (not other local processes) can reach
-    // OpenHuman's tools/memory.
+    // Neppy's tools/memory.
     let cfg = json!({
         "mcpServers": {
             "openhuman": {
@@ -249,7 +249,7 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
         .prefix("openhuman-cc-")
         .tempdir()
         .map_err(|e| anyhow::anyhow!("create scratch dir: {e}"))?;
-    // Point CC at OpenHuman's in-process HTTP MCP server (unjailed core), so
+    // Point CC at Neppy's in-process HTTP MCP server (unjailed core), so
     // the memory bridge survives CC's `.openhuman` jail deny.
     let mut mcp_config_path: Option<PathBuf> = None;
     match crate::openhuman::mcp::server::ensure_local_http().await {
@@ -263,18 +263,18 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
                 mcp_config_path = Some(p);
             }
             Err(e) => log::warn!(
-                "[claude-code][driver] failed to write mcp-config: {e}; CC will run without OpenHuman MCP tools"
+                "[claude-code][driver] failed to write mcp-config: {e}; CC will run without Neppy MCP tools"
             ),
         },
         Err(e) => log::warn!(
-            "[claude-code][driver] in-process MCP HTTP server unavailable: {e}; CC running without OpenHuman MCP tools"
+            "[claude-code][driver] in-process MCP HTTP server unavailable: {e}; CC running without Neppy MCP tools"
         ),
     }
 
     // The user explicitly opts into Claude Code, so we do NOT limit its toolset
     // on any platform — CC always gets its full tools + `bypassPermissions`.
     // The jail (macOS Seatbelt, below) is purely the `.openhuman` wall: it
-    // doesn't restrict CC, it just protects OpenHuman's internal data where the
+    // doesn't restrict CC, it just protects Neppy's internal data where the
     // OS supports it. On Linux/Windows there's no OS wall yet, so CC runs
     // unconfined there (user's machine, user's call).
     let jailed = seatbelt_available();

@@ -620,7 +620,7 @@ impl Agent {
         // afterward so a delegate synthesised here (e.g.
         // `delegate_name = "research"`) doesn't collide with a
         // same-named skill tool on the wire — Anthropic 400s on dup
-        // tool names where OpenHuman's backend silently accepts.
+        // tool names where Neppy's backend silently accepts.
         self.rebuild_tool_policy_session();
 
         // Compute add/remove deltas for the log line — useful when

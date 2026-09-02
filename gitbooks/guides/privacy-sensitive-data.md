@@ -1,13 +1,13 @@
 ---
 description: >-
-  A plain-language map of what OpenHuman keeps on your computer versus what it
+  A plain-language map of what Neppy keeps on your computer versus what it
   sends out, and the settings that let you keep sensitive work local.
 icon: lock
 ---
 
 # Keep sensitive data private
 
-**Goal:** understand, in everyday language rather than architecture, what stays on your machine and what leaves it, so you can decide what OpenHuman should touch.
+**Goal:** understand, in everyday language rather than architecture, what stays on your machine and what leaves it, so you can decide what Neppy should touch.
 
 If you want the engineering detail, read [Privacy & Security](../features/privacy-and-security.md). This guide is the version you can act on in five minutes.
 
@@ -15,7 +15,7 @@ If you want the engineering detail, read [Privacy & Security](../features/privac
 
 ## The one-sentence version
 
-**Your memory lives on your computer. The OpenHuman backend only handles the things that genuinely have to be brokered: signing you in, routing model requests, and talking to the services you connect.**
+**Your memory lives on your computer. The Neppy backend only handles the things that genuinely have to be brokered: signing you in, routing model requests, and talking to the services you connect.**
 
 Everything below is an expansion of that sentence.
 
@@ -27,7 +27,7 @@ These never leave your computer as raw data:
 
 | Thing                         | Plain meaning                                                                                |
 | ----------------------------- | -------------------------------------------------------------------------------------------- |
-| **Your Memory Tree**          | The database of everything OpenHuman has learned about your world. It's a file on your disk. |
+| **Your Memory Tree**          | The database of everything Neppy has learned about your world. It's a file on your disk. |
 | **Your Obsidian vault**       | The human-readable Markdown version of that memory. Yours to read, edit, or delete.          |
 | **Audio you speak**           | Captured to transcribe, then discarded.                                                      |
 | **Local model state**         | If you turn on [local AI](local-model.md), the model and its work stay on-device.            |
@@ -45,7 +45,7 @@ These leave your machine because they can't work otherwise, but note _what_ is s
 | **Text-to-speech**     | The words to be spoken are streamed to generate audio, then discarded. They are not retained.                                                                                      |
 
 {% hint style="info" %}
-**Why local memory _is_ the privacy design.** Most assistants trade privacy for context, because more context means more of your raw data uploaded. OpenHuman does the heavy work (chunking, scoring, summarizing) inside the local core, so the model only ever sees what you asked it to retrieve, at the moment you ask. Locality is the privacy feature, not a setting bolted on top.
+**Why local memory _is_ the privacy design.** Most assistants trade privacy for context, because more context means more of your raw data uploaded. Neppy does the heavy work (chunking, scoring, summarizing) inside the local core, so the model only ever sees what you asked it to retrieve, at the moment you ask. Locality is the privacy feature, not a setting bolted on top.
 {% endhint %}
 
 ## Two promises worth knowing
@@ -67,7 +67,7 @@ You have real controls. From most to least private:
 ## Built-in protections you didn't have to configure
 
 - **Prompt-injection screening.** Incoming content is screened for attempts to hijack the assistant's instructions before it acts on them.
-- **Secret & PII redaction on save.** When content is written into long-lived memory, OpenHuman strips things like API keys, tokens, private-key blocks, and personal identifiers so they don't get stored.
+- **Secret & PII redaction on save.** When content is written into long-lived memory, Neppy strips things like API keys, tokens, private-key blocks, and personal identifiers so they don't get stored.
 - **Encrypted in transit.** All traffic between the app and the backend is TLS. Nothing travels in plain text.
 
 ---
@@ -85,7 +85,7 @@ You know your privacy posture when you can answer these:
 
 | Belief                                                      | Reality                                                                                |
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| "OpenHuman uploads my whole memory to answer."              | It sends only what it retrieves for that specific turn.                                |
+| "Neppy uploads my whole memory to answer."              | It sends only what it retrieves for that specific turn.                                |
 | "My service passwords are on my laptop."                    | Integration tokens are held by the backend; local secrets go in your OS keychain.      |
 | "Turning on local AI makes _everything_ local."             | Speech-to-text, text-to-speech, and web search still use the backend proxy by default. |
 | "Revoking an integration deletes what it already gathered." | Already-ingested memory is yours and stays local; revoking only stops future syncing.  |
@@ -93,5 +93,5 @@ You know your privacy posture when you can answer these:
 ## See also
 
 - [Privacy & Security](../features/privacy-and-security.md): the detailed architecture.
-- [Use OpenHuman with a local model](local-model.md): keep inference on-device.
+- [Use Neppy with a local model](local-model.md): keep inference on-device.
 - [Create a safe companion for a child](child-safe-companion.md): the strictest lockdown, composed from these controls.

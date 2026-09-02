@@ -97,7 +97,7 @@ test.describe('Chat management functional coverage', () => {
     await expect(fileInput).toHaveCount(1);
 
     // Documents work on every model; images require a vision-capable model.
-    // Managed OpenHuman tiers are text-only (see `oh_tier_supports_vision`), so
+    // Managed Neppy tiers are text-only (see `oh_tier_supports_vision`), so
     // the attachment mechanics here are exercised with a text document. Image
     // upload is gated to vision-flagged models and validated in unit tests.
     const txtBuffer = Buffer.from('renderer uploaded text document', 'utf8');

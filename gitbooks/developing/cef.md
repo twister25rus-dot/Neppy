@@ -1,21 +1,21 @@
 ---
 description: >-
-  Why OpenHuman ships its own Chromium runtime, what we use it for today, and
+  Why Neppy ships its own Chromium runtime, what we use it for today, and
   what the same CDP surface unlocks next.
 icon: chrome
 ---
 
 # Chromium Embedded Framework
 
-OpenHuman doesn't run on the platform's built-in webview. It ships its own **Chromium Embedded Framework (CEF) runtime** via a fork of `tauri-runtime`, and that single decision is load-bearing for almost every "OpenHuman knows what's happening in your tools" feature in the product.
+Neppy doesn't run on the platform's built-in webview. It ships its own **Chromium Embedded Framework (CEF) runtime** via a fork of `tauri-runtime`, and that single decision is load-bearing for almost every "Neppy knows what's happening in your tools" feature in the product.
 
 This page explains why CEF is in the bundle, what the codebase uses it for today, and where the same surface could go.
 
 ## Why CEF instead of a stock webview
 
-Stock Tauri uses each platform's native webview. WKWebView on macOS, WebView2 on Windows, WebKitGTK on Linux. Those work fine for rendering the OpenHuman app itself. They have one fatal limitation for our use case: **none of them expose Chrome DevTools Protocol (CDP)**.
+Stock Tauri uses each platform's native webview. WKWebView on macOS, WebView2 on Windows, WebKitGTK on Linux. Those work fine for rendering the Neppy app itself. They have one fatal limitation for our use case: **none of them expose Chrome DevTools Protocol (CDP)**.
 
-CDP is the load-bearing primitive. Every "watch what's happening inside Slack / WhatsApp / Telegram / Discord / Meet" feature in OpenHuman talks to those embedded apps via CDP, not via injected JavaScript. CDP gives us:
+CDP is the load-bearing primitive. Every "watch what's happening inside Slack / WhatsApp / Telegram / Discord / Meet" feature in Neppy talks to those embedded apps via CDP, not via injected JavaScript. CDP gives us:
 
 - `Target.getTargets` to discover every page and service worker.
 - `IndexedDB.requestDatabaseNames` / `requestDatabase` / `requestData` to walk a third-party app's local storage.
@@ -113,7 +113,7 @@ Windows users report a silent exit, a permanent "Connecting..." spinner, or a
 for these details in the issue:
 
 - Windows edition and full build number, especially for Insider builds.
-- OpenHuman version and installer type (`.msi` or `.exe`).
+- Neppy version and installer type (`.msi` or `.exe`).
 - Whether `%LOCALAPPDATA%\com.neppy.app` was moved aside before retrying.
 - Startup log lines from `[startup]`, `[cef-profile]`, and `[cef-startup]`.
 - Any panic text that names `tauri-runtime-cef/src/lib.rs`.
@@ -123,7 +123,7 @@ the current stable Windows release. That separates a profile/cache problem from
 an OS/runtime compatibility regression in CEF startup.
 
 If the logs point to a GPU-process startup failure rather than a stale CEF
-profile lock, set `OPENHUMAN_DISABLE_GPU=1` before launching OpenHuman. On
+profile lock, set `OPENHUMAN_DISABLE_GPU=1` before launching Neppy. On
 Windows this pins CEF to the pure-software ANGLE/SwiftShader GL backend
 (`--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader
 --disable-gpu-compositing`) rather than bare `--disable-gpu`: on NVIDIA Blackwell

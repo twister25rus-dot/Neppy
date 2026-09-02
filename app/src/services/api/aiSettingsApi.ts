@@ -64,7 +64,7 @@ export const ALL_WORKLOADS: WorkloadId[] = [...CHAT_WORKLOADS, ...BACKGROUND_WOR
 // settings serialization. Includes the tier-specific `vision` workload, which
 // is deliberately NOT part of `CHAT_WORKLOADS`/`ALL_WORKLOADS`: it defaults to
 // the managed `vision-v1` tier and is a delegate (like agentic BYOK), so it does
-// not participate in the billing-suppression / "routed away from OpenHuman"
+// not participate in the billing-suppression / "routed away from Neppy"
 // checks in `useUsageState`.
 const ROUTABLE_WORKLOADS: WorkloadId[] = [...ALL_WORKLOADS, 'vision'];
 export const OPENAI_CODEX_OAUTH_MISSING_AUTH_URL = 'OPENAI_CODEX_OAUTH_MISSING_AUTH_URL';
@@ -450,7 +450,7 @@ function modelRegistriesEqual(a: ModelRegistryEntry[], b: ModelRegistryEntry[]):
  */
 export async function setCloudProviderKey(slug: string, apiKey: string): Promise<void> {
   if (slug === 'openhuman') {
-    throw new Error('OpenHuman uses the session JWT — keys are not configurable here.');
+    throw new Error('Neppy uses the session JWT — keys are not configurable here.');
   }
   // Store under both new-style key `provider:<slug>` and legacy bare `<slug>`
   // so old code paths that look up by bare slug continue to work.

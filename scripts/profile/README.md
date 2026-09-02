@@ -1,6 +1,6 @@
 # `scripts/profile/`
 
-Reproducible benchmarking scripts for the OpenHuman Rust core as an embedded
+Reproducible benchmarking scripts for the Neppy Rust core as an embedded
 library (no RPC server), built around the `library-profile` and `rss-bench`
 binaries (see `src/bin/library_profile/main.rs`). Full write-up:
 [`docs/library-benchmarking.md`](../../docs/library-benchmarking.md). Prior

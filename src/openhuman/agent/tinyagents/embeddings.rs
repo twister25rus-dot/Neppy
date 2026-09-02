@@ -1,18 +1,18 @@
-//! Adapter bridging OpenHuman's [`EmbeddingProvider`] onto the `tinyagents`
+//! Adapter bridging Neppy's [`EmbeddingProvider`] onto the `tinyagents`
 //! crate's [`EmbeddingModel`] trait (issue #4249, workstream 09-embeddings).
 //!
-//! OpenHuman owns the concrete embedding providers (voyage / openai / cohere /
+//! Neppy owns the concrete embedding providers (voyage / openai / cohere /
 //! ollama / cloud / noop) and the `embeddings/factory.rs` construction policy
 //! (rate-limit + retry). This adapter is a **thin seam**: it wraps an
 //! `Arc<dyn EmbeddingProvider>` and re-exposes it as the crate's provider-neutral
 //! [`EmbeddingModel`] so the harness's retrieval surface
 //! ([`Retriever`](tinyagents::harness::embeddings::Retriever) /
 //! [`VectorStore`](tinyagents::harness::embeddings::VectorStore)) can drive
-//! OpenHuman embeddings without cloning provider logic.
+//! Neppy embeddings without cloning provider logic.
 //!
 //! The only real work here is bridging the batch signature: the crate trait
-//! takes `&[String]` while OpenHuman's `EmbeddingProvider::embed` takes
-//! `&[&str]`, and the crate uses its own `TinyAgentsError` while OpenHuman uses
+//! takes `&[String]` while Neppy's `EmbeddingProvider::embed` takes
+//! `&[&str]`, and the crate uses its own `TinyAgentsError` while Neppy uses
 //! `anyhow::Error`. Both are mapped without touching the underlying providers.
 //!
 //! Wired into the recall/retrieval path in step 09.2; this step just lands the
@@ -27,20 +27,20 @@ use tinyagents::{Result as TaResult, TinyAgentsError};
 
 use crate::openhuman::inference::embeddings::EmbeddingProvider;
 
-/// Wraps an OpenHuman [`EmbeddingProvider`] as a `tinyagents`
+/// Wraps an Neppy [`EmbeddingProvider`] as a `tinyagents`
 /// [`EmbeddingModel`](TaEmbeddingModel).
 ///
 /// Holds the provider behind an `Arc` (matching how providers are shared
 /// elsewhere in the codebase), so the adapter is cheap to clone and share
 /// across async task boundaries behind an `Arc<dyn EmbeddingModel>`.
 pub(crate) struct ProviderEmbeddingModel {
-    /// The underlying OpenHuman embedding provider (voyage/openai/cohere/ollama/
+    /// The underlying Neppy embedding provider (voyage/openai/cohere/ollama/
     /// cloud/noop) with its factory-configured rate-limit + retry policy intact.
     provider: Arc<dyn EmbeddingProvider>,
 }
 
 impl ProviderEmbeddingModel {
-    /// Builds an adapter over the given OpenHuman embedding provider.
+    /// Builds an adapter over the given Neppy embedding provider.
     pub(crate) fn new(provider: Arc<dyn EmbeddingProvider>) -> Self {
         tracing::debug!(
             provider = provider.name(),
@@ -79,7 +79,7 @@ impl TaEmbeddingModel for ProviderEmbeddingModel {
             "[embeddings] adapter embed: entry"
         );
         // Bridge the signature difference: the crate trait hands us owned
-        // `String`s; OpenHuman's `EmbeddingProvider::embed` takes borrowed
+        // `String`s; Neppy's `EmbeddingProvider::embed` takes borrowed
         // `&str`. Borrow each without allocating new strings.
         let borrowed: Vec<&str> = texts.iter().map(String::as_str).collect();
         let result = self.provider.embed(&borrowed).await.map_err(|e| {
@@ -88,7 +88,7 @@ impl TaEmbeddingModel for ProviderEmbeddingModel {
                 error = %e,
                 "[embeddings] adapter embed: provider error"
             );
-            // OpenHuman providers surface `anyhow::Error`; the crate expects its
+            // Neppy providers surface `anyhow::Error`; the crate expects its
             // own error type. Carry the full chain into the crate's embedding
             // error variant so nothing is lost.
             TinyAgentsError::Embedding(format!("{e:#}"))

@@ -29,7 +29,7 @@ import {
   typeIntoComposer,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -141,7 +141,7 @@ describe('Chat conversation history', () => {
     // Wait for IN_FLIGHT to clear before sending next message.
     await browser.waitUntil(
       async () => {
-        const snap = await callOpenhumanRpc<{ result: { entries: Array<{ key: string }> } }>(
+        const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
           'openhuman.test_support_in_flight_chats',
           {}
         );
@@ -184,7 +184,7 @@ describe('Chat conversation history', () => {
     // Wait for IN_FLIGHT to clear before inspecting the request log.
     await browser.waitUntil(
       async () => {
-        const snap = await callOpenhumanRpc<{ result: { entries: Array<{ key: string }> } }>(
+        const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
           'openhuman.test_support_in_flight_chats',
           {}
         );
@@ -252,7 +252,7 @@ describe('Chat conversation history', () => {
     let content = '';
     const deadline = Date.now() + 15_000;
     while (Date.now() < deadline) {
-      const read = await callOpenhumanRpc<{ result: { content_utf8: string } }>(
+      const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
         'openhuman.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 131_072 }
       );

@@ -1,17 +1,17 @@
 ---
 description: >-
-  High-level shape of the OpenHuman system (desktop shell, Rust core, Memory
+  High-level shape of the Neppy system (desktop shell, Rust core, Memory
   Tree, agent loop). Pointer to the deep developer architecture in the repo.
 icon: code-branch
 ---
 
 # Architecture
 
-OpenHuman is open-sourced under GNU GPL3. This page is the high-level shape of the system; the deep developer architecture lives in [deep architecture reference](../architecture.md) in the repo.
+Neppy is open-sourced under GNU GPL3. This page is the high-level shape of the system; the deep developer architecture lives in [deep architecture reference](../architecture.md) in the repo.
 
 ## The shape
 
-OpenHuman is a **React + Tauri v2 desktop app** with a **Rust core** that does the heavy lifting.
+Neppy is a **React + Tauri v2 desktop app** with a **Rust core** that does the heavy lifting.
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -65,7 +65,7 @@ Stays on your machine:
 - The Obsidian Markdown vault.
 - Audio capture buffers and any local model state.
 
-Goes through the OpenHuman backend (under one subscription):
+Goes through the Neppy backend (under one subscription):
 
 - LLM calls (model providers).
 - Web search proxy.

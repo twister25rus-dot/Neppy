@@ -1,10 +1,10 @@
-//! Tests for OpenHuman's half of the artifact-offload convention (#3883).
+//! Tests for Neppy's half of the artifact-offload convention (#3883).
 //!
 //! The mechanics moved to `tinyagents::harness::artifacts` and are tested
 //! there — path resolution, thresholds, abstracts, pointer parsing, the
 //! symlink re-check. What is tested here is what stayed:
 //!
-//! * the **prompt contract**, which is OpenHuman text naming OpenHuman tools;
+//! * the **prompt contract**, which is Neppy text naming Neppy tools;
 //! * the **two policy adapters**, which is where a widened permission would
 //!   actually cause harm and where no crate-side test can reach;
 //! * an **integration pass** proving the wiring hands the crate a guarded,
@@ -20,7 +20,7 @@ use crate::openhuman::security::{AutonomyLevel, SecurityPolicy, TrustedAccess, T
 use tinyagents::harness::artifacts::ArtifactPathPolicy;
 
 /// Policy with disjoint action/workspace roots, the shipped default layout
-/// (`~/OpenHuman/projects` vs `~/.openhuman/users/<id>/workspace`).
+/// (`~/Neppy/projects` vs `~/.openhuman/users/<id>/workspace`).
 ///
 /// `action_dir` is granted as a read-write trusted root, because that is what
 /// production does: `SecurityPolicy::from_config` grants the projects dir
@@ -46,7 +46,7 @@ fn policy_with(action_dir: PathBuf, workspace_dir: PathBuf) -> Arc<SecurityPolic
     })
 }
 
-// ── The prompt contract (stays host-side: OpenHuman prompt text) ──────────────
+// ── The prompt contract (stays host-side: Neppy prompt text) ──────────────
 
 #[test]
 fn prompt_contract_names_both_directories_and_the_write_step() {
@@ -221,7 +221,7 @@ async fn oversized_result_is_offloaded_and_the_parent_gets_a_readable_pointer() 
     let artifact = artifact.expect("an artifact was written");
 
     assert!(text.starts_with(ARTIFACT_POINTER_PREFIX));
-    // The pointer must name OpenHuman's reading tool, not the crate's idea of
+    // The pointer must name Neppy's reading tool, not the crate's idea of
     // one — this is the wiring the READ_TOOL parameter exists for.
     assert!(
         text.contains(READ_TOOL),

@@ -141,7 +141,7 @@ fn replace_last_assistant_reply(history: &mut Vec<ConversationMessage>, text: &s
 
 fn render_agent_context_status_note(sources: &[harness::AgentContextPreparedSource]) -> String {
     let sources = if sources.is_empty() {
-        "the OpenHuman harness".to_string()
+        "the Neppy harness".to_string()
     } else {
         sources
             .iter()
@@ -856,7 +856,7 @@ impl Agent {
     ///
     /// Full-fidelity with the legacy `run_turn_engine`: live tool-timeline /
     /// text-delta progress and the cost/token footer are mirrored from the
-    /// harness event stream via `OpenhumanEventBridge` (tinyagents harness),
+    /// harness event stream via `NeppyEventBridge` (tinyagents harness),
     /// `[IMAGE:…]`/`[FILE:…]` markers are expanded for the provider, and history
     /// is trimmed to the provider's context window.
     async fn run_turn_via_tinyagents_session(

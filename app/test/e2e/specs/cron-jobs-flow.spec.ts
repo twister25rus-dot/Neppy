@@ -27,7 +27,7 @@
  *     agrees, but the *test* drove everything via the buttons.
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import {
   clickNativeButton,
   clickTestId,
@@ -138,7 +138,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
 
     // The morning_briefing cron is auto-seeded after onboarding completes.
     // If the async seed hasn't fired yet, seed it explicitly via RPC.
-    const preCheck = await callOpenhumanRpc('openhuman.cron_list', {});
+    const preCheck = await callNeppyRpc('openhuman.cron_list', {});
     expect(preCheck.ok).toBe(true);
     const preJobs = Array.isArray(preCheck.result?.result) ? preCheck.result.result : [];
     const existing = preJobs.find(
@@ -147,7 +147,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
     morningBriefingId = existing?.id ?? '';
     if (!existing) {
       stepLog('morning_briefing not auto-seeded — seeding via cron_create');
-      const seed = await callOpenhumanRpc('openhuman.cron_create', {
+      const seed = await callNeppyRpc('openhuman.cron_create', {
         name: MORNING_BRIEFING,
         schedule: '0 8 * * *',
         enabled: true,
@@ -158,7 +158,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
       await browser.pause(1_000);
     } else if (!existing.enabled) {
       stepLog('morning_briefing is paused — enabling it for toggle assertions');
-      const enable = await callOpenhumanRpc('openhuman.cron_update', {
+      const enable = await callNeppyRpc('openhuman.cron_update', {
         job_id: morningBriefingId,
         patch: { enabled: true },
       });
@@ -224,7 +224,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
     expect(gone).toBe(true);
 
     // Single oracle RPC: confirm the sidecar agrees with the UI.
-    const list = await callOpenhumanRpc('openhuman.cron_list', {});
+    const list = await callNeppyRpc('openhuman.cron_list', {});
     expect(list.ok).toBe(true);
     const inner = (list.result as { result?: unknown } | undefined)?.result ?? list.result;
     const jobs = Array.isArray(inner) ? inner : [];

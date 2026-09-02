@@ -642,7 +642,7 @@ async fn boot_stack() -> Stack {
     let rpc_base = format!("http://{rpc_addr}");
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // Establish an authenticated session so the OpenHuman backend provider
+    // Establish an authenticated session so the Neppy backend provider
     // can read the stored JWT from the keyring (same pattern as json_rpc_e2e.rs:1768-1779).
     let store = post_json_rpc(
         &rpc_base,
@@ -1203,9 +1203,9 @@ async fn subagent_clarification_flow_inner() {
 // `FileWriteTool::external_effect_with_args` (src/openhuman/tools/impl/filesystem/file_write.rs:65)
 // only returns `true` when the target file ALREADY EXISTS at `action_dir/path`.
 // Logic: "exists = edit → prompt; new = create → free". The default action_dir
-// is `~/OpenHuman/projects` (derived from the HOME env var that boot_stack
+// is `~/Neppy/projects` (derived from the HOME env var that boot_stack
 // overrides to a tempdir). Tests therefore pre-create the target file under
-// `$HOME/OpenHuman/projects/` so that `external_effect_with_args` sees an
+// `$HOME/Neppy/projects/` so that `external_effect_with_args` sees an
 // existing file and returns `true`, routing the call through the approval gate.
 //
 // The approval gate fires only for WebChat-origin turns
@@ -1283,9 +1283,9 @@ fn register_approval_bridge() -> Option<tinybus::SubscriptionHandle> {
 
 /// Pre-create a file in the action_dir so file_write sees it as an existing
 /// file and external_effect_with_args returns true (triggering the approval gate).
-/// The action_dir is `$HOME/OpenHuman/projects/` where HOME is set to `home`.
+/// The action_dir is `$HOME/Neppy/projects/` where HOME is set to `home`.
 fn pre_create_for_approval(home: &Path, filename: &str) -> std::path::PathBuf {
-    let action_dir = home.join("OpenHuman").join("projects");
+    let action_dir = home.join("Neppy").join("projects");
     std::fs::create_dir_all(&action_dir)
         .unwrap_or_else(|e| panic!("create action_dir {action_dir:?}: {e}"));
     let target = action_dir.join(filename);
@@ -1436,9 +1436,9 @@ async fn approval_gate_approve_flow_inner() {
         "full_response must contain APPROVED_WRITE_CANARY; got: {full_response}"
     );
 
-    // The file was actually written under the temp HOME (action_dir = $HOME/OpenHuman/projects/).
+    // The file was actually written under the temp HOME (action_dir = $HOME/Neppy/projects/).
     // Walk the tempdir to confirm the file exists with the written content.
-    let action_dir = stack._tmp.path().join("OpenHuman").join("projects");
+    let action_dir = stack._tmp.path().join("Neppy").join("projects");
     let canary_path = action_dir.join("approval-canary.txt");
     let content = std::fs::read_to_string(&canary_path)
         .unwrap_or_else(|e| panic!("approval-canary.txt missing after approve: {e}"));
@@ -1535,7 +1535,7 @@ async fn approval_gate_deny_flow_inner() {
 
     // The denied file_write must not have overwritten the placeholder.
     // The pre-created file must still contain exactly the original placeholder string.
-    let action_dir = stack._tmp.path().join("OpenHuman").join("projects");
+    let action_dir = stack._tmp.path().join("Neppy").join("projects");
     let canary_path = action_dir.join("denied-canary.txt");
     let content = std::fs::read_to_string(&canary_path)
         .expect("denied-canary.txt must exist after deny flow");
@@ -1688,7 +1688,7 @@ async fn subagent_with_approval_gate_inner() {
 
     // The file must have been written with the canary content, proving that the
     // approved tool execution actually ran (not just that the decision propagated).
-    let action_dir = stack._tmp.path().join("OpenHuman").join("projects");
+    let action_dir = stack._tmp.path().join("Neppy").join("projects");
     let artifact_path = action_dir.join("subagent-artifact.txt");
     let artifact_content = std::fs::read_to_string(&artifact_path)
         .unwrap_or_else(|e| panic!("subagent-artifact.txt missing after approve: {e}"));
@@ -1775,7 +1775,7 @@ async fn approval_gate_timeout_inner() {
 
     // The file's content must remain the placeholder (not the canary).
     // Use .expect() so a missing file fails loudly rather than vacuously passing.
-    let action_dir = stack._tmp.path().join("OpenHuman").join("projects");
+    let action_dir = stack._tmp.path().join("Neppy").join("projects");
     let canary_path = action_dir.join("timeout-canary.txt");
     let content = std::fs::read_to_string(&canary_path)
         .expect("timeout-canary.txt must exist after timeout flow");

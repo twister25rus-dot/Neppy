@@ -1,16 +1,16 @@
 ---
 description: >-
-  Shape OpenHuman into a role-specific assistant for clinical work: persona,
+  Shape Neppy into a role-specific assistant for clinical work: persona,
   tight data boundaries, and the limits you must keep in mind.
 icon: user-doctor
 ---
 
 # Create a doctor-specific assistant
 
-**Goal:** tailor OpenHuman for a clinician's workflow: a persona that speaks the part, memory scoped to the right sources, and privacy settings appropriate for sensitive information.
+**Goal:** tailor Neppy for a clinician's workflow: a persona that speaks the part, memory scoped to the right sources, and privacy settings appropriate for sensitive information.
 
 {% hint style="danger" %}
-**Read this first.** OpenHuman is a general-purpose assistant, **not** a medical device and **not** a source of medical advice. It can hallucinate. Nothing here makes it safe for diagnosis, treatment decisions, or handling protected health information under a specific regulatory regime (HIPAA, GDPR, etc.). You are responsible for compliance, for clinical judgment, and for what data you let it touch. Treat its output as draft text a qualified human must verify.
+**Read this first.** Neppy is a general-purpose assistant, **not** a medical device and **not** a source of medical advice. It can hallucinate. Nothing here makes it safe for diagnosis, treatment decisions, or handling protected health information under a specific regulatory regime (HIPAA, GDPR, etc.). You are responsible for compliance, for clinical judgment, and for what data you let it touch. Treat its output as draft text a qualified human must verify.
 {% endhint %}
 
 With that boundary set, here's how to shape it responsibly.
@@ -19,14 +19,14 @@ With that boundary set, here's how to shape it responsibly.
 
 ## Prerequisites
 
-- OpenHuman set up. See [Create my personal AI assistant](personal-assistant.md).
+- Neppy set up. See [Create my personal AI assistant](personal-assistant.md).
 - A clear decision about **what data this assistant may and may not see**. For anything sensitive, plan to keep inference [local](local-model.md).
 
 ## Privacy implications
 
 - Decide early whether any real patient data will ever be involved. If regulatory rules apply to your data, the safest posture is: **local model on, minimal integrations, read-only or supervised autonomy.**
-- OpenHuman keeps memory local and redacts secrets/PII on save, but **that is not a compliance guarantee**. It is a general privacy design. Do not treat it as certified for regulated health data.
-- If you route reasoning to the [OpenHuman backend](../features/privacy-and-security.md) (the default), relevant snippets are sent to the model provider for each turn. For sensitive material, turn on a [local model](local-model.md) so that work stays on-device.
+- Neppy keeps memory local and redacts secrets/PII on save, but **that is not a compliance guarantee**. It is a general privacy design. Do not treat it as certified for regulated health data.
+- If you route reasoning to the [Neppy backend](../features/privacy-and-security.md) (the default), relevant snippets are sent to the model provider for each turn. For sensitive material, turn on a [local model](local-model.md) so that work stays on-device.
 
 ---
 
@@ -42,7 +42,7 @@ In **Settings → Agents → Agent access**:
 
 ### 2. Turn on local inference for sensitive work
 
-Follow [Use OpenHuman with a local model](local-model.md) and pick at least **"memory + reflection"** so embeddings and background summarization stay on-device. Confirm status reads `ready`.
+Follow [Use Neppy with a local model](local-model.md) and pick at least **"memory + reflection"** so embeddings and background summarization stay on-device. Confirm status reads `ready`.
 
 ### 3. Give it a clinical persona
 
@@ -89,5 +89,5 @@ Test with **made-up** cases, never real patient data, until you're satisfied wit
 ## See also
 
 - [Keep sensitive data private](privacy-sensitive-data.md): the controls this guide composes.
-- [Use OpenHuman with a local model](local-model.md): keeping sensitive inference on-device.
+- [Use Neppy with a local model](local-model.md): keeping sensitive inference on-device.
 - [Approval Gate](../features/approval-gate.md): how actions are gated.

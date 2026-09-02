@@ -1,5 +1,5 @@
 //! Task prompt construction — a thin binding of
-//! [`tinyagents::graph::todos::dispatch::prompt`] to OpenHuman's tool names.
+//! [`tinyagents::graph::todos::dispatch::prompt`] to Neppy's tool names.
 //!
 //! The crate owns the rendering (objective, plan, acceptance criteria, source
 //! provenance, and the "block rather than guess" progress addendum). All this
@@ -14,7 +14,7 @@ use tinyagents::graph::todos::dispatch::TaskPromptTools;
 
 use crate::openhuman::agent::task_board::TaskBoardCard;
 
-/// OpenHuman's tool names for the two tools a task prompt references.
+/// Neppy's tool names for the two tools a task prompt references.
 static TOOLS: LazyLock<TaskPromptTools> = LazyLock::new(|| TaskPromptTools {
     memory_recall: Some("memory_recall".to_string()),
     update_task: "update_task".to_string(),

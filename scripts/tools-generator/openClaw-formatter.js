@@ -425,13 +425,13 @@ export function generateOpenClawMarkdown(tools) {
   const grouped = groupToolsBySkill(tools);
   const skillNames = Object.keys(grouped);
 
-  let content = `# OpenHuman Tools
+  let content = `# Neppy Tools
 
-This document lists all available tools that OpenHuman can use to interact with external services and perform actions. Tools are organized by integration and automatically updated during build time.
+This document lists all available tools that Neppy can use to interact with external services and perform actions. Tools are organized by integration and automatically updated during build time.
 
 ## Overview
 
-OpenHuman has access to **${tools.length} tools** across **${skillNames.length} integrations** organized into **${Object.keys(TOOL_CATEGORIES).length} categories**.
+Neppy has access to **${tools.length} tools** across **${skillNames.length} integrations** organized into **${Object.keys(TOOL_CATEGORIES).length} categories**.
 
 **Quick Statistics:**
 ${skillNames.map(skill => `- **${grouped[skill].name}**: ${grouped[skill].tools.length} tools`).join('\n')}

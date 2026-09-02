@@ -202,7 +202,7 @@ test.describe('Harness - Search tool-flow', () => {
 
   test('file_read prompt completes the two-turn sequence', async ({ page }) => {
     const CANARY = 'canary-file-read-e5f6';
-    const FILE_SNIPPET = 'OpenHuman is an AI assistant for communities';
+    const FILE_SNIPPET = 'Neppy is an AI assistant for communities';
     const forced = [
       {
         content: '',
@@ -221,7 +221,7 @@ test.describe('Harness - Search tool-flow', () => {
 
     await sendMessage(page, 'read the README');
     await expect(agentMessageText(page, CANARY)).toBeVisible({ timeout: 60_000 });
-    await expect(agentMessageText(page, /OpenHuman is an AI assistant/i)).toBeVisible();
+    await expect(agentMessageText(page, /Neppy is an AI assistant/i)).toBeVisible();
 
     const log = await requests();
     const llmHits = log.filter(

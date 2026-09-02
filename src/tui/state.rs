@@ -113,11 +113,11 @@ impl TranscriptState {
     }
 
     pub fn export_markdown(&self) -> String {
-        let mut out = String::from("# OpenHuman transcript\n\n");
+        let mut out = String::from("# Neppy transcript\n\n");
         for entry in &self.entries {
             let title = match entry.kind {
                 EntryKind::User => "You",
-                EntryKind::Assistant => "OpenHuman",
+                EntryKind::Assistant => "Neppy",
                 EntryKind::Thinking => "Reasoning",
                 EntryKind::Tool => "Tool",
                 EntryKind::Error => "Error",

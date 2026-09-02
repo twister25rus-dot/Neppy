@@ -243,7 +243,7 @@ pub async fn doctor_channels(config: Config) -> Result<()> {
         return Ok(());
     }
 
-    println!("🩺 OpenHuman Channel Doctor");
+    println!("🩺 Neppy Channel Doctor");
     println!();
 
     let mut healthy = 0_u32;

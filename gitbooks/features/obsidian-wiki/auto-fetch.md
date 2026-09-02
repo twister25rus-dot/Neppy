@@ -1,13 +1,13 @@
 ---
 description: >-
-  Every twenty minutes, OpenHuman walks every active integration and folds new
+  Every twenty minutes, Neppy walks every active integration and folds new
   data into your memory tree. No prompts, no polling loops you have to write.
 icon: arrows-rotate
 ---
 
 # Auto-fetch from Integrations
 
-Most "AI assistants" are reactive: you ask, they think, they answer. OpenHuman is the opposite. It pulls from your stack continuously, so by the time you ask "what landed in my inbox overnight?" the answer is already in the [Memory Tree](memory-tree.md).
+Most "AI assistants" are reactive: you ask, they think, they answer. Neppy is the opposite. It pulls from your stack continuously, so by the time you ask "what landed in my inbox overnight?" the answer is already in the [Memory Tree](memory-tree.md).
 
 ## How it works
 

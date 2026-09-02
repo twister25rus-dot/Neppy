@@ -92,7 +92,7 @@ pub enum ExpectedErrorKind {
     ProviderUserState,
     /// A user-configured custom cloud provider (`custom_openai` → DeepSeek
     /// / OpenRouter / Moonshot / …) rejected the request because of the
-    /// user's **model / parameter configuration**: an OpenHuman abstract
+    /// user's **model / parameter configuration**: an Neppy abstract
     /// tier alias leaked to a provider that only speaks its native ids
     /// (#2079), an unknown / stale model pin (#2202), or a model-specific
     /// temperature constraint (#2076 — Moonshot Kimi K2). The provider
@@ -598,7 +598,7 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
         return Some(ExpectedErrorKind::BackendUserError);
     }
     // Check `is_session_expired_message` BEFORE `is_embedding_backend_auth_failure`:
-    // the OpenHuman-backend embedding 401 "Invalid token" envelope
+    // the Neppy-backend embedding 401 "Invalid token" envelope
     // (`Embedding API error (401 …): {"error":"Invalid token"}`) is a
     // recoverable session expiry (TAURI-RUST-4K5, #2786), not a generic
     // backend error. The broader `is_embedding_backend_auth_failure` matcher
@@ -640,7 +640,7 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
     }
     // Provider config-rejection (unknown model / abstract tier leaked to a
     // custom provider / model-specific temperature). Body-shape based and
-    // intrinsically scoped to third-party providers — the OpenHuman
+    // intrinsically scoped to third-party providers — the Neppy
     // backend never emits these phrases. See the predicate's polarity
     // contract. Drops OPENHUMAN-TAURI-WJ / -QW / -HB / -NH re-reports
     // (#2079 / #2076 / #2202).
@@ -826,7 +826,7 @@ fn is_config_load_timed_out_message(lower: &str) -> bool {
 
 /// Detect a config-file READ that failed because the operating system refused
 /// access to a file that **exists** — i.e. an unpreventable user-environment
-/// condition with zero local lever, not an OpenHuman defect.
+/// condition with zero local lever, not an Neppy defect.
 ///
 /// `Config::load_or_init` (`impl_load.rs`) takes its read branch only after
 /// `config_path.exists()` returns true, then `read_to_string` is retried 5× and
@@ -838,7 +838,7 @@ fn is_config_load_timed_out_message(lower: &str) -> bool {
 /// every poll → 36k events / 1 user) carries no Sentry-actionable signal.
 ///
 /// Polarity contract — demote **only** when BOTH hold:
-///   1. an OpenHuman config-read context anchor is present — either
+///   1. an Neppy config-read context anchor is present — either
 ///      `"failed to read config file"` (`load_or_init` retry path,
 ///      `impl_load.rs`, the DME surface) or `"reading config.toml from"`
 ///      (`load_from_config_path` snapshot-reload path) — AND
@@ -866,7 +866,7 @@ fn is_config_read_io_failure_message(lower: &str) -> bool {
         return false;
     }
     // The file is owned by a uid other than the one reading it. That is an
-    // OpenHuman defect, not user-environment state: *we* pick the runtime uid
+    // Neppy defect, not user-environment state: *we* pick the runtime uid
     // (Dockerfile) and *we* write the config at 0600 (`impl_load.rs`), and the
     // container entrypoint chowns only the workspace directory — so a
     // stale-uid `config.toml` inside a reused volume denies every config RPC
@@ -1013,38 +1013,38 @@ fn is_memory_store_breaker_open(lower: &str) -> bool {
 /// This is also the JSON-RPC dispatch-site classifier. Keep it stricter than
 /// a bare "401 + unauthorized" pair: OpenAI / Anthropic BYO-key failures,
 /// Composio scope failures, and channel-provider 401s are actionable scoped
-/// errors, not proof that the user's OpenHuman app session expired.
+/// errors, not proof that the user's Neppy app session expired.
 ///
-/// The canonical OpenHuman session-expired wire shapes:
+/// The canonical Neppy session-expired wire shapes:
 ///
-/// - `"OpenHuman API error (401 Unauthorized): {…\"Session expired. Please
+/// - `"Neppy API error (401 Unauthorized): {…\"Session expired. Please
 ///   log in again.\"…}"` — emitted by `providers::ops::api_error` from the
-///   OpenHuman backend and re-raised through `agent::run_single` /
+///   Neppy backend and re-raised through `agent::run_single` /
 ///   `web_chat::run_chat_task` (OPENHUMAN-TAURI-26). The
-///   `"session expired"` substring anchors the match to the OpenHuman
+///   `"session expired"` substring anchors the match to the Neppy
 ///   backend's session-renewal body, not the bare numeric status.
-/// - `"OpenHuman API error (401 Unauthorized): {…\"error\":\"Invalid token\"…}"`
+/// - `"Neppy API error (401 Unauthorized): {…\"error\":\"Invalid token\"…}"`
 ///   — same emit site, same wire shape as the `Session expired` body, but the
-///   OpenHuman backend swaps in `"Invalid token"` for the JWT-validity
+///   Neppy backend swaps in `"Invalid token"` for the JWT-validity
 ///   rejection branch (vs. the explicit session-renewal branch).
-///   OPENHUMAN-TAURI-4P0. The conjunctive anchor — `"OpenHuman API error
+///   OPENHUMAN-TAURI-4P0. The conjunctive anchor — `"Neppy API error
 ///   (401"` **and** the envelope-shaped `"\"error\":\"Invalid token\""` —
 ///   keeps the #2286 contract intact: bare `"Invalid token"`, OpenAI /
 ///   Anthropic BYO-key 401s, Discord upstream-bot-token rejections, and
 ///   provider scope errors still route to Sentry as actionable.
 /// - `"Embedding API error (401 Unauthorized): {…\"error\":\"Invalid token\"…}"`
-///   — TAURI-RUST-4K5 (~118 events, escalating on 0.56.0). Same OpenHuman
+///   — TAURI-RUST-4K5 (~118 events, escalating on 0.56.0). Same Neppy
 ///   backend session-expired envelope as 4P0, but the embedding client at
 ///   `src/openhuman/inference/embeddings/openai.rs:139` wraps it with the
-///   `"Embedding API error"` prefix instead of `"OpenHuman API error"`.
+///   `"Embedding API error"` prefix instead of `"Neppy API error"`.
 ///   Uses the same conjunctive-anchor pattern so BYO-key embedding 401s
 ///   from third-party providers (OpenAI / Voyage / Cohere) still escalate
 ///   — guarded by `does_not_classify_embedding_byo_key_401_as_session_expired`.
-/// - `"OpenHuman streaming API error (401 Unauthorized): {…\"error\":\"Invalid token\"…}"`
+/// - `"Neppy streaming API error (401 Unauthorized): {…\"error\":\"Invalid token\"…}"`
 ///   — TAURI-RUST-1EE (~110 events, ongoing on 0.56.0). Same envelope as
 ///   4P0, wrapped by the streaming-chat path at
 ///   `inference/provider/compatible.rs:949` with the
-///   `"OpenHuman streaming API error"` prefix. The `streaming` token means
+///   `"Neppy streaming API error"` prefix. The `streaming` token means
 ///   the 4P0 anchor doesn't match, so it needs its own prefix arm; BYO-key
 ///   streaming 401s still escalate — guarded by
 ///   `does_not_classify_streaming_byo_key_401_as_session_expired`.
@@ -1054,7 +1054,7 @@ fn is_memory_store_breaker_open(lower: &str) -> bool {
 /// - `"no backend session token; run auth_store_session first"` and
 ///   `"session JWT required"` — local pre-flight guards that fire when the
 ///   stored profile is empty (`#1465`-ish onboarding spam) or has been
-///   cleared by a previous 401 cycle. Both shapes are OpenHuman-specific.
+///   cleared by a previous 401 cycle. Both shapes are Neppy-specific.
 ///
 /// At the JSON-RPC dispatch boundary the same strict match controls
 /// `DomainEvent::SessionExpired` publication, so downstream/provider 401s stay
@@ -1065,21 +1065,21 @@ pub fn is_session_expired_message(msg: &str) -> bool {
         || lower.contains("no backend session token")
         || lower.contains("session jwt required")
         || msg.contains("SESSION_EXPIRED")
-        || (msg.contains("OpenHuman API error (401") && msg.contains("\"error\":\"Invalid token\""))
+        || (msg.contains("Neppy API error (401") && msg.contains("\"error\":\"Invalid token\""))
         || (msg.contains("Embedding API error (401") && msg.contains("\"error\":\"Invalid token\""))
-        // OPENHUMAN-TAURI-4P0 — OpenHuman backend's "Invalid token" 401
-        // envelope. Both anchors must be present: the OpenHuman-scoped
-        // `"OpenHuman API error (401"` prefix (so a third-party provider's
+        // OPENHUMAN-TAURI-4P0 — Neppy backend's "Invalid token" 401
+        // envelope. Both anchors must be present: the Neppy-scoped
+        // `"Neppy API error (401"` prefix (so a third-party provider's
         // `"OpenAI API error (401 Unauthorized): invalid_api_key"` cannot
         // match), AND the envelope-shaped `"\"error\":\"Invalid token\""`
         // (so bare prose mentions of "invalid token" — Discord OAuth
         // failures, generic upstream errors covered by #2286 — stay
         // actionable in Sentry).
-        || (msg.contains("OpenHuman API error (401")
+        || (msg.contains("Neppy API error (401")
             && msg.contains("\"error\":\"Invalid token\""))
-        // TAURI-RUST-4K5 — same OpenHuman backend "Invalid token" envelope
+        // TAURI-RUST-4K5 — same Neppy backend "Invalid token" envelope
         // wrapped by `src/openhuman/inference/embeddings/openai.rs:139` with the
-        // `"Embedding API error"` prefix instead of `"OpenHuman API error"`.
+        // `"Embedding API error"` prefix instead of `"Neppy API error"`.
         // Same conjunctive-anchor pattern as 4P0: the embedding-scoped
         // prefix gates the match so a third-party BYO-key embedding 401
         // (e.g. OpenAI/Voyage/Cohere rejecting the user's own API key)
@@ -1087,32 +1087,32 @@ pub fn is_session_expired_message(msg: &str) -> bool {
         // `does_not_classify_embedding_byo_key_401_as_session_expired`.
         || (msg.contains("Embedding API error (401")
             && msg.contains("\"error\":\"Invalid token\""))
-        // TAURI-RUST-1EE — same OpenHuman backend "Invalid token" envelope
+        // TAURI-RUST-1EE — same Neppy backend "Invalid token" envelope
         // wrapped by the streaming-chat path at
         // `inference/provider/compatible.rs:949` with the
-        // `"OpenHuman streaming API error"` prefix. The `streaming` token
-        // between `OpenHuman` and `API error` means the 4P0 anchor
-        // (`"OpenHuman API error (401"`) does not match it, so the
+        // `"Neppy streaming API error"` prefix. The `streaming` token
+        // between `Neppy` and `API error` means the 4P0 anchor
+        // (`"Neppy API error (401"`) does not match it, so the
         // streaming path needs its own prefix arm. Same conjunctive-anchor
         // pattern keeps third-party BYO-key streaming 401s
         // (`"OpenAI streaming API error (401): invalid_api_key"`)
         // escalating — guarded by
         // `does_not_classify_streaming_byo_key_401_as_session_expired`.
-        || (msg.contains("OpenHuman streaming API error (401")
+        || (msg.contains("Neppy streaming API error (401")
             && msg.contains("\"error\":\"Invalid token\""))
-        // TAURI-RUST-N — same OpenHuman backend "Invalid token" envelope
+        // TAURI-RUST-N — same Neppy backend "Invalid token" envelope
         // wrapped by the tinyagents `ProviderError::Display` format
         // (`TinyAgentsError::Provider(Box<ProviderError>)`). The crate-native
-        // path (`OpenHumanBackendModel`) delegates to tinyagents' `OpenAiModel`
+        // path (`NeppyBackendModel`) delegates to tinyagents' `OpenAiModel`
         // which formats errors as `"{provider} returned HTTP {status}: {body}"`,
-        // producing `"OpenHuman returned HTTP 401: ..."` — different from the
-        // `"OpenHuman API error (401"` prefix the classic `api_error` path emits.
-        // Same conjunctive-anchor pattern: scoped to `"OpenHuman returned HTTP
+        // producing `"Neppy returned HTTP 401: ..."` — different from the
+        // `"Neppy API error (401"` prefix the classic `api_error` path emits.
+        // Same conjunctive-anchor pattern: scoped to `"Neppy returned HTTP
         // {status}"` (so a third-party BYO-key 401 from a provider whose label
-        // contains "OpenHuman" cannot match) AND the envelope-shaped
+        // contains "Neppy" cannot match) AND the envelope-shaped
         // `"\"error\":\"Invalid token\""` (so bare prose mentions of "invalid
         // token" stay actionable).
-        || (msg.contains("OpenHuman returned HTTP 401")
+        || (msg.contains("Neppy returned HTTP 401")
             && msg.contains("\"error\":\"Invalid token\""))
 }
 
@@ -1529,7 +1529,7 @@ fn is_channel_supervisor_restart_message(lower: &str) -> bool {
 ///
 /// The canonical wire format from `providers::ops::api_error` is:
 /// `"<provider> API error (<status>): <sanitized>"` — e.g.
-/// `"OpenHuman API error (504 Gateway Timeout): error code: 504"`. Pin the
+/// `"Neppy API error (504 Gateway Timeout): error code: 504"`. Pin the
 /// match to that exact `"api error (<status>"` prefix so an unrelated message
 /// that merely mentions "504" (a log line, a doc URL) is not silenced.
 ///
@@ -1683,7 +1683,7 @@ fn is_provider_user_state_message(lower: &str) -> bool {
     // tokens-per-minute cap — `413 Payload Too Large … Request too large …
     // tokens per minute (TPM): Limit 8000, Requested 42084`. It is permanently
     // non-viable on the current tier (not a burst that retry/backoff clears)
-    // and OpenHuman cannot raise a third-party account's TPM tier, so it is
+    // and Neppy cannot raise a third-party account's TPM tier, so it is
     // user-config state, not a product bug. NOTE: a *managed-backend*
     // `PAYLOAD_TOO_LARGE` guard-leak is force-captured (returns `None`) earlier
     // in `expected_error_kind`, before this matcher runs, so this arm only ever
@@ -2190,7 +2190,7 @@ fn report_expected_message(kind: ExpectedErrorKind, message: &str, domain: &str,
         ExpectedErrorKind::ProviderConfigRejection => {
             // User-config state: a custom cloud provider rejected the
             // request because of the user's model / parameter setup — an
-            // OpenHuman abstract tier alias leaked to a provider that only
+            // Neppy abstract tier alias leaked to a provider that only
             // speaks its native ids (#2079), an unknown / stale model pin
             // (#2202), or a model-specific temperature constraint (#2076,
             // Moonshot Kimi K2). The provider HTTP layer already demoted
@@ -2225,7 +2225,7 @@ fn report_expected_message(kind: ExpectedErrorKind, message: &str, domain: &str,
         }
         ExpectedErrorKind::BudgetExhausted => {
             // User-state condition: the backend reports the user is out of
-            // budget / credits / balance (HTTP 400 from the OpenHuman backend,
+            // budget / credits / balance (HTTP 400 from the Neppy backend,
             // surfaced by `providers::is_budget_exhausted_message`). The UI
             // already surfaces this as an actionable toast — Sentry would
             // turn each affected turn into noise (OPENHUMAN-TAURI-3M / -12 /
@@ -2883,7 +2883,7 @@ pub fn is_max_iterations_event(event: &sentry::protocol::Event<'_>) -> bool {
 }
 
 /// Tag + body classifier for the `before_send` chain — drops Sentry events
-/// emitted at the OpenHuman backend / rpc layers for "401 Session
+/// emitted at the Neppy backend / rpc layers for "401 Session
 /// expired" or the pre-flight "no session token stored" guards.
 ///
 /// Pairs with [`is_session_expired_message`] (which classifies the
@@ -3292,7 +3292,7 @@ pub fn is_insufficient_credits_message(text: &str) -> bool {
 
 /// Defense-in-depth `before_send` filter for **insufficient-credits 402**
 /// provider events (TAURI-RUST-C62): the user's own BYO provider account
-/// (e.g. OpenRouter) is out of balance — a billing state OpenHuman has no
+/// (e.g. OpenRouter) is out of balance — a billing state Neppy has no
 /// lever over once the request already caps `max_tokens`.
 ///
 /// The primary emit-site demotion lives in the `Provider::chat()` native_chat
@@ -3339,7 +3339,7 @@ pub fn is_quota_exhausted_message(text: &str) -> bool {
 
 /// Defense-in-depth `before_send` filter for provider **monthly-quota
 /// exhausted** events (TAURI-RUST-C9A): the user's third-party plan has spent
-/// its allotment for the period — a billing/plan state OpenHuman has no lever
+/// its allotment for the period — a billing/plan state Neppy has no lever
 /// over.
 ///
 /// The primary emit-site demotion lives in the `Provider::chat()` native_chat
@@ -4136,7 +4136,7 @@ mod tests {
             "OpenAI API error (401 Unauthorized): invalid_api_key"
         ));
         assert!(!is_api_key_unset_message(
-            "OpenHuman API error (500 Internal Server Error): {\"error\":\"Internal server error\"}"
+            "Neppy API error (500 Internal Server Error): {\"error\":\"Internal server error\"}"
         ));
     }
 
@@ -4325,7 +4325,7 @@ mod tests {
     #[test]
     fn classifies_embedding_backend_auth_failure() {
         // TAURI-RUST-T (~4k events) — companion of TAURI-RUST-4K5: the
-        // OpenHuman backend rejected the embeddings worker's bearer
+        // Neppy backend rejected the embeddings worker's bearer
         // token. Both the bare-status and parenthesised wire shapes
         // must classify as SessionExpired so the FE re-login prompt
         // fires (matches the contract introduced by #2786 and
@@ -4598,7 +4598,7 @@ mod tests {
         // cap, so groq returns 413 and no retry can ever fit it. When re-raised
         // by `agent.run_single` under `domain=agent`, `report_error_or_expected`
         // must demote it to expected user-config state (the user's account tier
-        // is not a lever OpenHuman controls) instead of paging Sentry.
+        // is not a lever Neppy controls) instead of paging Sentry.
         assert_eq!(
             expected_error_kind(
                 "groq API error (413 Payload Too Large): {\"error\":{\"message\":\"Request too large \
@@ -4618,7 +4618,7 @@ mod tests {
         // ProviderUserState matcher runs, so the new TPM arm cannot demote it.
         assert_eq!(
             expected_error_kind(
-                "OpenHuman API error (413 Payload Too Large): \
+                "Neppy API error (413 Payload Too Large): \
                  {\"error\":{\"errorCode\":\"PAYLOAD_TOO_LARGE\",\"message\":\"request too big\"}}"
             ),
             None,
@@ -4657,7 +4657,7 @@ mod tests {
         // must classify so no Sentry event fires.
         assert_eq!(
             expected_error_kind(
-                "root_path is not a directory: /Users/zadam/Documents/SndBrainOpenHuman"
+                "root_path is not a directory: /Users/zadam/Documents/SndBrainNeppy"
             ),
             Some(ExpectedErrorKind::FilesystemUserPathInvalid)
         );
@@ -4973,7 +4973,7 @@ mod tests {
             Some(ExpectedErrorKind::ConfigLoadTimedOut),
         );
         assert_ne!(
-            expected_error_kind("OpenHuman API error (504 Gateway Timeout): error code: 504"),
+            expected_error_kind("Neppy API error (504 Gateway Timeout): error code: 504"),
             Some(ExpectedErrorKind::ConfigLoadTimedOut),
         );
         // Bare "timed out" without the config-load phrase must not match.
@@ -5016,7 +5016,7 @@ mod tests {
     }
 
     /// A denial caused by the config being owned by a *different uid than the
-    /// process reading it* is an OpenHuman defect, not user-environment state:
+    /// process reading it* is an Neppy defect, not user-environment state:
     /// we pick the container runtime uid and we write the file at 0600, and the
     /// entrypoint historically chowned only the workspace directory — so a
     /// reused volume denied every config RPC (including the sign-in
@@ -5388,18 +5388,18 @@ mod tests {
         // OPENHUMAN-TAURI-5Z: the canonical shape emitted by
         // `providers::ops::api_error` and re-raised through `agent.run_single`.
         assert_eq!(
-            expected_error_kind("OpenHuman API error (504 Gateway Timeout): error code: 504"),
+            expected_error_kind("Neppy API error (504 Gateway Timeout): error code: 504"),
             Some(ExpectedErrorKind::TransientUpstreamHttp)
         );
 
         // Every transient code must classify, whether the status renders as
         // bare digits or "<digits> <reason>".
         for raw in [
-            "OpenHuman API error (408): request timeout",
+            "Neppy API error (408): request timeout",
             "OpenAI API error (429 Too Many Requests): rate limit",
             "Anthropic API error (502 Bad Gateway): upstream unhealthy",
             "custom_openai API error (502 Bad Gateway): upstream gateway blip",
-            "OpenHuman API error (503): service unavailable",
+            "Neppy API error (503): service unavailable",
             "Provider API error (504): upstream timed out",
         ] {
             assert_eq!(
@@ -5413,7 +5413,7 @@ mod tests {
         // still classify — `expected_error_kind` is substring-based.
         assert_eq!(
             expected_error_kind(
-                "agent turn failed: OpenHuman API error (504 Gateway Timeout): \
+                "agent turn failed: Neppy API error (504 Gateway Timeout): \
                  error code: 504"
             ),
             Some(ExpectedErrorKind::TransientUpstreamHttp)
@@ -5443,7 +5443,7 @@ mod tests {
         // trailing space so adjacent digit runs (`api error 5042…`) and
         // non-transient codes (400/401/403/404) don't get silenced.
         assert_eq!(
-            expected_error_kind("OpenHuman API error 400 Bad Request: malformed body"),
+            expected_error_kind("Neppy API error 400 Bad Request: malformed body"),
             None
         );
         assert_eq!(
@@ -5558,20 +5558,20 @@ mod tests {
         // via raw `report_error` (which skips classification). Switching
         // that site to `report_error_or_expected` routes the chain
         // through this classifier — but only works if the canonical
-        // `"OpenHuman API error (NNN ...)"` substring still anchors the
+        // `"Neppy API error (NNN ...)"` substring still anchors the
         // match through the channels-layer wrapping.
         //
         // The wrapping shape at the dispatch site is the agent error
         // chain rendered via `format!("{e:#}")`. For a backend 502 from
         // `providers::ops::api_error`, that resolves to:
-        //   "OpenHuman API error (502 Bad Gateway): error code: 502"
+        //   "Neppy API error (502 Bad Gateway): error code: 502"
         // possibly prepended with a runner / iteration prefix. Both
         // shapes must classify as transient so the dispatch re-emit
         // gets demoted.
         for raw in [
-            "OpenHuman API error (502 Bad Gateway): error code: 502",
-            "agent.provider_chat failed: OpenHuman API error (503 Service Unavailable): retry budget exhausted",
-            "all providers exhausted: OpenHuman API error (504 Gateway Timeout): error code: 504",
+            "Neppy API error (502 Bad Gateway): error code: 502",
+            "agent.provider_chat failed: Neppy API error (503 Service Unavailable): retry budget exhausted",
+            "all providers exhausted: Neppy API error (504 Gateway Timeout): error code: 504",
         ] {
             assert_eq!(
                 expected_error_kind(raw),
@@ -6018,7 +6018,7 @@ mod tests {
 
     #[test]
     fn classifies_provider_config_rejection() {
-        // #2079 — an OpenHuman abstract tier alias leaked to a custom
+        // #2079 — an Neppy abstract tier alias leaked to a custom
         // provider; raised again by `agent.run_single` /
         // `web_channel.run_chat_task` so it escapes the provider-layer
         // demotion and reaches `report_error_or_expected` here.
@@ -6094,7 +6094,7 @@ mod tests {
     fn does_not_classify_unrelated_provider_failures_as_config_rejection() {
         // Inverted polarity / scope guard: a 5xx or a generic 4xx with no
         // config-rejection body must still reach Sentry as actionable.
-        // (The OpenHuman backend never emits these phrases, so the
+        // (The Neppy backend never emits these phrases, so the
         // message-level predicate is intrinsically custom-provider scoped;
         // the HTTP-layer twin enforces the non-backend guard explicitly.)
         assert_eq!(
@@ -6562,12 +6562,12 @@ mod tests {
         // and `web_channel.run_chat_task` re-emit via `report_error_or_expected`
         // when the user's JWT expires mid-conversation. The classifier
         // anchors on the literal `"session expired"` substring from the
-        // OpenHuman backend's 401 body — NOT on the bare `(401 Unauthorized)`
+        // Neppy backend's 401 body — NOT on the bare `(401 Unauthorized)`
         // status, which would also silence BYO-key OpenAI/Anthropic 401s
         // that are actionable.
         assert_eq!(
             expected_error_kind(
-                r#"OpenHuman API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
+                r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
             ),
             Some(ExpectedErrorKind::SessionExpired)
         );
@@ -6577,7 +6577,7 @@ mod tests {
         // defeat it.
         assert_eq!(
             expected_error_kind(
-                r#"run_chat_task failed client_id=abc thread_id=t1 request_id=r1 error=OpenHuman API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
+                r#"run_chat_task failed client_id=abc thread_id=t1 request_id=r1 error=Neppy API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
             ),
             Some(ExpectedErrorKind::SessionExpired)
         );
@@ -6593,7 +6593,7 @@ mod tests {
             Some(ExpectedErrorKind::SessionExpired)
         );
 
-        // Local pre-flight guards — OpenHuman-specific phrasing, safe to
+        // Local pre-flight guards — Neppy-specific phrasing, safe to
         // match regardless of caller wrapping.
         for raw in [
             "no backend session token; run auth_store_session first",
@@ -6645,7 +6645,7 @@ mod tests {
         // src/openhuman/inference/provider/factory.rs:266
         // (verify_session_active — empty auth-profile JWT path)
         let no_backend_session_variant =
-            "SESSION_EXPIRED: no backend session — sign in to use OpenHuman";
+            "SESSION_EXPIRED: no backend session — sign in to use Neppy";
 
         for raw in [custom_providers_variant, no_backend_session_variant] {
             assert_eq!(
@@ -6656,14 +6656,14 @@ mod tests {
         }
     }
 
-    /// OPENHUMAN-TAURI-4P0: the OpenHuman backend rejects an expired/
+    /// OPENHUMAN-TAURI-4P0: the Neppy backend rejects an expired/
     /// revoked JWT with the envelope `{"success":false,"error":"Invalid
     /// token"}` (vs. the explicit `"Session expired. Please log in again."`
     /// body covered by `classifies_session_expired_messages`). Same emit
     /// site, same wrapping by `web_channel.run_chat_task`, but the body
     /// substring is different.
     ///
-    /// The matcher uses a conjunctive `"OpenHuman API error (401"` +
+    /// The matcher uses a conjunctive `"Neppy API error (401"` +
     /// envelope-shaped `"\"error\":\"Invalid token\""` anchor pair so the
     /// #2286 contract for bare `"Invalid token"` / BYO-key 401s is
     /// preserved — `does_not_classify_byo_key_provider_401_as_session_expired`
@@ -6671,7 +6671,7 @@ mod tests {
     #[test]
     fn classifies_openhuman_invalid_token_401_as_session_expired() {
         // Verbatim wire shape from the OPENHUMAN-TAURI-4P0 event payload.
-        let msg = r#"run_chat_task failed client_id=lssXhQidBfzGXG9k thread_id=thread-743193ba-f0c1-4008-b665-64d3030d1453 request_id=00696b71-fa05-4574-bcdb-5744a5dac6ea error=OpenHuman API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
+        let msg = r#"run_chat_task failed client_id=lssXhQidBfzGXG9k thread_id=thread-743193ba-f0c1-4008-b665-64d3030d1453 request_id=00696b71-fa05-4574-bcdb-5744a5dac6ea error=Neppy API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
         assert_eq!(
             expected_error_kind(msg),
             Some(ExpectedErrorKind::SessionExpired),
@@ -6683,18 +6683,18 @@ mod tests {
         // catch it regardless of caller wrapping.
         assert_eq!(
             expected_error_kind(
-                r#"OpenHuman API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#
+                r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#
             ),
             Some(ExpectedErrorKind::SessionExpired),
-            "unwrapped OpenHuman invalid-token envelope must classify as SessionExpired"
+            "unwrapped Neppy invalid-token envelope must classify as SessionExpired"
         );
     }
 
     /// TAURI-RUST-4K5 (118 events, escalating on 0.56.0): the embedding
     /// client at `src/openhuman/inference/embeddings/openai.rs:139` wraps the same
-    /// OpenHuman backend `{"success":false,"error":"Invalid token"}` 401
+    /// Neppy backend `{"success":false,"error":"Invalid token"}` 401
     /// envelope as 4P0, but with the `"Embedding API error"` prefix
-    /// instead of `"OpenHuman API error"` (different emit-site format
+    /// instead of `"Neppy API error"` (different emit-site format
     /// string, same underlying session-expired cause — see breadcrumb
     /// `[scheduler_gate] signed_out false -> true` immediately preceding
     /// the 401 in the event payload).
@@ -6731,21 +6731,21 @@ mod tests {
     }
 
     /// TAURI-RUST-1EE (Sentry issue 1807, 110 events, 109 on
-    /// openhuman@0.56.0): the streaming-chat path wraps the same OpenHuman
+    /// openhuman@0.56.0): the streaming-chat path wraps the same Neppy
     /// backend `{"success":false,"error":"Invalid token"}` 401 envelope
-    /// with the `"OpenHuman streaming API error"` prefix (emitted at
+    /// with the `"Neppy streaming API error"` prefix (emitted at
     /// `inference/provider/compatible.rs:949`) — distinct from the
-    /// non-streaming `"OpenHuman API error"` prefix (4P0) and the
+    /// non-streaming `"Neppy API error"` prefix (4P0) and the
     /// `"Embedding API error"` prefix (4K5). The `streaming` token between
-    /// `OpenHuman` and `API error` means the 4P0 anchor
-    /// (`"OpenHuman API error (401"`) does not match it, so it needs its
+    /// `Neppy` and `API error` means the 4P0 anchor
+    /// (`"Neppy API error (401"`) does not match it, so it needs its
     /// own prefix arm.
     #[test]
     fn classifies_openhuman_streaming_invalid_token_401_as_session_expired() {
         // Verbatim wire shape from the TAURI-RUST-1EE event payload
         // (domain=llm_provider operation=streaming_chat status=401
-        // provider=OpenHuman model=reasoning-v1).
-        let msg = r#"OpenHuman streaming API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
+        // provider=Neppy model=reasoning-v1).
+        let msg = r#"Neppy streaming API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
         assert_eq!(
             expected_error_kind(msg),
             Some(ExpectedErrorKind::SessionExpired),
@@ -6754,7 +6754,7 @@ mod tests {
 
         // Caller-wrapped (agent.run_single / web_channel.run_chat_task
         // re-emit prepends context) must still classify.
-        let wrapped = r#"run_chat_task failed error=OpenHuman streaming API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
+        let wrapped = r#"run_chat_task failed error=Neppy streaming API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
         assert_eq!(
             expected_error_kind(wrapped),
             Some(ExpectedErrorKind::SessionExpired),
@@ -6765,8 +6765,8 @@ mod tests {
     /// Polarity guard for the 1EE streaming arm — a third-party BYO-key
     /// provider's streaming 401 (`"OpenAI streaming API error (401 …):
     /// invalid_api_key"`) must STILL reach Sentry as actionable
-    /// misconfiguration. The `"OpenHuman streaming API error (401"` prefix
-    /// gate keeps the match OpenHuman-scoped.
+    /// misconfiguration. The `"Neppy streaming API error (401"` prefix
+    /// gate keeps the match Neppy-scoped.
     #[test]
     fn does_not_classify_streaming_byo_key_401_as_session_expired() {
         for raw in [
@@ -6794,7 +6794,7 @@ mod tests {
         for raw in [
             "Embedding API error (401 Unauthorized): invalid_api_key",
             r#"Embedding API error (401 Unauthorized): {"error":{"code":"invalid_api_key","message":"Incorrect API key provided"}}"#,
-            // Wire shape without the OpenHuman envelope — bare provider
+            // Wire shape without the Neppy envelope — bare provider
             // rejection prose. Must reach Sentry as actionable BYO-key
             // misconfiguration.
             "Embedding API error (401): authentication_error",
@@ -6813,7 +6813,7 @@ mod tests {
         // actionable misconfiguration (wrong API key) that the user needs
         // to fix in settings. It must reach Sentry as an error and must
         // NOT be classified as session-expired at the agent layer — the
-        // strict classifier requires the OpenHuman backend's
+        // strict classifier requires the Neppy backend's
         // "session expired" body to anchor the match. The JSON-RPC
         // dispatch-site classifier uses the same strict rule so these
         // scoped provider failures never clear the app session either.
@@ -6822,7 +6822,7 @@ mod tests {
             "Anthropic API error (401 Unauthorized): authentication_error",
             "OpenAI API error (401): unauthorized",
             r#"OpenAI API error (401 Unauthorized): {"error":{"code":"invalid_api_key","message":"Incorrect API key provided"}}"#,
-            // Generic "invalid token" without OpenHuman session phrasing —
+            // Generic "invalid token" without Neppy session phrasing —
             // could mean a third-party provider rejected its own token.
             "Invalid token",
             "got an invalid token here",
@@ -7450,7 +7450,7 @@ mod tests {
             "rpc.invoke_method failed: GET /teams failed (502 Bad Gateway)",
             "GET /teams/me/usage failed (503 Service Unavailable)",
             "downstream returned (504 Gateway Timeout): retry budget exhausted",
-            "OpenHuman API error (520 <unknown status code>): cf",
+            "Neppy API error (520 <unknown status code>): cf",
             "POST /channels/telegram/typing failed (429 Too Many Requests)",
             "auth connect failed: 503 Service Unavailable",
         ] {
@@ -7498,7 +7498,7 @@ mod tests {
     fn budget_filter_drops_budget_message_on_tagged_400() {
         let event = event_with_tags_and_message(
             &[("failure", "non_2xx"), ("status", "400")],
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Insufficient budget"}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Insufficient budget"}"#,
         );
 
         assert!(is_budget_event(&event));
@@ -8267,7 +8267,7 @@ mod tests {
 
     fn managed_body(status: &str, code: &str) -> String {
         format!(
-            "OpenHuman API error ({status}): {{\"error\":{{\"errorCode\":\"{code}\",\"message\":\"x\"}}}}"
+            "Neppy API error ({status}): {{\"error\":{{\"errorCode\":\"{code}\",\"message\":\"x\"}}}}"
         )
     }
 
@@ -8292,7 +8292,7 @@ mod tests {
         // Client-guard-leak codes page (None = capture), even with realistic
         // explanatory text that a later substring matcher would otherwise
         // re-demote into a suppressed bucket.
-        let payload = "OpenHuman API error (413 Payload Too Large): \
+        let payload = "Neppy API error (413 Payload Too Large): \
              {\"error\":{\"errorCode\":\"PAYLOAD_TOO_LARGE\",\"message\":\"request entity too large\"}}";
         assert_eq!(
             expected_error_kind(payload),
@@ -8303,7 +8303,7 @@ mod tests {
         // This body's message matches `is_context_window_exceeded_message`, so
         // without the early guard-leak bypass it would re-demote to the
         // suppressed `ContextWindowExceeded` bucket (CodeRabbit).
-        let context = "OpenHuman API error (400 Bad Request): \
+        let context = "Neppy API error (400 Bad Request): \
              {\"error\":{\"errorCode\":\"CONTEXT_LENGTH_EXCEEDED\",\"message\":\"This model's maximum context length is 128000 tokens, however you requested more\"}}";
         assert_eq!(
             expected_error_kind(context),
@@ -8326,7 +8326,7 @@ mod tests {
         // F8: the one errorCode case that still pages — the backend flagged a
         // client-built payload as unparseable. `expected_error_kind` must NOT
         // classify it as expected, so capture proceeds.
-        let body = "OpenHuman API error (400 Bad Request): \
+        let body = "Neppy API error (400 Bad Request): \
              {\"error\":{\"errorCode\":\"BAD_REQUEST\",\"malformed\":true}}";
         assert_eq!(expected_error_kind(body), None);
     }
@@ -8383,9 +8383,9 @@ mod tests {
         // should have caught the limit before sending) — including a realistic
         // CONTEXT_LENGTH_EXCEEDED body whose wording matches the context-window
         // substring matcher (the filter keys on the errorCode, not the text).
-        let payload = "OpenHuman API error (413 Payload Too Large): \
+        let payload = "Neppy API error (413 Payload Too Large): \
              {\"error\":{\"errorCode\":\"PAYLOAD_TOO_LARGE\",\"message\":\"request entity too large\"}}";
-        let context = "OpenHuman API error (400 Bad Request): \
+        let context = "Neppy API error (400 Bad Request): \
              {\"error\":{\"errorCode\":\"CONTEXT_LENGTH_EXCEEDED\",\"message\":\"This model's maximum context length is 128000 tokens\"}}";
         for body in [payload, context] {
             let event = event_with_message(body);
@@ -8400,7 +8400,7 @@ mod tests {
     #[test]
     fn before_send_filter_keeps_malformed_bad_request_event() {
         let event = event_with_message(
-            "OpenHuman API error (400 Bad Request): \
+            "Neppy API error (400 Bad Request): \
              {\"error\":{\"errorCode\":\"BAD_REQUEST\",\"malformed\":true}}",
         );
         assert!(

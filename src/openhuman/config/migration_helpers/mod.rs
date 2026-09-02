@@ -1,4 +1,4 @@
-//! Data migration helpers for OpenHuman.
+//! Data migration helpers for Neppy.
 
 mod core;
 pub mod ops;

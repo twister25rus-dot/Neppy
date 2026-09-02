@@ -91,7 +91,7 @@ describe.skip('Local model runtime flow', () => {
     const guidance = await waitForAnyText(
       [
         'Ollama runtime unavailable',
-        'Manage the Ollama process and model pulls outside OpenHuman.',
+        'Manage the Ollama process and model pulls outside Neppy.',
         'Ollama docs',
       ],
       25_000

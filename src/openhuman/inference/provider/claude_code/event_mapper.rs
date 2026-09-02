@@ -1,4 +1,4 @@
-//! Translate `ClaudeCodeEvent`s into OpenHuman `ProviderDelta`s plus a
+//! Translate `ClaudeCodeEvent`s into Neppy `ProviderDelta`s plus a
 //! final aggregated `ChatResponse`.
 //!
 //! The CLI emits content as anthropic-style content blocks. We map:
@@ -100,7 +100,7 @@ impl EventMapper {
             ClaudeCodeEvent::StreamEvent { event } => self.handle_assistant_block(&event),
             ClaudeCodeEvent::User { message } => {
                 // tool_result blocks from the CLI's own tool runs aren't
-                // surfaced to OpenHuman's harness (the harness owns tools
+                // surfaced to Neppy's harness (the harness owns tools
                 // via MCP, not via CC internals). Track for completeness.
                 let _ = message;
                 Vec::new()

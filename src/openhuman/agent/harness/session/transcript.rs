@@ -290,7 +290,7 @@ pub struct TranscriptMeta {
     /// Cumulative amount charged in USD.
     pub charged_amount_usd: f64,
     /// Backend-side LLM thread identifier (the `thread_id` forwarded on
-    /// `/openai/v1/chat/completions` so the OpenHuman backend can group
+    /// `/openai/v1/chat/completions` so the Neppy backend can group
     /// `InferenceLog` entries and align KV-cache keys with the same logical
     /// chat thread the user sees in the UI). `None` for runs that don't
     /// originate from a thread-scoped channel (e.g. CLI-only sessions).

@@ -6,7 +6,7 @@ import { bootAuthenticatedPage, callCoreRpc } from '../helpers/core-rpc';
 
 const TEST_RELATIVE_PATH = 'e2e-967-filesystem-canary.txt';
 const TEST_CONTENT =
-  'OpenHuman filesystem tool canary fact - issue #967 - bytes asserted both via RPC and disk';
+  'Neppy filesystem tool canary fact - issue #967 - bytes asserted both via RPC and disk';
 const TRAVERSAL_PATH = '../escape-967.txt';
 const ABSOLUTE_PATH = '/tmp/openhuman-967-absolute-escape.txt';
 

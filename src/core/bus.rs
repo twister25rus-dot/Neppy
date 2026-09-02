@@ -41,7 +41,7 @@ use tinybus::version::{InterfaceVersion, PeerManifest, Version};
 
 use crate::core::events::DomainEvent;
 
-/// The object path OpenHuman's events are published beneath. Each event's
+/// The object path Neppy's events are published beneath. Each event's
 /// `domain()` is appended, so a peer can subscribe to one domain's subtree.
 pub const EVENTS_ROOT: &str = "/ai/tinyhumans/openhuman/events";
 
@@ -71,7 +71,7 @@ pub fn config() -> EventBusConfig {
 
 /// What this process tells the rest of the bus about itself.
 ///
-/// Declared as both provided and consumed: OpenHuman publishes the catalog and
+/// Declared as both provided and consumed: Neppy publishes the catalog and
 /// subscribes to it, so an integration that does either needs to check
 /// compatibility in both directions.
 pub fn manifest() -> PeerManifest {

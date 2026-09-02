@@ -208,7 +208,7 @@ const RESOURCE_CATALOG: &[PromptResource] = &[
     PromptResource {
         uri: "neppy://prompts/agents/settings_agent",
         name: "settings_agent",
-        description: "Specialist worker for inspecting and updating OpenHuman settings.",
+        description: "Specialist worker for inspecting and updating Neppy settings.",
         content: include_str!("../../agent/registry/agents/settings_agent/prompt.md"),
     },
     PromptResource {

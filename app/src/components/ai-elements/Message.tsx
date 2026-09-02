@@ -10,7 +10,7 @@
  *   spellings are accepted and normalised to `data-from="assistant"` — callers
  *   pass `msg.sender` straight through without a translation step.
  * - `@/lib/utils` `cn` → `../../lib/cn`; `@/registry/default/ui/button` →
- *   OpenHuman's `Button` from `../ui`.
+ *   Neppy's `Button` from `../ui`.
  * - Upstream distinguishes the two sides with the marker classes `is-user` /
  *   `is-assistant` and then styles descendants through
  *   `group-[.is-user]:…` selectors. That reads as dead weight in a codebase

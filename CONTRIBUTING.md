@@ -1,6 +1,6 @@
-# Contributing to OpenHuman
+# Contributing to Neppy
 
-Thank you for your interest in contributing to OpenHuman. This guide is the fast path for getting a fresh checkout running locally, validating changes, and opening a pull request without having to piece together setup notes from multiple files.
+Thank you for your interest in contributing to Neppy. This guide is the fast path for getting a fresh checkout running locally, validating changes, and opening a pull request without having to piece together setup notes from multiple files.
 
 > **New to open source or coding?** Start with [`CONTRIBUTING-BEGINNERS.md`](CONTRIBUTING-BEGINNERS.md) — it walks you through every step from installing tools to opening your first PR.
 
@@ -120,10 +120,10 @@ clang -v
 
 - **Web-only development** needs Node, pnpm, and the Rust toolchain present in the repo. You can usually ignore desktop-only system packages.
 - **Desktop development** needs the vendored Tauri/CEF setup. Use `pnpm --filter openhuman-app dev:app` on macOS and `pnpm dev:app:win` on native Windows; both entrypoints configure the platform-specific CEF environment.
-- **Linux desktop builds** require extra system packages beyond Node/Rust. Follow the distro-specific Tauri dependency list before running desktop commands, then use the OpenHuman scripts below. For deeper platform troubleshooting, see [`gitbooks/developing/getting-set-up.md`](gitbooks/developing/getting-set-up.md).
-- **Windows 10 WSL + classic X11 forwarding** is unsupported for the desktop app. The Tauri/CEF stack can hang, render blank windows, or crash before useful app logs are available. Use native Windows development, or Windows 11 WSLg if you need a Linux GUI workflow. OpenHuman logs a startup warning when it detects WSL with `DISPLAY` set but no `WAYLAND_DISPLAY`/WSLg markers.
+- **Linux desktop builds** require extra system packages beyond Node/Rust. Follow the distro-specific Tauri dependency list before running desktop commands, then use the Neppy scripts below. For deeper platform troubleshooting, see [`gitbooks/developing/getting-set-up.md`](gitbooks/developing/getting-set-up.md).
+- **Windows 10 WSL + classic X11 forwarding** is unsupported for the desktop app. The Tauri/CEF stack can hang, render blank windows, or crash before useful app logs are available. Use native Windows development, or Windows 11 WSLg if you need a Linux GUI workflow. Neppy logs a startup warning when it detects WSL with `DISPLAY` set but no `WAYLAND_DISPLAY`/WSLg markers.
 - **Windows desktop builds** additionally require Visual Studio C++ Build Tools (MSVC v143), LLVM/Clang, CMake, and Ninja. See [Windows-specific setup](#windows-specific-setup) for the full list and install order.
-- **macOS desktop builds** require a one-time codesigning cert. After cloning, run `bash scripts/setup-dev-codesign.sh` once to create the local "OpenHuman Dev Signer" self-signed certificate that Tauri uses when bundling dev builds. Without it, `pnpm --filter openhuman-app dev:app` fails at the bundle/sign step with `OpenHuman Dev Signer: no identity found`.
+- **macOS desktop builds** require a one-time codesigning cert. After cloning, run `bash scripts/setup-dev-codesign.sh` once to create the local "Neppy Dev Signer" self-signed certificate that Tauri uses when bundling dev builds. Without it, `pnpm --filter openhuman-app dev:app` fails at the bundle/sign step with `Neppy Dev Signer: no identity found`.
 - **Skills development** happens in the separate [`tinyhumansai/openhuman-skills`](https://github.com/tinyhumansai/openhuman-skills) repository. This repo consumes built skill bundles from GitHub or a local override path; it does not vendor the skills source as a submodule.
 
 Example macOS bootstrap with Homebrew:
@@ -157,7 +157,7 @@ Those vendored trees are part of the current desktop toolchain. If they are miss
 
 ### 3. Configure for development
 
-OpenHuman uses two environment templates:
+Neppy uses two environment templates:
 
 - Root [`.env.example`](.env.example): Rust core, Tauri shell, shared runtime settings.
 - [`app/.env.example`](app/.env.example): frontend `VITE_*` variables for the web app.
@@ -355,4 +355,4 @@ If you are contributing through a coding agent or remote environment, include th
 - Keep logs grep-friendly and avoid logging secrets, tokens, or full PII.
 - Follow ESLint, Prettier, and Rust formatting output as authoritative.
 
-Thank you for contributing to OpenHuman.
+Thank you for contributing to Neppy.

@@ -48,7 +48,7 @@ export async function previewWorkspaceText(path: string): Promise<WorkspaceTextP
 
 /**
  * Resolve a workspace-relative path to its canonical absolute path on disk,
- * after the Rust side validates it stays inside the active OpenHuman
+ * after the Rust side validates it stays inside the active Neppy
  * workspace. Useful for UI flows that need to compose an absolute path into a
  * platform-specific URL scheme (e.g. `obsidian://open?path=<abs>`) without
  * re-implementing path normalization in the renderer.

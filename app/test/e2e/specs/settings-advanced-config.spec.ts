@@ -2,7 +2,7 @@
 import { browser, expect } from '@wdio/globals';
 
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import {
   clickLabelContaining,
   clickText,
@@ -58,7 +58,7 @@ describe('Settings - Advanced Config', function () {
 
   it('persists composio trigger triage settings', async function () {
     this.timeout(60_000);
-    const before = await callOpenhumanRpc('openhuman.config_get_composio_trigger_settings', {});
+    const before = await callNeppyRpc('openhuman.config_get_composio_trigger_settings', {});
     expect(before.ok).toBe(true);
 
     await navigateViaHash('/settings/composio-triggers');
@@ -102,7 +102,7 @@ describe('Settings - Advanced Config', function () {
 
     await browser.waitUntil(
       async () => {
-        const after = await callOpenhumanRpc('openhuman.config_get_composio_trigger_settings', {});
+        const after = await callNeppyRpc('openhuman.config_get_composio_trigger_settings', {});
         const result = after.result?.result ?? {};
         return (
           after.ok &&
@@ -117,7 +117,7 @@ describe('Settings - Advanced Config', function () {
 
   it('persists autonomy max_actions_per_hour through core RPC', async function () {
     this.timeout(60_000);
-    const before = await callOpenhumanRpc('openhuman.config_get_autonomy_settings', {});
+    const before = await callNeppyRpc('openhuman.config_get_autonomy_settings', {});
     expect(before.ok).toBe(true);
     const current = before.result?.result?.max_actions_per_hour ?? 20;
     // Pick a value different from the current one so the save actually mutates state.
@@ -152,7 +152,7 @@ describe('Settings - Advanced Config', function () {
 
     await browser.waitUntil(
       async () => {
-        const after = await callOpenhumanRpc('openhuman.config_get_autonomy_settings', {});
+        const after = await callNeppyRpc('openhuman.config_get_autonomy_settings', {});
         return after.ok && after.result?.result?.max_actions_per_hour === target;
       },
       { timeout: 15_000, interval: 500, timeoutMsg: 'autonomy setting did not persist' }
@@ -186,7 +186,7 @@ describe('Settings - Advanced Config', function () {
 
     await browser.waitUntil(
       async () => {
-        const mode = await callOpenhumanRpc('openhuman.composio_get_mode', {});
+        const mode = await callNeppyRpc('openhuman.composio_get_mode', {});
         return (
           mode.ok &&
           mode.result?.result?.mode === 'direct' &&
@@ -196,9 +196,9 @@ describe('Settings - Advanced Config', function () {
       { timeout: 15_000, interval: 500, timeoutMsg: 'composio direct mode did not persist' }
     );
 
-    const cleared = await callOpenhumanRpc('openhuman.composio_clear_api_key', {});
+    const cleared = await callNeppyRpc('openhuman.composio_clear_api_key', {});
     expect(cleared.ok).toBe(true);
-    const backend = await callOpenhumanRpc('openhuman.composio_get_mode', {});
+    const backend = await callNeppyRpc('openhuman.composio_get_mode', {});
     expect(backend.ok).toBe(true);
     expect(backend.result?.result?.mode).toBe('backend');
     expect(backend.result?.result?.api_key_set).toBe(false);
@@ -226,7 +226,7 @@ describe('Settings - Advanced Config', function () {
     expect(
       (await textExists('Reasoning')) ||
         (await textExists('Cloud providers')) ||
-        (await textExists('OpenHuman'))
+        (await textExists('Neppy'))
     ).toBe(true);
   });
 });

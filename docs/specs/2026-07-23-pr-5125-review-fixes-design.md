@@ -18,7 +18,7 @@ Work in small review clusters and commit each validated cluster separately:
      clobbering a newer capture.
    - Register the configured global hotkey when the user starts a companion
      session.
-   - Resolve companion chat requests against the OpenHuman backend base, never a
+   - Resolve companion chat requests against the Neppy backend base, never a
      user-configured inference URL carrying different credentials.
 2. Persistence concurrency:
    - Clear goal continuation suppression through the tinyagents atomic mutation

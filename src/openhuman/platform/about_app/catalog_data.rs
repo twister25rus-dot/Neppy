@@ -11,13 +11,13 @@ const LOCAL_RAW: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
 const DERIVED_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Derived,
-    destinations: &["OpenHuman backend", "TinyHumans Neocortex"],
+    destinations: &["Neppy backend", "TinyHumans Neocortex"],
 });
 
 const CODING_SESSION_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Raw,
-    destinations: &["Configured OpenHuman inference provider"],
+    destinations: &["Configured Neppy inference provider"],
 });
 
 // AGENTS.md instruction layers are injected verbatim into the agent's system
@@ -29,7 +29,7 @@ const CODING_SESSION_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPriv
 const AGENTS_MD_TO_INFERENCE_PROVIDER: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Raw,
-    destinations: &["Configured OpenHuman inference provider"],
+    destinations: &["Configured Neppy inference provider"],
 });
 
 // Vision sub-agent ships the attached image (raw pixels) to the managed
@@ -37,15 +37,15 @@ const AGENTS_MD_TO_INFERENCE_PROVIDER: Option<CapabilityPrivacy> = Some(Capabili
 const IMAGE_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Raw,
-    destinations: &["OpenHuman backend", "TinyHumans Neocortex"],
+    destinations: &["Neppy backend", "TinyHumans Neocortex"],
 });
 
 // Media generation sends the prompt (and any reference image URL) to GMI Cloud
-// via the OpenHuman backend; generated media is downloaded back to the device.
+// via the Neppy backend; generated media is downloaded back to the device.
 const MEDIA_GEN_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Raw,
-    destinations: &["OpenHuman backend", "GMI Cloud"],
+    destinations: &["Neppy backend", "GMI Cloud"],
 });
 
 const LOCAL_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
@@ -57,7 +57,7 @@ const LOCAL_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
 const DIAGNOSTICS_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Diagnostics,
-    destinations: &["OpenHuman backend"],
+    destinations: &["Neppy backend"],
 });
 
 const MODEL_DOWNLOAD: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
@@ -66,7 +66,7 @@ const MODEL_DOWNLOAD: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     destinations: &["Hugging Face"],
 });
 
-// Self-update flows talk to GitHub Releases directly, not the OpenHuman
+// Self-update flows talk to GitHub Releases directly, not the Neppy
 // backend. The outbound payload is metadata only (release list query for
 // `update.check`, asset download URL request for `update.apply`) so
 // `data_kind: Metadata` is the right label — but the destination must
@@ -81,7 +81,7 @@ const GITHUB_RELEASES_METADATA: Option<CapabilityPrivacy> = Some(CapabilityPriva
 // GitHub repo memory source: the reader queries a repository's activity
 // (commits / issues / PRs) directly against the GitHub API — via the `gh`
 // CLI when available, otherwise the public REST API — not through the
-// OpenHuman backend. The *outbound* payload is metadata (which repo, which
+// Neppy backend. The *outbound* payload is metadata (which repo, which
 // activity, pagination) plus whatever auth `gh` carries; the fetched content
 // is archived locally under the vault and only its embeddings travel onward
 // (covered by the embedding-provider capability). Mirrors the
@@ -113,7 +113,7 @@ const SEARXNG_RAW_TO_CONFIGURED_INSTANCE: Option<CapabilityPrivacy> = Some(Capab
 });
 
 // Direct-mode Composio: the user's API key and tool arguments leave the
-// device — they are sent to backend.composio.dev, not the OpenHuman backend.
+// device — they are sent to backend.composio.dev, not the Neppy backend.
 // LOCAL_CREDENTIALS was incorrect here because leaves_device must be true.
 const COMPOSIO_DIRECT_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
@@ -124,7 +124,7 @@ const COMPOSIO_DIRECT_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPr
 // "Test Connection" on the Embeddings settings panel routes a small probe
 // payload to *whichever provider the user has selected* — not just the
 // managed cloud default. `DERIVED_TO_BACKEND` only enumerates the managed
-// path (OpenHuman backend / Neocortex), which under-reports the actual
+// path (Neppy backend / Neocortex), which under-reports the actual
 // privacy surface when the user has switched to OpenAI / Cohere / a
 // self-hosted endpoint. The catalog needs to list every reachable
 // destination so the Privacy surface can render the full set instead of
@@ -133,7 +133,7 @@ const EMBEDDING_PROBE_TO_CONFIGURED_PROVIDER: Option<CapabilityPrivacy> = Some(C
     leaves_device: true,
     data_kind: PrivacyDataKind::Derived,
     destinations: &[
-        "OpenHuman backend / TinyHumans Neocortex (managed cloud default)",
+        "Neppy backend / TinyHumans Neocortex (managed cloud default)",
         "OpenAI API (api.openai.com)",
         "Cohere API (api.cohere.com)",
         "User-configured OpenAI-compatible endpoint (custom:<url>)",
@@ -187,7 +187,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "voice",
         category: CapabilityCategory::Conversation,
         description: "Choose which hosted engine transcribes your speech. \"Backend\" uses \
-                      OpenHuman's transcription proxy and needs no setup; ElevenLabs and OpenAI \
+                      Neppy's transcription proxy and needs no setup; ElevenLabs and OpenAI \
                       call the provider directly with your own API key. Audio always leaves the \
                       device — the bundled offline whisper.cpp engine was removed, so there is \
                       no local option.",
@@ -236,7 +236,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         name: "Tabbed Terminal UI",
         domain: "tui",
         category: CapabilityCategory::Conversation,
-        description: "Operate OpenHuman from a terminal through four tabs: live core logs, \
+        description: "Operate Neppy from a terminal through four tabs: live core logs, \
                       orchestrator chat, safe configuration, and account settings. Bare \
                       `openhuman` opens it on an interactive non-container host; `openhuman tui` \
                       (alias `chat`) forces it. The chat streams replies, thinking, and tools live.",
@@ -418,15 +418,15 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "intelligence",
         category: CapabilityCategory::Intelligence,
         description: "Load configurable standing instructions from AGENTS.md files into the agent's \
-            system prompt — OpenHuman's analog of Claude Code's CLAUDE.md / Codex's AGENTS.md. Two \
-            layers are read once at session start: a global layer from the OpenHuman workspace \
+            system prompt — Neppy's analog of Claude Code's CLAUDE.md / Codex's AGENTS.md. Two \
+            layers are read once at session start: a global layer from the Neppy workspace \
             (<workspace_dir>/AGENTS.md) and a project layer from the folder the agent is operating \
             in (<action_dir>/AGENTS.md, or a sub-agent's isolated worktree). The global layer is \
             injected first, the project layer second (project instructions take precedence). \
             Missing or empty files are silently skipped, and each layer is capped so a large file \
             can't crowd out the rest of the prompt. On by default; disable via \
             `agent.agents_md_enabled = false`.",
-        how_to: "Create an AGENTS.md file in your OpenHuman workspace and/or your project's action \
+        how_to: "Create an AGENTS.md file in your Neppy workspace and/or your project's action \
             directory. Toggle off with `agent.agents_md_enabled = false` in config.toml.",
         status: CapabilityStatus::Stable,
         privacy: AGENTS_MD_TO_INFERENCE_PROVIDER,
@@ -620,7 +620,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         name: "MCP Server",
         domain: "intelligence",
         category: CapabilityCategory::Intelligence,
-        description: "Expose a curated OpenHuman tool surface over stdio MCP or Streamable HTTP/SSE for MCP-compatible clients.",
+        description: "Expose a curated Neppy tool surface over stdio MCP or Streamable HTTP/SSE for MCP-compatible clients.",
         how_to: "Run `openhuman-core mcp` (stdio) or `openhuman-core mcp --transport http --port 9300` for remote clients.",
         status: CapabilityStatus::Beta,
         privacy: LOCAL_RAW,
@@ -640,7 +640,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         name: "Tool Registry",
         domain: "intelligence",
         category: CapabilityCategory::Intelligence,
-        description: "Discover OpenHuman's MCP stdio tools and controller-backed tools from one local registry, including versions, routes, input/output schemas, allowed agents, and health state.",
+        description: "Discover Neppy's MCP stdio tools and controller-backed tools from one local registry, including versions, routes, input/output schemas, allowed agents, and health state.",
         how_to: "Call openhuman.tool_registry_list over core JSON-RPC, or openhuman.tool_registry_get with a tool_id such as memory.search.",
         status: CapabilityStatus::Beta,
         privacy: LOCAL_RAW,
@@ -833,7 +833,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         category: CapabilityCategory::Workflows,
         description:
             "Route Composio tool calls directly to backend.composio.dev with your own API key, \
-             bypassing the OpenHuman backend proxy. Tool execution only — trigger webhooks still \
+             bypassing the Neppy backend proxy. Tool execution only — trigger webhooks still \
              require backend mode.",
         how_to: "Settings > Skills > Composio > Direct mode",
         status: CapabilityStatus::Beta,
@@ -1026,7 +1026,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "runtime_python",
         category: CapabilityCategory::LocalAI,
         description:
-            "Download and reuse an OpenHuman-managed CPython runtime for Python-backed local integrations such as MCP servers, with a system-Python override reserved for development.",
+            "Download and reuse an Neppy-managed CPython runtime for Python-backed local integrations such as MCP servers, with a system-Python override reserved for development.",
         how_to: "Configured by the core `runtime_python` module; future UI surfaces can expose install state and overrides.",
         status: CapabilityStatus::Beta,
         privacy: MODEL_DOWNLOAD,
@@ -1126,7 +1126,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         name: "Configure Tool Access",
         domain: "auth",
         category: CapabilityCategory::Auth,
-        description: "Choose which built-in tools OpenHuman can use on your behalf during setup.",
+        description: "Choose which built-in tools Neppy can use on your behalf during setup.",
         how_to: "Onboarding > Enable Tools",
         status: CapabilityStatus::Stable,
         privacy: None,
@@ -1177,7 +1177,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "channels",
         category: CapabilityCategory::Channels,
         description:
-            "Operate OpenHuman from Telegram with slash commands: /status, /sessions, /new, and /help.",
+            "Operate Neppy from Telegram with slash commands: /status, /sessions, /new, and /help.",
         how_to: "Connections > Channels > Telegram (connect), then message the bot",
         status: CapabilityStatus::Beta,
         privacy: None,
@@ -1217,7 +1217,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         name: "Read WhatsApp Messages",
         domain: "channels",
         category: CapabilityCategory::Channels,
-        description: "Read and search WhatsApp Web conversations and messages after connecting WhatsApp in OpenHuman. Data is stored locally only and never transmitted.",
+        description: "Read and search WhatsApp Web conversations and messages after connecting WhatsApp in Neppy. Data is stored locally only and never transmitted.",
         how_to: "Connect WhatsApp Web via Channels, then ask the agent to read or summarise your messages.",
         status: CapabilityStatus::Beta,
         privacy: LOCAL_RAW,
@@ -1289,9 +1289,9 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         name: "Run the Core Somewhere Else",
         domain: "settings",
         category: CapabilityCategory::Settings,
-        description: "Choose where the OpenHuman core runs: inside this app, at a URL \
+        description: "Choose where the Neppy core runs: inside this app, at a URL \
             you point it at, in a Docker container, on another machine over SSH, or in a \
-            container on another machine. OpenHuman starts the core, connects to it, and \
+            container on another machine. Neppy starts the core, connects to it, and \
             shuts it down when you switch away. Where it runs and what contains it are \
             separate choices, so SSH and Docker combine without being a third option.",
         how_to: "Settings > Core connection",
@@ -1568,7 +1568,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         description: "iOS app for chatting with your assistant on the go. Connects to the desktop \
                       core via LAN HTTP, an E2E-encrypted socket.io tunnel, or a cloud HTTP \
                       fallback — no Rust core ships on the device.",
-        how_to: "Pair via Settings > Devices, then open the OpenHuman iOS app.",
+        how_to: "Pair via Settings > Devices, then open the Neppy iOS app.",
         status: CapabilityStatus::Beta,
         privacy: None,
     },

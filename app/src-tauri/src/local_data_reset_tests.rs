@@ -18,7 +18,7 @@ fn reset_local_data_delete_error_keeps_generic_message_for_other_errors() {
 
     let msg = result.expect_err("non-lock errors must still surface to the UI");
     assert!(msg.starts_with("Failed to remove current openhuman dir at /tmp/openhuman:"));
-    assert!(!msg.contains("Close all OpenHuman windows and try again"));
+    assert!(!msg.contains("Close all Neppy windows and try again"));
 }
 
 #[cfg(windows)]
@@ -77,7 +77,7 @@ fn reset_local_data_delete_error_reports_reboot_schedule_counts() {
     // Whatever branch we land on, the user must still be told the lock
     // is what blocked the immediate removal.
     assert!(
-        msg.contains("locked by another OpenHuman window or process")
+        msg.contains("locked by another Neppy window or process")
             || msg.contains("another process is holding it open"),
         "missing lock cause: {msg}"
     );

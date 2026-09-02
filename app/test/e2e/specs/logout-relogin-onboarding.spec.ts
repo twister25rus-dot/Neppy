@@ -16,7 +16,7 @@
  * currentUser before sending incomplete onboarding sessions to /onboarding.
  */
 import { waitForApp, waitForAppReady, waitForAuthBootstrap } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
 import { hasAppChrome, waitForWebView, waitForWindowVisible } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
@@ -74,7 +74,7 @@ describe('Logout -> re-login onboarding overlay', function () {
     // the Rust core retains onboarding_completed=true from the first session
     // and the overlay would not reappear for the same mock user.
     const resetResult = await Promise.race([
-      callOpenhumanRpc('openhuman.test_reset', {}),
+      callNeppyRpc('openhuman.test_reset', {}),
       new Promise(resolve => setTimeout(() => resolve({ ok: false, error: 'timeout' }), 8_000)),
     ]);
     if (!resetResult.ok) {
@@ -152,7 +152,7 @@ describe('Logout -> re-login onboarding overlay', function () {
       };
     });
     expect(firstStep.mounted).toBe(true);
-    expect(firstStep.heading).toBe("Hi. I'm OpenHuman.");
+    expect(firstStep.heading).toBe("Hi. I'm Neppy.");
     expect(firstStep.hasCta).toBe(true);
   });
 });

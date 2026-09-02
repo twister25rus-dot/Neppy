@@ -13,7 +13,7 @@
  *
  * Gap note (port fallback path):
  *   The desktop app's CoreProcessHandle selects a fallback port when the
- *   preferred port is occupied by a non-OpenHuman listener
+ *   preferred port is occupied by a non-Neppy listener
  *   (see app/src-tauri/src/core_process.rs, `identify_listener` +
  *   `is_expected_port_clash`). The fallback port is communicated back via
  *   `EmbeddedReadySignal.fallback_from`. The UI does not currently render a

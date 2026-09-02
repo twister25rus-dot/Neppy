@@ -51,7 +51,7 @@ function ComposerTextBridge({
 }
 
 /**
- * The assistant-ui `Thread`, projected from OpenHuman's Redux transcript.
+ * The assistant-ui `Thread`, projected from Neppy's Redux transcript.
  *
  * The runtime is a read-only projection; Redux and the core remain authoritative
  * for messages, streaming and persistence. Composer sends are forwarded through
@@ -74,7 +74,7 @@ export function AssistantUiChat({
   attachmentsEnabled,
   attachmentInteractionBlocked,
   onAttachmentOnlySend,
-  onOpenHumanMode,
+  onNeppyMode,
   onSwitchToMicCloud,
 }: {
   threadGoal: ThreadGoalController;
@@ -93,7 +93,7 @@ export function AssistantUiChat({
   attachmentInteractionBlocked: boolean;
   onAttachmentOnlySend: () => void;
   /** Opens the Human page from the composer's idle primary slot. */
-  onOpenHumanMode?: () => void;
+  onNeppyMode?: () => void;
   /** Switches to the existing microphone-first chat composer. */
   onSwitchToMicCloud?: () => void;
 }) {
@@ -194,7 +194,7 @@ export function AssistantUiChat({
    */
   const ComposerIdleAction = useCallback(
     () =>
-      onOpenHumanMode ? (
+      onNeppyMode ? (
         <Button
           type="button"
           iconOnly
@@ -205,11 +205,11 @@ export function AssistantUiChat({
           aria-label={t('composer.humanMode')}
           title={t('composer.humanMode')}
           className="size-7 shrink-0 rounded-full p-0"
-          onClick={onOpenHumanMode}>
+          onClick={onNeppyMode}>
           <MascotChipAvatar color={mascotColor} customPrimary={mascotCustomPrimary} size={18} />
         </Button>
       ) : null,
-    [mascotColor, mascotCustomPrimary, onOpenHumanMode, t]
+    [mascotColor, mascotCustomPrimary, onNeppyMode, t]
   );
 
   const components: ThreadComponents = useMemo(

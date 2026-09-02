@@ -38,18 +38,18 @@ import {
 
 // ─── Mock declarations (must be hoisted before imports) ───────────────────────
 
-const mockOpenhumanGetClientConfig = vi.fn();
+const mockNeppyGetClientConfig = vi.fn();
 const mockAuthListProviderCredentials = vi.fn();
-const mockOpenhumanUpdateModelSettings = vi.fn();
-const mockOpenhumanUpdateLocalAiSettings = vi.fn();
+const mockNeppyUpdateModelSettings = vi.fn();
+const mockNeppyUpdateLocalAiSettings = vi.fn();
 const mockAuthStoreProviderCredentials = vi.fn();
 const mockAuthRemoveProviderCredentials = vi.fn();
 const mockCallCoreRpc = vi.fn();
 const mockIsTauri = vi.fn(() => true);
-const mockOpenhumanLocalAiStatus = vi.fn();
-const mockOpenhumanLocalAiDiagnostics = vi.fn();
-const mockOpenhumanLocalAiPresets = vi.fn();
-const mockOpenhumanLocalAiApplyPreset = vi.fn();
+const mockNeppyLocalAiStatus = vi.fn();
+const mockNeppyLocalAiDiagnostics = vi.fn();
+const mockNeppyLocalAiPresets = vi.fn();
+const mockNeppyLocalAiApplyPreset = vi.fn();
 
 vi.mock('../../coreRpcClient', () => ({ callCoreRpc: (a: unknown) => mockCallCoreRpc(a) }));
 
@@ -65,16 +65,16 @@ vi.mock('../../../utils/tauriCommands/auth', () => ({
 }));
 
 vi.mock('../../../utils/tauriCommands/config', () => ({
-  openhumanGetClientConfig: () => mockOpenhumanGetClientConfig(),
-  openhumanUpdateModelSettings: (a: unknown) => mockOpenhumanUpdateModelSettings(a),
-  openhumanUpdateLocalAiSettings: (a: unknown) => mockOpenhumanUpdateLocalAiSettings(a),
+  openhumanGetClientConfig: () => mockNeppyGetClientConfig(),
+  openhumanUpdateModelSettings: (a: unknown) => mockNeppyUpdateModelSettings(a),
+  openhumanUpdateLocalAiSettings: (a: unknown) => mockNeppyUpdateLocalAiSettings(a),
 }));
 
 vi.mock('../../../utils/tauriCommands/localAi', () => ({
-  openhumanLocalAiStatus: (...args: unknown[]) => mockOpenhumanLocalAiStatus(...args),
-  openhumanLocalAiDiagnostics: (...args: unknown[]) => mockOpenhumanLocalAiDiagnostics(...args),
-  openhumanLocalAiPresets: (...args: unknown[]) => mockOpenhumanLocalAiPresets(...args),
-  openhumanLocalAiApplyPreset: (...args: unknown[]) => mockOpenhumanLocalAiApplyPreset(...args),
+  openhumanLocalAiStatus: (...args: unknown[]) => mockNeppyLocalAiStatus(...args),
+  openhumanLocalAiDiagnostics: (...args: unknown[]) => mockNeppyLocalAiDiagnostics(...args),
+  openhumanLocalAiPresets: (...args: unknown[]) => mockNeppyLocalAiPresets(...args),
+  openhumanLocalAiApplyPreset: (...args: unknown[]) => mockNeppyLocalAiApplyPreset(...args),
 }));
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -282,17 +282,17 @@ describe('serializeProviderRef', () => {
 
 describe('loadAISettings', () => {
   beforeEach(() => {
-    mockOpenhumanGetClientConfig.mockReset();
+    mockNeppyGetClientConfig.mockReset();
     mockAuthListProviderCredentials.mockReset();
-    mockOpenhumanUpdateLocalAiSettings.mockReset();
-    mockOpenhumanLocalAiStatus.mockReset();
-    mockOpenhumanLocalAiDiagnostics.mockReset();
-    mockOpenhumanLocalAiPresets.mockReset();
-    mockOpenhumanLocalAiApplyPreset.mockReset();
+    mockNeppyUpdateLocalAiSettings.mockReset();
+    mockNeppyLocalAiStatus.mockReset();
+    mockNeppyLocalAiDiagnostics.mockReset();
+    mockNeppyLocalAiPresets.mockReset();
+    mockNeppyLocalAiApplyPreset.mockReset();
   });
 
   it('returns cloudProviders with has_api_key=false when no profiles stored', async () => {
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({
         cloud_providers: [
           {
@@ -319,24 +319,24 @@ describe('loadAISettings', () => {
     mockAuthListProviderCredentials.mockResolvedValue(makeAuthProfileResult([]));
 
     // Absent in an older snapshot → both tiers conservative false.
-    mockOpenhumanGetClientConfig.mockResolvedValue(makeClientConfigResult({}));
+    mockNeppyGetClientConfig.mockResolvedValue(makeClientConfigResult({}));
     expect((await loadAISettings()).creditsBypass).toEqual({ chat: false, reasoning: false });
 
     // Per-tier: chat true, reasoning absent → chat true, reasoning false.
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({ credits_bypass: { chat: true } })
     );
     expect((await loadAISettings()).creditsBypass).toEqual({ chat: true, reasoning: false });
 
     // Both present.
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({ credits_bypass: { chat: true, reasoning: true } })
     );
     expect((await loadAISettings()).creditsBypass).toEqual({ chat: true, reasoning: true });
   });
 
   it('sets has_api_key=true when a matching provider:<slug> profile is stored', async () => {
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({
         cloud_providers: [
           {
@@ -362,7 +362,7 @@ describe('loadAISettings', () => {
   });
 
   it('also accepts legacy bare-slug auth profiles', async () => {
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({
         cloud_providers: [
           {
@@ -385,7 +385,7 @@ describe('loadAISettings', () => {
   });
 
   it('parses non-default per-workload routing strings correctly', async () => {
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({
         cloud_providers: [],
         reasoning_provider: 'openai:gpt-4o',
@@ -417,7 +417,7 @@ describe('loadAISettings', () => {
   });
 
   it('degrades gracefully when authListProviderCredentials throws', async () => {
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({
         cloud_providers: [
           {
@@ -439,7 +439,7 @@ describe('loadAISettings', () => {
   });
 
   it('keeps local runtime endpoint providers so the AI panel can edit them', async () => {
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({
         cloud_providers: [
           {
@@ -462,7 +462,7 @@ describe('loadAISettings', () => {
   });
 
   it('includes two cloud providers with correct labels and endpoints', async () => {
-    mockOpenhumanGetClientConfig.mockResolvedValue(
+    mockNeppyGetClientConfig.mockResolvedValue(
       makeClientConfigResult({
         cloud_providers: [
           {
@@ -522,19 +522,19 @@ describe('loadAISettings', () => {
 
 describe('local provider facade', () => {
   beforeEach(() => {
-    mockOpenhumanUpdateLocalAiSettings.mockReset();
-    mockOpenhumanLocalAiStatus.mockReset();
-    mockOpenhumanLocalAiDiagnostics.mockReset();
-    mockOpenhumanLocalAiPresets.mockReset();
-    mockOpenhumanLocalAiApplyPreset.mockReset();
+    mockNeppyUpdateLocalAiSettings.mockReset();
+    mockNeppyLocalAiStatus.mockReset();
+    mockNeppyLocalAiDiagnostics.mockReset();
+    mockNeppyLocalAiPresets.mockReset();
+    mockNeppyLocalAiApplyPreset.mockReset();
   });
 
   it('loadLocalProviderSnapshot joins status diagnostics and presets', async () => {
-    mockOpenhumanLocalAiStatus.mockResolvedValue({ result: { state: 'ready' } });
-    mockOpenhumanLocalAiDiagnostics.mockResolvedValue({
+    mockNeppyLocalAiStatus.mockResolvedValue({ result: { state: 'ready' } });
+    mockNeppyLocalAiDiagnostics.mockResolvedValue({
       installed_models: [{ name: 'gemma3:1b-it-qat', size: 123 }],
     });
-    mockOpenhumanLocalAiPresets.mockResolvedValue({
+    mockNeppyLocalAiPresets.mockResolvedValue({
       recommended_tier: 'ram_2_4gb',
       current_tier: 'ram_2_4gb',
       selected_tier: 'ram_2_4gb',
@@ -558,25 +558,25 @@ describe('local provider facade', () => {
   });
 
   it('setLocalRuntimeEnabled updates runtime_enabled and opt_in_confirmed together', async () => {
-    mockOpenhumanUpdateLocalAiSettings.mockResolvedValue({ result: {} });
+    mockNeppyUpdateLocalAiSettings.mockResolvedValue({ result: {} });
 
     await setLocalRuntimeEnabled(true);
 
-    expect(mockOpenhumanUpdateLocalAiSettings).toHaveBeenCalledWith({
+    expect(mockNeppyUpdateLocalAiSettings).toHaveBeenCalledWith({
       runtime_enabled: true,
       opt_in_confirmed: true,
     });
   });
 
   it('localProvider facade delegates applyPreset and setEnabled', async () => {
-    mockOpenhumanLocalAiApplyPreset.mockResolvedValue({ applied_tier: 'ram_2_4gb' });
-    mockOpenhumanUpdateLocalAiSettings.mockResolvedValue({ result: {} });
+    mockNeppyLocalAiApplyPreset.mockResolvedValue({ applied_tier: 'ram_2_4gb' });
+    mockNeppyUpdateLocalAiSettings.mockResolvedValue({ result: {} });
 
     await localProvider.applyPreset('ram_2_4gb');
     await localProvider.setEnabled(false);
 
-    expect(mockOpenhumanLocalAiApplyPreset).toHaveBeenCalledWith('ram_2_4gb');
-    expect(mockOpenhumanUpdateLocalAiSettings).toHaveBeenCalledWith({
+    expect(mockNeppyLocalAiApplyPreset).toHaveBeenCalledWith('ram_2_4gb');
+    expect(mockNeppyUpdateLocalAiSettings).toHaveBeenCalledWith({
       runtime_enabled: false,
       opt_in_confirmed: false,
     });
@@ -587,8 +587,8 @@ describe('local provider facade', () => {
 
 describe('saveAISettings', () => {
   beforeEach(() => {
-    mockOpenhumanUpdateModelSettings.mockReset();
-    mockOpenhumanUpdateModelSettings.mockResolvedValue({ result: {} });
+    mockNeppyUpdateModelSettings.mockReset();
+    mockNeppyUpdateModelSettings.mockResolvedValue({ result: {} });
   });
 
   function makeSettings(overrides: Partial<AISettings> = {}): AISettings {
@@ -624,7 +624,7 @@ describe('saveAISettings', () => {
   it('issues no RPC call when nothing changed', async () => {
     const settings = makeSettings();
     await saveAISettings(settings, settings);
-    expect(mockOpenhumanUpdateModelSettings).not.toHaveBeenCalled();
+    expect(mockNeppyUpdateModelSettings).not.toHaveBeenCalled();
   });
 
   it('sends only changed routing fields when providers are unchanged', async () => {
@@ -633,8 +633,8 @@ describe('saveAISettings', () => {
 
     await saveAISettings(prev, next);
 
-    expect(mockOpenhumanUpdateModelSettings).toHaveBeenCalledOnce();
-    const patch = mockOpenhumanUpdateModelSettings.mock.calls[0][0];
+    expect(mockNeppyUpdateModelSettings).toHaveBeenCalledOnce();
+    const patch = mockNeppyUpdateModelSettings.mock.calls[0][0];
     expect(patch.reasoning_provider).toBe('openhuman');
     // Other workloads unchanged — should not appear in patch.
     expect(patch.agentic_provider).toBeUndefined();
@@ -647,7 +647,7 @@ describe('saveAISettings', () => {
 
     await saveAISettings(prev, next);
 
-    const patch = mockOpenhumanUpdateModelSettings.mock.calls[0][0];
+    const patch = mockNeppyUpdateModelSettings.mock.calls[0][0];
     expect(patch.cloud_providers).toHaveLength(1);
     expect(patch.cloud_providers![0].slug).toBe('openai');
     // has_api_key must NOT be present in the wire payload — it's not part of
@@ -672,7 +672,7 @@ describe('saveAISettings', () => {
 
     await saveAISettings(prev, next);
 
-    const patch = mockOpenhumanUpdateModelSettings.mock.calls[0][0];
+    const patch = mockNeppyUpdateModelSettings.mock.calls[0][0];
     expect(patch.cloud_providers).toHaveLength(1);
     expect(patch.cloud_providers![0]).toMatchObject({
       slug: 'ollama',
@@ -714,7 +714,7 @@ describe('saveAISettings', () => {
 
     await saveAISettings(prev, next);
 
-    const patch = mockOpenhumanUpdateModelSettings.mock.calls[0][0];
+    const patch = mockNeppyUpdateModelSettings.mock.calls[0][0];
     expect(patch.cloud_providers![0].auth_style).toBe('anthropic');
   });
 
@@ -730,7 +730,7 @@ describe('saveAISettings', () => {
 
     await saveAISettings(prev, next);
 
-    const patch = mockOpenhumanUpdateModelSettings.mock.calls[0][0];
+    const patch = mockNeppyUpdateModelSettings.mock.calls[0][0];
     expect(patch.cloud_providers).toBeDefined();
     expect(patch.coding_provider).toBe('openai:gpt-4o-mini');
     expect(patch.vision_provider).toBe('openai:gpt-4o-mini');
@@ -742,7 +742,7 @@ describe('saveAISettings', () => {
       modelRegistry: [{ id: 'my-llava', provider: 'openai', cost_per_1m_output: 0, vision: true }],
     });
     await saveAISettings(prev, next);
-    const patch = mockOpenhumanUpdateModelSettings.mock.calls[0][0];
+    const patch = mockNeppyUpdateModelSettings.mock.calls[0][0];
     expect(patch.model_registry).toEqual([
       {
         id: 'my-llava',
@@ -768,7 +768,7 @@ describe('saveAISettings', () => {
       },
     });
     await saveAISettings(prev, next);
-    const patch = mockOpenhumanUpdateModelSettings.mock.calls[0][0];
+    const patch = mockNeppyUpdateModelSettings.mock.calls[0][0];
     expect(patch.model_registry).toBeUndefined();
     expect(patch.coding_provider).toBe('openai:gpt-4o-mini');
     expect(patch.vision_provider).toBe('openai:gpt-4o-mini');
@@ -1019,12 +1019,12 @@ describe('testProviderModel', () => {
 
 describe('flushCloudProviders', () => {
   beforeEach(() => {
-    mockOpenhumanUpdateModelSettings.mockReset();
+    mockNeppyUpdateModelSettings.mockReset();
     mockIsTauri.mockReturnValue(true);
   });
 
   it('calls update_model_settings with the cloud_providers array', async () => {
-    mockOpenhumanUpdateModelSettings.mockResolvedValue({});
+    mockNeppyUpdateModelSettings.mockResolvedValue({});
     const providers = [
       {
         id: 'p_openai_1',
@@ -1035,13 +1035,13 @@ describe('flushCloudProviders', () => {
       },
     ];
     await flushCloudProviders(providers);
-    expect(mockOpenhumanUpdateModelSettings).toHaveBeenCalledWith({ cloud_providers: providers });
+    expect(mockNeppyUpdateModelSettings).toHaveBeenCalledWith({ cloud_providers: providers });
   });
 
   it('no-ops when not running in Tauri', async () => {
     mockIsTauri.mockReturnValue(false);
     await flushCloudProviders([]);
-    expect(mockOpenhumanUpdateModelSettings).not.toHaveBeenCalled();
+    expect(mockNeppyUpdateModelSettings).not.toHaveBeenCalled();
   });
 });
 

@@ -200,7 +200,7 @@ fn process_diagnostics_list_owned() -> Result<Vec<process_recovery::ProcessInfo>
     match process_recovery::enumerate_openhuman_processes() {
         Ok(processes) => {
             log::info!(
-                "[startup-recovery] diagnostics listed {} owned OpenHuman processes",
+                "[startup-recovery] diagnostics listed {} owned Neppy processes",
                 processes.len()
             );
             Ok(processes)
@@ -355,7 +355,7 @@ async fn restart_core_process(
     state.inner().restart().await
 }
 
-/// Attempt to auto-recover from a port conflict by reaping stale OpenHuman
+/// Attempt to auto-recover from a port conflict by reaping stale Neppy
 /// processes (cross-platform) and restarting the embedded core.
 ///
 /// Called by the BootCheckGate "Fix Automatically" button when the core is
@@ -411,13 +411,13 @@ async fn start_core_process(
     state.inner().ensure_running().await?;
     if let Some(notice) = state.inner().take_last_port_fallback_notice() {
         let body = format!(
-            "OpenHuman is using port {} because {} was busy",
+            "Neppy is using port {} because {} was busy",
             notice.chosen_port, notice.preferred_port
         );
         if let Err(err) = app
             .notification()
             .builder()
-            .title("OpenHuman")
+            .title("Neppy")
             .body(&body)
             .show()
         {
@@ -1553,7 +1553,7 @@ fn macos_app_menu(app: &AppHandle<AppRuntime>) -> tauri::Result<Menu<AppRuntime>
     let quit = MenuItem::with_id(
         app,
         APP_QUIT_MENU_ID,
-        "Quit OpenHuman",
+        "Quit Neppy",
         true,
         Some("CmdOrCtrl+Q"),
     )?;
@@ -1561,7 +1561,7 @@ fn macos_app_menu(app: &AppHandle<AppRuntime>) -> tauri::Result<Menu<AppRuntime>
     let app_sep_2 = PredefinedMenuItem::separator(app)?;
     let app_menu = Submenu::with_items(
         app,
-        "OpenHuman",
+        "Neppy",
         true,
         &[
             &about,
@@ -1622,7 +1622,7 @@ fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
     let show_item = MenuItem::with_id(
         app,
         "tray_show_window",
-        "Open OpenHuman",
+        "Open Neppy",
         true,
         None::<&str>,
     )?;
@@ -1783,7 +1783,7 @@ fn shutdown_app_sync(app_handle: &AppHandle<AppRuntime>, exit_code: i32) {
 }
 
 #[cfg(target_os = "linux")]
-const WSL_X11_DESKTOP_WARNING: &str = "[startup] likely unsupported desktop environment: WSL with classic X11 forwarding detected (DISPLAY is set, but WAYLAND_DISPLAY/WSLg markers are absent). OpenHuman's Tauri/CEF desktop flow is fragile in this setup; use native Windows development or Windows 11 WSLg for desktop GUI work.";
+const WSL_X11_DESKTOP_WARNING: &str = "[startup] likely unsupported desktop environment: WSL with classic X11 forwarding detected (DISPLAY is set, but WAYLAND_DISPLAY/WSLg markers are absent). Neppy's Tauri/CEF desktop flow is fragile in this setup; use native Windows development or Windows 11 WSLg for desktop GUI work.";
 
 #[cfg(any(target_os = "linux", test))]
 fn should_warn_for_wsl_x11_desktop(
@@ -1868,7 +1868,7 @@ fn check_linux_display_server() {
         return;
     }
     let msg = "[openhuman] no display server found (DISPLAY and WAYLAND_DISPLAY are both unset).\n\
-               OpenHuman requires an X11 or Wayland display to run.\n\
+               Neppy requires an X11 or Wayland display to run.\n\
                On WSL2: install WSLg or configure X11 forwarding from Windows.\n\
                Set DISPLAY (e.g. export DISPLAY=:0) or WAYLAND_DISPLAY before launching.";
     log::error!(
@@ -2157,7 +2157,7 @@ fn is_time_ticks_at_unix_epoch_flag(flag: &str) -> bool {
 /// derives this value itself when it spawns each child, and it must stay
 /// consistent with the host clock.
 ///
-/// OpenHuman must never inject this switch into the CEF command line: a stale
+/// Neppy must never inject this switch into the CEF command line: a stale
 /// or negative value (e.g. the `-1780937467390432` reported in #3554) pins the
 /// renderer's internal clock ~56 years before the Unix epoch, which surfaces
 /// as a wrong "Current Date & Time" in the app. The CEF command line is
@@ -2170,7 +2170,7 @@ fn strip_time_ticks_at_unix_epoch(args: &mut Vec<CefCommandLineArg>) {
     args.retain(|(flag, value)| {
         if is_time_ticks_at_unix_epoch_flag(flag) {
             log::warn!(
-                "[cef-startup] dropping OpenHuman-supplied --time-ticks-at-unix-epoch{} so \
+                "[cef-startup] dropping Neppy-supplied --time-ticks-at-unix-epoch{} so \
                  Chromium computes the clock origin locally (issue #3554)",
                 value.map(|v| format!("={v}")).unwrap_or_default()
             );
@@ -2323,7 +2323,7 @@ pub fn run() {
     // The guard is held for the entire lifetime of `run()` so events queued
     // during shutdown still flush. Only invoked here (and not in `main.rs`)
     // so renderer/GPU CEF helper subprocesses (re-exec'd via
-    // `tauri::cef_entry_point`) and the `OpenHuman core …` in-process core
+    // `tauri::cef_entry_point`) and the `Neppy core …` in-process core
     // path do NOT spin up a second client — those have their own reporting
     // surfaces.
     let _sentry_guard = sentry::init(sentry::ClientOptions {
@@ -2433,7 +2433,7 @@ pub fn run() {
             }
             // Drop provider insufficient-credits 402s — the user's own BYO
             // account (e.g. OpenRouter) is out of balance, a billing state
-            // OpenHuman has no lever over once the request already caps
+            // Neppy has no lever over once the request already caps
             // max_tokens. The core binary's main.rs before_send already
             // filters these; since #1061 the core runs in-process inside this
             // shell, so the cron `agent_job` retries-exhausted report (and any
@@ -2679,13 +2679,13 @@ pub fn run() {
     // The Win32 mutex above already guaranteed we are the only *top-level*
     // GUI instance past that point — a concurrent secondary saw
     // `ERROR_ALREADY_EXISTS` and exited before reaching here. So a surviving
-    // GUI `OpenHuman.exe` browser process is a *wedged prior instance* left
+    // GUI `Neppy.exe` browser process is a *wedged prior instance* left
     // behind by an update or hard exit, not a legitimate peer. Reap it
     // proactively (TERM then KILL) — the cross-platform analogue of the macOS
     // reap above.
     //
     // The reap is deliberately narrow (issue #3900): it targets ONLY the
-    // wedged GUI browser process. It never touches `OpenHuman.exe core` /
+    // wedged GUI browser process. It never touches `Neppy.exe core` /
     // `mcp` CLI/MCP sessions or the standalone `openhuman-core.exe` (which
     // never take the CEF mutex and may be an active user session), never
     // touches CEF `--type=` helper subprocesses (the OS job object reaps
@@ -2736,7 +2736,7 @@ pub fn run() {
         deep_link_ipc::bind_and_listen()
     };
 
-    // CEF cache-lock preflight (macOS + Linux): if another OpenHuman instance
+    // CEF cache-lock preflight (macOS + Linux): if another Neppy instance
     // holds the CEF user-data-dir SingletonLock, `cef_initialize` returns 0 and
     // the vendored runtime used to panic (`left: 0, right: 1`). The common
     // cause is a *sequential relaunch race* where the prior instance is still
@@ -2816,7 +2816,7 @@ pub fn run() {
                 // safe.
                 ("--autoplay-policy", Some("no-user-gesture-required")),
                 // Background-throttling defeaters. The MeetCallProducer
-                // pumps mascot frames at 24 fps from the *main* OpenHuman
+                // pumps mascot frames at 24 fps from the *main* Neppy
                 // window, but as soon as the off-screen Meet webview opens
                 // (or the user clicks anywhere outside main), macOS demotes
                 // the renderer's priority and Chromium throttles its
@@ -2861,7 +2861,7 @@ pub fn run() {
         // Use an app-owned Quit item for Cmd+Q instead of the native
         // predefined Quit action. The predefined path calls
         // NSApplication::terminate, which reaches CEF shutdown before
-        // OpenHuman's child-webview/core teardown can run.
+        // Neppy's child-webview/core teardown can run.
         .menu(macos_app_menu)
         .on_menu_event(|app, event| {
             if event.id().as_ref() == APP_QUIT_MENU_ID {
@@ -2910,7 +2910,7 @@ pub fn run() {
         log::warn!(
             "[single-instance] D-Bus session bus unreachable (DBUS_SESSION_BUS_ADDRESS={:?}, \
              XDG_RUNTIME_DIR={:?}); skipping tauri-plugin-single-instance to avoid \
-             OPENHUMAN-TAURI-TM panic. Multiple OpenHuman instances will not be deduplicated.",
+             OPENHUMAN-TAURI-TM panic. Multiple Neppy instances will not be deduplicated.",
             std::env::var("DBUS_SESSION_BUS_ADDRESS").ok(),
             std::env::var("XDG_RUNTIME_DIR").ok()
         );
@@ -3576,7 +3576,7 @@ pub fn run() {
 pub fn run_core_from_args(args: &[String]) -> Result<(), String> {
     // Core lives in-process: dispatch directly through the linked `openhuman_core`
     // library instead of shelling out to a separate binary. The Tauri main()
-    // routes `OpenHuman core <args>` here so users can still drive the core CLI
+    // routes `Neppy core <args>` here so users can still drive the core CLI
     // from the bundled app.
     openhuman_core::run_core_from_args(args).map_err(|e| format!("{e:#}"))
 }

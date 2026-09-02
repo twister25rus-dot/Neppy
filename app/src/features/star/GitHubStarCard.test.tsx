@@ -22,7 +22,7 @@ describe('GitHubStarCard', () => {
   test('renders the CTA when not yet dismissed', () => {
     renderWithProviders(<GitHubStarCard />);
     expect(screen.getByTestId('github-star-cta')).toBeInTheDocument();
-    expect(screen.getByText('Enjoying OpenHuman?')).toBeInTheDocument();
+    expect(screen.getByText('Enjoying Neppy?')).toBeInTheDocument();
     expect(screen.getByText('Star on GitHub')).toBeInTheDocument();
   });
 

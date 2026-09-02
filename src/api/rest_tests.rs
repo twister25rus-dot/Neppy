@@ -255,7 +255,7 @@ async fn authed_json_uses_sdk_transport_with_bearer_and_host_headers() {
     );
     assert!(
         request_headers.get("x-core-version").is_some(),
-        "OpenHuman host metadata must survive the SDK cutover"
+        "Neppy host metadata must survive the SDK cutover"
     );
 }
 

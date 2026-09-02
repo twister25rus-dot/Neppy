@@ -292,7 +292,7 @@ fn module_config(config: &Config, id: &str) -> serde_json::Value {
         // The module's `EmbeddingHost::default_cloud_embedding_model`: what the
         // engine switches to when the opted-in local model is unreachable
         // (`store::factories`). That is the host's managed-cloud default, the
-        // same constant the in-process `OpenHumanEmbeddingHost` answers with.
+        // same constant the in-process `NeppyEmbeddingHost` answers with.
         // It is NOT `config.memory.embedding_model`, which is the user's
         // intended model and is usually the local one; sending that here made
         // the cloud fallback ask the managed embedder for `nomic-embed-text`

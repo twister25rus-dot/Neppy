@@ -1,11 +1,11 @@
 ---
-description: Build, run, test, and ship OpenHuman from source.
+description: Build, run, test, and ship Neppy from source.
 icon: code-branch
 ---
 
 # Overview
 
-OpenHuman is open source under GPLv3 at [github.com/tinyhumansai/openhuman](https://github.com/tinyhumansai/openhuman). This section is for contributors and anyone running OpenHuman from source.
+Neppy is open source under GPLv3 at [github.com/tinyhumansai/openhuman](https://github.com/tinyhumansai/openhuman). This section is for contributors and anyone running Neppy from source.
 
 If you just want to use the app, head to [Getting Started](../overview/getting-started.md). If you're here to read the architecture, hack on a feature, or land a PR, you're in the right place.
 
@@ -32,13 +32,13 @@ If it's your first time pulling the repo:
 2. [**Building the Rust Core**](building-rust-core.md). Fresh-machine setup for the repo-root Rust crate only: pinned toolchain, OS packages, and exact `cargo` commands.
 3. [**Architecture**](architecture.md). How the desktop app, the Rust core sidecar, the JSON-RPC bridge, and the dual sockets fit together. Read this before you make non-trivial changes.
 4. [**Frontend**](architecture/frontend.md) and [**Tauri Shell**](architecture/tauri-shell.md). The React app and the desktop host that wraps it.
-5. [**MCP Server**](mcp-server.md). Opt-in stdio MCP mode for exposing read-only OpenHuman memory tools to local clients.
+5. [**MCP Server**](mcp-server.md). Opt-in stdio MCP mode for exposing read-only Neppy memory tools to local clients.
 
 ---
 
 ## Testing
 
-OpenHuman ships with three test layers. Know which one your change belongs in:
+Neppy ships with three test layers. Know which one your change belongs in:
 
 - [**Testing Strategy**](testing-strategy.md). When to write Vitest vs cargo tests vs WDIO.
 - [**E2E Testing**](e2e-testing.md). WDIO/Appium specs, dual-platform setup (Linux tauri-driver, macOS Appium Mac2), and how to run a single spec locally.

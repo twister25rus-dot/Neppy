@@ -459,10 +459,10 @@ mod tests {
         // upstream/develop `routes/inference.ts::writeInferenceSSE`
         // ({error:{message,type:"stream_error",errorCode}}), wrapped by the
         // client's `sse_error_frame_bail_message` as
-        // "OpenHuman streaming API error: <payload>". `validateToolMessageOrdering`
+        // "Neppy streaming API error: <payload>". `validateToolMessageOrdering`
         // throws BadRequestError (errorCode=BAD_REQUEST) for an orphaned tool_call_id.
         let err: Result<WebChatTaskResult, String> = Err(
-            "OpenHuman streaming API error: {\"error\":{\"message\":\"Message has tool role, \
+            "Neppy streaming API error: {\"error\":{\"message\":\"Message has tool role, \
              but there was no previous assistant message with a tool call!\",\
              \"type\":\"stream_error\",\"errorCode\":\"BAD_REQUEST\"}}"
                 .to_string(),

@@ -1,13 +1,13 @@
 ---
 description: >-
   Five built-in theme families, light/dark/auto variants, and a full visual
-  Theme Studio - make OpenHuman look the way you want.
+  Theme Studio - make Neppy look the way you want.
 icon: palette
 ---
 
 # Themes & Theme Studio
 
-OpenHuman is fully re-skinnable at runtime. Pick from built-in themes, switch light/dark/auto, or open the **Theme Studio** to design your own. Every change applies instantly and persists locally, no restart required.
+Neppy is fully re-skinnable at runtime. Pick from built-in themes, switch light/dark/auto, or open the **Theme Studio** to design your own. Every change applies instantly and persists locally, no restart required.
 
 ---
 
@@ -17,7 +17,7 @@ Five theme families ship out of the box, each with light and dark variants:
 
 | Family       | Feel                                     |
 | ------------ | ---------------------------------------- |
-| **Classic**  | The default OpenHuman look.              |
+| **Classic**  | The default Neppy look.              |
 | **Ocean**    | Cool blues around the `#4A83DD` primary. |
 | **Sepia**    | Warm, paper-like, easy on the eyes.      |
 | **Matrix**   | High-contrast green-on-black.            |
@@ -60,4 +60,4 @@ For the full token taxonomy, Tailwind wiring, and component-authoring best pract
 ## See also
 
 - [Theming (contributor reference)](../developing/theming.md): token system, Tailwind wiring, migration codemod.
-- [Realtime Mascot](mascot/README.md): the other big piece of OpenHuman's personality.
+- [Realtime Mascot](mascot/README.md): the other big piece of Neppy's personality.

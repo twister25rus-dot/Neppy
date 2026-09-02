@@ -3,15 +3,15 @@
 Host policy and RPC surface for vector embeddings. Concrete OpenAI-compatible,
 Cohere, Voyage, Ollama, cloud-transport, retry, and rate-limit implementations
 live in `tinyagents::harness::embeddings`; this domain selects and adapts those
-models for OpenHuman.
+models for Neppy.
 
 ## Host-owned responsibilities
 
 - `factory.rs`: provider slug/model/dimension selection and construction of
   TinyAgents models.
-- `provider_trait.rs`: compatibility contract used by existing OpenHuman
+- `provider_trait.rs`: compatibility contract used by existing Neppy
   consumers plus `TinyAgentsEmbeddingProvider`, the one trait adapter.
-- `cloud_adapter.rs`: OpenHuman session-token resolution, egress disclosure,
+- `cloud_adapter.rs`: Neppy session-token resolution, egress disclosure,
   and local-only privacy enforcement around TinyAgents `CloudEmbeddingModel`.
 - `catalog.rs`, `rpc.rs`, `schemas.rs`: Settings catalog, credentials, JSON-RPC,
   connection tests, and re-embed/wipe policy.

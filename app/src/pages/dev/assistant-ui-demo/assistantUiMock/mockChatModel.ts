@@ -1,7 +1,7 @@
 /**
  * A mock `ChatModelAdapter` that replays {@link MOCK_SCRIPT}.
  *
- * Nothing here reaches the OpenHuman core, the backend, or any provider. It
+ * Nothing here reaches the Neppy core, the backend, or any provider. It
  * exists so the assistant-ui surfaces have something to render while the real
  * seams are reconnected: thinking tokens, tool calls with streaming arguments,
  * subagent delegations with nested steps, and streamed markdown prose.

@@ -70,7 +70,7 @@ import {
   waitForAssistantReplyContaining,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
 import {
@@ -595,7 +595,7 @@ describe('PTT — global push-to-talk flow', function () {
     let content = '';
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
-      const read = await callOpenhumanRpc<{ result: { content_utf8: string } }>(
+      const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
         'openhuman.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 65_536 }
       );

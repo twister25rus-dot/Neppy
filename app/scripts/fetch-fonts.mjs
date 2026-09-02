@@ -4,7 +4,7 @@
  * `src/styles/fonts.css` from the result.
  *
  * WHY THIS EXISTS: `index.css` used to `@import` Inter and JetBrains Mono from
- * fonts.googleapis.com. OpenHuman is an offline-capable desktop app, so on a
+ * fonts.googleapis.com. Neppy is an offline-capable desktop app, so on a
  * cold start without a network the CSS import fails and the entire UI renders
  * in a system fallback face — a first-run regression nobody sees in dev,
  * because dev machines are online and the font is already cached.

@@ -1,4 +1,4 @@
-<h1 align="center">OpenHuman</h1>
+<h1 align="center">Neppy</h1>
 
 <p align="center">
  <img src="../gitbooks/.gitbook/assets/demo.png" alt="The Tet" />
@@ -9,23 +9,23 @@
 		<img src="https://trendshift.io/api/badge/repositories/23680" alt="tinyhumansai%2Fopenhuman | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 	</a>
 	<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-		<img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=daily&amp;t=1778916022823">
+		<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=daily&amp;t=1778916022823">
 		</a>
 		<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-			<img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;t=1779351403565">
+			<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;t=1779351403565">
 		</a>
 </p>
 <p align="center" style="display: inline-block">
  <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-  <img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=268&amp;t=1779351808756">
+  <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=268&amp;t=1779351808756">
   </a>
   <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-   <img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=46&amp;t=1779351808756">
+   <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=46&amp;t=1779351808756">
    </a>
  </p>
 
 <p align="center">
- <strong>OpenHuman ist deine persönliche KI-Superintelligenz: ein Gehirn, das sich alles merkt, ein fantastischer Orchestrator, ein Deep Researcher. Local-first, schlicht, mächtig.</strong>
+ <strong>Neppy ist deine persönliche KI-Superintelligenz: ein Gehirn, das sich alles merkt, ein fantastischer Orchestrator, ein Deep Researcher. Local-first, schlicht, mächtig.</strong>
 </p>
 
 <p align="center">
@@ -49,7 +49,7 @@
 
 > **Frühe Beta**: Wird aktiv weiterentwickelt. Mit Ecken und Kanten ist zu rechnen.
 
-> 🎉 Innerhalb einer Woche nach dem Launch wurde OpenHuman neun Tage in Folge das Nummer-eins-Trending-Repository auf GitHub.
+> 🎉 Innerhalb einer Woche nach dem Launch wurde Neppy neun Tage in Folge das Nummer-eins-Trending-Repository auf GitHub.
 
 # Installation
 
@@ -57,9 +57,9 @@ Lade die Installer von [tinyhumans.ai/openhuman](https://tinyhumans.ai/openhuman
 
 Für Terminal-Installationen (Homebrew, Debian/Ubuntu-`.deb`, AUR, Install-Skripte und Plattformhinweise) siehe **[INSTALL.md](../INSTALL.md)**.
 
-# Was ist OpenHuman?
+# Was ist Neppy?
 
-OpenHuman ist drei Dinge, die die meisten Assistenten nicht sind: **ein Gehirn**, das ein persistentes, lokales Gedächtnis deiner Welt aufbaut; **ein fantastischer Orchestrator**, der Flotten von Agenten auf dauerhaften Graphen betreibt; und **ein Deep Researcher**, der deine Daten und das Web durchkämmt, bevor du deine Frage zu Ende gestellt hast. Jeder Punkt verlinkt auf die ausführliche Beschreibung in der [Doku](https://tinyhumans.gitbook.io/openhuman/).
+Neppy ist drei Dinge, die die meisten Assistenten nicht sind: **ein Gehirn**, das ein persistentes, lokales Gedächtnis deiner Welt aufbaut; **ein fantastischer Orchestrator**, der Flotten von Agenten auf dauerhaften Graphen betreibt; und **ein Deep Researcher**, der deine Daten und das Web durchkämmt, bevor du deine Frage zu Ende gestellt hast. Jeder Punkt verlinkt auf die ausführliche Beschreibung in der [Doku](https://tinyhumans.gitbook.io/openhuman/).
 
 ### 🧠 Das Gehirn
 
@@ -89,29 +89,29 @@ OpenHuman ist drei Dinge, die die meisten Assistenten nicht sind: **ein Gehirn**
 
 ## Kontext in Minuten, nicht in Wochen
 
-OpenHuman ist das erste Agent-Harness, das dich in Minuten kennenlernt. Inspiriert von [Karpathys LLM-Knowledgebase](https://x.com/karpathy/status/2039805659525644595). Die meisten Agenten starten aus dem Kalten. Hermes lernt, indem er dir bei der Arbeit zusieht; OpenClaw wartet darauf, dass Plugins Kontext einspielen. So oder so vergehen Tage oder Wochen, bevor der Agent genug über deinen Stack weiß, um wirklich nützlich zu sein.
+Neppy ist das erste Agent-Harness, das dich in Minuten kennenlernt. Inspiriert von [Karpathys LLM-Knowledgebase](https://x.com/karpathy/status/2039805659525644595). Die meisten Agenten starten aus dem Kalten. Hermes lernt, indem er dir bei der Arbeit zusieht; OpenClaw wartet darauf, dass Plugins Kontext einspielen. So oder so vergehen Tage oder Wochen, bevor der Agent genug über deinen Stack weiß, um wirklich nützlich zu sein.
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/memory.png" alt="Diagramm zum OpenHuman-Kontextaufbau">
+ <img src="../gitbooks/.gitbook/assets/memory.png" alt="Diagramm zum Neppy-Kontextaufbau">
 </p>
 
-> OpenHuman fasst all deine Dokumente, E-Mails und Chats zusammen, komprimiert sie und legt einen Memory Graph an, mit dem dein Agent sich alles über dich merken kann.
+> Neppy fasst all deine Dokumente, E-Mails und Chats zusammen, komprimiert sie und legt einen Memory Graph an, mit dem dein Agent sich alles über dich merken kann.
 
-OpenHuman überspringt die Wartezeit. Verbinde deine Accounts, lass [Auto-Fetch](https://tinyhumans.gitbook.io/openhuman/features/integrations/auto-fetch) die Daten lokal in einer 20-Minuten-Schleife abholen, und [Memory Trees](https://tinyhumans.gitbook.io/openhuman/features/memory-tree) komprimieren alles in Markdown-Dateien, intelligent abgelegt in einem [Obsidian-Wiki im Karpathy-Stil](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki).
+Neppy überspringt die Wartezeit. Verbinde deine Accounts, lass [Auto-Fetch](https://tinyhumans.gitbook.io/openhuman/features/integrations/auto-fetch) die Daten lokal in einer 20-Minuten-Schleife abholen, und [Memory Trees](https://tinyhumans.gitbook.io/openhuman/features/memory-tree) komprimieren alles in Markdown-Dateien, intelligent abgelegt in einem [Obsidian-Wiki im Karpathy-Stil](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki).
 
 Nach nur einem Sync-Durchlauf hat der Agent den vollständigen (komprimierten) Kontext deines Postfachs, deines Kalenders, deiner Repos, deiner Dokumente und deiner Nachrichten. Keine Trainingsphase. Kein „gib ihm ein paar Wochen". Er wird zu dir, gesteuert von dir.
 
-Du hostest [agentmemory](https://github.com/rohitg00/agentmemory) bereits selbst für andere Coding-Agenten? OpenHuman bringt ein optionales `Memory`-Backend mit, das dorthin proxyt: setze `memory.backend = "agentmemory"` in `config.toml`, und derselbe persistente Store treibt OpenHuman zusammen mit Claude Code, Cursor, Codex und OpenCode an. Setup-Details auf der Seite zum [agentmemory-Backend](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki/agentmemory-backend).
+Du hostest [agentmemory](https://github.com/rohitg00/agentmemory) bereits selbst für andere Coding-Agenten? Neppy bringt ein optionales `Memory`-Backend mit, das dorthin proxyt: setze `memory.backend = "agentmemory"` in `config.toml`, und derselbe persistente Store treibt Neppy zusammen mit Claude Code, Cursor, Codex und OpenCode an. Setup-Details auf der Seite zum [agentmemory-Backend](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki/agentmemory-backend).
 
 ## Ein Orchestrator, kein Chatbot
 
-Die meisten Agent-Harnesses betreiben einen Agenten in einer Schleife. OpenHuman ist ein **[Orchestrator](https://tinyhumans.gitbook.io/openhuman/features/orchestration)**:
+Die meisten Agent-Harnesses betreiben einen Agenten in einer Schleife. Neppy ist ein **[Orchestrator](https://tinyhumans.gitbook.io/openhuman/features/orchestration)**:
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/orchestration.png" alt="OpenHuman-Orchestrierungsdiagramm">
+ <img src="../gitbooks/.gitbook/assets/orchestration.png" alt="Neppy-Orchestrierungsdiagramm">
 </p>
 
-> Agent-zu-Agent-Messaging läuft über Signal-Protokoll-Ende-zu-Ende-Verschlüsselung. Du kannst also alles anbinden (Claude Code, Codex, OpenClaw, Hermes) und mit OpenHuman all deine Agenten und Tools orchestrieren.
+> Agent-zu-Agent-Messaging läuft über Signal-Protokoll-Ende-zu-Ende-Verschlüsselung. Du kannst also alles anbinden (Claude Code, Codex, OpenClaw, Hermes) und mit Neppy all deine Agenten und Tools orchestrieren.
 
 - **Graphen statt Schleifen**: Turns laufen als checkpointed Graphen auf [tinyagents](https://github.com/tinyhumansai/tinyagents): für einen Menschen pausieren, einen Neustart überleben, mitten im Lauf weitermachen.
 - **Sub-Agenten-Flotten**: Spezialisten spawnen drei Ebenen tief; festgefahrene Agenten werden zu Root-Cause-Berichten.
@@ -122,18 +122,18 @@ Die meisten Agent-Harnesses betreiben einen Agenten in einer Schleife. OpenHuman
 Stark inspiriert von n8n und Zapier bringen [Workflows](https://tinyhumans.gitbook.io/openhuman/features/workflows) dieselbe visuelle, trigger-gesteuerte Automatisierung zu deinem Agenten, nur dass der Agent sie für dich baut. Bitte um eine Automatisierung, und er schlägt eine vor: einen [tinyflows](https://github.com/tinyhumansai/tinyflows)-Graphen, den du vor dem Speichern auf einer visuellen Canvas prüfst.
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/workflows.png" alt="OpenHuman-Workflow-Canvas">
+ <img src="../gitbooks/.gitbook/assets/workflows.png" alt="Neppy-Workflow-Canvas">
 </p>
 
 > Der Agent schlägt den Workflow vor; du prüfst ihn auf einer Canvas und speicherst ihn.
 
 Gespeicherte Workflows sind dauerhaft und trigger-gesteuert: sie feuern auf Zeitpläne, Webhooks oder Kanal-Events, überleben Neustarts und sichern Seiteneffekte hinter Freigaben ab.
 
-## OpenHuman vs. andere Agent-Harnesses
+## Neppy vs. andere Agent-Harnesses
 
-Übersichtsvergleich (Produkte entwickeln sich weiter, bitte beim jeweiligen Anbieter verifizieren). OpenHuman ist darauf ausgelegt, **Vendor-Wildwuchs zu reduzieren**, **Workflow-Wissen auf dem Gerät zu halten** und dem Agenten eine **persistente Erinnerung** an deine Daten zu geben, nicht nur an den Chat.
+Übersichtsvergleich (Produkte entwickeln sich weiter, bitte beim jeweiligen Anbieter verifizieren). Neppy ist darauf ausgelegt, **Vendor-Wildwuchs zu reduzieren**, **Workflow-Wissen auf dem Gerät zu halten** und dem Agenten eine **persistente Erinnerung** an deine Daten zu geben, nicht nur an den Chat.
 
-|                        | Claude Cowork         | OpenClaw           | Hermes Agent       | OpenHuman                                                                                                |
+|                        | Claude Cowork         | OpenClaw           | Hermes Agent       | Neppy                                                                                                |
 | ---------------------- | --------------------- | ------------------ | ------------------ | -------------------------------------------------------------------------------------------------------- |
 | **Quelloffen**         | 🚫 Proprietär         | ✅ MIT             | ✅ MIT             | ✅ GNU                                                                                                   |
 | **Einfacher Einstieg** | ✅ Desktop + CLI      | ⚠️ Terminal zuerst | ⚠️ Terminal zuerst | ✅ Aufgeräumte UI, in Minuten                                                                            |
@@ -180,5 +180,5 @@ _Baust du auch in Richtung AGI und künstlichem Bewusstsein? Setze einen Stern u
 Zeig etwas Liebe und lande in der Hall of Fame. Mitwirkende erhalten kostenloses Merch und besonderen Zugang zu unserem [Discord](https://discord.tinyhumans.ai/).
 
 <a href="https://github.com/tinyhumansai/openhuman/graphs/contributors">
- <img src="https://contrib.rocks/image?repo=tinyhumansai/openhuman" alt="OpenHuman contributors" />
+ <img src="https://contrib.rocks/image?repo=tinyhumansai/openhuman" alt="Neppy contributors" />
 </a>

@@ -71,7 +71,7 @@ impl AgentBuilder {
 
     /// Sets the AI provider as a **crate-native** turn-model source (Phase 3 P3-B):
     /// `build`/`build_summarizer` construct crate `ChatModel`s from `(role, config)`
-    /// via `create_turn_chat_model` (managed → `OpenHumanBackendModel`, local/cloud →
+    /// via `create_turn_chat_model` (managed → `NeppyBackendModel`, local/cloud →
     /// crate `OpenAiModel`) instead of wrapping `provider` in `native model adapters.
     /// Used by the production session factory; the plain
     /// [`provider`](Self::provider) setter (Provider path) stays for tests that
@@ -533,7 +533,7 @@ impl AgentBuilder {
 
         // Dedupe by tool name. Anthropic (and other strict providers)
         // rejects a chat/completions request that lists two tools with
-        // the same name — OpenHuman's own backend and OpenAI silently
+        // the same name — Neppy's own backend and OpenAI silently
         // accept duplicates, which hid this bug until #1710's per-role
         // routing started sending the same tool list to Anthropic.
         let visible_tool_specs: Vec<ToolSpec> =

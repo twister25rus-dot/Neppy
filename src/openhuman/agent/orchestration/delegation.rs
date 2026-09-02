@@ -54,7 +54,7 @@ pub(crate) async fn run_subagent_delegation(
     let thread_id = format!("delegrun-{}", uuid::Uuid::new_v4());
     // Durable graph checkpoints ride the crate's `SqliteCheckpointer` (issue
     // #4249, 04.3) at a dedicated `graph_checkpoints.db` under the workspace —
-    // a separate SQLite file from OpenHuman's session-db pool, so the crate's
+    // a separate SQLite file from Neppy's session-db pool, so the crate's
     // owned connection never contends on the run-ledger locks. Nothing outside
     // the retired `SqlRunLedgerCheckpointer` read the old `graph_checkpoints`
     // run-ledger table, so no row migration is needed: pre-swap in-flight

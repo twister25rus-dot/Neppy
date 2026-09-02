@@ -27,8 +27,8 @@ use crate::openhuman::tools::HttpRequestTool;
 /// (`src/openhuman/tools/impl/network/http_request.rs`). Allowlist + DNS-rebind
 /// guard live inside `execute`, so this adapter gets them for free.
 ///
-/// **B2:** also routes through the OpenHuman `ApprovalGate` before dispatch
-/// (same rationale/shape as [`OpenHumanTools::invoke`] — closes the Codex P1
+/// **B2:** also routes through the Neppy `ApprovalGate` before dispatch
+/// (same rationale/shape as [`NeppyTools::invoke`] — closes the Codex P1
 /// finding that flow HTTP nodes bypassed the Network approval gate).
 ///
 /// **Phase 2 — `http_cred:<name>` resolution:** a `"http_cred:<name>"`
@@ -41,7 +41,7 @@ use crate::openhuman::tools::HttpRequestTool;
 /// scheme are logged; the value is redacted). A `connection_ref` that names an
 /// **unknown** credential fails the request closed (`EngineError::Capability`)
 /// rather than silently sending it unauthenticated.
-pub struct OpenHumanHttp {
+pub struct NeppyHttp {
     pub security: Arc<SecurityPolicy>,
     pub http_config: HttpRequestConfig,
     pub http_creds: Arc<HttpCredentialsStore>,
@@ -50,7 +50,7 @@ pub struct OpenHumanHttp {
 /// Resolves an optional HTTP `connection_ref` to the stored credential to
 /// inject. Split out as a free function (over the store, not `&self`) so the
 /// resolve/fail-closed policy is unit-testable without constructing a full
-/// [`OpenHumanHttp`] adapter.
+/// [`NeppyHttp`] adapter.
 ///
 /// - `None` conn, or a `connection_ref` whose prefix isn't `http_cred:` →
 ///   `Ok(None)` (no credential to inject; a non-`http_cred:` prefix is logged
@@ -161,7 +161,7 @@ pub(crate) fn inject_http_credential(request: &mut Value, cred: &HttpCredential)
 }
 
 #[async_trait]
-impl HttpClient for OpenHumanHttp {
+impl HttpClient for NeppyHttp {
     async fn request(&self, mut request: Value, conn: Option<&str>) -> Result<Value> {
         const TOOL_NAME: &str = "flows_http_request";
 

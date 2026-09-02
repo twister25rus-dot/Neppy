@@ -13,7 +13,7 @@
 //!
 //! | String                | Resolves to                                    |
 //! |-----------------------|------------------------------------------------|
-//! | `"cloud"` / `"openhuman"` / `"backend"` | OpenHuman backend proxy      |
+//! | `"cloud"` / `"openhuman"` / `"backend"` | Neppy backend proxy      |
 //! | `"piper"`             | Local Piper (TTS)                              |
 //! | `"<slug>:<model>"`    | Voice provider entry matched by slug           |
 //! | `"<slug>"`            | Bare slug — uses provider's default model/voice|

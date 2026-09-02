@@ -31,7 +31,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc, expectRpcOk } from '../helpers/core-rpc';
+import { callNeppyRpc, expectRpcOk } from '../helpers/core-rpc';
 import { triggerDeepLink } from '../helpers/deep-link-helpers';
 import { hasAppChrome } from '../helpers/element-helpers';
 import {
@@ -245,7 +245,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
 
     // The core must still respond — the deep-link must not have torn down the
     // RPC session.
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
     console.log(`${LOG} oauth:success: session healthy after deep link — core.ping ok`);
 
@@ -280,7 +280,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     }
     await resetEverything('after Scenario 3');
 
-    const auth = await callOpenhumanRpc('openhuman.auth_store_session', {
+    const auth = await callNeppyRpc('openhuman.auth_store_session', {
       token: buildBypassJwt('mega-composio-user'),
     });
     expect(auth.ok).toBe(true);
@@ -296,7 +296,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
 
     const listTriggersMethod = 'openhuman.composio_list_triggers';
     const enableTriggerMethod = 'openhuman.composio_enable_trigger';
-    const before = await callOpenhumanRpc(listTriggersMethod, {});
+    const before = await callNeppyRpc(listTriggersMethod, {});
     expectRpcOk(listTriggersMethod, before);
     // list_triggers always emits a log line → RpcOutcome wraps in {result, logs}.
     // JSON-RPC result shape: { result: { triggers: [...] }, logs: [...] }
@@ -307,13 +307,13 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     expect(Array.isArray(beforeList)).toBe(true);
     expect(beforeList).toHaveLength(0);
 
-    const enable = await callOpenhumanRpc(enableTriggerMethod, {
+    const enable = await callNeppyRpc(enableTriggerMethod, {
       connection_id: 'c1',
       slug: 'GMAIL_NEW_GMAIL_MESSAGE',
     });
     expectRpcOk(enableTriggerMethod, enable);
 
-    const after = await callOpenhumanRpc(listTriggersMethod, {});
+    const after = await callNeppyRpc(listTriggersMethod, {});
     expectRpcOk(listTriggersMethod, after);
     const afterList = (after.result?.result?.triggers ?? after.result?.triggers ?? []) as unknown[];
     expect(afterList.length).toBeGreaterThan(0);
@@ -342,7 +342,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
       (await waitForMockRequest('GET', '/auth/integrations', 3_000));
     // It's OK if neither call fires (the error path may not trigger a refresh),
     // but the RPC layer must still be alive.
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
     console.log(`${LOG} oauth error: core.ping still ok after error deep link`);
     if (post) console.log(`${LOG} post-error follow-up:`, post.url);
@@ -365,7 +365,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     // Attempt to append a message to a thread ID that does not exist.
     // The core must return a structured error (kind=ThreadNotFound) rather
     // than a hard crash or an opaque 500.
-    const result = await callOpenhumanRpc('openhuman.threads_message_append', {
+    const result = await callNeppyRpc('openhuman.threads_message_append', {
       thread_id: 'stale-thread-does-not-exist',
       role: 'user',
       content: 'hello from mega-flow stale thread test',
@@ -381,7 +381,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     console.log(`${LOG} stale-thread: error returned = ${errorMessage}`);
 
     // Core must still respond to ping — the error must not have torn down the session.
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
     console.log(`${LOG} stale-thread: core.ping healthy after structured error`);
   });
@@ -399,7 +399,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     clearRequestLog();
 
     // Call a method name that no controller has registered.
-    const result = await callOpenhumanRpc('openhuman.nonexistent_method_for_capability_test', {});
+    const result = await callNeppyRpc('openhuman.nonexistent_method_for_capability_test', {});
 
     // Must fail — the core does not have this method.
     expect(result.ok).toBe(false);
@@ -410,7 +410,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     console.log(`${LOG} unknown-method: error = ${errorMsg}`);
 
     // Session must survive — core.ping must still respond.
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
     console.log(`${LOG} unknown-method: core.ping healthy after method-not-found`);
   });
@@ -452,7 +452,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     console.log(`${LOG} whatsapp list_chats returned ${chats.length} chat(s)`);
 
     // Session must still be healthy.
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
   });
 
@@ -490,7 +490,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
 
     // Create a thread as user A.
     // CreateConversationThreadRequest only accepts `labels` (deny_unknown_fields).
-    const createA = await callOpenhumanRpc('openhuman.threads_create_new', {});
+    const createA = await callNeppyRpc('openhuman.threads_create_new', {});
     expect(createA.ok).toBe(true);
     // threads_create_new returns RpcOutcome<ApiEnvelope<ConversationThreadSummary>> with
     // empty logs → bare ApiEnvelope: { data: { id, ... }, meta: {...} }
@@ -499,7 +499,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     console.log(`${LOG} acct-switch: user A thread id = ${threadId || '(unknown)'}`);
 
     // List threads — must have at least 1.
-    const listA = await callOpenhumanRpc('openhuman.threads_list', {});
+    const listA = await callNeppyRpc('openhuman.threads_list', {});
     expect(listA.ok).toBe(true);
     // threads_list returns RpcOutcome<ApiEnvelope<{threads, count}>> with empty logs
     // callResult.result = { data: { threads: [...], count: N }, meta: {...} }
@@ -517,7 +517,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     // Verify RPC is healthy for "User B". The thread list is a valid array
     // (may contain User A's threads since the workspace is shared in this
     // test environment — per-account isolation is tested by the unit layer).
-    const listB = await callOpenhumanRpc('openhuman.threads_list', {});
+    const listB = await callNeppyRpc('openhuman.threads_list', {});
     expect(listB.ok).toBe(true);
     const threadsB: unknown[] = listB.result?.data?.threads ?? [];
     expect(Array.isArray(threadsB)).toBe(true);
@@ -535,7 +535,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
-    const listA2 = await callOpenhumanRpc('openhuman.threads_list', {});
+    const listA2 = await callNeppyRpc('openhuman.threads_list', {});
     expect(listA2.ok).toBe(true);
     const threadsA2: unknown[] = listA2.result?.data?.threads ?? [];
     // After a full reset the workspace is wiped, so the count is 0 (not the
@@ -546,7 +546,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
       `${LOG} acct-switch: user A (re-login) sees ${threadsA2.length} thread(s) — RPC healthy`
     );
 
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
   });
 
@@ -573,7 +573,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     }
     await resetEverything('after Scenario 10');
 
-    const auth = await callOpenhumanRpc('openhuman.auth_store_session', {
+    const auth = await callNeppyRpc('openhuman.auth_store_session', {
       token: buildBypassJwt('mega-composio-webhook-user'),
     });
     expect(auth.ok).toBe(true);
@@ -592,7 +592,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     // Step 1 — enable trigger.
     const enableTriggerMethod = 'openhuman.composio_enable_trigger';
     const listTriggersMethod = 'openhuman.composio_list_triggers';
-    const enable = await callOpenhumanRpc(enableTriggerMethod, {
+    const enable = await callNeppyRpc(enableTriggerMethod, {
       connection_id: 'c2',
       slug: 'GITHUB_PULL_REQUEST_EVENT',
     });
@@ -601,7 +601,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
 
     // Step 2 — register an echo tunnel so the core has a tunnel ID to work with.
     const tunnelUuid = 'mega-flow-composio-tunnel';
-    const register = await callOpenhumanRpc('openhuman.webhooks_register_echo', {
+    const register = await callNeppyRpc('openhuman.webhooks_register_echo', {
       tunnel_uuid: tunnelUuid,
       tunnel_name: 'Mega Flow Composio Tunnel',
       backend_tunnel_id: 'backend-mega-composio',
@@ -636,7 +636,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
 
     // Step 4 — verify the enabled trigger is still listed.
     // list_triggers always emits a log line → {result: {triggers:[...]}, logs:[...]}
-    const list = await callOpenhumanRpc(listTriggersMethod, {});
+    const list = await callNeppyRpc(listTriggersMethod, {});
     expectRpcOk(listTriggersMethod, list);
     const triggers: unknown[] = list.result?.result?.triggers ?? list.result?.triggers ?? [];
     expect(triggers.length).toBeGreaterThan(0);
@@ -644,7 +644,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
       `${LOG} composio+webhook: list_triggers after ingest has ${triggers.length} entry(s)`
     );
 
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
   });
 
@@ -664,7 +664,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     await waitForMockRequest('POST', '/auth/login-token/consume', 15_000);
     clearRequestLog();
 
-    const result = await callOpenhumanRpc('openhuman.update_version', {});
+    const result = await callNeppyRpc('openhuman.update_version', {});
     expect(result.ok).toBe(true);
 
     // update_version always emits a log → RpcOutcome wraps in {result, logs}.
@@ -712,7 +712,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     });
     expect(outbound).toBeUndefined();
 
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
   });
 
@@ -739,20 +739,20 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     };
 
     // First ingest — must succeed.
-    const first = await callOpenhumanRpc('openhuman.notification_ingest', notifPayload);
+    const first = await callNeppyRpc('openhuman.notification_ingest', notifPayload);
     expect(first.ok).toBe(true);
     const firstSkipped: boolean = first.result?.skipped ?? first.result?.result?.skipped ?? false;
     console.log(`${LOG} dedup: first ingest skipped=${firstSkipped}`);
 
     // Second ingest with identical params — must also return ok (not crash).
-    const second = await callOpenhumanRpc('openhuman.notification_ingest', notifPayload);
+    const second = await callNeppyRpc('openhuman.notification_ingest', notifPayload);
     expect(second.ok).toBe(true);
     const secondSkipped: boolean =
       second.result?.skipped ?? second.result?.result?.skipped ?? false;
     console.log(`${LOG} dedup: second ingest skipped=${secondSkipped}`);
 
     // List all notifications for the gmail provider.
-    const list = await callOpenhumanRpc('openhuman.notification_list', {
+    const list = await callNeppyRpc('openhuman.notification_list', {
       provider: 'gmail',
       limit: 50,
     });
@@ -775,7 +775,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     expect(matchingItems.length).toBeLessThanOrEqual(1);
     console.log(`${LOG} dedup: found ${matchingItems.length} matching record(s) — dedup confirmed`);
 
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
   });
 
@@ -798,7 +798,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     // threads_create_new returns RpcOutcome<ApiEnvelope<ConversationThreadSummary>> with
     // empty logs → bare ApiEnvelope: { data: { id, title, ... }, meta: {...} }
     // callResult.result = { data: { id, ... }, meta: {...} }
-    const create = await callOpenhumanRpc('openhuman.threads_create_new', {});
+    const create = await callNeppyRpc('openhuman.threads_create_new', {});
     expect(create.ok).toBe(true);
     const threadId: string = create.result?.data?.id ?? '';
     expect(typeof threadId).toBe('string');
@@ -810,7 +810,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
     // use camelCase in JSON: createdAt, extraMetadata (not created_at / extra_metadata).
     const now = new Date().toISOString();
     const msgId = `msg-e2e-batch3-${Date.now()}`;
-    const append = await callOpenhumanRpc('openhuman.threads_message_append', {
+    const append = await callNeppyRpc('openhuman.threads_message_append', {
       thread_id: threadId,
       message: {
         id: msgId,
@@ -826,7 +826,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
 
     // Step 3 — list messages for the thread and assert the appended message
     // appears in the result.
-    const msgList = await callOpenhumanRpc('openhuman.threads_messages_list', {
+    const msgList = await callNeppyRpc('openhuman.threads_messages_list', {
       thread_id: threadId,
     });
     expect(msgList.ok).toBe(true);
@@ -847,7 +847,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
       `${LOG} thread-crud: message ${msgId} confirmed in list (${messages.length} total)`
     );
 
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
   });
 });

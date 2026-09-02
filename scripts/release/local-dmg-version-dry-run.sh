@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APP_DIR="$REPO_ROOT/app"
-APP_BUNDLE="$REPO_ROOT/app/src-tauri/target/release/bundle/macos/OpenHuman.app"
+APP_BUNDLE="$REPO_ROOT/app/src-tauri/target/release/bundle/macos/Neppy.app"
 DMG_DIR="$REPO_ROOT/app/src-tauri/target/release/bundle/dmg"
 TEMP_ENV_CREATED=0
 TMP_TAURI_CONF=""

@@ -4,15 +4,15 @@ icon: shield
 
 # Privacy & Security
 
-OpenHuman is designed so that the **memory of your life lives on your machine**. The local SQLite Memory Tree, the Markdown Obsidian vault, your audio buffers, all of that stays under your control. The OpenHuman backend handles things that have to be brokered (LLM calls, OAuth tokens, search proxying), and nothing more.
+Neppy is designed so that the **memory of your life lives on your machine**. The local SQLite Memory Tree, the Markdown Obsidian vault, your audio buffers, all of that stays under your control. The Neppy backend handles things that have to be brokered (LLM calls, OAuth tokens, search proxying), and nothing more.
 
 ---
 
 ## Privacy by Design
 
-**The Memory Tree is local.** The SQLite database (`<workspace>/memory_tree/chunks.db`) and the Markdown vault (`<workspace>/wiki/`) live on your machine. The agent reads from them locally; nothing about your raw source data sits on the OpenHuman backend.
+**The Memory Tree is local.** The SQLite database (`<workspace>/memory_tree/chunks.db`) and the Markdown vault (`<workspace>/wiki/`) live on your machine. The agent reads from them locally; nothing about your raw source data sits on the Neppy backend.
 
-**Integration tokens are held by the backend, not on your laptop.** OAuth tokens are never written to disk in plaintext on your device. The OpenHuman backend brokers each integration request, the core never speaks any third-party API directly.
+**Integration tokens are held by the backend, not on your laptop.** OAuth tokens are never written to disk in plaintext on your device. The Neppy backend brokers each integration request, the core never speaks any third-party API directly.
 
 **OS-level credential storage.** Sensitive local secrets are rooted in your platform's secure keychain, macOS Keychain, Windows Credential Manager, Linux Secret Service. See [OS Keyring & Secret Storage](os-keyring-and-secret-storage.md).
 
@@ -31,12 +31,12 @@ OpenHuman is designed so that the **memory of your life lives on your machine**.
 | **Audio capture buffers**       | Local. Discarded after STT.                                     |
 | **Local model state**           | Local.                                                          |
 
-## What the OpenHuman backend handles
+## What the Neppy backend handles
 
 |                                    |                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **LLM calls**                      | Proxied through the backend under one subscription, then forwarded to the underlying provider (Anthropic / OpenAI / Google / etc.) per the [model router](model-routing/).                                                                                                                                                                                                                                             |
-| **Web search proxy**               | The native [web search tool](native-tools/web-search.md) uses the backend proxy by default, currently powered by [Exa](https://exa.ai), so you don't carry a search API key. With your own Exa, Brave, or Querit key, queries go directly to that provider; Parallel remains routed through the OpenHuman backend. If you call the optional SearXNG tool, that query goes to your configured SearXNG instance instead. |
+| **Web search proxy**               | The native [web search tool](native-tools/web-search.md) uses the backend proxy by default, currently powered by [Exa](https://exa.ai), so you don't carry a search API key. With your own Exa, Brave, or Querit key, queries go directly to that provider; Parallel remains routed through the Neppy backend. If you call the optional SearXNG tool, that query goes to your configured SearXNG instance instead. |
 | **Integration OAuth & tool proxy** | Token storage and rate-limited request brokering for [118+ integrations](integrations/README.md).                                                                                                                                                                                                                                                                                                                      |
 | **TTS streaming**                  | Hosted [text-to-speech](native-tools/voice.md) audio streams. Audio is generated and discarded - not retained.                                                                                                                                                                                                                                                                                                         |
 
@@ -44,7 +44,7 @@ OpenHuman is designed so that the **memory of your life lives on your machine**.
 
 ## Permissions and access control
 
-OpenHuman accesses an integration only after you complete its OAuth flow. Each connection has its own scope; you can revoke any of them at any time from the **Connections** page.
+Neppy accesses an integration only after you complete its OAuth flow. Each connection has its own scope; you can revoke any of them at any time from the **Connections** page.
 
 [Auto-fetch](obsidian-wiki/auto-fetch.md) does run continuously while a connection is active, that is the whole point. But it is bound by:
 
@@ -68,9 +68,9 @@ Compression and locality together become the privacy architecture.
 
 ## Security
 
-**Encrypted in transit.** All communication between the application and the OpenHuman backend uses TLS. No data travels in plain text.
+**Encrypted in transit.** All communication between the application and the Neppy backend uses TLS. No data travels in plain text.
 
-**Key in keyring, ciphertext on disk.** For local secrets that must be persisted in app files, OpenHuman stores encrypted ciphertext on disk and keeps the master decryption key in the OS keyring. See [OS Keyring & Secret Storage](os-keyring-and-secret-storage.md).
+**Key in keyring, ciphertext on disk.** For local secrets that must be persisted in app files, Neppy stores encrypted ciphertext on disk and keeps the master decryption key in the OS keyring. See [OS Keyring & Secret Storage](os-keyring-and-secret-storage.md).
 
 **Sandboxed skills.** Each skill runs in its own isolated execution environment with enforced memory and resource limits. Skills cannot access each other's data, the host system's file system, or your credentials.
 
@@ -82,13 +82,13 @@ Compression and locality together become the privacy architecture.
 
 ## Trust & Risk Intelligence
 
-OpenHuman includes an intelligence layer designed to help you reason about credibility, information quality, and potential risks across your connected sources.
+Neppy includes an intelligence layer designed to help you reason about credibility, information quality, and potential risks across your connected sources.
 
 **Scam and impersonation signals.** Behavioral patterns associated with scams, impersonation, or coordinated abuse can surface as warnings. Signals come from patterns, not from sharing individual message content.
 
-**Contextual dynamic trust.** Trust is contextual, credibility in one domain does not automatically transfer to another. OpenHuman represents trust through aggregated artifacts and historical accuracy rather than static scores.
+**Contextual dynamic trust.** Trust is contextual, credibility in one domain does not automatically transfer to another. Neppy represents trust through aggregated artifacts and historical accuracy rather than static scores.
 
-**Advisory, not enforcement.** Trust and risk outputs are advisory signals to inform your judgment. OpenHuman does not ban users, remove messages, or enforce moderation decisions.
+**Advisory, not enforcement.** Trust and risk outputs are advisory signals to inform your judgment. Neppy does not ban users, remove messages, or enforce moderation decisions.
 
 ---
 

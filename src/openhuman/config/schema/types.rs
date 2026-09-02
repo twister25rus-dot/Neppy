@@ -79,7 +79,7 @@ pub struct Config {
     pub workspace_dir: PathBuf,
     /// Agent action sandbox root — the default cwd for shell/file/git tools.
     /// Kept separate from `workspace_dir` (which holds internal state like
-    /// memory DBs, sessions, tokens). Defaults to `~/OpenHuman/projects`
+    /// memory DBs, sessions, tokens). Defaults to `~/Neppy/projects`
     /// (`default_action_dir()`); overridable via `OPENHUMAN_ACTION_DIR`.
     ///
     /// This is the **resolved runtime value** and is `#[serde(skip)]` — it is
@@ -125,7 +125,7 @@ pub struct Config {
     pub api_key: Option<String>,
     /// Custom LLM inference endpoint (OpenAI-compatible). When set together
     /// with `api_key`, the inference provider talks directly to this URL
-    /// instead of routing through the OpenHuman backend. Account/auth/billing
+    /// instead of routing through the Neppy backend. Account/auth/billing
     /// calls always continue to use `api_url` — keeping inference and
     /// product-backend concerns cleanly separated.
     #[serde(default)]
@@ -375,7 +375,7 @@ pub struct Config {
     //
     //   "cloud"                → resolves to `primary_cloud`; if primary is
     //                            openhuman, behaves identically to "openhuman"
-    //   "openhuman"            → OpenHuman backend (api_url + api_key session JWT)
+    //   "openhuman"            → Neppy backend (api_url + api_key session JWT)
     //   "openai:<model>"       → look up cloud_providers entry of type=openai;
     //                            build crate OpenAiModel with Bearer auth
     //   "anthropic:<model>"    → type=anthropic; Bearer auth on the compat endpoint
@@ -386,13 +386,13 @@ pub struct Config {
     //
     // Per-workload fields default to None, which the factory treats as "cloud".
     // Changing `primary_cloud` instantly re-routes every "cloud" workload.
-    /// Registered cloud providers. Index 0 is always the built-in OpenHuman
+    /// Registered cloud providers. Index 0 is always the built-in Neppy
     /// entry; additional entries are user-added third-party backends.
     #[serde(default)]
     pub cloud_providers: Vec<crate::openhuman::config::schema::cloud_providers::CloudProviderCreds>,
 
     /// Id of the `cloud_providers` entry that "cloud" and "primary" resolve to.
-    /// When `None`, the factory falls back to the OpenHuman entry.
+    /// When `None`, the factory falls back to the Neppy entry.
     #[serde(default)]
     pub primary_cloud: Option<String>,
 
@@ -479,7 +479,7 @@ pub struct Config {
     //
     // Provider-string grammar (consumed by `voice::factory`):
     //
-    //   "cloud" / "openhuman"  → OpenHuman backend proxy (STT or TTS)
+    //   "cloud" / "openhuman"  → Neppy backend proxy (STT or TTS)
     //   "piper"                → local Piper (TTS only)
     //   "<slug>:<model>"       → voice_providers entry matched by slug
     //

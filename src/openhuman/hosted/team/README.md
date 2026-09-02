@@ -1,6 +1,6 @@
 # team
 
-Team management RPC adapters. This domain is a **thin proxy to the hosted backend**: every operation forwards an authenticated HTTP request to the OpenHuman backend (`/teams/*`) and returns the raw JSON response verbatim. It owns **no local state, no domain types, and no server-side authorization** — the backend enforces team ownership, role permissions, and tenant isolation; non-authorized callers receive the backend's 401/403 surfaced as an RPC error string. Covers team CRUD, membership, role changes, invites, usage, and active-team switching.
+Team management RPC adapters. This domain is a **thin proxy to the hosted backend**: every operation forwards an authenticated HTTP request to the Neppy backend (`/teams/*`) and returns the raw JSON response verbatim. It owns **no local state, no domain types, and no server-side authorization** — the backend enforces team ownership, role permissions, and tenant isolation; non-authorized callers receive the backend's 401/403 surfaced as an RPC error string. Covers team CRUD, membership, role changes, invites, usage, and active-team switching.
 
 ## Responsibilities
 

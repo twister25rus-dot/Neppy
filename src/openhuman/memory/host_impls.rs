@@ -1,6 +1,6 @@
 //! Host implementations of the seam traits `tinymemory-core` declares.
 //!
-//! The extracted memory subsystem reaches back into OpenHuman through nine
+//! The extracted memory subsystem reaches back into Neppy through nine
 //! traits (see `tinymemory_api::host` and the `*_host` modules in
 //! `tinymemory_core`). [`super::host`] carries the two that are about *data* —
 //! `MemoryHostConfig` and `MemoryEventSink`. This module carries the seven that
@@ -47,11 +47,11 @@ type SeamConfig = tinymemory_core::Config;
 
 /// Builds embedding providers for the memory subsystem.
 #[derive(Debug)]
-pub struct OpenHumanEmbeddingHost {
+pub struct NeppyEmbeddingHost {
     config: Arc<Config>,
 }
 
-impl EmbeddingHost for OpenHumanEmbeddingHost {
+impl EmbeddingHost for NeppyEmbeddingHost {
     fn resolve_api_key(&self, provider: &str) -> Option<String> {
         let key = crate::openhuman::inference::embeddings::resolve_api_key(&self.config, provider);
         // The host returns "" for "no credential stored"; the seam distinguishes
@@ -103,7 +103,7 @@ impl EmbeddingHost for OpenHumanEmbeddingHost {
         dims: usize,
     ) -> Result<Box<dyn EmbeddingProvider>, String> {
         Ok(Box::new(
-            crate::openhuman::inference::embeddings::cloud::OpenHumanCloudEmbedding::new(
+            crate::openhuman::inference::embeddings::cloud::NeppyCloudEmbedding::new(
                 None,
                 self.config
                     .config_path
@@ -143,11 +143,11 @@ impl EmbeddingHost for OpenHumanEmbeddingHost {
 /// [`host_config`]. The captured config is only the fallback for a caller that
 /// handed us somebody else's implementation.
 #[derive(Debug)]
-pub struct OpenHumanChatHost {
+pub struct NeppyChatHost {
     config: Arc<Config>,
 }
 
-impl ChatHost for OpenHumanChatHost {
+impl ChatHost for NeppyChatHost {
     fn provider_for_role(&self, role: &str, config: &SeamConfig) -> String {
         crate::openhuman::inference::provider::provider_for_role(
             role,
@@ -190,12 +190,12 @@ impl ChatHost for OpenHumanChatHost {
 /// immediately. The two sync ones recover the caller's config with
 /// [`host_config`], which costs nothing and is still current as of the call.
 #[derive(Debug)]
-pub struct OpenHumanComposioHost {
+pub struct NeppyComposioHost {
     config: Arc<Config>,
 }
 
 #[async_trait]
-impl ComposioHost for OpenHumanComposioHost {
+impl ComposioHost for NeppyComposioHost {
     async fn list_connections(
         &self,
         config: &SeamConfig,
@@ -291,10 +291,10 @@ impl ComposioHost for OpenHumanComposioHost {
 
 /// Loads host configs for the memory subsystem's background loops.
 #[derive(Debug)]
-pub struct OpenHumanConfigLoader;
+pub struct NeppyConfigLoader;
 
 #[async_trait]
-impl ConfigLoader for OpenHumanConfigLoader {
+impl ConfigLoader for NeppyConfigLoader {
     async fn load(&self) -> Result<Box<SeamConfig>, String> {
         Ok(Box::new(
             crate::openhuman::config::rpc::load_config_with_timeout().await?,
@@ -317,10 +317,10 @@ impl ConfigLoader for OpenHumanConfigLoader {
 
 /// Runs spaCy extraction through the host's Python runtime.
 #[derive(Debug)]
-pub struct OpenHumanNlpHost;
+pub struct NeppyNlpHost;
 
 #[async_trait]
-impl NlpHost for OpenHumanNlpHost {
+impl NlpHost for NeppyNlpHost {
     async fn extract_spacy(
         &self,
         config: &SeamConfig,
@@ -337,10 +337,10 @@ impl NlpHost for OpenHumanNlpHost {
 
 /// Exposes the host's background-AI throttle.
 #[derive(Debug)]
-pub struct OpenHumanSchedulerGate;
+pub struct NeppySchedulerGate;
 
 #[async_trait]
-impl SchedulerGate for OpenHumanSchedulerGate {
+impl SchedulerGate for NeppySchedulerGate {
     fn current_policy(&self) -> Policy {
         crate::openhuman::cron::scheduler_gate::gate::current_policy()
     }
@@ -360,9 +360,9 @@ impl SchedulerGate for OpenHumanSchedulerGate {
 
 /// Registers memory shutdown hooks with the host's shutdown sequencer.
 #[derive(Debug)]
-pub struct OpenHumanShutdownHost;
+pub struct NeppyShutdownHost;
 
-impl ShutdownHost for OpenHumanShutdownHost {
+impl ShutdownHost for NeppyShutdownHost {
     fn register(&self, hook: ShutdownHook) {
         let hook = Arc::new(hook);
         crate::core::shutdown::register(move || {
@@ -376,9 +376,9 @@ impl ShutdownHost for OpenHumanShutdownHost {
 
 /// Routes memory error reports into the host's observability pipeline.
 #[derive(Debug)]
-pub struct OpenHumanErrorReporter;
+pub struct NeppyErrorReporter;
 
-impl ErrorReporter for OpenHumanErrorReporter {
+impl ErrorReporter for NeppyErrorReporter {
     fn report_error(&self, rendered: &str, domain: &str, operation: &str, tags: &[(&str, &str)]) {
         crate::core::observability::report_error(rendered, domain, operation, tags);
     }
@@ -434,20 +434,20 @@ async fn live_config(config: &SeamConfig) -> Result<Config, String> {
 /// design, because degrading quietly would corrupt an embedding space or make a
 /// sync run look empty rather than broken.
 pub fn install_memory_host_seams(config: Arc<Config>) {
-    tinymemory_core::embedding_host::set_embedding_host(Arc::new(OpenHumanEmbeddingHost {
+    tinymemory_core::embedding_host::set_embedding_host(Arc::new(NeppyEmbeddingHost {
         config: Arc::clone(&config),
     }));
-    tinymemory_core::chat_host::set_chat_host(Arc::new(OpenHumanChatHost {
+    tinymemory_core::chat_host::set_chat_host(Arc::new(NeppyChatHost {
         config: Arc::clone(&config),
     }));
-    tinymemory_core::composio_host::set_composio_host(Arc::new(OpenHumanComposioHost {
+    tinymemory_core::composio_host::set_composio_host(Arc::new(NeppyComposioHost {
         config: Arc::clone(&config),
     }));
-    tinymemory_core::config_loader::set_config_loader(Arc::new(OpenHumanConfigLoader));
-    tinymemory_core::nlp_host::set_nlp_host(Arc::new(OpenHumanNlpHost));
-    tinymemory_core::scheduler_gate::set_scheduler_gate(Arc::new(OpenHumanSchedulerGate));
-    tinymemory_core::shutdown::set_shutdown_host(Arc::new(OpenHumanShutdownHost));
-    tinymemory_core::observability::set_error_reporter(Arc::new(OpenHumanErrorReporter));
+    tinymemory_core::config_loader::set_config_loader(Arc::new(NeppyConfigLoader));
+    tinymemory_core::nlp_host::set_nlp_host(Arc::new(NeppyNlpHost));
+    tinymemory_core::scheduler_gate::set_scheduler_gate(Arc::new(NeppySchedulerGate));
+    tinymemory_core::shutdown::set_shutdown_host(Arc::new(NeppyShutdownHost));
+    tinymemory_core::observability::set_error_reporter(Arc::new(NeppyErrorReporter));
     super::host::install_memory_event_sink();
     log::debug!("[memory:host] all seam implementations installed");
 }

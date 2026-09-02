@@ -138,7 +138,7 @@ fn ensure_running_does_not_publish_token_to_env() {
     );
 }
 
-/// Issue #1613: when the preferred port is occupied by a non-OpenHuman
+/// Issue #1613: when the preferred port is occupied by a non-Neppy
 /// listener, startup should fall back to a nearby port instead of failing.
 #[test]
 fn ensure_running_falls_back_for_unknown_listener_on_port() {

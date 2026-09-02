@@ -150,7 +150,7 @@ echo "---"
 # ── Strip ASCII art banner from output ─────────────────────────────────
 
 strip_banner() {
-    grep -v '▗\|▐\|▝\|▀\|█\|Contribute\|OpenHuman core' | grep -v '^[[:space:]]*$'
+    grep -v '▗\|▐\|▝\|▀\|█\|Contribute\|Neppy core' | grep -v '^[[:space:]]*$'
 }
 
 # ── Run for each namespace ─────────────────────────────────────────────

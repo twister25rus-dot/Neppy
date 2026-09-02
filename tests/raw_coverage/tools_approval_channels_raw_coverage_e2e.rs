@@ -1563,7 +1563,7 @@ fn tools_and_tool_registry_public_surfaces_cover_schema_and_assembly_paths() {
 
     let computer = ComputerUseConfig {
         api_key: Some("secret-key".into()),
-        window_allowlist: vec!["OpenHuman".into()],
+        window_allowlist: vec!["Neppy".into()],
         max_coordinate_x: Some(1920),
         max_coordinate_y: Some(1080),
         ..ComputerUseConfig::default()

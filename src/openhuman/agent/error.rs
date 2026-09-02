@@ -37,7 +37,7 @@ pub enum AgentError {
     /// Qwen/Llama via LM Studio or Ollama). Surfaced as a user-facing
     /// error instead of a silent blank reply (defense-in-depth from
     /// `agent/harness/session/turn.rs`) but suppressed from Sentry — it's
-    /// a provider/user-state outcome, not an OpenHuman bug, and a deeper
+    /// a provider/user-state outcome, not an Neppy bug, and a deeper
     /// fix lives in the model / provider config the user chose. Targets
     /// Sentry TAURI-RUST-4JX (~33 events, escalating on 0.56.0).
     EmptyProviderResponse { iteration: usize },

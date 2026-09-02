@@ -1,4 +1,4 @@
-//! Migration 7 → 8: retire the stale OpenHuman reasoning-tier `default_model`
+//! Migration 7 → 8: retire the stale Neppy reasoning-tier `default_model`
 //! defaults, rewriting them to the canonical `chat-v1` tier.
 //!
 //! `config.default_model` selects the managed-backend tier for the implicit
@@ -9,7 +9,7 @@
 //! another window. App updates never refresh a persisted `default_model`, so
 //! those workspaces still drive background turns onto the stale tier.
 //!
-//! This migration rewrites **only** those two known stale OpenHuman tier values
+//! This migration rewrites **only** those two known stale Neppy tier values
 //! to `chat-v1`. It deliberately leaves every other value untouched —
 //! `default_model` round-trips arbitrary strings (custom/BYOK model ids set via
 //! `config.update_model_settings` or `OPENHUMAN_MODEL`, plus the current
@@ -43,7 +43,7 @@ pub struct MigrationStats {
 pub fn run(config: &mut Config) -> anyhow::Result<MigrationStats> {
     let mut stats = MigrationStats::default();
 
-    // Only the two known stale OpenHuman tiers are rewritten. Trim so a padded
+    // Only the two known stale Neppy tiers are rewritten. Trim so a padded
     // `" reasoning-v1 "` is still caught, but never touch arbitrary/custom values.
     let is_stale_reasoning_tier = config.default_model.as_deref().is_some_and(|model| {
         let trimmed = model.trim();

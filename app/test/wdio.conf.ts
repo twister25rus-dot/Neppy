@@ -30,7 +30,7 @@ const tsconfigE2ePath = path.join(projectRoot, 'test', 'tsconfig.e2e.json');
 const testSpecsPath = path.join(projectRoot, 'test', 'e2e', 'specs', '**', '*.spec.ts');
 
 function linuxAppPath(): string {
-  const candidate = path.join(projectRoot, 'src-tauri', 'target', 'debug', 'OpenHuman');
+  const candidate = path.join(projectRoot, 'src-tauri', 'target', 'debug', 'Neppy');
   if (fs.existsSync(candidate)) return candidate;
   return candidate;
 }
@@ -113,7 +113,7 @@ export const config: Options.Testrunner & Record<string, unknown> = {
   },
   autoCompileOpts: { tsNodeOpts: { project: tsconfigE2ePath } },
   /**
-   * Switch the active window to the main OpenHuman app webview.
+   * Switch the active window to the main Neppy app webview.
    *
    * The driver may hand back a handle for a non-app window, so pick the
    * first whose URL contains `tauri.localhost`, falling back to the first

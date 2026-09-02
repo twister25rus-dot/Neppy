@@ -59,7 +59,7 @@ const EMPTY_TOOL_TIMELINE: ToolTimelineEntry[] = [];
 const EMPTY_PROCESSING: ProcessingTranscriptItem[] = [];
 
 /**
- * Establishes assistant-ui's message context around an OpenHuman transcript
+ * Establishes assistant-ui's message context around an Neppy transcript
  * row. The row itself remains responsible for the richer interleaved tool and
  * agent-process content, while the core primitive supplies native message
  * state for action bars and future editing/branching affordances.
@@ -153,7 +153,7 @@ interface ChatThreadViewProps {
  * ## assistant-ui
  *
  * The presentation leaves under `./aui/` are built on assistant-ui's HEADLESS
- * primitives and styled with OpenHuman semantic tokens; `@assistant-ui/react-ui`
+ * primitives and styled with Neppy semantic tokens; `@assistant-ui/react-ui`
  * and `@assistant-ui/styles` are deliberately NOT used (compiled Tailwind v4,
  * which this repo's `safari15` CSS target cannot downlevel, and a second theming
  * system competing with Theme Studio).
@@ -182,7 +182,7 @@ export const ChatThreadView = forwardRef<ChatThreadViewHandle, ChatThreadViewPro
       isLoading = false,
       loadError = null,
       emptyContent = null,
-      shareAgentName = 'OpenHuman',
+      shareAgentName = 'Neppy',
       scrollResetKey = 'chat-thread-view',
       pendingSendActive = false,
     },

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Messaging platforms OpenHuman talks back to you on: inbound dispatch into the
+  Messaging platforms Neppy talks back to you on: inbound dispatch into the
   agent loop, outbound replies and proactive delivery, and per-channel
   credentials.
 icon: messages-square
@@ -8,7 +8,7 @@ icon: messages-square
 
 # Messaging Channels
 
-A **channel** is a messaging platform OpenHuman uses to _talk back_ to you. This is the mirror image of an [integration](integrations/README.md): an integration is mostly a source the agent _reads from_ (your inbox, your calendar, your CRM), while a channel is a two-way conversation surface. You message the agent on a platform you already use, and the agent replies there.
+A **channel** is a messaging platform Neppy uses to _talk back_ to you. This is the mirror image of an [integration](integrations/README.md): an integration is mostly a source the agent _reads from_ (your inbox, your calendar, your CRM), while a channel is a two-way conversation surface. You message the agent on a platform you already use, and the agent replies there.
 
 Under the hood every channel implements one small Rust contract (a `send` path for outbound messages and a `listen` path for inbound ones), so the same agent loop serves Telegram, Discord, the built-in web chat, and a dozen others without per-platform branching in the core.
 
@@ -27,11 +27,11 @@ Channels that support it can show a typing indicator, stream progressive **draft
 
 ## Supported channels
 
-OpenHuman ships **18 channel provider modules** (16 built by default plus two behind Cargo feature flags), of which **17 are real messaging platforms**. The remaining one, `presentation`, is an internal response-rendering helper for the web chat, not a platform you connect to. A separate `cli` channel serves the `openhuman-core` terminal binary. Seven channels are exposed in the Settings UI; the rest are enabled through `config.toml`.
+Neppy ships **18 channel provider modules** (16 built by default plus two behind Cargo feature flags), of which **17 are real messaging platforms**. The remaining one, `presentation`, is an internal response-rendering helper for the web chat, not a platform you connect to. A separate `cli` channel serves the `openhuman-core` terminal binary. Seven channels are exposed in the Settings UI; the rest are enabled through `config.toml`.
 
 | Channel            | Direction     | Inbound transport            | Credential mode                                                    | In Settings UI |
 | ------------------ | ------------- | ---------------------------- | ------------------------------------------------------------------ | -------------- |
-| **Telegram**       | Two-way       | Bot API long-poll            | Connect via OpenHuman (managed DM) **or** your own BotFather token | Yes            |
+| **Telegram**       | Two-way       | Bot API long-poll            | Connect via Neppy (managed DM) **or** your own BotFather token | Yes            |
 | **Discord**        | Two-way       | Gateway                      | Your own bot token, OAuth install, **or** managed account link     | Yes            |
 | **Web**            | Two-way       | In-app                       | Built-in, no setup (local)                                         | Yes            |
 | **iMessage**       | Two-way       | macOS Messages (AppleScript) | Local-only, no credentials (needs Full Disk Access)                | Yes            |
@@ -59,11 +59,11 @@ Telegram is the most fully featured channel. It supports typing indicators and l
 
 Channels authenticate one of a few ways:
 
-- **Connect via OpenHuman (managed)**: a one-click, encrypted connection brokered through the OpenHuman backend. Today this covers Telegram (message the managed bot directly) and Discord (link your account or install via OAuth). No tokens live on your machine.
+- **Connect via Neppy (managed)**: a one-click, encrypted connection brokered through the Neppy backend. Today this covers Telegram (message the managed bot directly) and Discord (link your account or install via OAuth). No tokens live on your machine.
 - **Your own credentials**: you supply a bot token, API key/secret, or app credentials. Telegram (BotFather token), Discord (bot token), Slack, WhatsApp, Lark/Feishu, DingTalk, Yuanbao, Matrix, Signal, Mattermost, QQ, Linq, IRC, and Email all support this. Maximum control; you own the platform account, rate limits, and any webhook endpoint.
 - **Local, no credentials**: the **Web** chat and **iMessage** need no tokens at all. Web runs inside the desktop app; iMessage drives the local macOS Messages app over an AppleScript bridge (grant Full Disk Access). Both keep messages on your machine.
 
-Secrets supplied for any mode are stored through OpenHuman's credential layer and protected at rest by the [encryption layer](privacy-and-security.md). They are never written to `config.toml` in plaintext for the UI-managed channels.
+Secrets supplied for any mode are stored through Neppy's credential layer and protected at rest by the [encryption layer](privacy-and-security.md). They are never written to `config.toml` in plaintext for the UI-managed channels.
 
 ---
 
@@ -71,8 +71,8 @@ Secrets supplied for any mode are stored through OpenHuman's credential layer an
 
 Channels are set up under **Connections → Channels** in the left sidebar — **not** under Settings, and not under any "Automation & Channels" menu (no such menu exists). Open that tab, pick a platform tile, and follow its setup card:
 
-- **Discord** — choose _Connect via OpenHuman_ (link your account or install the bot via OAuth), or paste your own Discord bot token.
-- **Telegram** — message the managed OpenHuman bot to link, or paste a BotFather bot token.
+- **Discord** — choose _Connect via Neppy_ (link your account or install the bot via OAuth), or paste your own Discord bot token.
+- **Telegram** — message the managed Neppy bot to link, or paste a BotFather bot token.
 
 Slack is connected as an **app** under **Connections → OAuth** (Composio) so the agent can read and act in Slack; it is not set up as a talk-back channel in the Channels tab.
 
@@ -80,7 +80,7 @@ Slack is connected as an **app** under **Connections → OAuth** (Composio) so t
 
 ## Choosing the default channel
 
-Open **Connections → Channels** to pick which channel is the **active route**: the one OpenHuman uses for proactive, recipient-less delivery (cron, triggers, subconscious). The default is the in-app **Web** chat until you change it. Setting a new default takes effect immediately, without restarting the channel runtime, and the panel shows which channel is currently active. Inbound messages always get answered on whatever channel they arrived on, regardless of the default route.
+Open **Connections → Channels** to pick which channel is the **active route**: the one Neppy uses for proactive, recipient-less delivery (cron, triggers, subconscious). The default is the in-app **Web** chat until you change it. Setting a new default takes effect immediately, without restarting the channel runtime, and the panel shows which channel is currently active. Inbound messages always get answered on whatever channel they arrived on, regardless of the default route.
 
 ---
 

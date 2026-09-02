@@ -1,4 +1,4 @@
-//! OpenHuman adapters for the `tinyflows::caps` host seam.
+//! Neppy adapters for the `tinyflows::caps` host seam.
 //!
 //! This module stays export-focused. Capability construction, curation,
 //! preflight, and invocation logic live in [`ops`]; individual trait adapters

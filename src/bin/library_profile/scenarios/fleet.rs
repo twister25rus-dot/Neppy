@@ -1,4 +1,4 @@
-//! `fleet`: can OpenHuman host 100–1000 live agents on a 2 GB / 2 vCPU box?
+//! `fleet`: can Neppy host 100–1000 live agents on a 2 GB / 2 vCPU box?
 //!
 //! Answers four questions in one process: (1) marginal RSS per live agent
 //! (`baseline → constructed`), (2) idle CPU of parked agents (CPU delta over a

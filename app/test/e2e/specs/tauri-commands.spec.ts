@@ -12,7 +12,7 @@
  *
  *   2. **Core RPC over the relay**. We hit `openhuman.about_app_list` — a
  *      cheap read-only method that returns the capability catalogue —
- *      through the same `callOpenhumanRpc` helper every product spec uses.
+ *      through the same `callNeppyRpc` helper every product spec uses.
  *      That round-trips renderer → Tauri IPC → relay → core → response.
  *
  * The Tauri commands are invoked via `window.__TAURI_INTERNALS__.invoke`
@@ -25,7 +25,7 @@
  * present in the CEF harness.
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { hasAppChrome } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 
@@ -103,7 +103,7 @@ describe('Tauri commands', function () {
   });
 
   it('round-trips an RPC through the relay (openhuman.about_app_list)', async () => {
-    const res = await callOpenhumanRpc('openhuman.about_app_list', {});
+    const res = await callNeppyRpc('openhuman.about_app_list', {});
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     // about_app_list uses single_log → result is {result: [...capabilities], logs: [...]}

@@ -37,7 +37,7 @@ import {
   typeIntoComposer,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -137,7 +137,7 @@ describe('Chat harness — send + stream', () => {
     let sawInFlight = false;
     const inFlightDeadline = Date.now() + 8_000;
     while (Date.now() < inFlightDeadline) {
-      const snap = await callOpenhumanRpc<{ result: { entries: Array<{ key: string }> } }>(
+      const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
         'openhuman.test_support_in_flight_chats',
         {}
       );
@@ -169,7 +169,7 @@ describe('Chat harness — send + stream', () => {
     // e.g. a stray morning_briefing trigger from the seed cron job.
     const currentThreadId = await getSelectedThreadId();
     expect(typeof currentThreadId).toBe('string');
-    const after = await callOpenhumanRpc<{ result: { entries: Array<{ key: string }> } }>(
+    const after = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
       'openhuman.test_support_in_flight_chats',
       {}
     );
@@ -203,7 +203,7 @@ describe('Chat harness — send + stream', () => {
     let content = '';
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
-      const read = await callOpenhumanRpc<{ result: { content_utf8: string } }>(
+      const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
         'openhuman.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 65_536 }
       );
@@ -219,7 +219,7 @@ describe('Chat harness — send + stream', () => {
   });
 
   it('reads thread state from the workspace via list_workspace_files', async () => {
-    const list = await callOpenhumanRpc<{
+    const list = await callNeppyRpc<{
       result: { entries: Array<{ rel_path: string; size: number; is_dir: boolean }> };
     }>('openhuman.test_support_list_workspace_files', {
       rel_root: 'memory/conversations/threads',

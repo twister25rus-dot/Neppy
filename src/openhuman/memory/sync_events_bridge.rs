@@ -7,7 +7,7 @@
 //! frontend consumes, and the post-sync trigger that kicks off batch embedding.
 //!
 //! Subscribers are host surface by the tinymemory README's split — they name
-//! `DomainEvent`, which is OpenHuman's own vocabulary spanning agents,
+//! `DomainEvent`, which is Neppy's own vocabulary spanning agents,
 //! channels, cron and tools, and `BUS`, which the engine crate has no business
 //! knowing about.
 

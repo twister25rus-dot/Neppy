@@ -137,7 +137,7 @@ pub struct RpcError {
 /// Currently holds shared metadata like the core version.
 #[derive(Clone)]
 pub struct AppState {
-    /// The current version of the OpenHuman core binary, usually from `CARGO_PKG_VERSION`.
+    /// The current version of the Neppy core binary, usually from `CARGO_PKG_VERSION`.
     pub core_version: String,
 }
 

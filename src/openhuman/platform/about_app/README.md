@@ -1,6 +1,6 @@
 # about_app
 
-The single source of truth for the OpenHuman desktop app's **user-facing capability catalog**. It enumerates every capability the app exposes to end users — what each one does, where it lives in the UI (`how_to`), its maturity (`stable` / `beta` / `coming_soon` / `deprecated`), and a per-capability privacy disclosure (what data, if any, leaves the device and where it goes). The catalog is a compile-time static table; the module exposes read-only list / lookup / search over it via JSON-RPC. It is stateless — no persistence, no event subscribers, no agent tools.
+The single source of truth for the Neppy desktop app's **user-facing capability catalog**. It enumerates every capability the app exposes to end users — what each one does, where it lives in the UI (`how_to`), its maturity (`stable` / `beta` / `coming_soon` / `deprecated`), and a per-capability privacy disclosure (what data, if any, leaves the device and where it goes). The catalog is a compile-time static table; the module exposes read-only list / lookup / search over it via JSON-RPC. It is stateless — no persistence, no event subscribers, no agent tools.
 
 ## Responsibilities
 

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Get a broken or half-installed OpenHuman running again without losing your
+  Get a broken or half-installed Neppy running again without losing your
   memory, personas, or settings. Configuration is preserved by default.
 icon: life-ring
 ---
@@ -16,7 +16,7 @@ The guiding rule of this guide: **your configuration and memory are preserved by
 ## Prerequisites
 
 - Nothing special. You can do all of this from the app plus a file manager and, occasionally, a terminal.
-- Know where your data lives. **Everything OpenHuman persists is in one folder:**
+- Know where your data lives. **Everything Neppy persists is in one folder:**
 
   | Platform      | Data folder                 |
   | ------------- | --------------------------- |
@@ -49,7 +49,7 @@ Work top to bottom. **Stop as soon as it works.** Each rung is more disruptive t
 
 ### Rung 1: Restart cleanly
 
-- Fully quit OpenHuman (make sure no leftover process is running) and reopen it.
+- Fully quit Neppy (make sure no leftover process is running) and reopen it.
 - Only **one** instance should run at a time. A second copy can hold a lock the first one needs.
 
 ### Rung 2: Reinstall the app over your data
@@ -67,8 +67,8 @@ Match your symptom:
 | Symptom in logs / UI                                                                                                   | Cause                                                                        | Fix                                                                                                                                   |
 | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Sign-in stalls after the provider step; log mentions `neppy://` scheme **not registered** (Windows)                | The URL handler didn't register, or the install was moved after first launch | Follow the repair steps in [Troubleshooting Sign-In](../overview/troubleshooting-sign-in.md#windows-openhuman-handler-not-registered) |
-| App won't render / crashes on launch citing a **CEF / cache lock** (`SingletonLock`, cache "held by another instance") | A previous instance's browser cache is still locked                          | Ensure no other OpenHuman is running; if it persists, close all instances and relaunch                                                |
-| Local AI / Ollama errors on startup                                                                                    | The local model runtime isn't reachable                                      | This does **not** block the app; see [Use OpenHuman with a local model](local-model.md#common-failures)                               |
+| App won't render / crashes on launch citing a **CEF / cache lock** (`SingletonLock`, cache "held by another instance") | A previous instance's browser cache is still locked                          | Ensure no other Neppy is running; if it persists, close all instances and relaunch                                                |
+| Local AI / Ollama errors on startup                                                                                    | The local model runtime isn't reachable                                      | This does **not** block the app; see [Use Neppy with a local model](local-model.md#common-failures)                               |
 | "Low disk space" warning, or writes failing                                                                            | The workspace can't be written                                               | Free up space (the app wants a healthy margin, a few hundred MB minimum) and restart                                                  |
 
 ### Rung 4: Move the data folder aside (non-destructive reset)
@@ -76,7 +76,7 @@ Match your symptom:
 If the app still won't start and you suspect the **data folder** itself is the problem, **rename** it rather than delete it. This gives you a clean start while keeping a full backup you can restore from.
 
 {% hint style="warning" %}
-Quit OpenHuman completely before moving its folder.
+Quit Neppy completely before moving its folder.
 {% endhint %}
 
 ```bash
@@ -89,7 +89,7 @@ mv ~/.openhuman ~/.openhuman.backup-$(date +%Y%m%d)
 Rename-Item "$env:USERPROFILE\.openhuman" ".openhuman.backup"
 ```
 
-Relaunch. OpenHuman recreates a fresh data folder and you sign in again.
+Relaunch. Neppy recreates a fresh data folder and you sign in again.
 
 - If the fresh start **works**, the old folder was the issue, but your data is safe in the backup. You can copy specific pieces back (your memory database and vault) and test after each.
 - If it **still fails**, the data folder wasn't the cause. **Restore your backup** by renaming it back, so you lose nothing, and escalate (below).
@@ -121,4 +121,4 @@ Gather this and open an issue on [GitHub](https://github.com/tinyhumansai/openhu
 ## See also
 
 - [Troubleshooting Sign-In](../overview/troubleshooting-sign-in.md): the deep dive for auth-specific failures.
-- [Move OpenHuman to a new PC](move-to-new-pc.md): the same data folder is what you carry over.
+- [Move Neppy to a new PC](move-to-new-pc.md): the same data folder is what you carry over.

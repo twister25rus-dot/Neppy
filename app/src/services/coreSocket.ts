@@ -1,5 +1,5 @@
 /**
- * Shared Socket.IO factory for connections to the local OpenHuman core
+ * Shared Socket.IO factory for connections to the local Neppy core
  * (the in-process Rust server, addressed at `getCoreHttpBaseUrl()` or
  * the user's cloud-mode override).
  *

@@ -59,7 +59,7 @@ pub struct AgentRegistryEntry {
     pub name: String,
     /// Short explanation of when this agent should be used.
     pub description: String,
-    /// Default agents ship with OpenHuman; custom agents are user-authored.
+    /// Default agents ship with Neppy; custom agents are user-authored.
     pub source: AgentRegistrySource,
     /// Whether this agent is available for selection/delegation.
     #[serde(default = "default_true")]

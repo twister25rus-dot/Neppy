@@ -1,6 +1,6 @@
 # service
 
-Service-management domain for the OpenHuman core daemon. It installs/uninstalls the core binary as a per-user OS service (macOS LaunchAgent, Linux systemd user unit, Windows scheduled task), drives its install/start/stop/status lifecycle, and orchestrates **self-restart** and **graceful shutdown** of the currently running core process via the event bus. It also persists machine-local daemon-host UI preferences (tray visibility). All of this is exposed transport-agnostically through the `service.*` RPC/CLI controller registry.
+Service-management domain for the Neppy core daemon. It installs/uninstalls the core binary as a per-user OS service (macOS LaunchAgent, Linux systemd user unit, Windows scheduled task), drives its install/start/stop/status lifecycle, and orchestrates **self-restart** and **graceful shutdown** of the currently running core process via the event bus. It also persists machine-local daemon-host UI preferences (tray visibility). All of this is exposed transport-agnostically through the `service.*` RPC/CLI controller registry.
 
 ## Responsibilities
 

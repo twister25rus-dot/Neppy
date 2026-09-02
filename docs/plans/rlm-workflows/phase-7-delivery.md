@@ -10,7 +10,7 @@
   submodule checkout (the `[patch]` already points at
   `vendor/tinyagents`), so nothing blocks.
 
-## 7.2 OpenHuman PR (the gigantic one)
+## 7.2 Neppy PR (the gigantic one)
 
 - Repo: `tinyhumansai/openhuman`, branch `feat/rlm-language-workflows` off
   `upstream/main`; push to `origin` (fork `senamakel/openhuman`), PR

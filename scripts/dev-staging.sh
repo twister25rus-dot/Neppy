@@ -95,4 +95,4 @@ cargo tauri build --debug --bundles app
 kill $VITE_PID 2>/dev/null
 
 echo "[dev-staging] launching app bundle..."
-exec "$ROOT_DIR/app/src-tauri/target/debug/bundle/macos/OpenHuman.app/Contents/MacOS/OpenHuman"
+exec "$ROOT_DIR/app/src-tauri/target/debug/bundle/macos/Neppy.app/Contents/MacOS/Neppy"

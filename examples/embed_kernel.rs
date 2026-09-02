@@ -1,4 +1,4 @@
-//! Embed the OpenHuman core at its **kernel floor**, then opt one subsystem in.
+//! Embed the Neppy core at its **kernel floor**, then opt one subsystem in.
 //!
 //! [`DomainSet::kernel`] is the smallest useful runtime surface: threads,
 //! config, and security — the transport, dispatch, policy and identity a host

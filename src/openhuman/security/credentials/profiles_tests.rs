@@ -688,7 +688,7 @@ fn clear_lock_if_stale_reclaims_aged_malformed_lock() {
 /// be reclaimed after the short [`MALFORMED_LOCK_GRACE_MS`], NOT held for the
 /// full [`STALE_LOCK_AGE_MS`]. Previously a fresh pidless lock made
 /// `app_state_snapshot` (→ `acquire_lock`) block ~30s, stranding the user on
-/// "Initializing OpenHuman" after a kill+reopen.
+/// "Initializing Neppy" after a kill+reopen.
 #[test]
 fn clear_lock_if_stale_reclaims_pidless_lock_past_short_grace() {
     let tmp = TempDir::new().unwrap();

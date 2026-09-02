@@ -263,7 +263,7 @@ mod tests {
                 namespace: Some("global".into()),
                 subject: "Alice".into(),
                 predicate: "OWNS".into(),
-                object: "OpenHuman".into(),
+                object: "Neppy".into(),
                 attrs: json!({"entity_types": {"subject": "PERSON", "object": "PRODUCT"}}),
                 updated_at: 2.0,
                 evidence_count: 1,
@@ -288,7 +288,7 @@ mod tests {
         let relation = sample_hit(MemoryItemKind::Document)
             .supporting_relations
             .remove(0);
-        assert_eq!(relation_identity(&relation), "global|Alice|OWNS|OpenHuman");
+        assert_eq!(relation_identity(&relation), "global|Alice|OWNS|Neppy");
         let meta = relation_metadata(&relation);
         assert_eq!(meta["namespace"], "global");
         assert_eq!(meta["attrs"]["entity_types"]["subject"], "PERSON");
@@ -301,7 +301,7 @@ mod tests {
         assert_eq!(ctx.chunks.len(), 2);
         assert_eq!(ctx.relations.len(), 1);
         assert!(ctx.entities.iter().any(|e| e.name == "Alice"));
-        assert!(ctx.entities.iter().any(|e| e.name == "OpenHuman"));
+        assert!(ctx.entities.iter().any(|e| e.name == "Neppy"));
     }
 
     #[test]
@@ -310,7 +310,7 @@ mod tests {
         let text = format_llm_context_message(Some("who owns it"), &[hit]).unwrap();
         assert!(text.contains("Query: who owns it"));
         assert!(text.contains("Title: Body text"));
-        assert!(text.contains("Alice (PERSON) -[OWNS]-> OpenHuman (PRODUCT)"));
+        assert!(text.contains("Alice (PERSON) -[OWNS]-> Neppy (PRODUCT)"));
     }
 }
 

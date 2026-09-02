@@ -28,7 +28,7 @@ pub fn is_budget_exhausted_http_400(status: reqwest::StatusCode, body: &str) -> 
 /// running but has **no model loaded** (e.g. LM Studio idle): a 400 carrying
 /// `No models loaded. Please load a model …`.
 ///
-/// This is pure local user-state — nothing OpenHuman sent is malformed, there
+/// This is pure local user-state — nothing Neppy sent is malformed, there
 /// is no product bug and no local lever beyond the user loading a model — so it
 /// should be demoted from Sentry to an info log rather than paging on every
 /// retry (TAURI-RUST-DMQ: 5,469 events from a single idle LM Studio server).
@@ -76,7 +76,7 @@ pub fn log_local_provider_no_model_loaded(
 ///
 /// This shape is deterministic provider/user-state (endpoint-model mismatch,
 /// unsupported schema, provider-side validation) and does not provide
-/// actionable signal for OpenHuman Sentry triage.
+/// actionable signal for Neppy Sentry triage.
 pub fn is_custom_openai_upstream_bad_request_http_400(
     provider: &str,
     status: reqwest::StatusCode,
@@ -210,7 +210,7 @@ pub fn log_provider_access_policy_denied_http_403(
 /// rather than the model's full window — see
 /// [`crate::openhuman::inference::provider::ChatRequest::max_tokens`]): a 402
 /// that still arrives means the user's own third-party account is genuinely
-/// out of credit, a billing state OpenHuman has no lever over. Demote from
+/// out of credit, a billing state Neppy has no lever over. Demote from
 /// Sentry to an info log rather than page once per retry
 /// (TAURI-RUST-C62: 12k events from a single low-balance user).
 ///
@@ -263,7 +263,7 @@ pub fn log_provider_insufficient_credits_402(
 /// Whether a provider non-2xx response is a deterministic **monthly-quota /
 /// usage-limit exhausted** user-state error — the user's third-party plan has
 /// spent its allotment for the period and no request will succeed until it
-/// resets (a billing/plan state OpenHuman has no lever over).
+/// resets (a billing/plan state Neppy has no lever over).
 ///
 /// Distinct from [`is_provider_insufficient_credits_402`] in two ways:
 /// 1. The signal is a *usage-quota cap* ("you have reached the limit",
@@ -436,7 +436,7 @@ pub fn log_ollama_cloud_internal_500(
 /// `{"error":"Message rejected by Ombudsman","score":80}` (TAURI-RUST-ECR,
 /// 4,517 events from a single looping triage-agent machine).
 ///
-/// This is `genuinely-unpreventable` from OpenHuman's side: the request is
+/// This is `genuinely-unpreventable` from Neppy's side: the request is
 /// well-formed, the rejection comes from an external guard we neither own nor
 /// configure, and there is no client lever to reshape the request into one the
 /// proxy will accept. The triage agent re-issues the same prompt every turn, so
@@ -447,7 +447,7 @@ pub fn log_ollama_cloud_internal_500(
 ///
 /// Anchored on the moderation-verdict shape — the rejection wording
 /// (`message rejected` / `ombudsman`) or the `"score"` verdict field — none of
-/// which OpenHuman's own backend or a normal provider 400 (malformed request,
+/// which Neppy's own backend or a normal provider 400 (malformed request,
 /// schema error) emits, so a genuine bug still reaches Sentry. Covered by a
 /// verbatim-body test so a proxy wording drift fails CI instead of silently
 /// leaking events.
@@ -490,7 +490,7 @@ pub fn log_provider_moderation_rejection(
 /// constraint) that should be demoted from Sentry to an info log.
 ///
 /// Provider-aware (inverted polarity vs. the 401/403 backend rule): for
-/// most config-rejection phrases the same body from the OpenHuman
+/// most config-rejection phrases the same body from the Neppy
 /// **backend** stays Sentry-actionable — that would mean we sent our own
 /// backend a bad request (a regression, e.g. #2079). Restricted to the
 /// observed shapes (400 invalid-param / unknown-model, 404
@@ -498,7 +498,7 @@ pub fn log_provider_moderation_rejection(
 /// handled separately.
 ///
 /// **Exception: OpenAI-compatible "unknown model"** (`Model 'X' is not
-/// available. Use GET /openai/v1/models …`). The OpenHuman backend now
+/// available. Use GET /openai/v1/models …`). The Neppy backend now
 /// emits this exact body for user-configured unknown model ids, so it is
 /// user-state regardless of provider — the polarity guard is dropped for
 /// this specific shape (TAURI-RUST-2Z1). See
@@ -525,7 +525,7 @@ pub fn is_provider_config_rejection_http(
     }
     // OpenAI-compatible "unknown model" body is user-state regardless of
     // provider — both third-party `custom_openai` upstreams and our own
-    // OpenHuman backend now emit it for user-configured model ids that
+    // Neppy backend now emit it for user-configured model ids that
     // aren't in the registry (TAURI-RUST-2Z1).
     if crate::openhuman::inference::provider::is_openai_compatible_unknown_model_message(body) {
         return true;
@@ -679,7 +679,7 @@ pub fn log_context_window_exceeded(
 /// ([`is_context_window_exceeded_message`], a model-size limit not a rate cap).
 /// Here the request is larger than the per-minute limit outright, so it is
 /// permanently non-viable until the user picks a higher-tier model/provider —
-/// OpenHuman has no lever to raise a third-party account's TPM tier.
+/// Neppy has no lever to raise a third-party account's TPM tier.
 ///
 /// Canonical wire shape (groq `on_demand` free tier, Sentry TAURI-RUST-HXF):
 /// `groq API error (413 Payload Too Large): {"error":{"message":"Request too
@@ -701,7 +701,7 @@ pub fn is_provider_rate_cap_exceeded_message(body: &str) -> bool {
         && (lower.contains("tokens per minute") || lower.contains("(tpm)"))
 }
 
-/// Whether a provider non-2xx response is the OpenHuman **backend** rejecting
+/// Whether a provider non-2xx response is the Neppy **backend** rejecting
 /// the app session JWT (`401`/`403`). This is expected user-session state
 /// (token expired / revoked / rotated server-side), not a product bug — the
 /// auth domain owns recovery, so the predicate is provider-scoped to
@@ -725,7 +725,7 @@ pub fn is_backend_auth_failure(provider: &str, status: reqwest::StatusCode) -> b
 /// (#2786 / [`is_backend_auth_failure`]).
 ///
 /// Provider-scoped and body-shape-anchored, mirroring the sibling rules:
-/// - The OpenHuman **backend** keeps its [`is_backend_auth_failure`] →
+/// - The Neppy **backend** keeps its [`is_backend_auth_failure`] →
 ///   [`publish_backend_session_expired`] branch (a backend `401`/`403` is
 ///   app-session expiry, not a BYO key), so this predicate excludes
 ///   [`openhuman_backend_model::PROVIDER_LABEL`].
@@ -782,7 +782,7 @@ pub fn is_byo_provider_auth_failure_http(
         // OpenRouter's wording for a key that resolves to no account
         // (revoked / deleted user): `401 {"error":{"message":"User not
         // found.","code":401}}`. Same invalid-BYO-key user-state as the
-        // markers above — OpenHuman has no lever to make the user's
+        // markers above — Neppy has no lever to make the user's
         // third-party account exist. Kept OpenRouter-gated (not a global
         // marker): `"user not found"` is generic prose another provider
         // could emit for an unrelated 401/403, and demoting that would
@@ -861,11 +861,11 @@ pub fn log_byo_provider_auth_failure(
 ///
 /// Keyed on the OAuth-expiry body markers, which an API-key rejection never
 /// emits (those say "incorrect api key" — caught by
-/// [`is_byo_provider_auth_failure_http`] instead). The OpenHuman **backend**
+/// [`is_byo_provider_auth_failure_http`] instead). The Neppy **backend**
 /// provider is excluded — its `401`/`403` is app-session expiry handled by
 /// [`publish_backend_session_expired`]. Unlike that path, this does **not**
 /// publish [`crate::core::events::DomainEvent::SessionExpired`]: an expired
-/// *provider* OAuth token must not tear down the OpenHuman app session.
+/// *provider* OAuth token must not tear down the Neppy app session.
 pub fn is_openai_oauth_session_expired_http(
     provider: &str,
     status: reqwest::StatusCode,
@@ -1002,7 +1002,7 @@ pub fn publish_backend_session_expired(
 /// - **Transient statuses** (429 — see [`should_report_provider_http_failure`]).
 ///   These get retried by the reliable-provider layer and don't deserve a
 ///   per-attempt Sentry event.
-/// - **401/403 from the OpenHuman backend provider** — the user's app session
+/// - **401/403 from the Neppy backend provider** — the user's app session
 ///   expired. That is expected user-state, not a server bug, and reporting it
 ///   spams Sentry (OPENHUMAN-TAURI-1T: 5,414 events from a single user whose
 ///   cron loops kept firing post-expiry). Instead we publish a
@@ -1563,7 +1563,7 @@ mod tests {
 
     #[test]
     fn openai_oauth_session_expired_excludes_backend_provider() {
-        // The OpenHuman backend owns app-session expiry via
+        // The Neppy backend owns app-session expiry via
         // `publish_backend_session_expired`; this provider-OAuth gate must not
         // claim a backend 401.
         assert!(!is_openai_oauth_session_expired_http(

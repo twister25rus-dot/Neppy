@@ -5,7 +5,7 @@
 //! this client, and every host needs them. Re-exported here so existing call
 //! sites keep one import path.
 //!
-//! What stays OpenHuman-specific is *where the token lives*: the credentials
+//! What stays Neppy-specific is *where the token lives*: the credentials
 //! store, keyring, and auth-profile names below.
 
 use chrono::{DateTime, Utc};

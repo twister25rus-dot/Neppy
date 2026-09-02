@@ -9,7 +9,7 @@
  *   3. The Skills UI surface renders and shows the skills catalog.
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { dumpAccessibilityTree, textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateToSkills } from '../helpers/shared-flows';
@@ -38,7 +38,7 @@ describe('Skill discovery (UI + core RPC)', () => {
   });
 
   it('core.ping responds over the same JSON-RPC URL the UI uses', async () => {
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     expect(ping.ok).toBe(true);
   });
 

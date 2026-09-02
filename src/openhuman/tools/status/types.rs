@@ -42,7 +42,7 @@ pub enum ToolLifecycleState {
 /// explanations in [`ClassifiedFailure`], not to internal error enums.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ToolFailureClass {
-    /// OpenHuman lacks an OS/tool permission it needs (e.g. file access).
+    /// Neppy lacks an OS/tool permission it needs (e.g. file access).
     MissingPermission,
     /// A required application or command is not installed / not available.
     MissingApp,
@@ -73,7 +73,7 @@ pub enum ToolFailureClass {
 /// and action-needs-user-confirmation states".
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FailureCategory {
-    /// Transient — safe for OpenHuman to retry on its own (bounded, in a later
+    /// Transient — safe for Neppy to retry on its own (bounded, in a later
     /// phase). `recoverable` on [`ClassifiedFailure`] is true iff this variant.
     Recoverable,
     /// Refused by policy. Not retried; the user must change settings to allow it.
@@ -103,7 +103,7 @@ pub struct ClassifiedFailure {
     pub cause_plain: String,
     /// Plain-language description of what to do next.
     pub next_action: String,
-    /// Whether OpenHuman may retry automatically. Always equal to
+    /// Whether Neppy may retry automatically. Always equal to
     /// `category == FailureCategory::Recoverable` — carried explicitly so
     /// serialized consumers don't have to re-derive it.
     pub recoverable: bool,

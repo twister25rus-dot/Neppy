@@ -1,4 +1,4 @@
-# OpenHuman App Knip Cleanup Implementation Plan
+# Neppy App Knip Cleanup Implementation Plan
 
 > **Execution note:** Carry this plan out from
 > `/Users/enamakel/work/workflow-openhuman/worktrees/knip-cleanup/openhuman` on
@@ -6,7 +6,7 @@
 > for every pnpm/Knip command. Do not push, open a PR, edit Rust, touch another
 > umbrella submodule, or expand the cleanup beyond `app/`.
 
-**Goal:** Make Knip's OpenHuman app analysis trustworthy, then remove unreachable
+**Goal:** Make Knip's Neppy app analysis trustworthy, then remove unreachable
 TypeScript/React files, unused package dependencies, and unnecessary exported
 surface without changing runtime behavior.
 

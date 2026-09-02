@@ -4,18 +4,18 @@
 //! limits, and the validation rules — lives in the host-local
 //! [`format`](super::format)
 //! module and is re-exported here. Nothing about "a title, some sections, and a bullet
-//! list" is OpenHuman-specific, so the definitions live where any host can
+//! list" is Neppy-specific, so the definitions live where any host can
 //! reach them and this module keeps only what genuinely is ours:
 //!
 //! - [`GenerateDocumentOutput`] — artifact ids and workspace paths, concepts
 //!   the bus contract has no notion of.
 //! - [`DocumentError`] — the agent-facing error shape, which carries a
 //!   [`DocumentError::GenerationTimeout`] variant the document module cannot produce:
-//!   the deadline is OpenHuman's policy, applied by [`engine`](super::engine)
+//!   the deadline is Neppy's policy, applied by [`engine`](super::engine)
 //!   around a synchronous crate call.
 //!
 //! The re-exported [`GenerateDocumentInput`] is the format module's `DocumentSpec`
-//! under its historical OpenHuman name. Field names are unchanged, so the JSON
+//! under its historical Neppy name. Field names are unchanged, so the JSON
 //! tool schema the agent sees is byte-identical to before the extraction.
 
 use serde::{Deserialize, Serialize};

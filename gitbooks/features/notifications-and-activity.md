@@ -1,14 +1,14 @@
 ---
 description: >-
   The notification center, the Activity transparency hub, and the Routines
-  scheduler: everything OpenHuman tells you about, and everything it does in
+  scheduler: everything Neppy tells you about, and everything it does in
   the background.
 icon: bell
 ---
 
 # Notifications & Activity
 
-OpenHuman surfaces two kinds of "what's happening" in one place: **notifications** (things you should look at, like an important Slack message, a failed webhook, or a high-priority email) and **activity** (a transparent ledger of what the agent did on its own while you weren't watching). This page covers the notification center, the Activity hub that fronts it, and the Routines screen for managing scheduled automations.
+Neppy surfaces two kinds of "what's happening" in one place: **notifications** (things you should look at, like an important Slack message, a failed webhook, or a high-priority email) and **activity** (a transparent ledger of what the agent did on its own while you weren't watching). This page covers the notification center, the Activity hub that fronts it, and the Routines screen for managing scheduled automations.
 
 ---
 

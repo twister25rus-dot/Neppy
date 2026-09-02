@@ -76,7 +76,7 @@ async fn telegram_mock_handler(
 
     let result = match method.as_str() {
         "sendMessage" => json!({ "message_id": 9101 }),
-        "getMe" => json!({ "id": 1, "username": "OpenHumanBot" }),
+        "getMe" => json!({ "id": 1, "username": "NeppyBot" }),
         _ => json!(true),
     };
     (
@@ -154,7 +154,7 @@ async fn dispatch_harness_covers_streaming_reactions_memory_and_success_events()
         response_text: Some("streamed final response".to_string()),
         memory_entries: vec![TestMemoryEntry {
             key: "project".to_string(),
-            content: "OpenHuman uses a channel runtime".to_string(),
+            content: "Neppy uses a channel runtime".to_string(),
             score: Some(0.9),
         }],
         ..Default::default()

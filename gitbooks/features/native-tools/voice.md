@@ -7,7 +7,7 @@ icon: microphone
 
 # Voice
 
-OpenHuman is voice-first when you want it to be. STT, TTS, and the live Google Meet agent are part of the core, not a third-party plugin.
+Neppy is voice-first when you want it to be. STT, TTS, and the live Google Meet agent are part of the core, not a third-party plugin.
 
 ## Speech-to-text
 
@@ -25,7 +25,7 @@ Reply speech routes through a hosted TTS model. The agent's responses can be spo
 
 ## Live Google Meet agent
 
-OpenHuman's flagship voice integration:
+Neppy's flagship voice integration:
 
 - Joins a Google Meet via the embedded webview.
 - Streams audio out to STT in real time, transcribes everyone in the call, and writes structured notes into the [Memory Tree](../obsidian-wiki/memory-tree.md) as the meeting progresses.
@@ -33,7 +33,7 @@ OpenHuman's flagship voice integration:
 
 ## Privacy
 
-- Audio capture is local. Streaming STT goes through the OpenHuman backend; no recording is retained beyond the live transcript.
+- Audio capture is local. Streaming STT goes through the Neppy backend; no recording is retained beyond the live transcript.
 - TTS audio is streamed and discarded - nothing stored.
 - Meeting transcripts land in your local memory tree, like any other source.
 

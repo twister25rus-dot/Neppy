@@ -19,7 +19,7 @@
 //! escape hatches". That was true before the memory extraction and is not true
 //! now: all three live in `tinymemory-core`, a *different* crate, where
 //! `pub(crate)` would have been unreachable from `src/` too — and all three are
-//! `pub`. Every OpenHuman item this file names (`memory::ops::*`,
+//! `pub`. Every Neppy item this file names (`memory::ops::*`,
 //! `memory::rpc_models::QueryNamespaceRequest`, `config::Config`) is `pub` as
 //! well, so nothing here ever needed in-crate reach.
 //!

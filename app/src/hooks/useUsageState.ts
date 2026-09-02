@@ -27,7 +27,7 @@ interface UsageState {
   /**
    * True when every chat workload (reasoning/agentic/coding) is routed to a
    * non-openhuman provider (a user-configured cloud provider or local Ollama).
-   * Used to suppress the OpenHuman-included-budget banner / modal: when the
+   * Used to suppress the Neppy-included-budget banner / modal: when the
    * user has explicitly bypassed the hosted backend for chat, the included
    * budget cycle no longer gates them. See #2040 and #2041.
    */
@@ -61,7 +61,7 @@ async function fetchUsageData(): Promise<{
 } | null> {
   // Read routing first. If every workload is explicitly assigned to a local
   // or user-supplied cloud provider, this session should not phone home to
-  // OpenHuman's billing/usage APIs at all (#2020). Missing/failed AI settings
+  // Neppy's billing/usage APIs at all (#2020). Missing/failed AI settings
   // stay conservative and fall through to the existing billing path.
   const aiSettings = await loadAISettings().catch(err => {
     if (err instanceof CoreRpcError && err.kind === 'auth_expired') {
@@ -196,7 +196,7 @@ export function useUsageState(activeChatRole: 'chat' | 'reasoning' = 'chat'): Us
       : 0;
 
   // When every chat workload routes to a user-supplied provider (cloud or
-  // local Ollama), the OpenHuman included-budget cycle does not gate the
+  // local Ollama), the Neppy included-budget cycle does not gate the
   // user. Conservative on missing aiSettings (treat as still using
   // openhuman) so we never silently disable the gate after a transient
   // fetch failure (#2040, #2041).
@@ -228,7 +228,7 @@ export function useUsageState(activeChatRole: 'chat' | 'reasoning' = 'chat'): Us
   const isAtLimit = isBudgetExhausted;
 
   // Mirror the isAtLimit guard: when every chat workload is routed away from
-  // OpenHuman the included-budget cycle does not gate the user, so the
+  // Neppy the included-budget cycle does not gate the user, so the
   // near-limit warning is equally irrelevant (#3097 — top-up banner shown
   // despite custom provider).
   const isNearLimit = !isAtLimit && !isFullyRoutedAway && teamUsage !== null && usagePct >= 0.8;

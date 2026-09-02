@@ -770,7 +770,7 @@ export default function CoreStateProvider({ children }: { children: ReactNode })
   //    them so `clearSession` only runs once.
   // 2. `openhuman:session-expired` — emitted by `socketService` when
   //    the core pushes `auth:session_expired` over Socket.IO (the
-  //    OpenHuman backend provider's `api_error` published
+  //    Neppy backend provider's `api_error` published
   //    `DomainEvent::SessionExpired`, or `jsonrpc::invoke_method`
   //    detected a 401 on a server-side method call). Without this, the
   //    UI keeps showing a logged-in shell until the next refresh()

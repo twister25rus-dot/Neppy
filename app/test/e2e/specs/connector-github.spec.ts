@@ -18,7 +18,7 @@ import {
   seedComposioConnection,
   seedComposioToolkits,
 } from '../helpers/composio-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
 import {
   textExists,
@@ -86,7 +86,7 @@ describe('GitHub Composio connector flow', () => {
     seedComposioConnection(TOOLKIT_SLUG, 'ACTIVE', 'c-github-1');
     clearRequestLog();
 
-    const out = await callOpenhumanRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
+    const out = await callNeppyRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
     expect(out.ok).toBe(true);
     const authReq = getRequestLog().find(
       r => r.method === 'POST' && r.url.includes('/agent-integrations/composio/authorize')
@@ -101,7 +101,7 @@ describe('GitHub Composio connector flow', () => {
     this.timeout(60_000);
     seedComposioConnection(TOOLKIT_SLUG, 'ACTIVE', 'c-github-1');
 
-    const out = await callOpenhumanRpc('openhuman.composio_list_connections', {});
+    const out = await callNeppyRpc('openhuman.composio_list_connections', {});
     expect(out.ok).toBe(true);
     const result = (out.result as { result?: unknown })?.result ?? out.result;
     const connections = (result as { connections?: unknown[] })?.connections ?? [];
@@ -117,7 +117,7 @@ describe('GitHub Composio connector flow', () => {
     this.timeout(30_000);
     clearRequestLog();
 
-    await callOpenhumanRpc('openhuman.composio_sync', { toolkit: TOOLKIT_SLUG });
+    await callNeppyRpc('openhuman.composio_sync', { toolkit: TOOLKIT_SLUG });
     // syncReq URL check dropped — composio_sync short-circuits with 'no
     // native provider' for connectors without a Rust-side provider, so no
     // HTTP request is logged. assertSessionNotNuked() covers the real
@@ -129,7 +129,7 @@ describe('GitHub Composio connector flow', () => {
     this.timeout(30_000);
     clearRequestLog();
 
-    await callOpenhumanRpc('openhuman.composio_execute', {
+    await callNeppyRpc('openhuman.composio_execute', {
       connection_id: 'c-github-1',
       action: 'GITHUB_LIST_REPOS',
       params: {},
@@ -140,7 +140,7 @@ describe('GitHub Composio connector flow', () => {
 
   it('trigger catalog lists available GitHub triggers', async function () {
     this.timeout(30_000);
-    const out = await callOpenhumanRpc('openhuman.composio_list_available_triggers', {
+    const out = await callNeppyRpc('openhuman.composio_list_available_triggers', {
       toolkit: TOOLKIT_SLUG,
       connection_id: 'c-github-1',
     });
@@ -180,7 +180,7 @@ describe('GitHub Composio connector flow', () => {
     this.timeout(60_000);
     // Inject a fault that returns 400 on execute (simulates a scoped 4xx)
     injectComposioFault(400);
-    await callOpenhumanRpc('openhuman.composio_execute', {
+    await callNeppyRpc('openhuman.composio_execute', {
       connection_id: 'c-github-1',
       action: 'GITHUB_LIST_REPOS',
       params: {},
@@ -194,7 +194,7 @@ describe('GitHub Composio connector flow', () => {
     seedComposioConnection(TOOLKIT_SLUG, 'ACTIVE', 'c-github-1');
     clearRequestLog();
 
-    await callOpenhumanRpc('openhuman.composio_delete_connection', { connection_id: 'c-github-1' });
+    await callNeppyRpc('openhuman.composio_delete_connection', { connection_id: 'c-github-1' });
     const deleteReq = getRequestLog().find(
       r => r.method === 'DELETE' && r.url.includes('/composio/connections/')
     );

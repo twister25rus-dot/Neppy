@@ -132,19 +132,19 @@ export function oauthAuthReadinessUserMessage(reason: OAuthAuthReadinessFailure)
   switch (reason) {
     case 'core_mode_unset':
       return (
-        'Finish choosing how OpenHuman runs (tap Continue on the setup screen), ' +
+        'Finish choosing how Neppy runs (tap Continue on the setup screen), ' +
         'then try signing in again.'
       );
     case 'core_unreachable': {
       const mode = getStoredCoreMode();
       if (mode === 'cloud') {
         return (
-          'OpenHuman could not reach its remote (cloud) runtime. ' +
+          'Neppy could not reach its remote (cloud) runtime. ' +
           'Check your RPC URL and token in Settings, then try signing in again.'
         );
       }
       return (
-        'OpenHuman could not reach its local runtime. Quit and reopen the app, ' +
+        'Neppy could not reach its local runtime. Quit and reopen the app, ' +
         'then try signing in again.'
       );
     }

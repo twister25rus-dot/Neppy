@@ -1,6 +1,6 @@
 ---
 description: >-
-  Let OpenHuman tidy, rename, and restructure a folder of files safely, inside
+  Let Neppy tidy, rename, and restructure a folder of files safely, inside
   a boundary you set, with every change gated by your approval.
 icon: folder-tree
 ---
@@ -15,7 +15,7 @@ The core idea: the agent works inside a **boundary you define**, and any file ch
 
 ## Prerequisites
 
-- OpenHuman set up. See [Create my personal AI assistant](personal-assistant.md).
+- Neppy set up. See [Create my personal AI assistant](personal-assistant.md).
 - A specific folder you want organized. Ideally, make a copy first if the contents are irreplaceable.
 
 ## Privacy implications
@@ -30,7 +30,7 @@ The core idea: the agent works inside a **boundary you define**, and any file ch
 
 ### 1. Decide where the agent may act
 
-By default the agent's read/write root is its **projects** area (by default `~/OpenHuman/projects`), and it's confined there. It does **not** have ambient access to the rest of your disk. To let it work on a folder elsewhere, add that folder as a **trusted root**:
+By default the agent's read/write root is its **projects** area (by default `~/Neppy/projects`), and it's confined there. It does **not** have ambient access to the rest of your disk. To let it work on a folder elsewhere, add that folder as a **trusted root**:
 
 - Open **Settings → Agents → Agent access**.
 - Add the target folder as a trusted root with read-write access.
@@ -76,7 +76,7 @@ When the agent wants to move, rename, or delete, an **Approval Request card** ap
 ## Recovery
 
 - **Nothing runs without approval** in Supervised tier. If a plan looks wrong, **Deny** and it doesn't happen.
-- **Undo is manual.** OpenHuman doesn't roll file operations back for you, so work on a **copy** of anything precious, or keep the folder under version control (e.g. `git`) so you can revert.
+- **Undo is manual.** Neppy doesn't roll file operations back for you, so work on a **copy** of anything precious, or keep the folder under version control (e.g. `git`) so you can revert.
 - If the agent is doing too much, drop to **Read-only** in Agent access. It can still suggest a plan but can't change files.
 
 ## See also

@@ -97,7 +97,7 @@ export function handleIntegrations(ctx) {
       data: [
         {
           id: "msg-1",
-          subject: "Welcome to OpenHuman",
+          subject: "Welcome to Neppy",
           from: "team@openhuman.com",
           date: new Date().toISOString(),
           snippet: "Welcome to the platform!",
@@ -480,7 +480,7 @@ export function handleIntegrations(ctx) {
               {
                 id: "e2e-gmail-message-1",
                 snippet:
-                  "Welcome to OpenHuman. No profile link is required for this run.",
+                  "Welcome to Neppy. No profile link is required for this run.",
               },
             ],
           }

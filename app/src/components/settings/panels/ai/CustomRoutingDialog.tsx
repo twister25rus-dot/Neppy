@@ -55,7 +55,7 @@ export const CustomRoutingDialog = ({
 }: CustomRoutingDialogProps) => {
   const { t } = useT();
   // Non-openhuman cloud providers + local-ollama (if available) are the
-  // "Custom" options. OpenHuman is its own Managed path; Default serializes
+  // "Custom" options. Neppy is its own Managed path; Default serializes
   // to the backend's `cloud` sentinel. Claude Code is excluded here — it has
   // its own dedicated `claude-code:` select option, not a generic cloud one.
   const customCloud = cloudProviders.filter(

@@ -241,7 +241,7 @@ fn composio_error_mapping_classifies_and_formats_provider_failures() {
 
     let rate_limited = format_provider_error("SLACK_FETCH_CONVERSATION_HISTORY", "429");
     assert!(rate_limited.starts_with("[composio:error:rate_limited]"));
-    assert!(rate_limited.contains("not an OpenHuman gateway outage"));
+    assert!(rate_limited.contains("not an Neppy gateway outage"));
 
     let platform = format_provider_error("CUSTOM_ACTION", "token revoked");
     assert!(platform.starts_with("[composio:error:composio_platform]"));

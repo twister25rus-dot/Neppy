@@ -61,7 +61,7 @@ pub fn tools_schemas(function: &str) -> ControllerSchema {
             namespace: "tools",
             function: "composio_execute",
             description: "Execute a Composio action. Routes through the mode-aware \
-                          factory: backend mode proxies via the OpenHuman backend; \
+                          factory: backend mode proxies via the Neppy backend; \
                           direct mode calls backend.composio.dev with the user's own \
                           API key. Exposed for Tauri-driven flows (e.g. onboarding) \
                           that orchestrate tool calls themselves.",
@@ -303,10 +303,9 @@ pub fn tools_schemas(function: &str) -> ControllerSchema {
         "tools_searxng_search" => ControllerSchema {
             namespace: "tools",
             function: "searxng_search",
-            description:
-                "Web search via a user-configured SearXNG instance. Returns normalized \
+            description: "Web search via a user-configured SearXNG instance. Returns normalized \
                           results with title, URL, snippet, and source. Intended for private, \
-                          self-hosted search without routing queries through the OpenHuman backend.",
+                          self-hosted search without routing queries through the Neppy backend.",
             inputs: vec![
                 FieldSchema {
                     name: "query",

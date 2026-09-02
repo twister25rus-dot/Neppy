@@ -8,14 +8,14 @@ describe('parseToolFailure', () => {
       class: 'MissingPermission',
       category: 'NeedsUserConfirmation',
       recoverable: false,
-      cause_plain: "OpenHuman doesn't have permission to do this yet.",
+      cause_plain: "Neppy doesn't have permission to do this yet.",
       next_action: 'Grant the permission it needs, then try again.',
     });
     expect(parsed).toEqual({
       class: 'MissingPermission',
       category: 'NeedsUserConfirmation',
       recoverable: false,
-      causePlain: "OpenHuman doesn't have permission to do this yet.",
+      causePlain: "Neppy doesn't have permission to do this yet.",
       nextAction: 'Grant the permission it needs, then try again.',
     });
   });

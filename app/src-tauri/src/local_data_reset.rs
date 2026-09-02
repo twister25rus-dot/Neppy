@@ -2,7 +2,7 @@ use crate::core_process;
 #[cfg(target_os = "windows")]
 use crate::reset_reboot_schedule;
 
-/// Reset the user's local OpenHuman data and bounce the embedded core.
+/// Reset the user's local Neppy data and bounce the embedded core.
 ///
 /// Replaces the prior two-step UI flow that called the core JSON-RPC
 /// `openhuman.config_reset_local_data` (in-process removal) followed by
@@ -195,7 +195,7 @@ fn reset_local_data_delete_error(
         //     `shutdown_file_guard()` (drops the rolling log file handle).
         // So any remaining lock now comes from *outside* this process —
         // anti-virus / file indexer / sibling app / Explorer — and cannot
-        // be released by closing more OpenHuman windows. See issue #1615.
+        // be released by closing more Neppy windows. See issue #1615.
         #[cfg(target_os = "windows")]
         {
             return schedule_reboot_delete_or_describe(label, path, error);
@@ -207,7 +207,7 @@ fn reset_local_data_delete_error(
         #[cfg(not(target_os = "windows"))]
         {
             return Err(format!(
-                "Failed to remove {label} at {} because it is locked by another OpenHuman window or process. Close all OpenHuman windows and try again. ({error})",
+                "Failed to remove {label} at {} because it is locked by another Neppy window or process. Close all Neppy windows and try again. ({error})",
                 path.display()
             ));
         }
@@ -273,13 +273,13 @@ fn schedule_reboot_delete_or_describe(
             );
             if partial_total == 0 {
                 Err(format!(
-                    "Failed to remove {label} at {} because it is locked by another OpenHuman window or process, and scheduling deletion on next reboot also failed ({}). Close all OpenHuman windows and try again. ({original_error})",
+                    "Failed to remove {label} at {} because it is locked by another Neppy window or process, and scheduling deletion on next reboot also failed ({}). Close all Neppy windows and try again. ({original_error})",
                     path.display(),
                     failure.error,
                 ))
             } else {
                 Err(format!(
-                    "Failed to remove {label} at {} because it is locked by another OpenHuman window or process. {} files and {} folders were queued for the next reboot before scheduling failed ({}); the rest still needs manual cleanup. Close all OpenHuman windows and try again. ({original_error})",
+                    "Failed to remove {label} at {} because it is locked by another Neppy window or process. {} files and {} folders were queued for the next reboot before scheduling failed ({}); the rest still needs manual cleanup. Close all Neppy windows and try again. ({original_error})",
                     path.display(),
                     failure.partial.files,
                     failure.partial.dirs,

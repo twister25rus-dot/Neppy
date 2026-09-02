@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 /// Name of the Inno Setup installer process. On Windows the installer is
 /// spawned via PowerShell's `Start-Process`, which creates a top-level
-/// process — it survives the parent OpenHuman process dying. If OpenHuman
+/// process — it survives the parent Neppy process dying. If Neppy
 /// is killed mid-install (or the user closes the app and reopens it before
 /// install completes) we need to detect the in-flight installer instead
 /// of launching a second one that would race on the same install dir.
@@ -70,7 +70,7 @@ pub(crate) async fn run_ollama_install_script(install_dir: &Path) -> Result<Inst
 
 #[cfg(target_os = "windows")]
 pub(crate) fn resolve_powershell_executable() -> std::ffi::OsString {
-    // `Command::new("powershell")` relies on PATH. When OpenHuman.exe is
+    // `Command::new("powershell")` relies on PATH. When Neppy.exe is
     // spawned by `cargo tauri dev` (or similar dev harnesses) the inherited
     // PATH can be sanitized down to a subset that excludes the
     // `WindowsPowerShell\v1.0` dir, and the spawn fails with `program not
@@ -115,14 +115,14 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
         let mut cmd = tokio::process::Command::new(&powershell_exe);
         // Kill the PowerShell child if the spawning future is dropped — e.g.
         // the in-process tokio runtime shuts down because the user closed
-        // OpenHuman mid-install. Without this, `cmd.output().await` keeps
-        // OpenHuman.exe alive (and port 7788 bound) for the full 60–120s of
+        // Neppy mid-install. Without this, `cmd.output().await` keeps
+        // Neppy.exe alive (and port 7788 bound) for the full 60–120s of
         // the install download, producing zombie processes and
         // "port in use" errors on the next launch. Note: OllamaSetup.exe is
         // spawned by PowerShell as a TOP-LEVEL process (via `Start-Process`),
         // so it survives PowerShell's death. That's intentional — the
         // crash-resume detection in `is_ollama_installer_running` picks it
-        // up on the next OpenHuman launch and waits.
+        // up on the next Neppy launch and waits.
         cmd.kill_on_drop(true);
         crate::openhuman::inference::local::process_util::apply_no_window(&mut cmd);
         cmd.env("OPENHUMAN_OLLAMA_INSTALL_DIR", install_dir);
@@ -140,9 +140,9 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
             $tempInstaller = Join-Path $env:TEMP "OllamaSetup.exe"
             Invoke-WebRequest -UseBasicParsing -Uri $installerUrl -OutFile $tempInstaller
             # /SILENT (not /VERYSILENT) so Inno Setup's small progress dialog
-            # appears. The dialog is owned by the OS, not OpenHuman, so it
+            # appears. The dialog is owned by the OS, not Neppy, so it
             # survives the parent process crashing — giving the user a visible
-            # signal that an install is in flight even if OpenHuman dies.
+            # signal that an install is in flight even if Neppy dies.
             $args = "/SILENT /NORESTART /SUPPRESSMSGBOXES /CURRENTUSER /DIR=""$installDir"""
             $proc = Start-Process -FilePath $tempInstaller -ArgumentList $args -PassThru
             $proc.WaitForExit()

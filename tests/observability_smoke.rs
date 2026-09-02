@@ -172,7 +172,7 @@ fn drops_budget_exhausted_400() {
             ("failure", "non_2xx"),
             ("status", "400"),
         ],
-        r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Insufficient budget"}"#,
+        r#"Neppy API error (400 Bad Request): {"success":false,"error":"Insufficient budget"}"#,
     );
 
     assert_eq!(

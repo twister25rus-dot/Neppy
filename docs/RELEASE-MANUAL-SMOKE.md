@@ -30,24 +30,24 @@ Applies to every release, all platforms.
 
 ### macOS
 
-- [ ] **Gatekeeper accepts the signed `.app` on first launch** — Double-click the `.app` from a fresh download (Quarantine attribute set). Expected: app opens without `"OpenHuman" cannot be opened because the developer cannot be verified` dialog. If it appears, the build is unsigned or the notarization stapler is missing.
-- [ ] **`codesign --verify --deep --strict <path-to-OpenHuman.app>` exits 0** — Run from terminal. Expected: no output, exit 0. Any `code object is not signed at all` or `invalid signature` output blocks the release.
-- [ ] **DMG drag-to-Applications flow works** — Mount the `.dmg`, drag `OpenHuman.app` to the `Applications` alias. Expected: copy completes; eject succeeds; first launch from `/Applications` does not re-prompt Gatekeeper.
-- [ ] **Accessibility permission prompt fires on first agent run** — Trigger an agent action that uses Accessibility (e.g. window-control skill). Expected: macOS prompts `OpenHuman would like to control this computer using accessibility features`. Granting it allows the action; denying it surfaces a clear in-app fallback.
+- [ ] **Gatekeeper accepts the signed `.app` on first launch** — Double-click the `.app` from a fresh download (Quarantine attribute set). Expected: app opens without `"Neppy" cannot be opened because the developer cannot be verified` dialog. If it appears, the build is unsigned or the notarization stapler is missing.
+- [ ] **`codesign --verify --deep --strict <path-to-Neppy.app>` exits 0** — Run from terminal. Expected: no output, exit 0. Any `code object is not signed at all` or `invalid signature` output blocks the release.
+- [ ] **DMG drag-to-Applications flow works** — Mount the `.dmg`, drag `Neppy.app` to the `Applications` alias. Expected: copy completes; eject succeeds; first launch from `/Applications` does not re-prompt Gatekeeper.
+- [ ] **Accessibility permission prompt fires on first agent run** — Trigger an agent action that uses Accessibility (e.g. window-control skill). Expected: macOS prompts `Neppy would like to control this computer using accessibility features`. Granting it allows the action; denying it surfaces a clear in-app fallback.
 - [ ] **Input Monitoring prompt fires on first hotkey use** — Press the registered global hotkey for the first time. Expected: `Input Monitoring` prompt; granting it makes the hotkey trigger; denying it does not crash the app.
 - [ ] **Microphone prompt fires on first voice capture** — Start a voice session. Expected: standard mic prompt; granted → capture begins; denied → fallback message, no panic.
-- [ ] **File picker does not crash on Documents/Downloads/Desktop selections** — From an embedded app (Slack, Discord, Telegram), trigger a file upload and pick a file from `Documents`, `Downloads`, and `Desktop` in turn. Expected: macOS prompts `OpenHuman would like to access files in your <Folder> folder` the first time per folder; deny + retry must not crash.
+- [ ] **File picker does not crash on Documents/Downloads/Desktop selections** — From an embedded app (Slack, Discord, Telegram), trigger a file upload and pick a file from `Documents`, `Downloads`, and `Desktop` in turn. Expected: macOS prompts `Neppy would like to access files in your <Folder> folder` the first time per folder; deny + retry must not crash.
 
 ### Windows
 
 - [ ] **SmartScreen does not block install** — Run the installer from a fresh download. Expected: SmartScreen passes (signed binary). If `Windows protected your PC` appears, the EV signature is missing or the reputation has not built up — escalate before shipping.
 - [ ] **Installer creates Start Menu + Desktop shortcuts** — Defaults preserved. Expected: both shortcuts launch the app.
-- [ ] **App registers `neppy://` URL scheme** — From a browser, click an `neppy://oauth/success?...` link. Expected: OS prompts to open in OpenHuman; clicking through delivers the deep link.
+- [ ] **App registers `neppy://` URL scheme** — From a browser, click an `neppy://oauth/success?...` link. Expected: OS prompts to open in Neppy; clicking through delivers the deep link.
 
 ### Linux
 
-- [ ] **Public `install.sh` prefers the `.deb` path on clean Ubuntu 24.04** — Run `curl -fsSL https://raw.githubusercontent.com/tinyhumansai/openhuman/main/scripts/install.sh | bash` on a host with `apt-get` and `dpkg`. Expected: the script resolves `OpenHuman_*_amd64.deb` or `OpenHuman_*_arm64.deb`, installs it with `apt-get`, and launch does not fail on missing CEF runtime libraries such as `libgbm.so.1`.
-- [ ] **`.deb` and/or `.AppImage` install on a clean Ubuntu 22.04** — `sudo apt-get install -y --no-install-recommends ./OpenHuman_*.deb` or `chmod +x OpenHuman_*.AppImage && ./OpenHuman_*.AppImage`. Expected: no missing-dependency errors; app launches.
+- [ ] **Public `install.sh` prefers the `.deb` path on clean Ubuntu 24.04** — Run `curl -fsSL https://raw.githubusercontent.com/tinyhumansai/openhuman/main/scripts/install.sh | bash` on a host with `apt-get` and `dpkg`. Expected: the script resolves `Neppy_*_amd64.deb` or `Neppy_*_arm64.deb`, installs it with `apt-get`, and launch does not fail on missing CEF runtime libraries such as `libgbm.so.1`.
+- [ ] **`.deb` and/or `.AppImage` install on a clean Ubuntu 22.04** — `sudo apt-get install -y --no-install-recommends ./Neppy_*.deb` or `chmod +x Neppy_*.AppImage && ./Neppy_*.AppImage`. Expected: no missing-dependency errors; app launches.
 - [ ] **`.AppImage` launches on a clean Ubuntu 24.04 host without a sibling extracted tree** — Run the downloaded AppImage directly from an empty directory. Expected: no `Interpreter not found!` error; `sharun` finds its bundled dynamic linker and the app reaches the first window.
 - [ ] **OS-native notification toasts fire** — Trigger a notification from inside the app (e.g. memory captured, agent finished). Expected: a libnotify-style toast appears outside the app window. (CI Linux sees only Xvfb; this surface verifies on a real desktop.)
 - [ ] **Headless supervisor update stages without self-exit** — On a Linux service deployment with `[update] restart_strategy = "supervisor"` and `rpc_mutations_enabled = false`, stage a new core binary through the documented operator flow. Expected: the running process stays up until the supervisor restart, the staged binary is present on disk, and `systemctl restart openhuman` (or equivalent) picks up the new version.

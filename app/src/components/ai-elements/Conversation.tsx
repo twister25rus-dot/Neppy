@@ -28,7 +28,7 @@ export const Conversation = forwardRef<HTMLDivElement, ConversationProps>(
       ...props,
     };
 
-    // OpenHuman's richer transcript has tool timelines and streamed content
+    // Neppy's richer transcript has tool timelines and streamed content
     // outside assistant-ui's message list. Its existing hook remains the
     // scroll authority; this viewport supplies assistant-ui's thread context
     // and future core affordances without competing auto-scroll behavior.

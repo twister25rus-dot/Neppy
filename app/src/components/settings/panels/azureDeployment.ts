@@ -8,7 +8,7 @@
  * value taken from the provider's `/models` catalog (which lists base model
  * ids) yields "Model not found".
  *
- * OpenHuman's routing already sends the `<model>` half of a `"<slug>:<model>"`
+ * Neppy's routing already sends the `<model>` half of a `"<slug>:<model>"`
  * provider string verbatim as that body field, so nothing in the request path
  * needs to change. The only defect is that the settings UI sourced the value
  * exclusively from the `/models` catalog, leaving no way to type a deployment
@@ -95,7 +95,7 @@ export function isAzureFoundryEndpoint(endpoint: string | null | undefined): boo
  * (`https://<resource>.<host>/openai/v1[/]`).
  *
  * This matters because only that base behaves like every other provider
- * OpenHuman stores: it serves a `GET {base}/models` listing and accepts the
+ * Neppy stores: it serves a `GET {base}/models` listing and accepts the
  * resource key in the `authorization` header (Azure's published v1 spec
  * declares both an `api-key` and an `authorization` API-key scheme), which is
  * the `bearer` auth style custom providers are created with. The older

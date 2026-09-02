@@ -1,4 +1,4 @@
-//! OpenHuman's half of attachment handling.
+//! Neppy's half of attachment handling.
 //!
 //! The pipeline itself — marker parsing, `data:` URI decoding, MIME detection,
 //! size and count limits, the rendered payload — lives in
@@ -7,7 +7,7 @@
 //!
 //! | Kept here | Why it cannot be generic |
 //! | --- | --- |
-//! | [`ChatMessage`] adapters | the durable transcript record is OpenHuman's |
+//! | [`ChatMessage`] adapters | the durable transcript record is Neppy's |
 //! | Config mapping | `MultimodalConfig` is a `config.toml` schema type |
 //! | The `reqwest::Client` | the runtime proxy and its timeouts are host policy |
 //! | [`DocumentsTextExtractor`] | PDF text comes from the `tinydocs` module, behind the `documents` gate and a host-chosen deadline |

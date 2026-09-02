@@ -1,6 +1,6 @@
 //! Graph topology export for debug / inspection (issue #4249, Phase 4).
 //!
-//! Every custom OpenHuman graph exposes a `*_topology()` builder that constructs
+//! Every custom Neppy graph exposes a `*_topology()` builder that constructs
 //! its structure with no-op stub closures and returns a behaviour-free
 //! [`GraphTopology`] (node names, edges, routing, and a structural validation
 //! report — never closure bodies). [`all_graph_topologies`] collects them so a
@@ -37,7 +37,7 @@ fn describe(name: &'static str, topology: &GraphTopology) -> GraphTopologyReport
     }
 }
 
-/// Collect structure-only topologies of every custom OpenHuman graph.
+/// Collect structure-only topologies of every custom Neppy graph.
 ///
 /// Graphs that fail to build (should not happen for the fixed-structure graphs)
 /// are silently skipped. Each entry carries a Mermaid + JSON rendering and the

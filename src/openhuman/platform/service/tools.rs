@@ -83,28 +83,28 @@ config_tool!(
     "service_start",
     service_start,
     PermissionLevel::Execute,
-    "Start the OpenHuman daemon service. Default-OFF (opt-in)."
+    "Start the Neppy daemon service. Default-OFF (opt-in)."
 );
 config_tool!(
     ServiceStopTool,
     "service_stop",
     service_stop,
     PermissionLevel::Execute,
-    "Stop the OpenHuman daemon service. Default-OFF (opt-in)."
+    "Stop the Neppy daemon service. Default-OFF (opt-in)."
 );
 config_tool!(
     ServiceInstallTool,
     "service_install",
     service_install,
     PermissionLevel::Dangerous,
-    "Install the OpenHuman daemon as a system service. Default-OFF (opt-in)."
+    "Install the Neppy daemon as a system service. Default-OFF (opt-in)."
 );
 config_tool!(
     ServiceUninstallTool,
     "service_uninstall",
     service_uninstall,
     PermissionLevel::Dangerous,
-    "Remove the OpenHuman daemon system service. Default-OFF (opt-in)."
+    "Remove the Neppy daemon system service. Default-OFF (opt-in)."
 );
 
 /// Set daemon host tray preference. Default-OFF.

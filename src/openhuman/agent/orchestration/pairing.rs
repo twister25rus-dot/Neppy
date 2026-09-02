@@ -1,6 +1,6 @@
 //! User-consented tiny.place contact pairing for wrapped agent sessions.
 //!
-//! The tiny.place backend owns the contact graph; this module owns OpenHuman's
+//! The tiny.place backend owns the contact graph; this module owns Neppy's
 //! local consent record for orchestration sessions that are allowed to exchange
 //! 1:1 encrypted envelopes.
 
@@ -369,18 +369,18 @@ pub(crate) async fn linked_agent_ids(workspace_dir: &Path) -> std::collections::
 }
 
 /// One entry in the local co-location handshake file (`~/.openhuman/local-agents.json`).
-/// A tiny.place CLI wrapper writes its own agent id + the OpenHuman owner it is
+/// A tiny.place CLI wrapper writes its own agent id + the Neppy owner it is
 /// connecting to, moments before it sends its contact request. Because a contact
 /// request carries NO owner declaration on the wire, this same-machine file is
 /// how a freshly-connecting local agent proves "I am a co-located CLI that wants
-/// THIS OpenHuman as my owner" — same-user filesystem access is the trust proof.
+/// THIS Neppy as my owner" — same-user filesystem access is the trust proof.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LocalAgentEntry {
     agent_id: String,
-    /// The OpenHuman agent id this CLI declares as its owner. Auto-accept only
+    /// The Neppy agent id this CLI declares as its owner. Auto-accept only
     /// fires when this matches OUR own id — so a CLI configured for a *different*
-    /// local OpenHuman identity is never cross-accepted just for sharing a box.
+    /// local Neppy identity is never cross-accepted just for sharing a box.
     owner: String,
     /// RFC3339 write time. Required + TTL-bounded (fail-closed): a missing or
     /// stale timestamp is not trusted, so a long-dead entry can't linger as
@@ -488,7 +488,7 @@ fn entry_is_fresh(ts: Option<&str>, now: DateTime<Utc>) -> bool {
     age >= -Duration::minutes(5) && age < local_handshake_ttl()
 }
 
-/// Reduce the local handshake file to the set of agent ids OpenHuman may
+/// Reduce the local handshake file to the set of agent ids Neppy may
 /// auto-accept: those declaring US (`own`) as owner AND still fresh. Pure — the
 /// trust gate is unit-testable without any filesystem or network IO.
 fn coload_trusted_ids(file: &LocalAgentsFile, own: &str, now: DateTime<Utc>) -> HashSet<String> {
@@ -1009,7 +1009,7 @@ mod tests {
         )]);
         assert!(
             coload_trusted_ids(&file, UNLINKED_BASE58, now).is_empty(),
-            "a CLI declaring a DIFFERENT local OpenHuman as owner is never trusted"
+            "a CLI declaring a DIFFERENT local Neppy as owner is never trusted"
         );
     }
 

@@ -22,7 +22,7 @@ const NO_MESSAGES: ThreadMessageLike[] = [];
  * The obvious fix — `AssistantUiRuntimeProvider threadId={null}` — is the right
  * shape but the wrong dependency: that provider reads Redux unconditionally
  * (`useAppSelector` for the selected thread, and again inside
- * `useOpenHumanExternalStore`), so it requires a store even when the thread is
+ * `useNeppyExternalStore`), so it requires a store even when the thread is
  * explicitly `null` and there is nothing to select. A surface with no thread has
  * nothing to project from the store either, so this mounts a genuinely inert
  * runtime instead: no messages, never running, and a `onNew` that fails loudly

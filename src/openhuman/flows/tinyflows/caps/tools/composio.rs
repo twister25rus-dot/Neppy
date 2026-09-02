@@ -117,7 +117,7 @@ impl ToolBackend for ComposioToolBackend {
         // provider or asks the user to approve a call that cannot succeed.
         super::super::preflight_composio_args(&live_config, slug, &args).await?;
 
-        // Approval gate (see the struct doc). Mirrors `OpenHumanHttp::request`'s
+        // Approval gate (see the struct doc). Mirrors `NeppyHttp::request`'s
         // shape exactly: `gate_call_for_tier` is what actually performs the
         // `Prompt` round-trip — it escalates a Supervised `Prompt` decision
         // into a forced approval regardless of the flow's own
@@ -195,7 +195,7 @@ impl ToolBackend for ComposioToolBackend {
                              names a specific connected account, but backend mode has no per-call \
                              account-scoping path yet, so this call runs against the AMBIENT \
                              signed-in session account instead of the one requested (E-m3, \
-                             documented backend-API-gap stub, see caps.rs's OpenHumanTools doc). \
+                             documented backend-API-gap stub, see caps.rs's NeppyTools doc). \
                              Proceeds rather than failing closed."
                         ),
                         None => tracing::warn!(
@@ -207,7 +207,7 @@ impl ToolBackend for ComposioToolBackend {
                              connected accounts, and backend mode has no per-call account-scoping \
                              path to validate it against anyway — this call runs against the \
                              AMBIENT signed-in session account regardless (E-m3, documented \
-                             backend-API-gap stub, see caps.rs's OpenHumanTools doc). Proceeds \
+                             backend-API-gap stub, see caps.rs's NeppyTools doc). Proceeds \
                              rather than failing closed."
                         ),
                     }

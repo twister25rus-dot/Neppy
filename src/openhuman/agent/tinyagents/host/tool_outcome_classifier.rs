@@ -1,9 +1,9 @@
-//! Host implementation of [`ToolOutcomeClassifier`] over OpenHuman's
+//! Host implementation of [`ToolOutcomeClassifier`] over Neppy's
 //! `tool_status` domain.
 //!
 //! This is `docs/specs/plan-agents.md` Phase 4. The agent runtime knows a tool
 //! call returned; it does not know whether the thing that came back is a
-//! success, something to re-dispatch, or a dead end. OpenHuman already owns that
+//! success, something to re-dispatch, or a dead end. Neppy already owns that
 //! judgement in [`crate::openhuman::tool_status`], whose
 //! [`classify`](crate::openhuman::tools::status::classify) turns raw tool error
 //! text into a [`ClassifiedFailure`](crate::openhuman::tools::status::ClassifiedFailure)
@@ -21,11 +21,11 @@
 //! contract for [`OutcomeClass::RetryableFailure`] is much stronger: it is "an
 //! assertion by the host that repeating is acceptable", made without knowing
 //! whether the tool had side effects. An unclassified failure is precisely the
-//! case where OpenHuman does *not* know that. So this adapter branches on the
+//! case where Neppy does *not* know that. So this adapter branches on the
 //! **class**, not on `recoverable`, and only the three transient classes are
 //! called retryable.
 //!
-//! That is not a new policy invention — it is the split OpenHuman's own steering
+//! That is not a new policy invention — it is the split Neppy's own steering
 //! middleware already makes. `TinyAgents`' recoverable-failure headroom ladder
 //! (`middleware.rs`, issue #4463 part 4) gates on exactly
 //! `Timeout | ServiceUnavailable | ModelConnection` and lets everything else,
@@ -57,7 +57,7 @@
 //! crate's `RetryableFailure` is an assertion that repeating is *acceptable*,
 //! so it may only be made about a tool the host has positively identified as
 //! side-effect free — declared through
-//! [`OpenHumanToolOutcomeClassifier::with_retry_safe_tools`] as an
+//! [`NeppyToolOutcomeClassifier::with_retry_safe_tools`] as an
 //! **allowlist**. An allowlist rather than the inverse, because
 //! `Tool::external_effect()` is arg-less: `ShellTool` and the TinyPlace raw
 //! tool classify their effect from *arguments* (`external_effect_with_args`)
@@ -78,7 +78,7 @@ use tinyagents::harness::tool::ToolResult;
 
 use crate::openhuman::tools::status::{classify, ToolFailureClass};
 
-/// OpenHuman's [`ToolOutcomeClassifier`], backed by
+/// Neppy's [`ToolOutcomeClassifier`], backed by
 /// [`crate::openhuman::tools::status::classify`].
 ///
 /// Zero-sized and stateless: the classifier's whole knowledge base is the
@@ -86,7 +86,7 @@ use crate::openhuman::tools::status::{classify, ToolFailureClass};
 /// instance behaves identically, so callers may construct one per session
 /// without cost.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct OpenHumanToolOutcomeClassifier {
+pub struct NeppyToolOutcomeClassifier {
     /// Names of tools the host positively knows are safe to call twice.
     ///
     /// An **allowlist**, not a denylist, and deliberately so. The obvious
@@ -104,7 +104,7 @@ pub struct OpenHumanToolOutcomeClassifier {
     retry_safe_tools: Option<Arc<HashSet<String>>>,
 }
 
-impl OpenHumanToolOutcomeClassifier {
+impl NeppyToolOutcomeClassifier {
     /// Creates the classifier with no retry-safe tools declared.
     ///
     /// Timeouts are then treated as **permanent**, because a classifier that
@@ -139,7 +139,7 @@ impl OpenHumanToolOutcomeClassifier {
             .is_some_and(|safe| safe.contains(name))
     }
 
-    /// Projects one OpenHuman failure class onto the crate's coarse
+    /// Projects one Neppy failure class onto the crate's coarse
     /// [`OutcomeClass`].
     ///
     /// Exhaustive on purpose — no `_` arm. A new [`ToolFailureClass`] must not
@@ -161,7 +161,7 @@ impl OpenHumanToolOutcomeClassifier {
     ///   permissions, a missing app, and bad credentials need a human to act, so
     ///   an identical re-dispatch just burns an iteration; `BlockedByPolicy`,
     ///   `Denied`, and `ApprovalExpired` are refusals that auto-retrying would
-    ///   actively subvert (#4459); and `Unknown` is the case where OpenHuman has
+    ///   actively subvert (#4459); and `Unknown` is the case where Neppy has
     ///   no basis to promise a repeat is safe.
     fn class_of(failure: ToolFailureClass, retry_safe: bool) -> OutcomeClass {
         match failure {
@@ -201,7 +201,7 @@ impl OpenHumanToolOutcomeClassifier {
     }
 }
 
-impl ToolOutcomeClassifier for OpenHumanToolOutcomeClassifier {
+impl ToolOutcomeClassifier for NeppyToolOutcomeClassifier {
     fn classify(&self, name: &str, result: &ToolResult) -> OutcomeClass {
         // `error.is_none()` is the sole success signal, matching the middleware.
         // A tool that writes "Error: …" into `content` while leaving `error`
@@ -269,8 +269,8 @@ mod tests {
     }
 
     /// A classifier that positively knows `safe` are the repeatable tools.
-    fn classifier_allowing(safe: &[&str]) -> OpenHumanToolOutcomeClassifier {
-        OpenHumanToolOutcomeClassifier::new()
+    fn classifier_allowing(safe: &[&str]) -> NeppyToolOutcomeClassifier {
+        NeppyToolOutcomeClassifier::new()
             .with_retry_safe_tools(Arc::new(safe.iter().map(|t| t.to_string()).collect()))
     }
 
@@ -316,7 +316,7 @@ mod tests {
         // Without the set the classifier cannot tell an email sender from a
         // file read, so it must not promise that repeating is safe.
         assert_eq!(
-            OpenHumanToolOutcomeClassifier::new()
+            NeppyToolOutcomeClassifier::new()
                 .classify("file_read", &result(Some("request timed out"), "")),
             OutcomeClass::PermanentFailure
         );
@@ -358,7 +358,7 @@ mod tests {
             (Unknown, PermanentFailure),
         ] {
             assert_eq!(
-                OpenHumanToolOutcomeClassifier::class_of(class, true),
+                NeppyToolOutcomeClassifier::class_of(class, true),
                 want,
                 "mapping {class:?}"
             );
@@ -382,7 +382,7 @@ mod tests {
             ToolFailureClass::Unknown,
         ] {
             assert!(
-                OpenHumanToolOutcomeClassifier::class_of(class, true).is_failure(),
+                NeppyToolOutcomeClassifier::class_of(class, true).is_failure(),
                 "{class:?} must stay a failure"
             );
         }
@@ -399,7 +399,7 @@ mod tests {
             "domain still calls Unknown recoverable"
         );
         assert_eq!(
-            OpenHumanToolOutcomeClassifier::class_of(ToolFailureClass::Unknown, true),
+            NeppyToolOutcomeClassifier::class_of(ToolFailureClass::Unknown, true),
             OutcomeClass::PermanentFailure
         );
     }
@@ -408,7 +408,7 @@ mod tests {
 
     #[test]
     fn absent_error_is_success_even_with_scary_content() {
-        let classifier = OpenHumanToolOutcomeClassifier::new();
+        let classifier = NeppyToolOutcomeClassifier::new();
         assert_eq!(
             classifier.classify("shell", &result(None, "Error: everything is on fire")),
             OutcomeClass::Success
@@ -485,7 +485,7 @@ mod tests {
         // The tool layer puts the marker in whichever field it had to hand; the
         // combined sniff is what makes both placements behave the same.
         let denied = format!("{POLICY_DENIED_MARKER} declined");
-        let classifier = OpenHumanToolOutcomeClassifier::new();
+        let classifier = NeppyToolOutcomeClassifier::new();
         assert_eq!(
             classifier.classify("shell", &result(Some("tool failed"), &denied)),
             OutcomeClass::PermanentFailure
@@ -496,25 +496,25 @@ mod tests {
     fn failure_text_borrows_when_one_side_is_empty_or_duplicated() {
         let only_error = result(Some("boom"), "");
         assert!(matches!(
-            OpenHumanToolOutcomeClassifier::failure_text(&only_error),
+            NeppyToolOutcomeClassifier::failure_text(&only_error),
             Cow::Borrowed("boom")
         ));
 
         let duplicated = result(Some("boom"), "boom");
         assert!(matches!(
-            OpenHumanToolOutcomeClassifier::failure_text(&duplicated),
+            NeppyToolOutcomeClassifier::failure_text(&duplicated),
             Cow::Borrowed("boom")
         ));
 
         let only_content = result(Some(""), "boom");
         assert!(matches!(
-            OpenHumanToolOutcomeClassifier::failure_text(&only_content),
+            NeppyToolOutcomeClassifier::failure_text(&only_content),
             Cow::Borrowed("boom")
         ));
 
         let both = result(Some("boom"), "context");
         assert_eq!(
-            OpenHumanToolOutcomeClassifier::failure_text(&both),
+            NeppyToolOutcomeClassifier::failure_text(&both),
             "boom\ncontext"
         );
     }
@@ -523,7 +523,7 @@ mod tests {
     fn an_error_present_but_empty_is_still_a_failure() {
         // `Some("")` is a tool reporting failure without a message. Matching the
         // crate's baseline classifier, the field's presence is the signal.
-        let classifier = OpenHumanToolOutcomeClassifier::new();
+        let classifier = NeppyToolOutcomeClassifier::new();
         assert_eq!(
             classifier.classify("shell", &result(Some(""), "")),
             OutcomeClass::PermanentFailure
@@ -534,7 +534,7 @@ mod tests {
 
     #[test]
     fn classification_is_pure_and_repeatable() {
-        let classifier = OpenHumanToolOutcomeClassifier::new();
+        let classifier = NeppyToolOutcomeClassifier::new();
         let r = result(Some("connection refused"), "");
         let first = classifier.classify("http_request", &r);
         assert_eq!(first, classifier.classify("http_request", &r));
@@ -543,7 +543,7 @@ mod tests {
 
     #[test]
     fn the_dispatched_name_changes_the_verdict_only_for_timeouts() {
-        // OpenHuman's taxonomy is text-driven, so `name` feeds exactly one
+        // Neppy's taxonomy is text-driven, so `name` feeds exactly one
         // decision: whether a *timeout* may be repeated. Every other class must
         // stay name-independent, or the same error text would mean different
         // things for two tools.
@@ -567,7 +567,7 @@ mod tests {
     #[test]
     fn usable_as_a_trait_object() {
         let classifier: std::sync::Arc<dyn ToolOutcomeClassifier> =
-            std::sync::Arc::new(OpenHumanToolOutcomeClassifier::default());
+            std::sync::Arc::new(NeppyToolOutcomeClassifier::default());
         assert_eq!(
             classifier.classify("shell", &result(Some("503"), "")),
             OutcomeClass::RetryableFailure

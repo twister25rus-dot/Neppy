@@ -1,4 +1,4 @@
-//! Unified read-only tool registry for discovery across OpenHuman tool surfaces.
+//! Unified read-only tool registry for discovery across Neppy tool surfaces.
 
 pub mod denials;
 pub mod ops;

@@ -59,7 +59,7 @@ export interface ChatComposerProps {
    * moment there is something to send — the same slot ChatGPT gives its voice
    * mode. Omit it and the empty composer keeps the plain disabled Send button.
    */
-  onOpenHumanMode?: () => void;
+  onNeppyMode?: () => void;
   textInputRef: React.RefObject<HTMLTextAreaElement | null>;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   composerInteractionBlocked: boolean;
@@ -147,7 +147,7 @@ export interface ChatComposerProps {
  * `ComposerPrimitive.Cancel` fire `aui.composer.send()` / `.cancel()`, which the
  * external-store runtime forwards to `chatSurfaceHandlers` as
  * `send(text: string)`. That signature cannot carry this composer's
- * attachments, and it knows nothing about the OpenHuman-specific modifier
+ * attachments, and it knows nothing about the Neppy-specific modifier
  * semantics `allowParallelSend` implements (plain Enter queues a follow-up
  * mid-stream; Cmd/Ctrl+Enter forks a parallel branch) — routing a send through
  * it would silently drop attachments and collapse the two modifiers into one.
@@ -185,7 +185,7 @@ function ChatComposerBody({
   setInputValue,
   onSend,
   onStopGeneration,
-  onOpenHumanMode,
+  onNeppyMode,
   textInputRef,
   fileInputRef,
   composerInteractionBlocked,
@@ -256,7 +256,7 @@ function ChatComposerBody({
   // over it — a turn is still the thing the button is about while one is
   // running — and the first typed character hands the slot back to Send.
   const showHumanModeButton =
-    !!onOpenHumanMode && !hasTypedContent && !showStopButton && !showSendingSpinner;
+    !!onNeppyMode && !hasTypedContent && !showStopButton && !showSendingSpinner;
 
   // Attachment ingest is blocked while the feature is off, the composer is
   // locked, or the budget is full — drag-drop and paste honour the same gate as
@@ -400,7 +400,7 @@ function ChatComposerBody({
               placeholder ?? (allowParallelSend ? t('chat.followupHint') : t('chat.typeMessage'))
             }
             disabled={composerLocked}
-            // Enter/modifier semantics are entirely OpenHuman's. `submitMode`
+            // Enter/modifier semantics are entirely Neppy's. `submitMode`
             // is NOT cosmetic here: assistant-ui's own Enter handler runs after
             // ours (Radix composes them) and fires whenever ours merely
             // *declines* to act rather than calling `preventDefault` — which is
@@ -497,7 +497,7 @@ function ChatComposerBody({
                 title={t('composer.humanMode')}
                 onClick={() => {
                   debug('[chat-composer] human-mode click');
-                  onOpenHumanMode?.();
+                  onNeppyMode?.();
                 }}
                 className={COMPOSER_SEND}>
                 <HumanModeIcon />

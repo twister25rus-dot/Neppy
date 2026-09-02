@@ -4,7 +4,7 @@ icon: key
 
 # OS Keyring & Secret Storage
 
-OpenHuman uses the **operating system's secure credential store** to protect the secrets that must live on your device.
+Neppy uses the **operating system's secure credential store** to protect the secrets that must live on your device.
 
 On desktop builds, that means:
 
@@ -12,17 +12,17 @@ On desktop builds, that means:
 - **Windows:** Credential Manager
 - **Linux:** Secret Service / libsecret
 
-This is the root of trust for local secret material. OpenHuman does not rely on a plaintext `.env` file or a plaintext local config file for user credentials.
+This is the root of trust for local secret material. Neppy does not rely on a plaintext `.env` file or a plaintext local config file for user credentials.
 
 ---
 
 ## What goes into the OS keyring
 
-OpenHuman uses the OS keyring for two kinds of local secret material:
+Neppy uses the OS keyring for two kinds of local secret material:
 
 ### 1. Credential entries
 
-When a feature needs a local credential slot, OpenHuman stores it in the platform keyring rather than writing the raw secret into a normal config file.
+When a feature needs a local credential slot, Neppy stores it in the platform keyring rather than writing the raw secret into a normal config file.
 
 Examples include:
 
@@ -30,13 +30,13 @@ Examples include:
 - session and bearer tokens that must remain on-device
 - wallet secret material where applicable
 
-These entries are scoped under OpenHuman's own key namespace so they do not collide with unrelated apps.
+These entries are scoped under Neppy's own key namespace so they do not collide with unrelated apps.
 
 ### 2. The master encryption key
 
 Some sensitive values still need to live **inside local files** because the application configuration itself is file-based.
 
-OpenHuman handles that by splitting storage in two:
+Neppy handles that by splitting storage in two:
 
 - the **secret value on disk** is stored as encrypted ciphertext
 - the **master key used to decrypt it** lives in the OS keyring
@@ -47,7 +47,7 @@ This means your local config and state files can contain encrypted values withou
 
 ## What stays encrypted on disk
 
-When OpenHuman needs to persist sensitive application settings locally, it writes the **ciphertext** to disk and keeps the key in the OS keyring.
+When Neppy needs to persist sensitive application settings locally, it writes the **ciphertext** to disk and keeps the key in the OS keyring.
 
 That covers local secrets such as:
 
@@ -55,7 +55,7 @@ That covers local secrets such as:
 - channel and webhook secrets stored in local config
 - other locally persisted secret settings required for desktop features
 
-The encryption format is authenticated, so OpenHuman can detect tampering instead of silently accepting modified ciphertext.
+The encryption format is authenticated, so Neppy can detect tampering instead of silently accepting modified ciphertext.
 
 In practice, the security model is:
 
@@ -69,7 +69,7 @@ In practice, the security model is:
 
 If your machine has a local workspace backup, sync folder, or support bundle, plaintext secrets in config files are a liability.
 
-Using the OS keyring as the root secret store gives OpenHuman a safer split:
+Using the OS keyring as the root secret store gives Neppy a safer split:
 
 - config files can be copied without exposing raw credentials
 - accidental log or file inspection is less likely to reveal secrets
@@ -85,11 +85,11 @@ Not every secret follows the same path.
 
 ### Managed integrations
 
-For the default managed integration flow, third-party OAuth tokens are handled by the OpenHuman backend. Your local app does **not** need to persist those provider tokens in plaintext on your machine.
+For the default managed integration flow, third-party OAuth tokens are handled by the Neppy backend. Your local app does **not** need to persist those provider tokens in plaintext on your machine.
 
 ### Local BYO credentials
 
-When you choose a bring-your-own-key or direct-mode path, OpenHuman treats those credentials as **local secrets** and protects them using the OS keyring plus encrypted-at-rest local storage where needed.
+When you choose a bring-your-own-key or direct-mode path, Neppy treats those credentials as **local secrets** and protects them using the OS keyring plus encrypted-at-rest local storage where needed.
 
 ---
 
@@ -103,7 +103,7 @@ Current desktop builds migrate that material into the OS keyring and keep the en
 
 ## Consent flow when the keyring is unavailable
 
-Sometimes the OS keyring is unreachable, for example on Linux without a Secret Service daemon, or on macOS when keychain access is denied. When that happens, OpenHuman **stops and asks** before falling back to local encrypted storage.
+Sometimes the OS keyring is unreachable, for example on Linux without a Secret Service daemon, or on macOS when keychain access is denied. When that happens, Neppy **stops and asks** before falling back to local encrypted storage.
 
 ### How it works
 
@@ -132,7 +132,7 @@ Auth profiles, config secrets, wallet mnemonic, and the `secrets.enc` backend al
 
 ## Platform note
 
-This page describes **desktop** OpenHuman: the Tauri app on macOS, Windows, and Linux.
+This page describes **desktop** Neppy: the Tauri app on macOS, Windows, and Linux.
 
 In development and test environments, the repository may use test-specific overrides so automated runs do not depend on an interactive OS keychain. That is a developer convenience, not the end-user desktop security model.
 

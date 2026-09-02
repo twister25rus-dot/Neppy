@@ -35,7 +35,7 @@ import { ProviderIcon } from './accounts/providerIcons';
 import ChannelSetupModal from './channels/ChannelSetupModal';
 import Button from './ui/Button';
 
-interface OpenhumanLinkEvent {
+interface NeppyLinkEvent {
   path: string;
 }
 
@@ -54,13 +54,13 @@ type AllowedPath = (typeof ALLOWED_PATHS)[number];
 
 const ALLOWED_PATHS_SET = new Set<string>(ALLOWED_PATHS);
 
-const OpenhumanLinkModal = () => {
+const NeppyLinkModal = () => {
   const { t } = useT();
   const [activePath, setActivePath] = useState<AllowedPath | null>(null);
 
   useEffect(() => {
     const handler = (event: Event) => {
-      const detail = (event as CustomEvent<OpenhumanLinkEvent>).detail;
+      const detail = (event as CustomEvent<NeppyLinkEvent>).detail;
       if (detail?.path && ALLOWED_PATHS_SET.has(detail.path)) {
         setActivePath(detail.path as AllowedPath);
       }
@@ -590,4 +590,4 @@ const DoneFooter = ({
   );
 };
 
-export default OpenhumanLinkModal;
+export default NeppyLinkModal;

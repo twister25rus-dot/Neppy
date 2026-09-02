@@ -8,7 +8,7 @@ icon: bolt
 
 # Triggers
 
-A connected integration is not just a place the agent can read from on demand. It is also a **source of live events**. When someone sends you an email, edits a Notion page, opens a GitHub issue on one of your repos, charges a card on Stripe, or DMs you on Slack, OpenHuman receives that event in near-real-time and can decide whether to do something about it.
+A connected integration is not just a place the agent can read from on demand. It is also a **source of live events**. When someone sends you an email, edits a Notion page, opens a GitHub issue on one of your repos, charges a card on Stripe, or DMs you on Slack, Neppy receives that event in near-real-time and can decide whether to do something about it.
 
 This page is about that pipeline: how triggers arrive, how they get classified, and how a trigger can turn into a full agent action without you typing a thing.
 
@@ -29,7 +29,7 @@ The full set comes from the [Composio](https://composio.dev) connector layer tha
 
 ### Gmail OAuth scopes
 
-Gmail trigger subscriptions require message-read access on the connected Google account. Fresh OpenHuman Gmail authorizations request `https://www.googleapis.com/auth/gmail.readonly` so `GMAIL_NEW_GMAIL_MESSAGE` can be enabled and the native Gmail sync path can read the new message metadata.
+Gmail trigger subscriptions require message-read access on the connected Google account. Fresh Neppy Gmail authorizations request `https://www.googleapis.com/auth/gmail.readonly` so `GMAIL_NEW_GMAIL_MESSAGE` can be enabled and the native Gmail sync path can read the new message metadata.
 
 If an older Gmail connection was created before this scope was requested, reconnect Gmail from Settings before enabling Gmail triggers.
 
@@ -42,7 +42,7 @@ If an older Gmail connection was created before this scope was requested, reconn
  │ webhook
  ▼
 ┌────────────────────┐
-│ OpenHuman backend │ HMAC-verifies the webhook, normalises the payload
+│ Neppy backend │ HMAC-verifies the webhook, normalises the payload
 └─────────┬──────────┘
  │ Socket.IO event ("composio:trigger")
  ▼
@@ -81,11 +81,11 @@ It picks exactly one of four actions:
 | **`react`**       | The [`trigger_reactor`](https://github.com/tinyhumansai/openhuman/tree/main/src/openhuman/agent/agents/trigger_reactor) agent runs with one or two tool calls. | A small, single-step side effect: store a memory entry, post a quick acknowledgement, mark a thread read.                                                    |
 | **`escalate`**    | The full **orchestrator** agent takes over with planning capability.                                                                                           | Anything that needs reasoning, multiple steps, or multiple skills: drafting a reply, updating several Notion pages, deciding how to triage an inbound issue. |
 
-The triage agent has the same memory and workspace context the rest of the agent has. It can tell whether a trigger is relevant to something you're currently working on, who the people involved are, and whether it's the kind of thing you've asked OpenHuman to act on before.
+The triage agent has the same memory and workspace context the rest of the agent has. It can tell whether a trigger is relevant to something you're currently working on, who the people involved are, and whether it's the kind of thing you've asked Neppy to act on before.
 
 ## When a trigger turns into an agent action
 
-This is the part that distinguishes "OpenHuman has a Gmail integration" from "OpenHuman is on call for your inbox":
+This is the part that distinguishes "Neppy has a Gmail integration" from "Neppy is on call for your inbox":
 
 - **`react`** is the cheap path. The Trigger Reactor is a narrow specialist with a hard budget of a couple of tool calls. It's perfect for: writing a one-line memory note that says "saw a new charge from Stripe for $84, customer X, merchant Y", silently marking a Slack message as handled because it's the same automated alert you've already triaged twice this week, or storing a structured record of an event the user might want to look up later.
 

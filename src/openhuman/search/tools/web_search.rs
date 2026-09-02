@@ -6,7 +6,7 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 
-/// Provider the OpenHuman Managed search path resolves to today. Exa powers
+/// Provider the Neppy Managed search path resolves to today. Exa powers
 /// the overwhelming majority of managed search traffic, so it is the labelled
 /// default whenever the backend response does not name a provider. This is a
 /// *fallback* label, not a hardcoded one: [`resolve_managed_provider`] prefers

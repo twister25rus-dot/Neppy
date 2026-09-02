@@ -2,7 +2,7 @@
 import { browser, expect } from '@wdio/globals';
 
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { dumpAccessibilityTree, waitForText } from '../helpers/element-helpers';
 import { supportsExecuteScript } from '../helpers/platform';
 import { resetApp } from '../helpers/reset-app';
@@ -49,7 +49,7 @@ async function waitForCoreSidecar(timeout = 30_000): Promise<void> {
   let lastErr: unknown;
   await browser.waitUntil(
     async () => {
-      const result = await callOpenhumanRpc('core.ping', {});
+      const result = await callNeppyRpc('core.ping', {});
       if (result.ok) {
         stepLog('core ready (ping ok)', { result: result.result });
         return true;
@@ -88,7 +88,7 @@ describe('Notifications', () => {
 
   it('notification_ingest creates a new notification via core RPC', async () => {
     // Required params: provider, title, body, raw_payload (no id/category/timestamp_ms).
-    const result = await callOpenhumanRpc('openhuman.notification_ingest', {
+    const result = await callNeppyRpc('openhuman.notification_ingest', {
       provider: 'e2e',
       title: 'E2E Test Notification',
       body: 'Created by the notifications E2E spec',
@@ -105,7 +105,7 @@ describe('Notifications', () => {
   });
 
   it('notification_list returns the ingested notification', async () => {
-    const result = await callOpenhumanRpc('openhuman.notification_list', { limit: 20 });
+    const result = await callNeppyRpc('openhuman.notification_list', { limit: 20 });
     stepLog('notification_list result', { ok: result.ok, result: result.result });
     expect(result.ok).toBe(true);
 
@@ -121,7 +121,7 @@ describe('Notifications', () => {
   });
 
   it('notification_mark_read transitions notification status', async () => {
-    const before = await callOpenhumanRpc('openhuman.notification_stats', {});
+    const before = await callNeppyRpc('openhuman.notification_stats', {});
     expect(before.ok).toBe(true);
     // handle_stats returns bare value → result.result is {total, unread, ...}
     const beforeStats = (before.result as any) ?? {};
@@ -131,7 +131,7 @@ describe('Notifications', () => {
     let notifId = ingestedNotifId;
     if (!notifId) {
       stepLog('no cached notifId — ingesting a fresh notification for mark_read');
-      const fresh = await callOpenhumanRpc('openhuman.notification_ingest', {
+      const fresh = await callNeppyRpc('openhuman.notification_ingest', {
         provider: 'e2e',
         title: 'E2E Mark Read Fallback',
         body: 'Fallback notification for mark_read test',
@@ -141,11 +141,11 @@ describe('Notifications', () => {
     }
     expect(notifId).toBeDefined();
 
-    const result = await callOpenhumanRpc('openhuman.notification_mark_read', { id: notifId });
+    const result = await callNeppyRpc('openhuman.notification_mark_read', { id: notifId });
     stepLog('notification_mark_read result', { ok: result.ok, result: result.result });
     expect(result.ok).toBe(true);
 
-    const after = await callOpenhumanRpc('openhuman.notification_stats', {});
+    const after = await callNeppyRpc('openhuman.notification_stats', {});
     expect(after.ok).toBe(true);
     const afterStats = (after.result as any) ?? {};
     const finalUnread = getUnreadCount(afterStats);
@@ -157,7 +157,7 @@ describe('Notifications', () => {
   });
 
   it('notification_stats returns aggregate statistics', async () => {
-    const result = await callOpenhumanRpc('openhuman.notification_stats', {});
+    const result = await callNeppyRpc('openhuman.notification_stats', {});
     stepLog('notification_stats result', { ok: result.ok, result: result.result });
     expect(result.ok).toBe(true);
     // handle_stats returns bare value → result.result is {total, unread, unscored, ...}
@@ -283,7 +283,7 @@ describe('Notifications', () => {
       }
       await invoker('plugin:notification|notify', {
         options: {
-          title: 'OpenHuman E2E notification',
+          title: 'Neppy E2E notification',
           body: 'Verifies the plugin command is wired and callable.',
         },
       });

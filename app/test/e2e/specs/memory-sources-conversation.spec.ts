@@ -15,7 +15,7 @@
  *   6. List confirms removal
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc, expectRpcOk } from '../helpers/core-rpc';
+import { callNeppyRpc, expectRpcOk } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 
 const LOG_PREFIX = '[memory-sources-conversation]';
@@ -39,7 +39,7 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('adds a conversation source via RPC', async () => {
-    const resp = await callOpenhumanRpc<{ source: MemorySource }>('openhuman.memory_sources_add', {
+    const resp = await callNeppyRpc<{ source: MemorySource }>('openhuman.memory_sources_add', {
       kind: 'conversation',
       label: 'Agent Conversations',
       enabled: true,
@@ -56,7 +56,7 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('lists sources including the conversation source', async () => {
-    const resp = await callOpenhumanRpc<{ sources: MemorySource[] }>(
+    const resp = await callNeppyRpc<{ sources: MemorySource[] }>(
       'openhuman.memory_sources_list',
       {}
     );
@@ -68,7 +68,7 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('gets the source by id', async () => {
-    const resp = await callOpenhumanRpc<{ source: MemorySource }>('openhuman.memory_sources_get', {
+    const resp = await callNeppyRpc<{ source: MemorySource }>('openhuman.memory_sources_get', {
       id: sourceId,
     });
     expectRpcOk('openhuman.memory_sources_get', resp);
@@ -79,7 +79,7 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('updates the source to disabled', async () => {
-    const resp = await callOpenhumanRpc<{ source: MemorySource }>(
+    const resp = await callNeppyRpc<{ source: MemorySource }>(
       'openhuman.memory_sources_update',
       { id: sourceId, enabled: false }
     );
@@ -90,7 +90,7 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('removes the conversation source', async () => {
-    const resp = await callOpenhumanRpc<{ removed: boolean }>('openhuman.memory_sources_remove', {
+    const resp = await callNeppyRpc<{ removed: boolean }>('openhuman.memory_sources_remove', {
       id: sourceId,
     });
     expectRpcOk('openhuman.memory_sources_remove', resp);
@@ -98,7 +98,7 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('list confirms source is removed', async () => {
-    const resp = await callOpenhumanRpc<{ sources: MemorySource[] }>(
+    const resp = await callNeppyRpc<{ sources: MemorySource[] }>(
       'openhuman.memory_sources_list',
       {}
     );

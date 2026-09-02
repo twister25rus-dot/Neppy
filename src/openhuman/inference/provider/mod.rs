@@ -19,7 +19,7 @@ pub mod factory;
 /// Actionable diagnostics for background-workload provider fallback (#5146 §2.1).
 pub(crate) mod fallback_diagnostics;
 pub(crate) mod openai_codex;
-/// Crate-native managed OpenHuman backend as a host `ChatModel` (issue #4727).
+/// Crate-native managed Neppy backend as a host `ChatModel` (issue #4727).
 pub mod openhuman_backend_model;
 pub mod ops;
 pub mod schemas;
@@ -48,5 +48,5 @@ pub use factory::{
     create_chat_model_with_model_id, probe_inference_readiness, provider_for_role,
     role_for_model_tier, BYOK_INCOMPLETE_SENTINEL,
 };
-pub use openhuman_backend_model::{OpenHumanBackendModel, PROVIDER_LABEL};
+pub use openhuman_backend_model::{NeppyBackendModel, PROVIDER_LABEL};
 pub use ops::*;

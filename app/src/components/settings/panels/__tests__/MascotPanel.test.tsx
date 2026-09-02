@@ -130,7 +130,7 @@ describe('MascotPanel', () => {
 
   it('renders a radio swatch for each supported color', () => {
     renderPanel();
-    expect(screen.getByRole('radiogroup', { name: 'OpenHuman color' })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Neppy color' })).toBeInTheDocument();
     for (const label of ['Yellow', 'Burgundy', 'Black', 'Navy', 'Custom']) {
       expect(screen.getByRole('radio', { name: label })).toBeInTheDocument();
     }
@@ -228,7 +228,7 @@ describe('MascotPanel — mascotSlice rehydrate guard', () => {
       // Draft status badge surfaces for non-ready mascots.
       expect(screen.getByText('Draft')).toBeInTheDocument();
       // Default-row (local) sentinel
-      expect(screen.getByText(/Local OpenHuman/)).toBeInTheDocument();
+      expect(screen.getByText(/Local Neppy/)).toBeInTheDocument();
     });
 
     it('shows a friendly empty state when the library is empty', () => {
@@ -243,7 +243,7 @@ describe('MascotPanel — mascotSlice rehydrate guard', () => {
         })
       );
       renderPanel();
-      expect(screen.getByText(/No OpenHuman characters are available yet/i)).toBeInTheDocument();
+      expect(screen.getByText(/No Neppy characters are available yet/i)).toBeInTheDocument();
     });
 
     it('shows an error when the manifest fails to load', () => {
@@ -251,7 +251,7 @@ describe('MascotPanel — mascotSlice rehydrate guard', () => {
         manifestResult([], { manifest: null, entry: null, error: new Error('offline') })
       );
       renderPanel();
-      expect(screen.getByText(/OpenHuman library unavailable: offline/i)).toBeInTheDocument();
+      expect(screen.getByText(/Neppy library unavailable: offline/i)).toBeInTheDocument();
     });
 
     it('dispatches setSelectedMascotId when a mascot is picked', () => {
@@ -274,7 +274,7 @@ describe('MascotPanel — mascotSlice rehydrate guard', () => {
       store.dispatch(setSelectedMascotId('yellow'));
       useMascotManifestMock.mockReturnValue(manifestResult([yellow], { entry: yellow }));
       renderPanel(store);
-      fireEvent.click(screen.getByText(/Local OpenHuman/));
+      fireEvent.click(screen.getByText(/Local Neppy/));
       expect(store.getState().mascot.selectedMascotId).toBeNull();
     });
 

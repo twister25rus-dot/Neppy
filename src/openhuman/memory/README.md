@@ -4,7 +4,7 @@ Host layer over the memory stack. The substance of the memory subsystem was
 extracted into [`tinymemory-core`](https://github.com/tinyhumansai/tinymemory): the
 SQLite/vector store, the markdown summary tree, the provider sync pipelines,
 ingestion, recall/query/search, the ingest queue, conversations, people,
-goals and the tool-memory rules. That crate names no OpenHuman type — see
+goals and the tool-memory rules. That crate names no Neppy type — see
 [its README](https://github.com/tinyhumansai/tinymemory#readme) for the extracted
 side of this split.
 

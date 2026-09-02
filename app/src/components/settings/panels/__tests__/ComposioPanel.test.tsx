@@ -75,7 +75,7 @@ describe('ComposioPanel', () => {
     // native `<input type="radio">`), so checked-ness is exposed via
     // `aria-checked`/`data-state` rather than a `.checked` DOM property —
     // `toBeChecked()` reads either shape.
-    const backendRadio = screen.getByLabelText('Managed (OpenHuman handles it for you)');
+    const backendRadio = screen.getByLabelText('Managed (Neppy handles it for you)');
     const directRadio = screen.getByLabelText('Direct (bring your own API key)');
 
     expect(backendRadio).toBeChecked();
@@ -117,7 +117,7 @@ describe('ComposioPanel', () => {
     await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
 
     expect(
-      screen.queryByLabelText('Managed (OpenHuman handles it for you)')
+      screen.queryByLabelText('Managed (Neppy handles it for you)')
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Direct (bring your own API key)')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Composio API key')).toBeInTheDocument();
@@ -202,7 +202,7 @@ describe('ComposioPanel', () => {
     renderWithProviders(<Panel />);
     await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
 
-    fireEvent.click(screen.getByLabelText('Managed (OpenHuman handles it for you)'));
+    fireEvent.click(screen.getByLabelText('Managed (Neppy handles it for you)'));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     // No dialog appeared — clearApiKey was invoked straight through.
@@ -263,7 +263,7 @@ describe('ComposioPanel', () => {
     renderWithProviders(<Panel />);
     await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
 
-    fireEvent.click(screen.getByLabelText('Managed (OpenHuman handles it for you)'));
+    fireEvent.click(screen.getByLabelText('Managed (Neppy handles it for you)'));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
@@ -299,7 +299,7 @@ describe('ComposioPanel', () => {
     renderWithProviders(<Panel />);
     await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
 
-    expect(screen.getByLabelText('Managed (OpenHuman handles it for you)')).toBeInTheDocument();
+    expect(screen.getByLabelText('Managed (Neppy handles it for you)')).toBeInTheDocument();
   });
 
   test('trigger-webhook gap is surfaced in the Direct mode description', async () => {

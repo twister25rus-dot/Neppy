@@ -142,7 +142,7 @@ impl MemoryContextWindow {
 /// Configuration for a delegate sub-agent used by the `delegate` tool.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DelegateAgentConfig {
-    /// Model name (inference uses the OpenHuman backend from main config).
+    /// Model name (inference uses the Neppy backend from main config).
     pub model: String,
     /// Optional system prompt for the sub-agent
     #[serde(default)]
@@ -369,7 +369,7 @@ pub struct AgentConfig {
     pub required_output: Option<RequiredOutputContract>,
 
     /// Whether to load `AGENTS.md` instruction files into the agent's system
-    /// prompt — OpenHuman's analog of Claude Code's `CLAUDE.md` / Codex's
+    /// prompt — Neppy's analog of Claude Code's `CLAUDE.md` / Codex's
     /// `AGENTS.md`. When `true` (the default), the harness reads
     /// `<workspace_dir>/AGENTS.md` (global) and `<action_dir>/AGENTS.md`
     /// (project) once at system-prompt build time and injects them as

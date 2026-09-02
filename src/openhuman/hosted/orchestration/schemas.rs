@@ -186,7 +186,7 @@ fn schema_for(function: &str) -> ControllerSchema {
         "orchestration_run" => ControllerSchema {
             namespace: "orchestration",
             function: "run",
-            description: "Run the paid hosted Medulla engine with OpenHuman's local contact/session/send tools. Tool calls execute on this device and are returned through the backend continuation loop until a final reply is available.",
+            description: "Run the paid hosted Medulla engine with Neppy's local contact/session/send tools. Tool calls execute on this device and are returned through the backend continuation loop until a final reply is available.",
             inputs: vec![
                 required_str("input", "The task or prompt for Medulla to orchestrate."),
                 optional_str("sessionId", "Optional Medulla session id to continue."),
@@ -582,14 +582,14 @@ fn handle_send_master_message(params: Map<String, Value>) -> ControllerFuture {
             .filter(|s| !s.is_empty() && *s != "master" && *s != "subconscious")
             .map(str::to_string);
 
-        // W2 — "ask OpenHuman locally". No recipient AND no session id means the
-        // human is asking the OpenHuman agent itself via the Master chat (not
-        // steering an external peer). Route the question into OpenHuman's OWN
+        // W2 — "ask Neppy locally". No recipient AND no session id means the
+        // human is asking the Neppy agent itself via the Master chat (not
+        // steering an external peer). Route the question into Neppy's OWN
         // reasoning graph: persist it in the Master window + wake the reasoning
         // core locally — NO outbound peer DM, no recipient required. The core
         // answers (using its history/read tools and, if it needs a real external
         // agent, `orchestration_send_to_agent` + W7 threading) and its reply lands
-        // back in this Master window. This is the human↔OpenHuman channel; peer
+        // back in this Master window. This is the human↔Neppy channel; peer
         // steering still works by passing an explicit `recipient`/`sessionId`.
         if explicit.is_none() && session_id.is_none() {
             let now = chrono::Utc::now().to_rfc3339();

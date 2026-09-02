@@ -5,7 +5,7 @@
 //! and commons/11): the plan called for pointing `HttpRequestTool` at a local
 //! mock HTTP server and asserting a success round-trip. That is not possible
 //! against the REAL `HttpRequestTool` — unlike `tinyflows`' own mock
-//! `HttpClient`, OpenHuman's `url_guard` unconditionally blocks
+//! `HttpClient`, Neppy's `url_guard` unconditionally blocks
 //! loopback/private hosts as an SSRF guard (`is_private_or_local_host`),
 //! before the allowlist is even consulted, and any locally-hosted mock server
 //! is necessarily loopback. So instead:
@@ -15,7 +15,7 @@
 //! - the engine smoke test drives `trigger -> http_request` against a
 //!   deterministically-blocked loopback URL with `on_error: continue`, which
 //!   exercises the full real stack (build_capabilities -> engine -> compiled
-//!   graph -> `OpenHumanHttp` -> real `HttpRequestTool` -> SSRF guard ->
+//!   graph -> `NeppyHttp` -> real `HttpRequestTool` -> SSRF guard ->
 //!   `EngineError::Capability` -> the crate's `on_error: continue` policy ->
 //!   error item) without any network dependency.
 
@@ -30,7 +30,7 @@ use crate::openhuman::config::Config;
 use crate::openhuman::security::SecurityPolicy;
 
 use super::build_capabilities;
-use super::caps::{FlowStateStore, OpenHumanCode, OpenHumanHttp, OpenHumanTools};
+use super::caps::{FlowStateStore, NeppyCode, NeppyHttp, NeppyTools};
 
 fn test_config(tmp: &TempDir) -> Arc<Config> {
     let config = Config {
@@ -74,13 +74,13 @@ fn build_capabilities_constructs_every_slot_without_panicking() {
     assert!(caps.tasks.is_some(), "Tinyflows task nodes need a runner");
     assert!(
         caps.approvals.is_none(),
-        "OpenHuman resumes approvals through its existing flow-run surface"
+        "Neppy resumes approvals through its existing flow-run surface"
     );
 }
 
 // ── HTTP adapter ─────────────────────────────────────────────────────────
 
-fn http_adapter(allowed_domains: Vec<String>) -> OpenHumanHttp {
+fn http_adapter(allowed_domains: Vec<String>) -> NeppyHttp {
     let tmp = TempDir::new().unwrap();
     let config = test_config(&tmp);
     let security = Arc::new(SecurityPolicy::from_config(
@@ -88,7 +88,7 @@ fn http_adapter(allowed_domains: Vec<String>) -> OpenHumanHttp {
         &config.workspace_dir,
         &config.action_dir,
     ));
-    OpenHumanHttp {
+    NeppyHttp {
         security,
         http_config: crate::openhuman::config::HttpRequestConfig {
             allowed_domains,
@@ -215,7 +215,7 @@ async fn code_adapter_javascript_passthrough_round_trips_json() {
         &config.workspace_dir,
         &config.action_dir,
     ));
-    let runner = OpenHumanCode { config, security };
+    let runner = NeppyCode { config, security };
 
     let input = json!([{ "json": { "n": 7 } }]);
     let result = runner
@@ -233,13 +233,13 @@ async fn code_adapter_javascript_passthrough_round_trips_json() {
 // independent of the approval gate and runs first, so they stay deterministic
 // without any global state.
 
-fn tools_adapter(config: Arc<Config>) -> OpenHumanTools {
+fn tools_adapter(config: Arc<Config>) -> NeppyTools {
     let security = Arc::new(SecurityPolicy::from_config(
         &config.autonomy,
         &config.workspace_dir,
         &config.action_dir,
     ));
-    OpenHumanTools { config, security }
+    NeppyTools { config, security }
 }
 
 #[tokio::test]
@@ -539,7 +539,7 @@ async fn preflight_invoker_gates_the_mock_tool_path() {
     assert_eq!(ok["tool"], "oh:web_search");
 }
 
-// ── OpenHumanAgentRunner: routing + request/model mapping (Phase A) ───────────
+// ── NeppyAgentRunner: routing + request/model mapping (Phase A) ───────────
 
 use super::caps::{
     build_agent_result, clamp_run_timeout_secs, harness_model_default_override,

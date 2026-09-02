@@ -369,7 +369,7 @@ pub fn client_config(config: &Config) -> McpClientConfig {
         client.servers.push(McpServerConfig {
             name: GITBOOKS_SERVER_NAME.to_string(),
             endpoint: config.gitbooks.endpoint.clone(),
-            description: Some("OpenHuman GitBook documentation MCP server.".to_string()),
+            description: Some("Neppy GitBook documentation MCP server.".to_string()),
             timeout_secs: config.gitbooks.timeout_secs,
             ..McpServerConfig::default()
         });

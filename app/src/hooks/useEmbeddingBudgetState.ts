@@ -129,7 +129,7 @@ export function useEmbeddingBudgetState(): EmbeddingBudgetState {
   const [providerLoading, setProviderLoading] = useState(true);
   // Fallback budget snapshot for the routed-away-but-managed-embeddings case.
   // `useUsageState` deliberately returns no `teamUsage` when every chat +
-  // background workload is routed off OpenHuman (#2020 privacy optimisation) —
+  // background workload is routed off Neppy (#2020 privacy optimisation) —
   // but managed embeddings still bill against the managed cycle budget, so we
   // read it directly there rather than letting that bypass silence the warning.
   const [fallbackUsage, setFallbackUsage] = useState<DerivedBudget | null>(null);

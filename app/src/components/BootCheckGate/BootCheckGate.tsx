@@ -733,7 +733,7 @@ export default function BootCheckGate({ children }: BootCheckGateProps) {
           recovery.message
         );
         if (!recovery.success) {
-          // Reaping stale OpenHuman processes didn't free the port. If a foreign
+          // Reaping stale Neppy processes didn't free the port. If a foreign
           // owner was identified, surface it so the user can consent-quit it.
           if (recovery.foreign_owner) {
             setResult({ ...result, foreignOwner: recovery.foreign_owner });

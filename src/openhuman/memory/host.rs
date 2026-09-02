@@ -2,7 +2,7 @@
 //!
 //! `tinymemory-core` holds the substance of the memory subsystem — the store,
 //! the summary tree, the sync pipelines, ingestion, recall. It names no
-//! OpenHuman type. Everything it needs from us arrives through the traits in
+//! Neppy type. Everything it needs from us arrives through the traits in
 //! [`tinymemory_api::host`], and this module is where we implement them.
 //!
 //! Three impls, and one wiring call:
@@ -14,7 +14,7 @@
 //!   the call site.
 //! - [`MemoryEventSink`] for [`BusEventSink`] — maps the core's memory-domain
 //!   events onto [`DomainEvent`] and publishes them on our bus. The core never
-//!   learns `DomainEvent` exists; that enum is OpenHuman's own vocabulary and
+//!   learns `DomainEvent` exists; that enum is Neppy's own vocabulary and
 //!   spans agents, channels, cron and tools as well as memory.
 //! - The embedding provider trait is not implemented here — it is *defined* in
 //!   `tinymemory_api::host` and re-exported from
@@ -176,7 +176,7 @@ impl MemoryHostConfig for Config {
 
 // ── Events ──────────────────────────────────────────────────────────────────
 
-/// Publishes the memory subsystem's events onto OpenHuman's event bus.
+/// Publishes the memory subsystem's events onto Neppy's event bus.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BusEventSink;
 

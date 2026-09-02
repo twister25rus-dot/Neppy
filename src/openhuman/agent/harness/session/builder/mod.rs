@@ -20,7 +20,7 @@ use crate::openhuman::tools::ToolSpec;
 /// Drop entries with duplicate `name` fields, first occurrence wins.
 ///
 /// Anthropic (and other strict providers) rejects a chat/completions
-/// request that lists two tools with the same name — OpenHuman's own
+/// request that lists two tools with the same name — Neppy's own
 /// backend and OpenAI silently accept duplicates, which hid the
 /// underlying collision (researcher sub-agent's `delegate_name =
 /// "research"` shadowing a same-named skill tool) until #1710's

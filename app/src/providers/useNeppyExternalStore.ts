@@ -27,7 +27,7 @@ function appendMessageText(message: AppendMessage): string {
  * a faithful, live view of the conversation and a working action API without
  * holding any state of its own.
  */
-export function useOpenHumanExternalStore(threadId: string | null) {
+export function useNeppyExternalStore(threadId: string | null) {
   const messages = useAppSelector(state =>
     threadId ? (state.thread.messagesByThreadId[threadId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES
   );

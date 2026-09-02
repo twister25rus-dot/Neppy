@@ -1,4 +1,4 @@
-//! Host [`SecurityGate`] — OpenHuman's answer to "may this tool run?" and
+//! Host [`SecurityGate`] — Neppy's answer to "may this tool run?" and
 //! "may this text enter the model context?".
 //!
 //! This is `docs/specs/plan-agents.md` Phase 4 for the most policy-sensitive
@@ -22,7 +22,7 @@
 //!
 //! # Contract mismatches, resolved in favour of the existing guard
 //!
-//! 1. **"Answer, do not act" vs. the rate limiter.** OpenHuman's
+//! 1. **"Answer, do not act" vs. the rate limiter.** Neppy's
 //!    [`SecurityPolicy::enforce_tool_operation`] *records* an action against the
 //!    sliding-window tracker as a side effect of authorizing one. The trait
 //!    forbids acting, and the tools call it themselves anyway, so this adapter
@@ -42,17 +42,17 @@
 //!
 //!    So ownership is consolidated here. This adapter calls
 //!    `intercept_audited`, stashes the id under the call id, and exposes
-//!    [`OpenHumanSecurityGate::take_audit_request_id`] for the executor to drain
+//!    [`NeppySecurityGate::take_audit_request_id`] for the executor to drain
 //!    and hand to [`ApprovalGate::record_execution`]. **A runner that installs
 //!    this gate must not also compose `ApprovalSecurityMiddleware`'s approval
 //!    step** — the two are alternatives, not layers. The session-allowlist
 //!    shortcut yields no id and needs no terminal row.
-//! 3. **No `Redacted` outcome is ever produced.** OpenHuman can *detect* PII
+//! 3. **No `Redacted` outcome is ever produced.** Neppy can *detect* PII
 //!    ([`crate::openhuman::security::pii::scan`]) but exposes no verified
 //!    public helper that rewrites free text into a redacted copy — the one that
 //!    exists (`approval::redact::scrub_paths`) is private and shaped for JSON
 //!    argument maps. Screening therefore only ever passes or blocks. See the
-//!    `TODO(phase4)` in [`OpenHumanSecurityGate::screen_input`].
+//!    `TODO(phase4)` in [`NeppySecurityGate::screen_input`].
 //! 4. **An absent approval gate allows, it does not deny.** When
 //!    [`ApprovalGate::try_global`] is `None` (CLI, headless embed, tests) a
 //!    `Prompt` decision cannot be resolved by a human. This adapter warns
@@ -121,13 +121,13 @@ enum ToolPolicyVerdict {
     Deny(String),
 }
 
-/// OpenHuman's [`SecurityGate`].
+/// Neppy's [`SecurityGate`].
 ///
 /// Holds a boot-time [`SecurityPolicy`] snapshot, the session's optional
 /// [`ToolPolicySession`], and the same `Arc`-shared tool sets the harness
 /// registers — the last is how a call's declared permission level and
 /// external-effect classification are recovered from a bare tool name.
-pub struct OpenHumanSecurityGate {
+pub struct NeppySecurityGate {
     /// Fallback policy used when no process-global live policy is installed.
     ///
     /// Per-call resolution prefers
@@ -158,7 +158,7 @@ pub struct OpenHumanSecurityGate {
     pending_audit: Mutex<HashMap<String, String>>,
 }
 
-impl OpenHumanSecurityGate {
+impl NeppySecurityGate {
     /// Builds a gate over `policy` and the runner's shared `tool_sets`.
     ///
     /// `tool_sets` is not optional on purpose. Without it a tool name cannot be
@@ -250,7 +250,7 @@ impl OpenHumanSecurityGate {
         }
     }
 
-    /// Classifies a `shell` call and maps OpenHuman's three-way policy verdict
+    /// Classifies a `shell` call and maps Neppy's three-way policy verdict
     /// onto this trait's.
     ///
     /// Mirrors `ShellTool::external_effect_with_args` exactly: the deterministic
@@ -373,7 +373,7 @@ impl OpenHumanSecurityGate {
 }
 
 #[async_trait]
-impl SecurityGate for OpenHumanSecurityGate {
+impl SecurityGate for NeppySecurityGate {
     /// Answers in five stages, each of which can only narrow the answer:
     ///
     /// 1. the channel tool policy (`agent_tool_policy`),
@@ -482,7 +482,7 @@ impl SecurityGate for OpenHumanSecurityGate {
         //    command, and `gate_decision` already encodes the autonomy tier —
         //    at a finer grain than the tool's coarse `Execute` permission
         //    level. Running stage 4 first would refuse `ls` in read-only mode,
-        //    which OpenHuman's own `ShellTool` permits. So shell answers here
+        //    which Neppy's own `ShellTool` permits. So shell answers here
         //    and returns.
         if call.tool_name == SHELL_TOOL {
             match Self::shell_decision(&policy, &call.arguments) {
@@ -582,11 +582,11 @@ impl SecurityGate for OpenHumanSecurityGate {
         Ok(self.settled(channel_approved))
     }
 
-    /// Runs OpenHuman's prompt-injection detector over `text`.
+    /// Runs Neppy's prompt-injection detector over `text`.
     ///
     /// Every origin is screened, `User` included — the detector's primary
     /// production caller is the user-prompt path, and provenance is not trust.
-    /// Both non-allow verdicts map to [`ScreenOutcome::Block`]: OpenHuman's
+    /// Both non-allow verdicts map to [`ScreenOutcome::Block`]: Neppy's
     /// `Review` verdict is already spelled `ReviewBlocked` on the enforcement
     /// side, so admitting it here would be this adapter inventing a permission
     /// the host does not grant.
@@ -715,8 +715,8 @@ mod tests {
         })
     }
 
-    fn gate(autonomy: AutonomyLevel) -> OpenHumanSecurityGate {
-        OpenHumanSecurityGate::new(policy(autonomy), registry())
+    fn gate(autonomy: AutonomyLevel) -> NeppySecurityGate {
+        NeppySecurityGate::new(policy(autonomy), registry())
     }
 
     fn req(tool_name: &str, args: serde_json::Value) -> ToolCallRequest {
@@ -802,7 +802,7 @@ mod tests {
 
     #[tokio::test]
     async fn an_empty_registry_denies_everything() {
-        let gate = OpenHumanSecurityGate::new(policy(AutonomyLevel::Full), Vec::new());
+        let gate = NeppySecurityGate::new(policy(AutonomyLevel::Full), Vec::new());
         assert!(!gate
             .authorize_tool(&req("read_file", json!({})))
             .await
@@ -823,7 +823,7 @@ mod tests {
     async fn a_read_class_shell_command_still_runs_in_read_only_mode() {
         // The regression the stage ordering exists for: `shell` declares the
         // coarse `Execute` permission level, so a naive tier check would refuse
-        // `ls` in read-only mode — which OpenHuman's own ShellTool permits,
+        // `ls` in read-only mode — which Neppy's own ShellTool permits,
         // because `classify_command` says the command itself is a Read.
         let decision = gate(AutonomyLevel::ReadOnly)
             .authorize_tool(&req(SHELL_TOOL, json!({ "command": "ls -la" })))
@@ -864,12 +864,12 @@ mod tests {
         };
         // `touch` is Write, which Full runs silently…
         assert_eq!(
-            OpenHumanSecurityGate::shell_decision(&full, &json!({ "command": "touch f" })),
+            NeppySecurityGate::shell_decision(&full, &json!({ "command": "touch f" })),
             Ok(PolicyGateDecision::Allow)
         );
         // …until the model itself declares it destructive, which must prompt.
         assert_eq!(
-            OpenHumanSecurityGate::shell_decision(
+            NeppySecurityGate::shell_decision(
                 &full,
                 &json!({ "command": "touch f", "category": "destructive" })
             ),
@@ -878,7 +878,7 @@ mod tests {
         // The hint can never lower the deterministic floor: a network command
         // declared "read" still prompts.
         assert_eq!(
-            OpenHumanSecurityGate::shell_decision(
+            NeppySecurityGate::shell_decision(
                 &full,
                 &json!({ "command": "curl https://example.invalid", "category": "read" })
             ),
@@ -890,7 +890,7 @@ mod tests {
     fn a_missing_command_argument_classifies_as_read_rather_than_panicking() {
         let supervised = SecurityPolicy::default();
         assert_eq!(
-            OpenHumanSecurityGate::shell_decision(&supervised, &json!({})),
+            NeppySecurityGate::shell_decision(&supervised, &json!({})),
             Ok(PolicyGateDecision::Allow)
         );
     }
@@ -975,7 +975,7 @@ mod tests {
     #[tokio::test]
     async fn require_approval_never_silently_allows_a_plain_tool() {
         let gate =
-            OpenHumanSecurityGate::new(policy(AutonomyLevel::Full), registry()).with_tool_policy(
+            NeppySecurityGate::new(policy(AutonomyLevel::Full), registry()).with_tool_policy(
                 policy_session("write_file", ToolPolicyAction::RequireApproval),
             );
 
@@ -1006,7 +1006,7 @@ mod tests {
     /// the fix, stage 1 returned immediately and stages 2-5 never ran.
     #[tokio::test]
     async fn channel_approval_does_not_bypass_the_readonly_tier() {
-        let decision = OpenHumanSecurityGate::new(policy(AutonomyLevel::ReadOnly), registry())
+        let decision = NeppySecurityGate::new(policy(AutonomyLevel::ReadOnly), registry())
             .with_tool_policy(policy_session(
                 "write_file",
                 ToolPolicyAction::RequireApproval,
@@ -1026,7 +1026,7 @@ mod tests {
     /// not from the channel verdict.
     #[tokio::test]
     async fn the_readonly_tier_refuses_an_acting_tool_the_channel_allowed() {
-        let decision = OpenHumanSecurityGate::new(policy(AutonomyLevel::ReadOnly), registry())
+        let decision = NeppySecurityGate::new(policy(AutonomyLevel::ReadOnly), registry())
             .with_tool_policy(policy_session("write_file", ToolPolicyAction::Allow))
             .authorize_tool(&req("write_file", json!({ "path": "notes.md" })))
             .await
@@ -1038,14 +1038,14 @@ mod tests {
     /// The other two verdicts keep their existing meaning.
     #[tokio::test]
     async fn allow_and_deny_channel_verdicts_are_unchanged() {
-        let allowed = OpenHumanSecurityGate::new(policy(AutonomyLevel::Full), registry())
+        let allowed = NeppySecurityGate::new(policy(AutonomyLevel::Full), registry())
             .with_tool_policy(policy_session("write_file", ToolPolicyAction::Allow))
             .authorize_tool(&req("write_file", json!({ "path": "notes.md" })))
             .await
             .unwrap();
         assert_eq!(allowed, GateDecision::Allow);
 
-        let denied = OpenHumanSecurityGate::new(policy(AutonomyLevel::Full), registry())
+        let denied = NeppySecurityGate::new(policy(AutonomyLevel::Full), registry())
             .with_tool_policy(policy_session("write_file", ToolPolicyAction::Deny))
             .authorize_tool(&req("write_file", json!({ "path": "notes.md" })))
             .await

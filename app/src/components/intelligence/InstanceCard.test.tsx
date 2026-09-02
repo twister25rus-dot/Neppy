@@ -49,7 +49,7 @@ describe('InstanceCard', () => {
     expect(onSelect).toHaveBeenCalledOnce();
   });
 
-  it('falls back to the OpenHuman glyph when no harness is set', () => {
+  it('falls back to the Neppy glyph when no harness is set', () => {
     render(<InstanceCard session={session({ harnessType: undefined, source: 'user_created' })} />);
     expect(screen.getByTestId('harness-glyph')).toHaveAttribute('data-harness', 'openhuman');
   });

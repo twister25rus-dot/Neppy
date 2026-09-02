@@ -1,7 +1,7 @@
 //! Context utilisation and session-memory state for [`ContextManager`].
 //!
 //! Live context reduction is owned by the TinyAgents middleware stack. This
-//! module keeps only OpenHuman-specific bookkeeping: last provider usage,
+//! module keeps only Neppy-specific bookkeeping: last provider usage,
 //! context-window utilisation for the UI/footer, and session-memory extraction
 //! trigger state.
 

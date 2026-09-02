@@ -1,8 +1,8 @@
 /**
- * SelfIdentityCard — pinned at the top of the roster, shows OpenHuman's *own*
+ * SelfIdentityCard — pinned at the top of the roster, shows Neppy's *own*
  * tiny.place identity so the user can hand it to a peer to be messaged inbound.
  *
- * Why it exists: the tab previously showed peers/contacts but never OpenHuman's
+ * Why it exists: the tab previously showed peers/contacts but never Neppy's
  * own agent id, so there was no way to say "here's my address, DM me". Worse, a
  * fresh identity can accept contacts yet stay un-messageable until it registers a
  * @handle (which is what publishes its directory card + Signal key) — every send

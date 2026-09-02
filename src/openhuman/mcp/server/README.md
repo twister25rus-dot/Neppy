@@ -1,6 +1,6 @@
 # mcp/server
 
-Opt-in **Model Context Protocol (MCP) server** that exposes a curated, security-gated slice of OpenHuman's tool surface (memory-tree reads/writes, core/agent introspection, subagent execution, SearXNG search) and bundled prompt assets to external MCP clients (Claude Desktop, Cursor, Windsurf, …). Started via `openhuman-core mcp` — stdio transport by default, or `--transport http` for Streamable HTTP + SSE on a local bind address. It is a JSON-RPC dispatcher, not a registered RPC domain: it has no `schemas.rs`/controllers and is wired only through `src/core/cli.rs`, translating each MCP `tools/call` into an existing registered core RPC method.
+Opt-in **Model Context Protocol (MCP) server** that exposes a curated, security-gated slice of Neppy's tool surface (memory-tree reads/writes, core/agent introspection, subagent execution, SearXNG search) and bundled prompt assets to external MCP clients (Claude Desktop, Cursor, Windsurf, …). Started via `openhuman-core mcp` — stdio transport by default, or `--transport http` for Streamable HTTP + SSE on a local bind address. It is a JSON-RPC dispatcher, not a registered RPC domain: it has no `schemas.rs`/controllers and is wired only through `src/core/cli.rs`, translating each MCP `tools/call` into an existing registered core RPC method.
 
 ## Responsibilities
 

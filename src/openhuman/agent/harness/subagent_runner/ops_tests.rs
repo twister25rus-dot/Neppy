@@ -182,7 +182,7 @@ fn subagent_mode_as_str_roundtrip() {
 fn append_subagent_role_contract_adds_role_and_brevity_rules() {
     let rendered = append_subagent_role_contract("base prompt".to_string(), "researcher");
     assert!(rendered.contains("## Sub-agent Role Contract"));
-    assert!(rendered.contains("You are a sub-agent working for a parent OpenHuman agent"));
+    assert!(rendered.contains("You are a sub-agent working for a parent Neppy agent"));
     assert!(rendered.contains("Keep your final response concise and synthesis-ready"));
     assert!(rendered.contains("## Sub-agent Result Contract"));
     assert!(rendered.contains("Evidence used"));
@@ -513,7 +513,7 @@ async fn typed_mode_system_prompt_includes_subagent_role_contract() {
     assert!(system_msg.content.contains("## Sub-agent Role Contract"));
     assert!(system_msg
         .content
-        .contains("You are a sub-agent working for a parent OpenHuman agent"));
+        .contains("You are a sub-agent working for a parent Neppy agent"));
     assert!(system_msg
         .content
         .contains("Keep your final response concise and synthesis-ready"));
@@ -1333,7 +1333,7 @@ fn resolve_subagent_source_config_alias_matches_issue_team_examples() {
 fn resolve_subagent_source_hint_with_no_config_falls_back() {
     // The async config load failed (transient I/O, missing file, etc.).
     // The Hint arm must NOT silently swallow the failure and synthesise
-    // `{workload}-v1` — that's the OpenHuman-only naming that breaks
+    // `{workload}-v1` — that's the Neppy-only naming that breaks
     // Anthropic/OpenAI. Fall back to the parent's known-good
     // (provider, model) instead.
     let parent: Arc<dyn ChatModel<()>> = ScriptedProvider::new(vec![]);
@@ -1357,7 +1357,7 @@ fn resolve_subagent_source_hint_with_no_config_falls_back() {
 fn resolve_subagent_source_hint_with_config_routes_via_factory() {
     // The Hint arm with a real config takes the workload-factory path.
     // We don't assert the *resulting* provider identity here (the
-    // factory may return a fresh OpenHuman backend or whatever
+    // factory may return a fresh Neppy backend or whatever
     // primary_cloud resolves to), but we DO assert the resolved model
     // is the workload's canonical managed tier — NOT `default_model`,
     // and NOT the parent's model.
@@ -1369,7 +1369,7 @@ fn resolve_subagent_source_hint_with_config_routes_via_factory() {
     // so `agentic` resolves to `agentic-v1` regardless of `default_model`.
     use crate::openhuman::config::Config;
     let mut config = Config::default();
-    // Route `agentic` to the OpenHuman backend explicitly, and set a
+    // Route `agentic` to the Neppy backend explicitly, and set a
     // distinct `default_model` so the assertion proves the role — not the
     // global default — drives the resolved tier.
     config.agentic_provider = Some("openhuman".to_string());

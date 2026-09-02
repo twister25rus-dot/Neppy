@@ -167,7 +167,7 @@ export function useAISettings() {
       // unreachable between add-time and save-time, etc.) before they reach
       // the saved config and start routing chat traffic to a dead host.
       //
-      // OpenHuman is exempt (session JWT, no /models endpoint to hit).
+      // Neppy is exempt (session JWT, no /models endpoint to hit).
       const savedById = new Map(saved.cloudProviders.map(p => [p.id, p]));
       const toProbe = draft.cloudProviders.filter(p => {
         if (p.slug === 'openhuman') return false;

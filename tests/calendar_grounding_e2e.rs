@@ -193,7 +193,7 @@ async fn test_integrations_agent_has_current_date_context() -> Result<()> {
     // `integrations_agent` ships with `[model] hint = "agentic"`. After
     // #1710, a Hint sub-agent builds a fresh provider via the workload
     // factory instead of inheriting `parent.provider` — which here would
-    // resolve to the OpenHuman backend and fail with "No backend session"
+    // resolve to the Neppy backend and fail with "No backend session"
     // before the MockCalendarModel ever sees a request. This test only
     // asserts prompt construction (the "Current Date & Time" context), so
     // override the model spec to Inherit to keep the real integrations_agent

@@ -38,7 +38,7 @@ struct BudgetSignal {
 /// a *later* turn on the same thread whose provider returned an empty 200. The
 /// managed route closes the SSE cleanly under credit exhaustion (the response
 /// already flushed HTTP 200, so there is no error frame and no inline budget
-/// marker — `OpenHumanBilling` carries only `charged_amount_usd`). Without this
+/// marker — `NeppyBilling` carries only `charged_amount_usd`). Without this
 /// correlator such a budget-caused empty turn surfaces as the generic "empty
 /// response" copy instead of the actionable out-of-credits copy.
 ///

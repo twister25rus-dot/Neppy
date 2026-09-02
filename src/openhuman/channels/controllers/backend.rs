@@ -1,4 +1,4 @@
-//! TinyChannels backend implementation for OpenHuman controller operations.
+//! TinyChannels backend implementation for Neppy controller operations.
 
 use async_trait::async_trait;
 use serde::Serialize;
@@ -17,13 +17,13 @@ use tinychannels::controllers::{
 };
 use tinychannels::{ChannelBackend, ChannelOutboundIntent, SendMessage};
 
-/// OpenHuman-owned implementation of the TinyChannels backend contract.
+/// Neppy-owned implementation of the TinyChannels backend contract.
 #[derive(Debug, Clone)]
-pub struct OpenHumanChannelBackend {
+pub struct NeppyChannelBackend {
     config: Config,
 }
 
-impl OpenHumanChannelBackend {
+impl NeppyChannelBackend {
     pub fn new(config: Config) -> Self {
         Self { config }
     }
@@ -169,7 +169,7 @@ fn disconnect_result(
 }
 
 #[async_trait]
-impl ChannelBackend for OpenHumanChannelBackend {
+impl ChannelBackend for NeppyChannelBackend {
     async fn connect_channel(
         &self,
         channels_config: &ChannelsConfig,

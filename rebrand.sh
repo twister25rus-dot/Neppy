@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# rebrand.sh — staged OpenHuman -> Neppy rename.
+# rebrand.sh — staged Neppy -> Neppy rename.
 #
 # Run from the repo root (/Users/alex/Neppy). Dry-run by default.
 #
@@ -9,7 +9,7 @@
 # Categories, run them in this order, commit + `cargo check` between each:
 #   docs      user-facing text, README, gitbooks, locales, prompts
 #   env       OPENHUMAN_* -> NEPPY_* environment variables
-#   paths     ~/.openhuman -> ~/.neppy, ~/OpenHuman/projects -> ~/Neppy/projects
+#   paths     ~/.openhuman -> ~/.neppy, ~/Neppy/projects -> ~/Neppy/projects
 #   tauri     product name, window title, bundle identifier
 #   crates    crate + package names (openhuman -> neppy)
 #   moddir    src/openhuman/ -> src/neppy/ and every import path (do this LAST)
@@ -45,10 +45,10 @@ EXCLUDES=(
 PROTECTED='tinyagents|tinycortex|tinyflows|tinychannels|tinybus|tinymcp|tinymemory|tinydocs|tinyvoice|tinyjuice|tinyruntime|tinywallet|tinyhumans-sdk|tinyjuice_retrieve|tokenjuice_retrieve|x-sdk-name|openhuman-skills|VITE_SKILLS_GITHUB_REPO|retire_local_whisper_stt|INFERENCE_COMPILED_IN'
 
 case "$CATEGORY" in
-  docs)   PATTERN='OpenHuman' ;      REPLACE='Neppy' ;      SCOPE=(README.md INSTALL.md CONTRIBUTING.md docs gitbooks app/src/locales src/openhuman/agent/prompts) ;;
+  docs)   PATTERN='Neppy' ;      REPLACE='Neppy' ;      SCOPE=(README.md INSTALL.md CONTRIBUTING.md docs gitbooks app/src/locales src/openhuman/agent/prompts) ;;
   env)    PATTERN='OPENHUMAN_' ;     REPLACE='NEPPY_' ;     SCOPE=(.) ;;
   paths)  PATTERN='\.openhuman' ;    REPLACE='.neppy' ;     SCOPE=(.) ;;
-  tauri)  PATTERN='OpenHuman' ;      REPLACE='Neppy' ;      SCOPE=(app/src-tauri/tauri.conf.json app/src-tauri/Cargo.toml) ;;
+  tauri)  PATTERN='Neppy' ;      REPLACE='Neppy' ;      SCOPE=(app/src-tauri/tauri.conf.json app/src-tauri/Cargo.toml) ;;
   crates) PATTERN='openhuman' ;      REPLACE='neppy' ;      SCOPE=(Cargo.toml app/src-tauri/Cargo.toml package.json app/package.json) ;;
   moddir) echo "moddir is a manual step, see below"; MODDIR=1 ;;
   *)      echo "unknown category: $CATEGORY"; exit 1 ;;

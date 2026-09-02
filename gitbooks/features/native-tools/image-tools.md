@@ -1,6 +1,6 @@
 # Image Tools
 
-OpenHuman's image contract gives agents a stable way to reason about
+Neppy's image contract gives agents a stable way to reason about
 image generation and local image inspection without tying the prompt surface to a
 single provider runtime.
 
@@ -83,7 +83,7 @@ runtime adapter, not in the hosted contract module.
 
 Separate from the high-level `image_generation` contract above, the
 `src/openhuman/media/generation/` domain ships **wired, executing** tools that
-generate images and video through the OpenHuman backend's `media_generation`
+generate images and video through the Neppy backend's `media_generation`
 provider (GMI Cloud: Seedream, SeedEdit, Seedance, Veo).
 
 | Tool                   | Purpose                                                          | Permission | Output                                    |

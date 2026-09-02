@@ -34,10 +34,10 @@
 //!   successful run is a no-op.
 //! - Never touches keys / secrets. API keys remain in
 //!   `auth-profiles.json` via [`crate::openhuman::security::credentials::AuthService`].
-//! - Always seeds an `Openhuman` entry into `cloud_providers` (idempotent —
+//! - Always seeds an `Neppy` entry into `cloud_providers` (idempotent —
 //!   only when the list is empty).
 //! - Migrates `inference_url` into a `Custom` cloud provider entry when the
-//!   URL doesn't look like the OpenHuman backend.
+//!   URL doesn't look like the Neppy backend.
 
 use crate::openhuman::config::schema::cloud_providers::{
     generate_provider_id, AuthStyle, CloudProviderCreds, CloudProviderType,
@@ -74,7 +74,7 @@ pub fn run(config: &mut Config) -> anyhow::Result<MigrationStats> {
     Ok(stats)
 }
 
-/// Seed `cloud_providers` with an OpenHuman entry (and optionally a Custom
+/// Seed `cloud_providers` with an Neppy entry (and optionally a Custom
 /// entry derived from a legacy `inference_url`).
 fn seed_cloud_providers(config: &mut Config, stats: &mut MigrationStats) {
     if !config.cloud_providers.is_empty() {
@@ -85,13 +85,13 @@ fn seed_cloud_providers(config: &mut Config, stats: &mut MigrationStats) {
         return;
     }
 
-    // Always seed the OpenHuman entry — even if api_url is None, the factory
+    // Always seed the Neppy entry — even if api_url is None, the factory
     // resolves a sensible default at runtime.
     let oh_endpoint = config
         .api_url
         .clone()
         .filter(|s| !s.trim().is_empty())
-        .unwrap_or_else(|| CloudProviderType::Openhuman.default_endpoint().to_string());
+        .unwrap_or_else(|| CloudProviderType::Neppy.default_endpoint().to_string());
     let oh_default_model = config
         .default_model
         .clone()
@@ -100,18 +100,18 @@ fn seed_cloud_providers(config: &mut Config, stats: &mut MigrationStats) {
     config.cloud_providers.push(CloudProviderCreds {
         id: generate_provider_id("openhuman"),
         slug: "openhuman".to_string(),
-        label: "OpenHuman".to_string(),
+        label: "Neppy".to_string(),
         endpoint: oh_endpoint,
-        auth_style: AuthStyle::OpenhumanJwt,
+        auth_style: AuthStyle::NeppyJwt,
         default_model: Some(oh_default_model),
         ..Default::default()
     });
     stats.cloud_providers_seeded += 1;
 
-    // If there's a legacy `inference_url` pointing at a non-OpenHuman
+    // If there's a legacy `inference_url` pointing at a non-Neppy
     // endpoint, surface it as a Custom entry so the user keeps their
     // configuration. The actual key continues to live in auth-profiles.json
-    // (or in `api_key` on Config — which is OpenHuman's session JWT and
+    // (or in `api_key` on Config — which is Neppy's session JWT and
     // doesn't apply here; users will re-enter via the new UI).
     if let Some(raw) = config.inference_url.as_deref() {
         let trimmed = raw.trim();
@@ -144,9 +144,9 @@ fn seed_cloud_providers(config: &mut Config, stats: &mut MigrationStats) {
 }
 
 /// Default `primary_cloud` to the legacy custom inference entry when one was
-/// present; otherwise use the OpenHuman entry. This preserves pre-migration
+/// present; otherwise use the Neppy entry. This preserves pre-migration
 /// behavior where a configured `inference_url` handled chat instead of the
-/// hosted OpenHuman budget.
+/// hosted Neppy budget.
 fn set_primary_cloud(config: &mut Config, stats: &mut MigrationStats) {
     if config.primary_cloud.is_some() {
         return;
@@ -259,10 +259,10 @@ fn derive_workload_providers(config: &mut Config, stats: &mut MigrationStats) {
     // legacy config for chat, so there's nothing to derive.
 }
 
-/// Heuristic: does the URL look like a configured OpenHuman backend?
+/// Heuristic: does the URL look like a configured Neppy backend?
 ///
 /// Used to decide whether a non-empty `inference_url` should be migrated
-/// into a Custom cloud provider entry. The default OpenHuman backend lives
+/// into a Custom cloud provider entry. The default Neppy backend lives
 /// at api.openhuman.ai; staging and dev URLs use the same host pattern.
 ///
 /// Matches only on the host component to avoid false positives from custom

@@ -212,7 +212,7 @@ async fn verb_methods_block_user_data_egress_under_local_only() {
     );
 }
 
-/// The OpenHuman compatibility wrapper must retain the SDK's privileged-route
+/// The Neppy compatibility wrapper must retain the SDK's privileged-route
 /// denylist on every public verb, including the temporary reqwest download
 /// exception. An unreachable base URL makes a transport error the failure
 /// mode if any request gets past the local gate.
@@ -743,7 +743,7 @@ async fn jira_generic_400_classifies_as_backend_user_error() {
 // ── TAURI-RUST-84E: session-JWT 401 → session-expiry recovery ─────
 
 /// Root-cause regression guard for TAURI-RUST-84E. A `401 Unauthorized` from
-/// the OpenHuman backend's `/agent-integrations/*` routes is the backend
+/// the Neppy backend's `/agent-integrations/*` routes is the backend
 /// rejecting our app-session JWT. The propagated error string MUST:
 ///   1. classify as `SessionExpired` (so it stays demoted from Sentry — the
 ///      noise suppression the prior fix established), AND

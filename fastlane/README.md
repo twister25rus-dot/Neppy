@@ -21,7 +21,7 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 [bundle exec] fastlane ios push_screenshots
 ```
 
-Push OpenHuman iOS App Store screenshots without uploading a binary
+Push Neppy iOS App Store screenshots without uploading a binary
 
 ### ios push_metadata
 
@@ -29,7 +29,7 @@ Push OpenHuman iOS App Store screenshots without uploading a binary
 [bundle exec] fastlane ios push_metadata
 ```
 
-Push OpenHuman iOS App Store metadata and screenshots without uploading a binary
+Push Neppy iOS App Store metadata and screenshots without uploading a binary
 
 ----
 

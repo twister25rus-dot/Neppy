@@ -42,7 +42,7 @@ use crate::openhuman::inference::provider::{is_raw_passthrough_model, role_for_m
 ///    [`AgentRegistryEntry`](crate::openhuman::agent::registry::AgentRegistryEntry)
 ///    (no harness definition), the node keeps the original single-completion
 ///    behavior: the entry's `system_prompt` / `model` are shaped on top of the
-///    node request and run through [`OpenHumanLlm::complete`].
+///    node request and run through [`NeppyLlm::complete`].
 ///
 /// **Security.** No new origin is scoped here: the engine future already runs
 /// under the flow's `Workflow` origin (`turn_origin`), so the user's autonomy
@@ -66,12 +66,12 @@ use crate::openhuman::inference::provider::{is_raw_passthrough_model, role_for_m
 /// shared state. The origin escalation and approval-run context are task-locals
 /// propagated by the engine's `buffer_unordered` (which polls every item on the
 /// caller's task), so HITL gating still applies to every fanned-out turn.
-pub struct OpenHumanAgentRunner {
+pub struct NeppyAgentRunner {
     pub config: Arc<Config>,
 }
 
 /// Process-wide ceiling on **simultaneous harness agent turns started by flow
-/// nodes**, honoured by [`run_via_harness`](OpenHumanAgentRunner::run_via_harness).
+/// nodes**, honoured by [`run_via_harness`](NeppyAgentRunner::run_via_harness).
 ///
 /// The engine's per-node `concurrency` bounds one node's fan-out; this bounds
 /// the host. Those are different limits and the host one is the load-bearing
@@ -113,7 +113,7 @@ fn max_parallel_harness_agents(raw: Option<&str>) -> usize {
         .unwrap_or(DEFAULT_MAX_PARALLEL_HARNESS_AGENTS)
 }
 
-/// Which execution path an `agent_ref` routes to (see [`OpenHumanAgentRunner`]).
+/// Which execution path an `agent_ref` routes to (see [`NeppyAgentRunner`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum AgentRoute {
     /// A harness `AgentDefinition` exists — run the full agent tool loop.
@@ -202,7 +202,7 @@ pub(crate) fn resolve_run_timeout_secs(
 /// [`Agent::run_single`](crate::openhuman::agent::Agent::run_single) takes: the
 /// `prompt` string when present and non-empty, else the `messages` array
 /// flattened to `"<role>: <content>"` lines (blank entries skipped). Empty
-/// string when neither yields content. Mirrors how [`OpenHumanLlm::complete`]
+/// string when neither yields content. Mirrors how [`NeppyLlm::complete`]
 /// reads `prompt`/`messages`, collapsed to one string because the harness turn
 /// entry point is single-message.
 pub(crate) fn node_request_to_prompt(request: &Value) -> String {
@@ -269,7 +269,7 @@ pub(crate) fn resolve_node_model(request: &Value, entry_model: Option<&str>) -> 
 /// the session builder's generic `chat` role — which inherits
 /// `config.default_model` — to `make_openhuman_backend`, which forwards non-tier
 /// ids to the backend unchanged. Mirrors the per-node routing
-/// [`OpenHumanLlm::complete`] applies via [`resolve_completion_model`].
+/// [`NeppyLlm::complete`] applies via [`resolve_completion_model`].
 pub(crate) fn harness_model_default_override(node_model: &str) -> String {
     if is_raw_passthrough_model(node_model) {
         return node_model.to_string();
@@ -280,7 +280,7 @@ pub(crate) fn harness_model_default_override(node_model: &str) -> String {
 /// Builds the JSON-steering instruction that a structured-output node needs (an
 /// `output_parser.schema` or `response_format: "json"`), or `None` when the node
 /// didn't request structured output. Shared shape with
-/// [`OpenHumanLlm::complete`]'s inline steering; the harness path appends it to
+/// [`NeppyLlm::complete`]'s inline steering; the harness path appends it to
 /// the run prompt (rather than inserting a system message) because `run_single`
 /// takes a single user message.
 pub(crate) fn structured_output_instruction(request: &Value) -> Option<String> {
@@ -302,7 +302,7 @@ pub(crate) fn structured_output_instruction(request: &Value) -> Option<String> {
     Some(instruction)
 }
 
-/// Builds [`OpenHumanAgentRunner::run_via_harness`]'s single run message: the
+/// Builds [`NeppyAgentRunner::run_via_harness`]'s single run message: the
 /// node's `input_context` (when present — see [`input_context_block`]'s doc),
 /// then the JSON-steering instruction (when the node requested structured
 /// output), then the node's own prompt (or flattened messages, via
@@ -321,7 +321,7 @@ pub(crate) fn build_harness_run_prompt(request: &Value) -> String {
 }
 
 /// Shapes an agent-node harness turn's final text into the node's output value,
-/// mirroring [`OpenHumanLlm::complete`]: when the node requested structured
+/// mirroring [`NeppyLlm::complete`]: when the node requested structured
 /// output and the text parses as JSON, the parsed object/array is returned so
 /// downstream `=item.<field>` / `=nodes.<id>.item.<field>` bindings work;
 /// otherwise `{ text, agent_ref }`. The vendor `agent` node then folds this into
@@ -349,7 +349,7 @@ pub(crate) fn build_agent_result(agent_ref: &str, final_text: &str, request: &Va
 }
 
 #[async_trait]
-impl AgentRunner for OpenHumanAgentRunner {
+impl AgentRunner for NeppyAgentRunner {
     async fn run_agent(
         &self,
         agent_ref: &str,
@@ -451,7 +451,7 @@ impl AgentRunner for OpenHumanAgentRunner {
 /// synthesizes a real `AgentDefinition` for it (issue B38/Gap 2), so it can
 /// run the full tool loop — and [`AgentRoute::RegistryFallback`] for
 /// anything else (no entry at all, or a disabled one, which
-/// [`OpenHumanAgentRunner::run_via_registry_fallback`] itself rejects with a
+/// [`NeppyAgentRunner::run_via_registry_fallback`] itself rejects with a
 /// clear "is disabled" error rather than silently skipping it here). Pure
 /// over the lookup result so the decision is unit-testable without a live
 /// `Config`/registry.
@@ -464,10 +464,10 @@ pub(crate) fn route_custom_entry_lookup(
     }
 }
 
-impl OpenHumanAgentRunner {
+impl NeppyAgentRunner {
     /// Full harness turn: build a real session agent for `agent_ref` and drive
     /// one `run_single` under the node's model override + timeout. See
-    /// [`OpenHumanAgentRunner`] for the security/origin contract.
+    /// [`NeppyAgentRunner`] for the security/origin contract.
     ///
     /// `entry_model` is the custom `AgentRegistryEntry`'s own `model` pin (a
     /// `hint:<role>` or raw BYOK model id), when `agent_ref` resolved to one —
@@ -515,7 +515,7 @@ impl OpenHumanAgentRunner {
                 target: "flows",
                 conn = %c,
                 "[flows] agent_runner: connection_ref present but not resolved to a BYOK account \
-                 for the harness turn (matches OpenHumanLlm)"
+                 for the harness turn (matches NeppyLlm)"
             );
         }
 
@@ -685,7 +685,7 @@ impl OpenHumanAgentRunner {
         // Shape the completion by the agent kind: prepend the agent's system
         // prompt (its persona) ahead of the node's messages, and adopt its model
         // when the node didn't pin one. The completion itself runs through the
-        // same provider path as a plain agent turn (OpenHumanLlm::complete), so
+        // same provider path as a plain agent turn (NeppyLlm::complete), so
         // structured-output / envelope behavior is identical.
         let mut request = request;
         if let Some(system_prompt) = entry.system_prompt.as_deref().filter(|s| !s.is_empty()) {
@@ -699,7 +699,7 @@ impl OpenHumanAgentRunner {
             }
         }
 
-        OpenHumanLlm {
+        NeppyLlm {
             config: self.config.clone(),
         }
         .complete(request, conn)
@@ -710,7 +710,7 @@ impl OpenHumanAgentRunner {
 /// Inserts `system_prompt` as the first `system` message of a completion
 /// `request`, creating the `messages` array (seeded from any `prompt` string)
 /// when the request doesn't already carry one. Mirrors how
-/// [`OpenHumanLlm::complete`] reads `messages`/`prompt`.
+/// [`NeppyLlm::complete`] reads `messages`/`prompt`.
 pub(crate) fn prepend_system_message(request: &mut Value, system_prompt: &str) {
     let Value::Object(map) = request else {
         return;

@@ -175,8 +175,8 @@ fn reset_local_data_remove_error_explains_windows_file_locks() {
     let msg =
         reset_local_data_remove_error(std::path::Path::new("C:\\Users\\me\\.openhuman"), &err);
 
-    assert!(msg.contains("locked by another OpenHuman window or process"));
-    assert!(msg.contains("Close all OpenHuman windows and try again"));
+    assert!(msg.contains("locked by another Neppy window or process"));
+    assert!(msg.contains("Close all Neppy windows and try again"));
 }
 
 #[cfg(windows)]
@@ -186,8 +186,8 @@ fn reset_local_data_remove_error_explains_windows_lock_violation() {
     let msg =
         reset_local_data_remove_error(std::path::Path::new("C:\\Users\\me\\.openhuman"), &err);
 
-    assert!(msg.contains("locked by another OpenHuman window or process"));
-    assert!(msg.contains("Close all OpenHuman windows and try again"));
+    assert!(msg.contains("locked by another Neppy window or process"));
+    assert!(msg.contains("Close all Neppy windows and try again"));
 }
 
 // ── get_runtime_flags / set_browser_allow_all ─────────────────
@@ -678,7 +678,7 @@ async fn apply_model_settings_stores_api_key_and_clears_when_empty() {
 #[tokio::test]
 async fn apply_model_settings_replaces_model_routes_when_some_and_keeps_when_none() {
     // #1342: switching providers writes role->model routes; switching back to
-    // OpenHuman sends an empty vec to wipe them. Omitting the field leaves
+    // Neppy sends an empty vec to wipe them. Omitting the field leaves
     // existing routes alone.
     use crate::openhuman::config::ModelRouteConfig;
     let tmp = tempdir().unwrap();
@@ -851,9 +851,9 @@ async fn apply_model_settings_preserves_existing_reserved_slug_cloud_providers()
         CloudProviderCreds {
             id: "openhuman-builtin".into(),
             slug: "openhuman".into(),
-            label: "OpenHuman".into(),
+            label: "Neppy".into(),
             endpoint: "https://api.tinyhumans.ai".into(),
-            auth_style: AuthStyle::OpenhumanJwt,
+            auth_style: AuthStyle::NeppyJwt,
             default_model: Some("reasoning-v1".into()),
             ..Default::default()
         },
@@ -918,9 +918,9 @@ async fn apply_model_settings_does_not_double_add_reserved_entries() {
     cfg.cloud_providers = vec![CloudProviderCreds {
         id: "openhuman-stored".into(),
         slug: "openhuman".into(),
-        label: "OpenHuman (stored)".into(),
+        label: "Neppy (stored)".into(),
         endpoint: "https://api.tinyhumans.ai".into(),
-        auth_style: AuthStyle::OpenhumanJwt,
+        auth_style: AuthStyle::NeppyJwt,
         default_model: Some("reasoning-v1".into()),
         ..Default::default()
     }];
@@ -929,9 +929,9 @@ async fn apply_model_settings_does_not_double_add_reserved_entries() {
         cloud_providers: Some(vec![CloudProviderCreds {
             id: "openhuman-from-patch".into(),
             slug: "openhuman".into(),
-            label: "OpenHuman (from patch)".into(),
+            label: "Neppy (from patch)".into(),
             endpoint: "https://api.tinyhumans.ai".into(),
-            auth_style: AuthStyle::OpenhumanJwt,
+            auth_style: AuthStyle::NeppyJwt,
             default_model: Some("reasoning-v1".into()),
             ..Default::default()
         }]),
@@ -2164,11 +2164,11 @@ async fn apply_agent_paths_env_set_reports_source_env() {
 
 #[test]
 fn expand_tilde_happy_path_uses_home() {
-    // `~/OpenHuman/projects` resolves to the home dir joined component-wise.
-    let expanded = expand_tilde("~/OpenHuman/projects");
+    // `~/Neppy/projects` resolves to the home dir joined component-wise.
+    let expanded = expand_tilde("~/Neppy/projects");
     let expected = dirs::home_dir()
         .expect("home dir resolvable in test env")
-        .join("OpenHuman")
+        .join("Neppy")
         .join("projects");
     assert_eq!(expanded, expected.to_string_lossy());
 }
@@ -2187,7 +2187,7 @@ fn expand_tilde_has_no_mixed_separators_on_windows() {
     // The whole point of the component-wise build: the result must be a pure
     // backslash path with no embedded forward slash, so CreateProcessW accepts
     // it as a CWD instead of failing with ERROR_DIRECTORY (os error 267).
-    let expanded = expand_tilde("~/OpenHuman/projects");
+    let expanded = expand_tilde("~/Neppy/projects");
     assert!(
         !expanded.contains('/'),
         "expected no forward slashes on Windows, got: {expanded}"
@@ -2200,7 +2200,7 @@ fn redact_home_replaces_home_prefix_and_passes_through_others() {
 
     // A path under home is redacted to `~/...` — the username/home prefix is
     // stripped but the diagnostic suffix is preserved.
-    let under_home = home.join("OpenHuman").join("projects");
+    let under_home = home.join("Neppy").join("projects");
     let redacted = redact_home(&under_home);
     assert!(
         redacted.starts_with('~'),
@@ -2211,7 +2211,7 @@ fn redact_home_replaces_home_prefix_and_passes_through_others() {
         "redacted path must not contain the raw home dir: {redacted}"
     );
     assert!(
-        redacted.contains("OpenHuman"),
+        redacted.contains("Neppy"),
         "diagnostic suffix should be preserved: {redacted}"
     );
 
@@ -2227,7 +2227,7 @@ async fn ensure_agent_dirs_creates_missing_action_dir_and_trusted_root() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     // Point the default projects home at the tempdir so the helper doesn't touch
-    // the real `~/OpenHuman/projects`.
+    // the real `~/Neppy/projects`.
     let projects_dir = tmp.path().join("projects-home");
     let prev_projects_dir = std::env::var_os("OPENHUMAN_PROJECTS_DIR");
     unsafe {

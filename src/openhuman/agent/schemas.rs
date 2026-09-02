@@ -557,7 +557,7 @@ fn handle_registry_snapshot(_params: Map<String, Value>) -> ControllerFuture {
 
         let mut components: Vec<ComponentMetadata> = Vec::new();
 
-        // ── Models: unified catalog (crate seed + OpenHuman overlay + local) ─
+        // ── Models: unified catalog (crate seed + Neppy overlay + local) ─
         // Derive runtime-discovered local models from the user's model registry:
         // any entry whose provider is a local runtime (ollama, lmstudio, mlx, …)
         // is overlaid as a free, runtime-profiled catalog entry so local models

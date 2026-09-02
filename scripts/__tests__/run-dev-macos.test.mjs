@@ -27,7 +27,7 @@ test("starts without an untracked .env using the default port", () => {
     OPENHUMAN_DEV_PORT: "",
   });
 
-  assert.match(output, /identity=OpenHuman Dev Signer/);
+  assert.match(output, /identity=Neppy Dev Signer/);
   assert.match(output, /port=1420/);
   assert.match(output, /devUrl.*localhost:1420/);
 });

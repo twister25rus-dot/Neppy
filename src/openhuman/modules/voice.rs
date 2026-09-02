@@ -246,7 +246,7 @@ pub use tinyvoice_bus::vad::VadConfig;
 ///
 /// A free function rather than an inherent method because [`VadConfig`] is the
 /// contract's type. The unit conversion is the reason this exists at all:
-/// OpenHuman persists the utterance ceiling in seconds and the module speaks
+/// Neppy persists the utterance ceiling in seconds and the module speaks
 /// milliseconds.
 #[must_use]
 pub fn vad_config_from_server_config(c: &crate::openhuman::config::VoiceServerConfig) -> VadConfig {

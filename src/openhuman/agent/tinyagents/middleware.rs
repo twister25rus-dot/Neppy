@@ -11,7 +11,7 @@
 //!   tool-result messages (keeping the N most recent) so a long tool-heavy
 //!   thread stays cheap without dropping chat history. This is now the crate
 //!   [`tinyagents::harness::middleware::MicrocompactMiddleware`], constructed
-//!   with OpenHuman's [`CLEARED_PLACEHOLDER`] wording; the in-house copy was
+//!   with Neppy's [`CLEARED_PLACEHOLDER`] wording; the in-house copy was
 //!   upstreamed (see `99-deletion-ledger.md`).
 //! - [`ToolOutputMiddleware`] (`after_tool`) — apply the per-tool-result byte
 //!   cap and (optionally) the semantic payload summarizer to each tool result
@@ -158,7 +158,7 @@ pub(crate) struct HandoffConfig {
 /// SHADOW tool-exposure middleware (issue #4249, 01.3 — dynamic exposure).
 ///
 /// This is the **adapter-first landing** of the crate-native tool-selection
-/// layer. It expresses OpenHuman's exposure policy (agent
+/// layer. It expresses Neppy's exposure policy (agent
 /// `tool_allowlist`/`tool_denylist` + sub-agent scope + MCP visibility + channel
 /// permission ceiling — all already collapsed by the precompute path into the
 /// single `allowed` visible set handed to `assemble_turn_harness`) as a composed
@@ -171,11 +171,11 @@ pub(crate) struct HandoffConfig {
 ///
 /// It runs in **SHADOW**: on the first model call it drives the composed crate
 /// selection over a scratch [`ModelRequest`] built from the **broad candidate
-/// set** (not the live request, whose `tools` OpenHuman already narrowed), so it
+/// set** (not the live request, whose `tools` Neppy already narrowed), so it
 /// (a) makes the exposure decision **event-native** via the crate selection's own
 /// [`AgentEvent::ToolsFiltered`] emit, and (b) logs any DIVERGENCE (grep-friendly
 /// `[tool-exposure]`) between what the crate layer would expose and the set
-/// OpenHuman actually registered as callable. It **never** mutates the live
+/// Neppy actually registered as callable. It **never** mutates the live
 /// `ModelRequest::tools`, so the model's actually-callable tool set is
 /// byte-identical to today (zero behavior risk). Exposure is fail-closed in the
 /// COMPUTATION (a candidate absent from `allowed` is excluded), but that decision
@@ -184,10 +184,10 @@ pub(crate) struct HandoffConfig {
 /// Ownership flip (making this crate selection the sole authority + deleting
 /// `agent/harness/tool_filter.rs` and `subagent_runner/tool_prep.rs`) is the
 /// GATED follow-up, once the `[tool-exposure]` divergence logs show parity.
-pub(super) struct OpenHumanToolExposureShadowMiddleware {
+pub(super) struct NeppyToolExposureShadowMiddleware {
     /// Static allow guard (crate). Held for the fail-closed parity cross-check;
     /// NOT installed as a live `before_tool` execution guard this slice —
-    /// OpenHuman already registers only the `allowed` set, so the model can never
+    /// Neppy already registers only the `allowed` set, so the model can never
     /// call a hidden tool.
     allowlist: ToolAllowlistMiddleware,
     /// The composed contextual selection layer, built via `inheriting(...)`:
@@ -197,7 +197,7 @@ pub(super) struct OpenHumanToolExposureShadowMiddleware {
     /// Broad candidate tool set (names before the precompute narrowed it), as
     /// scratch schemas the shadow selection filters over.
     candidates: Vec<ToolSchema>,
-    /// The set OpenHuman actually registered as callable this turn — the
+    /// The set Neppy actually registered as callable this turn — the
     /// divergence reference.
     registered: std::collections::HashSet<String>,
     /// agent id / task kind / security tier / channel encoded as selection tags
@@ -210,14 +210,14 @@ pub(super) struct OpenHumanToolExposureShadowMiddleware {
     ran: AtomicBool,
 }
 
-impl OpenHumanToolExposureShadowMiddleware {
+impl NeppyToolExposureShadowMiddleware {
     /// Build the shadow layer from the SAME inputs the precompute path feeds the
     /// runner: the broad `candidate_names` and the narrowed `allowed` visible set.
     /// Allowlist semantics are **fail-closed** (issue #4452): `None` means "no
     /// filter supplied → all candidates visible"; `Some(set)` means "exactly the
     /// named tools", so `Some(empty)` is a genuine deny-all. This mirrors the
     /// registration loop in `assemble_turn_harness`, keeping the shadow divergence
-    /// reference in step with what OpenHuman actually registers as callable.
+    /// reference in step with what Neppy actually registers as callable.
     pub(super) fn new(
         candidate_names: &[String],
         allowed: Option<&std::collections::HashSet<String>>,
@@ -315,7 +315,7 @@ impl TurnContextMiddleware {
         }
         if self.microcompact_keep_recent > 0 {
             // Crate middleware (upstreamed from the in-house copy). Constructed
-            // with OpenHuman's model-facing placeholder so behavior is
+            // with Neppy's model-facing placeholder so behavior is
             // byte-identical to the deleted local version. Events stay off (the
             // default) to preserve the prior silent-rewrite behavior.
             harness.push_middleware(Arc::new(MicrocompactMiddleware::new(
@@ -365,7 +365,7 @@ fn estimate_output_tokens(bytes: usize) -> u64 {
 }
 
 #[async_trait]
-impl Middleware<()> for OpenHumanToolExposureShadowMiddleware {
+impl Middleware<()> for NeppyToolExposureShadowMiddleware {
     fn name(&self) -> &str {
         "openhuman_tool_exposure_shadow"
     }
@@ -382,7 +382,7 @@ impl Middleware<()> for OpenHumanToolExposureShadowMiddleware {
         }
         // SHADOW: drive the composed crate selection over a SCRATCH request built
         // from the BROAD candidate set — deliberately NOT the live `request`,
-        // whose `tools` OpenHuman already narrowed to the visible set. This lets
+        // whose `tools` Neppy already narrowed to the visible set. This lets
         // the crate layer compute the exposure decision over the full candidate
         // context and emit it event-native (the crate
         // `ContextualToolSelectionMiddleware::before_model` emits
@@ -402,7 +402,7 @@ impl Middleware<()> for OpenHumanToolExposureShadowMiddleware {
         let shadow_exposed: std::collections::HashSet<String> =
             scratch.tools.iter().map(|s| s.name.clone()).collect();
 
-        // Divergence vs what OpenHuman actually registered as callable this turn.
+        // Divergence vs what Neppy actually registered as callable this turn.
         let mut missing_from_shadow: Vec<&String> = self
             .registered
             .iter()
@@ -432,7 +432,7 @@ impl Middleware<()> for OpenHumanToolExposureShadowMiddleware {
                 candidates = self.candidates.len(),
                 registered = self.registered.len(),
                 tags = ?self.tags,
-                "[tool-exposure] shadow crate selection agrees with OpenHuman precompute (parity)"
+                "[tool-exposure] shadow crate selection agrees with Neppy precompute (parity)"
             );
         } else {
             tracing::warn!(
@@ -443,7 +443,7 @@ impl Middleware<()> for OpenHumanToolExposureShadowMiddleware {
                 shadow_exposed = shadow_exposed.len(),
                 candidates = self.candidates.len(),
                 tags = ?self.tags,
-                "[tool-exposure] DIVERGENCE: shadow crate selection differs from OpenHuman precompute — NOT enforced (SHADOW; ownership flip is the gated follow-up)"
+                "[tool-exposure] DIVERGENCE: shadow crate selection differs from Neppy precompute — NOT enforced (SHADOW; ownership flip is the gated follow-up)"
             );
         }
         Ok(())
@@ -487,7 +487,7 @@ impl Middleware<()> for HandoffMiddleware {
 }
 
 /// Stable SHA-256 fingerprint over canonical JSON. TinyAgents' prompt builder
-/// uses the same shape for `ModelRequest::prompt_fingerprint`; OpenHuman builds
+/// uses the same shape for `ModelRequest::prompt_fingerprint`; Neppy builds
 /// requests directly, so this adapter must stamp equivalent content-derived
 /// segment ids and request fingerprints.
 fn stable_prefix_fingerprint(value: &serde_json::Value) -> String {
@@ -505,7 +505,7 @@ fn stable_prefix_fingerprint(value: &serde_json::Value) -> String {
 /// `before_model`: declare the turn's stable prompt prefix (system prompt + tool
 /// schemas) as [`PromptSegment`]s on the [`ModelRequest`] (issue #4249, 03.2).
 ///
-/// OpenHuman assembles the request's messages/tools directly rather than through
+/// Neppy assembles the request's messages/tools directly rather than through
 /// the crate prompt builder, so `cache_segments` would otherwise stay empty and
 /// the crate `PromptCacheGuardMiddleware` (installed immediately after this)
 /// would have no prefix to protect. This stamps the segments with
@@ -651,13 +651,13 @@ struct ToolOutputMiddleware {
     tokenjuice_compaction_enabled: bool,
     tokenjuice_compression: AgentTokenjuiceCompression,
     /// SDK policy snapshot keyed by tool name. Used to honor the adapter-mapped
-    /// `max_result_size_chars()` cap without re-querying the OpenHuman tool
+    /// `max_result_size_chars()` cap without re-querying the Neppy tool
     /// trait from `after_tool`.
     tool_policies: HashMap<String, TaToolPolicy>,
 }
 
 impl ToolOutputMiddleware {
-    /// The tool's own declared cap, if any. The adapter maps OpenHuman's
+    /// The tool's own declared cap, if any. The adapter maps Neppy's
     /// `max_result_size_chars()` into `ToolRuntime.max_result_bytes`; preserving
     /// char-based truncation here keeps the existing model-facing marker stable.
     fn tool_char_cap(&self, name: &str) -> Option<usize> {
@@ -907,7 +907,7 @@ impl Middleware<()> for ToolOutputMiddleware {
     }
 }
 
-/// `wrap_tool`: route OpenHuman's human-in-the-loop **approval gate** through a
+/// `wrap_tool`: route Neppy's human-in-the-loop **approval gate** through a
 /// named tinyagents tool middleware (issue #4249, Phase 1). A tool with an
 /// external effect intercepts through the global [`ApprovalGate`]; a denial
 /// short-circuits with the reason as a model-consumable [`TaToolResult`]
@@ -921,7 +921,7 @@ impl Middleware<()> for ToolOutputMiddleware {
 /// operation semantics the harness boundary can't reconstruct generically.
 pub(super) struct ApprovalSecurityMiddleware {
     /// The same `Arc`-shared tool sets the runner registers, used to resolve a
-    /// call's OpenHuman `Tool` by name so `external_effect_with_args` can gate.
+    /// call's Neppy `Tool` by name so `external_effect_with_args` can gate.
     tool_sets: Vec<Arc<Vec<Box<dyn Tool>>>>,
 }
 
@@ -1194,7 +1194,7 @@ pub(super) struct ToolPolicyMiddleware {
     /// The session's channel-permission snapshot — enforces the per-channel deny
     /// + per-call permission-level ceiling the engine ran in `agent_tool_exec`.
     session: crate::openhuman::tools::agent_policy::ToolPolicySession,
-    /// Shared tool sets (same `Arc`s the runner registers) so a call's OpenHuman
+    /// Shared tool sets (same `Arc`s the runner registers) so a call's Neppy
     /// `Tool` can be resolved for its generated-tool runtime context and its
     /// per-call permission level.
     tool_sets: Vec<Arc<Vec<Box<dyn Tool>>>>,
@@ -1946,7 +1946,7 @@ impl Middleware<()> for MemoryProtocolMiddleware {
     }
 }
 
-/// `before_model`: enforce OpenHuman's daily/monthly cost budgets **before** a
+/// `before_model`: enforce Neppy's daily/monthly cost budgets **before** a
 /// model call spends (issue #4249, Phase 5). Reads the global
 /// [`CostTracker`](crate::openhuman::platform::cost) and, when cost budgets are configured
 /// and already exceeded, fails the run before the provider call; a warning
@@ -2020,8 +2020,8 @@ impl Middleware<()> for CostBudgetMiddleware {
         // history. Excluding BYOK from the managed totals alone still refuses a
         // mixed-route user's own-key calls once their managed spend has
         // legitimately crossed the cap — managed exhaustion would disable the
-        // provider OpenHuman never bills for, which is the whole bug. Classify
-        // this call's route and skip the gate when OpenHuman is not the biller.
+        // provider Neppy never bills for, which is the whole bug. Classify
+        // this call's route and skip the gate when Neppy is not the biller.
         if let Some(model) = request.model.as_deref() {
             let route = crate::openhuman::platform::cost::route::route_for_model(model);
             if !route.counts_toward_budget() {
@@ -2126,11 +2126,11 @@ impl Middleware<()> for CostBudgetMiddleware {
 /// guard as a graph middleware.
 ///
 /// As of tinyagents 1.5.0 the escalation ladder itself lives in the crate
-/// ([`NoProgressTracker`], extracted upstream from OpenHuman #4389). This
+/// ([`NoProgressTracker`], extracted upstream from Neppy #4389). This
 /// middleware is now a **thin driver**: it captures the per-call argument
 /// fingerprint (the tool result carries no arguments), feeds each outcome into
 /// [`NoProgressTracker::record`], and lowers the returned [`NoProgress`] verdict
-/// into OpenHuman steering. It owns only the OpenHuman-side policy:
+/// into Neppy steering. It owns only the Neppy-side policy:
 ///
 /// - [`NoProgress::Continue`] — do nothing.
 /// - [`NoProgress::Nudge`] — inject the crate's structured "no progress since
@@ -2752,7 +2752,7 @@ struct PendingCallBatch {
 
 /// Host adapter for the crate's successful-repeat tracker (#4088 / #4095).
 /// [`SuccessfulRepeatTracker`] owns the generic streak accounting; this adapter
-/// builds canonical OpenHuman tool signatures, applies the product polling-tool
+/// builds canonical Neppy tool signatures, applies the product polling-tool
 /// exemption, and maps a crate halt verdict into the shared halt summary and
 /// steering pause:
 ///
@@ -3474,7 +3474,7 @@ mod tests {
     // ── MicrocompactMiddleware (crate) ──────────────────────────────────────
     //
     // These assert the crate `MicrocompactMiddleware`, constructed with
-    // OpenHuman's `CLEARED_PLACEHOLDER`, reproduces the deleted in-house
+    // Neppy's `CLEARED_PLACEHOLDER`, reproduces the deleted in-house
     // middleware byte-for-byte — the parity contract for the upstream swap.
 
     #[tokio::test]
@@ -3697,7 +3697,7 @@ mod tests {
     // ── ToolOutputMiddleware: COMPACTION_EXEMPT_TOOLS (workflow proposals) ───
 
     /// A `workflow_proposal` payload with enough uniform-object rows to clear
-    /// tinyjuice's `MIN_ROWS` (3) and OpenHuman's default 2 KiB compaction
+    /// tinyjuice's `MIN_ROWS` (3) and Neppy's default 2 KiB compaction
     /// floor — i.e. exactly the shape that used to get its `"type"` marker
     /// stripped by the `[json table: …]` rewrite before the middleware
     /// exemption existed.
@@ -3772,7 +3772,7 @@ mod tests {
                 >= crate::openhuman::config::Config::default()
                     .tokenjuice
                     .min_bytes_to_compress,
-            "baseline payload must clear OpenHuman's configured compaction floor"
+            "baseline payload must clear Neppy's configured compaction floor"
         );
         let mut result = tool_result("some_other_tool", &payload);
         mw.after_tool(&mut ctx(), &(), &mut result).await.unwrap();

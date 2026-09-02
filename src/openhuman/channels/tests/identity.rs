@@ -20,7 +20,7 @@ fn openclaw_loads_workspace_markdown_files() {
         "SOUL.md content should be inlined"
     );
     assert!(
-        prompt.contains("Name: OpenHuman"),
+        prompt.contains("Name: Neppy"),
         "IDENTITY.md content should be inlined"
     );
     assert!(

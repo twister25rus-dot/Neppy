@@ -263,7 +263,7 @@ pub async fn get_agent_settings() -> Result<RpcOutcome<serde_json::Value>, Strin
 /// component-by-component so the result uses the platform-native separator
 /// throughout. A naive `format!("{}/{rest}", home)` — or even `home.join(rest)`
 /// — leaves the embedded `/` inside `rest`, yielding a mixed-separator path like
-/// `C:\Users\Harry/OpenHuman/projects` on Windows, which `CreateProcessW`
+/// `C:\Users\Harry/Neppy/projects` on Windows, which `CreateProcessW`
 /// rejects with `ERROR_DIRECTORY` (os error 267) when used as a process CWD.
 /// See issue #3353 (RC-B).
 ///
@@ -287,7 +287,7 @@ pub fn expand_tilde(path: &str) -> String {
 }
 
 /// Redact a path for logging by replacing the user's home-directory prefix with
-/// `~`. Keeps the path *shape* (e.g. `~/OpenHuman/projects`) useful for
+/// `~`. Keeps the path *shape* (e.g. `~/Neppy/projects`) useful for
 /// diagnosis while not leaking the OS username / full home path (PII). Paths
 /// outside the home dir are returned unchanged.
 pub fn redact_home(path: &Path) -> String {
@@ -309,7 +309,7 @@ pub fn redact_home(path: &Path) -> String {
 /// `start_channels`).
 ///
 /// Without this on the always-run boot, a fresh desktop install with no
-/// messaging integrations leaves `~/OpenHuman/projects` uncreated (the only
+/// messaging integrations leaves `~/Neppy/projects` uncreated (the only
 /// other creation lived inside the integration-gated `start_channels`), so the
 /// shell tool's `current_dir` fails with `ERROR_DIRECTORY` (os error 267) on
 /// Windows / `ENOENT` on Unix. See issue #3353 (RC-A).

@@ -1,4 +1,4 @@
-//! One-time migration from OpenHuman's retired file-backed thread-goal store
+//! One-time migration from Neppy's retired file-backed thread-goal store
 //! into tinyagents' authoritative `graph.goals` namespace.
 
 use std::path::Path;

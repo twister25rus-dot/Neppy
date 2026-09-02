@@ -7,9 +7,9 @@ icon: book-open
 
 # Memory
 
-<figure><img src="../../.gitbook/assets/memory.png" alt=""><figcaption><p>A preview of the OpenHuman memory in Obsidian. Data from various sources (GMail, Slack, Whatsapp etc..) is organized as a memory tree.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/memory.png" alt=""><figcaption><p>A preview of the Neppy memory in Obsidian. Data from various sources (GMail, Slack, Whatsapp etc..) is organized as a memory tree.</p></figcaption></figure>
 
-OpenHuman's memory is not a black box. The same chunks the agent reasons over are written as plain `.md` files into an Obsidian-compatible vault inside your workspace. You can open it in [Obsidian](https://obsidian.md), browse it, edit it, and link notes by hand, and the agent will see your edits.
+Neppy's memory is not a black box. The same chunks the agent reasons over are written as plain `.md` files into an Obsidian-compatible vault inside your workspace. You can open it in [Obsidian](https://obsidian.md), browse it, edit it, and link notes by hand, and the agent will see your edits.
 
 The design is directly inspired by [Andrej Karpathy's obsidian-wiki workflow](https://x.com/karpathy/status/2039805659525644595): a personal wiki where every interesting thing in your life ends up as a linkable note.
 
@@ -43,11 +43,11 @@ The `summaries/` folder is laid out hierarchically, by date for the global tree,
 
 In the desktop app, the **Memory** tab has a **"View vault in Obsidian"** button. It uses an `obsidian://open?path=...` deep link, which only resolves once the folder is **registered** as a vault in Obsidian. The deep link can't register it for you. So the first time:
 
-1. Click **View vault in Obsidian**. If the folder isn't a registered vault yet, OpenHuman shows inline guidance instead of silently failing.
+1. Click **View vault in Obsidian**. If the folder isn't a registered vault yet, Neppy shows inline guidance instead of silently failing.
 2. In Obsidian, choose **"Open folder as vault"** and pick the path shown. You only need to do this once.
 3. Click **View vault in Obsidian** again; it now opens straight into the vault.
 
-If Obsidian is installed somewhere non-standard (Flatpak/Snap/portable), use **Open in Obsidian anyway**, or point OpenHuman at its config folder under **Advanced** so detection works. Don't have Obsidian? The guidance links to the download page, and **Reveal Folder** always opens the vault directory in your OS file manager.
+If Obsidian is installed somewhere non-standard (Flatpak/Snap/portable), use **Open in Obsidian anyway**, or point Neppy at its config folder under **Advanced** so detection works. Don't have Obsidian? The guidance links to the download page, and **Reveal Folder** always opens the vault directory in your OS file manager.
 
 You can also open the folder in any editor, it's just Markdown. Links between files use standard `[[wiki-link]]` syntax, so Obsidian's graph view, backlinks, and tag explorer all work out of the box.
 
@@ -63,9 +63,9 @@ This means you can:
 
 ## Why this matters
 
-You can't trust a memory you can't read. Most "AI memory" systems hide the state in opaque embeddings; OpenHuman's vault is the inverse, the agent's memory is **literally** a folder of Markdown you own. If the agent gets something wrong, you can find the file, fix it, and the next retrieval is correct.
+You can't trust a memory you can't read. Most "AI memory" systems hide the state in opaque embeddings; Neppy's vault is the inverse, the agent's memory is **literally** a folder of Markdown you own. If the agent gets something wrong, you can find the file, fix it, and the next retrieval is correct.
 
-It's also the cleanest possible export: stop using OpenHuman tomorrow and you keep a fully-formed personal wiki.
+It's also the cleanest possible export: stop using Neppy tomorrow and you keep a fully-formed personal wiki.
 
 ## See also
 

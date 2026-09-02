@@ -99,7 +99,7 @@ impl LocalAiService {
 
         // Crash-resume guard: Inno Setup's installer is spawned via
         // PowerShell's `Start-Process`, which creates a top-level process.
-        // It outlives OpenHuman crashing, the user closing the app, or
+        // It outlives Neppy crashing, the user closing the app, or
         // the bootstrap task being cancelled. If a prior launch left an
         // OllamaSetup.exe running, wait for it instead of starting a
         // second one — two concurrent installers race on the same dir

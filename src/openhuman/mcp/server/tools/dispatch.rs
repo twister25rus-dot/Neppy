@@ -267,7 +267,7 @@ async fn list_subagents() -> Result<Value, ToolCallError> {
         .collect::<Vec<_>>();
 
     let summary = format!(
-        "# OpenHuman Subagents\n\nWorkspace: `{}`\n\n{}",
+        "# Neppy Subagents\n\nWorkspace: `{}`\n\n{}",
         config.workspace_dir.display(),
         definitions
             .iter()

@@ -40,7 +40,7 @@ async fn presentation_segments_text_and_delivers_single_bubble_with_citations() 
         namespace: Some("test".to_string()),
         score: Some(0.91),
         timestamp: "2026-05-29T00:00:00Z".to_string(),
-        snippet: "OpenHuman channel presentation citation.".to_string(),
+        snippet: "Neppy channel presentation citation.".to_string(),
     };
 
     let mut rx = subscribe_web_channel_events();

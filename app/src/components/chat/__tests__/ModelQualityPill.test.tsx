@@ -8,7 +8,7 @@ vi.mock('../../../lib/i18n/I18nContext', () => ({ useT: () => ({ t: (k: string) 
 describe('ModelQualityPill', () => {
   it('renders with model name', () => {
     render(<ModelQualityPill />);
-    expect(screen.getByText('OpenHuman')).toBeInTheDocument();
+    expect(screen.getByText('Neppy')).toBeInTheDocument();
   });
 
   it('has chevron icon', () => {

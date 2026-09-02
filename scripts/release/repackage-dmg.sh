@@ -101,7 +101,7 @@ find "$MACOS_DIR" -maxdepth 1 -name 'rw.*.dmg' -delete 2>/dev/null || true
 rm -f "$FINAL_DMG"
 
 BUNDLE_ARGS=(
-  --volname "OpenHuman"
+  --volname "Neppy"
   --icon "$APP_NAME" 180 170
   --app-drop-link 480 170
   --window-size 660 400
@@ -162,7 +162,7 @@ echo "[dmg] DMG notarization complete: $DMG_PATH"
 
 # ── Final verification ───────────────────────────────────────────────────────
 echo "[dmg] Verifying final DMG layout..."
-VERIFY_MOUNT="$(mktemp -d /tmp/OpenHuman-Verify-XXXXXX)"
+VERIFY_MOUNT="$(mktemp -d /tmp/Neppy-Verify-XXXXXX)"
 hdiutil attach "$DMG_PATH" -mountpoint "$VERIFY_MOUNT" -noautoopen
 
 if [ ! -d "$VERIFY_MOUNT/$APP_NAME" ]; then

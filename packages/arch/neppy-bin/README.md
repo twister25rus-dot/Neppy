@@ -7,7 +7,7 @@ adds `/usr/bin/openhuman` as a launcher.
 
 The package does not launch the AppImage runtime directly. Arch-family distros
 have reported `Interpreter not found!` from the bundled AppImage runtime on
-v0.54.0, so the launcher executes the extracted `shared/bin/OpenHuman` binary
+v0.54.0, so the launcher executes the extracted `shared/bin/Neppy` binary
 with the bundled library path instead.
 
 ## Local package test

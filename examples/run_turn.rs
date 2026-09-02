@@ -1,4 +1,4 @@
-//! Run one OpenHuman agent turn as a library call.
+//! Run one Neppy agent turn as a library call.
 //!
 //! The counterpart to `embed_headless.rs`: that one shows how to *build* a core
 //! and dispatch plumbing methods, this one shows the thing an embedder actually

@@ -132,20 +132,18 @@ impl Agent {
         self.runtime_config.is_some()
     }
 
-    /// OpenHuman's [`AgentMemory`](tinyagents::harness::host::AgentMemory)
+    /// Neppy's [`AgentMemory`](tinyagents::harness::host::AgentMemory)
     /// capability over this session's memory backend.
     ///
     /// Built on demand rather than stored: it is a thin adapter over an `Arc`
     /// the session already holds, so constructing one is a refcount bump, and
     /// storing it would create a second handle that could drift from
     /// `self.memory` if the backend were ever swapped.
-    pub fn host_agent_memory(
-        &self,
-    ) -> crate::openhuman::agent::tinyagents::host::OpenHumanAgentMemory {
-        crate::openhuman::agent::tinyagents::host::OpenHumanAgentMemory::new(self.memory_arc())
+    pub fn host_agent_memory(&self) -> crate::openhuman::agent::tinyagents::host::NeppyAgentMemory {
+        crate::openhuman::agent::tinyagents::host::NeppyAgentMemory::new(self.memory_arc())
     }
 
-    /// OpenHuman's [`ExperienceStore`](tinyagents::harness::host::ExperienceStore)
+    /// Neppy's [`ExperienceStore`](tinyagents::harness::host::ExperienceStore)
     /// capability, scoped to this session's agent profile.
     ///
     /// Writes go to this session's own `memory`; recall additionally consults
@@ -159,8 +157,8 @@ impl Agent {
     /// new records inside the profile subtree.
     pub fn host_experience_store(
         &self,
-    ) -> crate::openhuman::agent::tinyagents::host::OpenHumanExperienceStore {
-        crate::openhuman::agent::tinyagents::host::OpenHumanExperienceStore::with_profile(
+    ) -> crate::openhuman::agent::tinyagents::host::NeppyExperienceStore {
+        crate::openhuman::agent::tinyagents::host::NeppyExperienceStore::with_profile(
             self.memory_arc(),
             self.active_profile_id.clone(),
         )
@@ -653,7 +651,7 @@ impl Agent {
     ///
     /// This is the public, non-draining counterpart to
     /// [`take_last_turn_usage_totals`](Self::take_last_turn_usage_totals): a
-    /// downstream crate embedding OpenHuman as a library (e.g. the OpenCompany
+    /// downstream crate embedding Neppy as a library (e.g. the OpenCompany
     /// hosting platform's cost-metering hook) can read per-turn token and USD
     /// totals after [`Agent::turn`](crate::openhuman::agent::Agent) returns,
     /// while leaving the value in place for the web-channel drain path.
@@ -930,7 +928,7 @@ impl Agent {
     /// directly from the console. It handles input until a termination command
     /// (e.g., `/quit`) is received.
     pub async fn run_interactive(&mut self) -> Result<()> {
-        println!("🦀 OpenHuman Interactive Mode");
+        println!("🦀 Neppy Interactive Mode");
         println!("Type /quit to exit.\n");
 
         let (tx, mut rx) = tokio::sync::mpsc::channel(32);

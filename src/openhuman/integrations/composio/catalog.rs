@@ -44,7 +44,7 @@ use crate::openhuman::json_schema::{
 ///
 /// Everything on this type comes straight from Composio's own v3 `/tools`
 /// listing (`ComposioToolFunction` — `parameters`/`output_parameters`), never
-/// from OpenHuman's static curated catalog: `required_args`/`input_schema`
+/// from Neppy's static curated catalog: `required_args`/`input_schema`
 /// are the action's real input contract, `output_fields`/`output_schema`/
 /// `primary_array_path` are its real output contract. `is_curated` is the
 /// ONE field that cross-references the static catalog — purely for ranking
@@ -96,7 +96,7 @@ pub struct ToolContract {
     /// leading `data.` segment. `None` when the output schema is unknown or
     /// names no array property.
     pub primary_array_path: Option<String>,
-    /// Whether this action is ALSO one of OpenHuman's hand-curated actions
+    /// Whether this action is ALSO one of Neppy's hand-curated actions
     /// for its toolkit (`catalog_for_toolkit` /
     /// `ComposioProvider::curated_tools`) — ranking signal only; a `false`
     /// here never hides a real action, it only sorts it after curated ones.
@@ -267,7 +267,7 @@ async fn fetch_raw_toolkit_tools(
 
 /// Fetches (or returns the cached) FULL LIVE Composio catalog for one
 /// toolkit — every real action Composio publishes for it, mapped into
-/// [`ToolContract`]s — regardless of OpenHuman's curated whitelist or the
+/// [`ToolContract`]s — regardless of Neppy's curated whitelist or the
 /// user's connection state. This is the ground-truth source the Workflow
 /// builder's discovery (`search_tool_catalog`/`get_tool_contract`) and
 /// enforcement (`ops::validate_tool_contracts`) both consult.

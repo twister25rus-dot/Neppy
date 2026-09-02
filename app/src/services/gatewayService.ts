@@ -1,7 +1,7 @@
 /**
  * gatewayService — the renderer's view of where its RPC goes.
  *
- * A *gateway* is one way of reaching an OpenHuman core: the one running inside
+ * A *gateway* is one way of reaching an Neppy core: the one running inside
  * this app, a core somebody else is running at a URL, or one this app
  * provisions itself — in a Docker container, on a machine reached over SSH, or
  * a container on a machine over SSH.

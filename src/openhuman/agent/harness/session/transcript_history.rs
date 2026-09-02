@@ -1,8 +1,8 @@
-//! [`ChatHistory`] over OpenHuman's durable `session_raw` transcript.
+//! [`ChatHistory`] over Neppy's durable `session_raw` transcript.
 //!
 //! This is the seam chosen in `docs/specs/2026-07-28-agent-session-transcript-to-tinyagents-design.md`
 //! §4 Option A: the harness talks to the crate's
-//! [`tinyagents::harness::memory::ChatHistory`] trait, while OpenHuman keeps
+//! [`tinyagents::harness::memory::ChatHistory`] trait, while Neppy keeps
 //! ownership of the on-disk format. Nothing about `session_raw` moves, so
 //! there is no on-disk change and no migration risk — the previous parallel
 //! abstraction is what goes away.
@@ -65,7 +65,7 @@
 //!   path used it.
 //!
 //! So the turn path goes through [`SessionHistory::append_turn`] — an
-//! OpenHuman-side supertrait of `ChatHistory` whose one method forwards the
+//! Neppy-side supertrait of `ChatHistory` whose one method forwards the
 //! same six arguments `append_transcript_turn` already takes. The indirection
 //! is real (`Arc<dyn SessionHistory>`), the on-disk bytes are unchanged by
 //! construction, and `ChatHistory` stays in the bound so the handle is still a

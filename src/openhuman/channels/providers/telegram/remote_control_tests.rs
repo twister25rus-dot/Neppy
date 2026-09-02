@@ -23,7 +23,7 @@ fn parse_remote_commands() {
         Some(TelegramRemoteCommand::Help)
     );
     assert_eq!(
-        parse_telegram_remote_command(" /STATUS@OpenHumanBot now "),
+        parse_telegram_remote_command(" /STATUS@NeppyBot now "),
         Some(TelegramRemoteCommand::Status)
     );
     // Case insensitivity for other variants
@@ -37,5 +37,5 @@ fn parse_remote_commands() {
     );
     assert!(parse_telegram_remote_command("hello").is_none());
     assert!(parse_telegram_remote_command("/model").is_none());
-    assert!(parse_telegram_remote_command("/unknown@OpenHumanBot").is_none());
+    assert!(parse_telegram_remote_command("/unknown@NeppyBot").is_none());
 }

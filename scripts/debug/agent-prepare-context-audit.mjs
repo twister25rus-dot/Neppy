@@ -188,7 +188,7 @@ function parsePositiveInt(raw, label) {
   return value;
 }
 
-function defaultOpenhumanDir() {
+function defaultNeppyDir() {
   if (process.env.OPENHUMAN_APP_ENV === "staging") {
     return path.join(homedir(), ".openhuman-staging");
   }
@@ -213,7 +213,7 @@ function defaultOpenhumanDir() {
 
 async function defaultWorkspace() {
   if (process.env.OPENHUMAN_WORKSPACE) return process.env.OPENHUMAN_WORKSPACE;
-  const openhumanDir = defaultOpenhumanDir();
+  const openhumanDir = defaultNeppyDir();
   try {
     const active = await readFile(
       path.join(openhumanDir, "active_user.toml"),

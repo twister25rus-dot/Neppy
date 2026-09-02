@@ -100,7 +100,7 @@ pub async fn native_balance(address: &str) -> Result<u128, String> {
 ///
 /// The root crate owns SLIP-0010 ed25519 derivation; the hand-rolled HMAC walk
 /// and path parser that used to live here moved there wholesale — nothing about
-/// "derive an ed25519 key at a hardened path" is OpenHuman-specific. Custody
+/// "derive an ed25519 key at a hardened path" is Neppy-specific. Custody
 /// stays here: the mnemonic arrives already decrypted from the keyring and
 /// `tinywallet` never sees a stored secret.
 ///

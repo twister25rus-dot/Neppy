@@ -1,7 +1,7 @@
 # Master Chat — scoping (read-only investigation)
 
-**Feature target.** A human asks the OpenHuman agent a question in a "Master chat".
-OpenHuman either (a) answers from its own persisted session history with other agents,
+**Feature target.** A human asks the Neppy agent a question in a "Master chat".
+Neppy either (a) answers from its own persisted session history with other agents,
 or (b) asks an external agent on the human's behalf by DMing it under a session id
 (new or existing), with the external reply threading back into the Master-chat answer.
 
@@ -15,8 +15,8 @@ already assumes.
 
 > Terminology caution: in the code today, **"master" (`ChatKind::Master`)** is the window
 > that aggregates *plain (non-envelope) DMs* from peers, and `orchestration_send_master_message`
-> is the human→front-end **steering** send. The task's "Master chat" (human asks OpenHuman,
-> OpenHuman answers *back to the human*) is a **superset** that is only partially realized by
+> is the human→front-end **steering** send. The task's "Master chat" (human asks Neppy,
+> Neppy answers *back to the human*) is a **superset** that is only partially realized by
 > this window — see the gap analysis.
 
 ---
@@ -114,7 +114,7 @@ supervisor).
 - **`send_dm`** (`build.rs:273-294` / `ops.rs:804-816`): sends `channel_response` back to
   **`state.counterpart_agent_id`** (the session's peer). `dm_sent` latch prevents double-send.
 
-### 4. The SEND path (OpenHuman → peer under a sessionId)
+### 4. The SEND path (Neppy → peer under a sessionId)
 
 Two send surfaces exist, both routing through `tinyplace::handle_tinyplace_signal_send_message`:
 
@@ -162,14 +162,14 @@ Two send surfaces exist, both routing through `tinyplace::handle_tinyplace_signa
 (`state.rs:97-134`) folds just those messages + the single `counterpart_agent_id`. The
 reasoning core's only cross-session recall is indirect (memory-RAG over evicted compressed
 summaries at `orchestration/<session>`, and the `tinyplace_feed`/`_status` read tools). There
-is **no** node or tool that loads/validates the OpenHuman↔agentX **session transcript(s)** as
+is **no** node or tool that loads/validates the Neppy↔agentX **session transcript(s)** as
 explicit context for answering a question, and none that spans *multiple* sessions/peers.
 
 ---
 
 ## WHAT'S NEEDED (gap analysis)
 
-Target flow: **human asks in Master chat → orchestration LOADS the relevant OpenHuman↔agent
+Target flow: **human asks in Master chat → orchestration LOADS the relevant Neppy↔agent
 session history (validate persistence) → runs the LLM over that history + the question → if an
 external agent is needed, SEND a DM under a session id (reuse the per-pair id if a thread
 exists, else mint) → the external reply threads back (shared-session-id model) → update the
@@ -181,11 +181,11 @@ delivers.
 
 | # | Sub-flow | State at scoping (pre-PR) | Landed in this PR |
 |---|----------|---------------------------|-------------------|
-| 1 | human→OpenHuman question intake + routing into the graph | **Partial** — `send_master_message` + master wake exist, but they reply *outbound to a peer*, not *back to the human*. No "answer the asker" surface. | ✅ W2 local-ask path + human-facing `master_agent`; answers land back in the Master window. |
+| 1 | human→Neppy question intake + routing into the graph | **Partial** — `send_master_message` + master wake exist, but they reply *outbound to a peer*, not *back to the human*. No "answer the asker" surface. | ✅ W2 local-ask path + human-facing `master_agent`; answers land back in the Master window. |
 | 2 | graph loads + validates cross-agent session history as context | **Missing** — single-window seed only. | ✅ `orchestration_list_sessions` / `orchestration_read_session` browse tools. |
-| 3 | decision + tool for OpenHuman to ask an external agent | **Missing** — reasoning core has no send/ask tool. | ✅ `orchestration_send_to_agent` (linked-peers-only guardrail). |
+| 3 | decision + tool for Neppy to ask an external agent | **Missing** — reasoning core has no send/ask tool. | ✅ `orchestration_send_to_agent` (linked-peers-only guardrail). |
 | 4 | choose new-vs-existing session id for the outbound ask | **Missing** — `sessions_create` mints; no reuse-lookup; no agent caller. | ✅ reuse `latest_session_for_agent`, else mint fresh. |
-| 5 | thread external reply back into the Master-chat answer | **Missing** — reply wakes the *sub-session* graph and replies to the peer; never correlated back to the originating Master question. | ✅ W7 correlation (process-global beacon) → reply surfaced as OpenHuman's own message. |
+| 5 | thread external reply back into the Master-chat answer | **Missing** — reply wakes the *sub-session* graph and replies to the peer; never correlated back to the originating Master question. | ✅ W7 correlation (process-global beacon) → reply surfaced as Neppy's own message. |
 
 Session-persistence-validity concerns to carry through: **dedupe** (already solid —
 `message_exists` before decrypt, `INSERT OR IGNORE`); **ordering/#4583** (cursor keyed on
@@ -198,8 +198,8 @@ Session-persistence-validity concerns to carry through: **dedupe** (already soli
 
 #4599 lands the **reliable reactive reply loop** (`ingest.rs`/`ops.rs`/`store.rs`/`tools.rs`
 only). It closes the P0 foundation and adds plumbing the answer path reuses — but delivers
-**none** of the target-flow gaps (it makes *peer→OpenHuman→peer* replies reliable, not
-*human→OpenHuman→(history|external agent)→human*):
+**none** of the target-flow gaps (it makes *peer→Neppy→peer* replies reliable, not
+*human→Neppy→(history|external agent)→human*):
 
 - **W1 → DONE**: `store::next_session_seq` = `MAX(seq)+1` per `(agent,session)`, stamped in
   `persist_message` on both `last_seq` and message `seq` (replaces the warn guard); also fixes
@@ -220,7 +220,7 @@ Three follow-ups #4599 explicitly defers (its "Related") are folded in below as 
 ### Design pivot — agentic tools, not static seed (branch `feat/master-chat-orchestration-tools`)
 
 Per the owner: the master orchestration layer should have **tools** to (1) browse its
-OpenHuman↔agent session chats and (2) send messages on OpenHuman's behalf — rather than the
+Neppy↔agent session chats and (2) send messages on Neppy's behalf — rather than the
 graph pre-loading history into the prompt. This **replaces W3/W4** ("seed history into state")
 with on-demand read tools the reasoning core calls, and reframes W5 as the send tool.
 
@@ -234,7 +234,7 @@ with on-demand read tools the reasoning core calls, and reframes W5 as the send 
 
 **Shipped in this branch (send slice — W5 + W6):**
 
-- ✅ `orchestration_send_to_agent` (`orchestration/tools.rs`) — DM a peer on OpenHuman's
+- ✅ `orchestration_send_to_agent` (`orchestration/tools.rs`) — DM a peer on Neppy's
   behalf. **Guardrail: linked-peers-only** (`pairing::linked_agent_ids` OR an existing session
   with the peer) — refuses cold-DMs from the un-gated background origin. **Session id:
   reuse-or-mint per peer** via new `store::latest_session_for_agent` (reuse the peer's newest
@@ -258,7 +258,7 @@ with on-demand read tools the reasoning core calls, and reframes W5 as the send 
   graph** — no ping-pong. One-shot: the pending marker is consumed **only after the reply is durably
   surfaced** (`store::{pending_ask_origin,clear_pending_ask}`), so a transient store failure retries
   on the next drain instead of dropping the answer.
-- ✅ Reply surfaced as **OpenHuman's own message**, not the peer's raw words. For a master-initiated
+- ✅ Reply surfaced as **Neppy's own message**, not the peer's raw words. For a master-initiated
   ask the reply is run through the **tool-free `master_reporter`** (`report_peer_reply_to_master`) —
   the peer text is untrusted, so the reporter carries no tiny.place tools/sub-agents (no
   prompt-injection surface) and emits an `assistant` message in the Master window. Peer/A2A origins
@@ -297,7 +297,7 @@ perf/robustness **F1/F2**; robust correlation **F3** (cross-repo).
 **P1 — the answer path**
 
 - [ ] **W3 — Cross-agent session-history loader + validity check.** A store read that gathers
-  the relevant OpenHuman↔agent transcript(s) (by peer and/or across peers), validates ordering
+  the relevant Neppy↔agent transcript(s) (by peer and/or across peers), validates ordering
   (monotonic seq from W1), drops dead/stale sessions, and returns a bounded, LLM-ready context.
   *Where:* `orchestration/store.rs` (new `load_history_for_question`) + `ops.rs::seed_state`
   (extend state with a `history_context`). *Size:* **M/L.** *Deps:* #4599 (monotonic seq).
@@ -345,7 +345,7 @@ perf/robustness **F1/F2**; robust correlation **F3** (cross-repo).
 **P3 — UI**
 
 - [ ] **W10 — Master-chat ask/answer UX.** Client method + hook wiring so a master question
-  shows "OpenHuman is asking @peer…" and the threaded answer updates in place. *Where:*
+  shows "Neppy is asking @peer…" and the threaded answer updates in place. *Where:*
   `app/src/lib/orchestration/orchestrationClient.ts`, `useOrchestrationChats.ts`,
   `TinyPlaceOrchestrationTab.tsx`. *Size:* **M.** *Deps:* W8. *Note:* i18n keys in `en.ts` +
   all locales; no dynamic imports.

@@ -1,4 +1,4 @@
-//! JSON-RPC 2.0 server implementation for OpenHuman.
+//! JSON-RPC 2.0 server implementation for Neppy.
 //!
 //! This module provides:
 //! - An Axum-based HTTP server for handling JSON-RPC requests.
@@ -264,7 +264,7 @@ pub async fn rpc_handler(State(state): State<AppState>, Json(req): Json<RpcReque
 ///
 /// This is a high-level wrapper around [`invoke_method_inner`] that adds
 /// automatic session management logic. If a call fails with a confirmed
-/// OpenHuman session-expired error, it will automatically clear the local
+/// Neppy session-expired error, it will automatically clear the local
 /// session.
 ///
 /// # Arguments
@@ -275,7 +275,7 @@ pub async fn rpc_handler(State(state): State<AppState>, Json(req): Json<RpcReque
 pub async fn invoke_method(state: AppState, method: &str, params: Value) -> Result<Value, String> {
     let result = invoke_method_inner(state, method, params).await;
 
-    // Session auto-cleanup: if the OpenHuman auth session is explicitly
+    // Session auto-cleanup: if the Neppy auth session is explicitly
     // expired, publish a `SessionExpired` event. The credentials subscriber
     // clears the stored token, flips the scheduler-gate signed-out override
     // so background workers stand down, and (eventually) pushes a sign-out to
@@ -315,7 +315,7 @@ pub async fn invoke_method(state: AppState, method: &str, params: Value) -> Resu
 }
 
 /// Helper to determine if an error message indicates an expired or invalid
-/// OpenHuman backend session.
+/// Neppy backend session.
 ///
 /// **Narrower than the previous implementation** (fixed in issue #2286):
 ///
@@ -324,7 +324,7 @@ pub async fn invoke_method(state: AppState, method: &str, params: Value) -> Resu
 /// Anthropic failures, Composio direct-mode errors) to clear the user's session
 /// and log them out. The fix distinguishes between:
 ///
-/// - **OpenHuman backend 401s** (`authed_json` in `src/api/rest.rs`): formatted
+/// - **Neppy backend 401s** (`authed_json` in `src/api/rest.rs`): formatted
 ///   as `"{METHOD} /path failed (401 Unauthorized): {body}"`, e.g.
 ///   `"GET /teams failed (401 Unauthorized): {"success":false}"`. These always
 ///   start with an HTTP method verb followed by a space and a forward slash.
@@ -335,7 +335,7 @@ pub async fn invoke_method(state: AppState, method: &str, params: Value) -> Resu
 ///   provider name, NOT an HTTP method verb.
 ///
 /// **What still triggers session expiry:**
-/// - `"Session expired"` — explicit body text from the OpenHuman backend.
+/// - `"Session expired"` — explicit body text from the Neppy backend.
 /// - `"no backend session token"` — pre-flight guard; auth profile is missing.
 /// - `"session jwt required"` — local guard; JWT already cleared by a prior 401.
 /// - `"SESSION_EXPIRED"` — scheduler-gate sentinel (exact case).
@@ -345,19 +345,19 @@ pub async fn invoke_method(state: AppState, method: &str, params: Value) -> Resu
 /// - Provider-prefixed 401s (`"Discord API error: ..."`, `"OpenAI API error ..."`)
 /// - `"invalid token"` — too broad; also matches Discord / OAuth provider tokens.
 ///
-/// Note: for inference-path OpenHuman backend 401s, `api_error` (in
+/// Note: for inference-path Neppy backend 401s, `api_error` (in
 /// `inference/provider/ops.rs` lines 479–497) ALREADY publishes `SessionExpired`
 /// directly, so there is no regression if this predicate misses them — the
 /// subscriber is idempotent and a harmless double-publish would still be correct.
 fn is_session_expired_error(msg: &str) -> bool {
-    // Explicit session-expired markers from the OpenHuman backend / local
+    // Explicit session-expired markers from the Neppy backend / local
     // guards — delegated to the shared observability classifier so both the
     // Sentry expected-error pipeline and the JSON-RPC publish boundary stay
     // in lock-step.
     if crate::core::observability::is_session_expired_message(msg) {
         return true;
     }
-    // OpenHuman backend path 401s via `authed_json`:
+    // Neppy backend path 401s via `authed_json`:
     // format is "{METHOD} /path failed (401 Unauthorized): {body}"
     // The HTTP-method prefix distinguishes these from provider-prefixed errors.
     // HEAD and OPTIONS are intentionally excluded — `authed_json` only issues
@@ -376,7 +376,7 @@ fn is_session_expired_error(msg: &str) -> bool {
 }
 
 /// Detect auth-looking failures that are not specific enough to clear the
-/// OpenHuman session. This is only for diagnostics; it must not feed the
+/// Neppy session. This is only for diagnostics; it must not feed the
 /// `SessionExpired` publish path.
 ///
 /// Matches a generic `401 Unauthorized` OR a bare `"invalid token"` string,
@@ -543,7 +543,7 @@ fn success_html(message: &str) -> String {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>OpenHuman &#8212; Connected</title>
+    <title>Neppy &#8212; Connected</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
@@ -584,7 +584,7 @@ fn error_html(message: &str) -> String {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>OpenHuman &#8212; Error</title>
+    <title>Neppy &#8212; Error</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }}
@@ -680,7 +680,7 @@ async fn oauth_mcp_callback_handler(
             log::info!("[oauth:mcp] completed sign-in for server_id={server_id}");
             html(
                 StatusCode::OK,
-                success_html("Signed in. The MCP server is now connected — you can close this tab and return to OpenHuman."),
+                success_html("Signed in. The MCP server is now connected — you can close this tab and return to Neppy."),
             )
         }
         Err(e) => {
@@ -932,9 +932,7 @@ async fn telegram_auth_handler(
 
     html_response(
         StatusCode::OK,
-        success_html(
-            "Your Telegram account has been connected to OpenHuman. You can close this tab.",
-        ),
+        success_html("Your Telegram account has been connected to Neppy. You can close this tab."),
     )
 }
 
@@ -1048,7 +1046,7 @@ async fn desktop_auth_handler(
             return html_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 error_html(
-                    "Sign-in succeeded but OpenHuman could not save the session. Please try again.",
+                    "Sign-in succeeded but Neppy could not save the session. Please try again.",
                 ),
             );
         }
@@ -1056,7 +1054,7 @@ async fn desktop_auth_handler(
 
     html_response(
         StatusCode::OK,
-        success_html("Sign-in completed. You can close this tab and return to OpenHuman."),
+        success_html("Sign-in completed. You can close this tab and return to Neppy."),
     )
 }
 
@@ -2486,7 +2484,7 @@ pub async fn bootstrap_core_runtime(
     // projects dir as a ReadWrite trusted root BEFORE building the live policy
     // below (so the trusted root is reflected in `from_config`). This is the
     // always-run boot for web-chat-only desktop cores; without it a fresh
-    // install with no messaging integrations leaves `~/OpenHuman/projects`
+    // install with no messaging integrations leaves `~/Neppy/projects`
     // uncreated and every shell-tool `current_dir` fails with ERROR_DIRECTORY
     // (os error 267) on Windows / ENOENT on Unix (#3353, RC-A). Idempotent — a
     // later `start_channels` calls the same helper.

@@ -1,4 +1,4 @@
-//! The entry point for the OpenHuman core application.
+//! The entry point for the Neppy core application.
 //!
 //! This file is responsible for:
 //! - Initializing error tracking with Sentry.

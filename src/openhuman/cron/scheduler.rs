@@ -307,7 +307,7 @@ pub async fn execute_job_now(config: &Config, job: &CronJob) -> (bool, String) {
 
 /// Did this failed agent-job attempt hit the backend session-expired state?
 ///
-/// When the OpenHuman backend returns 401 because the user's app JWT has
+/// When the Neppy backend returns 401 because the user's app JWT has
 /// lapsed, [`inference::provider::ops::api_error`] already publishes
 /// [`crate::core::events::DomainEvent::SessionExpired`] (via
 /// `publish_backend_session_expired`) and the credentials subscriber clears
@@ -330,7 +330,7 @@ pub async fn execute_job_now(config: &Config, job: &CronJob) -> (bool, String) {
 /// the existing classifier
 /// [`crate::core::observability::is_session_expired_message`] already
 /// considers this expected user state (`observability.rs` — anchored on
-/// `OpenHuman API error (401` + `"error":"Invalid token"`).
+/// `Neppy API error (401` + `"error":"Invalid token"`).
 ///
 /// We match on `last_agent_error` first because cron's `run_agent_job`
 /// routes the raw anyhow chain there (containing the provider's wire
@@ -385,7 +385,7 @@ fn is_insufficient_credits_failure(
 }
 
 /// Did this failed agent-job attempt hit a managed-backend **budget-exhausted
-/// 400** state (`USER_INSUFFICIENT_CREDITS` — the OpenHuman account is out of
+/// 400** state (`USER_INSUFFICIENT_CREDITS` — the Neppy account is out of
 /// its spend budget)?
 ///
 /// The sibling of [`is_insufficient_credits_failure`] for the managed-backend
@@ -830,7 +830,7 @@ async fn run_agent_job(config: &Config, job: &CronJob) -> (bool, String, Option<
                 );
                 // Resolve the agent definition's model spec into an
                 // exact model id. `ModelSpec::resolve` synthesises
-                // `{hint}-v1` for Hint specs, which only the OpenHuman
+                // `{hint}-v1` for Hint specs, which only the Neppy
                 // backend understands as a tier hint — Anthropic and
                 // every other provider 404 on names like `agentic-v1`.
                 // Route Hint specs through the per-workload factory so

@@ -1,12 +1,12 @@
-//! `OpenHumanMemory`: the host adapter backing the tinyflows `memory` node's
+//! `NeppyMemory`: the host adapter backing the tinyflows `memory` node's
 //! `tinyflows::caps::MemoryProvider` capability (PR2 of the memory-node
 //! feature — tracking issue #5226; see
 //! `my_docs/memory_access_in_workflows/08-memory-node.md` for the design).
 //!
 //! **No new permission path.** Every operation routes through the exact same
 //! [`enforce_node_tier_gate`] / [`gate_call_for_tier`] pair every other acting
-//! adapter in [`super::caps`] uses (`OpenHumanTools`, `OpenHumanHttp`,
-//! `OpenHumanCode`) — `CommandClass::Read` for `recall`/`search`/`flavour`/
+//! adapter in [`super::caps`] uses (`NeppyTools`, `NeppyHttp`,
+//! `NeppyCode`) — `CommandClass::Read` for `recall`/`search`/`flavour`/
 //! `people`, `CommandClass::Write` for `remember`/`forget`.
 //!
 //! **Coherence with `flow_memory_recall`/`flow_memory_remember` (#5176).**
@@ -66,14 +66,14 @@ const LOG_PREFIX: &str = "[memory-node-host]";
 const USER_NAMESPACE: &str = tinycortex::memory::GLOBAL_NAMESPACE;
 
 /// Host-injected memory access for `memory` nodes. See the module doc for the
-/// security contract; see [`super::caps::OpenHumanAgentRunner`] for the
+/// security contract; see [`super::caps::NeppyAgentRunner`] for the
 /// sibling adapter this one's tier-gate wiring mirrors.
-pub struct OpenHumanMemory {
+pub struct NeppyMemory {
     pub(crate) config: Arc<Config>,
     pub(crate) security: Arc<SecurityPolicy>,
 }
 
-impl OpenHumanMemory {
+impl NeppyMemory {
     /// Resolves the process-global memory store, matching how every other
     /// memory-backed agent tool (`flow_memory_recall`, `memory_recall`, the
     /// post-run digest subscriber) reaches it —
@@ -124,7 +124,7 @@ impl OpenHumanMemory {
     /// across every acting/reading adapter in this module. No
     /// [`gate_call_for_tier`] round-trip: unlike `remember`/`forget`, a read
     /// never needs the HITL escalation that function exists for, and — like
-    /// the curated-Read short-circuit in `OpenHumanTools::invoke` — routing
+    /// the curated-Read short-circuit in `NeppyTools::invoke` — routing
     /// a guaranteed-`Allow` decision through `intercept_audited` anyway would
     /// only reintroduce the "reads wait for approval" bug that short-circuit
     /// was added to close.
@@ -141,7 +141,7 @@ impl OpenHumanMemory {
     /// `Allow` — because a `Full`-tier run can still have the *flow's own*
     /// `require_approval: true` toggle set, and only `intercept_audited`
     /// (reached via `gate_call_for_tier`) consults that. Mirrors
-    /// `OpenHumanCode::run`'s gating exactly.
+    /// `NeppyCode::run`'s gating exactly.
     ///
     /// Returns the approval audit request id (`None` when no
     /// [`ApprovalGate`] is installed, or the tier decision never went
@@ -228,7 +228,7 @@ impl OpenHumanMemory {
 }
 
 #[async_trait]
-impl MemoryProvider for OpenHumanMemory {
+impl MemoryProvider for NeppyMemory {
     /// Backs both `recall` and `search` (`opts.operation` distinguishes them
     /// only for the `tracing::debug!` logs below — [`Self::shape_recall_result`]
     /// returns `{ scope, query, results }` with no `operation` field, so the

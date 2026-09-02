@@ -25,7 +25,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 FieldSchema {
                     name: "api_url",
                     ty: TypeSchema::Option(Box::new(TypeSchema::String)),
-                    comment: "Configured OpenHuman product backend URL, if any.",
+                    comment: "Configured Neppy product backend URL, if any.",
                     required: false,
                 },
                 FieldSchema {
@@ -43,7 +43,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 FieldSchema {
                     name: "app_version",
                     ty: TypeSchema::String,
-                    comment: "OpenHuman core version.",
+                    comment: "Neppy core version.",
                     required: true,
                 },
                 FieldSchema {
@@ -55,7 +55,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 FieldSchema {
                     name: "model_routes",
                     ty: TypeSchema::Json,
-                    comment: "Persisted task-hint -> model id pairs the core router will obey. Empty when the OpenHuman built-in router is active.",
+                    comment: "Persisted task-hint -> model id pairs the core router will obey. Empty when the Neppy built-in router is active.",
                     required: true,
                 },
             ],
@@ -65,8 +65,8 @@ pub fn schemas(function: &str) -> ControllerSchema {
             function: "update_model_settings",
             description: "Update model and backend connection settings, including a custom OpenAI-compatible backend (api_url + api_key).",
             inputs: vec![
-                optional_string("api_url", "OpenHuman product backend URL (auth/billing/voice). Almost always left blank; the inference URL is a separate `inference_url` field."),
-                optional_string("inference_url", "Custom OpenAI-compatible LLM endpoint. When set together with `api_key`, inference goes direct to this URL instead of the OpenHuman backend. Pass an empty string to clear."),
+                optional_string("api_url", "Neppy product backend URL (auth/billing/voice). Almost always left blank; the inference URL is a separate `inference_url` field."),
+                optional_string("inference_url", "Custom OpenAI-compatible LLM endpoint. When set together with `api_key`, inference goes direct to this URL instead of the Neppy backend. Pass an empty string to clear."),
                 optional_string("api_key", "Optional API key for the configured inference endpoint. Pass an empty string to clear a previously stored key."),
                 optional_string("default_model", "Default model id."),
                 FieldSchema {
@@ -78,7 +78,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 FieldSchema {
                     name: "model_routes",
                     ty: TypeSchema::Option(Box::new(TypeSchema::Json)),
-                    comment: "Optional list of {hint, model} pairs mapping task hints (reasoning, agentic, coding, summarization) to provider-specific model ids. Replaces config.model_routes wholesale; send [] to clear (e.g. when switching back to the OpenHuman built-in router).",
+                    comment: "Optional list of {hint, model} pairs mapping task hints (reasoning, agentic, coding, summarization) to provider-specific model ids. Replaces config.model_routes wholesale; send [] to clear (e.g. when switching back to the Neppy built-in router).",
                     required: false,
                 },
                 FieldSchema {
@@ -550,7 +550,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
             namespace: "config",
             function: "reset_local_data",
             description:
-                "Delete local OpenHuman data for the active config/workspace so the next restart boots clean.",
+                "Delete local Neppy data for the active config/workspace so the next restart boots clean.",
             inputs: vec![],
             outputs: vec![json_output("result", "Reset result with removed paths.")],
         },
@@ -558,7 +558,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
             namespace: "config",
             function: "get_data_paths",
             description:
-                "Resolve the OpenHuman data directories (current workspace, default ~/.openhuman, active workspace marker) that reset_local_data would remove. Read-only — performs no filesystem changes.",
+                "Resolve the Neppy data directories (current workspace, default ~/.openhuman, active workspace marker) that reset_local_data would remove. Read-only — performs no filesystem changes.",
             inputs: vec![optional_string(
                 "user_id",
                 "Resolve paths for this specific user id (users/<id>) instead of the active-user marker. Clear App Data passes this because it signs the user out — removing the marker — before deleting the data.",

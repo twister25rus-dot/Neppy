@@ -1,9 +1,9 @@
-//! Core library for the OpenHuman platform.
+//! Core library for the Neppy platform.
 //!
-//! This crate provides the central logic for the OpenHuman core binary, including:
+//! This crate provides the central logic for the Neppy core binary, including:
 //! - API and RPC handlers for external interactions.
 //! - Core system services (CLI, configuration, monitoring).
-//! - Domain-specific logic for the OpenHuman agent runtime.
+//! - Domain-specific logic for the Neppy agent runtime.
 
 // The RPC dispatch chokepoint wraps each handler future in an ambient
 // `CoreContext` scope (Phase 2). Combined with the already very deep async type
@@ -23,7 +23,7 @@ pub mod tui;
 
 pub use openhuman::config::DaemonConfig;
 
-/// Embeddable core composition API. Host the OpenHuman core in any process —
+/// Embeddable core composition API. Host the Neppy core in any process —
 /// the Tauri shell, a CLI, a stdio MCP server, or a cloud/team server — via
 /// [`CoreBuilder`] → [`CoreRuntime`]. See `docs/plans/pluggable-core/`.
 pub use core::runtime::{CoreBuilder, CoreRuntime, DomainSet, ServiceSet, TokenSource};
@@ -31,7 +31,7 @@ pub use core::types::HostKind;
 
 #[cfg(feature = "mcp")]
 pub use embed::McpServer;
-/// Run the OpenHuman agent harness as a library call.
+/// Run the Neppy agent harness as a library call.
 ///
 /// [`CoreBuilder`] composes a core; [`embed::Core`] gives it typed methods.
 /// [`Harness`] is the front door above both: configure a provider, a workspace,
@@ -91,7 +91,7 @@ pub mod agent_progress {
 
 /// Runs the core logic based on the provided command-line arguments.
 ///
-/// This is the primary entry point for the OpenHuman binary, delegating to the
+/// This is the primary entry point for the Neppy binary, delegating to the
 /// CLI module for argument parsing and command dispatch.
 ///
 /// # Arguments

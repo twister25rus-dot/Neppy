@@ -9,7 +9,7 @@ icon: clapperboard
 
 # Image & Video Generation
 
-OpenHuman can _make_ media, not just read it. Ask the assistant to "generate an image of…", "edit this screenshot to…", or "animate this photo into a short clip" and a dedicated media sub-agent takes over. No plugin, no API key, no separate billing.
+Neppy can _make_ media, not just read it. Ask the assistant to "generate an image of…", "edit this screenshot to…", or "animate this photo into a short clip" and a dedicated media sub-agent takes over. No plugin, no API key, no separate billing.
 
 ## What it can do
 
@@ -19,13 +19,13 @@ OpenHuman can _make_ media, not just read it. Ask the assistant to "generate an 
 
 ## How it works
 
-The `media_generation` domain (`src/openhuman/media/generation/`) exposes three agent tools (generate image, generate video, list models) backed by the OpenHuman backend's media-generation provider. The backend owns the provider keys, billing, and rate limiting; your subscription covers it like any other model call.
+The `media_generation` domain (`src/openhuman/media/generation/`) exposes three agent tools (generate image, generate video, list models) backed by the Neppy backend's media-generation provider. The backend owns the provider keys, billing, and rate limiting; your subscription covers it like any other model call.
 
 The tools submit the job and then poll on a 4-second cadence (up to 180 s for images, 420 s for video), so the agent, and you, get live progress instead of a hung call. Finished artifacts are downloaded into the agent's `generated-media/` folder in your workspace and returned as local file paths, ready to attach, post, or edit further.
 
 ## Privacy
 
-Prompts and reference media for these tools are sent to the OpenHuman backend and on to the hosted media provider. This is disclosed in the in-app capability catalog (`intelligence.image_generation` / `intelligence.video_generation`, both Beta). Note that [Privacy Mode](../privacy-mode.md)'s local-only enforcement currently covers **inference providers only**. The media tools still call the backend, so avoid using them if you need strict no-egress today. Extending enforcement to integrations and network tools is a planned later slice.
+Prompts and reference media for these tools are sent to the Neppy backend and on to the hosted media provider. This is disclosed in the in-app capability catalog (`intelligence.image_generation` / `intelligence.video_generation`, both Beta). Note that [Privacy Mode](../privacy-mode.md)'s local-only enforcement currently covers **inference providers only**. The media tools still call the backend, so avoid using them if you need strict no-egress today. Extending enforcement to integrations and network tools is a planned later slice.
 
 ## See also
 

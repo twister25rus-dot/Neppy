@@ -1,8 +1,8 @@
-//! Tests for the OpenHuman-specific half of tool-call parsing.
+//! Tests for the Neppy-specific half of tool-call parsing.
 //!
 //! The parser tests moved with the parsers, to
 //! `tinyagents::harness::tool_calling`. What is exercised here is the wire
-//! vocabulary that stayed: OpenHuman's `ToolCall`, its native-history JSON
+//! vocabulary that stayed: Neppy's `ToolCall`, its native-history JSON
 //! (including the Gemini `thought_signature` round-trip), and its OpenAI
 //! function-calling payload.
 

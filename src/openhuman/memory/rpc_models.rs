@@ -1,4 +1,4 @@
-//! RPC data models for the OpenHuman memory system.
+//! RPC data models for the Neppy memory system.
 //!
 //! This module defines the request and response structures used by the JSON-RPC
 //! interface to interact with the memory system. These models ensure type-safe

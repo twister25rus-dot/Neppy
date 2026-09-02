@@ -1186,7 +1186,7 @@ pub async fn retry_failed_rpc(config: &Config) -> Result<RpcOutcome<RetryFailedR
 /// since.
 ///
 /// In production that surfaced as a signed-in user being told "No embeddings
-/// credentials found. Log in to OpenHuman" — the remediation for an
+/// credentials found. Log in to Neppy" — the remediation for an
 /// `auth_missing` batch that had failed **27 days earlier**, while the queue had
 /// been completing jobs normally the whole time. The banner was a tombstone, and
 /// following it was impossible: the user was already logged in.
@@ -2614,7 +2614,7 @@ mod tests {
     }
 
     /// The active production defect: a signed-in user was told "No embeddings
-    /// credentials found. Log in to OpenHuman" because a batch of `auth_missing`
+    /// credentials found. Log in to Neppy" because a batch of `auth_missing`
     /// jobs had failed 27 days earlier and, being unrecoverable, was never
     /// retried. The queue had been completing jobs the whole time since.
     ///

@@ -2,7 +2,7 @@
 import { expect } from '@wdio/globals';
 
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 import { clearRequestLog, startMockServer, stopMockServer } from '../mock-server';
 
@@ -44,17 +44,17 @@ describe('Webhooks ingress surface (stub-level)', () => {
   it('exposes the stub webhook RPC surface with stable result and log shapes', async () => {
     const tunnelUuid = 'e2e-webhooks-ingress-tunnel';
 
-    const registrations = await callOpenhumanRpc('openhuman.webhooks_list_registrations', {});
+    const registrations = await callNeppyRpc('openhuman.webhooks_list_registrations', {});
     expect(registrations.ok).toBe(true);
     expect(registrations.result?.result?.registrations).toEqual([]);
     expect(registrations.result?.logs?.[0]).toContain('webhooks.list_registrations returned 0');
 
-    const logs = await callOpenhumanRpc('openhuman.webhooks_list_logs', { limit: 5 });
+    const logs = await callNeppyRpc('openhuman.webhooks_list_logs', { limit: 5 });
     expect(logs.ok).toBe(true);
     expect(logs.result?.result?.logs).toEqual([]);
     expect(logs.result?.logs?.[0]).toContain('webhooks.list_logs returned 0');
 
-    const register = await callOpenhumanRpc('openhuman.webhooks_register_echo', {
+    const register = await callNeppyRpc('openhuman.webhooks_register_echo', {
       tunnel_uuid: tunnelUuid,
       tunnel_name: 'E2E Tunnel',
       backend_tunnel_id: 'backend-e2e-webhooks-ingress',
@@ -73,12 +73,12 @@ describe('Webhooks ingress surface (stub-level)', () => {
         `webhooks.register_echo registered tunnel ${tunnelUuid}`
       );
 
-      const clear = await callOpenhumanRpc('openhuman.webhooks_clear_logs', {});
+      const clear = await callNeppyRpc('openhuman.webhooks_clear_logs', {});
       expect(clear.ok).toBe(true);
       expect(clear.result?.result?.cleared).toBe(0);
       expect(clear.result?.logs?.[0]).toContain('webhooks.clear_logs removed 0');
 
-      const unregister = await callOpenhumanRpc('openhuman.webhooks_unregister_echo', {
+      const unregister = await callNeppyRpc('openhuman.webhooks_unregister_echo', {
         tunnel_uuid: tunnelUuid,
       });
       expect(unregister.ok).toBe(true);

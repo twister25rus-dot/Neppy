@@ -9,7 +9,7 @@ fn enabled_config() -> CostConfig {
     }
 }
 
-/// A managed-backend tier slug — spend on this route is billed to OpenHuman
+/// A managed-backend tier slug — spend on this route is billed to Neppy
 /// credits and so is the only kind the local budget may gate (#5016).
 const MANAGED_MODEL: &str = "chat-v1";
 
@@ -249,10 +249,10 @@ fn budget_monthly_exceeded() {
 
 // ── BYOK budget exemption (#5016 / #5127) ──────────────────────────────
 //
-// The reported bug: a user with no OpenHuman credits configured, routing all
+// The reported bug: a user with no Neppy credits configured, routing all
 // inference through their own OpenRouter key, accumulated locally *estimated*
 // spend until they tripped the default $10/day cap and were told "You're out
-// of credits" — for inference OpenHuman never billed them for.
+// of credits" — for inference Neppy never billed them for.
 
 #[test]
 fn byok_spend_never_exceeds_the_daily_limit() {

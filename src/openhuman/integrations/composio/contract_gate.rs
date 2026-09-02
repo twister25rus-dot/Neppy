@@ -302,7 +302,7 @@ fn args_satisfy_contract(args: &serde_json::Value, contract: &ToolContract) -> b
         .and_then(|p| p.as_object())
     {
         for (key, value) in obj {
-            // `connection_id` is an OpenHuman-injected routing parameter
+            // `connection_id` is an Neppy-injected routing parameter
             // (`ComposioActionTool::parameters_schema` / `ComposioExecuteTool`),
             // consumed before dispatch and absent from Composio's live catalog
             // `input_schema`. Skip it so a valid multi-account call isn't bounced

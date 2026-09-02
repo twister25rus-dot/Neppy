@@ -10,7 +10,7 @@ use crate::openhuman::config::{
     MODEL_REASONING_V1,
 };
 
-/// Conservative default for OpenHuman abstract tier models (tokens).
+/// Conservative default for Neppy abstract tier models (tokens).
 const TIER_LARGE_CONTEXT: u64 = 200_000;
 /// Reasoning tier — backed by a 1M-context model.
 const TIER_REASONING_CONTEXT: u64 = 1_000_000;
@@ -50,7 +50,7 @@ const CONSERVATIVE_LOCAL_CONTEXT_FLOOR: u64 = 4_096;
 /// it must reflect the real backing model's capacity.
 const TIER_FLASH_CONTEXT: u64 = 1_000_000;
 
-/// Resolve the context window (in tokens) for a model id or OpenHuman tier alias.
+/// Resolve the context window (in tokens) for a model id or Neppy tier alias.
 ///
 /// Returns `None` when the model is unknown — callers should skip pre-dispatch
 /// trimming rather than guess.
@@ -86,7 +86,7 @@ pub fn context_window_for_model(model: &str) -> Option<u64> {
     // The crate's `context_window_for_model_id` resolves the canonical o1/o3
     // ids (`o1`, `o1-mini`, `openai/o1-preview`, …) but does not match an
     // `o1`/`o3` token embedded mid-name (e.g. `ollama/mistral-for-o1-benchmark`).
-    // OpenHuman keeps that segment heuristic host-side to preserve the
+    // Neppy keeps that segment heuristic host-side to preserve the
     // pre-port behavior (regression guard from PR #2100) until the crate
     // matcher covers internal segments.
     if let Some(window) = o1_o3_segment_context(normalized) {
@@ -223,7 +223,7 @@ pub fn model_vision_enabled(model: &str, config: &crate::openhuman::config::Conf
 /// Whether a resolved model accepts image input. The single predicate shared by
 /// the chat UI resolve and the server-side session/sub-agent gates.
 ///
-/// - **Managed OpenHuman tiers** consult the hardcoded per-tier map
+/// - **Managed Neppy tiers** consult the hardcoded per-tier map
 ///   ([`crate::openhuman::inference::provider::factory::oh_tier_supports_vision`]) —
 ///   the remote backend does not advertise per-tier capability, so the core owns
 ///   it. Currently only `reasoning-v1` is vision-capable.

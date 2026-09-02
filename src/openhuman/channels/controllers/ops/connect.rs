@@ -827,7 +827,7 @@ pub fn get_default_channel(config: &Config) -> Result<RpcOutcome<Value>, String>
 }
 
 /// Return the slugs of all messaging channels currently connected,
-/// merging the two storage layers OpenHuman uses for connection state.
+/// merging the two storage layers Neppy uses for connection state.
 ///
 /// Two equally-authoritative sources exist today:
 ///

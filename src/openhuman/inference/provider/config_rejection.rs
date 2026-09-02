@@ -1,13 +1,13 @@
 //! Classifier for **provider configuration-rejection** errors.
 //!
-//! When OpenHuman talks to a user-configured custom cloud endpoint
+//! When Neppy talks to a user-configured custom cloud endpoint
 //! (`custom_openai` → DeepSeek / OpenRouter / Moonshot / …) the upstream
 //! API rejects requests whose model id or sampling params it doesn't
 //! understand:
 //!
 //! - `"The supported API model names are deepseek-v4-pro or
 //!   deepseek-v4-flash, but you passed reasoning-v1."` (#2079 — an
-//!   OpenHuman abstract tier alias leaked to a provider that only speaks
+//!   Neppy abstract tier alias leaked to a provider that only speaks
 //!   its own native ids)
 //! - `"Model 'deepseek-v4-pro' is not available. Use GET
 //!   /openai/v1/models to list available models."` (#2202)
@@ -34,7 +34,7 @@
 //!   `type` field carrying "model 'X' not found")
 //!
 //! These are **deterministic user-configuration state**, not bugs the
-//! maintainers can act on: the user pointed OpenHuman at a custom
+//! maintainers can act on: the user pointed Neppy at a custom
 //! provider with a model / temperature / region / credential that
 //! provider does not accept. The remediation is "fix the model, key, or
 //! routing in Settings", which the UI surfaces. Yet every agent turn
@@ -47,7 +47,7 @@
 //! ## Provider-aware polarity (important)
 //!
 //! Most of the phrases below are emitted by **third-party upstream APIs**
-//! (DeepSeek / OpenRouter / Moonshot). The OpenHuman hosted backend
+//! (DeepSeek / OpenRouter / Moonshot). The Neppy hosted backend
 //! resolves tier aliases natively and never emits "supported API model
 //! names are deepseek-…" or "invalid temperature: only 1 is allowed" — so
 //! that phrase set is intrinsically scoped to custom providers. The
@@ -63,7 +63,7 @@
 //!
 //! **Exception: the OpenAI-compatible "unknown model" shape** (`Model 'X'
 //! is not available. Use GET /openai/v1/models …`) is now emitted by the
-//! OpenHuman hosted backend too, in response to user-configured model ids
+//! Neppy hosted backend too, in response to user-configured model ids
 //! that aren't in the backend's registry. Pinned by
 //! [`is_openai_compatible_unknown_model_message`]. The HTTP-layer wrapper
 //! drops the polarity guard for that specific shape so the same body is
@@ -85,7 +85,7 @@
 /// contract and the OPENHUMAN-TAURI Sentry issues each phrase drops.
 pub fn is_provider_config_rejection_message(body: &str) -> bool {
     const PHRASES: &[&str] = &[
-        // #2079 — an OpenHuman abstract tier alias (`reasoning-v1`,
+        // #2079 — an Neppy abstract tier alias (`reasoning-v1`,
         // `chat-v1`, …) reached a custom provider that lists its own
         // native ids back at us.
         "supported api model names are",
@@ -123,7 +123,7 @@ pub fn is_provider_config_rejection_message(body: &str) -> bool {
         // credits. Body always carries "requires more credits, or fewer
         // max_tokens"; pin to the unique-enough credits phrase. (The
         // separate `billing_error` classifier handles our own
-        // OpenHuman-backend balance gate; this catches the third-party
+        // Neppy-backend balance gate; this catches the third-party
         // OpenRouter shape that re-emits via `agent.run_single`.)
         "requires more credits",
         // TAURI-RUST-4ZF — DeepSeek (custom BYO-key) 402 when the user's
@@ -212,7 +212,7 @@ pub fn is_provider_config_rejection_message(body: &str) -> bool {
         //
         //   "The model `<name>` may not be available on your provider.
         //    Configure a fallback chain via `reliability.model_fallbacks`
-        //    in your OpenHuman config, or change your default model in
+        //    in your Neppy config, or change your default model in
         //    Connections → API keys → LLM.\n\nAll providers/models failed. Attempts:\n…"
         //
         // The aggregate fires once per turn regardless of the underlying
@@ -264,7 +264,7 @@ pub fn is_provider_config_rejection_message(body: &str) -> bool {
         // its own capability breaker (`subconscious/engine.rs`).
         "no endpoints found that support tool use",
         // TAURI-RUST-4P6 (~36.6k events / 2 users) — user picked an
-        // *embedding* model (Ollama `bge-m3:latest`, OpenHuman's default
+        // *embedding* model (Ollama `bge-m3:latest`, Neppy's default
         // memory-tree embed model) as their chat model. Ollama rejects every
         // chat turn with `{"error":{"message":"\"bge-m3:latest\" does not
         // support chat","type":"invalid_request_error",...}}` on a 400. Same
@@ -293,7 +293,7 @@ pub fn is_provider_config_rejection_message(body: &str) -> bool {
 /// helper exists so the HTTP-layer wrapper
 /// ([`super::ops::is_provider_config_rejection_http`]) can drop its
 /// `provider != openhuman_backend_model::PROVIDER_LABEL` polarity guard for
-/// this specific body shape — the OpenHuman hosted backend now emits the
+/// this specific body shape — the Neppy hosted backend now emits the
 /// same OpenAI-compatible "Model 'X' is not available" wire body in
 /// response to user-configured unknown model ids, so the original
 /// polarity assumption ("only third-party providers speak this dialect")
@@ -361,7 +361,7 @@ mod tests {
             ),
             (
                 "KB",
-                r#"OpenHuman API error (404 Not Found): {"error":{"message":"No active credentials for provider: openai","type":"invalid_request_error","code":"model_not_found"}}"#,
+                r#"Neppy API error (404 Not Found): {"error":{"message":"No active credentials for provider: openai","type":"invalid_request_error","code":"model_not_found"}}"#,
             ),
             (
                 "JK",
@@ -478,28 +478,28 @@ mod tests {
             // 1) Verbatim 4JS payload.
             "The model `reasoning-quick-v1` may not be available on your provider. \
              Configure a fallback chain via `reliability.model_fallbacks` in your \
-             OpenHuman config, or change your default model in Connections → API keys → LLM.\n\n\
+             Neppy config, or change your default model in Connections → API keys → LLM.\n\n\
              All providers/models failed. Attempts:\n\
              provider=openhuman model=reasoning-quick-v1 attempt 1/3: non_retryable; \
-             error=OpenHuman API error (401 Unauthorized): {\"success\":false,\"error\":\"Invalid token\"}",
+             error=Neppy API error (401 Unauthorized): {\"success\":false,\"error\":\"Invalid token\"}",
             // 2) Unknown-model upstream cause.
             "The model `gpt-5.5` may not be available on your provider. \
              Configure a fallback chain via `reliability.model_fallbacks` in your \
-             OpenHuman config, or change your default model in Connections → API keys → LLM.\n\n\
+             Neppy config, or change your default model in Connections → API keys → LLM.\n\n\
              All providers/models failed. Attempts:\n\
              provider=custom_openai model=gpt-5.5 attempt 1/3: non_retryable; \
              error=custom_openai API error (404 Not Found): {\"error\":\"model not found\"}",
             // 3) Region-block (R1-sibling) per-attempt cause.
             "The model `gpt-4o` may not be available on your provider. \
              Configure a fallback chain via `reliability.model_fallbacks` in your \
-             OpenHuman config, or change your default model in Connections → API keys → LLM.\n\n\
+             Neppy config, or change your default model in Connections → API keys → LLM.\n\n\
              All providers/models failed. Attempts:\n\
              provider=custom_openai model=gpt-4o attempt 1/3: non_retryable; \
              error=custom_openai API error (403 Forbidden): {\"error\":{\"message\":\"This model is not available in your region.\"}}",
             // 4) Bare aggregate — minimal anchor surface.
             "The model `x` may not be available on your provider. \
              Configure a fallback chain via `reliability.model_fallbacks` in your \
-             OpenHuman config, or change your default model in Connections → API keys → LLM.\n\n\
+             Neppy config, or change your default model in Connections → API keys → LLM.\n\n\
              All providers/models failed. Attempts:\n",
         ] {
             assert!(
@@ -522,7 +522,7 @@ mod tests {
         // …) can demote it on a per-shape basis.
         let aggregate_with_fallbacks = "All providers/models failed. Attempts:\n\
              provider=openhuman model=gpt-5.5 attempt 1/3: non_retryable; \
-             error=OpenHuman API error (404 Not Found): {\"error\":\"unknown model\"}";
+             error=Neppy API error (404 Not Found): {\"error\":\"unknown model\"}";
         assert!(
             !is_provider_config_rejection_message(aggregate_with_fallbacks),
             "configured-fallbacks aggregate (no `reliability.model_fallbacks` anchor) \
@@ -597,15 +597,15 @@ mod tests {
 
     #[test]
     fn unknown_model_helper_matches_openai_compatible_bodies() {
-        // TAURI-RUST-2Z1 — the OpenHuman hosted backend now emits the
+        // TAURI-RUST-2Z1 — the Neppy hosted backend now emits the
         // OpenAI-compatible "Model 'X' is not available" wire body for
         // user-configured unknown model ids. The helper is anchored on
         // the `/openai/v1/models` remediation hint so the same body shape
         // matches whether it came from a third-party `custom_openai`
         // upstream or our own backend.
         for body in [
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
             "Model 'deepseek-v4-pro' is not available. Use GET /openai/v1/models to list available models.",
         ] {
             assert!(

@@ -125,7 +125,7 @@ pub struct DescriptorImport {
     pub warnings: usize,
 }
 
-/// The `sessions/{session_key}` compatibility descriptor: maps the OpenHuman
+/// The `sessions/{session_key}` compatibility descriptor: maps the Neppy
 /// session key to TinyAgents-side identifiers and back.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionDescriptor {

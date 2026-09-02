@@ -24,7 +24,7 @@ pub enum VoiceActivationMode {
 ///
 /// | Variant      | Routing string | Client                                     |
 /// |--------------|----------------|--------------------------------------------|
-/// | `Backend`    | `"cloud"`      | `CloudSttProvider` (OpenHuman backend proxy) |
+/// | `Backend`    | `"cloud"`      | `CloudSttProvider` (Neppy backend proxy) |
 /// | `Elevenlabs` | `"elevenlabs"` | `ExternalSttProvider` via the `elevenlabs` `voice_providers` entry |
 /// | `Openai`     | `"openai"`     | `ExternalSttProvider` via the `openai` `voice_providers` entry |
 ///
@@ -38,7 +38,7 @@ pub enum VoiceActivationMode {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum SttEngine {
-    /// OpenHuman's hosted transcription proxy. Default.
+    /// Neppy's hosted transcription proxy. Default.
     #[default]
     Backend,
     /// ElevenLabs Scribe, called directly with the user's own key.
@@ -242,7 +242,7 @@ mod tests {
         // The routing grammar's pre-existing backend aliases must keep working
         // so an older `stt_provider = "cloud"` maps onto the same engine.
         assert_eq!(SttEngine::parse("cloud"), Some(SttEngine::Backend));
-        assert_eq!(SttEngine::parse(" OpenHuman "), Some(SttEngine::Backend));
+        assert_eq!(SttEngine::parse(" Neppy "), Some(SttEngine::Backend));
         assert_eq!(SttEngine::parse("ElevenLabs"), Some(SttEngine::Elevenlabs));
         assert_eq!(SttEngine::parse("openai"), Some(SttEngine::Openai));
         // The removed local engine is not an engine any more.

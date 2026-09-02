@@ -1,7 +1,7 @@
 //! Durable event journals + status stores for tinyagents turns (issue #4249,
 //! Workstream 05-events, 05.1).
 //!
-//! The live [`crate::openhuman::agent::tinyagents::observability::OpenhumanEventBridge`]
+//! The live [`crate::openhuman::agent::tinyagents::observability::NeppyEventBridge`]
 //! mirrors the harness [`EventSink`] onto openhuman's in-process `AgentProgress`
 //! stream — transient state that is lost the moment the UI detaches. This module
 //! makes that history **durable**: it attaches, *in addition to* the untouched
@@ -19,7 +19,7 @@
 //! ## Composition
 //!
 //! The crate [`EventSink`] is itself the fan-out point: the (already-subscribed)
-//! `OpenhumanEventBridge` and this journal sink are independent subscribers, so
+//! `NeppyEventBridge` and this journal sink are independent subscribers, so
 //! **both** receive every event. The journal side is wrapped in a
 //! [`FanOutSink`] as the durable-observer composition seam (05.2 will add graph
 //! sinks here) and its records pass through a [`RedactingSink`] so process
@@ -125,7 +125,7 @@ async fn resolve_workspace() -> anyhow::Result<PathBuf> {
     Ok(config.workspace_dir)
 }
 
-/// The OpenHuman journal redaction policy (issue #4249, 05.1).
+/// The Neppy journal redaction policy (issue #4249, 05.1).
 ///
 /// The crate [`RedactingSink`] masks configured secret substrings anywhere they
 /// appear in a serialized event before the observation is persisted. This policy
@@ -319,7 +319,7 @@ impl TurnJournal {
 }
 
 /// Attach a durable event journal + status writer to `events`, *in addition to*
-/// the existing (untouched) [`OpenhumanEventBridge`] subscription.
+/// the existing (untouched) [`NeppyEventBridge`] subscription.
 ///
 /// `run_id` MUST be the same id the caller passed to
 /// [`EventSink::with_stream_id`] when it created `events` (mint it once via
@@ -333,7 +333,7 @@ impl TurnJournal {
 /// proceeds unaffected — journaling is best-effort). Safe to call for observed
 /// and unobserved turns alike: it does not depend on `on_progress`.
 ///
-/// [`OpenhumanEventBridge`]: crate::openhuman::agent::tinyagents::observability::OpenhumanEventBridge
+/// [`NeppyEventBridge`]: crate::openhuman::agent::tinyagents::observability::NeppyEventBridge
 /// [`EventSink::with_stream_id`]: tinyagents::harness::events::EventSink::with_stream_id
 pub(crate) async fn attach_turn_journal(
     events: &EventSink,

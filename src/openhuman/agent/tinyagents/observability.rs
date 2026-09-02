@@ -161,7 +161,7 @@ struct BridgeState {
     /// means the harness served a model call from its [`ResponseCache`] without
     /// invoking the provider. Additive counters — a follow-up (coordinated with
     /// workstream 06) wires these into the cost-footer DTO; today they are logged
-    /// with a grep-friendly `[cache]` prefix and exposed via [`OpenhumanEventBridge::cache_counts`].
+    /// with a grep-friendly `[cache]` prefix and exposed via [`NeppyEventBridge::cache_counts`].
     cache_hits: u64,
     /// Local response-cache misses observed on this turn (provider *was* invoked).
     cache_misses: u64,
@@ -180,7 +180,7 @@ struct ResolvedCallFigures {
 
 /// An [`EventListener`] that mirrors harness events onto openhuman's progress
 /// sink and cost tracker.
-pub(crate) struct OpenhumanEventBridge {
+pub(crate) struct NeppyEventBridge {
     on_progress: Option<Sender<AgentProgress>>,
     model: String,
     /// Telemetry provider id (`"managed"`, `"openai"`, …) — from
@@ -213,7 +213,7 @@ pub(crate) struct OpenhumanEventBridge {
     /// `BudgetMiddleware::after_model` — both carrying identical usage and both
     /// delivered to this bridge. Keyed on the run-scoped model-call identity (the
     /// iteration cursor, bumped once per `ModelStarted`) so a given call's usage
-    /// is recorded exactly once. See [`OpenhumanEventBridge::record_usage`].
+    /// is recorded exactly once. See [`NeppyEventBridge::record_usage`].
     recorded_iterations: Mutex<std::collections::HashSet<u32>>,
     /// Per-iteration figures resolved by `record_usage` (see
     /// [`ResolvedCallFigures`]); taken by the `ModelCompleted` arm.
@@ -241,7 +241,7 @@ struct OverflowState {
     draining: bool,
 }
 
-impl OpenhumanEventBridge {
+impl NeppyEventBridge {
     /// Build a parent-scoped bridge for `model`.
     pub(crate) fn new(
         on_progress: Option<Sender<AgentProgress>>,
@@ -575,7 +575,7 @@ impl OpenhumanEventBridge {
     }
 }
 
-impl EventListener for OpenhumanEventBridge {
+impl EventListener for NeppyEventBridge {
     fn on_event(&self, record: &EventRecord) {
         match &record.event {
             AgentEvent::ModelStarted { .. } => {
@@ -765,7 +765,7 @@ impl EventListener for OpenhumanEventBridge {
             AgentEvent::CostRecorded { cost } => {
                 tracing::debug!(
                     cost = ?cost,
-                    "[tinyagents] cost event observed without OpenHuman accounting side effect"
+                    "[tinyagents] cost event observed without Neppy accounting side effect"
                 );
             }
             AgentEvent::BudgetReserved {
@@ -1143,7 +1143,7 @@ mod tests {
     #[tokio::test]
     async fn bridge_forwards_tool_and_cost_progress() {
         let (tx, mut rx) = tokio::sync::mpsc::channel(64);
-        let bridge = OpenhumanEventBridge::new(Some(tx), "mock-model", 10);
+        let bridge = NeppyEventBridge::new(Some(tx), "mock-model", 10);
         let sink = EventSink::new();
         sink.subscribe(bridge.clone());
 
@@ -1194,7 +1194,7 @@ mod tests {
     #[tokio::test]
     async fn model_completed_projects_generation_with_content_and_provider() {
         let (tx, mut rx) = tokio::sync::mpsc::channel(64);
-        let bridge = OpenhumanEventBridge::with_scope(
+        let bridge = NeppyEventBridge::with_scope(
             Some(tx),
             "chat-v1",
             "managed",
@@ -1217,7 +1217,7 @@ mod tests {
             started_at_ms: None,
             usage: Some(Usage::new(1_000, 50)),
             input: Some(serde_json::json!([
-                {"role": "system", "content": "You are OpenHuman."}
+                {"role": "system", "content": "You are Neppy."}
             ])),
             output: Some(serde_json::json!({"role": "assistant", "content": "hi"})),
         });
@@ -1251,7 +1251,7 @@ mod tests {
         assert_eq!(model, "chat-v1");
         assert_eq!(provider_id, "managed");
         assert!(task.is_none(), "parent scope carries no task id");
-        assert!(input.unwrap().to_string().contains("You are OpenHuman."));
+        assert!(input.unwrap().to_string().contains("You are Neppy."));
         assert!(output.unwrap().to_string().contains("hi"));
         assert_eq!(input_tokens, 1_000);
         // chat-v1 is a managed tier handle — the tier-aware estimator must
@@ -1262,7 +1262,7 @@ mod tests {
     #[tokio::test]
     async fn subagent_model_completed_carries_task_attribution() {
         let (tx, mut rx) = tokio::sync::mpsc::channel(64);
-        let bridge = OpenhumanEventBridge::with_scope(
+        let bridge = NeppyEventBridge::with_scope(
             Some(tx),
             "burst-v1",
             "managed",
@@ -1305,7 +1305,7 @@ mod tests {
     #[tokio::test]
     async fn tool_completed_projects_output_arguments_and_elapsed() {
         let (tx, mut rx) = tokio::sync::mpsc::channel(64);
-        let bridge = OpenhumanEventBridge::new(Some(tx), "mock-model", 10);
+        let bridge = NeppyEventBridge::new(Some(tx), "mock-model", 10);
         let sink = EventSink::new();
         sink.subscribe(bridge.clone());
 
@@ -1349,7 +1349,7 @@ mod tests {
         // surface the *attempted* tool on the timeline (a failed call) so the UI
         // shows what the agent tried, instead of the attempt vanishing.
         let (tx, mut rx) = tokio::sync::mpsc::channel(64);
-        let bridge = OpenhumanEventBridge::new(Some(tx), "mock-model", 10);
+        let bridge = NeppyEventBridge::new(Some(tx), "mock-model", 10);
         let sink = EventSink::new();
         sink.subscribe(bridge.clone());
 
@@ -1391,7 +1391,7 @@ mod tests {
     #[tokio::test]
     async fn duplicate_usage_for_same_model_call_is_recorded_once() {
         let (tx, mut rx) = tokio::sync::mpsc::channel(64);
-        let bridge = OpenhumanEventBridge::new(Some(tx), "mock-model", 10);
+        let bridge = NeppyEventBridge::new(Some(tx), "mock-model", 10);
         let sink = EventSink::new();
         sink.subscribe(bridge.clone());
 

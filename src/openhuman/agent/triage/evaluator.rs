@@ -645,7 +645,7 @@ fn is_prompt_guard_rejection(message: &str) -> bool {
 /// call because the user's inference budget or credit balance is empty —
 /// meaning a retry would hit the same wall.
 ///
-/// The vocabulary matches the OpenHuman backend's error copy and common
+/// The vocabulary matches the Neppy backend's error copy and common
 /// third-party provider phrasing. It does **not** mirror the
 /// *semantics* of `web_chat/` (a different code path);
 /// it is an independent, conservative allowlist evaluated inline so the

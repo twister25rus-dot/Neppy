@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=OpenHuman
+Name=Neppy
 Comment=Personal AI desktop assistant
 Exec=/usr/bin/openhuman %U
 Terminal=false
@@ -7,5 +7,5 @@ Type=Application
 Icon=openhuman
 Categories=Utility;Office;Network;
 StartupNotify=true
-StartupWMClass=OpenHuman
+StartupWMClass=Neppy
 MimeType=x-scheme-handler/openhuman;

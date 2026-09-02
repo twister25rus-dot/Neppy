@@ -1,6 +1,6 @@
 //! Product identity attached to every backend-bound HTTP request.
 //!
-//! OpenHuman, OpenCompany and Medulla share a single login and all three reach
+//! Neppy, OpenCompany and Medulla share a single login and all three reach
 //! the TinyHumans backend through this crate, so without a per-product marker
 //! the backend sees three products as one undifferentiated user base. Every
 //! request therefore carries an `x-sdk-name` header, which the backend reads

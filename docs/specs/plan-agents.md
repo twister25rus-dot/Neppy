@@ -4,7 +4,7 @@
 after two rounds of pushback; this document plans the move rather than
 re-arguing it. The open questions below are *how*, not *whether*.
 **Scope:** relocate `src/openhuman/agent/` (152 files, 70,530 LOC) into
-`vendor/tinyagents` as a generic agent runtime, with OpenHuman's coupling
+`vendor/tinyagents` as a generic agent runtime, with Neppy's coupling
 expressed as trait injection.
 **Supersedes:** the "permanent host" dispositions for `builder/`, `turn/`,
 `runtime.rs`, and `types.rs` in
@@ -16,7 +16,7 @@ Those rows are reopened by this decision and must be updated in the ledger.
 
 ## 1. Why this is feasible (the enabling fact)
 
-The earlier objection was dependency direction: `agent/` reaches 45 OpenHuman
+The earlier objection was dependency direction: `agent/` reaches 45 Neppy
 domains, so relocating it appeared to force a GPL-redistributed crate to import
 Composio, `SecurityPolicy`, and `memory_store`.
 
@@ -32,7 +32,7 @@ pub trait Middleware<State: Send + Sync, Ctx: Send + Sync = ()>: Send + Sync { �
 
 `State` is the injection vehicle. A relocated agent runtime does not import
 `crate::openhuman::memory` — it is generic over a `State` that *provides*
-memory, and OpenHuman supplies the impl. The crate already ships **18 extension
+memory, and Neppy supplies the impl. The crate already ships **18 extension
 traits** on exactly this pattern (`ChatModel`, `Tool`, `ChatHistory`, `Store`,
 `AppendStore`, `Summarizer`, `EmbeddingModel`, `VectorStore`, `ResponseCache`,
 `WorkspaceIsolation`, `HarnessEventJournal`, `HarnessStatusStore`,
@@ -41,7 +41,7 @@ traits** on exactly this pattern (`ChatModel`, `Tool`, `ChatHistory`, `Store`,
 is not a new architecture; it is more of the one already in use.
 
 The GPL/crates.io concern also narrows correctly: the constraint is that no
-*OpenHuman product logic* is published, not that no agent runtime is. Traits and
+*Neppy product logic* is published, not that no agent runtime is. Traits and
 a generic loop are publishable; `provider_role_for`'s `subconscious` routing and
 the `integrations_agent` dispatcher override are not — they become host impls.
 
@@ -103,7 +103,7 @@ By symbol:
 **Consequence:** `agent/` does not empty out. Roughly **20–25k LOC stays** as
 the host adapter layer (`ChatMessage`, `AgentProgress`, `turn_origin`, prompts,
 triage, bus, host_runtime, message_convert, the trait impls). The deliverable is
-"the runtime moves down and OpenHuman keeps an adapter", not "the directory
+"the runtime moves down and Neppy keeps an adapter", not "the directory
 disappears".
 
 ### 2.3 Honest cost
@@ -134,7 +134,7 @@ program can be halted at any phase boundary without leaving the tree broken.
 | `progress_tracing/` | ~3,186 | deleted, not moved — crate observability already covers it (parent spec DS-5) |
 | `multimodal.rs` (resolution half) | ~1,300 | `harness::multimodal` behind the `multimodal` cargo feature — **landed**, see §5 Phase 5 |
 
-### Stays in OpenHuman as the adapter layer
+### Stays in Neppy as the adapter layer
 
 `messages.rs` (`ChatMessage`), `message_convert.rs`, `progress.rs`
 (`AgentProgress`), `turn_origin.rs`, `prompts/`, `triage/`, `bus.rs`,
@@ -159,11 +159,11 @@ traits**. Estimated ~20–25k LOC including tests.
 ### 4.1 Config (195 refs — the real blocker)
 
 `agent/` reads `Config`, `AgentConfig` (742-line schema), `MemoryConfig`,
-`ContextConfig` directly. A generic runtime cannot import OpenHuman's config
+`ContextConfig` directly. A generic runtime cannot import Neppy's config
 schema. Options:
 
 - **A — Crate-owned config structs.** The crate defines `SessionConfig`,
-  `TurnConfig`, `ToolConfig`; OpenHuman maps its schema into them at build time.
+  `TurnConfig`, `ToolConfig`; Neppy maps its schema into them at build time.
   Explicit, versionable, and mirrors how `MemoryConfig` is derived for TinyCortex
   (`tinycortex/config.rs::memory_config_from`). **Recommended.**
 - **B — `ConfigProvider` trait** with ~40 getters. Avoids a mapping layer but
@@ -211,7 +211,7 @@ because the link checker does not check out submodules)
 — all ten signatures, grounded in measured reference counts. **Not yet
 accepted**; it carries four open questions that block Phase 1, the hard one
 being a name collision: `tinyflows` 0.5.1 shipped its own, unrelated
-`MemoryProvider` trait, and both crates are in OpenHuman's dependency graph.
+`MemoryProvider` trait, and both crates are in Neppy's dependency graph.
 
 **Phase 1 — Land the traits upstream, empty.**
 Add the traits + no-op/in-memory default impls to the crate. No host change.
@@ -290,11 +290,11 @@ Landed so far — foundation only, nothing repointed yet:
 
 - `tinyagents::harness::config` — `SessionConfig`, `TurnConfig`, `ToolConfig`,
   `MemoryLimits`, `RequiredOutput`, `ToolDispatcher`. Inert (serde + std only),
-  defaults pinned to OpenHuman's current values.
+  defaults pinned to Neppy's current values.
 - `src/openhuman/tinyagents/config.rs` — `session_config_from` plus
   `apply_team_models` / `apply_delegate`, following the
   `tinycortex::config::memory_config_from` precedent. Split three ways because
-  OpenHuman's model pins are **not global**: `Config::teams` is keyed by team
+  Neppy's model pins are **not global**: `Config::teams` is keyed by team
   and `Config::agents` by delegate, so one flat mapper would have to invent the
   model for a session.
 - 23 tests across both sides. The load-bearing one is
@@ -436,7 +436,7 @@ from its baseline to the adapter layer only.
 > larger number counted a wider tree. 295 is the number to drive down.
 
 **Landed: all ten adapters** in `src/openhuman/tinyagents/host/`
-(~6,000 LOC, 140 tests). Each wires one crate trait to the real OpenHuman
+(~6,000 LOC, 140 tests). Each wires one crate trait to the real Neppy
 domains, with policy enforced adapter-side. `agent/` **does not call them yet**,
 so the exit criterion is still at 295 — writing the adapters and repointing the
 callers are two separate pieces of work and only the first is done.
@@ -551,7 +551,7 @@ filed upstream — repointing should not proceed past them:
 >   wire them.
 > - **The `model_pin` is advisory by design.** The host decides whether it can
 >   honour a pin, because the runtime has no view of credentials or provider
->   health. `OpenHumanModelResolver` should therefore validate the id against
+>   health. `NeppyModelResolver` should therefore validate the id against
 >   configured providers rather than pass it through blind — which is the
 >   behaviour §4's adapter notes already wanted and had no channel for.
 
@@ -559,7 +559,7 @@ filed upstream — repointing should not proceed past them:
 surface that was not reachable. They are honest gaps, not stubs pretending to
 work; the notable ones are `AgentMemory::thread_summary` (no host-authored
 per-thread prose rollup exists) and `SecurityGate::screen_input` never returning
-`Redacted` (OpenHuman can detect PII but exposes no public text-rewriting
+`Redacted` (Neppy can detect PII but exposes no public text-rewriting
 helper).
 
 **Phase 5 — Relocate, module family at a time.** — *3 of 7 families landed*
@@ -592,7 +592,7 @@ family's tests live upstream.
 > **Two rules the `artifact_offload` move established**, both of which will
 > recur:
 >
-> 1. **Prompt text never moves.** §6 lists OpenHuman prompt text as
+> 1. **Prompt text never moves.** §6 lists Neppy prompt text as
 >    unpublishable, and prompts name host tool ids. So the crate's pointer
 >    renderer takes the read-tool name as a *parameter* rather than a constant
 >    — a hard-coded tool name in a redistributed crate would put a tool some
@@ -600,7 +600,7 @@ family's tests live upstream.
 > 2. **A host policy becomes a trait pair, not an import.** `SecurityPolicy`
 >    and `sanitize_text` became `ArtifactPathPolicy` / `ArtifactRedactor`. The
 >    host constructor installs both every time, because the crate permits
->    `None` for each and OpenHuman never wants either — routing construction
+>    `None` for each and Neppy never wants either — routing construction
 >    through one helper is what stops a call site producing an unguarded writer
 >    by omission.
 
@@ -632,7 +632,7 @@ rust:check`, deletion-ledger totals reconciled, architecture docs rewritten.
   that is a signal a seam is wrong — re-open the RFC rather than adding it.
 - **GPL/crates.io.** Publishable: traits, generic loop, tool-calling wire
   formats. Not publishable: `provider_role_for`'s `subconscious` routing, the
-  `integrations_agent` override, OpenHuman prompt text, backend phrasing, key
+  `integrations_agent` override, Neppy prompt text, backend phrasing, key
   material. Every relocated file needs this check.
 - **≥ 80% diff-coverage gate** on a program of this size — Phases 4 and 5 touch
   hundreds of files. Check `diff-cover` per slice.

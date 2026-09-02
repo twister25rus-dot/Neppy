@@ -7,9 +7,9 @@ icon: plug
 
 # Third-party Integrations (118+)
 
-OpenHuman ships with backend-proxied access to **118+ third-party services**. Connecting any of them through the managed path is a one-click OAuth flow inside the app, there are no API keys to wire by hand, and no plugin marketplace to navigate.
+Neppy ships with backend-proxied access to **118+ third-party services**. Connecting any of them through the managed path is a one-click OAuth flow inside the app, there are no API keys to wire by hand, and no plugin marketplace to navigate.
 
-Under the hood, the connector layer is powered by [Composio](https://composio.dev). In the default managed mode, OpenHuman's backend owns the Composio API key, OAuth token brokering, rate limits, and trigger webhook fan-out. If you switch to direct mode, the core talks to Composio with your own Composio API key; synchronous tool calls work, but real-time trigger webhooks must be configured on your own webhook infrastructure.
+Under the hood, the connector layer is powered by [Composio](https://composio.dev). In the default managed mode, Neppy's backend owns the Composio API key, OAuth token brokering, rate limits, and trigger webhook fan-out. If you switch to direct mode, the core talks to Composio with your own Composio API key; synchronous tool calls work, but real-time trigger webhooks must be configured on your own webhook infrastructure.
 
 Once a service is connected, it shows up in four places at once:
 
@@ -39,7 +39,7 @@ Some services have **native providers**. Rust modules that know how to ingest th
 
 ## How connections work
 
-Click **Connect** on any integration. A browser window opens for OAuth. Once you sign in, the connection becomes active and OpenHuman starts syncing it through [auto-fetch](../obsidian-wiki/auto-fetch.md) on the next 20-minute tick.
+Click **Connect** on any integration. A browser window opens for OAuth. Once you sign in, the connection becomes active and Neppy starts syncing it through [auto-fetch](../obsidian-wiki/auto-fetch.md) on the next 20-minute tick.
 
 Each integration shows its current status:
 
@@ -51,17 +51,17 @@ You can revoke any connection at any time from the **Connections** page.
 
 ## Messaging channels
 
-Three integrations are special. OpenHuman uses them to _talk back_ to you, not just read from them:
+Three integrations are special. Neppy uses them to _talk back_ to you, not just read from them:
 
 - **Telegram**. the primary messaging channel. Two-way: send and receive messages, manage chats, search history, create groups, 80+ actions on your behalf. All actions run through your own encrypted credentials.
-- **Discord**. send and receive messages via Discord. Connect your account to receive OpenHuman messages there.
+- **Discord**. send and receive messages via Discord. Connect your account to receive Neppy messages there.
 - **Web**. a browser-based chat interface within the desktop app. Messages stay entirely local.
 
-Set your default under **Connections → Channels**. The active route status shows which channel is currently in use. Telegram offers two credential modes: connect via OpenHuman (one-click, encrypted) or provide your own credentials for maximum control.
+Set your default under **Connections → Channels**. The active route status shows which channel is currently in use. Telegram offers two credential modes: connect via Neppy (one-click, encrypted) or provide your own credentials for maximum control.
 
 ## Beyond the curated catalog: MCP & Skills
 
-The 118+ OAuth connectors are the curated path. Beyond them, OpenHuman opens up the wider open-tooling ecosystem:
+The 118+ OAuth connectors are the curated path. Beyond them, Neppy opens up the wider open-tooling ecosystem:
 
 - **MCP servers**: a built-in registry browses thousands of [Model Context Protocol](https://modelcontextprotocol.io) servers (Smithery + the official registry) that install locally as new agent tools.
 - **Skills**: a browsable, ~90,000-entry catalog of `SKILL.md` capability bundles aggregated from HermesHub, ClawHub, LobeHub and more. (Note: the old in-app skills runtime has been removed; Skills are now a metadata catalog you install from the **Connections → Skills** tab.)
@@ -77,7 +77,7 @@ Two capabilities ship native rather than as integrations because they're load-be
 
 ## Privacy boundary
 
-OpenHuman's core never calls any third-party API directly. All requests go through the OpenHuman backend, which handles OAuth tokens and rate limiting. Your tokens never sit on disk in plaintext on your machine, and the agent only sees the _results_ of tool calls, not the credentials.
+Neppy's core never calls any third-party API directly. All requests go through the Neppy backend, which handles OAuth tokens and rate limiting. Your tokens never sit on disk in plaintext on your machine, and the agent only sees the _results_ of tool calls, not the credentials.
 
 If you opt into direct Composio mode, that boundary changes: your local core uses your own Composio API key and you are responsible for the Composio account, rate limits, billing relationship, and any webhook endpoint needed for trigger delivery.
 

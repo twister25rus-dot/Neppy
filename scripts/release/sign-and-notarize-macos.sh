@@ -50,7 +50,7 @@ if [ -d "$APP_PATH/Contents/Frameworks" ]; then
   ls -la "$APP_PATH/Contents/Frameworks/"
 fi
 
-MAIN_EXE="$(defaults read "$APP_PATH/Contents/Info.plist" CFBundleExecutable 2>/dev/null || echo "OpenHuman")"
+MAIN_EXE="$(defaults read "$APP_PATH/Contents/Info.plist" CFBundleExecutable 2>/dev/null || echo "Neppy")"
 echo "[sign] Main executable (from plist): $MAIN_EXE"
 
 codesign_hardened() {
@@ -133,7 +133,7 @@ codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
 # ── Notarize ─────────────────────────────────────────────────────────────────
 echo "[sign] Notarizing..."
-NOTARIZE_ZIP="$(mktemp /tmp/OpenHuman-notarize-XXXXXX.zip)"
+NOTARIZE_ZIP="$(mktemp /tmp/Neppy-notarize-XXXXXX.zip)"
 ditto -c -k --keepParent "$APP_PATH" "$NOTARIZE_ZIP"
 
 SUBMIT_OUT="$(mktemp /tmp/notarize-submit-XXXXXX.json)"

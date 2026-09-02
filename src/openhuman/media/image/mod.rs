@@ -1,6 +1,6 @@
 //! Image-tool contracts for model-facing agents.
 //!
-//! This module is intentionally a high-level contract layer. OpenHuman already
+//! This module is intentionally a high-level contract layer. Neppy already
 //! has lower-level image helpers (`image_info`, local image viewing, and
 //! multimodal `[IMAGE:...]` normalization). The image layer defines the
 //! stable tool names, schema, gating, and prompt guidance that agents should see

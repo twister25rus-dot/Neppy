@@ -271,7 +271,7 @@ proposal, tell the user in plain language that the workflow is built correctly
 but needs their AI provider connected before it will run:
 
 - **`signed_out`** ("you are signed out" / no active session): tell the user
-  the workflow is ready to go, they just need to sign in to OpenHuman before
+  the workflow is ready to go, they just need to sign in to Neppy before
   running it.
 - **`provider_not_configured`** (the backend reports something like "API key
   not configured for provider"): tell the user the workflow is ready to go,
@@ -526,7 +526,7 @@ A `WorkflowGraph` is `{ name?, nodes: [...], edges: [...] }`.
      `composio_connect { toolkit }` yourself (see "Connecting integrations"
      below) or note in your reply that the user needs to connect it — the
      flow will also prompt for the connection the first time it actually runs.
-   - **Native OpenHuman tool** — `config.slug` = `oh:<tool_name>` (e.g.
+   - **Native Neppy tool** — `config.slug` = `oh:<tool_name>` (e.g.
      `oh:web_search`) to call one of the assistant's own built-in tools (search,
      media generation, files, …). No `connection_ref`. Args go in `config.args`.
 4. **`http_request`** — `config.method` + `config.url`, optional `headers` /

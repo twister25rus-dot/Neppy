@@ -1,13 +1,13 @@
 ---
 description: >-
-  Run OpenHuman's inference on your own machine with Ollama: detection, model
+  Run Neppy's inference on your own machine with Ollama: detection, model
   selection, a real test, and every way it commonly breaks with the fix.
 icon: microchip
 ---
 
-# Use OpenHuman with a local model
+# Use Neppy with a local model
 
-**Goal:** move some or all of OpenHuman's model work onto your own computer, so that data used for those workloads never leaves the machine.
+**Goal:** move some or all of Neppy's model work onto your own computer, so that data used for those workloads never leaves the machine.
 
 Local AI is **opt-in** and ships **off**. Turning it on doesn't silently reroute everything. You choose which workloads go local.
 
@@ -17,14 +17,14 @@ For the config-level reference (every flag and provider field), see [Local AI (o
 
 ## Prerequisites
 
-- [**Ollama**](https://ollama.com) installed. OpenHuman talks to it at its default address `http://localhost:11434`. (LM Studio is also supported at `http://localhost:1234/v1`; see the [reference page](../features/model-routing/local-ai.md#lm-studio-troubleshooting).)
+- [**Ollama**](https://ollama.com) installed. Neppy talks to it at its default address `http://localhost:11434`. (LM Studio is also supported at `http://localhost:1234/v1`; see the [reference page](../features/model-routing/local-ai.md#lm-studio-troubleshooting).)
 - **8 GB+ RAM** to get real value. Machines with less than 8 GB fall back to cloud summarization by design, because a small local model won't have the headroom.
-- Disk for the weights: a small chat model plus an embedding model is a few GB. OpenHuman does not ship weights; Ollama pulls them on demand.
+- Disk for the weights: a small chat model plus an embedding model is a few GB. Neppy does not ship weights; Ollama pulls them on demand.
 
 ## Privacy implications
 
 - Workloads you route locally (embeddings, summary building, background loops, and, if you choose, chat/reasoning) run **entirely on-device**. Nothing about that work is sent out.
-- Anything you leave on the default route still goes through the OpenHuman [model router](../features/model-routing/). Local AI is additive; it doesn't change what you didn't move.
+- Anything you leave on the default route still goes through the Neppy [model router](../features/model-routing/). Local AI is additive; it doesn't change what you didn't move.
 - If the local provider becomes unreachable mid-session, requests **transparently fall back** to the remote provider. That means a crashed Ollama can send that data to the cloud path instead. If strict locality matters, watch the diagnostics (below).
 
 ---
@@ -39,17 +39,17 @@ Install and launch Ollama so its local server is running. You can confirm it's u
 curl http://localhost:11434/api/tags
 ```
 
-A JSON list of models (even an empty one) means the server is reachable. This is the exact probe OpenHuman uses to detect Ollama.
+A JSON list of models (even an empty one) means the server is reachable. This is the exact probe Neppy uses to detect Ollama.
 
-### 2. Turn on Local AI in OpenHuman
+### 2. Turn on Local AI in Neppy
 
-Open **Settings → AI & Skills → Local AI**. It's off until you opt in here. Pick the **model tier** that matches your machine's memory (for example the `ram_2_4gb` tier on a typical laptop). OpenHuman selects sensible on-device models for you, for example `gemma3:1b-it-qat` for chat and `bge-m3` for embeddings.
+Open **Settings → AI & Skills → Local AI**. It's off until you opt in here. Pick the **model tier** that matches your machine's memory (for example the `ram_2_4gb` tier on a typical laptop). Neppy selects sensible on-device models for you, for example `gemma3:1b-it-qat` for chat and `bge-m3` for embeddings.
 
 By default the tier keeps **embeddings and memory** on-device while chat and reasoning stay on the cloud route. To move those workloads local too, use **custom routing** to point the chat and reasoning workloads at the local provider, then test that a message stays on the machine.
 
 ### 3. Let it pull the models
 
-When a workload needs a model that isn't installed yet, OpenHuman pulls it through Ollama and shows **download progress**. You can also pull manually:
+When a workload needs a model that isn't installed yet, Neppy pulls it through Ollama and shows **download progress**. You can also pull manually:
 
 ```bash
 ollama pull gemma3:1b-it-qat
@@ -72,7 +72,7 @@ Local AI is operational when:
 - [ ] For an embeddings-only setup: after the next memory sync, new summaries keep appearing in the **Memory** tab with Ollama running. That confirms embeddings are being produced locally.
 
 {% hint style="info" %}
-**Where to look under the hood.** OpenHuman surfaces a live diagnostics view for the local runtime (Ollama reachable? runner OK? which models are installed vs expected? what issues?). If a check fails, the diagnostics name the specific problem. Start there before changing config.
+**Where to look under the hood.** Neppy surfaces a live diagnostics view for the local runtime (Ollama reachable? runner OK? which models are installed vs expected? what issues?). If a check fails, the diagnostics name the specific problem. Start there before changing config.
 {% endhint %}
 
 ## Common failures
@@ -83,16 +83,16 @@ These are the actual failure states the runtime reports, and what each one means
 | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **"Ollama server is not running or not reachable"** (status `degraded`)             | The app can't reach Ollama at its base URL                               | Start Ollama; confirm `curl http://localhost:11434/api/tags` works; if you use a non-default port, set the base URL in Local AI settings |
 | **"…reachable but cannot execute models. Restart the external runtime and retry."** | Ollama is answering but its model runner is broken (a fork/exec failure) | Quit and relaunch Ollama itself, then retry                                                                                              |
-| **"Chat model '…' is not installed"**                                               | The configured model isn't pulled yet                                    | Let OpenHuman pull it, or run `ollama pull <model>`                                                                                      |
+| **"Chat model '…' is not installed"**                                               | The configured model isn't pulled yet                                    | Let Neppy pull it, or run `ollama pull <model>`                                                                                      |
 | **"…not reachable after fresh install. Start `ollama serve` manually and retry."**  | Ollama was just installed but the server isn't up                        | Run `ollama serve` (or launch the Ollama app) and retry                                                                                  |
 | Embedding model rejected for **context window too small**                           | The chosen embedding model can't hold enough tokens for the memory layer | Choose a larger-context embedding model such as **`bge-m3`**                                                                             |
 | Status stuck at **`downloading`**, then a retry message                             | A model pull stream was interrupted                                      | It retries automatically; if it keeps failing, check disk space and network, then pull manually                                          |
-| It "works" but answers feel cloud-quality                                           | The local provider was unreachable and OpenHuman **fell back to remote** | Fix reachability above; strict-local users should confirm status is `ready` before relying on it                                         |
+| It "works" but answers feel cloud-quality                                           | The local provider was unreachable and Neppy **fell back to remote** | Fix reachability above; strict-local users should confirm status is `ready` before relying on it                                         |
 
 ## Recovery
 
 - **Back to cloud in one step:** turn Local AI back off in **Settings → AI & Skills → Local AI**. Workloads return to the default route immediately; no data is lost.
-- **Free up a stuck runtime:** quit Ollama fully and relaunch it, then re-open the Local AI settings so OpenHuman re-probes.
+- **Free up a stuck runtime:** quit Ollama fully and relaunch it, then re-open the Local AI settings so Neppy re-probes.
 - **Disk pressure:** interrupted pulls are usually low disk. Clear space and let the pull resume, or `ollama pull` the model by hand.
 
 ---

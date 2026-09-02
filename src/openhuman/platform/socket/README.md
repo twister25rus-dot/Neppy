@@ -1,6 +1,6 @@
 # socket
 
-Persistent, Rust-native Socket.IO client to the OpenHuman backend. The `socket` domain owns a single long-lived `SocketManager` that speaks Engine.IO v4 + Socket.IO v4 directly over a WebSocket (`tokio-tungstenite` + `rustls`), maintains the connection with exponential-backoff reconnection, and routes inbound server events onto the in-process event bus for domain-specific handling (webhooks, channel messages, Composio triggers, device tunnel). Outbound `emit`s and connection lifecycle are exposed over JSON-RPC under the `socket` namespace.
+Persistent, Rust-native Socket.IO client to the Neppy backend. The `socket` domain owns a single long-lived `SocketManager` that speaks Engine.IO v4 + Socket.IO v4 directly over a WebSocket (`tokio-tungstenite` + `rustls`), maintains the connection with exponential-backoff reconnection, and routes inbound server events onto the in-process event bus for domain-specific handling (webhooks, channel messages, Composio triggers, device tunnel). Outbound `emit`s and connection lifecycle are exposed over JSON-RPC under the `socket` namespace.
 
 ## Responsibilities
 

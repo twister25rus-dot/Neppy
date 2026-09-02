@@ -4,7 +4,7 @@
 //! that need to launch Python subprocesses such as MCP servers.
 //!
 //! Product direction: `runtime_python` should eventually own a managed
-//! CPython distribution so OpenHuman does not depend on host Python being
+//! CPython distribution so Neppy does not depend on host Python being
 //! installed correctly. The system-interpreter probe is a compatibility and
 //! developer override path, not the desired long-term contract.
 
@@ -41,7 +41,7 @@ pub struct RuntimePythonConfig {
     pub managed_release_tag: String,
     /// When `true`, probe the host `PATH` for a compatible interpreter before
     /// attempting any managed-runtime flow. Useful for development; the
-    /// intended shipped path is a managed interpreter owned by OpenHuman.
+    /// intended shipped path is a managed interpreter owned by Neppy.
     #[serde(default = "default_prefer_system")]
     pub prefer_system: bool,
     /// Optional preferred executable name or absolute path. Examples:

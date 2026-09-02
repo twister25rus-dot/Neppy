@@ -1,4 +1,4 @@
-//! OpenHuman credential adapter for tinyagents cloud embeddings.
+//! Neppy credential adapter for tinyagents cloud embeddings.
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -16,11 +16,11 @@ pub const DEFAULT_CLOUD_EMBEDDING_MODEL: &str = DEFAULT_CLOUD_MODEL;
 pub const DEFAULT_CLOUD_EMBEDDING_DIMENSIONS: usize = DEFAULT_CLOUD_DIMENSIONS;
 
 /// Host-owned credential resolution around the crate-owned cloud transport.
-pub struct OpenHumanCloudEmbedding {
+pub struct NeppyCloudEmbedding {
     inner: TinyAgentsEmbeddingProvider,
 }
 
-impl OpenHumanCloudEmbedding {
+impl NeppyCloudEmbedding {
     pub fn new(
         api_url: Option<String>,
         openhuman_dir: Option<PathBuf>,
@@ -36,7 +36,7 @@ impl OpenHumanCloudEmbedding {
                 .filter(|token| !token.trim().is_empty())
                 .ok_or_else(|| {
                     tinyagents::TinyAgentsError::Validation(
-                        "No backend session for cloud embeddings: log in to OpenHuman".into(),
+                        "No backend session for cloud embeddings: log in to Neppy".into(),
                     )
                 })
         });
@@ -134,7 +134,7 @@ fn user_scoped_state_dir(root: &std::path::Path, active_user_id: Option<&str>) -
 }
 
 #[async_trait]
-impl EmbeddingProvider for OpenHumanCloudEmbedding {
+impl EmbeddingProvider for NeppyCloudEmbedding {
     fn name(&self) -> &str {
         self.inner.name()
     }
@@ -179,7 +179,7 @@ mod tests {
         let _mode = crate::openhuman::security::live_policy::test_privacy_scope(
             crate::openhuman::config::PrivacyMode::LocalOnly,
         );
-        let provider = OpenHumanCloudEmbedding::new(
+        let provider = NeppyCloudEmbedding::new(
             Some("http://127.0.0.1:0".into()),
             Some(std::env::temp_dir().join("openhuman_embeddings_localonly_state")),
             false,

@@ -1,5 +1,5 @@
 mod doctor;
-// `pub(crate)` (not `mod`): the tinyflows `memory` node's `OpenHumanMemory`
+// `pub(crate)` (not `mod`): the tinyflows `memory` node's `NeppyMemory`
 // adapter (`crate::openhuman::flows::tinyflows::memory_adapter`) reaches
 // `flavour::lookup_flavour` / `flavour::FlavourLookup` directly so the node's
 // `flavour` operation and `MemoryFlavourTool` share one flavoured-tree read

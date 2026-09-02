@@ -698,7 +698,7 @@ pub fn session_agent_id(conn: &Connection, session_id: &str) -> Result<Option<St
 }
 
 /// The most recent non-pinned session id for a peer agent, if any — the thread to
-/// reuse when OpenHuman initiates an outbound ask to that peer, so the peer's
+/// reuse when Neppy initiates an outbound ask to that peer, so the peer's
 /// reply threads back into the same session (shared `wrapper_session_id` model,
 /// #227/#4582). Newest by `last_message_at`. Returns `None` when there is no
 /// existing thread with the peer (caller mints a fresh session id).
@@ -886,7 +886,7 @@ pub fn kv_delete(conn: &Connection, key: &str) -> Result<()> {
 
 // ── Outbound-ask correlation (Master chat, W7) ───────────────────────────────
 //
-// When OpenHuman DMs a peer on the user's behalf (`orchestration_send_to_agent`),
+// When Neppy DMs a peer on the user's behalf (`orchestration_send_to_agent`),
 // we record a ONE-SHOT pending ask keyed by the outbound session id, mapping it
 // to the window the ask originated from (usually `master`). When the peer's reply
 // lands under that session id (shared `wrapper_session_id`), the wake path threads

@@ -1,4 +1,4 @@
-//! Streamable HTTP + SSE transport for the OpenHuman MCP server.
+//! Streamable HTTP + SSE transport for the Neppy MCP server.
 //!
 //! Reuses [`super::protocol`] for JSON-RPC dispatch. Session lifecycle and header
 //! names match [`crate::openhuman::mcp::http_client::McpHttpClient`] so remote

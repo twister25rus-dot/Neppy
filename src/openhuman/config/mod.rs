@@ -1,4 +1,4 @@
-//! Configuration management for the OpenHuman core.
+//! Configuration management for the Neppy core.
 //!
 //! This module serves as the primary gateway for all configuration-related functionality.
 //! It re-exports types and functions from submodules to provide a unified API for:

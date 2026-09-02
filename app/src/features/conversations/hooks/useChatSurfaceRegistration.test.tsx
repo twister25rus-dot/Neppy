@@ -1,7 +1,7 @@
 /**
  * The write half of the assistant-ui seam.
  *
- * `useOpenHumanExternalStore`'s `onNew` throws when no surface owns the thread,
+ * `useNeppyExternalStore`'s `onNew` throws when no surface owns the thread,
  * so these tests are what make the runtime's action API real: they pin that the
  * chat surface claims its thread, releases it, hands it over on a thread switch,
  * and that a turn appended through the runtime lands on the surface's own send

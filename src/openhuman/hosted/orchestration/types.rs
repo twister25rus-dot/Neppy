@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 pub const SESSION_ENVELOPE_VERSION_V1: &str = "tinyplace.harness.session.v1";
 
 /// Sentinel counterpart for a **local** Master-chat cycle — the human asking the
-/// OpenHuman agent itself (W2), as opposed to a real external peer. When the wake
+/// Neppy agent itself (W2), as opposed to a real external peer. When the wake
 /// graph sees this as the counterpart it must NOT send an outbound tiny.place DM;
 /// the reply belongs in the Master window. Contains a `:` so it can never collide
 /// with a real base58 tiny.place address.

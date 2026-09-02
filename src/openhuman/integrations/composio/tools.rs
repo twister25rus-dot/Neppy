@@ -182,7 +182,7 @@ fn empty_uncurated_toolkits_message(toolkits: &[String]) -> Option<String> {
         .join(", ");
     Some(format!(
         "composio_list_tools: no agent-ready actions are available for toolkit(s) {names}. \
-         These integrations can be connected, but OpenHuman does not yet ship curated agent \
+         These integrations can be connected, but Neppy does not yet ship curated agent \
          tool catalogs for them. Use a supported toolkit such as Google Drive or Google Sheets \
          for now, or try again after catalog support lands."
     ))

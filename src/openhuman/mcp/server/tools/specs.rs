@@ -15,7 +15,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
         McpToolSpec {
             name: "core.list_tools",
             title: "List Core Tools",
-            description: "List the live core agent tool catalog that OpenHuman exposes to its orchestrator session.",
+            description: "List the live core agent tool catalog that Neppy exposes to its orchestrator session.",
             rpc_method: None,
             input_schema: no_args_schema(),
             annotations: read_only_local_annotations(),
@@ -23,7 +23,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
         McpToolSpec {
             name: "core.tool_instructions",
             title: "Get Tool Instructions",
-            description: "Emit the markdown tool-use instructions block that OpenHuman injects into prompt-guided agents.",
+            description: "Emit the markdown tool-use instructions block that Neppy injects into prompt-guided agents.",
             rpc_method: None,
             input_schema: no_args_schema(),
             annotations: read_only_local_annotations(),
@@ -39,7 +39,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
         McpToolSpec {
             name: "agent.run_subagent",
             title: "Run Subagent",
-            description: "Run a registered OpenHuman sub-agent directly from the core and return its final response.",
+            description: "Run a registered Neppy sub-agent directly from the core and return its final response.",
             rpc_method: None,
             input_schema: json!({
                 "type": "object",
@@ -71,7 +71,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
         McpToolSpec {
             name: "memory.search",
             title: "Search Memory",
-            description: "Keyword-search OpenHuman's local memory tree and return matching chunks ordered by recency.",
+            description: "Keyword-search Neppy's local memory tree and return matching chunks ordered by recency.",
             rpc_method: Some("openhuman.memory_tree_search"),
             input_schema: query_schema("Substring to match against stored memory chunks."),
             annotations: read_only_local_annotations(),
@@ -175,7 +175,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
 }
 
 /// Annotation preset for the read-only, closed-world tools that just read
-/// OpenHuman's local memory tree or agent registry. The MCP spec defaults are
+/// Neppy's local memory tree or agent registry. The MCP spec defaults are
 /// `readOnlyHint: false` / `openWorldHint: true`, so both fields must be set
 /// explicitly to communicate the actual shape to clients. Destructive and
 /// idempotent hints are deliberately omitted — per the spec they are
@@ -188,7 +188,7 @@ pub fn read_only_local_annotations() -> Value {
 }
 
 /// Annotation preset for the MCP write tools (`memory.store`, `memory.note`,
-/// `tree.tag`) that upsert documents into OpenHuman's local memory tree.
+/// `tree.tag`) that upsert documents into Neppy's local memory tree.
 /// Writes are keyed deterministically (slug-from-title, `mcp-note-<chunk_id>`,
 /// `mcp-tag-<chunk_id>`) so repeating a call with identical arguments yields
 /// the same stored state — `idempotentHint: true`. The upsert can replace a
@@ -208,12 +208,12 @@ pub fn searxng_tool_spec() -> McpToolSpec {
     McpToolSpec {
         name: "searxng_search",
         title: "SearXNG Search",
-        description: "Search the configured self-hosted SearXNG instance and return normalized title, URL, snippet, and source results. Requires searxng.enabled=true in OpenHuman config.",
+        description: "Search the configured self-hosted SearXNG instance and return normalized title, URL, snippet, and source results. Requires searxng.enabled=true in Neppy config.",
         rpc_method: Some("openhuman.tools_searxng_search"),
         input_schema: searxng_search_schema(),
         // SearXNG queries an external (self-hosted but network-reachable)
         // search engine: read-only (no state mutation), open-world (results
-        // come from outside OpenHuman). Per spec, destructive/idempotent
+        // come from outside Neppy). Per spec, destructive/idempotent
         // hints are meaningful only when readOnlyHint=false, so omit them.
         annotations: json!({
             "readOnlyHint": true,

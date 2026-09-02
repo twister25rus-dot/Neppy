@@ -103,10 +103,10 @@ make_sharun_appdir() {
   printf 'Interpreter not found!' >> "$appdir/sharun"
   chmod +x "$appdir/sharun"
   ln "$appdir/sharun" "$appdir/AppRun"
-  ln "$appdir/sharun" "$appdir/bin/OpenHuman"
+  ln "$appdir/sharun" "$appdir/bin/Neppy"
 
-  cp "$HOST_ELF" "$appdir/shared/bin/OpenHuman"
-  chmod +x "$appdir/shared/bin/OpenHuman"
+  cp "$HOST_ELF" "$appdir/shared/bin/Neppy"
+  chmod +x "$appdir/shared/bin/Neppy"
 }
 ```
 
@@ -318,8 +318,8 @@ Add explicit released-layout assertions:
 ```bash
 [ "$fixture/AppRun" -ef "$fixture/sharun" ] \
   || fail "AppRun fixture is not hard-linked to sharun"
-[ "$fixture/bin/OpenHuman" -ef "$fixture/sharun" ] \
-  || fail "bin/OpenHuman fixture is not hard-linked to sharun"
+[ "$fixture/bin/Neppy" -ef "$fixture/sharun" ] \
+  || fail "bin/Neppy fixture is not hard-linked to sharun"
 is_executable_elf "$fixture/AppRun" \
   || fail "released-style AppRun fixture is not ELF"
 uses_sharun_launcher "$fixture" \
@@ -460,8 +460,8 @@ smoke_extracted_apprun "$appdir" "$foreign_cwd" "$log_file"
 `validate_extracted_appdir` is the unit-test seam; it must not extract or launch
 anything. Build a complete fixture with:
 
-- hard-linked ELF `AppRun`, `sharun`, and `bin/OpenHuman`;
-- executable ELF `shared/bin/OpenHuman`;
+- hard-linked ELF `AppRun`, `sharun`, and `bin/Neppy`;
+- executable ELF `shared/bin/Neppy`;
 - `shared/lib/lib.path` containing `+`;
 - `shared/lib/anylinux.so`;
 - `shared/lib/libxdo.so.3`;
@@ -484,9 +484,9 @@ assert rejection when:
 - `anylinux.so` is absent;
 - `libxdo.so.3` is absent;
 - `libcef.so` is absent;
-- `shared/bin/OpenHuman` is absent or is not ELF;
+- `shared/bin/Neppy` is absent or is not ELF;
 - `AppRun` is neither the same inode nor byte-equivalent to `sharun`;
-- `bin/OpenHuman` is neither the same inode nor byte-equivalent to `sharun`;
+- `bin/Neppy` is neither the same inode nor byte-equivalent to `sharun`;
 - an ELF RPATH contains
   `/home/runner/work/openhuman/openhuman/shared/lib`;
 - an ELF RPATH contains `/__w/openhuman/openhuman/shared/lib`;
@@ -494,7 +494,7 @@ assert rejection when:
 - the real app's `NEEDED` list lacks `libcef.so`.
 
 For equivalent launcher support, copy rather than hard-link `sharun` to
-`AppRun` and `bin/OpenHuman`; byte-identical executable copies must pass. This
+`AppRun` and `bin/Neppy`; byte-identical executable copies must pass. This
 covers a repacker that preserves launcher contents but not hard-link metadata.
 
 Add a source-order regression that invokes a stub validator from
@@ -574,8 +574,8 @@ Implement `validate_extracted_appdir "$appdir"` as follows:
 1. Print the extracted path and the normalized `lib.path` contents with each
    line prefixed for readable CI logs.
 2. Require `uses_sharun_launcher "$appdir"`.
-3. Require ELF executables at `AppRun`, `sharun`, `bin/OpenHuman`, and
-   `shared/bin/OpenHuman`.
+3. Require ELF executables at `AppRun`, `sharun`, `bin/Neppy`, and
+   `shared/bin/Neppy`.
 4. For both launcher aliases, accept either `[ alias -ef sharun ]` or
    `cmp -s alias sharun`; reject anything else.
 5. Call `validate_sharun_lib_path` and
@@ -583,7 +583,7 @@ Implement `validate_extracted_appdir "$appdir"` as follows:
 6. Add `anylinux.so` to the required-library contract in
    `validate_appimage_required_libs`; its missing diagnostic must identify the
    preload library separately from the existing libxdo/CEF diagnostics.
-7. Run `patchelf --print-needed "$appdir/shared/bin/OpenHuman"` and require each
+7. Run `patchelf --print-needed "$appdir/shared/bin/Neppy"` and require each
    whitespace-delimited name in
    `${APPIMAGE_EXPECTED_NEEDED:-libxdo.so.3 libcef.so}` as an exact full line.
    Print the NEEDED list before checking it.
@@ -612,7 +612,7 @@ Implement `validate_extracted_appdir "$appdir"` as follows:
 2. Print the AppDir and caller CWD.
 3. Create isolated `home`, `config`, `data`, and `cache` directories beneath
    the temporary root so the release smoke cannot read or mutate the runner's
-   real OpenHuman state.
+   real Neppy state.
 4. Launch from `$foreign_cwd` with:
 
    ```bash
@@ -887,7 +887,7 @@ Run the reusable desktop build on an amd64 Ubuntu runner. The log from
 - final extracted AppDir path;
 - caller working directory outside that AppDir;
 - normalized `lib.path` containing `+` entries only;
-- `shared/bin/OpenHuman` NEEDED entries;
+- `shared/bin/Neppy` NEEDED entries;
 - no CI/build-machine RPATHs;
 - presence of `anylinux.so`, `libxdo.so.3`, and `libcef.so`;
 - timeout status `124`, documented as the expected live-GUI boundary;

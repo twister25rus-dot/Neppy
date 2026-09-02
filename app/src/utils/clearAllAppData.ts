@@ -1,6 +1,6 @@
 import { persistor } from '../store';
 import {
-  resetOpenHumanDataAndRestartCore,
+  resetNeppyDataAndRestartCore,
   restartApp,
   scheduleCefProfilePurge,
 } from './tauriCommands';
@@ -109,7 +109,7 @@ export const clearAllAppData = async ({
   //    fully intact. That marker/ordering gap is the root cause of #4950
   //    ("Clear App Data does nothing"). Passing the id the caller already holds
   //    pins the deletion to the correct user regardless of marker state.
-  await resetOpenHumanDataAndRestartCore(userId);
+  await resetNeppyDataAndRestartCore(userId);
 
   // 4. Purge redux-persist + browser storage. `persistor.purge()` wipes the
   //    persisted backend; `clearUserScopedStorage` removes only the active

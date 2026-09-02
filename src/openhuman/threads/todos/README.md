@@ -1,13 +1,13 @@
 # todos
 
-Compatibility surface for OpenHuman task-board callers.
+Compatibility surface for Neppy task-board callers.
 
 The task-board model and behavior are owned by
 `tinyagents::graph::todos`: types, normalization, markdown rendering, CRUD,
 plan decisions, session links, the single-`in_progress` invariant, atomic
 claims, durable storage, and the in-memory scratch board.
 
-OpenHuman keeps this module to preserve app-specific integration:
+Neppy keeps this module to preserve app-specific integration:
 
 - `ops.rs` maps `BoardLocation` onto TinyAgents stores, preserves the optional
   `threadId` snapshot shape used by scratch callers, and emits

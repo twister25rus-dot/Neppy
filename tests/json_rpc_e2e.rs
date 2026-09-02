@@ -1,6 +1,6 @@
 //! HTTP JSON-RPC integration tests against a real axum stack and a mock upstream API.
 //!
-//! Isolates config under a temp `HOME` so auth profiles and the OpenHuman provider resolve
+//! Isolates config under a temp `HOME` so auth profiles and the Neppy provider resolve
 //! the same state directory. Run with: `cargo test --test json_rpc_e2e`
 
 use std::collections::VecDeque;
@@ -10846,7 +10846,7 @@ async fn port_conflict_recovery_core_starts_on_fallback_port_e2e() {
     // ── 2. pick_listen_port should fall back to 7789–7798 ────────────────
     let pick_result = pick_listen_port(7788)
         .await
-        .expect("pick_listen_port must succeed when port is occupied by non-OpenHuman process");
+        .expect("pick_listen_port must succeed when port is occupied by non-Neppy process");
     assert!(
         pick_result.fallback_from.is_some(),
         "expected fallback_from to be Some(7788) when preferred port is occupied, got None"

@@ -93,7 +93,7 @@ export function nodeKindIcon(kind: NodeKind | string): IconType {
  * exists solely to say so once, here, instead of at three call sites.
  *
  * `icon` overrides the per-kind lookup for nodes that need a distinct glyph
- * without a distinct `NodeKind` — today only the native OpenHuman tool, which
+ * without a distinct `NodeKind` — today only the native Neppy tool, which
  * is a `tool_call` but reads as one of the assistant's own capabilities.
  */
 export function NodeKindGlyph({

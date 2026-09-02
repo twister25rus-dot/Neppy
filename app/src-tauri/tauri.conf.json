@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "OpenHuman",
+        "title": "Neppy",
         "width": 1280,
         "height": 900,
         "visible": false,

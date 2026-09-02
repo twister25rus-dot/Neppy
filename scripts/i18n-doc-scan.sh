@@ -1,9 +1,9 @@
 #!/bin/bash
-# i18n-doc-scan.sh - OpenHuman GitBook 中文文档问题扫描
+# i18n-doc-scan.sh - Neppy GitBook 中文文档问题扫描
 
 set -e
 
-echo "=== OpenHuman i18n 文档扫描 ==="
+echo "=== Neppy i18n 文档扫描 ==="
 echo ""
 
 # 1. 未本地化的内部链接

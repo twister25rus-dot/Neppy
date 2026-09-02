@@ -13,7 +13,7 @@
  * failures when the UI wires correctly through core RPC.
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateToSkills } from '../helpers/shared-flows';
@@ -59,7 +59,7 @@ describe('Skill lifecycle smoke', () => {
     // uses openhuman.flows_list (not a mock-backend HTTP call) since the
     // QuickJS skills runtime was removed. We probe it here as the
     // authoritative oracle that the data-fetch path is wired.
-    const rpcResult = await callOpenhumanRpc('openhuman.flows_list', {});
+    const rpcResult = await callNeppyRpc('openhuman.flows_list', {});
     expect(rpcResult.ok).toBe(true);
   });
 });

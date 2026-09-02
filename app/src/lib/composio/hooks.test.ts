@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockListToolkits = vi.fn();
 const mockListConnections = vi.fn();
 const mockListAgentReadyToolkits = vi.fn();
-const mockOpenhumanComposioGetMode = vi.fn();
+const mockNeppyComposioGetMode = vi.fn();
 let sessionToken = 'jwt-abc';
 
 vi.mock('./composioApi', () => ({
@@ -23,7 +23,7 @@ vi.mock('../../utils/tauriCommands', async () => {
   const actual = await vi.importActual<typeof import('../../utils/tauriCommands')>(
     '../../utils/tauriCommands'
   );
-  return { ...actual, openhumanComposioGetMode: () => mockOpenhumanComposioGetMode() };
+  return { ...actual, openhumanComposioGetMode: () => mockNeppyComposioGetMode() };
 });
 
 describe('useComposioIntegrations', () => {
@@ -34,7 +34,7 @@ describe('useComposioIntegrations', () => {
     // so each test exercises the mocked fetch instead of a prior test's cache.
     window.localStorage.clear();
     sessionToken = 'jwt-abc';
-    mockOpenhumanComposioGetMode.mockResolvedValue({
+    mockNeppyComposioGetMode.mockResolvedValue({
       result: { mode: 'backend', api_key_set: true },
       logs: [],
     });
@@ -271,7 +271,7 @@ describe('useComposioIntegrations', () => {
 
   it('skips toolkit fetch and polling for local sessions without a composio api key', async () => {
     sessionToken = 'header.payload.local';
-    mockOpenhumanComposioGetMode.mockResolvedValue({
+    mockNeppyComposioGetMode.mockResolvedValue({
       result: { mode: 'direct', api_key_set: false },
       logs: [],
     });

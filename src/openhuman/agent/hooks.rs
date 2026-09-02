@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-/// Post-turn hooks supplied by a process embedding OpenHuman.
+/// Post-turn hooks supplied by a process embedding Neppy.
 static EMBEDDER_POST_TURN_HOOKS: std::sync::LazyLock<std::sync::Mutex<Vec<Arc<dyn PostTurnHook>>>> =
     std::sync::LazyLock::new(|| std::sync::Mutex::new(Vec::new()));
 
@@ -129,7 +129,7 @@ pub trait PostTurnHook: Send + Sync {
     async fn on_turn_complete(&self, ctx: &TurnContext) -> anyhow::Result<()>;
 }
 
-/// The two tool lifecycle moments OpenHuman exposes to embedding hosts.
+/// The two tool lifecycle moments Neppy exposes to embedding hosts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ToolHookEvent {
     /// Immediately before the selected tool executes.
@@ -153,7 +153,7 @@ pub struct ToolHookContext {
     pub call_id: String,
     /// The registered tool name.
     pub tool_name: String,
-    /// Arguments after OpenHuman's recovery/normalization middleware.
+    /// Arguments after Neppy's recovery/normalization middleware.
     pub arguments: serde_json::Value,
     /// Whether a completed tool succeeded; absent before execution.
     pub success: Option<bool>,

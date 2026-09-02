@@ -7,7 +7,7 @@ import {
   showNativeNotification,
 } from '../../lib/nativeNotifications/tauriBridge';
 import { isTauri } from '../../utils/tauriCommands/common';
-import OpenhumanLinkModal, { OPENHUMAN_LINK_EVENT } from '../OpenhumanLinkModal';
+import NeppyLinkModal, { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
 
 vi.mock('../../utils/tauriCommands/common', () => ({ isTauri: vi.fn(() => false) }));
 
@@ -17,7 +17,7 @@ vi.mock('../../lib/nativeNotifications/tauriBridge', () => ({
   showNativeNotification: vi.fn(),
 }));
 
-describe('OpenhumanLinkModal notifications test flow', () => {
+describe('NeppyLinkModal notifications test flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getNotificationPermissionState).mockResolvedValue('prompt');
@@ -36,7 +36,7 @@ describe('OpenhumanLinkModal notifications test flow', () => {
     vi.mocked(ensureNotificationPermission).mockResolvedValue(true);
     vi.mocked(showNativeNotification).mockResolvedValue({ delivered: true });
 
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openNotificationsModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Send test notification' }));
@@ -56,7 +56,7 @@ describe('OpenhumanLinkModal notifications test flow', () => {
     vi.mocked(ensureNotificationPermission).mockResolvedValue(false);
     vi.mocked(getNotificationPermissionState).mockResolvedValue('denied');
 
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openNotificationsModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Send test notification' }));
@@ -77,7 +77,7 @@ describe('OpenhumanLinkModal notifications test flow', () => {
       error: 'notification show failed: test error',
     });
 
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openNotificationsModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Send test notification' }));
@@ -100,7 +100,7 @@ describe('OpenhumanLinkModal notifications test flow', () => {
       .mockResolvedValueOnce('granted');
     vi.mocked(showNativeNotification).mockResolvedValue({ delivered: true });
 
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openNotificationsModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Send test notification' }));

@@ -22,7 +22,7 @@ impl Tool for McpListServersTool {
     }
 
     fn description(&self) -> &str {
-        "List named remote MCP servers registered in OpenHuman core. Use this before browsing tools on a specific MCP server."
+        "List named remote MCP servers registered in Neppy core. Use this before browsing tools on a specific MCP server."
     }
 
     fn parameters_schema(&self) -> Value {

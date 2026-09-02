@@ -23,7 +23,7 @@ import { cn } from '../../lib/cn';
  * The app shell's sidebar, as a primitive.
  *
  * Ported from shadcn's `sidebar` (provider + collapsible column + trigger +
- * menu primitives) but hand-authored against Radix and the OpenHuman token
+ * menu primitives) but hand-authored against Radix and the Neppy token
  * scale, and shaped to what `components/layout/shell/` actually does rather
  * than to shadcn's demo. Three differences are deliberate:
  *

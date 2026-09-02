@@ -4,4 +4,4 @@
  * /chat with something to respond to.
  */
 export const TOUR_WELCOME_MESSAGE =
-  "Hey! Welcome to OpenHuman 👋 You just finished setting up, and I'm here whenever you need me. Ask me anything, get summaries from your connected apps, or just say hi — what would you like to explore first?";
+  "Hey! Welcome to Neppy 👋 You just finished setting up, and I'm here whenever you need me. Ask me anything, get summaries from your connected apps, or just say hi — what would you like to explore first?";

@@ -121,7 +121,7 @@ export default function MeshGradient() {
 
     // Pause/resume the animation as the window gains or loses visibility/focus
     // (and when the reduced-motion preference flips), so it only ever burns
-    // cycles while the user is actually looking at a focused OpenHuman window.
+    // cycles while the user is actually looking at a focused Neppy window.
     const onPlayStateChange = () => applyPlayState();
     document.addEventListener('visibilitychange', onPlayStateChange);
     window.addEventListener('focus', onPlayStateChange);

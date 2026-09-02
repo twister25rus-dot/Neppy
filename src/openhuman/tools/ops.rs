@@ -277,7 +277,7 @@ pub fn all_tools_with_runtime(
         Box::new(DetectToolsTool::new()),
         Box::new(InstallToolTool::new(security.clone())),
         // Orchestration session-history read tools — browse persisted
-        // OpenHuman↔agent transcripts. Read-only; workspace-internal store access.
+        // Neppy↔agent transcripts. Read-only; workspace-internal store access.
         Box::new(
             crate::openhuman::hosted::orchestration::tools::ListSessionsTool::new(config.clone()),
         ),
@@ -842,7 +842,7 @@ pub fn all_tools_with_runtime(
         root_config.curl.timeout_secs,
     )));
 
-    // gitbooks — answers questions about OpenHuman by calling the
+    // gitbooks — answers questions about Neppy by calling the
     // GitBook MCP server. Two tools mirroring the upstream MCP tools.
     // Gitbooks is modelled as a legacy MCP server (`McpServerRegistry`), so it
     // honours the same per-profile `mcp_allowlist`: a profile that scopes its

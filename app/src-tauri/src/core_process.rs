@@ -6,7 +6,7 @@
 //!
 //! Stale-listener policy (see issue #1130): if something is already listening
 //! on the configured port when `ensure_running` runs, we probe `GET /` to see
-//! whether it is an OpenHuman core. If it is, we treat it as a stale process
+//! whether it is an Neppy core. If it is, we treat it as a stale process
 //! left behind by a previous build/dev session and proactively terminate it
 //! (graceful signal, then a force-kill that *revalidates* the pid is still
 //! the same listener — guards against PID reuse if the original exits inside
@@ -140,7 +140,7 @@ impl CoreProcessHandle {
         // us — return Ok without identifying or taking over. Without this,
         // a second `start_core_process` call (e.g. HMR re-mounting the boot
         // gate) sees its own port as bound, classifies the listener as
-        // "stale OpenHuman", and walks into the SIGTERM/SIGKILL takeover
+        // "stale Neppy", and walks into the SIGTERM/SIGKILL takeover
         // path against itself. (#1130 takeover is meant to recover from
         // *external* leftover binaries, not our own in-process spawn.)
         {
@@ -169,7 +169,7 @@ impl CoreProcessHandle {
             // call (from BootCheckGate re-render, React StrictMode mount, or
             // any double-invoke of `start_core_process`) hits the
             // `identify_listener` path, identifies the listener as
-            // OpenHuman, calls `takeover_stale_listener`, and aborts with
+            // Neppy, calls `takeover_stale_listener`, and aborts with
             // "stale-listener pid <self> matches the Tauri host pid;
             // refusing to self-terminate". (#1316 introduced the
             // frontend-driven `start_core_process` invoke without
@@ -196,9 +196,9 @@ impl CoreProcessHandle {
             }
 
             match identify_listener(self.preferred_port).await {
-                ListenerKind::OpenHuman => {
+                ListenerKind::Neppy => {
                     log::warn!(
-                        "[core] found stale OpenHuman listener on port {} — taking over (issue #1130)",
+                        "[core] found stale Neppy listener on port {} — taking over (issue #1130)",
                         self.preferred_port
                     );
                     self.takeover_stale_listener().await?;
@@ -207,7 +207,7 @@ impl CoreProcessHandle {
                 ListenerKind::Unknown { reason } => {
                     if is_expected_port_clash(&reason) {
                         log::warn!(
-                            "[core] preferred RPC port {} is occupied by non-OpenHuman listener ({reason}); attempting fallback bind range",
+                            "[core] preferred RPC port {} is occupied by non-Neppy listener ({reason}); attempting fallback bind range",
                             self.preferred_port
                         );
                     } else {
@@ -486,7 +486,7 @@ impl CoreProcessHandle {
 
     /// Identify the OS pid currently bound to our port and terminate it,
     /// then wait for the port to free. Used when the listener has been
-    /// fingerprinted as an OpenHuman core (via `GET /`) so killing it is safe.
+    /// fingerprinted as an Neppy core (via `GET /`) so killing it is safe.
     async fn takeover_stale_listener(&self) -> Result<(), String> {
         let port = self.preferred_port;
         let pid = match find_pid_on_port(port) {
@@ -508,7 +508,7 @@ impl CoreProcessHandle {
             ));
         }
         log::warn!(
-            "[core] terminating stale OpenHuman process pid={pid} on port {} (issue #1130)",
+            "[core] terminating stale Neppy process pid={pid} on port {} (issue #1130)",
             port
         );
         if let Err(e) = kill_pid_term(pid) {
@@ -693,7 +693,7 @@ impl CoreProcessHandle {
     }
 }
 
-/// A non-OpenHuman process holding the core RPC port. Surfaced to the frontend
+/// A non-Neppy process holding the core RPC port. Surfaced to the frontend
 /// so the user can see what to free, and so the consent-gated force-quit knows
 /// which pid the user agreed to terminate.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -715,7 +715,7 @@ pub struct RecoveryOutcome {
 }
 
 impl CoreProcessHandle {
-    /// Attempt to recover from a port conflict: reap stale OpenHuman processes,
+    /// Attempt to recover from a port conflict: reap stale Neppy processes,
     /// wait briefly for the port to free, then start the embedded core.
     ///
     /// Called from the `recover_port_conflict` Tauri command when the frontend's
@@ -751,7 +751,7 @@ impl CoreProcessHandle {
                 }
             }
             Err(err) => {
-                // Reaping stale OpenHuman processes didn't free the port, so a
+                // Reaping stale Neppy processes didn't free the port, so a
                 // foreign process is holding it. Identify it (name + pid) so the
                 // frontend can surface it and offer a consent-gated force-quit.
                 let port = self.preferred_port;
@@ -776,7 +776,7 @@ impl CoreProcessHandle {
     ///
     /// Re-validates that `expected_pid` still owns the port immediately before
     /// killing — closing the PID-reuse window and refusing if the owner changed,
-    /// the port is already free, or the owner is OpenHuman's own process.
+    /// the port is already free, or the owner is Neppy's own process.
     pub async fn force_quit_port_owner(&self, expected_pid: u32) -> RecoveryOutcome {
         let port = self.preferred_port;
         let self_pid = std::process::id();
@@ -888,8 +888,8 @@ async fn is_port_open(port: u16) -> bool {
 #[derive(Debug)]
 enum ListenerKind {
     /// `GET /` returned a JSON body with `"name": "openhuman"` — i.e. a
-    /// stale OpenHuman core process from a previous build/session.
-    OpenHuman,
+    /// stale Neppy core process from a previous build/session.
+    Neppy,
     /// Either the listener didn't speak HTTP, didn't respond, or returned
     /// a body that doesn't identify as openhuman.
     Unknown { reason: String },
@@ -933,7 +933,7 @@ async fn identify_listener(port: u16) -> ListenerKind {
     };
     if is_openhuman_root_body(&body) {
         log::info!("[core] listener on port {port} identified as openhuman core");
-        ListenerKind::OpenHuman
+        ListenerKind::Neppy
     } else {
         let preview: String = body.chars().take(80).collect();
         ListenerKind::Unknown {
@@ -1119,7 +1119,7 @@ fn validate_kill_target(
     match current_owner {
         None => Err("the port is no longer held by any process".to_string()),
         Some(pid) if pid == self_pid => Err(format!(
-            "refusing to terminate OpenHuman's own process (pid {pid})"
+            "refusing to terminate Neppy's own process (pid {pid})"
         )),
         // Defense-in-depth: low/kernel pids are never legitimate port owners and
         // must never be signalled, even if one slipped past `find_pid_on_port`.

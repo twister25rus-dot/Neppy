@@ -3,7 +3,7 @@
 //! The transport (Bot API driver, session store, pairing) now lives in
 //! `tinychannels::providers::telegram`; re-export it here so existing paths
 //! keep resolving. What stays are the host-coupled pieces that depend on the
-//! OpenHuman event bus, runtime context, and cross-channel calls:
+//! Neppy event bus, runtime context, and cross-channel calls:
 //! - [`remote_control`] — `/status /sessions /new` command handling (uses the
 //!   agent runtime context + web session invalidation).
 //! - [`bus`] — the `TelegramRemoteSubscriber` busy-state event handler.

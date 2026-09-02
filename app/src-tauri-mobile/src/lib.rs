@@ -1,4 +1,4 @@
-// OpenHuman mobile (iOS + Android) Tauri host.
+// Neppy mobile (iOS + Android) Tauri host.
 //
 // No CEF runtime, no Rust core sidecar, no desktop chrome. The React app
 // (built from `app/src/`) is loaded into a single WKWebView (iOS) /

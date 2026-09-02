@@ -1,6 +1,6 @@
 //! Business logic for the `profiles` RPC surface.
 //!
-//! Per the OpenHuman domain contract, controller handlers in [`super::schemas`]
+//! Per the Neppy domain contract, controller handlers in [`super::schemas`]
 //! stay thin (deserialize + delegate) and the real work — config loading,
 //! `agent_id` validation, and store mutation — lives here, returning the JSON
 //! payload the controller emits. The persistence itself is owned by

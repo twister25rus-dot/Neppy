@@ -7,7 +7,7 @@ Speech-to-text (STT) and text-to-speech (TTS) domain. Exposes the `openhuman.voi
 - Transcribe audio (file path, raw bytes, or base64) via whisper.cpp (local) or the hosted backend STT proxy, with optional LLM cleanup and hallucination filtering.
 - Synthesize speech via local Piper, the hosted ElevenLabs proxy, or third-party providers (OpenAI-compatible / Deepgram / ElevenLabs) keyed by slug.
 - Resolve effective STT/TTS providers from config and construct boxed `SttProvider` / `TtsProvider` trait objects (the factory).
-- Run a hotkey-driven dictation server: capture mic audio, gate on duration/silence/hallucination, transcribe, then either deliver via Socket.IO (when OpenHuman is focused) or paste into the active external app.
+- Run a hotkey-driven dictation server: capture mic audio, gate on duration/silence/hallucination, transcribe, then either deliver via Socket.IO (when Neppy is focused) or paste into the active external app.
 - Provide a core-side dictation hotkey listener that broadcasts press/release and transcription events to the Socket.IO bridge.
 - Synthesize agent replies with Oculus-15 viseme alignment for mascot lip-sync.
 - Persist STT/TTS provider selection and the voice provider registry into config.

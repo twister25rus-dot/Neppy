@@ -52,7 +52,7 @@ Use the benchmark script to measure retrieval performance:
 ./scripts/bench-memory-walk.sh
 
 # Custom queries
-./scripts/bench-memory-walk.sh --query "what did I discuss about OpenHuman?" --max-turns 15
+./scripts/bench-memory-walk.sh --query "what did I discuss about Neppy?" --max-turns 15
 
 # Custom content root
 ./scripts/bench-memory-walk.sh --content-root /path/to/memory_tree/content

@@ -52,7 +52,7 @@ export function useAuiThreadRunning(): boolean | undefined {
 /**
  * The two capabilities the external-store adapter does NOT implement.
  *
- * `useOpenHumanExternalStore` supplies `onNew` / `onCancel` only;
+ * `useNeppyExternalStore` supplies `onNew` / `onCancel` only;
  * it implements neither `onEdit` nor `setMessages`, which is what assistant-ui
  * requires for message editing and for the branch picker. The runtime reports
  * that faithfully, so this hook is the honest gate for those affordances rather
@@ -77,7 +77,7 @@ export function useAuiEditCapabilities(): { canEdit: boolean; canSwitchToBranch:
 /**
  * THE EDIT / BRANCH SEAM.
  *
- * When the core gains a branch model and `useOpenHumanExternalStore` grows
+ * When the core gains a branch model and `useNeppyExternalStore` grows
  * `onEdit` + `setMessages`, two affordances become renderable and both belong
  * inside `TranscriptRow` (the memoized per-turn component), NOT here:
  *

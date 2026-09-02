@@ -381,7 +381,7 @@ impl Agent {
         // "reasoning-v1" tier name to Anthropic would 404).
         //
         // When `reasoning_provider` is unset or `"cloud"`, the factory
-        // resolves to the primary cloud (OpenHuman by default), so the
+        // resolves to the primary cloud (Neppy by default), so the
         // baseline behaviour is identical to the legacy
         // `create_intelligent_routing_provider` path.
         //

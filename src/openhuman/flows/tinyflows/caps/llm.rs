@@ -1,4 +1,4 @@
-//! The `LlmProvider` capability, backed by OpenHuman's inference stack.
+//! The `LlmProvider` capability, backed by Neppy's inference stack.
 //!
 //! What an `agent` node falls back to when no agent runner is installed, and
 //! what a raw completion node uses directly.
@@ -17,7 +17,7 @@ use crate::openhuman::config::Config;
 use crate::openhuman::inference::provider::{create_chat_model_with_model_id, role_for_model_tier};
 use tinyagents::harness::model::ModelRequest;
 
-/// [`LlmProvider`] adapter over OpenHuman's inference stack
+/// [`LlmProvider`] adapter over Neppy's inference stack
 /// (`src/openhuman/inference/provider/`).
 ///
 /// The `agent` node is single-completion in tinyflows 0.2 (no tool-calling
@@ -35,12 +35,12 @@ use tinyagents::harness::model::ModelRequest;
 /// shape is no longer visible to consumers. A completion that doesn't parse
 /// still lets the agent node's `output_parser` sub-port coerce it via the
 /// schema auto-fix path before enveloping.
-pub struct OpenHumanLlm {
+pub struct NeppyLlm {
     pub config: Arc<Config>,
 }
 
 #[async_trait]
-impl LlmProvider for OpenHumanLlm {
+impl LlmProvider for NeppyLlm {
     async fn complete(&self, request: Value, conn: Option<&str>) -> Result<Value> {
         if let Some(c) = conn {
             // B1 does not resolve `connection_ref` to a specific BYOK account —

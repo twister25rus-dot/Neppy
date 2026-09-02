@@ -1,5 +1,5 @@
 //! Media generation domain — agent tools for image/video generation backed by
-//! GMI via the OpenHuman backend's `media_generation` provider.
+//! GMI via the Neppy backend's `media_generation` provider.
 //!
 //! The backend (`/agent-integrations/media-generation/*`) owns provider keys,
 //! billing, and the standardized contract; these tools submit a request, block

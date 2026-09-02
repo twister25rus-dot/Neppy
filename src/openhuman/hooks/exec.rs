@@ -281,8 +281,8 @@ fn truncate(text: &str, max_chars: usize) -> String {
 /// Ambient environment every hook receives, on top of the process environment.
 ///
 /// `CLAUDE_PROJECT_DIR` and `CURSOR_PROJECT_DIR` are set alongside the
-/// OpenHuman names so a script written for either host finds its project root
-/// without an OpenHuman-specific branch.
+/// Neppy names so a script written for either host finds its project root
+/// without an Neppy-specific branch.
 pub fn ambient_env(input: &HookInput) -> BTreeMap<String, String> {
     let mut env = BTreeMap::new();
     if let Some(root) = input.workspace_roots.first() {

@@ -100,7 +100,7 @@ impl EncryptionKey {
     }
 }
 
-/// Get the path to the OpenHuman data directory.
+/// Get the path to the Neppy data directory.
 /// If an active user is set, returns the user-scoped directory under the
 /// env-aware root returned by `default_root_openhuman_dir()`
 /// (for example `~/.openhuman/users/{user_id}` in production or
@@ -124,7 +124,7 @@ pub fn get_data_dir() -> Result<PathBuf, String> {
     Ok(data_dir)
 }
 
-/// Get the path to the encryption key file under the env-aware OpenHuman root
+/// Get the path to the encryption key file under the env-aware Neppy root
 /// (for example `~/.openhuman/encryption.key` or `~/.openhuman-staging/encryption.key`).
 fn get_key_file_path() -> Result<PathBuf, String> {
     Ok(get_data_dir()?.join("encryption.key"))

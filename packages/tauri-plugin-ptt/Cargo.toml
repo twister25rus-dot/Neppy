@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Push-to-talk plugin for Tauri v2 — iOS AVAudioEngine + Speech + TTS"
 license = "MIT"
-authors = ["OpenHuman"]
+authors = ["Neppy"]
 # Required by tauri_plugin::Builder::try_build — must match package.name.
 links = "tauri-plugin-ptt"
 

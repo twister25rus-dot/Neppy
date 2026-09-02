@@ -1,11 +1,11 @@
-//! Retriever facade over OpenHuman's recall path (issue #4249, workstream
+//! Retriever facade over Neppy's recall path (issue #4249, workstream
 //! 09-embeddings, steps 2 + 3).
 //!
 //! Step 1 landed [`ProviderEmbeddingModel`](super::ProviderEmbeddingModel), the
-//! adapter that re-exposes an OpenHuman `EmbeddingProvider` as the crate's
+//! adapter that re-exposes an Neppy `EmbeddingProvider` as the crate's
 //! provider-neutral [`EmbeddingModel`](TaEmbeddingModel). This module is the
 //! **retrieval seam** the harness recall path loads context through:
-//! [`recall_through_facade`] wraps OpenHuman's authoritative
+//! [`recall_through_facade`] wraps Neppy's authoritative
 //! [`Memory::recall`], projects each recalled document onto the crate's
 //! [`ScoredDoc`] shape, applies the CLAUDE.md `path_scope` dedupe rule, and
 //! emits [`AgentEvent::MemoryLoaded`] so retrieval becomes swappable and
@@ -16,20 +16,20 @@
 //! The migration plan's acceptance criterion is **recall-injection parity** —
 //! the injected `[Memory context]` / `[Cross-chat context]` blocks and the
 //! `collect_recall_citations` output must stay byte-identical to today. So the
-//! facade **wraps** [`Memory::recall`] (preserving OpenHuman's ranking / MMR /
+//! facade **wraps** [`Memory::recall`] (preserving Neppy's ranking / MMR /
 //! diversity engine verbatim) rather than replacing the ranking engine with a
 //! fresh [`Retriever`] over an [`InMemoryVectorStore`]. The concrete crate
 //! [`Retriever`] is still exposed here via [`build_retriever`] as the available,
 //! swap-in engine seam (exercised in tests), so a future step can flip the
 //! engine without touching the callers — but the live path returns the exact
-//! same `Vec<MemoryEntry>` OpenHuman's recall produced, in the same order.
+//! same `Vec<MemoryEntry>` Neppy's recall produced, in the same order.
 //!
 //! ## `path_scope` dedupe (CLAUDE.md)
 //!
 //! Per the project rule, *per-item IDs are dedupe keys only*; `path_scope` is
 //! the **stable collection scope**. The facade carries a derived `path_scope`
 //! into each [`ScoredDoc::metadata`] and collapses the projection by the
-//! per-item `id` key. Because OpenHuman recall returns unique ids within one
+//! per-item `id` key. Because Neppy recall returns unique ids within one
 //! result, this collapse is a no-op on real data — which is exactly what keeps
 //! the returned entries (and therefore the rendered recall block) byte-identical.
 //!
@@ -55,7 +55,7 @@ use crate::openhuman::memory::{Memory, MemoryEntry, RecallOpts};
 /// Process-global [`EventSink`] the facade emits [`AgentEvent::MemoryLoaded`]
 /// onto.
 ///
-/// OpenHuman assembles its recall/context block *before* the tinyagents
+/// Neppy assembles its recall/context block *before* the tinyagents
 /// [`RunContext`](tinyagents::harness::context::RunContext) (and its per-run
 /// `EventSink`) exist — the block is prepended to the user message that then
 /// seeds the harness turn. There is therefore no run-scoped sink in scope at
@@ -91,12 +91,12 @@ fn derive_path_scope(entry: &MemoryEntry) -> String {
     "global".to_string()
 }
 
-/// Project an OpenHuman [`MemoryEntry`] onto the crate [`ScoredDoc`] shape,
+/// Project an Neppy [`MemoryEntry`] onto the crate [`ScoredDoc`] shape,
 /// carrying the derived `path_scope` (and the identity fields the seam needs)
 /// into `metadata`.
 ///
 /// `score` maps the entry's optional relevance score (absent → `0.0`); the
-/// cosine-similarity range contract is preserved because OpenHuman scores are
+/// cosine-similarity range contract is preserved because Neppy scores are
 /// already normalised relevance values.
 fn entry_to_scored_doc(entry: &MemoryEntry) -> ScoredDoc {
     ScoredDoc {
@@ -115,7 +115,7 @@ fn entry_to_scored_doc(entry: &MemoryEntry) -> ScoredDoc {
 
 /// Apply the CLAUDE.md `path_scope` dedupe rule to a [`ScoredDoc`] projection:
 /// collapse by the per-item `id` key (the dedupe key), keeping the first
-/// occurrence so the ranked order OpenHuman produced is preserved. `path_scope`
+/// occurrence so the ranked order Neppy produced is preserved. `path_scope`
 /// rides along in each doc's `metadata` as the collection scope.
 fn dedupe_scored_docs(docs: Vec<ScoredDoc>) -> Vec<ScoredDoc> {
     let mut seen: HashSet<String> = HashSet::new();
@@ -127,7 +127,7 @@ fn dedupe_scored_docs(docs: Vec<ScoredDoc>) -> Vec<ScoredDoc> {
 /// Collapse recalled entries by the same per-item `id` dedupe key the
 /// [`ScoredDoc`] projection uses, preserving first-occurrence (ranked) order.
 ///
-/// OpenHuman recall returns unique ids within a single result, so this is a
+/// Neppy recall returns unique ids within a single result, so this is a
 /// no-op on real data — which is the property that keeps the facade's returned
 /// entries (and the rendered recall block) byte-identical to a direct
 /// `Memory::recall` call.
@@ -141,7 +141,7 @@ fn dedupe_entries_by_id(entries: Vec<MemoryEntry>) -> Vec<MemoryEntry> {
 
 /// Load recall context through the retrieval facade.
 ///
-/// Wraps OpenHuman's authoritative [`Memory::recall`] (ranking engine unchanged)
+/// Wraps Neppy's authoritative [`Memory::recall`] (ranking engine unchanged)
 /// and, additively:
 /// 1. projects each recalled document onto a crate [`ScoredDoc`] carrying its
 ///    derived `path_scope` (the swappable-engine seam);
@@ -172,7 +172,7 @@ pub(crate) async fn recall_through_facade<'a>(
 
     if !entries.is_empty() {
         // The seam is now event-visible: memory loading previously emitted zero
-        // `MemoryLoaded` events in OpenHuman.
+        // `MemoryLoaded` events in Neppy.
         memory_event_sink().emit(AgentEvent::MemoryLoaded);
     }
 
@@ -194,7 +194,7 @@ pub(crate) async fn recall_through_facade<'a>(
 /// seam.
 ///
 /// The live recall path deliberately does **not** run through this (it wraps
-/// [`Memory::recall`] to preserve OpenHuman's ranking engine, per the parity
+/// [`Memory::recall`] to preserve Neppy's ranking engine, per the parity
 /// acceptance criterion). This constructor exists so the engine is swappable
 /// without touching callers, and is exercised in tests to keep the seam live.
 #[allow(dead_code)] // Engine-swap seam; the live path wraps Memory::recall for parity (09.2).

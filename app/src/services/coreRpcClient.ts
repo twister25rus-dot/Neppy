@@ -165,7 +165,7 @@ export function classifyRpcError(
   // feature build), never a transient fault. Classified before the generic
   // arms so polling callers can stop instead of retrying forever (#5157).
   if (message.startsWith(UNKNOWN_METHOD_PREFIX)) return 'method_not_found';
-  // Confirmed OpenHuman session expiry — explicit markers from the backend/core.
+  // Confirmed Neppy session expiry — explicit markers from the backend/core.
   if (/Session expired|SESSION_EXPIRED/i.test(message)) return 'auth_expired';
   // Core-side "no backend session token" → the auth profile is gone but the
   // frontend may still hold a stale sessionToken from an optimistic post-login
@@ -176,7 +176,7 @@ export function classifyRpcError(
   // "session JWT required" covers the case where a prior 401 already cleared
   // the token and the very next RPC call finds no JWT in the store.
   if (/session jwt required/i.test(message)) return 'auth_expired';
-  // OpenHuman backend path 401s (via authed_json): "{METHOD} /path failed (401 Unauthorized)"
+  // Neppy backend path 401s (via authed_json): "{METHOD} /path failed (401 Unauthorized)"
   // The HTTP method prefix distinguishes these from downstream provider 401s.
   // Fix for issue #2286: only match when the message starts with an HTTP verb
   // followed by a path — this excludes "Discord API error:", "OpenAI API error:", etc.

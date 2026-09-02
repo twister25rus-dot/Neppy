@@ -1,7 +1,7 @@
 /**
  * In-app "Star us on GitHub" CTA (#5005).
  *
- * A subtle, dismissible card that nudges satisfied users to star the OpenHuman
+ * A subtle, dismissible card that nudges satisfied users to star the Neppy
  * repo without leaving the app. Deliberately non-intrusive: it blocks nothing,
  * lives inside Settings → About (a surface the user navigates to on purpose, so
  * it is never shown on first launch), and never reappears once the user stars

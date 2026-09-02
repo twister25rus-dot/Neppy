@@ -16,7 +16,7 @@ or bid. A user who wants to sell opens the Trading tab and finds a dead end.
 **Seller-side actions are web-only by design.** The tiny.place backend does not expose
 seller routes (create-listing, accept/reject-offer), and the vendored Rust SDK
 (`vendor/tinyplace/sdk/rust/src/api/marketplace.rs`) is explicitly a *"compatibility wrapper
-for marketplace endpoints used by OpenHuman"* — buyer-side only. Listing a handle and
+for marketplace endpoints used by Neppy"* — buyer-side only. Listing a handle and
 responding to offers happens on the tiny.place web app.
 
 This resolves #4920 not by building the full seller stack (SDK → core handler →

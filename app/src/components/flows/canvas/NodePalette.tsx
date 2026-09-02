@@ -2,7 +2,7 @@
  * NodePalette — the editable Workflow Canvas's insert palette (issue B5b.2 /
  * Phase 3a). Lists the tinyflows node kinds as {@link PaletteEntry}s grouped
  * into labelled sections (Triggers / Actions / Logic). `tool_call` splits into
- * two entries — an "App action" (Composio OAuth) and a "Tool" (native OpenHuman)
+ * two entries — an "App action" (Composio OAuth) and a "Tool" (native Neppy)
  * — so the two are distinct nodes in the palette. Two ways to add:
  *
  *  - **click** an entry → `onAdd(entry)` (the canvas drops it at a default

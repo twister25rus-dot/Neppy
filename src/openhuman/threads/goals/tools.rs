@@ -1,4 +1,4 @@
-//! OpenHuman `Tool` adapters for tinyagents' model-facing goal controls.
+//! Neppy `Tool` adapters for tinyagents' model-facing goal controls.
 //!
 //! These let the orchestrator (and any agent that allowlists them) read and
 //! drive the current thread's goal. Ownership is **asymmetric** (Codex parity):

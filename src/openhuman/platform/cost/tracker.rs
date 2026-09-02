@@ -54,7 +54,7 @@ impl CostTracker {
     /// Check if a request is within budget.
     ///
     /// Only **managed-route** spend is considered (#5016). The local `[cost]`
-    /// limits cap spend against OpenHuman credits; bring-your-own-key and
+    /// limits cap spend against Neppy credits; bring-your-own-key and
     /// local inference is billed by the user's own provider, so counting it
     /// here produced a phantom limit — a pure-BYOK user accrued locally
     /// *estimated* spend they were never charged for and got "You're out of
@@ -219,7 +219,7 @@ impl CostTracker {
 
     /// Get the **managed-route** monthly cost for a specific month — the
     /// portion of spend the local `[cost]` budget applies to (#5016). BYOK and
-    /// local inference is excluded because OpenHuman never bills for it.
+    /// local inference is excluded because Neppy never bills for it.
     pub fn get_managed_monthly_cost(&self, year: i32, month: u32) -> Result<f64> {
         let storage = self.lock_storage();
         storage.get_managed_cost_for_month(year, month)

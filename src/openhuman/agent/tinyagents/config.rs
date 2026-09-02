@@ -1,15 +1,15 @@
-//! Maps OpenHuman's config schema into the crate-owned
+//! Maps Neppy's config schema into the crate-owned
 //! [`tinyagents::harness::config`] structs.
 //!
 //! This is the host half of `docs/specs/plan-agents.md` Phase 3. The agent
 //! runtime is being made generic over its host, so it cannot read
 //! [`Config`] — instead the crate declares what it needs and this module is the
-//! single place OpenHuman's schema meets it. Mirrors the established
+//! single place Neppy's schema meets it. Mirrors the established
 //! `tinycortex::config::memory_config_from` precedent.
 //!
 //! # Why the mapping is split into three functions
 //!
-//! OpenHuman's model pins are not global. `Config::teams` is keyed by team name
+//! Neppy's model pins are not global. `Config::teams` is keyed by team name
 //! and `Config::agents` by delegate id, so "the model for this session" is only
 //! knowable once you know *which* agent is running. Folding all of that into
 //! one `session_config_from(&Config)` would force it to invent an answer.
@@ -25,7 +25,7 @@ use crate::openhuman::config::{
     AgentConfig, Config, DelegateAgentConfig, RequiredOutputContract, DEFAULT_MODEL,
 };
 
-/// Translates OpenHuman's free-form `agent.tool_dispatcher` string into the
+/// Translates Neppy's free-form `agent.tool_dispatcher` string into the
 /// crate enum.
 ///
 /// Unknown values fall back to [`ToolDispatcher::Auto`] with a warning rather

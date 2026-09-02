@@ -20,7 +20,7 @@ use crate::openhuman::config::Config;
 use crate::openhuman::inference::provider::{is_raw_passthrough_model, UsageInfo};
 
 /// Maps a `UsageInfo` (not `Serialize`) into a JSON value field-by-field, so
-/// [`OpenHumanLlm::complete`] can surface it in its response `Value` without
+/// [`NeppyLlm::complete`] can surface it in its response `Value` without
 /// requiring an upstream `Serialize` impl change.
 pub(crate) fn usage_to_json(usage: &Option<UsageInfo>) -> Value {
     match usage {
@@ -65,8 +65,8 @@ pub(crate) const INPUT_CONTEXT_MAX_LEN: usize = 50_000;
 /// Renders an agent-node's `config.input_context` (an explicit `=`-bound
 /// carrier for upstream data — see the module doc and
 /// `flows/agents/workflow_builder/prompt.md`) into the system-message text
-/// both completion paths ([`OpenHumanLlm::complete`] and
-/// [`OpenHumanAgentRunner::run_via_harness`]) prepend ahead of the node's own
+/// both completion paths ([`NeppyLlm::complete`] and
+/// [`NeppyAgentRunner::run_via_harness`]) prepend ahead of the node's own
 /// prompt/messages.
 ///
 /// Returns `None` when `input_context` is absent or resolved to `null` (an
@@ -135,7 +135,7 @@ pub(crate) fn structured_output_requested(request: &Value) -> bool {
     has_schema || json_format
 }
 
-/// Builds [`OpenHumanLlm::complete`]'s chat message list: the node's
+/// Builds [`NeppyLlm::complete`]'s chat message list: the node's
 /// `messages` array (when non-empty) or its `prompt` string as a single user
 /// message, with up to two leading messages prepended in this exact order
 /// when present — `input_context` (the upstream data, see

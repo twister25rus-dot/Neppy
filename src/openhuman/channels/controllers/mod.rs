@@ -5,7 +5,7 @@ mod definitions;
 mod ops;
 mod schemas;
 
-pub use backend::OpenHumanChannelBackend;
+pub use backend::NeppyChannelBackend;
 
 pub use definitions::{
     all_channel_definitions, find_channel_definition, AuthModeSpec, ChannelAuthMode,

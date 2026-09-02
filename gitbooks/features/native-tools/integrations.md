@@ -5,11 +5,11 @@ icon: plug
 
 # Third-party Integrations
 
-OpenHuman's agent can call into [119+ third-party services](../integrations/README.md) - Gmail, Notion, GitHub, Slack, Lark / Feishu, Stripe, Calendar, and the long tail - through a single proxied tool surface.
+Neppy's agent can call into [119+ third-party services](../integrations/README.md) - Gmail, Notion, GitHub, Slack, Lark / Feishu, Stripe, Calendar, and the long tail - through a single proxied tool surface.
 
 ## How it shows up to the agent
 
-Once you've connected a service via OAuth, its actions become callable tools. The agent doesn't need to know whether a tool talks to Gmail or to a local file - it just calls the tool, the proxy routes the request through the OpenHuman backend with your token, and the result comes back like any other tool output.
+Once you've connected a service via OAuth, its actions become callable tools. The agent doesn't need to know whether a tool talks to Gmail or to a local file - it just calls the tool, the proxy routes the request through the Neppy backend with your token, and the result comes back like any other tool output.
 
 A few examples of what becomes available:
 
@@ -26,7 +26,7 @@ Lark / Feishu currently has two surfaces: a native real-time channel for message
 
 ## Privacy boundary
 
-For Composio-proxied integrations, OpenHuman's core never calls any third-party API directly. Requests go through the OpenHuman backend, which handles OAuth tokens and rate limiting. Your tokens never sit on disk in plaintext on your machine, and the agent only sees the _results_ of tool calls, not the credentials. Native channels such as Lark / Feishu use their own local configuration and should be reviewed separately from the Composio OAuth boundary.
+For Composio-proxied integrations, Neppy's core never calls any third-party API directly. Requests go through the Neppy backend, which handles OAuth tokens and rate limiting. Your tokens never sit on disk in plaintext on your machine, and the agent only sees the _results_ of tool calls, not the credentials. Native channels such as Lark / Feishu use their own local configuration and should be reviewed separately from the Composio OAuth boundary.
 
 ## See also
 

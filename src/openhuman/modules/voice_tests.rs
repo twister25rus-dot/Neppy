@@ -162,7 +162,7 @@ fn the_registry_entry_matches_the_interface_this_client_calls() {
     );
 }
 
-/// Drive the real published module through OpenHuman's own module host.
+/// Drive the real published module through Neppy's own module host.
 ///
 /// `#[ignore]`d, and it must stay that way. The bus belongs to whichever
 /// runtime creates it, so two `#[tokio::test]`s that each load a module find

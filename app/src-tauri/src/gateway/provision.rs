@@ -323,7 +323,7 @@ fn candidate_port(reach: &Reach) -> u16 {
         }
     }
     // Draw from the ephemeral range rather than counting up from a fixed base:
-    // two OpenHuman instances against the same remote machine would otherwise
+    // two Neppy instances against the same remote machine would otherwise
     // collide on their first attempt every time, and again on their second.
     use rand::Rng as _;
     rand::rng().random_range(49_152..=65_535)

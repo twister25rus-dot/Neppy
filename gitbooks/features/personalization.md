@@ -1,13 +1,13 @@
 ---
 description: >-
-  How OpenHuman learns your communication style, identity, tooling, vetoes, and
+  How Neppy learns your communication style, identity, tooling, vetoes, and
   goals from everyday use, then surfaces them as ambient defaults in every reply.
 icon: brain
 ---
 
 # Personalization & Self-Learning
 
-OpenHuman gets to know you the way a good assistant would: not by asking you to fill in a settings form, but by paying attention. As you chat, connect accounts, and correct it, it quietly collects evidence about how you like to work, scores that evidence for stability, and promotes the durable signals into your **`PROFILE.md`** and into the system prompt of every future turn.
+Neppy gets to know you the way a good assistant would: not by asking you to fill in a settings form, but by paying attention. As you chat, connect accounts, and correct it, it quietly collects evidence about how you like to work, scores that evidence for stability, and promotes the durable signals into your **`PROFILE.md`** and into the system prompt of every future turn.
 
 Nothing is locked in from a single message. A preference has to keep showing up before it earns a place in your profile, and anything that fades stops being injected. You stay in control: the profile is a plain Markdown file you can edit, and you can pin or forget any learned fact.
 
@@ -102,7 +102,7 @@ On every turn the agent reads the Active facets and injects them as a compact **
 
 ## Optional LinkedIn enrichment
 
-During onboarding you can let OpenHuman bootstrap your identity from LinkedIn. The flow searches your connected Gmail for a `linkedin.com/in/...` profile URL, and (when available) scrapes the public profile, then compresses what it finds into `PROFILE.md` via the `learning_save_profile` step. It runs once, as a fire-and-forget pass. It is entirely opt-in and is skipped cleanly if no profile is found.
+During onboarding you can let Neppy bootstrap your identity from LinkedIn. The flow searches your connected Gmail for a `linkedin.com/in/...` profile URL, and (when available) scrapes the public profile, then compresses what it finds into `PROFILE.md` via the `learning_save_profile` step. It runs once, as a fire-and-forget pass. It is entirely opt-in and is skipped cleanly if no profile is found.
 
 ---
 

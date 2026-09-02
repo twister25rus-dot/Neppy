@@ -87,7 +87,7 @@ token budget. Ownership isolation is a storage predicate, not a post-search filt
 
 **Adopt:** one-slot binding; the recall/store/forget core triple; auto-recall/auto-capture as
 kernel-owned lifecycle hooks; per-call character/token budgets; isolation pushed into the query.
-**Reject:** the tool triple as the *whole* contract — OpenHuman's surface is an order of magnitude
+**Reject:** the tool triple as the *whole* contract — Neppy's surface is an order of magnitude
 larger (trees, diffs, goals, sources, sync, entities), which is exactly why capabilities must be
 negotiated rather than assumed. **Also reject:** provider-authored lifecycle hooks. In OpenClaw the
 plugin hooks the turn; here the kernel does, so policy cannot be bypassed by a driver.
@@ -378,7 +378,7 @@ see the revised M8 split in §8.
   of a concrete TinyCortex path. The crate never learns that JSON-RPC exists.
 - ❌ **Crate-owned RPC exposed through a host shim.** If `tinycortex` gains schemas/handlers and
   the host merely re-exports them, the dependency boundary inverts: the reusable engine now knows
-  OpenHuman's method names, error envelope, and policy vocabulary — and a second driver can no
+  Neppy's method names, error envelope, and policy vocabulary — and a second driver can no
   longer satisfy the same RPC surface, which defeats the whole point.
 
 The 51 controller schemas under `memory/schemas/` therefore **do not move**, even though they are

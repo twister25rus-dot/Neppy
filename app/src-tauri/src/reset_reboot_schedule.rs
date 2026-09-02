@@ -1,11 +1,11 @@
 //! Windows-only fallback for `reset_local_data` (issue #1615).
 //!
 //! When the in-process `remove_dir_all` step fails because a third-party
-//! process (anti-virus, file-indexer, sibling OpenHuman window) still holds
+//! process (anti-virus, file-indexer, sibling Neppy window) still holds
 //! an open handle inside the `.openhuman` tree, Windows returns
 //! `ERROR_SHARING_VIOLATION` (os error 32) / `ERROR_LOCK_VIOLATION` (33)
 //! and the user is stuck — see PR #2395 / #1811, which surface a "close all
-//! OpenHuman windows" prompt but cannot break a foreign lock.
+//! Neppy windows" prompt but cannot break a foreign lock.
 //!
 //! This module walks the still-present sub-tree depth-first and asks the
 //! Windows Session Manager to delete each entry at next boot via
@@ -23,7 +23,7 @@
 //! That is by design — Microsoft documents the elevation requirement on the
 //! `MOVEFILE_DELAY_UNTIL_REBOOT` flag — and the caller in `lib.rs` handles
 //! the failure path gracefully: it preserves the original lock error plus
-//! the schedule failure reason and falls back to the "close all OpenHuman
+//! the schedule failure reason and falls back to the "close all Neppy
 //! windows and try again" guidance from PR #2395 / #1811.
 
 #![cfg(target_os = "windows")]

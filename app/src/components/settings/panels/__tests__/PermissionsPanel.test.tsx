@@ -26,9 +26,9 @@ const autonomy = (overrides: Partial<AutonomySettings> = {}): AutonomySettings =
 });
 
 const agentPaths = (overrides: Partial<AgentPaths> = {}): AgentPaths => ({
-  action_dir: '/home/test/OpenHuman/projects',
+  action_dir: '/home/test/Neppy/projects',
   workspace_dir: '/home/test/.openhuman/users/u1/workspace',
-  projects_dir: '/home/test/OpenHuman/projects',
+  projects_dir: '/home/test/Neppy/projects',
   action_dir_source: 'default',
   ...overrides,
 });
@@ -116,13 +116,13 @@ describe('PermissionsPanel', () => {
 
   it('loads and displays the action_dir from the core', async () => {
     mockGetPaths.mockResolvedValue({
-      result: agentPaths({ action_dir: '/Users/sample/OpenHuman/projects' }),
+      result: agentPaths({ action_dir: '/Users/sample/Neppy/projects' }),
       logs: [],
     });
     renderWithProviders(<PermissionsPanel />);
     await waitFor(() => expect(mockGetPaths).toHaveBeenCalledTimes(1));
     expect(await screen.findByTestId('permissions-action-dir')).toHaveTextContent(
-      '/Users/sample/OpenHuman/projects'
+      '/Users/sample/Neppy/projects'
     );
   });
 
@@ -130,7 +130,7 @@ describe('PermissionsPanel', () => {
     mockGetPaths.mockRejectedValue(new Error('rpc unavailable'));
     renderWithProviders(<PermissionsPanel />);
     expect(await screen.findByTestId('permissions-action-dir')).toHaveTextContent(
-      '~/OpenHuman/projects'
+      '~/Neppy/projects'
     );
   });
 

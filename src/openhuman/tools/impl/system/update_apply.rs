@@ -1,5 +1,5 @@
 //! Tool: `update_apply` — orchestrated check → download → stage →
-//! restart of the OpenHuman core binary.
+//! restart of the Neppy core binary.
 //!
 //! Wraps [`crate::openhuman::platform::update::rpc::update_run`] so the LLM can
 //! finish an "update me to the latest version" intent in chat. The
@@ -74,7 +74,7 @@ impl Tool for UpdateApplyTool {
     }
 
     fn description(&self) -> &str {
-        "Download, verify, and stage the latest OpenHuman core binary, then \
+        "Download, verify, and stage the latest Neppy core binary, then \
          request a restart per the configured restart strategy. HIGH IMPACT — \
          replaces the running binary on disk and (under `self_replace`) \
          restarts the core process. ALWAYS confirm with the user via \

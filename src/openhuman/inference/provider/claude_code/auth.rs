@@ -7,7 +7,7 @@
 //!      *not* setting `ANTHROPIC_API_KEY`; the CLI then reads its own
 //!      credentials file.
 //!
-//! v1.1 will wire OpenHuman `AuthService` (auth-profiles.json) so an
+//! v1.1 will wire Neppy `AuthService` (auth-profiles.json) so an
 //! Anthropic key stored in settings is picked up automatically.
 //! Subscription / OAuth auth (Claude Pro/Max) deferred to v2.
 

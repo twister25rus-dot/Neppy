@@ -2,7 +2,7 @@
 //!
 //! Tests the core binary resolution paths introduced in PR #3:
 //! - OPENHUMAN_CORE_BIN env override
-//! - Packaged Linux paths (/usr/bin/openhuman-core, /usr/lib/OpenHuman/openhuman-core)
+//! - Packaged Linux paths (/usr/bin/openhuman-core, /usr/lib/Neppy/openhuman-core)
 //! - Staged sidecar detection in dev builds
 //! - Fallback to self-subcommand
 //!
@@ -131,10 +131,7 @@ fn core_bin_env_override_graceful_when_nonexistent() {
 #[test]
 fn core_bin_packaged_linux_paths_order() {
     // Document the expected search order for packaged Linux binaries
-    let expected_paths = [
-        "/usr/bin/openhuman-core",
-        "/usr/lib/OpenHuman/openhuman-core",
-    ];
+    let expected_paths = ["/usr/bin/openhuman-core", "/usr/lib/Neppy/openhuman-core"];
 
     // Verify these are valid absolute paths
     for path in &expected_paths {

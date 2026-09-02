@@ -1,8 +1,8 @@
 //! Host adapter for [`tinyagents::harness::host::LearningSink`] — the seam the
-//! generic agent runtime uses to hand a finished turn to OpenHuman's
+//! generic agent runtime uses to hand a finished turn to Neppy's
 //! self-learning subsystem.
 //!
-//! This is `docs/specs/plan-agents.md` Phase 4. OpenHuman already has a
+//! This is `docs/specs/plan-agents.md` Phase 4. Neppy already has a
 //! post-turn learning fan-out: [`crate::openhuman::agent::hooks::PostTurnHook`]
 //! implementations (`UserProfileHook`, `ToolTrackerHook`, `ReflectionHook`,
 //! `ToolMemoryCaptureHook`, `AgentExperienceCaptureHook`, `ArchivistHook`, …)
@@ -18,7 +18,7 @@
 //! This is the load-bearing mismatch. [`TurnSummary::tools_invoked`] carries a
 //! deduplicated list of tool *names* by design — the crate doc is explicit that
 //! arguments and results must never travel this path because the record is
-//! built to be persisted. OpenHuman's
+//! built to be persisted. Neppy's
 //! [`crate::openhuman::agent::hooks::ToolCallRecord`] is the opposite: it exists
 //! to carry `success`, `duration_ms`, and a sanitized `output_summary`, and
 //! every outcome-mining hook (`ToolTrackerHook`, `AgentExperienceCaptureHook`)
@@ -55,7 +55,7 @@
 //!
 //! **4. Errors are advisory.** The trait doc is emphatic that the turn is
 //! already committed and an `Err` must not roll it back. `fire_hooks` is
-//! infallible and non-blocking, so [`OpenHumanLearningSink::on_turn_complete`]
+//! infallible and non-blocking, so [`NeppyLearningSink::on_turn_complete`]
 //! always returns `Ok(())`; hook failures surface in the host log where they
 //! belong.
 //!
@@ -80,21 +80,21 @@ use crate::openhuman::agent::learning::{ToolTrackerHook, UserProfileHook};
 use crate::openhuman::config::LearningConfig;
 use crate::openhuman::memory::Memory;
 
-/// Adapts OpenHuman's [`PostTurnHook`] fan-out to the crate's
+/// Adapts Neppy's [`PostTurnHook`] fan-out to the crate's
 /// [`LearningSink`] capability.
 ///
 /// Holds the hook list rather than building it, because *which* hooks are
 /// installed is a composition decision the session builder already makes (see
 /// `agent/harness/session/builder/factory.rs`); duplicating that policy here
 /// would give the generic runtime a second, silently divergent hook set.
-/// [`OpenHumanLearningSink::from_learning_config`] is a convenience for the
+/// [`NeppyLearningSink::from_learning_config`] is a convenience for the
 /// hooks that need nothing but config and memory.
-pub struct OpenHumanLearningSink {
+pub struct NeppyLearningSink {
     /// Hooks fired, in parallel, for every completed turn.
     hooks: Vec<Arc<dyn PostTurnHook>>,
 }
 
-impl OpenHumanLearningSink {
+impl NeppyLearningSink {
     /// Wraps an already-composed hook list.
     ///
     /// An empty list is legal and turns the sink into a no-op. It is *not* the
@@ -114,7 +114,7 @@ impl OpenHumanLearningSink {
     ///
     /// `ReflectionHook` is *not* included: its constructor also needs an
     /// `Arc<Config>` and an optional `ChatModel` provider, which are session
-    /// composition concerns. Add it with [`OpenHumanLearningSink::with_hook`].
+    /// composition concerns. Add it with [`NeppyLearningSink::with_hook`].
     pub fn from_learning_config(config: LearningConfig, memory: Arc<dyn Memory>) -> Self {
         Self::new(vec![
             Arc::new(UserProfileHook::new(config.clone(), Arc::clone(&memory))),
@@ -135,7 +135,7 @@ impl OpenHumanLearningSink {
         self.hooks.len()
     }
 
-    /// Projects a crate [`TurnSummary`] onto OpenHuman's [`TurnContext`].
+    /// Projects a crate [`TurnSummary`] onto Neppy's [`TurnContext`].
     ///
     /// See the module doc for why `tool_calls` comes out empty. Kept associated
     /// and pure so the projection is testable without a runtime.
@@ -174,8 +174,8 @@ impl OpenHumanLearningSink {
 }
 
 #[async_trait]
-impl LearningSink for OpenHumanLearningSink {
-    /// Enqueues the turn onto OpenHuman's post-turn hook fan-out and returns.
+impl LearningSink for NeppyLearningSink {
+    /// Enqueues the turn onto Neppy's post-turn hook fan-out and returns.
     ///
     /// Always `Ok(())`. `fire_hooks` spawns each hook on the tokio runtime and
     /// logs its failure, so there is nothing fallible left to report — and the
@@ -253,7 +253,7 @@ mod tests {
 
     #[test]
     fn projection_carries_identity_and_text() {
-        let ctx = OpenHumanLearningSink::turn_context_from(&sample());
+        let ctx = NeppyLearningSink::turn_context_from(&sample());
         assert_eq!(ctx.user_message, "I prefer terse answers.");
         assert_eq!(ctx.assistant_response, "Understood.");
         assert_eq!(ctx.session_id.as_deref(), Some("thread-7"));
@@ -270,7 +270,7 @@ mod tests {
         // tool_effectiveness tallies start recording invented successes.
         let summary = sample();
         assert!(summary.used_tools(), "fixture must carry tool names");
-        let ctx = OpenHumanLearningSink::turn_context_from(&summary);
+        let ctx = NeppyLearningSink::turn_context_from(&summary);
         assert!(
             ctx.tool_calls.is_empty(),
             "no outcome data exists to build a ToolCallRecord from"
@@ -282,7 +282,7 @@ mod tests {
         // A blank agent id must not become `Some("")`, which would key hook
         // state on an empty string rather than falling back to a global bucket.
         let summary = TurnSummary::new("   ", "  ").with_text("hi", "hello");
-        let ctx = OpenHumanLearningSink::turn_context_from(&summary);
+        let ctx = NeppyLearningSink::turn_context_from(&summary);
         assert!(ctx.session_id.is_none());
         assert!(ctx.agent_id.is_none());
     }
@@ -290,7 +290,7 @@ mod tests {
     #[tokio::test]
     async fn on_turn_complete_dispatches_the_projected_context() {
         let (tx, mut rx) = mpsc::unbounded_channel();
-        let sink = OpenHumanLearningSink::new(vec![Arc::new(RecordingHook { tx })]);
+        let sink = NeppyLearningSink::new(vec![Arc::new(RecordingHook { tx })]);
         assert_eq!(sink.hook_count(), 1);
 
         sink.on_turn_complete(&sample()).await.expect("advisory Ok");
@@ -307,7 +307,7 @@ mod tests {
         // forbids surfacing a hook failure to the caller.
         let called = Arc::new(Mutex::new(false));
         let (tx, mut rx) = mpsc::unbounded_channel();
-        let sink = OpenHumanLearningSink::new(vec![
+        let sink = NeppyLearningSink::new(vec![
             Arc::new(FailingHook {
                 called: Arc::clone(&called),
             }),
@@ -323,7 +323,7 @@ mod tests {
 
     #[tokio::test]
     async fn an_empty_hook_list_is_a_successful_no_op() {
-        let sink = OpenHumanLearningSink::new(Vec::new());
+        let sink = NeppyLearningSink::new(Vec::new());
         assert_eq!(sink.hook_count(), 0);
         assert!(sink.on_turn_complete(&sample()).await.is_ok());
     }
@@ -333,7 +333,7 @@ mod tests {
         // The runtime stores this capability as `Option<Arc<dyn LearningSink>>`;
         // pin that the adapter is object-safe in that position.
         let (tx, mut rx) = mpsc::unbounded_channel();
-        let sink = OpenHumanLearningSink::new(Vec::new())
+        let sink = NeppyLearningSink::new(Vec::new())
             .with_hook(Arc::new(RecordingHook { tx }) as Arc<dyn PostTurnHook>);
         assert_eq!(sink.hook_count(), 1);
 
@@ -413,7 +413,7 @@ mod tests {
         // The point is the composition, not the hooks' own behaviour (which
         // they test themselves against their own mocks).
         let memory: Arc<dyn Memory> = Arc::new(InertMemory);
-        let sink = OpenHumanLearningSink::from_learning_config(LearningConfig::default(), memory);
+        let sink = NeppyLearningSink::from_learning_config(LearningConfig::default(), memory);
         assert_eq!(sink.hook_count(), 2, "user profile + tool tracker");
         // Learning is off by default, so both hooks self-gate to a no-op — the
         // call must still succeed.

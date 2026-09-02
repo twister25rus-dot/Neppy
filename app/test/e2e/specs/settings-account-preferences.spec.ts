@@ -2,7 +2,7 @@
 import { browser, expect } from '@wdio/globals';
 
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { clickSelector, clickText, textExists, waitForText } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -59,7 +59,7 @@ describe('Settings - Account Preferences', function () {
     await waitForText('Recovery phrase saved', 20_000);
     await waitForText('Multi-chain wallet identities are ready', 20_000);
 
-    const wallet = await callOpenhumanRpc('openhuman.wallet_status', {});
+    const wallet = await callNeppyRpc('openhuman.wallet_status', {});
     expect(wallet.ok).toBe(true);
     expect(wallet.result?.result?.configured).toBe(true);
     expect((wallet.result?.result?.accounts ?? []).length).toBeGreaterThan(0);
@@ -72,7 +72,7 @@ describe('Settings - Account Preferences', function () {
 
   it('persists the privacy analytics toggle to core config', async function () {
     this.timeout(90_000);
-    const beforeAnalytics = await callOpenhumanRpc('openhuman.config_get_analytics_settings', {});
+    const beforeAnalytics = await callNeppyRpc('openhuman.config_get_analytics_settings', {});
     expect(beforeAnalytics.ok).toBe(true);
 
     const initialAnalytics = Boolean(beforeAnalytics.result?.result?.enabled);
@@ -85,20 +85,20 @@ describe('Settings - Account Preferences', function () {
     await clickSelector('[data-testid="privacy-analytics-toggle"]');
     await browser.waitUntil(
       async () => {
-        const analytics = await callOpenhumanRpc('openhuman.config_get_analytics_settings', {});
+        const analytics = await callNeppyRpc('openhuman.config_get_analytics_settings', {});
         return analytics.ok && Boolean(analytics.result?.result?.enabled) === !initialAnalytics;
       },
       { timeout: 15_000, interval: 500, timeoutMsg: 'analytics setting did not persist' }
     );
     await browser.waitUntil(
       async () => {
-        const analytics = await callOpenhumanRpc('openhuman.config_get_analytics_settings', {});
+        const analytics = await callNeppyRpc('openhuman.config_get_analytics_settings', {});
         return analytics.ok && Boolean(analytics.result?.result?.enabled) === !initialAnalytics;
       },
       { timeout: 15_000, interval: 500, timeoutMsg: 'privacy settings did not persist' }
     );
 
-    const snapshot = await callOpenhumanRpc('openhuman.app_state_snapshot', {});
+    const snapshot = await callNeppyRpc('openhuman.app_state_snapshot', {});
     expect(snapshot.ok).toBe(true);
     expect(Boolean(snapshot.result?.result?.analyticsEnabled)).toBe(!initialAnalytics);
   });

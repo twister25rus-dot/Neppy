@@ -80,7 +80,7 @@ async fn telegram_mock_handler(
 
     let result = match method.as_str() {
         "sendMessage" => json!({ "message_id": 9001 }),
-        "getMe" => json!({ "id": 1, "username": "OpenHumanBot" }),
+        "getMe" => json!({ "id": 1, "username": "NeppyBot" }),
         _ => json!(true),
     };
     (

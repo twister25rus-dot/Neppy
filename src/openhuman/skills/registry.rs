@@ -111,7 +111,7 @@ pub fn render_inputs_block(defs: &[WorkflowInput], provided: &serde_json::Value)
 
 /// Legacy bundled skills that shipped with older builds and were removed in the
 /// workflows-unify refactor (the old `dev-workflow` plus the
-/// `github-issue-crusher` / `pr-review-shepherd` runner skills). OpenHuman no
+/// `github-issue-crusher` / `pr-review-shepherd` runner skills). Neppy no
 /// longer ships any bundled defaults; these ids are pruned from upgraded
 /// workspaces so they stop surfacing in the Workflows tab.
 const LEGACY_BUNDLED_WORKFLOW_IDS: &[&str] =

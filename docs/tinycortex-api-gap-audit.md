@@ -97,7 +97,7 @@ retrieval: RetrievalConfig{default_profile}, sync_budget: SyncBudgetConfig}` +
 - **Crate:** persists the **entity occurrence index** at persist time
   (`score::persist_score`/`persist_score_tx`, `score/mod.rs:847-906`) but **does not write
   co-occurrence graph edges** — docstring `score/mod.rs:843-846`: *"Co-occurrence graph edges
-  (OpenHuman's E2GraphRAG accumulation) are not written here."* The `graph` module **derives**
+  (Neppy's E2GraphRAG accumulation) are not written here."* The `graph` module **derives**
   edges on read from the occurrence index (`graph/query.rs`, "owns no state, performs no
   writes"). `GraphRelationRecord` exists as a type but nothing in the crate writes it.
 - **Decision (W6/W7):** verify whether derive-on-read reproduces the host's persisted-relation
@@ -145,7 +145,7 @@ retrieval: RetrievalConfig{default_profile}, sync_budget: SyncBudgetConfig}` +
   the markdown time-tree runtime. They are distinct contracts with the same name.
 - **Decision (W1/W5):** the host seam must implement **both**. Flag for possible upstream
   unification (rename one, e.g. `TimeTreeSummariser`) to reduce confusion — non-blocking. Note
-  which tree path OpenHuman actually drives (bucket-seal SQLite trees vs markdown time-tree) so we
+  which tree path Neppy actually drives (bucket-seal SQLite trees vs markdown time-tree) so we
   don't wire a dead seam.
 
 ### Non-gaps (expected host glue — no crate change)

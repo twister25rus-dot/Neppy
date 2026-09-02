@@ -115,7 +115,7 @@ use crate::embed::Core;
 /// Guards the process-scoped core state described in the module docs.
 static HARNESS_LIVE: AtomicBool = AtomicBool::new(false);
 
-/// An embedded OpenHuman agent harness.
+/// An embedded Neppy agent harness.
 ///
 /// Build once with [`Harness::builder`], then run as many turns as you like.
 /// Dropping it releases the process slot and, for

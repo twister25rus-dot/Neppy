@@ -5,14 +5,14 @@
 //! [`tinyagents::harness::artifacts`]** — thresholds, path resolution, pointer
 //! rendering, the symlink re-check, and the writer itself. This module is what
 //! `plan-agents.md` Phase 5 leaves behind: the wiring, plus the two halves that
-//! are genuinely OpenHuman's.
+//! are genuinely Neppy's.
 //!
 //! ## What stayed, and why
 //!
-//! * **[`contract`] — the prompt half.** It is OpenHuman prompt text naming
-//!   OpenHuman tools, which `plan-agents.md` §6 lists as not publishable. The
+//! * **[`contract`] — the prompt half.** It is Neppy prompt text naming
+//!   Neppy tools, which `plan-agents.md` §6 lists as not publishable. The
 //!   crate's [`render_artifact_pointer`] takes the read-tool name as a
-//!   parameter for the same reason, and [`READ_TOOL`] is what OpenHuman passes.
+//!   parameter for the same reason, and [`READ_TOOL`] is what Neppy passes.
 //! * **[`policy`] — the two host policies.** `SecurityPolicy`'s workspace
 //!   containment and `sanitize_text`'s credential scrubbing. The crate asks;
 //!   these answer.
@@ -69,7 +69,7 @@ pub use tinyagents::harness::artifacts::{
     SCRATCH_DIR,
 };
 
-/// Tool OpenHuman tells a parent to open an offloaded artifact with.
+/// Tool Neppy tells a parent to open an offloaded artifact with.
 ///
 /// Passed into the crate's pointer renderer rather than baked into it: tool
 /// names are host vocabulary, and a crate that hard-coded one would name a tool
@@ -80,11 +80,11 @@ pub use tinyagents::harness::artifacts::{
 /// its agent actually holds, and the reader and the writer are different agents.
 pub const READ_TOOL: &str = "file_read";
 
-/// Build a writer for one sub-agent run, wired to OpenHuman's policies.
+/// Build a writer for one sub-agent run, wired to Neppy's policies.
 ///
 /// Supplies both host policies every time, so no call site can accidentally
 /// construct an unguarded or unredacted writer — the crate permits `None` for
-/// each, and OpenHuman never wants either.
+/// each, and Neppy never wants either.
 pub fn new_artifact_offload(
     action_dir: PathBuf,
     policy: Option<Arc<SecurityPolicy>>,
@@ -105,7 +105,7 @@ pub fn new_artifact_offload(
 /// Offload `output` when it exceeds `threshold_bytes`, returning the text the
 /// parent should receive plus the artifact when one was written.
 ///
-/// Thin wrapper over the crate's function that pins OpenHuman's [`READ_TOOL`].
+/// Thin wrapper over the crate's function that pins Neppy's [`READ_TOOL`].
 /// Every failure mode is soft: the caller gets the original payload back and
 /// the summarizer detour and tool-result budget stay in charge as the fallback.
 pub async fn offload_oversized_result(

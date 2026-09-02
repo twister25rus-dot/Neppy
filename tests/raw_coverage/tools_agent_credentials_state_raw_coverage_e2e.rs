@@ -481,7 +481,7 @@ fn browser_tool(endpoint: String, workspace: &Path) -> BrowserTool {
             api_key: Some("round16-sidecar-token".into()),
             timeout_ms: 1_000,
             allow_remote_endpoint: false,
-            window_allowlist: vec!["OpenHuman".into()],
+            window_allowlist: vec!["Neppy".into()],
             max_coordinate_x: Some(100),
             max_coordinate_y: Some(100),
         },

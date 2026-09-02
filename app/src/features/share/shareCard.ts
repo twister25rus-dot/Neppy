@@ -97,7 +97,7 @@ export interface ShareCardFallbacks {
 
 /** English defaults, used when a caller doesn't pass locale-aware fallbacks (e.g. tests). */
 const DEFAULT_CARD_FALLBACKS: ShareCardFallbacks = {
-  headline: 'Look what my OpenHuman agent just did',
+  headline: 'Look what my Neppy agent just did',
   agentName: 'My agent',
 };
 
@@ -169,7 +169,7 @@ export function paintShareCard(
 
   const pad = 72;
 
-  // Brand wordmark: a dot + "OpenHuman".
+  // Brand wordmark: a dot + "Neppy".
   ctx.beginPath();
   ctx.fillStyle = '#FFFFFF';
   ctx.arc(pad + 12, pad + 6, 12, 0, Math.PI * 2);
@@ -178,7 +178,7 @@ export function paintShareCard(
   ctx.textAlign = 'left';
   ctx.font = `700 34px ${FONT_DISPLAY}`;
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('OpenHuman', pad + 36, pad + 18);
+  ctx.fillText('Neppy', pad + 36, pad + 18);
 
   // Headline block.
   ctx.font = `700 62px ${FONT_SANS}`;

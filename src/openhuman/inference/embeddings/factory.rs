@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use super::cloud::{
-    OpenHumanCloudEmbedding, DEFAULT_CLOUD_EMBEDDING_DIMENSIONS, DEFAULT_CLOUD_EMBEDDING_MODEL,
+    NeppyCloudEmbedding, DEFAULT_CLOUD_EMBEDDING_DIMENSIONS, DEFAULT_CLOUD_EMBEDDING_MODEL,
 };
 use super::provider_trait::{EmbeddingProvider, TinyAgentsEmbeddingProvider};
 use crate::openhuman::config::Config;
@@ -52,7 +52,7 @@ pub(crate) const MODELS_SUPPORTING_DIMENSIONS: [&str; 2] =
 /// Creates an embedding provider based on the specified name and configuration.
 ///
 /// Supported provider names:
-/// - `"managed"` / `"cloud"` → OpenHuman backend (Voyage-backed) — default
+/// - `"managed"` / `"cloud"` → Neppy backend (Voyage-backed) — default
 /// - `"voyage"` → direct Voyage AI API (user's own key)
 /// - `"openai"` → OpenAI API (user's own key)
 /// - `"cohere"` → Cohere API (user's own key)
@@ -69,7 +69,7 @@ pub fn create_embedding_provider(
     dims: usize,
 ) -> anyhow::Result<Box<dyn EmbeddingProvider>> {
     match provider {
-        "cloud" | "managed" => Ok(Box::new(OpenHumanCloudEmbedding::new(
+        "cloud" | "managed" => Ok(Box::new(NeppyCloudEmbedding::new(
             None, None, true, model, dims,
         ))),
         "voyage" => Ok(TinyAgentsEmbeddingProvider::boxed(
@@ -125,7 +125,7 @@ pub fn create_embedding_provider_with_credentials(
     custom_endpoint: Option<&str>,
 ) -> anyhow::Result<Box<dyn EmbeddingProvider>> {
     match provider {
-        "cloud" | "managed" => Ok(Box::new(OpenHumanCloudEmbedding::new(
+        "cloud" | "managed" => Ok(Box::new(NeppyCloudEmbedding::new(
             None, None, true, model, dims,
         ))),
         "voyage" => Ok(TinyAgentsEmbeddingProvider::boxed(
@@ -207,7 +207,7 @@ pub fn create_embedding_provider_with_config(
             log::debug!(
                 "[embeddings::factory] building managed embedder from config credential scope (encrypt={encrypt_secrets})"
             );
-            Ok(Box::new(OpenHumanCloudEmbedding::new(
+            Ok(Box::new(NeppyCloudEmbedding::new(
                 None,
                 state_dir,
                 encrypt_secrets,
@@ -237,7 +237,7 @@ fn managed_credential_scope(config: &Config) -> (Option<PathBuf>, bool) {
     (Some(state_dir_from_config(config)), config.secrets.encrypt)
 }
 
-/// Returns the default embedding provider — cloud (OpenHuman backend, Voyage) —
+/// Returns the default embedding provider — cloud (Neppy backend, Voyage) —
 /// scoped to `config`'s credential store.
 ///
 /// This is the [`default_embedding_provider`] every caller that holds a
@@ -260,7 +260,7 @@ pub fn default_embedding_provider_with_config(config: &Config) -> Arc<dyn Embedd
     log::debug!(
         "[embeddings::factory] building default managed embedder from config credential scope (encrypt={encrypt_secrets})"
     );
-    Arc::new(OpenHumanCloudEmbedding::new(
+    Arc::new(NeppyCloudEmbedding::new(
         None,
         state_dir,
         encrypt_secrets,
@@ -269,7 +269,7 @@ pub fn default_embedding_provider_with_config(config: &Config) -> Arc<dyn Embedd
     ))
 }
 
-/// Returns the default embedding provider — cloud (OpenHuman backend, Voyage).
+/// Returns the default embedding provider — cloud (Neppy backend, Voyage).
 ///
 /// The cloud embedder lazily resolves the session JWT and API URL on each
 /// call, so this can be constructed before login completes; the first
@@ -282,7 +282,7 @@ pub fn default_embedding_provider_with_config(config: &Config) -> Arc<dyn Embedd
 /// encryption or roots the workspace/user elsewhere than the process default
 /// (#5356 / #5501). Only callers that genuinely hold no `&Config` should use it.
 pub fn default_embedding_provider() -> Arc<dyn EmbeddingProvider> {
-    Arc::new(OpenHumanCloudEmbedding::new(
+    Arc::new(NeppyCloudEmbedding::new(
         None,
         None,
         true,
@@ -433,7 +433,7 @@ mod tests {
     /// `create_embedding_provider_with_config`** must authenticate with the
     /// `app-session` token stored under the *config* credential scope. A local
     /// mock stands in for the cloud backend (no external network) and captures
-    /// the bearer it receives. A regression to `OpenHumanCloudEmbedding::new(None,
+    /// the bearer it receives. A regression to `NeppyCloudEmbedding::new(None,
     /// None, true, …)` would resolve the token from `default_state_dir()` — a
     /// different directory with no token — and fail with "No backend session"
     /// before any request, so this test fails if the factory ignores `config`.
@@ -486,7 +486,7 @@ mod tests {
             )
             .unwrap();
 
-        // `OpenHumanCloudEmbedding::new` bakes the base URL at construction, so
+        // `NeppyCloudEmbedding::new` bakes the base URL at construction, so
         // BACKEND_URL only needs to point at the mock while the factory builds —
         // held under the crate-wide backend-env lock (shared with `api::config`'s
         // own BACKEND_URL tests) so the process-global env can't race.

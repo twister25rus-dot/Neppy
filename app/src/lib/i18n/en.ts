@@ -42,15 +42,15 @@ const en: TranslationMap = {
   'orchPage.medulla.nav': 'Overview',
   'orchPage.medulla.badge': 'Coming soon',
   'orchPage.medulla.title': 'Medulla',
-  'orchPage.medulla.tagline': "OpenHuman's orchestration model",
+  'orchPage.medulla.tagline': "Neppy's orchestration model",
   'orchPage.medulla.body':
-    "Medulla is OpenHuman's custom-built LLM, engineered to orchestrate thousands of agents at once, with a 10-million-token context window and radically low-cost orchestration.",
+    "Medulla is Neppy's custom-built LLM, engineered to orchestrate thousands of agents at once, with a 10-million-token context window and radically low-cost orchestration.",
   'orchPage.medulla.featAgents': 'Thousands of agents',
   'orchPage.medulla.featContext': '10M-token context',
   'orchPage.medulla.featCost': 'Low-cost orchestration',
-  'orchPage.medulla.subscriberTitle': 'OpenHuman Subscribers',
+  'orchPage.medulla.subscriberTitle': 'Neppy Subscribers',
   'orchPage.medulla.subscriberNote':
-    'When Medulla goes live, it will be exclusive to OpenHuman subscribers.',
+    'When Medulla goes live, it will be exclusive to Neppy subscribers.',
   'orchPage.medulla.subscriberCta': 'Get a Subscription',
   'orchPage.medulla.discordTitle': 'Join the Discord',
   'orchPage.medulla.earlyAccess':
@@ -118,7 +118,7 @@ const en: TranslationMap = {
   'orchPage.connections.replyPlaceholder': 'Reply…',
   'orchPage.connections.initTitle': 'Initialize an agent or an instance',
   'orchPage.connections.initDesc':
-    'Spin up a new sub-agent to work alongside you. Open the agent chat and describe the role, goal, and tools it should use: OpenHuman provisions a dedicated instance you can steer from here.',
+    'Spin up a new sub-agent to work alongside you. Open the agent chat and describe the role, goal, and tools it should use: Neppy provisions a dedicated instance you can steer from here.',
   'orchPage.connections.initCta': 'Start in chat',
   'orchPage.connections.status.needsYou': 'Needs you',
   'orchPage.connections.status.running': 'Running',
@@ -207,7 +207,7 @@ const en: TranslationMap = {
   'feedback.welcome.eyebrow': 'Feedback',
   'feedback.welcome.title': 'Help shape what we build',
   'feedback.welcome.body':
-    "Tell us what's working, what's missing, and what would make OpenHuman better. Post an idea, vote on what others suggest, and watch the best ones rise to the top of our roadmap.",
+    "Tell us what's working, what's missing, and what would make Neppy better. Post an idea, vote on what others suggest, and watch the best ones rise to the top of our roadmap.",
   'feedback.welcome.ctaShare': 'Share an idea',
   'feedback.welcome.ctaBoard': 'See the board',
   'feedback.welcome.featsLabel': 'What you can do',
@@ -557,8 +557,8 @@ const en: TranslationMap = {
   'clearData.failedPersist': 'Failed to clear persisted app state. Please try again.',
 
   // Welcome page
-  'welcome.logoAlt': 'OpenHuman',
-  'welcome.title': 'Welcome to OpenHuman',
+  'welcome.logoAlt': 'Neppy',
+  'welcome.title': 'Welcome to Neppy',
   'welcome.subtitle':
     'Your personal AI super intelligence. Private, simple and extremely powerful.',
   'welcome.connectPrompt': 'Configure RPC URL (Advanced)',
@@ -568,7 +568,7 @@ const en: TranslationMap = {
   'welcome.clearAppDataWarning':
     'This wipes locally stored secrets and accounts on this device. Your cloud account is unaffected - you can sign in again right after.',
   'welcome.resetErrorFallback':
-    'Could not clear app data. Please quit and reopen OpenHuman, then try again.',
+    'Could not clear app data. Please quit and reopen Neppy, then try again.',
   'welcome.signingIn': 'Signing you in...',
   'welcome.termsIntro': 'By continuing, you agree to the',
   'welcome.termsOfUse': 'Terms',
@@ -588,7 +588,7 @@ const en: TranslationMap = {
   'home.statusOk': 'Your assistant is ready when you are. Type something below to get started.',
   'home.statusBackendOnly': 'Reconnecting to backend… your agent will be available again shortly.',
   'home.statusCoreUnreachable':
-    "The OpenHuman core isn't responding. The background process may have crashed or failed to start.",
+    "The Neppy core isn't responding. The background process may have crashed or failed to start.",
   'home.statusInternetOffline':
     'Your device is offline right now. Check your network or restart the app to reconnect.',
   'home.restartCore': 'Restart Core',
@@ -671,10 +671,10 @@ const en: TranslationMap = {
   'share.captionPlaceholder': 'Write a caption...',
   'share.privacyNote':
     'Only the headline, caption, agent name, and branding are shared. Your chat, memory, and files stay private.',
-  'share.defaultHeadline': 'Look what my OpenHuman agent just did',
+  'share.defaultHeadline': 'Look what my Neppy agent just did',
   'share.defaultAgentName': 'My agent',
-  'share.defaultCaption': 'Look what my OpenHuman agent just did.',
-  'share.captionWithHeadline': '{headline}. Made with my OpenHuman agent.',
+  'share.defaultCaption': 'Look what my Neppy agent just did.',
+  'share.captionWithHeadline': '{headline}. Made with my Neppy agent.',
   'share.linkedInHint': 'Caption copied. Paste it into your LinkedIn post.',
   'share.shareX': 'Share on X',
   'share.shareLinkedIn': 'Share on LinkedIn',
@@ -1039,7 +1039,7 @@ const en: TranslationMap = {
   'memory.health.remediation.budget_exhausted':
     'Memory embeddings hit the managed budget. Set up local Ollama embeddings (Connections → API keys → Embeddings) or add your own embeddings API key to keep building memory.',
   'memory.health.remediation.auth_missing':
-    'No embeddings credentials found. Log in to OpenHuman, or set up local Ollama embeddings in Connections → API keys → Embeddings.',
+    'No embeddings credentials found. Log in to Neppy, or set up local Ollama embeddings in Connections → API keys → Embeddings.',
   'memory.health.remediation.auth_invalid':
     'Your embeddings credentials were rejected. Re-authenticate, or switch to local Ollama embeddings in Connections → API keys → Embeddings.',
   'memory.health.remediation.embeddings_unconfigured':
@@ -1055,7 +1055,7 @@ const en: TranslationMap = {
   'memory.health.remediation.empty_input_refused':
     'A memory item was skipped because its text was empty. No action needed: newer items continue to embed normally.',
   'memory.health.remediation.storage_unavailable':
-    "OpenHuman can't write to its memory storage: the disk or SD card appears to be failing, full, or read-only. Check the drive and free up space; memory processing resumes automatically once storage is writable again.",
+    "Neppy can't write to its memory storage: the disk or SD card appears to be failing, full, or read-only. Check the drive and free up space; memory processing resumes automatically once storage is writable again.",
   'memory.health.remediation.transient':
     'A temporary error interrupted memory processing. It will retry automatically.',
   'memory.health.remediation.unknown':
@@ -1118,7 +1118,7 @@ const en: TranslationMap = {
   'rewards.welcome.eyebrow': 'Rewards',
   'rewards.welcome.title': 'Get rewarded for showing up',
   'rewards.welcome.body':
-    'Earn points as you use OpenHuman and invite others, keep your streak alive, and redeem what you’ve earned, all tracked in one place.',
+    'Earn points as you use Neppy and invite others, keep your streak alive, and redeem what you’ve earned, all tracked in one place.',
   'rewards.welcome.ctaView': 'View rewards',
   'rewards.welcome.featsLabel': 'How it works',
   'rewards.welcome.feat1Title': 'Earn points',
@@ -1130,7 +1130,7 @@ const en: TranslationMap = {
   'rewards.referrals': 'Referrals',
   'rewards.coupons': 'Redeem',
   'rewards.localUnavailable':
-    'Local login does not earn rewards, coupons, or referral credit. To earn rewards, log out and continue by signing in with an OpenHuman account.',
+    'Local login does not earn rewards, coupons, or referral credit. To earn rewards, log out and continue by signing in with an Neppy account.',
   'rewards.localUnavailableCta': 'Open Account Settings',
   'rewards.credits': 'Credits',
   'rewards.referralCode': 'Your referral code',
@@ -1138,7 +1138,7 @@ const en: TranslationMap = {
   'rewards.share': 'Share',
 
   // Onboarding
-  'onboarding.welcome': "Hi. I'm OpenHuman.",
+  'onboarding.welcome': "Hi. I'm Neppy.",
   'onboarding.welcomeDesc':
     'Your super-intelligent AI assistant that runs on your computer. Private, simple, and extremely powerful.',
   'onboarding.context': 'Context Gathering',
@@ -1150,17 +1150,17 @@ const en: TranslationMap = {
   'onboarding.referral': 'Referral',
   'onboarding.referralDesc': 'Apply a referral code if you have one.',
   'onboarding.finish': 'Finish Setup',
-  'onboarding.finishDesc': "You're all set! Start using OpenHuman.",
+  'onboarding.finishDesc': "You're all set! Start using Neppy.",
   'onboarding.skip': 'Skip',
   'onboarding.getStarted': 'Get Started',
 
   // Onboarding: runtime-choice step (Cloud vs Custom)
-  'onboarding.runtimeChoice.title': 'How would you like to run OpenHuman?',
+  'onboarding.runtimeChoice.title': 'How would you like to run Neppy?',
   'onboarding.runtimeChoice.subtitle':
-    'Pick how much OpenHuman manages for you. You can change this later in Settings.',
+    'Pick how much Neppy manages for you. You can change this later in Settings.',
   'onboarding.runtimeChoice.cloud.title': 'Simple',
   'onboarding.runtimeChoice.cloud.tagline':
-    'Use OpenHuman-hosted sign-in, model routing, search, and managed integrations.',
+    'Use Neppy-hosted sign-in, model routing, search, and managed integrations.',
   'onboarding.runtimeChoice.cloud.f1': 'Backend-brokered OAuth and model routing',
   'onboarding.runtimeChoice.cloud.f2': 'Token compression to stretch your usage further',
   'onboarding.runtimeChoice.cloud.f3': 'One subscription, every model included',
@@ -1168,7 +1168,7 @@ const en: TranslationMap = {
   'onboarding.runtimeChoice.cloud.f5': 'Local Memory Tree, managed network services',
   'onboarding.runtimeChoice.custom.title': 'Run Custom',
   'onboarding.runtimeChoice.custom.tagline':
-    'Bring your own keys. Choose which services OpenHuman should call.',
+    'Bring your own keys. Choose which services Neppy should call.',
   'onboarding.runtimeChoice.custom.f1': "You'll need API keys for almost everything",
   'onboarding.runtimeChoice.custom.f2': 'Reuses services you already pay for',
   'onboarding.runtimeChoice.custom.f3': 'Keep supported workloads on your machine',
@@ -1220,7 +1220,7 @@ const en: TranslationMap = {
   'onboarding.custom.stepperMemory': 'Memory',
   'onboarding.custom.stepCounter': 'Step {n} of {total}',
   'onboarding.custom.defaultTitle': 'Default',
-  'onboarding.custom.defaultSubtitle': 'Let OpenHuman manage it for you.',
+  'onboarding.custom.defaultSubtitle': 'Let Neppy manage it for you.',
   'onboarding.custom.configureTitle': 'Configure',
   'onboarding.custom.configureSubtitle': "I'll pick what to use.",
   'onboarding.custom.progressAriaLabel': 'Onboarding progress',
@@ -1236,7 +1236,7 @@ const en: TranslationMap = {
   'onboarding.custom.inference.subtitle':
     'Which language model should answer your questions and run your agents?',
   'onboarding.custom.inference.defaultDesc':
-    'OpenHuman routes workloads through its managed backend by default. No keys, no setup.',
+    'Neppy routes workloads through its managed backend by default. No keys, no setup.',
   'onboarding.custom.inference.configureDesc':
     'Bring your own OpenAI or Anthropic key. We use it for every text-based workload.',
 
@@ -1244,7 +1244,7 @@ const en: TranslationMap = {
   'onboarding.custom.voice.title': 'Voice',
   'onboarding.custom.voice.subtitle': 'Speech-to-text and text-to-speech for voice mode.',
   'onboarding.custom.voice.defaultDesc':
-    'OpenHuman ships with managed STT/TTS providers that may send audio/text to hosted services.',
+    'Neppy ships with managed STT/TTS providers that may send audio/text to hosted services.',
   'onboarding.custom.voice.configureDesc':
     'Use your own ElevenLabs / OpenAI Whisper / etc. Configure in Settings › Voice.',
 
@@ -1253,24 +1253,24 @@ const en: TranslationMap = {
   'onboarding.custom.oauth.subtitle':
     'Gmail, Slack, Notion, and other connected services that need OAuth.',
   'onboarding.custom.oauth.defaultDesc':
-    'OpenHuman brokers OAuth and tool calls through a managed Composio workspace.',
+    'Neppy brokers OAuth and tool calls through a managed Composio workspace.',
   'onboarding.custom.oauth.configureDesc':
     'Bring your own Composio account / API key. Configure in Settings › Connections.',
 
   // Onboarding: Custom > Search
   'onboarding.custom.search.title': 'Web Search',
-  'onboarding.custom.search.subtitle': 'How OpenHuman searches the web on your behalf.',
+  'onboarding.custom.search.subtitle': 'How Neppy searches the web on your behalf.',
   'onboarding.custom.search.defaultDesc':
-    'OpenHuman uses a managed search proxy by default. No search API key needed.',
+    'Neppy uses a managed search proxy by default. No search API key needed.',
   'onboarding.custom.search.configureDesc':
     'Bring your own search provider key (Tavily, Brave, etc.). Configure in Settings › Tools.',
 
   // Onboarding: Custom > Embeddings
   'onboarding.custom.embeddings.title': 'Embeddings',
   'onboarding.custom.embeddings.subtitle':
-    'How OpenHuman generates vector embeddings for semantic memory search.',
+    'How Neppy generates vector embeddings for semantic memory search.',
   'onboarding.custom.embeddings.defaultDesc':
-    'OpenHuman uses a managed embedding service. No API key needed.',
+    'Neppy uses a managed embedding service. No API key needed.',
   'onboarding.custom.embeddings.configureDesc':
     'Bring your own embedding provider (OpenAI, Voyage, Ollama, etc.).',
 
@@ -1288,19 +1288,19 @@ const en: TranslationMap = {
   'onboarding.custom.vault.subtitle':
     'Confirm where memory notes are written, how source data is read, and whether your vault pipeline is healthy.',
   'onboarding.custom.vault.defaultDesc':
-    'Use OpenHuman-managed memory defaults. Vault path and sync health can still be reviewed later.',
+    'Use Neppy-managed memory defaults. Vault path and sync health can still be reviewed later.',
   'onboarding.custom.vault.configureDesc':
     'Review vault ownership, run health checks, and tune memory controls now.',
   'onboarding.custom.vault.localDisabledReason':
-    'Managed setup requires OpenHuman sign-in and is unavailable in local mode.',
+    'Managed setup requires Neppy sign-in and is unavailable in local mode.',
   'onboarding.custom.vault.exitError': 'Could not finish onboarding. Please try again.',
 
   // Onboarding: Custom > Memory
   'onboarding.custom.memory.title': 'Memory',
   'onboarding.custom.memory.subtitle':
-    'How OpenHuman remembers your context, preferences, and prior conversations.',
+    'How Neppy remembers your context, preferences, and prior conversations.',
   'onboarding.custom.memory.defaultDesc':
-    'OpenHuman manages memory storage and retrieval automatically. Nothing to set up.',
+    'Neppy manages memory storage and retrieval automatically. Nothing to set up.',
   'onboarding.custom.memory.configureDesc':
     'Inspect, export, or wipe memory yourself. Configure in Settings › Memory.',
 
@@ -1472,7 +1472,7 @@ const en: TranslationMap = {
   'misc.downloading': 'Downloading...',
   'misc.installing': 'Installing...',
   'misc.beta':
-    'OpenHuman is in early beta. Feel free to share feedback or report any bugs you run into: every report helps us ship faster.',
+    'Neppy is in early beta. Feel free to share feedback or report any bugs you run into: every report helps us ship faster.',
   'misc.betaFeedback': 'Send feedback',
 
   // Mnemonic / Recovery
@@ -1499,11 +1499,11 @@ const en: TranslationMap = {
   'privacy.anonymizedAnalytics': 'Product Analytics',
   'privacy.shareAnonymizedData': 'Share Product Analytics and Diagnostics',
   'privacy.shareAnonymizedDataDesc':
-    'Help improve OpenHuman by sharing privacy-limited crash reports and usage events, including a stable account ID and app version metadata. Messages, wallet keys, API keys, and session tokens are never collected.',
+    'Help improve Neppy by sharing privacy-limited crash reports and usage events, including a stable account ID and app version metadata. Messages, wallet keys, API keys, and session tokens are never collected.',
   'privacy.meetingFollowUps': 'Meeting follow-ups',
   'privacy.autoHandoffMeet': 'Auto-handoff Google Meet transcripts to the orchestrator',
   'privacy.autoHandoffMeetDesc':
-    "When a Google Meet call ends, OpenHuman's orchestrator can read the transcript and may take actions like drafting messages, scheduling follow-ups, or posting summaries to your connected Slack workspace. Off by default.",
+    "When a Google Meet call ends, Neppy's orchestrator can read the transcript and may take actions like drafting messages, scheduling follow-ups, or posting summaries to your connected Slack workspace. Off by default.",
   'privacy.analyticsDisclaimer':
     'When enabled, Product Analytics and Diagnostics may include privacy-limited crash reports and usage events, a stable account ID, and app version metadata. Messages, wallet keys, API keys, and session tokens are never collected. You can change this setting at any time.',
 
@@ -1535,7 +1535,7 @@ const en: TranslationMap = {
   'settings.about.releases': 'Releases',
   'settings.about.releasesDesc': 'Browse release notes and earlier builds on GitHub.',
   'settings.about.openReleases': 'Open GitHub releases',
-  'settings.about.starCta.title': 'Enjoying OpenHuman?',
+  'settings.about.starCta.title': 'Enjoying Neppy?',
   'settings.about.starCta.body': 'Star us on GitHub. It helps more people find us.',
   'settings.about.starCta.star': 'Star on GitHub',
   'settings.about.starCta.dismiss': 'Not now',
@@ -1563,7 +1563,7 @@ const en: TranslationMap = {
   'settings.core.statusUnreachable': 'Cannot reach the core',
   'settings.core.recheck': 'Recheck',
   'settings.core.save': 'Save & restart',
-  'settings.core.applyRestartNote': 'Saving restarts OpenHuman to reconnect.',
+  'settings.core.applyRestartNote': 'Saving restarts Neppy to reconnect.',
 
   // Gateways — cores this app provisions and runs elsewhere.
   'devOptions.gateway': 'Gateway',
@@ -1571,7 +1571,7 @@ const en: TranslationMap = {
   'devOptions.gatewayId': 'Gateway',
   'settings.gateway.title': 'Run the core somewhere else',
   'settings.gateway.description':
-    'The core can run in a container, on another machine over SSH, or in a container on another machine. OpenHuman starts it, connects to it, and shuts it down when you switch away.',
+    'The core can run in a container, on another machine over SSH, or in a container on another machine. Neppy starts it, connects to it, and shuts it down when you switch away.',
   'settings.gateway.add': 'Add a location',
   'settings.gateway.save': 'Save location',
   'settings.gateway.remove': 'Remove',
@@ -1679,18 +1679,18 @@ const en: TranslationMap = {
     'Send an agent message: token usage from the next provider call will populate the chart within ~10 seconds.',
   'settings.search.title': 'Search engine',
   'settings.search.menuDesc':
-    'Default to OpenHuman-managed search or wire up your own provider with an API key.',
+    'Default to Neppy-managed search or wire up your own provider with an API key.',
   'settings.search.description':
-    "Pick the search engine the agent uses, or disable search tools entirely. Managed uses OpenHuman's backend (no setup). Parallel, Brave, Querit, and Exa run direct from your machine using your API key.",
+    "Pick the search engine the agent uses, or disable search tools entirely. Managed uses Neppy's backend (no setup). Parallel, Brave, Querit, and Exa run direct from your machine using your API key.",
   'settings.search.engineAria': 'Search engine',
   'settings.search.engineDisabledLabel': 'Disabled',
   'settings.search.engineDisabledDesc':
     'Remove search tools from the agent context and available tool list.',
-  'settings.search.engineManagedLabel': 'OpenHuman Managed',
+  'settings.search.engineManagedLabel': 'Neppy Managed',
   'settings.search.engineManagedDesc':
-    'Default. Routed through the OpenHuman backend, currently powered by Exa: no API key required.',
+    'Default. Routed through the Neppy backend, currently powered by Exa: no API key required.',
   'settings.search.localManagedUnavailable':
-    'OpenHuman Managed search is not available for local users. Add your own Parallel, Brave, Querit, or Exa API key to enable web search.',
+    'Neppy Managed search is not available for local users. Add your own Parallel, Brave, Querit, or Exa API key to enable web search.',
   'settings.search.engineParallelLabel': 'Parallel',
   'settings.search.engineParallelDesc':
     'Direct Parallel API: search, extract, chat, research, enrich, dataset tools.',
@@ -1749,15 +1749,15 @@ const en: TranslationMap = {
   'settings.embeddings.providerAria': 'Embedding provider',
   'settings.embeddings.statusConfigured': 'Configured',
   'settings.embeddings.statusNeedsKey': 'Needs API key',
-  'settings.embeddings.requiresSignIn': 'Requires OpenHuman sign-in',
+  'settings.embeddings.requiresSignIn': 'Requires Neppy sign-in',
   'settings.embeddings.managedLoginRequired':
-    'Managed embeddings require OpenHuman sign-in. Sign in to use the OpenHuman backend.',
+    'Managed embeddings require Neppy sign-in. Sign in to use the Neppy backend.',
   'settings.embeddings.managedBannerIntro':
-    'Managed embeddings route through the OpenHuman backend and require an OpenHuman account session.',
+    'Managed embeddings route through the Neppy backend and require an Neppy account session.',
   'settings.embeddings.managedBannerLocalSession':
     'Exit local session and sign in to use this provider, or switch to a local or bring-your-own embeddings provider.',
   'settings.embeddings.managedBannerRemoteSession':
-    'Sign in again to refresh your OpenHuman session, or switch to a local or bring-your-own embeddings provider.',
+    'Sign in again to refresh your Neppy session, or switch to a local or bring-your-own embeddings provider.',
   'settings.embeddings.signInAgain': 'Sign in again',
   'settings.embeddings.apiKeyLabel': '{provider} API key',
   'settings.embeddings.apiKeyLabelGeneric': 'API key',
@@ -1818,13 +1818,13 @@ const en: TranslationMap = {
     'Stored encrypted in the local MCP secrets table. Never logged or sent to a model.',
   'devices.betaBadge': 'Beta',
   'devices.betaText':
-    'This feature is currently in beta. Pair iOS phones with this OpenHuman to use them as a remote client.',
+    'This feature is currently in beta. Pair iOS phones with this Neppy to use them as a remote client.',
   'devices.comingSoonDescription':
     'Device pairing is coming soon. This page will be the home for pairing iPhones and managing connected devices.',
   'devices.title': 'Devices',
   'devices.pairIphone': 'Pair iPhone',
   'devices.noPaired': 'No paired devices',
-  'devices.emptyState': 'Scan a QR code on your iPhone to connect it to this OpenHuman session.',
+  'devices.emptyState': 'Scan a QR code on your iPhone to connect it to this Neppy session.',
   'devices.devicePairedTitle': 'Device paired',
   'devices.devicePairedMessage': 'iPhone connected successfully.',
   'devices.deviceRevokedTitle': 'Device revoked',
@@ -1844,7 +1844,7 @@ const en: TranslationMap = {
   'devices.loadFailed': 'Failed to load devices: {message}',
   'devices.pairModal.title': 'Pair iPhone',
   'devices.pairModal.loading': 'Generating pairing code…',
-  'devices.pairModal.instructions': 'Open the OpenHuman app on your iPhone and scan this code.',
+  'devices.pairModal.instructions': 'Open the Neppy app on your iPhone and scan this code.',
   'devices.pairModal.expiresIn': 'Code expires in ~{count} minute',
   'devices.pairModal.expiresInPlural': 'Code expires in ~{count} minutes',
   'devices.pairModal.showDetails': 'Show details',
@@ -2099,7 +2099,7 @@ const en: TranslationMap = {
   'mcp.connectAuth.schemeRaw': 'None',
   'mcp.connectAuth.reconnectFailed': 'Saved the credentials, but connecting failed.',
   'mcp.connectAuth.oauthHint':
-    'This server uses OAuth. Sign in through your browser to authorize OpenHuman.',
+    'This server uses OAuth. Sign in through your browser to authorize Neppy.',
   'mcp.connectAuth.signIn': 'Sign in with browser',
   'mcp.connectAuth.oauthWaiting': 'Waiting for sign-in…',
   'mcp.connectAuth.oauthOrToken':
@@ -2124,7 +2124,7 @@ const en: TranslationMap = {
   'autonomy.title': 'Agent autonomy',
   'autonomy.maxActionsLabel': 'Max actions per hour',
   'autonomy.maxActionsHelp':
-    'Maximum tool actions an agent can run per rolling hour. New value applies to your next chat. Cron jobs and channel listeners keep their current limit until you restart OpenHuman.',
+    'Maximum tool actions an agent can run per rolling hour. New value applies to your next chat. Cron jobs and channel listeners keep their current limit until you restart Neppy.',
   'autonomy.statusSaving': 'Saving…',
   'autonomy.statusSaved': 'Saved.',
   'autonomy.statusFailed': 'Failed',
@@ -2187,7 +2187,7 @@ const en: TranslationMap = {
 
   // Settings: Tools
   'settings.tools.chooseCapabilities':
-    'Choose which capabilities OpenHuman can use on your behalf.',
+    'Choose which capabilities Neppy can use on your behalf.',
   'settings.tools.saveChanges': 'Save Changes',
   'settings.tools.preferencesSaved': 'Preferences saved',
   'settings.tools.saveFailed': 'Failed to save preferences. Try again.',
@@ -2416,14 +2416,14 @@ const en: TranslationMap = {
     'Choose which hosted engine transcribes your speech and where synthesis runs. Speech-to-text always runs in the cloud; only text-to-speech has a local option (Piper), installed with the Install locally button. No manual PIPER_BIN setup required.',
   'voice.providers.sttProvider': 'Speech-to-Text Provider',
   'voice.providers.sttProviderAria': 'STT provider',
-  'voice.providers.backendSttProxy': 'OpenHuman (Managed)',
+  'voice.providers.backendSttProxy': 'Neppy (Managed)',
   'voice.providers.installRequired': ' (install required)',
   'voice.providers.installed': 'Installed',
   'voice.providers.installFailed': 'Install failed',
   'voice.providers.notInstalled': 'Not installed',
   'voice.providers.ttsProvider': 'Text-to-Speech Provider',
   'voice.providers.ttsProviderAria': 'TTS provider',
-  'voice.providers.cloudElevenLabsProxy': 'OpenHuman (Managed)',
+  'voice.providers.cloudElevenLabsProxy': 'Neppy (Managed)',
   'voice.providers.localPiper': 'Local Piper',
   'voice.providers.piperInstalledTitle': 'Piper is installed. Click to reinstall.',
   'voice.providers.piperDownloadTitle':
@@ -2451,8 +2451,8 @@ const en: TranslationMap = {
   'voice.providers.piperPreset.northernEnglishMaleMedium': 'GB · Northern English (male)',
 
   // Voice provider chips (new chip-toggle UI)
-  'voice.providers.chip.cloud': 'OpenHuman (Managed)',
-  'voice.providers.chip.cloudAria': 'OpenHuman managed provider is always enabled',
+  'voice.providers.chip.cloud': 'Neppy (Managed)',
+  'voice.providers.chip.cloudAria': 'Neppy managed provider is always enabled',
   'voice.providers.chip.piper': 'Piper (Local)',
   'voice.providers.chip.enablePiper': 'Enable local Piper TTS',
   'voice.providers.chip.disablePiper': 'Disable local Piper TTS',
@@ -2503,7 +2503,7 @@ const en: TranslationMap = {
   // Push-to-talk (PTT)
   'pttSettings.title': 'Push-to-talk',
   'pttSettings.description':
-    "Hold a key to talk to OpenHuman while you're in another app. Release the key to send; OpenHuman speaks the reply if 'Speak agent replies' is on.",
+    "Hold a key to talk to Neppy while you're in another app. Release the key to send; Neppy speaks the reply if 'Speak agent replies' is on.",
   'pttSettings.shortcutLabel': 'Hotkey',
   'pttSettings.shortcutPlaceholder': 'Press a key (e.g. F13)',
   'pttSettings.shortcutUnsetHint': 'Push-to-talk is off: pick a hotkey to enable.',
@@ -2515,10 +2515,10 @@ const en: TranslationMap = {
     "Pick a regular key (e.g. F13): modifier-only shortcuts don't work for push-to-talk.",
   'pttSettings.errorEmpty': 'Pick a key to bind.',
   'pttSettings.errorAccessibility':
-    'macOS needs Accessibility permission for this shortcut. Open System Settings → Privacy & Security → Accessibility and enable OpenHuman.',
+    'macOS needs Accessibility permission for this shortcut. Open System Settings → Privacy & Security → Accessibility and enable Neppy.',
   'pttSettings.errorShortcutInUse': 'Another app already uses this shortcut. Pick a different one.',
   'pttSettings.errorUnsupportedWayland':
-    "Wayland sessions don't support global shortcuts in OpenHuman yet: switch to an X11 session or use the in-app dictation toggle.",
+    "Wayland sessions don't support global shortcuts in Neppy yet: switch to an X11 session or use the in-app dictation toggle.",
   'pttSettings.exclusiveFullscreenHint':
     "In exclusive-fullscreen games the overlay won't render: you'll only hear the chime. Switch to borderless fullscreen for the overlay.",
   'pttOverlay.listening': 'Listening…',
@@ -2728,13 +2728,13 @@ const en: TranslationMap = {
   'chat.attachment.tooManyFiles': 'Maximum {max} files per message',
   'chat.attachment.tooManyVideos': 'Maximum {max} videos per message',
   'chat.attachment.videoNotSupported':
-    'This model can’t read videos. You can use the OpenHuman Reasoning tier to attach your video.',
+    'This model can’t read videos. You can use the Neppy Reasoning tier to attach your video.',
   'chat.attachment.dropToAttach': 'Drop files to attach',
   'chat.attachment.tooLarge': 'Image exceeds {max} size limit',
   'chat.attachment.unsupportedType':
     'Unsupported file type. Use an image (PNG, JPEG, WebP, GIF, BMP) or a PDF, TXT, or Markdown file.',
   'chat.attachment.imageNotSupported':
-    'This model can’t read images. You can use the OpenHuman Reasoning tier to attach your image.',
+    'This model can’t read images. You can use the Neppy Reasoning tier to attach your image.',
   'chat.attachment.readFailed': 'Could not read file',
 
   // Memory (additional)
@@ -2942,9 +2942,9 @@ const en: TranslationMap = {
   'vaultHealth.existsLabel': 'Workspace vault path exists',
   'vaultHealth.existsRecovery':
     'Vault folder is missing. Start a sync or create this folder, then refresh this checklist.',
-  'vaultHealth.writableLabel': 'Vault is writable by OpenHuman',
+  'vaultHealth.writableLabel': 'Vault is writable by Neppy',
   'vaultHealth.writableRecovery':
-    'OpenHuman cannot write to this vault yet. Grant write permissions and refresh.',
+    'Neppy cannot write to this vault yet. Grant write permissions and refresh.',
   'vaultHealth.obsidianLabel': 'Vault is registered in Obsidian',
   'vaultHealth.obsidianRecovery':
     'In Obsidian, choose "Open folder as vault" for this path, then refresh this checklist.',
@@ -2967,13 +2967,13 @@ const en: TranslationMap = {
   'memoryData.howItWorks': 'How memory storage works',
   'memoryData.workspaceVault': 'Workspace vault · write',
   'memoryData.workspaceVaultDesc':
-    'OpenHuman writes generated memory notes to memory_tree/content.',
+    'Neppy writes generated memory notes to memory_tree/content.',
   'memoryData.connectedSources': 'Connected sources · read',
   'memoryData.connectedSourcesDesc':
     'Folders, mailboxes, chats, and repos are imported for memory indexing: their original files are never rewritten.',
   'memoryData.internalFiles': 'Internal memory-tree files',
   'memoryData.internalFilesDesc':
-    'Indexes, queue state, and summaries are managed by OpenHuman to keep recall and sync healthy.',
+    'Indexes, queue state, and summaries are managed by Neppy to keep recall and sync healthy.',
   'memoryData.windowError': 'Memory window',
   'memoryData.windowUpdated': 'Memory window updated',
   'memoryData.windowUpdatedMsg': 'Set to {window}.',
@@ -3148,7 +3148,7 @@ const en: TranslationMap = {
   'backend.cloud': 'Cloud',
   'backend.recommended': 'Recommended',
   'backend.cloudDescription':
-    'Fast, powerful models routed through the OpenHuman backend. Ready to use immediately.',
+    'Fast, powerful models routed through the Neppy backend. Ready to use immediately.',
   'backend.privacyNote':
     'Prompts and selected context may be sent to the configured backend/provider. Use local mode for supported on-device workloads.',
   'backend.local': 'Local',
@@ -3193,9 +3193,9 @@ const en: TranslationMap = {
     'This is a plain HTTP URL on a public host: traffic will not be encrypted. Use HTTPS unless you trust this network.',
   'bootCheck.chooseCoreMode': 'Select a Runtime',
   'bootCheck.connectToCore': 'Connect to Your Runtime',
-  'bootCheck.desktopDescription': 'OpenHuman needs a runtime to think. Pick where it should live.',
+  'bootCheck.desktopDescription': 'Neppy needs a runtime to think. Pick where it should live.',
   'bootCheck.webDescription':
-    'On the web, OpenHuman connects to a runtime you control. Drop in its URL and auth token below, or grab the desktop app to run one right on your machine.',
+    'On the web, Neppy connects to a runtime you control. Drop in its URL and auth token below, or grab the desktop app to run one right on your machine.',
   'bootCheck.preferDesktop': 'Rather keep everything on your own device?',
   'bootCheck.downloadDesktop': 'Get the Desktop App',
   'bootCheck.localRecommended': 'Run Locally (Recommended)',
@@ -3221,7 +3221,7 @@ const en: TranslationMap = {
   'bootCheck.quit': 'Quit',
   'bootCheck.legacyDetected': 'Legacy Background Runtime Detected',
   'bootCheck.legacyDescription':
-    'A separately-installed OpenHuman daemon is already running on this device. We need to clear it out before the built-in runtime can take over.',
+    'A separately-installed Neppy daemon is already running on this device. We need to clear it out before the built-in runtime can take over.',
   'bootCheck.removing': 'Removing…',
   'bootCheck.removeContinue': 'Remove and Continue',
   'bootCheck.localNeedsRestart': 'Local Runtime Needs a Restart',
@@ -3243,12 +3243,12 @@ const en: TranslationMap = {
   'bootCheck.actionFailed': 'Something went wrong. Please try again.',
   'bootCheck.portConflictTitle': "Couldn't Start the App Engine",
   'bootCheck.portConflictBody':
-    "Another process is using the network port OpenHuman needs. We'll try to fix this automatically.",
+    "Another process is using the network port Neppy needs. We'll try to fix this automatically.",
   'bootCheck.portConflictFixButton': 'Fix Automatically',
   'bootCheck.portConflictFixing': 'Fixing…',
   'bootCheck.portConflictFixFailed':
     "Automatic fix didn't work. Please restart your computer and try again.",
-  'bootCheck.portConflictOwner': '{name} (PID {pid}) is using the network port OpenHuman needs.',
+  'bootCheck.portConflictOwner': '{name} (PID {pid}) is using the network port Neppy needs.',
   'bootCheck.portConflictGuidance':
     'Close that program to free the port, or force-quit it below, then try again.',
   'bootCheck.portConflictForceQuit': 'Force-quit {name}',
@@ -3295,7 +3295,7 @@ const en: TranslationMap = {
     'The runtime could not read its configuration file. config.toml may belong to a different user account, or be inaccessible to the runtime process for another reason. Restart the runtime, and if that does not help, repair the workspace ownership or re-create its volume.',
   'welcome.localSessionErrorFallback': 'Could not start a local session.',
   'welcome.gatewaySessionErrorFallback':
-    'Sign-in could not be completed right now. The session store did not respond in time (even after retrying). Please restart OpenHuman and try again.',
+    'Sign-in could not be completed right now. The session store did not respond in time (even after retrying). Please restart Neppy and try again.',
   'welcome.localSessionDesc': 'Uses an offline local profile and skips TinyHumans OAuth.',
 
   // Chat: Agent chat panel description
@@ -3326,7 +3326,7 @@ const en: TranslationMap = {
   'composio.reconnect': 'Reconnect',
   'composio.expiredAuthorization': '{name} authorization expired',
   'composio.expiredDescription':
-    'Reconnect to re-enable {name} tools. OpenHuman will keep this integration unavailable until you refresh OAuth access.',
+    'Reconnect to re-enable {name} tools. Neppy will keep this integration unavailable until you refresh OAuth access.',
   'composio.envVarOverrides': 'is set, it overrides this setting.',
   'composio.previewBadge': 'Preview',
   'composio.colApp': 'App',
@@ -3356,7 +3356,7 @@ const en: TranslationMap = {
   'mic.failedToStopRecording': 'Failed to stop recording: {message}',
   'mic.transcriptionFailed': 'Transcription failed: {message}',
   'mic.voiceNotCompiled':
-    'Voice transcription is not included in this version of the app. Update OpenHuman to enable it.',
+    'Voice transcription is not included in this version of the app. Update Neppy to enable it.',
 
   // Reflections: kind labels
   'reflections.kind.retrospective': 'Retrospective',
@@ -3412,7 +3412,7 @@ const en: TranslationMap = {
   'app.openhumanLink.accounts.continueWith': 'Continue with {label} sign-in',
   'app.openhumanLink.accounts.done': 'Done',
   'app.openhumanLink.accounts.intro':
-    'Connect your apps to give OpenHuman access to your accounts.',
+    'Connect your apps to give Neppy access to your accounts.',
   'app.openhumanLink.accounts.webviewNote':
     'Your credentials stay on this device and are never shared.',
   'app.openhumanLink.billing.openDashboard': 'Open dashboard',
@@ -3422,10 +3422,10 @@ const en: TranslationMap = {
     'Credit offers can vary by promotion and account eligibility.',
   'app.openhumanLink.defaultBody':
     "Not ready in the popup yet. Open the full settings page when you're done.",
-  'app.openhumanLink.discord.intro': 'Join the OpenHuman community on Discord.',
+  'app.openhumanLink.discord.intro': 'Join the Neppy community on Discord.',
   'app.openhumanLink.discord.openInvite': 'Open invite link',
   'app.openhumanLink.discord.perk1': 'Early access to new features',
-  'app.openhumanLink.discord.perk2': 'Connect with other OpenHuman users',
+  'app.openhumanLink.discord.perk2': 'Connect with other Neppy users',
   'app.openhumanLink.discord.perk3': 'Share feedback directly with the team',
   'app.openhumanLink.discord.perk4': 'Community help and support',
   'app.openhumanLink.discordReport.intro':
@@ -3435,12 +3435,12 @@ const en: TranslationMap = {
   'app.openhumanLink.notifications.desktopOnly':
     'Native notifications are only available in the desktop app (run `pnpm dev:app`).',
   'app.openhumanLink.notifications.permissionOff':
-    'Notification permission is off. Enable OpenHuman in System Settings → Notifications, then retry.',
+    'Notification permission is off. Enable Neppy in System Settings → Notifications, then retry.',
   'app.openhumanLink.notifications.triggerFailed':
-    'OpenHuman could not trigger a system notification. Check OS notification settings and retry.',
+    'Neppy could not trigger a system notification. Check OS notification settings and retry.',
   'app.openhumanLink.notifications.welcomeBody':
     'You will get pings here when something needs your attention.',
-  'app.openhumanLink.notifications.welcomeTitle': 'OpenHuman is good to go',
+  'app.openhumanLink.notifications.welcomeTitle': 'Neppy is good to go',
   'app.openhumanLink.status.closed': 'Closed',
   'app.openhumanLink.status.connected': 'Connected',
   'app.openhumanLink.status.error': 'Error',
@@ -3452,15 +3452,15 @@ const en: TranslationMap = {
   'app.openhumanLink.notifications.asking': 'Asking your OS…',
   'app.openhumanLink.notifications.blocked': 'Notifications blocked',
   'app.openhumanLink.notifications.blockedStep1': 'Open System Settings',
-  'app.openhumanLink.notifications.blockedStep2': 'Go to Notifications → OpenHuman',
+  'app.openhumanLink.notifications.blockedStep2': 'Go to Notifications → Neppy',
   'app.openhumanLink.notifications.blockedStep3': 'Enable Allow Notifications',
-  'app.openhumanLink.notifications.intro': 'Allow OpenHuman to send you notifications.',
+  'app.openhumanLink.notifications.intro': 'Allow Neppy to send you notifications.',
   'app.openhumanLink.notifications.promptHint': 'Click Allow when your system asks for permission.',
   'app.openhumanLink.notifications.retry': 'Retry test notification',
   'app.openhumanLink.notifications.send': 'Send test notification',
   'app.openhumanLink.notifications.sendFailed': "Couldn't send: {error}",
   'app.openhumanLink.notifications.sent':
-    "Test notification sent. If you didn't receive it, go to System Settings → Notifications → OpenHuman, turn on Allow Notifications, and set Banner Style to Persistent.",
+    "Test notification sent. If you didn't receive it, go to System Settings → Notifications → Neppy, turn on Allow Notifications, and set Banner Style to Persistent.",
   'app.openhumanLink.skipForNow': 'Skip for now',
   'app.openhumanLink.telegramUnavailable': 'Telegram unavailable',
   'app.openhumanLink.title.accounts': 'Connect your apps',
@@ -3473,7 +3473,7 @@ const en: TranslationMap = {
   'app.persistRehydration.heading': 'Restoring your data',
   'app.persistRehydration.resetCta': 'Resetting…',
   'app.persistRehydration.resetting': 'Resetting…',
-  'app.routeLoading.initializing': 'Initializing OpenHuman...',
+  'app.routeLoading.initializing': 'Initializing Neppy...',
   'app.update.currentlyOn': '{version}',
   'app.update.errorFallback': 'Something went wrong while updating.',
   'app.update.header.default': 'Update',
@@ -3574,7 +3574,7 @@ const en: TranslationMap = {
   'chat.flowProposal.stepKind.subWorkflow': 'Sub-workflow',
 
   // Auth mode labels
-  'channels.authMode.managed_dm': 'Login with OpenHuman',
+  'channels.authMode.managed_dm': 'Login with Neppy',
   'channels.authMode.oauth': 'OAuth Sign-in',
   'channels.authMode.bot_token': 'Use your own Bot Token',
   'channels.authMode.api_key': 'Use your own API Key',
@@ -3592,9 +3592,9 @@ const en: TranslationMap = {
   'channels.discord.description': 'Send and receive messages via Discord.',
   'channels.discord.authMode.bot_token.description': 'Provide your own Discord bot token.',
   'channels.discord.authMode.oauth.description':
-    'Install the OpenHuman bot to your Discord server via OAuth.',
+    'Install the Neppy bot to your Discord server via OAuth.',
   'channels.discord.authMode.managed_dm.description':
-    'Link your personal Discord account to the OpenHuman bot.',
+    'Link your personal Discord account to the Neppy bot.',
   'channels.discord.fields.bot_token.label': 'Bot Token',
   'channels.discord.fields.bot_token.placeholder': 'Your Discord bot token',
   'channels.discord.fields.guild_id.label': 'Server (Guild) ID',
@@ -3604,7 +3604,7 @@ const en: TranslationMap = {
   'channels.telegram.displayName': 'Telegram',
   'channels.telegram.description': 'Send and receive messages via Telegram.',
   'channels.telegram.authMode.managed_dm.description':
-    'Message the OpenHuman Telegram bot directly.',
+    'Message the Neppy Telegram bot directly.',
   'channels.telegram.authMode.bot_token.description':
     'Provide your own Telegram Bot token from @BotFather.',
   'channels.telegram.fields.bot_token.label': 'Bot Token',
@@ -3618,9 +3618,9 @@ const en: TranslationMap = {
   // Connect help (in-app guidance so users do not have to ask the agent for the path)
   'channels.connectHelp.title': 'How to connect',
   'channels.connectHelp.discord':
-    'Pick a method below: link your account via OpenHuman, install the bot with OAuth, or paste your own bot token from the Discord developer portal.',
+    'Pick a method below: link your account via Neppy, install the bot with OAuth, or paste your own bot token from the Discord developer portal.',
   'channels.connectHelp.telegram':
-    'Pick a method below: message the managed OpenHuman bot to link it, or paste your own bot token from @BotFather.',
+    'Pick a method below: message the managed Neppy bot to link it, or paste your own bot token from @BotFather.',
   'channels.connectHelp.slackNote':
     'Looking for Slack? Slack connects as an app under Connections → OAuth, not as a messaging channel here.',
 
@@ -3685,16 +3685,16 @@ const en: TranslationMap = {
   'iosPair.error.connectionFailed':
     'Connection failed. Make sure the desktop app is running and try again.',
   'iosPair.error.invalidQr':
-    'Invalid QR code. Make sure you are scanning an OpenHuman pairing code.',
+    'Invalid QR code. Make sure you are scanning an Neppy pairing code.',
   'iosPair.error.unreachableDesktop':
     'Could not reach the desktop. Make sure both devices are online and try again.',
   'iosPair.expired': 'QR code expired. Ask the desktop to regenerate the code.',
   'iosPair.instructions':
-    'Open OpenHuman on your desktop, go to Settings > Devices, and tap "Pair phone" to show the QR code.',
+    'Open Neppy on your desktop, go to Settings > Devices, and tap "Pair phone" to show the QR code.',
   'iosPair.retryScan': 'Retry scan',
   'iosPair.scanQrCode': 'Scan QR code',
   'iosPair.scannerOpening': 'Scanner opening...',
-  'iosPair.step.openDesktop': 'Open OpenHuman on desktop',
+  'iosPair.step.openDesktop': 'Open Neppy on desktop',
   'iosPair.step.openSettings': 'Go to Settings > Devices',
   'iosPair.step.showQr': 'Tap "Pair phone" to show QR',
   'iosPair.title': 'Pair with your desktop',
@@ -3729,7 +3729,7 @@ const en: TranslationMap = {
   'composio.connect.permissionsDefault': 'Read + Write enabled by default',
   'composio.connect.permissionsNote': 'can expose',
   'composio.connect.permissionsNoteSuffix':
-    "OpenHuman's own agent permissions are controlled below as read, write, and admin toggles.",
+    "Neppy's own agent permissions are controlled below as read, write, and admin toggles.",
   'composio.connect.reopenBrowser': 'Reopen browser',
   'composio.connect.requestingUrl': 'Requesting connect URL…',
   'composio.connect.requiredFieldEmpty': 'This field is required.',
@@ -3761,7 +3761,7 @@ const en: TranslationMap = {
   'composio.triggers.listenFrom': 'Listen for events from',
   'composio.triggers.loadError': "Couldn't load triggers",
   'composio.triggers.sessionExpired':
-    'Your OpenHuman session expired. Sign in again to load triggers.',
+    'Your Neppy session expired. Sign in again to load triggers.',
   'composio.triggers.needsConfiguration': 'Needs configuration',
   'composio.triggers.noneAvailable': 'No triggers are currently available for',
   'conversations.taskKanban.moveLeft': 'Move left',
@@ -3862,16 +3862,16 @@ const en: TranslationMap = {
   'conversations.toolFailure.whyLabel': 'Why',
   'conversations.toolFailure.nextLabel': 'What to do next',
   'conversations.toolFailure.missingPermission.cause':
-    "OpenHuman doesn't have permission to do this yet.",
+    "Neppy doesn't have permission to do this yet.",
   'conversations.toolFailure.missingPermission.next':
     'Grant the permission it needs, then try again.',
   'conversations.toolFailure.missingApp.cause':
     "The app or program needed for this action isn't available.",
   'conversations.toolFailure.missingApp.next': 'Install or open the app, then try again.',
   'conversations.toolFailure.serviceUnavailable.cause':
-    'A service OpenHuman needs is temporarily unavailable.',
+    'A service Neppy needs is temporarily unavailable.',
   'conversations.toolFailure.serviceUnavailable.next':
-    'OpenHuman will try again shortly: no action needed.',
+    'Neppy will try again shortly: no action needed.',
   'conversations.toolFailure.badCredentials.cause':
     'The saved sign-in details are missing or no longer valid.',
   'conversations.toolFailure.badCredentials.next':
@@ -3880,19 +3880,19 @@ const en: TranslationMap = {
     'This action is blocked by your safety settings.',
   'conversations.toolFailure.blockedByPolicy.next':
     'Allow it in Settings → Agent access if you want it to run.',
-  'conversations.toolFailure.modelConnection.cause': "OpenHuman couldn't reach the AI model.",
+  'conversations.toolFailure.modelConnection.cause': "Neppy couldn't reach the AI model.",
   'conversations.toolFailure.modelConnection.next':
-    'Check your connection or model settings; OpenHuman will retry.',
+    'Check your connection or model settings; Neppy will retry.',
   'conversations.toolFailure.timeout.cause': 'The action took too long and was stopped.',
   'conversations.toolFailure.timeout.next':
-    'OpenHuman will try again, or you can retry it manually.',
+    'Neppy will try again, or you can retry it manually.',
   'conversations.toolFailure.denied.cause': 'You declined this action.',
   'conversations.toolFailure.denied.next':
     'Nothing to do: it was not run. Ask again if you change your mind.',
   'conversations.toolFailure.approvalExpired.cause':
     'The approval request expired before anyone responded.',
   'conversations.toolFailure.approvalExpired.next':
-    "Ask again to run it: OpenHuman won't retry it on its own.",
+    "Ask again to run it: Neppy won't retry it on its own.",
   'conversations.toolFailure.unknown.cause': 'Something went wrong with this action.',
   'conversations.toolFailure.unknown.next':
     'Try again; if it keeps failing, run diagnostics from Settings.',
@@ -3972,7 +3972,7 @@ const en: TranslationMap = {
   'daemon.serviceBlockingGate.retryFailed':
     'Retry failed. Download the latest app build and try again.',
   'daemon.serviceBlockingGate.retrying': 'Retrying...',
-  'daemon.serviceBlockingGate.title': 'OpenHuman core is unavailable',
+  'daemon.serviceBlockingGate.title': 'Neppy core is unavailable',
   'home.banners.discordSubtitle': 'get support, share feedback, and meet the community.',
   'home.banners.discordTitle': 'Join our Discord',
   'home.banners.earlyBirdDismiss': 'Dismiss early bird banner',
@@ -4008,7 +4008,7 @@ const en: TranslationMap = {
   'intelligence.diagram.skillInstallCommand': 'npx skills add yizhiyanhua-ai/fireworks-tech-graph',
   'intelligence.diagram.promptExample':
     'Generate an architecture diagram of the current swarm in dark terminal style',
-  'intelligence.diagram.imageAlt': 'Latest generated OpenHuman architecture diagram',
+  'intelligence.diagram.imageAlt': 'Latest generated Neppy architecture diagram',
   'intelligence.diagram.refreshesEvery': 'Refreshes every {seconds}s',
   'intelligence.memoryText.entityTypePrefix': 'Entity type',
   'intelligence.tasks.activeBoardOne': '1 active board across conversations',
@@ -4192,7 +4192,7 @@ const en: TranslationMap = {
   'tinyplaceOrchestration.unknownSender': 'Unknown sender',
   'tinyplaceOrchestration.master.title': 'Agent / human',
   'tinyplaceOrchestration.master.subtitle': 'Master chat',
-  'tinyplaceOrchestration.master.preview': 'Direct coordination between you and OpenHuman.',
+  'tinyplaceOrchestration.master.preview': 'Direct coordination between you and Neppy.',
   'tinyplaceOrchestration.subconscious.title': 'Subconscious',
   'tinyplaceOrchestration.subconscious.subtitle': 'Internal agent chats',
   'tinyplaceOrchestration.subconscious.preview': 'Background agent coordination and memory loops.',
@@ -4210,7 +4210,7 @@ const en: TranslationMap = {
   'tinyplaceOrchestration.pairing.incoming': 'Incoming',
   'tinyplaceOrchestration.pairing.outgoing': 'Outgoing',
   'tinyplaceOrchestration.master.you': 'You',
-  'tinyplaceOrchestration.composer.placeholder': 'Message OpenHuman…',
+  'tinyplaceOrchestration.composer.placeholder': 'Message Neppy…',
   'tinyplaceOrchestration.composer.send': 'Send',
   'tinyplaceOrchestration.composer.sendFailed': 'Failed to send message',
   'tinyplaceOrchestration.steering.label': 'Steering',
@@ -4586,7 +4586,7 @@ const en: TranslationMap = {
   'flows.nodeSummary.agent.withPrompt': '“{prompt}” · {model}',
   'flows.nodeSummary.agent.default': 'Asks the {model}',
   'flows.nodeSummary.toolCall.runsNative': 'Runs {name}',
-  'flows.nodeSummary.toolCall.pickNative': 'Runs an OpenHuman tool (pick one)',
+  'flows.nodeSummary.toolCall.pickNative': 'Runs an Neppy tool (pick one)',
   'flows.nodeSummary.toolCall.runs': 'Runs {slug}',
   'flows.nodeSummary.toolCall.pick': 'Runs an app action (pick one)',
   'flows.nodeSummary.http.withUrl': '{method} {url}',
@@ -4922,7 +4922,7 @@ const en: TranslationMap = {
   'onboarding.contextGathering.title': 'Context Gathering',
   'openhuman.team_list_teams': 'Team list teams',
   'overlay.ariaAttention': 'Attention message',
-  'overlay.ariaOrb': 'OpenHuman overlay',
+  'overlay.ariaOrb': 'Neppy overlay',
   'overlay.ariaVoiceActive': 'Voice input active',
   'overlay.orbTitle': 'Drag to move · Double-click to reset position',
   'pages.settings.account.connections': 'Connections',
@@ -4963,7 +4963,7 @@ const en: TranslationMap = {
   'privacy.dataKind.raw': 'Raw',
   'privacy.whatLeaves.link.label': 'What leaves my computer?',
   'rewards.community.achievementsUnlocked': '{unlocked} of {total} achievements unlocked',
-  'rewards.community.activityStreakHint': 'Consecutive days you were active on OpenHuman.',
+  'rewards.community.activityStreakHint': 'Consecutive days you were active on Neppy.',
   'rewards.community.activityTitle': 'Your activity',
   'rewards.community.claimCredited': '{amount} credited to your balance',
   'rewards.community.claimError': 'Could not claim. Please try again.',
@@ -4989,7 +4989,7 @@ const en: TranslationMap = {
   'rewards.community.discordStatusUnavailable': 'Discord status unavailable',
   'rewards.community.discordWaiting': 'Waiting for Discord…',
   'rewards.community.heroSubtitle': 'Refer friends and complete challenges to earn credits.',
-  'rewards.community.heroTitle': 'Earn rewards with OpenHuman',
+  'rewards.community.heroTitle': 'Earn rewards with Neppy',
   'rewards.community.joinDiscord': 'Join Discord',
   'rewards.community.loadingRewards': 'Loading rewards…',
   'rewards.community.locked': 'Locked',
@@ -5000,7 +5000,7 @@ const en: TranslationMap = {
   'rewards.community.roleAssigned': 'Role assigned',
   'rewards.community.roleAssignmentCount': '{assigned} of {unlocked} roles assigned',
   'rewards.community.roleClaimDesc':
-    'You unlocked Discord roles but have not joined the OpenHuman server yet. Join to get them assigned automatically.',
+    'You unlocked Discord roles but have not joined the Neppy server yet. Join to get them assigned automatically.',
   'rewards.community.roleClaimTitle': 'Claim your Discord roles',
   'rewards.community.roleJoinToClaim': 'Join server to claim',
   'rewards.community.rolePending': 'Syncing role…',
@@ -5081,7 +5081,7 @@ const en: TranslationMap = {
   'settings.ai.providers.groupCli': 'CLI logins',
   'settings.ai.providers.cliDetail': 'Uses a login another CLI already holds',
   'settings.ai.providers.connected': 'Connected',
-  'settings.ai.providers.managedDetail': 'OpenHuman chooses a model for each task',
+  'settings.ai.providers.managedDetail': 'Neppy chooses a model for each task',
   'settings.ai.providers.rowActions': 'More actions for {provider}',
   'settings.ai.providers.replaceKey': 'Replace API key',
   'settings.ai.providers.custom': 'Custom',
@@ -5215,7 +5215,7 @@ const en: TranslationMap = {
   'settings.ai.noSpendRows': 'No spend rows loaded.',
   'settings.ai.topHours': 'Top hours',
   'settings.ai.noHourlySpend': 'No hourly spend yet.',
-  'settings.ai.openhumanDefault': 'OpenHuman (default)',
+  'settings.ai.openhumanDefault': 'Neppy (default)',
   'settings.ai.localModelResolved': 'Ollama · {model}',
   'settings.ai.customRoutingForWorkload': 'Custom routing for {label}',
   'settings.ai.loadingModels': 'Loading models...',
@@ -5300,17 +5300,17 @@ const en: TranslationMap = {
   'settings.ai.composioSyncScans': 'Composio sync scans',
   'settings.ai.totalBackgroundApiReadBudget': 'Total bg API read budget',
   'settings.ai.memoryWorkerPolls': 'Memory worker polls',
-  'settings.ai.defaultProviderName': 'OpenHuman',
+  'settings.ai.defaultProviderName': 'Neppy',
   'settings.ai.routing.managed': 'Managed',
-  'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
+  'settings.ai.managedSourceLabel': 'Managed by Neppy',
   'settings.ai.managedSourceDetail': 'Automatic model selection',
   'settings.ai.routing.managedAlwaysOn': 'Always on',
   'settings.ai.routing.managedHint':
     'Managed is always available as a fallback. To use your own model, choose a routing mode below.',
   'settings.ai.routing.managedDesc':
-    'OpenHuman will run all inference in the cloud, choose the best model for the task, optimize for cost, and keep the safest routing defaults.',
+    'Neppy will run all inference in the cloud, choose the best model for the task, optimize for cost, and keep the safest routing defaults.',
   'settings.ai.routing.managedMsg':
-    'OpenHuman will handle all inference for every workload and automatically choose the best route for cost, quality, and security.',
+    'Neppy will handle all inference for every workload and automatically choose the best route for cost, quality, and security.',
   'settings.ai.routing.useYourOwn': 'Use Your Own Models',
   'settings.ai.routing.useYourOwnDesc':
     'Choose one provider + model and route every workload through it. This is simple, but it can be inefficient because lightweight and heavyweight inference all share the same route.',
@@ -5484,16 +5484,16 @@ const en: TranslationMap = {
   'settings.composio.confirmSwitch': 'I understand, switch to Direct',
   'settings.composio.confirmTitle': '⚠️ Switching to Direct mode',
   'settings.composio.confirmWarning':
-    "Your existing integrations (Gmail, Slack, GitHub, etc. linked through OpenHuman) won't be visible: they live in the OpenHuman-managed Composio tenant.",
+    "Your existing integrations (Gmail, Slack, GitHub, etc. linked through Neppy) won't be visible: they live in the Neppy-managed Composio tenant.",
   'settings.composio.intro':
     'Composio integrates 250+ external apps as tools your agent can call. Choose how those tool calls are routed.',
   'settings.composio.title': 'Composio',
   'settings.composio.modeDirect': 'Direct (bring your own API key)',
   'settings.composio.modeDirectDesc':
     'Calls go to backend.composio.dev directly. Sovereign / offline-friendly. Tool execution works synchronously; real-time trigger webhooks are not yet routed in direct mode (follow-up issue).',
-  'settings.composio.modeManaged': 'Managed (OpenHuman handles it for you)',
+  'settings.composio.modeManaged': 'Managed (Neppy handles it for you)',
   'settings.composio.modeManagedDesc':
-    'OpenHuman proxies tool calls through our backend (recommended). Auth is brokered; you never paste a Composio API key. Webhooks are fully routed.',
+    'Neppy proxies tool calls through our backend (recommended). Auth is brokered; you never paste a Composio API key. Webhooks are fully routed.',
   'settings.composio.routingMode': 'Routing mode',
   'settings.composio.saveErrorNoKey': 'Failed to save. Direct mode requires a non-empty API key.',
   'settings.composio.saving': 'Saving…',
@@ -5600,7 +5600,7 @@ const en: TranslationMap = {
     'Configure Telegram/Discord auth modes and default channel routing',
   'settings.developerMenu.tools.title': 'Tools',
   'settings.developerMenu.tools.desc':
-    'Enable or disable capabilities OpenHuman can use on your behalf',
+    'Enable or disable capabilities Neppy can use on your behalf',
   'settings.developerMenu.devWorkflow.title': 'Dev Workflow',
   'settings.developerMenu.devWorkflow.desc':
     'Autonomous agent that picks your GitHub issues and raises PRs on a schedule',
@@ -5770,7 +5770,7 @@ const en: TranslationMap = {
   'settings.developerMenu.integrationTriggers.desc':
     'Configure AI triage settings for Composio integration triggers',
   'settings.developerMenu.mcpServer.title': 'MCP Server',
-  'settings.developerMenu.mcpServer.desc': 'Configure external MCP clients to connect to OpenHuman',
+  'settings.developerMenu.mcpServer.desc': 'Configure external MCP clients to connect to Neppy',
   'settings.developerMenu.autonomy.title': 'Agent autonomy',
   'settings.developerMenu.autonomy.desc': 'Tool action rate limits and safety thresholds',
   // Tools & Capabilities group: autocomplete and voice debug (doc § Tools & Capabilities)
@@ -5787,7 +5787,7 @@ const en: TranslationMap = {
   'settings.mcpServer.copied': 'Copied!',
   'settings.mcpServer.openConfigFile': 'Open Config File',
   'settings.mcpServer.binaryPathNotFound':
-    'OpenHuman binary not found. If running from source, build with: cargo build --bin openhuman-core',
+    'Neppy binary not found. If running from source, build with: cargo build --bin openhuman-core',
   'settings.mcpServer.openConfigError': 'Failed to open config file',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': 'Cursor',
@@ -5828,7 +5828,7 @@ const en: TranslationMap = {
     'When enabled, the agent executes all eligible actions without asking for your approval first. This includes file writes, shell commands, network requests, and any other side effects. Credential and system directories stay blocked, and actions from untrusted or unlabelled call origins are still denied.',
   'settings.agentAccess.tinyplaceAutopilot.title': 'Autonomous tiny.place agent',
   'settings.agentAccess.tinyplaceAutopilot.desc':
-    'Let OpenHuman act on tiny.place on its own. On a schedule, it finds worthwhile work (open bounties first), does what fits its skills, and acts from your identity. It runs unattended and can spend, so keep it on devnet while testing. Off by default.',
+    'Let Neppy act on tiny.place on its own. On a schedule, it finds worthwhile work (open bounties first), does what fits its skills, and acts from your identity. It runs unattended and can spend, so keep it on devnet while testing. Off by default.',
   'settings.agentAccess.tinyplaceAutopilot.label': 'Run automatically',
   'settings.agentAccess.timeout.label': 'Action timeout',
   'settings.agentAccess.timeout.desc':
@@ -6063,7 +6063,7 @@ const en: TranslationMap = {
   'settings.appearance.showChatMascotDesc':
     'Keep the mascot standing on the composer. Hidden, the chat is text only until you turn this back on.',
   'settings.mascot.active': 'Active',
-  'settings.mascot.characterDesc': 'Choose your OpenHuman character.',
+  'settings.mascot.characterDesc': 'Choose your Neppy character.',
   'settings.mascot.characterDraft': 'Draft',
   'settings.mascot.characterHeading': 'Character',
   'settings.mascot.customGifError':
@@ -6079,7 +6079,7 @@ const en: TranslationMap = {
   'settings.mascot.characterPreview': 'Preview',
   'settings.mascot.characterStates': 'states',
   'settings.mascot.characterVisemes': 'visemes',
-  'settings.mascot.colorAria': 'OpenHuman color',
+  'settings.mascot.colorAria': 'Neppy color',
   'settings.mascot.colorDesc': 'Pick a color theme for your character.',
   'settings.mascot.colorHeading': 'Color',
   'settings.mascot.colorBlack': 'Black',
@@ -6089,15 +6089,15 @@ const en: TranslationMap = {
   'settings.mascot.primaryColor': 'Primary color',
   'settings.mascot.secondaryColor': 'Secondary color',
   'settings.mascot.colorYellow': 'Yellow',
-  'settings.mascot.libraryUnavailable': 'OpenHuman library unavailable',
-  'settings.mascot.title': 'OpenHuman',
-  'settings.mascot.loadingLibrary': 'Loading OpenHuman library…',
+  'settings.mascot.libraryUnavailable': 'Neppy library unavailable',
+  'settings.mascot.title': 'Neppy',
+  'settings.mascot.loadingLibrary': 'Loading Neppy library…',
   'settings.mascot.loadDetailError': 'Could not load mascot.',
   'settings.mascot.loadLibraryError': 'Could not load mascot library.',
-  'settings.mascot.localDefault': 'Local OpenHuman (default)',
+  'settings.mascot.localDefault': 'Local Neppy (default)',
   'settings.mascot.menuTitle': 'Mascot',
   'settings.mascot.menuDesc': 'Pick the mascot color used across the app',
-  'settings.mascot.noCharacters': 'No OpenHuman characters are available yet',
+  'settings.mascot.noCharacters': 'No Neppy characters are available yet',
   'settings.mascot.noColorVariants': 'No color variants',
   'settings.mascot.secondaryHeading': 'Meeting duo (second mascot)',
   'settings.mascot.secondaryDesc':
@@ -6190,7 +6190,7 @@ const en: TranslationMap = {
     'Sensible default: good continuity without burning extra tokens on every run.',
   'settings.memoryWindow.balanced.label': 'Balanced',
   'settings.memoryWindow.description':
-    'How much remembered context OpenHuman injects into every new agent run. Larger windows feel more aware of past conversations but use more tokens (and cost more) on every run.',
+    'How much remembered context Neppy injects into every new agent run. Larger windows feel more aware of past conversations but use more tokens (and cost more) on every run.',
   'settings.memoryWindow.extended.badge': 'More context',
   'settings.memoryWindow.extended.hint':
     'More long-term memory injected into each run. Higher token cost per turn.',
@@ -6357,21 +6357,21 @@ const en: TranslationMap = {
   'skills.install.urlLabel': 'Skill URL',
   'skills.install.urlPlaceholder': 'https://raw.githubusercontent.com/owner/repo/main/SKILL.md',
   'skills.meetingBots.bannerDesc':
-    'OpenHuman joins calls silently and handles notes and follow-ups automatically.',
-  'skills.meetingBots.bannerTitle': 'Send OpenHuman to your next meeting',
-  'skills.meetingBots.busyTitle': 'OpenHuman is busy',
+    'Neppy joins calls silently and handles notes and follow-ups automatically.',
+  'skills.meetingBots.bannerTitle': 'Send Neppy to your next meeting',
+  'skills.meetingBots.busyTitle': 'Neppy is busy',
   'skills.meetingBots.comingSoon': 'coming soon',
   'skills.meetingBots.couldNotLeaveTitle': 'Couldn’t leave the meeting',
-  'skills.meetingBots.couldNotStartTitle': 'Could not start OpenHuman',
+  'skills.meetingBots.couldNotStartTitle': 'Could not start Neppy',
   'skills.meetingBots.displayName': 'Display name',
-  'skills.meetingBots.failedToStart': 'Failed to start OpenHuman.',
+  'skills.meetingBots.failedToStart': 'Failed to start Neppy.',
   'skills.meetingBots.joiningMessage': 'It should appear as a participant in a few seconds.',
-  'skills.meetingBots.joiningTitle': 'OpenHuman is joining the meeting',
+  'skills.meetingBots.joiningTitle': 'Neppy is joining the meeting',
   'skills.meetingBots.meetingLink': 'Meeting link',
-  'skills.meetingBots.modalAriaLabel': 'Send OpenHuman to a meeting',
+  'skills.meetingBots.modalAriaLabel': 'Send Neppy to a meeting',
   'skills.meetingBots.modalDesc':
-    'OpenHuman will join as a silent participant and help with notes and follow-ups.',
-  'skills.meetingBots.modalTitle': 'Send OpenHuman to a meeting',
+    'Neppy will join as a silent participant and help with notes and follow-ups.',
+  'skills.meetingBots.modalTitle': 'Send Neppy to a meeting',
   'skills.meetingBots.newBadge': 'New',
   'skills.meetingBots.platformComingSoon': '{label} support is coming soon.',
   'skills.meetingBots.platformHints.gmeet': 'meet.google.com/abc-defg-hij',
@@ -6384,7 +6384,7 @@ const en: TranslationMap = {
   'skills.meetingBots.platforms.zoom': 'Zoom',
   'skills.meetingBots.sendTo': 'Send to {label}',
   'skills.meetingBots.serverOverloaded':
-    'OpenHuman is under heavy load right now. Please try again in a few minutes.',
+    'Neppy is under heavy load right now. Please try again in a few minutes.',
   'skills.meetingBots.soonSuffix': 'soon',
   'skills.meetingBots.starting': 'Starting…',
   'skills.meetingBots.recentCallsAriaLabel': 'Recent meeting calls',
@@ -6425,7 +6425,7 @@ const en: TranslationMap = {
   'skills.meetingBots.respondToParticipantDesc':
     'Enter your exact display name from the meeting. The bot only responds when you say its name (wake phrase).',
   'skills.meetingBots.wakePhrase': 'Wake Phrase',
-  'skills.meetingBots.wakePhraseHint': 'Hey OpenHuman',
+  'skills.meetingBots.wakePhraseHint': 'Hey Neppy',
   'skills.meetingBots.wakePhraseDesc': 'Participant must say this before the bot responds.',
   'skills.meetingBots.activeMode': 'Respond when I address it',
   'skills.meetingBots.activeModeDesc':
@@ -6436,7 +6436,7 @@ const en: TranslationMap = {
   'skills.meetingBots.history.earlier': 'Earlier',
   'skills.meetingBots.history.participantCount': '{count} participant',
   'skills.meetingBots.history.participantCountPlural': '{count} participants',
-  'skills.meetingBots.history.runWithOpenHuman': 'Run with OpenHuman',
+  'skills.meetingBots.history.runWithNeppy': 'Run with Neppy',
   'skills.meetingBots.history.searchPlaceholder': 'Search calls…',
   'skills.meetingBots.history.selectPrompt': 'Select a call to see its summary and transcript.',
   'skills.meetingBots.history.today': 'Today',
@@ -6477,7 +6477,7 @@ const en: TranslationMap = {
   'skills.meetingBots.defaults.openDefaults': 'Meeting defaults',
   'skills.meetingBots.defaults.watchCalendar': 'Watch my calendar',
   'skills.meetingBots.defaults.watchCalendarDesc':
-    'Let OpenHuman watch your connected calendar so it can auto-join or prompt for meetings based on the policies below. This is separate from meeting reminder notifications.',
+    'Let Neppy watch your connected calendar so it can auto-join or prompt for meetings based on the policies below. This is separate from meeting reminder notifications.',
   'skills.meetingBots.defaults.globalPolicy': 'Global auto-join policy',
   'skills.meetingBots.defaults.perPlatformTitle': 'Per-platform overrides',
   'skills.meetingBots.defaults.perPlatformDesc':
@@ -6563,7 +6563,7 @@ const en: TranslationMap = {
     'Human is where your personal context, identity, and assistant-facing profile come together.',
   'walkthrough.steps.brainTab.title': 'Open your Brain',
   'walkthrough.steps.brainTab.content':
-    'Brain is the memory graph: the place to inspect what OpenHuman knows and how ideas connect.',
+    'Brain is the memory graph: the place to inspect what Neppy knows and how ideas connect.',
   'walkthrough.steps.connectionsTab.title': 'Manage connections',
   'walkthrough.steps.connectionsTab.content':
     'Connections is always available from the main nav when you want to add or adjust services.',
@@ -6622,7 +6622,7 @@ const en: TranslationMap = {
   'chat.parentThread': 'parent thread',
   'chat.removeReaction': 'Remove {emoji}',
   'settings.composio.loading': 'Loading…',
-  'settings.mascot.noCharactersAvailable': 'No OpenHuman characters are available yet',
+  'settings.mascot.noCharactersAvailable': 'No Neppy characters are available yet',
   'skills.uninstall.confirmTitle': 'Uninstall {name}?',
   'conversations.taskKanban.blocked': 'Blocked',
   'conversations.taskKanban.done': 'Done',
@@ -6650,7 +6650,7 @@ const en: TranslationMap = {
   'devOptions.menuMessagingDesc':
     'Configure Telegram/Discord auth modes and default channel routing',
   'devOptions.menuTools': 'Tools',
-  'devOptions.menuToolsDesc': 'Enable or disable capabilities OpenHuman can use on your behalf',
+  'devOptions.menuToolsDesc': 'Enable or disable capabilities Neppy can use on your behalf',
   'devOptions.menuAgentChat': 'Agent Chat',
   'devOptions.menuAgentChatDesc': 'Test agent conversation with model and temperature overrides',
   'devOptions.menuCronJobs': 'Cron Jobs',
@@ -7014,7 +7014,7 @@ const en: TranslationMap = {
   // First-run initialization (harness_init)
   'harnessInit.title': 'Setting things up',
   'announcement.gotIt': 'Got it',
-  'harnessInit.subtitle': 'OpenHuman is preparing components it needs on first launch.',
+  'harnessInit.subtitle': 'Neppy is preparing components it needs on first launch.',
   'harnessInit.stepPython': 'Python runtime',
   'harnessInit.stepSpacy': 'Language model',
   'harnessInit.stepNode': 'Node.js runtime',
@@ -7024,16 +7024,16 @@ const en: TranslationMap = {
   'harnessInit.stateSkipped': 'Skipped',
   'harnessInit.stateFailed': 'Failed',
   'harnessInit.failedMessage':
-    'Some setup steps did not finish. You can retry, or continue: OpenHuman will use a built-in fallback.',
+    'Some setup steps did not finish. You can retry, or continue: Neppy will use a built-in fallback.',
   'harnessInit.retry': 'Retry',
   'harnessInit.continueAnyway': 'Continue anyway',
   'harnessInit.runInBackground': 'Run in background',
-  'harnessInit.backgroundHint': 'You can keep using OpenHuman while this finishes.',
+  'harnessInit.backgroundHint': 'You can keep using Neppy while this finishes.',
 
   // Keyring consent & security
   'keyring.consent.title': 'Secure Storage Unavailable',
   'keyring.consent.description':
-    'Your operating system keychain is not accessible. OpenHuman needs your permission to store secrets using local encrypted storage instead.',
+    'Your operating system keychain is not accessible. Neppy needs your permission to store secrets using local encrypted storage instead.',
   'keyring.consent.reasonPrefix': 'Reason:',
   'keyring.consent.showDetails': 'What does this mean?',
   'keyring.consent.hideDetails': 'Hide details',

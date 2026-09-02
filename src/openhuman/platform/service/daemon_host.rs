@@ -1,5 +1,5 @@
 //! Machine-local daemon UI preferences (tray visibility, etc.).
-//! Stored next to the main OpenHuman config file.
+//! Stored next to the main Neppy config file.
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};

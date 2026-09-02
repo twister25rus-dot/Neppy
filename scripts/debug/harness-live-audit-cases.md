@@ -2,7 +2,7 @@
 
 These checks exercise the real harness through JSON-RPC with live model credentials. They are debug audits, not CI tests. They intentionally avoid printing prompt bodies, response bodies, tokens, or transcript contents.
 
-Use an isolated spawned core when validating managed OpenHuman backend behavior without relying on a running desktop core:
+Use an isolated spawned core when validating managed Neppy backend behavior without relying on a running desktop core:
 
 ```bash
 node scripts/debug/harness-subagent-rpc-audit.mjs --spawn-core --isolated-workspace --model agentic-v1 --scenario all

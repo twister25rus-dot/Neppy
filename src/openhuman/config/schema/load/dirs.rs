@@ -71,10 +71,10 @@ pub(super) fn default_config_and_workspace_dirs() -> Result<(PathBuf, PathBuf)> 
 }
 
 /// The agent's default **projects home** — a visible, read-write directory
-/// (`~/OpenHuman/projects`) where the coding agent creates and saves projects,
+/// (`~/Neppy/projects`) where the coding agent creates and saves projects,
 /// kept distinct from the hidden internal state dir (`~/.openhuman/workspace`,
 /// which also holds `memory_tree` etc.). Overridable via `OPENHUMAN_PROJECTS_DIR`;
-/// falls back to `./OpenHuman/projects` only when the home dir can't be resolved.
+/// falls back to `./Neppy/projects` only when the home dir can't be resolved.
 pub fn default_projects_dir() -> PathBuf {
     if let Ok(p) = std::env::var(PROJECTS_DIR_ENV_VAR) {
         let trimmed = p.trim();
@@ -85,7 +85,7 @@ pub fn default_projects_dir() -> PathBuf {
     UserDirs::new()
         .map(|u| u.home_dir().to_path_buf())
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("OpenHuman")
+        .join("Neppy")
         .join("projects")
 }
 

@@ -385,7 +385,7 @@ pub async fn run_pending(config: &mut Config) {
         }
     }
 
-    // 7 -> 8: retire the two stale OpenHuman reasoning-tier `default_model`
+    // 7 -> 8: retire the two stale Neppy reasoning-tier `default_model`
     // defaults to `chat-v1`. `reasoning-v1` (a former DEFAULT_MODEL) and the
     // deprecated `reasoning-quick-v1` alias were the persisted default for older
     // builds and drive the implicit managed turns (triage, the subconscious tick,

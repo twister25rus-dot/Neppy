@@ -180,8 +180,8 @@ host files (`schemas.rs`, `presets.rs`, `model_ids.rs`, `paths.rs`, `parse.rs`,
 | `agent_orchestration/` | 64 / 27.9k | Engine already on `tinyagents::graph` (workflow runs, teams, delegation, `map_reduce`); what remains is the product layer (ledgers, RPC). Residual upstream item: detached-subagent `TaskStore` lifecycle — WP-5. 25 files crate-backed. |
 | `routing/` | 8 / 2.7k | **Deleted in WP-2.** A repository-wide reference audit found no consumer outside the module; #4783's crate `ModelRouter` already owns the live path, so retaining the nominally host-specific health/provider files would preserve an unreachable parallel stack. |
 | `model_council/` + `council_registry/` | 8 / 1.7k | **Deleted after WP-2 audit.** Generic fan-out already used crate `parallel::map_reduce`; upstream dead-code cleanup removed the remaining unreachable product and registry surfaces. |
-| `tool_timeout/` | 1 / 316 | **HOST-OWNED.** TinyAgents `harness::tool::ToolTimeout` is declarative per-tool metadata; it has no process-global value to receive OpenHuman config. This module owns UI/config + env precedence and the actual `tokio::time::timeout` deadline used by the host-tool adapter — WP-2 audit closed. |
-| `tool_status/` | 3 / 0.7k | **HOST-OWNED.** Its serialized UI/persistence taxonomy, OpenHuman security markers, retry categories, and user-facing remediation copy are product semantics. TinyAgents tool outcomes remain the generic execution input — WP-2 audit closed. |
+| `tool_timeout/` | 1 / 316 | **HOST-OWNED.** TinyAgents `harness::tool::ToolTimeout` is declarative per-tool metadata; it has no process-global value to receive Neppy config. This module owns UI/config + env precedence and the actual `tokio::time::timeout` deadline used by the host-tool adapter — WP-2 audit closed. |
+| `tool_status/` | 3 / 0.7k | **HOST-OWNED.** Its serialized UI/persistence taxonomy, Neppy security markers, retry categories, and user-facing remediation copy are product semantics. TinyAgents tool outcomes remain the generic execution input — WP-2 audit closed. |
 | `tools/` | 98 / 40.9k | The `Tool` trait + `ToolSpec` mechanics (`traits.rs:255`), `schema.rs`, `policy.rs`, `orchestrator_tools.rs`, `user_filter.rs` are framework-shaped; all of `tools/impl/*` + RPC (`schemas.rs` 985, `ops.rs` 1,407) are product. **Design-gated** (port-plan §2 blockers still apply) — WP-4. Note: `ToolResult`/`ToolContent` are re-exported from `skills::types` (~236 consumer files) — moving those types is the highest-blast-radius single step in the whole migration and must be its own slice. Security coupling: 49 files. |
 | `tool_registry/` | 7 / 1.8k | Read-only cross-surface discovery + RPC. Stays. |
 | `agent_registry/`, `agent_experience/`, `agent_memory/`, `agent_tool_policy/`, `agentbox/`, `orchestration/` | — | All host/product (definitions-as-data, RPC controllers, marketplace HTTP, remote-brain client — `orchestration/` talks to the hosted backend, not the local crate). Stay. `agent_tool_policy` overlaps crate `tool_policy` middleware mechanically but encodes host channel-permission policy — stays, mechanism may thin post-WP-4. |
@@ -197,7 +197,7 @@ The seam is healthy: 23/25 files use the crate; it implements `Middleware`
 - **`model.rs`: `ProviderModel` is deleted.** The former `convert.rs` was split:
   tool-schema conversion remains as the 34-line WP-4 seam, while durable-message
   conversion moved to `agent/message_convert.rs`. The execution audit found that
-  `ChatMessage` is OpenHuman's versioned JSONL/thread persistence record (including
+  `ChatMessage` is Neppy's versioned JSONL/thread persistence record (including
   message ids and product metadata), not a duplicate provider request type;
   replacing it directly with the crate enum would change existing on-disk data.
 - **`middleware.rs` (4,702):** the WP-5 audit records all 18 concrete types
@@ -205,7 +205,7 @@ The seam is healthy: 23/25 files use the crate; it implements `Middleware`
   snapshot) in `docs/tinyagents-drift-ledger.md`. `SchemaGuard` is now deleted
   in favor of TinyAgents 2.1 `InvalidArgsPolicy::ReturnToolError`, leaving 17.
   `ArgRecovery` overlaps crate #45/#71 normalization. `RepeatProgress` now uses
-  the merged #72 crate tracker; only the thin OpenHuman signature/exemption and
+  the merged #72 crate tracker; only the thin Neppy signature/exemption and
   halt-projection adapter remains. Upstream the generic ones; host-policy ones
   (ApprovalSecurity, CredentialScrub, CliRpcOnly, MemoryProtocol, CostBudget)
   stay — WP-5.
@@ -336,7 +336,7 @@ Independent, individually shippable slices:
    removed the unreachable parallel stack and its self-tests.
 2. **`tool_timeout/` — HOST-OWNED (audit closed).** The similarly named crate
    `ToolTimeout` is per-tool policy metadata, not a global timeout store or
-   executor. OpenHuman must retain config/env precedence, live UI updates,
+   executor. Neppy must retain config/env precedence, live UI updates,
    seconds clamping, grace handling, and the adapter's hard deadline. The seam
    already projects host policy into crate `ToolRuntime`; there is no duplicate
    crate implementation to delete.
@@ -345,7 +345,7 @@ Independent, individually shippable slices:
    cleanup removed the remaining unreachable council and registry product
    surfaces.
 4. **`tool_status/` — HOST-OWNED (audit closed).** The classifier is tied to
-   OpenHuman security markers, serialized thread/UI types, retry categories,
+   Neppy security markers, serialized thread/UI types, retry categories,
    localized-copy keys, and remediation language. TinyAgents owns generic tool
    outcomes; mapping those outcomes into product status remains in the host.
 
@@ -358,7 +358,7 @@ audit evidence.
 **Audit result: complete before this plan was written.** The filenames cited by
 the initial audit survived, but their legacy engines did not:
 
-1. `session/turn/core.rs` performs OpenHuman turn preparation and calls the
+1. `session/turn/core.rs` performs Neppy turn preparation and calls the
    TinyAgents session path; it contains no `run_turn_engine` definition.
 2. `subagent_runner/ops/graph.rs` documents the removed `run_inner_loop` /
    `run_turn_engine` and unconditionally calls `run_turn_via_tinyagents_shared`.
@@ -415,7 +415,7 @@ changes remain gated on explicit approval of that proposal.
    recorded by the earlier audit without relying on a phantom design doc.
    **Cutover implemented:** TinyAgents PR
    [#75](https://github.com/tinyhumansai/tinyagents/pull/75) adds the generic
-   ownership-aware `DetachedTaskRegistry`; OpenHuman now delegates snapshots,
+   ownership-aware `DetachedTaskRegistry`; Neppy now delegates snapshots,
    waits, steering lookup, cancellation/abort, terminal sweeping, and lock-error
    handling to it. The host retains durable `TaskStore` projection, product
    metadata, RPC, and the `RunQueue` compatibility fallback. All 17 focused
@@ -484,7 +484,7 @@ changes remain gated on explicit approval of that proposal.
 | `agent/` remainder, `agent_registry/`, `agent_experience/`, `agent_memory/`, `agent_tool_policy/`, `agentbox/`, `orchestration/`, `tool_registry/` | STAYS (product/host) |
 | `routing/` | DELETED; #4783 crate router already owned the only live path (WP-2) |
 | `tool_timeout/` | HOST-OWNED: config/env state + hard-deadline enforcement; crate timeout is metadata only (WP-2 closed) |
-| `tool_status/` classification | HOST-OWNED: OpenHuman UI/security/recovery taxonomy (WP-2 closed) |
+| `tool_status/` classification | HOST-OWNED: Neppy UI/security/recovery taxonomy (WP-2 closed) |
 | `model_council/`, `council_registry/` | DELETED after crate-backed fan-out audit and upstream dead-code cleanup (WP-2 closed) |
 | `tools/` trait mechanics | DESIGN-GATED (WP-4) |
 | `tools/impl/*`, all `schemas.rs` RPC controllers | STAYS |

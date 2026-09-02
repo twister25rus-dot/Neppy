@@ -20,7 +20,7 @@
 //! crate's in-process recursion stack because two things the crate stack does not
 //! see still need the depth:
 //!
-//! 1. **Cross-process transport.** OpenHuman spawns child `claude` processes that
+//! 1. **Cross-process transport.** Neppy spawns child `claude` processes that
 //!    re-enter the core over the loopback MCP HTTP hop; the crate's per-run-tree
 //!    recursion stack does not cross that boundary. `current_spawn_depth` feeds
 //!    `mcp::server::subagent_depth` which stamps/reads the depth on that hop.

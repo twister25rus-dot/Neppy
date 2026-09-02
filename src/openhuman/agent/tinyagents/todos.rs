@@ -1,4 +1,4 @@
-//! OpenHuman integration for the TinyAgents task-board implementation.
+//! Neppy integration for the TinyAgents task-board implementation.
 
 use std::path::Path;
 use std::sync::{Arc, OnceLock};

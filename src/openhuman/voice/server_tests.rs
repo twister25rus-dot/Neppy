@@ -90,7 +90,7 @@ fn truncate_for_log_long() {
 #[tokio::test]
 async fn build_initial_prompt_combines_dictionary_and_recent_transcripts() {
     let config = VoiceServerConfig {
-        custom_dictionary: vec!["OpenHuman".into(), "QuickJS".into()],
+        custom_dictionary: vec!["Neppy".into(), "QuickJS".into()],
         ..VoiceServerConfig::default()
     };
     let recent = Mutex::new(vec!["first note".into(), "second note".into()]);
@@ -99,7 +99,7 @@ async fn build_initial_prompt_combines_dictionary_and_recent_transcripts() {
         .await
         .expect("prompt should be built");
 
-    assert!(prompt.contains("OpenHuman, QuickJS"));
+    assert!(prompt.contains("Neppy, QuickJS"));
     assert!(prompt.contains("first note second note"));
 }
 

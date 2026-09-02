@@ -7,7 +7,7 @@
 //! Studio so user-managed model IDs (e.g. an LM-Studio-served
 //! `text-embedding-bge-m3`) are passed through unchanged; the generic
 //! `effective_*` helpers still enforce the MVP tier restriction for
-//! OpenHuman-managed Ollama assets.
+//! Neppy-managed Ollama assets.
 
 use crate::openhuman::config::Config;
 use crate::openhuman::inference::local::provider::{provider_from_config, LocalAiProvider};
@@ -283,11 +283,11 @@ pub(crate) fn effective_embedding_model_id(config: &Config) -> String {
 
     // LM Studio serves embeddings under user-managed names (e.g.
     // `text-embedding-bge-m3`) that are deliberately outside the
-    // OpenHuman-managed Ollama MVP allowlist. Mirror `effective_chat_model_id`
+    // Neppy-managed Ollama MVP allowlist. Mirror `effective_chat_model_id`
     // and pass a configured id through unchanged so the user can target the
     // exact served model instead of having it rewritten back to `bge-m3`
     // (#3920). The allowlist remains in force for the managed Ollama path
-    // below, where the ids are OpenHuman-pulled assets.
+    // below, where the ids are Neppy-pulled assets.
     if provider_from_config(config) == LocalAiProvider::LmStudio {
         if raw.is_empty() {
             // No configured id — fall back to the canonical default so the

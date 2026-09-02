@@ -1,13 +1,13 @@
 ---
 description: >-
   Long-term goals, per-thread objectives with budgets, and a kanban task board -
-  how OpenHuman stays pointed at what matters.
+  how Neppy stays pointed at what matters.
 icon: target
 ---
 
 # Goals & Todos
 
-OpenHuman keeps the agent aligned with what you actually care about through three complementary layers: durable **long-term goals**, a single **thread goal** per conversation, and a collaborative **task board** of todos. Each one is editable by both you and the agent, and all of them survive restarts.
+Neppy keeps the agent aligned with what you actually care about through three complementary layers: durable **long-term goals**, a single **thread goal** per conversation, and a collaborative **task board** of todos. Each one is editable by both you and the agent, and all of them survive restarts.
 
 ---
 

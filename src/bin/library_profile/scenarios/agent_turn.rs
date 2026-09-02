@@ -1,4 +1,4 @@
-//! `agent-turn`: the minimal "embed OpenHuman as a library" unit — a single
+//! `agent-turn`: the minimal "embed Neppy as a library" unit — a single
 //! cold agent turn built directly from config, with a plain-text mock provider
 //! (no tool calls, no delegation).
 

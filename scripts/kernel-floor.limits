@@ -216,7 +216,7 @@
 #                      (-3 packages / -3 names). The `tinyjuice`,
 #                      `tinyjuice-tokenizer`, and `tinyjuice-vector`
 #                      crates no longer enter the always-on `flows` graph;
-#                      OpenHuman keeps only its stable wire types and host
+#                      Neppy keeps only its stable wire types and host
 #                      adapter. Measured with `scripts/kernel-floor.sh flows`.
 #   308/284/2  2026-08-13  tinyflows' host-stack advance (PR #5537) moved its
 #                      direct HTTP client from reqwest 0.12 to 0.13 while the
@@ -300,7 +300,7 @@
 #                      and `source` submodules are serde/std-only and are now
 #                      ungated there; only `ledger`/`ledger_helpers` (the two
 #                      that touch git2), the impls written against `Ledger`,
-#                      and `DiffEngine` sit behind the feature. OpenHuman
+#                      and `DiffEngine` sit behind the feature. Neppy
 #                      mirrors the split: `memory::diff::types` compiles in
 #                      both directions because the always-on subconscious
 #                      profile renders those types into prompts.

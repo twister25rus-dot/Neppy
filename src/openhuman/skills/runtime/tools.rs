@@ -25,7 +25,7 @@ impl Tool for SkillRuntimeResolveRuntimesTool {
     }
 
     fn description(&self) -> &str {
-        "Resolve OpenHuman's reusable Node/Python runtimes for skill execution. \
+        "Resolve Neppy's reusable Node/Python runtimes for skill execution. \
          Use before running skills that reference node, npm, npx, python, or \
          bundled .js/.py scripts."
     }

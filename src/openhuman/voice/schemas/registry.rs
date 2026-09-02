@@ -203,7 +203,7 @@ pub fn voice_schemas(function: &str) -> ControllerSchema {
             namespace: "voice",
             function: "stt_dispatch",
             description:
-                "Factory-dispatched speech-to-text. Routes to the OpenHuman backend proxy or a \
+                "Factory-dispatched speech-to-text. Routes to the Neppy backend proxy or a \
                  third-party provider based on `provider` (or, when unspecified, the resolved \
                  `voice_server.stt_engine`). Returns the same `{ text }` payload either way.",
             inputs: vec![

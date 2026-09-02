@@ -11,7 +11,7 @@ use std::process::Command;
 use super::common::{self, run_capture, run_checked};
 use super::{ServiceState, ServiceStatus};
 
-const WINDOWS_TASK_NAME: &str = "OpenHuman Core";
+const WINDOWS_TASK_NAME: &str = "Neppy Core";
 
 fn windows_task_name() -> &'static str {
     WINDOWS_TASK_NAME

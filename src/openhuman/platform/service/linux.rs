@@ -28,7 +28,7 @@ pub(crate) fn install(config: &Config) -> Result<()> {
     let exec_start = common::daemon_command_line(&exe);
 
     let unit = format!(
-        "[Unit]\nDescription=OpenHuman Daemon\n\n[Service]\nExecStart={}\nRestart=always\nRestartSec=3\n\nStandardOutput=append:{}\nStandardError=append:{}\n\n[Install]\nWantedBy=default.target\n",
+        "[Unit]\nDescription=Neppy Daemon\n\n[Service]\nExecStart={}\nRestart=always\nRestartSec=3\n\nStandardOutput=append:{}\nStandardError=append:{}\n\n[Install]\nWantedBy=default.target\n",
         exec_start,
         stdout.display(),
         stderr.display(),

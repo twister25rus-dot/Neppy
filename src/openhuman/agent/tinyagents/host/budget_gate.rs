@@ -1,11 +1,11 @@
-//! Host [`BudgetGate`] backed by OpenHuman's scheduler gate, cost tracker, and
+//! Host [`BudgetGate`] backed by Neppy's scheduler gate, cost tracker, and
 //! TokenJuice profile.
 //!
 //! This is `docs/specs/plan-agents.md` Phase 4. The agent runtime is being made
 //! generic over its host, so it can no longer reach into
 //! [`crate::openhuman::cron::scheduler_gate`] or [`crate::openhuman::cost`] directly.
 //! It declares [`BudgetGate`] instead, and this module is the single place
-//! OpenHuman's three metering concerns meet it:
+//! Neppy's three metering concerns meet it:
 //!
 //! * **admission / back-pressure** — [`scheduler_gate::wait_for_capacity`],
 //!   which owns the single-slot global LLM semaphore and the
@@ -34,24 +34,24 @@
 //!   for a budget guard.
 //! * *Pricing* — with no provider-reported charge available, the cost is
 //!   estimated from the catalog. See the `TODO(phase4)` on [`Self::record`]:
-//!   OpenHuman will label that record `CostSource::ProviderCharged` even though
+//!   Neppy will label that record `CostSource::ProviderCharged` even though
 //!   it is an estimate.
 //!
 //! **2. `compression_hint` must be cheap and synchronous**, but every budget
-//! read in OpenHuman goes through a mutex and may touch the JSONL store. The
+//! read in Neppy goes through a mutex and may touch the JSONL store. The
 //! gate therefore caches a three-state budget pressure in an atomic, refreshed
 //! on the async [`acquire`](Self::acquire) / [`record`](Self::record) paths —
 //! exactly the "anything that needs I/O belongs in `record`, whose result this
 //! can then consult" shape the trait documents.
 //!
 //! **3. The hint is a union with `SummarizationPolicy`, never an override.**
-//! Returning [`CompressionHint::None`] here means *OpenHuman is not asking for
+//! Returning [`CompressionHint::None`] here means *Neppy is not asking for
 //! compression for a budget reason*; it is not a veto, and the crate's own
 //! window-pressure policy still runs. That is why an agent whose TokenJuice
 //! profile is `Off` yields `None` rather than anything stronger — `Off` opts
 //! that agent out of *TokenJuice*, not out of summarization.
 //!
-//! Nothing here bypasses an OpenHuman guard: budget refusal still goes through
+//! Nothing here bypasses an Neppy guard: budget refusal still goes through
 //! `check_budget` (which honours `cost.enabled`), and the scheduler-gate permit
 //! is held for exactly the lifetime of the crate permit.
 
@@ -94,14 +94,14 @@ const PRESSURE_EXCEEDED: u8 = 2;
 /// answering it a second time from the host is how the two silently disagree.
 const ESCALATE_AT_UTILIZATION: f64 = 0.9;
 
-/// OpenHuman's [`BudgetGate`]: scheduler-gate back-pressure, cost-tracker
+/// Neppy's [`BudgetGate`]: scheduler-gate back-pressure, cost-tracker
 /// budget enforcement, and TokenJuice-profile-aware compression advice.
 ///
 /// One instance per agent session. It holds the session's config (for the
 /// fallback model id) and the agent's TokenJuice profile, plus the small amount
 /// of state needed to bridge the two contract mismatches described in the
 /// module docs.
-pub struct OpenHumanBudgetGate {
+pub struct NeppyBudgetGate {
     /// Session config. Read only for the fallback model id — everything
     /// budget-shaped is read live from the global cost tracker so a settings
     /// update takes effect without rebuilding the gate.
@@ -120,7 +120,7 @@ pub struct OpenHumanBudgetGate {
     ///
     /// Defaults to `false`, because that gate is for background AI only: its
     /// `Paused` arm polls indefinitely while background work is disabled or the
-    /// user is signed out, and OpenHuman's interactive inference paths
+    /// user is signed out, and Neppy's interactive inference paths
     /// deliberately never enter it. Routing a user-initiated turn through it
     /// would stall the chat until the turn timeout for anyone who is signed out
     /// on a local/BYOK model, or who merely paused background AI. Cron and
@@ -129,7 +129,7 @@ pub struct OpenHumanBudgetGate {
     background: bool,
 }
 
-impl OpenHumanBudgetGate {
+impl NeppyBudgetGate {
     /// Builds a gate for a session running under `config`, with the agent's
     /// TokenJuice profile left at [`AgentTokenjuiceCompression::Auto`].
     pub fn new(config: Arc<Config>) -> Self {
@@ -178,7 +178,7 @@ impl OpenHumanBudgetGate {
     /// reconciling after one). Returns the raw [`BudgetCheck`] so
     /// [`acquire`](Self::acquire) can refuse on `Exceeded`; returns `None` when
     /// the tracker is uninitialised (before bootstrap, and in unit tests),
-    /// which OpenHuman treats everywhere as "no budget opinion", never as a
+    /// which Neppy treats everywhere as "no budget opinion", never as a
     /// refusal.
     fn refresh_pressure(&self, pending_usd: f64) -> Option<BudgetCheck> {
         let tracker = cost::try_global()?;
@@ -228,8 +228,8 @@ impl OpenHumanBudgetGate {
 }
 
 #[async_trait]
-impl BudgetGate for OpenHumanBudgetGate {
-    /// Refuses over-budget calls, then parks on OpenHuman's scheduler gate
+impl BudgetGate for NeppyBudgetGate {
+    /// Refuses over-budget calls, then parks on Neppy's scheduler gate
     /// until the host has capacity.
     ///
     /// Ordered budget-check-first on purpose: a refusal must not first occupy
@@ -306,7 +306,7 @@ impl BudgetGate for OpenHumanBudgetGate {
         }
 
         // `wait_for_capacity` returns `None` only when the global semaphore has
-        // been closed, which never happens in production. Every OpenHuman
+        // been closed, which never happens in production. Every Neppy
         // caller treats that as "skip the gate" rather than an error, and so
         // does this one — failing here would deadlock the pipeline on a
         // condition that is not the user's fault.
@@ -329,7 +329,7 @@ impl BudgetGate for OpenHumanBudgetGate {
             .with_reserved_tokens(est.estimated_total_tokens()))
     }
 
-    /// Persists realised usage to OpenHuman's cost tracker and refreshes the
+    /// Persists realised usage to Neppy's cost tracker and refreshes the
     /// cached budget pressure.
     ///
     /// Additive and non-fatal, as the trait requires: it is also called for
@@ -385,7 +385,7 @@ impl BudgetGate for OpenHumanBudgetGate {
         Ok(())
     }
 
-    /// Advises compression when OpenHuman is under *budget* pressure.
+    /// Advises compression when Neppy is under *budget* pressure.
     ///
     /// A single relaxed atomic load plus, at most, one float compare — no lock,
     /// no I/O, safe to call between every iteration of a turn.
@@ -420,8 +420,8 @@ mod tests {
     use super::*;
     use std::time::Duration;
 
-    fn gate(compression: AgentTokenjuiceCompression) -> OpenHumanBudgetGate {
-        OpenHumanBudgetGate::with_compression(Arc::new(Config::default()), compression)
+    fn gate(compression: AgentTokenjuiceCompression) -> NeppyBudgetGate {
+        NeppyBudgetGate::with_compression(Arc::new(Config::default()), compression)
     }
 
     fn crowded() -> ContextState {
@@ -437,12 +437,12 @@ mod tests {
     fn seeds_the_attributed_model_from_config() {
         let mut config = Config::default();
         config.default_model = Some("pinned-model".into());
-        let gate = OpenHumanBudgetGate::new(Arc::new(config));
+        let gate = NeppyBudgetGate::new(Arc::new(config));
         assert_eq!(gate.attributed_model(), "pinned-model");
 
         let mut unpinned = Config::default();
         unpinned.default_model = None;
-        let gate = OpenHumanBudgetGate::new(Arc::new(unpinned));
+        let gate = NeppyBudgetGate::new(Arc::new(unpinned));
         assert_eq!(gate.attributed_model(), DEFAULT_MODEL);
     }
 
@@ -461,7 +461,7 @@ mod tests {
     async fn an_empty_model_does_not_erase_the_attribution() {
         let mut config = Config::default();
         config.default_model = Some("pinned-model".into());
-        let gate = OpenHumanBudgetGate::new(Arc::new(config));
+        let gate = NeppyBudgetGate::new(Arc::new(config));
         gate.acquire(&CallEstimate::new("   ", 1, 1))
             .await
             .expect("grants");

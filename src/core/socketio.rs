@@ -175,7 +175,7 @@ pub struct WebChannelEvent {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_retry_after_ms: Option<u64>,
     /// Provider name extracted from `"<provider> API error (...)"`
-    /// envelopes. `None` for non-provider errors (OpenHuman budget cap,
+    /// envelopes. `None` for non-provider errors (Neppy budget cap,
     /// agent loop) and for transport failures without a provider prefix.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_provider: Option<String>,

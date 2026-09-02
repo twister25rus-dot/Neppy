@@ -310,14 +310,14 @@ mod macos {
         #[test]
         fn bundled_app_layout_is_accepted() {
             assert!(is_bundled_app_executable(Path::new(
-                "/Applications/OpenHuman.app/Contents/MacOS/OpenHuman"
+                "/Applications/Neppy.app/Contents/MacOS/Neppy"
             )));
         }
 
         #[test]
         fn unbundled_executable_is_rejected() {
             assert!(!is_bundled_app_executable(Path::new(
-                "/tmp/openhuman/target/debug/OpenHuman"
+                "/tmp/openhuman/target/debug/Neppy"
             )));
         }
     }

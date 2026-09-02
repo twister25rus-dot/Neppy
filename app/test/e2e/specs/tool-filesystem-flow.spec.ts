@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 import { startMockServer, stopMockServer } from '../mock-server';
 
@@ -39,7 +39,7 @@ function stepLog(message: string, context?: unknown): void {
 const TEST_RELATIVE_PATH = 'e2e-967-filesystem-canary.txt';
 const TEST_WORKSPACE_RELATIVE_PATH = `memory/${TEST_RELATIVE_PATH}`;
 const TEST_CONTENT =
-  'OpenHuman filesystem tool canary fact — issue #967 — bytes asserted both via RPC and disk';
+  'Neppy filesystem tool canary fact — issue #967 — bytes asserted both via RPC and disk';
 const TRAVERSAL_PATH = '../escape-967.txt';
 const ABSOLUTE_PATH = '/tmp/openhuman-967-absolute-escape.txt';
 
@@ -82,7 +82,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
       relative_path: TEST_RELATIVE_PATH,
       bytes: TEST_CONTENT.length,
     });
-    const writeResult = await callOpenhumanRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const writeResult = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
       relative_path: TEST_RELATIVE_PATH,
       content: TEST_CONTENT,
     });
@@ -98,7 +98,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
     // Disk-side assertion: the byte payload must round-trip via the workspace.
     // This is the load-bearing "side effect proof" that the sidecar actually
     // wrote the file rather than only echoing a success payload.
-    const diskRead = await callOpenhumanRpc<WorkspaceReadResultEnvelope>(
+    const diskRead = await callNeppyRpc<WorkspaceReadResultEnvelope>(
       'openhuman.test_support_read_workspace_file',
       { rel_path: TEST_WORKSPACE_RELATIVE_PATH, max_bytes: 1024 }
     );
@@ -110,14 +110,14 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
   it('6.1.1 reads back the file via memory_read_file and content matches', async () => {
     // Seed the canary in-test so the read assertion remains valid when the
     // suite is run with `--grep` and the write test has not preceded it.
-    const seed = await callOpenhumanRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const seed = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
       relative_path: TEST_RELATIVE_PATH,
       content: TEST_CONTENT,
     });
     expect(seed.ok).toBe(true);
 
     stepLog('issuing memory_read_file', { relative_path: TEST_RELATIVE_PATH });
-    const readResult = await callOpenhumanRpc<ReadResultEnvelope>('openhuman.memory_read_file', {
+    const readResult = await callNeppyRpc<ReadResultEnvelope>('openhuman.memory_read_file', {
       relative_path: TEST_RELATIVE_PATH,
     });
     stepLog('read response', readResult);
@@ -127,7 +127,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
 
     // Cross-check with memory_list_files to prove directory listing also
     // honours the workspace boundary and surfaces the canary.
-    const listResult = await callOpenhumanRpc<ListResultEnvelope>('openhuman.memory_list_files', {
+    const listResult = await callNeppyRpc<ListResultEnvelope>('openhuman.memory_list_files', {
       relative_dir: '',
     });
     stepLog('list response', listResult);
@@ -143,7 +143,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
     stepLog('issuing memory_write_file with parent-traversal payload', {
       relative_path: TRAVERSAL_PATH,
     });
-    const traversal = await callOpenhumanRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const traversal = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
       relative_path: TRAVERSAL_PATH,
       content: 'should never be written',
     });
@@ -155,7 +155,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
     // 6.1.3b — absolute paths must also be denied; this guards a different
     // branch of the validator (`is_absolute()` short-circuit).
     stepLog('issuing memory_write_file with absolute payload', { relative_path: ABSOLUTE_PATH });
-    const absolute = await callOpenhumanRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const absolute = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
       relative_path: ABSOLUTE_PATH,
       content: 'should never be written',
     });

@@ -153,7 +153,7 @@ function parseNonNegativeNumber(raw, label) {
   return value;
 }
 
-function defaultOpenhumanDir() {
+function defaultNeppyDir() {
   return process.env.OPENHUMAN_APP_ENV === "staging"
     ? path.join(homedir(), ".openhuman-staging")
     : path.join(homedir(), ".openhuman");
@@ -161,7 +161,7 @@ function defaultOpenhumanDir() {
 
 async function defaultWorkspace() {
   if (process.env.OPENHUMAN_WORKSPACE) return process.env.OPENHUMAN_WORKSPACE;
-  const openhumanDir = defaultOpenhumanDir();
+  const openhumanDir = defaultNeppyDir();
   try {
     const active = await readFile(
       path.join(openhumanDir, "active_user.toml"),
@@ -397,7 +397,7 @@ function printReport(opts, rows, turnResults) {
 function auditPrompt(turn) {
   return `Harness cache audit turn ${turn}.
 
-You are exercising OpenHuman's live harness and backend cache behavior.
+You are exercising Neppy's live harness and backend cache behavior.
 You must delegate exactly one small task to an appropriate subagent if a delegation tool is available.
 Ask the subagent to return a one-sentence cache-audit note about stable prompts and repeated turns.
 Then reply with only a concise one-sentence summary.`;
@@ -431,7 +431,7 @@ omit_memory_md = true
 
 [system_prompt]
 inline = """
-You are the OpenHuman harness cache audit orchestrator.
+You are the Neppy harness cache audit orchestrator.
 For every user message, call delegate_audit_worker exactly once with a concise prompt.
 After the worker returns, provide one sentence. Do not call any other tools.
 """

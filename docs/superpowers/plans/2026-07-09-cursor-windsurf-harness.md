@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make OpenHuman's orchestration engine recognize `cursor` and `windsurf` as harness providers so their sessions render with a first-class roster group and brand glyph instead of the "Other" catch-all.
+**Goal:** Make Neppy's orchestration engine recognize `cursor` and `windsurf` as harness providers so their sessions render with a first-class roster group and brand glyph instead of the "Other" catch-all.
 
 **Architecture:** Widen the single backend recognition gate (`harness_type_for()` in the Rust orchestration crate), then widen the frontend `HarnessType` union it feeds — the TypeScript type-checker forces the two UI lookup tables (`HarnessGlyph` glyph map, `TinyPlaceRoster` groups) to stay complete. No changes to ingest, pairing, relay, or attention.
 

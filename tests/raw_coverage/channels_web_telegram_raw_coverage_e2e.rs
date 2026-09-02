@@ -69,7 +69,7 @@ async fn telegram_mock_handler(
                 StatusCode::OK,
                 axum::Json(json!({
                     "ok": true,
-                    "result": { "id": 1, "username": "OpenHumanBot" },
+                    "result": { "id": 1, "username": "NeppyBot" },
                 })),
             );
         }
@@ -90,7 +90,7 @@ async fn telegram_mock_handler(
                             "message": {
                                 "message_id": 501,
                                 "message_thread_id": 77,
-                                "text": "@OpenHumanBot please cover inbound parsing",
+                                "text": "@NeppyBot please cover inbound parsing",
                                 "from": { "id": 77, "username": "allowed_user" },
                                 "chat": { "id": -1001, "type": "supergroup" },
                                 "reply_to_message": { "message_id": 490 }
@@ -100,7 +100,7 @@ async fn telegram_mock_handler(
                             "update_id": 100,
                             "message": {
                                 "message_id": 502,
-                                "text": "@OpenHumanBot duplicate should be skipped",
+                                "text": "@NeppyBot duplicate should be skipped",
                                 "from": { "id": 77, "username": "allowed_user" },
                                 "chat": { "id": -1001, "type": "supergroup" }
                             }

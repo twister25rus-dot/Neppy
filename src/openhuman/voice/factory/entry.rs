@@ -12,7 +12,7 @@ use super::traits::{SttProvider, TtsProvider};
 use super::tts_providers::{CloudTtsProvider, PiperTtsProvider};
 use crate::openhuman::config::Config;
 
-/// Default STT model id for the OpenHuman backend proxy.
+/// Default STT model id for the Neppy backend proxy.
 /// Third-party providers use the `default_stt_model` configured in their
 /// registry entry when callers leave the model empty.
 pub const DEFAULT_STT_MODEL: &str = "whisper-v1";
@@ -24,7 +24,7 @@ pub const DEFAULT_PIPER_VOICE: &str = "en_US-lessac-medium";
 /// Creates a speech-to-text provider from a routing string.
 ///
 /// Supported provider names:
-/// - `"cloud"` / `"openhuman"` / `"backend"` → the OpenHuman backend
+/// - `"cloud"` / `"openhuman"` / `"backend"` → the Neppy backend
 ///   transcription proxy. The default, and the only one that needs no user key.
 /// - `"<slug>"` / `"<slug>:<model>"` → a third-party STT API resolved against
 ///   `config.voice_providers` (e.g. `"elevenlabs"`, `"openai:whisper-1"`,

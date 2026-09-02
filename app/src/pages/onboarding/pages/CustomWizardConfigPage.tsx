@@ -19,7 +19,7 @@ const log = createDebug('app:onboarding:custom');
 const describeError = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 const LOCAL_DEFAULT_DISABLED_REASON =
-  'Managed setup requires OpenHuman sign-in and is unavailable in local mode.';
+  'Managed setup requires Neppy sign-in and is unavailable in local mode.';
 
 interface CustomWizardConfigPageProps {
   stepKey: CustomStepKey;

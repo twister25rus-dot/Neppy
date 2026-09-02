@@ -1,4 +1,4 @@
-class Openhuman < Formula
+class Neppy < Formula
   desc "AI-powered personal assistant for communities"
   homepage "https://tinyhumans.ai/openhuman"
   url "https://github.com/tinyhumansai/openhuman/archive/refs/tags/v0.52.27.tar.gz"
@@ -22,7 +22,7 @@ class Openhuman < Formula
   end
 
   test do
-    assert_match "OpenHuman core CLI", shell_output("#{bin}/openhuman --help")
-    assert_match "OpenHuman core CLI", shell_output("#{bin}/openhuman-core --help")
+    assert_match "Neppy core CLI", shell_output("#{bin}/openhuman --help")
+    assert_match "Neppy core CLI", shell_output("#{bin}/openhuman-core --help")
   end
 end

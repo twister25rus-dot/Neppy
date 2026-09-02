@@ -66,11 +66,7 @@ pub(super) fn make_workspace() -> TempDir {
     // Create minimal workspace files — only the bundled identity prompts
     // plus a MEMORY.md stand-in for what the archivist would write.
     std::fs::write(tmp.path().join("SOUL.md"), "# Soul\nBe helpful.").unwrap();
-    std::fs::write(
-        tmp.path().join("IDENTITY.md"),
-        "# Identity\nName: OpenHuman",
-    )
-    .unwrap();
+    std::fs::write(tmp.path().join("IDENTITY.md"), "# Identity\nName: Neppy").unwrap();
     std::fs::write(
         tmp.path().join("PROFILE.md"),
         "# User Profile\nName: Test User",

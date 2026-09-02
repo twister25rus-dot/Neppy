@@ -31,7 +31,7 @@ use crate::openhuman::config::Config;
 /// then fails that shape against ANY declared schema (no field matches) and
 /// falls to a one-shot LLM auto-fix that the sandbox's plain `MockLlm` also
 /// can't satisfy — so the whole dry run would error out even for a workflow a
-/// real run (via [`OpenHumanAgentRunner`], whose completion the same sub-port
+/// real run (via [`NeppyAgentRunner`], whose completion the same sub-port
 /// validates/repairs against the schema) would execute cleanly.
 ///
 /// When `request` (the resolved node config `run_agent` receives — see

@@ -38,7 +38,7 @@ fi
 # the hardened .app produces different bytes than the bundler's original
 # .app.tar.gz — its .sig would no longer verify on installed clients.
 if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
-  APP_ZIP="/tmp/OpenHuman_${VERSION}_${ARCH}.app.tar.gz"
+  APP_ZIP="/tmp/Neppy_${VERSION}_${ARCH}.app.tar.gz"
   tar -czf "$APP_ZIP" -C "$(dirname "$APP_PATH")" "$(basename "$APP_PATH")"
 
   if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then

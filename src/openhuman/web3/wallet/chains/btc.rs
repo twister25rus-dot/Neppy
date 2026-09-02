@@ -57,7 +57,7 @@ pub fn estimated_btc_fee_sats() -> u64 {
 /// `bitcoin` crate's script_pubkey() will encode P2WPKH/P2TR/P2SH correctly).
 ///
 /// Delegates to the vendored [`tinywallet_bus`] crate, which owns the address
-/// format itself. Nothing about parsing a Bitcoin address is OpenHuman-
+/// format itself. Nothing about parsing a Bitcoin address is Neppy-
 /// specific, so the rules live where any host can reach them; what stays here
 /// is the `Result<_, String>` shape the rest of this domain speaks.
 pub fn validate_btc_address(addr: &str) -> Result<String, String> {

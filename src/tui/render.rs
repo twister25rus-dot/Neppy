@@ -57,11 +57,7 @@ fn draw_tabs(frame: &mut Frame, area: Rect, ui: &UiState) {
         .collect::<Vec<_>>();
     let tabs = Tabs::new(titles)
         .select(selected)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(" OpenHuman CLI "),
-        )
+        .block(Block::default().borders(Borders::ALL).title(" Neppy CLI "))
         .style(Style::default().fg(Color::DarkGray))
         .highlight_style(Style::default().fg(OCEAN).add_modifier(Modifier::BOLD));
     frame.render_widget(tabs, area);
@@ -83,7 +79,7 @@ fn draw_chat(frame: &mut Frame, area: Rect, state: &TranscriptState, ui: &UiStat
 fn draw_logs(frame: &mut Frame, area: Rect, ui: &UiState) {
     let lines = crate::core::logging::tui_log_lines();
     let text = if lines.is_empty() {
-        Text::from("Core logs will appear here as OpenHuman starts.")
+        Text::from("Core logs will appear here as Neppy starts.")
     } else {
         Text::from(lines.join("\n"))
     };
@@ -222,7 +218,7 @@ fn draw_settings(frame: &mut Frame, area: Rect, ui: &UiState) {
 fn draw_transcript(frame: &mut Frame, area: Rect, state: &TranscriptState, ui: &UiState) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" OpenHuman chat ")
+        .title(" Neppy chat ")
         .border_style(Style::default().fg(OCEAN));
     let inner = block.inner(area);
 

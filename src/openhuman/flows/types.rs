@@ -1,9 +1,9 @@
 //! The [`Flow`] entity: a saved automation workflow definition.
 //!
-//! Wraps `tinyflows::model::WorkflowGraph` with the metadata OpenHuman needs to
+//! Wraps `tinyflows::model::WorkflowGraph` with the metadata Neppy needs to
 //! store, list, and track runs for a saved flow. The graph itself is the
 //! portable, tinyflows-owned contract (validated + migrated on load); this
-//! struct is the OpenHuman-side record around it.
+//! struct is the Neppy-side record around it.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -197,7 +197,7 @@ pub struct FlowDraft {
     pub updated_at: String,
 }
 
-/// A saved automation workflow: a `tinyflows` graph plus OpenHuman-side
+/// A saved automation workflow: a `tinyflows` graph plus Neppy-side
 /// bookkeeping (enablement, run history summary).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Flow {

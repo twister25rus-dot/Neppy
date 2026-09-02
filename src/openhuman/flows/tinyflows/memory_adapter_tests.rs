@@ -21,11 +21,11 @@ fn test_config() -> (TempDir, Arc<Config>) {
     (tmp, Arc::new(cfg))
 }
 
-fn adapter(autonomy: AutonomyLevel) -> (TempDir, OpenHumanMemory) {
+fn adapter(autonomy: AutonomyLevel) -> (TempDir, NeppyMemory) {
     let (tmp, config) = test_config();
     (
         tmp,
-        OpenHumanMemory {
+        NeppyMemory {
             config,
             security: security(autonomy),
         },

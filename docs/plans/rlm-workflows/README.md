@@ -3,7 +3,7 @@
 **Goal:** expose TinyAgents' Rhai-backed REPL language (the `.ragsh` / RLM /
 CodeAct surface, gated behind the `repl` cargo feature in
 `vendor/tinyagents/Cargo.toml`) as a **first-class `rlm` tool** in the
-OpenHuman Rust core, so the orchestrator agent can *write its own workflow
+Neppy Rust core, so the orchestrator agent can *write its own workflow
 scripts* — fan-out over subagents, batched tool/model calls, loops,
 conditionals — and execute them deterministically, similar to Claude Code
 Workflows and Recursive Language Models (RLMs).

@@ -26,12 +26,12 @@ runs, and how the two runtimes compose.
 | Crate                         | Role                                                                                                                                            | Where                                                                                                  |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `tinyflows`                   | Host-agnostic workflow model + validate + compile + run. Never hard-codes a vendor; every outside-world effect goes through a capability trait. | [`vendor/tinyflows/`](../../../vendor/tinyflows/)                                                      |
-| `tinyagents`                  | The published state-graph + agent-loop harness both runtimes lower onto.                                                                        | crate; OpenHuman seam in [`src/openhuman/agent/tinyagents/`](../../../src/openhuman/agent/tinyagents/) |
+| `tinyagents`                  | The published state-graph + agent-loop harness both runtimes lower onto.                                                                        | crate; Neppy seam in [`src/openhuman/agent/tinyagents/`](../../../src/openhuman/agent/tinyagents/) |
 | `openhuman::flows`            | The host: CRUD/run/resume RPCs, SQLite store, triggers, the builder/scout agents.                                                               | [`src/openhuman/flows/`](../../../src/openhuman/flows/)                                                |
-| `openhuman::flows::tinyflows` | The **capability seam** - adapters implementing the `tinyflows` traits over real OpenHuman services.                                            | [`src/openhuman/flows/tinyflows/`](../../../src/openhuman/flows/tinyflows/)                            |
+| `openhuman::flows::tinyflows` | The **capability seam** - adapters implementing the `tinyflows` traits over real Neppy services.                                            | [`src/openhuman/flows/tinyflows/`](../../../src/openhuman/flows/tinyflows/)                            |
 
 `tinyflows` is published to crates.io and is deliberately persistence-free and
-vendor-free (see its [`CLAUDE.md`](../../../vendor/tinyflows/CLAUDE.md)); OpenHuman
+vendor-free (see its [`CLAUDE.md`](../../../vendor/tinyflows/CLAUDE.md)); Neppy
 is the first downstream host and injects everything real through the seam.
 
 ## The run pipeline
@@ -154,26 +154,26 @@ implements ([`vendor/tinyflows/src/caps/mod.rs`](../../../vendor/tinyflows/src/c
 `Capabilities` bundle per run by `build_capabilities`
 ([`caps.rs`](../../../src/openhuman/flows/tinyflows/caps.rs)):
 
-| tinyflows trait    | Node(s) it backs                | OpenHuman adapter           | Wraps                                            |
+| tinyflows trait    | Node(s) it backs                | Neppy adapter           | Wraps                                            |
 | ------------------ | ------------------------------- | --------------------------- | ------------------------------------------------ |
-| `LlmProvider`      | `agent` (bare), `output_parser` | `OpenHumanLlm`              | `inference/provider` (`create_chat_provider`)    |
-| `AgentRunner`      | `agent` (with `agent_ref`)      | `OpenHumanAgentRunner`      | the agent registry + harness `Agent`             |
-| `ToolInvoker`      | `tool_call`                     | `OpenHumanTools`            | Composio + native `oh:` tools                    |
-| `HttpClient`       | `http_request`                  | `OpenHumanHttp`             | `HttpRequestTool` (allowlist + DNS-rebind guard) |
-| `CodeRunner`       | `code`                          | `OpenHumanCode`             | the sandbox (`execute_in_sandbox`)               |
+| `LlmProvider`      | `agent` (bare), `output_parser` | `NeppyLlm`              | `inference/provider` (`create_chat_provider`)    |
+| `AgentRunner`      | `agent` (with `agent_ref`)      | `NeppyAgentRunner`      | the agent registry + harness `Agent`             |
+| `ToolInvoker`      | `tool_call`                     | `NeppyTools`            | Composio + native `oh:` tools                    |
+| `HttpClient`       | `http_request`                  | `NeppyHttp`             | `HttpRequestTool` (allowlist + DNS-rebind guard) |
+| `CodeRunner`       | `code`                          | `NeppyCode`             | the sandbox (`execute_in_sandbox`)               |
 | `StateStore`       | resumable/stateful runs         | `FlowStateStore`            | the `flow_state` KV table                        |
-| `WorkflowResolver` | `sub_workflow` by id            | `OpenHumanWorkflowResolver` | the saved-flow store (`load_flow_graph`)         |
+| `WorkflowResolver` | `sub_workflow` by id            | `NeppyWorkflowResolver` | the saved-flow store (`load_flow_graph`)         |
 
 `AgentRunner` is **optional** in the crate (`Capabilities::agent` is
 `Option`): a host without an agent registry leaves it `None` and `agent` nodes
-fall back to a bare `LlmProvider` completion. OpenHuman always wires it, so
+fall back to a bare `LlmProvider` completion. Neppy always wires it, so
 `agent` nodes get the real agent runtime described next.
 
 ## Agent nodes: a graph within the graph
 
 A flow `agent` node names a **registered agent kind** through a trusted
 `agent_ref` in its config (researcher, code_executor, a custom specialist, …).
-`OpenHumanAgentRunner::run_agent` resolves that ref and routes on what it finds:
+`NeppyAgentRunner::run_agent` resolves that ref and routes on what it finds:
 
 - **A harness `AgentDefinition` exists** → build a full harness `Agent`
   (`Agent::from_config_for_agent`) and run the node's request through
@@ -185,7 +185,7 @@ A flow `agent` node names a **registered agent kind** through a trusted
 - **Only a custom `AgentRegistryEntry` exists** (no full definition) → the
   persona-shaping fallback: the entry's `system_prompt` (and model, when the node
   didn't pin one) is prepended and the request runs through
-  `OpenHumanLlm::complete` - a single completion, no private tool loop. This
+  `NeppyLlm::complete` - a single completion, no private tool loop. This
   keeps custom registry agents working without a regression.
 
 The consequence is the nesting the plan set out to achieve: **the flow is a

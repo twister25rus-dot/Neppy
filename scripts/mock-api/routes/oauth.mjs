@@ -241,7 +241,7 @@ function renderOAuthPage({ provider, target, autoRedirectMs, errorCode }) {
   <h1>${heading}</h1>
   <p>${blurb}</p>
   <p>Target: <code>${safeTarget}</code></p>
-  <p><a class="button" id="continue" href="${safeTarget}">Continue to OpenHuman</a></p>
+  <p><a class="button" id="continue" href="${safeTarget}">Continue to Neppy</a></p>
   ${autoRedirectScript}
 </body>
 </html>`;

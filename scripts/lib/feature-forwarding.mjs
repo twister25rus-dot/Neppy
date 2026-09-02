@@ -51,7 +51,7 @@
 export const INTENTIONALLY_NOT_FORWARDED = {
   // 'some-gate': 'Reason it must not ship in the desktop build.',
   tui: 'Terminal UI subcommand (openhuman tui/chat); the desktop app ships its own Tauri UI and never runs the ratatui terminal front-end. NOTE: `tui` is also default-OFF, so it is in NEITHER the contributor nor the product set and no ordinary lane compiles it — the feature-gate-smoke lane checks it explicitly. Any future entry here in the same position needs the same treatment.',
-  medulla: 'Medulla orchestration-backend client; the desktop app is OpenHuman\'s own product and never dials a Medulla backend. Consumed by the Medulla TUI, which embeds this crate directly.',
+  medulla: 'Medulla orchestration-backend client; the desktop app is Neppy\'s own product and never dials a Medulla backend. Consumed by the Medulla TUI, which embeds this crate directly.',
 };
 
 /**

@@ -234,7 +234,7 @@ fn enrich_output_hides_internal_run_id() {
     let resp = EnrichResponse {
         run_id: Some("run_internal_456".into()),
         status: Some("completed".into()),
-        output: Some(json!({ "company": "OpenHuman" })),
+        output: Some(json!({ "company": "Neppy" })),
         cost_usd: 0.5678,
     };
     let output = format_enrich_response(EnrichResponse {
@@ -247,7 +247,7 @@ fn enrich_output_hides_internal_run_id() {
     let payload = enrich_payload(&resp, &output);
 
     assert!(output.contains("Status: completed"));
-    assert!(output.contains("OpenHuman"));
+    assert!(output.contains("Neppy"));
     assert!(output.contains("Cost: $0.5678"));
     assert!(!output.contains("Run:"));
     assert!(!output.contains("run_internal_456"));

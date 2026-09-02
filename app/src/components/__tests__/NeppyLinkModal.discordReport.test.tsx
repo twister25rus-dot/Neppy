@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as openUrlModule from '../../utils/openUrl';
-import OpenhumanLinkModal, { OPENHUMAN_LINK_EVENT } from '../OpenhumanLinkModal';
+import NeppyLinkModal, { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
 
 // Mock modules that require Tauri runtime or browser APIs not in jsdom
 vi.mock('../../utils/tauriCommands/common', () => ({ isTauri: vi.fn(() => false) }));
@@ -16,7 +16,7 @@ vi.mock('../../lib/nativeNotifications/tauriBridge', () => ({
 // Mock openUrl so "Open Discord" tests don't hit the real URL opener
 vi.mock('../../utils/openUrl', () => ({ openUrl: vi.fn().mockResolvedValue(undefined) }));
 
-describe('OpenhumanLinkModal discord-report flow', () => {
+describe('NeppyLinkModal discord-report flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -30,7 +30,7 @@ describe('OpenhumanLinkModal discord-report flow', () => {
   }
 
   it('dispatching the event with discord-report path opens the modal with the report title', () => {
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openReportModal();
 
     // The report title (not the join-community title) should be visible
@@ -42,7 +42,7 @@ describe('OpenhumanLinkModal discord-report flow', () => {
   it('clicking "Open Discord" calls openUrl with the Discord invite URL', () => {
     const openUrlSpy = vi.spyOn(openUrlModule, 'openUrl').mockResolvedValue(undefined);
 
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openReportModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Discord' }));
@@ -51,7 +51,7 @@ describe('OpenhumanLinkModal discord-report flow', () => {
   });
 
   it('clicking "Open Discord" closes the modal', async () => {
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openReportModal();
 
     expect(screen.getByText('Report this error')).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe('OpenhumanLinkModal discord-report flow', () => {
   });
 });
 
-describe('OpenhumanLinkModal discord join-community flow', () => {
+describe('NeppyLinkModal discord join-community flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -79,7 +79,7 @@ describe('OpenhumanLinkModal discord join-community flow', () => {
   }
 
   it('opens the join-community modal (not the error-report variant)', () => {
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openJoinModal();
 
     expect(screen.getByText('Join the community')).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('OpenhumanLinkModal discord join-community flow', () => {
   it('clicking "Open invite link" calls openUrl with the shared Discord URL', async () => {
     const openUrlSpy = vi.spyOn(openUrlModule, 'openUrl').mockResolvedValue(undefined);
 
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openJoinModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Open invite link' }));
@@ -104,7 +104,7 @@ describe('OpenhumanLinkModal discord join-community flow', () => {
       .spyOn(openUrlModule, 'openUrl')
       .mockRejectedValue(new Error('launcher failed'));
 
-    render(<OpenhumanLinkModal />);
+    render(<NeppyLinkModal />);
     openJoinModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Open invite link' }));

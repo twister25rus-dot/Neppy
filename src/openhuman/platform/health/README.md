@@ -1,6 +1,6 @@
 # health
 
-In-process health registry for the OpenHuman core. Tracks per-component liveness (status, last-ok / last-error timestamps, restart counts) plus process metadata (PID, uptime), exposes a snapshot over JSON-RPC/CLI, and keeps itself current by subscribing to `system`/`channel` domain events on the global event bus. State is purely in-memory (a process-global `OnceLock` registry) — nothing is persisted to disk. It also serves static system info (version/OS/arch/PID).
+In-process health registry for the Neppy core. Tracks per-component liveness (status, last-ok / last-error timestamps, restart counts) plus process metadata (PID, uptime), exposes a snapshot over JSON-RPC/CLI, and keeps itself current by subscribing to `system`/`channel` domain events on the global event bus. State is purely in-memory (a process-global `OnceLock` registry) — nothing is persisted to disk. It also serves static system info (version/OS/arch/PID).
 
 ## Responsibilities
 

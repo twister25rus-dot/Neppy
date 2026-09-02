@@ -2,39 +2,39 @@
 description: >-
   Optional `Memory` trait backend that delegates to a locally-running
   agentmemory REST server, for users who self-host agentmemory across
-  Claude Code, Cursor, Codex, OpenCode, and OpenHuman.
+  Claude Code, Cursor, Codex, OpenCode, and Neppy.
 icon: database
 ---
 
 # agentmemory backend
 
-OpenHuman's default `Memory` trait backend is `sqlite`, the unified store
+Neppy's default `Memory` trait backend is `sqlite`, the unified store
 documented in [Memory Trees](memory-tree.md). Some users already
 self-host [agentmemory](https://github.com/rohitg00/agentmemory), typically
 because they want a single durable memory shared across Claude Code,
-Cursor, Codex, OpenCode, and OpenHuman. For them, OpenHuman exposes an opt-in
+Cursor, Codex, OpenCode, and Neppy. For them, Neppy exposes an opt-in
 backend that proxies every trait call through agentmemory's REST surface.
 
-Selecting `backend = "agentmemory"` skips OpenHuman's SQLite + embedder
+Selecting `backend = "agentmemory"` skips Neppy's SQLite + embedder
 path entirely. agentmemory owns the storage, embedding, and retrieval
-layers. OpenHuman becomes a thin REST client.
+layers. Neppy becomes a thin REST client.
 
 ## When to use this
 
 Use the agentmemory backend if:
 
 - You already run `npx -y @agentmemory/agentmemory` for one or more
-  coding agents and want OpenHuman to share the same durable store.
+  coding agents and want Neppy to share the same durable store.
 - You want hybrid BM25 + vector + graph retrieval without provisioning a
-  separate embedder on the OpenHuman side.
+  separate embedder on the Neppy side.
 - You prefer agentmemory's lifecycle (consolidation, retention scoring,
-  auto-forget, graph extraction) over OpenHuman's unified store.
+  auto-forget, graph extraction) over Neppy's unified store.
 
 Keep the default `sqlite` backend if:
 
 - You want self-contained, single-process operation with no external
   daemon dependency.
-- You rely on OpenHuman-specific Memory Tree features (chunking,
+- You rely on Neppy-specific Memory Tree features (chunking,
   sealing, summary trees) that operate on top of the SQLite store. The
   Memory Tree pipeline is unaffected by the trait backend, since it
   operates on the host's document store independently. Even so, the
@@ -53,7 +53,7 @@ Keep the default `sqlite` backend if:
    (engine). First boot generates an HMAC secret at `~/.agentmemory/.hmac`
    and prints it once.
 
-2. **Point OpenHuman at it** in your `config.toml`:
+2. **Point Neppy at it** in your `config.toml`:
 
    ```toml
    [memory]
@@ -64,10 +64,10 @@ Keep the default `sqlite` backend if:
    # agentmemory_timeout_ms = 5000
    ```
 
-3. **Restart OpenHuman**. The factory short-circuits the SQLite path
+3. **Restart Neppy**. The factory short-circuits the SQLite path
    and logs `[memory::factory] using agentmemory backend at <url>`.
 
-That's it. Existing OpenHuman call sites (`store`, `recall`, `get`,
+That's it. Existing Neppy call sites (`store`, `recall`, `get`,
 `list`, `forget`, `namespace_summaries`, `count`, `health_check`) work
 unchanged.
 
@@ -94,9 +94,9 @@ own embedder lifecycle.
 
 ## Field mapping
 
-OpenHuman's `MemoryEntry` ↔ agentmemory wire row:
+Neppy's `MemoryEntry` ↔ agentmemory wire row:
 
-| OpenHuman field            | agentmemory field                | Notes                                                             |
+| Neppy field            | agentmemory field                | Notes                                                             |
 | -------------------------- | -------------------------------- | ----------------------------------------------------------------- |
 | `namespace`                | `project`                        | Defaults to `"default"` when empty                                |
 | `key`                      | `title`                          |                                                                   |
@@ -106,7 +106,7 @@ OpenHuman's `MemoryEntry` ↔ agentmemory wire row:
 | `category: Daily`          | `type: "conversation"`           |                                                                   |
 | `category: Conversation`   | `type: "conversation"`           |                                                                   |
 | `category: Custom(s)`      | `type: "fact"` + `concepts: [s]` | Custom tag rolled into the concepts array so it remains queryable |
-| `session_id`               | `sessionIds: [...]`              | OpenHuman exposes a single id; agentmemory persists an array      |
+| `session_id`               | `sessionIds: [...]`              | Neppy exposes a single id; agentmemory persists an array      |
 | `timestamp`                | `updatedAt` (RFC3339)            | Falls back to `createdAt` if `updatedAt` is absent                |
 | `score` (recall hits only) | smart-search `score`             | Populated on `recall` responses, `None` on `get` / `list`         |
 
@@ -114,7 +114,7 @@ agentmemory carries additional fields that this backend leaves at
 defaults: `concepts` (auto-extracted), `files` (path tags), `strength`
 (retention score), `version`, and `supersedes` (the lifecycle chain).
 They're internal to agentmemory's lifecycle layer and don't need to
-round-trip through OpenHuman's trait.
+round-trip through Neppy's trait.
 
 ## Trait method → endpoint
 
@@ -157,7 +157,7 @@ misconfigured TLS terminator fails loud rather than silently leaking.
 The plaintext-bearer guard mirrors the integration plugin guards in
 agentmemory's [PR #315](https://github.com/rohitg00/agentmemory/pull/315)
 so an operator who's seen the warning on Hermes / OpenClaw / pi will
-recognise the same message on OpenHuman.
+recognise the same message on Neppy.
 
 ## Failure modes
 
@@ -200,11 +200,11 @@ trait call. Practical implications:
 
 There's no in-place migration today. The recommended path:
 
-1. Export your existing memories from the SQLite store via OpenHuman's
+1. Export your existing memories from the SQLite store via Neppy's
    existing export RPC (or by direct SQL).
 2. Walk the export and POST each row to `/agentmemory/remember` with
    the same `project` + `title` + `content`. agentmemory will assign
-   new ids; the OpenHuman side picks them up on first `list`.
+   new ids; the Neppy side picks them up on first `list`.
 3. Set `backend = "agentmemory"` and restart.
 
 A dedicated bulk import path is filed as a follow-up.

@@ -13,14 +13,14 @@
  * bearer token written to `${tmpdir}/openhuman-e2e-rpc-token`, and does
  * the JSON-RPC over plain HTTP — fully driver-agnostic.
  */
-import { callOpenhumanRpcNode } from './core-rpc-node';
+import { callNeppyRpcNode } from './core-rpc-node';
 import type { RpcCallResult } from './core-rpc-webview';
 
 export { expectRpcOk } from './core-rpc-node';
 
-export async function callOpenhumanRpc<T = unknown>(
+export async function callNeppyRpc<T = unknown>(
   method: string,
   params: Record<string, unknown> = {}
 ): Promise<RpcCallResult<T>> {
-  return callOpenhumanRpcNode<T>(method, params);
+  return callNeppyRpcNode<T>(method, params);
 }

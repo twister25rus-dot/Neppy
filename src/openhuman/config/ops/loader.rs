@@ -222,7 +222,7 @@ pub(crate) fn fallback_workspace_dir() -> PathBuf {
         .join("workspace")
 }
 
-/// Returns the default OpenHuman configuration directory (~/.openhuman).
+/// Returns the default Neppy configuration directory (~/.openhuman).
 pub(crate) fn default_openhuman_dir() -> PathBuf {
     crate::openhuman::config::default_root_openhuman_dir()
         .unwrap_or_else(|_| env_scoped_fallback_root_dir())
@@ -264,7 +264,7 @@ pub(crate) fn reset_local_data_remove_error(path: &Path, error: &std::io::Error)
             "[config] reset_local_data: Windows file lock blocked local data deletion"
         );
         return format!(
-            "Failed to remove {} because it is locked by another OpenHuman window or process. Close all OpenHuman windows and try again. ({error})",
+            "Failed to remove {} because it is locked by another Neppy window or process. Close all Neppy windows and try again. ({error})",
             path.display()
         );
     }
@@ -288,7 +288,7 @@ pub(crate) fn reset_local_data_marker_remove_error(path: &Path, error: &std::io:
             "[config] reset_local_data: Windows file lock blocked marker deletion"
         );
         return format!(
-            "Failed to remove marker {} ({marker_name}) because it is locked by another OpenHuman window or process. Close all OpenHuman windows and try again. ({error})",
+            "Failed to remove marker {} ({marker_name}) because it is locked by another Neppy window or process. Close all Neppy windows and try again. ({error})",
             path.display()
         );
     }
@@ -553,7 +553,7 @@ pub fn set_browser_allow_all(enabled: bool) -> Result<RpcOutcome<RuntimeFlagsOut
              {BROWSER_ALLOW_ALL_RPC_ENABLE_ENV}=1 before using the runtime toggle"
         );
         return Err(format!(
-            "Refusing to enable {BROWSER_ALLOW_ALL_ENV} via RPC. Start OpenHuman with \
+            "Refusing to enable {BROWSER_ALLOW_ALL_ENV} via RPC. Start Neppy with \
              {BROWSER_ALLOW_ALL_ENV}=1, or set {BROWSER_ALLOW_ALL_RPC_ENABLE_ENV}=1 for an \
              explicit operator-approved runtime override."
         ));

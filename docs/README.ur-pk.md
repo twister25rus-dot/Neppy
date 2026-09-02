@@ -1,6 +1,6 @@
 <div dir="ltr">
 
-<h1 align="center">OpenHuman</h1>
+<h1 align="center">Neppy</h1>
 
 <p align="center">
  <img src="../gitbooks/.gitbook/assets/demo.png" alt="The Tet" />
@@ -11,18 +11,18 @@
 		<img src="https://trendshift.io/api/badge/repositories/23680" alt="tinyhumansai%2Fopenhuman | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 	</a>
 	<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-		<img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=daily&amp;t=1778916022823">
+		<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=daily&amp;t=1778916022823">
 		</a>
 		<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-			<img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;t=1779351403565">
+			<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;t=1779351403565">
 		</a>
 </p>
 <p align="center" style="display: inline-block">
  <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-  <img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=268&amp;t=1779351808756">
+  <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=268&amp;t=1779351808756">
   </a>
   <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-   <img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=46&amp;t=1779351808756">
+   <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=46&amp;t=1779351808756">
    </a>
  </p>
 
@@ -31,7 +31,7 @@
 <div dir="rtl" lang="ur">
 
 <p align="center">
- <strong>OpenHuman آپ کی ذاتی AI سپر انٹیلی جنس ہے: ایک دماغ جو سب کچھ یاد رکھتا ہے، ایک شاندار آرکسٹریٹر، ایک گہرا محقق۔ مقامی اول، سادہ، طاقتور۔</strong>
+ <strong>Neppy آپ کی ذاتی AI سپر انٹیلی جنس ہے: ایک دماغ جو سب کچھ یاد رکھتا ہے، ایک شاندار آرکسٹریٹر، ایک گہرا محقق۔ مقامی اول، سادہ، طاقتور۔</strong>
 </p>
 
 <p align="center">
@@ -63,7 +63,7 @@
 
 > **ابتدائی آزمائشی نسخہ**: فعال ترقی جاری ہے، بے ضابطگیوں کی توقع کریں۔
 
-> 🎉 لانچ کے ایک ہفتے کے اندر، OpenHuman مسلسل نو دن تک GitHub پر نمبر ایک ٹرینڈنگ ریپوزٹری رہا۔
+> 🎉 لانچ کے ایک ہفتے کے اندر، Neppy مسلسل نو دن تک GitHub پر نمبر ایک ٹرینڈنگ ریپوزٹری رہا۔
 
 # انسٹال کریں
 
@@ -71,9 +71,9 @@
 
 ٹرمینل انسٹال (Homebrew، Debian/Ubuntu `.deb`، AUR، انسٹال اسکرپٹس، اور پلیٹ فارم نوٹس) کے لیے **[INSTALL.md](../INSTALL.md)** دیکھیں۔
 
-# OpenHuman کیا ہے؟
+# Neppy کیا ہے؟
 
-OpenHuman تین چیزیں ہے جو زیادہ تر اسسٹنٹس نہیں ہیں: **ایک دماغ** جو آپ کی دنیا کی ایک مستقل، مقامی یادداشت بناتا ہے؛ **ایک شاندار آرکسٹریٹر** جو پائیدار گرافس پر ایجنٹس کے فلیٹس چلاتا ہے؛ اور **ایک گہرا محقق** جو آپ کے سوال مکمل کرنے سے پہلے آپ کے ڈیٹا اور ویب کا جائزہ لے لیتا ہے۔ ہر بلیٹ [دستاویزات](https://tinyhumans.gitbook.io/openhuman/) میں گہرائی سے تحریر کی طرف جاتا ہے۔
+Neppy تین چیزیں ہے جو زیادہ تر اسسٹنٹس نہیں ہیں: **ایک دماغ** جو آپ کی دنیا کی ایک مستقل، مقامی یادداشت بناتا ہے؛ **ایک شاندار آرکسٹریٹر** جو پائیدار گرافس پر ایجنٹس کے فلیٹس چلاتا ہے؛ اور **ایک گہرا محقق** جو آپ کے سوال مکمل کرنے سے پہلے آپ کے ڈیٹا اور ویب کا جائزہ لے لیتا ہے۔ ہر بلیٹ [دستاویزات](https://tinyhumans.gitbook.io/openhuman/) میں گہرائی سے تحریر کی طرف جاتا ہے۔
 
 ### 🧠 دماغ
 
@@ -103,45 +103,45 @@ OpenHuman تین چیزیں ہے جو زیادہ تر اسسٹنٹس نہیں ہ
 
 ## منٹوں میں سیاق و سباق، ہفتوں میں نہیں
 
-OpenHuman پہلا ایجنٹ ہارنس ہے جو منٹوں میں آپ کو جان لیتا ہے۔ کارپیتھی کے [LLM Knowledgebase](https://x.com/karpathy/status/2039805659525644595) سے متاثر۔ زیادہ تر ایجنٹ سرد شروع ہوتے ہیں۔ Hermes آپ کو کام کرتے دیکھ کر سیکھتا ہے؛ OpenClaw پلگ انز کا سیاق و سباق لانے کا انتظار کرتا ہے۔ کسی بھی طرح، آپ دن یا ہفتے گزارتے ہیں اس سے پہلے کہ ایجنٹ آپ کے اسٹیک کے بارے میں کافی جانے تاکہ حقیقی طور پر مفید ہو۔
+Neppy پہلا ایجنٹ ہارنس ہے جو منٹوں میں آپ کو جان لیتا ہے۔ کارپیتھی کے [LLM Knowledgebase](https://x.com/karpathy/status/2039805659525644595) سے متاثر۔ زیادہ تر ایجنٹ سرد شروع ہوتے ہیں۔ Hermes آپ کو کام کرتے دیکھ کر سیکھتا ہے؛ OpenClaw پلگ انز کا سیاق و سباق لانے کا انتظار کرتا ہے۔ کسی بھی طرح، آپ دن یا ہفتے گزارتے ہیں اس سے پہلے کہ ایجنٹ آپ کے اسٹیک کے بارے میں کافی جانے تاکہ حقیقی طور پر مفید ہو۔
 
 </div>
 
 <div dir="ltr">
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/memory.png" alt="OpenHuman سیاق و سباق بنانے کا خاکہ">
+ <img src="../gitbooks/.gitbook/assets/memory.png" alt="Neppy سیاق و سباق بنانے کا خاکہ">
 </p>
 
 </div>
 
 <div dir="rtl" lang="ur">
 
-> OpenHuman آپ کی تمام دستاویزات، ای میلز اور چیٹس کا خلاصہ اور کمپریس کرتا ہے؛ اور ایک میموری گراف بناتا ہے جو آپ کے ایجنٹ کو آپ کے بارے میں سب کچھ یاد رکھنے دیتا ہے۔
+> Neppy آپ کی تمام دستاویزات، ای میلز اور چیٹس کا خلاصہ اور کمپریس کرتا ہے؛ اور ایک میموری گراف بناتا ہے جو آپ کے ایجنٹ کو آپ کے بارے میں سب کچھ یاد رکھنے دیتا ہے۔
 
-OpenHuman انتظار چھوڑ دیتا ہے۔ اپنے اکاؤنٹس جوڑیں، [خودکار لانے](https://tinyhumans.gitbook.io/openhuman/features/integrations/auto-fetch) کو 20 منٹ کے لوپ پر مقامی طور پر ڈیٹا کھینچنے دیں، اور پھر [میموری ٹریز](https://tinyhumans.gitbook.io/openhuman/features/memory-tree) کو ہر چیز کو Markdown فائلوں میں کمپریس کرنے دیں جو [Karpathy-style Obsidian wiki](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki) میں ذہانت سے ذخیرہ ہوتی ہیں۔
+Neppy انتظار چھوڑ دیتا ہے۔ اپنے اکاؤنٹس جوڑیں، [خودکار لانے](https://tinyhumans.gitbook.io/openhuman/features/integrations/auto-fetch) کو 20 منٹ کے لوپ پر مقامی طور پر ڈیٹا کھینچنے دیں، اور پھر [میموری ٹریز](https://tinyhumans.gitbook.io/openhuman/features/memory-tree) کو ہر چیز کو Markdown فائلوں میں کمپریس کرنے دیں جو [Karpathy-style Obsidian wiki](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki) میں ذہانت سے ذخیرہ ہوتی ہیں۔
 
 صرف ایک سنک پاس میں، ایجنٹ کے پاس آپ کے ان باکس، کیلنڈر، ریپوز، دستاویزات، پیغامات کا مکمل (کمپریسڈ) سیاق و سباق ہوتا ہے۔ کوئی تربیتی مدت نہیں۔ کوئی "اسے کچھ ہفتے دو" نہیں۔ یہ آپ بن جاتا ہے، آپ کے کنٹرول میں۔
 
-پہلے سے دوسرے کوڈنگ ایجنٹس میں [agentmemory](https://github.com/rohitg00/agentmemory) سیلف ہوسٹ کر رہے ہیں؟ OpenHuman ایک اختیاری `Memory` بیک اینڈ بھیجتا ہے جو اسے پروکسی کرتا ہے: `config.toml` میں `memory.backend = "agentmemory"` سیٹ کریں اور وہی پائیدار اسٹور OpenHuman کے ساتھ Claude Code، Cursor، Codex، اور OpenCode کو طاقت دیتا ہے۔ سیٹ اپ کے لیے [agentmemory بیک اینڈ](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki/agentmemory-backend) صفحہ دیکھیں۔
+پہلے سے دوسرے کوڈنگ ایجنٹس میں [agentmemory](https://github.com/rohitg00/agentmemory) سیلف ہوسٹ کر رہے ہیں؟ Neppy ایک اختیاری `Memory` بیک اینڈ بھیجتا ہے جو اسے پروکسی کرتا ہے: `config.toml` میں `memory.backend = "agentmemory"` سیٹ کریں اور وہی پائیدار اسٹور Neppy کے ساتھ Claude Code، Cursor، Codex، اور OpenCode کو طاقت دیتا ہے۔ سیٹ اپ کے لیے [agentmemory بیک اینڈ](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki/agentmemory-backend) صفحہ دیکھیں۔
 
 ## ایک آرکسٹریٹر، چیٹ بوٹ نہیں
 
-زیادہ تر ایجنٹ ہارنسز ایک لوپ میں ایک ایجنٹ چلاتے ہیں۔ OpenHuman ایک **[آرکسٹریٹر](https://tinyhumans.gitbook.io/openhuman/features/orchestration)** ہے:
+زیادہ تر ایجنٹ ہارنسز ایک لوپ میں ایک ایجنٹ چلاتے ہیں۔ Neppy ایک **[آرکسٹریٹر](https://tinyhumans.gitbook.io/openhuman/features/orchestration)** ہے:
 
 </div>
 
 <div dir="ltr">
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/orchestration.png" alt="OpenHuman آرکسٹریشن کا خاکہ">
+ <img src="../gitbooks/.gitbook/assets/orchestration.png" alt="Neppy آرکسٹریشن کا خاکہ">
 </p>
 
 </div>
 
 <div dir="rtl" lang="ur">
 
-> ایجنٹ سے ایجنٹ میسجنگ Signal-پروٹوکول اینڈ ٹو اینڈ انکرپشن پر چلتی ہے، لہٰذا آپ کچھ بھی جوڑ سکتے ہیں (Claude Code، Codex، OpenClaw، Hermes) اور OpenHuman کو اپنے تمام ایجنٹس اور ٹولز کو آرکسٹریٹ کرنے کے لیے استعمال کر سکتے ہیں۔
+> ایجنٹ سے ایجنٹ میسجنگ Signal-پروٹوکول اینڈ ٹو اینڈ انکرپشن پر چلتی ہے، لہٰذا آپ کچھ بھی جوڑ سکتے ہیں (Claude Code، Codex، OpenClaw، Hermes) اور Neppy کو اپنے تمام ایجنٹس اور ٹولز کو آرکسٹریٹ کرنے کے لیے استعمال کر سکتے ہیں۔
 
 - **گرافس، لوپس نہیں**: باریاں [tinyagents](https://github.com/tinyhumansai/tinyagents) پر چیک پوائنٹ شدہ گرافس کے طور پر چلتی ہیں: انسان کے لیے رکیں، ری اسٹارٹ سے بچ نکلیں، رن کے بیچ سے دوبارہ شروع ہوں۔
 - **ذیلی ایجنٹ فلیٹس**: ماہرین تین سطح گہرائی تک بنتے ہیں؛ اٹکے ہوئے ایجنٹ بنیادی وجہ کی رپورٹیں بن جاتے ہیں۔
@@ -156,7 +156,7 @@ n8n اور Zapier سے گہرے متاثر، [ورک فلوز](https://tinyhuman
 <div dir="ltr">
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/workflows.png" alt="OpenHuman ورک فلو کینوس">
+ <img src="../gitbooks/.gitbook/assets/workflows.png" alt="Neppy ورک فلو کینوس">
 </p>
 
 </div>
@@ -167,15 +167,15 @@ n8n اور Zapier سے گہرے متاثر، [ورک فلوز](https://tinyhuman
 
 محفوظ شدہ ورک فلوز پائیدار اور ٹرگر سے چلنے والے ہوتے ہیں: یہ شیڈولز، ویب ہکس، یا چینل ایونٹس پر چلتے ہیں، ری اسٹارٹ سے بچ نکلتے ہیں، اور ضمنی اثرات کو منظوریوں کے پیچھے محفوظ رکھتے ہیں۔
 
-## OpenHuman بمقابلہ دوسرے ایجنٹ ہارنسز
+## Neppy بمقابلہ دوسرے ایجنٹ ہارنسز
 
-اعلیٰ سطحی موازنہ (مصنوعات تیار ہوتی ہیں، اس لیے ہر وینڈر کے خلاف تصدیق کریں)۔ OpenHuman کو **وینڈر پھیلاؤ کو کم سے کم کرنے**، **ورک فلو کے علم کو ڈیوائس پر رکھنے**، اور ایجنٹ کو آپ کے ڈیٹا کی **مستقل یادداشت** دینے کے لیے بنایا گیا ہے، نہ کہ صرف چیٹ۔
+اعلیٰ سطحی موازنہ (مصنوعات تیار ہوتی ہیں، اس لیے ہر وینڈر کے خلاف تصدیق کریں)۔ Neppy کو **وینڈر پھیلاؤ کو کم سے کم کرنے**، **ورک فلو کے علم کو ڈیوائس پر رکھنے**، اور ایجنٹ کو آپ کے ڈیٹا کی **مستقل یادداشت** دینے کے لیے بنایا گیا ہے، نہ کہ صرف چیٹ۔
 
 </div>
 
 <div dir="ltr">
 
-|                    | Claude Cowork            | OpenClaw            | Hermes Agent        | OpenHuman                                                                                              |
+|                    | Claude Cowork            | OpenClaw            | Hermes Agent        | Neppy                                                                                              |
 | ------------------ | ------------------------ | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
 | **اوپن سورس**      | 🚫 ملکیتی                | ✅ MIT              | ✅ MIT              | ✅ GNU                                                                                                 |
 | **شروع کرنا آسان** | ✅ ڈیسک ٹاپ + کمانڈ لائن | ⚠️ پہلے ٹرمینل      | ⚠️ پہلے ٹرمینل      | ✅ صاف یوزر انٹرفیس، منٹوں میں                                                                         |
@@ -238,7 +238,7 @@ _AGI اور مصنوعی شعور کی طرف بڑھ رہے ہیں؟ ریپو ک
 <div dir="ltr">
 
 <a href="https://github.com/tinyhumansai/openhuman/graphs/contributors">
- <img src="https://contrib.rocks/image?repo=tinyhumansai/openhuman" alt="OpenHuman شراکت دار" />
+ <img src="https://contrib.rocks/image?repo=tinyhumansai/openhuman" alt="Neppy شراکت دار" />
 </a>
 
 </div>

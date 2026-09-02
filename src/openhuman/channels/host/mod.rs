@@ -1,19 +1,19 @@
-//! OpenHuman implementation of the `tinychannels::host` capability boundary.
+//! Neppy implementation of the `tinychannels::host` capability boundary.
 //!
 //! [`build_channel_host`] assembles the concrete [`tinychannels::ChannelHost`]
-//! from OpenHuman internals (voice, inference, approvals, conversation store,
+//! from Neppy internals (voice, inference, approvals, conversation store,
 //! shutdown registry, web event bus). [`build_provider_context`] wraps it into
 //! the [`tinychannels::host::ProviderContext`] handed to channel providers.
 //!
 //! Ported providers reach host capabilities through this context instead of
-//! calling OpenHuman internals directly — the inversion that lets them live in
+//! calling Neppy internals directly — the inversion that lets them live in
 //! the standalone `tinychannels` crate. Lean providers ignore the host.
 
 mod adapters;
 
 pub use adapters::{
     ConfigAllowlistStore, ConversationHistoryStore, CoreApprovalGate, CoreShutdownRegistry,
-    InferenceReactionGate, OpenHumanEventSink, VoiceSynthesizer, VoiceTranscriber,
+    InferenceReactionGate, NeppyEventSink, VoiceSynthesizer, VoiceTranscriber,
 };
 
 use std::sync::Arc;
@@ -23,11 +23,11 @@ use tinychannels::ChannelHost;
 
 use crate::openhuman::config::Config;
 
-/// Assemble the full OpenHuman [`ChannelHost`] from a config snapshot.
+/// Assemble the full Neppy [`ChannelHost`] from a config snapshot.
 ///
-/// Wires every capability OpenHuman can back today: lifecycle (shutdown),
+/// Wires every capability Neppy can back today: lifecycle (shutdown),
 /// STT, TTS, reaction gate, approval-reply parsing, conversation history, and
-/// the web-channel event sink. Capabilities OpenHuman cannot yet express
+/// the web-channel event sink. Capabilities Neppy cannot yet express
 /// portably (turn dispatch, run ledger, pairing) are simply left unset — a
 /// provider that needs one degrades gracefully.
 pub fn build_channel_host(config: Arc<Config>) -> Arc<dyn ChannelHost> {
@@ -46,7 +46,7 @@ pub fn build_channel_host(config: Arc<Config>) -> Arc<dyn ChannelHost> {
         .conversations(Arc::new(ConversationHistoryStore {
             workspace_dir: config.workspace_dir.clone(),
         }))
-        .events(Arc::new(OpenHumanEventSink))
+        .events(Arc::new(NeppyEventSink))
         .allowlist(Arc::new(ConfigAllowlistStore))
         .build()
 }

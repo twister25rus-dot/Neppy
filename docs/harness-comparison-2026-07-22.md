@@ -17,7 +17,7 @@ Hermes' figure is self-reported documentation.
 
 | Harness | Language / runtime | Deployment shape | RAM idle | RAM under load | Startup | Binary / install | N-agent scaling | Source quality |
 |---|---|---|---|---|---|---|---|---|
-| **OpenHuman core** (ours) | Rust, embeddable library | Library or one RPC process; agents share the process | 44-51 MiB settled (default); 35-44 MiB slim | Cold turn +26-31 MiB (first-use); warm turn +0.5-1.9 MiB | ~100-140 ms cold turn; ~0 idle CPU | 116 MiB default / 81 MiB library-minimal / 60 MiB stripped | **In-process**: ~0.4 MiB/agent cold roster, ~1.8 MiB warm marginal | Measured, reproducible (this repo) |
+| **Neppy core** (ours) | Rust, embeddable library | Library or one RPC process; agents share the process | 44-51 MiB settled (default); 35-44 MiB slim | Cold turn +26-31 MiB (first-use); warm turn +0.5-1.9 MiB | ~100-140 ms cold turn; ~0 idle CPU | 116 MiB default / 81 MiB library-minimal / 60 MiB stripped | **In-process**: ~0.4 MiB/agent cold roster, ~1.8 MiB warm marginal | Measured, reproducible (this repo) |
 | OpenAI Codex CLI (codex-rs) | Rust, single native binary | CLI process per session | no published RSS | no published RSS (qualitative claims only) | "milliseconds" (qualitative) | **80 MB** (macOS arm64, primary: issue #13091) | N independent processes | Binary size primary; RSS unpublished |
 | Codex CLI (old Node/TS) | Node.js / V8 | CLI process per session | no published data | no published data | Node startup | npm + Node runtime | N processes | none published |
 | ZeroClaw | Rust, static binary | CLI + optional daemon | **< 5 MB (self-reported, unverified)** | **no verified figure** (the oft-quoted "7.8-12 MiB" has no locatable primary source) | "< 10 ms" (self-reported) | 3.4 MB (one page says ~8.8 MB — internally inconsistent) | "multiple concurrently", no numbers | Marketing only; provenance suspect (SEO domain cluster) |
@@ -55,14 +55,14 @@ well-documented (primary GitHub issues) is a family of off-heap RSS leak bugs:
 they are a cautionary tale about native-buffer discipline in long-running
 Node agent processes.
 
-**Hermes Agent.** The closest scope match to OpenHuman (SQLite + FTS5 + WAL
+**Hermes Agent.** The closest scope match to Neppy (SQLite + FTS5 + WAL
 curated memory, parent/child subagent lineage, cron, unified
 Telegram/Discord/Slack/Signal/WhatsApp/WeChat gateway) — and it is Python 81% /
 TypeScript 16%, not Rust. Subagents run as isolated subprocesses, so it pays
 its base footprint per agent. Self-reported "under 500 MB without a local
 LLM", 4 GB RAM minimum.
 
-## What this means for OpenHuman
+## What this means for Neppy
 
 **Today.** Against honest scope-matched peers we are clearly leaner: Hermes at
 similar capability self-reports ~10x our settled RSS and requires 4 GB

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap a fresh git worktree for OpenHuman dev.
+# Bootstrap a fresh git worktree for Neppy dev.
 #
 # `git worktree add` only checks out the tree. Submodules, untracked env
 # files don't come along — the app won't build until they do. Run this once

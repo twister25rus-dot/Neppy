@@ -235,7 +235,7 @@ fn load_node(chat_dir: &Path, node: &StoredNode) -> ChatNode {
 /// Current wall-clock in epoch millis, for [`save_chat_tree`].
 ///
 /// Inlined rather than imported: medulla-public routes this through a shared
-/// `crate::clock`, which OpenHuman has no equivalent of — its convention is a
+/// `crate::clock`, which Neppy has no equivalent of — its convention is a
 /// module-local helper (see `monitor::types::now_ms`, `web3::store::now_ms`).
 /// A saturating `0` on a pre-epoch clock preserves the original behaviour.
 pub fn now_millis() -> i64 {

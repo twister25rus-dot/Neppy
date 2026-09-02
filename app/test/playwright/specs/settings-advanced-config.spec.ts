@@ -159,6 +159,6 @@ test.describe('Settings - Advanced Config', () => {
     await expect
       .poll(async () => page.evaluate(() => window.location.hash))
       .toContain('/connections');
-    await expect(page.getByText(/Reasoning|Cloud providers|OpenHuman/).first()).toBeVisible();
+    await expect(page.getByText(/Reasoning|Cloud providers|Neppy/).first()).toBeVisible();
   });
 });

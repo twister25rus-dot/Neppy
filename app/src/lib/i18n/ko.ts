@@ -14,10 +14,10 @@ const messages: TranslationMap = {
   'share.captionPlaceholder': '캡션을 작성하세요...',
   'share.privacyNote':
     '제목, 캡션, 에이전트 이름, 브랜딩만 공유됩니다. 대화, 메모리, 파일은 비공개로 유지됩니다.',
-  'share.defaultHeadline': '내 OpenHuman 에이전트가 방금 한 일을 확인해 보세요',
+  'share.defaultHeadline': '내 Neppy 에이전트가 방금 한 일을 확인해 보세요',
   'share.defaultAgentName': '내 에이전트',
-  'share.defaultCaption': '내 OpenHuman 에이전트가 방금 한 일을 확인해 보세요.',
-  'share.captionWithHeadline': '{headline}. 제 OpenHuman 에이전트와 함께 만들었습니다.',
+  'share.defaultCaption': '내 Neppy 에이전트가 방금 한 일을 확인해 보세요.',
+  'share.captionWithHeadline': '{headline}. 제 Neppy 에이전트와 함께 만들었습니다.',
   'share.linkedInHint': '캡션이 복사되었습니다. LinkedIn 게시물에 붙여넣으세요.',
   'share.shareX': 'X에 공유',
   'share.shareLinkedIn': 'LinkedIn에 공유',
@@ -52,7 +52,7 @@ const messages: TranslationMap = {
   'feedback.welcome.eyebrow': '피드백',
   'feedback.welcome.title': '우리가 만들 것을 함께 만들어가세요',
   'feedback.welcome.body':
-    '무엇이 잘 되고 있는지, 무엇이 부족한지, 무엇이 OpenHuman을 더 좋게 만들지 알려주세요. 아이디어를 올리고, 다른 사람의 제안에 투표하고, 최고의 아이디어가 우리 로드맵의 최상단으로 올라가는 것을 지켜보세요.',
+    '무엇이 잘 되고 있는지, 무엇이 부족한지, 무엇이 Neppy을 더 좋게 만들지 알려주세요. 아이디어를 올리고, 다른 사람의 제안에 투표하고, 최고의 아이디어가 우리 로드맵의 최상단으로 올라가는 것을 지켜보세요.',
   'feedback.welcome.ctaShare': '아이디어 공유',
   'feedback.welcome.ctaBoard': '보드 보기',
   'feedback.welcome.featsLabel': '할 수 있는 것',
@@ -113,7 +113,7 @@ const messages: TranslationMap = {
   'rewards.welcome.eyebrow': '리워드',
   'rewards.welcome.title': '함께해 준 것에 대한 보상',
   'rewards.welcome.body':
-    'OpenHuman을 사용하고 다른 사람을 초대하며 포인트를 모으고, 연속 기록을 이어가고, 모은 것을 사용하세요. 모두 한곳에서 추적됩니다.',
+    'Neppy을 사용하고 다른 사람을 초대하며 포인트를 모으고, 연속 기록을 이어가고, 모은 것을 사용하세요. 모두 한곳에서 추적됩니다.',
   'rewards.welcome.ctaView': '리워드 보기',
   'rewards.welcome.featsLabel': '작동 방식',
   'rewards.welcome.feat1Title': '포인트 적립',
@@ -164,7 +164,7 @@ const messages: TranslationMap = {
   'settings.core.statusUnreachable': '코어에 연결할 수 없습니다',
   'settings.core.recheck': '다시 확인',
   'settings.core.save': '저장 후 재시작',
-  'settings.core.applyRestartNote': '저장하면 다시 연결하기 위해 OpenHuman이 재시작됩니다.',
+  'settings.core.applyRestartNote': '저장하면 다시 연결하기 위해 Neppy이 재시작됩니다.',
   // Cross-host vault (#4278)
   'crossHostVault.title': '보관소가 코어 호스트에 있습니다.',
   'crossHostVault.message':
@@ -172,15 +172,15 @@ const messages: TranslationMap = {
   'conversations.toolFailure.whyLabel': '이유',
   'conversations.toolFailure.nextLabel': '다음 할 일',
   'conversations.toolFailure.missingPermission.cause':
-    'OpenHuman에 아직 이 작업을 수행할 권한이 없습니다.',
+    'Neppy에 아직 이 작업을 수행할 권한이 없습니다.',
   'conversations.toolFailure.missingPermission.next': '필요한 권한을 부여한 후 다시 시도하세요.',
   'conversations.toolFailure.missingApp.cause':
     '이 작업에 필요한 앱 또는 프로그램을 사용할 수 없습니다.',
   'conversations.toolFailure.missingApp.next': '앱을 설치하거나 연 후 다시 시도하세요.',
   'conversations.toolFailure.serviceUnavailable.cause':
-    'OpenHuman에 필요한 서비스를 일시적으로 사용할 수 없습니다.',
+    'Neppy에 필요한 서비스를 일시적으로 사용할 수 없습니다.',
   'conversations.toolFailure.serviceUnavailable.next':
-    'OpenHuman이 곧 다시 시도합니다: 별도의 조치가 필요하지 않습니다.',
+    'Neppy이 곧 다시 시도합니다: 별도의 조치가 필요하지 않습니다.',
   'conversations.toolFailure.badCredentials.cause':
     '저장된 로그인 정보가 없거나 더 이상 유효하지 않습니다.',
   'conversations.toolFailure.badCredentials.next':
@@ -188,19 +188,19 @@ const messages: TranslationMap = {
   'conversations.toolFailure.blockedByPolicy.cause': '이 작업은 보안 설정에 의해 차단되었습니다.',
   'conversations.toolFailure.blockedByPolicy.next':
     '실행하려면 설정 → 에이전트 액세스에서 허용하세요.',
-  'conversations.toolFailure.modelConnection.cause': 'OpenHuman이 AI 모델에 연결하지 못했습니다.',
+  'conversations.toolFailure.modelConnection.cause': 'Neppy이 AI 모델에 연결하지 못했습니다.',
   'conversations.toolFailure.modelConnection.next':
-    '연결 또는 모델 설정을 확인하세요. OpenHuman이 다시 시도합니다.',
+    '연결 또는 모델 설정을 확인하세요. Neppy이 다시 시도합니다.',
   'conversations.toolFailure.timeout.cause': '작업이 너무 오래 걸려 중지되었습니다.',
   'conversations.toolFailure.timeout.next':
-    'OpenHuman이 다시 시도하거나 수동으로 다시 실행할 수 있습니다.',
+    'Neppy이 다시 시도하거나 수동으로 다시 실행할 수 있습니다.',
   'conversations.toolFailure.denied.cause': '이 작업을 거부했습니다.',
   'conversations.toolFailure.denied.next':
     '할 일이 없습니다: 실행되지 않았습니다. 마음이 바뀌면 다시 요청하세요.',
   'conversations.toolFailure.approvalExpired.cause':
     '아무도 응답하기 전에 승인 요청이 만료되었습니다.',
   'conversations.toolFailure.approvalExpired.next':
-    '실행하려면 다시 요청하세요: OpenHuman이 스스로 재시도하지 않습니다.',
+    '실행하려면 다시 요청하세요: Neppy이 스스로 재시도하지 않습니다.',
   'conversations.toolFailure.unknown.cause': '이 작업에서 문제가 발생했습니다.',
   'conversations.toolFailure.unknown.next':
     '다시 시도하세요. 계속 실패하면 설정에서 진단을 실행하세요.',
@@ -324,14 +324,14 @@ const messages: TranslationMap = {
   'orchPage.medulla.nav': '개요',
   'orchPage.medulla.badge': '출시 예정',
   'orchPage.medulla.title': 'Medulla',
-  'orchPage.medulla.tagline': 'OpenHuman의 오케스트레이션 모델',
+  'orchPage.medulla.tagline': 'Neppy의 오케스트레이션 모델',
   'orchPage.medulla.body':
-    'Medulla는 OpenHuman이 자체 개발한 LLM으로, 수천 개의 에이전트를 동시에 오케스트레이션하도록 설계되었으며, 1,000만 토큰 컨텍스트 창과 획기적으로 낮은 비용의 오케스트레이션을 제공합니다.',
+    'Medulla는 Neppy이 자체 개발한 LLM으로, 수천 개의 에이전트를 동시에 오케스트레이션하도록 설계되었으며, 1,000만 토큰 컨텍스트 창과 획기적으로 낮은 비용의 오케스트레이션을 제공합니다.',
   'orchPage.medulla.featAgents': '수천 개의 에이전트',
   'orchPage.medulla.featContext': '10M 토큰 컨텍스트',
   'orchPage.medulla.featCost': '저비용 오케스트레이션',
-  'orchPage.medulla.subscriberTitle': 'OpenHuman 구독자',
-  'orchPage.medulla.subscriberNote': 'Medulla가 출시되면 OpenHuman 구독자 전용으로 제공됩니다.',
+  'orchPage.medulla.subscriberTitle': 'Neppy 구독자',
+  'orchPage.medulla.subscriberNote': 'Medulla가 출시되면 Neppy 구독자 전용으로 제공됩니다.',
   'orchPage.medulla.subscriberCta': '구독하기',
   'orchPage.medulla.discordTitle': 'Discord 참여하기',
   'orchPage.medulla.earlyAccess':
@@ -398,7 +398,7 @@ const messages: TranslationMap = {
   'orchPage.connections.replyPlaceholder': '답장…',
   'orchPage.connections.initTitle': '에이전트 또는 인스턴스 초기화',
   'orchPage.connections.initDesc':
-    '함께 일할 새 서브 에이전트를 만드세요. 에이전트 채팅을 열고 역할, 목표, 사용할 도구를 설명하면 OpenHuman이 여기서 조종할 수 있는 전용 인스턴스를 준비합니다.',
+    '함께 일할 새 서브 에이전트를 만드세요. 에이전트 채팅을 열고 역할, 목표, 사용할 도구를 설명하면 Neppy이 여기서 조종할 수 있는 전용 인스턴스를 준비합니다.',
   'orchPage.connections.initCta': '채팅에서 시작',
   'orchPage.connections.status.needsYou': '확인 필요',
   'orchPage.connections.status.running': '실행 중',
@@ -475,7 +475,7 @@ const messages: TranslationMap = {
   'tinyplaceOrchestration.unknownSender': '알 수 없는 보낸 사람',
   'tinyplaceOrchestration.master.title': '에이전트 / 사람',
   'tinyplaceOrchestration.master.subtitle': '마스터 채팅',
-  'tinyplaceOrchestration.master.preview': '사용자와 OpenHuman 간의 직접 조율.',
+  'tinyplaceOrchestration.master.preview': '사용자와 Neppy 간의 직접 조율.',
   'tinyplaceOrchestration.subconscious.title': '잠재의식',
   'tinyplaceOrchestration.subconscious.subtitle': '내부 에이전트 채팅',
   'tinyplaceOrchestration.subconscious.preview': '백그라운드 에이전트 조율과 메모리 루프.',
@@ -493,7 +493,7 @@ const messages: TranslationMap = {
   'tinyplaceOrchestration.pairing.incoming': '수신',
   'tinyplaceOrchestration.pairing.outgoing': '발신',
   'tinyplaceOrchestration.master.you': '나',
-  'tinyplaceOrchestration.composer.placeholder': 'OpenHuman에 메시지…',
+  'tinyplaceOrchestration.composer.placeholder': 'Neppy에 메시지…',
   'tinyplaceOrchestration.composer.send': '보내기',
   'tinyplaceOrchestration.composer.sendFailed': '메시지를 보내지 못했습니다',
   'tinyplaceOrchestration.steering.label': '조종',
@@ -806,8 +806,8 @@ const messages: TranslationMap = {
   'clearData.failed': '데이터 삭제 및 로그아웃에 실패했습니다. 다시 시도해 주세요.',
   'clearData.failedLogout': '로그아웃에 실패했습니다. 다시 시도해 주세요.',
   'clearData.failedPersist': '저장된 앱 상태를 삭제하지 못했습니다. 다시 시도해 주세요.',
-  'welcome.logoAlt': 'OpenHuman',
-  'welcome.title': 'OpenHuman에 오신 것을 환영합니다',
+  'welcome.logoAlt': 'Neppy',
+  'welcome.title': 'Neppy에 오신 것을 환영합니다',
   'welcome.subtitle': '개인용 AI 슈퍼 인텔리전스입니다. 비공개이며, 간단하고, 매우 강력합니다.',
   'welcome.connectPrompt': 'RPC URL 구성(고급)',
   'welcome.selectRuntime': '런타임 선택',
@@ -816,7 +816,7 @@ const messages: TranslationMap = {
   'welcome.clearAppDataWarning':
     '이 작업은 이 기기에 로컬로 저장된 비밀 정보와 계정을 초기화합니다. 클라우드 계정은 영향을 받지 않으며 즉시 다시 로그인할 수 있습니다.',
   'welcome.resetErrorFallback':
-    '앱 데이터를 지울 수 없습니다. OpenHuman을 종료하고 다시 열어 재시도하세요.',
+    '앱 데이터를 지울 수 없습니다. Neppy을 종료하고 다시 열어 재시도하세요.',
   'welcome.signingIn': '로그인 중...',
   'welcome.termsIntro': '계속 진행하면',
   'welcome.termsOfUse': '약관',
@@ -835,7 +835,7 @@ const messages: TranslationMap = {
   'home.statusBackendOnly':
     '백엔드에 다시 연결하는 중입니다… 곧 에이전트를 다시 사용할 수 있습니다.',
   'home.statusCoreUnreachable':
-    '로컬 코어 사이드카가 응답하지 않습니다. OpenHuman 백그라운드 프로세스가 중단되었거나 시작하지 못했을 수 있습니다.',
+    '로컬 코어 사이드카가 응답하지 않습니다. Neppy 백그라운드 프로세스가 중단되었거나 시작하지 못했을 수 있습니다.',
   'home.statusInternetOffline':
     '현재 기기가 오프라인 상태입니다. 네트워크를 확인하거나 앱을 다시 시작하여 다시 연결하세요.',
   'home.restartCore': '코어 다시 시작',
@@ -1170,13 +1170,13 @@ const messages: TranslationMap = {
   'rewards.referrals': '추천',
   'rewards.coupons': '교환',
   'rewards.localUnavailable':
-    '로컬 로그인은 리워드, 쿠폰 또는 추천 크레딧을 적립할 수 없습니다. 리워드를 적립하려면 로그아웃하고 OpenHuman 계정으로 로그인하세요.',
+    '로컬 로그인은 리워드, 쿠폰 또는 추천 크레딧을 적립할 수 없습니다. 리워드를 적립하려면 로그아웃하고 Neppy 계정으로 로그인하세요.',
   'rewards.localUnavailableCta': '계정 설정 열기',
   'rewards.credits': '크레딧',
   'rewards.referralCode': '내 추천 코드',
   'rewards.copyCode': '코드 복사',
   'rewards.share': '공유',
-  'onboarding.welcome': '안녕하세요. 저는 OpenHuman입니다.',
+  'onboarding.welcome': '안녕하세요. 저는 Neppy입니다.',
   'onboarding.welcomeDesc':
     '컴퓨터에서 실행되는 초지능 AI 어시스턴트입니다. 비공개이며, 간단하고, 매우 강력합니다.',
   'onboarding.context': '컨텍스트 수집',
@@ -1188,14 +1188,14 @@ const messages: TranslationMap = {
   'onboarding.referral': '추천',
   'onboarding.referralDesc': '추천 코드가 있다면 적용하세요.',
   'onboarding.finish': '설정 완료',
-  'onboarding.finishDesc': '모든 준비가 끝났습니다! OpenHuman을 사용해 보세요.',
+  'onboarding.finishDesc': '모든 준비가 끝났습니다! Neppy을 사용해 보세요.',
   'onboarding.skip': '건너뛰기',
   'onboarding.getStarted': '시작하기',
-  'onboarding.runtimeChoice.title': 'OpenHuman을 어떻게 실행하시겠습니까?',
+  'onboarding.runtimeChoice.title': 'Neppy을 어떻게 실행하시겠습니까?',
   'onboarding.runtimeChoice.subtitle':
     '가장 잘 맞는 설정을 선택하세요. 나중에 설정에서 변경할 수 있습니다.',
   'onboarding.runtimeChoice.cloud.title': '간단 모드',
-  'onboarding.runtimeChoice.cloud.tagline': 'OpenHuman이 모든 것을 대신 관리하도록 합니다.',
+  'onboarding.runtimeChoice.cloud.tagline': 'Neppy이 모든 것을 대신 관리하도록 합니다.',
   'onboarding.runtimeChoice.cloud.f1': '내장 보안',
   'onboarding.runtimeChoice.cloud.f2': '사용량을 더 오래 쓰기 위한 토큰 압축',
   'onboarding.runtimeChoice.cloud.f3': '하나의 구독으로 모든 모델 포함',
@@ -1248,7 +1248,7 @@ const messages: TranslationMap = {
   'onboarding.custom.stepperMemory': '메모리',
   'onboarding.custom.stepCounter': '{total}단계 중 {n}단계',
   'onboarding.custom.defaultTitle': '기본값',
-  'onboarding.custom.defaultSubtitle': 'OpenHuman이 대신 관리하도록 합니다.',
+  'onboarding.custom.defaultSubtitle': 'Neppy이 대신 관리하도록 합니다.',
   'onboarding.custom.configureTitle': '구성',
   'onboarding.custom.configureSubtitle': '사용할 항목을 직접 선택합니다.',
   'onboarding.custom.progressAriaLabel': '온보딩 진행 상황',
@@ -1262,41 +1262,41 @@ const messages: TranslationMap = {
   'onboarding.custom.inference.subtitle':
     '어떤 언어 모델이 질문에 답하고 에이전트를 실행해야 하나요?',
   'onboarding.custom.inference.defaultDesc':
-    'OpenHuman은 모든 작업을 적절한 기본 모델로 라우팅합니다. 키도 필요 없고 설정도 필요 없습니다.',
+    'Neppy은 모든 작업을 적절한 기본 모델로 라우팅합니다. 키도 필요 없고 설정도 필요 없습니다.',
   'onboarding.custom.inference.configureDesc':
     '직접 OpenAI 또는 Anthropic 키를 가져오세요. 모든 텍스트 기반 작업에 이 키를 사용합니다.',
   'onboarding.custom.voice.title': '음성',
   'onboarding.custom.voice.subtitle':
     '음성 모드를 위한 음성-텍스트 변환 및 텍스트-음성 변환입니다.',
   'onboarding.custom.voice.defaultDesc':
-    'OpenHuman에는 바로 사용할 수 있는 관리형 STT/TTS가 포함되어 있습니다. 별도로 연결할 필요가 없습니다.',
+    'Neppy에는 바로 사용할 수 있는 관리형 STT/TTS가 포함되어 있습니다. 별도로 연결할 필요가 없습니다.',
   'onboarding.custom.voice.configureDesc':
     '직접 ElevenLabs / OpenAI Whisper 등을 사용하세요. 설정 › 음성에서 구성할 수 있습니다.',
   'onboarding.custom.oauth.title': '연결(OAuth)',
   'onboarding.custom.oauth.subtitle':
     'OAuth가 필요한 Gmail, Slack, Notion 및 기타 연결 서비스입니다.',
   'onboarding.custom.oauth.defaultDesc':
-    'OpenHuman은 관리형 Composio 워크스페이스를 실행합니다. 나중에 각 서비스를 한 번의 클릭으로 연결할 수 있습니다.',
+    'Neppy은 관리형 Composio 워크스페이스를 실행합니다. 나중에 각 서비스를 한 번의 클릭으로 연결할 수 있습니다.',
   'onboarding.custom.oauth.configureDesc':
     '직접 Composio 계정 또는 API 키를 가져오세요. 설정 › 연결에서 구성할 수 있습니다.',
   'onboarding.custom.search.title': '웹 검색',
-  'onboarding.custom.search.subtitle': 'OpenHuman이 사용자를 대신해 웹을 검색하는 방식입니다.',
+  'onboarding.custom.search.subtitle': 'Neppy이 사용자를 대신해 웹을 검색하는 방식입니다.',
   'onboarding.custom.search.defaultDesc':
-    'OpenHuman은 관리형 검색 백엔드를 사용합니다. 키가 필요 없습니다.',
+    'Neppy은 관리형 검색 백엔드를 사용합니다. 키가 필요 없습니다.',
   'onboarding.custom.search.configureDesc':
     '직접 검색 제공업체 키(Tavily, Brave 등)를 가져오세요. 설정 › 도구에서 구성할 수 있습니다.',
   'onboarding.custom.embeddings.title': 'Embeddings',
   'onboarding.custom.embeddings.subtitle':
-    'OpenHuman이 시맨틱 메모리 검색을 위한 벡터 임베딩을 생성하는 방식입니다.',
+    'Neppy이 시맨틱 메모리 검색을 위한 벡터 임베딩을 생성하는 방식입니다.',
   'onboarding.custom.embeddings.defaultDesc':
-    'OpenHuman이 관리형 임베딩 서비스를 사용합니다. API 키가 필요 없습니다.',
+    'Neppy이 관리형 임베딩 서비스를 사용합니다. API 키가 필요 없습니다.',
   'onboarding.custom.embeddings.configureDesc':
     '자체 임베딩 공급자(OpenAI, Voyage, Ollama 등)를 사용하세요.',
   'onboarding.custom.memory.title': '메모리',
   'onboarding.custom.memory.subtitle':
-    'OpenHuman이 사용자의 컨텍스트, 선호도, 이전 대화를 기억하는 방식입니다.',
+    'Neppy이 사용자의 컨텍스트, 선호도, 이전 대화를 기억하는 방식입니다.',
   'onboarding.custom.memory.defaultDesc':
-    'OpenHuman은 메모리 저장과 검색을 자동으로 관리합니다. 설정할 것이 없습니다.',
+    'Neppy은 메모리 저장과 검색을 자동으로 관리합니다. 설정할 것이 없습니다.',
   'onboarding.custom.memory.configureDesc':
     '메모리를 직접 검사, 내보내기 또는 삭제할 수 있습니다. 설정 › 메모리에서 구성할 수 있습니다.',
   'accounts.addAccount': '계정 추가',
@@ -1430,7 +1430,7 @@ const messages: TranslationMap = {
   'misc.downloading': '다운로드 중...',
   'misc.installing': '설치 중...',
   'misc.beta':
-    'OpenHuman은 초기 베타 버전입니다. 피드백을 공유하거나 발견한 버그를 신고해 주세요: 모든 신고는 더 빠른 출시를 돕습니다.',
+    'Neppy은 초기 베타 버전입니다. 피드백을 공유하거나 발견한 버그를 신고해 주세요: 모든 신고는 더 빠른 출시를 돕습니다.',
   'misc.betaFeedback': '피드백 보내기',
   'mnemonic.title': '복구 문구',
   'mnemonic.warning': '이 단어들을 순서대로 적어 안전한 곳에 보관하세요.',
@@ -1454,11 +1454,11 @@ const messages: TranslationMap = {
   'privacy.anonymizedAnalytics': '제품 분석',
   'privacy.shareAnonymizedData': '제품 분석 및 진단 공유',
   'privacy.shareAnonymizedDataDesc':
-    '안정적인 계정 ID와 앱 버전 메타데이터를 포함한 개인정보 제한 충돌 보고서와 사용 이벤트를 공유하여 OpenHuman 개선을 도와주세요. 메시지, 지갑 키, API 키, 세션 토큰은 절대 수집되지 않습니다.',
+    '안정적인 계정 ID와 앱 버전 메타데이터를 포함한 개인정보 제한 충돌 보고서와 사용 이벤트를 공유하여 Neppy 개선을 도와주세요. 메시지, 지갑 키, API 키, 세션 토큰은 절대 수집되지 않습니다.',
   'privacy.meetingFollowUps': '회의 후속 조치',
   'privacy.autoHandoffMeet': 'Google Meet transcript를 오케스트레이터에 자동 전달',
   'privacy.autoHandoffMeetDesc':
-    'Google Meet 통화가 끝나면 OpenHuman의 오케스트레이터가 transcript를 읽고 메시지 초안 작성, 후속 일정 예약, 연결된 Slack 워크스페이스에 요약 게시 같은 작업을 수행할 수 있습니다. 기본값은 꺼짐입니다.',
+    'Google Meet 통화가 끝나면 Neppy의 오케스트레이터가 transcript를 읽고 메시지 초안 작성, 후속 일정 예약, 연결된 Slack 워크스페이스에 요약 게시 같은 작업을 수행할 수 있습니다. 기본값은 꺼짐입니다.',
   'privacy.analyticsDisclaimer':
     '활성화하면 제품 분석 및 진단에 개인정보가 제한된 충돌 보고서와 사용 이벤트, 안정적인 계정 ID, 앱 버전 메타데이터가 포함될 수 있습니다. 메시지, 지갑 키, API 키, 세션 토큰은 절대 수집되지 않습니다. 이 설정은 언제든지 변경할 수 있습니다.',
   'settings.about.version': '버전',
@@ -1470,7 +1470,7 @@ const messages: TranslationMap = {
   'settings.about.releases': '릴리스',
   'settings.about.releasesDesc': 'GitHub에서 릴리스 노트와 이전 빌드를 찾아보세요.',
   'settings.about.openReleases': 'GitHub 릴리스 열기',
-  'settings.about.starCta.title': 'OpenHuman이 마음에 드시나요?',
+  'settings.about.starCta.title': 'Neppy이 마음에 드시나요?',
   'settings.about.starCta.body':
     'GitHub에서 별을 눌러 주세요. 더 많은 사람이 저희를 발견하는 데 도움이 됩니다.',
   'settings.about.starCta.star': 'GitHub에서 별 누르기',
@@ -1555,18 +1555,18 @@ const messages: TranslationMap = {
     '에이전트 메시지를 보내세요. 다음 제공업체 호출의 토큰 사용량이 약 10초 안에 차트에 표시됩니다.',
   'settings.search.title': '검색 엔진',
   'settings.search.menuDesc':
-    'OpenHuman 관리 검색을 기본값으로 사용하거나 API 키로 자체 제공업체를 연결하세요.',
+    'Neppy 관리 검색을 기본값으로 사용하거나 API 키로 자체 제공업체를 연결하세요.',
   'settings.search.description':
-    '에이전트가 사용할 검색 엔진을 선택하거나 검색 도구를 완전히 비활성화합니다. 관리형은 OpenHuman의 백엔드를 사용합니다(설정 불필요). 병렬, Brave, Querit, Exa는 API 키를 사용하여 내 컴퓨터에서 직접 실행됩니다.',
+    '에이전트가 사용할 검색 엔진을 선택하거나 검색 도구를 완전히 비활성화합니다. 관리형은 Neppy의 백엔드를 사용합니다(설정 불필요). 병렬, Brave, Querit, Exa는 API 키를 사용하여 내 컴퓨터에서 직접 실행됩니다.',
   'settings.search.engineAria': '검색 엔진',
   'settings.search.engineDisabledLabel': 'Disabled',
   'settings.search.engineDisabledDesc':
     '에이전트 컨텍스트 및 사용 가능한 도구 목록에서 검색 도구를 제거합니다.',
-  'settings.search.engineManagedLabel': 'OpenHuman 관리됨',
+  'settings.search.engineManagedLabel': 'Neppy 관리됨',
   'settings.search.engineManagedDesc':
-    '기본값입니다. OpenHuman 백엔드를 통해 라우팅되며 현재 Exa로 구동됩니다. API 키가 필요하지 않습니다.',
+    '기본값입니다. Neppy 백엔드를 통해 라우팅되며 현재 Exa로 구동됩니다. API 키가 필요하지 않습니다.',
   'settings.search.localManagedUnavailable':
-    '로컬 사용자는 OpenHuman 관리 검색을 사용할 수 없습니다. 웹 검색을 활성화하려면 자체 Parallel, Brave, Querit 또는 Exa API 키를 추가하세요.',
+    '로컬 사용자는 Neppy 관리 검색을 사용할 수 없습니다. 웹 검색을 활성화하려면 자체 Parallel, Brave, Querit 또는 Exa API 키를 추가하세요.',
   'settings.search.engineParallelLabel': 'Parallel',
   'settings.search.engineParallelDesc':
     '직접 Parallel API: 검색, 추출, 채팅, 리서치, 보강, 데이터셋 도구.',
@@ -1624,15 +1624,15 @@ const messages: TranslationMap = {
   'settings.embeddings.providerAria': '임베딩 제공자',
   'settings.embeddings.statusConfigured': '구성됨',
   'settings.embeddings.statusNeedsKey': 'API 키 필요',
-  'settings.embeddings.requiresSignIn': 'OpenHuman 로그인 필요',
+  'settings.embeddings.requiresSignIn': 'Neppy 로그인 필요',
   'settings.embeddings.managedLoginRequired':
-    '관리형 임베딩을 사용하려면 OpenHuman 로그인이 필요합니다. OpenHuman 백엔드를 사용하려면 로그인하세요.',
+    '관리형 임베딩을 사용하려면 Neppy 로그인이 필요합니다. Neppy 백엔드를 사용하려면 로그인하세요.',
   'settings.embeddings.managedBannerIntro':
-    '관리형 임베딩은 OpenHuman 백엔드를 통해 라우팅되며 OpenHuman 계정 세션이 필요합니다.',
+    '관리형 임베딩은 Neppy 백엔드를 통해 라우팅되며 Neppy 계정 세션이 필요합니다.',
   'settings.embeddings.managedBannerLocalSession':
     '이 공급자를 사용하려면 로컬 세션을 종료하고 로그인하거나, 로컬 또는 자체 키 임베딩 공급자로 전환하세요.',
   'settings.embeddings.managedBannerRemoteSession':
-    'OpenHuman 세션을 새로 고치려면 다시 로그인하거나, 로컬 또는 자체 키 임베딩 공급자로 전환하세요.',
+    'Neppy 세션을 새로 고치려면 다시 로그인하거나, 로컬 또는 자체 키 임베딩 공급자로 전환하세요.',
   'settings.embeddings.signInAgain': '다시 로그인',
   'settings.embeddings.apiKeyLabel': '{provider} API 키',
   'settings.embeddings.apiKeyLabelGeneric': 'API 키',
@@ -1692,13 +1692,13 @@ const messages: TranslationMap = {
     '로컬 MCP 비밀 테이블에 암호화되어 저장됩니다. 로그에 남기거나 모델로 전송하지 않습니다.',
   'devices.betaBadge': '베타',
   'devices.betaText':
-    '이 기능은 현재 베타 버전입니다. iOS 기기를 이 OpenHuman과 페어링하여 원격 클라이언트로 사용할 수 있습니다.',
+    '이 기능은 현재 베타 버전입니다. iOS 기기를 이 Neppy과 페어링하여 원격 클라이언트로 사용할 수 있습니다.',
   'devices.comingSoonDescription':
     '기기 페어링이 곧 제공됩니다. 이 페이지에서 iPhone을 페어링하고 연결된 기기를 관리할 수 있게 됩니다.',
   'devices.title': '장치',
   'devices.pairIphone': 'iPhone 페어링',
   'devices.noPaired': '페어링된 장치가 없습니다.',
-  'devices.emptyState': 'iPhone에서 QR code을 스캔하여 이 OpenHuman 세션에 연결하세요.',
+  'devices.emptyState': 'iPhone에서 QR code을 스캔하여 이 Neppy 세션에 연결하세요.',
   'devices.devicePairedTitle': '기기 페어링됨',
   'devices.devicePairedMessage': 'iPhone이 성공적으로 연결되었습니다.',
   'devices.deviceRevokedTitle': '장치가 취소되었습니다.',
@@ -1719,7 +1719,7 @@ const messages: TranslationMap = {
   'devices.loadFailed': '장치를 로드하지 못했습니다: {message}',
   'devices.pairModal.title': 'iPhone 페어링',
   'devices.pairModal.loading': '페어링 코드 생성 중…',
-  'devices.pairModal.instructions': 'iPhone에서 OpenHuman 앱을 열고 이 코드를 스캔하세요.',
+  'devices.pairModal.instructions': 'iPhone에서 Neppy 앱을 열고 이 코드를 스캔하세요.',
   'devices.pairModal.expiresIn': '코드는 ~{count}분 후에 만료됩니다.',
   'devices.pairModal.expiresInPlural': '코드는 ~{count}분 후에 만료됩니다.',
   'devices.pairModal.showDetails': '세부 정보 표시',
@@ -1978,7 +1978,7 @@ const messages: TranslationMap = {
   'mcp.connectAuth.schemeRaw': '없음',
   'mcp.connectAuth.reconnectFailed': '자격 증명은 저장했지만 연결에 실패했습니다.',
   'mcp.connectAuth.oauthHint':
-    '이 서버는 OAuth를 사용합니다. OpenHuman을 인증하려면 브라우저로 로그인하세요.',
+    '이 서버는 OAuth를 사용합니다. Neppy을 인증하려면 브라우저로 로그인하세요.',
   'mcp.connectAuth.signIn': '브라우저로 로그인',
   'mcp.connectAuth.oauthWaiting': '로그인 대기 중…',
   'mcp.connectAuth.oauthOrToken':
@@ -1998,7 +1998,7 @@ const messages: TranslationMap = {
   'autonomy.title': '에이전트 자율성',
   'autonomy.maxActionsLabel': '시간당 최대 작업',
   'autonomy.maxActionsHelp':
-    '에이전트가 롤링 1시간 동안 실행할 수 있는 최대 도구 작업 수입니다. 새 값은 다음 채팅부터 적용됩니다. 크론 작업 및 채널 리스너는 OpenHuman을 재시작할 때까지 현재 제한을 유지합니다.',
+    '에이전트가 롤링 1시간 동안 실행할 수 있는 최대 도구 작업 수입니다. 새 값은 다음 채팅부터 적용됩니다. 크론 작업 및 채널 리스너는 Neppy을 재시작할 때까지 현재 제한을 유지합니다.',
   'autonomy.statusSaving': '저장 중…',
   'autonomy.statusSaved': '저장되었습니다.',
   'autonomy.statusFailed': '실패',
@@ -2051,7 +2051,7 @@ const messages: TranslationMap = {
   'settings.billing.browserNotOpen': '브라우저가 열리지 않았다면 위 버튼을 사용하세요.',
   'settings.billing.browserOpenFailed': '브라우저를 자동으로 열 수 없습니다. 위 버튼을 사용하세요.',
   'settings.tools.chooseCapabilities':
-    'OpenHuman이 사용자를 대신해 사용할 수 있는 기능을 선택하세요.',
+    'Neppy이 사용자를 대신해 사용할 수 있는 기능을 선택하세요.',
   'settings.tools.saveChanges': '변경 사항 저장',
   'settings.tools.preferencesSaved': '기본 설정이 저장되었습니다',
   'settings.tools.saveFailed': '기본 설정 저장에 실패했습니다. 다시 시도하세요.',
@@ -2295,8 +2295,8 @@ const messages: TranslationMap = {
   'voice.providers.piperPreset.alanMedium': 'GB · Alan (남)',
   'voice.providers.piperPreset.jennyDiocoMedium': 'GB · Jenny Dioco (여)',
   'voice.providers.piperPreset.northernEnglishMaleMedium': 'GB · 북부 영어(남성)',
-  'voice.providers.chip.cloud': 'OpenHuman (관리형)',
-  'voice.providers.chip.cloudAria': 'OpenHuman 관리형 공급자는 항상 활성화되어 있습니다',
+  'voice.providers.chip.cloud': 'Neppy (관리형)',
+  'voice.providers.chip.cloudAria': 'Neppy 관리형 공급자는 항상 활성화되어 있습니다',
   'voice.providers.chip.piper': 'Piper (로컬)',
   'voice.providers.chip.enablePiper': '로컬 Piper TTS 활성화',
   'voice.providers.chip.disablePiper': '로컬 Piper TTS 비활성화',
@@ -2340,7 +2340,7 @@ const messages: TranslationMap = {
   'voice.externalProviders.add': 'Add',
   'pttSettings.title': '눌러서 말하기',
   'pttSettings.description':
-    "다른 앱을 사용하는 중에도 키를 누르고 있으면 OpenHuman과 대화할 수 있습니다. 키를 놓으면 녹음이 전송되고, '답변 읽어주기'가 켜져 있으면 OpenHuman이 답변을 음성으로 들려줍니다.",
+    "다른 앱을 사용하는 중에도 키를 누르고 있으면 Neppy과 대화할 수 있습니다. 키를 놓으면 녹음이 전송되고, '답변 읽어주기'가 켜져 있으면 Neppy이 답변을 음성으로 들려줍니다.",
   'pttSettings.shortcutLabel': '단축키',
   'pttSettings.shortcutPlaceholder': '키를 누르세요 (예: F13)',
   'pttSettings.shortcutUnsetHint':
@@ -2353,11 +2353,11 @@ const messages: TranslationMap = {
     '일반 키를 선택하세요(예: F13): 보조 키로만 구성된 단축키는 눌러서 말하기에서 동작하지 않습니다.',
   'pttSettings.errorEmpty': '바인딩할 키를 선택하세요.',
   'pttSettings.errorAccessibility':
-    '이 단축키에는 macOS의 손쉬운 사용 권한이 필요합니다. 시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용을 열고 OpenHuman을 활성화하세요.',
+    '이 단축키에는 macOS의 손쉬운 사용 권한이 필요합니다. 시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용을 열고 Neppy을 활성화하세요.',
   'pttSettings.errorShortcutInUse':
     '다른 앱이 이미 이 단축키를 사용 중입니다. 다른 단축키를 선택하세요.',
   'pttSettings.errorUnsupportedWayland':
-    'Wayland 세션은 OpenHuman의 전역 단축키를 아직 지원하지 않습니다: X11 세션으로 전환하거나 앱 내 받아쓰기 토글을 사용하세요.',
+    'Wayland 세션은 Neppy의 전역 단축키를 아직 지원하지 않습니다: X11 세션으로 전환하거나 앱 내 받아쓰기 토글을 사용하세요.',
   'pttSettings.exclusiveFullscreenHint':
     '전용 전체 화면 게임에서는 오버레이가 표시되지 않습니다: 알림음만 들립니다. 오버레이를 보려면 테두리 없는 전체 화면으로 전환하세요.',
   'pttOverlay.listening': '듣는 중…',
@@ -2546,13 +2546,13 @@ const messages: TranslationMap = {
   'chat.attachment.tooManyFiles': '메시지당 최대 {max}개 파일',
   'chat.attachment.tooManyVideos': '메시지당 최대 {max}개 동영상',
   'chat.attachment.videoNotSupported':
-    '이 모델은 동영상을 읽을 수 없습니다. 동영상을 첨부하려면 OpenHuman 추론 등급을 사용할 수 있습니다.',
+    '이 모델은 동영상을 읽을 수 없습니다. 동영상을 첨부하려면 Neppy 추론 등급을 사용할 수 있습니다.',
   'chat.attachment.dropToAttach': '파일을 놓아 첨부',
   'chat.attachment.tooLarge': '이미지가 {max} 크기 제한을 초과합니다',
   'chat.attachment.unsupportedType':
     '지원되지 않는 파일 형식입니다. 이미지(PNG, JPEG, WebP, GIF, BMP) 또는 PDF, TXT, Markdown 파일을 사용하세요.',
   'chat.attachment.imageNotSupported':
-    '이 모델은 이미지를 읽을 수 없습니다. 이미지를 첨부하려면 OpenHuman 추론 등급을 사용할 수 있습니다.',
+    '이 모델은 이미지를 읽을 수 없습니다. 이미지를 첨부하려면 Neppy 추론 등급을 사용할 수 있습니다.',
   'chat.attachment.readFailed': '파일을 읽을 수 없습니다',
   'memory.searchAria': '메모리 검색',
   'memory.searchPlaceholder': '메모리 항목 검색...',
@@ -2897,9 +2897,9 @@ const messages: TranslationMap = {
   'bootCheck.chooseCoreMode': '런타임 선택',
   'bootCheck.connectToCore': '런타임에 연결',
   'bootCheck.desktopDescription':
-    'OpenHuman은 생각하기 위한 런타임이 필요합니다. 어디에서 실행할지 선택하세요.',
+    'Neppy은 생각하기 위한 런타임이 필요합니다. 어디에서 실행할지 선택하세요.',
   'bootCheck.webDescription':
-    '웹에서 OpenHuman은 사용자가 제어하는 런타임에 연결됩니다. 아래에 URL과 인증 토큰을 입력하거나, 데스크톱 앱을 받아 이 컴퓨터에서 바로 실행하세요.',
+    '웹에서 Neppy은 사용자가 제어하는 런타임에 연결됩니다. 아래에 URL과 인증 토큰을 입력하거나, 데스크톱 앱을 받아 이 컴퓨터에서 바로 실행하세요.',
   'bootCheck.preferDesktop': '모든 것을 자신의 기기에 보관하고 싶으신가요?',
   'bootCheck.downloadDesktop': '데스크톱 앱 받기',
   'bootCheck.localRecommended': '로컬에서 실행(추천)',
@@ -2925,7 +2925,7 @@ const messages: TranslationMap = {
   'bootCheck.quit': '종료',
   'bootCheck.legacyDetected': '레거시 백그라운드 런타임 감지됨',
   'bootCheck.legacyDescription':
-    '별도로 설치된 OpenHuman 데몬이 이 기기에서 이미 실행 중입니다. 내장 런타임이 대신 실행되기 전에 이를 정리해야 합니다.',
+    '별도로 설치된 Neppy 데몬이 이 기기에서 이미 실행 중입니다. 내장 런타임이 대신 실행되기 전에 이를 정리해야 합니다.',
   'bootCheck.removing': '제거 중…',
   'bootCheck.removeContinue': '제거하고 계속',
   'bootCheck.localNeedsRestart': '로컬 런타임을 다시 시작해야 함',
@@ -2947,13 +2947,13 @@ const messages: TranslationMap = {
   'bootCheck.actionFailed': '문제가 발생했습니다. 다시 시도해 주세요.',
   'bootCheck.portConflictTitle': '앱 엔진을 시작할 수 없습니다',
   'bootCheck.portConflictBody':
-    '다른 프로세스가 OpenHuman에 필요한 네트워크 포트를 사용 중입니다. 자동으로 문제를 해결해 드리겠습니다.',
+    '다른 프로세스가 Neppy에 필요한 네트워크 포트를 사용 중입니다. 자동으로 문제를 해결해 드리겠습니다.',
   'bootCheck.portConflictFixButton': '자동 수정',
   'bootCheck.portConflictFixing': '수정 중…',
   'bootCheck.portConflictFixFailed':
     '자동 수정에 실패했습니다. 컴퓨터를 재시작한 후 다시 시도해 주세요.',
   'bootCheck.portConflictOwner':
-    '{name}(PID {pid})이(가) OpenHuman에 필요한 네트워크 포트를 사용하고 있습니다.',
+    '{name}(PID {pid})이(가) Neppy에 필요한 네트워크 포트를 사용하고 있습니다.',
   'bootCheck.portConflictGuidance':
     '포트를 비우려면 해당 프로그램을 닫거나 아래에서 강제 종료한 후 다시 시도하세요.',
   'bootCheck.portConflictForceQuit': '{name} 강제 종료',
@@ -2994,7 +2994,7 @@ const messages: TranslationMap = {
     '런타임이 자체 구성 파일을 읽지 못했습니다. config.toml이 다른 사용자 계정 소유이거나 다른 이유로 런타임 프로세스가 접근할 수 없는 상태일 수 있습니다. 런타임을 다시 시작하고, 그래도 해결되지 않으면 작업 디렉터리의 소유권을 복구하거나 볼륨을 다시 만드세요.',
   'welcome.localSessionErrorFallback': '로컬 세션을 시작할 수 없습니다.',
   'welcome.gatewaySessionErrorFallback':
-    '지금은 로그인을 완료할 수 없습니다. 세션 저장소가 제때 응답하지 않았습니다(다시 시도한 후에도). OpenHuman을 다시 시작하고 다시 시도하세요.',
+    '지금은 로그인을 완료할 수 없습니다. 세션 저장소가 제때 응답하지 않았습니다(다시 시도한 후에도). Neppy을 다시 시작하고 다시 시도하세요.',
   'welcome.localSessionDesc': '오프라인 로컬 프로필을 사용하고 TinyHumans를 건너뜁니다. OAuth.',
   'channels.activeRouteValue': '{authMode}을(를) 통해 {channel}',
   'privacy.dataKind.messages': '메시지',
@@ -3015,7 +3015,7 @@ const messages: TranslationMap = {
   'composio.reconnect': '다시 연결',
   'composio.expiredAuthorization': '{name} 인증이 만료되었습니다.',
   'composio.expiredDescription':
-    '{name} 도구를 다시 활성화하려면 다시 연결하세요. OpenHuman은 OAuth 액세스를 새로 고칠 때까지 이 통합을 사용할 수 없는 상태로 유지합니다.',
+    '{name} 도구를 다시 활성화하려면 다시 연결하세요. Neppy은 OAuth 액세스를 새로 고칠 때까지 이 통합을 사용할 수 없는 상태로 유지합니다.',
   'composio.envVarOverrides': '설정되어 있으며, 이 설정을 재정의합니다.',
   'composio.previewBadge': '미리보기',
   'composio.colApp': '앱',
@@ -3039,7 +3039,7 @@ const messages: TranslationMap = {
   'mic.failedToStopRecording': '녹음을 중지하지 못했습니다: {message}',
   'mic.transcriptionFailed': '전사에 실패했습니다: {message}',
   'mic.voiceNotCompiled':
-    '이 버전의 앱에는 음성 받아쓰기가 포함되어 있지 않습니다. OpenHuman을 업데이트하면 사용할 수 있습니다.',
+    '이 버전의 앱에는 음성 받아쓰기가 포함되어 있지 않습니다. Neppy을 업데이트하면 사용할 수 있습니다.',
   'reflections.kind.retrospective': '회고',
   'reflections.kind.derivedFact': '파생된 사실',
   'reflections.kind.moodInsight': '기분 인사이트',
@@ -3063,7 +3063,7 @@ const messages: TranslationMap = {
   'accounts.respondQueue.title': '응답 대기열',
   'app.connectionBadge.composio': 'Composio',
   'app.connectionBadge.messaging': '메시징',
-  'app.connectionIndicator.connected': 'OpenHuman AI에 연결됨 🚀',
+  'app.connectionIndicator.connected': 'Neppy AI에 연결됨 🚀',
   'app.connectionIndicator.connecting': '연결 중',
   'app.connectionIndicator.coreOffline': '코어 오프라인',
   'app.connectionIndicator.disconnected': '연결 해제됨',
@@ -3107,12 +3107,12 @@ const messages: TranslationMap = {
   'app.openhumanLink.notifications.desktopOnly':
     '기본 알림은 데스크톱 앱에서만 사용할 수 있습니다 (`pnpm dev:app` 실행).',
   'app.openhumanLink.notifications.permissionOff':
-    '알림 권한이 꺼져 있습니다. 시스템 설정 → 알림에서 OpenHuman을 활성화한 후 다시 시도하세요.',
+    '알림 권한이 꺼져 있습니다. 시스템 설정 → 알림에서 Neppy을 활성화한 후 다시 시도하세요.',
   'app.openhumanLink.notifications.triggerFailed':
-    'OpenHuman이 시스템 알림을 발생시킬 수 없습니다. 운영체제 알림 설정을 확인한 후 다시 시도하세요.',
+    'Neppy이 시스템 알림을 발생시킬 수 없습니다. 운영체제 알림 설정을 확인한 후 다시 시도하세요.',
   'app.openhumanLink.notifications.welcomeBody':
     '주의가 필요한 일이 생기면 여기에서 알림을 받게 됩니다.',
-  'app.openhumanLink.notifications.welcomeTitle': 'OpenHuman 준비 완료',
+  'app.openhumanLink.notifications.welcomeTitle': 'Neppy 준비 완료',
   'app.openhumanLink.status.closed': '닫힘',
   'app.openhumanLink.status.connected': '연결됨',
   'app.openhumanLink.status.error': '오류',
@@ -3132,7 +3132,7 @@ const messages: TranslationMap = {
   'app.openhumanLink.notifications.send': '테스트 알림 보내기',
   'app.openhumanLink.notifications.sendFailed': '보낼 수 없습니다: {error}',
   'app.openhumanLink.notifications.sent':
-    '테스트 알림이 전송되었습니다. 받지 못했다면 시스템 설정 → 알림 → OpenHuman으로 이동해 알림 허용을 켜고 배너 스타일을 지속으로 설정하세요.',
+    '테스트 알림이 전송되었습니다. 받지 못했다면 시스템 설정 → 알림 → Neppy으로 이동해 알림 허용을 켜고 배너 스타일을 지속으로 설정하세요.',
   'app.openhumanLink.skipForNow': '지금은 건너뛰기',
   'app.openhumanLink.telegramUnavailable': 'Telegram을 사용할 수 없음',
   'app.openhumanLink.title.accounts': '앱 연결',
@@ -3145,7 +3145,7 @@ const messages: TranslationMap = {
   'app.persistRehydration.heading': '제목',
   'app.persistRehydration.resetCta': '초기화 중…',
   'app.persistRehydration.resetting': '초기화 중…',
-  'app.routeLoading.initializing': 'OpenHuman 초기화 중...',
+  'app.routeLoading.initializing': 'Neppy 초기화 중...',
   'app.update.currentlyOn': '{version}',
   'app.update.errorFallback': '업데이트 중 문제가 발생했습니다.',
   'app.update.header.default': '업데이트',
@@ -3237,7 +3237,7 @@ const messages: TranslationMap = {
   'chat.flowProposal.stepKind.transform': '변환',
   'chat.flowProposal.stepKind.outputParser': '출력 파싱',
   'chat.flowProposal.stepKind.subWorkflow': '하위 워크플로',
-  'channels.authMode.managed_dm': 'OpenHuman로 로그인',
+  'channels.authMode.managed_dm': 'Neppy로 로그인',
   'channels.authMode.oauth': 'OAuth 로그인',
   'channels.authMode.bot_token': '자체 봇 토큰 사용',
   'channels.authMode.api_key': '자체 API 키 사용',
@@ -3249,9 +3249,9 @@ const messages: TranslationMap = {
   'channels.discord.description': 'Discord을(를) 통해 메시지를 보내고 받습니다.',
   'channels.discord.authMode.bot_token.description': '자신만의 Discord 봇 토큰을 제공하세요.',
   'channels.discord.authMode.oauth.description':
-    'OAuth을 통해 OpenHuman 봇을 Discord 서버에 설치합니다.',
+    'OAuth을 통해 Neppy 봇을 Discord 서버에 설치합니다.',
   'channels.discord.authMode.managed_dm.description':
-    '개인 Discord 계정을 OpenHuman 봇에 연결하세요.',
+    '개인 Discord 계정을 Neppy 봇에 연결하세요.',
   'channels.discord.fields.bot_token.label': '봇 토큰',
   'channels.discord.fields.bot_token.placeholder': '귀하의 Discord 봇 토큰',
   'channels.discord.fields.guild_id.label': '서버(길드) ID',
@@ -3259,7 +3259,7 @@ const messages: TranslationMap = {
   'channels.telegram.displayName': 'Telegram',
   'channels.telegram.description': '메시지 보내기 및 받기 Telegram.',
   'channels.telegram.authMode.managed_dm.description':
-    'OpenHuman Telegram 봇에게 직접 메시지를 보냅니다.',
+    'Neppy Telegram 봇에게 직접 메시지를 보냅니다.',
   'channels.telegram.authMode.bot_token.description':
     '@BotFather에서 자신만의 Telegram 봇 토큰을 제공하세요.',
   'channels.telegram.fields.bot_token.label': '봇 토큰',
@@ -3271,9 +3271,9 @@ const messages: TranslationMap = {
     '허용된 Telegram 채팅에서 /status, /sessions, /new 또는 /help를 보냅니다. 모델 라우팅은 여전히 ​​/model 및 /models를 사용합니다.',
   'channels.connectHelp.title': '연결 방법',
   'channels.connectHelp.discord':
-    '아래에서 방법을 선택하세요: OpenHuman으로 계정 연결, OAuth로 봇 설치, 또는 Discord 개발자 포털에서 발급한 봇 토큰 붙여넣기.',
+    '아래에서 방법을 선택하세요: Neppy으로 계정 연결, OAuth로 봇 설치, 또는 Discord 개발자 포털에서 발급한 봇 토큰 붙여넣기.',
   'channels.connectHelp.telegram':
-    '아래에서 방법을 선택하세요: 관리형 OpenHuman 봇에 메시지를 보내 연결하거나, @BotFather에서 발급한 봇 토큰을 붙여넣으세요.',
+    '아래에서 방법을 선택하세요: 관리형 Neppy 봇에 메시지를 보내 연결하거나, @BotFather에서 발급한 봇 토큰을 붙여넣으세요.',
   'channels.connectHelp.slackNote':
     'Slack을 찾으세요? Slack은 여기서 메시징 채널이 아니라 연결 → OAuth에서 앱으로 연결됩니다.',
   'channels.web.displayName': '웹',
@@ -3337,16 +3337,16 @@ const messages: TranslationMap = {
   'iosPair.error.connectionFailed':
     '연결에 실패했습니다. 데스크탑 앱이 실행 중인지 확인하고 다시 시도하세요.',
   'iosPair.error.invalidQr':
-    '유효하지 않은 QR 코드입니다. OpenHuman 페어링 코드를 스캔하고 있는지 확인하세요.',
+    '유효하지 않은 QR 코드입니다. Neppy 페어링 코드를 스캔하고 있는지 확인하세요.',
   'iosPair.error.unreachableDesktop':
     '데스크탑에 연결할 수 없습니다. 두 기기가 모두 온라인 상태인지 확인하고 다시 시도하세요.',
   'iosPair.expired': 'QR code이 만료되었습니다. 데스크탑에 코드 재생성을 요청하십시오.',
   'iosPair.instructions':
-    '데스크탑에서 OpenHuman을 열고 설정 > 기기로 이동한 후 "기기 페어링"을 탭하여 QR 코드를 표시하세요.',
+    '데스크탑에서 Neppy을 열고 설정 > 기기로 이동한 후 "기기 페어링"을 탭하여 QR 코드를 표시하세요.',
   'iosPair.retryScan': '스캔 재시도',
   'iosPair.scanQrCode': '스캔 QR code',
   'iosPair.scannerOpening': '스캐너 여는 중...',
-  'iosPair.step.openDesktop': '데스크톱에서 OpenHuman 열기',
+  'iosPair.step.openDesktop': '데스크톱에서 Neppy 열기',
   'iosPair.step.openSettings': '설정 > 장치로 이동',
   'iosPair.step.showQr': '"기기 페어링"을 탭하여 QR 표시',
   'iosPair.title': '데스크톱과 페어링',
@@ -3381,7 +3381,7 @@ const messages: TranslationMap = {
   'composio.connect.permissionsDefault': '읽기 + 쓰기가 기본적으로 활성화됨',
   'composio.connect.permissionsNote': '노출할 수 있음',
   'composio.connect.permissionsNoteSuffix':
-    'OpenHuman 자체 에이전트 권한은 아래에서 읽기, 쓰기, 관리자 토글로 제어됩니다.',
+    'Neppy 자체 에이전트 권한은 아래에서 읽기, 쓰기, 관리자 토글로 제어됩니다.',
   'composio.connect.reopenBrowser': '브라우저 다시 열기',
   'composio.connect.requestingUrl': '연결 URL 요청 중…',
   'composio.connect.requiredFieldEmpty': '이 필드는 필수입니다.',
@@ -3413,7 +3413,7 @@ const messages: TranslationMap = {
   'composio.triggers.listenFrom': '다음에서 이벤트 수신:',
   'composio.triggers.loadError': '트리거를 불러올 수 없습니다',
   'composio.triggers.sessionExpired':
-    'OpenHuman 세션이 만료되었습니다. 트리거를 불러오려면 다시 로그인하세요.',
+    'Neppy 세션이 만료되었습니다. 트리거를 불러오려면 다시 로그인하세요.',
   'composio.triggers.needsConfiguration': '구성이 필요합니다',
   'composio.triggers.noneAvailable': '현재 사용할 수 있는 트리거가 없습니다:',
   'conversations.taskKanban.moveLeft': '왼쪽으로 이동',
@@ -3537,7 +3537,7 @@ const messages: TranslationMap = {
   'daemon.serviceBlockingGate.retryFailed':
     '다시 시도에 실패했습니다. 최신 앱 빌드를 다운로드하고 다시 시도하세요.',
   'daemon.serviceBlockingGate.retrying': '다시 시도 중...',
-  'daemon.serviceBlockingGate.title': 'OpenHuman 코어를 사용할 수 없습니다',
+  'daemon.serviceBlockingGate.title': 'Neppy 코어를 사용할 수 없습니다',
   'home.banners.discordSubtitle': 'Discord 부제목',
   'home.banners.discordTitle': 'Discord 참여하기',
   'home.banners.earlyBirdDismiss': '얼리버드 배너 닫기',
@@ -3573,7 +3573,7 @@ const messages: TranslationMap = {
   'intelligence.diagram.skillInstallCommand': 'npx skills add yizhiyanhua-ai/fireworks-tech-graph',
   'intelligence.diagram.promptExample':
     '현재 스웜의 아키텍처 다이어그램을 다크 터미널 스타일로 생성하세요',
-  'intelligence.diagram.imageAlt': '최신 생성된 OpenHuman 아키텍처 다이어그램',
+  'intelligence.diagram.imageAlt': '최신 생성된 Neppy 아키텍처 다이어그램',
   'intelligence.diagram.refreshesEvery': '{seconds}초마다 새로 고침',
   'intelligence.memoryText.entityTypePrefix': '엔터티 유형',
   'intelligence.tasks.activeBoardOne': '대화 전반에 활성 보드 1개',
@@ -3948,7 +3948,7 @@ const messages: TranslationMap = {
   'flows.nodeSummary.agent.withPrompt': '“{prompt}” · {model}',
   'flows.nodeSummary.agent.default': '{model}에 질문합니다',
   'flows.nodeSummary.toolCall.runsNative': '{name} 실행',
-  'flows.nodeSummary.toolCall.pickNative': 'OpenHuman 도구를 실행합니다 (하나 선택)',
+  'flows.nodeSummary.toolCall.pickNative': 'Neppy 도구를 실행합니다 (하나 선택)',
   'flows.nodeSummary.toolCall.runs': '{slug} 실행',
   'flows.nodeSummary.toolCall.pick': '앱 작업을 실행합니다 (하나 선택)',
   'flows.nodeSummary.http.withUrl': '{method} {url}',
@@ -4263,7 +4263,7 @@ const messages: TranslationMap = {
   'onboarding.contextGathering.title': '컨텍스트 수집',
   'openhuman.team_list_teams': '팀 목록 팀',
   'overlay.ariaAttention': '주의 메시지',
-  'overlay.ariaOrb': 'OpenHuman 오버레이',
+  'overlay.ariaOrb': 'Neppy 오버레이',
   'overlay.ariaVoiceActive': '음성 입력 활성',
   'overlay.orbTitle': '드래그하여 이동 · 두 번 클릭하여 위치 초기화',
   'pages.settings.account.connections': '연결',
@@ -4302,7 +4302,7 @@ const messages: TranslationMap = {
   'privacy.dataKind.raw': '원본',
   'privacy.whatLeaves.link.label': '내 컴퓨터를 떠나는 데이터는 무엇인가요?',
   'rewards.community.achievementsUnlocked': '{total}개 중 {unlocked}개 업적 잠금 해제됨',
-  'rewards.community.activityStreakHint': 'OpenHuman에서 연속으로 활동한 일수입니다.',
+  'rewards.community.activityStreakHint': 'Neppy에서 연속으로 활동한 일수입니다.',
   'rewards.community.activityTitle': '내 활동',
   'rewards.community.claimCredited': '{amount}이(가) 잔액에 적립되었습니다',
   'rewards.community.claimError': '수령하지 못했습니다. 다시 시도해 주세요.',
@@ -4341,7 +4341,7 @@ const messages: TranslationMap = {
   'rewards.community.roleAssigned': '역할이 부여됨',
   'rewards.community.roleAssignmentCount': '{unlocked}개 중 {assigned}개 역할 부여됨',
   'rewards.community.roleClaimDesc':
-    'Discord 역할을 잠금 해제했지만 아직 OpenHuman 서버에 참여하지 않았습니다. 참여하면 자동으로 부여됩니다.',
+    'Discord 역할을 잠금 해제했지만 아직 Neppy 서버에 참여하지 않았습니다. 참여하면 자동으로 부여됩니다.',
   'rewards.community.roleClaimTitle': 'Discord 역할 받기',
   'rewards.community.roleJoinToClaim': '받으려면 서버 참여',
   'rewards.community.rolePending': '역할 동기화 중…',
@@ -4422,7 +4422,7 @@ const messages: TranslationMap = {
   'settings.ai.providers.groupCli': 'CLI 로그인',
   'settings.ai.providers.cliDetail': '다른 CLI가 이미 가진 로그인을 사용합니다',
   'settings.ai.providers.connected': '연결됨',
-  'settings.ai.providers.managedDetail': 'OpenHuman이 작업마다 모델을 선택합니다',
+  'settings.ai.providers.managedDetail': 'Neppy이 작업마다 모델을 선택합니다',
   'settings.ai.providers.rowActions': '{provider} 추가 작업',
   'settings.ai.providers.replaceKey': 'API 키 교체',
   'settings.ai.providers.custom': '사용자 지정',
@@ -4555,7 +4555,7 @@ const messages: TranslationMap = {
   'settings.ai.noSpendRows': '로드된 지출 행이 없습니다.',
   'settings.ai.topHours': '상위 시간',
   'settings.ai.noHourlySpend': '아직 시간당 지출이 없습니다.',
-  'settings.ai.openhumanDefault': 'OpenHuman(기본값)',
+  'settings.ai.openhumanDefault': 'Neppy(기본값)',
   'settings.ai.localModelResolved': 'Ollama · {model}',
   'settings.ai.customRoutingForWorkload': '{label}에 대한 사용자 정의 라우팅',
   'settings.ai.loadingModels': '모델 로드 중...',
@@ -4640,17 +4640,17 @@ const messages: TranslationMap = {
   'settings.ai.composioSyncScans': 'Composio 동기화 검색',
   'settings.ai.totalBackgroundApiReadBudget': '총 bg API 읽기 예산',
   'settings.ai.memoryWorkerPolls': '메모리 작업자 설문 조사',
-  'settings.ai.defaultProviderName': 'OpenHuman',
+  'settings.ai.defaultProviderName': 'Neppy',
   'settings.ai.routing.managed': '관리됨',
-  'settings.ai.managedSourceLabel': 'OpenHuman이 관리',
+  'settings.ai.managedSourceLabel': 'Neppy이 관리',
   'settings.ai.managedSourceDetail': '자동 모델 선택',
   'settings.ai.routing.managedAlwaysOn': '항상 켜짐',
   'settings.ai.routing.managedHint':
     '관리형은 항상 대체 수단으로 사용할 수 있습니다. 자신의 모델을 사용하려면 아래에서 라우팅 모드를 선택하세요.',
   'settings.ai.routing.managedDesc':
-    'OpenHuman이 모든 추론을 클라우드에서 실행하고, 작업에 가장 적합한 모델을 선택하며, 비용을 최적화하고 가장 안전한 라우팅 기본값을 유지합니다.',
+    'Neppy이 모든 추론을 클라우드에서 실행하고, 작업에 가장 적합한 모델을 선택하며, 비용을 최적화하고 가장 안전한 라우팅 기본값을 유지합니다.',
   'settings.ai.routing.managedMsg':
-    'OpenHuman이 모든 워크로드의 추론을 처리하고 비용, 품질, 보안을 고려해 최적의 경로를 자동으로 선택합니다.',
+    'Neppy이 모든 워크로드의 추론을 처리하고 비용, 품질, 보안을 고려해 최적의 경로를 자동으로 선택합니다.',
   'settings.ai.routing.useYourOwn': '자체 모델 사용',
   'settings.ai.routing.useYourOwnDesc':
     '제공업체와 모델 하나를 선택하고 모든 워크로드를 해당 경로로 라우팅합니다. 간단하지만 경량 추론과 대형 추론이 같은 경로를 공유하므로 비효율적일 수 있습니다.',
@@ -4819,16 +4819,16 @@ const messages: TranslationMap = {
   'settings.composio.confirmSwitch': '이해했습니다. Direct로 전환',
   'settings.composio.confirmTitle': '⚠️ Direct 모드로 전환',
   'settings.composio.confirmWarning':
-    '기존 통합(Gmail, Slack, GitHub 등 OpenHuman을 통해 연결된 통합)은 표시되지 않습니다: OpenHuman 관리형 Composio 테넌트에 있습니다.',
+    '기존 통합(Gmail, Slack, GitHub 등 Neppy을 통해 연결된 통합)은 표시되지 않습니다: Neppy 관리형 Composio 테넌트에 있습니다.',
   'settings.composio.intro':
     'Composio는 에이전트가 호출할 수 있는 도구로 250개 이상의 외부 앱을 통합합니다. 이러한 도구 호출이 라우팅되는 방식을 선택하세요.',
   'settings.composio.title': 'Composio',
   'settings.composio.modeDirect': 'Direct(직접 API 키 사용)',
   'settings.composio.modeDirectDesc':
     '호출이 backend.composio.dev로 직접 이동합니다. 독립적이고 오프라인 친화적입니다. 도구 실행은 동기식으로 작동하지만, 실시간 트리거 웹훅은 아직 Direct 모드에서 라우팅되지 않습니다(후속 이슈).',
-  'settings.composio.modeManaged': '관리형(OpenHuman이 대신 처리)',
+  'settings.composio.modeManaged': '관리형(Neppy이 대신 처리)',
   'settings.composio.modeManagedDesc':
-    'OpenHuman이 백엔드를 통해 도구 호출을 프록시합니다(권장). 인증은 중개되며, Composio API 키를 붙여넣을 필요가 없습니다. 웹훅은 완전히 라우팅됩니다.',
+    'Neppy이 백엔드를 통해 도구 호출을 프록시합니다(권장). 인증은 중개되며, Composio API 키를 붙여넣을 필요가 없습니다. 웹훅은 완전히 라우팅됩니다.',
   'settings.composio.routingMode': '라우팅 모드',
   'settings.composio.saveErrorNoKey':
     '저장에 실패했습니다. Direct 모드에는 비어 있지 않은 API 키가 필요합니다.',
@@ -4935,7 +4935,7 @@ const messages: TranslationMap = {
     'Telegram/Discord 인증 모드 및 기본 채널 라우팅 구성',
   'settings.developerMenu.tools.title': '도구',
   'settings.developerMenu.tools.desc':
-    'OpenHuman이 사용자를 대신하여 사용할 수 있는 기능 활성화 또는 비활성화',
+    'Neppy이 사용자를 대신하여 사용할 수 있는 기능 활성화 또는 비활성화',
   'settings.developerMenu.devWorkflow.title': '개발 워크플로',
   'settings.developerMenu.devWorkflow.desc':
     'GitHub 이슈를 선택하고 일정에 따라 PR을 여는 자율 에이전트',
@@ -5102,7 +5102,7 @@ const messages: TranslationMap = {
   'settings.developerMenu.integrationTriggers.desc':
     'Composio 통합 트리거에 대한 AI 분류 설정 구성',
   'settings.developerMenu.mcpServer.title': 'MCP 서버',
-  'settings.developerMenu.mcpServer.desc': 'OpenHuman에 연결하도록 외부 MCP 클라이언트 구성',
+  'settings.developerMenu.mcpServer.desc': 'Neppy에 연결하도록 외부 MCP 클라이언트 구성',
   'settings.developerMenu.autonomy.title': '에이전트 자율성',
   'settings.developerMenu.autonomy.desc': '도구 작업 속도 제한 및 안전 임계값',
   'settings.developerMenu.voiceDebug.title': '음성 (디버그)',
@@ -5118,7 +5118,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': '복사되었습니다!',
   'settings.mcpServer.openConfigFile': '구성 파일 열기',
   'settings.mcpServer.binaryPathNotFound':
-    'OpenHuman 바이너리를 찾을 수 없습니다. 소스에서 실행하는 경우 다음을 사용하여 빌드하세요: cargo build --bin openhuman-core',
+    'Neppy 바이너리를 찾을 수 없습니다. 소스에서 실행하는 경우 다음을 사용하여 빌드하세요: cargo build --bin openhuman-core',
   'settings.mcpServer.openConfigError': '구성 파일을 열지 못했습니다.',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': '커서',
@@ -5159,7 +5159,7 @@ const messages: TranslationMap = {
     '활성화하면 에이전트가 먼저 승인을 요청하지 않고 해당되는 모든 작업을 실행합니다. 여기에는 파일 쓰기, 셸 명령, 네트워크 요청 및 기타 모든 부작용이 포함됩니다. 자격 증명 및 시스템 디렉터리는 계속 차단되며, 신뢰할 수 없거나 출처가 확인되지 않은 호출에서 비롯된 작업은 계속 거부됩니다.',
   'settings.agentAccess.tinyplaceAutopilot.title': '자율 tiny.place 에이전트',
   'settings.agentAccess.tinyplaceAutopilot.desc':
-    'OpenHuman이 tiny.place에서 스스로 행동하게 하세요: 일정에 따라 가치 있는 일을 찾고(열린 현상금 우선) 자신의 능력에 맞는 작업을 수행하며 당신의 신원으로 행동합니다. 감독 없이 작동하며 비용을 지출할 수 있으니 테스트 중에는 devnet을 사용하세요. 기본값은 꺼짐입니다.',
+    'Neppy이 tiny.place에서 스스로 행동하게 하세요: 일정에 따라 가치 있는 일을 찾고(열린 현상금 우선) 자신의 능력에 맞는 작업을 수행하며 당신의 신원으로 행동합니다. 감독 없이 작동하며 비용을 지출할 수 있으니 테스트 중에는 devnet을 사용하세요. 기본값은 꺼짐입니다.',
   'settings.agentAccess.tinyplaceAutopilot.label': '자동 실행',
   'settings.agentAccess.timeout.label': '작업 제한 시간',
   'settings.agentAccess.timeout.desc':
@@ -5406,7 +5406,7 @@ const messages: TranslationMap = {
   'settings.mascot.characterPreview': '미리보기',
   'settings.mascot.characterStates': '상태',
   'settings.mascot.characterVisemes': '입 모양',
-  'settings.mascot.colorAria': 'OpenHuman 색상',
+  'settings.mascot.colorAria': 'Neppy 색상',
   'settings.mascot.colorDesc': '색상 설명',
   'settings.mascot.colorHeading': '색상 제목',
   'settings.mascot.colorBlack': '검정',
@@ -5416,15 +5416,15 @@ const messages: TranslationMap = {
   'settings.mascot.primaryColor': '기본 색상',
   'settings.mascot.secondaryColor': '보조 색상',
   'settings.mascot.colorYellow': '노랑',
-  'settings.mascot.libraryUnavailable': 'OpenHuman 라이브러리를 사용할 수 없음',
-  'settings.mascot.title': 'OpenHuman',
-  'settings.mascot.loadingLibrary': 'OpenHuman 라이브러리 불러오는 중…',
+  'settings.mascot.libraryUnavailable': 'Neppy 라이브러리를 사용할 수 없음',
+  'settings.mascot.title': 'Neppy',
+  'settings.mascot.loadingLibrary': 'Neppy 라이브러리 불러오는 중…',
   'settings.mascot.loadDetailError': '마스코트를 로드할 수 없습니다.',
   'settings.mascot.loadLibraryError': '마스코트 라이브러리를 로드할 수 없습니다.',
-  'settings.mascot.localDefault': '로컬 OpenHuman(기본값)',
+  'settings.mascot.localDefault': '로컬 Neppy(기본값)',
   'settings.mascot.menuTitle': '마스코트',
   'settings.mascot.menuDesc': '앱 전체에서 사용되는 마스코트 색상 선택',
-  'settings.mascot.noCharacters': '아직 사용할 수 있는 OpenHuman 캐릭터가 없습니다',
+  'settings.mascot.noCharacters': '아직 사용할 수 있는 Neppy 캐릭터가 없습니다',
   'settings.mascot.noColorVariants': '색상 변형 없음',
   'settings.mascot.secondaryHeading': '회의 듀오 (두 번째 마스코트)',
   'settings.mascot.secondaryDesc':
@@ -5517,7 +5517,7 @@ const messages: TranslationMap = {
     '합리적인 기본값: 매번 추가 토큰을 많이 쓰지 않으면서 좋은 연속성을 제공합니다.',
   'settings.memoryWindow.balanced.label': '균형',
   'settings.memoryWindow.description':
-    'OpenHuman이 새 에이전트 실행마다 주입하는 기억된 컨텍스트의 양입니다. 창이 클수록 과거 대화를 더 잘 인식하지만, 매 실행마다 더 많은 토큰을 사용하고 비용도 더 듭니다.',
+    'Neppy이 새 에이전트 실행마다 주입하는 기억된 컨텍스트의 양입니다. 창이 클수록 과거 대화를 더 잘 인식하지만, 매 실행마다 더 많은 토큰을 사용하고 비용도 더 듭니다.',
   'settings.memoryWindow.extended.badge': '더 많은 컨텍스트',
   'settings.memoryWindow.extended.hint':
     '각 실행에 더 많은 장기 메모리를 주입합니다. 턴당 토큰 비용이 더 높습니다.',
@@ -5674,21 +5674,21 @@ const messages: TranslationMap = {
   'skills.install.urlLabel': '스킬 URL',
   'skills.install.urlPlaceholder': 'https://raw.githubusercontent.com/owner/repo/main/SKILL.md',
   'skills.meetingBots.bannerDesc':
-    'Google Meet 링크를 넣으면 OpenHuman이 게스트로 참여하여 말하고, 듣고, 반응합니다.',
-  'skills.meetingBots.bannerTitle': 'OpenHuman을 회의에 보내기',
-  'skills.meetingBots.busyTitle': 'OpenHuman이 바쁩니다',
+    'Google Meet 링크를 넣으면 Neppy이 게스트로 참여하여 말하고, 듣고, 반응합니다.',
+  'skills.meetingBots.bannerTitle': 'Neppy을 회의에 보내기',
+  'skills.meetingBots.busyTitle': 'Neppy이 바쁩니다',
   'skills.meetingBots.comingSoon': '곧 제공 예정',
   'skills.meetingBots.couldNotLeaveTitle': '회의에서 나갈 수 없습니다',
-  'skills.meetingBots.couldNotStartTitle': 'OpenHuman을 시작할 수 없습니다',
+  'skills.meetingBots.couldNotStartTitle': 'Neppy을 시작할 수 없습니다',
   'skills.meetingBots.displayName': '표시 이름',
-  'skills.meetingBots.failedToStart': 'OpenHuman 시작에 실패했습니다.',
+  'skills.meetingBots.failedToStart': 'Neppy 시작에 실패했습니다.',
   'skills.meetingBots.joiningMessage': '몇 초 안에 참가자로 표시될 것입니다.',
-  'skills.meetingBots.joiningTitle': 'OpenHuman이 회의에 참여하는 중',
+  'skills.meetingBots.joiningTitle': 'Neppy이 회의에 참여하는 중',
   'skills.meetingBots.meetingLink': '회의 링크',
-  'skills.meetingBots.modalAriaLabel': 'OpenHuman을 회의에 보내기',
+  'skills.meetingBots.modalAriaLabel': 'Neppy을 회의에 보내기',
   'skills.meetingBots.modalDesc':
-    'OpenHuman이 익명 게스트로 참여하여 비디오를 통화에 스트리밍하고 에이전트를 통해 응답합니다.',
-  'skills.meetingBots.modalTitle': 'OpenHuman을 회의에 보내기',
+    'Neppy이 익명 게스트로 참여하여 비디오를 통화에 스트리밍하고 에이전트를 통해 응답합니다.',
+  'skills.meetingBots.modalTitle': 'Neppy을 회의에 보내기',
   'skills.meetingBots.newBadge': '새 항목',
   'skills.meetingBots.platformComingSoon': '{label} 지원이 곧 제공될 예정입니다.',
   'skills.meetingBots.platformHints.gmeet': 'Meet.google.com/abc-defg-hij',
@@ -5701,7 +5701,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.platforms.zoom': 'Zoom',
   'skills.meetingBots.sendTo': '보내기',
   'skills.meetingBots.serverOverloaded':
-    '현재 OpenHuman의 부하가 매우 높습니다. 몇 분 후에 다시 시도해 주세요.',
+    '현재 Neppy의 부하가 매우 높습니다. 몇 분 후에 다시 시도해 주세요.',
   'skills.meetingBots.soonSuffix': '곧',
   'skills.meetingBots.starting': '시작 중…',
   'skills.meetingBots.recentCallsAriaLabel': '최근 회의 통화',
@@ -5741,7 +5741,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.respondToParticipantDesc':
     '회의에서 사용하는 정확한 표시 이름을 입력하세요. 봇은 이름(웨이크 구문)을 말할 때만 응답합니다.',
   'skills.meetingBots.wakePhrase': '웨이크 구문',
-  'skills.meetingBots.wakePhraseHint': 'Hey OpenHuman',
+  'skills.meetingBots.wakePhraseHint': 'Hey Neppy',
   'skills.meetingBots.wakePhraseDesc': '참가자가 봇이 응답하기 전에 이것을 말해야 합니다.',
   'skills.meetingBots.activeMode': '부르면 응답하기',
   'skills.meetingBots.activeModeDesc':
@@ -5752,7 +5752,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.history.earlier': '이전',
   'skills.meetingBots.history.participantCount': '{count}명 참가자',
   'skills.meetingBots.history.participantCountPlural': '{count}명 참가자',
-  'skills.meetingBots.history.runWithOpenHuman': 'OpenHuman으로 실행',
+  'skills.meetingBots.history.runWithNeppy': 'Neppy으로 실행',
   'skills.meetingBots.history.searchPlaceholder': '통화 검색…',
   'skills.meetingBots.history.selectPrompt': '통화를 선택하면 요약과 전사를 볼 수 있습니다.',
   'skills.meetingBots.history.today': '오늘',
@@ -5795,7 +5795,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.defaults.openDefaults': '회의 설정',
   'skills.meetingBots.defaults.watchCalendar': '내 캘린더 감시',
   'skills.meetingBots.defaults.watchCalendarDesc':
-    'OpenHuman이 연결된 캘린더를 감시하여 아래 정책에 따라 회의에 자동 참가하거나 참가 여부를 묻도록 허용합니다. 이는 회의 알림과는 별개입니다.',
+    'Neppy이 연결된 캘린더를 감시하여 아래 정책에 따라 회의에 자동 참가하거나 참가 여부를 묻도록 허용합니다. 이는 회의 알림과는 별개입니다.',
   'skills.meetingBots.defaults.globalPolicy': '전역 자동 참가 정책',
   'skills.meetingBots.defaults.perPlatformTitle': '플랫폼별 설정',
   'skills.meetingBots.defaults.perPlatformDesc': '특정 플랫폼에 대한 전역 정책을 재정의합니다.',
@@ -5878,7 +5878,7 @@ const messages: TranslationMap = {
     'Human은 개인 맥락, 정체성, 어시스턴트가 보는 프로필을 한곳에 모읍니다.',
   'walkthrough.steps.brainTab.title': 'Brain 열기',
   'walkthrough.steps.brainTab.content':
-    'Brain은 메모리 그래프입니다. OpenHuman이 무엇을 알고 아이디어가 어떻게 연결되는지 확인하는 곳입니다.',
+    'Brain은 메모리 그래프입니다. Neppy이 무엇을 알고 아이디어가 어떻게 연결되는지 확인하는 곳입니다.',
   'walkthrough.steps.connectionsTab.title': '연결 관리',
   'walkthrough.steps.connectionsTab.content':
     '서비스를 추가하거나 조정하고 싶을 때 Connections는 항상 기본 내비게이션에 있습니다.',
@@ -5938,7 +5938,7 @@ const messages: TranslationMap = {
   'chat.parentThread': '상위 스레드',
   'chat.removeReaction': '{emoji} 제거',
   'settings.composio.loading': '불러오는 중…',
-  'settings.mascot.noCharactersAvailable': '아직 사용할 수 있는 OpenHuman 캐릭터가 없습니다',
+  'settings.mascot.noCharactersAvailable': '아직 사용할 수 있는 Neppy 캐릭터가 없습니다',
   'skills.uninstall.confirmTitle': '{name}을(를) 제거하시겠습니까?',
   'conversations.taskKanban.blocked': '차단됨',
   'conversations.taskKanban.done': '완료',
@@ -5965,7 +5965,7 @@ const messages: TranslationMap = {
   'devOptions.menuMessagingDesc': 'Telegram/Discord 인증 모드 및 기본 채널 라우팅 구성',
   'devOptions.menuTools': '도구',
   'devOptions.menuToolsDesc':
-    'OpenHuman이(가) 사용자를 대신하여 사용할 수 있는 기능 활성화 또는 비활성화',
+    'Neppy이(가) 사용자를 대신하여 사용할 수 있는 기능 활성화 또는 비활성화',
   'devOptions.menuAgentChat': '에이전트 채팅',
   'devOptions.menuAgentChatDesc': '모델 및 온도 재정의를 사용한 테스트 에이전트 대화',
   'devOptions.menuCronJobs': '크론 작업',
@@ -6306,7 +6306,7 @@ const messages: TranslationMap = {
   'harnessInit.title': '설정하는 중',
 
   'announcement.gotIt': '확인',
-  'harnessInit.subtitle': 'OpenHuman이 처음 실행에 필요한 구성 요소를 준비하고 있습니다.',
+  'harnessInit.subtitle': 'Neppy이 처음 실행에 필요한 구성 요소를 준비하고 있습니다.',
   'harnessInit.stepPython': 'Python 런타임',
   'harnessInit.stepSpacy': '언어 모델',
   'harnessInit.stepNode': 'Node.js 런타임',
@@ -6316,15 +6316,15 @@ const messages: TranslationMap = {
   'harnessInit.stateSkipped': '건너뜀',
   'harnessInit.stateFailed': '실패',
   'harnessInit.failedMessage':
-    '일부 설정 단계가 완료되지 않았습니다. 다시 시도하거나 계속 진행할 수 있습니다: OpenHuman이 내장 대체 기능을 사용합니다.',
+    '일부 설정 단계가 완료되지 않았습니다. 다시 시도하거나 계속 진행할 수 있습니다: Neppy이 내장 대체 기능을 사용합니다.',
   'harnessInit.retry': '다시 시도',
   'harnessInit.continueAnyway': '그래도 계속',
   'harnessInit.runInBackground': '백그라운드에서 실행',
-  'harnessInit.backgroundHint': '이 작업이 완료되는 동안 계속 OpenHuman을 사용할 수 있습니다.',
+  'harnessInit.backgroundHint': '이 작업이 완료되는 동안 계속 Neppy을 사용할 수 있습니다.',
 
   'keyring.consent.title': '보안 저장소를 사용할 수 없음',
   'keyring.consent.description':
-    '운영 체제 키체인에 접근할 수 없습니다. OpenHuman이 로컬 암호화 저장소를 사용하여 비밀을 저장하려면 귀하의 허가가 필요합니다.',
+    '운영 체제 키체인에 접근할 수 없습니다. Neppy이 로컬 암호화 저장소를 사용하여 비밀을 저장하려면 귀하의 허가가 필요합니다.',
   'keyring.consent.reasonPrefix': '이유:',
   'keyring.consent.showDetails': '이것은 무엇을 의미하나요?',
   'keyring.consent.hideDetails': '세부 정보 숨기기',
@@ -6365,7 +6365,7 @@ const messages: TranslationMap = {
   'memory.health.remediation.budget_exhausted':
     '메모리 임베딩이 관리형 예산에 도달했습니다. 로컬 Ollama 임베딩을 설정하거나(연결 → API 키 → 임베딩) 메모리를 계속 구축하려면 자체 임베딩 API 키를 추가하세요.',
   'memory.health.remediation.auth_missing':
-    '임베딩 자격 증명을 찾을 수 없습니다. OpenHuman에 로그인하거나 연결 → API 키 → 임베딩에서 로컬 Ollama 임베딩을 설정하세요.',
+    '임베딩 자격 증명을 찾을 수 없습니다. Neppy에 로그인하거나 연결 → API 키 → 임베딩에서 로컬 Ollama 임베딩을 설정하세요.',
   'memory.health.remediation.auth_invalid':
     '임베딩 자격 증명이 거부되었습니다. 다시 인증하거나 연결 → API 키 → 임베딩에서 로컬 Ollama 임베딩으로 전환하세요.',
   'memory.health.remediation.embeddings_unconfigured':
@@ -6381,7 +6381,7 @@ const messages: TranslationMap = {
   'memory.health.remediation.empty_input_refused':
     '텍스트가 비어 있어 메모리 항목이 건너뛰어졌습니다. 조치가 필요하지 않습니다: 새 항목은 정상적으로 임베딩됩니다.',
   'memory.health.remediation.storage_unavailable':
-    'OpenHuman이 메모리 저장소에 쓸 수 없습니다: 디스크 또는 SD 카드가 손상되었거나 가득 찼거나 읽기 전용인 것 같습니다. 드라이브를 확인하고 공간을 확보하세요. 저장소에 다시 쓸 수 있게 되면 메모리 처리가 자동으로 재개됩니다.',
+    'Neppy이 메모리 저장소에 쓸 수 없습니다: 디스크 또는 SD 카드가 손상되었거나 가득 찼거나 읽기 전용인 것 같습니다. 드라이브를 확인하고 공간을 확보하세요. 저장소에 다시 쓸 수 있게 되면 메모리 처리가 자동으로 재개됩니다.',
   'memory.health.remediation.transient':
     '일시적인 오류로 메모리 처리가 중단되었습니다. 자동으로 다시 시도됩니다.',
   'memory.health.remediation.unknown':
@@ -6454,11 +6454,11 @@ const messages: TranslationMap = {
   'onboarding.custom.vault.subtitle':
     '메모리 노트가 기록되는 위치, 소스 데이터를 읽는 방법, 볼트 파이프라인이 정상인지 확인하세요.',
   'onboarding.custom.vault.defaultDesc':
-    'OpenHuman 관리형 메모리 기본값을 사용합니다. 볼트 경로와 동기화 상태는 나중에 검토할 수 있습니다.',
+    'Neppy 관리형 메모리 기본값을 사용합니다. 볼트 경로와 동기화 상태는 나중에 검토할 수 있습니다.',
   'onboarding.custom.vault.configureDesc':
     '볼트 소유권을 검토하고 상태 검사를 실행하며 메모리 컨트롤을 지금 조정하세요.',
   'onboarding.custom.vault.localDisabledReason':
-    '관리형 설정은 OpenHuman 로그인이 필요하며 로컬 모드에서는 사용할 수 없습니다.',
+    '관리형 설정은 Neppy 로그인이 필요하며 로컬 모드에서는 사용할 수 없습니다.',
   'onboarding.custom.vault.exitError': '온보딩을 완료할 수 없습니다. 다시 시도해 주세요.',
   'vaultHealth.title': '볼트 상태 체크리스트',
   'vaultHealth.setupTitle': '볼트 설정 상태',
@@ -6478,9 +6478,9 @@ const messages: TranslationMap = {
   'vaultHealth.existsLabel': '워크스페이스 볼트 경로가 존재합니다',
   'vaultHealth.existsRecovery':
     '볼트 폴더가 없습니다. 동기화를 시작하거나 이 폴더를 만든 후 체크리스트를 새로 고침하세요.',
-  'vaultHealth.writableLabel': 'OpenHuman이 볼트에 쓸 수 있습니다',
+  'vaultHealth.writableLabel': 'Neppy이 볼트에 쓸 수 있습니다',
   'vaultHealth.writableRecovery':
-    'OpenHuman이 아직 이 볼트에 쓸 수 없습니다. 쓰기 권한을 부여하고 새로 고침하세요.',
+    'Neppy이 아직 이 볼트에 쓸 수 없습니다. 쓰기 권한을 부여하고 새로 고침하세요.',
   'vaultHealth.obsidianLabel': '볼트가 Obsidian에 등록되어 있습니다',
   'vaultHealth.obsidianRecovery':
     'Obsidian에서 이 경로에 대해 "폴더를 볼트로 열기"를 선택한 후 체크리스트를 새로 고침하세요.',
@@ -6496,13 +6496,13 @@ const messages: TranslationMap = {
   'memoryData.howItWorks': '메모리 저장 방식',
   'memoryData.workspaceVault': '워크스페이스 볼트 · 쓰기',
   'memoryData.workspaceVaultDesc':
-    'OpenHuman이 생성된 메모리 노트를 memory_tree/content에 기록합니다.',
+    'Neppy이 생성된 메모리 노트를 memory_tree/content에 기록합니다.',
   'memoryData.connectedSources': '연결된 소스 · 읽기',
   'memoryData.connectedSourcesDesc':
     '폴더, 사서함, 채팅, 저장소가 메모리 인덱싱을 위해 가져와집니다: 원본 파일은 절대 수정되지 않습니다.',
   'memoryData.internalFiles': '내부 메모리 트리 파일',
   'memoryData.internalFilesDesc':
-    '인덱스, 큐 상태, 요약은 OpenHuman이 관리하여 회상과 동기화를 정상 상태로 유지합니다.',
+    '인덱스, 큐 상태, 요약은 Neppy이 관리하여 회상과 동기화를 정상 상태로 유지합니다.',
   'memoryData.windowError': '메모리 창',
   'memoryData.windowUpdated': '메모리 창 업데이트됨',
   'memoryData.windowUpdatedMsg': '{window}(으)로 설정되었습니다.',
@@ -6766,7 +6766,7 @@ const messages: TranslationMap = {
   // Gateways: cores this app provisions and runs elsewhere.
   'settings.gateway.title': '코어를 다른 곳에서 실행',
   'settings.gateway.description':
-    '코어는 컨테이너에서, SSH로 연결한 다른 컴퓨터에서, 또는 다른 컴퓨터의 컨테이너에서 실행할 수 있습니다. OpenHuman이 코어를 시작하고 연결하며, 다른 곳으로 전환하면 종료합니다.',
+    '코어는 컨테이너에서, SSH로 연결한 다른 컴퓨터에서, 또는 다른 컴퓨터의 컨테이너에서 실행할 수 있습니다. Neppy이 코어를 시작하고 연결하며, 다른 곳으로 전환하면 종료합니다.',
   'settings.gateway.add': '위치 추가',
   'settings.gateway.save': '위치 저장',
   'settings.gateway.remove': '제거',

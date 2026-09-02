@@ -1,4 +1,4 @@
-# Beginner's Guide to Contributing to OpenHuman
+# Beginner's Guide to Contributing to Neppy
 
 New to open source or coding? This guide walks you through everything from zero to your first pull request — based on real setup pain points that new contributors hit.
 
@@ -24,7 +24,7 @@ For the full contributor reference, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## What is this project?
 
-OpenHuman is a desktop AI assistant app. The codebase has three main parts:
+Neppy is a desktop AI assistant app. The codebase has three main parts:
 
 | Part             | Tech               | What it does                           |
 | ---------------- | ------------------ | -------------------------------------- |
@@ -404,7 +404,7 @@ git push -u origin your-branch-name
 If you use Claude Code, Cursor, AmpCode, Codex, or another coding agent, you can paste this prompt after cloning the repo:
 
 ```text
-I want to make my first contribution to OpenHuman. First read these upstream docs:
+I want to make my first contribution to Neppy. First read these upstream docs:
 
 CONTRIBUTING.md: https://raw.githubusercontent.com/tinyhumansai/openhuman/main/CONTRIBUTING.md
 AGENTS.md: https://raw.githubusercontent.com/tinyhumansai/openhuman/main/AGENTS.md
@@ -479,4 +479,4 @@ The desktop build requires the full Rust toolchain and vendored Tauri setup. For
 - Comment on the issue you're working on
 - Check [`gitbooks/developing/getting-set-up.md`](gitbooks/developing/getting-set-up.md) for deeper setup docs
 
-Thank you for contributing to OpenHuman!
+Thank you for contributing to Neppy!

@@ -1,4 +1,4 @@
-//! Diagnostic checks for OpenHuman configuration, workspace health, and daemon state.
+//! Diagnostic checks for Neppy configuration, workspace health, and daemon state.
 
 mod core;
 pub mod ops;

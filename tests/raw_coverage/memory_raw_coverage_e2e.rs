@@ -557,7 +557,7 @@ async fn memory_ingestion_state_and_request_models_report_edges() {
             namespace: "coverage".into(),
             key: "doc-key".into(),
             title: "Coverage Doc".into(),
-            content: "Alice collaborates with Bob on OpenHuman memory tests.".into(),
+            content: "Alice collaborates with Bob on Neppy memory tests.".into(),
             source_type: "test".into(),
             priority: "medium".into(),
             tags: vec!["coverage".into()],

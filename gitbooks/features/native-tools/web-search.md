@@ -7,7 +7,7 @@ icon: magnifying-glass
 
 # Web Search
 
-The agent can search the live web on its own. By default this runs on **OpenHuman Managed** search: the query goes through the OpenHuman backend, currently powered by [Exa](https://exa.ai), so you never carry a search API key. You can also bring your own key for Exa, Brave, or Querit, or enable the backend-proxied Parallel engine. If you run your own [SearXNG](https://docs.searxng.org/) instance, you can expose `searxng_search` to RPC and MCP clients as a private, self-hosted search tool.
+The agent can search the live web on its own. By default this runs on **Neppy Managed** search: the query goes through the Neppy backend, currently powered by [Exa](https://exa.ai), so you never carry a search API key. You can also bring your own key for Exa, Brave, or Querit, or enable the backend-proxied Parallel engine. If you run your own [SearXNG](https://docs.searxng.org/) instance, you can expose `searxng_search` to RPC and MCP clients as a private, self-hosted search tool.
 
 ## What it's good for
 
@@ -21,22 +21,22 @@ Pick the engine under **Connections → Search**. Exactly one engine is active a
 
 | Engine                          | Setup                  | Where your queries go                                                                                                                                                                                                                                                    |
 | ------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **OpenHuman Managed** (default) | Not needed             | The OpenHuman backend, currently powered by [Exa](https://exa.ai).                                                                                                                                                                                                       |
+| **Neppy Managed** (default) | Not needed             | The Neppy backend, currently powered by [Exa](https://exa.ai).                                                                                                                                                                                                       |
 | **Exa**                         | Your API key           | Straight to `https://api.exa.ai` with your key.                                                                                                                                                                                                                          |
-| **Parallel**                    | Local enablement value | Parallel-specific tools go through the OpenHuman backend to Parallel; the canonical `web_search_tool` keeps using the backend-resolved managed provider (currently Exa). The value selects the engine locally and is not sent to Parallel for authentication or billing. |
+| **Parallel**                    | Local enablement value | Parallel-specific tools go through the Neppy backend to Parallel; the canonical `web_search_tool` keeps using the backend-resolved managed provider (currently Exa). The value selects the engine locally and is not sent to Parallel for authentication or billing. |
 | **Brave**                       | Your API key           | Straight to the Brave Search API with your key.                                                                                                                                                                                                                          |
 | **Querit**                      | Your API key           | Straight to the Querit API with your key.                                                                                                                                                                                                                                |
 | **Disabled**                    | Not needed             | Nowhere. All agent-facing search tools are removed; an enabled SearXNG endpoint remains available through RPC/MCP.                                                                                                                                                       |
 
 Selecting a bring-your-own-key engine without saving a key falls back to managed search. That fallback requires a backend-authenticated session; local or offline users must configure a direct provider key. Once a search finishes, the chat timeline names the provider that answered it ("Searched with Exa"), so the managed path is never an unattributed black box.
 
-### OpenHuman Managed (default)
+### Neppy Managed (default)
 
-Managed search is the out-of-the-box path and needs no setup: it is proxied through the OpenHuman backend on your existing subscription, and Exa is the provider behind it today. Your machine holds no search credentials, and the agent gets the single `web_search_tool` slot.
+Managed search is the out-of-the-box path and needs no setup: it is proxied through the Neppy backend on your existing subscription, and Exa is the provider behind it today. Your machine holds no search credentials, and the agent gets the single `web_search_tool` slot.
 
 ### Exa (bring your own key)
 
-Prefer to run search on your own Exa account? Grab a key from [exa.ai](https://exa.ai) and paste it under **Connections → Search → Exa**. Calls then go straight from your machine to `https://api.exa.ai` with your key and never touch the managed backend. When secret encryption is enabled, OpenHuman stores the key as ciphertext in `config.toml`; the OS keyring protects the master encryption key, not the Exa key itself.
+Prefer to run search on your own Exa account? Grab a key from [exa.ai](https://exa.ai) and paste it under **Connections → Search → Exa**. Calls then go straight from your machine to `https://api.exa.ai` with your key and never touch the managed backend. When secret encryption is enabled, Neppy stores the key as ciphertext in `config.toml`; the OS keyring protects the master encryption key, not the Exa key itself.
 
 Choosing Exa registers Exa's neural-search family for the agent, on top of the usual `web_search_tool`:
 
@@ -54,7 +54,7 @@ engine = "exa"
 api_key = "your-exa-api-key"
 ```
 
-Do not commit a plaintext API key from this example. A key entered directly in `config.toml` remains plaintext until OpenHuman next saves the configuration with secret encryption enabled.
+Do not commit a plaintext API key from this example. A key entered directly in `config.toml` remains plaintext until Neppy next saves the configuration with secret encryption enabled.
 
 Or via environment:
 

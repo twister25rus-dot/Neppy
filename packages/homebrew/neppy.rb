@@ -1,7 +1,7 @@
 # Homebrew formula template — rendered by CI, committed to tinyhumansai/homebrew-openhuman.
 # Placeholders replaced by .github/workflows/release-packages.yml before commit.
-class Openhuman < Formula
-  desc "AI-powered assistant for communities — OpenHuman CLI"
+class Neppy < Formula
+  desc "AI-powered assistant for communities — Neppy CLI"
   homepage "https://github.com/tinyhumansai/openhuman"
   version "@VERSION@"
   license "MIT"

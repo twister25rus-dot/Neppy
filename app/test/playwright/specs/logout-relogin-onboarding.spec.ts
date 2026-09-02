@@ -63,7 +63,7 @@ async function completeCloudOnboarding(page: Page): Promise<void> {
 async function logoutViaSettings(page: Page): Promise<void> {
   await callCoreRpc('openhuman.auth_clear_session', {});
   await page.goto('/#/');
-  await expect(page.getByText('Welcome to OpenHuman')).toBeVisible();
+  await expect(page.getByText('Welcome to Neppy')).toBeVisible();
 }
 
 test.describe('Logout -> re-login onboarding overlay', () => {
@@ -81,12 +81,12 @@ test.describe('Logout -> re-login onboarding overlay', () => {
 
     await callCoreRpc('openhuman.config_set_onboarding_completed', { value: false });
     await page.goto('/#/');
-    await expect(page.getByText('Welcome to OpenHuman')).toBeVisible();
+    await expect(page.getByText('Welcome to Neppy')).toBeVisible();
 
     await signInToOnboarding(page, 'pw-logout-relogin-user');
 
     await expect(page.getByTestId('onboarding-welcome-step')).toBeVisible();
-    await expect(page.getByText("Hi. I'm OpenHuman.")).toBeVisible();
+    await expect(page.getByText("Hi. I'm Neppy.")).toBeVisible();
     await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
     await expect
       .poll(async () => page.evaluate(() => window.location.hash))

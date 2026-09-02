@@ -8,7 +8,7 @@ const debug = debugFactory('openhuman:chat-surface');
 /**
  * Claim ownership of a thread's write path for assistant-ui's runtime.
  *
- * `useOpenHumanExternalStore`'s `onNew`/`onCancel` do not implement sending —
+ * `useNeppyExternalStore`'s `onNew`/`onCancel` do not implement sending —
  * they look the owning surface up in `chatSurfaceHandlers` and forward. This
  * hook is the registration half of that seam for the home chat surface.
  *

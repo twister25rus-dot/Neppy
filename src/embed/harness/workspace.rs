@@ -26,7 +26,7 @@ pub enum Workspace {
     Ephemeral,
     /// A caller-owned directory. Created if absent; persists across runs.
     Dir(PathBuf),
-    /// The machine's configured OpenHuman workspace — the one the desktop app
+    /// The machine's configured Neppy workspace — the one the desktop app
     /// and CLI use, resolved the usual way (`OPENHUMAN_WORKSPACE`,
     /// `active_user.toml`, `~/.openhuman/...`).
     ///

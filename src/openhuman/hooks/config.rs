@@ -311,12 +311,12 @@ pub fn layer_paths(
 
 #[cfg(target_os = "windows")]
 fn system_hooks_dir() -> Option<PathBuf> {
-    std::env::var_os("ProgramData").map(|dir| PathBuf::from(dir).join("OpenHuman"))
+    std::env::var_os("ProgramData").map(|dir| PathBuf::from(dir).join("Neppy"))
 }
 
 #[cfg(target_os = "macos")]
 fn system_hooks_dir() -> Option<PathBuf> {
-    Some(PathBuf::from("/Library/Application Support/OpenHuman"))
+    Some(PathBuf::from("/Library/Application Support/Neppy"))
 }
 
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]

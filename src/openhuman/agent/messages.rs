@@ -1,8 +1,8 @@
-//! Durable OpenHuman transcript records.
+//! Durable Neppy transcript records.
 //!
 //! Runtime model calls use [`tinyagents::harness::message::Message`]. These
 //! compact records preserve the stable JSONL/thread storage contract used by
-//! existing installations and carry OpenHuman-only message metadata.
+//! existing installations and carry Neppy-only message metadata.
 
 use serde::{Deserialize, Serialize};
 

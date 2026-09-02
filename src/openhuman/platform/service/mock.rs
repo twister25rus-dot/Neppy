@@ -276,7 +276,7 @@ fn mock_label() -> &'static str {
 
 #[cfg(windows)]
 fn mock_label() -> &'static str {
-    "OpenHuman Core"
+    "Neppy Core"
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]

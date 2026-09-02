@@ -25,12 +25,12 @@ impl LocalAiService {
             );
         }
         Err(format!(
-            "OpenHuman no longer starts or installs Ollama automatically. Start your inference runtime yourself and make sure it is reachable at {base_url}."
+            "Neppy no longer starts or installs Ollama automatically. Start your inference runtime yourself and make sure it is reachable at {base_url}."
         ))
     }
 
     /// Alias of `ensure_ollama_server` in external-runtime mode.
-    /// OpenHuman no longer installs or starts Ollama automatically; the
+    /// Neppy no longer installs or starts Ollama automatically; the
     /// "fresh" retry path is a no-op that defers to the standard check.
     pub(in crate::openhuman::inference::local::service) async fn ensure_ollama_server_fresh(
         &self,

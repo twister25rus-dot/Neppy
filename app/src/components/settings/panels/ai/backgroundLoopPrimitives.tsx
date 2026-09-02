@@ -108,7 +108,7 @@ export function describeProvider(
   ref: ProviderRef,
   providers: BackgroundLoopProviderView[]
 ): string {
-  if (ref.kind === 'openhuman') return 'Managed · OpenHuman';
+  if (ref.kind === 'openhuman') return 'Managed · Neppy';
   if (ref.kind === 'default') return 'Default route';
   if (ref.kind === 'local') return `Local ${ref.model}`;
   if (ref.kind === 'claude-code') return `Claude Code CLI ${ref.model || 'default model'}`;

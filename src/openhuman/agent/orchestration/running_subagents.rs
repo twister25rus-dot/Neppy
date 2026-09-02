@@ -19,7 +19,7 @@
 //!   detached work.
 //!
 //! TinyAgents owns the process-local watch/cancel/abort/steering mechanics.
-//! OpenHuman retains product metadata, durable task-store projection, and the
+//! Neppy retains product metadata, durable task-store projection, and the
 //! legacy `RunQueue` steering fallback. Ownership is enforced by parent session;
 //! terminal entries are pruned on `wait` and swept at the registry soft cap.
 //!
@@ -57,7 +57,7 @@ use tinyagents::CancellationToken;
 /// Where a workspace's detached-task ledger lives.
 ///
 /// A product path, not a generic one: TinyAgents opens whatever file it is
-/// given, and this is where OpenHuman keeps it.
+/// given, and this is where Neppy keeps it.
 fn task_store_path(workspace_dir: &Path) -> PathBuf {
     workspace_dir
         .join(".openhuman")
@@ -214,7 +214,7 @@ fn list_task_records(workspace_dir: &Path) -> Vec<OrchestrationTaskRecord> {
 /// [`CancellationToken`] — is gone, but the durable [`JsonlTaskStore`] still
 /// holds a non-terminal (`Pending`/`Running`/`Awaiting`/`CancelRequested`)
 /// record for it. Such a record is **orphaned**: there is no live executor to
-/// re-attach to (OpenHuman spawns child processes, so an in-flight run from a
+/// re-attach to (Neppy spawns child processes, so an in-flight run from a
 /// dead parent cannot be resumed), and the run-ledger finalizer never observed a
 /// terminal event, so it would otherwise render as a perpetual "running" entry.
 ///
@@ -243,7 +243,7 @@ pub(crate) fn reconcile_orphaned_tasks_on_boot(workspace_dir: &Path) -> usize {
 
     // The sweep itself — which statuses are live, and which terminal state each
     // becomes — is TinyAgents'. What stays here is the reason a *sub-agent*
-    // orphan carries, and the lifecycle event that finalizes OpenHuman's run
+    // orphan carries, and the lifecycle event that finalizes Neppy's run
     // ledger afterwards.
     let report = reconcile_orphaned_tasks(
         store.as_ref(),
@@ -876,7 +876,7 @@ fn send_registered_steering(
 /// `Pause`/`Resume`/`Cancel` are pure control-flow.
 ///
 /// The crate's `SetMetadata` command is intentionally *not* mapped here: no
-/// OpenHuman control surface owns run-metadata mutation yet.
+/// Neppy control surface owns run-metadata mutation yet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum SteeringDirective {
     /// Redirect the run toward a new instruction (`SteeringCommand::Redirect`).
@@ -933,7 +933,7 @@ pub(crate) enum SteerDirectiveError {
 /// sub-agent through its registered TinyAgents [`SteeringHandle`].
 ///
 /// Unlike [`steer`], this has **no** `RunQueue` fallback: the crate control
-/// variants (`Redirect`/`Pause`/`Resume`/`Cancel`) have no OpenHuman queue lane,
+/// variants (`Redirect`/`Pause`/`Resume`/`Cancel`) have no Neppy queue lane,
 /// so a run must have a live registered handle to receive them. The directive's
 /// command kind is checked against the run's own `SteeringPolicy` *before*
 /// enqueue — a disallowed command would otherwise abort the run — so this can
@@ -966,7 +966,7 @@ pub(crate) fn steer_directive(
 
 /// Inject a message into a running sub-agent. Prefer the crate-native
 /// TinyAgents steering registry when the child run has registered its live
-/// handle, and fall back to the OpenHuman `RunQueue` compatibility path.
+/// handle, and fall back to the Neppy `RunQueue` compatibility path.
 pub async fn steer(
     task_id: &str,
     parent_session: &str,

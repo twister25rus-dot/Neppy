@@ -165,7 +165,7 @@ function parsePositiveInt(raw, label) {
   return value;
 }
 
-function defaultOpenhumanDir() {
+function defaultNeppyDir() {
   return process.env.OPENHUMAN_APP_ENV === "staging"
     ? path.join(homedir(), ".openhuman-staging")
     : path.join(homedir(), ".openhuman");
@@ -173,7 +173,7 @@ function defaultOpenhumanDir() {
 
 async function defaultWorkspace() {
   if (process.env.OPENHUMAN_WORKSPACE) return process.env.OPENHUMAN_WORKSPACE;
-  const openhumanDir = defaultOpenhumanDir();
+  const openhumanDir = defaultNeppyDir();
   try {
     const active = await readFile(
       path.join(openhumanDir, "active_user.toml"),
@@ -560,7 +560,7 @@ omit_memory_md = true
 
 [system_prompt]
 inline = """
-You are the OpenHuman async subagent RPC audit orchestrator.
+You are the Neppy async subagent RPC audit orchestrator.
 For async steering audit messages, call spawn_subagent exactly once with agent_id "async_audit_worker", blocking false, fresh false, and the task_key provided by the user.
 For parallel audit messages, call spawn_parallel_agents exactly once with the task list provided by the user.
 For reusable subagent parent communication audit messages, call spawn_subagent exactly as many times as requested, preserving each requested task_key, blocking setting, and fresh setting. When asked to collect workers, call wait_subagent for the returned task_id values.
@@ -645,7 +645,7 @@ function backendApiUrl() {
     : "https://api.tinyhumans.ai";
 }
 
-async function writeIsolatedOpenHumanBackendConfig(workspace, model) {
+async function writeIsolatedNeppyBackendConfig(workspace, model) {
   const providerModel = model?.trim() || "agentic-v1";
   await writeFile(
     path.join(workspace, "config.toml"),
@@ -993,7 +993,7 @@ async function main() {
     await writeAuditDefinitions(opts.workspace);
     await writeAuditDefinitions(path.join(opts.workspace, "workspace"));
     if (opts.providerMode === "openhuman-backend") {
-      await writeIsolatedOpenHumanBackendConfig(opts.workspace, opts.model);
+      await writeIsolatedNeppyBackendConfig(opts.workspace, opts.model);
       await writeIsolatedAppSessionAuth(opts.workspace);
     } else {
       await writeIsolatedDirectProviderConfig(opts.workspace, opts.model);

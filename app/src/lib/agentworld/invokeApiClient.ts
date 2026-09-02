@@ -1,5 +1,5 @@
 /**
- * tiny.place API client bridge — routes method calls through the OpenHuman
+ * tiny.place API client bridge — routes method calls through the Neppy
  * core RPC (`openhuman.tinyplace_*`) rather than the tiny.place HTTP API.
  *
  * The factory `createInvokeApiClient()` returns an object whose shape mirrors

@@ -865,7 +865,7 @@ describe('MicComposer', () => {
     transcribeWithFactoryMock.mockRejectedValueOnce(
       new Error(
         'Voice transcription is unavailable in this build — the voice module was not compiled into the app. ' +
-          'Update OpenHuman to the latest version; restarting will not help.'
+          'Update Neppy to the latest version; restarting will not help.'
       )
     );
     const onError = vi.fn();

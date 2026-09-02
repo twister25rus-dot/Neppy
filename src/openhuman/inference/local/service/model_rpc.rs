@@ -1,6 +1,6 @@
 //! Thin local-model RPC boundary backed by TinyAgents.
 //!
-//! Local runtimes execute out of process. OpenHuman only resolves their HTTP
+//! Local runtimes execute out of process. Neppy only resolves their HTTP
 //! endpoint and adapts the legacy local-AI call shape to TinyAgents' provider-
 //! neutral `ChatModel` interface.
 

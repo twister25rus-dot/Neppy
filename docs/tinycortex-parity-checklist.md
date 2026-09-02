@@ -152,16 +152,16 @@ job payload_json parity (P4/P9). Any red = upstream fix in tinycortex, re-bump s
 
 ### W8 test-ownership audit (2026-07-13)
 
-Engine tests now run at their ownership boundary rather than through OpenHuman re-export shims:
+Engine tests now run at their ownership boundary rather than through Neppy re-export shims:
 
 - TinyCortex owns memory value/chunk/tree/queue/scoring behavior and the Composio sync pipelines.
   Duplicate engine assertions were removed from the pure `chunks::types`, `trees::types`,
   queue-backfill flag, retrieval-weight, and score re-export shims.
-- OpenHuman retains tests that cross a product boundary: config and credential mapping,
+- Neppy retains tests that cross a product boundary: config and credential mapping,
   `SkillDocSink` persistence, event-bus subscribers, RPC envelopes, provider profile/task/catalog
   surfaces, agent-tool response post-processing, source registry side effects, and the
   security-critical `MemoryTaint` seam.
-- OpenHuman CI now runs `cargo test --manifest-path vendor/tinycortex/Cargo.toml --features
+- Neppy CI now runs `cargo test --manifest-path vendor/tinycortex/Cargo.toml --features
   git-diff,sync,persona` when the submodule pointer changes and in the reusable full Rust suite. This is
   required because Cargo does not run dependency test targets while testing `openhuman`.
 

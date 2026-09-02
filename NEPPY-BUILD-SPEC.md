@@ -58,7 +58,7 @@ Rust commands with `GGML_NATIVE=OFF`. `observed`.
 
 Licence: GPL-3.0. For personal use you have no distribution obligation at all.
 If you ever publish the fork: keep the licence, keep the copyright notices, mark
-the files you changed (GPL-3 §5a). The *name* "OpenHuman" and the TinyHumans
+the files you changed (GPL-3 §5a). The *name* "Neppy" and the TinyHumans
 logos are trademarks and are not covered by the GPL, so renaming to Neppy is the
 correct thing to do rather than just a preference. `observed`.
 
@@ -206,7 +206,7 @@ Here is the split.
   and `openhuman_core::` path with it
 - Env vars `OPENHUMAN_*` → `NEPPY_*`, everywhere at once: `.env.example`,
   `app/.env.example`, `scripts/load-dotenv.sh`, CI workflows, docs
-- Filesystem roots: `~/.openhuman` → `~/.neppy`, `~/OpenHuman/projects` →
+- Filesystem roots: `~/.openhuman` → `~/.neppy`, `~/Neppy/projects` →
   `~/Neppy/projects`
 
 ### 3.2 Do NOT rename these
@@ -255,7 +255,7 @@ pnpm dev:app
 Stop here until the untouched app builds and launches. If you skip this, every
 later error is ambiguous.
 
-**Phase B — de-cloud, still called OpenHuman.**
+**Phase B — de-cloud, still called Neppy.**
 Sections 2.1 → 2.10 above. Success condition: turn off wifi, run one full agent
 turn against Ollama, get a sane reply with a tool call in it.
 

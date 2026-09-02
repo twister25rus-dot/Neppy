@@ -1,4 +1,4 @@
-//! OpenHuman RPC shell for memory synchronization status.
+//! Neppy RPC shell for memory synchronization status.
 
 use crate::openhuman::config::Config;
 use crate::rpc::RpcOutcome;

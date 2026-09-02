@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# OpenHuman Core — multi-stage Docker build
+# Neppy Core — multi-stage Docker build
 # Produces a minimal image running the `openhuman-core` binary (JSON-RPC server).
 #
 # Build:   docker build -t openhuman-core .

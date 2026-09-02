@@ -55,7 +55,7 @@ fn now_ms() -> u64 {
 /// Build the actionable, user-facing message for a BYO key the provider
 /// rejected. Phrased so it reads the same in the notification center and the
 /// AI-settings notice, and points the user at the one fix that resolves it
-/// (the third-party key is invalid / revoked — OpenHuman has no other lever).
+/// (the third-party key is invalid / revoked — Neppy has no other lever).
 pub fn auth_error_message(provider: &str, status: u16) -> String {
     format!(
         "{provider} rejected the API key (HTTP {status}). Update your {provider} \

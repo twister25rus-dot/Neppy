@@ -8,7 +8,7 @@
 //! ```
 //! It inherits the core bearer-token auth middleware, but `/v1/*` also accepts
 //! a stable user-managed external API key so local harnesses can treat
-//! OpenHuman like an OpenAI-compatible router.
+//! Neppy like an OpenAI-compatible router.
 
 /// Auth-profile provider id used for the stable external bearer that guards
 /// the OpenAI-compatible `/v1/*` endpoint.

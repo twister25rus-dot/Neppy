@@ -154,7 +154,7 @@ export function startNativeNotificationsService(): void {
     dispatchAndMaybeBanner('system', {
       id: `socket_disconnect:${Date.now()}`,
       title: 'Connection lost',
-      body: `OpenHuman lost its connection to the core service (${truncate(reason, 80)}).`,
+      body: `Neppy lost its connection to the core service (${truncate(reason, 80)}).`,
     });
   };
 

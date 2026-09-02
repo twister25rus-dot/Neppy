@@ -11,7 +11,7 @@
 //! hooks). When the caller supplies an `on_progress` sender the harness event
 //! stream is mirrored onto `AgentProgress` (live tool timeline, streaming text
 //! deltas, cost/token footer) via the same
-//! `OpenhumanEventBridge`
+//! `NeppyEventBridge`
 //! the chat route uses.
 //!
 //! **Available tools.** Reuses the bus handler's `Arc`-shared tool sets

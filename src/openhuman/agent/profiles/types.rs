@@ -140,7 +140,7 @@ mod tests {
             "profiles": [{
                 "id": "default",
                 "name": "Default",
-                "description": "The standard OpenHuman orchestrator.",
+                "description": "The standard Neppy orchestrator.",
                 "agentId": "orchestrator",
                 "builtIn": true
             }]

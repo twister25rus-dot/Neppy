@@ -76,14 +76,14 @@ impl RetryPolicy {
 
 #[derive(Debug, Clone)]
 enum ListenerFingerprint {
-    OpenHumanCore,
+    NeppyCore,
     Other(String),
 }
 
 impl ListenerFingerprint {
     fn as_human_readable(&self) -> String {
         match self {
-            Self::OpenHumanCore => "openhuman-core".to_string(),
+            Self::NeppyCore => "openhuman-core".to_string(),
             Self::Other(reason) => reason.clone(),
         }
     }
@@ -92,7 +92,7 @@ impl ListenerFingerprint {
 /// Failure modes for preferred-port selection.
 #[derive(Debug, Clone)]
 pub enum PickListenPortError {
-    /// Port is occupied by another OpenHuman core; caller should run the stale
+    /// Port is occupied by another Neppy core; caller should run the stale
     /// listener takeover flow (#1130) before retrying startup.
     WouldTakeOver { preferred: u16, fingerprint: String },
     /// No candidate port was available after trying the fallback pool.
@@ -138,7 +138,7 @@ impl std::error::Error for PickListenPortError {}
 /// Behavior:
 /// - first tries `preferred`
 /// - retries transient `AddrInUse` races a few times
-/// - if still occupied by another OpenHuman core, asks caller to takeover
+/// - if still occupied by another Neppy core, asks caller to takeover
 /// - otherwise falls back to ports 7789..=7798
 pub async fn pick_listen_port(preferred: u16) -> Result<PickListenPortResult, PickListenPortError> {
     pick_listen_port_for_host("127.0.0.1", preferred).await
@@ -167,7 +167,7 @@ async fn pick_listen_port_with_policy(
     retry_policy: RetryPolicy,
 ) -> Result<PickListenPortResult, PickListenPortError> {
     // `None`  → preferred port is occupied (AddrInUse): probe for a stale
-    //           OpenHuman listener to take over before falling back.
+    //           Neppy listener to take over before falling back.
     // `Some`  → preferred port is OS-excluded (Windows WSAEACCES / os error
     //           10013): nothing is listening, so skip the takeover probe and
     //           go straight to the fallback ports. The string is the bind
@@ -240,7 +240,7 @@ async fn pick_listen_port_with_policy(
     let fingerprint_label = match excluded_reason {
         None => {
             let fingerprint = identify_listener(host, preferred).await;
-            if matches!(fingerprint, ListenerFingerprint::OpenHumanCore) {
+            if matches!(fingerprint, ListenerFingerprint::NeppyCore) {
                 return Err(PickListenPortError::WouldTakeOver {
                     preferred,
                     fingerprint: fingerprint.as_human_readable(),
@@ -356,7 +356,7 @@ async fn identify_listener(host: &str, port: u16) -> ListenerFingerprint {
     };
     // IPv6 literals must be bracketed in the URL authority per RFC 3986; an
     // un-bracketed `http://::1:7788/` parses the colons as host:port and
-    // mis-classifies live OpenHuman cores on IPv6 hosts as `Other`.
+    // mis-classifies live Neppy cores on IPv6 hosts as `Other`.
     let authority = if probe_host.contains(':') && !probe_host.starts_with('[') {
         format!("[{probe_host}]")
     } else {
@@ -395,7 +395,7 @@ async fn identify_listener(host: &str, port: u16) -> ListenerFingerprint {
     };
 
     if is_openhuman_root_body(&body) {
-        ListenerFingerprint::OpenHumanCore
+        ListenerFingerprint::NeppyCore
     } else {
         let preview: String = body.chars().take(80).collect();
         ListenerFingerprint::Other(format!(

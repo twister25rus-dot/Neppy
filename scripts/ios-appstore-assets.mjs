@@ -43,10 +43,10 @@ function pairScreen() {
         <div></div><div></div><div></div><span></span>
       </div>
       <h2>Pair with your desktop</h2>
-      <p>Scan the QR code from OpenHuman on your computer and connect your phone in seconds.</p>
+      <p>Scan the QR code from Neppy on your computer and connect your phone in seconds.</p>
       <button>Scan QR code</button>
       <ol>
-        <li>Open OpenHuman on desktop</li>
+        <li>Open Neppy on desktop</li>
         <li>Go to Settings > Devices</li>
         <li>Tap Pair phone to show QR</li>
       </ol>
@@ -87,7 +87,7 @@ function privacyScreen() {
         <span></span>
       </div>
       <h2>Anchored to your desktop</h2>
-      <p>Your phone is a companion surface. Memory, tools, and integrations stay with the OpenHuman runtime you paired.</p>
+      <p>Your phone is a companion surface. Memory, tools, and integrations stay with the Neppy runtime you paired.</p>
       <div class="rows">
         <div><strong>Short-lived QR pairing</strong><span>Connect intentionally</span></div>
         <div><strong>Push-to-talk voice</strong><span>Speak when you choose</span></div>
@@ -429,9 +429,9 @@ function html({ title, kicker, body, iconUri, wordmarkUri }) {
 const shots = [
   {
     file: "iPhone_6_9_01_pair_with_desktop.png",
-    kicker: "OpenHuman for iPhone",
+    kicker: "Neppy for iPhone",
     title: "Pair with your desktop",
-    body: "Scan the QR code from OpenHuman on your computer and connect your phone to the assistant you already trust.",
+    body: "Scan the QR code from Neppy on your computer and connect your phone to the assistant you already trust.",
   },
   {
     file: "iPhone_6_9_02_chat_and_voice.png",
@@ -443,7 +443,7 @@ const shots = [
     file: "iPhone_6_9_03_desktop_anchored.png",
     kicker: "Desktop-owned context",
     title: "Your memory stays anchored",
-    body: "Use your paired OpenHuman setup for memory, tools, and integrations without turning the phone into a separate workspace.",
+    body: "Use your paired Neppy setup for memory, tools, and integrations without turning the phone into a separate workspace.",
   },
 ];
 
@@ -452,7 +452,7 @@ const iconUri = await pngDataUri(
   "app/src-tauri-mobile/icons/store/appstore.png",
 );
 const wordmarkUri = await pngDataUri(
-  "app/public/brand/OpenhumanLogo+wordmark-White.png",
+  "app/public/brand/NeppyLogo+wordmark-White.png",
 );
 
 const browser = await chromium.launch();

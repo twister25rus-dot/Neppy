@@ -202,7 +202,7 @@ describe('Login flow — complete with mock data (Linux)', () => {
 
     // Real onboarding step markers
     const onboardingCandidates = [
-      "Hi. I'm OpenHuman.", // WelcomeStep heading
+      "Hi. I'm Neppy.", // WelcomeStep heading
       "Let's Start", // WelcomeStep CTA
       'Connect your Gmail', // SkillsStep heading
       'Skip for Now', // SkillsStep CTA when no source is connected

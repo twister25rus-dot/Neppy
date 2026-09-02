@@ -44,7 +44,7 @@ function readSubagentState(
   return { activity: progress, running: result === undefined };
 }
 
-/** Render a real OpenHuman `task` delegation using the existing activity view. */
+/** Render a real Neppy `task` delegation using the existing activity view. */
 export const SubagentCall: ToolCallMessagePartComponent = ({ args, result }) => {
   const { activity, running } = readSubagentState(args, result);
   const description = (args as { description?: string } | undefined)?.description;

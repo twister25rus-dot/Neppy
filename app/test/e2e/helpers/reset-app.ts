@@ -19,7 +19,7 @@
  * mock-backend identity so request logs aren't cross-contaminated.
  */
 import { waitForApp, waitForAppReady } from './app-helpers';
-import { callOpenhumanRpc } from './core-rpc';
+import { callNeppyRpc } from './core-rpc';
 import { waitForWebView, waitForWindowVisible } from './element-helpers';
 import { triggerAuthLoopbackBypass } from './loopback-auth-helpers';
 import { supportsExecuteScript } from './platform';
@@ -74,7 +74,7 @@ export async function resetApp(userId: string, options: ResetAppOptions = {}): P
   // the wipe would have produced. Race the RPC call against a short budget
   // and treat the result as a flag: did we actually wipe anything?
   const reset = await Promise.race([
-    callOpenhumanRpc('openhuman.test_reset', {}),
+    callNeppyRpc('openhuman.test_reset', {}),
     new Promise<{ ok: false; error: string }>(resolve =>
       setTimeout(
         () =>
@@ -94,7 +94,7 @@ export async function resetApp(userId: string, options: ResetAppOptions = {}): P
     // test_reset clears onboarding_completed=false (mirrors a fresh install).
     // E2E specs assume an already-onboarded user — restore the flag so
     // App.tsx's onboarding gate doesn't redirect every spec into the wizard.
-    const setOnboarding = await callOpenhumanRpc('openhuman.config_set_onboarding_completed', {
+    const setOnboarding = await callNeppyRpc('openhuman.config_set_onboarding_completed', {
       value: true,
     }).catch((err: unknown) => {
       stepLog(`config_set_onboarding_completed failed (non-fatal): ${err}`);
@@ -113,7 +113,7 @@ export async function resetApp(userId: string, options: ResetAppOptions = {}): P
     // behind `clearAuthSession` because specs that re-authenticate right after
     // reset must NOT have their freshly-minted session wiped.
     if (options.clearAuthSession) {
-      const cleared = await callOpenhumanRpc('openhuman.auth_clear_session', {}).catch(
+      const cleared = await callNeppyRpc('openhuman.auth_clear_session', {}).catch(
         (err: unknown) => {
           stepLog(`auth_clear_session failed (non-fatal): ${err}`);
           return { ok: false as const };
@@ -199,9 +199,9 @@ export async function resetApp(userId: string, options: ResetAppOptions = {}): P
     while (Date.now() < welcomeDeadline) {
       welcomeVisible = await browser
         .execute(() => {
-          // Welcome.tsx renders an h1 with i18n key welcome.title ('Welcome to OpenHuman').
+          // Welcome.tsx renders an h1 with i18n key welcome.title ('Welcome to Neppy').
           const headings = Array.from(document.querySelectorAll('h1'));
-          return headings.some(h => /Welcome to OpenHuman/i.test(h.textContent ?? ''));
+          return headings.some(h => /Welcome to Neppy/i.test(h.textContent ?? ''));
         })
         .catch(() => false);
       if (welcomeVisible) break;

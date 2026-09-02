@@ -2,7 +2,7 @@
 
 ## Purpose
 
-"opencompany" wants to embed the OpenHuman Rust core as a library: no always-on
+"opencompany" wants to embed the Neppy Rust core as a library: no always-on
 RPC server, no Tauri shell, just the core linked in-process and driven
 directly. That changes what "resource usage" means. There is no single steady
 process to profile; there are per-use-case workloads (a long-running agent
@@ -142,7 +142,7 @@ of resident-but-mostly-inactive malloc pages (allocator high-water
 retention). See
 [`docs/resource-profiling-session-2026-07-21.md`](resource-profiling-session-2026-07-21.md#deep-memory-attribution)
 for the full breakdown, the executable-paging finding (a cold turn faults in
-~15 MiB of previously nonresident OpenHuman code), and the warmed-process
+~15 MiB of previously nonresident Neppy code), and the warmed-process
 control showing steady-state turns cost ~0.5-1.9 MiB once warm rather than
 the ~26-31 MiB a cold turn costs. Use `library-bench.sh` for the RSS/duration
 headline numbers, `library-cpu.sh` when CPU attribution is the question, and
@@ -155,11 +155,11 @@ ZeroClaw self-reports idling under 5 MiB RAM; the "7.8-12 MiB under load"
 figure sometimes quoted alongside it has no locatable primary source, and even
 the idle figure is vendor marketing with no third-party verification (see
 [`docs/harness-comparison-2026-07-22.md`](harness-comparison-2026-07-22.md)).
-OpenHuman's Rust core currently settles around 35-50 MiB depending on
+Neppy's Rust core currently settles around 35-50 MiB depending on
 scenario and feature set (see the baseline table below).
 
 Treat this as a **north star, not an apples-to-apples benchmark**. ZeroClaw's
-scope and feature set differ substantially from the OpenHuman core: OpenHuman
+scope and feature set differ substantially from the Neppy core: Neppy
 links a full agent/memory/tool/orchestration stack (SQLite-backed unified
 memory, TinyCortex PII detection, prompt-injection detection, a builtin-agent
 registry, tool catalogs, provider routing) that a narrower harness may not
@@ -214,7 +214,7 @@ vCPU / 2 GB target) rather than trusting the macOS projection alone.
 ### Fleet (one process) vs instances (many processes)
 
 The budget section above measures one deployment shape: N agents sharing a
-single process. But "opencompany" may instead run OpenHuman as **N
+single process. But "opencompany" may instead run Neppy as **N
 independent processes or containers** — one per tenant — rather than N
 agents inside one process. Those are different cost models and the fleet
 number does not answer the second one.

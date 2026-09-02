@@ -297,7 +297,7 @@ motosan-ai-oauth = { path = "../../vendor/motosan-ai-oauth" }
 # in-tree SDK source. `git submodule update --init vendor/tinyagents` first.
 tinyagents = { path = "../../vendor/tinyagents" }
 # TinyFlows, TinyCortex, TinyChannels, and TinyPlace are vendored beside
-# TinyAgents so integration work can test crate changes against OpenHuman before
+# TinyAgents so integration work can test crate changes against Neppy before
 # publishing.
 tinyflows = { path = "../../vendor/tinyflows" }
 tinycortex = { path = "../../vendor/tinycortex" }

@@ -1,6 +1,6 @@
 # tool_registry
 
-Unified **read-only** tool registry for OpenHuman. It builds a single discovery view across every tool surface the agent can call — MCP stdio server tools, JSON-RPC controller-backed tools, and tools from currently-connected MCP client servers — and exposes them with stable ids, normalized JSON Schemas, transport/route metadata, tags, and health. It also produces redacted policy/tool-visibility diagnostics (autonomy posture, MCP allowlists, MCP write-audit health, recent policy denials, capability-provider summaries) and tracks an in-memory ring buffer of recent agent-tool policy denials. Nothing here executes tools; it only enumerates and describes them.
+Unified **read-only** tool registry for Neppy. It builds a single discovery view across every tool surface the agent can call — MCP stdio server tools, JSON-RPC controller-backed tools, and tools from currently-connected MCP client servers — and exposes them with stable ids, normalized JSON Schemas, transport/route metadata, tags, and health. It also produces redacted policy/tool-visibility diagnostics (autonomy posture, MCP allowlists, MCP write-audit health, recent policy denials, capability-provider summaries) and tracks an in-memory ring buffer of recent agent-tool policy denials. Nothing here executes tools; it only enumerates and describes them.
 
 ## Responsibilities
 

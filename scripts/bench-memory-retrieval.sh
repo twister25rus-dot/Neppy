@@ -112,7 +112,7 @@ EOF
 
 # Benchmark file-based tree walking: grep across content files
 TREE_QUERIES=(
-    "OpenHuman"
+    "Neppy"
     "memory"
     "important"
     "project"
@@ -148,7 +148,7 @@ EOF
 
 # Test the tree RPC APIs
 RPC_METHODS=(
-    "openhuman.memory_tree_search_entities::{\"query\":\"OpenHuman project\",\"limit\":5}"
+    "openhuman.memory_tree_search_entities::{\"query\":\"Neppy project\",\"limit\":5}"
     "openhuman.memory_tree_query_source::{\"source_kind\":\"chat\",\"limit\":5}"
     "openhuman.memory_tree_query_source::{\"source_kind\":\"episodic\",\"limit\":5}"
 )

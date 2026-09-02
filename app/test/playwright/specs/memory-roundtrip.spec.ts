@@ -5,7 +5,7 @@ import { bootAuthenticatedPage, callCoreRpc } from '../helpers/core-rpc';
 const TEST_NAMESPACE = 'e2e-memory-roundtrip-773';
 const TEST_KEY = 'roundtrip-canary-key';
 const TEST_TITLE = 'Memory roundtrip canary';
-const TEST_CONTENT = 'OpenHuman memory roundtrip canary fact #773';
+const TEST_CONTENT = 'Neppy memory roundtrip canary fact #773';
 
 test.describe('Memory subsystem round-trip', () => {
   test.beforeEach(async ({ page }, testInfo) => {

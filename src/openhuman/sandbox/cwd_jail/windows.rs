@@ -286,7 +286,7 @@ unsafe fn spawn_in_container(jail: &Jail, cmd: Command) -> io::Result<Child> {
 
     // TODO: bridge OwnedHandle -> std::process::Child once
     // `std::os::windows::process::ChildExt::from_raw_handle` lands, OR
-    // expose a custom `OpenhumanChild` from the cwd_jail module that
+    // expose a custom `NeppyChild` from the cwd_jail module that
     // mirrors the bits of `Child` callers actually need (id, wait, kill).
     Err(io::Error::new(
         io::ErrorKind::Unsupported,

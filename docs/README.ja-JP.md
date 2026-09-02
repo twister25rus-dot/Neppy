@@ -1,4 +1,4 @@
-<h1 align="center">OpenHuman</h1>
+<h1 align="center">Neppy</h1>
 
 <p align="center">
  <img src="../gitbooks/.gitbook/assets/demo.png" alt="The Tet" />
@@ -9,23 +9,23 @@
 		<img src="https://trendshift.io/api/badge/repositories/23680" alt="tinyhumansai%2Fopenhuman | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 	</a>
 	<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-		<img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=daily&amp;t=1778916022823">
+		<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=daily&amp;t=1778916022823">
 		</a>
 		<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-			<img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;t=1779351403565">
+			<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;t=1779351403565">
 		</a>
 </p>
 <p align="center" style="display: inline-block">
  <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-  <img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=268&amp;t=1779351808756">
+  <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=268&amp;t=1779351808756">
   </a>
   <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-   <img alt="OpenHuman - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=46&amp;t=1779351808756">
+   <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=46&amp;t=1779351808756">
    </a>
  </p>
 
 <p align="center">
- <strong>OpenHuman はあなたのパーソナル AI スーパーインテリジェンスです：すべてを記憶する脳、素晴らしいオーケストレーター、ディープリサーチャー。ローカルファーストで、シンプルで、強力。</strong>
+ <strong>Neppy はあなたのパーソナル AI スーパーインテリジェンスです：すべてを記憶する脳、素晴らしいオーケストレーター、ディープリサーチャー。ローカルファーストで、シンプルで、強力。</strong>
 </p>
 
 <p align="center">
@@ -49,7 +49,7 @@
 
 > **早期ベータ版**: 現在も活発に開発中です。荒削りな部分があることをご了承ください。
 
-> 🎉 ローンチから 1 週間以内に、OpenHuman は GitHub のトレンドリポジトリ第 1 位を 9 日間連続で獲得しました。
+> 🎉 ローンチから 1 週間以内に、Neppy は GitHub のトレンドリポジトリ第 1 位を 9 日間連続で獲得しました。
 
 # インストール
 
@@ -57,9 +57,9 @@
 
 ターミナルからのインストール（Homebrew、Debian/Ubuntu の `.deb`、AUR、インストールスクリプト、プラットフォーム別の注意点）については **[INSTALL.md](../INSTALL.md)** を参照してください。
 
-# OpenHuman とは?
+# Neppy とは?
 
-OpenHuman は、ほとんどのアシスタントが持っていない 3 つのものです: あなたの世界の永続的なローカルメモリを構築する**脳**、永続的なグラフ上でエージェントの艦隊を動かす**素晴らしいオーケストレーター**、そしてあなたが質問し終える前にあなたのデータとウェブを走査する**ディープリサーチャー**。各項目は[ドキュメント](https://tinyhumans.gitbook.io/openhuman/)内の詳細な解説にリンクしています。
+Neppy は、ほとんどのアシスタントが持っていない 3 つのものです: あなたの世界の永続的なローカルメモリを構築する**脳**、永続的なグラフ上でエージェントの艦隊を動かす**素晴らしいオーケストレーター**、そしてあなたが質問し終える前にあなたのデータとウェブを走査する**ディープリサーチャー**。各項目は[ドキュメント](https://tinyhumans.gitbook.io/openhuman/)内の詳細な解説にリンクしています。
 
 ### 🧠 脳
 
@@ -89,29 +89,29 @@ OpenHuman は、ほとんどのアシスタントが持っていない 3 つの�
 
 ## コンテキストを数週間ではなく数分で
 
-OpenHuman は、数分であなたのことを理解する初めてのエージェントハーネスです。[Karpathy 氏の LLM ナレッジベース](https://x.com/karpathy/status/2039805659525644595)にインスパイアされました。ほとんどのエージェントは冷えた状態から始まります。Hermes はあなたの作業を見て学習し、OpenClaw はプラグインがコンテキストを運び込むのを待ちます。いずれにせよ、エージェントがあなたのスタックを十分理解して本当に役立つようになるまで、数日から数週間を費やすことになります。
+Neppy は、数分であなたのことを理解する初めてのエージェントハーネスです。[Karpathy 氏の LLM ナレッジベース](https://x.com/karpathy/status/2039805659525644595)にインスパイアされました。ほとんどのエージェントは冷えた状態から始まります。Hermes はあなたの作業を見て学習し、OpenClaw はプラグインがコンテキストを運び込むのを待ちます。いずれにせよ、エージェントがあなたのスタックを十分理解して本当に役立つようになるまで、数日から数週間を費やすことになります。
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/memory.png" alt="OpenHuman のコンテキスト構築図">
+ <img src="../gitbooks/.gitbook/assets/memory.png" alt="Neppy のコンテキスト構築図">
 </p>
 
-> OpenHuman はあなたのすべてのドキュメント、メール、チャットを要約・圧縮し、エージェントがあなたについてすべてを覚えていられるメモリーグラフを作成します。
+> Neppy はあなたのすべてのドキュメント、メール、チャットを要約・圧縮し、エージェントがあなたについてすべてを覚えていられるメモリーグラフを作成します。
 
-OpenHuman はその待ち時間をスキップします。アカウントを接続し、[自動取得](https://tinyhumans.gitbook.io/openhuman/features/integrations/auto-fetch)に 20 分ループでローカルにデータを取得させ、その後 [Memory Trees](https://tinyhumans.gitbook.io/openhuman/features/memory-tree) ですべてを Markdown ファイルに圧縮し、[Karpathy 流の Obsidian wiki](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki) にインテリジェントに保存します。
+Neppy はその待ち時間をスキップします。アカウントを接続し、[自動取得](https://tinyhumans.gitbook.io/openhuman/features/integrations/auto-fetch)に 20 分ループでローカルにデータを取得させ、その後 [Memory Trees](https://tinyhumans.gitbook.io/openhuman/features/memory-tree) ですべてを Markdown ファイルに圧縮し、[Karpathy 流の Obsidian wiki](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki) にインテリジェントに保存します。
 
 たった 1 回の同期パスで、エージェントはあなたの受信箱、カレンダー、リポジトリ、ドキュメント、メッセージの完全な(圧縮された)コンテキストを得ます。トレーニング期間も「数週間お待ちください」もありません。エージェントはあなたになり、あなたによって制御されます。
 
-既に他のコーディングエージェント間で [agentmemory](https://github.com/rohitg00/agentmemory) をセルフホストしていますか? OpenHuman にはそれにプロキシするオプションの `Memory` バックエンドが同梱されています。`config.toml` で `memory.backend = "agentmemory"` を設定すれば、同じ永続ストアが Claude Code、Cursor、Codex、OpenCode と並んで OpenHuman を駆動します。セットアップ方法は [agentmemory バックエンド](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki/agentmemory-backend)のページを参照してください。
+既に他のコーディングエージェント間で [agentmemory](https://github.com/rohitg00/agentmemory) をセルフホストしていますか? Neppy にはそれにプロキシするオプションの `Memory` バックエンドが同梱されています。`config.toml` で `memory.backend = "agentmemory"` を設定すれば、同じ永続ストアが Claude Code、Cursor、Codex、OpenCode と並んで Neppy を駆動します。セットアップ方法は [agentmemory バックエンド](https://tinyhumans.gitbook.io/openhuman/features/obsidian-wiki/agentmemory-backend)のページを参照してください。
 
 ## チャットボットではなく、オーケストレーター
 
-ほとんどのエージェントハーネスは 1 つのループで 1 つのエージェントを動かします。OpenHuman は**[オーケストレーター](https://tinyhumans.gitbook.io/openhuman/features/orchestration)**です:
+ほとんどのエージェントハーネスは 1 つのループで 1 つのエージェントを動かします。Neppy は**[オーケストレーター](https://tinyhumans.gitbook.io/openhuman/features/orchestration)**です:
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/orchestration.png" alt="OpenHuman のオーケストレーション図">
+ <img src="../gitbooks/.gitbook/assets/orchestration.png" alt="Neppy のオーケストレーション図">
 </p>
 
-> エージェント間メッセージングは Signal プロトコルのエンドツーエンド暗号化の上で動作するため、Claude Code、Codex、OpenClaw、Hermes など何でも接続でき、OpenHuman ですべてのエージェントとツールをオーケストレーションできます。
+> エージェント間メッセージングは Signal プロトコルのエンドツーエンド暗号化の上で動作するため、Claude Code、Codex、OpenClaw、Hermes など何でも接続でき、Neppy ですべてのエージェントとツールをオーケストレーションできます。
 
 - **ループではなくグラフ**: ターンは [tinyagents](https://github.com/tinyhumansai/tinyagents) 上のチェックポイント付きグラフとして実行され、人間のために一時停止し、再起動を生き延び、実行の途中から再開します。
 - **サブエージェントの艦隊**: スペシャリストは 3 階層の深さまで起動され、行き詰まったエージェントは根本原因レポートになります。
@@ -122,18 +122,18 @@ OpenHuman はその待ち時間をスキップします。アカウントを接�
 n8n と Zapier に強くインスパイアされた[ワークフロー](https://tinyhumans.gitbook.io/openhuman/features/workflows)は、同じビジュアルでトリガー駆動の自動化をあなたのエージェントにもたらします。ただし、それを構築するのはエージェント自身です。自動化を依頼すると、エージェントが提案してくれます: 保存する前にビジュアルキャンバス上でレビューできる [tinyflows](https://github.com/tinyhumansai/tinyflows) グラフです。
 
 <p align="center">
- <img src="../gitbooks/.gitbook/assets/workflows.png" alt="OpenHuman のワークフローキャンバス">
+ <img src="../gitbooks/.gitbook/assets/workflows.png" alt="Neppy のワークフローキャンバス">
 </p>
 
 > エージェントがワークフローを提案し、あなたはキャンバス上でレビューして保存します。
 
 保存されたワークフローは永続的でトリガー駆動です。スケジュール、Webhook、チャネルイベントで発火し、再起動を生き延び、副作用は承認ゲートで守られます。
 
-## OpenHuman と他のエージェントハーネスの比較
+## Neppy と他のエージェントハーネスの比較
 
-ハイレベルな比較です(製品は進化するため、各ベンダーで確認してください)。OpenHuman は **ベンダーの乱立を最小限に抑え**、**ワークフロー知識をデバイス上に保ち**、チャットだけでなくあなたのデータに対する **永続的なメモリ** をエージェントに与えるよう構築されています。
+ハイレベルな比較です(製品は進化するため、各ベンダーで確認してください)。Neppy は **ベンダーの乱立を最小限に抑え**、**ワークフロー知識をデバイス上に保ち**、チャットだけでなくあなたのデータに対する **永続的なメモリ** をエージェントに与えるよう構築されています。
 
-|                            | Claude Cowork          | OpenClaw            | Hermes Agent        | OpenHuman                                                                                                          |
+|                            | Claude Cowork          | OpenClaw            | Hermes Agent        | Neppy                                                                                                          |
 | -------------------------- | ---------------------- | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | **オープンソース**         | 🚫 プロプライエタリ    | ✅ MIT              | ✅ MIT              | ✅ GNU                                                                                                             |
 | **開始が簡単**             | ✅ デスクトップ + CLI  | ⚠️ ターミナル中心   | ⚠️ ターミナル中心   | ✅ クリーンな UI、数分                                                                                             |
@@ -180,5 +180,5 @@ _AGI と人工意識への道を進んでいますか? リポジトリにスタ�
 愛を示して、殿堂入りしましょう。コントリビューターには無料グッズと [Discord](https://discord.tinyhumans.ai/) への特別アクセスが提供されます。
 
 <a href="https://github.com/tinyhumansai/openhuman/graphs/contributors">
- <img src="https://contrib.rocks/image?repo=tinyhumansai/openhuman" alt="OpenHuman contributors" />
+ <img src="https://contrib.rocks/image?repo=tinyhumansai/openhuman" alt="Neppy contributors" />
 </a>

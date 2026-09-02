@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build, export, and optionally upload the OpenHuman iOS IPA to App Store Connect.
+# Build, export, and optionally upload the Neppy iOS IPA to App Store Connect.
 #
 # Required local inputs:
 #   TEAM_ID=XXXXXXXXXX

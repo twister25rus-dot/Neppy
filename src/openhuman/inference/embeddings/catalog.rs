@@ -100,8 +100,8 @@ static OLLAMA_MODELS: &[EmbeddingModelPreset] = &[EmbeddingModelPreset {
 static CATALOG: &[EmbeddingProviderEntry] = &[
     EmbeddingProviderEntry {
         slug: PROVIDER_MANAGED,
-        label: "Managed (OpenHuman)",
-        description: "Routes through the OpenHuman backend. No API key needed.",
+        label: "Managed (Neppy)",
+        description: "Routes through the Neppy backend. No API key needed.",
         requires_api_key: false,
         requires_endpoint: false,
         models: MANAGED_MODELS,

@@ -51,10 +51,10 @@ projection, SHA-256 prompt-cache fingerprinting, and the redaction-layer audit.
 
 **Phase 1 partial cutover:** TinyAgents `v1.7.1` is tagged at
 `3e81e493`, and the host now pins both lockfiles plus `vendor/tinyagents` to
-that release. `SchemaCleanr` is crate-backed through the stable OpenHuman
+that release. `SchemaCleanr` is crate-backed through the stable Neppy
 import path; `model_context.rs` delegates generic raw-model hints to
 `tinyagents::harness::model::context_window_for_model_id` after checking
-OpenHuman tier aliases and the cost catalog; and the observed run path now
+Neppy tier aliases and the cost catalog; and the observed run path now
 drives `invoke_stream_in_context`, whose `Send` stream fix shipped in
 [tinyagents#28](https://github.com/tinyhumansai/tinyagents/pull/28).
 
@@ -87,7 +87,7 @@ Engine changes are made **inside `vendor/tinyagents`**, committed on a branch th
 | `agent_orchestration/workflow_runs/` phase-DAG validation + `agent_teams/` dependency-DAG/atomic-claim/quality-gate logic | evaluate upstreaming the *validation/scheduling slices* as graph extensions; durability (`session_db::run_ledger`) and RPC stay host-side | `graph/` |
 | Reasoning-content channel (historically smuggled via `ContentBlock::ProviderExtension`; host now writes `ContentBlock::Thinking` for new messages and only reads legacy `ProviderExtension` from persisted transcripts — seam `convert.rs`) | **largely done** — the crate's first-class typed reasoning channel (`ContentBlock::Thinking`) is live per Phase 1.4 / ledger P1-5 | `harness/message/` |
 
-### 1.2 Stays in OpenHuman (product policy, I/O, surfaces)
+### 1.2 Stays in Neppy (product policy, I/O, surfaces)
 
 - **All RPC surfaces**: `inference/{ops,schemas}.rs`, `provider/ops*`, `tools/schemas.rs`, `agent_orchestration/*_schemas.rs`, `subagent_control.rs`, `command_center/`, `worktree_schemas.rs`. JSON-RPC method names and payload shapes must not change.
 - **Provider resolution & auth**: `provider/factory.rs` (provider-string grammar), `openhuman_backend.rs`, `openai_codex.rs`, `claude_code/`, `claude_agent_sdk/`, `openai_oauth/`, `thread_context.rs`, backend billing-envelope parsing (`openhuman.usage.*` / `openhuman.billing.*`).
@@ -126,11 +126,11 @@ Each phase is a coherent PR set: tinyagents PR(s) → release/tag → host `chor
 Land these as separate small PRs against tinyagents (each with its ported tests re-expressed in crate conventions):
 
 1. `SchemaCleanr` (+ its 15-test suite) → provider-layer schema cleaning. Zero-dep, highest value/effort ratio. **Status:** released in TinyAgents `v1.7.0`; host `tools/schema.rs` re-exports the crate implementation so existing import paths keep working.
-2. `error_classify.rs` classifiers → retry/HTTP-error classification (strip openhuman-backend phrase matches into a host-side extension table; keep the generic HTTP/status logic). **Status:** released in TinyAgents `v1.7.0`; host retry/failure call-site swaps remain pending because OpenHuman-specific backend phrase and billing-envelope rules must stay host-side.
-3. `model_context.rs` pattern-match table (substring-vs-segment matching, incl. the o1/o3 regression guard) → `ModelProfile` context resolution. OH tier aliases and cost-catalog arms stay host-side. **Status:** released in TinyAgents `v1.7.0`; host now delegates generic fallback lookup to the crate after checking tiers and the OpenHuman cost catalog.
+2. `error_classify.rs` classifiers → retry/HTTP-error classification (strip openhuman-backend phrase matches into a host-side extension table; keep the generic HTTP/status logic). **Status:** released in TinyAgents `v1.7.0`; host retry/failure call-site swaps remain pending because Neppy-specific backend phrase and billing-envelope rules must stay host-side.
+3. `model_context.rs` pattern-match table (substring-vs-segment matching, incl. the o1/o3 regression guard) → `ModelProfile` context resolution. OH tier aliases and cost-catalog arms stay host-side. **Status:** released in TinyAgents `v1.7.0`; host now delegates generic fallback lookup to the crate after checking tiers and the Neppy cost catalog.
 4. First-class **reasoning channel** on `AssistantMessage` → delete the `ProviderExtension` smuggling in seam `convert.rs`. **Status:** closed for new messages: TinyAgents `v1.6.0` provides typed thinking blocks, and the host now writes `reasoning_content` to `ContentBlock::Thinking` while retaining legacy `ProviderExtension` reads.
-5. Git-worktree `WorkspaceIsolation` provider from `agent_orchestration/worktree.rs` (+ `worktree_tests.rs`, which exercises real git repos — fits the crate's offline test policy). The single `publish_global` event becomes a host-side wrapper. **Status:** released in TinyAgents `v1.7.0`; OpenHuman's wrapper stays for event-bus emissions, `OutsideWorkspace`, and host policy mapping until a safer adapter pass.
-6. Tool display metadata (`humanize_tool_name`, `display_label`/`display_detail`, `ToolTimeout` semantics) → `harness/tool/`. **Status:** released in TinyAgents `v1.7.0`; host adjusted `ToolRuntime.timeout`, but the OpenHuman `Tool` trait still owns richer legacy metadata until Phase 2 reconciles the tool model.
+5. Git-worktree `WorkspaceIsolation` provider from `agent_orchestration/worktree.rs` (+ `worktree_tests.rs`, which exercises real git repos — fits the crate's offline test policy). The single `publish_global` event becomes a host-side wrapper. **Status:** released in TinyAgents `v1.7.0`; Neppy's wrapper stays for event-bus emissions, `OutsideWorkspace`, and host policy mapping until a safer adapter pass.
+6. Tool display metadata (`humanize_tool_name`, `display_label`/`display_detail`, `ToolTimeout` semantics) → `harness/tool/`. **Status:** released in TinyAgents `v1.7.0`; host adjusted `ToolRuntime.timeout`, but the Neppy `Tool` trait still owns richer legacy metadata until Phase 2 reconciles the tool model.
 7. `current_time` / `resolve_time` as the first two builtin tools (pilot for the `tools` feature layout). **Status:** released in TinyAgents `v1.7.0` behind the optional `tools` feature; host wrappers stay until the Phase 2 tool model reconciliation adopts crate builtins.
 8. **Exit:** TinyAgents `v1.7.1` tagged and host bumped. `SchemaCleanr`, generic model-context lookup, reasoning, and the context-preserving observed stream path are crate-backed; worktree/time/error-classification/display APIs are available but host deletion waits for their adapter/model reconciliation steps.
 

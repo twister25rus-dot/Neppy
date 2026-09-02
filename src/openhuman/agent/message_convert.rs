@@ -1,4 +1,4 @@
-//! Persistence-boundary conversions between OpenHuman transcript records and
+//! Persistence-boundary conversions between Neppy transcript records and
 //! TinyAgents' rich [`Message`]/[`TaToolCall`] types.
 //!
 //! The two sides model the same concepts with different shapes:

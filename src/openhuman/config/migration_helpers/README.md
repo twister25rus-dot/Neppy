@@ -1,13 +1,13 @@
 # migration
 
-Data-migration helpers that import memory from **other AI assistants' workspaces** (OpenClaw, Hermes Agent) into the current OpenHuman workspace's memory backend. It scans a source workspace for SQLite (`brain.db`) and Markdown memory artifacts, normalizes them into `Memory` entries, backs up the target's existing memory, and writes the imported entries — supporting a `dry_run` plan-only mode and idempotent re-runs (unchanged entries are skipped, conflicts are renamed). Exposes two RPC controllers under the `migrate` namespace.
+Data-migration helpers that import memory from **other AI assistants' workspaces** (OpenClaw, Hermes Agent) into the current Neppy workspace's memory backend. It scans a source workspace for SQLite (`brain.db`) and Markdown memory artifacts, normalizes them into `Memory` entries, backs up the target's existing memory, and writes the imported entries — supporting a `dry_run` plan-only mode and idempotent re-runs (unchanged entries are skipped, conflicts are renamed). Exposes two RPC controllers under the `migrate` namespace.
 
 > Not to be confused with `crate::openhuman::config::migrations` (plural), which handles internal config **schema** version upgrades. This module migrates **user memory data** from foreign vendors.
 
 ## Responsibilities
 
 - Resolve a source workspace path (explicit override, else vendor default: `~/.openclaw/workspace`, or `~/.hermes` / `%LOCALAPPDATA%\hermes` on Windows).
-- Refuse self-migration when source resolves to the current OpenHuman workspace.
+- Refuse self-migration when source resolves to the current Neppy workspace.
 - **OpenClaw**: read memory entries from `memory/brain.db` (SQLite `memories` table, schema-tolerant column detection) plus `MEMORY.md` and `memory/*.md`.
 - **Hermes**: read a fixed file mapping — `MEMORY.md` → core, `USER.md` → `Custom("user_profile")`, `SOUL.md` → `Custom("persona")`.
 - Normalize keys (non-alphanumeric → `_`), parse/map categories, de-dup exact duplicates for deterministic re-runs.

@@ -15,7 +15,7 @@ import {
   seedComposioConnection,
   seedComposioToolkits,
 } from '../helpers/composio-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
 import {
   textExists,
@@ -71,7 +71,7 @@ describe('Gmail (Composio) connector flow', () => {
   it('auth/connect flow succeeds with mocked backend', async function () {
     this.timeout(60_000);
     clearRequestLog();
-    const out = await callOpenhumanRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
+    const out = await callNeppyRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
     expect(out.ok).toBe(true);
     const authReq = getRequestLog().find(
       r => r.method === 'POST' && r.url.includes('/agent-integrations/composio/authorize')
@@ -85,7 +85,7 @@ describe('Gmail (Composio) connector flow', () => {
   it('connected state persists after reconnect/reload', async function () {
     this.timeout(60_000);
     seedComposioConnection(TOOLKIT_SLUG, 'ACTIVE', 'c-gmail-1');
-    const out = await callOpenhumanRpc('openhuman.composio_list_connections', {});
+    const out = await callNeppyRpc('openhuman.composio_list_connections', {});
     expect(out.ok).toBe(true);
     const result = (out.result as { result?: unknown })?.result ?? out.result;
     const connections = (result as { connections?: unknown[] })?.connections ?? [];
@@ -100,7 +100,7 @@ describe('Gmail (Composio) connector flow', () => {
   it('composio_sync does not tear down the session', async function () {
     this.timeout(30_000);
     clearRequestLog();
-    await callOpenhumanRpc('openhuman.composio_sync', { toolkit: TOOLKIT_SLUG });
+    await callNeppyRpc('openhuman.composio_sync', { toolkit: TOOLKIT_SLUG });
     // syncReq URL check dropped — see connector-github.spec.ts.
     await assertSessionNotNuked();
   });
@@ -108,7 +108,7 @@ describe('Gmail (Composio) connector flow', () => {
   it('composio_execute routes a basic task', async function () {
     this.timeout(30_000);
     clearRequestLog();
-    await callOpenhumanRpc('openhuman.composio_execute', {
+    await callNeppyRpc('openhuman.composio_execute', {
       connection_id: 'c-gmail-1',
       action: 'GMAIL_FETCH_EMAILS',
       params: {},
@@ -123,7 +123,7 @@ describe('Gmail (Composio) connector flow', () => {
     setMockBehavior('composioExecuteFails', '1');
     clearRequestLog();
 
-    await callOpenhumanRpc('openhuman.composio_execute', {
+    await callNeppyRpc('openhuman.composio_execute', {
       connection_id: 'c-gmail-1',
       action: 'GMAIL_FETCH_EMAILS',
       params: {},
@@ -170,7 +170,7 @@ describe('Gmail (Composio) connector flow', () => {
   it('unrelated 401 on composio route does not nuke session', async function () {
     this.timeout(60_000);
     injectComposioFault(400);
-    await callOpenhumanRpc('openhuman.composio_execute', {
+    await callNeppyRpc('openhuman.composio_execute', {
       connection_id: 'c-gmail-1',
       action: 'GMAIL_FETCH_EMAILS',
       params: {},
@@ -183,7 +183,7 @@ describe('Gmail (Composio) connector flow', () => {
     this.timeout(60_000);
     seedComposioConnection(TOOLKIT_SLUG, 'ACTIVE', 'c-gmail-1');
     clearRequestLog();
-    await callOpenhumanRpc('openhuman.composio_delete_connection', { connection_id: 'c-gmail-1' });
+    await callNeppyRpc('openhuman.composio_delete_connection', { connection_id: 'c-gmail-1' });
     const deleteReq = getRequestLog().find(
       r => r.method === 'DELETE' && r.url.includes('/composio/connections/')
     );

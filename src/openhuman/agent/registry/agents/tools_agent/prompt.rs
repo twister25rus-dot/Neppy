@@ -1,7 +1,7 @@
 //! System prompt builder for the `tools_agent` built-in agent.
 //!
 //! `tools_agent` is the counterpart to [`super::integrations_agent`]:
-//! Composio-free specialist that only ever sees OpenHuman's built-in
+//! Composio-free specialist that only ever sees Neppy's built-in
 //! (system-category) tools — shell, file I/O, HTTP, web search, memory.
 //! Composio action tools are filtered out at tool-list construction
 //! time in the subagent runner.

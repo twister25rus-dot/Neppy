@@ -176,7 +176,7 @@ describe('TinyPlaceOrchestrationTab', () => {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
           source: 'openhuman-app',
-          label: 'OpenHuman app session',
+          label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',
           unread: 0,
@@ -192,7 +192,7 @@ describe('TinyPlaceOrchestrationTab', () => {
     // Pinned master appears twice: in the list button and the main header.
     expect(await screen.findAllByText('tinyplaceOrchestration.master.title')).toHaveLength(2);
     expect(screen.getByText('tinyplaceOrchestration.subconscious.title')).toBeInTheDocument();
-    expect(screen.getByText('OpenHuman app session')).toBeInTheDocument();
+    expect(screen.getByText('Neppy app session')).toBeInTheDocument();
   });
 
   it('keeps the relay badge visible when identity discovery fails (locked wallet)', async () => {
@@ -232,7 +232,7 @@ describe('TinyPlaceOrchestrationTab', () => {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
           source: 'openhuman-app',
-          label: 'OpenHuman app session',
+          label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',
           unread: 0,
@@ -286,7 +286,7 @@ describe('TinyPlaceOrchestrationTab', () => {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
           source: 'openhuman-app',
-          label: 'OpenHuman app session',
+          label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',
           unread: 3,
@@ -531,7 +531,7 @@ describe('TinyPlaceOrchestrationTab', () => {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
           source: 'openhuman-app',
-          label: 'OpenHuman app session',
+          label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',
           unread: 2,

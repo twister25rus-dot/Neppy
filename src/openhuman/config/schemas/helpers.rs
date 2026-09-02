@@ -36,13 +36,13 @@ pub(super) struct CloudProviderUpdate {
 
 #[derive(Debug, Deserialize)]
 pub(super) struct ModelSettingsUpdate {
-    /// OpenHuman product backend URL. Used for auth, billing, voice, and
+    /// Neppy product backend URL. Used for auth, billing, voice, and
     /// every non-inference HTTP call. Almost always left blank so it
     /// defaults to the canonical hosted backend.
     pub(super) api_url: Option<String>,
     /// Custom OpenAI-compatible LLM endpoint. When set together with
     /// `api_key`, inference talks directly to this URL instead of routing
-    /// through the OpenHuman backend. Send an empty string to clear.
+    /// through the Neppy backend. Send an empty string to clear.
     pub(super) inference_url: Option<String>,
     /// Optional API key for OpenAI-compatible backends. Stored verbatim in
     /// `config.toml` on the user's machine — see #1342 (local-first / pluggable
@@ -53,7 +53,7 @@ pub(super) struct ModelSettingsUpdate {
     pub(super) default_temperature: Option<f64>,
     /// When present, REPLACES `config.model_routes` wholesale with these
     /// `(hint, model)` pairs. Send `Some([])` to clear all routes (used when
-    /// the user switches back to the OpenHuman backend whose built-in router
+    /// the user switches back to the Neppy backend whose built-in router
     /// picks per-task models on its own). Omit to leave existing routes
     /// untouched.
     pub(super) model_routes: Option<Vec<ModelRouteUpdate>>,

@@ -6,8 +6,8 @@ use std::path::PathBuf;
 #[cfg(unix)]
 use std::sync::OnceLock;
 
-/// OpenHuman's commit trailer.
-pub const TRAILER: &str = "Co-authored-by: OpenHuman <openhuman@tinyhumans.ai>";
+/// Neppy's commit trailer.
+pub const TRAILER: &str = "Co-authored-by: Neppy <openhuman@tinyhumans.ai>";
 
 #[cfg(unix)]
 const HOOKS: &[&str] = &[
@@ -33,7 +33,7 @@ const HOOKS: &[&str] = &[
 
 #[cfg(unix)]
 const SHIM: &str = r#"#!/bin/sh
-# OpenHuman hook shim. Delegate to the repository hook before attributing.
+# Neppy hook shim. Delegate to the repository hook before attributing.
 hook_name=$(basename "$0")
 self_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 # Suppress only our injected config while resolving the repository's configured
@@ -55,7 +55,7 @@ git interpret-trailers --in-place --if-exists addIfDifferent \
 #[cfg(unix)]
 static HOOK_DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
 
-/// Environment values that activate OpenHuman's commit-attribution hook.
+/// Environment values that activate Neppy's commit-attribution hook.
 ///
 /// The result is intended for an agent-owned child process. It does not change
 /// repository configuration or the parent application's environment.
@@ -124,6 +124,6 @@ fn build_hook_dir() -> std::io::Result<PathBuf> {
 
 #[cfg(all(unix, test))]
 pub(super) fn test_hook_env(inherited_parameters: Option<&OsStr>) -> HashMap<OsString, OsString> {
-    let dir = build_hook_dir().expect("create OpenHuman hook directory");
+    let dir = build_hook_dir().expect("create Neppy hook directory");
     build_hook_env(&dir, inherited_parameters)
 }

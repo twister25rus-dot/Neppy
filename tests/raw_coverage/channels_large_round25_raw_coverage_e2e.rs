@@ -212,21 +212,21 @@ async fn mattermost_loopback_send_typing_health_and_parser_paths() {
     let post = json!({
         "id": "post-1",
         "user_id": "alice",
-        "message": "@OpenHuman please triage",
+        "message": "@Neppy please triage",
         "create_at": 1_700_000_005_000_i64,
         "metadata": {"mentions": ["bot-id"]}
     });
     assert!(mattermost_support::contains_bot_mention_for_test(
         "hello @openhuman",
         "bot-id",
-        "OpenHuman",
+        "Neppy",
         &post,
     ));
     assert_eq!(
         mattermost_support::normalize_mattermost_content_for_test(
-            "@OpenHuman please triage",
+            "@Neppy please triage",
             "bot-id",
-            "OpenHuman",
+            "Neppy",
             &post,
         )
         .as_deref(),
@@ -236,7 +236,7 @@ async fn mattermost_loopback_send_typing_health_and_parser_paths() {
         &channel,
         &post,
         "bot-id",
-        "OpenHuman",
+        "Neppy",
         1_700_000_000_000_i64,
         "chan-1",
     )
@@ -256,7 +256,7 @@ async fn mattermost_loopback_send_typing_health_and_parser_paths() {
         ),
         &post,
         "bot-id",
-        "OpenHuman",
+        "Neppy",
         1_700_000_000_000_i64,
         "chan-1",
     );

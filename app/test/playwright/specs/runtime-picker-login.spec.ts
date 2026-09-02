@@ -102,7 +102,7 @@ test.describe('Runtime picker -> login -> logout', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     await waitForAppReady(page);
-    await expect(page.getByText('Welcome to OpenHuman')).toBeVisible();
+    await expect(page.getByText('Welcome to Neppy')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Select a Runtime' })).toBeVisible();
   });
 
@@ -119,6 +119,6 @@ test.describe('Runtime picker -> login -> logout', () => {
     await waitForAppReady(page);
     await page.getByTestId('settings-nav-logout').click();
 
-    await expect(page.getByText('Welcome to OpenHuman')).toBeVisible();
+    await expect(page.getByText('Welcome to Neppy')).toBeVisible();
   });
 });

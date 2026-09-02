@@ -1,6 +1,6 @@
 # Tauri resource profiler
 
-Offline developer tool for measuring a locally running OpenHuman desktop app.
+Offline developer tool for measuring a locally running Neppy desktop app.
 It is a standalone Cargo crate and is not linked into, registered with, or
 shipped in the Tauri app.
 
@@ -10,9 +10,9 @@ Start the current checkout:
 
     pnpm dev:app
 
-Find the main host PID, excluding OpenHuman Helper processes:
+Find the main host PID, excluding Neppy Helper processes:
 
-    pgrep -fl '/OpenHuman$'
+    pgrep -fl '/Neppy$'
 
 Then capture a representative workload:
 
@@ -42,7 +42,7 @@ honestly as Tauri host + embedded Rust core.
 
 CEF renderer, GPU, utility, and other helper processes are separate and are
 reported independently. On macOS, the tool also parses the recursive stack
-counts from cpu-stacks.txt and groups OpenHuman symbols by Rust domain, such as
+counts from cpu-stacks.txt and groups Neppy symbols by Rust domain, such as
 openhuman_core::openhuman::agent or openhuman::core_process.
 
 CPU percentages are percentages of one logical CPU and may exceed 100 when a

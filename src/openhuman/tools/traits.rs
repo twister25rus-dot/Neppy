@@ -149,13 +149,13 @@ pub struct ToolSpec {
 /// supply a curated phrase, so a timeline row never shows raw `snake_case`.
 ///
 /// Re-exported from [`tinyagents::harness::tool`]: naming a tool for a human is
-/// not OpenHuman-specific, and two copies of the prefix list is how one of them
+/// not Neppy-specific, and two copies of the prefix list is how one of them
 /// silently stops stripping a prefix the other does.
 pub use tinyagents::harness::tool::humanize_tool_name;
 
 /// Trimming rule for [`context_detail_from_args`].
 ///
-/// OpenHuman elides with a single `…` rather than three dots, because the
+/// Neppy elides with a single `…` rather than three dots, because the
 /// detail sits inline in a timeline row where three characters of budget are
 /// worth having. That is the only thing this host changes about the rule.
 const CONTEXT_DETAIL: tinyagents::harness::tool::ContextDetailOptions =
@@ -175,7 +175,7 @@ const CONTEXT_DETAIL: tinyagents::harness::tool::ContextDetailOptions =
 /// recognized key carries a usable scalar.
 ///
 /// The key list and the scan live in [`tinyagents::harness::tool`]; this wrapper
-/// supplies OpenHuman's [`CONTEXT_DETAIL`] trimming.
+/// supplies Neppy's [`CONTEXT_DETAIL`] trimming.
 pub fn context_detail_from_args(args: &serde_json::Value) -> Option<String> {
     tinyagents::harness::tool::context_detail_from_args_with(args, CONTEXT_DETAIL)
 }

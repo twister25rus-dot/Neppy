@@ -1,13 +1,13 @@
 ---
 description: >-
-  What OpenHuman ships as (native React + Tauri v2 desktop app with a Rust
+  What Neppy ships as (native React + Tauri v2 desktop app with a Rust
   core), supported platforms, and what's in scope today.
 icon: layer-plus
 ---
 
 # Platform & Availability
 
-OpenHuman is a native desktop application, not a browser extension, not an Electron wrapper. Built on **React + Tauri v2** with a **Rust core**, it ships small, starts fast, and stays out of the way.
+Neppy is a native desktop application, not a browser extension, not an Electron wrapper. Built on **React + Tauri v2** with a **Rust core**, it ships small, starts fast, and stays out of the way.
 
 ---
 
@@ -24,7 +24,7 @@ OpenHuman is a native desktop application, not a browser extension, not an Elect
 The Linux AppImage is built for x64 desktops and is the default asset selected
 by the curl installer. On newer distributions, especially builds that tighten
 unprivileged user namespaces or AppArmor defaults, AppImage startup can fail
-before OpenHuman reaches its own crash reporter. Known symptoms include:
+before Neppy reaches its own crash reporter. Known symptoms include:
 
 - `unshare: write failed /proc/self/uid_map: Operation not permitted`
 - `Interpreter not found!`
@@ -40,7 +40,7 @@ badly packaged AppImage runtime.
 
 ## Why native matters
 
-OpenHuman is built as a native application rather than a web wrapper for three reasons.
+Neppy is built as a native application rather than a web wrapper for three reasons.
 
 **Small footprint.** A fraction of the size of typical communication tools. Starts in under a second and uses minimal memory.
 
@@ -90,7 +90,7 @@ setup.
 
 ## Real-time communication
 
-The desktop app maintains a persistent connection to the OpenHuman backend. Responses stream as they are generated; outputs appear progressively, not after a hang. If the network drops, the app reconnects automatically with progressive backoff.
+The desktop app maintains a persistent connection to the Neppy backend. Responses stream as they are generated; outputs appear progressively, not after a hang. If the network drops, the app reconnects automatically with progressive backoff.
 
 ---
 
@@ -104,4 +104,4 @@ Auto-fetch and live LLM calls require connectivity. When the network returns, th
 
 ## Auto-update
 
-The desktop shell auto-updates itself via Tauri's updater plugin against a manifest published on GitHub Releases. The OpenHuman core sidecar ships inside the same bundle, so a shell update upgrades both.
+The desktop shell auto-updates itself via Tauri's updater plugin against a manifest published on GitHub Releases. The Neppy core sidecar ships inside the same bundle, so a shell update upgrades both.

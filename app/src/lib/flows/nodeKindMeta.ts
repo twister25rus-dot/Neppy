@@ -97,7 +97,7 @@ export const NODE_GROUP_ORDER: NodeGroup[] = ['triggers', 'actions', 'logic'];
 /**
  * One palette entry. Usually 1:1 with a `NodeKind`, but `tool_call` splits into
  * TWO entries — an "App action" (Composio OAuth) node and a "Tool" (native
- * OpenHuman) node — distinguished by the `preset` config (`provider`) merged
+ * Neppy) node — distinguished by the `preset` config (`provider`) merged
  * onto the new node. `key` is the palette/testid id; `labelKey` its i18n label.
  */
 export interface PaletteEntry {

@@ -25,7 +25,7 @@ import {
   seedComposioConnection,
   seedComposioToolkits,
 } from './composio-helpers';
-import { callOpenhumanRpc } from './core-rpc';
+import { callNeppyRpc } from './core-rpc';
 import { triggerAuthDeepLinkBypass } from './deep-link-helpers';
 import { textExists, waitForText, waitForWebView, waitForWindowVisible } from './element-helpers';
 import { completeOnboardingIfVisible, navigateToSkills } from './shared-flows';
@@ -89,7 +89,7 @@ export function runConnectorContract(config: ConnectorContractConfig): void {
     it('auth/connect flow succeeds with mocked backend', async function () {
       this.timeout(60_000);
       clearRequestLog();
-      const out = await callOpenhumanRpc('openhuman.composio_authorize', { toolkit: slug });
+      const out = await callNeppyRpc('openhuman.composio_authorize', { toolkit: slug });
       expect(out.ok).toBe(true);
       const authReq = getRequestLog().find(
         r => r.method === 'POST' && r.url.includes('/composio/authorize')
@@ -100,7 +100,7 @@ export function runConnectorContract(config: ConnectorContractConfig): void {
 
     it('connected state persists after reconnect/reload', async function () {
       this.timeout(60_000);
-      const out = await callOpenhumanRpc('openhuman.composio_list_connections', {});
+      const out = await callNeppyRpc('openhuman.composio_list_connections', {});
       expect(out.ok).toBe(true);
       const result = (out.result as { result?: unknown })?.result ?? out.result;
       const connections = (result as { connections?: unknown[] })?.connections ?? [];
@@ -119,7 +119,7 @@ export function runConnectorContract(config: ConnectorContractConfig): void {
     it('composio_sync does not tear down the session', async function () {
       this.timeout(30_000);
       clearRequestLog();
-      await callOpenhumanRpc('openhuman.composio_sync', { toolkit: slug });
+      await callNeppyRpc('openhuman.composio_sync', { toolkit: slug });
       await assertSessionNotNuked();
       console.log(`${LOG} PASS: sync does not nuke session`);
     });
@@ -127,7 +127,7 @@ export function runConnectorContract(config: ConnectorContractConfig): void {
     it('composio_execute routes a basic task', async function () {
       this.timeout(30_000);
       clearRequestLog();
-      await callOpenhumanRpc('openhuman.composio_execute', {
+      await callNeppyRpc('openhuman.composio_execute', {
         connection_id: activeId,
         action: executeAction,
         params: {},
@@ -160,7 +160,7 @@ export function runConnectorContract(config: ConnectorContractConfig): void {
     it('unrelated 400 on composio route does not nuke session', async function () {
       this.timeout(60_000);
       injectComposioFault(400);
-      await callOpenhumanRpc('openhuman.composio_execute', {
+      await callNeppyRpc('openhuman.composio_execute', {
         connection_id: activeId,
         action: executeAction,
         params: {},
@@ -173,7 +173,7 @@ export function runConnectorContract(config: ConnectorContractConfig): void {
       this.timeout(60_000);
       seedComposioConnection(slug, 'ACTIVE', activeId);
       clearRequestLog();
-      await callOpenhumanRpc('openhuman.composio_delete_connection', { connection_id: activeId });
+      await callNeppyRpc('openhuman.composio_delete_connection', { connection_id: activeId });
       const deleteReq = getRequestLog().find(
         r => r.method === 'DELETE' && r.url.includes('/composio/connections/')
       );

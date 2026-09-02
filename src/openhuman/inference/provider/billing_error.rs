@@ -22,10 +22,10 @@ pub fn is_budget_exhausted_message(body: &str) -> bool {
         // the full body is `"Your credit balance is too low to access the
         // Anthropic API. Please go to Plans & Billing to upgrade or purchase
         // credits."` (direct provider, "anthropic API error", not the managed
-        // "OpenHuman API error"). Anchored on the "credit balance is too low"
+        // "Neppy API error"). Anchored on the "credit balance is too low"
         // fragment — the "too low" qualifier keeps a positive-balance message
         // (e.g. "your credit balance is $50") from tripping, per the tight-list
-        // rule above. OpenHuman has no lever over a third-party Anthropic
+        // rule above. Neppy has no lever over a third-party Anthropic
         // account's balance; budget toast already surfaced in the UI.
         "credit balance is too low",
     ];
@@ -81,7 +81,7 @@ mod tests {
     }
 
     /// Verbatim Anthropic BYO out-of-credits 400 body (Sentry TAURI-RUST-4MM).
-    /// Direct provider — "anthropic API error", not the managed "OpenHuman API
+    /// Direct provider — "anthropic API error", not the managed "Neppy API
     /// error". The classifier feeds the emit-site `classify_expected_error`
     /// demotion, the agent turn's billing gate, the `web_errors` net, the
     /// `is_budget_event` before_send filter, AND the cron billing-halt, so

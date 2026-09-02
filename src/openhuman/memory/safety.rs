@@ -3,7 +3,7 @@
 //! Conservative by design — it prefers false positives over leaking a
 //! credential into a long-lived store.
 //!
-//! # Why this is OpenHuman's and not the engine's
+//! # Why this is Neppy's and not the engine's
 //!
 //! Which byte sequences count as a credential worth blanking, and which
 //! national-ID shapes are worth a checksum, is product policy about what this

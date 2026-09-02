@@ -108,7 +108,7 @@ impl SecurityPolicy {
         // still run *before* the gate, so the allowlist can only suppress the
         // human prompt — it can never override a hard policy denial.
 
-        // The default projects home (`~/OpenHuman/projects`) is always a
+        // The default projects home (`~/Neppy/projects`) is always a
         // read-write trusted root so the coding agent can create/edit projects
         // there regardless of tier or `workspace_only`. Injected here — the one
         // autonomy→policy chokepoint every session goes through — because the

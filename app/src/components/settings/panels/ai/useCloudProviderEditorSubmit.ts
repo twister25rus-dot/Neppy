@@ -64,7 +64,7 @@ export function useCloudProviderEditorSubmit({
       }
 
       // Live verification — flush the new cloud_providers list and call
-      // `/models` through the Rust controller. Skip for the OpenHuman backend
+      // `/models` through the Rust controller. Skip for the Neppy backend
       // (session JWT, no probe-able endpoint).
       if (upserted.slug !== 'openhuman') {
         const list =

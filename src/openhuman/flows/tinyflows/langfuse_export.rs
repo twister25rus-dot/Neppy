@@ -15,7 +15,7 @@
 //! Transport mirrors the agent-turn tracing path
 //! (`agent::progress_tracing::langfuse::push_spans`): the endpoint is derived
 //! from the **current backend hostname** (`effective_backend_api_url`), auth
-//! is the live OpenHuman session bearer (the backend injects the real
+//! is the live Neppy session bearer (the backend injects the real
 //! Langfuse keys server-side), the send is capped at 10s, `207 Multi-Status`
 //! is tolerated, and every failure is logged and swallowed — exporting is
 //! best-effort and never fails the run. Gated on
@@ -52,7 +52,7 @@ fn ingestion_url(config: &Config) -> String {
     crate::api::config::api_url(&base, INGESTION_PATH)
 }
 
-/// The OpenHuman core crate version (e.g. `0.58.0`), stamped onto every flow
+/// The Neppy core crate version (e.g. `0.58.0`), stamped onto every flow
 /// trace as the Langfuse `release` field plus an `app_version` metadata key so
 /// traces can be correlated with the app build that produced them.
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");

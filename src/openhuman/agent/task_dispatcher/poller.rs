@@ -34,7 +34,7 @@ const POLLER_IDLE_GRACE_TICKS: u32 = 2;
 
 /// The backoff curve itself lives in the crate
 /// ([`select::PollCadence`](tinyagents::graph::todos::dispatch::select::PollCadence));
-/// this is OpenHuman's tuning of it (issue #4090).
+/// this is Neppy's tuning of it (issue #4090).
 const POLLER_CADENCE: select::PollCadence = select::PollCadence {
     base: Duration::from_secs(POLLER_TICK_SECONDS),
     max_backoff: Duration::from_secs(POLLER_MAX_BACKOFF_SECONDS),

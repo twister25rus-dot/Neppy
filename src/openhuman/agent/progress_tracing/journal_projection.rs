@@ -9,7 +9,7 @@
 //!
 //! This is deliberately built on `SpanCollector` (not a re-derivation) so span
 //! *shape* parity holds by construction for every `AgentProgress` the journal
-//! can produce. The one-way mapping here mirrors `OpenhumanEventBridge`
+//! can produce. The one-way mapping here mirrors `NeppyEventBridge`
 //! (`tinyagents/observability.rs`) but is **pure** — it depends only on the
 //! journalled event, made possible by the crate carrying tool outcome
 //! (`duration_ms`/`output_bytes`/`error`) on `ToolCompleted` (tinyagents#18).

@@ -1,4 +1,4 @@
-//! Unit tests for the OpenHuman ChannelHost capability adapters.
+//! Unit tests for the Neppy ChannelHost capability adapters.
 
 use super::*;
 use std::sync::Arc;
@@ -41,11 +41,11 @@ async fn reaction_gate_returns_default_when_runtime_disabled() {
     assert!(decision.emoji.is_none());
 }
 
-// --- OpenHumanEventSink --------------------------------------------------
+// --- NeppyEventSink --------------------------------------------------
 
 #[tokio::test]
 async fn event_sink_accepts_web_channel_event_shape() {
-    let sink = OpenHumanEventSink;
+    let sink = NeppyEventSink;
     let ok = sink
         .publish(
             "web",
@@ -64,7 +64,7 @@ async fn event_sink_accepts_web_channel_event_shape() {
 
 #[tokio::test]
 async fn event_sink_rejects_non_object_payload() {
-    let sink = OpenHumanEventSink;
+    let sink = NeppyEventSink;
     let err = sink
         .publish("web", "bad", serde_json::json!([1, 2, 3]))
         .await;
@@ -73,7 +73,7 @@ async fn event_sink_rejects_non_object_payload() {
 
 #[tokio::test]
 async fn event_sink_routes_channel_reactions_to_domain_bus() {
-    let sink = OpenHumanEventSink;
+    let sink = NeppyEventSink;
     assert!(sink
         .publish(
             "channel",

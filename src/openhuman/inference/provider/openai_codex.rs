@@ -13,10 +13,7 @@ pub(crate) const OPENAI_CODEX_MODEL_HINTS: &[&str] =
 const OPENAI_CODEX_DEFAULT_CLIENT_VERSION: &str = "0.130.0";
 
 pub(crate) fn openai_codex_user_agent() -> String {
-    format!(
-        "codex_cli_rs/0.0.0 (OpenHuman {})",
-        env!("CARGO_PKG_VERSION")
-    )
+    format!("codex_cli_rs/0.0.0 (Neppy {})", env!("CARGO_PKG_VERSION"))
 }
 
 #[derive(Debug, Clone)]

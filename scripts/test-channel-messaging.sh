@@ -33,7 +33,7 @@ if [[ -z "$CORE_BIN" ]]; then
   fi
 fi
 
-MESSAGE="${1:-Hello from OpenHuman! 🚀 This is a test message sent via the channel messaging API.}"
+MESSAGE="${1:-Hello from Neppy! 🚀 This is a test message sent via the channel messaging API.}"
 
 divider() { echo "────────────────────────────────────────────────"; }
 
@@ -75,7 +75,7 @@ if [[ -z "$TELEGRAM_ID" ]]; then
   echo ""
   echo "   ⚠️  No telegramId found on your profile."
   echo "   Complete the Telegram managed DM linking flow first."
-  echo "   (Skills page → Telegram → Login with OpenHuman → click Start in Telegram)"
+  echo "   (Skills page → Telegram → Login with Neppy → click Start in Telegram)"
   exit 1
 fi
 
@@ -106,7 +106,7 @@ echo "4️⃣  Sending message with inline button..."
 
 BUTTON_MSG=$("$CORE_BIN" channels send_message \
   --channel telegram \
-  --message '{"text": "Here is a link for you:", "buttons": [{"label": "OpenHuman GitHub", "url": "https://github.com/tinyhumansai/openhuman"}]}' 2>&1 || true)
+  --message '{"text": "Here is a link for you:", "buttons": [{"label": "Neppy GitHub", "url": "https://github.com/tinyhumansai/openhuman"}]}' 2>&1 || true)
 
 echo "$BUTTON_MSG" | grep -A20 '{' | head -15
 

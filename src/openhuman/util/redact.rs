@@ -4,7 +4,7 @@
 //! content paths can embed full email addresses, so any log line printing one
 //! has to redact it first.
 //!
-//! # Why this is OpenHuman's and not the memory crate's
+//! # Why this is Neppy's and not the memory crate's
 //!
 //! An identical helper lives at `tinymemory_core::util::redact`, and this host
 //! used to call it. That is an engine dependency taken on for the sake of six

@@ -19,7 +19,7 @@ are product adapters or compatibility paths, not a second memory engine:
 - process lifecycle and the global memory singleton
 
 Moving those concerns into TinyCortex would reverse the established dependency
-boundary by teaching the reusable engine about OpenHuman RPC, policy, secrets,
+boundary by teaching the reusable engine about Neppy RPC, policy, secrets,
 and runtime composition.
 
 ## Audit result
@@ -60,7 +60,7 @@ those files would create broad source churn without changing runtime ownership.
 ## Guardrails
 
 - New generic memory behavior belongs in `vendor/tinycortex`.
-- OpenHuman may add adapters, policy, RPC, tools, lifecycle, and product
+- Neppy may add adapters, policy, RPC, tools, lifecycle, and product
   projections, but must not fork TinyCortex engine logic.
 - Persisted format parity tests in `openhuman::memory::tinycortex::parity` remain the
   cutover guard for existing workspaces.

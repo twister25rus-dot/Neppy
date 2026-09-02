@@ -15,7 +15,7 @@ use crate::openhuman::config::{
     MODEL_SUMMARIZATION_V1, MODEL_VISION_V1,
 };
 
-/// The workload routes projected into the registry, keyed by their OpenHuman
+/// The workload routes projected into the registry, keyed by their Neppy
 /// tier alias (the string the wrapped provider resolves at dispatch).
 ///
 /// This is the canonical tier inventory (`reasoning`, `chat`, `agentic`,
@@ -33,7 +33,7 @@ pub(super) const WORKLOAD_ROUTE_TIERS: &[&str] = &[
     MODEL_VISION_V1,
 ];
 
-/// The OpenHuman workload-tier routing table as a crate
+/// The Neppy workload-tier routing table as a crate
 /// [`ModelRouter`](tinyagents::registry::ModelRouter) — the single declarative
 /// source for cross-route **fallback chains** and per-tier **required-capability
 /// gates** (issue #4249, Phase 3 routing consolidation).
@@ -177,7 +177,7 @@ pub(super) fn route_fallback_policy(model: &str) -> Option<FallbackPolicy> {
 /// [`AgentEvent::FallbackSelected`]. This observer wraps the resolving core, and
 /// on success compares the response's `resolved_model` against the turn's primary
 /// model name: when they differ a fallback occurred, so it emits the parity
-/// `FallbackSelected` event (mirrored onto OpenHuman's progress/observability
+/// `FallbackSelected` event (mirrored onto Neppy's progress/observability
 /// bridge) and logs it under `[fallback]`. It never re-issues the call, so it adds
 /// no extra provider dispatch on top of the native traversal (no double-fallback).
 pub(super) struct FallbackObserverMiddleware {
@@ -230,7 +230,7 @@ impl ModelMiddleware<()> for FallbackObserverMiddleware {
 /// backend-charged USD + context window from the G1 `raw` passthrough
 /// ([`usage_info_from_response`](super::model::usage_info_from_response)) — and
 /// pushes it onto the shared [`ProviderUsageCarry`](super::observability::ProviderUsageCarry)
-/// the [`OpenhumanEventBridge`](super::OpenhumanEventBridge) drains on
+/// the [`NeppyEventBridge`](super::NeppyEventBridge) drains on
 /// `UsageRecorded`.
 ///
 /// It wraps the whole retry/fallback core, so it fires

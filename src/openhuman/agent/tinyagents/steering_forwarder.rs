@@ -1,6 +1,6 @@
 //! Abort-on-drop steering forwarder guard (issue #4456).
 //!
-//! `run_turn_via_tinyagents_shared` bridges OpenHuman's session-owned
+//! `run_turn_via_tinyagents_shared` bridges Neppy's session-owned
 //! [`RunQueue`] into a running TinyAgents turn by spawning a 50 ms poll loop
 //! that drains queued **steer**/**collect** messages and forwards them into the
 //! run's [`SteeringHandle`]. The harness applies them at the next iteration

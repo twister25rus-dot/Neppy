@@ -54,7 +54,7 @@ pub use tinycortex::memory::tool_memory::{
 pub mod capture;
 pub mod prompt;
 
-/// Build the rule store over OpenHuman's shared memory object.
+/// Build the rule store over Neppy's shared memory object.
 ///
 /// A named constructor rather than `ToolMemoryStore::new` at each call site:
 /// every caller (`capture.rs`, the harness session builder, the raw-coverage

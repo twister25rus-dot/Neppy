@@ -1,4 +1,4 @@
-//! Generic OpenHuman startup helpers.
+//! Generic Neppy startup helpers.
 
 pub mod ops;
 

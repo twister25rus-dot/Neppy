@@ -1,9 +1,9 @@
-//! Host capability adapter: [`AgentMemory`] over OpenHuman's memory stack.
+//! Host capability adapter: [`AgentMemory`] over Neppy's memory stack.
 //!
 //! This is `docs/specs/plan-agents.md` Phase 4 for the memory seam. The agent
 //! runtime is being made generic over its host, so it must stop reaching into
 //! [`crate::openhuman::memory`] directly. Instead the crate declares
-//! [`AgentMemory`] and this module is the single place OpenHuman's memory
+//! [`AgentMemory`] and this module is the single place Neppy's memory
 //! domains meet it.
 //!
 //! # Domains adapted
@@ -13,7 +13,7 @@
 //! - `crate::openhuman::agent::tinyagents::retriever::recall_through_facade` — the
 //!   existing retrieval facade (issue #4249, 09.2). Recall goes **through** it
 //!   rather than calling `Memory::recall` directly, so this adapter inherits
-//!   OpenHuman's ranking engine verbatim, the `path_scope` dedupe rule, and the
+//!   Neppy's ranking engine verbatim, the `path_scope` dedupe rule, and the
 //!   `AgentEvent::MemoryLoaded` emission instead of forking a second recall path.
 //! - [`crate::openhuman::memory::safety`] — `sanitize_text`, the
 //!   conservative secret + PII scrubber, applied on the way out of recall and on
@@ -26,7 +26,7 @@
 //! The trait's contract is explicit: items returned by [`AgentMemory::recall`]
 //! have **already** been scope-filtered and redacted, and the runtime is
 //! forbidden from re-ranking or re-filtering them. That makes this adapter the
-//! last place OpenHuman's guards can run, so all of them run here:
+//! last place Neppy's guards can run, so all of them run here:
 //!
 //! - **Scope is host-chosen, never runtime-chosen.** `RecallRequest`'s
 //!   `agent_id` / `thread_id` / `limit` are documented as *hints about the
@@ -55,13 +55,13 @@
 //!   `Memory::store_with_taint`. It **fails closed to
 //!   [`MemoryTaint::ExternalSync`]**: an agent turn may have been summarizing an
 //!   email or a web page, this adapter cannot tell, and `ExternalSync` is the
-//!   value OpenHuman's subconscious gate treats as "unknown origin, refuse
-//!   external-effect tools". [`OpenHumanAgentMemory::with_taint`] lets a wiring
+//!   value Neppy's subconscious gate treats as "unknown origin, refuse
+//!   external-effect tools". [`NeppyAgentMemory::with_taint`] lets a wiring
 //!   site that genuinely knows better relax it.
 //!
 //! # Contract mismatches resolved
 //!
-//! 1. **`remember` returns an id, `Memory::store` does not.** OpenHuman's write
+//! 1. **`remember` returns an id, `Memory::store` does not.** Neppy's write
 //!    path is an upsert keyed by `(namespace, key)` and hands nothing back. To
 //!    keep the id space coherent with the ids `recall` returns, this adapter
 //!    reads the row back with `Memory::get` after storing and returns the
@@ -69,14 +69,14 @@
 //!    `"{namespace}/{key}"` handle when the read-back finds nothing.
 //! 2. **`MemoryItem::citation` is an opaque `String`.** The host's
 //!    `MemoryCitation` is a structured UI contract; leaking its JSON would
-//!    couple the crate to OpenHuman's frontend. It is built for real (so the
+//!    couple the crate to Neppy's frontend. It is built for real (so the
 //!    seam uses the host type rather than a parallel one) and then rendered to a
 //!    single flat `openhuman:memory/...` line by [`render_citation`].
-//! 3. **`thread_summary` returns `Ok(None)`.** See the method docs — OpenHuman
+//! 3. **`thread_summary` returns `Ok(None)`.** See the method docs — Neppy
 //!    has no host-authored per-thread prose rollup to return, and the trait
 //!    forbids synthesizing a substitute.
 //! 4. **`NewMemory::tags` are dropped.** The trait calls them advisory and
-//!    explicitly permits a host to discard them; OpenHuman's `Memory::store` has
+//!    explicitly permits a host to discard them; Neppy's `Memory::store` has
 //!    no tag column, and folding runtime-supplied labels into the namespace or
 //!    key would turn an advisory hint into a scope, which the trait forbids.
 //!    They are logged and otherwise ignored.
@@ -98,7 +98,7 @@ use crate::openhuman::util::truncate_with_ellipsis;
 ///
 /// `"global"` is `tinycortex::memory::GLOBAL_NAMESPACE`, which is also what
 /// `RecallOpts { namespace: None, .. }` falls back to — so the default is the
-/// same namespace the rest of OpenHuman's recall already reads.
+/// same namespace the rest of Neppy's recall already reads.
 pub const DEFAULT_AGENT_MEMORY_NAMESPACE: &str = "global";
 
 /// Number of items recalled when the runtime supplies no `limit`.
@@ -127,7 +127,7 @@ pub const DEFAULT_MIN_RELEVANCE_SCORE: f64 = 0.4;
 /// adapter carries the same amount of text the RPC surface already shows.
 const CITATION_SNIPPET_CHARS: usize = 280;
 
-/// OpenHuman's implementation of the crate's durable-memory capability.
+/// Neppy's implementation of the crate's durable-memory capability.
 ///
 /// Holds an `Arc<dyn Memory>` rather than building one: memory construction
 /// needs a `MemoryConfig` plus a workspace dir (see
@@ -138,7 +138,7 @@ const CITATION_SNIPPET_CHARS: usize = 280;
 ///
 /// Every knob below is a **host** decision, deliberately not reachable from the
 /// runtime side of the trait.
-pub struct OpenHumanAgentMemory {
+pub struct NeppyAgentMemory {
     /// The backend recall reads from and `remember` writes to.
     memory: Arc<dyn Memory>,
     /// The one namespace this adapter may touch. Never derived from a runtime
@@ -160,8 +160,8 @@ pub struct OpenHumanAgentMemory {
     category: MemoryCategory,
 }
 
-impl OpenHumanAgentMemory {
-    /// Wraps `memory` with OpenHuman's default recall scope and a fail-closed
+impl NeppyAgentMemory {
+    /// Wraps `memory` with Neppy's default recall scope and a fail-closed
     /// `ExternalSync` write taint.
     pub fn new(memory: Arc<dyn Memory>) -> Self {
         Self {
@@ -320,7 +320,7 @@ impl OpenHumanAgentMemory {
 ///
 /// The crate types `MemoryItem::citation` as a `String` precisely so a host's
 /// citation shape stays a host concern, so this deliberately does **not**
-/// serialize the struct — a JSON blob would export OpenHuman's field names into
+/// serialize the struct — a JSON blob would export Neppy's field names into
 /// a redistributed crate and make them a de-facto wire contract. The rendered
 /// form is a single flat line the runtime passes through and never parses.
 ///
@@ -341,8 +341,8 @@ pub fn render_citation(citation: &MemoryCitation) -> String {
 }
 
 #[async_trait]
-impl AgentMemory for OpenHumanAgentMemory {
-    /// Recalls through OpenHuman's ranking engine, then scope-filters and
+impl AgentMemory for NeppyAgentMemory {
+    /// Recalls through Neppy's ranking engine, then scope-filters and
     /// redacts before handing anything back.
     ///
     /// Order is preserved exactly as the ranking engine produced it — the trait
@@ -508,7 +508,7 @@ impl AgentMemory for OpenHumanAgentMemory {
 
     /// Always `Ok(None)`.
     ///
-    /// OpenHuman has no host-authored per-thread prose rollup to return.
+    /// Neppy has no host-authored per-thread prose rollup to return.
     /// `ConversationThread` (`memory_conversations`) is metadata — title, counts,
     /// timestamps, labels — not a summary, and the `memory_tree` digests are
     /// scoped to sources and the entity index rather than to one thread.
@@ -736,10 +736,10 @@ mod tests {
         }
     }
 
-    fn adapter(stub: StubMemory) -> (OpenHumanAgentMemory, Arc<StubMemory>) {
+    fn adapter(stub: StubMemory) -> (NeppyAgentMemory, Arc<StubMemory>) {
         let stub = Arc::new(stub);
         let memory: Arc<dyn Memory> = stub.clone();
-        (OpenHumanAgentMemory::new(memory), stub)
+        (NeppyAgentMemory::new(memory), stub)
     }
 
     // ── recall ────────────────────────────────────────────────────────────
@@ -822,7 +822,7 @@ mod tests {
         // Asking for the right exclusion is the part that lives here.
         let stub = Arc::new(StubMemory::with_rows(vec![entry("r1", "k1", "note")]));
         let memory: Arc<dyn Memory> = stub.clone();
-        let mem = OpenHumanAgentMemory::new(memory);
+        let mem = NeppyAgentMemory::new(memory);
 
         mem.recall(RecallRequest::new("note").with_thread(ThreadId::new("t1")))
             .await
@@ -889,7 +889,7 @@ mod tests {
 
         let stub = Arc::new(StubMemory::with_rows(vec![mine, theirs]));
         let memory: Arc<dyn Memory> = stub.clone();
-        let mem = OpenHumanAgentMemory::new(memory).with_cross_session(true);
+        let mem = NeppyAgentMemory::new(memory).with_cross_session(true);
 
         let items = mem
             .recall(RecallRequest::new("scoped").with_thread(ThreadId::new("t1")))
@@ -909,18 +909,18 @@ mod tests {
         // The backend filter should already have done this; the second pass is
         // what makes the adapter safe if it ever does not, because the runtime
         // is forbidden from filtering again.
-        assert!(OpenHumanAgentMemory::scope_allows(
+        assert!(NeppyAgentMemory::scope_allows(
             false,
             Some("t1"),
             Some("t1")
         ));
-        assert!(!OpenHumanAgentMemory::scope_allows(
+        assert!(!NeppyAgentMemory::scope_allows(
             false,
             Some("t1"),
             Some("t2")
         ));
-        assert!(OpenHumanAgentMemory::scope_allows(false, Some("t1"), None));
-        assert!(OpenHumanAgentMemory::scope_allows(false, None, Some("t2")));
+        assert!(NeppyAgentMemory::scope_allows(false, Some("t1"), None));
+        assert!(NeppyAgentMemory::scope_allows(false, None, Some("t2")));
     }
 
     #[test]
@@ -928,12 +928,8 @@ mod tests {
         // `cross_session` is sent to the backend as "return other sessions'
         // rows". Re-applying the same-session test here would delete exactly
         // those rows and make the opt-in indistinguishable from `false`.
-        assert!(OpenHumanAgentMemory::scope_allows(
-            true,
-            Some("t1"),
-            Some("t2")
-        ));
-        assert!(OpenHumanAgentMemory::scope_allows(true, Some("t1"), None));
+        assert!(NeppyAgentMemory::scope_allows(true, Some("t1"), Some("t2")));
+        assert!(NeppyAgentMemory::scope_allows(true, Some("t1"), None));
     }
 
     #[tokio::test]
@@ -1021,7 +1017,7 @@ mod tests {
     async fn a_wiring_site_can_relax_the_write_taint() {
         let stub = Arc::new(StubMemory::default());
         let memory: Arc<dyn Memory> = stub.clone();
-        let mem = OpenHumanAgentMemory::new(memory).with_taint(MemoryTaint::Internal);
+        let mem = NeppyAgentMemory::new(memory).with_taint(MemoryTaint::Internal);
         mem.remember(NewMemory::new("a fact")).await.unwrap();
         assert_eq!(stub.snapshot()[0].taint, MemoryTaint::Internal);
     }

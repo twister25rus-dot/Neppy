@@ -1,13 +1,13 @@
 /**
  * MedullaOverviewPanel — the landing "Overview" for the Orchestration page.
  *
- * A teaser for **Medulla**, OpenHuman's custom-built LLM designed specifically
+ * A teaser for **Medulla**, Neppy's custom-built LLM designed specifically
  * to orchestrate thousands of agents at once. It is not shipped yet; this page
- * announces it and points early-access seekers at the Discord. OpenHuman
+ * announces it and points early-access seekers at the Discord. Neppy
  * subscribers get early access to the model and the orchestration engine.
  *
  * Pure marketing surface — no core RPC, no live state. Product/brand names
- * ("Medulla", "OpenHuman", "Discord") stay in every locale.
+ * ("Medulla", "Neppy", "Discord") stay in every locale.
  */
 import { useT } from '../../lib/i18n/I18nContext';
 import { DISCORD_INVITE_URL, PRICING_URL } from '../../utils/links';
@@ -55,7 +55,7 @@ export default function MedullaOverviewPanel() {
           ))}
         </div>
 
-        {/* Two early-access cards: OpenHuman subscribers · the Discord. */}
+        {/* Two early-access cards: Neppy subscribers · the Discord. */}
         <div className="mt-8 grid w-full max-w-xl grid-cols-1 gap-3 text-left sm:grid-cols-2">
           {/* Subscribers */}
           <div className="flex flex-col rounded-2xl border border-line bg-surface p-4 shadow-soft">

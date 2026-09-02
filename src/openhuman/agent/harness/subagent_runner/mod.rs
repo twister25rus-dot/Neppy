@@ -18,7 +18,7 @@
 //!    mirrors the child transcript/progress and returns one compact tool result
 //!    to the parent.
 //!
-//! This module is the OpenHuman **build pipeline** around that TinyAgents
+//! This module is the Neppy **build pipeline** around that TinyAgents
 //! run: definition lookup/allowlists, archetype prompt assembly, toolkit
 //! filtering, sandbox/action-root narrowing, checkpoint/handback, and
 //! worker-thread transcript mirroring.
@@ -28,7 +28,7 @@
 //! `DefinitionRegistry`, `SecurityGate`, `ModelResolver` are exactly the phases
 //! named above. So the open question is not whether to relocate this pipeline
 //! into the crate (that would push product policy across the GPL boundary) but
-//! whether OpenHuman should implement those four traits and let the crate
+//! whether Neppy should implement those four traits and let the crate
 //! drive. That is its own design-gated package, not part of WP-5.
 //!
 //! ## Layout

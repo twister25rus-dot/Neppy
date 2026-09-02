@@ -1,6 +1,6 @@
 # AgentBox Marketplace Deployment
 
-OpenHuman ships as a containerized agent on GMI Cloud's
+Neppy ships as a containerized agent on GMI Cloud's
 [AgentBox marketplace](https://docs.gmicloud.ai/agentbox-marketplace/overview).
 This page is the operator runbook for new deployments and version bumps.
 
@@ -20,7 +20,7 @@ AgentBox's edge handles auth before traffic reaches us.
 
 In the AgentBox console:
 
-1. **Basic Info**: name `OpenHuman`, description, listing identity.
+1. **Basic Info**: name `Neppy`, description, listing identity.
 2. **Infrastructure**: Docker image source (push tagged builds to your
    chosen registry, see "Image push" below), compute tier, region. Enable the
    "GMI MaaS" toggle so the platform injects `GMI_MAAS_BASE_URL` and
@@ -51,7 +51,7 @@ First deploy takes 10 to 25 minutes to reach `running`; later deploys are faster
 
 ## Long-running requests
 
-AgentBox treats requests >2 min as long-running. OpenHuman handles this with
+AgentBox treats requests >2 min as long-running. Neppy handles this with
 **polling** per AgentBox's documented pattern: the agent runtime is invoked
 inside the worker task, capped by `OPENHUMAN_AGENTBOX_JOB_TIMEOUT_SECS`
 (default 10 minutes). No streaming.

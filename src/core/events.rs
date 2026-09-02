@@ -1,9 +1,9 @@
-//! The domain event catalog: every cross-module event OpenHuman emits.
+//! The domain event catalog: every cross-module event Neppy emits.
 //!
 //! This is the vocabulary half of what used to be `core::bus`. The
 //! machinery half — the bus, the subscriber trait, the handle, the native
 //! request registry — now lives in the `tinybus` crate; what stays here is the
-//! part that is specific to OpenHuman and has no business in a generic bus.
+//! part that is specific to Neppy and has no business in a generic bus.
 //!
 //! # Why these types are serializable now
 //!

@@ -110,7 +110,7 @@ is engine semantics both ends must agree on forever.
 `tinymemory_core::{sync, composio_host, chat, learning_candidate, nlp_host}`
 and `memory/host_impls.rs` are orchestration, credentials and scheduling. By
 TinyMemory's own README split those are host concerns. They move **back** into
-OpenHuman rather than into the module, and `host_impls.rs` is deleted in favour
+Neppy rather than into the module, and `host_impls.rs` is deleted in favour
 of the bus services in `modules/memory_host.rs`.
 
 ---
@@ -369,7 +369,7 @@ crates.
 
 **Why People moves rather than staying put.** `tinymemory-core` survives this
 port — it is the module's own implementation crate, it just stops being an
-*OpenHuman* dependency — so leaving People there would compile. But the contract
+*Neppy* dependency — so leaving People there would compile. But the contract
 defines a capability and each engine implements it; a second engine binding in
 TinyCortex's place must bring its own People store. Storage belongs to the
 engine, which is exactly the split that makes the contract engine-neutral.

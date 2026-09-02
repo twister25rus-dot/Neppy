@@ -400,7 +400,7 @@ fn agent_paths_rpc_is_registered() {
 async fn handle_get_agent_paths_returns_action_workspace_and_projects() {
     // Regression guard for #3237. AgentAccessPanel calls this RPC to render
     // the action sandbox / internal workspace paths instead of the hard-coded
-    // `~/OpenHuman/projects` / `~/.openhuman/workspace` strings that drift
+    // `~/Neppy/projects` / `~/.openhuman/workspace` strings that drift
     // when an operator sets OPENHUMAN_ACTION_DIR.
     let _g = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().unwrap();

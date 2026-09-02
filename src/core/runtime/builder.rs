@@ -1,6 +1,6 @@
 //! `CoreBuilder` → `CoreRuntime`: the embeddable composition surface.
 //!
-//! This is the first-class library API for hosting the OpenHuman core. It
+//! This is the first-class library API for hosting the Neppy core. It
 //! splits the monolithic `run_server_inner` into two phases:
 //!
 //! 1. [`CoreBuilder::build`] — *initialization only*: register controllers, load
@@ -867,7 +867,7 @@ impl CoreRuntime {
         self.start_selected_services().await;
 
         log::info!(
-            "[core] OpenHuman core is ready — listening on http://{bind_addr} (version {})",
+            "[core] Neppy core is ready — listening on http://{bind_addr} (version {})",
             env!("CARGO_PKG_VERSION")
         );
         log::info!("[rpc:http] JSON-RPC — POST http://{bind_addr}/rpc (JSON-RPC 2.0)");

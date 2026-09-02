@@ -2,7 +2,7 @@
 //!
 //! TinyAgents keeps cooperative cancellation on `RunContext`, while the
 //! tool-visible `ToolExecutionContext` intentionally exposes only stable run
-//! metadata. OpenHuman tools that need to fan out nested graph work can read this
+//! metadata. Neppy tools that need to fan out nested graph work can read this
 //! scoped token and pass the same live cancellation signal into graph helpers.
 
 use tinyagents::CancellationToken;

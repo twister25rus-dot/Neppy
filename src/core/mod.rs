@@ -1,6 +1,6 @@
 //! Shared core-level schemas and contracts used across adapters (RPC, CLI, etc.).
 //!
-//! This module defines the foundational types for OpenHuman's controller system,
+//! This module defines the foundational types for Neppy's controller system,
 //! which provides a transport-agnostic way to define and invoke domain logic.
 //! It also exports submodules for CLI handling, event bus, and RPC server.
 

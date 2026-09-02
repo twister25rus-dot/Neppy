@@ -705,7 +705,7 @@ export default function RewardsCommunityTab({
         </section>
 
         {/* Product-usage metrics — the activity streak counts consecutive days the
-            user actually used OpenHuman (token-processing days), not a check-in. */}
+            user actually used Neppy (token-processing days), not a check-in. */}
         <section
           data-testid="rewards-activity-stats"
           className="rounded-3xl bg-[#f2f4f6] dark:bg-surface-muted/60 p-4 text-sm text-content-secondary">

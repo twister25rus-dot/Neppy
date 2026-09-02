@@ -1,11 +1,11 @@
 ---
-description: Run OpenHuman Core as a read-only stdio Model Context Protocol server.
+description: Run Neppy Core as a read-only stdio Model Context Protocol server.
 icon: plug
 ---
 
 # MCP Server
 
-OpenHuman Core can run as an opt-in stdio MCP server for local MCP clients such
+Neppy Core can run as an opt-in stdio MCP server for local MCP clients such
 as Claude Desktop, Cursor, or Zed.
 
 ```bash
@@ -150,7 +150,7 @@ still route through their existing JSON-RPC methods.
 
 ### External Capability Providers
 
-OpenHuman can record trusted external capability providers in `config.toml`.
+Neppy can record trusted external capability providers in `config.toml`.
 This is governance metadata only: it does not install packages, execute remote
 code, or bypass the existing MCP/controller dispatch paths.
 

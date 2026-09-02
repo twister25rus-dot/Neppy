@@ -2094,7 +2094,7 @@ impl Tool for SearchToolCatalogTool {
     fn description(&self) -> &str {
         "Search the FULL LIVE Composio catalog for REAL action slugs to use on `tool_call` \
          nodes — every action for a named app, whether or not the user has connected it yet \
-         and whether or not it's one of OpenHuman's hand-curated actions. Read-only. Query by \
+         and whether or not it's one of Neppy's hand-curated actions. Read-only. Query by \
          keyword (e.g. 'send email', 'slack message'); optionally scope to one `toolkit` (e.g. \
          'gmail', or any Composio app name) to search that app specifically. Returns matching \
          { slug, toolkit, description, required_args, output_fields, primary_array_path, \

@@ -13,19 +13,19 @@
 //! ([`tinyagents::harness::workspace::git`]): worktree create/list/status/diff/
 //! remove, repo-root validation, run-id sanitizing, and cross-worker overlap
 //! detection are host-agnostic and are re-exported here under their historical
-//! OpenHuman names so call sites and the RPC surface are unchanged.
+//! Neppy names so call sites and the RPC surface are unchanged.
 //!
-//! What stays in OpenHuman is the part that depends on *this* host: the
-//! [`OpenHumanWorktreeIsolation`] adapter, which stamps an
+//! What stays in Neppy is the part that depends on *this* host: the
+//! [`NeppyWorktreeIsolation`] adapter, which stamps an
 //! `openhuman.worktree:{agent}:{run_id}` policy id onto prepared descriptors and
-//! announces workspace lifecycle on the OpenHuman event bus so audit and
+//! announces workspace lifecycle on the Neppy event bus so audit and
 //! observability subscribers can correlate an isolated run with its allowed
 //! root.
 //!
 //! ## Scope and safety
 //!
 //! - This targets the **user's project repository** rooted at the agent's
-//!   `action_dir` — it never operates on OpenHuman's own source tree.
+//!   `action_dir` — it never operates on Neppy's own source tree.
 //! - Every operation validates that `repo_root` is a real git repository
 //!   first (via `git rev-parse --is-inside-work-tree`), so a stray path can
 //!   never be mutated.
@@ -48,7 +48,7 @@ use crate::core::bus::BUS;
 use crate::core::events::DomainEvent;
 
 // The git worktree surface is TinyAgents'. These aliases keep the historical
-// OpenHuman spellings — `worktree::create`, `worktree::BaseRef`,
+// Neppy spellings — `worktree::create`, `worktree::BaseRef`,
 // `WorktreeStatus` — so the RPC schemas, tools, and tests that name them do not
 // change. `WorktreeStatus` in particular is serialized straight to the desktop
 // UI; it is field- and `serde`-identical to the crate type, pinned by
@@ -61,20 +61,20 @@ pub use tinyagents::harness::workspace::{
     GIT_WORKTREE_SUBDIR as WORKTREE_SUBDIR,
 };
 
-/// OpenHuman's [`WorkspaceIsolation`] adapter over the TinyAgents git-worktree
+/// Neppy's [`WorkspaceIsolation`] adapter over the TinyAgents git-worktree
 /// provider.
 ///
 /// The crate's [`GitWorktreeIsolation`] already prepares and cleans up the
-/// checkout. This wrapper adds the two things that are OpenHuman's rather than
+/// checkout. This wrapper adds the two things that are Neppy's rather than
 /// every host's: the `openhuman.worktree:*` policy-id convention, and
 /// [`DomainEvent::WorkspacePrepared`] / [`DomainEvent::WorkspaceCleanup`]
 /// announcements on the global bus.
 #[derive(Debug, Clone)]
-pub struct OpenHumanWorktreeIsolation {
+pub struct NeppyWorktreeIsolation {
     inner: GitWorktreeIsolation,
 }
 
-impl OpenHumanWorktreeIsolation {
+impl NeppyWorktreeIsolation {
     /// Create an isolation provider rooted at the user's project repo.
     pub fn new(repo_root: impl Into<PathBuf>) -> Self {
         Self {
@@ -100,7 +100,7 @@ impl OpenHumanWorktreeIsolation {
         self
     }
 
-    /// OpenHuman's policy-id convention for an isolated run.
+    /// Neppy's policy-id convention for an isolated run.
     fn policy_id(run_id: &str, agent: Option<&str>) -> String {
         match agent {
             Some(agent) if !agent.is_empty() => format!("openhuman.worktree:{agent}:{run_id}"),
@@ -110,7 +110,7 @@ impl OpenHumanWorktreeIsolation {
 }
 
 #[async_trait::async_trait]
-impl WorkspaceIsolation for OpenHumanWorktreeIsolation {
+impl WorkspaceIsolation for NeppyWorktreeIsolation {
     async fn prepare(
         &self,
         run_id: &str,
@@ -195,7 +195,7 @@ impl WorkspaceIsolation for OpenHumanWorktreeIsolation {
 }
 
 /// Fail-closed workspace path gate that mirrors
-/// [`WorkspaceDescriptor::enforce`] but routes the violation onto OpenHuman's
+/// [`WorkspaceDescriptor::enforce`] but routes the violation onto Neppy's
 /// global event bus instead of the SDK [`EventSink`], so audit/observability
 /// subscribers see out-of-root rejections.
 ///
@@ -227,7 +227,7 @@ pub fn enforce_workspace_path(
 /// Rejection from [`enforce_workspace_path`].
 ///
 /// Separate from [`WorktreeError`] (which is TinyAgents' git-plumbing error)
-/// because this gate is about OpenHuman's descriptor policy, not about git.
+/// because this gate is about Neppy's descriptor policy, not about git.
 #[derive(Debug, thiserror::Error)]
 pub enum WorkspacePathError {
     /// The path escaped every root the descriptor allows.

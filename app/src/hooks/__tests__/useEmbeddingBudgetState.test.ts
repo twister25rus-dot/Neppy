@@ -95,7 +95,7 @@ describe('isManagedEmbeddingProvider', () => {
   });
 
   it('ignores case and surrounding whitespace', () => {
-    expect(isManagedEmbeddingProvider('  OpenHuman  ')).toBe(true);
+    expect(isManagedEmbeddingProvider('  Neppy  ')).toBe(true);
   });
 });
 
@@ -185,7 +185,7 @@ describe('useEmbeddingBudgetState session + managed-embeddings gaps', () => {
     });
   });
 
-  // Codex: chat + background workloads routed off OpenHuman (so useUsageState
+  // Codex: chat + background workloads routed off Neppy (so useUsageState
   // reports no payload) while embeddings stay on the managed budget. The
   // warning must still reach this user via a direct budget read.
   it('warns a routed-away user whose embeddings still bill against the managed budget', async () => {

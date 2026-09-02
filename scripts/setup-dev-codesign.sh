@@ -9,14 +9,14 @@
 #
 # After running this script:
 #   1. pnpm core:stage        (signs the sidecar with the new cert)
-#   2. In OpenHuman → Request Permissions (removes old stale TCC entry,
+#   2. In Neppy → Request Permissions (removes old stale TCC entry,
 #      registers current binary)
 #   3. Grant in System Settings → Refresh Status
 #   From this point the grant survives future `pnpm core:stage` runs.
 
 set -euo pipefail
 
-IDENTITY="OpenHuman Dev Signer"
+IDENTITY="Neppy Dev Signer"
 KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 TMPDIR_CERT=$(mktemp -d)
 KEY="$TMPDIR_CERT/openhuman-dev.key"
@@ -120,7 +120,7 @@ echo "[setup-dev-codesign] Done. Certificate \"$IDENTITY\" added to login Keycha
 echo ""
 echo "Next steps:"
 echo "  1. pnpm core:stage          — rebuilds and signs the sidecar"
-echo "  2. In OpenHuman click 'Request Permissions' to register the signed binary"
+echo "  2. In Neppy click 'Request Permissions' to register the signed binary"
 echo "  3. Grant in System Settings → Privacy & Security → Accessibility"
 echo "  4. Click 'Refresh Status'"
 echo ""

@@ -10,7 +10,7 @@ use crate::openhuman::config::rpc as config_rpc;
 use crate::openhuman::config::Config;
 use crate::rpc::RpcOutcome;
 
-use super::backend::OpenHumanChannelBackend;
+use super::backend::NeppyChannelBackend;
 use super::definitions::ChannelAuthMode;
 use tinychannels::controllers::{
     all_channel_controller_schemas, channel_controller_schema, channel_credential_provider,
@@ -558,10 +558,10 @@ fn deserialize_params<T: DeserializeOwned>(params: Map<String, Value>) -> Result
     serde_json::from_value(Value::Object(params)).map_err(|e| format!("invalid params: {e}"))
 }
 
-fn openhuman_channel_manager(config: Config) -> ChannelManager<OpenHumanChannelBackend> {
+fn openhuman_channel_manager(config: Config) -> ChannelManager<NeppyChannelBackend> {
     ChannelManager::new(
         config.channels_config.clone(),
-        OpenHumanChannelBackend::new(config),
+        NeppyChannelBackend::new(config),
     )
 }
 

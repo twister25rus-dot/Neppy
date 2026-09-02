@@ -1,6 +1,6 @@
 # Hooks
 
-A hook is a script you own that OpenHuman runs at a specific moment — before a
+A hook is a script you own that Neppy runs at a specific moment — before a
 tool executes, after a file is edited, when a turn finishes — and whose answer
 the agent obeys. It is how you make the agent follow a rule that lives in your
 repository rather than in our code: block `rm -rf`, run the formatter after every
@@ -14,7 +14,7 @@ for either host runs on the other unchanged.
 > There is a second, unrelated meaning of "hook" in this codebase: the in-process
 > Rust traits in `src/openhuman/agent/hooks.rs` that an *embedding host* installs
 > by compiling against the core. Those are for building a product on top of
-> OpenHuman. This page is about the file-based kind, for using OpenHuman.
+> Neppy. This page is about the file-based kind, for using Neppy.
 
 ## The file
 
@@ -44,7 +44,7 @@ remove a broader one's rules**:
 
 | Layer | Path |
 | ----- | ---- |
-| System | `/etc/openhuman/hooks.json` · `/Library/Application Support/OpenHuman/hooks.json` · `%ProgramData%\OpenHuman\hooks.json` |
+| System | `/etc/openhuman/hooks.json` · `/Library/Application Support/Neppy/hooks.json` · `%ProgramData%\Neppy\hooks.json` |
 | User | `~/.openhuman/hooks.json` |
 | Workspace | `<workspace_dir>/hooks.json` |
 | Project | `<action_dir>/.openhuman/hooks.json` |
@@ -137,7 +137,7 @@ silently never runs is the worst thing this system can do to you.
 
 ### Derived events
 
-OpenHuman has no separate "shell execution" or "file read" call site — those are
+Neppy has no separate "shell execution" or "file read" call site — those are
 the `shell`, `file_read` and `file_write` tools going through the ordinary tool
 seam. So the shell, file and MCP events are *derived* from tool calls, and their
 payloads are reshaped the way a Cursor hook expects: a `command` string, a

@@ -47,7 +47,7 @@ function script(path, body) {
 /** Build the AppDir that tauri-bundler 2.9.4 + linuxdeploy actually produce. */
 function makeLinuxdeployAppDir() {
   const root = fs.mkdtempSync(join(os.tmpdir(), "openhuman-appdir-ld-"));
-  const app = join(root, "OpenHuman.AppDir");
+  const app = join(root, "Neppy.AppDir");
   for (const d of [
     "usr/bin",
     "usr/lib",
@@ -73,7 +73,7 @@ function makeLinuxdeployAppDir() {
   );
   script(join(app, "apprun-hooks/linuxdeploy-plugin-gtk.sh"), "#!/bin/sh\n");
   elf(join(app, "AppRun.wrapped"));
-  elf(join(app, "usr/bin/OpenHuman"));
+  elf(join(app, "usr/bin/Neppy"));
 
   // xdg-mime / xdg-open are copied in as POSIX shell scripts, not ELF (#5607).
   script(join(app, "usr/bin/xdg-mime"), "#!/bin/sh\n");
@@ -83,26 +83,26 @@ function makeLinuxdeployAppDir() {
   elf(join(app, "usr/lib/libwebkit2gtk-4.1.so.0"));
 
   fs.writeFileSync(
-    join(app, "usr/share/applications/OpenHuman.desktop"),
+    join(app, "usr/share/applications/Neppy.desktop"),
     [
       "[Desktop Entry]",
-      "Exec=OpenHuman --enable-features=UseOzonePlatform --ozone-platform=x11",
-      "Icon=OpenHuman",
-      "Name=OpenHuman",
+      "Exec=Neppy --enable-features=UseOzonePlatform --ozone-platform=x11",
+      "Icon=Neppy",
+      "Name=Neppy",
       "Type=Application",
       "MimeType=x-scheme-handler/openhuman",
       "",
     ].join("\n"),
   );
 
-  const icon = "usr/share/icons/hicolor/256x256@2/apps/OpenHuman.png";
+  const icon = "usr/share/icons/hicolor/256x256@2/apps/Neppy.png";
   fs.writeFileSync(join(app, icon), "");
   // The AppDir-root icon and .desktop are SYMLINKS, not regular files.
-  fs.symlinkSync(icon, join(app, "OpenHuman.png"));
-  fs.symlinkSync("OpenHuman.png", join(app, ".DirIcon"));
+  fs.symlinkSync(icon, join(app, "Neppy.png"));
+  fs.symlinkSync("Neppy.png", join(app, ".DirIcon"));
   fs.symlinkSync(
-    "usr/share/applications/OpenHuman.desktop",
-    join(app, "OpenHuman.desktop"),
+    "usr/share/applications/Neppy.desktop",
+    join(app, "Neppy.desktop"),
   );
 
   return { root, app };
@@ -111,16 +111,16 @@ function makeLinuxdeployAppDir() {
 /** Build the pre-Wry sharun AppDir, which must still validate. */
 function makeSharunAppDir() {
   const root = fs.mkdtempSync(join(os.tmpdir(), "openhuman-appdir-sharun-"));
-  const app = join(root, "OpenHuman.AppDir");
+  const app = join(root, "Neppy.AppDir");
   for (const d of ["shared/bin", "shared/lib", "bin"]) {
     fs.mkdirSync(join(app, d), { recursive: true });
   }
   elf(join(app, "sharun"));
   fs.copyFileSync(join(app, "sharun"), join(app, "AppRun"));
   fs.chmodSync(join(app, "AppRun"), 0o755);
-  fs.copyFileSync(join(app, "sharun"), join(app, "bin/OpenHuman"));
-  fs.chmodSync(join(app, "bin/OpenHuman"), 0o755);
-  elf(join(app, "shared/bin/OpenHuman"));
+  fs.copyFileSync(join(app, "sharun"), join(app, "bin/Neppy"));
+  fs.chmodSync(join(app, "bin/Neppy"), 0o755);
+  elf(join(app, "shared/bin/Neppy"));
   fs.writeFileSync(join(app, "shared/lib/lib.path"), "lib\n");
   return { root, app };
 }
@@ -155,7 +155,7 @@ test(
       const main = bash(
         `appdir_main_binary ${JSON.stringify(app)} linuxdeploy`,
       ).stdout.trim();
-      assert.equal(main, join(app, "usr/bin/OpenHuman"));
+      assert.equal(main, join(app, "usr/bin/Neppy"));
       assert.ok(
         validateLinuxdeploy(app),
         "a well-formed linuxdeploy AppDir must validate",
@@ -173,7 +173,7 @@ test("still classifies and resolves a sharun AppDir", SKIP, () => {
     const main = bash(
       `appdir_main_binary ${JSON.stringify(app)} sharun`,
     ).stdout.trim();
-    assert.equal(main, join(app, "shared/bin/OpenHuman"));
+    assert.equal(main, join(app, "shared/bin/Neppy"));
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -185,9 +185,9 @@ test(
   () => {
     const root = fs.mkdtempSync(join(os.tmpdir(), "openhuman-appdir-unk-"));
     try {
-      fs.mkdirSync(join(root, "OpenHuman.AppDir/random"), { recursive: true });
-      fs.writeFileSync(join(root, "OpenHuman.AppDir/random/thing"), "");
-      assert.equal(layoutOf(join(root, "OpenHuman.AppDir")), "unknown");
+      fs.mkdirSync(join(root, "Neppy.AppDir/random"), { recursive: true });
+      fs.writeFileSync(join(root, "Neppy.AppDir/random/thing"), "");
+      assert.equal(layoutOf(join(root, "Neppy.AppDir")), "unknown");
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -231,7 +231,7 @@ test(
       assert.equal(result.status, 0, result.stderr);
       // The profile must confine the real binary, not the sharun path.
       const written = fs.readFileSync(profile, "utf8");
-      assert.match(written, /usr\/bin\/OpenHuman/);
+      assert.match(written, /usr\/bin\/Neppy/);
       assert.doesNotMatch(written, /shared\/bin/);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
@@ -263,7 +263,7 @@ const MUTATIONS = [
   [
     "the desktop entry has no Exec=",
     (a) => {
-      const p = join(a, "usr/share/applications/OpenHuman.desktop");
+      const p = join(a, "usr/share/applications/Neppy.desktop");
       fs.writeFileSync(p, fs.readFileSync(p, "utf8").replace(/^Exec=.*$/m, ""));
     },
   ],
@@ -271,13 +271,13 @@ const MUTATIONS = [
     "there are two desktop entries",
     (a) =>
       fs.copyFileSync(
-        join(a, "usr/share/applications/OpenHuman.desktop"),
+        join(a, "usr/share/applications/Neppy.desktop"),
         join(a, "usr/share/applications/Other.desktop"),
       ),
   ],
   [
     "there is no desktop entry",
-    (a) => fs.rmSync(join(a, "usr/share/applications/OpenHuman.desktop")),
+    (a) => fs.rmSync(join(a, "usr/share/applications/Neppy.desktop")),
   ],
   [
     "usr/lib contains no shared libraries",
@@ -290,7 +290,7 @@ const MUTATIONS = [
     ".DirIcon dangles",
     (a) =>
       fs.rmSync(
-        join(a, "usr/share/icons/hicolor/256x256@2/apps/OpenHuman.png"),
+        join(a, "usr/share/icons/hicolor/256x256@2/apps/Neppy.png"),
       ),
   ],
 ];

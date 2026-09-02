@@ -1,4 +1,4 @@
-//! Service management helpers for OpenHuman daemon.
+//! Service management helpers for Neppy daemon.
 
 pub mod bus;
 mod core;

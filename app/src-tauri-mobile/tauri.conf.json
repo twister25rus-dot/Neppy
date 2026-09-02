@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OpenHuman",
+  "productName": "Neppy",
   "version": "0.58.16",
   "identifier": "com.tinyhumansai.openhuman",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "OpenHuman",
+        "title": "Neppy",
         "width": 390,
         "height": 844,
         "decorations": true,

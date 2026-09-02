@@ -3,7 +3,7 @@
 //! TinyAgents owns the durable task-run record, the heartbeat, the staleness
 //! policy, and the reclaim sweep (card back to `todo`, or parked at `blocked`
 //! once a card has burned through its reclaim budget). What stays here is
-//! OpenHuman's own shape around it: [`BoardLocation`] addressing (including the
+//! Neppy's own shape around it: [`BoardLocation`] addressing (including the
 //! process-global scratch board), RFC 3339 timestamps on the wire, the
 //! `TaskRunReclaimed` domain event, and the one-time import of the retired
 //! `{workspace}/agent_task_boards/<hex>.runs.json` ledger.

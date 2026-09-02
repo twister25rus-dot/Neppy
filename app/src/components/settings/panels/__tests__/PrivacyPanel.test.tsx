@@ -30,7 +30,7 @@ const annotated: Capability = {
   privacy: {
     leaves_device: true,
     data_kind: 'derived',
-    destinations: ['OpenHuman backend', 'TinyHumans Neocortex'],
+    destinations: ['Neppy backend', 'TinyHumans Neocortex'],
   },
 };
 
@@ -85,7 +85,7 @@ describe('PrivacyPanel', () => {
 
     expect(screen.getByTestId('privacy-row-conversation.send_text')).toBeTruthy();
     expect(screen.getByTestId('privacy-row-local_ai.embed_text')).toBeTruthy();
-    expect(screen.getByText(/OpenHuman backend, TinyHumans Neocortex/)).toBeTruthy();
+    expect(screen.getByText(/Neppy backend, TinyHumans Neocortex/)).toBeTruthy();
     expect(screen.getByText('Stays local')).toBeTruthy();
   });
 

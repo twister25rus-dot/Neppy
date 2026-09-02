@@ -3,14 +3,14 @@
 //! The cutover replaced the in-house OpenAI-compatible wire client with the
 //! vendored `tinyagents` crate's `OpenAiModel` — a `ChatModel` that speaks the
 //! OpenAI Chat Completions wire and, since tinyagents #44/#47/#48, carries the
-//! host-parity config the OpenHuman provider catalog needs: configurable auth
+//! host-parity config the Neppy provider catalog needs: configurable auth
 //! styles + static headers, per-model temperature suppression/override, and
 //! system→user merging. `num_ctx` and other Ollama `options` ride
 //! `ModelRequest.provider_options` (already supported upstream).
 //!
 //! This module is the **single boundary** where the host's resolved provider
 //! config becomes a crate-native `ChatModel`. Bespoke providers that the crate
-//! can't serve — the managed OpenHuman backend (session JWT + billing envelope),
+//! can't serve — the managed Neppy backend (session JWT + billing envelope),
 //! `claude_code` / `claude_agent_sdk` (subprocess), and `openai_codex`
 //! (`/v1/responses` + query-param auth) — stay as host `ChatModel` impls and do
 //! **not** route through here.
@@ -26,7 +26,7 @@ use tinyagents::harness::providers::openai::{AuthStyle as CrateAuthStyle, OpenAi
 use super::auth::AuthStyle as HostAuthStyle;
 
 /// Map the host [`AuthStyle`](HostAuthStyle) to the crate's `AuthStyle`. The
-/// variants are 1:1 (both were derived from the same OpenHuman provider catalog).
+/// variants are 1:1 (both were derived from the same Neppy provider catalog).
 pub(crate) fn map_auth_style(host: HostAuthStyle) -> CrateAuthStyle {
     match host {
         HostAuthStyle::None => CrateAuthStyle::None,

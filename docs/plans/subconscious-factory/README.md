@@ -8,7 +8,7 @@ steer the rest of the system. Today that layer exists twice, fused together
 inside one engine. This plan pulls it apart into a **factory** that can
 instantiate a subconscious per *world*:
 
-- **`memory`** — OpenHuman's internal high-level world: the user's connected
+- **`memory`** — Neppy's internal high-level world: the user's connected
   memory sources (Gmail/Slack/Notion/folders). Observes a `memory_diff`
   against a baseline checkpoint; reflects with the slim decision agent
   (to-dos, goals, `notify_user`, delegation).

@@ -7,7 +7,7 @@ import {
   userErrorId,
 } from '../classify';
 
-const BUDGET_MSG = 'OpenHuman API error (400): Insufficient budget';
+const BUDGET_MSG = 'Neppy API error (400): Insufficient budget';
 const CREDITS_MSG = 'OpenRouter: this request requires more credits';
 const BALANCE_MSG = 'HTTP 402: account is out of balance';
 const GENERIC_MSG = 'Something went wrong. Please try again.';

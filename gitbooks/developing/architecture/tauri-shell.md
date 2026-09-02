@@ -5,7 +5,7 @@ icon: desktop
 
 # Tauri shell (`app/src-tauri/`)
 
-The desktop host for OpenHuman: Tauri v2 + WebView, IPC commands, window management, and bridging to the embedded `openhuman-core` Rust runtime (core JSON-RPC). It does **not** duplicate the full domain stack; that lives in the repo-root Rust crate (`openhuman_core`, `src/main.rs`).
+The desktop host for Neppy: Tauri v2 + WebView, IPC commands, window management, and bridging to the embedded `openhuman-core` Rust runtime (core JSON-RPC). It does **not** duplicate the full domain stack; that lives in the repo-root Rust crate (`openhuman_core`, `src/main.rs`).
 
 ## Responsibilities
 
@@ -23,7 +23,7 @@ The desktop host for OpenHuman: Tauri v2 + WebView, IPC commands, window managem
 
 Normal app quit runs teardown from `RunEvent::ExitRequested`: child webviews are closed before CEF shutdown, the embedded core's cancellation token is triggered, and the final process sweep sends `SIGTERM` to direct children before escalating holdouts with `SIGKILL` after a short grace period. Sweep summaries are logged as `[app] sweep: term=N kill=M total=K`; any nonzero `kill` count is a warning and means a child ignored graceful shutdown.
 
-On macOS, hard exits (Force Quit, `SIGKILL`, renderer crash) can skip normal teardown. The next launch runs startup recovery before CEF cache preflight: it lists OpenHuman processes whose executable path belongs to the launching `.app/Contents`, skips the current process, sends `SIGTERM`, waits briefly, then `SIGKILL`s stragglers that still match the same pid+command. Logs use the `[startup-recovery]` prefix.
+On macOS, hard exits (Force Quit, `SIGKILL`, renderer crash) can skip normal teardown. The next launch runs startup recovery before CEF cache preflight: it lists Neppy processes whose executable path belongs to the launching `.app/Contents`, skips the current process, sends `SIGTERM`, waits briefly, then `SIGKILL`s stragglers that still match the same pid+command. Logs use the `[startup-recovery]` prefix.
 
 Startup recovery skips when `OPENHUMAN_CORE_REUSE_EXISTING=1` is set (so manual CLI-core reuse still works) and when the CEF `SingletonLock` is held by a live process (so the normal second-instance path can fail without killing the already-running app). The Tauri command `process_diagnostics_list_owned` returns the currently owned process list; the macOS implementation is bundle-scoped, Linux/Windows currently return empty.
 
@@ -31,7 +31,7 @@ Startup recovery skips when `OPENHUMAN_CORE_REUSE_EXISTING=1` is set (so manual 
 
 ### Overview
 
-The **`app/src-tauri`** crate (Rust package **`OpenHuman`**, binary **`OpenHuman`**) is a **desktop-only** host. It embeds the React UI, registers plugins (deep link, opener, OS, notifications, autostart, updater), manages the main window and tray, and runs the core JSON-RPC server **in-process**.
+The **`app/src-tauri`** crate (Rust package **`Neppy`**, binary **`Neppy`**) is a **desktop-only** host. It embeds the React UI, registers plugins (deep link, opener, OS, notifications, autostart, updater), manages the main window and tray, and runs the core JSON-RPC server **in-process**.
 
 Non-desktop targets fail at compile time (`compile_error!` in `lib.rs`).
 
@@ -115,13 +115,13 @@ All commands are registered in **`app/src-tauri/src/lib.rs`** inside `tauri::gen
 | `core_rpc_token`                 | Return the active gateway's bearer. Paired with `core_rpc_url`: a token minted for the embedded core is meaningless to a core in a container    |
 | `relay_http_rpc`                 | Host-side JSON-RPC POST (`{ url, token?, body }` → `{ status, body }`) for self-hosted runtimes the webview cannot fetch (mixed content, #3865) |
 | `overlay_parent_rpc_url`         | RPC URL inherited from a parent process (overlay windows), from `OPENHUMAN_CORE_RPC_URL`                                                        |
-| `process_diagnostics_list_owned` | List OpenHuman processes owned by this app bundle (macOS; empty elsewhere)                                                                      |
+| `process_diagnostics_list_owned` | List Neppy processes owned by this app bundle (macOS; empty elsewhere)                                                                      |
 
 Use **`app/src/services/coreRpcClient.ts`** (`callCoreRpc`) from the frontend.
 
 ### Gateways — running the core somewhere else
 
-A **gateway** is one way of reaching an OpenHuman core. Four exist: the core inside this
+A **gateway** is one way of reaching an Neppy core. Four exist: the core inside this
 process, a core somebody else is running at a URL, and two this app provisions itself — in
 a Docker container, or on a machine reached over SSH. The last two are the same code:
 [tinybox](https://github.com/tinyhumansai/tinybox) models *reach* (`local` / `ssh`) and
@@ -219,7 +219,7 @@ Hide-to-tray / reopen behavior is **not** an IPC command — it lives in the `Ru
 
 ### Workspace file links
 
-From **`workspace_paths.rs`** (closes `#1402`). These commands accept workspace-relative paths only. The shell resolves each path against the active OpenHuman workspace, canonicalizes the target, and rejects traversal, absolute paths, URI-like prefixes, and symlink escapes before opening or reading anything.
+From **`workspace_paths.rs`** (closes `#1402`). These commands accept workspace-relative paths only. The shell resolves each path against the active Neppy workspace, canonicalizes the target, and rejects traversal, absolute paths, URI-like prefixes, and symlink escapes before opening or reading anything.
 
 | Command                           | Purpose                                                                |
 | --------------------------------- | ---------------------------------------------------------------------- |
@@ -293,7 +293,7 @@ The Tauri crate **does not** embed a duplicate Socket.io server or Telegram clie
 
 - Runs the core's HTTP/JSON-RPC server as a **tokio task inside the Tauri host** via `openhuman_core::core::jsonrpc::run_server_embedded_with_ready` — no sidecar binary.
 - Generates a per-launch 256-bit hex bearer token (`generate_rpc_token`) and hands it to the embedded server; the renderer reads it via the `core_rpc_token` command.
-- Stale-listener policy (#1130): if the core port is already occupied, probes whether the listener is an old OpenHuman core (terminate + respawn) or something foreign (surface the conflict). `OPENHUMAN_CORE_REUSE_EXISTING=1` opts back into attach-to-existing for debugging.
+- Stale-listener policy (#1130): if the core port is already occupied, probes whether the listener is an old Neppy core (terminate + respawn) or something foreign (surface the conflict). `OPENHUMAN_CORE_REUSE_EXISTING=1` opts back into attach-to-existing for debugging.
 - Managed as Tauri state in `lib.rs` (`app.manage(core_handle)`).
 
 ### `core_rpc` (`core_rpc.rs`)

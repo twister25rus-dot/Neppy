@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs';
 
 // @ts-nocheck
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 import { startMockServer, stopMockServer } from '../mock-server';
 
@@ -64,7 +64,7 @@ function stepLog(message: string, context?: unknown): void {
 
 const FIXTURE_REPO_REL = 'fixtures/967-git-fixture';
 const FIXTURE_FILE = 'README.md';
-const FIXTURE_COMMIT_AUTHOR = 'OpenHuman E2E Bot <e2e-967@openhuman.local>';
+const FIXTURE_COMMIT_AUTHOR = 'Neppy E2E Bot <e2e-967@openhuman.local>';
 
 interface ServerStatus {
   running?: boolean;
@@ -122,7 +122,7 @@ async function makeFixtureRepo(absRepoDir: string): Promise<void> {
     throw new Error(`git init failed in fixture: ${init.stderr || init.stdout}`);
   }
   await runLocal('git', ['config', 'user.email', 'e2e-967@openhuman.local'], absRepoDir);
-  await runLocal('git', ['config', 'user.name', 'OpenHuman E2E Bot'], absRepoDir);
+  await runLocal('git', ['config', 'user.name', 'Neppy E2E Bot'], absRepoDir);
   // Skip GPG signing in the fixture — the user's key is not provisioned in CI.
   await runLocal('git', ['config', 'commit.gpgsign', 'false'], absRepoDir);
   await fs.writeFile(
@@ -171,11 +171,11 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     // Probe the agent runtime — this is the same RPC the React UI's service
     // page hits, so failure here means the entire system-tool surface is
     // unreachable. core.ping is independent of agent-runtime bootstrap.
-    const ping = await callOpenhumanRpc('core.ping', {});
+    const ping = await callNeppyRpc('core.ping', {});
     stepLog('core.ping response', ping);
     expect(ping.ok).toBe(true);
 
-    const status = await callOpenhumanRpc<ServerStatus>('openhuman.agent_server_status', {});
+    const status = await callNeppyRpc<ServerStatus>('openhuman.agent_server_status', {});
     stepLog('agent_server_status response', status);
     expect(status.ok).toBe(true);
     // agent_server_status uses single_log → result is {result: {running, url}, logs: [...]}
@@ -186,7 +186,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     // (shell, file_read, file_write, git_operations, browser_open, browser).
     // Asserting it is registered proves the registry path that resolves
     // shell/git tools is live behind JSON-RPC.
-    const list = await callOpenhumanRpc<ListDefinitionsResult>(
+    const list = await callNeppyRpc<ListDefinitionsResult>(
       'openhuman.agent_list_definitions',
       {}
     );
@@ -210,7 +210,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     // as `{ ok: true }` with a hidden error string. This is the contract every
     // restricted-command response (and every `Tool::error(...)` result) must
     // satisfy for the UI to render the deny path.
-    const bogus = await callOpenhumanRpc('openhuman.memory_write_file', {
+    const bogus = await callNeppyRpc('openhuman.memory_write_file', {
       // omit `relative_path` to force the validator to short-circuit
       content: 'no path provided',
     });
@@ -219,7 +219,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     expect(typeof bogus.error === 'string' && bogus.error.length > 0).toBe(true);
 
     // Negative path traversal — also a denial — must surface the same shape.
-    const traversal = await callOpenhumanRpc('openhuman.memory_write_file', {
+    const traversal = await callNeppyRpc('openhuman.memory_write_file', {
       relative_path: '../shell-restriction-967.txt',
       content: 'should not be written',
     });

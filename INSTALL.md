@@ -1,4 +1,4 @@
-# Installing OpenHuman
+# Installing Neppy
 
 Download installers from [tinyhumans.ai/openhuman](https://tinyhumans.ai/openhuman?utm_source=github&utm_medium=readme) or from the [GitHub Releases](https://github.com/tinyhumansai/openhuman/releases/latest) page. For terminal installs, the native package paths below are preferred because they use your OS package manager or native installer where available.
 
@@ -15,10 +15,10 @@ brew install --cask openhuman
 **Linux (Debian/Ubuntu, release `.deb`):**
 
 ```bash
-# Download OpenHuman_<version>_amd64.deb or OpenHuman_<version>_arm64.deb
+# Download Neppy_<version>_amd64.deb or Neppy_<version>_arm64.deb
 # from https://github.com/tinyhumansai/openhuman/releases/latest, then:
 # Replace amd64 with arm64 on arm64 hosts.
-sudo apt-get install -y --no-install-recommends ./OpenHuman_*_amd64.deb
+sudo apt-get install -y --no-install-recommends ./Neppy_*_amd64.deb
 ```
 
 **Linux (Arch, AUR):** the [`openhuman-bin` AUR recipe](./packages/arch/openhuman-bin/) is in the repo. Once published, Arch users can install it with `yay -S openhuman-bin`.

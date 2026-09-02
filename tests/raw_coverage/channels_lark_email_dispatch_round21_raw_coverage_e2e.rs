@@ -56,7 +56,7 @@ fn lark_parser_support_covers_post_mentions_placeholders_and_webhook_payloads() 
     );
     assert!(!lark_support::should_respond_in_group_for_test(&[]));
     assert!(lark_support::should_respond_in_group_for_test(&[
-        json!({"name": "OpenHuman"})
+        json!({"name": "Neppy"})
     ]));
     assert!(lark_support::should_refresh_last_recv_for_test(
         &WsMsg::Binary(vec![1, 2, 3].into())

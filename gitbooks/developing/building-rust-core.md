@@ -210,4 +210,4 @@ Windows note:
 ## 7. Related paths
 
 - [Getting Set Up](getting-set-up.md): full desktop contributor setup with `pnpm`, Tauri, submodules, and sidecar staging.
-- [OpenHuman Architecture](architecture/README.md): where the core fits into the desktop app and RPC flow.
+- [Neppy Architecture](architecture/README.md): where the core fits into the desktop app and RPC flow.

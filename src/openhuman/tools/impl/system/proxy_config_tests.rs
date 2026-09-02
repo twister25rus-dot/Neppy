@@ -124,15 +124,15 @@ fn parse_scope_known_values() {
     );
     assert_eq!(
         ProxyConfigTool::parse_scope("openhuman"),
-        Some(ProxyScope::OpenHuman)
+        Some(ProxyScope::Neppy)
     );
     assert_eq!(
         ProxyConfigTool::parse_scope("internal"),
-        Some(ProxyScope::OpenHuman)
+        Some(ProxyScope::Neppy)
     );
     assert_eq!(
         ProxyConfigTool::parse_scope("core"),
-        Some(ProxyScope::OpenHuman)
+        Some(ProxyScope::Neppy)
     );
     assert_eq!(
         ProxyConfigTool::parse_scope("services"),

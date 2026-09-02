@@ -17,7 +17,7 @@
  * - Sidecar JSON-RPC connectivity
  */
 import { waitForApp, waitForAppReady } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { dumpAccessibilityTree, textExists } from '../helpers/element-helpers';
 import { supportsExecuteScript } from '../helpers/platform';
 import { startMockServer, stopMockServer } from '../mock-server';
@@ -119,7 +119,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
     });
 
     it('core RPC endpoint responds to ping (sidecar is reachable)', async () => {
-      const result = await callOpenhumanRpc('core.ping', {});
+      const result = await callNeppyRpc('core.ping', {});
 
       stepLog('core.ping result', {
         ok: result.ok,
@@ -132,7 +132,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
     });
 
     it('core version is accessible via JSON-RPC', async () => {
-      const result = await callOpenhumanRpc('core.version', {});
+      const result = await callNeppyRpc('core.version', {});
 
       stepLog('core.version result', {
         ok: result.ok,
@@ -162,7 +162,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
 
       for (const method of methods) {
         try {
-          const result = await callOpenhumanRpc(method, {});
+          const result = await callNeppyRpc(method, {});
           results[method] = result.ok;
           stepLog(`Health check ${method}`, { ok: result.ok });
         } catch {
@@ -184,10 +184,10 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
       // Post PR #1061 the core runs in-process (no sidecar binary), but this
       // assertion still has value: a successful core.ping proves the core
       // RPC server bound a port and is reachable. `httpStatus` is only set
-      // on failure paths of callOpenhumanRpcNode — so asserting on it for a
+      // on failure paths of callNeppyRpcNode — so asserting on it for a
       // success case always fails; check `ok` and absence of error instead.
 
-      const result = await callOpenhumanRpc('core.ping', {});
+      const result = await callNeppyRpc('core.ping', {});
 
       stepLog('Verifying core RPC is running', { ok: result.ok, error: result.error });
 
@@ -205,7 +205,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
       // The app started successfully in before() - if setup_tray() had panicked
       // on linux+cef, we wouldn't be here. Verify app is healthy.
 
-      const hasChrome = await textExists('OpenHuman');
+      const hasChrome = await textExists('Neppy');
       stepLog('App chrome check', { hasChrome });
 
       // App should have started without crashing
@@ -257,7 +257,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
       stepLog('Full chain test: core_rpc_url', { rpcUrl });
 
       // Now verify that URL is actually reachable
-      const pingResult = await callOpenhumanRpc('core.ping', {});
+      const pingResult = await callNeppyRpc('core.ping', {});
       expect(pingResult.ok).toBe(true);
     });
 
@@ -296,7 +296,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
       // We can't directly read logs in E2E, but we verify the sidecar
       // started successfully which means the logging paths executed
 
-      const result = await callOpenhumanRpc('core.ping', {});
+      const result = await callNeppyRpc('core.ping', {});
       expect(result.ok).toBe(true);
 
       stepLog('Diagnostic patterns verified via successful startup', { pingOk: result.ok });
@@ -327,7 +327,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
       const results: boolean[] = [];
 
       for (let i = 0; i < 3; i++) {
-        const result = await callOpenhumanRpc('core.ping', {});
+        const result = await callNeppyRpc('core.ping', {});
         results.push(result.ok);
         await browser.pause(100);
       }

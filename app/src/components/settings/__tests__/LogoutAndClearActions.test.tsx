@@ -58,7 +58,7 @@ describe('LogoutAndClearActions', () => {
     const user = userEvent.setup();
     mockClearAllAppData.mockRejectedValueOnce(
       new Error(
-        'Failed to remove C:\\Users\\me\\.openhuman because it is locked by another OpenHuman window or process. Close all OpenHuman windows and try again.'
+        'Failed to remove C:\\Users\\me\\.openhuman because it is locked by another Neppy window or process. Close all Neppy windows and try again.'
       )
     );
     renderActions();
@@ -68,7 +68,7 @@ describe('LogoutAndClearActions', () => {
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
     expect(
-      await screen.findByText(/locked by another OpenHuman window or process/)
+      await screen.findByText(/locked by another Neppy window or process/)
     ).toBeInTheDocument();
   });
 

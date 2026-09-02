@@ -51,7 +51,7 @@ export default function WebCallbackPage({
       <div className="max-w-md space-y-3">
         <h1 className="text-2xl font-semibold text-slate-900">Completing sign-in</h1>
         <p className="text-sm text-slate-600">
-          OpenHuman is processing your callback and will continue automatically.
+          Neppy is processing your callback and will continue automatically.
         </p>
       </div>
     </div>

@@ -31,7 +31,7 @@ export class VoiceNotCompiledError extends Error {
   constructor() {
     super(
       'Voice transcription is unavailable in this build — the voice module was not compiled into the app. ' +
-        'Update OpenHuman to the latest version; restarting will not help.'
+        'Update Neppy to the latest version; restarting will not help.'
     );
     this.name = 'VoiceNotCompiledError';
   }

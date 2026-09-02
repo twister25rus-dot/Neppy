@@ -7,7 +7,7 @@ icon: route
 
 # Automatic Model Routing
 
-Different parts of an agent want different models. Long reasoning wants a frontier model. Quick "fix this typo" calls want a fast cheap one. Vision wants a vision model. OpenHuman handles this with a built-in **router provider** so you never have to think about it.
+Different parts of an agent want different models. Long reasoning wants a frontier model. Quick "fix this typo" calls want a fast cheap one. Vision wants a vision model. Neppy handles this with a built-in **router provider** so you never have to think about it.
 
 ## How a request gets routed
 
@@ -45,7 +45,7 @@ The exact mappings are configurable; the defaults ship sensible per-provider rou
 
 ## One subscription, or your own
 
-Routing happens behind a single OpenHuman subscription by default. You don't hold separate API keys for Anthropic, OpenAI, Google etc., the backend brokers access, and the router picks the right one per task. That's the "one subscription, many providers" promise from the README, made concrete.
+Routing happens behind a single Neppy subscription by default. You don't hold separate API keys for Anthropic, OpenAI, Google etc., the backend brokers access, and the router picks the right one per task. That's the "one subscription, many providers" promise from the README, made concrete.
 
 The subscription is the default, not a requirement. The same router works against **your own provider key** or a **fully local model**, per workload, and you can mix all three. See [Local models & bring your own key](local-and-byok-models.md) for setup and for what each route supports for chat, vision, and embeddings.
 

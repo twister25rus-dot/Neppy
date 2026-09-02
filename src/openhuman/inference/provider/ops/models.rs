@@ -143,7 +143,7 @@ pub async fn list_configured_models_from_config(
             }
             r
         }
-        AuthStyle::OpenhumanJwt => {
+        AuthStyle::NeppyJwt => {
             if !api_key.is_empty() {
                 request.header("Authorization", format!("Bearer {}", api_key))
             } else {

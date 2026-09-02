@@ -565,7 +565,7 @@ fn strip_time_ticks_removes_inline_value_form() {
 
 #[test]
 fn strip_time_ticks_removes_the_flag_regardless_of_value() {
-    // Even a non-negative value is dropped: OpenHuman must let Chromium
+    // Even a non-negative value is dropped: Neppy must let Chromium
     // compute the clock origin rather than anchor it from the shell.
     let mut args = vec![
         ("--time-ticks-at-unix-epoch", Some("1780937467390432")),

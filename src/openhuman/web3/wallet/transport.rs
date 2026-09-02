@@ -1,9 +1,9 @@
-//! OpenHuman's implementation of the [`tinywallet_bus::rpc::Transport`] seam.
+//! Neppy's implementation of the [`tinywallet_bus::rpc::Transport`] seam.
 //!
 //! `tinywallet-bus` performs no I/O and takes no URLs: it names a
 //! [`NetworkId`](tinywallet_bus::rpc::NetworkId) and asks a host to reach it. This
 //! module is that host side — the adapter that lets `tinywallet_bus::rpc` and
-//! the chain modules run against OpenHuman's existing RPC layer.
+//! the chain modules run against Neppy's existing RPC layer.
 //!
 //! Everything the crate deliberately refused to own lives on this side of the
 //! seam and is reused from [`super::rpc`] unchanged:
@@ -22,7 +22,7 @@
 //! distinction: retrying an authoritative "insufficient funds" gets the same
 //! answer, while retrying an ambiguous failure risks a double broadcast.
 //!
-//! OpenHuman's RPC helpers flatten both into `String`, so this adapter cannot
+//! Neppy's RPC helpers flatten both into `String`, so this adapter cannot
 //! recover the distinction perfectly. It classifies conservatively — **anything
 //! it cannot prove is a transport failure is reported as authoritative** — so
 //! an unclassifiable error stops a failover loop rather than driving it. That
@@ -38,14 +38,14 @@ use super::defaults::{rpc_url_for_chain, rpc_url_for_evm_network, EvmNetwork};
 use super::ops::WalletChain;
 use super::rpc::{redact_rpc_url, rest_get_text, rest_post_text, rpc_call_to};
 
-/// Adapter over OpenHuman's wallet RPC layer.
+/// Adapter over Neppy's wallet RPC layer.
 ///
 /// Stateless — endpoint resolution happens per call so an env override applied
 /// mid-process (as the e2e harness does) is picked up without rebuilding it.
 #[derive(Debug, Clone, Copy, Default)]
-pub struct OpenHumanTransport;
+pub struct NeppyTransport;
 
-impl OpenHumanTransport {
+impl NeppyTransport {
     /// Build the adapter.
     #[must_use]
     pub const fn new() -> Self {
@@ -53,13 +53,13 @@ impl OpenHumanTransport {
     }
 }
 
-/// Map a `tinywallet-bus` network onto OpenHuman's chain enum plus a base URL.
+/// Map a `tinywallet-bus` network onto Neppy's chain enum plus a base URL.
 #[allow(unreachable_patterns)]
 fn resolve(network: NetworkId) -> Result<String, TransportError> {
     match network.chain {
         tinywallet_bus::Chain::Evm => {
             // An EVM request names its EIP-155 chain id; resolving it here is
-            // what keeps `tinywallet-bus` free of OpenHuman's network enum.
+            // what keeps `tinywallet-bus` free of Neppy's network enum.
             let chain_id = network.evm_chain_id.ok_or_else(|| TransportError::Rpc {
                 network,
                 message: "EVM requests require an EIP-155 chain id".to_string(),
@@ -112,7 +112,7 @@ fn classify(network: NetworkId, message: String) -> TransportError {
 }
 
 #[async_trait]
-impl Transport for OpenHumanTransport {
+impl Transport for NeppyTransport {
     async fn json_rpc(
         &self,
         network: NetworkId,

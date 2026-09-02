@@ -1,34 +1,34 @@
 ---
 description: >-
-  Open OpenHuman's memory as an Obsidian vault so you can read, edit, and link
+  Open Neppy's memory as an Obsidian vault so you can read, edit, and link
   the agent's notes by hand, and have it pick up your edits.
 icon: book-open
 ---
 
-# Connect OpenHuman to Obsidian
+# Connect Neppy to Obsidian
 
 **Goal:** browse and edit the assistant's memory as plain Markdown in [Obsidian](https://obsidian.md), and have your edits flow back into what the agent knows.
 
-OpenHuman's memory isn't a black box: the same chunks the agent reasons over are written as `.md` files in an Obsidian-compatible vault inside your workspace. See [Memory](../features/obsidian-wiki/) for the full picture; this guide just gets you connected.
+Neppy's memory isn't a black box: the same chunks the agent reasons over are written as `.md` files in an Obsidian-compatible vault inside your workspace. See [Memory](../features/obsidian-wiki/) for the full picture; this guide just gets you connected.
 
 ---
 
 ## Prerequisites
 
 - [Obsidian](https://obsidian.md) installed (free).
-- OpenHuman set up with at least one source connected, so there's memory to look at. See [Create my personal AI assistant](personal-assistant.md).
+- Neppy set up with at least one source connected, so there's memory to look at. See [Create my personal AI assistant](personal-assistant.md).
 
 ## Privacy implications
 
 - The vault is **local**. It lives in your workspace folder (`…/wiki/`) on your machine. Opening it in Obsidian doesn't upload anything.
-- Obsidian reads local files directly; no OpenHuman account or backend is involved in browsing the vault.
+- Obsidian reads local files directly; no Neppy account or backend is involved in browsing the vault.
 - Anything you type into the vault becomes part of what the agent can read on its next ingest. Treat it like writing into the assistant's memory.
 
 ---
 
 ## Steps
 
-### 1. Open the vault from OpenHuman
+### 1. Open the vault from Neppy
 
 Go to the **Memory** tab and click **View vault in Obsidian**. This opens your `…/wiki/` folder as a vault in Obsidian.
 
@@ -57,9 +57,9 @@ Your changes are read on the next ingest, so you don't have to import anything. 
 
 ## Success checks
 
-- [ ] Obsidian opens the vault and shows OpenHuman's summary files.
+- [ ] Obsidian opens the vault and shows Neppy's summary files.
 - [ ] You can open a summary and see source/time provenance in its frontmatter.
-- [ ] A note you add by hand is still there after OpenHuman runs (it isn't overwritten), and the agent can reference it in a later chat.
+- [ ] A note you add by hand is still there after Neppy runs (it isn't overwritten), and the agent can reference it in a later chat.
 
 ## Common failures
 
@@ -71,7 +71,7 @@ Your changes are read on the next ingest, so you don't have to import anything. 
 
 ## Recovery
 
-- The vault is just files. If Obsidian shows something odd, close it and reopen the folder. You can't break OpenHuman by browsing.
+- The vault is just files. If Obsidian shows something odd, close it and reopen the folder. You can't break Neppy by browsing.
 - If you deleted a note you wanted, the memory database still holds the underlying chunk; the summary can regenerate.
 
 ## See also

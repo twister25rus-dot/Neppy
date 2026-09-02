@@ -1,6 +1,6 @@
 # doctor
 
-Diagnostic / self-check domain for OpenHuman. Runs a synchronous battery of probes against the live `Config`, the workspace directory, the daemon state file, the local environment, the memory-tree SQLite DB, the embedding provider (Ollama), and the Claude Agent SDK binary, then aggregates the findings into a severity-tagged `DoctorReport`. Exposed to CLI and JSON-RPC as `doctor.report` and `doctor.models`. This is what powers `openhuman doctor` / the Settings health surface.
+Diagnostic / self-check domain for Neppy. Runs a synchronous battery of probes against the live `Config`, the workspace directory, the daemon state file, the local environment, the memory-tree SQLite DB, the embedding provider (Ollama), and the Claude Agent SDK binary, then aggregates the findings into a severity-tagged `DoctorReport`. Exposed to CLI and JSON-RPC as `doctor.report` and `doctor.models`. This is what powers `openhuman doctor` / the Settings health surface.
 
 ## Responsibilities
 

@@ -554,10 +554,10 @@ export PATH="$PATH_PREFIX:$PATH"
 "$PNPM_EXE" core:stage
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Stage the CEF runtime next to the dev OpenHuman.exe.
+# Stage the CEF runtime next to the dev Neppy.exe.
 #
 # `cargo tauri build` (release) copies CEF into the bundle automatically, but
-# `cargo tauri dev` doesn't — the dev .exe lands at <target>/debug/OpenHuman.exe
+# `cargo tauri dev` doesn't — the dev .exe lands at <target>/debug/Neppy.exe
 # alone, and Windows can't find libcef.dll. The .exe panics during boot with
 # `cef::library_loader::LibraryLoader::new` errors (or just refuses to launch
 # with "libcef.dll not found"). Without this step every fresh contributor
@@ -568,11 +568,11 @@ export PATH="$PATH_PREFIX:$PATH"
 # destination, so subsequent dev runs are essentially free.
 # ─────────────────────────────────────────────────────────────────────────────
 if [[ -n "${CEF_RUNTIME_PATH:-}" && -f "$CEF_RUNTIME_PATH/libcef.dll" ]]; then
-  # The dev OpenHuman.exe is produced by the *Tauri shell* crate
+  # The dev Neppy.exe is produced by the *Tauri shell* crate
   # (app/src-tauri/Cargo.toml), not the root core crate. When
   # CARGO_TARGET_DIR is set both workspaces share it; when unset, the
   # Tauri shell builds into app/src-tauri/target while the root crate
-  # builds into target/. Stage CEF next to where OpenHuman.exe will
+  # builds into target/. Stage CEF next to where Neppy.exe will
   # actually live so Windows' DLL search order finds libcef.dll
   # regardless of how the exe is launched (terminal, OAuth deep-link,
   # double-click, etc).

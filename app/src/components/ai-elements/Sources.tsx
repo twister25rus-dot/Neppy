@@ -3,11 +3,11 @@
  * https://github.com/vercel/ai-elements (Apache License 2.0).
  *
  * Changes made in this port:
- * - `@/registry/default/ui/collapsible` -> OpenHuman's Collapsible primitives
+ * - `@/registry/default/ui/collapsible` -> Neppy's Collapsible primitives
  *   from `../ui`; `@/lib/utils` cn -> `../../lib/cn`.
  * - lucide `BookIcon` / `ChevronDownIcon` -> inline SVGs in `./icons`
  *   (`lucide-react` is not a dependency here).
- * - shadcn semantic colours -> OpenHuman design tokens, and the
+ * - shadcn semantic colours -> Neppy design tokens, and the
  *   `tailwindcss-animate` enter/exit utilities dropped in favour of the
  *   `animate-fade-in` already baked into `CollapsibleContent`.
  * - `SourcesProps` is typed off `CollapsibleRoot` rather than `'div'` so

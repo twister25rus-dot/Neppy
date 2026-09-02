@@ -340,7 +340,7 @@ async fn diagnostics_reports_server_unreachable_when_url_unbound() {
         .unwrap_or_default();
     assert!(
         repair_actions.is_empty(),
-        "OpenHuman should not suggest app-managed repair actions anymore"
+        "Neppy should not suggest app-managed repair actions anymore"
     );
     unsafe {
         std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");

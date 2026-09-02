@@ -21,7 +21,7 @@
 //! The `model` field in the request selects the provider:
 //! - `"ollama:<model>"` or a bare model name → local Ollama
 //! - `"<slug>:<model>"` → cloud provider entry by slug
-//! - everything else → OpenHuman backend (session JWT)
+//! - everything else → Neppy backend (session JWT)
 
 use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive, Sse};
@@ -293,7 +293,7 @@ async fn models_handler(State(_state): State<AppState>) -> Response {
         }
     };
 
-    // Stable managed-router sentinel for callers that want OpenHuman to keep
+    // Stable managed-router sentinel for callers that want Neppy to keep
     // selecting the effective upstream model based on the current routing config.
     push_model("openhuman".to_string(), "openhuman".to_string());
 

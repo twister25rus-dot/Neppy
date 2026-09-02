@@ -9,7 +9,7 @@
 //!
 //! When the user selects `exa` as their search engine and has saved their own
 //! Exa API key, every call in this family goes straight from the desktop client
-//! to `api.exa.ai` -- the OpenHuman managed backend is never involved. The
+//! to `api.exa.ai` -- the Neppy managed backend is never involved. The
 //! managed (`engine = "managed"`) path is untouched by this module.
 
 use crate::openhuman::tools::traits::{Tool, ToolCallOptions, ToolResult};

@@ -20,7 +20,7 @@
 //!    Save-As fallback works on Windows too.
 //!
 //! Both validate that the source is an existing file inside the
-//! OpenHuman data dir's `artifacts/` tree, and sanitize the filename
+//! Neppy data dir's `artifacts/` tree, and sanitize the filename
 //! hint, so the renderer can never copy an arbitrary local file out nor
 //! write outside the chosen directory.
 
@@ -66,7 +66,7 @@ pub async fn save_artifact_via_dialog(
 }
 
 /// Validate a renderer-supplied source path: must be a non-empty,
-/// absolute path that exists on disk AND resolve inside the OpenHuman
+/// absolute path that exists on disk AND resolve inside the Neppy
 /// data directory's `artifacts/` tree. The path always originates from
 /// the core `ai_get_artifact` RPC's `absolute_path`, but the command is
 /// reachable by the renderer directly, so we re-validate the trust
@@ -93,7 +93,7 @@ fn validate_source(source_path: &str) -> Result<PathBuf, String> {
     Ok(source)
 }
 
-/// Confirm `source` resolves inside `root` (the OpenHuman data dir) and
+/// Confirm `source` resolves inside `root` (the Neppy data dir) and
 /// carries an `artifacts` path component — i.e. it is a workspace
 /// artifact, not an arbitrary local file. Canonicalizes both sides so
 /// symlink trickery can't escape the root. Isolated for unit testing
@@ -104,7 +104,7 @@ fn assert_artifact_source(source: &Path, root: &Path) -> Result<(), String> {
         .map_err(|e| format!("cannot resolve source path: {e}"))?;
     let canon_root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     if !canon_source.starts_with(&canon_root) {
-        return Err("source must be inside the OpenHuman data directory".to_string());
+        return Err("source must be inside the Neppy data directory".to_string());
     }
     if !canon_source
         .components()

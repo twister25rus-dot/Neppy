@@ -1,6 +1,6 @@
 # Library-minimal feature recipe
 
-A **supported, measured** compile-time feature recipe for embedding the OpenHuman
+A **supported, measured** compile-time feature recipe for embedding the Neppy
 Rust core as a library in "opencompany" — headless, no RPC server, no Tauri
 shell, targeting 100-1000 live agents in a 2 GB RAM / 2 vCPU box.
 

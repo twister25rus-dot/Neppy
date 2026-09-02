@@ -2,7 +2,7 @@
 //!
 //! Drives Anthropic's `claude` CLI (`-p --output-format stream-json
 //! --verbose --include-partial-messages --resume <uuid>`) instead of
-//! calling the HTTP API directly. v2 will expose OpenHuman's native
+//! calling the HTTP API directly. v2 will expose Neppy's native
 //! Rust tools back into the CLI over MCP; this Phase 2 cut runs the
 //! driver end-to-end with native CC built-ins disabled at the caller
 //! (no `--allowedTools` set means CC's own tools simply don't fire
@@ -177,7 +177,7 @@ impl ClaudeCodeProvider {
             .find(|m| m.role == "system")
             .map(|m| m.content.clone());
 
-        // OpenHuman doesn't pass thread_id directly through ChatRequest yet
+        // Neppy doesn't pass thread_id directly through ChatRequest yet
         // (Phase 4 will). For Phase 2 we key sessions on a stable hash of
         // the conversation so /resume kicks in across consecutive turns.
         let thread_id = thread_key_from_messages(request.messages);
@@ -297,7 +297,7 @@ impl ChatModel<()> for ClaudeCodeProvider {
 }
 
 /// Stable session key derived from the conversation's first user message.
-/// Best-effort — Phase 4 will plumb the real OpenHuman thread id through
+/// Best-effort — Phase 4 will plumb the real Neppy thread id through
 /// `ChatRequest`.
 ///
 /// Uses SHA-256 (truncated) so the key is stable across Rust compiler

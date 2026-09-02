@@ -75,7 +75,7 @@ pub(crate) enum FlavourLookup {
 
 /// Pure lookup shared by [`MemoryFlavourTool::execute`] and the tinyflows
 /// `memory` node's `flavour` operation
-/// (`OpenHumanMemory::flavour` in `crate::openhuman::flows::tinyflows::memory_adapter`)
+/// (`NeppyMemory::flavour` in `crate::openhuman::flows::tinyflows::memory_adapter`)
 /// — both surfaces read the exact same flavoured-tree path, so there is only
 /// one place that knows how a `flavour` slug resolves to a compiled profile.
 ///

@@ -4,7 +4,7 @@
 //! `workflows` owns discovery and installed skill metadata. `skill_registry`
 //! owns remote catalogs and install sources. This module owns actually running
 //! a skill, regardless of whether the skill's instructions call Python, Node,
-//! shell tools, or another OpenHuman agent tool.
+//! shell tools, or another Neppy agent tool.
 //!
 //! ## Compile-time gate (`skills` feature)
 //!

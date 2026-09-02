@@ -4,7 +4,7 @@
 //! helper. The CLI's OAuth flow is interactive (it prints a URL and
 //! waits for the user to paste a code), so we can't host it in-app — we
 //! detach into the user's native terminal so they complete login there,
-//! then return to OpenHuman and click Recheck in the settings card.
+//! then return to Neppy and click Recheck in the settings card.
 
 use std::process::Command;
 

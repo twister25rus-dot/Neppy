@@ -2,7 +2,7 @@
 //!
 //! Each provider response carries an optional [`UsageInfo`] block with
 //! `input_tokens`, `output_tokens`, `cached_input_tokens`, and an
-//! authoritative `charged_amount_usd` populated by the OpenHuman
+//! authoritative `charged_amount_usd` populated by the Neppy
 //! backend. [`TurnCost`] sums those across every provider call inside a
 //! single turn so the harness can:
 //!
@@ -55,7 +55,7 @@ const FALLBACK_PRICING: ModelPricing = ModelPricing {
 
 /// Static price table keyed by tier name.
 ///
-/// These are the OpenHuman tier handles, not concrete vendor model
+/// These are the Neppy tier handles, not concrete vendor model
 /// strings — the backend chooses which underlying Claude / GPT / etc.
 /// model serves each tier. Numbers track the public Anthropic price
 /// list at the time of writing for the tiers' default mappings; treat
@@ -120,8 +120,8 @@ const PRICING_TABLE: &[ModelPricing] = &[
     },
 ];
 
-/// Whether `model` is one of the managed OpenHuman tier handles (routed and
-/// billed by the OpenHuman backend). Anything else — concrete vendor ids
+/// Whether `model` is one of the managed Neppy tier handles (routed and
+/// billed by the Neppy backend). Anything else — concrete vendor ids
 /// (`claude-*`, `gpt-*`, OpenRouter slugs) or local model names — is a
 /// custom/BYO-provider model. Used by trace exporters to stamp model
 /// provenance (`gen_ai.provider` = "managed" | "custom").
@@ -132,7 +132,7 @@ pub(crate) fn is_managed_tier(model: &str) -> bool {
 /// Look up pricing for a model name, falling back to [`FALLBACK_PRICING`].
 ///
 /// Resolution order:
-/// 1. Exact match on a canonical OpenHuman tier name (`agentic-v1`, …).
+/// 1. Exact match on a canonical Neppy tier name (`agentic-v1`, …).
 /// 2. The concrete-vendor-model pricing catalog
 ///    ([`crate::openhuman::platform::cost::catalog`]) — accurate per-model rates for
 ///    `claude-*`, `gpt-*`, `gemini-*`, `deepseek-*`, `kimi-*`, `qwen-*`,

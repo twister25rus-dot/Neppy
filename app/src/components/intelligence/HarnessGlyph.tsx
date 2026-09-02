@@ -1,6 +1,6 @@
 /**
  * HarnessGlyph — a small brand mark for the agent harness driving an instance
- * (Claude / Codex / Gemini), plus an OpenHuman mark for internal windows. Used
+ * (Claude / Codex / Gemini), plus an Neppy mark for internal windows. Used
  * as the leading glyph in roster rows.
  *
  * The colors here are deliberate brand/identity hues (not surface chrome), so

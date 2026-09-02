@@ -62,7 +62,7 @@ impl ArchivistHook {
     /// That question is the host's to answer, and this asks it directly.
     /// `build_chat_provider` wraps `tinymemory_core::chat_host::
     /// create_chat_model_with_model_id`, which is a process-global seam whose
-    /// only implementation is `OpenHumanChatHost` in `memory/host_impls.rs`,
+    /// only implementation is `NeppyChatHost` in `memory/host_impls.rs`,
     /// and that forwards verbatim to the call below — same role, same config,
     /// same temperature. The predicate is therefore unchanged; what changed is
     /// that the archivist no longer names the memory engine to evaluate it

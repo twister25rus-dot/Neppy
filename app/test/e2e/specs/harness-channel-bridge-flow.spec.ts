@@ -56,7 +56,7 @@ import {
   waitForAssistantReplyContaining,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -95,7 +95,7 @@ const TEST_BOT_USERNAME = 'e2e_test_bot';
 
 /** List cron jobs via oracle RPC. */
 async function listCronJobs(): Promise<Array<{ id?: string; name?: string; schedule?: string }>> {
-  const out = await callOpenhumanRpc('openhuman.cron_list', {});
+  const out = await callNeppyRpc('openhuman.cron_list', {});
   if (!out.ok) {
     console.warn(`${LOG_PREFIX} cron_list RPC failed: ${JSON.stringify(out)}`);
     return [];

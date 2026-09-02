@@ -1,9 +1,9 @@
 ---
-description: How to build OpenHuman from source - toolchain, vendored Tauri CLI, and local desktop builds.
+description: How to build Neppy from source - toolchain, vendored Tauri CLI, and local desktop builds.
 icon: wrench
 ---
 
-# Building & Installing OpenHuman
+# Building & Installing Neppy
 
 This guide covers the full desktop/source install path and release installers.
 
@@ -11,7 +11,7 @@ If you only need the repo-root Rust crate on a fresh machine, use [Building the 
 
 This guide covers two paths:
 
-1. Build and compile OpenHuman from source
+1. Build and compile Neppy from source
 2. Install the latest stable release binaries
 
 ## Prerequisites
@@ -84,10 +84,10 @@ curl -fsSL https://raw.githubusercontent.com/tinyhumansai/openhuman/main/scripts
 
 Installer behavior:
 
-- Resolves latest stable OpenHuman release for your platform
+- Resolves latest stable Neppy release for your platform
 - Validates artifact digest when available
 - Installs locally (no sudo by default)
-- macOS: installs `OpenHuman.app` into `~/Applications`
+- macOS: installs `Neppy.app` into `~/Applications`
 - Linux x64: installs AppImage as `~/.local/bin/openhuman` and writes a desktop entry
 
 ### Arch Linux package recipe
@@ -160,7 +160,7 @@ The binary requires the CEF library path to be set:
 REL_DIR=app/src-tauri/target/aarch64-unknown-linux-gnu/release
 CEF_DIR=$(ls -d "$REL_DIR"/build/cef-dll-sys-*/out/cef_linux_aarch64 2>/dev/null | head -n1)
 export LD_LIBRARY_PATH="$CEF_DIR:$REL_DIR/deps:$REL_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-"$REL_DIR/OpenHuman" --no-sandbox
+"$REL_DIR/Neppy" --no-sandbox
 ```
 
 ### Option 2 - Wrapper script (recommended)
@@ -172,13 +172,13 @@ Save to `~/bin/openhuman` and make it executable (`chmod +x ~/bin/openhuman`):
 REL_DIR=/path/to/app/src-tauri/target/aarch64-unknown-linux-gnu/release
 CEF_DIR=$(ls -d "$REL_DIR"/build/cef-dll-sys-*/out/cef_linux_aarch64 2>/dev/null | head -n1)
 export LD_LIBRARY_PATH="$CEF_DIR:$REL_DIR/deps:$REL_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-exec "$REL_DIR/OpenHuman" --no-sandbox "$@"
+exec "$REL_DIR/Neppy" --no-sandbox "$@"
 ```
 
 ### DEB package install
 
 ```bash
-DEB_FILE=$(ls app/src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/deb/OpenHuman_*_arm64.deb | head -n1)
+DEB_FILE=$(ls app/src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/deb/Neppy_*_arm64.deb | head -n1)
 sudo dpkg -i "$DEB_FILE"
 ```
 
@@ -203,17 +203,17 @@ Manual download links (all platforms):
 
 ## Troubleshooting
 
-### macOS: `pnpm dev:app` exits with "CEF cache is held by another OpenHuman instance"
+### macOS: `pnpm dev:app` exits with "CEF cache is held by another Neppy instance"
 
 **Symptom**
 
 `pnpm dev:app` (or any debug build of the Tauri shell) exits before the window appears with a message like:
 
 ```
-[openhuman] CEF cache at /Users/<you>/Library/Caches/com.neppy.app/cef is held by another OpenHuman instance (host <hostname>, pid 12345).
+[openhuman] CEF cache at /Users/<you>/Library/Caches/com.neppy.app/cef is held by another Neppy instance (host <hostname>, pid 12345).
 Quit the running instance and try again.
 Workaround:
-  pkill -f "OpenHuman.app/Contents"
+  pkill -f "Neppy.app/Contents"
   pkill -f "openhuman-core"
 ```
 
@@ -223,10 +223,10 @@ CEF (Chromium Embedded Framework) holds an exclusive lock on its user-data direc
 
 **Fix**
 
-Quit the other OpenHuman instance and re-run. Fastest path:
+Quit the other Neppy instance and re-run. Fastest path:
 
 ```bash
-pkill -f "OpenHuman.app/Contents"
+pkill -f "Neppy.app/Contents"
 pkill -f "openhuman-core"
 pnpm dev:app
 ```
@@ -247,13 +247,13 @@ A previous Tauri build or `openhuman-core run` harness left a process listening 
 
 `core_process::ensure_running` now probes the port at startup:
 
-- If `GET /` identifies the listener as an OpenHuman core (JSON body with `"name": "openhuman"`), it is treated as a stale process from a previous run and proactively terminated (`SIGTERM`, then `SIGKILL` after 750ms on Unix; `taskkill /F /T /PID` on Windows). The Tauri host then spawns its own fresh embedded core.
+- If `GET /` identifies the listener as an Neppy core (JSON body with `"name": "openhuman"`), it is treated as a stale process from a previous run and proactively terminated (`SIGTERM`, then `SIGKILL` after 750ms on Unix; `taskkill /F /T /PID` on Windows). The Tauri host then spawns its own fresh embedded core.
 - If the listener is something else (or doesn't speak HTTP), startup fails loudly with the conflict surfaced in the log instead of silently attaching.
 - Set `OPENHUMAN_CORE_REUSE_EXISTING=1` to opt back into the legacy attach-to-anything behavior, useful when running `openhuman-core run` as a manual debugging harness.
 
 **Manual cleanup (still works)**
 
 ```bash
-pkill -f "OpenHuman.app/Contents"
+pkill -f "Neppy.app/Contents"
 pkill -f "openhuman-core"
 ```

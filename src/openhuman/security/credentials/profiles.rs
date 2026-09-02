@@ -49,7 +49,7 @@ const STALE_LOCK_AGE_MS: u64 = 30_000;
 /// abandoned in-flight writer). It is never a live, well-behaved holder, so
 /// we reclaim it after a short grace instead of making every reader wait the
 /// full [`STALE_LOCK_AGE_MS`]. This is what was leaving users stuck on
-/// "Initializing OpenHuman" for ~30s after a kill+reopen: `app_state_snapshot`
+/// "Initializing Neppy" for ~30s after a kill+reopen: `app_state_snapshot`
 /// → `load_app_session_profile` → `acquire_lock` blocked on a fresh pidless
 /// lock. The grace is generous enough to never reclaim under a live writer
 /// mid-`create_new`/`pid=` window (microseconds in practice).
@@ -773,7 +773,7 @@ impl AuthProfilesStore {
                     log::warn!(
                         "[auth] dropping profile with unrecognized kind={:?} provider={}: {e}. \
                          This usually means the profile was written by an older version of \
-                         OpenHuman. Re-authenticate to restore the session.",
+                         Neppy. Re-authenticate to restore the session.",
                         p.kind,
                         p.provider
                     );
@@ -1353,7 +1353,7 @@ impl AuthProfilesStore {
     ///    grace is an abandoned in-flight writer (crashed/killed between
     ///    `create_new` and the `pid=` write) — reclaim it rather than make
     ///    every reader spin the full [`STALE_LOCK_AGE_MS`]/`LOCK_TIMEOUT_MS`
-    ///    window (the ~30s "stuck on Initializing OpenHuman" after a
+    ///    window (the ~30s "stuck on Initializing Neppy" after a
     ///    kill+reopen). The grace is short but non-zero so we never reclaim a
     ///    live writer that is mid-`create_new`/`pid=`.
     fn clear_lock_if_stale(&self) -> bool {

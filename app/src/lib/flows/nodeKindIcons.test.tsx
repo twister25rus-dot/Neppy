@@ -55,7 +55,7 @@ describe('nodeKindIcons', () => {
   });
 
   it('honours an explicit icon override', () => {
-    // The native OpenHuman tool is a `tool_call` that needs its own glyph
+    // The native Neppy tool is a `tool_call` that needs its own glyph
     // without its own NodeKind — the override is what makes that possible.
     const Custom = () => <svg data-testid="custom-glyph" />;
     const { getByTestId } = render(<NodeKindGlyph kind="tool_call" icon={Custom} />);

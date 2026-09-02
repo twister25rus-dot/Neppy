@@ -1,9 +1,9 @@
 //! Hosting: putting a workspace on the internet.
 //!
-//! This domain is the seam between OpenHuman and [`tinyhosts`], the unified
+//! This domain is the seam between Neppy and [`tinyhosts`], the unified
 //! hosting API. TinyHosts owns everything about a provider — Vercel's endpoints,
 //! its deployment protocol, how a marketplace database is provisioned and
-//! connected. This module owns everything about *OpenHuman*: where the
+//! connected. This module owns everything about *Neppy*: where the
 //! credential comes from, which directory an agent is allowed to deploy, and how
 //! the result is described back to a model.
 //!

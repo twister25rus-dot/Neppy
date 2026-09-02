@@ -1,4 +1,4 @@
-# OpenHuman Core — Docker Compose for self-hosted cloud deploy.
+# Neppy Core — Docker Compose for self-hosted cloud deploy.
 #
 # Brings up the headless Rust core (`openhuman-core`) on :7788, persists the
 # workspace to a named volume, and reads secrets/config from a `.env` file

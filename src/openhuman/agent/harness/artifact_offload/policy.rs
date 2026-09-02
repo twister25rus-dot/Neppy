@@ -1,4 +1,4 @@
-//! OpenHuman's implementations of the two artifact-offload host policies.
+//! Neppy's implementations of the two artifact-offload host policies.
 //!
 //! `tinyagents::harness::artifacts` owns the mechanics — thresholds, path
 //! resolution, pointer rendering, the symlink re-check. It deliberately knows

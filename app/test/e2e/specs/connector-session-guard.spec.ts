@@ -16,7 +16,7 @@ import {
   injectComposioFault,
   seedComposioToolkits,
 } from '../helpers/composio-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
 import { waitForWebView, waitForWindowVisible } from '../helpers/element-helpers';
 import { completeOnboardingIfVisible, navigateToSkills } from '../helpers/shared-flows';
@@ -76,7 +76,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
     // Fire execute against every guard toolkit
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callOpenhumanRpc('openhuman.composio_execute', {
+      await callNeppyRpc('openhuman.composio_execute', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
         action: `${slug.toUpperCase()}_TEST_ACTION`,
         params: {},
@@ -94,7 +94,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
 
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callOpenhumanRpc('openhuman.composio_execute', {
+      await callNeppyRpc('openhuman.composio_execute', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
         action: `${slug.toUpperCase()}_TEST_ACTION`,
         params: {},
@@ -111,7 +111,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
 
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callOpenhumanRpc('openhuman.composio_delete_connection', {
+      await callNeppyRpc('openhuman.composio_delete_connection', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
       });
     }
@@ -126,7 +126,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
 
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callOpenhumanRpc('openhuman.composio_sync', { toolkit: slug });
+      await callNeppyRpc('openhuman.composio_sync', { toolkit: slug });
     }
 
     await assertSessionNotNuked();
@@ -174,8 +174,8 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
     setMockBehavior('composioDeleteFails', '1');
 
     for (const slug of GUARD_TOOLKITS) {
-      await callOpenhumanRpc('openhuman.composio_authorize', { toolkit: slug });
-      await callOpenhumanRpc('openhuman.composio_execute', {
+      await callNeppyRpc('openhuman.composio_authorize', { toolkit: slug });
+      await callNeppyRpc('openhuman.composio_execute', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
         action: `${slug.toUpperCase()}_TEST_ACTION`,
         params: {},

@@ -195,7 +195,7 @@ pub(super) fn extract_thread_id(value: &Value) -> Option<String> {
         .map(str::to_string)
 }
 
-/// Resolve the OpenHuman data dir (host of `logs/`), mirroring the shell's
+/// Resolve the Neppy data dir (host of `logs/`), mirroring the shell's
 /// resolution: `OPENHUMAN_WORKSPACE` override, else `~/.openhuman`, else a temp
 /// fallback. No `eprintln!` — the TUI is about to take the terminal.
 fn resolve_data_dir() -> PathBuf {

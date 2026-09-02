@@ -138,7 +138,7 @@ CORE_PID=$!
 
 # Give the core process time to start and fail if it's going to
 sleep 2
-if ! check_process_alive "$CORE_PID" "OpenHuman core"; then
+if ! check_process_alive "$CORE_PID" "Neppy core"; then
   echo "Core startup failed. Last 50 lines of core.log:" >&2
   tail -50 "$OPENHUMAN_WORKSPACE/core.log" >&2
   exit 1

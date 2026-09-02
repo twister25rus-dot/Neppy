@@ -13,7 +13,7 @@ describe('tauriCommands', () => {
   const mockInvoke = invoke as Mock;
   const mockCallCoreRpc = callCoreRpc as Mock;
   let getAuthState: typeof import('../tauriCommands').getAuthState;
-  let resetOpenHumanDataAndRestartCore: typeof import('../tauriCommands').resetOpenHumanDataAndRestartCore;
+  let resetNeppyDataAndRestartCore: typeof import('../tauriCommands').resetNeppyDataAndRestartCore;
   let storeSession: typeof import('../tauriCommands').storeSession;
   let openhumanLocalAiStatus: typeof import('../tauriCommands').openhumanLocalAiStatus;
   let openhumanServiceStatus: typeof import('../tauriCommands').openhumanServiceStatus;
@@ -33,7 +33,7 @@ describe('tauriCommands', () => {
     holder.__TAURI_INTERNALS__ = { invoke: () => undefined };
     const actual = await vi.importActual<typeof import('../tauriCommands')>('../tauriCommands');
     getAuthState = actual.getAuthState;
-    resetOpenHumanDataAndRestartCore = actual.resetOpenHumanDataAndRestartCore;
+    resetNeppyDataAndRestartCore = actual.resetNeppyDataAndRestartCore;
     storeSession = actual.storeSession;
     openhumanLocalAiStatus = actual.openhumanLocalAiStatus;
     openhumanServiceStatus = actual.openhumanServiceStatus;
@@ -77,8 +77,8 @@ describe('tauriCommands', () => {
     });
   });
 
-  test('resetOpenHumanDataAndRestartCore invokes the destructive Tauri command', async () => {
-    await resetOpenHumanDataAndRestartCore('user-1');
+  test('resetNeppyDataAndRestartCore invokes the destructive Tauri command', async () => {
+    await resetNeppyDataAndRestartCore('user-1');
 
     // The helper used to call `openhuman.config_reset_local_data` over
     // JSON-RPC followed by `restart_core_process`, but the in-process
@@ -93,15 +93,15 @@ describe('tauriCommands', () => {
     expect(mockInvoke).toHaveBeenCalledWith('reset_local_data', { userId: 'user-1' });
   });
 
-  test('resetOpenHumanDataAndRestartCore forwards null when no user id is given', async () => {
-    await resetOpenHumanDataAndRestartCore();
+  test('resetNeppyDataAndRestartCore forwards null when no user id is given', async () => {
+    await resetNeppyDataAndRestartCore();
 
     // Pre-login recovery has no user id; the core falls back to marker-based
     // resolution when `userId` is null.
     expect(mockInvoke).toHaveBeenCalledWith('reset_local_data', { userId: null });
   });
 
-  test('resetOpenHumanDataAndRestartCore surfaces invoke failures to the caller', async () => {
+  test('resetNeppyDataAndRestartCore surfaces invoke failures to the caller', async () => {
     // Callers (e.g. `clearAllAppData`) treat a thrown error as unrecoverable
     // and abort the flow — so the helper must rethrow instead of swallowing
     // a `reset_local_data` failure (e.g. Windows `ERROR_SHARING_VIOLATION`
@@ -110,7 +110,7 @@ describe('tauriCommands', () => {
     mockInvoke.mockRejectedValueOnce(boom);
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(resetOpenHumanDataAndRestartCore()).rejects.toBe(boom);
+    await expect(resetNeppyDataAndRestartCore()).rejects.toBe(boom);
     expect(consoleErrorSpy).toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();

@@ -1,11 +1,11 @@
 /**
  * End-to-end: webhook controller surface and compatibility-route coverage.
  *
- * The backend tunnel CRUD surface is available through OpenHuman. Echo-registration
+ * The backend tunnel CRUD surface is available through Neppy. Echo-registration
  * behavior is exercised separately in webhooks-ingress-flow.spec.ts.
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
 import { resetMockBehavior, startMockServer, stopMockServer } from '../mock-server';
@@ -37,7 +37,7 @@ describe('Webhook controller surface and retired-route coverage', () => {
   });
 
   it('exposes backend tunnel CRUD', async () => {
-    const listed = await callOpenhumanRpc('openhuman.webhooks_list_tunnels', {});
+    const listed = await callNeppyRpc('openhuman.webhooks_list_tunnels', {});
     expect(listed.ok).toBe(true);
   });
 

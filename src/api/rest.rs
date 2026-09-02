@@ -288,7 +288,7 @@ fn build_backend_reqwest_client() -> Result<Client> {
         .map_err(|e| anyhow::anyhow!("failed to build HTTP client: {e}"))
 }
 
-/// Normalize the backend envelope while preserving OpenHuman's historical
+/// Normalize the backend envelope while preserving Neppy's historical
 /// response shape. In particular, `/auth/me` returns `{success,user}` rather
 /// than `{success,data}`; SDK transport must not expose that envelope detail to
 /// existing callers.

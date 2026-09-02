@@ -15,7 +15,7 @@
 // `MemoryHostConfig` was imported here for `config.to_arc()`, the argument to
 // the engine's `queue::start`. That call left with the in-process engine
 // (openhuman#5560 — see `start_bootstrap_jobs`); every remaining `config.…` in
-// this file is plain field access on OpenHuman's own `Config`.
+// this file is plain field access on Neppy's own `Config`.
 use crate::core::runtime::ServiceSet;
 use crate::openhuman::config::Config;
 

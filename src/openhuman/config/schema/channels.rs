@@ -1,5 +1,5 @@
 //! Channel provider configuration re-exported from tinychannels, plus
-//! OpenHuman-owned security/sandbox configuration.
+//! Neppy-owned security/sandbox configuration.
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

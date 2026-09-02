@@ -1,7 +1,7 @@
-//! Tool-schema conversion retained at the OpenHuman/TinyAgents tool seam.
+//! Tool-schema conversion retained at the Neppy/TinyAgents tool seam.
 //!
 //! Durable message conversion lives in `agent::message_convert`, beside the
-//! OpenHuman transcript record it adapts. This module remains until WP-4
+//! Neppy transcript record it adapts. This module remains until WP-4
 //! decides the host tool-trait boundary.
 
 use tinyagents::harness::tool::ToolSchema;

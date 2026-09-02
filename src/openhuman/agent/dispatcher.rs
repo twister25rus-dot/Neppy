@@ -1,10 +1,10 @@
-//! Tool dialects — OpenHuman's adapter over
+//! Tool dialects — Neppy's adapter over
 //! [`tinyagents::harness::tool_calling::dialect`].
 //!
 //! The dialects themselves moved to the crate: how a model is told to ask for a
 //! tool, how it is parsed when it does, how results are rendered back, and how
 //! a transcript is replayed onto the provider wire so the next iteration is
-//! well-formed. None of that is OpenHuman-specific, and keeping a second copy
+//! well-formed. None of that is Neppy-specific, and keeping a second copy
 //! of it here is how a catalogue and its parser drift apart.
 //!
 //! # What stayed
@@ -22,14 +22,14 @@
 //! Second, the **[`Tool`] trait object**. The crate takes
 //! [`ToolSchema`](tinyagents::harness::tool::ToolSchema)s, never a host's tool
 //! type, for the reason the parse seam already documents: a crate that depended
-//! on OpenHuman's `Tool` could not be used by a second host. So
+//! on Neppy's `Tool` could not be used by a second host. So
 //! [`ToolDispatcher::prompt_instructions`] reads names and schemas off the
 //! slice and hands the crate exactly what it needs.
 //!
 //! # What did not move, and will not
 //!
 //! Executing a tool. The security policy, the approval gate, the sandbox, the
-//! per-call timeout, the progress events — those are OpenHuman's, and a dialect
+//! per-call timeout, the progress events — those are Neppy's, and a dialect
 //! never decides what is *allowed to happen*, only what the model reads and
 //! writes. That line is what keeps the policy auditable in one place.
 
@@ -76,7 +76,7 @@ pub struct ToolExecutionResult {
 /// the specific formatting required by the provider.
 ///
 /// Each implementation below is a thin projection of one
-/// [`ToolDialect`] into OpenHuman's own vocabulary.
+/// [`ToolDialect`] into Neppy's own vocabulary.
 pub trait ToolDispatcher: Send + Sync {
     /// Parse the LLM response to extract narrative text and any tool calls.
     fn parse_response(&self, response: &ChatResponse) -> (String, Vec<ParsedToolCall>);
@@ -108,7 +108,7 @@ pub trait ToolDispatcher: Send + Sync {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The seam: OpenHuman vocabulary ↔ crate vocabulary
+// The seam: Neppy vocabulary ↔ crate vocabulary
 //
 // Every function here is field-wise and lossless in the direction it is used.
 // If one of them ever needs a judgement call, that judgement belongs in the
@@ -167,7 +167,7 @@ fn to_outcomes(results: &[ToolExecutionResult]) -> Vec<ToolOutcome> {
         .collect()
 }
 
-/// Project one durable OpenHuman record onto the crate's transcript entry.
+/// Project one durable Neppy record onto the crate's transcript entry.
 fn to_transcript_entry(message: &ConversationMessage) -> TranscriptEntry {
     match message {
         ConversationMessage::Chat(chat) => TranscriptEntry::Chat(to_dialect_message(chat)),

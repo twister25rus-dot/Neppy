@@ -1,9 +1,9 @@
-//! P-format tool calls — OpenHuman's adapter over
+//! P-format tool calls — Neppy's adapter over
 //! [`tinyagents::harness::tool_calling::pformat`].
 //!
 //! The format itself — the positional `name[arg|arg]` grammar, the schema-driven
 //! argument reconstruction, the type coercion, the escape handling — lives in the
-//! crate. What stays here is the part that speaks OpenHuman's own tool
+//! crate. What stays here is the part that speaks Neppy's own tool
 //! vocabulary.
 //!
 //! # Why the crate takes schemas and this takes tools

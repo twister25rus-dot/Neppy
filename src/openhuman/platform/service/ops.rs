@@ -5,25 +5,25 @@ use crate::openhuman::platform::service::daemon_host::DaemonHostConfig;
 use crate::openhuman::platform::service::{self, daemon_host, ServiceStatus};
 use crate::rpc::RpcOutcome;
 
-/// Installs the OpenHuman daemon as a system service.
+/// Installs the Neppy daemon as a system service.
 pub async fn service_install(config: &Config) -> Result<RpcOutcome<ServiceStatus>, String> {
     let status = service::install(config).map_err(|e| e.to_string())?;
     Ok(RpcOutcome::single_log(status, "service install completed"))
 }
 
-/// Starts the installed OpenHuman daemon service.
+/// Starts the installed Neppy daemon service.
 pub async fn service_start(config: &Config) -> Result<RpcOutcome<ServiceStatus>, String> {
     let status = service::start(config).map_err(|e| e.to_string())?;
     Ok(RpcOutcome::single_log(status, "service start completed"))
 }
 
-/// Stops the running OpenHuman daemon service.
+/// Stops the running Neppy daemon service.
 pub async fn service_stop(config: &Config) -> Result<RpcOutcome<ServiceStatus>, String> {
     let status = service::stop(config).map_err(|e| e.to_string())?;
     Ok(RpcOutcome::single_log(status, "service stop completed"))
 }
 
-/// Returns the current status of the OpenHuman daemon service.
+/// Returns the current status of the Neppy daemon service.
 pub async fn service_status(config: &Config) -> Result<RpcOutcome<ServiceStatus>, String> {
     let status = service::status(config).map_err(|e| e.to_string())?;
     Ok(RpcOutcome::single_log(status, "service status fetched"))
@@ -45,7 +45,7 @@ pub async fn service_shutdown(
     service::shutdown::service_shutdown(source, reason).await
 }
 
-/// Uninstalls the OpenHuman daemon system service.
+/// Uninstalls the Neppy daemon system service.
 pub async fn service_uninstall(config: &Config) -> Result<RpcOutcome<ServiceStatus>, String> {
     let status = service::uninstall(config).map_err(|e| e.to_string())?;
     Ok(RpcOutcome::single_log(

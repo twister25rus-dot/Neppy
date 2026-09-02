@@ -19,7 +19,7 @@ import {
   typeIntoComposer,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -75,7 +75,7 @@ async function snapshotRuntime(threadId: string): Promise<RuntimeSnapshot> {
     };
   }, threadId);
 
-  const inFlightSnap = await callOpenhumanRpc<{ result: { entries: Array<{ key: string }> } }>(
+  const inFlightSnap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
     'openhuman.test_support_in_flight_chats',
     {}
   );
@@ -221,7 +221,7 @@ describe('Chat tool-call lifecycle', () => {
 
     await browser.waitUntil(
       async () => {
-        const snap = await callOpenhumanRpc<{ result: { entries: Array<{ key: string }> } }>(
+        const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
           'openhuman.test_support_in_flight_chats',
           {}
         );

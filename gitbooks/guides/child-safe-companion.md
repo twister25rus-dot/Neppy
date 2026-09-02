@@ -1,16 +1,16 @@
 ---
 description: >-
-  Compose OpenHuman's autonomy, approval, and content-screening controls into a
+  Compose Neppy's autonomy, approval, and content-screening controls into a
   locked-down assistant for a child, with an honest account of the limits.
 icon: child
 ---
 
 # Create a safe companion for a child
 
-**Goal:** set up the most restricted, supervised version of OpenHuman you can, intended for a child to use with an adult present.
+**Goal:** set up the most restricted, supervised version of Neppy you can, intended for a child to use with an adult present.
 
 {% hint style="danger" %}
-**Read this first. It is an honest warning.** OpenHuman has **no dedicated "child mode"**, no age verification, and no content filter on what the model _says_. There is no certified parental-control product here. What you _can_ do is compose the existing safety controls into a tightly locked-down setup. That reduces risk; it does not make an AI assistant a safe, unsupervised experience for a child. **Adult supervision is the control that matters most.** Do not rely on software alone.
+**Read this first. It is an honest warning.** Neppy has **no dedicated "child mode"**, no age verification, and no content filter on what the model _says_. There is no certified parental-control product here. What you _can_ do is compose the existing safety controls into a tightly locked-down setup. That reduces risk; it does not make an AI assistant a safe, unsupervised experience for a child. **Adult supervision is the control that matters most.** Do not rely on software alone.
 {% endhint %}
 
 This guide is about stacking the real controls that exist, and being clear about what they do and don't cover.
@@ -19,7 +19,7 @@ This guide is about stacking the real controls that exist, and being clear about
 
 ## Prerequisites
 
-- OpenHuman set up on the machine the child will use. See [Create my personal AI assistant](personal-assistant.md).
+- Neppy set up on the machine the child will use. See [Create my personal AI assistant](personal-assistant.md).
 - An adult who owns the account and stays involved.
 
 ## Privacy implications
@@ -83,7 +83,7 @@ Edit the behavior prompt (`SOUL.md`, via the **Brain** page `/brain`) to set age
 | It produced content you consider inappropriate | There is no content filter; the persona alone governs tone | Strengthen the `SOUL.md` rules; supervise; this is an inherent limit of the tool |
 | It tried to do something (send/open/fetch)     | Tier isn't Read-only                                       | Set autonomy to **Read-only** in Agent access                                    |
 | Conversation went to the cloud                 | Local AI isn't on                                          | Turn on a [local model](local-model.md) and confirm `ready`                      |
-| The child reached settings and changed things  | OpenHuman has no separate child login                      | Use OS-level user accounts/parental controls to lock down the machine itself     |
+| The child reached settings and changed things  | Neppy has no separate child login                      | Use OS-level user accounts/parental controls to lock down the machine itself     |
 
 ## Recovery
 

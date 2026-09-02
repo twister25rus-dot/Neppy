@@ -54,7 +54,7 @@ cd "$MOBILE_DIR"
 "$REPO_ROOT/app/node_modules/.bin/tauri" android init
 
 # Overwrite the placeholder launcher icons Tauri generates with the
-# OpenHuman brand icons committed under icons/android/. The Android Studio
+# Neppy brand icons committed under icons/android/. The Android Studio
 # project layout uses `app/src/main/res/mipmap-*/` mirroring our sources.
 RES_DIR=$(find "$MOBILE_DIR/gen/android" -type d -path "*/src/main/res" 2>/dev/null | head -1)
 if [[ -n "$RES_DIR" ]]; then

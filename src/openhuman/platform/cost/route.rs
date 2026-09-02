@@ -1,12 +1,12 @@
 //! Which billing route a recorded cost belongs to (issue #5016).
 //!
 //! The local `[cost]` daily/monthly limits exist to cap spend against
-//! **OpenHuman-managed credits**. They were being enforced against *every*
+//! **Neppy-managed credits**. They were being enforced against *every*
 //! recorded call, including bring-your-own-key (BYOK) and local inference that
-//! OpenHuman never bills for. A BYOK user therefore accumulated phantom spend
+//! Neppy never bills for. A BYOK user therefore accumulated phantom spend
 //! — priced locally from [`super::catalog`] because their provider echoes no
 //! `charged_amount_usd` — until they tripped the default $10/day cap and got
-//! "You're out of credits", despite OpenHuman having charged them nothing.
+//! "You're out of credits", despite Neppy having charged them nothing.
 //!
 //! The route is derived from the recorded model id rather than threaded
 //! through as a new parameter, which matters for two reasons:
@@ -21,11 +21,11 @@
 /// The billing route a cost record belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CostRoute {
-    /// Served by the OpenHuman managed backend and paid for with OpenHuman
+    /// Served by the Neppy managed backend and paid for with Neppy
     /// credits. Counts toward — and is gated by — the local `[cost]` limits.
     Managed,
     /// Served by the user's own key (OpenRouter, Anthropic, a self-hosted
-    /// OpenAI-compatible gateway, …) or a local model. OpenHuman bills nothing
+    /// OpenAI-compatible gateway, …) or a local model. Neppy bills nothing
     /// for it, so it is recorded for the dashboard but never gated.
     Byok,
 }
@@ -115,7 +115,7 @@ mod tests {
             "openhuman/chat-v1",
             "hint:openhuman/chat-v1",
             "openhuman/hint:chat-v1",
-            "  HINT:OpenHuman/Chat-V1  ",
+            "  HINT:Neppy/Chat-V1  ",
         ] {
             assert_eq!(
                 route_for_model(id),

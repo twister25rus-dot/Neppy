@@ -3,7 +3,7 @@
 use unicode_width::UnicodeWidthChar;
 
 /// Commands implemented by the terminal client.  The list is deliberately
-/// OpenHuman-native: commands either map to a stable core RPC or a local view.
+/// Neppy-native: commands either map to a stable core RPC or a local view.
 pub const COMMANDS: &[(&str, &str)] = &[
     ("help", "show commands and keyboard shortcuts"),
     ("new", "start a new thread"),
@@ -25,7 +25,7 @@ pub const COMMANDS: &[(&str, &str)] = &[
         "diff",
         "show the working-tree diff when action_dir is a Git repo",
     ),
-    ("review", "ask OpenHuman to review the working tree"),
+    ("review", "ask Neppy to review the working tree"),
     ("copy", "copy the latest completed answer"),
     ("export", "export this transcript as Markdown"),
     ("clear", "clear the visible transcript"),

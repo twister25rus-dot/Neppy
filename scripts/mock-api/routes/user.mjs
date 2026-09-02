@@ -142,7 +142,7 @@ function buildRewardsSnapshot(mockBehavior) {
     {
       id: "STREAK_7",
       title: "7-Day Streak",
-      description: "Use OpenHuman on seven consecutive active days.",
+      description: "Use Neppy on seven consecutive active days.",
       actionLabel: "Keep your streak alive for 7 days",
       unlocked: false,
       progressLabel: "0 / 7 days",
@@ -153,7 +153,7 @@ function buildRewardsSnapshot(mockBehavior) {
     {
       id: "DISCORD_MEMBER",
       title: "Discord Member",
-      description: "Join the OpenHuman Discord server.",
+      description: "Join the Neppy Discord server.",
       actionLabel: "Connect Discord and join the server",
       unlocked: false,
       progressLabel: "Not joined",

@@ -9,7 +9,7 @@
  * tag renders as a clickable pill instead.
  *
  * **Why this lives here and not in a global shared spot:** the chat-side
- * `OpenhumanLinkPill` is a non-exported function inside `AgentMessageBubble.tsx`
+ * `NeppyLinkPill` is a non-exported function inside `AgentMessageBubble.tsx`
  * (`app/src/features/conversations/`). Extracting from chat would change the chat
  * render path — out of scope for this fix. Instead, we keep the grammar / parsing
  * shared (reuses `parseBubbleSegments` from conversations) but reimplement the
@@ -18,12 +18,12 @@
  *
  * Safety: this component renders **only** text + button elements. It never
  * uses `dangerouslySetInnerHTML`, never sets an `href`, and the dispatched
- * `OPENHUMAN_LINK_EVENT` is consumed by `OpenhumanLinkModal`, which hard-
- * allowlists `path` values before routing. See `OpenhumanLinkModal.tsx`
+ * `OPENHUMAN_LINK_EVENT` is consumed by `NeppyLinkModal`, which hard-
+ * allowlists `path` values before routing. See `NeppyLinkModal.tsx`
  * `ALLOWED_PATHS_SET`.
  */
 import { parseBubbleSegments } from '../../features/conversations/utils/format';
-import { OPENHUMAN_LINK_EVENT } from '../OpenhumanLinkModal';
+import { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
 
 function NotificationLinkPill({ path, label }: { path: string; label: string }) {
   return (

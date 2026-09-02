@@ -22,7 +22,7 @@ const STRINGS: Record<string, string> = {
   'flows.nodeSummary.agent.withPrompt': '“{prompt}” · {model}',
   'flows.nodeSummary.agent.default': 'Asks the {model}',
   'flows.nodeSummary.toolCall.runsNative': 'Runs {name}',
-  'flows.nodeSummary.toolCall.pickNative': 'Runs an OpenHuman tool (pick one)',
+  'flows.nodeSummary.toolCall.pickNative': 'Runs an Neppy tool (pick one)',
   'flows.nodeSummary.toolCall.runs': 'Runs {slug}',
   'flows.nodeSummary.toolCall.pick': 'Runs an app action (pick one)',
   'flows.nodeSummary.http.withUrl': '{method} {url}',

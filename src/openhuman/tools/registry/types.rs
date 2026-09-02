@@ -1,7 +1,7 @@
 use serde::Serialize;
 use serde_json::Value;
 
-/// Serialized discovery metadata for one OpenHuman tool surface.
+/// Serialized discovery metadata for one Neppy tool surface.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ToolRegistryEntry {
     /// Stable unique registry id, such as `memory.search` or `tools.web_search`.

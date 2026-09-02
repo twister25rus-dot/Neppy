@@ -655,9 +655,9 @@ fn config_schema_helpers_cover_provider_voice_agent_and_channel_defaults() {
     };
     migrate_legacy_fields(&mut openhuman_legacy);
     assert_eq!(openhuman_legacy.slug, "openhuman");
-    assert_eq!(openhuman_legacy.label, "OpenHuman");
+    assert_eq!(openhuman_legacy.label, "Neppy");
     assert_eq!(openhuman_legacy.endpoint, "https://api.openhuman.ai/v1");
-    assert_eq!(openhuman_legacy.auth_style, AuthStyle::OpenhumanJwt);
+    assert_eq!(openhuman_legacy.auth_style, AuthStyle::NeppyJwt);
     let mut custom_legacy = CloudProviderCreds {
         id: "provider-custom".to_string(),
         legacy_type: Some("unknown-provider".to_string()),
@@ -688,7 +688,7 @@ fn config_schema_helpers_cover_provider_voice_agent_and_channel_defaults() {
     // the legacy `type=minimax` migration fills from the corrected catalog.
     assert_eq!(minimax_legacy.endpoint, "https://api.minimax.io/v1");
     assert_eq!(minimax_legacy.auth_style, AuthStyle::Bearer);
-    assert_eq!(AuthStyle::OpenhumanJwt.as_str(), "openhuman_jwt");
+    assert_eq!(AuthStyle::NeppyJwt.as_str(), "openhuman_jwt");
     assert_eq!(AuthStyle::Anthropic.as_str(), "anthropic");
     assert_eq!(AuthStyle::None.as_str(), "none");
     assert_eq!(
@@ -696,7 +696,7 @@ fn config_schema_helpers_cover_provider_voice_agent_and_channel_defaults() {
         "https://openrouter.ai/api/v1"
     );
     assert_eq!(
-        CloudProviderType::Openhuman.default_endpoint(),
+        CloudProviderType::Neppy.default_endpoint(),
         "https://api.openhuman.ai/v1"
     );
     assert_eq!(
@@ -712,20 +712,17 @@ fn config_schema_helpers_cover_provider_voice_agent_and_channel_defaults() {
         "https://api.orcarouter.ai/v1"
     );
     assert_eq!(CloudProviderType::Custom.default_endpoint(), "");
-    assert_eq!(CloudProviderType::Openhuman.label(), "OpenHuman");
+    assert_eq!(CloudProviderType::Neppy.label(), "Neppy");
     assert_eq!(CloudProviderType::Openai.label(), "OpenAI");
     assert_eq!(CloudProviderType::Anthropic.label(), "Anthropic");
     assert_eq!(CloudProviderType::Orcarouter.label(), "OrcaRouter");
-    assert_eq!(CloudProviderType::Openhuman.as_str(), "openhuman");
+    assert_eq!(CloudProviderType::Neppy.as_str(), "openhuman");
     assert_eq!(CloudProviderType::Openai.as_str(), "openai");
     assert_eq!(CloudProviderType::Anthropic.as_str(), "anthropic");
     assert_eq!(CloudProviderType::Openrouter.as_str(), "openrouter");
     assert_eq!(CloudProviderType::Orcarouter.as_str(), "orcarouter");
     assert_eq!(CloudProviderType::Custom.as_str(), "custom");
-    assert_eq!(
-        CloudProviderType::Openhuman.auth_style(),
-        AuthStyle::OpenhumanJwt
-    );
+    assert_eq!(CloudProviderType::Neppy.auth_style(), AuthStyle::NeppyJwt);
     assert_eq!(
         CloudProviderType::Anthropic.auth_style(),
         AuthStyle::Anthropic
@@ -1357,7 +1354,7 @@ fn config_proxy_public_paths_normalize_validate_and_apply_scope() {
 
     let openhuman_scope = ProxyConfig {
         enabled: true,
-        scope: ProxyScope::OpenHuman,
+        scope: ProxyScope::Neppy,
         http_proxy: Some("https://proxy.example".into()),
         no_proxy: vec![" local.test ".into()],
         ..ProxyConfig::default()
@@ -1872,16 +1869,13 @@ async fn config_default_path_loader_ignores_workspace_override_and_projects_dir_
         Some("default-loader-model")
     );
 
-    let custom_projects = tmp.path().join("OpenHuman Projects");
+    let custom_projects = tmp.path().join("Neppy Projects");
     {
         let _projects_guard = EnvVarGuard::set_to_path("OPENHUMAN_PROJECTS_DIR", &custom_projects);
         assert_eq!(default_projects_dir(), custom_projects);
     }
     let _blank_projects_guard = EnvVarGuard::set("OPENHUMAN_PROJECTS_DIR", "   ");
-    assert_eq!(
-        default_projects_dir(),
-        home.join("OpenHuman").join("projects")
-    );
+    assert_eq!(default_projects_dir(), home.join("Neppy").join("projects"));
 }
 
 #[tokio::test]
@@ -3086,7 +3080,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
                 "skip_cleanup": true,
                 "min_duration_secs": 0.25,
                 "silence_threshold": 0.01,
-                "custom_dictionary": ["OpenHuman", "WorkerA"]
+                "custom_dictionary": ["Neppy", "WorkerA"]
             }),
         ),
         (
@@ -3550,7 +3544,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
             "cloud_providers": [
                 {
                     "slug": "openhuman",
-                    "label": "Reserved OpenHuman",
+                    "label": "Reserved Neppy",
                     "endpoint": "https://api.openhuman.ai/v1",
                     "auth_style": "openhuman_jwt"
                 },
@@ -4860,10 +4854,7 @@ async fn app_state_snapshot_degrades_runtime_service_status_failures() {
             .is_some_and(|message| message.contains("forced status failure")),
         "service status failures should degrade to Unknown state: {service}"
     );
-    assert_eq!(
-        service.get("label").and_then(Value::as_str),
-        Some("OpenHuman")
-    );
+    assert_eq!(service.get("label").and_then(Value::as_str), Some("Neppy"));
 
     harness.join.abort();
 }
@@ -5908,7 +5899,7 @@ async fn connectivity_pick_listen_port_covers_direct_bind_and_exhausted_fallback
             assert_eq!(attempted.len(), 10);
             assert!(
                 fingerprint.contains("probe"),
-                "non-OpenHuman listeners should be identified by probe details: {fingerprint}"
+                "non-Neppy listeners should be identified by probe details: {fingerprint}"
             );
         }
         other => panic!("unexpected exhausted port error: {other:?}"),

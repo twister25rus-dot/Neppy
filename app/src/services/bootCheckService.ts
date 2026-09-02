@@ -21,7 +21,7 @@ async function invokeCmd<T>(cmd: string, args?: Record<string, unknown>): Promis
 }
 
 /**
- * Invoke the `recover_port_conflict` Tauri command to reap stale OpenHuman
+ * Invoke the `recover_port_conflict` Tauri command to reap stale Neppy
  * processes and restart the embedded core on any available port. When recovery
  * fails because a foreign process holds the port, the outcome carries that
  * process's identity in `foreign_owner`.

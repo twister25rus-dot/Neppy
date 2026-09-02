@@ -92,7 +92,7 @@ export type ThreadComponents = {
   /**
    * Extra controls in the composer's action row, to the right of the model
    * selector. A seam rather than a fixed set because what belongs there is
-   * host-specific — OpenHuman puts the context-window meter and the thread
+   * host-specific — Neppy puts the context-window meter and the thread
    * goal here — and hard-coding either would make this component unusable by
    * anything else.
    */

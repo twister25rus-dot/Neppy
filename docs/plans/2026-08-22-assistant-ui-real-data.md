@@ -1,4 +1,4 @@
-# Wiring the assistant-ui chat surface to real OpenHuman data
+# Wiring the assistant-ui chat surface to real Neppy data
 
 **Status:** implementation complete on `fix/ui-shdcdn`; branch-wide verification
 is pending unrelated stale AI-settings tests.
@@ -33,7 +33,7 @@ offline adapter. That was deliberate: it let the _shape_ of the surface be built
 and reviewed — streamed reasoning, tool calls, dispatched subagents, slash
 commands, a context meter, and a thread goal — before any of it was load-bearing.
 
-The normal text-chat path now renders that same `Thread` from OpenHuman's real
+The normal text-chat path now renders that same `Thread` from Neppy's real
 Redux/core seams. The `mic-cloud` embed retains its voice-specific legacy footer
 until the controls tracked in #5685 have an assistant-ui equivalent.
 
@@ -41,7 +41,7 @@ This document is the other half: replacing each mock with the real seam. It is
 written for an agent picking the work up cold, so every seam below names the file
 and the RPC method rather than describing them.
 
-**The through-line: none of these are new features.** OpenHuman already has a
+**The through-line: none of these are new features.** Neppy already has a
 goal domain, a cost domain, a token-usage RPC, a command palette and a
 Redux-backed transcript projection. Four of the five tasks are _deletions_ —
 removing a mock and pointing the component at machinery that already exists. Do
@@ -68,7 +68,7 @@ unchanged:
 - `ThreadProps.slashCommands` — `/` commands, supplied by the host because a
   command's `execute` is host behaviour.
 
-Keep using them. Putting OpenHuman logic back inside `thread.tsx` is what makes
+Keep using them. Putting Neppy logic back inside `thread.tsx` is what makes
 the file impossible to re-pull from the registry.
 
 ---
@@ -80,7 +80,7 @@ and is tested:
 
 - [`app/src/providers/AssistantUiRuntimeProvider.tsx`](../../app/src/providers/AssistantUiRuntimeProvider.tsx)
   — mounts `useExternalStoreRuntime`, scoped to one thread by prop.
-- [`app/src/providers/useOpenHumanExternalStore.ts`](../../app/src/providers/useOpenHumanExternalStore.ts)
+- [`app/src/providers/useNeppyExternalStore.ts`](../../app/src/providers/useNeppyExternalStore.ts)
   — the adapter.
 - [`app/src/providers/assistantUiMessages.ts`](../../app/src/providers/assistantUiMessages.ts)
   — the Redux → assistant-ui projection. Read its header before touching it: the
@@ -99,7 +99,7 @@ and is tested:
    Getting this wrong is a real bug with a real precedent — see the provider's
    header comment about the Workflow Copilot painting the home chat's messages.
 3. Sending: the composer must reach the same path the legacy composer used.
-   `useOpenHumanExternalStore.onNew` is the seam; verify it is wired before
+   `useNeppyExternalStore.onNew` is the seam; verify it is wired before
    removing the legacy pane, not after. The adapter deliberately exposes no
    `onEdit`: `openhuman.threads_message_update` updates metadata only, not
    message content, so advertising assistant-ui's edit capability would create
@@ -200,7 +200,7 @@ Two candidate sources, both real:
 
 ## Task 4 — Goal: local state → the thread-goal domain
 
-**This one is almost entirely a deletion.** OpenHuman already has a per-thread
+**This one is almost entirely a deletion.** Neppy already has a per-thread
 goal, end to end:
 
 - UI: [`app/src/features/conversations/components/ThreadGoalChip.tsx`](../../app/src/features/conversations/components/ThreadGoalChip.tsx)
@@ -233,7 +233,7 @@ goal, end to end:
 `/clear` and `/goal` are currently closures in `AssistantUiChat`, and `/clear`
 calls `runtime.thread.reset()` — which stops working after Task 1.
 
-OpenHuman already has a command surface:
+Neppy already has a command surface:
 [`app/src/components/commands/CommandProvider.tsx`](../../app/src/components/commands/CommandProvider.tsx),
 `CommandPalette.tsx`, `CommandScope.tsx`.
 

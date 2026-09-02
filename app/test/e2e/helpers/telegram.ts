@@ -1,7 +1,7 @@
 /**
  * Telegram channel E2E helpers.
  *
- * Wraps `callOpenhumanRpc` (core RPC) and the Telegram mock admin endpoints so
+ * Wraps `callNeppyRpc` (core RPC) and the Telegram mock admin endpoints so
  * specs can drive the full Telegram channel lifecycle without knowing the raw
  * RPC method names or admin path strings.
  *
@@ -9,7 +9,7 @@
  *  - All helpers are pure async functions — no hidden state.
  *  - Admin HTTP helpers call mock server endpoints that are already wired by
  *    WS-A (see `app/test/e2e/mock-server.ts` and `scripts/mock-api/routes/telegram.mjs`).
- *  - RPC helpers forward to `callOpenhumanRpc` using the exact field names from
+ *  - RPC helpers forward to `callNeppyRpc` using the exact field names from
  *    `src/openhuman/channels/controllers/schemas.rs` (camelCase for the wire
  *    format; the Rust serde layer translates).
  *
@@ -23,7 +23,7 @@ import {
   injectTelegramUpdate as adminInjectUpdate,
   resetTelegramMock as adminReset,
 } from '../mock-server';
-import { callOpenhumanRpc } from './core-rpc';
+import { callNeppyRpc } from './core-rpc';
 
 const LOG_PREFIX = '[TelegramChannel]';
 
@@ -139,7 +139,7 @@ export async function connectTelegramBot(
       `mentionOnly=${opts.mentionOnly ?? false}`
   );
 
-  const out = await callOpenhumanRpc('openhuman.channels_connect', {
+  const out = await callNeppyRpc('openhuman.channels_connect', {
     channel: 'telegram',
     authMode: 'bot_token',
     credentials,
@@ -175,7 +175,7 @@ export async function connectTelegramBot(
 export async function disconnectTelegramBot(): Promise<boolean> {
   console.log(`${LOG_PREFIX} disconnectTelegramBot: calling channels_disconnect`);
 
-  const out = await callOpenhumanRpc('openhuman.channels_disconnect', {
+  const out = await callNeppyRpc('openhuman.channels_disconnect', {
     channel: 'telegram',
     authMode: 'bot_token',
   });
@@ -199,7 +199,7 @@ export async function disconnectTelegramBot(): Promise<boolean> {
 export async function getTelegramChannelStatus(): Promise<TelegramStatusEntry | null> {
   console.log(`${LOG_PREFIX} getTelegramChannelStatus: calling channels_status`);
 
-  const out = await callOpenhumanRpc('openhuman.channels_status', { channel: 'telegram' });
+  const out = await callNeppyRpc('openhuman.channels_status', { channel: 'telegram' });
 
   if (!out.ok) {
     console.warn(`${LOG_PREFIX} getTelegramChannelStatus: RPC failed — ${JSON.stringify(out)}`);

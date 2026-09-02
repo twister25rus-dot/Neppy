@@ -1,6 +1,6 @@
 ---
 description: >-
-  How OpenHuman collects, uses, processes, stores, and protects information
+  How Neppy collects, uses, processes, stores, and protects information
   when you use the service.
 icon: key
 ---

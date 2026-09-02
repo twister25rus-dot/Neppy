@@ -157,7 +157,7 @@ echo "App bundle: $APP_PATH"
 
 # ── Sign .app contents and bundle ─────────────────────────────────────
 ENTITLEMENTS="app/src-tauri/entitlements.sidecar.plist"
-MAIN_EXE="$(defaults read "$APP_PATH/Contents/Info.plist" CFBundleExecutable 2>/dev/null || echo "OpenHuman")"
+MAIN_EXE="$(defaults read "$APP_PATH/Contents/Info.plist" CFBundleExecutable 2>/dev/null || echo "Neppy")"
 
 echo
 echo "Bundle contents:"
@@ -206,7 +206,7 @@ if $SKIP_NOTARIZE; then
   echo
   echo "Skipping notarization (--skip-notarize)."
 else
-  NOTARIZE_FILE="$(mktemp /tmp/OpenHuman-XXXXXX.zip)"
+  NOTARIZE_FILE="$(mktemp /tmp/Neppy-XXXXXX.zip)"
   echo
   echo "Creating zip for notarization..."
   ditto -c -k --keepParent "$APP_PATH" "$NOTARIZE_FILE"
@@ -228,8 +228,8 @@ else
   DMG_PATH="$(find "$BUNDLE_DIR/dmg" -name '*.dmg' -maxdepth 1 2>/dev/null | head -1)"
   if [[ -n "$DMG_PATH" ]]; then
     echo "Re-creating DMG with stapled .app..."
-    DMG_TEMP="$(mktemp /tmp/OpenHuman-XXXXXX.dmg)"
-    hdiutil create -volname "OpenHuman" -srcfolder "$APP_PATH" -ov -format UDZO "$DMG_TEMP"
+    DMG_TEMP="$(mktemp /tmp/Neppy-XXXXXX.dmg)"
+    hdiutil create -volname "Neppy" -srcfolder "$APP_PATH" -ov -format UDZO "$DMG_TEMP"
     mv "$DMG_TEMP" "$DMG_PATH"
 
     echo "Notarizing DMG..."

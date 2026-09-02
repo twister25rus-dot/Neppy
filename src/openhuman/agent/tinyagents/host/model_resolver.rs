@@ -1,13 +1,13 @@
 //! Host capability: **which** model answers a turn.
 //!
-//! Adapts [`tinyagents::harness::host::ModelResolver`] onto OpenHuman's
+//! Adapts [`tinyagents::harness::host::ModelResolver`] onto Neppy's
 //! inference domain — `crate::openhuman::inference::provider` (the per-role
 //! provider factory: [`create_chat_model_with_model_id`], `provider_for_role`,
 //! [`role_for_model_tier`]) driven by a [`Config`] snapshot.
 //!
 //! This is `docs/specs/plan-agents.md` Phase 4. The crate deliberately refuses
 //! to know about tiers, lead/subagent economics, or BYOK-vs-managed routing —
-//! all of that is OpenHuman product policy, and this module is where it lives.
+//! all of that is Neppy product policy, and this module is where it lives.
 //! The mapping performed here is exactly the one the rest of the core already
 //! performs: *workload role* → provider string → concrete `ChatModel`. Nothing
 //! about provider selection, BYOK inheritance, or egress disclosure is
@@ -19,12 +19,12 @@
 //!
 //! 1. **`State` erasure.** The trait is generic over the harness state
 //!    (`ModelResolver<State>` must return `Arc<dyn ChatModel<State>>`), but
-//!    every model OpenHuman builds is a `ChatModel<()>` — the core's harness
+//!    every model Neppy builds is a `ChatModel<()>` — the core's harness
 //!    carries its per-turn context in task-locals and `RunContext`, not in a
 //!    typed state value. [`StatelessModel`] bridges the two: it implements
 //!    `ChatModel<State>` for *any* `State` by discarding the state reference and
 //!    invoking the inner model with `&()`. That is lossless today precisely
-//!    because no OpenHuman model reads state; if one ever does, it must stop
+//!    because no Neppy model reads state; if one ever does, it must stop
 //!    going through this wrapper rather than silently observing `()`.
 //!
 //! 2. **"resolve is cheap, and must not be memoized by the caller."** The trait
@@ -33,15 +33,15 @@
 //!    client and throw away its connection pool — the exact waste the trait's
 //!    `Arc` return is trying to avoid. Since this resolver holds an immutable
 //!    `Arc<Config>` snapshot, the answer for a given workload role cannot change
-//!    over its lifetime, so [`OpenHumanModelResolver`] memoizes per role. A
+//!    over its lifetime, so [`NeppyModelResolver`] memoizes per role. A
 //!    caller that needs re-resolution after a config edit constructs a new
 //!    resolver, which is how every other `Arc<Config>` holder in the core works.
 //!
-//! 3. **Tiered routing is not represented.** OpenHuman's richer per-turn model
+//! 3. **Tiered routing is not represented.** Neppy's richer per-turn model
 //!    bundle (primary + workload-tier fallback routes + summarizer) is
 //!    `TurnModelSource` / `TurnModels` in `super::super` — a *bundle*, not one
 //!    `Arc<dyn ChatModel>`, so it does not fit this signature. See the
-//!    `TODO(phase4)` on [`OpenHumanModelResolver::base_model_for_role`].
+//!    `TODO(phase4)` on [`NeppyModelResolver::base_model_for_role`].
 //!
 //! 4. **`ModelResolveRequest::model_pin` is not honoured yet.** The field
 //!    exists now (`tinyagents#89`, which this resolver's `-v1` suffix test was
@@ -116,7 +116,7 @@ const LEAD_DEFAULT_ROLE: &str = "chat";
 /// The role a non-lead agent takes when the caller supplied none.
 ///
 /// `chat` is the core's own default workload (`DEFAULT_MODEL` is `chat-v1`), so
-/// an unannotated delegate lands exactly where an unconfigured OpenHuman turn
+/// an unannotated delegate lands exactly where an unconfigured Neppy turn
 /// already lands.
 const SUBAGENT_DEFAULT_ROLE: &str = "chat";
 
@@ -134,7 +134,7 @@ fn is_known_model_tier(lowered: &str) -> bool {
     stem == "reasoning-quick" || CHAT_WORKLOAD_ROLES.contains(&stem)
 }
 
-/// Maps one [`ModelResolveRequest`] onto an OpenHuman workload role.
+/// Maps one [`ModelResolveRequest`] onto an Neppy workload role.
 ///
 /// This function *is* the product policy the seam exists to hold:
 ///
@@ -202,10 +202,10 @@ fn workload_role_for(req: &ModelResolveRequest) -> &'static str {
     structural_default
 }
 
-/// Presents a state-agnostic OpenHuman `ChatModel<()>` as a `ChatModel<State>`
+/// Presents a state-agnostic Neppy `ChatModel<()>` as a `ChatModel<State>`
 /// for any harness state.
 ///
-/// Not a general-purpose adapter: it is sound only because OpenHuman's models
+/// Not a general-purpose adapter: it is sound only because Neppy's models
 /// genuinely ignore the harness state (they carry per-turn context in
 /// task-locals and `RunContext`). Both `invoke` and `stream` are forwarded so a
 /// streaming provider keeps streaming — falling through to the trait's default
@@ -229,12 +229,12 @@ impl<State: Send + Sync> ChatModel<State> for StatelessModel {
     }
 }
 
-/// OpenHuman's [`ModelResolver`]: routes a turn to a workload role, then to that
+/// Neppy's [`ModelResolver`]: routes a turn to a workload role, then to that
 /// role's configured provider.
 ///
 /// Holds an immutable [`Config`] snapshot — the same shape `TurnModelSource`'s
 /// crate-native source uses — plus a per-role cache of already-built clients.
-pub struct OpenHumanModelResolver {
+pub struct NeppyModelResolver {
     config: Arc<Config>,
     /// Temperature applied as the *request default* by the factory; an explicit
     /// per-call `ModelRequest` temperature still wins.
@@ -244,7 +244,7 @@ pub struct OpenHumanModelResolver {
     cache: Mutex<HashMap<&'static str, Arc<dyn ChatModel<()>>>>,
 }
 
-impl OpenHumanModelResolver {
+impl NeppyModelResolver {
     /// Builds a resolver over `config`, using its configured default
     /// temperature.
     pub fn new(config: Arc<Config>) -> Self {
@@ -273,7 +273,7 @@ impl OpenHumanModelResolver {
 
     /// Resolves (and memoizes) the state-agnostic client for one workload role.
     ///
-    /// TODO(phase4): this returns the role's **primary** model only. OpenHuman's
+    /// TODO(phase4): this returns the role's **primary** model only. Neppy's
     /// real per-turn bundle — primary + workload-tier fallback routes +
     /// summarizer — is `TurnModels`, built by
     /// `crate::openhuman::agent::tinyagents::TurnModelSource::build` (see
@@ -323,16 +323,16 @@ impl OpenHumanModelResolver {
     }
 }
 
-impl std::fmt::Debug for OpenHumanModelResolver {
+impl std::fmt::Debug for NeppyModelResolver {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("OpenHumanModelResolver")
+        f.debug_struct("NeppyModelResolver")
             .field("temperature", &self.temperature)
             .finish_non_exhaustive()
     }
 }
 
 #[async_trait]
-impl<State: Send + Sync> ModelResolver<State> for OpenHumanModelResolver {
+impl<State: Send + Sync> ModelResolver<State> for NeppyModelResolver {
     async fn resolve(&self, req: &ModelResolveRequest) -> TaResult<Arc<dyn ChatModel<State>>> {
         let role = workload_role_for(req);
         let inner = self.base_model_for_role(role)?;
@@ -534,10 +534,10 @@ mod tests {
     fn new_takes_the_configured_default_temperature() {
         let mut config = Config::default();
         config.default_temperature = 0.42;
-        let resolver = OpenHumanModelResolver::new(Arc::new(config));
+        let resolver = NeppyModelResolver::new(Arc::new(config));
         assert_eq!(resolver.temperature, 0.42);
 
-        let pinned = OpenHumanModelResolver::with_temperature(Arc::new(Config::default()), 0.0);
+        let pinned = NeppyModelResolver::with_temperature(Arc::new(Config::default()), 0.0);
         assert_eq!(pinned.temperature, 0.0);
     }
 
@@ -547,7 +547,7 @@ mod tests {
         // environment may have no provider configured at all), so this test
         // asserts the caching contract only when construction succeeds. The
         // failure path is covered by `unroutable_role_is_an_error`.
-        let resolver = OpenHumanModelResolver::new(Arc::new(Config::default()));
+        let resolver = NeppyModelResolver::new(Arc::new(Config::default()));
         let Ok(first) = resolver.base_model_for_role("chat") else {
             return;
         };
@@ -562,7 +562,7 @@ mod tests {
 
     #[tokio::test]
     async fn resolve_routes_through_the_role_policy() {
-        let resolver = OpenHumanModelResolver::new(Arc::new(Config::default()));
+        let resolver = NeppyModelResolver::new(Arc::new(Config::default()));
         let request = ModelResolveRequest::new("lead").as_team_lead();
         let expected = workload_role_for(&request);
         assert_eq!(expected, LEAD_DEFAULT_ROLE);

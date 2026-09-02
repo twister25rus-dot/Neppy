@@ -1,6 +1,6 @@
 # Theming
 
-OpenHuman is fully re-skinnable at runtime. Colours and fonts are driven by CSS
+Neppy is fully re-skinnable at runtime. Colours and fonts are driven by CSS
 variables (the "tokens"), so a theme is just a set of values for those variables.
 This page is the contributor reference for the token system.
 

@@ -25,7 +25,7 @@ import {
   waitForAssistantReplyContaining,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -150,7 +150,7 @@ describe('Composio GitHub tools — tags query param flow', () => {
     resetMockBehavior();
     seedGitHubState();
 
-    const result = await callOpenhumanRpc('openhuman.composio_list_tools', {
+    const result = await callNeppyRpc('openhuman.composio_list_tools', {
       toolkits: ['github'],
       tags: ['stars'],
     });
@@ -192,7 +192,7 @@ describe('Composio GitHub tools — tags query param flow', () => {
     resetMockBehavior();
     seedGitHubState();
 
-    const result = await callOpenhumanRpc('openhuman.composio_list_tools', {
+    const result = await callNeppyRpc('openhuman.composio_list_tools', {
       toolkits: ['github'],
       tags: ['stars', 'repos'],
     });
@@ -245,7 +245,7 @@ describe('Composio GitHub tools — tags query param flow', () => {
     // tags knob for "stars" — must NOT appear in gmail response.
     setMockBehavior('composioToolsByTag_stars', JSON.stringify(STARS_TOOLS));
 
-    const result = await callOpenhumanRpc('openhuman.composio_list_tools', {
+    const result = await callNeppyRpc('openhuman.composio_list_tools', {
       toolkits: ['gmail'],
       tags: ['stars'],
     });

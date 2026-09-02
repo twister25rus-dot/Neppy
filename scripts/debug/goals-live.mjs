@@ -138,7 +138,7 @@ function parseArgs(argv) {
 
 // ── workspace / token resolution (mirrors harness-cache-audit) ──────────────
 
-function defaultOpenhumanDir() {
+function defaultNeppyDir() {
   return process.env.OPENHUMAN_APP_ENV === "staging"
     ? path.join(homedir(), ".openhuman-staging")
     : path.join(homedir(), ".openhuman");
@@ -146,7 +146,7 @@ function defaultOpenhumanDir() {
 
 async function defaultWorkspace() {
   if (process.env.OPENHUMAN_WORKSPACE) return process.env.OPENHUMAN_WORKSPACE;
-  const dir = defaultOpenhumanDir();
+  const dir = defaultNeppyDir();
   try {
     const active = await readFile(path.join(dir, "active_user.toml"), "utf8");
     const match = active.match(/^\s*user_id\s*=\s*"([^"]+)"\s*$/m);
@@ -438,7 +438,7 @@ async function caseList(opts, label = "list") {
 async function caseAdd(opts) {
   console.log("\n=== case: add ===");
   const seeds = [
-    "Help the user ship the OpenHuman desktop app across macOS, Windows and Linux",
+    "Help the user ship the Neppy desktop app across macOS, Windows and Linux",
     "Keep the Rust core the single source of truth for business logic",
   ];
   for (const text of seeds) {

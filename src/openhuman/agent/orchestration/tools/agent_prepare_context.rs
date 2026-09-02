@@ -68,7 +68,7 @@ fn extract_context_bundle(output: &str) -> Option<String> {
 
 fn already_prepared_context_bundle(sources: &[AgentContextPreparedSource]) -> String {
     let source_names = if sources.is_empty() {
-        "the OpenHuman harness".to_string()
+        "the Neppy harness".to_string()
     } else {
         sources
             .iter()
@@ -170,7 +170,7 @@ fn scout_failure_signal(err: &SubagentRunError) -> String {
 /// Is a failed `context_scout` run just the user being out of credits?
 ///
 /// Two billing shapes reach here, both **user-state, not defects**:
-/// * the managed OpenHuman backend's budget-exhausted 400
+/// * the managed Neppy backend's budget-exhausted 400
 ///   (`{"error":"Insufficient budget","errorCode":"USER_INSUFFICIENT_CREDITS"}`),
 ///   matched by [`crate::openhuman::inference::provider::is_budget_exhausted_message`];
 /// * a BYO provider's insufficient-credits 402, matched by
@@ -188,7 +188,7 @@ fn is_expected_billing_failure(message: &str) -> bool {
 /// The scout is a **background/best-effort** pass: every caller already
 /// degrades to the un-augmented message on failure. When the cause is the user
 /// being out of credits (`USER_INSUFFICIENT_CREDITS`) that is a preventable
-/// billing state OpenHuman has no lever over, yet `tracing::error!` maps to
+/// billing state Neppy has no lever over, yet `tracing::error!` maps to
 /// `EventFilter::Event` in `core::logging::sentry_tracing_layer` — so every
 /// tick of every out-of-credits user paged Sentry (TAURI-RUST-HMW: 8314 events
 /// / 13 users, #5308). The existing `is_budget_event` `before_send` net cannot
@@ -965,7 +965,7 @@ mod tests {
     /// Verbatim wire body from Sentry TAURI-RUST-HMW's breadcrumb — the
     /// managed backend's budget-exhausted 400. Pinning the exact string makes a
     /// backend phrasing drift fail CI rather than silently re-flood Sentry.
-    const CREDITS_400_BODY: &str = "OpenHuman returned HTTP 400: \
+    const CREDITS_400_BODY: &str = "Neppy returned HTTP 400: \
         {\"success\":false,\"error\":\"Insufficient budget\",\
         \"errorCode\":\"USER_INSUFFICIENT_CREDITS\"}";
 
@@ -987,7 +987,7 @@ mod tests {
             "provider call failed: connection reset by peer",
             "agent definition 'context_scout' not found in registry",
             "sub-agent exceeded maximum iterations (8)",
-            "OpenHuman returned HTTP 400: {\"error\":\"model not found\"}",
+            "Neppy returned HTTP 400: {\"error\":\"model not found\"}",
             // A healthy-balance readout must not be swallowed.
             "You have 100 remaining credits this month",
             "",

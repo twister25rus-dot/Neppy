@@ -1575,7 +1575,7 @@ fn expand_tilde_delegates_to_config_single_source_of_truth() {
     // The policy method must stay byte-for-byte identical to the canonical
     // config helper so path checks and config expansion never diverge (#3353).
     let p = SecurityPolicy::default();
-    let input = "~/OpenHuman/projects";
+    let input = "~/Neppy/projects";
     assert_eq!(
         p.expand_tilde(input),
         crate::openhuman::config::expand_tilde(input)
@@ -2486,7 +2486,7 @@ fn supervised_runs_approved_redirects_but_blocks_hidden_execution() {
     assert!(full_policy().check_gated_command("echo $(date)").is_ok());
 }
 
-/// The default projects home (`~/OpenHuman/projects`) must always be a
+/// The default projects home (`~/Neppy/projects`) must always be a
 /// read-write trusted root on a policy built from config — `from_config` is the
 /// one autonomy→policy chokepoint every agent session uses, so the grant can't
 /// depend on the channels-startup path (skipped on web-chat-only cores).

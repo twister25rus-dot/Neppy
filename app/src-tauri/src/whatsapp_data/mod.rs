@@ -36,7 +36,7 @@ use openhuman_core::openhuman::channels::whatsapp_data::types::{
 use store::WhatsAppDataStore;
 
 /// Lazily open (or return) the shell's whatsapp_data store, bound to the active
-/// OpenHuman workspace dir.
+/// Neppy workspace dir.
 ///
 /// The store is process-global so the scanner, native query handlers, and Tauri
 /// commands share one write lock and recovery lifecycle. Every call resolves

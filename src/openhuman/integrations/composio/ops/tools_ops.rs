@@ -106,7 +106,7 @@ pub async fn composio_list_tools(
     }
 }
 
-/// Apply OpenHuman's curated-whitelist + user-scope visibility filter to
+/// Apply Neppy's curated-whitelist + user-scope visibility filter to
 /// a fresh `ComposioToolsResponse` in direct mode. Mirrors the per-call
 /// filter loop in `tools.rs::filter_list_tools_response` so backend and
 /// direct surfaces share the same safety net.

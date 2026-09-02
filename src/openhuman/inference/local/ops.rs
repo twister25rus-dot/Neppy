@@ -37,7 +37,7 @@ fn prompt_guard_user_message(action: PromptEnforcementAction) -> &'static str {
 /// `None` → `None`. `Some(non-empty-after-trim)` → `Some(trimmed)`. Anything
 /// else (`Some("")`, `Some("   ")`, `Some("\t\n")`) collapses to `None` so
 /// the existing default-model fallback applies instead of overwriting
-/// `config.default_model` with a blank string that the OpenHuman backend
+/// `config.default_model` with a blank string that the Neppy backend
 /// would reject with `400 model is required` (Sentry TAURI-RUST-RS).
 ///
 /// Extracted to keep `agent_chat` and `agent_chat_simple` in lockstep —

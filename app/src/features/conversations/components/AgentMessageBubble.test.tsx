@@ -168,12 +168,12 @@ describe('AgentMessageText', () => {
   });
 
   test('uses the dedicated table renderer in plain text mode', () => {
-    render(<AgentMessageText content={'| Name | Value |\n| --- | --- |\n| OpenHuman | 42 |'} />);
+    render(<AgentMessageText content={'| Name | Value |\n| --- | --- |\n| Neppy | 42 |'} />);
 
     expect(screen.getByTestId('agent-message-text')).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: 'OpenHuman' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'Neppy' })).toBeInTheDocument();
   });
 });
 

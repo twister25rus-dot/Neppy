@@ -14,10 +14,10 @@ const messages: TranslationMap = {
   'share.captionPlaceholder': 'Tulis keterangan...',
   'share.privacyNote':
     'Hanya judul, keterangan, nama agen, dan merek yang dibagikan. Obrolan, memori, dan file Anda tetap pribadi.',
-  'share.defaultHeadline': 'Lihat apa yang baru saja dilakukan agen OpenHuman saya',
+  'share.defaultHeadline': 'Lihat apa yang baru saja dilakukan agen Neppy saya',
   'share.defaultAgentName': 'Agen saya',
-  'share.defaultCaption': 'Lihat apa yang baru saja dilakukan agen OpenHuman saya.',
-  'share.captionWithHeadline': '{headline}. Dibuat dengan agen OpenHuman saya.',
+  'share.defaultCaption': 'Lihat apa yang baru saja dilakukan agen Neppy saya.',
+  'share.captionWithHeadline': '{headline}. Dibuat dengan agen Neppy saya.',
   'share.linkedInHint': 'Keterangan disalin. Tempel ke postingan LinkedIn Anda.',
   'share.shareX': 'Bagikan ke X',
   'share.shareLinkedIn': 'Bagikan ke LinkedIn',
@@ -52,7 +52,7 @@ const messages: TranslationMap = {
   'feedback.welcome.eyebrow': 'Masukan',
   'feedback.welcome.title': 'Bantu bentuk apa yang kami bangun',
   'feedback.welcome.body':
-    'Beri tahu kami apa yang berjalan baik, apa yang kurang, dan apa yang akan membuat OpenHuman lebih baik. Kirim ide, beri suara pada saran orang lain, dan saksikan yang terbaik naik ke puncak peta jalan kami.',
+    'Beri tahu kami apa yang berjalan baik, apa yang kurang, dan apa yang akan membuat Neppy lebih baik. Kirim ide, beri suara pada saran orang lain, dan saksikan yang terbaik naik ke puncak peta jalan kami.',
   'feedback.welcome.ctaShare': 'Bagikan ide',
   'feedback.welcome.ctaBoard': 'Lihat papan',
   'feedback.welcome.featsLabel': 'Apa yang bisa Anda lakukan',
@@ -117,7 +117,7 @@ const messages: TranslationMap = {
   'rewards.welcome.eyebrow': 'Hadiah',
   'rewards.welcome.title': 'Dapatkan hadiah karena hadir',
   'rewards.welcome.body':
-    'Kumpulkan poin saat Anda menggunakan OpenHuman dan mengundang orang lain, jaga rentetan Anda tetap hidup, dan tukarkan yang telah Anda peroleh, semuanya terlacak dalam satu tempat.',
+    'Kumpulkan poin saat Anda menggunakan Neppy dan mengundang orang lain, jaga rentetan Anda tetap hidup, dan tukarkan yang telah Anda peroleh, semuanya terlacak dalam satu tempat.',
   'rewards.welcome.ctaView': 'Lihat hadiah',
   'rewards.welcome.featsLabel': 'Cara kerjanya',
   'rewards.welcome.feat1Title': 'Kumpulkan poin',
@@ -173,7 +173,7 @@ const messages: TranslationMap = {
   'settings.core.recheck': 'Periksa ulang',
   'settings.core.save': 'Simpan & mulai ulang',
   'settings.core.applyRestartNote':
-    'Menyimpan akan memulai ulang OpenHuman untuk menyambung kembali.',
+    'Menyimpan akan memulai ulang Neppy untuk menyambung kembali.',
   // Cross-host vault (#4278)
   'crossHostVault.title': 'Vault berada di host core.',
   'crossHostVault.message':
@@ -181,16 +181,16 @@ const messages: TranslationMap = {
   'conversations.toolFailure.whyLabel': 'Mengapa',
   'conversations.toolFailure.nextLabel': 'Yang harus dilakukan',
   'conversations.toolFailure.missingPermission.cause':
-    'OpenHuman belum memiliki izin untuk melakukan ini.',
+    'Neppy belum memiliki izin untuk melakukan ini.',
   'conversations.toolFailure.missingPermission.next':
     'Berikan izin yang diperlukan, lalu coba lagi.',
   'conversations.toolFailure.missingApp.cause':
     'Aplikasi atau program yang diperlukan untuk tindakan ini tidak tersedia.',
   'conversations.toolFailure.missingApp.next': 'Instal atau buka aplikasinya, lalu coba lagi.',
   'conversations.toolFailure.serviceUnavailable.cause':
-    'Layanan yang dibutuhkan OpenHuman sedang tidak tersedia untuk sementara.',
+    'Layanan yang dibutuhkan Neppy sedang tidak tersedia untuk sementara.',
   'conversations.toolFailure.serviceUnavailable.next':
-    'OpenHuman akan mencoba lagi sebentar lagi: tidak perlu tindakan apa pun.',
+    'Neppy akan mencoba lagi sebentar lagi: tidak perlu tindakan apa pun.',
   'conversations.toolFailure.badCredentials.cause':
     'Detail masuk yang tersimpan tidak ada atau tidak lagi valid.',
   'conversations.toolFailure.badCredentials.next':
@@ -199,19 +199,19 @@ const messages: TranslationMap = {
     'Tindakan ini diblokir oleh pengaturan keamanan Anda.',
   'conversations.toolFailure.blockedByPolicy.next':
     'Izinkan di Pengaturan → Akses agen jika Anda ingin menjalankannya.',
-  'conversations.toolFailure.modelConnection.cause': 'OpenHuman tidak dapat menjangkau model AI.',
+  'conversations.toolFailure.modelConnection.cause': 'Neppy tidak dapat menjangkau model AI.',
   'conversations.toolFailure.modelConnection.next':
-    'Periksa koneksi atau pengaturan model Anda; OpenHuman akan mencoba lagi.',
+    'Periksa koneksi atau pengaturan model Anda; Neppy akan mencoba lagi.',
   'conversations.toolFailure.timeout.cause': 'Tindakan memakan waktu terlalu lama dan dihentikan.',
   'conversations.toolFailure.timeout.next':
-    'OpenHuman akan mencoba lagi, atau Anda dapat mengulanginya secara manual.',
+    'Neppy akan mencoba lagi, atau Anda dapat mengulanginya secara manual.',
   'conversations.toolFailure.denied.cause': 'Anda menolak tindakan ini.',
   'conversations.toolFailure.denied.next':
     'Tidak ada yang perlu dilakukan: tindakan ini tidak dijalankan. Minta lagi jika Anda berubah pikiran.',
   'conversations.toolFailure.approvalExpired.cause':
     'Permintaan persetujuan kedaluwarsa sebelum ada yang merespons.',
   'conversations.toolFailure.approvalExpired.next':
-    'Minta lagi untuk menjalankannya: OpenHuman tidak akan mencobanya sendiri.',
+    'Minta lagi untuk menjalankannya: Neppy tidak akan mencobanya sendiri.',
   'conversations.toolFailure.unknown.cause': 'Terjadi kesalahan pada tindakan ini.',
   'conversations.toolFailure.unknown.next':
     'Coba lagi; jika terus gagal, jalankan diagnostik dari Pengaturan.',
@@ -334,15 +334,15 @@ const messages: TranslationMap = {
   'orchPage.medulla.nav': 'Ikhtisar',
   'orchPage.medulla.badge': 'Segera hadir',
   'orchPage.medulla.title': 'Medulla',
-  'orchPage.medulla.tagline': 'Model orkestrasi OpenHuman',
+  'orchPage.medulla.tagline': 'Model orkestrasi Neppy',
   'orchPage.medulla.body':
-    'Medulla adalah LLM buatan OpenHuman yang dirancang untuk mengorkestrasi ribuan agen sekaligus, dengan jendela konteks 10 juta token dan orkestrasi berbiaya sangat rendah.',
+    'Medulla adalah LLM buatan Neppy yang dirancang untuk mengorkestrasi ribuan agen sekaligus, dengan jendela konteks 10 juta token dan orkestrasi berbiaya sangat rendah.',
   'orchPage.medulla.featAgents': 'Ribuan agen',
   'orchPage.medulla.featContext': 'Konteks 10M token',
   'orchPage.medulla.featCost': 'Orkestrasi berbiaya rendah',
-  'orchPage.medulla.subscriberTitle': 'Pelanggan OpenHuman',
+  'orchPage.medulla.subscriberTitle': 'Pelanggan Neppy',
   'orchPage.medulla.subscriberNote':
-    'Saat Medulla diluncurkan, akan eksklusif untuk pelanggan OpenHuman.',
+    'Saat Medulla diluncurkan, akan eksklusif untuk pelanggan Neppy.',
   'orchPage.medulla.subscriberCta': 'Dapatkan langganan',
   'orchPage.medulla.discordTitle': 'Gabung Discord',
   'orchPage.medulla.earlyAccess':
@@ -409,7 +409,7 @@ const messages: TranslationMap = {
   'orchPage.connections.replyPlaceholder': 'Balas…',
   'orchPage.connections.initTitle': 'Inisialisasi agen atau instans',
   'orchPage.connections.initDesc':
-    'Buat sub-agen baru untuk bekerja bersama Anda. Buka obrolan agen dan jelaskan peran, tujuan, serta alat yang harus digunakan: OpenHuman menyediakan instans khusus yang dapat Anda kendalikan dari sini.',
+    'Buat sub-agen baru untuk bekerja bersama Anda. Buka obrolan agen dan jelaskan peran, tujuan, serta alat yang harus digunakan: Neppy menyediakan instans khusus yang dapat Anda kendalikan dari sini.',
   'orchPage.connections.initCta': 'Mulai di obrolan',
   'orchPage.connections.status.needsYou': 'Perlu Anda',
   'orchPage.connections.status.running': 'Berjalan',
@@ -486,7 +486,7 @@ const messages: TranslationMap = {
   'tinyplaceOrchestration.unknownSender': 'Pengirim tidak dikenal',
   'tinyplaceOrchestration.master.title': 'Agen / manusia',
   'tinyplaceOrchestration.master.subtitle': 'Chat master',
-  'tinyplaceOrchestration.master.preview': 'Koordinasi langsung antara Anda dan OpenHuman.',
+  'tinyplaceOrchestration.master.preview': 'Koordinasi langsung antara Anda dan Neppy.',
   'tinyplaceOrchestration.subconscious.title': 'Alam Bawah Sadar',
   'tinyplaceOrchestration.subconscious.subtitle': 'Chat internal agen',
   'tinyplaceOrchestration.subconscious.preview': 'Koordinasi agen latar belakang dan loop memori.',
@@ -504,7 +504,7 @@ const messages: TranslationMap = {
   'tinyplaceOrchestration.pairing.incoming': 'Masuk',
   'tinyplaceOrchestration.pairing.outgoing': 'Keluar',
   'tinyplaceOrchestration.master.you': 'Anda',
-  'tinyplaceOrchestration.composer.placeholder': 'Pesan ke OpenHuman…',
+  'tinyplaceOrchestration.composer.placeholder': 'Pesan ke Neppy…',
   'tinyplaceOrchestration.composer.send': 'Kirim',
   'tinyplaceOrchestration.composer.sendFailed': 'Gagal mengirim pesan',
   'tinyplaceOrchestration.steering.label': 'Pengarahan',
@@ -823,8 +823,8 @@ const messages: TranslationMap = {
   'clearData.failed': 'Gagal membersihkan data dan keluar. Silakan coba lagi.',
   'clearData.failedLogout': 'Gagal keluar. Silakan coba lagi.',
   'clearData.failedPersist': 'Gagal membersihkan status aplikasi tersimpan. Silakan coba lagi.',
-  'welcome.logoAlt': 'OpenHuman',
-  'welcome.title': 'Selamat datang di OpenHuman',
+  'welcome.logoAlt': 'Neppy',
+  'welcome.title': 'Selamat datang di Neppy',
   'welcome.subtitle': 'Asisten AI Anda untuk komunitas',
   'welcome.connectPrompt': 'Konfigurasikan RPC URL (Lanjutan)',
   'welcome.selectRuntime': 'Pilih Runtime',
@@ -833,7 +833,7 @@ const messages: TranslationMap = {
   'welcome.clearAppDataWarning':
     'Ini akan menghapus rahasia dan akun yang tersimpan secara lokal di perangkat ini. Akun cloud Anda tidak terpengaruh: Anda dapat masuk kembali segera setelahnya.',
   'welcome.resetErrorFallback':
-    'Tidak dapat menghapus data aplikasi. Silakan keluar dan buka kembali OpenHuman, lalu coba lagi.',
+    'Tidak dapat menghapus data aplikasi. Silakan keluar dan buka kembali Neppy, lalu coba lagi.',
   'welcome.signingIn': 'Memasukkan Anda...',
   'welcome.termsIntro': 'Dengan melanjutkan, Anda menyetujui',
   'welcome.termsOfUse': 'Persyaratan',
@@ -852,7 +852,7 @@ const messages: TranslationMap = {
   'home.statusBackendOnly':
     'Menghubungkan ulang ke backend... agen Anda akan segera tersedia lagi.',
   'home.statusCoreUnreachable':
-    'Core sidecar lokal tidak merespons. Proses latar OpenHuman mungkin crash atau gagal dimulai.',
+    'Core sidecar lokal tidak merespons. Proses latar Neppy mungkin crash atau gagal dimulai.',
   'home.statusInternetOffline':
     'Perangkat Anda sedang offline. Periksa jaringan atau mulai ulang aplikasi untuk menyambung lagi.',
   'home.restartCore': 'Mulai Ulang Core',
@@ -1192,13 +1192,13 @@ const messages: TranslationMap = {
   'rewards.referrals': 'Referral',
   'rewards.coupons': 'Tukarkan',
   'rewards.localUnavailable':
-    'Login lokal tidak mendapatkan reward, kupon, atau kredit referral. Keluar lalu lanjutkan dengan masuk menggunakan akun OpenHuman jika Anda ingin reward dihitung.',
+    'Login lokal tidak mendapatkan reward, kupon, atau kredit referral. Keluar lalu lanjutkan dengan masuk menggunakan akun Neppy jika Anda ingin reward dihitung.',
   'rewards.localUnavailableCta': 'Buka Pengaturan Akun',
   'rewards.credits': 'Kredit',
   'rewards.referralCode': 'Kode referral Anda',
   'rewards.copyCode': 'Salin kode',
   'rewards.share': 'Bagikan',
-  'onboarding.welcome': 'Hai. Saya OpenHuman.',
+  'onboarding.welcome': 'Hai. Saya Neppy.',
   'onboarding.welcomeDesc':
     'Asisten AI super cerdas yang berjalan di komputer Anda. Privat, sederhana, dan sangat kuat.',
   'onboarding.context': 'Pengumpulan Konteks',
@@ -1210,14 +1210,14 @@ const messages: TranslationMap = {
   'onboarding.referral': 'Rujukan',
   'onboarding.referralDesc': 'Gunakan kode referral jika Anda memilikinya.',
   'onboarding.finish': 'Selesaikan Pengaturan',
-  'onboarding.finishDesc': 'Semua siap! Mulai gunakan OpenHuman.',
+  'onboarding.finishDesc': 'Semua siap! Mulai gunakan Neppy.',
   'onboarding.skip': 'Lewati',
   'onboarding.getStarted': 'Mulai',
-  'onboarding.runtimeChoice.title': 'Bagaimana Anda ingin menjalankan OpenHuman?',
+  'onboarding.runtimeChoice.title': 'Bagaimana Anda ingin menjalankan Neppy?',
   'onboarding.runtimeChoice.subtitle':
     'Pilih pengaturan yang paling sesuai untuk Anda. Anda dapat mengubahnya nanti di Pengaturan.',
   'onboarding.runtimeChoice.cloud.title': 'Sederhana',
-  'onboarding.runtimeChoice.cloud.tagline': 'Biarkan OpenHuman mengelola segalanya untuk Anda.',
+  'onboarding.runtimeChoice.cloud.tagline': 'Biarkan Neppy mengelola segalanya untuk Anda.',
   'onboarding.runtimeChoice.cloud.f1': 'Keamanan bawaan',
   'onboarding.runtimeChoice.cloud.f2': 'Kompresi token untuk memaksimalkan penggunaan Anda',
   'onboarding.runtimeChoice.cloud.f3': 'Satu langganan, semua model sudah termasuk',
@@ -1271,7 +1271,7 @@ const messages: TranslationMap = {
   'onboarding.custom.stepperMemory': 'Memori',
   'onboarding.custom.stepCounter': 'Langkah {n} dari {total}',
   'onboarding.custom.defaultTitle': 'Bawaan',
-  'onboarding.custom.defaultSubtitle': 'Biarkan OpenHuman mengelolanya untuk Anda.',
+  'onboarding.custom.defaultSubtitle': 'Biarkan Neppy mengelolanya untuk Anda.',
   'onboarding.custom.configureTitle': 'Konfigurasi',
   'onboarding.custom.configureSubtitle': 'Saya akan memilih apa yang digunakan.',
   'onboarding.custom.progressAriaLabel': 'Progres orientasi',
@@ -1285,40 +1285,40 @@ const messages: TranslationMap = {
   'onboarding.custom.inference.subtitle':
     'Model bahasa mana yang harus menjawab pertanyaan dan menjalankan agen Anda?',
   'onboarding.custom.inference.defaultDesc':
-    'OpenHuman mengarahkan setiap beban kerja ke model default yang masuk akal. Tidak perlu key, tidak perlu pengaturan.',
+    'Neppy mengarahkan setiap beban kerja ke model default yang masuk akal. Tidak perlu key, tidak perlu pengaturan.',
   'onboarding.custom.inference.configureDesc':
     'Bawa key OpenAI atau Anthropic Anda sendiri. Kami menggunakannya untuk setiap beban kerja berbasis teks.',
   'onboarding.custom.voice.title': 'Suara',
   'onboarding.custom.voice.subtitle': 'Speech-to-text dan text-to-speech untuk mode suara.',
   'onboarding.custom.voice.defaultDesc':
-    'OpenHuman dilengkapi dengan STT/TTS terkelola yang langsung berfungsi. Tidak ada yang perlu dikonfigurasi.',
+    'Neppy dilengkapi dengan STT/TTS terkelola yang langsung berfungsi. Tidak ada yang perlu dikonfigurasi.',
   'onboarding.custom.voice.configureDesc':
     'Gunakan ElevenLabs / OpenAI Whisper / dll. milik Anda sendiri. Konfigurasi di Pengaturan › Suara.',
   'onboarding.custom.oauth.title': 'Koneksi (OAuth)',
   'onboarding.custom.oauth.subtitle':
     'Gmail, Slack, Notion, dan layanan terhubung lainnya yang memerlukan OAuth.',
   'onboarding.custom.oauth.defaultDesc':
-    'OpenHuman menjalankan workspace Composio terkelola. Satu klik untuk menghubungkan setiap layanan nanti.',
+    'Neppy menjalankan workspace Composio terkelola. Satu klik untuk menghubungkan setiap layanan nanti.',
   'onboarding.custom.oauth.configureDesc':
     'Bawa akun Composio / API key Anda sendiri. Konfigurasi di Pengaturan › Koneksi.',
   'onboarding.custom.search.title': 'Pencarian Web',
-  'onboarding.custom.search.subtitle': 'Cara OpenHuman mencari web atas nama Anda.',
+  'onboarding.custom.search.subtitle': 'Cara Neppy mencari web atas nama Anda.',
   'onboarding.custom.search.defaultDesc':
-    'OpenHuman menggunakan backend pencarian terkelola. Tidak perlu key.',
+    'Neppy menggunakan backend pencarian terkelola. Tidak perlu key.',
   'onboarding.custom.search.configureDesc':
     'Bawa key penyedia pencarian Anda sendiri (Tavily, Brave, dll.). Konfigurasi di Pengaturan › Alat.',
   'onboarding.custom.embeddings.title': 'Embeddings',
   'onboarding.custom.embeddings.subtitle':
-    'Cara OpenHuman menghasilkan embedding vektor untuk pencarian memori semantik.',
+    'Cara Neppy menghasilkan embedding vektor untuk pencarian memori semantik.',
   'onboarding.custom.embeddings.defaultDesc':
-    'OpenHuman menggunakan layanan embedding terkelola. Tidak perlu API key.',
+    'Neppy menggunakan layanan embedding terkelola. Tidak perlu API key.',
   'onboarding.custom.embeddings.configureDesc':
     'Gunakan penyedia embedding Anda sendiri (OpenAI, Voyage, Ollama, dll.).',
   'onboarding.custom.memory.title': 'Memori',
   'onboarding.custom.memory.subtitle':
-    'Cara OpenHuman mengingat konteks, preferensi, dan percakapan sebelumnya.',
+    'Cara Neppy mengingat konteks, preferensi, dan percakapan sebelumnya.',
   'onboarding.custom.memory.defaultDesc':
-    'OpenHuman mengelola penyimpanan dan pengambilan memori secara otomatis. Tidak ada yang perlu diatur.',
+    'Neppy mengelola penyimpanan dan pengambilan memori secara otomatis. Tidak ada yang perlu diatur.',
   'onboarding.custom.memory.configureDesc':
     'Periksa, ekspor, atau hapus memori sendiri. Konfigurasi di Pengaturan › Memori.',
   'accounts.addAccount': 'Tambah Akun',
@@ -1477,11 +1477,11 @@ const messages: TranslationMap = {
   'privacy.anonymizedAnalytics': 'Analitik Produk',
   'privacy.shareAnonymizedData': 'Bagikan Analitik Produk dan Diagnostik',
   'privacy.shareAnonymizedDataDesc':
-    'Bantu meningkatkan OpenHuman dengan membagikan laporan crash dan peristiwa penggunaan yang dibatasi privasi, termasuk ID akun stabil dan metadata versi aplikasi. Pesan, kunci dompet, kunci API, dan token sesi tidak pernah dikumpulkan.',
+    'Bantu meningkatkan Neppy dengan membagikan laporan crash dan peristiwa penggunaan yang dibatasi privasi, termasuk ID akun stabil dan metadata versi aplikasi. Pesan, kunci dompet, kunci API, dan token sesi tidak pernah dikumpulkan.',
   'privacy.meetingFollowUps': 'Tindak lanjut rapat',
   'privacy.autoHandoffMeet': 'Serahkan transkrip Google Meet otomatis ke orchestrator',
   'privacy.autoHandoffMeetDesc':
-    'Saat panggilan Google Meet berakhir, orchestrator OpenHuman dapat membaca transkrip dan mengambil tindakan seperti menyusun pesan, menjadwalkan tindak lanjut, atau memposting ringkasan ke workspace Slack yang terhubung. Nonaktif secara default.',
+    'Saat panggilan Google Meet berakhir, orchestrator Neppy dapat membaca transkrip dan mengambil tindakan seperti menyusun pesan, menjadwalkan tindak lanjut, atau memposting ringkasan ke workspace Slack yang terhubung. Nonaktif secara default.',
   'privacy.analyticsDisclaimer':
     'Saat aktif, Analitik Produk dan Diagnostik dapat menyertakan laporan crash dan peristiwa penggunaan yang dibatasi privasi, ID akun stabil, dan metadata versi aplikasi. Pesan, kunci dompet, kunci API, dan token sesi tidak pernah dikumpulkan. Pengaturan ini bisa diubah kapan saja.',
   'settings.about.version': 'Versi',
@@ -1493,7 +1493,7 @@ const messages: TranslationMap = {
   'settings.about.releases': 'Rilis',
   'settings.about.releasesDesc': 'Telusuri catatan rilis dan build sebelumnya di GitHub.',
   'settings.about.openReleases': 'Buka rilis GitHub',
-  'settings.about.starCta.title': 'Menikmati OpenHuman?',
+  'settings.about.starCta.title': 'Menikmati Neppy?',
   'settings.about.starCta.body':
     'Beri kami bintang di GitHub. Ini membantu lebih banyak orang menemukan kami.',
   'settings.about.starCta.star': 'Beri bintang di GitHub',
@@ -1578,18 +1578,18 @@ const messages: TranslationMap = {
     'Kirim pesan agen - penggunaan token dari panggilan penyedia berikutnya akan mengisi bagan dalam waktu ~10.',
   'settings.search.title': 'Mesin pencari',
   'settings.search.menuDesc':
-    'Baku bagi OpenHuman- mengatur pencarian atau menghubungkan penyedia anda sendiri dengan kunci API.',
+    'Baku bagi Neppy- mengatur pencarian atau menghubungkan penyedia anda sendiri dengan kunci API.',
   'settings.search.description':
-    'Pilih mesin pencari yang digunakan agen, atau nonaktifkan alat pencarian sepenuhnya. Managed menggunakan backend OpenHuman (tanpa pengaturan). Parallel, Brave, Querit, dan Exa berjalan langsung dari mesin Anda menggunakan kunci API Anda.',
+    'Pilih mesin pencari yang digunakan agen, atau nonaktifkan alat pencarian sepenuhnya. Managed menggunakan backend Neppy (tanpa pengaturan). Parallel, Brave, Querit, dan Exa berjalan langsung dari mesin Anda menggunakan kunci API Anda.',
   'settings.search.engineAria': 'Mesin pencari',
   'settings.search.engineDisabledLabel': 'Disabled',
   'settings.search.engineDisabledDesc':
     'Hapus alat pencarian dari konteks agen dan daftar alat yang tersedia.',
-  'settings.search.engineManagedLabel': 'OpenHuman Dikelola',
+  'settings.search.engineManagedLabel': 'Neppy Dikelola',
   'settings.search.engineManagedDesc':
-    'Baku. Diarahkan melalui backend OpenHuman, saat ini didukung oleh Exa: tidak diperlukan kunci API.',
+    'Baku. Diarahkan melalui backend Neppy, saat ini didukung oleh Exa: tidak diperlukan kunci API.',
   'settings.search.localManagedUnavailable':
-    'Pencarian OpenHuman Managed tidak tersedia untuk pengguna lokal. Tambahkan API key Parallel, Brave, Querit, atau Exa Anda sendiri untuk mengaktifkan pencarian web.',
+    'Pencarian Neppy Managed tidak tersedia untuk pengguna lokal. Tambahkan API key Parallel, Brave, Querit, atau Exa Anda sendiri untuk mengaktifkan pencarian web.',
   'settings.search.engineParallelLabel': 'Parallel',
   'settings.search.engineParallelDesc':
     'Parallel Langsung API: pencarian, ekstrak, percakapan, penelitian, perkaya, alat dataset.',
@@ -1648,15 +1648,15 @@ const messages: TranslationMap = {
   'settings.embeddings.providerAria': 'Penyedia embedding',
   'settings.embeddings.statusConfigured': 'Dikonfigurasi',
   'settings.embeddings.statusNeedsKey': 'Perlu kunci API',
-  'settings.embeddings.requiresSignIn': 'Memerlukan masuk OpenHuman',
+  'settings.embeddings.requiresSignIn': 'Memerlukan masuk Neppy',
   'settings.embeddings.managedLoginRequired':
-    'Embedding terkelola memerlukan masuk OpenHuman. Masuk untuk menggunakan backend OpenHuman.',
+    'Embedding terkelola memerlukan masuk Neppy. Masuk untuk menggunakan backend Neppy.',
   'settings.embeddings.managedBannerIntro':
-    'Embedding terkelola dirutekan melalui backend OpenHuman dan memerlukan sesi akun OpenHuman.',
+    'Embedding terkelola dirutekan melalui backend Neppy dan memerlukan sesi akun Neppy.',
   'settings.embeddings.managedBannerLocalSession':
     'Keluar dari sesi lokal dan masuk untuk menggunakan penyedia ini, atau beralih ke penyedia embedding lokal atau bawa-kunci-sendiri.',
   'settings.embeddings.managedBannerRemoteSession':
-    'Masuk lagi untuk menyegarkan sesi OpenHuman Anda, atau beralih ke penyedia embedding lokal atau bawa-kunci-sendiri.',
+    'Masuk lagi untuk menyegarkan sesi Neppy Anda, atau beralih ke penyedia embedding lokal atau bawa-kunci-sendiri.',
   'settings.embeddings.signInAgain': 'Masuk lagi',
   'settings.embeddings.apiKeyLabel': 'Kunci API {provider}',
   'settings.embeddings.apiKeyLabelGeneric': 'Kunci API',
@@ -1716,14 +1716,14 @@ const messages: TranslationMap = {
     'Terenkripsi di meja rahasia MCP lokal. Tidak pernah log atau dikirim ke model.',
   'devices.betaBadge': 'Beta',
   'devices.betaText':
-    'Fitur ini sedang dalam versi beta. Pasangkan ponsel iOS dengan OpenHuman ini untuk menggunakannya sebagai klien jarak jauh.',
+    'Fitur ini sedang dalam versi beta. Pasangkan ponsel iOS dengan Neppy ini untuk menggunakannya sebagai klien jarak jauh.',
   'devices.comingSoonDescription':
     'Pemasangan perangkat akan segera hadir. Halaman ini akan menjadi tempat untuk memasangkan iPhone dan mengelola perangkat yang terhubung.',
   'devices.title': 'Perangkat',
   'devices.pairIphone': 'Pasangkan iPhone',
   'devices.noPaired': 'Tidak ada perangkat yang dipasangkan',
   'devices.emptyState':
-    'Pindai kode QR di iPhone Anda untuk menghubungkannya ke sesi OpenHuman ini.',
+    'Pindai kode QR di iPhone Anda untuk menghubungkannya ke sesi Neppy ini.',
   'devices.devicePairedTitle': 'Perangkat yang dipasangkan',
   'devices.devicePairedMessage': 'iPhone berhasil tersambung.',
   'devices.deviceRevokedTitle': 'Perangkat dicabut',
@@ -1744,7 +1744,7 @@ const messages: TranslationMap = {
   'devices.loadFailed': 'Gagal memuat perangkat: {message}',
   'devices.pairModal.title': 'Pasangkan iPhone',
   'devices.pairModal.loading': 'Membuat kode penyandingan…',
-  'devices.pairModal.instructions': 'Buka aplikasi OpenHuman di iPhone Anda dan pindai kode ini.',
+  'devices.pairModal.instructions': 'Buka aplikasi Neppy di iPhone Anda dan pindai kode ini.',
   'devices.pairModal.expiresIn': 'Masa berlaku kode akan habis dalam ~{count} menit',
   'devices.pairModal.expiresInPlural': 'Masa berlaku kode akan habis dalam ~{count} menit',
   'devices.pairModal.showDetails': 'Tampilkan detailnya',
@@ -2008,7 +2008,7 @@ const messages: TranslationMap = {
   'mcp.connectAuth.schemeRaw': 'Tidak ada',
   'mcp.connectAuth.reconnectFailed': 'Kredensial tersimpan, tetapi koneksi gagal.',
   'mcp.connectAuth.oauthHint':
-    'Server ini menggunakan OAuth. Masuk melalui browser Anda untuk mengizinkan OpenHuman.',
+    'Server ini menggunakan OAuth. Masuk melalui browser Anda untuk mengizinkan Neppy.',
   'mcp.connectAuth.signIn': 'Masuk dengan browser',
   'mcp.connectAuth.oauthWaiting': 'Menunggu proses masuk…',
   'mcp.connectAuth.oauthOrToken':
@@ -2029,7 +2029,7 @@ const messages: TranslationMap = {
   'autonomy.title': 'Otonomi agen',
   'autonomy.maxActionsLabel': 'Tindakan maksimal per jam',
   'autonomy.maxActionsHelp':
-    'Jumlah maksimum tindakan alat yang dapat dijalankan agen per jam bergulir. Nilai baru berlaku untuk obrolan berikutnya. Pekerjaan cron dan pendengar saluran tetap menggunakan batas saat ini sampai Anda me-restart OpenHuman.',
+    'Jumlah maksimum tindakan alat yang dapat dijalankan agen per jam bergulir. Nilai baru berlaku untuk obrolan berikutnya. Pekerjaan cron dan pendengar saluran tetap menggunakan batas saat ini sampai Anda me-restart Neppy.',
   'autonomy.statusSaving': 'Menyimpan…',
   'autonomy.statusSaved': 'Tersimpan.',
   'autonomy.statusFailed': 'Gagal',
@@ -2084,7 +2084,7 @@ const messages: TranslationMap = {
   'settings.billing.browserOpenFailed':
     'Browser tidak dapat dibuka otomatis. Gunakan tombol di atas.',
   'settings.tools.chooseCapabilities':
-    'Pilih kemampuan yang dapat digunakan OpenHuman atas nama Anda.',
+    'Pilih kemampuan yang dapat digunakan Neppy atas nama Anda.',
   'settings.tools.saveChanges': 'Simpan Perubahan',
   'settings.tools.preferencesSaved': 'Preferensi tersimpan',
   'settings.tools.saveFailed': 'Gagal menyimpan preferensi. Coba lagi.',
@@ -2336,8 +2336,8 @@ const messages: TranslationMap = {
   'voice.providers.piperPreset.alanMedium': 'GB · Alan (pria)',
   'voice.providers.piperPreset.jennyDiocoMedium': 'GB · Jenny Dioco (wanita)',
   'voice.providers.piperPreset.northernEnglishMaleMedium': 'GB · Bahasa Inggris Utara (pria)',
-  'voice.providers.chip.cloud': 'OpenHuman (Terkelola)',
-  'voice.providers.chip.cloudAria': 'Penyedia terkelola OpenHuman selalu aktif',
+  'voice.providers.chip.cloud': 'Neppy (Terkelola)',
+  'voice.providers.chip.cloudAria': 'Penyedia terkelola Neppy selalu aktif',
   'voice.providers.chip.piper': 'Piper (Lokal)',
   'voice.providers.chip.enablePiper': 'Aktifkan Piper TTS lokal',
   'voice.providers.chip.disablePiper': 'Nonaktifkan Piper TTS lokal',
@@ -2381,7 +2381,7 @@ const messages: TranslationMap = {
   'voice.externalProviders.add': 'Add',
   'pttSettings.title': 'Tekan untuk bicara',
   'pttSettings.description':
-    'Tahan sebuah tombol untuk berbicara dengan OpenHuman saat kamu sedang di aplikasi lain. Lepas tombol untuk mengirim; jika «Bacakan balasan» aktif, OpenHuman akan menyuarakan balasannya.',
+    'Tahan sebuah tombol untuk berbicara dengan Neppy saat kamu sedang di aplikasi lain. Lepas tombol untuk mengirim; jika «Bacakan balasan» aktif, Neppy akan menyuarakan balasannya.',
   'pttSettings.shortcutLabel': 'Pintasan',
   'pttSettings.shortcutPlaceholder': 'Tekan sebuah tombol (mis. F13)',
   'pttSettings.shortcutUnsetHint': 'Tekan untuk bicara mati: pilih pintasan untuk mengaktifkannya.',
@@ -2393,10 +2393,10 @@ const messages: TranslationMap = {
     'Pilih tombol biasa (mis. F13): pintasan hanya pengubah tidak berfungsi untuk tekan untuk bicara.',
   'pttSettings.errorEmpty': 'Pilih tombol untuk diikat.',
   'pttSettings.errorAccessibility':
-    'macOS memerlukan izin Aksesibilitas untuk pintasan ini. Buka Pengaturan Sistem → Privasi & Keamanan → Aksesibilitas lalu aktifkan OpenHuman.',
+    'macOS memerlukan izin Aksesibilitas untuk pintasan ini. Buka Pengaturan Sistem → Privasi & Keamanan → Aksesibilitas lalu aktifkan Neppy.',
   'pttSettings.errorShortcutInUse': 'Aplikasi lain sudah memakai pintasan ini. Pilih yang lain.',
   'pttSettings.errorUnsupportedWayland':
-    'Sesi Wayland belum mendukung pintasan global di OpenHuman: beralihlah ke sesi X11 atau gunakan tombol dikte di dalam aplikasi.',
+    'Sesi Wayland belum mendukung pintasan global di Neppy: beralihlah ke sesi X11 atau gunakan tombol dikte di dalam aplikasi.',
   'pttSettings.exclusiveFullscreenHint':
     'Pada game layar penuh eksklusif, lapisan tidak akan tampil: kamu hanya akan mendengar nada. Beralihlah ke layar penuh tanpa bingkai untuk melihat lapisan.',
   'pttOverlay.listening': 'Mendengarkan…',
@@ -2586,13 +2586,13 @@ const messages: TranslationMap = {
   'chat.attachment.tooManyFiles': 'Maksimal {max} file per pesan',
   'chat.attachment.tooManyVideos': 'Maksimal {max} video per pesan',
   'chat.attachment.videoNotSupported':
-    'Model ini tidak dapat membaca video. Anda dapat menggunakan tingkat Penalaran OpenHuman untuk melampirkan video Anda.',
+    'Model ini tidak dapat membaca video. Anda dapat menggunakan tingkat Penalaran Neppy untuk melampirkan video Anda.',
   'chat.attachment.dropToAttach': 'Lepaskan file untuk melampirkan',
   'chat.attachment.tooLarge': 'Gambar melebihi batas ukuran {max}',
   'chat.attachment.unsupportedType':
     'Jenis file tidak didukung. Gunakan gambar (PNG, JPEG, WebP, GIF, BMP) atau file PDF, TXT, atau Markdown.',
   'chat.attachment.imageNotSupported':
-    'Model ini tidak dapat membaca gambar. Anda dapat menggunakan tingkat Penalaran OpenHuman untuk melampirkan gambar Anda.',
+    'Model ini tidak dapat membaca gambar. Anda dapat menggunakan tingkat Penalaran Neppy untuk melampirkan gambar Anda.',
   'chat.attachment.readFailed': 'Tidak dapat membaca file',
   'memory.searchAria': 'Cari memori',
   'memory.searchPlaceholder': 'Cari entri memori...',
@@ -2942,9 +2942,9 @@ const messages: TranslationMap = {
   'bootCheck.chooseCoreMode': 'Pilih Runtime',
   'bootCheck.connectToCore': 'Hubungkan ke Runtime Anda',
   'bootCheck.desktopDescription':
-    'OpenHuman memerlukan runtime untuk berpikir. Pilih di mana runtime harus berada.',
+    'Neppy memerlukan runtime untuk berpikir. Pilih di mana runtime harus berada.',
   'bootCheck.webDescription':
-    'Di web, OpenHuman terhubung ke runtime yang Anda kendalikan. Masukkan URL dan token autentikasi di bawah, atau ambil aplikasi desktop untuk menjalankannya langsung di mesin Anda.',
+    'Di web, Neppy terhubung ke runtime yang Anda kendalikan. Masukkan URL dan token autentikasi di bawah, atau ambil aplikasi desktop untuk menjalankannya langsung di mesin Anda.',
   'bootCheck.preferDesktop': 'Lebih suka menyimpan semuanya di perangkat Anda sendiri?',
   'bootCheck.downloadDesktop': 'Dapatkan Aplikasi Desktop',
   'bootCheck.localRecommended': 'Jalankan Secara Lokal (Direkomendasikan)',
@@ -2971,7 +2971,7 @@ const messages: TranslationMap = {
   'bootCheck.quit': 'Keluar',
   'bootCheck.legacyDetected': 'Runtime Latar Belakang Lama Terdeteksi',
   'bootCheck.legacyDescription':
-    'Daemon OpenHuman yang diinstal terpisah sudah berjalan di perangkat ini. Kami perlu membersihkannya sebelum runtime bawaan dapat mengambil alih.',
+    'Daemon Neppy yang diinstal terpisah sudah berjalan di perangkat ini. Kami perlu membersihkannya sebelum runtime bawaan dapat mengambil alih.',
   'bootCheck.removing': 'Menghapus...',
   'bootCheck.removeContinue': 'Hapus dan Lanjutkan',
   'bootCheck.localNeedsRestart': 'Runtime Lokal Perlu Dimulai Ulang',
@@ -2993,13 +2993,13 @@ const messages: TranslationMap = {
   'bootCheck.actionFailed': 'Terjadi kesalahan. Silakan coba lagi.',
   'bootCheck.portConflictTitle': 'Tidak dapat memulai mesin aplikasi',
   'bootCheck.portConflictBody':
-    'Proses lain sedang menggunakan port jaringan yang dibutuhkan OpenHuman. Kami akan mencoba memperbaikinya secara otomatis.',
+    'Proses lain sedang menggunakan port jaringan yang dibutuhkan Neppy. Kami akan mencoba memperbaikinya secara otomatis.',
   'bootCheck.portConflictFixButton': 'Perbaiki Otomatis',
   'bootCheck.portConflictFixing': 'Memperbaiki…',
   'bootCheck.portConflictFixFailed':
     'Perbaikan otomatis tidak berhasil. Silakan restart komputer Anda dan coba lagi.',
   'bootCheck.portConflictOwner':
-    '{name} (PID {pid}) sedang menggunakan port jaringan yang dibutuhkan OpenHuman.',
+    '{name} (PID {pid}) sedang menggunakan port jaringan yang dibutuhkan Neppy.',
   'bootCheck.portConflictGuidance':
     'Tutup program tersebut untuk membebaskan port, atau paksa tutup di bawah, lalu coba lagi.',
   'bootCheck.portConflictForceQuit': 'Paksa tutup {name}',
@@ -3040,7 +3040,7 @@ const messages: TranslationMap = {
     'Runtime tidak dapat membaca berkas konfigurasinya. config.toml mungkin milik akun pengguna lain, atau tidak dapat diakses oleh proses runtime karena alasan lain. Mulai ulang runtime, dan jika belum teratasi, perbaiki kepemilikan direktori kerja atau buat ulang volumenya.',
   'welcome.localSessionErrorFallback': 'Tidak dapat memulai sesi lokal.',
   'welcome.gatewaySessionErrorFallback':
-    'Masuk tidak dapat diselesaikan saat ini. Penyimpanan sesi tidak merespons tepat waktu (bahkan setelah dicoba lagi). Mulai ulang OpenHuman dan coba lagi.',
+    'Masuk tidak dapat diselesaikan saat ini. Penyimpanan sesi tidak merespons tepat waktu (bahkan setelah dicoba lagi). Mulai ulang Neppy dan coba lagi.',
   'welcome.localSessionDesc': 'Menggunakan profil lokal offline dan melewati TinyHumans OAuth.',
   'channels.activeRouteValue': '{channel} lewat {authMode}',
   'privacy.dataKind.messages': 'Pesan',
@@ -3061,7 +3061,7 @@ const messages: TranslationMap = {
   'composio.reconnect': 'Hubungkan ulang',
   'composio.expiredAuthorization': '{name} otorisasi kedaluwarsa',
   'composio.expiredDescription':
-    'Sambungkan kembali untuk mengaktifkan kembali alat {name}. OpenHuman akan membuat integrasi ini tidak tersedia sampai Anda menyegarkan akses OAuth.',
+    'Sambungkan kembali untuk mengaktifkan kembali alat {name}. Neppy akan membuat integrasi ini tidak tersedia sampai Anda menyegarkan akses OAuth.',
   'composio.envVarOverrides': 'diatur, itu menggantikan pengaturan ini.',
   'composio.previewBadge': 'Pratinjau',
   'composio.colApp': 'Aplikasi',
@@ -3085,7 +3085,7 @@ const messages: TranslationMap = {
   'mic.failedToStopRecording': 'Gagal menghentikan perekaman: {message}',
   'mic.transcriptionFailed': 'Transkripsi gagal: {message}',
   'mic.voiceNotCompiled':
-    'Transkripsi suara tidak tersedia di versi aplikasi ini. Perbarui OpenHuman untuk mengaktifkannya.',
+    'Transkripsi suara tidak tersedia di versi aplikasi ini. Perbarui Neppy untuk mengaktifkannya.',
   'reflections.kind.retrospective': 'Retrospektif',
   'reflections.kind.derivedFact': 'Fakta Turunan',
   'reflections.kind.moodInsight': 'Wawasan Suasana Hati',
@@ -3109,7 +3109,7 @@ const messages: TranslationMap = {
   'accounts.respondQueue.title': 'Antrean respons',
   'app.connectionBadge.composio': 'Composio',
   'app.connectionBadge.messaging': 'Pesan',
-  'app.connectionIndicator.connected': 'Terhubung ke OpenHuman AI 🚀',
+  'app.connectionIndicator.connected': 'Terhubung ke Neppy AI 🚀',
   'app.connectionIndicator.connecting': 'Menghubungkan',
   'app.connectionIndicator.coreOffline': 'Core tidak online',
   'app.connectionIndicator.disconnected': 'Terputus',
@@ -3153,12 +3153,12 @@ const messages: TranslationMap = {
   'app.openhumanLink.notifications.desktopOnly':
     'Notifikasi native hanya tersedia di aplikasi desktop (jalankan `pnpm dev:app`).',
   'app.openhumanLink.notifications.permissionOff':
-    'Izin notifikasi nonaktif. Aktifkan OpenHuman di Pengaturan Sistem → Notifikasi, lalu coba lagi.',
+    'Izin notifikasi nonaktif. Aktifkan Neppy di Pengaturan Sistem → Notifikasi, lalu coba lagi.',
   'app.openhumanLink.notifications.triggerFailed':
-    'OpenHuman tidak dapat memicu notifikasi sistem. Periksa pengaturan notifikasi OS dan coba lagi.',
+    'Neppy tidak dapat memicu notifikasi sistem. Periksa pengaturan notifikasi OS dan coba lagi.',
   'app.openhumanLink.notifications.welcomeBody':
     'Anda akan menerima pemberitahuan di sini saat ada hal yang memerlukan perhatian Anda.',
-  'app.openhumanLink.notifications.welcomeTitle': 'OpenHuman siap digunakan',
+  'app.openhumanLink.notifications.welcomeTitle': 'Neppy siap digunakan',
   'app.openhumanLink.status.closed': 'Tertutup',
   'app.openhumanLink.status.connected': 'Terhubung',
   'app.openhumanLink.status.error': 'Kesalahan',
@@ -3178,7 +3178,7 @@ const messages: TranslationMap = {
   'app.openhumanLink.notifications.send': 'Kirim notifikasi tes',
   'app.openhumanLink.notifications.sendFailed': 'Tidak bisa mengirim: {error}',
   'app.openhumanLink.notifications.sent':
-    'Notifikasi uji telah dikirim. Jika Anda tidak menerimanya, buka System Settings → Notifications → OpenHuman, aktifkan Allow Notifications, dan atur Banner Style ke Persistent.',
+    'Notifikasi uji telah dikirim. Jika Anda tidak menerimanya, buka System Settings → Notifications → Neppy, aktifkan Allow Notifications, dan atur Banner Style ke Persistent.',
   'app.openhumanLink.skipForNow': 'Lewati untuk sekarang',
   'app.openhumanLink.telegramUnavailable': 'Telegram tidak tersedia',
   'app.openhumanLink.title.accounts': 'Hubungkan aplikasi Anda',
@@ -3191,7 +3191,7 @@ const messages: TranslationMap = {
   'app.persistRehydration.heading': 'Judul',
   'app.persistRehydration.resetCta': 'Mereset...',
   'app.persistRehydration.resetting': 'Mereset...',
-  'app.routeLoading.initializing': 'Menginisialisasi OpenHuman...',
+  'app.routeLoading.initializing': 'Menginisialisasi Neppy...',
   'app.update.currentlyOn': '{version}',
   'app.update.errorFallback': 'Terjadi kesalahan saat memperbarui.',
   'app.update.header.default': 'Perbarui',
@@ -3287,7 +3287,7 @@ const messages: TranslationMap = {
   'chat.flowProposal.stepKind.transform': 'Transformasikan',
   'chat.flowProposal.stepKind.outputParser': 'Uraikan output',
   'chat.flowProposal.stepKind.subWorkflow': 'Sub-alur kerja',
-  'channels.authMode.managed_dm': 'Masuk dengan OpenHuman',
+  'channels.authMode.managed_dm': 'Masuk dengan Neppy',
   'channels.authMode.oauth': 'OAuth Masuk',
   'channels.authMode.bot_token': 'Gunakan Token Bot Anda sendiri',
   'channels.authMode.api_key': 'Gunakan Kunci API Anda sendiri',
@@ -3299,9 +3299,9 @@ const messages: TranslationMap = {
   'channels.discord.description': 'Mengirim dan menerima pesan melalui Discord.',
   'channels.discord.authMode.bot_token.description': 'Berikan token bot Discord Anda sendiri.',
   'channels.discord.authMode.oauth.description':
-    'Instal bot OpenHuman ke server Discord Anda melalui OAuth.',
+    'Instal bot Neppy ke server Discord Anda melalui OAuth.',
   'channels.discord.authMode.managed_dm.description':
-    'Tautkan akun Discord pribadi Anda ke bot OpenHuman.',
+    'Tautkan akun Discord pribadi Anda ke bot Neppy.',
   'channels.discord.fields.bot_token.label': 'Token Bot',
   'channels.discord.fields.bot_token.placeholder': 'Token bot Discord Anda',
   'channels.discord.fields.guild_id.label': 'ID Server (Guild)',
@@ -3309,7 +3309,7 @@ const messages: TranslationMap = {
   'channels.telegram.displayName': 'Telegram',
   'channels.telegram.description': 'Mengirim dan menerima pesan melalui Telegram.',
   'channels.telegram.authMode.managed_dm.description':
-    'Kirim pesan langsung ke bot OpenHuman Telegram.',
+    'Kirim pesan langsung ke bot Neppy Telegram.',
   'channels.telegram.authMode.bot_token.description':
     'Berikan token Bot Telegram Anda sendiri dari @Botfather.',
   'channels.telegram.fields.bot_token.label': 'Token Bot',
@@ -3321,9 +3321,9 @@ const messages: TranslationMap = {
     'Dari obrolan Telegram yang diizinkan, kirim /status, /sessions, /new, atau /help. Perutean model masih menggunakan /model dan /models.',
   'channels.connectHelp.title': 'Cara menghubungkan',
   'channels.connectHelp.discord':
-    'Pilih metode di bawah: tautkan akun Anda lewat OpenHuman, pasang bot dengan OAuth, atau tempel token bot Anda sendiri dari portal developer Discord.',
+    'Pilih metode di bawah: tautkan akun Anda lewat Neppy, pasang bot dengan OAuth, atau tempel token bot Anda sendiri dari portal developer Discord.',
   'channels.connectHelp.telegram':
-    'Pilih metode di bawah: kirim pesan ke bot OpenHuman terkelola untuk menautkannya, atau tempel token bot Anda sendiri dari @BotFather.',
+    'Pilih metode di bawah: kirim pesan ke bot Neppy terkelola untuk menautkannya, atau tempel token bot Anda sendiri dari @BotFather.',
   'channels.connectHelp.slackNote':
     'Mencari Slack? Slack terhubung sebagai aplikasi di Koneksi → OAuth, bukan sebagai saluran pesan di sini.',
   'channels.web.displayName': 'Web',
@@ -3387,16 +3387,16 @@ const messages: TranslationMap = {
   'iosPair.error.camera': 'Pemindaian kamera gagal. Periksa izin kamera dan coba lagi.',
   'iosPair.error.connectionFailed':
     'Koneksi gagal. Pastikan aplikasi desktop sedang berjalan dan coba lagi.',
-  'iosPair.error.invalidQr': 'Kode QR tidak valid. Pastikan Anda memindai kode pairing OpenHuman.',
+  'iosPair.error.invalidQr': 'Kode QR tidak valid. Pastikan Anda memindai kode pairing Neppy.',
   'iosPair.error.unreachableDesktop':
     'Tidak dapat menjangkau desktop. Pastikan kedua perangkat online dan coba lagi.',
   'iosPair.expired': 'QR code kedaluwarsa. Minta desktop untuk membuat ulang kode.',
   'iosPair.instructions':
-    'Buka OpenHuman di desktop Anda, buka Pengaturan > Perangkat, dan ketuk "Pasangkan ponsel" untuk menampilkan kode QR.',
+    'Buka Neppy di desktop Anda, buka Pengaturan > Perangkat, dan ketuk "Pasangkan ponsel" untuk menampilkan kode QR.',
   'iosPair.retryScan': 'Coba pindai lagi',
   'iosPair.scanQrCode': 'Pindai QR code',
   'iosPair.scannerOpening': 'Pemindai terbuka...',
-  'iosPair.step.openDesktop': 'Buka OpenHuman di desktop',
+  'iosPair.step.openDesktop': 'Buka Neppy di desktop',
   'iosPair.step.openSettings': 'Buka Pengaturan > Perangkat',
   'iosPair.step.showQr': 'Ketuk "Pasangkan ponsel" untuk menampilkan QR',
   'iosPair.title': 'Pasangkan dengan desktop Anda',
@@ -3431,7 +3431,7 @@ const messages: TranslationMap = {
   'composio.connect.permissionsDefault': 'Baca + Tulis diaktifkan secara default',
   'composio.connect.permissionsNote': 'dapat mengekspos',
   'composio.connect.permissionsNoteSuffix':
-    'Izin agen milik OpenHuman dikendalikan di bawah sebagai sakelar read, write, dan admin.',
+    'Izin agen milik Neppy dikendalikan di bawah sebagai sakelar read, write, dan admin.',
   'composio.connect.reopenBrowser': 'Buka ulang browser',
   'composio.connect.requestingUrl': 'Meminta URL koneksi...',
   'composio.connect.requiredFieldEmpty': 'Bidang ini wajib diisi.',
@@ -3463,7 +3463,7 @@ const messages: TranslationMap = {
   'composio.triggers.listenFrom': 'Dengarkan event dari',
   'composio.triggers.loadError': 'Tidak bisa memuat trigger',
   'composio.triggers.sessionExpired':
-    'Sesi OpenHuman Anda telah berakhir. Masuk lagi untuk memuat trigger.',
+    'Sesi Neppy Anda telah berakhir. Masuk lagi untuk memuat trigger.',
   'composio.triggers.needsConfiguration': 'Perlu konfigurasi',
   'composio.triggers.noneAvailable': 'Tidak ada trigger yang tersedia saat ini untuk',
   'conversations.taskKanban.moveLeft': 'Pindah ke kiri',
@@ -3586,7 +3586,7 @@ const messages: TranslationMap = {
   'daemon.serviceBlockingGate.retryFailed':
     'Coba ulang gagal. Unduh build aplikasi terbaru dan coba lagi.',
   'daemon.serviceBlockingGate.retrying': 'Mencoba ulang...',
-  'daemon.serviceBlockingGate.title': 'Core OpenHuman tidak tersedia',
+  'daemon.serviceBlockingGate.title': 'Core Neppy tidak tersedia',
   'home.banners.discordSubtitle': 'Subtitle Discord',
   'home.banners.discordTitle': 'Bergabung ke Discord Kami',
   'home.banners.earlyBirdDismiss': 'Abaikan banner early bird',
@@ -3622,7 +3622,7 @@ const messages: TranslationMap = {
   'intelligence.diagram.skillInstallCommand': 'npx skills add yizhiyanhua-ai/fireworks-tech-graph',
   'intelligence.diagram.promptExample':
     'Buat diagram arsitektur swarm saat ini dalam gaya terminal gelap',
-  'intelligence.diagram.imageAlt': 'Diagram arsitektur OpenHuman terbaru yang dihasilkan',
+  'intelligence.diagram.imageAlt': 'Diagram arsitektur Neppy terbaru yang dihasilkan',
   'intelligence.diagram.refreshesEvery': 'Diperbarui setiap {seconds}d',
   'intelligence.memoryText.entityTypePrefix': 'Tipe entitas',
   'intelligence.tasks.activeBoardOne': '1 board aktif di seluruh percakapan',
@@ -4009,7 +4009,7 @@ const messages: TranslationMap = {
   'flows.nodeSummary.agent.withPrompt': '“{prompt}” · {model}',
   'flows.nodeSummary.agent.default': 'Bertanya kepada {model}',
   'flows.nodeSummary.toolCall.runsNative': 'Menjalankan {name}',
-  'flows.nodeSummary.toolCall.pickNative': 'Menjalankan alat OpenHuman (pilih salah satu)',
+  'flows.nodeSummary.toolCall.pickNative': 'Menjalankan alat Neppy (pilih salah satu)',
   'flows.nodeSummary.toolCall.runs': 'Menjalankan {slug}',
   'flows.nodeSummary.toolCall.pick': 'Menjalankan aksi aplikasi (pilih salah satu)',
   'flows.nodeSummary.http.withUrl': '{method} {url}',
@@ -4330,7 +4330,7 @@ const messages: TranslationMap = {
   'onboarding.contextGathering.title': 'Pengumpulan Konteks',
   'openhuman.team_list_teams': 'Daftar tim',
   'overlay.ariaAttention': 'Pesan perhatian',
-  'overlay.ariaOrb': 'Overlay OpenHuman',
+  'overlay.ariaOrb': 'Overlay Neppy',
   'overlay.ariaVoiceActive': 'Input suara aktif',
   'overlay.orbTitle': 'Seret untuk memindahkan · Klik dua kali untuk mereset posisi',
   'pages.settings.account.connections': 'Koneksi',
@@ -4371,7 +4371,7 @@ const messages: TranslationMap = {
   'privacy.dataKind.raw': 'Mentah',
   'privacy.whatLeaves.link.label': 'Apa yang keluar dari komputer saya?',
   'rewards.community.achievementsUnlocked': '{unlocked} dari {total} pencapaian terbuka',
-  'rewards.community.activityStreakHint': 'Hari berturut-turut kamu aktif di OpenHuman.',
+  'rewards.community.activityStreakHint': 'Hari berturut-turut kamu aktif di Neppy.',
   'rewards.community.activityTitle': 'Aktivitas kamu',
   'rewards.community.claimCredited': '{amount} ditambahkan ke saldo kamu',
   'rewards.community.claimError': 'Tidak dapat mengklaim. Silakan coba lagi.',
@@ -4409,7 +4409,7 @@ const messages: TranslationMap = {
   'rewards.community.roleAssigned': 'Role ditetapkan',
   'rewards.community.roleAssignmentCount': '{assigned} dari {unlocked} role ditetapkan',
   'rewards.community.roleClaimDesc':
-    'Kamu telah membuka role Discord tetapi belum bergabung ke server OpenHuman. Bergabunglah agar role ditetapkan secara otomatis.',
+    'Kamu telah membuka role Discord tetapi belum bergabung ke server Neppy. Bergabunglah agar role ditetapkan secara otomatis.',
   'rewards.community.roleClaimTitle': 'Klaim role Discord kamu',
   'rewards.community.roleJoinToClaim': 'Gabung server untuk klaim',
   'rewards.community.rolePending': 'Menyinkronkan role…',
@@ -4489,7 +4489,7 @@ const messages: TranslationMap = {
   'settings.ai.providers.groupCli': 'Login CLI',
   'settings.ai.providers.cliDetail': 'Memakai login yang sudah dimiliki CLI lain',
   'settings.ai.providers.connected': 'Terhubung',
-  'settings.ai.providers.managedDetail': 'OpenHuman memilih model untuk setiap tugas',
+  'settings.ai.providers.managedDetail': 'Neppy memilih model untuk setiap tugas',
   'settings.ai.providers.rowActions': 'Tindakan lain untuk {provider}',
   'settings.ai.providers.replaceKey': 'Ganti kunci API',
   'settings.ai.providers.custom': 'Kustom',
@@ -4623,7 +4623,7 @@ const messages: TranslationMap = {
   'settings.ai.noSpendRows': 'Tidak ada baris pembelanjaan yang dimuat.',
   'settings.ai.topHours': 'Jam sibuk',
   'settings.ai.noHourlySpend': 'Belum ada pembelanjaan per jam.',
-  'settings.ai.openhumanDefault': 'OpenHuman (baku)',
+  'settings.ai.openhumanDefault': 'Neppy (baku)',
   'settings.ai.localModelResolved': 'Ollama',
   'settings.ai.customRoutingForWorkload': 'Perutean khusus untuk {label}',
   'settings.ai.loadingModels': 'Memuat model...',
@@ -4708,17 +4708,17 @@ const messages: TranslationMap = {
   'settings.ai.composioSyncScans': 'Composio pemindaian sinkronisasi',
   'settings.ai.totalBackgroundApiReadBudget': 'Total bg API anggaran baca',
   'settings.ai.memoryWorkerPolls': 'Jajak pendapat pekerja memori',
-  'settings.ai.defaultProviderName': 'OpenHuman',
+  'settings.ai.defaultProviderName': 'Neppy',
   'settings.ai.routing.managed': 'Terkelola',
-  'settings.ai.managedSourceLabel': 'Dikelola oleh OpenHuman',
+  'settings.ai.managedSourceLabel': 'Dikelola oleh Neppy',
   'settings.ai.managedSourceDetail': 'Pemilihan model otomatis',
   'settings.ai.routing.managedAlwaysOn': 'Selalu aktif',
   'settings.ai.routing.managedHint':
     'Terkelola selalu tersedia sebagai cadangan. Untuk menggunakan model Anda sendiri, pilih mode perutean di bawah.',
   'settings.ai.routing.managedDesc':
-    'OpenHuman akan menjalankan semua kesimpulan di awan, memilih model terbaik untuk tugas ini, mengoptimalkan biaya, dan menjaga standar routing teraman.',
+    'Neppy akan menjalankan semua kesimpulan di awan, memilih model terbaik untuk tugas ini, mengoptimalkan biaya, dan menjaga standar routing teraman.',
   'settings.ai.routing.managedMsg':
-    'OpenHuman akan menangani semua inferensi untuk setiap beban kerja dan secara otomatis memilih rute terbaik untuk biaya, kualitas, dan keamanan.',
+    'Neppy akan menangani semua inferensi untuk setiap beban kerja dan secara otomatis memilih rute terbaik untuk biaya, kualitas, dan keamanan.',
   'settings.ai.routing.useYourOwn': 'Gunakan Model Anda Sendiri',
   'settings.ai.routing.useYourOwnDesc':
     'Pilih satu model + penyedia dan setiap beban kerja di dalamnya. Ini sederhana, tetapi dapat tidak efisien karena inferensi ringan dan kelas berat semua berbagi rute yang sama.',
@@ -4896,16 +4896,16 @@ const messages: TranslationMap = {
   'settings.composio.confirmSwitch': 'Saya mengerti, beralih ke Direct',
   'settings.composio.confirmTitle': '⚠️ Beralih ke mode Direct',
   'settings.composio.confirmWarning':
-    'Integrasi Anda yang sudah ada (Gmail, Slack, GitHub, dll. yang terhubung melalui OpenHuman) tidak akan terlihat: mereka berada di tenant Composio yang dikelola OpenHuman.',
+    'Integrasi Anda yang sudah ada (Gmail, Slack, GitHub, dll. yang terhubung melalui Neppy) tidak akan terlihat: mereka berada di tenant Composio yang dikelola Neppy.',
   'settings.composio.intro':
     'Composio mengintegrasikan 250+ aplikasi eksternal sebagai tool yang dapat dipanggil agen Anda. Pilih cara pemanggilan tool tersebut dirutekan.',
   'settings.composio.title': 'Composio',
   'settings.composio.modeDirect': 'Langsung (bawa API key Anda sendiri)',
   'settings.composio.modeDirectDesc':
     'Panggilan langsung ke backend.composio.dev. Berdaulat / ramah offline. Eksekusi tool berjalan sinkron; webhook trigger real-time belum dirutekan dalam mode direct (isu lanjutan).',
-  'settings.composio.modeManaged': 'Terkelola (OpenHuman menanganinya untuk Anda)',
+  'settings.composio.modeManaged': 'Terkelola (Neppy menanganinya untuk Anda)',
   'settings.composio.modeManagedDesc':
-    'OpenHuman mem-proxy pemanggilan tool melalui backend kami (disarankan). Autentikasi dibrokerkan; Anda tidak perlu menempel API key Composio. Webhook dirutekan sepenuhnya.',
+    'Neppy mem-proxy pemanggilan tool melalui backend kami (disarankan). Autentikasi dibrokerkan; Anda tidak perlu menempel API key Composio. Webhook dirutekan sepenuhnya.',
   'settings.composio.routingMode': 'Mode routing',
   'settings.composio.saveErrorNoKey':
     'Gagal menyimpan. Mode Direct memerlukan API key yang tidak kosong.',
@@ -5013,7 +5013,7 @@ const messages: TranslationMap = {
     'Atur mode autentikasi Telegram/Discord dan routing kanal default',
   'settings.developerMenu.tools.title': 'Alat',
   'settings.developerMenu.tools.desc':
-    'Aktifkan atau nonaktifkan kemampuan yang bisa digunakan OpenHuman atas nama Anda',
+    'Aktifkan atau nonaktifkan kemampuan yang bisa digunakan Neppy atas nama Anda',
   'settings.developerMenu.devWorkflow.title': 'Alur Kerja Dev',
   'settings.developerMenu.devWorkflow.desc':
     'Agen Autonomus yang mengambil isu GitHub-mu dan menaikkan PRs sesuai jadwal',
@@ -5187,7 +5187,7 @@ const messages: TranslationMap = {
     'Atur pengaturan triase AI untuk pemicu integrasi Composio',
   'settings.developerMenu.mcpServer.title': 'Server MCP',
   'settings.developerMenu.mcpServer.desc':
-    'Konfigurasikan klien MCP eksternal untuk terhubung ke OpenHuman',
+    'Konfigurasikan klien MCP eksternal untuk terhubung ke Neppy',
   'settings.developerMenu.autonomy.title': 'Otonomi agen',
   'settings.developerMenu.autonomy.desc': 'Batas laju aksi alat dan ambang keamanan',
   'settings.developerMenu.voiceDebug.title': 'Suara (debug)',
@@ -5203,7 +5203,7 @@ const messages: TranslationMap = {
   'settings.mcpServer.copied': 'Tersalin!',
   'settings.mcpServer.openConfigFile': 'Buka File Konfigurasi',
   'settings.mcpServer.binaryPathNotFound':
-    'Binary OpenHuman tidak ditemukan. Jika menjalankan dari source, build dengan: cargo build --bin openhuman-core',
+    'Binary Neppy tidak ditemukan. Jika menjalankan dari source, build dengan: cargo build --bin openhuman-core',
   'settings.mcpServer.openConfigError': 'Gagal membuka file konfigurasi',
   'settings.mcpServer.clientClaudeDesktop': 'Claude Desktop',
   'settings.mcpServer.clientCursor': 'Kursor',
@@ -5244,7 +5244,7 @@ const messages: TranslationMap = {
     'Jika diaktifkan, agen akan menjalankan semua tindakan yang memenuhi syarat tanpa meminta persetujuan Anda terlebih dahulu. Ini termasuk penulisan file, perintah shell, permintaan jaringan, dan efek samping lainnya. Batasan keamanan ketat (direktori kredensial dan sistem) tetap berlaku, dan tindakan dari sumber yang tidak tepercaya atau tidak diketahui tidak pernah disetujui secara otomatis.',
   'settings.agentAccess.tinyplaceAutopilot.title': 'Agen tiny.place otonom',
   'settings.agentAccess.tinyplaceAutopilot.desc':
-    'Biarkan OpenHuman bertindak sendiri di tiny.place. Sesuai jadwal, ia mencari pekerjaan yang bermanfaat (mendahulukan bounty terbuka), mengerjakan tugas yang sesuai dengan keahliannya, dan bertindak dengan identitas Anda. Ia berjalan tanpa pengawasan dan dapat membelanjakan dana, jadi gunakan devnet saat menguji. Nonaktif secara bawaan.',
+    'Biarkan Neppy bertindak sendiri di tiny.place. Sesuai jadwal, ia mencari pekerjaan yang bermanfaat (mendahulukan bounty terbuka), mengerjakan tugas yang sesuai dengan keahliannya, dan bertindak dengan identitas Anda. Ia berjalan tanpa pengawasan dan dapat membelanjakan dana, jadi gunakan devnet saat menguji. Nonaktif secara bawaan.',
   'settings.agentAccess.tinyplaceAutopilot.label': 'Jalankan otomatis',
   'settings.agentAccess.timeout.label': 'Batas waktu tindakan',
   'settings.agentAccess.timeout.desc':
@@ -5496,7 +5496,7 @@ const messages: TranslationMap = {
   'settings.mascot.characterPreview': 'Pratinjau',
   'settings.mascot.characterStates': 'status',
   'settings.mascot.characterVisemes': 'visem',
-  'settings.mascot.colorAria': 'Warna OpenHuman',
+  'settings.mascot.colorAria': 'Warna Neppy',
   'settings.mascot.colorDesc': 'Deskripsi warna',
   'settings.mascot.colorHeading': 'Judul warna',
   'settings.mascot.colorBlack': 'Hitam',
@@ -5506,15 +5506,15 @@ const messages: TranslationMap = {
   'settings.mascot.primaryColor': 'Warna primer',
   'settings.mascot.secondaryColor': 'Warna sekunder',
   'settings.mascot.colorYellow': 'Kuning',
-  'settings.mascot.libraryUnavailable': 'Library OpenHuman tidak tersedia',
-  'settings.mascot.title': 'OpenHuman',
-  'settings.mascot.loadingLibrary': 'Memuat perpustakaan OpenHuman...',
+  'settings.mascot.libraryUnavailable': 'Library Neppy tidak tersedia',
+  'settings.mascot.title': 'Neppy',
+  'settings.mascot.loadingLibrary': 'Memuat perpustakaan Neppy...',
   'settings.mascot.loadDetailError': 'Tidak dapat memuat maskot.',
   'settings.mascot.loadLibraryError': 'Tidak dapat memuat perpustakaan maskot.',
-  'settings.mascot.localDefault': 'OpenHuman Lokal (default)',
+  'settings.mascot.localDefault': 'Neppy Lokal (default)',
   'settings.mascot.menuTitle': 'Maskot',
   'settings.mascot.menuDesc': 'Pilih warna maskot yang digunakan di seluruh aplikasi',
-  'settings.mascot.noCharacters': 'Belum ada karakter OpenHuman yang tersedia',
+  'settings.mascot.noCharacters': 'Belum ada karakter Neppy yang tersedia',
   'settings.mascot.noColorVariants': 'Tidak ada varian warna',
   'settings.mascot.secondaryHeading': 'Duo rapat (maskot kedua)',
   'settings.mascot.secondaryDesc':
@@ -5607,7 +5607,7 @@ const messages: TranslationMap = {
     'Default yang masuk akal: kontinuitas yang baik tanpa membakar token tambahan di setiap run.',
   'settings.memoryWindow.balanced.label': 'Seimbang',
   'settings.memoryWindow.description':
-    'Seberapa banyak konteks yang diingat OpenHuman dimasukkan ke setiap run agen baru. Jendela yang lebih besar terasa lebih sadar akan percakapan sebelumnya, tetapi menggunakan lebih banyak token dan biayanya lebih tinggi di setiap run.',
+    'Seberapa banyak konteks yang diingat Neppy dimasukkan ke setiap run agen baru. Jendela yang lebih besar terasa lebih sadar akan percakapan sebelumnya, tetapi menggunakan lebih banyak token dan biayanya lebih tinggi di setiap run.',
   'settings.memoryWindow.extended.badge': 'Lebih banyak konteks',
   'settings.memoryWindow.extended.hint':
     'Lebih banyak memori jangka panjang yang dimasukkan ke setiap run. Biaya token per giliran lebih tinggi.',
@@ -5768,18 +5768,18 @@ const messages: TranslationMap = {
   'skills.install.urlPlaceholder': 'https://raw.githubusercontent.com/owner/repo/main/SKILL.md',
   'skills.meetingBots.bannerDesc': 'Deskripsi banner',
   'skills.meetingBots.bannerTitle': 'Judul banner',
-  'skills.meetingBots.busyTitle': 'OpenHuman sedang sibuk',
+  'skills.meetingBots.busyTitle': 'Neppy sedang sibuk',
   'skills.meetingBots.comingSoon': 'Segera hadir',
   'skills.meetingBots.couldNotLeaveTitle': 'Tidak dapat keluar dari rapat',
-  'skills.meetingBots.couldNotStartTitle': 'Tidak bisa memulai OpenHuman',
+  'skills.meetingBots.couldNotStartTitle': 'Tidak bisa memulai Neppy',
   'skills.meetingBots.displayName': 'Nama tampilan',
-  'skills.meetingBots.failedToStart': 'Gagal memulai OpenHuman.',
+  'skills.meetingBots.failedToStart': 'Gagal memulai Neppy.',
   'skills.meetingBots.joiningMessage': 'Seharusnya muncul sebagai peserta dalam beberapa detik.',
-  'skills.meetingBots.joiningTitle': 'OpenHuman bergabung ke rapat',
+  'skills.meetingBots.joiningTitle': 'Neppy bergabung ke rapat',
   'skills.meetingBots.meetingLink': 'Tautan rapat',
-  'skills.meetingBots.modalAriaLabel': 'Kirim OpenHuman ke rapat',
+  'skills.meetingBots.modalAriaLabel': 'Kirim Neppy ke rapat',
   'skills.meetingBots.modalDesc': 'Deskripsi modal',
-  'skills.meetingBots.modalTitle': 'Kirim OpenHuman ke rapat',
+  'skills.meetingBots.modalTitle': 'Kirim Neppy ke rapat',
   'skills.meetingBots.newBadge': 'Lencana baru',
   'skills.meetingBots.platformComingSoon': '{label} dukungan akan segera hadir.',
   'skills.meetingBots.platformHints.gmeet': 'meet.google.com/abc-defg-hij',
@@ -5792,7 +5792,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.platforms.zoom': 'Zoom',
   'skills.meetingBots.sendTo': 'Kirim ke',
   'skills.meetingBots.serverOverloaded':
-    'OpenHuman sedang menerima beban tinggi saat ini. Silakan coba lagi dalam beberapa menit.',
+    'Neppy sedang menerima beban tinggi saat ini. Silakan coba lagi dalam beberapa menit.',
   'skills.meetingBots.soonSuffix': 'segera',
   'skills.meetingBots.starting': 'Memulai...',
   'skills.meetingBots.recentCallsAriaLabel': 'Panggilan rapat terbaru',
@@ -5834,7 +5834,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.respondToParticipantDesc':
     'Masukkan nama tampilan Anda yang tepat dari rapat. Bot hanya merespons ketika Anda menyebut namanya (frasa bangun).',
   'skills.meetingBots.wakePhrase': 'Frasa Bangun',
-  'skills.meetingBots.wakePhraseHint': 'Hey OpenHuman',
+  'skills.meetingBots.wakePhraseHint': 'Hey Neppy',
   'skills.meetingBots.wakePhraseDesc': 'Peserta harus mengucapkan ini sebelum bot merespons.',
   'skills.meetingBots.activeMode': 'Tanggapi saat saya menyapa',
   'skills.meetingBots.activeModeDesc':
@@ -5845,7 +5845,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.history.earlier': 'Sebelumnya',
   'skills.meetingBots.history.participantCount': '{count} peserta',
   'skills.meetingBots.history.participantCountPlural': '{count} peserta',
-  'skills.meetingBots.history.runWithOpenHuman': 'Jalankan dengan OpenHuman',
+  'skills.meetingBots.history.runWithNeppy': 'Jalankan dengan Neppy',
   'skills.meetingBots.history.searchPlaceholder': 'Cari panggilan…',
   'skills.meetingBots.history.selectPrompt':
     'Pilih panggilan untuk melihat ringkasan dan transkripnya.',
@@ -5889,7 +5889,7 @@ const messages: TranslationMap = {
   'skills.meetingBots.defaults.openDefaults': 'Pengaturan rapat',
   'skills.meetingBots.defaults.watchCalendar': 'Pantau kalender saya',
   'skills.meetingBots.defaults.watchCalendarDesc':
-    'Biarkan OpenHuman memantau kalender yang terhubung agar dapat bergabung otomatis atau meminta konfirmasi untuk rapat berdasarkan kebijakan di bawah ini. Ini terpisah dari notifikasi pengingat rapat.',
+    'Biarkan Neppy memantau kalender yang terhubung agar dapat bergabung otomatis atau meminta konfirmasi untuk rapat berdasarkan kebijakan di bawah ini. Ini terpisah dari notifikasi pengingat rapat.',
   'skills.meetingBots.defaults.globalPolicy': 'Kebijakan bergabung otomatis global',
   'skills.meetingBots.defaults.perPlatformTitle': 'Pengaturan per platform',
   'skills.meetingBots.defaults.perPlatformDesc': 'Timpa kebijakan global untuk platform tertentu.',
@@ -5974,7 +5974,7 @@ const messages: TranslationMap = {
     'Human menyatukan konteks pribadi, identitas, dan profil yang dilihat asisten.',
   'walkthrough.steps.brainTab.title': 'Buka Brain Anda',
   'walkthrough.steps.brainTab.content':
-    'Brain adalah grafik memori: tempat melihat apa yang diketahui OpenHuman dan bagaimana ide saling terhubung.',
+    'Brain adalah grafik memori: tempat melihat apa yang diketahui Neppy dan bagaimana ide saling terhubung.',
   'walkthrough.steps.connectionsTab.title': 'Kelola koneksi',
   'walkthrough.steps.connectionsTab.content':
     'Connections selalu tersedia di navigasi utama saat Anda ingin menambah atau menyesuaikan layanan.',
@@ -6034,7 +6034,7 @@ const messages: TranslationMap = {
   'chat.parentThread': 'thread induk',
   'chat.removeReaction': 'Hapus {emoji}',
   'settings.composio.loading': 'Memuat…',
-  'settings.mascot.noCharactersAvailable': 'Belum ada karakter OpenHuman yang tersedia',
+  'settings.mascot.noCharactersAvailable': 'Belum ada karakter Neppy yang tersedia',
   'skills.uninstall.confirmTitle': 'Copot {name}?',
   'conversations.taskKanban.blocked': 'Terhambat',
   'conversations.taskKanban.done': 'Selesai',
@@ -6062,7 +6062,7 @@ const messages: TranslationMap = {
     'Konfigurasikan mode autentikasi Telegram/Discord dan routing channel bawaan',
   'devOptions.menuTools': 'Alat',
   'devOptions.menuToolsDesc':
-    'Aktifkan atau nonaktifkan kemampuan yang dapat digunakan OpenHuman atas nama Anda',
+    'Aktifkan atau nonaktifkan kemampuan yang dapat digunakan Neppy atas nama Anda',
   'devOptions.menuAgentChat': 'Obrolan Agen',
   'devOptions.menuAgentChatDesc': 'Uji percakapan agen dengan override model dan suhu',
   'devOptions.menuCronJobs': 'Pekerjaan Cron',
@@ -6407,7 +6407,7 @@ const messages: TranslationMap = {
 
   'announcement.gotIt': 'Mengerti',
   'harnessInit.subtitle':
-    'OpenHuman sedang menyiapkan komponen yang dibutuhkan saat pertama kali dijalankan.',
+    'Neppy sedang menyiapkan komponen yang dibutuhkan saat pertama kali dijalankan.',
   'harnessInit.stepPython': 'Runtime Python',
   'harnessInit.stepSpacy': 'Model bahasa',
   'harnessInit.stepNode': 'Runtime Node.js',
@@ -6417,15 +6417,15 @@ const messages: TranslationMap = {
   'harnessInit.stateSkipped': 'Dilewati',
   'harnessInit.stateFailed': 'Gagal',
   'harnessInit.failedMessage':
-    'Beberapa langkah penyiapan tidak selesai. Anda dapat mencoba lagi atau melanjutkan: OpenHuman akan menggunakan cadangan bawaan.',
+    'Beberapa langkah penyiapan tidak selesai. Anda dapat mencoba lagi atau melanjutkan: Neppy akan menggunakan cadangan bawaan.',
   'harnessInit.retry': 'Coba lagi',
   'harnessInit.continueAnyway': 'Lanjutkan saja',
   'harnessInit.runInBackground': 'Jalankan di latar belakang',
-  'harnessInit.backgroundHint': 'Anda dapat terus menggunakan OpenHuman saat proses ini selesai.',
+  'harnessInit.backgroundHint': 'Anda dapat terus menggunakan Neppy saat proses ini selesai.',
 
   'keyring.consent.title': 'Penyimpanan aman tidak tersedia',
   'keyring.consent.description':
-    'Keychain sistem operasi Anda tidak dapat diakses. OpenHuman memerlukan izin Anda untuk menyimpan rahasia menggunakan penyimpanan lokal terenkripsi.',
+    'Keychain sistem operasi Anda tidak dapat diakses. Neppy memerlukan izin Anda untuk menyimpan rahasia menggunakan penyimpanan lokal terenkripsi.',
   'keyring.consent.reasonPrefix': 'Alasan:',
   'keyring.consent.showDetails': 'Apa artinya ini?',
   'keyring.consent.hideDetails': 'Sembunyikan detail',
@@ -6466,7 +6466,7 @@ const messages: TranslationMap = {
   'memory.health.remediation.budget_exhausted':
     'Embedding memori mencapai batas anggaran terkelola. Siapkan embedding Ollama lokal (Koneksi → Kunci API → Penyematan) atau tambahkan kunci API embedding Anda sendiri untuk terus membangun memori.',
   'memory.health.remediation.auth_missing':
-    'Kredensial embedding tidak ditemukan. Masuk ke OpenHuman, atau siapkan embedding Ollama lokal di Koneksi → Kunci API → Penyematan.',
+    'Kredensial embedding tidak ditemukan. Masuk ke Neppy, atau siapkan embedding Ollama lokal di Koneksi → Kunci API → Penyematan.',
   'memory.health.remediation.auth_invalid':
     'Kredensial embedding Anda ditolak. Autentikasi ulang, atau beralih ke embedding Ollama lokal di Koneksi → Kunci API → Penyematan.',
   'memory.health.remediation.embeddings_unconfigured':
@@ -6482,7 +6482,7 @@ const messages: TranslationMap = {
   'memory.health.remediation.empty_input_refused':
     'Item memori dilewati karena teksnya kosong. Tidak diperlukan tindakan: item baru tetap disematkan seperti biasa.',
   'memory.health.remediation.storage_unavailable':
-    'OpenHuman tidak dapat menulis ke penyimpanan memorinya: disk atau kartu SD tampaknya rusak, penuh, atau hanya-baca. Periksa drive dan kosongkan ruang; pemrosesan memori akan dilanjutkan secara otomatis setelah penyimpanan dapat ditulisi kembali.',
+    'Neppy tidak dapat menulis ke penyimpanan memorinya: disk atau kartu SD tampaknya rusak, penuh, atau hanya-baca. Periksa drive dan kosongkan ruang; pemrosesan memori akan dilanjutkan secara otomatis setelah penyimpanan dapat ditulisi kembali.',
   'memory.health.remediation.transient':
     'Kesalahan sementara mengganggu pemrosesan memori. Akan dicoba lagi secara otomatis.',
   'memory.health.remediation.unknown':
@@ -6560,11 +6560,11 @@ const messages: TranslationMap = {
   'onboarding.custom.vault.subtitle':
     'Konfirmasi di mana catatan memori ditulis, bagaimana data sumber dibaca, dan apakah pipeline vault Anda sehat.',
   'onboarding.custom.vault.defaultDesc':
-    'Gunakan default memori yang dikelola OpenHuman. Jalur vault dan kondisi sinkronisasi tetap dapat ditinjau nanti.',
+    'Gunakan default memori yang dikelola Neppy. Jalur vault dan kondisi sinkronisasi tetap dapat ditinjau nanti.',
   'onboarding.custom.vault.configureDesc':
     'Tinjau kepemilikan vault, jalankan pemeriksaan kesehatan, dan sesuaikan kontrol memori sekarang.',
   'onboarding.custom.vault.localDisabledReason':
-    'Pengaturan terkelola memerlukan masuk OpenHuman dan tidak tersedia dalam mode lokal.',
+    'Pengaturan terkelola memerlukan masuk Neppy dan tidak tersedia dalam mode lokal.',
   'onboarding.custom.vault.exitError': 'Tidak dapat menyelesaikan orientasi. Silakan coba lagi.',
   'vaultHealth.title': 'Daftar Periksa Kesehatan Vault',
   'vaultHealth.setupTitle': 'Kesehatan pengaturan vault',
@@ -6584,9 +6584,9 @@ const messages: TranslationMap = {
   'vaultHealth.existsLabel': 'Jalur vault ruang kerja ada',
   'vaultHealth.existsRecovery':
     'Folder vault tidak ditemukan. Mulai sinkronisasi atau buat folder ini, lalu segarkan daftar periksa ini.',
-  'vaultHealth.writableLabel': 'Vault dapat ditulis oleh OpenHuman',
+  'vaultHealth.writableLabel': 'Vault dapat ditulis oleh Neppy',
   'vaultHealth.writableRecovery':
-    'OpenHuman belum dapat menulis ke vault ini. Berikan izin tulis dan segarkan.',
+    'Neppy belum dapat menulis ke vault ini. Berikan izin tulis dan segarkan.',
   'vaultHealth.obsidianLabel': 'Vault terdaftar di Obsidian',
   'vaultHealth.obsidianRecovery':
     'Di Obsidian, pilih "Buka folder sebagai vault" untuk jalur ini, lalu segarkan daftar periksa ini.',
@@ -6602,13 +6602,13 @@ const messages: TranslationMap = {
   'memoryData.howItWorks': 'Cara kerja penyimpanan memori',
   'memoryData.workspaceVault': 'Vault ruang kerja · tulis',
   'memoryData.workspaceVaultDesc':
-    'OpenHuman menulis catatan memori yang dihasilkan ke memory_tree/content.',
+    'Neppy menulis catatan memori yang dihasilkan ke memory_tree/content.',
   'memoryData.connectedSources': 'Sumber terhubung · baca',
   'memoryData.connectedSourcesDesc':
     'Folder, kotak surat, obrolan, dan repositori diimpor untuk pengindeksan memori: file aslinya tidak pernah ditulis ulang.',
   'memoryData.internalFiles': 'File pohon memori internal',
   'memoryData.internalFilesDesc':
-    'Indeks, status antrean, dan ringkasan dikelola oleh OpenHuman agar pemanggilan dan sinkronisasi tetap sehat.',
+    'Indeks, status antrean, dan ringkasan dikelola oleh Neppy agar pemanggilan dan sinkronisasi tetap sehat.',
   'memoryData.windowError': 'Jendela memori',
   'memoryData.windowUpdated': 'Jendela memori diperbarui',
   'memoryData.windowUpdatedMsg': 'Diatur ke {window}.',
@@ -6876,7 +6876,7 @@ const messages: TranslationMap = {
   // Gateways: cores this app provisions and runs elsewhere.
   'settings.gateway.title': 'Jalankan core di tempat lain',
   'settings.gateway.description':
-    'Core bisa berjalan di dalam kontainer, di mesin lain lewat SSH, atau di kontainer pada mesin lain. OpenHuman menyalakannya, menyambung ke sana, dan mematikannya saat kamu berpindah.',
+    'Core bisa berjalan di dalam kontainer, di mesin lain lewat SSH, atau di kontainer pada mesin lain. Neppy menyalakannya, menyambung ke sana, dan mematikannya saat kamu berpindah.',
   'settings.gateway.add': 'Tambah lokasi',
   'settings.gateway.save': 'Simpan lokasi',
   'settings.gateway.remove': 'Hapus',

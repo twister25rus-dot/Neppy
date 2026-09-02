@@ -464,7 +464,7 @@ describe('Auth & Access Control', () => {
     }
 
     // Verify the app is either on Welcome or not on Home
-    const welcomeCandidates = ['Welcome', 'Sign in', 'Login', 'Get Started', 'OpenHuman'];
+    const welcomeCandidates = ['Welcome', 'Sign in', 'Login', 'Get Started', 'Neppy'];
     let onWelcome = false;
     for (const text of welcomeCandidates) {
       if (await textExists(text)) {

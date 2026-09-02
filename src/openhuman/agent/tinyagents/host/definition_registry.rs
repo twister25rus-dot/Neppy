@@ -1,6 +1,6 @@
 //! Host implementation of the TinyAgents **agent catalogue** seam.
 //!
-//! Adapts two OpenHuman domains onto
+//! Adapts two Neppy domains onto
 //! [`tinyagents::harness::host::DefinitionRegistry`]:
 //!
 //! * [`crate::openhuman::agent::harness::definition::AgentDefinitionRegistry`] —
@@ -15,24 +15,24 @@
 //!   definition's tool surface.
 //!
 //! This is `docs/specs/plan-agents.md` Phase 4. The crate-side
-//! [`AgentDefinition`] is inert (`serde` + `std`); OpenHuman's harness
+//! [`AgentDefinition`] is inert (`serde` + `std`); Neppy's harness
 //! definition is far richer (prompt builders, sandbox mode, iteration policy,
 //! TokenJuice profile, turn graph). Only the six fields the turn loop can act
 //! on cross the seam; everything else stays host-side by design.
 //!
 //! # Contract mismatches resolved here
 //!
-//! **1. Absence must never be an error.** OpenHuman's own catalogue relies on
+//! **1. Absence must never be an error.** Neppy's own catalogue relies on
 //! this: `orchestrator/agent.toml` lists `mcp_agent` in `subagents` even in a
 //! build with the `mcp` feature off, and both existing resolution sites
 //! tolerate it (`collect_orchestrator_tools` warns and skips;
 //! [`validate_tier_hierarchy`](crate::openhuman::agent::registry::agents::validate_tier_hierarchy) explicitly `continue`s past unknown ids). So
-//! `OpenHumanDefinitionRegistry::resolve` returns `Ok(None)` for every miss
+//! `NeppyDefinitionRegistry::resolve` returns `Ok(None)` for every miss
 //! and this adapter has no error path at all.
 //!
 //! **2. Declared vs authorized subagents.** The crate's
 //! `AgentDefinition::subagents` is only what an agent *declares*;
-//! `delegates_for` must return the **authorized** set. OpenHuman's authority is
+//! `delegates_for` must return the **authorized** set. Neppy's authority is
 //! the tier hierarchy, so `delegates_for` applies
 //! [`validate_tier_transition`](crate::openhuman::agent::harness::definition::validate_tier_transition)
 //! — the same single source of truth
@@ -133,7 +133,7 @@ impl std::fmt::Debug for RegistryHandle {
 
 // ── Adapter ───────────────────────────────────────────────────────────────────
 
-/// OpenHuman's agent catalogue, projected onto the crate's
+/// Neppy's agent catalogue, projected onto the crate's
 /// [`DefinitionRegistry`] seam.
 ///
 /// Read-only by construction: it borrows the harness registry, an optional
@@ -142,7 +142,7 @@ impl std::fmt::Debug for RegistryHandle {
 /// them. That matches the trait's rationale — a catalogue the runtime could
 /// mutate would let a turn grant itself a delegate or a tool.
 #[derive(Debug)]
-pub struct OpenHumanDefinitionRegistry {
+pub struct NeppyDefinitionRegistry {
     /// Built-in + workspace-override definitions.
     registry: RegistryHandle,
     /// Config snapshot used only for the enabled-custom-agent fallback. When
@@ -176,7 +176,7 @@ enum ResolvedScope {
     Named(Vec<String>),
 }
 
-impl OpenHumanDefinitionRegistry {
+impl NeppyDefinitionRegistry {
     /// Adapts an owned/shared harness registry.
     pub fn new(registry: Arc<AgentDefinitionRegistry>) -> Self {
         Self {
@@ -508,10 +508,10 @@ fn dedupe_preserving_order(names: &mut Vec<String>) {
 // ── Trait impl ────────────────────────────────────────────────────────────────
 
 #[async_trait]
-impl DefinitionRegistry for OpenHumanDefinitionRegistry {
+impl DefinitionRegistry for NeppyDefinitionRegistry {
     /// Never returns `Err`. Every lookup path here is an in-memory map probe or
     /// a `Vec` scan over an already-loaded config, so there is no "failed to
-    /// answer" case to distinguish — and OpenHuman's catalogue legitimately
+    /// answer" case to distinguish — and Neppy's catalogue legitimately
     /// names agents this build compiled out.
     async fn resolve(&self, id: &str) -> Result<Option<AgentDefinition>> {
         Ok(self.host_definition(id).map(|def| self.project(&def)))
@@ -553,8 +553,8 @@ mod tests {
         AgentRegistryEntry, AgentRegistrySource, AgentSubagentPolicy,
     };
 
-    fn builtins() -> OpenHumanDefinitionRegistry {
-        OpenHumanDefinitionRegistry::builtins_only()
+    fn builtins() -> NeppyDefinitionRegistry {
+        NeppyDefinitionRegistry::builtins_only()
     }
 
     /// A synthetic host definition built through the public
@@ -582,19 +582,19 @@ mod tests {
         def
     }
 
-    fn registry_of(defs: Vec<HostAgentDefinition>) -> OpenHumanDefinitionRegistry {
+    fn registry_of(defs: Vec<HostAgentDefinition>) -> NeppyDefinitionRegistry {
         let mut registry = AgentDefinitionRegistry::default();
         for def in defs {
             registry.insert(def);
         }
-        OpenHumanDefinitionRegistry::new(Arc::new(registry))
+        NeppyDefinitionRegistry::new(Arc::new(registry))
     }
 
     // ── the absence contract ──────────────────────────────────────────────
 
     #[tokio::test]
     async fn resolve_returns_none_for_an_unknown_id_without_erroring() {
-        // THE contract of this trait: OpenHuman's orchestrator TOML lists
+        // THE contract of this trait: Neppy's orchestrator TOML lists
         // subagents that a feature-gated build compiles out, and both existing
         // resolution sites tolerate that. An `Err` here would turn ordinary
         // build variance into a failed run.

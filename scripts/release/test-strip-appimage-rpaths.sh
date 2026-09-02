@@ -65,10 +65,10 @@ make_sharun_appdir() {
   printf 'Interpreter not found!' >> "$appdir/sharun"
   chmod +x "$appdir/sharun"
   ln "$appdir/sharun" "$appdir/AppRun"
-  ln "$appdir/sharun" "$appdir/bin/OpenHuman"
+  ln "$appdir/sharun" "$appdir/bin/Neppy"
 
-  cp "$HOST_ELF" "$appdir/shared/bin/OpenHuman"
-  chmod +x "$appdir/shared/bin/OpenHuman"
+  cp "$HOST_ELF" "$appdir/shared/bin/Neppy"
+  chmod +x "$appdir/shared/bin/Neppy"
 }
 
 assert_lib_path_contents() {
@@ -251,8 +251,8 @@ make_sharun_appdir "$RELEASED_LAYOUT"
 printf '%s\n' '+' >"$RELEASED_LAYOUT/shared/lib/lib.path"
 [ "$RELEASED_LAYOUT/AppRun" -ef "$RELEASED_LAYOUT/sharun" ] \
   || fail "AppRun fixture is not hard-linked to sharun"
-[ "$RELEASED_LAYOUT/bin/OpenHuman" -ef "$RELEASED_LAYOUT/sharun" ] \
-  || fail "bin/OpenHuman fixture is not hard-linked to sharun"
+[ "$RELEASED_LAYOUT/bin/Neppy" -ef "$RELEASED_LAYOUT/sharun" ] \
+  || fail "bin/Neppy fixture is not hard-linked to sharun"
 is_executable_elf "$RELEASED_LAYOUT/AppRun" \
   || fail "released-style AppRun fixture is not ELF"
 uses_sharun_launcher "$RELEASED_LAYOUT" \
@@ -298,8 +298,8 @@ make_runtime_appdir() {
   for elf in \
     "$appdir/AppRun" \
     "$appdir/sharun" \
-    "$appdir/bin/OpenHuman" \
-    "$appdir/shared/bin/OpenHuman" \
+    "$appdir/bin/Neppy" \
+    "$appdir/shared/bin/Neppy" \
     "$appdir/shared/lib/anylinux.so" \
     "$appdir/shared/lib/libxdo.so.3" \
     "$appdir/shared/lib/libcef.so"; do
@@ -324,11 +324,11 @@ assert_runtime_layout_rejected() {
 
 remove_anylinux() { rm -f "$1/shared/lib/anylinux.so"; }
 remove_libxdo() { rm -f "$1/shared/lib/libxdo.so.3"; }
-remove_real_app() { rm -f "$1/shared/bin/OpenHuman"; }
+remove_real_app() { rm -f "$1/shared/bin/Neppy"; }
 replace_real_app_with_text() {
-  rm -f "$1/shared/bin/OpenHuman"
-  printf '%s\n' 'not an ELF' >"$1/shared/bin/OpenHuman"
-  chmod +x "$1/shared/bin/OpenHuman"
+  rm -f "$1/shared/bin/Neppy"
+  printf '%s\n' 'not an ELF' >"$1/shared/bin/Neppy"
+  chmod +x "$1/shared/bin/Neppy"
 }
 replace_apprun() {
   rm -f "$1/AppRun"
@@ -336,9 +336,9 @@ replace_apprun() {
   chmod +x "$1/AppRun"
 }
 replace_bin_launcher() {
-  rm -f "$1/bin/OpenHuman"
-  cp "$HOST_ELF" "$1/bin/OpenHuman"
-  chmod +x "$1/bin/OpenHuman"
+  rm -f "$1/bin/Neppy"
+  cp "$HOST_ELF" "$1/bin/Neppy"
+  chmod +x "$1/bin/Neppy"
 }
 inject_runner_rpath() {
   patchelf --set-rpath \
@@ -358,10 +358,10 @@ APPIMAGE_EXPECTED_NEEDED="" validate_extracted_appdir "$RUNTIME_COMPLETE" \
 
 RUNTIME_EQUIVALENT="$WORK/runtime-equivalent-launchers"
 make_runtime_appdir "$RUNTIME_EQUIVALENT"
-rm "$RUNTIME_EQUIVALENT/AppRun" "$RUNTIME_EQUIVALENT/bin/OpenHuman"
+rm "$RUNTIME_EQUIVALENT/AppRun" "$RUNTIME_EQUIVALENT/bin/Neppy"
 cp "$RUNTIME_EQUIVALENT/sharun" "$RUNTIME_EQUIVALENT/AppRun"
-cp "$RUNTIME_EQUIVALENT/sharun" "$RUNTIME_EQUIVALENT/bin/OpenHuman"
-chmod +x "$RUNTIME_EQUIVALENT/AppRun" "$RUNTIME_EQUIVALENT/bin/OpenHuman"
+cp "$RUNTIME_EQUIVALENT/sharun" "$RUNTIME_EQUIVALENT/bin/Neppy"
+chmod +x "$RUNTIME_EQUIVALENT/AppRun" "$RUNTIME_EQUIVALENT/bin/Neppy"
 APPIMAGE_EXPECTED_NEEDED="" validate_extracted_appdir "$RUNTIME_EQUIVALENT" \
   || fail "validate_extracted_appdir rejected byte-equivalent launchers"
 
@@ -594,7 +594,7 @@ USERNS_SYSCTL="kernel.apparmor_restrict_unprivileged_userns"
 PATH="$APPARMOR_BIN:$PATH" install_smoke_userns_profile \
   "$RUNTIME_COMPLETE" "$APPARMOR_PROFILE" \
   || fail "install_smoke_userns_profile rejected the fixture AppDir"
-grep -F "\"$RUNTIME_COMPLETE/shared/bin/OpenHuman\"" \
+grep -F "\"$RUNTIME_COMPLETE/shared/bin/Neppy\"" \
   "$APPARMOR_PROFILE_SNAPSHOT" >/dev/null \
   || fail "AppArmor profile did not attach to the extracted real executable"
 grep -Fx "  userns," "$APPARMOR_PROFILE_SNAPSHOT" >/dev/null \
@@ -747,13 +747,13 @@ assert_runtime_layout_rejected missing-anylinux \
 assert_runtime_layout_rejected missing-libxdo \
   "missing libxdo.so.*" remove_libxdo
 assert_runtime_layout_rejected missing-real-app \
-  "shared/bin/OpenHuman is not an executable ELF" remove_real_app
+  "shared/bin/Neppy is not an executable ELF" remove_real_app
 assert_runtime_layout_rejected text-real-app \
-  "shared/bin/OpenHuman is not an executable ELF" replace_real_app_with_text
+  "shared/bin/Neppy is not an executable ELF" replace_real_app_with_text
 assert_runtime_layout_rejected mismatched-apprun \
   "AppRun does not match sharun" replace_apprun
 assert_runtime_layout_rejected mismatched-bin-launcher \
-  "bin/OpenHuman does not match sharun" replace_bin_launcher
+  "bin/Neppy does not match sharun" replace_bin_launcher
 assert_runtime_layout_rejected runner-rpath \
   "/home/runner/work/openhuman/openhuman/shared/lib" inject_runner_rpath
 assert_runtime_layout_rejected actions-rpath \
@@ -770,7 +770,7 @@ grep -F "missing NEEDED entry 'libxdo.so.3'" \
   "$RUNTIME_NEEDED/missing-xdo.log" >/dev/null \
   || fail "missing libxdo NEEDED diagnostic was not specific"
 
-patchelf --add-needed libxdo.so.3 "$RUNTIME_NEEDED/shared/bin/OpenHuman"
+patchelf --add-needed libxdo.so.3 "$RUNTIME_NEEDED/shared/bin/Neppy"
 if ( APPIMAGE_EXPECTED_NEEDED="libcef.so" \
   validate_extracted_appdir "$RUNTIME_NEEDED" ) \
   >"$RUNTIME_NEEDED/missing-cef.log" 2>&1; then
@@ -780,7 +780,7 @@ grep -F "missing NEEDED entry 'libcef.so'" \
   "$RUNTIME_NEEDED/missing-cef.log" >/dev/null \
   || fail "missing libcef NEEDED diagnostic was not specific"
 
-patchelf --add-needed libcef.so "$RUNTIME_NEEDED/shared/bin/OpenHuman"
+patchelf --add-needed libcef.so "$RUNTIME_NEEDED/shared/bin/Neppy"
 APPIMAGE_EXPECTED_NEEDED="libxdo.so.3 libcef.so" \
   validate_extracted_appdir "$RUNTIME_NEEDED" \
   || fail "validate_extracted_appdir rejected complete NEEDED entries"

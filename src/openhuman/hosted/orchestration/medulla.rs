@@ -1,6 +1,6 @@
 //! Client for the backend's paid Medulla request/response surface.
 //!
-//! OpenHuman supplies its existing local orchestration tools to
+//! Neppy supplies its existing local orchestration tools to
 //! `/orchestration/v1/run`, executes requested calls on-device, and returns the
 //! results through `/run/continue` until the cycle ends.
 
@@ -235,7 +235,7 @@ async fn execute_tool_call(tools: &[Box<dyn Tool>], call: ToolCall) -> Value {
         return json!({
             "id": call.id,
             "ok": false,
-            "error": format!("unknown OpenHuman tool: {}", call.name),
+            "error": format!("unknown Neppy tool: {}", call.name),
         });
     };
 
@@ -651,7 +651,7 @@ mod tests {
         assert_eq!(body["toolResults"][0]["ok"], false);
         assert_eq!(
             body["toolResults"][0]["error"],
-            "unknown OpenHuman tool: missing"
+            "unknown Neppy tool: missing"
         );
         assert_eq!(body["toolResults"][1]["error"], "expected failure");
         assert_eq!(body["toolResults"][2]["error"], "execution exploded");

@@ -136,7 +136,7 @@ impl HookEvent {
     ///
     /// `preToolUse`, `PreToolUse`, `pre_tool_use` and `pre-tool-use` are the
     /// same event; so are Claude Code's `UserPromptSubmit` /
-    /// `SubagentStop` spellings, which alias onto the closest OpenHuman moment.
+    /// `SubagentStop` spellings, which alias onto the closest Neppy moment.
     pub fn parse(key: &str) -> Option<HookEvent> {
         let normalized = normalize_key(key);
         if let Some(event) = HookEvent::ALL

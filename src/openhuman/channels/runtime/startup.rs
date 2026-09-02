@@ -661,7 +661,7 @@ pub async fn start_channels(mut config: Config) -> Result<()> {
         return Ok(());
     }
 
-    println!("🦀 OpenHuman Channel Server");
+    println!("🦀 Neppy Channel Server");
     println!("  🤖 Model:    {model}");
     println!(
         "  🧠 Memory:   {} (auto-save: {})",

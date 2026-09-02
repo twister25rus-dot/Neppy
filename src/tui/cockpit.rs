@@ -1,4 +1,4 @@
-//! OpenHuman-native overlays and structured control-plane state.
+//! Neppy-native overlays and structured control-plane state.
 
 use serde_json::Value;
 

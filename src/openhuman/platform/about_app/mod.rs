@@ -1,4 +1,4 @@
-//! User-facing capability catalog for the OpenHuman app.
+//! User-facing capability catalog for the Neppy app.
 //!
 //! This module is the single source of truth for what the desktop app exposes
 //! to end users, including where a capability lives in the UI and whether it is

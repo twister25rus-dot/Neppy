@@ -62,7 +62,7 @@ describe('i18n coverage', () => {
     expect(keysWithEmDashes).toEqual([]);
   });
 
-  // The OpenHuman Managed search option must name the provider behind it, so
+  // The Neppy Managed search option must name the provider behind it, so
   // the managed path does not read as an unattributed black box (#5136). The
   // provider name is a proper noun, so it stays literal in every locale.
   it.each(['en', ...LOCALES])('locale %s names Exa in the managed search copy', locale => {

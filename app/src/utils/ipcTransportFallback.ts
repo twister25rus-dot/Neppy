@@ -15,7 +15,7 @@
  *    and re-dispatches through `window.ipc.postMessage(data)`.
  * 2. `window.ipc` is wired by `wry`'s `with_ipc_handler`. The CEF runtime
  *    **discards** it: `tauri-runtime-cef/src/cef_impl.rs` destructures
- *    `ipc_handler: _`. So on every OpenHuman desktop build `window.ipc` is
+ *    `ipc_handler: _`. So on every Neppy desktop build `window.ipc` is
  *    `undefined` and that line throws.
  * 3. The throw happens inside the `fetch(...).then(ok, err)` rejection
  *    handler, so it escapes as an **unhandled** promise rejection (hence the

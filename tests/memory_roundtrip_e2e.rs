@@ -96,7 +96,7 @@ fn ensure_memory_seams(workspace: &Path) {
 const NS: &str = "memory-roundtrip-e2e-773";
 const KEY: &str = "roundtrip-canary-key";
 const TITLE: &str = "Memory roundtrip canary";
-const CONTENT: &str = "OpenHuman memory roundtrip canary fact #773";
+const CONTENT: &str = "Neppy memory roundtrip canary fact #773";
 
 fn put_params() -> PutDocParams {
     PutDocParams {

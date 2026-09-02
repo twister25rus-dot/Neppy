@@ -1,5 +1,5 @@
 /**
- * NativeToolField — the tool picker for the "Tool" node (native OpenHuman tools,
+ * NativeToolField — the tool picker for the "Tool" node (native Neppy tools,
  * as opposed to the Composio "App action" node). Loads the agent's tool
  * registry from `listRuntimeTools` (`openhuman.javascript_list_tools`) and lets
  * the author pick one from a dropdown; the value stored on `config.slug` is

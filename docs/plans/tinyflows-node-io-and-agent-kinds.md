@@ -12,7 +12,7 @@
 Two problems surfaced in the audit that share a root cause — **nodes have no declared I/O contract**, so what one node emits and what the next reads are only accidentally aligned:
 
 1. **Shape drift.** Every capability node wraps its host capability's raw return verbatim into `Item.json` (`agent.rs:115`, `tool_call.rs:31`, `http_request.rs:24`). The `agent` node emits three different shapes depending on sub-ports, and its plain shape flips between "parsed model JSON" and `{text}` at runtime (`caps.rs:359,369`). Downstream `=item.<field>` expressions therefore guess.
-2. **No agent identity.** The `agent` node is a single bare `provider.chat` call with a free-form inline `tools` list (`caps.rs` `OpenHumanLlm::complete`, "no agent loop is driven here"). There is no way to say "run this step as the **coding** agent" or "as the **researcher**", even though OpenHuman already ships a 35-agent registry where each agent (`researcher`, `code_executor`, `crypto_agent`, …) declares its own toolset, model hint, sandbox, and iteration policy in an `agent.toml`.
+2. **No agent identity.** The `agent` node is a single bare `provider.chat` call with a free-form inline `tools` list (`caps.rs` `NeppyLlm::complete`, "no agent loop is driven here"). There is no way to say "run this step as the **coding** agent" or "as the **researcher**", even though Neppy already ships a 35-agent registry where each agent (`researcher`, `code_executor`, `crypto_agent`, …) declares its own toolset, model hint, sandbox, and iteration policy in an `agent.toml`.
 
 Part A fixes the contract; Part B builds selectable agent kinds on top of the existing registry. They are sequenced so A1 (the agent envelope) lands before B (agent kinds emit into that same envelope).
 
@@ -41,7 +41,7 @@ Rules: `=item.text` always resolves (or is explicitly `null`); `=item.json.<fiel
 ### A1. Normalize the `agent` node output — _highest leverage, do first_
 
 - **Crate** (`vendor/tinyflows/src/nodes/integration/agent.rs:115`): wrap the completion in the envelope instead of `Item::new(value)`. If `output_parser` ran, the coerced value goes in `json`; the completion text (when present) in `text`; the untouched response in `raw`; a model-elected tool result stays under `json.tool_result` **and** mirrors to a stable `tool_result` accessor (see A2).
-- **Host** (`src/openhuman/flows/tinyflows/caps.rs` `OpenHumanLlm::complete`): return `{ json: <parsed-or-null>, text: <response.text>, raw: <full response> }` rather than either the bare parsed object _or_ the `{text}` fallback. Removes the runtime shape-flip (audit M1).
+- **Host** (`src/openhuman/flows/tinyflows/caps.rs` `NeppyLlm::complete`): return `{ json: <parsed-or-null>, text: <response.text>, raw: <full response> }` rather than either the bare parsed object _or_ the `{text}` fallback. Removes the runtime shape-flip (audit M1).
 - **Tests**: update `agent.rs` unit tests + `caps.rs` seam tests; add an e2e asserting `=item.text` resolves on both a JSON-emitting and a prose-emitting model (mock both).
 
 ### A2. Unify inline-tool vs `tool_call`-node result shape (audit M2)
@@ -87,7 +87,7 @@ A validation pass that, given a producer node's known/declared output envelope, 
 
 ### B0. The idea
 
-Let an `agent` node declare **which agent** runs it, by referencing an OpenHuman registry agent:
+Let an `agent` node declare **which agent** runs it, by referencing an Neppy registry agent:
 
 ```jsonc
 {
@@ -108,7 +108,7 @@ When `agent_ref` is set, the host runs that **registered agent** — with _its_ 
 
 ### B1. Crate seam — new `AgentRunner` capability (host-agnostic)
 
-The crate must not know about OpenHuman's registry, and "run a named agent to completion (multi-turn, tool-using)" is a **different capability** than `LlmProvider.complete` (single shot). Add a trait to `vendor/tinyflows/src/caps/mod.rs`:
+The crate must not know about Neppy's registry, and "run a named agent to completion (multi-turn, tool-using)" is a **different capability** than `LlmProvider.complete` (single shot). Add a trait to `vendor/tinyflows/src/caps/mod.rs`:
 
 ```rust
 #[async_trait]
@@ -126,7 +126,7 @@ pub trait AgentRunner: Send + Sync {
 
 ### B2. Host adapter — implement `AgentRunner` over the registry + delegate runtime
 
-- `src/openhuman/flows/tinyflows/caps.rs`: new `OpenHumanAgentRunner` implementing `AgentRunner`.
+- `src/openhuman/flows/tinyflows/caps.rs`: new `NeppyAgentRunner` implementing `AgentRunner`.
 - `run_agent(agent_ref, request, conn)`:
   1. `agent_registry::ops::get_agent(agent_ref)` → resolve the entry (tools, model hint, sandbox, `max_iterations`, `iteration_policy`).
   2. Apply optional per-node overrides (`model`, `max_iterations`, and a **narrowing-only** `tools_allow` — a node may _subset_ the agent's tools, never add).
@@ -157,7 +157,7 @@ pub trait AgentRunner: Send + Sync {
 | **C2** | A2 tool-shape unification; A3 per-item execution                                 | C1                    | `tool_call.rs`, `http_request.rs`, `nodes/mod.rs` |
 | **C3** | A4 port-aware `collect_input` (+ BUG-3/4); A5 merge modes                        | — (parallel to C1/C2) | `engine.rs`, `merge.rs`                           |
 | **C4** | **B1 `AgentRunner` capability** + mock                                           | C1 (shared envelope)  | `caps/mod.rs`, `caps/mock.rs`, `agent.rs`         |
-| **C5** | **B2 host `OpenHumanAgentRunner`** over registry+delegate (+ BUG-5 cancellation) | C4                    | `tinyflows/caps.rs`, `agent/tools/delegate.rs`    |
+| **C5** | **B2 host `NeppyAgentRunner`** over registry+delegate (+ BUG-5 cancellation) | C4                    | `tinyflows/caps.rs`, `agent/tools/delegate.rs`    |
 | **C6** | B3 `list_agent_profiles` + `agent_ref` validation; A6 alignment lint             | C5, BUG-10            | `flows/builder_tools.rs`, `validate.rs`           |
 | **C7** | B4 UI agent-kind picker                                                          | C5, U2 node panel     | `app/src/components/flows/*`                      |
 

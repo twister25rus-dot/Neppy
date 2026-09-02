@@ -1,7 +1,7 @@
-//! OpenHuman's implementations of the TinyAgents host capability traits.
+//! Neppy's implementations of the TinyAgents host capability traits.
 //!
 //! Each module here adapts one crate trait
-//! ([`tinyagents::harness::host`]) onto the OpenHuman domains that actually
+//! ([`tinyagents::harness::host`]) onto the Neppy domains that actually
 //! provide the behaviour. This is `docs/specs/plan-agents.md` **Phase 4**: the
 //! agent runtime stops reaching into 45 domains directly and instead asks ten
 //! capabilities, each of which is implemented here.
@@ -44,13 +44,13 @@ pub mod progress_sink;
 pub mod security_gate;
 pub mod tool_outcome_classifier;
 
-pub use agent_memory::OpenHumanAgentMemory;
-pub use budget_gate::OpenHumanBudgetGate;
-pub use context_composer::OpenHumanContextComposer;
-pub use definition_registry::OpenHumanDefinitionRegistry;
-pub use experience_store::OpenHumanExperienceStore;
-pub use learning_sink::OpenHumanLearningSink;
-pub use model_resolver::OpenHumanModelResolver;
-pub use progress_sink::OpenHumanProgressSink;
-pub use security_gate::OpenHumanSecurityGate;
-pub use tool_outcome_classifier::OpenHumanToolOutcomeClassifier;
+pub use agent_memory::NeppyAgentMemory;
+pub use budget_gate::NeppyBudgetGate;
+pub use context_composer::NeppyContextComposer;
+pub use definition_registry::NeppyDefinitionRegistry;
+pub use experience_store::NeppyExperienceStore;
+pub use learning_sink::NeppyLearningSink;
+pub use model_resolver::NeppyModelResolver;
+pub use progress_sink::NeppyProgressSink;
+pub use security_gate::NeppySecurityGate;
+pub use tool_outcome_classifier::NeppyToolOutcomeClassifier;

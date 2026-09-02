@@ -3,7 +3,7 @@
 ## Objective
 
 Remove every shipped screen-awareness and screen-capture capability from
-OpenHuman. The desktop app, embedded provider webviews, core RPC/CLI surface,
+Neppy. The desktop app, embedded provider webviews, core RPC/CLI surface,
 agent tool surface, and companion must no longer capture, share, inspect, or
 reason from the user's screen.
 
@@ -42,7 +42,7 @@ The following remain:
 - DOM and accessibility-tree browser snapshots that return structured text
   rather than captured pixels;
 - user-supplied image attachments, including screenshots the user captured
-  outside OpenHuman;
+  outside Neppy;
 - general image analysis and vision support for those supplied images;
 - camera and microphone capture that do not capture a display;
 - accessibility helpers still required by voice, dictation, hotkeys, or other
@@ -83,7 +83,7 @@ provider runtime.
 Update the vendored CEF permission policy to reject desktop audio and desktop
 video capture bits while continuing to allow device microphone and camera
 capture. Embedded Meet, Slack, Discord, Zoom, and similar provider webviews will
-therefore no longer offer working display sharing through OpenHuman.
+therefore no longer offer working display sharing through Neppy.
 
 ## Companion
 

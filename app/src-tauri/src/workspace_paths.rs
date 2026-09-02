@@ -52,7 +52,7 @@ pub async fn preview_workspace_text(path: String) -> Result<WorkspaceTextPreview
 }
 
 /// Resolve a workspace-relative path to its canonical absolute path on disk,
-/// after validating it stays inside the active OpenHuman workspace.
+/// after validating it stays inside the active Neppy workspace.
 ///
 /// This exposes the internal [`resolve_workspace_path`] helper so UI flows that
 /// need an absolute path to compose with a platform-specific URL scheme (e.g.
@@ -77,7 +77,7 @@ pub async fn resolve_workspace_absolute_path(path: String) -> Result<String, Str
 async fn active_workspace_root() -> Result<PathBuf, String> {
     let config = openhuman_core::openhuman::config::Config::load_or_init()
         .await
-        .map_err(|err| workspace_path_error(format!("failed to load OpenHuman config: {err}")))?;
+        .map_err(|err| workspace_path_error(format!("failed to load Neppy config: {err}")))?;
     fs::create_dir_all(&config.workspace_dir).map_err(|err| {
         workspace_path_error_with_debug(
             format!("failed to create workspace directory: {err}"),

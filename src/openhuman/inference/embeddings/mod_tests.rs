@@ -213,7 +213,7 @@ fn factory_with_credentials_custom() {
 #[test]
 fn factory_with_credentials_managed_ignores_key() {
     // Managed/cloud provider does not use the API key — it routes through
-    // the OpenHuman backend. Creating it with an arbitrary key must succeed
+    // the Neppy backend. Creating it with an arbitrary key must succeed
     // and produce the cloud provider.
     let p = factory::create_embedding_provider_with_credentials(
         "managed",

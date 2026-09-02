@@ -30,7 +30,7 @@ export interface AuiPlainTextProps {
  * a render per frame on top of a render per token, in the exact hot path
  * `ChatThreadView.renderPerf.test.tsx` exists to protect.
  *
- * Styling is OpenHuman semantic tokens only — the primitives ship no CSS, which
+ * Styling is Neppy semantic tokens only — the primitives ship no CSS, which
  * is the whole reason the headless layer was chosen over `@assistant-ui/styles`
  * (compiled Tailwind v4: `color-mix()` / `oklch()` / `@property`, none of which
  * esbuild downlevels for this repo's `safari15` CSS target).

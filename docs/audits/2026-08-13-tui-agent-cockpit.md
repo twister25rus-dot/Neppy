@@ -1,7 +1,7 @@
 # TUI agent-cockpit audit
 
 Reference: the interaction model of OpenAI Codex's terminal UI, adapted to
-OpenHuman's existing RPCs and four-tab product structure. This is behavioral
+Neppy's existing RPCs and four-tab product structure. This is behavioral
 parity, not a visual clone.
 
 ## Gaps found in the previous TUI
@@ -25,7 +25,7 @@ copy/export answers, or accept a launch prompt.
   queue status in `/status`.
 - Blocking approval and plan-review overlays, including approve-once, durable
   tool/flow approval, deny, approve/reject plan, and revise with feedback.
-- OpenHuman-native views for usage, goals, task board, agent profiles, Skills,
+- Neppy-native views for usage, goals, task board, agent profiles, Skills,
   MCP servers, and artifacts; agent profiles and autonomy tier can be changed
   in place.
 - Structured live tool, sub-agent, artifact, reasoning, retry, and error rows.
@@ -35,7 +35,7 @@ copy/export answers, or accept a launch prompt.
 
 ## Intentional differences
 
-- The four established OpenHuman tabs remain the top-level navigation.
+- The four established Neppy tabs remain the top-level navigation.
 - File references are text paths rooted in `action_dir`; binary/image
   attachments are not introduced.
 - Git controls appear on demand and report a clear non-repository state.

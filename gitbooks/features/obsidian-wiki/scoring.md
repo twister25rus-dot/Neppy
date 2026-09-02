@@ -1,6 +1,6 @@
 ---
 description: >-
-  How OpenHuman scores every chunk before it enters the Memory Tree - weighted
+  How Neppy scores every chunk before it enters the Memory Tree - weighted
   signals gate admission, entity extraction enriches it, and an inverted index
   plus vector embeddings make it recallable.
 icon: scale
@@ -103,7 +103,7 @@ The active embedder is selected by `build_embedder_from_config` ([`embed/factory
 1. **Explicit Ollama override** (`memory_tree.embedding_endpoint` + `embedding_model`) - power users / E2E rigs.
 2. **Local Ollama** via the unified `embeddings` workload setting - the "Memory embeddings" checkbox in [Local AI](../model-routing/local-ai.md) Settings.
 3. **User-configured OpenAI-compatible** endpoint (`OpenAiCompatEmbedder`, e.g. LM Studio).
-4. **Managed cloud** (`CloudEmbedder`, OpenHuman backend / Voyage) - the default once logged in.
+4. **Managed cloud** (`CloudEmbedder`, Neppy backend / Voyage) - the default once logged in.
 5. **No provider** - the read path falls back to `InertEmbedder` (zero vectors) so retrieval still runs; the write path returns `None`, skips embedding, and flags `semantic_recall` degraded so the chunk can be re-embedded later.
 
 Embeddings run on the background workers, not the ingest hot path, so a burst of new sources never blocks the UI. Trees give compression and navigation; embeddings keep similarity search working underneath them.

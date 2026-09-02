@@ -1,5 +1,5 @@
 //! File storage domain — agent tools for managed cloud file storage backed by
-//! the OpenHuman backend's `file_storage` provider
+//! the Neppy backend's `file_storage` provider
 //! (`/agent-integrations/file-storage/*`, S3 under the hood).
 //!
 //! The backend owns the bucket, billing (S3 rates + margin, charged via the

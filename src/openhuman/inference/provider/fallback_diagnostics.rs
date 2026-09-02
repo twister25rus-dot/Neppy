@@ -131,19 +131,19 @@ pub(crate) fn missing_provider_credentials_message(
     let slug = slug.trim();
     match local_chat_provider {
         Some(local) if !local.trim().is_empty() => format!(
-            "No usable credentials for '{slug}', which OpenHuman selected for the {} workload. \
+            "No usable credentials for '{slug}', which Neppy selected for the {} workload. \
              Your chat model is local ('{}') and does not serve this workload, so it fell back \
              to your cloud provider — but '{slug}' has no API key configured. Add a key for \
              '{slug}' in Connections → LLM, set {}_provider to a provider that is configured, \
-             or enable the managed OpenHuman backend.",
+             or enable the managed Neppy backend.",
             role_phrase(role),
             local.trim(),
             override_knob_for_role(role),
         ),
         _ => format!(
-            "No usable credentials for '{slug}', which OpenHuman selected for the {} workload. \
+            "No usable credentials for '{slug}', which Neppy selected for the {} workload. \
              Add a key for '{slug}' in Connections → LLM, set {}_provider to a provider that is \
-             configured, or enable the managed OpenHuman backend.",
+             configured, or enable the managed Neppy backend.",
             role_phrase(role),
             override_knob_for_role(role),
         ),

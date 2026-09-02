@@ -1,4 +1,4 @@
-//! MCP server for exposing a curated OpenHuman tool surface.
+//! MCP server for exposing a curated Neppy tool surface.
 //!
 //! Opt-in via `openhuman-core mcp` (stdio) or `openhuman-core mcp --transport http`.
 //! Stdio mode writes newline-delimited JSON-RPC to stdout; HTTP mode speaks

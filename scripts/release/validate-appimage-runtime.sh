@@ -32,7 +32,7 @@ source "$RUNTIME_VALIDATOR_SCRIPT_DIR/strip-appimage-graphics-libs.sh"
 # — the previous code duplicated the list, and the stale copy (libcef.so)
 # outlived CEF by two weeks.
 #
-# Verified against a real linuxdeploy bundle on both Linux arches: usr/bin/OpenHuman
+# Verified against a real linuxdeploy bundle on both Linux arches: usr/bin/Neppy
 # declares and bundles libxdo.so.3 and libwebkit2gtk-4.1.so.0.
 APPIMAGE_PRODUCTION_NEEDED="libxdo.so.3 libwebkit2gtk-4.1.so.0"
 
@@ -99,7 +99,7 @@ appdir_main_binary() {
   local desktop exec_name
   case "$layout" in
     sharun)
-      printf '%s\n' "$appdir/shared/bin/OpenHuman"
+      printf '%s\n' "$appdir/shared/bin/Neppy"
       return 0
       ;;
     linuxdeploy)
@@ -185,8 +185,8 @@ validate_sharun_appdir() {
   for executable in \
     "$appdir/AppRun" \
     "$appdir/sharun" \
-    "$appdir/bin/OpenHuman" \
-    "$appdir/shared/bin/OpenHuman"; do
+    "$appdir/bin/Neppy" \
+    "$appdir/shared/bin/Neppy"; do
     if ! is_executable_elf "$executable"; then
       runtime_validation_error "${executable#"$appdir"/} is not an executable ELF"
       return 1
@@ -194,7 +194,7 @@ validate_sharun_appdir() {
   done
 
   local alias
-  for alias in "$appdir/AppRun" "$appdir/bin/OpenHuman"; do
+  for alias in "$appdir/AppRun" "$appdir/bin/Neppy"; do
     if [ "$alias" -ef "$appdir/sharun" ] || cmp -s "$alias" "$appdir/sharun"; then
       continue
     fi
@@ -514,7 +514,7 @@ smoke_extracted_apprun() {
 # a per-executable AppArmor profile carrying `userns,`. It loads successfully
 # but never takes effect here, because the profile attaches by execve path and
 # the sharun launcher runs the app through the AppDir's bundled dynamic loader
-# rather than exec'ing `shared/bin/OpenHuman` directly (Chromium then re-execs
+# rather than exec'ing `shared/bin/Neppy` directly (Chromium then re-execs
 # `/proc/self/exe` for the zygote). Toggling the sysctl is Chromium's first
 # documented remedy and is path-independent, so it cannot miss the way the
 # profile attachment does. The AppArmor profile is retained alongside it: it is
@@ -569,7 +569,7 @@ install_smoke_userns_profile() {
   local profile_file="$2"
 
   # Resolve the target per layout. This was hardcoded to the sharun path
-  # (shared/bin/OpenHuman), which does not exist in a linuxdeploy AppDir - so the
+  # (shared/bin/Neppy), which does not exist in a linuxdeploy AppDir - so the
   # x86_64 smoke failed here with "AppArmor target is not executable" even after
   # static validation passed. Same defect class as #5606, one layer down.
   local layout executable

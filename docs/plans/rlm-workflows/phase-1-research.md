@@ -77,7 +77,7 @@ async worker deadlocks a current-thread runtime.
 5. Sync `eval_cell` + internal `block_on` — handled host-side with
    `spawn_blocking`, documented in tinyagents as part of Phase 2.
 
-## 2. What OpenHuman provides (integration points)
+## 2. What Neppy provides (integration points)
 
 - **Dependency**: `tinyagents = { version = "1.5.0", features = ["sqlite"] }`
   patched to `path = "vendor/tinyagents"` (git submodule,

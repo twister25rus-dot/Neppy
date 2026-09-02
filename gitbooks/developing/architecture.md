@@ -1,13 +1,13 @@
 ---
-description: Deep architecture reference for the OpenHuman codebase - repo layout, runtime scope, dual-socket sync, RPC flow.
+description: Deep architecture reference for the Neppy codebase - repo layout, runtime scope, dual-socket sync, RPC flow.
 icon: code-branch
 ---
 
-# OpenHuman Architecture
+# Neppy Architecture
 
 **AI-powered super assistant for crypto communities, built on Rust.**
 
-OpenHuman is a cross-platform communication and automation platform purpose-built for the cryptocurrency ecosystem. A single React + Rust (Tauri) codebase can target multiple platforms; **what we document and ship for users today is desktop only** - **Windows, macOS, and Linux**. Android, iOS, and web are **not** supported in current docs or releases. The stack includes a managed Node.js runtime for tool-capable skills, persistent Rust-native WebSocket infrastructure, and an AI tool protocol that lets language models invoke any connected service in real time.
+Neppy is a cross-platform communication and automation platform purpose-built for the cryptocurrency ecosystem. A single React + Rust (Tauri) codebase can target multiple platforms; **what we document and ship for users today is desktop only** - **Windows, macOS, and Linux**. Android, iOS, and web are **not** supported in current docs or releases. The stack includes a managed Node.js runtime for tool-capable skills, persistent Rust-native WebSocket infrastructure, and an AI tool protocol that lets language models invoke any connected service in real time.
 
 ---
 
@@ -32,7 +32,7 @@ The desktop app **WebView** loads the UI from `app/`; heavy RPC and skills run i
 **Not supported yet:** Android, iOS, standalone web client (may exist as experimental targets in the repo; do not treat as product-ready).
 
 ```
-                        OpenHuman (shipping)
+                        Neppy (shipping)
                             |
                          Desktop
                     /      |      \
@@ -84,9 +84,9 @@ The frontend communicates with the **openhuman** Rust core in two ways: **Tauri 
 
 ## Rust-Powered Performance
 
-OpenHuman chose Tauri + Rust over Electron for fundamental performance and security reasons:
+Neppy chose Tauri + Rust over Electron for fundamental performance and security reasons:
 
-| Metric                    | OpenHuman (Tauri + Rust)                                                   | Typical Electron App                     |
+| Metric                    | Neppy (Tauri + Rust)                                                   | Typical Electron App                     |
 | ------------------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
 | Binary size               | Feature-dependent (CEF runtime dominates)                                  | ~150 MB+                                 |
 | Memory per tool execution | Native Rust (no per-tool VM); shared managed Node runtime for helper calls | ~150 MB+ (Chromium renderer per process) |
@@ -95,7 +95,7 @@ OpenHuman chose Tauri + Rust over Electron for fundamental performance and secur
 | Memory safety             | Compile-time guaranteed                                                    | Runtime exceptions                       |
 | TLS implementation        | rustls (no OpenSSL dependency)                                             | Chromium's BoringSSL                     |
 
-**Why this matters for a crypto platform**: Traders and analysts run OpenHuman alongside resource-intensive tools, charting software, multiple browser tabs, trading terminals. A native binary with sub-500ms startup means the app feels native and stays out of the way. Zero GC pauses means real-time price feeds and alerts are never delayed by memory management.
+**Why this matters for a crypto platform**: Traders and analysts run Neppy alongside resource-intensive tools, charting software, multiple browser tabs, trading terminals. A native binary with sub-500ms startup means the app feels native and stays out of the way. Zero GC pauses means real-time price feeds and alerts are never delayed by memory management.
 
 The **Tokio async runtime** drives all I/O. WebSocket connections, HTTP requests, file operations, and inter-skill communication, as non-blocking tasks on a thread pool. Thousands of concurrent operations (skill executions, cron jobs, socket events) share a small fixed set of OS threads.
 
@@ -103,7 +103,7 @@ The **Tokio async runtime** drives all I/O. WebSocket connections, HTTP requests
 
 ## Real-Time Socket Infrastructure
 
-OpenHuman implements a **dual-socket architecture**: a Rust-native WebSocket client on desktop and a JavaScript Socket.io client on web. The Rust implementation survives app backgrounding, operates independently of the WebView, and handles TLS via rustls.
+Neppy implements a **dual-socket architecture**: a Rust-native WebSocket client on desktop and a JavaScript Socket.io client on web. The Rust implementation survives app backgrounding, operates independently of the WebView, and handles TLS via rustls.
 
 ```
 Desktop Mode:                          Web Mode:
@@ -158,7 +158,7 @@ Responsibilities are split across three domains:
 | `allowed-tools`   | Tool allowlist guidance        |
 | bundled resources | scripts, references, assets    |
 
-**Language runtimes**: script-backed skills run through shared runtime domains rather than embedded VMs — `runtime_node` resolves a compatible system `node` or installs a managed distribution (SHA-256-verified) into the OpenHuman cache, and `runtime_python` does the same for Python. Execution is gated by the `security/` sandbox policy like any other tool.
+**Language runtimes**: script-backed skills run through shared runtime domains rather than embedded VMs — `runtime_node` resolves a compatible system `node` or installs a managed distribution (SHA-256-verified) into the Neppy cache, and `runtime_python` does the same for Python. Execution is gated by the `security/` sandbox policy like any other tool.
 
 **Scheduling**: recurring work is owned by the `cron` domain (with `scheduler_gate`), not by skills; there is no per-skill `onCronTrigger()` handler.
 
@@ -166,7 +166,7 @@ Responsibilities are split across three domains:
 
 ## AI & Tool Protocol (MCP)
 
-OpenHuman implements the **Model Context Protocol**, a JSON-RPC 2.0 layer over Socket.io that lets AI models discover and invoke tools exposed by skills.
+Neppy implements the **Model Context Protocol**, a JSON-RPC 2.0 layer over Socket.io that lets AI models discover and invoke tools exposed by skills.
 
 ```
 User Prompt
@@ -293,7 +293,7 @@ Every layer is async and non-blocking. The Rust core processes thousands of conc
 Core subsystems run on published `tiny*` crates, vendored as git submodules under `vendor/` (`tinyagents`, `tinyflows`, `tinycortex`, `tinychannels`, `tinyjuice`, `tinyplace`) so crate changes can be tested in-tree before publishing. The major ownership boundaries are:
 
 - **Agent engine on tinyagents** — every agent turn runs through the `tinyagents` crate harness via the seam in `src/openhuman/agent/tinyagents/`; see [Agent Harness](architecture/agent-harness.md).
-- **Memory on tinycortex** — the generic store/tree/queue/retrieval/sync engine is crate-owned. OpenHuman keeps RPC, tools, scheduling, credentials, security/event policy, worker orchestration, and the host namespace-document store; `src/openhuman/memory/tinycortex/` implements those seams. Concrete embedding transports are shared through `tinyagents::harness::embeddings`.
+- **Memory on tinycortex** — the generic store/tree/queue/retrieval/sync engine is crate-owned. Neppy keeps RPC, tools, scheduling, credentials, security/event policy, worker orchestration, and the host namespace-document store; `src/openhuman/memory/tinycortex/` implements those seams. Concrete embedding transports are shared through `tinyagents::harness::embeddings`.
 - **Inference on the crate ModelRouter** — host workload-tier model routing and cloud provider slugs now use the crate-native `ModelRouter`/`OpenAiModel` (#4782, #4783).
 - **Hosted-only brain** — the client-local orchestration graph engine (`src/openhuman/hosted/orchestration/graph/`) was retired (#4738); the client is a thin hosted-brain participant (pushers, effect/tool executors, wire allowlist — #4725) surfaced in the `/orchestration` and `/brain/tinyplace-orchestration` routes.
 

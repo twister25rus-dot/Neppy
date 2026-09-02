@@ -1,6 +1,6 @@
 # Test Suite Audit & Improvement Plan
 
-Multi-agent audit of the OpenHuman test surface (2,367 files / ~25,900 test declarations per
+Multi-agent audit of the Neppy test surface (2,367 files / ~25,900 test declarations per
 `docs/test-inventory/REPORT.md`). Ten parallel auditors each read their slice of the inventory
 **plus the actual test source**; every "drop this test" / "this is overfitted" recommendation was
 then adversarially reviewed by a second skeptic pass that tried to refute it by re-opening the
@@ -198,7 +198,7 @@ already exists. `httpFaultRules` gives generic per-route status/body/latency inj
 
 1. **Orphaned tests — never run in any CI job:** `scripts/mock-api/socket.auth.test.mjs`,
    `socket.transport.test.mjs`, most of `scripts/__tests__/*.test.mjs`, and the Pester
-   Windows-install test (`OpenHumanWindowsInstall.Tests.ps1`). The mock server's socket-auth
+   Windows-install test (`NeppyWindowsInstall.Tests.ps1`). The mock server's socket-auth
    behavior — which every E2E suite depends on — is itself unverified in CI.
    → Add `pnpm test:scripts` (`node --test scripts/**/*.test.mjs`) + a CI step; wire the Pester lane.
 2. **Coverage-gate scope hole:** the diff-cover gate only arms on `frontend || rust-core || rust-tauri`

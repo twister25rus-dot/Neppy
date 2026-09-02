@@ -2,7 +2,7 @@
 //!
 //! The `claude` CLI's `--resume <uuid>` only reuses a server-side session
 //! if we pass it the same UUIDv4 we used the first time. We map an
-//! OpenHuman thread id → CC session UUID in a JSON file under the
+//! Neppy thread id → CC session UUID in a JSON file under the
 //! workspace.
 
 use std::collections::HashMap;

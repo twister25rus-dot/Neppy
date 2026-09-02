@@ -8,7 +8,7 @@
 //!
 //! ```text
 //! ""/"cloud"          → primary_cloud (managed)
-//! "openhuman"         → managed OpenHuman backend
+//! "openhuman"         → managed Neppy backend
 //! "ollama:<model>"    → local Ollama
 //! "lmstudio:<model>"  → local LM Studio
 //! "omlx:<model>"      → local OMLX

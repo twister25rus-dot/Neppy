@@ -1,6 +1,6 @@
 # startup
 
-Generic OpenHuman process-startup helpers. Currently a thin, stateless module whose sole job is to run one-shot workspace migrations during core boot. It centralizes "do this once when the process comes up" logic so the transport layer (`src/core/jsonrpc.rs`) can fire it without owning migration details. Failures are logged and never abort startup — individual migration helpers own their own idempotency markers.
+Generic Neppy process-startup helpers. Currently a thin, stateless module whose sole job is to run one-shot workspace migrations during core boot. It centralizes "do this once when the process comes up" logic so the transport layer (`src/core/jsonrpc.rs`) can fire it without owning migration details. Failures are logged and never abort startup — individual migration helpers own their own idempotency markers.
 
 ## Responsibilities
 

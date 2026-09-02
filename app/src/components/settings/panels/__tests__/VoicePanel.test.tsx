@@ -407,7 +407,7 @@ describe('VoicePanel', () => {
     await screen.findByTestId('voice-providers-section');
     // The cloud chip aria-label uses the i18n key voice.providers.chip.cloudAria.
     const cloudSwitch = screen.getByRole('switch', {
-      name: /OpenHuman managed provider is always enabled/i,
+      name: /Neppy managed provider is always enabled/i,
     });
     expect(cloudSwitch).toHaveAttribute('aria-checked', 'true');
     expect(cloudSwitch).toBeDisabled();

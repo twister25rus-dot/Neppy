@@ -46,7 +46,7 @@ fn open(db_path: &Path) -> rusqlite::Result<Connection> {
 pub fn read_since(db_path: &Path, since_rowid: i64, limit: usize) -> anyhow::Result<Vec<Message>> {
     let conn = open(db_path).map_err(|e| {
         anyhow::anyhow!(
-            "open chat.db failed ({}). Grant Full Disk Access to OpenHuman: \
+            "open chat.db failed ({}). Grant Full Disk Access to Neppy: \
              System Settings → Privacy & Security → Full Disk Access.",
             e
         )

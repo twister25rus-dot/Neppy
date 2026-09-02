@@ -161,7 +161,7 @@ pub const PACKS: &[ToolPack] = &[
     },
     ToolPack {
         id: "system",
-        summary: "OpenHuman's own health, diagnostics, cost dashboard, service lifecycle, proxy and read-only config.",
+        summary: "Neppy's own health, diagnostics, cost dashboard, service lifecycle, proxy and read-only config.",
         tools: &[
             "config_snapshot",
             "config_get_client_config",
@@ -200,7 +200,7 @@ pub const PACKS: &[ToolPack] = &[
     },
     ToolPack {
         id: "app_update",
-        summary: "Check for and apply OpenHuman application updates.",
+        summary: "Check for and apply Neppy application updates.",
         tools: &["update_check", "update_apply"],
         owners: &["settings_agent"],
     },

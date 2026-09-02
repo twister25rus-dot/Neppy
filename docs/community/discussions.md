@@ -75,7 +75,7 @@ route attached is how contributors leave.
 
 ## Cross-posting with OpenCompany
 
-OpenHuman is the runtime inside [OpenCompany](https://github.com/tinyhumansai/opencompany),
+Neppy is the runtime inside [OpenCompany](https://github.com/tinyhumansai/opencompany),
 so the launcher, the workspace root, and the agent journal produce questions
 that genuinely belong to both repositories.
 

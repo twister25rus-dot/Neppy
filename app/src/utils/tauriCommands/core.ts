@@ -260,9 +260,9 @@ export const installAppUpdate = async (): Promise<void> => {
   console.debug('[app-update] installAppUpdate: returned (install did not relaunch)');
 };
 
-export async function resetOpenHumanDataAndRestartCore(userId?: string | null): Promise<void> {
+export async function resetNeppyDataAndRestartCore(userId?: string | null): Promise<void> {
   if (!isTauri()) {
-    console.debug('[core] resetOpenHumanDataAndRestartCore: skipped — not running in Tauri');
+    console.debug('[core] resetNeppyDataAndRestartCore: skipped — not running in Tauri');
     return;
   }
   // Single Tauri command: the shell stops the embedded core (dropping
@@ -278,16 +278,16 @@ export async function resetOpenHumanDataAndRestartCore(userId?: string | null): 
   // `active_user.toml`) before this runs, so without the explicit id the core
   // would fall back to the pre-login dir and leave the real data behind
   // (issue #4950).
-  console.debug('[core] resetOpenHumanDataAndRestartCore: invoking reset_local_data', {
+  console.debug('[core] resetNeppyDataAndRestartCore: invoking reset_local_data', {
     hasUserId: userId != null,
   });
   try {
     await invoke<void>('reset_local_data', { userId: userId ?? null });
   } catch (err) {
-    console.error('[core] resetOpenHumanDataAndRestartCore: reset_local_data failed', err);
+    console.error('[core] resetNeppyDataAndRestartCore: reset_local_data failed', err);
     throw err;
   }
-  console.debug('[core] resetOpenHumanDataAndRestartCore: done');
+  console.debug('[core] resetNeppyDataAndRestartCore: done');
 }
 
 /** Read onboarding_completed from core config. */

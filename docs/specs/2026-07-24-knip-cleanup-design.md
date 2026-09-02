@@ -3,7 +3,7 @@
 ## Goal
 
 Remove unreachable frontend files, unused code, and unused package dependencies
-from the OpenHuman app without changing user-visible behavior or deleting
+from the Neppy app without changing user-visible behavior or deleting
 framework, test, desktop, or tooling entry points that are loaded indirectly.
 
 ## Scope

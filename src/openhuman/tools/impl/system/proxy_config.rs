@@ -55,7 +55,7 @@ impl ProxyConfigTool {
     fn parse_scope(raw: &str) -> Option<ProxyScope> {
         match raw.trim().to_ascii_lowercase().as_str() {
             "environment" | "env" => Some(ProxyScope::Environment),
-            "openhuman" | "internal" | "core" => Some(ProxyScope::OpenHuman),
+            "openhuman" | "internal" | "core" => Some(ProxyScope::Neppy),
             "services" | "service" => Some(ProxyScope::Services),
             _ => None,
         }
@@ -312,7 +312,7 @@ impl Tool for ProxyConfigTool {
     }
 
     fn description(&self) -> &str {
-        "Manage OpenHuman proxy settings (scope: environment | openhuman | services), including runtime and process env application"
+        "Manage Neppy proxy settings (scope: environment | openhuman | services), including runtime and process env application"
     }
 
     fn parameters_schema(&self) -> Value {

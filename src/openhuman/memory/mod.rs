@@ -4,7 +4,7 @@
 //! [`tinymemory_core`]: the SQLite/vector store, the markdown summary tree, the
 //! provider sync pipelines, ingestion, recall/query/search, the ingest queue,
 //! conversations, people, goals and the tool-memory rules. That crate names no
-//! OpenHuman type.
+//! Neppy type.
 //!
 //! What stays here is the host layer, per the tinymemory README's split:
 //!
@@ -48,7 +48,7 @@ pub mod host;
 /// dev-dependency is not linked into the shipped binary.
 pub mod host_impls;
 /// Host desktop policy: is the memory content root a vault Obsidian already
-/// knows about? See the module docs for why this is OpenHuman's and not the
+/// knows about? See the module docs for why this is Neppy's and not the
 /// engine's.
 pub mod obsidian_registry;
 pub mod ops;
@@ -60,12 +60,12 @@ pub mod sync_events_bridge;
 pub mod query;
 pub mod read_rpc;
 /// The host-side secret / PII scrubbers applied to anything this host persists
-/// or hands on. See the module docs for why this is OpenHuman's and not the
+/// or hands on. See the module docs for why this is Neppy's and not the
 /// engine's.
 pub mod safety;
 pub mod schemas;
 /// The host-side per-turn memory-source allowlist. See the module docs for why
-/// this is OpenHuman's and not the engine's.
+/// this is Neppy's and not the engine's.
 pub mod source_scope;
 #[cfg(test)]
 pub(crate) mod test_support;

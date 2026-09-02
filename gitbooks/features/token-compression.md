@@ -9,7 +9,7 @@ icon: file-zipper
 
 LLM tokens are expensive, and verbose tool output is where most of them go to die. A `git status` in a busy repo, a `cargo build` log, a 600-message email thread, a `docker ps -a` against a real cluster. Each can balloon a context window for almost no information gain.
 
-OpenHuman ships with **TokenJuice**, a compression router wired directly into the agent's tool-execution path. Before any tool result reaches a model, TokenJuice classifies it, routes it to a specialized compressor, optionally offloads the full original to a recoverable cache, and records how many tokens (and dollars) it saved.
+Neppy ships with **TokenJuice**, a compression router wired directly into the agent's tool-execution path. Before any tool result reaches a model, TokenJuice classifies it, routes it to a specialized compressor, optionally offloads the full original to a recoverable cache, and records how many tokens (and dollars) it saved.
 
 It began as a port of [vincentkoc/tokenjuice](https://github.com/vincentkoc/tokenjuice). That JSON rule overlay is still in here as the log/command compressor, but it has since grown into a multi-stage, content-aware pipeline.
 
@@ -79,7 +79,7 @@ Multi-byte text (CJK, emoji, combining marks) is handled grapheme-by-grapheme th
 
 ## ML compression (opt-in)
 
-Beyond the deterministic compressors, TokenJuice can route plain text through a **ModernBERT** token-salience model that scores and drops low-information spans. The TinyJuice compressor exposes the optional ML slot, and OpenHuman bridges it to Kompress in `src/openhuman/inference/tokenjuice/ml/`.
+Beyond the deterministic compressors, TokenJuice can route plain text through a **ModernBERT** token-salience model that scores and drops low-information spans. The TinyJuice compressor exposes the optional ML slot, and Neppy bridges it to Kompress in `src/openhuman/inference/tokenjuice/ml/`.
 
 - **Off by default.** Enable with `ml_compression_enabled = true` in `[tokenjuice]`.
 - **Runs locally** as the `kompress` backend of the shared Python runtime sidecar. No data leaves your machine.
@@ -103,7 +103,7 @@ So the agent gets the cheap compacted view by default, and can transparently "zo
 
 ## Savings tracking
 
-Every compression is metered by an OpenHuman savings callback (`src/openhuman/inference/tokenjuice/savings.rs`). TokenJuice reports events and token deltas; OpenHuman applies per-model input pricing, aggregates `total`, `by_model`, and `by_compressor`, and persists stats to `<workspace>/state/tokenjuice_savings.json`.
+Every compression is metered by an Neppy savings callback (`src/openhuman/inference/tokenjuice/savings.rs`). TokenJuice reports events and token deltas; Neppy applies per-model input pricing, aggregates `total`, `by_model`, and `by_compressor`, and persists stats to `<workspace>/state/tokenjuice_savings.json`.
 
 Read them over RPC with `openhuman.tokenjuice_savings_stats`; clear them with `openhuman.tokenjuice_savings_reset`.
 

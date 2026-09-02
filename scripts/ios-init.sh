@@ -48,7 +48,7 @@ npx --package=@tauri-apps/cli@^2 tauri ios init \
   -c "{\"bundle\":{\"iOS\":{\"developmentTeam\":\"$TEAM_ID\"}}}"
 
 # Overwrite the placeholder AppIcon set Tauri generates with the real
-# OpenHuman brand icons committed to icons/ios/. The generated Xcode project
+# Neppy brand icons committed to icons/ios/. The generated Xcode project
 # uses `Assets.xcassets/AppIcon.appiconset/`, identical to the iOS source
 # layout under our `icons/ios/`.
 ICONSRC="$MOBILE_DIR/icons/ios/AppIcon.appiconset"
@@ -66,9 +66,9 @@ fi
 INFO_PLIST="$MOBILE_DIR/gen/apple/openhuman-mobile_iOS/Info.plist"
 if [[ -f "$INFO_PLIST" ]]; then
   echo "[ios-init] injecting privacy keys → $INFO_PLIST"
-  /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'OpenHuman uses the camera to scan the pairing QR code from your desktop.'" "$INFO_PLIST" 2>/dev/null || true
-  /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'OpenHuman uses the microphone for push-to-talk voice messages.'" "$INFO_PLIST" 2>/dev/null || true
-  /usr/libexec/PlistBuddy -c "Add :NSSpeechRecognitionUsageDescription string 'OpenHuman uses on-device speech recognition to transcribe your voice messages.'" "$INFO_PLIST" 2>/dev/null || true
+  /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Neppy uses the camera to scan the pairing QR code from your desktop.'" "$INFO_PLIST" 2>/dev/null || true
+  /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'Neppy uses the microphone for push-to-talk voice messages.'" "$INFO_PLIST" 2>/dev/null || true
+  /usr/libexec/PlistBuddy -c "Add :NSSpeechRecognitionUsageDescription string 'Neppy uses on-device speech recognition to transcribe your voice messages.'" "$INFO_PLIST" 2>/dev/null || true
 fi
 
 # The generated Xcode build phase runs `npm run -- tauri ...` from gen/apple.

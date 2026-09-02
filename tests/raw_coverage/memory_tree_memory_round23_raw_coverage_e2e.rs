@@ -96,11 +96,11 @@ async fn ingestion_parser_recovers_headers_project_preferences_and_relations() {
 From: Alice Example <alice@example.com>
 To: Bob Builder <bob@example.com>
 CC: Clara Ops <clara@example.com>
-Subject: OpenHuman round 23 memory coverage
+Subject: Neppy round 23 memory coverage
 Date: 2026-05-30
 
 # Coverage Launch
-Project name: OpenHuman
+Project name: Neppy
 Subproject: Memory Tree Round 23
 Name: Parser coverage sweep
 Owner: Alice Example
@@ -109,7 +109,7 @@ Target milestone: Round 23 green coverage
 Preferred embedding model for local experiments: bge-m3
 Preferred extraction mode to try first: sentence mode
 Alice Example owns Parser coverage sweep.
-OpenHuman uses JSON-RPC.
+Neppy uses JSON-RPC.
 Clara Ops prefers core-first delivery.
 The board is spatially near the memory tree dashboard.
 Bob Builder will review the memory tree recap.
@@ -120,7 +120,7 @@ Bob Builder will review the memory tree recap.
             document: NamespaceDocumentInput {
                 namespace: "round23 memory".into(),
                 key: "parser-coverage".into(),
-                title: "OpenHuman parser coverage".into(),
+                title: "Neppy parser coverage".into(),
                 content: content.into(),
                 source_type: "gmail".into(),
                 priority: "high".into(),

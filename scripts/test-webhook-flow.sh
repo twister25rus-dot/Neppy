@@ -70,7 +70,7 @@ _resolve_rpc_token() {
     echo "ERROR: core RPC token not found. Options:" >&2
     echo "  1. Set OPENHUMAN_CORE_TOKEN=<token> before running this script" >&2
     echo "  2. Start the core standalone: openhuman core run  (writes $workspace_token_file)" >&2
-    echo "  3. Run the OpenHuman app in debug mode (writes $e2e_token_file)" >&2
+    echo "  3. Run the Neppy app in debug mode (writes $e2e_token_file)" >&2
     exit 1
   fi
 
@@ -244,7 +244,7 @@ HTTP_STATUS="$(
     -X "$HOOK_METHOD" \
     "$WEBHOOK_URL?source=local-curl&script=test-webhook-flow" \
     -H 'Content-Type: application/json' \
-    -H 'X-OpenHuman-Debug: webhook-flow-script' \
+    -H 'X-Neppy-Debug: webhook-flow-script' \
     -d "$PAYLOAD"
 )"
 

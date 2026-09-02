@@ -1,4 +1,4 @@
-# OpenHuman
+# Neppy
 
 **AI assistant for communities — React + Tauri v2 desktop app with a Rust core (JSON-RPC / CLI) embedded in-process.**
 
@@ -104,7 +104,7 @@ The `[autonomy]` block (`src/openhuman/config/schema/autonomy.rs`) drives `Secur
 
 **Two path roots** (`src/openhuman/config/schema/types.rs`):
 
-- **`action_dir`** — agent's read/write root. Acting tools resolve relative paths here. Default: `~/OpenHuman/projects` (`OPENHUMAN_ACTION_DIR`).
+- **`action_dir`** — agent's read/write root. Acting tools resolve relative paths here. Default: `~/Neppy/projects` (`OPENHUMAN_ACTION_DIR`).
 - **`workspace_dir`** — internal state (`~/.openhuman/users/<id>/workspace`). Agent tools **cannot** write here — enforced by `is_workspace_internal_path` fail-closed regardless of tier/trusted_roots.
 
 **Command permission model**: `classify_command` → `CommandClass` (`Read`/`Write`/`Network`/`Install`/`Destructive`); unrecognized = `Write`. `gate_decision(class, tier)` → `Allow`/`Prompt`/`Block`. System/credential dirs unconditionally blocked (`is_always_forbidden`).
@@ -122,7 +122,7 @@ The `[autonomy]` block (`src/openhuman/config/schema/autonomy.rs`) drives `Secur
 Four things to know before touching that domain:
 
 - **It mounts on the existing seams, not new call sites.** `hooks::bridge` registers itself as an embedder `ToolHook` + `PostTurnHook`. Only the moments with no seam at all (`beforeSubmitPrompt`, `subagentStart`/`Stop`) get their own call site, in `hooks::ops`.
-- **Shell/file/MCP events are derived from tool calls.** OpenHuman has no separate shell-execution call site — `beforeShellExecution` is the `shell` tool going through the tool seam, reshaped into a Cursor-shaped payload. Both the generic and the specialised event fire, generic first. `SHELL_TOOLS`/`READ_TOOLS`/`WRITE_TOOLS` in `bridge.rs` are the mapping; extend those rather than adding a call site.
+- **Shell/file/MCP events are derived from tool calls.** Neppy has no separate shell-execution call site — `beforeShellExecution` is the `shell` tool going through the tool seam, reshaped into a Cursor-shaped payload. Both the generic and the specialised event fire, generic first. `SHELL_TOOLS`/`READ_TOOLS`/`WRITE_TOOLS` in `bridge.rs` are the mapping; extend those rather than adding a call site.
 - **`HookEvent::is_wired()` is load-bearing honesty.** Four events (`sessionStart`, `sessionEnd`, `preCompact`, `afterAgentThought`) are fully defined but have no call site yet. The loader warns when one is configured and `hooks.list` reports `wired: false`. Flip the flag when the call site lands — never optimistically.
 - **Strictest verdict wins, and layers concatenate.** Four `hooks.json` layers merge by appending, and `HookOutput::merge` folds deny over ask over allow, so a project file can never loosen an operator's rule. Do not "fix" the layering into an override model.
 
@@ -260,7 +260,7 @@ the *next* extraction goes: **a crate owns what is the same for every host; the
 host owns what depends on its own runtime, config, or threat model.** The
 contract crates are therefore synchronous, I/O-free, and runtime-free.
 
-| Crate | Owns | OpenHuman keeps |
+| Crate | Owns | Neppy keeps |
 | --- | --- | --- |
 | `tinydocs-bus` | the `.docx` / `.pptx` spec types, their size limits and validation | the artifact pipeline, the `spawn_blocking` hop, and the generation deadline — `src/openhuman/tools/impl/document/` |
 | `tinywallet-bus` | the TinyWallet wire contract and bus member names, the BTC / EVM / Solana / Tron address formats, the EIP-712 and ERC-20 encoders, and the Tron verification codec | RPC endpoint resolution, transaction assembly and broadcast, key custody — `src/openhuman/web3/` |
@@ -301,7 +301,7 @@ Consequences worth knowing before touching either seam:
   contract's `DocumentSpec` re-exported under its historical name, with field
   names unchanged; `the_json_wire_shape_is_unchanged_by_the_extraction` pins
   that.
-- **Each crate's gates ride OpenHuman's existing ones**: `tinydocs-bus` is
+- **Each crate's gates ride Neppy's existing ones**: `tinydocs-bus` is
   exclusive to `documents`, `tinywallet-bus` to `web3`. Both are default-OFF for
   contributors and product-ON, and both are already forwarded to the desktop
   shell.
@@ -319,7 +319,7 @@ The split:
 
 - **SDK** — routes, URL building, percent-encoding, credential headers,
   `{success,data}` envelope handling, and the admin/webhook-receiver route gate.
-- **`src/api/`** — the OpenHuman-specific layer on top: session-token retrieval
+- **`src/api/`** — the Neppy-specific layer on top: session-token retrieval
   (`jwt.rs`), base-URL/env resolution (`config.rs`), and the error
   classification + Sentry policy in `rest.rs`.
 
@@ -335,7 +335,7 @@ field differs.)
 
 ### Product identity — `x-sdk-name` (`src/api/product.rs`)
 
-OpenHuman, OpenCompany and Medulla share one login and all three reach the
+Neppy, OpenCompany and Medulla share one login and all three reach the
 backend through this crate, so every backend-bound request carries
 `x-sdk-name` for the backend to attribute it to a product
 (`src/utils/sdkSource.ts` in `tinyhumansai/backend`). The value defaults to
@@ -504,12 +504,12 @@ is logged anywhere.
   the judgement in the crate.**
 - **The `Tool` trait object.** The crate takes `ToolSchema`s, never a host's
   tool type — same reason the parse seam already documents: depending on
-  OpenHuman's `Tool` would make the crate unusable by a second host.
+  Neppy's `Tool` would make the crate unusable by a second host.
 
 Two consequences worth knowing before editing this area:
 
 - **Executing a tool did not move and will not.** The security policy, approval
-  gate, sandbox, per-call timeout and progress events are OpenHuman's. A dialect
+  gate, sandbox, per-call timeout and progress events are Neppy's. A dialect
   decides what the model reads and writes; it never decides what is allowed to
   happen. That line is what keeps the policy auditable in one place.
 - **The catalogue has one renderer.** `ToolsSection` calls the crate's
@@ -519,7 +519,7 @@ Two consequences worth knowing before editing this area:
   promising the two "stay in lockstep", which is the shape of a bug waiting to
   happen, not a guarantee. `humanize_tool_name` and `context_detail_from_args`
   in `tools/traits.rs` are re-exports/wrappers over the crate for the same
-  reason; only the trimming rule (80 chars, `…`) is OpenHuman's.
+  reason; only the trimming rule (80 chars, `…`) is Neppy's.
 
 **Rules:**
 
@@ -986,7 +986,7 @@ out. `tinycortex-api` is now a deprecated re-export of `tinymemory-bus`, and the
 two resolve to the **same item**; the engine's chunk types are re-exported from
 `crate::engine::backend::chunks`, which lands in the same place. Verified with a
 compile-time identity probe (a function taking the engine path and returning the
-contract path), then by repointing every OpenHuman call site — the compiler is
+contract path), then by repointing every Neppy call site — the compiler is
 the proof. Prefer `tinymemory_api::chunks::…` in new code.
 
 The general shape of the warning still holds for *other* pairs: two crates with

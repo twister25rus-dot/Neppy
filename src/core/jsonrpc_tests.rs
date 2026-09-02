@@ -762,7 +762,7 @@ fn parse_json_params_reports_error_message() {
 
 #[test]
 fn is_session_expired_error_matches_backend_path_401() {
-    // Issue #2286: only OpenHuman backend path 401s (HTTP-method prefix) should
+    // Issue #2286: only Neppy backend path 401s (HTTP-method prefix) should
     // match, not generic 401/Unauthorized strings.
     assert!(is_session_expired_error(
         "GET /teams failed (401 Unauthorized): {\"success\":false}"
@@ -829,7 +829,7 @@ fn is_session_expired_error_does_not_match_partial_auth_text() {
 
 #[test]
 fn is_session_expired_error_matches_openhuman_backend_path_401() {
-    // OpenHuman backend calls via authed_json use the format:
+    // Neppy backend calls via authed_json use the format:
     // "{METHOD} /path failed (401 Unauthorized): {body}"
     assert!(is_session_expired_error(
         "GET /teams failed (401 Unauthorized): {\"success\":false}"
@@ -877,7 +877,7 @@ fn is_session_expired_error_does_not_match_byo_key_provider_401() {
 fn is_session_expired_error_does_not_match_backend_wrapped_composio_invalid_api_key() {
     // Issue #2537: the backend can return a 500 whose body wraps a Composio
     // upstream 401. That is a scoped integration/service failure, not proof
-    // that the user's OpenHuman app session expired.
+    // that the user's Neppy app session expired.
     let msg = r#"[composio] list_connections failed: Backend returned 500 Internal Server Error for GET https://api.tinyhumans.ai/agent-integrations/composio/connections: 401 {"error":{"message":"Invalid API key: ak_o1Og5*****","code":10401,"slug":"HTTP_Unauthorized","status":401}}"#;
 
     assert!(
@@ -908,7 +908,7 @@ fn is_session_expired_error_matches_openhuman_session_expired_body() {
     // Even without an HTTP-method prefix, an explicit "Session expired" body
     // text triggers session expiry via the shared observability classifier.
     assert!(is_session_expired_error(
-        r#"OpenHuman API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
+        r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
     ));
 }
 
@@ -933,7 +933,7 @@ fn is_session_expired_error_skips_discord_rewrap_for_2285() {
     // they do NOT match this dispatch-time classifier. If anyone
     // changes the wording on either side back into a string that
     // contains both "401" and "unauthorized", a connected-Discord
-    // card click would once again log the user out of OpenHuman.
+    // card click would once again log the user out of Neppy.
     //
     // We pin the exact substrings the Discord rewrap was designed
     // to avoid, plus the canonical post-rewrap message body, so

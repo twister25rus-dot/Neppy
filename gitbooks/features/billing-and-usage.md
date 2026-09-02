@@ -7,7 +7,7 @@ icon: credit-card
 
 # Billing, Cost & Usage
 
-OpenHuman keeps two related but separate ledgers. **Billing** is what you pay the hosted backend: plans, credit top-ups, saved cards and coupons, all settled through Stripe or Coinbase. **Cost & Usage** is what the agent spends on your behalf, tracked locally per provider call so you can see (and cap) real token spend before the bill ever lands.
+Neppy keeps two related but separate ledgers. **Billing** is what you pay the hosted backend: plans, credit top-ups, saved cards and coupons, all settled through Stripe or Coinbase. **Cost & Usage** is what the agent spends on your behalf, tracked locally per provider call so you can see (and cap) real token spend before the bill ever lands.
 
 The first lives in the cloud; the second never leaves your workspace.
 
@@ -64,7 +64,7 @@ The `cost` domain is entirely local. It records every provider call's token usag
 
 ### Real-time token & cost tracking
 
-For each call, per-call cost is computed from token counts and per-million-token prices (clamping non-finite or negative prices to `0.0`). When the provider echoes an authoritative `charged_amount_usd` that value wins; otherwise OpenHuman falls back to a static pricing catalog of known models. Usage is bucketed in UTC, keyed by model, with the **provider** derived from the `provider/model` prefix. All-zero usage payloads are skipped so providers that don't report usage don't inflate the request count.
+For each call, per-call cost is computed from token counts and per-million-token prices (clamping non-finite or negative prices to `0.0`). When the provider echoes an authoritative `charged_amount_usd` that value wins; otherwise Neppy falls back to a static pricing catalog of known models. Usage is bucketed in UTC, keyed by model, with the **provider** derived from the `provider/model` prefix. All-zero usage payloads are skipped so providers that don't report usage don't inflate the request count.
 
 ### Budgets & enforcement
 
@@ -99,7 +99,7 @@ These are also exposed as read-only, default-ON agent tools so the agent can ins
 
 ## Cost & token compression
 
-Because cost tracks **real token counts**, anything that shrinks the prompt directly lowers spend. OpenHuman's [TokenJuice token compression](token-compression.md) reduces the tokens sent on each call, and [model routing](model-routing/README.md) sends work to the cheapest model that can handle it. Both show up as lower bars in the dashboard and slower budget burn.
+Because cost tracks **real token counts**, anything that shrinks the prompt directly lowers spend. Neppy's [TokenJuice token compression](token-compression.md) reduces the tokens sent on each call, and [model routing](model-routing/README.md) sends work to the cheapest model that can handle it. Both show up as lower bars in the dashboard and slower budget burn.
 
 ---
 

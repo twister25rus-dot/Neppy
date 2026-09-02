@@ -1,6 +1,6 @@
 # Support
 
-OpenHuman runs on your machine, so nearly every answer depends on your machine.
+Neppy runs on your machine, so nearly every answer depends on your machine.
 Pick the channel by what you have, and bring the evidence the form asks for.
 
 | You have | Go to |
@@ -26,7 +26,7 @@ the log. That set settles most threads on the first reply — filling it in is
 faster than the exchange that asks for it.
 
 A workspace path is worth stating even when it seems irrelevant: a journal that
-cannot be written where OpenHuman expects it produces failures that look like
+cannot be written where Neppy expects it produces failures that look like
 something else entirely.
 
 Redact secrets before posting. A discussion is public and indexed; editing it

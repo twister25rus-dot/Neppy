@@ -1,6 +1,6 @@
 //! Wire payloads for the medulla "harness plane" — the `medulla:task_*`
 //! Socket.IO protocol that lets a medulla operator (running in the backend)
-//! drive an OpenHuman agent session as a delegated sub-agent.
+//! drive an Neppy agent session as a delegated sub-agent.
 //!
 //! See `docs/specs/session-streaming-api-spec.md` §6 in the medulla repo. All
 //! payloads are camelCase on the wire to match the backend's Socket.IO

@@ -11,7 +11,7 @@ pub struct GitbooksConfig {
     /// When `true`, register `gitbooks_search` and `gitbooks_get_page`.
     #[serde(default = "defaults::default_true")]
     pub enabled: bool,
-    /// MCP endpoint URL for the OpenHuman GitBook docs.
+    /// MCP endpoint URL for the Neppy GitBook docs.
     #[serde(default = "default_gitbooks_endpoint")]
     pub endpoint: String,
     /// Per-request timeout in seconds.
@@ -167,7 +167,7 @@ fn default_mcp_client_name() -> String {
 }
 
 fn default_mcp_client_title() -> String {
-    "OpenHuman Core MCP Client".into()
+    "Neppy Core MCP Client".into()
 }
 
 fn default_mcp_client_version() -> String {

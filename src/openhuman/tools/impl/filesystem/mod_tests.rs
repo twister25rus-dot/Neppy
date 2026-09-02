@@ -19,7 +19,7 @@ fn tool_context_with_workspace(root: &Path) -> ToolExecutionContext {
     ToolExecutionContext::from_run_context(&ctx)
 }
 
-/// A policy whose `workspace_dir`/`action_dir` are the OpenHuman home — i.e. a
+/// A policy whose `workspace_dir`/`action_dir` are the Neppy home — i.e. a
 /// directory that does NOT contain the descriptor root. `workspace_only` is on,
 /// matching the default tier, so an absolute path outside the workspace is
 /// refused unless something grants it.

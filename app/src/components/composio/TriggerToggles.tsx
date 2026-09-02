@@ -58,7 +58,7 @@ export default function TriggerToggles({
     new Map()
   );
   const [loadError, setLoadError] = useState<string | null>(null);
-  // Set when the load failure is a confirmed OpenHuman session expiry (the
+  // Set when the load failure is a confirmed Neppy session expiry (the
   // backend rejected the app-session JWT with a 401 → `SESSION_EXPIRED`).
   // Distinct from a generic load error so we surface an actionable re-auth
   // CTA instead of the raw `SESSION_EXPIRED: …` blob (#4281).
@@ -90,7 +90,7 @@ export default function TriggerToggles({
       } catch (err) {
         if (cancelled) return;
         const msg = err instanceof Error ? err.message : String(err);
-        // `auth_expired` is the typed classification of an OpenHuman
+        // `auth_expired` is the typed classification of an Neppy
         // session-JWT 401 (`SESSION_EXPIRED`). It deliberately excludes
         // downstream provider 401s (`provider_auth`) so a Composio-side
         // auth failure never shows the "sign in again" CTA (#4281, AC#4).

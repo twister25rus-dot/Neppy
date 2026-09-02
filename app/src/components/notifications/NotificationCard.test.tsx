@@ -17,7 +17,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IntegrationNotification } from '../../types/notifications';
-import { OPENHUMAN_LINK_EVENT } from '../OpenhumanLinkModal';
+import { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
 import NotificationCard from './NotificationCard';
 
 function makeNotification(body: string): IntegrationNotification {
@@ -68,9 +68,9 @@ describe('NotificationCard <openhuman-link> rendering', () => {
     // Even though the pill exists (the parser doesn't allowlist `path` — the
     // modal listener does), clicking it MUST NOT navigate. We verify by
     // listening for the dispatched custom event and confirming the path is
-    // exactly what was parsed — the OpenhumanLinkModal listener (which
+    // exactly what was parsed — the NeppyLinkModal listener (which
     // hard-allowlists paths) is what stops the dangerous string from doing
-    // anything. See OpenhumanLinkModal.tsx ALLOWED_PATHS_SET.
+    // anything. See NeppyLinkModal.tsx ALLOWED_PATHS_SET.
     const seen: string[] = [];
     const listener = (e: Event) => {
       const detail = (e as CustomEvent<{ path: string }>).detail;
@@ -85,7 +85,7 @@ describe('NotificationCard <openhuman-link> rendering', () => {
       window.removeEventListener(OPENHUMAN_LINK_EVENT, listener);
     }
 
-    // The dispatched event payload is exactly what was parsed — but `OpenhumanLinkModal`
+    // The dispatched event payload is exactly what was parsed — but `NeppyLinkModal`
     // (the listener that actually opens UI) hard-allowlists paths, so the
     // `javascript:` string never gets to act on anything. Both halves of the
     // contract are asserted: dispatch is faithful, navigation is impossible.

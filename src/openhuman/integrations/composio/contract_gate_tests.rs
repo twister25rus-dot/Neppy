@@ -216,7 +216,7 @@ async fn satisfied_required_arg_executes_immediately() {
 
 #[tokio::test]
 async fn synthetic_connection_id_does_not_bounce_a_valid_call() {
-    // #5119 review: `connection_id` is an OpenHuman-injected routing parameter
+    // #5119 review: `connection_id` is an Neppy-injected routing parameter
     // (added by `ComposioActionTool::parameters_schema` / `ComposioExecuteTool`
     // and consumed before dispatch), NOT a field in Composio's live catalog
     // `input_schema`. A valid multi-account first call carries it, so the

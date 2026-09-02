@@ -1,5 +1,5 @@
 //! Medulla "harness plane" — binds the backend's `medulla:task_*` Socket.IO
-//! protocol to an OpenHuman agent session so a medulla operator (running in the
+//! protocol to an Neppy agent session so a medulla operator (running in the
 //! backend) can drive an openhuman agent as a delegated sub-agent.
 //!
 //! This rides the *existing* authenticated backend socket owned by

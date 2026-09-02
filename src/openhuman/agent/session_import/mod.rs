@@ -1,4 +1,4 @@
-//! One-time import of legacy OpenHuman sessions into TinyAgents stores.
+//! One-time import of legacy Neppy sessions into TinyAgents stores.
 //!
 //! Implements the P1 migration from `docs/tinyagents-session-migration-design.md`
 //! (issue #4249): legacy transcript JSONL (`session_raw/`, flat and

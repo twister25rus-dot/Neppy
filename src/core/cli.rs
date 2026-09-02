@@ -1,4 +1,4 @@
-//! Command-line interface for the OpenHuman core binary.
+//! Command-line interface for the Neppy core binary.
 //!
 //! This module handles argument parsing, subcommand dispatching, and help printing
 //! for the CLI. It supports commands for running the server, making RPC calls,
@@ -715,7 +715,7 @@ fn grouped_schemas() -> BTreeMap<String, Vec<ControllerSchema>> {
 
 /// Prints the general help message listing available commands and namespaces.
 fn print_general_help(grouped: &BTreeMap<String, Vec<ControllerSchema>>) {
-    println!("OpenHuman core CLI\n");
+    println!("Neppy core CLI\n");
     println!("Usage:");
     println!("  openhuman [OPTIONS]                     (tabbed terminal UI on interactive hosts)");
     println!("  openhuman run [--host <addr>] [--port <u16>] [--jsonrpc-only] [--verbose]");

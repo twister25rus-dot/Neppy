@@ -1,4 +1,4 @@
-//! OpenHuman's **host-side** per-turn memory-source allowlist.
+//! Neppy's **host-side** per-turn memory-source allowlist.
 //!
 //! # Why this is here and not in a tinymemory crate
 //!

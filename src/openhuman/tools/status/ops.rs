@@ -64,11 +64,11 @@ fn classify_class(error_text: &str, timed_out: bool) -> ToolFailureClass {
         return ToolFailureClass::Timeout;
     }
 
-    // 2. Blocked by policy — the OpenHuman security/autonomy gate or a forbidden
-    //    path. Checked *before* credentials so the OpenHuman-specific
+    // 2. Blocked by policy — the Neppy security/autonomy gate or a forbidden
+    //    path. Checked *before* credentials so the Neppy-specific
     //    `forbidden path` marker wins over the bare `forbidden` that a plain
     //    external 403 body carries (routed to credentials below). Reserved for
-    //    OpenHuman policy phrasing only — a hard policy block is tagged upstream
+    //    Neppy policy phrasing only — a hard policy block is tagged upstream
     //    with `POLICY_BLOCKED_MARKER` and already short-circuited above (step 0);
     //    this heuristic only catches un-marked policy phrasing. Bare HTTP
     //    `403`/`Forbidden` is an external authz failure, not our gate.
@@ -92,7 +92,7 @@ fn classify_class(error_text: &str, timed_out: bool) -> ToolFailureClass {
     // 3. Bad credentials — auth-token problems and external authz failures
     //    (401/403). A bare HTTP 403/Forbidden or an `insufficient scopes` body
     //    means the connected account lacks the grant, so the user should
-    //    reconnect / re-authorize — not toggle OpenHuman's Agent-access policy.
+    //    reconnect / re-authorize — not toggle Neppy's Agent-access policy.
     //    Numeric codes go through `contains_code` so `401`/`403` never match
     //    inside a longer digit run (a port, byte count, or `14033`).
     if contains_any(
@@ -200,7 +200,7 @@ pub fn describe(class: ToolFailureClass) -> ClassifiedFailure {
     let category = class.category();
     let (cause_plain, next_action) = match class {
         ToolFailureClass::MissingPermission => (
-            "OpenHuman doesn't have permission to do this yet.",
+            "Neppy doesn't have permission to do this yet.",
             "Grant the permission it needs, then try again.",
         ),
         ToolFailureClass::MissingApp => (
@@ -208,8 +208,8 @@ pub fn describe(class: ToolFailureClass) -> ClassifiedFailure {
             "Install or open the app, then try again.",
         ),
         ToolFailureClass::ServiceUnavailable => (
-            "A service OpenHuman needs is temporarily unavailable.",
-            "OpenHuman will try again shortly — no action needed.",
+            "A service Neppy needs is temporarily unavailable.",
+            "Neppy will try again shortly — no action needed.",
         ),
         ToolFailureClass::BadCredentials => (
             "The saved sign-in details are missing or no longer valid.",
@@ -220,12 +220,12 @@ pub fn describe(class: ToolFailureClass) -> ClassifiedFailure {
             "Allow it in Settings → Agent access if you want it to run.",
         ),
         ToolFailureClass::ModelConnection => (
-            "OpenHuman couldn't reach the AI model.",
-            "Check your connection or model settings; OpenHuman will retry.",
+            "Neppy couldn't reach the AI model.",
+            "Check your connection or model settings; Neppy will retry.",
         ),
         ToolFailureClass::Timeout => (
             "The action took too long and was stopped.",
-            "OpenHuman will try again, or you can retry it manually.",
+            "Neppy will try again, or you can retry it manually.",
         ),
         ToolFailureClass::Denied => (
             "You declined this action.",
@@ -233,7 +233,7 @@ pub fn describe(class: ToolFailureClass) -> ClassifiedFailure {
         ),
         ToolFailureClass::ApprovalExpired => (
             "The approval request expired before anyone responded.",
-            "Ask again to run it — OpenHuman won't retry it on its own.",
+            "Ask again to run it — Neppy won't retry it on its own.",
         ),
         ToolFailureClass::Unknown => (
             "Something went wrong with this action.",
@@ -363,7 +363,7 @@ mod tests {
             class_of("blocked by policy: destructive command"),
             ToolFailureClass::BlockedByPolicy
         );
-        // OpenHuman's own path guard stays policy...
+        // Neppy's own path guard stays policy...
         assert_eq!(
             class_of("write rejected: forbidden path outside action_dir"),
             ToolFailureClass::BlockedByPolicy
@@ -373,7 +373,7 @@ mod tests {
     #[test]
     fn external_403_is_credentials_not_policy() {
         // A bare external authz failure must route to credentials (reconnect /
-        // grant scopes), NOT OpenHuman's Agent-access policy.
+        // grant scopes), NOT Neppy's Agent-access policy.
         assert_eq!(
             class_of("HTTP 403 Forbidden"),
             ToolFailureClass::BadCredentials

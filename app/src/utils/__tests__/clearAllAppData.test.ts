@@ -12,7 +12,7 @@ const { mockPurge, mockReset, mockRestart, mockPurgeCef } = vi.hoisted(() => ({
 vi.mock('../../store', () => ({ persistor: { purge: mockPurge } }));
 
 vi.mock('../tauriCommands', () => ({
-  resetOpenHumanDataAndRestartCore: mockReset,
+  resetNeppyDataAndRestartCore: mockReset,
   restartApp: mockRestart,
   scheduleCefProfilePurge: mockPurgeCef,
 }));
@@ -95,7 +95,7 @@ describe('clearAllAppData', () => {
     expect(mockRestart).toHaveBeenCalledTimes(1);
   });
 
-  it('throws when resetOpenHumanDataAndRestartCore fails (unrecoverable)', async () => {
+  it('throws when resetNeppyDataAndRestartCore fails (unrecoverable)', async () => {
     mockReset.mockRejectedValueOnce(new Error('core reset boom'));
 
     await expect(clearAllAppData()).rejects.toThrow('core reset boom');

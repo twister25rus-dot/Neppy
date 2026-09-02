@@ -213,7 +213,7 @@ fn usage_number(data: &Value, key: &str) -> f64 {
     data.get(key).and_then(Value::as_f64).unwrap_or(0.0)
 }
 
-/// Returns true when backend usage says OpenHuman-managed spend should stop.
+/// Returns true when backend usage says Neppy-managed spend should stop.
 ///
 /// A brand-new free account can legitimately have `remainingUsd == 0` and no
 /// recurring budget; that should not disable managed tools on its own. We only

@@ -42,7 +42,7 @@ Unified inference domain: the canonical home for everything LLM/STT/TTS/embeddin
 | `provider/types.rs`                                                               | Host request/response, streaming delta, tool-call, and usage DTOs retained at product/RPC boundaries.                                                                                                                                              |
 | `provider/factory.rs`                                                             | `create_chat_model*`, `provider_for_role`, provider-string grammar, access gates, and local/cloud/CLI model construction; `BYOK_INCOMPLETE_SENTINEL`.                                                                                              |
 | `provider/crate_openai.rs`                                                        | TinyAgents OpenAI-compatible model builders for managed, BYOK, and local endpoints.                                                                                                                                                                |
-| `provider/openhuman_backend_model.rs`                                             | Managed OpenHuman backend `ChatModel` with session JWT, billing metadata, and thread context.                                                                                                                                                      |
+| `provider/openhuman_backend_model.rs`                                             | Managed Neppy backend `ChatModel` with session JWT, billing metadata, and thread context.                                                                                                                                                      |
 | `provider/openai_codex.rs`                                                        | Codex OAuth/Responses transport as a host `ChatModel`.                                                                                                                                                                                             |
 | `provider/claude_agent_sdk/`                                                      | Claude Agent SDK subprocess provider (`protocol.rs`, `subprocess.rs`).                                                                                                                                                                             |
 | `provider/config_rejection.rs`, `provider/billing_error.rs`                       | Error classifiers (unknown-model / config rejection / budget exhausted).                                                                                                                                                                           |
@@ -67,7 +67,7 @@ From `mod.rs` re-exports:
 - `local::all_local_inference_controller_schemas` / `local::all_local_inference_registered_controllers` (legacy export names; registered schemas are in the `inference` namespace)
 - `rpc` (alias for `ops`) and `all_inference_controller_schemas` / `all_inference_registered_controllers`
 
-Provider-layer (via `provider::`): `ChatRequest`, `ChatResponse`, `ProviderDelta`, `ToolCall`, `UsageInfo`, `create_chat_model*`, `provider_for_role`, `BYOK_INCOMPLETE_SENTINEL`, `OpenHumanBackendModel`, plus error classifiers. Local runtime: `local::{global, try_global}` → `Arc<LocalAiService>`.
+Provider-layer (via `provider::`): `ChatRequest`, `ChatResponse`, `ProviderDelta`, `ToolCall`, `UsageInfo`, `create_chat_model*`, `provider_for_role`, `BYOK_INCOMPLETE_SENTINEL`, `NeppyBackendModel`, plus error classifiers. Local runtime: `local::{global, try_global}` → `Arc<LocalAiService>`.
 
 ## RPC / controllers
 
@@ -120,7 +120,7 @@ Widely depended on by the agent layer (`agent/harness`, `agent/harness/session`,
 - `ops.rs` deliberately demotes known provider/user-config failures (unknown cloud provider, 401/429, model-not-found) to `warn!` to keep them out of Sentry; only unclassified failures escalate to `error!`.
 - `apply_preset` is MVP-gated: only the 1B local preset (`ram_2_4gb`) and `disabled` are accepted; `custom` cannot be applied via this path.
 - `diagnostics` returns its payload unwrapped (no `{result, logs}` envelope) to match the legacy `local_ai_diagnostics` shape that `json_rpc_e2e` asserts against.
-- Adopted (externally started) `ollama serve` daemons are never killed on exit; only the child OpenHuman itself spawned (`owned_ollama`) is.
+- Adopted (externally started) `ollama serve` daemons are never killed on exit; only the child Neppy itself spawned (`owned_ollama`) is.
 - `local::global` lazily initialises the `LocalAiService` singleton; use `try_global()` on shutdown paths to avoid creating it just to no-op.
 - The `/v1/*` endpoint uses a stable external bearer (`EXTERNAL_OPENAI_COMPAT_PROVIDER`) separate from the core launch bearer, so external OpenAI-compatible harnesses can call it.
 - Tests serialize through `inference_test_guard()` (a process-global mutex) since the runtime singleton and config are shared.

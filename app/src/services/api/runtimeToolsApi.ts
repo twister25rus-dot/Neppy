@@ -1,7 +1,7 @@
 /**
  * Frontend client for the agent's native tool registry, exposed over
  * `openhuman.javascript_list_tools` (the same registry the assistant uses). The
- * flows "Tool" node (native OpenHuman tools, as opposed to the Composio "App
+ * flows "Tool" node (native Neppy tools, as opposed to the Composio "App
  * action" node) uses this to offer a dropdown of real tool names + descriptions.
  */
 import debug from 'debug';

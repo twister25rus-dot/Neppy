@@ -1,4 +1,4 @@
-//! Registry and dispatch logic for all OpenHuman controllers.
+//! Registry and dispatch logic for all Neppy controllers.
 //!
 //! This module serves as the central hub for registering domain-specific
 //! controllers (e.g., memory, skills, config) and providing a unified
@@ -1156,7 +1156,7 @@ pub fn namespace_description(namespace: &str) -> Option<&'static str> {
         "session_import" => {
             Some("One-time import of legacy session transcripts into TinyAgents stores.")
         }
-        "skill_registry" => Some("Browse, search, install, and uninstall skills from remote registries (OpenHuman, Hermes, OpenClaw)."),
+        "skill_registry" => Some("Browse, search, install, and uninstall skills from remote registries (Neppy, Hermes, OpenClaw)."),
         "skill_runtime" => Some("Run installed skills, inspect run logs, and resolve Node/Python skill runtimes."),
         "skills" => Some("Discovered SKILL.md skills (discovery, parse, install, run) and their resources."),
         "socket" => Some("Backend Socket.IO bridge controls."),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenHuman runtime Python server.
+"""Neppy runtime Python server.
 
 Private JSONL stdio protocol. Rust owns the process and sends one compact JSON
 request per line. This server keeps expensive Python backends warm for the

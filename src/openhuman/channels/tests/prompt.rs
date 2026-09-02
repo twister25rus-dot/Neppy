@@ -55,10 +55,7 @@ fn prompt_injects_workspace_files() {
     assert!(prompt.contains("### SOUL.md"), "missing SOUL.md header");
     assert!(prompt.contains("Be helpful"), "missing SOUL content");
     assert!(prompt.contains("### IDENTITY.md"), "missing IDENTITY.md");
-    assert!(
-        prompt.contains("Name: OpenHuman"),
-        "missing IDENTITY content"
-    );
+    assert!(prompt.contains("Name: Neppy"), "missing IDENTITY content");
     assert!(prompt.contains("### PROFILE.md"), "missing PROFILE.md");
     // HEARTBEAT.md is intentionally excluded from channel prompts — it's only
     // relevant to the heartbeat worker and causes LLMs to emit spurious
@@ -225,7 +222,7 @@ fn prompt_empty_files_skipped() {
 
 #[test]
 fn channel_log_truncation_is_utf8_safe_for_multibyte_text() {
-    let msg = "Hello from OpenHuman 🌍. Current status is healthy, and café-style UTF-8 text stays safe in logs.";
+    let msg = "Hello from Neppy 🌍. Current status is healthy, and café-style UTF-8 text stays safe in logs.";
 
     // Reproduces the production crash path where channel logs truncate at 80 chars.
     let result =

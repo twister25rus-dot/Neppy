@@ -118,10 +118,10 @@ trap cleanup EXIT
 
 log "waiting for core to be ready…"
 for _ in $(seq 1 60); do
-    grep -q "OpenHuman core is ready" "$LOG_FILE" 2>/dev/null && break
+    grep -q "Neppy core is ready" "$LOG_FILE" 2>/dev/null && break
     sleep 0.5
 done
-grep -q "OpenHuman core is ready" "$LOG_FILE" || {
+grep -q "Neppy core is ready" "$LOG_FILE" || {
     tail -40 "$LOG_FILE" | sed 's/^/[test][core-log] /'
     fail "core did not become ready"
 }

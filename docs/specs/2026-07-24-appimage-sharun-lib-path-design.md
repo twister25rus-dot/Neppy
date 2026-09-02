@@ -10,9 +10,9 @@ Running the extracted application with an explicit AppDir-rooted
 
 Read-only analysis verified the final v0.61.2 and v0.63.1 amd64 AppImages:
 
-- `AppRun`, `sharun`, and `bin/OpenHuman` are hard links to the sharun ELF
+- `AppRun`, `sharun`, and `bin/Neppy` are hard links to the sharun ELF
   launcher.
-- The real application is `shared/bin/OpenHuman`.
+- The real application is `shared/bin/Neppy`.
 - `lib/` contains `anylinux.so`, `libxdo.so.3`, `libcef.so`, `libssl.so.3`, and
   `libcrypto.so.3`; `shared/lib` is a symlink to `../lib`.
 - `shared/lib/lib.path` contains the bare relative entry `shared/lib`.
@@ -91,7 +91,7 @@ the existing ELF `AppRun` skip clearly enough to be the primary fix.
 
 ### 3. Bypass sharun
 
-A wrapper could execute `shared/bin/OpenHuman` with an explicit absolute
+A wrapper could execute `shared/bin/Neppy` with an explicit absolute
 `LD_LIBRARY_PATH`. This duplicates sharun's loader and portability behavior and
 risks losing its environment and compatibility hooks.
 
@@ -147,7 +147,7 @@ Extend `scripts/release/test-strip-appimage-rpaths.sh` with isolated cases for:
 - deduplication and idempotency;
 - rejection of bare `shared/lib`, CI paths, traversal, and missing targets;
 - the released launcher layout where ELF `AppRun`, `sharun`, and
-  `bin/OpenHuman` are hard-linked or equivalent launcher entries;
+  `bin/Neppy` are hard-linked or equivalent launcher entries;
 - expansion of the rewritten value according to sharun's algorithm, proving it
   resolves beneath the fixture AppDir regardless of the caller's directory.
 

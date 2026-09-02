@@ -2,7 +2,7 @@
 import { browser, expect } from '@wdio/globals';
 
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import {
   clickSelector,
   clickText,
@@ -99,7 +99,7 @@ describe('Settings - Feature Preferences', function () {
     // In a fresh workspace the only always-connected channel is Web (built-in
     // chat), so make Telegram the default first — that turns Web into a
     // connected, non-default tile with the control — then switch to Web.
-    await callOpenhumanRpc('openhuman.channels_set_default', { channel: 'telegram' });
+    await callNeppyRpc('openhuman.channels_set_default', { channel: 'telegram' });
 
     // Navigate away and back so the panel re-seeds the default from the core.
     await navigateViaHash('/home');
@@ -123,7 +123,7 @@ describe('Settings - Feature Preferences', function () {
   });
 
   it('persists tools preferences to the core app-state snapshot', async () => {
-    const before = await callOpenhumanRpc('openhuman.app_state_snapshot', {});
+    const before = await callNeppyRpc('openhuman.app_state_snapshot', {});
     expect(before.ok).toBe(true);
     const enabledBefore = before.result?.result?.localState?.onboardingTasks?.enabledTools ?? [];
 
@@ -136,7 +136,7 @@ describe('Settings - Feature Preferences', function () {
 
     await browser.waitUntil(
       async () => {
-        const after = await callOpenhumanRpc('openhuman.app_state_snapshot', {});
+        const after = await callNeppyRpc('openhuman.app_state_snapshot', {});
         const enabledAfter = after.result?.result?.localState?.onboardingTasks?.enabledTools ?? [];
         return JSON.stringify(enabledAfter) !== JSON.stringify(enabledBefore);
       },

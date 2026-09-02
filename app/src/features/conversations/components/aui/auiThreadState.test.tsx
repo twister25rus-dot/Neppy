@@ -2,7 +2,7 @@
  * The runtime reads must degrade, not throw, when no runtime is mounted — and
  * must report the ADAPTER's real capabilities when one is.
  *
- * The capability half is the important one. `useOpenHumanExternalStore`
+ * The capability half is the important one. `useNeppyExternalStore`
  * implements `onNew` / `onCancel` and neither `onEdit` nor
  * `setMessages`, so assistant-ui reports `edit` and `switchToBranch` as false.
  * The transcript renders no edit composer and no `BranchPickerPrimitive`

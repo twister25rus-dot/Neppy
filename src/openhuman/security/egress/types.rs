@@ -53,7 +53,7 @@ pub enum EgressReason {
     Inference,
     /// A tool / action call to a third-party provider (e.g. Composio).
     ToolCall,
-    /// A round-trip to the OpenHuman managed backend / integrations API.
+    /// A round-trip to the Neppy managed backend / integrations API.
     Integration,
     /// Text sent to a cloud embedding provider.
     Embedding,
@@ -168,7 +168,7 @@ impl EgressDescriptor {
         )
     }
 
-    /// OpenHuman managed-backend / integrations round-trip (always external —
+    /// Neppy managed-backend / integrations round-trip (always external —
     /// the backend is off-device). `service` is the request path.
     pub fn integration(service: impl Into<String>) -> Self {
         Self::new(

@@ -47,7 +47,7 @@ fn unauthorized_response() -> Response {
     let mut response = (StatusCode::UNAUTHORIZED, "basic auth required").into_response();
     response.headers_mut().insert(
         header::WWW_AUTHENTICATE,
-        HeaderValue::from_static("Basic realm=\"OpenHuman Hosted Directory\""),
+        HeaderValue::from_static("Basic realm=\"Neppy Hosted Directory\""),
     );
     response
 }

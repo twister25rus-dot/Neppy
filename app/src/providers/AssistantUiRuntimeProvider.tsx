@@ -3,7 +3,7 @@ import debugFactory from 'debug';
 import type { ReactNode } from 'react';
 
 import { useAppSelector } from '../store/hooks';
-import { useOpenHumanExternalStore } from './useOpenHumanExternalStore';
+import { useNeppyExternalStore } from './useNeppyExternalStore';
 
 const debug = debugFactory('openhuman:assistant-ui');
 
@@ -60,7 +60,7 @@ export function AssistantUiRuntimeProvider({
     effectiveThreadId ?? '(none)',
     threadId === undefined ? 'selection' : 'explicit'
   );
-  const adapter = useOpenHumanExternalStore(effectiveThreadId);
+  const adapter = useNeppyExternalStore(effectiveThreadId);
   const runtime = useExternalStoreRuntime(adapter);
   return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>;
 }

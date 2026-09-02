@@ -2,7 +2,7 @@
 name = "openhuman"
 version = "0.63.18"
 edition = "2021"
-description = "OpenHuman core business logic and RPC server"
+description = "Neppy core business logic and RPC server"
 # The crate ships a verbatim GPLv3 `LICENSE` file but carried no `license` key,
 # which left the grant ambiguous to every tool that reads metadata rather than
 # the file (cargo-deny, crates.io, SBOM generators). Declared explicitly as
@@ -129,19 +129,19 @@ crate-type = ["rlib"]
 # `vendor/` beside the other tiny* crates and consumed by path: the crate is not
 # published to crates.io, so there is no `[patch.crates-io]` entry for it.
 # This is the single source of truth for backend routes — `src/api/` is the
-# OpenHuman-local adapter layer (session tokens, config, observability) that
+# Neppy-local adapter layer (session tokens, config, observability) that
 # sits on top of it, not a second HTTP client. Anything missing here belongs
 # upstream in the SDK repo, not re-implemented in `src/api/`.
 # After cloning: `git submodule update --init vendor/tinyhumans-sdk`.
 tinyhumans-sdk = { path = "vendor/tinyhumans-sdk", default-features = false }
 # tiny.place A2A social network SDK — published on crates.io and patched below
-# to the vendored tiny.place submodule so OpenHuman can test SDK changes before
+# to the vendored tiny.place submodule so Neppy can test SDK changes before
 # publishing.
 tinyplace = "2.0"
 # tinyflows — host-agnostic workflow engine (typed node graph → validate → compile →
 # run on tinyagents). Powers the "Workflows" feature via the seam in
 # `src/openhuman/tinyflows/` + the `flows::` domain. Pulls tinyagents 2.1 transitively
-# (same version OpenHuman uses directly, preserving one trait identity). Published
+# (same version Neppy uses directly, preserving one trait identity). Published
 # on crates.io and patched below to the vendored submodule.
 #
 # `mock` feature: enables `tinyflows::caps::mock::mock_capabilities()` — the
@@ -170,14 +170,14 @@ tinyflows = { version = "0.8", features = ["mock"], optional = true }
 # The crate itself can never be dropped: 26+ domains consume tinyagents.
 # `multimodal` is not optional here: `agent::multimodal` is kernel surface —
 # web chat and the agent harness both resolve attachment markers on every turn
-# — so the gate is on for every OpenHuman build. It costs the dependency graph
+# — so the gate is on for every Neppy build. It costs the dependency graph
 # nothing: `base64`, `flate2` and `sha2` are all already resolved in the kernel
 # profile, so turning it on moves neither the package count nor the native
 # build count that `scripts/check-kernel-floor.sh` ratchets.
 tinyagents = { version = "2.1", features = ["sqlite", "multimodal"] }
 # TinyCortex — Rust core for the memory engine (store/chunks/tree/retrieval/
 # queue/ingest/score + long tail), vendored as a git submodule and patched
-# below to `vendor/tinycortex`. OpenHuman's memory subsystem migrates onto this
+# below to `vendor/tinycortex`. Neppy's memory subsystem migrates onto this
 # crate through the adapter seam in `src/openhuman/tinycortex/` (mirroring the
 # tinyagents seam): engine logic (including provider sync pipelines) in the
 # crate; RPC, agent tools, sync scheduling/credentials/events, security gating,
@@ -255,13 +255,13 @@ tinymemory-tinycortex = { path = "vendor/tinymemory/crates/tinymemory-tinycortex
 # per the tinymemory README split: the RPC surface (`schemas/`, `read_rpc/`),
 # agent tools (`tools/`), the security/taint guard (`guard/`), the driver
 # binding (`driver/`), the memory agent, and the config mapping. Those reach
-# into this crate; this crate never names an OpenHuman type. Everything it needs
+# into this crate; this crate never names an Neppy type. Everything it needs
 # from the host arrives through the seam traits in `tinymemory_api::host`, whose
 # implementations live in `src/openhuman/memory/host.rs`.
 #
 # The `schemars` feature is enabled because the memory config *section* structs
 # (`MemoryConfig`, `MemoryTreeConfig`, …) now live in `tinymemory_api::host` and
-# are still fields of OpenHuman's `Config`, which derives `JsonSchema`.
+# are still fields of Neppy's `Config`, which derives `JsonSchema`.
 tinymemory-core = { path = "vendor/tinymemory/crates/tinymemory-core" }
 
 # tinymcp — the Model Context Protocol client, extracted out of this tree
@@ -309,7 +309,7 @@ tinychannels = { version = "0.1", features = ["relay-websocket"] }
 # version negotiation. Vendored as a git submodule beside the other tiny*
 # crates and consumed by path.
 #
-# `DomainEvent` stays here, in `src/core/events.rs`: the catalog is OpenHuman's
+# `DomainEvent` stays here, in `src/core/events.rs`: the catalog is Neppy's
 # own vocabulary and a generic bus crate must not know it. tinybus is generic
 # over the event type and `DomainEvent` implements `tinybus::Event`.
 #
@@ -560,7 +560,7 @@ tinyjuice-bus = { path = "vendor/tinyjuice/crates/tinyjuice-bus" }
 # and the `launch` flow that puts a Next.js application, its database, its
 # environment and its domains on it in the one order that works.
 #
-# The provider vocabulary stops inside the crate. What OpenHuman gets is the
+# The provider vocabulary stops inside the crate. What Neppy gets is the
 # model — sites, deployments, databases, domains, analytics — so which provider
 # a user pastes a key for is a config value here rather than a code path.
 #
@@ -576,7 +576,7 @@ tinyhosts = { path = "vendor/tinyhosts", default-features = false, features = ["
 # TinyWallet — host-agnostic multi-chain wallet primitives. Owns the address
 # formats themselves: parsing, validation, and the conversions between their
 # encodings for Bitcoin, EVM chains, Solana and Tron. Nothing about "is this a
-# well-formed Solana address" is OpenHuman-specific, so the rules live where
+# well-formed Solana address" is Neppy-specific, so the rules live where
 # any host can reach them. What stays in `src/openhuman/web3/` is everything
 # the crate deliberately refuses to own: RPC endpoint resolution, transaction
 # assembly and broadcast, and key custody.
@@ -1091,7 +1091,7 @@ tui = ["dep:ratatui", "dep:crossterm", "dep:unicode-width"]
 #
 # Default-ON, but INTENTIONALLY NOT FORWARDED to the Tauri shell (allowlisted in
 # scripts/lib/feature-forwarding.mjs, alongside `tui`): the desktop app is
-# OpenHuman's own product and never dials a Medulla backend. The consumer is the
+# Neppy's own product and never dials a Medulla backend. The consumer is the
 # Medulla TUI, which embeds this crate directly.
 #
 # Facade + type carve-out, NOT a leaf gate: `pub mod medulla;` is always
@@ -1240,13 +1240,13 @@ tinymemory-api = { path = "vendor/tinymemory/crates/tinymemory-api" }
 # above. Remove this patch after upstream publishes the same manifest fix.
 motosan-ai-oauth = { path = "vendor/motosan-ai-oauth" }
 # TinyAgents is vendored as a git submodule (pinned at the released tag) so
-# migration work can change the SDK source in-tree, test it against OpenHuman
+# migration work can change the SDK source in-tree, test it against Neppy
 # immediately, and PR the diff upstream from the submodule. Keep the submodule
 # version in lockstep with the `tinyagents` requirement above. After cloning:
 # `git submodule update --init vendor/tinyagents` (worktrees included).
 tinyagents = { path = "vendor/tinyagents" }
 # TinyFlows, TinyCortex, TinyChannels, and TinyPlace are vendored beside
-# TinyAgents so integration work can test crate changes against OpenHuman before
+# TinyAgents so integration work can test crate changes against Neppy before
 # publishing.
 tinyflows = { path = "vendor/tinyflows" }
 tinycortex = { path = "vendor/tinycortex" }
@@ -1338,7 +1338,7 @@ debug = false
 #
 # Scope is intentionally narrow and low-risk:
 #   * `package."*"` targets dependencies only — our own crates keep full
-#     debuginfo, so panics/backtraces in OpenHuman code still resolve to
+#     debuginfo, so panics/backtraces in Neppy code still resolve to
 #     file:line and a debugger can still step through our code.
 #   * Only the unoptimised `dev`/`test` profiles change. `release` and `ci`
 #     (which already set `debug = false` / `line-tables-only`) are untouched.

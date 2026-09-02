@@ -5,7 +5,7 @@
 //! specialists. Each file defines exactly one definition.
 //!
 //! TOML (rather than YAML) is used for consistency with the rest of
-//! OpenHuman's config system, which already depends on the `toml` crate
+//! Neppy's config system, which already depends on the `toml` crate
 //! and uses TOML for its main config file.
 //!
 //! The loader is intentionally lenient: it logs and skips files that fail

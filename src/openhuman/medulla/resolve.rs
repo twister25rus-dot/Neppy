@@ -3,14 +3,14 @@
 //! # Why there is no `[medulla]` config section
 //!
 //! There does not need to be one. The Medulla orchestration API and the
-//! OpenHuman backend are the **same deployment**, so `api_url` already
+//! Neppy backend are the **same deployment**, so `api_url` already
 //! addresses it and the existing session token already authenticates against
 //! it. A separate `[medulla]` section would be a second source of truth for one
 //! endpoint and one credential — exactly the drift this migration exists to
 //! remove.
 //!
 //! `OPENHUMAN_MEDULLA_BASE_URL` remains as an override for pointing a
-//! development host at a different Medulla deployment than its OpenHuman one.
+//! development host at a different Medulla deployment than its Neppy one.
 //! Unset — the normal case — everything resolves through
 //! [`effective_backend_api_url`], the same chain every other hosted-backend
 //! call uses: `api_url`, then the `BACKEND_URL` keys, then the prod or staging
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn an_unconfigured_install_falls_back_to_the_hosted_backend() {
-        // Medulla and the OpenHuman backend are one deployment, so an install
+        // Medulla and the Neppy backend are one deployment, so an install
         // that never wrote an explicit `api_url` — the normal case — must reach
         // the same host every other backend call defaults to, not report itself
         // unconfigured while auth and billing work.

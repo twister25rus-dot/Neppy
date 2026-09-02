@@ -551,12 +551,12 @@ async fn memory_ingestion_pipeline_extracts_graph_preferences_and_recall_hits() 
     let content = r#"
 From: Alice Morgan <alice@example.test>
 To: Bob Stone <bob@example.test>, Cara Park <cara@example.test>
-Cc: OpenHuman Core <core@example.test>
-Subject: OpenHuman coverage memory plan
+Cc: Neppy Core <core@example.test>
+Subject: Neppy coverage memory plan
 Date: 2026-05-29
 
 # Project Alpha
-Project name: OpenHuman
+Project name: Neppy
 Subproject: memory-coverage
 Owner: Alice Morgan
 Name: Thread raw coverage
@@ -567,7 +567,7 @@ Preferred extraction mode to try first: sentence
 
 Alice Morgan owns memory-coverage.
 Bob Stone works_on memory-coverage.
-OpenHuman uses JSON-RPC.
+Neppy uses JSON-RPC.
 Cara Park prefers deterministic fixtures.
 Alice Morgan will review the ingestion assertions.
 Bob Stone sent draft notes to Cara Park.
@@ -579,7 +579,7 @@ Kitchen is north of Garden.
             document: NamespaceDocumentInput {
                 namespace: "memory-raw-ingestion".into(),
                 key: "plan-1".into(),
-                title: "OpenHuman coverage memory plan".into(),
+                title: "Neppy coverage memory plan".into(),
                 content: content.into(),
                 source_type: "test".into(),
                 priority: "high".into(),
@@ -649,8 +649,8 @@ Kitchen is north of Garden.
             &NamespaceDocumentInput {
                 namespace: "memory-raw-ingestion".into(),
                 key: "plan-1".into(),
-                title: "OpenHuman coverage memory plan".into(),
-                content: "OpenHuman uses JSON-RPC.\nAlice Morgan prefers small tests.".into(),
+                title: "Neppy coverage memory plan".into(),
+                content: "Neppy uses JSON-RPC.\nAlice Morgan prefers small tests.".into(),
                 source_type: "test".into(),
                 priority: "high".into(),
                 tags: Vec::new(),
@@ -1544,7 +1544,7 @@ fn memory_tree_scoring_signal_helpers_cover_boundaries_and_serialization() {
             },
             ExtractedEntity {
                 kind: EntityKind::Organization,
-                text: "OpenHuman".into(),
+                text: "Neppy".into(),
                 span_start: 10,
                 span_end: 19,
                 score: 0.7,
@@ -1599,7 +1599,7 @@ fn memory_tree_scoring_signal_helpers_cover_boundaries_and_serialization() {
 
     let computed = compute_score_signals(
         &meta,
-        "Alice from OpenHuman mentioned Phoenix migration on Friday",
+        "Alice from Neppy mentioned Phoenix migration on Friday",
         120,
         &extracted,
     );

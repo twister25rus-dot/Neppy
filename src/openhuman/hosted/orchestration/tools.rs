@@ -4,7 +4,7 @@
 //! in the hosted brain (see [`super::cloud`]).
 //!
 //! - [`ListSessionsTool`] (`orchestration_list_sessions`) — enumerate the
-//!   persisted OpenHuman↔agent session windows (peers/threads, one-line preview).
+//!   persisted Neppy↔agent session windows (peers/threads, one-line preview).
 //! - [`ReadSessionTool`] (`orchestration_read_session`) — read one session's
 //!   transcript by id.
 //! - [`ListContactsTool`] / [`SendToAgentTool`] — list paired agents and send a
@@ -127,7 +127,7 @@ fn preview_line(body: &str) -> String {
     out
 }
 
-/// `orchestration_list_sessions` — enumerate the persisted OpenHuman↔agent session
+/// `orchestration_list_sessions` — enumerate the persisted Neppy↔agent session
 /// windows so the reasoning core can decide which history to read.
 pub struct ListSessionsTool {
     config: Arc<Config>,
@@ -146,7 +146,7 @@ impl Tool for ListSessionsTool {
     }
 
     fn description(&self) -> &str {
-        "List your saved chat sessions with other agents (the persisted OpenHuman↔agent \
+        "List your saved chat sessions with other agents (the persisted Neppy↔agent \
          transcripts), newest activity first. Use this to find which past conversation to \
          read before answering a question. Returns each session's id, the peer agent, the \
          source harness, an optional label, the last activity time, the message count, and a \
@@ -392,10 +392,10 @@ impl Tool for ListContactsTool {
 
 // ── Reasoning-core send-on-behalf tool (Master chat) ─────────────────────────
 
-/// `orchestration_send_to_agent` — DM another agent on OpenHuman's behalf.
+/// `orchestration_send_to_agent` — DM another agent on Neppy's behalf.
 ///
 /// Guardrail (owner decision): **linked peers only** — the recipient must be a
-/// linked/paired agent OR one this OpenHuman already has a session with. This
+/// linked/paired agent OR one this Neppy already has a session with. This
 /// tool runs under a background origin that bypasses the interactive approval
 /// gate, so cold-DMing an arbitrary new address is refused here rather than
 /// prompting.
@@ -427,7 +427,7 @@ impl Tool for SendToAgentTool {
     }
 
     fn description(&self) -> &str {
-        "Send a direct message to another agent on OpenHuman's behalf (e.g. to ask them \
+        "Send a direct message to another agent on Neppy's behalf (e.g. to ask them \
          something for the user). Only works for agents you are already linked with or have \
          chatted with before. By default the message threads into your existing conversation \
          with that agent (so their reply comes back into the same session); pass `sessionId` to \

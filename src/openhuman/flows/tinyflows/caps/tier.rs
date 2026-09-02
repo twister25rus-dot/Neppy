@@ -34,7 +34,7 @@ use crate::openhuman::security::{
 /// middleware recognizes it as a permanent, don't-retry refusal.
 ///
 /// `pub(crate)` (not `http_request`/`code`-private): the `memory` node's
-/// [`OpenHumanMemory`](super::super::memory_adapter::OpenHumanMemory) adapter
+/// [`NeppyMemory`](super::super::memory_adapter::NeppyMemory) adapter
 /// reuses this exact function — `CommandClass::Read` for
 /// recall/search/flavour/people, `CommandClass::Write` for remember/forget —
 /// rather than growing a second permission path for the new node kind.

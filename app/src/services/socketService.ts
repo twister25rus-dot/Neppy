@@ -301,7 +301,7 @@ class SocketService {
     this.socket.on('channel:connection-updated', handleChannelConnectionUpdated);
     this.socket.on('channel_connection_updated', handleChannelConnectionUpdated);
 
-    // Core-side session expiry (401 from the OpenHuman backend or jsonrpc).
+    // Core-side session expiry (401 from the Neppy backend or jsonrpc).
     // The server has already published SessionExpired on its event bus,
     // the credentials subscriber has cleared the JWT, and the scheduler
     // gate is flipped to signed-out. All the UI needs to do is mirror

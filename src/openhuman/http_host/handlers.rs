@@ -134,7 +134,7 @@ async fn serve_directory(root_dir: &Path, dir: &Path, requested_path: &str) -> R
                 format!("/{}", requested_path.trim_matches('/'))
             };
             let mut html = String::from(
-                "<!doctype html><html><head><meta charset=\"utf-8\"><title>OpenHuman Directory Listing</title></head><body>",
+                "<!doctype html><html><head><meta charset=\"utf-8\"><title>Neppy Directory Listing</title></head><body>",
             );
             html.push_str(&format!(
                 "<h1>Directory listing for {}</h1><ul>",

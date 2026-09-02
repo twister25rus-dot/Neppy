@@ -76,7 +76,7 @@ use std::sync::Arc;
 
 use crate::core::runtime::CoreRuntime;
 
-/// Typed handle to an embedded OpenHuman core.
+/// Typed handle to an embedded Neppy core.
 ///
 /// Cheap to clone: it is an `Arc` over the runtime the embedder already owns.
 #[derive(Clone)]

@@ -77,7 +77,7 @@ The repo has **three** "workflow" systems. This plan touches only the first:
 
 What an n8n user would expect, mapped to our state:
 
-| n8n capability                                        | tinyflows/OpenHuman today                                                    | Covered by        |
+| n8n capability                                        | tinyflows/Neppy today                                                    | Covered by        |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------- |
 | Editable node canvas (drag, connect, add/delete)      | Read-only viewer                                                             | Phase 3           |
 | Node config side-panel with schema-driven forms       | Missing                                                                      | Phase 3           |
@@ -167,7 +167,7 @@ Full taxonomy, the generic event-dispatcher design, and the **cron → workflows
 The `connection_ref` seam exists end-to-end but resolves nothing. This phase makes integration nodes real.
 
 - **Composio connected accounts**: resolve `connection_ref` → specific Composio connected account (today: ambient-account fallback). Fix toolkit allow-listing in `caps.rs:193` so real toolkits pass policy instead of being hard-rejected. Surface account choice in the node config (`connection_ref` = connected-account id).
-- **HTTP credentials**: back `connection_ref` for `http_request` nodes with the existing `credentials` domain (header/bearer/basic templates stored encrypted; injected server-side in `OpenHumanHttp::request` — never returned to the UI or the engine).
+- **HTTP credentials**: back `connection_ref` for `http_request` nodes with the existing `credentials` domain (header/bearer/basic templates stored encrypted; injected server-side in `NeppyHttp::request` — never returned to the UI or the engine).
 - **RPCs**: `flows_list_connections()` (aggregate Composio connected accounts + stored HTTP credentials, ids + display names only) for the UI picker.
 - **Policy**: `code` and `http_request` node execution must respect the `[autonomy]` tier / `classify_command`-equivalent gating (network class); document the matrix in `flows/ops.rs`.
 

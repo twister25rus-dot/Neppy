@@ -5,7 +5,7 @@ icon: brain
 
 # Memory Tools
 
-The [Memory Tree](../obsidian-wiki/memory-tree.md) is OpenHuman's knowledge base. The memory tools are how the agent talks to it during a conversation.
+The [Memory Tree](../obsidian-wiki/memory-tree.md) is Neppy's knowledge base. The memory tools are how the agent talks to it during a conversation.
 
 ## Tools in the family
 

@@ -28,7 +28,7 @@ vi.mock('../providers/CoreStateProvider', () => ({
   useCoreState: () => ({ snapshot: { auth: { isAuthenticated: mockAuthState.isAuthenticated } } }),
 }));
 
-// All chat workloads routed to OpenHuman — the default for every existing
+// All chat workloads routed to Neppy — the default for every existing
 // test case (matches the legacy "you have a hosted-backend budget" world).
 const ALL_OPENHUMAN_AI_SETTINGS = {
   cloudProviders: [],
@@ -133,7 +133,7 @@ describe('useUsageState', () => {
     mockLoadAISettings.mockReset();
     // Default authenticated; the auth-gating test opts out explicitly.
     mockAuthState.isAuthenticated = true;
-    // Default: keep the OpenHuman-routed world so every legacy assertion
+    // Default: keep the Neppy-routed world so every legacy assertion
     // about budget gating stays identical until a test opts into the
     // routed-away scenarios below.
     mockLoadAISettings.mockResolvedValue(ALL_OPENHUMAN_AI_SETTINGS);
@@ -269,7 +269,7 @@ describe('useUsageState', () => {
     // OpenRouter key and routed reasoning/agentic/coding away from
     // openhuman. The banner that previously said "Your included budget is
     // complete" should NOT show, because the user is paying OpenRouter,
-    // not OpenHuman, for chat inference.
+    // not Neppy, for chat inference.
     mockGetCurrentPlan.mockResolvedValue({
       plan: 'BASIC',
       hasActiveSubscription: true,
@@ -405,7 +405,7 @@ describe('useUsageState', () => {
     expect(reasoning.result.current.shouldShowBudgetCompletedMessage).toBe(true);
   });
 
-  it('still shows the budget banner when at least one chat workload remains on OpenHuman', async () => {
+  it('still shows the budget banner when at least one chat workload remains on Neppy', async () => {
     const { useUsageState } = await import('./useUsageState');
 
     // User has saved an OpenRouter key for agentic+coding but left reasoning
@@ -573,7 +573,7 @@ describe('useUsageState', () => {
     expect(result.current.isAtLimit).toBe(false);
   });
 
-  it('does not fetch billing usage when every workload routes away from OpenHuman (#2020)', async () => {
+  it('does not fetch billing usage when every workload routes away from Neppy (#2020)', async () => {
     const { useUsageState } = await import('./useUsageState');
 
     mockLoadAISettings.mockResolvedValue(ALL_LOCAL_AI_SETTINGS);
@@ -629,11 +629,11 @@ describe('useUsageState', () => {
     // Background workloads (memory, heartbeat, …) keep the billing API call
     // alive (ALL_WORKLOADS check), but isFullyRoutedAway (CHAT_WORKLOADS) is
     // true so the near-limit banner must NOT show — the user's chat is not
-    // on OpenHuman's budget.
+    // on Neppy's budget.
     const { useUsageState } = await import('./useUsageState');
 
     mockGetCurrentPlan.mockResolvedValue(freePlan());
-    // Usage at 90% — would trigger isNearLimit for OpenHuman-routed users.
+    // Usage at 90% — would trigger isNearLimit for Neppy-routed users.
     mockGetTeamUsage.mockResolvedValue(buildUsage({ remainingUsd: 1, cycleBudgetUsd: 10 }));
     mockLoadAISettings.mockResolvedValue({
       cloudProviders: [],
@@ -642,7 +642,7 @@ describe('useUsageState', () => {
         reasoning: { kind: 'local' as const, model: 'qwen3:8b' },
         agentic: { kind: 'local' as const, model: 'qwen3:8b' },
         coding: { kind: 'local' as const, model: 'qwen3:8b' },
-        // background workloads still on OpenHuman → billing API is still called
+        // background workloads still on Neppy → billing API is still called
         memory: { kind: 'openhuman' as const },
         embeddings: { kind: 'openhuman' as const },
         heartbeat: { kind: 'openhuman' as const },
@@ -658,14 +658,14 @@ describe('useUsageState', () => {
     });
 
     expect(result.current.isFullyRoutedAway).toBe(true);
-    // usagePct ~90% but user is routed away from OpenHuman — no near-limit warning.
+    // usagePct ~90% but user is routed away from Neppy — no near-limit warning.
     expect(result.current.isNearLimit).toBe(false);
     expect(result.current.isAtLimit).toBe(false);
-    // billing was still fetched because background workloads remain on OpenHuman
+    // billing was still fetched because background workloads remain on Neppy
     expect(mockGetTeamUsage).toHaveBeenCalledTimes(1);
   });
 
-  it('still fetches billing when a background workload remains on OpenHuman', async () => {
+  it('still fetches billing when a background workload remains on Neppy', async () => {
     const { useUsageState } = await import('./useUsageState');
 
     mockLoadAISettings.mockResolvedValue({

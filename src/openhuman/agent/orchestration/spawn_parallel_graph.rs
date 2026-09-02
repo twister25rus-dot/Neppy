@@ -7,7 +7,7 @@
 //! `docs/tinyagents-migration-plan-2026-07-22.md`).
 //!
 //! **Write safety.** Whether a worker *needs* a claim on the shared workspace is
-//! an OpenHuman decision — it reads sandbox mode, tool permissions and the
+//! an Neppy decision — it reads sandbox mode, tool permissions and the
 //! isolation request. Whether the claims of a whole batch can be granted
 //! together is not, and goes through
 //! [`plan_shared_workspace_dispatch`](tinyagents::graph::parallel::plan_shared_workspace_dispatch).
@@ -262,7 +262,7 @@ fn shared_workspace_write_preview(write_capable_tools: &[String]) -> String {
     format!("{preview}{suffix}")
 }
 
-/// Parse OpenHuman's `files: a.rs, b.rs` ownership syntax into claimed paths.
+/// Parse Neppy's `files: a.rs, b.rs` ownership syntax into claimed paths.
 ///
 /// The `files:` prefix is this tool's parameter shape, so it is stripped here;
 /// validating what follows is generic and belongs to
@@ -333,7 +333,7 @@ async fn create_spawn_parallel_worktree(
                         tinyagents::harness::tool::SandboxMode::Inherit
                     }
                 };
-                let isolation = worktree::OpenHumanWorktreeIsolation::new(repo_root)
+                let isolation = worktree::NeppyWorktreeIsolation::new(repo_root)
                     .with_base_ref(base_ref)
                     .with_sandbox(sandbox);
                 match isolation.prepare(task_id, Some(&definition.id)).await {
@@ -415,7 +415,7 @@ fn snapshot_agent_definitions(
         .collect()
 }
 
-/// One task that cleared every OpenHuman policy gate and is awaiting the
+/// One task that cleared every Neppy policy gate and is awaiting the
 /// shared-workspace arbitration verdict.
 struct AdmittedParallelTask {
     definition: AgentDefinition,
@@ -431,7 +431,7 @@ pub(super) fn prepare_spawn_parallel_tasks_from_defs(
     definitions: &HashMap<String, AgentDefinition>,
     parent: &ParentExecutionContext,
 ) -> Vec<SpawnParallelTaskPreflight> {
-    // Pass 1 — OpenHuman policy. Identity, the parent's subagent allowlist, the
+    // Pass 1 — Neppy policy. Identity, the parent's subagent allowlist, the
     // integrations toolkit requirement, and whether a worker can write the
     // shared workspace at all are all product decisions, so they are settled
     // here and rejected in their own vocabulary. What survives carries a
@@ -978,7 +978,7 @@ pub(super) async fn run_spawn_parallel_graph_with_cancellation_and_workspace(
 /// Resolve the agent sandbox root once for the graph run.
 ///
 /// This is `Config.action_dir` (the user's project repo the coding agent edits),
-/// NOT OpenHuman's own tree. It is only consulted when a worker asks for
+/// NOT Neppy's own tree. It is only consulted when a worker asks for
 /// git-worktree isolation; failures preserve the previous `None` fallback.
 async fn resolve_spawn_parallel_action_root(
     parent_workspace_descriptor: Option<&WorkspaceDescriptor>,

@@ -155,13 +155,13 @@ fn the_client_identity_survives_the_conversion() {
     // A remote server sees these and may log or display them.
     let mut config = config_without_docs();
     config.mcp_client.client_identity.name = "openhuman-core".into();
-    config.mcp_client.client_identity.title = "OpenHuman Core MCP Client".into();
+    config.mcp_client.client_identity.title = "Neppy Core MCP Client".into();
     config.mcp_client.client_identity.version = "9.9.9".into();
 
     let identity = client_config(&config).client_identity;
 
     assert_eq!(identity.name, "openhuman-core");
-    assert_eq!(identity.title, "OpenHuman Core MCP Client");
+    assert_eq!(identity.title, "Neppy Core MCP Client");
     assert_eq!(identity.version, "9.9.9");
 }
 

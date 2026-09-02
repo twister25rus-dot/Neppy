@@ -1,6 +1,6 @@
 ---
 description: >-
-  OpenHuman is an orchestrator, not a chatbot: durable agent graphs, visual
+  Neppy is an orchestrator, not a chatbot: durable agent graphs, visual
   workflows, sub-agent fleets, a split-brain always-on layer, and end-to-end
   encrypted agent-to-agent sessions, all in one coherent stack.
 icon: sitemap
@@ -8,9 +8,9 @@ icon: sitemap
 
 # The Orchestrator
 
-<figure><img src="../.gitbook/assets/orchestration.png" alt=""><figcaption><p>OpenHuman orchestrating a fleet of agents (its own workers and external harnesses alike) over Signal-encrypted agent-to-agent sessions.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/orchestration.png" alt=""><figcaption><p>Neppy orchestrating a fleet of agents (its own workers and external harnesses alike) over Signal-encrypted agent-to-agent sessions.</p></figcaption></figure>
 
-Most harnesses run one agent in one loop. OpenHuman is built as an **orchestrator**: a stack for coordinating many agents, over long horizons, across machines. It does this durably, observably, and under your control.
+Most harnesses run one agent in one loop. Neppy is built as an **orchestrator**: a stack for coordinating many agents, over long horizons, across machines. It does this durably, observably, and under your control.
 
 Five layers make that real:
 
@@ -32,9 +32,9 @@ Inbound traffic hits a **fast reflex agent** that triages in seconds and hands a
 
 ## 5. Encrypted orchestration across machines
 
-OpenHuman instances collaborate through [tiny.place](tinyplace.md) sessions secured with the **Signal protocol**: real end-to-end encryption, with keys derived on-device and never persisted. Pairing is consent-based and fails closed: an unlinked agent's message is just a message, never an instruction. Your agent can orchestrate other agents (and be orchestrated) without a server ever seeing plaintext.
+Neppy instances collaborate through [tiny.place](tinyplace.md) sessions secured with the **Signal protocol**: real end-to-end encryption, with keys derived on-device and never persisted. Pairing is consent-based and fails closed: an unlinked agent's message is just a message, never an instruction. Your agent can orchestrate other agents (and be orchestrated) without a server ever seeing plaintext.
 
-Because the transport is plain Signal-encrypted messaging, the other side doesn't have to be OpenHuman. Connect **Claude Code, Codex, OpenClaw, Hermes**, or anything that can hold a session, and use OpenHuman as the conductor for all of your agents and tools.
+Because the transport is plain Signal-encrypted messaging, the other side doesn't have to be Neppy. Connect **Claude Code, Codex, OpenClaw, Hermes**, or anything that can hold a session, and use Neppy as the conductor for all of your agents and tools.
 
 ## What's next: RLMs
 
@@ -44,7 +44,7 @@ The direction we're building toward: **Rhai-backed language workflows**. These a
 
 ## Why this differentiates
 
-|                 | Single-agent harnesses (Claude Code, OpenClaw, Hermes) | OpenHuman                                                       |
+|                 | Single-agent harnesses (Claude Code, OpenClaw, Hermes) | Neppy                                                       |
 | --------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
 | Execution model | One loop, one context                                  | Compiled graphs, conditional routing, checkpoint/resume         |
 | Parallelism     | Manual / plugin                                        | Native sub-agent fleets, map-reduce fan-out, worker reuse       |

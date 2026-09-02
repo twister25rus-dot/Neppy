@@ -54,7 +54,7 @@ fn apply_host_overlay(contract: NodeKindContract) -> NodeKindContract {
         "tool_call" => contract
             .with_note(
                 "config.slug is a real Composio action slug (from search_tool_catalog, e.g. \
-                 GMAIL_SEND_EMAIL) OR oh:<tool_name> for a native OpenHuman tool (e.g. \
+                 GMAIL_SEND_EMAIL) OR oh:<tool_name> for a native Neppy tool (e.g. \
                  oh:web_search). A hallucinated/typo'd slug is a hard reject.",
             )
             .with_note(
@@ -126,7 +126,7 @@ fn apply_host_overlay(contract: NodeKindContract) -> NodeKindContract {
             .with_note(
                 "config.slug for target=tool follows the SAME rule as a tool_call: a real \
                  Composio action slug (with config.connection_ref for the account) or \
-                 oh:<tool_name> for a native OpenHuman tool. Call get_tool_contract first and \
+                 oh:<tool_name> for a native Neppy tool. Call get_tool_contract first and \
                  wire every required_arg into config.args.",
             )
             .with_note(

@@ -1,7 +1,7 @@
 //! x402 payment fulfillment bridge — **section-agnostic**.
 //!
 //! Turns a `402 Payment Required` [`PaymentChallenge`] into a signed
-//! [`X402PaymentMap`] by paying on-chain through the OpenHuman wallet and then
+//! [`X402PaymentMap`] by paying on-chain through the Neppy wallet and then
 //! signing the x402 authorization with the tiny.place identity key.
 //!
 //! The flow is shared verbatim across register / buy / bid / offer; callers

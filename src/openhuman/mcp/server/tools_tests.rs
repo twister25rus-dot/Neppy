@@ -53,7 +53,7 @@ fn list_tools_emits_annotations_for_every_tool() {
 
 #[test]
 fn read_only_tools_are_marked_read_only_and_closed_world() {
-    // Every tool except the act-capable ones reads local OpenHuman state
+    // Every tool except the act-capable ones reads local Neppy state
     // (memory tree / agent registry) or queries an external read-only
     // search engine. Per MCP spec defaults these would be
     // `readOnlyHint: false` and `openWorldHint: true`, so we MUST set

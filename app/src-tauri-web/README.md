@@ -1,7 +1,7 @@
 ## src-tauri-web
 
 This sibling to `src-tauri-mobile/` is the browser-hosted shell profile for
-OpenHuman E2E and future web-compatible development.
+Neppy E2E and future web-compatible development.
 
 Scope:
 

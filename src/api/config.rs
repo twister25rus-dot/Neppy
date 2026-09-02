@@ -166,7 +166,7 @@ pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
         let is_openhuman = looks_like_openhuman_backend_endpoint(u);
         // A public third-party inference host (openrouter.ai, api.openai.com, …)
         // set to its canonical base (`https://openrouter.ai/api/v1`) is neither
-        // local-AI nor an OpenHuman backend, so without this check the override
+        // local-AI nor an Neppy backend, so without this check the override
         // would be used as the backend base and every domain call (team usage,
         // billing) would 400/404 against the inference host — TAURI-RUST-HW1
         // (4932 `GET /teams/me/usage` 400s from `openrouter.ai`). Cloud analogue
@@ -243,7 +243,7 @@ pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
 // ─── URL classification ──────────────────────────────────────────────────────
 
 /// Returns `true` when the URL appears to be a local / self-hosted model
-/// runner rather than the hosted OpenHuman backend.
+/// runner rather than the hosted Neppy backend.
 ///
 /// The heuristic is **intentionally tight** to avoid misclassifying:
 /// * ad-hoc mock backends used in integration tests
@@ -309,7 +309,7 @@ pub fn looks_like_local_ai_endpoint(url: &str) -> bool {
 
 /// Well-known managed inference-provider registrable domains. A `config.api_url`
 /// pointed at one of these (or a subdomain) is a BYO chat/inference base — never
-/// an OpenHuman control-plane backend — so backend calls must NOT route there.
+/// an Neppy control-plane backend — so backend calls must NOT route there.
 ///
 /// Suffix-matched so `api.<provider>` / `<region>.<provider>` also classify.
 /// Kept tight to genuinely managed inference hosts; an unknown custom backend
@@ -340,7 +340,7 @@ const INFERENCE_PROVIDER_DOMAINS: &[&str] = &[
 ];
 
 /// Returns `true` when the URL looks like a **remote managed inference
-/// provider** base rather than the hosted OpenHuman backend.
+/// provider** base rather than the hosted Neppy backend.
 ///
 /// Complements [`looks_like_local_ai_endpoint`] (which only catches *local*
 /// model runners): together they let [`effective_backend_api_url`] fall back to
@@ -353,7 +353,7 @@ const INFERENCE_PROVIDER_DOMAINS: &[&str] = &[
 ///    [`INFERENCE_PROVIDER_DOMAINS`].
 /// 2. **OpenAI-compatible base path** — the path is exactly `/v1` or `/api/v1`
 ///    (trailing slash ignored). This is the canonical OpenAI-style base and is
-///    never an OpenHuman control-plane base. A bare `/v1/chat/completions` is
+///    never an Neppy control-plane base. A bare `/v1/chat/completions` is
 ///    already covered by [`looks_like_local_ai_endpoint`]'s path signal.
 ///
 /// Our own hosted backend short-circuits to `false` so a user who set
@@ -397,7 +397,7 @@ pub fn looks_like_inference_provider_endpoint(url: &str) -> bool {
     false
 }
 
-/// Returns `true` when the URL's host is one of the known OpenHuman backends.
+/// Returns `true` when the URL's host is one of the known Neppy backends.
 ///
 /// Used in [`effective_backend_api_url`] to short-circuit the local-AI check:
 /// a user who set `api_url` to `https://api.tinyhumans.ai/openai/v1/chat/completions`
@@ -410,7 +410,7 @@ fn looks_like_openhuman_backend_endpoint(url: &str) -> bool {
         Ok(p) => {
             tracing::trace!(
                 api_url = %redacted,
-                "[api/config] parsed api_url for OpenHuman backend classification"
+                "[api/config] parsed api_url for Neppy backend classification"
             );
             p
         }
@@ -418,7 +418,7 @@ fn looks_like_openhuman_backend_endpoint(url: &str) -> bool {
             tracing::trace!(
                 api_url = %redacted,
                 error   = %e,
-                "[api/config] api_url parse failed during OpenHuman backend classification"
+                "[api/config] api_url parse failed during Neppy backend classification"
             );
             return false;
         }
@@ -427,7 +427,7 @@ fn looks_like_openhuman_backend_endpoint(url: &str) -> bool {
     let Some(host) = parsed.host_str().map(str::to_ascii_lowercase) else {
         tracing::trace!(
             api_url = %redacted,
-            "[api/config] api_url has no host — not classified as OpenHuman backend"
+            "[api/config] api_url has no host — not classified as Neppy backend"
         );
         return false;
     };
@@ -441,7 +441,7 @@ fn looks_like_openhuman_backend_endpoint(url: &str) -> bool {
         api_url = %redacted,
         host    = %host,
         is_openhuman,
-        "[api/config] OpenHuman backend classification complete"
+        "[api/config] Neppy backend classification complete"
     );
 
     is_openhuman
@@ -1325,7 +1325,7 @@ mod tests {
         assert!(!looks_like_inference_provider_endpoint(
             "https://staging-api.tinyhumans.ai/"
         ));
-        // A custom self-hosted OpenHuman backend (no provider host, no `/v1`
+        // A custom self-hosted Neppy backend (no provider host, no `/v1`
         // base) must keep routing control-plane calls to itself.
         assert!(!looks_like_inference_provider_endpoint(
             "https://my-openhuman.example.com/"

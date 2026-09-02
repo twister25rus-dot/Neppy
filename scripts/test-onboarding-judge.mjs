@@ -349,7 +349,7 @@ function printJudgment(conversation) {
     hasAccountsLink ? 'Link found' : 'No accounts/setup link found'
   );
 
-  // 6. Tone: no "as an AI", no "I'm OpenHuman"
+  // 6. Tone: no "as an AI", no "I'm Neppy"
   const badPhrases = ['as an ai', "i'm openhuman", 'i am openhuman', 'as an artificial'];
   const foundBad = badPhrases.find((p) => lowerText.includes(p));
   check(

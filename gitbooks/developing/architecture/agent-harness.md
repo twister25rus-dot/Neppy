@@ -47,13 +47,13 @@ icon: layer-group
 
 ## TinyAgents crate: features & compatibility
 
-OpenHuman requires `tinyagents = { version = "2.1", features = ["sqlite", "repl"] }`, patched to the vendored git submodule at `vendor/tinyagents` so SDK changes can be tested in-tree before being PR'd upstream (see [`Cargo.toml`](../../../Cargo.toml) — keep the submodule in lockstep with the version requirement). The rationale, so future upgrades don't silently regress it:
+Neppy requires `tinyagents = { version = "2.1", features = ["sqlite", "repl"] }`, patched to the vendored git submodule at `vendor/tinyagents` so SDK changes can be tested in-tree before being PR'd upstream (see [`Cargo.toml`](../../../Cargo.toml) — keep the submodule in lockstep with the version requirement). The rationale, so future upgrades don't silently regress it:
 
-- **Native TinyAgents model interface, OpenHuman-owned product policy.** Every live route is an `Arc<dyn ChatModel<()>>`: TinyAgents OpenAI-compatible clients cover wire-equivalent managed, local, and BYOK routes, while host `ChatModel` implementations cover Claude SDK/Code and Codex-specific transports. OpenHuman still owns credential resolution, OAuth, access gates, endpoint selection, egress disclosure, billing metadata, and error classification.
-- **`sqlite` feature enabled with one native sqlite chain.** OpenHuman's root and Tauri Cargo worlds pin `rusqlite = "=0.40.0"` and patch `rusqlite` / `libsqlite3-sys` locally to avoid the upstream `cfg_select!` build break on the current toolchain. Both worlds resolve to a single `libsqlite3-sys v0.38.0` chain. Durable graph checkpoints still run through [`SqlRunLedgerCheckpointer`](../../../src/openhuman/agent/tinyagents/checkpoint.rs) until the migration re-points those rows to the crate checkpointer.
+- **Native TinyAgents model interface, Neppy-owned product policy.** Every live route is an `Arc<dyn ChatModel<()>>`: TinyAgents OpenAI-compatible clients cover wire-equivalent managed, local, and BYOK routes, while host `ChatModel` implementations cover Claude SDK/Code and Codex-specific transports. Neppy still owns credential resolution, OAuth, access gates, endpoint selection, egress disclosure, billing metadata, and error classification.
+- **`sqlite` feature enabled with one native sqlite chain.** Neppy's root and Tauri Cargo worlds pin `rusqlite = "=0.40.0"` and patch `rusqlite` / `libsqlite3-sys` locally to avoid the upstream `cfg_select!` build break on the current toolchain. Both worlds resolve to a single `libsqlite3-sys v0.38.0` chain. Durable graph checkpoints still run through [`SqlRunLedgerCheckpointer`](../../../src/openhuman/agent/tinyagents/checkpoint.rs) until the migration re-points those rows to the crate checkpointer.
 - **WhatsApp Web storage bridge.** `whatsapp-rust`'s Diesel-backed `sqlite-storage` feature links sqlite separately from rusqlite 0.40, so the optional `whatsapp-web` feature currently builds against `wacore::store::InMemoryBackend` and logs that sessions are not durable. A rusqlite-backed durable WhatsApp store is required before treating Web sessions as persistent again.
-- **`repl` feature enabled for language workflows; `.rag` expressive language unused.** OpenHuman still drives _graphs_ from Rust (`GraphBuilder`), not the declarative `.rag` language. But the `repl` feature (the imperative Rhai `.ragsh` session runtime) is enabled to power the `rhai_workflows` language-workflow tool ([`openhuman::flows::rhai`](../../../src/openhuman/flows/rhai/README.md), see "Language workflows (Rhai)" below).
-- **Ownership map:** model construction → `inference::provider::create_chat_model*`; crate SQLite checkpointer rows not yet adopted → `SqlRunLedgerCheckpointer`; generic detached executor state → `DetachedTaskRegistry`; controller-facing durability → OpenHuman SQL/JSON run ledgers (`running_subagents`, `workflow_runs`, `agent_teams`, `command_center`). The generic harness/graph/middleware/event primitives are used as-is.
+- **`repl` feature enabled for language workflows; `.rag` expressive language unused.** Neppy still drives _graphs_ from Rust (`GraphBuilder`), not the declarative `.rag` language. But the `repl` feature (the imperative Rhai `.ragsh` session runtime) is enabled to power the `rhai_workflows` language-workflow tool ([`openhuman::flows::rhai`](../../../src/openhuman/flows/rhai/README.md), see "Language workflows (Rhai)" below).
+- **Ownership map:** model construction → `inference::provider::create_chat_model*`; crate SQLite checkpointer rows not yet adopted → `SqlRunLedgerCheckpointer`; generic detached executor state → `DetachedTaskRegistry`; controller-facing durability → Neppy SQL/JSON run ledgers (`running_subagents`, `workflow_runs`, `agent_teams`, `command_center`). The generic harness/graph/middleware/event primitives are used as-is.
 
 The agent harness is the runtime that turns a user message (or a webhook fire, or a cron tick) into a complete, tool-using LLM interaction. It owns the tool-call loop, sub-agent dispatch, the trigger-triage pipeline, and the hook surface around them. It does **not** own provider HTTP transport, tool implementations, prompt-section assembly, or memory storage - those are separate domains the harness composes.
 
@@ -123,9 +123,9 @@ The system prompt is **not** rebuilt on subsequent turns. Even cosmetic byte cha
 
 ### AGENTS.md project instructions
 
-Alongside identity/soul/profile/memory, the system prompt pulls in **AGENTS.md** instruction files — OpenHuman's analog of Claude Code's `CLAUDE.md` / Codex's `AGENTS.md`. Two layers are loaded **once**, at system-prompt build time (never re-read per turn, so the frozen-prefix / KV-cache contract holds):
+Alongside identity/soul/profile/memory, the system prompt pulls in **AGENTS.md** instruction files — Neppy's analog of Claude Code's `CLAUDE.md` / Codex's `AGENTS.md`. Two layers are loaded **once**, at system-prompt build time (never re-read per turn, so the frozen-prefix / KV-cache contract holds):
 
-- **Global** — `<workspace_dir>/AGENTS.md`, the user's OpenHuman workspace (where `SOUL.md` / `USER.md` live). Applies to every run.
+- **Global** — `<workspace_dir>/AGENTS.md`, the user's Neppy workspace (where `SOUL.md` / `USER.md` live). Applies to every run.
 - **Project** — `<action_dir>/AGENTS.md`, the folder the agent is operating in. For sub-agent runs with a git-worktree override (`SubagentRunOptions.worktree_action_dir`), that override dir is the project layer instead.
 
 The global layer renders first, the project layer second (project instructions layered after, taking precedence on conflict), under a `## Project instructions (AGENTS.md)` heading. When the two dirs resolve to the same path the file is loaded **once** (deduped). Missing / unreadable / empty files are silently skipped, and each layer is capped at `BOOTSTRAP_MAX_CHARS` (~20 000 chars) with a `[... truncated]` marker so a large file can't crowd the prompt.
@@ -151,7 +151,7 @@ loop {
 
 Every iteration emits a real-time `AgentProgress` event so the UI can render token-by-token streaming, "calling tool X" status, and per-iteration cost updates.
 
-**One engine, three entry points.** The loop lives in one place (the tinyagents `AgentHarness`, entered via `run_turn_via_tinyagents_shared` in `src/openhuman/agent/tinyagents/mod.rs`) and every caller drives it: the chat turn (`harness/session/turn/core.rs` → `session/turn/graph.rs`), the channel/CLI bus turn (`harness/graph.rs`), and spawned sub-agents (`harness/subagent_runner/ops/graph.rs`). What varies per caller is supplied through the adapter seam: OpenHuman's provider wrapped as a `ChatModel` (`tinyagents/model.rs`), tools wrapped as tinyagents `Tool`s (`tinyagents/tools.rs`), an event bridge that projects harness `AgentEvent`s into `AgentProgress` + cost telemetry (`tinyagents/observability.rs`), `RunPolicy::unknown_tool` for hallucinated tool recovery, and a named middleware stack (`tinyagents/middleware.rs`) carrying the OpenHuman cross-cuts: approval/security gating (`ApprovalSecurityMiddleware`), tool policy and CLI/RPC-only denial (`ToolPolicyMiddleware`, `CliRpcOnlyMiddleware`), malformed-argument recovery (`ArgRecoveryMiddleware`), cost budget pre-checks (`CostBudgetMiddleware`), the repeated-tool-failure circuit breaker (`RepeatedToolFailureMiddleware`), and context trimming/compression. Policy stop hooks fire through `StopHookMiddleware` (`tinyagents/stop_hooks.rs`). The surviving OpenHuman-owned seams, `CheckpointStrategy` (error vs. summarize at the model-call cap) and `TurnProgress`, live in `harness/engine/`. Because all three entry points assemble the same harness, they can't drift.
+**One engine, three entry points.** The loop lives in one place (the tinyagents `AgentHarness`, entered via `run_turn_via_tinyagents_shared` in `src/openhuman/agent/tinyagents/mod.rs`) and every caller drives it: the chat turn (`harness/session/turn/core.rs` → `session/turn/graph.rs`), the channel/CLI bus turn (`harness/graph.rs`), and spawned sub-agents (`harness/subagent_runner/ops/graph.rs`). What varies per caller is supplied through the adapter seam: Neppy's provider wrapped as a `ChatModel` (`tinyagents/model.rs`), tools wrapped as tinyagents `Tool`s (`tinyagents/tools.rs`), an event bridge that projects harness `AgentEvent`s into `AgentProgress` + cost telemetry (`tinyagents/observability.rs`), `RunPolicy::unknown_tool` for hallucinated tool recovery, and a named middleware stack (`tinyagents/middleware.rs`) carrying the Neppy cross-cuts: approval/security gating (`ApprovalSecurityMiddleware`), tool policy and CLI/RPC-only denial (`ToolPolicyMiddleware`, `CliRpcOnlyMiddleware`), malformed-argument recovery (`ArgRecoveryMiddleware`), cost budget pre-checks (`CostBudgetMiddleware`), the repeated-tool-failure circuit breaker (`RepeatedToolFailureMiddleware`), and context trimming/compression. Policy stop hooks fire through `StopHookMiddleware` (`tinyagents/stop_hooks.rs`). The surviving Neppy-owned seams, `CheckpointStrategy` (error vs. summarize at the model-call cap) and `TurnProgress`, live in `harness/engine/`. Because all three entry points assemble the same harness, they can't drift.
 
 ### Tool dispatch and tool-call dialects
 
@@ -217,7 +217,7 @@ Writes log `[artifact] wrote worker artifact under action_dir`; each path a hand
 
 ### TokenJuice - content-aware tool-output compaction (Stage 1a)
 
-Before a fresh tool result enters history (and ahead of the byte-budget backstop), it passes through the **TokenJuice content router** in the vendored TinyJuice crate (`vendor/tinyjuice`), with OpenHuman adapters in `src/openhuman/inference/tokenjuice/`. Inspired by Headroom, the router _detects the content kind_ (JSON, code, log, search, diff, HTML, plain text) from the bytes and/or a hint derived from the tool name and arguments, then dispatches to a specialised compressor:
+Before a fresh tool result enters history (and ahead of the byte-budget backstop), it passes through the **TokenJuice content router** in the vendored TinyJuice crate (`vendor/tinyjuice`), with Neppy adapters in `src/openhuman/inference/tokenjuice/`. Inspired by Headroom, the router _detects the content kind_ (JSON, code, log, search, diff, HTML, plain text) from the bytes and/or a hint derived from the tool name and arguments, then dispatches to a specialised compressor:
 
 - **JSON** → SmartCrusher: array-of-objects → table (each key once), preserving rows that carry errors or numeric outliers.
 - **Code** → tree-sitter (Rust/TS/JS/Python) signature keeper that collapses function bodies; brace-depth heuristic fallback.
@@ -235,7 +235,7 @@ The `tool_maker` archetype exists for writing polyfill scripts and small helper 
 
 ## Sub-agents - the orchestrator pattern
 
-OpenHuman is **multi-agent**. The agent the user is chatting with is the **Master Agent** (stable internal id: `orchestrator`) - a capable default agent that answers and completes ordinary work directly, including the inspect → edit → verify coding loop. It spawns specialist sub-agents when parallelism, deeper reasoning, or a specialised capability materially helps.
+Neppy is **multi-agent**. The agent the user is chatting with is the **Master Agent** (stable internal id: `orchestrator`) - a capable default agent that answers and completes ordinary work directly, including the inspect → edit → verify coding loop. It spawns specialist sub-agents when parallelism, deeper reasoning, or a specialised capability materially helps.
 
 ### Why multi-agent
 
@@ -400,7 +400,7 @@ Interrupts are user-driven; stop hooks are policy-driven. Both enter the same ha
 
 ## Cost accounting
 
-Every provider response carries a `UsageInfo` block - input tokens, output tokens, cached input tokens, and an authoritative `charged_amount_usd` populated by the OpenHuman backend. `TurnCost` sums those across every provider call inside one turn so the harness can:
+Every provider response carries a `UsageInfo` block - input tokens, output tokens, cached input tokens, and an authoritative `charged_amount_usd` populated by the Neppy backend. `TurnCost` sums those across every provider call inside one turn so the harness can:
 
 - Emit per-iteration cost telemetry over the progress channel.
 - Feed the budget stop hook so a runaway turn cuts itself off mid-loop.
@@ -430,14 +430,14 @@ The harness shell lives under `src/openhuman/agent/`, with the tinyagents adapte
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `harness/session/turn/core.rs`           | `Agent::turn` - the lifecycle described above; routes into the tinyagents runner via `session/turn/graph.rs`. |
 | `../tinyagents/mod.rs`                   | `run_turn_via_tinyagents_shared` - the shared tinyagents harness assembly (the live loop).                    |
-| `../tinyagents/middleware.rs`            | The named OpenHuman middleware stack (approval/security, tool policy, recovery, budgets, circuit breaker).    |
+| `../tinyagents/middleware.rs`            | The named Neppy middleware stack (approval/security, tool policy, recovery, budgets, circuit breaker).    |
 | `harness/graph.rs`                       | The channel/CLI bus turn route into the tinyagents runner.                                                    |
 | `harness/subagent_runner/`               | `run_subagent`, history replay, fork-mode, oversized-result handoff; `ops/graph.rs` is its tinyagents route.  |
 | `agent_orchestration/subagent_sessions/` | Durable reusable sub-agent identity, compatibility matching, persisted status/history.                        |
 | `harness/definition.rs`                  | `AgentDefinition` - what an archetype declares.                                                               |
 | `harness/tool_filter.rs`                 | Toolkit-action ranking for integrations sub-agents.                                                           |
 | `../tinyagents/payload_summarizer.rs`    | Oversized-tool-result detour.                                                                                 |
-| `harness/engine/`                        | Surviving OpenHuman seams: `CheckpointStrategy`, `TurnProgress`.                                              |
+| `harness/engine/`                        | Surviving Neppy seams: `CheckpointStrategy`, `TurnProgress`.                                              |
 | `dispatcher.rs`                          | Tool-call dialect abstraction (persisted-transcript compatibility).                                           |
 | `triage/`                                | External-trigger classification + escalation.                                                                 |
 | `../agent_registry/agents/`              | Built-in archetypes - one subdirectory per agent.                                                             |
@@ -505,7 +505,7 @@ Every agent turn (chat via `harness/session/turn/core.rs`, channel/CLI via `harn
 | `mod.rs` / `model.rs` / `tools.rs` / `convert.rs` | `RunPolicy` / `ChatModel` / `Tool` / message adapters (incl. unknown-tool policy and out-of-band reasoning forwarding).                                                                                                                                                        |
 | `observability.rs`                                | Harness `AgentEvent` → `AgentProgress` + cost; `GraphTracingSink` for graph events.                                                                                                                                                                                            |
 | `orchestration.rs`                                | Re-exported `graph::orchestration` task-store types; map-reduce fanout now uses the TinyAgents SDK surface directly.                                                                                                                                                           |
-| `checkpoint.rs`                                   | `SqlRunLedgerCheckpointer`: a `Checkpointer` over openhuman's SQLite (`graph_checkpoints` table). TinyAgents 2.1 ships `SqliteCheckpointer`; OpenHuman keeps this adapter until existing checkpoint rows are migrated or expired and schema ownership is settled.              |
+| `checkpoint.rs`                                   | `SqlRunLedgerCheckpointer`: a `Checkpointer` over openhuman's SQLite (`graph_checkpoints` table). TinyAgents 2.1 ships `SqliteCheckpointer`; Neppy keeps this adapter until existing checkpoint rows are migrated or expired and schema ownership is settled.              |
 | `delegation.rs`                                   | The durable `plan → execute ⇄ review → finalize` delegation graph (production worker wired in `agent_orchestration::delegation`).                                                                                                                                              |
 
 **Orchestration on graphs** (`src/openhuman/agent/orchestration/`):
@@ -513,14 +513,14 @@ Every agent turn (chat via `harness/session/turn/core.rs`, channel/CLI via `harn
 - **Workflow phase DAG** (`workflow_runs/engine.rs`) runs on a `dispatch ⇄ run_phase → done` conditional-routing graph; each phase fans its agents out via `graph::parallel::map_reduce`. The durable `workflow_runs` row stays the source of truth (controllers + resume read it).
 - **Team member runtime** (`agent_teams/graph.rs`) is a conditional-routing graph (`execute → complete|fail → done`).
 - **Multi-stage delegation** (`agent_orchestration::delegation` + the `delegate` tool) runs `delegation.rs`, checkpointed to the session DB.
-- **Detached sub-agents** (`running_subagents.rs`) use TinyAgents `DetachedTaskRegistry` for ownership-aware snapshots, wait/timeout, steering lookup, cooperative cancellation, hard abort, and terminal cleanup. OpenHuman retains durable task-store projection, product/session metadata, RPC and delivery semantics, and the `RunQueue` compatibility fallback.
+- **Detached sub-agents** (`running_subagents.rs`) use TinyAgents `DetachedTaskRegistry` for ownership-aware snapshots, wait/timeout, steering lookup, cooperative cancellation, hard abort, and terminal cleanup. Neppy retains durable task-store projection, product/session metadata, RPC and delivery semantics, and the `RunQueue` compatibility fallback.
 
 **Deliberately kept off the crate's primitives** (documented engineering decisions, not gaps):
 
 - **Sub-agent build pipeline** (`subagent_runner/`) stays openhuman-owned: definition resolution, archetype tool filtering, provider resolution, narrow prompt building, memory context, worker-thread mirror, handoff cache, checkpoint/resume. Sub-agents already _execute_ on the harness; the crate's generic `SubAgentTool` would discard this pipeline for marginal crate-native depth tracking (openhuman's `spawn_depth_context` already bounds recursion).
-- **Durable run ledgers** (`workflow_runs`, `agent_teams`, `command_center`, `subagent_sessions`) stay on openhuman SQLite/JSON until their controller projections and restart semantics are mapped onto TinyAgents task/status/journal records. The `agent_teams` race-safe SQL compare-and-swap task claim remains OpenHuman-owned.
+- **Durable run ledgers** (`workflow_runs`, `agent_teams`, `command_center`, `subagent_sessions`) stay on openhuman SQLite/JSON until their controller projections and restart semantics are mapped onto TinyAgents task/status/journal records. The `agent_teams` race-safe SQL compare-and-swap task claim remains Neppy-owned.
 
-> **Note:** TinyAgents 2.1 ships harness store/cache/session primitives (`harness::store` with JSONL append stores, `harness::cache`, `harness::subagent`, lineage-aware status), graph task stores, the detached runtime registry, and conformance contracts. The session shell and product-specific sub-agent build/delivery pipeline remain OpenHuman-owned.
+> **Note:** TinyAgents 2.1 ships harness store/cache/session primitives (`harness::store` with JSONL append stores, `harness::cache`, `harness::subagent`, lineage-aware status), graph task stores, the detached runtime registry, and conformance contracts. The session shell and product-specific sub-agent build/delivery pipeline remain Neppy-owned.
 
 ## Reliability: breakers, handback, and classified failures
 
@@ -550,7 +550,7 @@ The remaining store cutover runs on **shadow scaffolding** (product behavior unc
 
 ## Workload routes and the burst tier
 
-`tinyagents/routes.rs` is the declarative TinyAgents `ModelRouter` for the OpenHuman tiers `chat`, `reasoning`, `agentic`, `coding`, `burst`, `summarization`, and `vision`. It owns fallback chains and capability gates; `inference::provider::factory` resolves each selected tier to its configured native `ChatModel`. The **`burst-v1`** tier serves low-context, high-fanout workers on a fast/cheap model.
+`tinyagents/routes.rs` is the declarative TinyAgents `ModelRouter` for the Neppy tiers `chat`, `reasoning`, `agentic`, `coding`, `burst`, `summarization`, and `vision`. It owns fallback chains and capability gates; `inference::provider::factory` resolves each selected tier to its configured native `ChatModel`. The **`burst-v1`** tier serves low-context, high-fanout workers on a fast/cheap model.
 
 ## See also
 

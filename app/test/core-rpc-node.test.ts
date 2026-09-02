@@ -16,7 +16,7 @@ describe('formatRpcCallFailure', () => {
   });
 });
 
-describe('callOpenhumanRpcNode', () => {
+describe('callNeppyRpcNode', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.resetModules();
@@ -52,14 +52,14 @@ describe('callOpenhumanRpcNode', () => {
       })
     );
 
-    const { callOpenhumanRpcNode } = await import('./e2e/helpers/core-rpc-node');
-    await expect(callOpenhumanRpcNode('openhuman.first_call')).resolves.toMatchObject({
+    const { callNeppyRpcNode } = await import('./e2e/helpers/core-rpc-node');
+    await expect(callNeppyRpcNode('openhuman.first_call')).resolves.toMatchObject({
       ok: true,
       result: 'first',
     });
 
     firstListenerAlive = false;
-    await expect(callOpenhumanRpcNode('openhuman.after_reset')).resolves.toMatchObject({
+    await expect(callNeppyRpcNode('openhuman.after_reset')).resolves.toMatchObject({
       ok: true,
       result: 'replacement',
     });

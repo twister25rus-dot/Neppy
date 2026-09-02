@@ -1,5 +1,5 @@
 //! Host capability: turns the crate's coarse [`ProgressEvent`] stream into
-//! OpenHuman's richer [`AgentProgress`] events.
+//! Neppy's richer [`AgentProgress`] events.
 //!
 //! Adapts `crate::openhuman::agent::progress` (the `AgentProgress` UI contract)
 //! for `tinyagents::harness::host::ProgressSink`. This is Phase 4 of
@@ -54,7 +54,7 @@
 //!   turn that requested two tools in parallel as three iterations. Still a
 //!   *lower bound* — two sequential tool batches with no tokens between them are
 //!   indistinguishable from one parallel batch. See the `TODO(phase4)` below.
-//! * **One sink may serve several runs.** `Arc<OpenHumanProgressSink>` is
+//! * **One sink may serve several runs.** `Arc<NeppyProgressSink>` is
 //!   explicitly shared across concurrent sub-runs, so all counters are keyed by
 //!   [`RunId`] and only the **first run seen** projects top-level `TurnStarted` /
 //!   `TurnCompleted`. A shared counter would let a child's tool calls renumber
@@ -92,7 +92,7 @@
 //!   failure and forwards nothing.
 //! * **`ProgressEvent::Finished { usage }` is not a cost event.**
 //!   `AgentProgress::TurnCostUpdated` requires a model id and a USD total that
-//!   the crate event does not carry, and OpenHuman's authoritative cost figures
+//!   the crate event does not carry, and Neppy's authoritative cost figures
 //!   come from the inference layer's charged amounts. Fabricating a
 //!   `model: ""` / `total_usd: 0.0` update would silently under-report in the
 //!   chat cost footer, so the usage is logged and only `TurnCompleted` is
@@ -153,7 +153,7 @@ struct OpenToolCall {
     iteration: u32,
 }
 
-/// Forwards crate progress into an OpenHuman [`AgentProgress`] channel.
+/// Forwards crate progress into an Neppy [`AgentProgress`] channel.
 ///
 /// Construct one per turn with the same sender that would otherwise be handed
 /// to `Agent::set_on_progress`, so the existing
@@ -161,10 +161,10 @@ struct OpenToolCall {
 /// regardless of which runtime produced it.
 ///
 /// Cheap to clone-by-`Arc`: the crate's blanket
-/// `impl ProgressSink for Arc<T>` makes `Arc<OpenHumanProgressSink>` usable
+/// `impl ProgressSink for Arc<T>` makes `Arc<NeppyProgressSink>` usable
 /// wherever a sink is wanted, which is how a sink shared by concurrent
 /// sub-runs is passed around.
-pub struct OpenHumanProgressSink {
+pub struct NeppyProgressSink {
     /// The per-request progress channel the turn loop's consumer owns.
     ///
     /// Bounded by whoever created it. Backpressure is handled by dropping, not
@@ -174,7 +174,7 @@ pub struct OpenHumanProgressSink {
     /// Per-run progress state, keyed by [`RunId`].
     ///
     /// Not a single counter, because the type doc explicitly supports one
-    /// `Arc<OpenHumanProgressSink>` shared by concurrent sub-runs. With shared
+    /// `Arc<NeppyProgressSink>` shared by concurrent sub-runs. With shared
     /// state, a child's `Started` would reset the parent's iteration count and
     /// a child's tool calls would advance it — so the parent's own events would
     /// carry a number describing somebody else's work.
@@ -197,7 +197,7 @@ pub struct OpenHumanProgressSink {
     dropped: AtomicU64,
 }
 
-impl OpenHumanProgressSink {
+impl NeppyProgressSink {
     /// Wraps a per-request `AgentProgress` sender.
     pub fn new(tx: Sender<AgentProgress>) -> Self {
         Self {
@@ -365,11 +365,11 @@ impl OpenHumanProgressSink {
 }
 
 #[async_trait]
-impl ProgressSink for OpenHumanProgressSink {
+impl ProgressSink for NeppyProgressSink {
     /// Projects one [`ProgressEvent`] onto zero or one [`AgentProgress`]
     /// events and forwards it.
     ///
-    /// Zero, for the two variants OpenHuman models elsewhere — see the module
+    /// Zero, for the two variants Neppy models elsewhere — see the module
     /// docs for `Error` and for the cost half of `Finished`. Never awaits
     /// anything that can block; the body is a counter bump and a `try_send`.
     async fn emit(&self, ev: ProgressEvent) {
@@ -614,9 +614,9 @@ mod tests {
         }
     }
 
-    fn sink(capacity: usize) -> (OpenHumanProgressSink, mpsc::Receiver<AgentProgress>) {
+    fn sink(capacity: usize) -> (NeppyProgressSink, mpsc::Receiver<AgentProgress>) {
         let (tx, rx) = mpsc::channel(capacity);
-        (OpenHumanProgressSink::new(tx), rx)
+        (NeppyProgressSink::new(tx), rx)
     }
 
     /// Drains and returns the first `ToolCallCompleted`, panicking if none
@@ -1074,7 +1074,7 @@ mod tests {
     #[tokio::test]
     async fn works_through_an_arc_trait_object() {
         let (tx, mut rx) = mpsc::channel(8);
-        let dynamic: Arc<dyn ProgressSink> = Arc::new(OpenHumanProgressSink::new(tx));
+        let dynamic: Arc<dyn ProgressSink> = Arc::new(NeppyProgressSink::new(tx));
         dynamic.emit(started()).await;
         assert!(matches!(
             rx.try_recv().expect("event forwarded"),

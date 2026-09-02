@@ -1,12 +1,12 @@
-//! Tool-call parsing — OpenHuman's adapter over
+//! Tool-call parsing — Neppy's adapter over
 //! [`tinyagents::harness::tool_calling`].
 //!
 //! The parsers themselves moved to the crate: `<tool_call>` tags in their
 //! several spellings, fenced blocks, bare JSON, Anthropic-style `<invoke>` XML,
 //! the GLM grammar, and the p-format bodies. Nothing about recovering a tool
-//! call from model text is OpenHuman-specific, so none of it stayed.
+//! call from model text is Neppy-specific, so none of it stayed.
 //!
-//! What is left below speaks OpenHuman's own wire vocabulary — its
+//! What is left below speaks Neppy's own wire vocabulary — its
 //! `inference::provider::ToolCall`, its native-history JSON, its OpenAI
 //! function-calling payload. All of it is `#[cfg(test)]`: these are the
 //! fixtures its own tests assert against, and they never compiled into a

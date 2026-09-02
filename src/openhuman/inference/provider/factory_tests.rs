@@ -44,9 +44,9 @@ fn oh_entry(id: &str) -> CloudProviderCreds {
     CloudProviderCreds {
         id: id.to_string(),
         slug: "openhuman".to_string(),
-        label: "OpenHuman".to_string(),
+        label: "Neppy".to_string(),
         endpoint: "https://api.openhuman.ai/v1".to_string(),
-        auth_style: AuthStyle::OpenhumanJwt,
+        auth_style: AuthStyle::NeppyJwt,
         ..Default::default()
     }
 }
@@ -668,7 +668,7 @@ fn local_only_blocks_external_cloud_slug() {
 fn local_only_blocks_managed_backend() {
     use crate::openhuman::config::PrivacyMode;
     let v = local_only_violation(PrivacyMode::LocalOnly, PROVIDER_OPENHUMAN);
-    assert_eq!(v.as_deref(), Some("OpenHuman (managed cloud)"));
+    assert_eq!(v.as_deref(), Some("Neppy (managed cloud)"));
 }
 
 #[test]
@@ -893,15 +893,15 @@ async fn one_shot_chat_models_preserve_factory_temperature_as_request_default() 
 }
 
 // ── Motion B (#4727): managed-backend crate-native routing ──────────────────
-// `create_chat_model` must route the managed OpenHuman backend through the
-// crate-native `OpenHumanBackendModel`, whose concrete `managed` profile
+// `create_chat_model` must route the managed Neppy backend through the
+// crate-native `NeppyBackendModel`, whose concrete `managed` profile
 // advertises the capabilities that routing previously inferred through the
 // provider adapter.
 
 #[test]
 fn resolves_to_managed_backend_for_default_config_but_not_for_local() {
     // A default config has no BYOK/cloud providers, so every chat-tier role
-    // resolves to the managed OpenHuman backend.
+    // resolves to the managed Neppy backend.
     let managed = Config::default();
     assert!(resolves_to_managed_backend("chat", &managed));
     assert!(resolves_to_managed_backend("reasoning", &managed));
@@ -1076,7 +1076,7 @@ fn configured_openhuman_jwt_slug_routes_to_managed_chat_model() {
     config.chat_provider = Some("openhuman:reasoning-v1".to_string());
 
     let (model, model_id) = try_create_cloud_slug_chat_model("chat", &config)
-        .expect("configured OpenhumanJwt slug should be recognized")
+        .expect("configured NeppyJwt slug should be recognized")
         .expect("managed model should build");
 
     assert_eq!(model_id, "reasoning-v1");
@@ -1085,7 +1085,7 @@ fn configured_openhuman_jwt_slug_routes_to_managed_chat_model() {
             .profile()
             .and_then(|profile| profile.provider.as_deref()),
         Some("managed"),
-        "OpenhumanJwt must use the crate-native managed backend model"
+        "NeppyJwt must use the crate-native managed backend model"
     );
 }
 
@@ -1104,7 +1104,7 @@ async fn openhuman_jwt_slug_discloses_pinned_model() {
     config.cloud_providers.push(oh_entry("p_oh"));
     let provider = format!("openhuman:{marker}");
     let _ = try_create_cloud_slug_chat_model_from_string("chat", &provider, &config)
-        .expect("configured OpenhumanJwt slug should be recognized")
+        .expect("configured NeppyJwt slug should be recognized")
         .expect("managed model should build");
 
     let sentinel = "egress-jwt-pinned-sentinel-end";
@@ -1225,7 +1225,7 @@ fn openhuman_jwt_slug_preserves_forced_text_mode() {
         &config,
         false,
     )
-    .expect("configured OpenhumanJwt slug should be recognized")
+    .expect("configured NeppyJwt slug should be recognized")
     .expect("managed model should build");
 
     let profile = model
@@ -1244,7 +1244,7 @@ fn openhuman_jwt_slug_without_model_preserves_managed_role_tier() {
 
     let (_model, model_id) =
         try_create_cloud_slug_chat_model_from_string("summarization", "openhuman:", &config)
-            .expect("configured OpenhumanJwt slug should be recognized")
+            .expect("configured NeppyJwt slug should be recognized")
             .expect("managed model should build");
 
     assert_eq!(model_id, crate::openhuman::config::MODEL_SUMMARIZATION_V1);

@@ -1,6 +1,6 @@
 [[permission]]
 identifier = "allow-workspace-files"
-description = "Allow opening, revealing, and previewing files resolved inside the active OpenHuman workspace"
+description = "Allow opening, revealing, and previewing files resolved inside the active Neppy workspace"
 
 [permission.commands]
 

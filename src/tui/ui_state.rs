@@ -123,7 +123,7 @@ impl UiState {
                 ConfigItem::new(
                     ConfigKey::ApiUrl,
                     "Backend URL",
-                    "OpenHuman auth and billing backend",
+                    "Neppy auth and billing backend",
                 ),
                 ConfigItem::new(
                     ConfigKey::InferenceUrl,

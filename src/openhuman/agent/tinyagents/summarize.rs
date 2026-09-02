@@ -14,7 +14,7 @@
 //! and a context-window-aware [`SummarizationPolicy`]. The policy only fires once
 //! the running token estimate crosses [`SUMMARIZE_THRESHOLD_FRACTION`] of the
 //! **current model's** context window — so the trigger is keyed to "whatever
-//! model we are using", mirroring the historical OpenHuman compaction threshold
+//! model we are using", mirroring the historical Neppy compaction threshold
 //! (0.90).
 //!
 //! Layering: a graph installs the compression middleware **before** the
@@ -38,7 +38,7 @@ use tinyagents::harness::model::{ChatModel, ModelRequest};
 
 /// Fraction of the model's context window at which summarization fires.
 ///
-/// Mirrors the old OpenHuman context guard soft threshold (0.90) so the
+/// Mirrors the old Neppy context guard soft threshold (0.90) so the
 /// tinyagents path compacts at the same point the legacy `ContextManager` did.
 const SUMMARIZE_THRESHOLD_FRACTION: f64 = 0.90;
 

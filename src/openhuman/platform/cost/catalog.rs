@@ -16,7 +16,7 @@
 //! - power the fallback estimate in
 //!   [`crate::openhuman::agent::cost::lookup_pricing`] when a backend doesn't
 //!   echo an authoritative `charged_amount_usd`.
-//! - project OpenHuman's static rows into TinyAgents catalog entries so later
+//! - project Neppy's static rows into TinyAgents catalog entries so later
 //!   phases can hydrate crate-native model profiles from the same pricing and
 //!   window source instead of carrying a second table.
 //!
@@ -453,9 +453,9 @@ fn per_token(rate_per_mtok: f64) -> Option<f64> {
     (rate_per_mtok > 0.0).then_some(rate_per_mtok / 1_000_000.0)
 }
 
-/// Project one OpenHuman catalog row into a TinyAgents model-catalog entry.
+/// Project one Neppy catalog row into a TinyAgents model-catalog entry.
 ///
-/// This is intentionally a pricing/window projection only. OpenHuman still
+/// This is intentionally a pricing/window projection only. Neppy still
 /// derives live runtime capability flags (tools, vision, streaming) from the
 /// provider adapter at construction time, because the static cost catalog does
 /// not yet encode those fields authoritatively for every provider/model.
@@ -569,8 +569,8 @@ fn upsert_catalog_entry(
 ///
 /// 1. **Crate seed** — `tinyagents::registry::ModelCatalog::seed()`, the crate's
 ///    checked-in offline catalog. This is the base/fallback set.
-/// 2. **OpenHuman static rows** — [`KNOWN_MODEL_PRICING`], projected via
-///    [`tinyagents_catalog_entry`]. OpenHuman's published rates/windows are
+/// 2. **Neppy static rows** — [`KNOWN_MODEL_PRICING`], projected via
+///    [`tinyagents_catalog_entry`]. Neppy's published rates/windows are
 ///    authoritative for the models the product routes to, so they overwrite any
 ///    crate-seed row for the same model. This is what keeps cost numbers
 ///    identical: the priced rows are the exact same `KNOWN_MODEL_PRICING` values
@@ -608,7 +608,7 @@ pub fn unified_model_catalog(
         }
     };
 
-    // 2. Overlay OpenHuman authoritative rates/windows (OpenHuman wins).
+    // 2. Overlay Neppy authoritative rates/windows (Neppy wins).
     for price in KNOWN_MODEL_PRICING {
         upsert_catalog_entry(&mut models, tinyagents_catalog_entry(price));
     }
@@ -632,7 +632,7 @@ pub fn unified_model_catalog(
         }
     }
 
-    // Record OpenHuman's own provenance alongside the crate seed's sources.
+    // Record Neppy's own provenance alongside the crate seed's sources.
     sources.push(tinyagents::registry::ModelCatalogSource {
         name: TINYAGENTS_CATALOG_SOURCE.to_string(),
         url: "repo:src/openhuman/platform/cost/catalog.rs".to_string(),
@@ -646,7 +646,7 @@ pub fn unified_model_catalog(
         currency: "USD".to_string(),
         unit: "token".to_string(),
         description: Some(
-            "Unified OpenHuman model catalog: crate seed overlaid with OpenHuman cost/window rows and runtime-discovered local models.".to_string(),
+            "Unified Neppy model catalog: crate seed overlaid with Neppy cost/window rows and runtime-discovered local models.".to_string(),
         ),
         sources,
         models,
@@ -791,9 +791,9 @@ mod tests {
         assert_eq!(snapshot.schema_version, 1);
         assert_eq!(snapshot.currency, "USD");
         assert_eq!(snapshot.unit, "token");
-        // Unified snapshot is a superset (crate seed + OpenHuman overlay), so it
-        // is at least as large as the OpenHuman table and carries every
-        // OpenHuman row with its authoritative pricing/window.
+        // Unified snapshot is a superset (crate seed + Neppy overlay), so it
+        // is at least as large as the Neppy table and carries every
+        // Neppy row with its authoritative pricing/window.
         assert!(snapshot.models.len() >= KNOWN_MODEL_PRICING.len());
         for price in KNOWN_MODEL_PRICING {
             let entry = snapshot
@@ -810,7 +810,7 @@ mod tests {
                 Some(price.input_per_mtok_usd / 1_000_000.0)
             );
         }
-        // OpenHuman provenance is recorded alongside any crate-seed sources.
+        // Neppy provenance is recorded alongside any crate-seed sources.
         assert!(snapshot
             .sources
             .iter()

@@ -32,11 +32,11 @@ release_parsed=$(resolve_release_asset_metadata "$RELEASE_FIXTURE" "linux" "x86_
 release_name=$(echo "$release_parsed" | sed -n '2p')
 release_url=$(echo "$release_parsed" | sed -n '3p')
 release_digest=$(echo "$release_parsed" | sed -n '4p')
-if [[ "$release_name" != "OpenHuman_0.0.0-test_amd64.deb" ]]; then
+if [[ "$release_name" != "Neppy_0.0.0-test_amd64.deb" ]]; then
   echo "FAIL: Debian/Ubuntu linux x86_64 should prefer .deb, got $release_name"
   exit 1
 fi
-if [[ "$release_url" != "https://example.invalid/OpenHuman_0.0.0-test_amd64.deb" ]]; then
+if [[ "$release_url" != "https://example.invalid/Neppy_0.0.0-test_amd64.deb" ]]; then
   echo "FAIL: expected .deb URL, got $release_url"
   exit 1
 fi
@@ -47,14 +47,14 @@ fi
 
 release_arm64_parsed=$(resolve_release_asset_metadata "$RELEASE_FIXTURE" "linux" "aarch64" "deb")
 release_arm64_name=$(echo "$release_arm64_parsed" | sed -n '2p')
-if [[ "$release_arm64_name" != "OpenHuman_0.0.0-test_arm64.deb" ]]; then
+if [[ "$release_arm64_name" != "Neppy_0.0.0-test_arm64.deb" ]]; then
   echo "FAIL: Debian/Ubuntu linux aarch64 should prefer .deb, got $release_arm64_name"
   exit 1
 fi
 
 release_appimage_parsed=$(resolve_release_asset_metadata "$RELEASE_FIXTURE" "linux" "x86_64" "appimage")
 release_appimage_name=$(echo "$release_appimage_parsed" | sed -n '2p')
-if [[ "$release_appimage_name" != "OpenHuman_0.0.0-test_amd64.AppImage" ]]; then
+if [[ "$release_appimage_name" != "Neppy_0.0.0-test_amd64.AppImage" ]]; then
   echo "FAIL: AppImage linux x86_64 should still resolve AppImage, got $release_appimage_name"
   exit 1
 fi
@@ -69,8 +69,8 @@ fi
   "tag_name": "v0.0.0-test",
   "assets": [
     {
-      "name": "OpenHuman_0.0.0-test_amd64.AppImage",
-      "browser_download_url": "https://example.invalid/OpenHuman_0.0.0-test_amd64.AppImage",
+      "name": "Neppy_0.0.0-test_amd64.AppImage",
+      "browser_download_url": "https://example.invalid/Neppy_0.0.0-test_amd64.AppImage",
       "digest": "sha256:appimage-amd64"
     }
   ]
@@ -83,7 +83,7 @@ JSON
   "version": "0.0.0-test",
   "platforms": {
     "linux-x86_64": {
-      "url": "https://example.invalid/OpenHuman_0.0.0-test_amd64.AppImage",
+      "url": "https://example.invalid/Neppy_0.0.0-test_amd64.AppImage",
       "signature": ""
     }
   }
@@ -179,8 +179,8 @@ fi
   trap 'rm -rf "$HOME"' EXIT
   OS=linux
   ARCH=x86_64
-  ASSET_NAME="OpenHuman_0.0.0-test_amd64.deb"
-  DOWNLOAD_PATH="/tmp/OpenHuman_0.0.0-test_amd64.deb"
+  ASSET_NAME="Neppy_0.0.0-test_amd64.deb"
+  DOWNLOAD_PATH="/tmp/Neppy_0.0.0-test_amd64.deb"
   DRY_RUN=true
   install_output="$(install_linux)"
   if [[ "$install_output" != *"apt-get install -y --no-install-recommends ${DOWNLOAD_PATH}"* ]]; then
@@ -220,11 +220,11 @@ PY
 {
   "version": "0.0.0-test",
   "platforms": {
-    "darwin-aarch64": {"url": "https://example.invalid/OpenHuman_0.0.0-test_aarch64.app.tar.gz"},
-    "darwin-x86_64": {"url": "https://example.invalid/OpenHuman_0.0.0-test_x86_64-apple-darwin.app.tar.gz"},
-    "linux-x86_64": {"url": "https://example.invalid/OpenHuman_0.0.0-test_amd64.AppImage"},
-    "linux-aarch64": {"url": "https://example.invalid/OpenHuman_0.0.0-test_aarch64.AppImage"},
-    "windows-x86_64": {"url": "https://example.invalid/OpenHuman_0.0.0-test_x64.msi"}
+    "darwin-aarch64": {"url": "https://example.invalid/Neppy_0.0.0-test_aarch64.app.tar.gz"},
+    "darwin-x86_64": {"url": "https://example.invalid/Neppy_0.0.0-test_x86_64-apple-darwin.app.tar.gz"},
+    "linux-x86_64": {"url": "https://example.invalid/Neppy_0.0.0-test_amd64.AppImage"},
+    "linux-aarch64": {"url": "https://example.invalid/Neppy_0.0.0-test_aarch64.AppImage"},
+    "windows-x86_64": {"url": "https://example.invalid/Neppy_0.0.0-test_x64.msi"}
   }
 }
 JSON
@@ -234,19 +234,19 @@ JSON
 {
   "tag_name": "v0.0.0-test",
   "assets": [
-    {"name": "OpenHuman_0.0.0-test_aarch64.app.tar.gz"},
-    {"name": "OpenHuman_0.0.0-test_x86_64-apple-darwin.app.tar.gz"},
-    {"name": "OpenHuman_0.0.0-test_amd64.AppImage"},
-    {"name": "OpenHuman_0.0.0-test_aarch64.AppImage"},
-    {"name": "OpenHuman_0.0.0-test_x64.msi"},
-    {"name": "OpenHuman_0.0.0-test_amd64.deb"},
-    {"name": "OpenHuman_0.0.0-test_arm64.deb"}
+    {"name": "Neppy_0.0.0-test_aarch64.app.tar.gz"},
+    {"name": "Neppy_0.0.0-test_x86_64-apple-darwin.app.tar.gz"},
+    {"name": "Neppy_0.0.0-test_amd64.AppImage"},
+    {"name": "Neppy_0.0.0-test_aarch64.AppImage"},
+    {"name": "Neppy_0.0.0-test_x64.msi"},
+    {"name": "Neppy_0.0.0-test_amd64.deb"},
+    {"name": "Neppy_0.0.0-test_arm64.deb"}
   ]
 }
 JSON
 
   if ! "$REPO_ROOT/scripts/validate-release-assets.sh" "$release_good_deb_names" "$latest_complete" >/dev/null; then
-    echo "FAIL: release validation should accept OpenHuman-named .deb assets"
+    echo "FAIL: release validation should accept Neppy-named .deb assets"
     exit 1
   fi
 
@@ -255,11 +255,11 @@ JSON
 {
   "tag_name": "v0.0.0-test",
   "assets": [
-    {"name": "OpenHuman_0.0.0-test_aarch64.app.tar.gz"},
-    {"name": "OpenHuman_0.0.0-test_x86_64-apple-darwin.app.tar.gz"},
-    {"name": "OpenHuman_0.0.0-test_amd64.AppImage"},
-    {"name": "OpenHuman_0.0.0-test_aarch64.AppImage"},
-    {"name": "OpenHuman_0.0.0-test_x64.msi"},
+    {"name": "Neppy_0.0.0-test_aarch64.app.tar.gz"},
+    {"name": "Neppy_0.0.0-test_x86_64-apple-darwin.app.tar.gz"},
+    {"name": "Neppy_0.0.0-test_amd64.AppImage"},
+    {"name": "Neppy_0.0.0-test_aarch64.AppImage"},
+    {"name": "Neppy_0.0.0-test_x64.msi"},
     {"name": "custom_amd64.deb"},
     {"name": "custom_arm64.deb"}
   ]
@@ -274,7 +274,7 @@ JSON
   set -e
 
   if [[ "$bad_deb_validation_rc" -eq 0 ]]; then
-    echo "FAIL: release validation should reject non-OpenHuman .deb asset names"
+    echo "FAIL: release validation should reject non-Neppy .deb asset names"
     exit 1
   fi
   if [[ "$bad_deb_validation_output" != *"Missing required release assets"* ]]; then
@@ -324,7 +324,7 @@ assert_retry_shape() {
     esac
   }
 
-  if ! curl_head_with_http_fallback "https://example.invalid/OpenHuman.app.tar.gz"; then
+  if ! curl_head_with_http_fallback "https://example.invalid/Neppy.app.tar.gz"; then
     echo "FAIL: reachability fallback should succeed when HTTP/1.1 retry succeeds"
     exit 1
   fi
@@ -358,7 +358,7 @@ assert_retry_shape() {
     esac
   }
 
-  if ! curl_download_file "https://example.invalid/OpenHuman.app.tar.gz" "/tmp/openhuman-test-download"; then
+  if ! curl_download_file "https://example.invalid/Neppy.app.tar.gz" "/tmp/openhuman-test-download"; then
     echo "FAIL: download fallback should succeed when HTTP/1.1 retry succeeds"
     exit 1
   fi

@@ -20,7 +20,7 @@ const IGNORED_TEXT = new Set([
   'QR',
   'URL',
   'API',
-  'OpenHuman',
+  'Neppy',
   'Gmail',
   'Discord',
   'Telegram',

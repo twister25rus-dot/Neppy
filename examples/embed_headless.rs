@@ -1,4 +1,4 @@
-//! Embed the OpenHuman core as a library — no HTTP, no background services.
+//! Embed the Neppy core as a library — no HTTP, no background services.
 //!
 //! Demonstrates the pluggable-core API: build a fully-initialized core with
 //! [`ServiceSet::none`] (no ports bound, no cron/channels/heartbeat) AND

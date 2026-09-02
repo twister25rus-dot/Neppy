@@ -1,5 +1,5 @@
 //! tiny.place command manifest — the **single source of truth** for which SDK
-//! methods are wired into OpenHuman's JSON-RPC layer.
+//! methods are wired into Neppy's JSON-RPC layer.
 //!
 //! ### Append-point convention
 //!

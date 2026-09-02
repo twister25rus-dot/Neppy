@@ -15,7 +15,7 @@ This is the "start here" guide. It assumes nothing beyond a downloaded app.
 
 ## Prerequisites
 
-- OpenHuman installed on macOS, Windows, or Linux. If you haven't installed yet, do [Getting Started](../overview/getting-started.md) first, then come back.
+- Neppy installed on macOS, Windows, or Linux. If you haven't installed yet, do [Getting Started](../overview/getting-started.md) first, then come back.
 - 4 GB+ RAM (16 GB+ if you plan to connect very large mailboxes or run a [local model](local-model.md)).
 - An account to sign in with (social login works).
 - Optional: one account you'd like the assistant to know about (Gmail is the usual first one).
@@ -23,8 +23,8 @@ This is the "start here" guide. It assumes nothing beyond a downloaded app.
 ## Privacy implications
 
 - Signing in **does not** grant ongoing access to anything. Every integration is a separate, explicit OAuth approval you can revoke later.
-- Your memory (the local database and the Markdown vault) is created **on your machine**. Raw source data does not sit on the OpenHuman backend.
-- By default, chat/reasoning runs through the OpenHuman-hosted [model router](../features/model-routing/). If you want inference on-device instead, see [Use OpenHuman with a local model](local-model.md).
+- Your memory (the local database and the Markdown vault) is created **on your machine**. Raw source data does not sit on the Neppy backend.
+- By default, chat/reasoning runs through the Neppy-hosted [model router](../features/model-routing/). If you want inference on-device instead, see [Use Neppy with a local model](local-model.md).
 - Full detail: [Keep sensitive data private](privacy-sensitive-data.md).
 
 ---
@@ -70,7 +70,7 @@ How the assistant talks and behaves is defined by an editable prompt called **`S
 - Set a display name and short description in **Settings → Personality**.
 - Edit the behavior itself via the **Brain** page (the raised center button in the bottom bar, `/brain`), where memory, goals, and intelligence live.
 
-OpenHuman also **learns** durable preferences from how you correct it over time. See [Personalization & Self-Learning](../features/personalization.md).
+Neppy also **learns** durable preferences from how you correct it over time. See [Personalization & Self-Learning](../features/personalization.md).
 
 ### 6. Run your first real request
 
@@ -111,6 +111,6 @@ You have a working assistant when **all** of these are true:
 
 ## Next steps
 
-- [Use OpenHuman with a local model](local-model.md): keep inference on-device.
-- [Connect OpenHuman to Obsidian](connect-obsidian.md): read and edit the memory by hand.
+- [Use Neppy with a local model](local-model.md): keep inference on-device.
+- [Connect Neppy to Obsidian](connect-obsidian.md): read and edit the memory by hand.
 - [Keep sensitive data private](privacy-sensitive-data.md): understand exactly what leaves your machine.

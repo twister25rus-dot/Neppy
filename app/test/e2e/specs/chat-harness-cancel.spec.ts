@@ -35,7 +35,7 @@ import {
   typeIntoComposer,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -90,7 +90,7 @@ async function clickComposerCancel(): Promise<boolean> {
 }
 
 async function inFlightCount(): Promise<number> {
-  const snap = await callOpenhumanRpc<{ result: { entries: Array<unknown> } }>(
+  const snap = await callNeppyRpc<{ result: { entries: Array<unknown> } }>(
     'openhuman.test_support_in_flight_chats',
     {}
   );
@@ -252,7 +252,7 @@ describe('Chat harness — mid-stream cancel', () => {
     // The store may or may not record the partial assistant turn — both
     // are acceptable. What we lock down is the contract that the
     // LATE_PIECES never reach the persisted file.
-    const read = await callOpenhumanRpc<{ result: { content_utf8: string } }>(
+    const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
       'openhuman.test_support_read_workspace_file',
       { rel_path: relPath, max_bytes: 131_072 }
     );

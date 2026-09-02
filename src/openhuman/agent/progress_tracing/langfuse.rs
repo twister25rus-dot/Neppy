@@ -1,10 +1,10 @@
 //! Langfuse ingestion exporter for agent trace spans (issue #4249 follow-up).
 //!
 //! When `[observability.agent_tracing]` has `enabled = true` and
-//! `backend = "langfuse"`, a completed run's spans are POSTed to the OpenHuman
+//! `backend = "langfuse"`, a completed run's spans are POSTed to the Neppy
 //! backend's Langfuse **proxy** route, `/telemetry/langfuse/ingestion`, derived
 //! from the **current backend hostname** (`effective_backend_api_url`). The
-//! request reuses the OpenHuman **session bearer** — the same auth every other
+//! request reuses the Neppy **session bearer** — the same auth every other
 //! backend call carries; the backend authenticates that JWT, injects the
 //! Langfuse project keys server-side, and forwards the batch to Langfuse's real
 //! `/api/public/ingestion` (backend `src/services/langfuseProxy.ts`). Clients

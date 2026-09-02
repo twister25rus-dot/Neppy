@@ -1,6 +1,6 @@
 //! Compatibility facade over [`tinyagents::graph::todos`].
 //!
-//! OpenHuman keeps its historical board-location and optional-thread snapshot
+//! Neppy keeps its historical board-location and optional-thread snapshot
 //! shapes for RPC and tool callers. All task-board data, normalization, CRUD,
 //! and compare-and-set behavior is owned by TinyAgents.
 

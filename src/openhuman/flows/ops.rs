@@ -94,7 +94,7 @@ const GRAPH_CHANGED_SINCE_PARK_ERROR: &str = "the workflow changed after this ru
 //   ¹ tool_call routes through the deny-by-default curation/scope gate plus the
 //     ApprovalGate rather than `gate_decision`; a Network-class Composio action
 //     still prompts under supervised/full and the curation gate is the hard
-//     allowlist. See `caps.rs::OpenHumanTools`.
+//     allowlist. See `caps.rs::NeppyTools`.
 //
 // `Network` is never `Allow` in any tier (always `Prompt` when not blocked), so
 // even a full-tier http_request node prompts unless a pre-declared trust root /
@@ -1024,7 +1024,7 @@ pub(crate) fn graph_has_actionable_nodes(graph: &WorkflowGraph) -> bool {
 ///
 /// This lives host-side (NOT in `tinyflows::validate`, which is host-agnostic
 /// and only does structural checks) because "which trigger kinds this host has
-/// wired" is an OpenHuman fact, not a property of the portable graph.
+/// wired" is an Neppy fact, not a property of the portable graph.
 pub(crate) fn graph_trigger_warnings(graph: &WorkflowGraph) -> Vec<String> {
     let Some(trigger) = graph.trigger() else {
         return Vec::new();
@@ -1130,7 +1130,7 @@ pub(crate) async fn graph_wiring_warnings(config: &Config, graph: &WorkflowGraph
 /// (`=nodes.<id>.item.json.data`, e.g. as an agent `input_context`) or one
 /// of `ComposioExecuteResponse`'s OTHER top-level envelope fields —
 /// `successful`, `error`, `costUsd`, `markdownFormatted` — which live
-/// alongside `data`, not inside it. `OpenHumanTools::invoke` serializes the
+/// alongside `data`, not inside it. `NeppyTools::invoke` serializes the
 /// whole `ComposioExecuteResponse` verbatim, so these ARE real
 /// `.item.json.<x>` fields with no `data.` prefix; flagging them as
 /// "missing the `data.` segment" would rewire an already-correct binding to
@@ -1764,7 +1764,7 @@ pub(crate) fn validate_binding_resolvability(graph: &WorkflowGraph) -> Vec<Strin
 //
 // A plain `agent` node with NO `agent_ref` is unaffected (and must stay
 // that way) — it runs on the default LLM completion (`caps.llm`), never
-// touches `OpenHumanAgentRunner`'s routing at all, so there is nothing to
+// touches `NeppyAgentRunner`'s routing at all, so there is nothing to
 // resolve.
 
 /// Rejects an `agent` node whose `config.agent_ref` would hit the runtime's
@@ -1776,7 +1776,7 @@ pub(crate) fn validate_binding_resolvability(graph: &WorkflowGraph) -> Vec<Strin
 /// — resolves to an *enabled*
 /// [`AgentRegistryEntry`](crate::openhuman::agent::registry::AgentRegistryEntry)
 /// via [`crate::openhuman::agent::registry::get_agent`]. Both are exactly the
-/// checks `OpenHumanAgentRunner::run_agent` performs at run time, reused here
+/// checks `NeppyAgentRunner::run_agent` performs at run time, reused here
 /// rather than duplicated so the two planes cannot drift.
 ///
 /// A node with no `agent_ref` (or a blank one) is a plain agent node — it
@@ -1797,7 +1797,7 @@ pub(crate) fn validate_binding_resolvability(graph: &WorkflowGraph) -> Vec<Strin
 /// as unknown. So this gate defensively (re-)initialises the harness registry
 /// itself, same idempotent (`OnceLock`) idiom as
 /// `memory_goals::enrich::enrich`, before resolving any ref — the two planes
-/// (author-time gate and `OpenHumanAgentRunner::run_agent` at actual run
+/// (author-time gate and `NeppyAgentRunner::run_agent` at actual run
 /// time) then always see the same registry state. Second, it threads through
 /// to `agent_registry::get_agent`'s underlying config load.
 ///
@@ -1918,7 +1918,7 @@ pub(crate) async fn validate_agent_refs(config: &Config, graph: &WorkflowGraph) 
 // Inference-readiness check: provider-connectivity (issue B45)
 // ─────────────────────────────────────────────────────────────────────────────
 //
-// An `agent` node's completion (`OpenHumanLlm::complete` in
+// An `agent` node's completion (`NeppyLlm::complete` in
 // `tinyflows/caps.rs`) resolves a chat model exactly like every other
 // inference caller in this host — but no check previously inspected that
 // resolution at all. `compute_required_connections` only walks `tool_call`
@@ -1966,7 +1966,7 @@ pub(crate) async fn validate_agent_refs(config: &Config, graph: &WorkflowGraph) 
 //   run authoring/run burst hits the network at most once per role per TTL
 //   window, whichever way the probe comes back. This is safe to cache
 //   negative because `probe_inference_readiness` (and, beneath it,
-//   `OpenHumanBackendModel::probe_readiness`) already fails OPEN (`Ok(())`)
+//   `NeppyBackendModel::probe_readiness`) already fails OPEN (`Ok(())`)
 //   on anything transient — a timeout, a transport error, a 5xx — so an
 //   `Err` reaching this cache is always the definitive, config-level "not
 //   ready" signal, never a flake that a naive cache would freeze in place.
@@ -2056,7 +2056,7 @@ async fn cached_probe_inference_readiness(role: &str, config: &Config) -> Result
 }
 
 /// The workload role an `agent` node's completion effectively runs on —
-/// mirrors the exact mapping `OpenHumanLlm::complete` (`tinyflows/caps.rs`)
+/// mirrors the exact mapping `NeppyLlm::complete` (`tinyflows/caps.rs`)
 /// applies, so this probe checks the same route the node will actually
 /// dispatch to at run time. Precedence (findings A+B on this gate):
 ///
@@ -2065,7 +2065,7 @@ async fn cached_probe_inference_readiness(role: &str, config: &Config) -> Result
 /// 2. A static (non-`=`) `agent_ref` whose custom
 ///    [`AgentRegistryEntry`](crate::openhuman::agent::registry::AgentRegistryEntry)
 ///    itself pins a `model` (e.g. `hint:reasoning`) — resolved the same way
-///    [`OpenHumanAgentRunner::run_via_harness`](crate::openhuman::flows::tinyflows::caps::OpenHumanAgentRunner)
+///    [`NeppyAgentRunner::run_via_harness`](crate::openhuman::flows::tinyflows::caps::NeppyAgentRunner)
 ///    does via `resolve_node_model(&request, entry_model)`, using the same
 ///    sync, config-only accessor
 ///    ([`find_custom_in_config`](crate::openhuman::agent::registry::find_custom_in_config))
@@ -2191,7 +2191,7 @@ async fn evaluate_inference_readiness(
         return Some(InferenceReadinessEvaluation {
             status: "signed_out",
             message: Some(
-                "Inference unavailable: you are signed out. Sign in to OpenHuman to run agent \
+                "Inference unavailable: you are signed out. Sign in to Neppy to run agent \
                  nodes."
                     .to_string(),
             ),
@@ -2205,7 +2205,7 @@ async fn evaluate_inference_readiness(
     // every agent-node graph built by the hundreds of existing flows tests
     // that have nothing to do with session state. Layer 2 below still fails
     // OPEN on a construction failure caused by a genuinely missing session
-    // (see `OpenHumanBackendModel::probe_readiness`'s own doc), so production
+    // (see `NeppyBackendModel::probe_readiness`'s own doc), so production
     // behavior for a real signed-out desktop user is unchanged — only the
     // (redundant, in that case) early rejection here is test-only skipped.
     #[cfg(not(test))]
@@ -2219,7 +2219,7 @@ async fn evaluate_inference_readiness(
         return Some(InferenceReadinessEvaluation {
             status: "signed_out",
             message: Some(format!(
-                "Inference unavailable: {e} Sign in to OpenHuman to run agent nodes."
+                "Inference unavailable: {e} Sign in to Neppy to run agent nodes."
             )),
             node_id: Some(first_node.id.clone()),
         });
@@ -2291,7 +2291,7 @@ async fn evaluate_inference_readiness(
             let message = if status == "provider_not_configured" {
                 format!(
                     "This flow's agent step needs a working AI provider, but the provider \
-                     returned: '{msg}'. Configure your provider API key in OpenHuman Settings > \
+                     returned: '{msg}'. Configure your provider API key in Neppy Settings > \
                      Providers, then try again."
                 )
             } else {
@@ -2317,7 +2317,7 @@ async fn evaluate_inference_readiness(
             if role_status == "provider_not_configured" {
                 format!(
                     "Node(s) {nodes} (role `{role}`): the provider returned: '{msg}'. Configure \
-                     your provider API key in OpenHuman Settings > Providers, then try again."
+                     your provider API key in Neppy Settings > Providers, then try again."
                 )
             } else {
                 format!("Node(s) {nodes} (role `{role}`): {msg}")
@@ -2403,7 +2403,7 @@ pub(crate) async fn validate_inference_readiness(
 /// (Part 2c/2d) — those degrade gracefully because a binding to an unknown
 /// field can't be proven wrong, whereas a nonexistent slug or a missing
 /// required arg are both provably broken.
-/// Whether OpenHuman ships a STATIC curated catalog for `toolkit`. This is the
+/// Whether Neppy ships a STATIC curated catalog for `toolkit`. This is the
 /// exact condition both [`validate_tool_contracts`]'s curation gate and
 /// `tinyflows::caps::flow_tool_allowed`'s runtime Path A use to decide a toolkit
 /// is a hard curated-only allowlist: for such a toolkit a real-but-uncurated
@@ -2477,7 +2477,7 @@ pub(crate) async fn validate_tool_contracts(config: &Config, graph: &WorkflowGra
             continue;
         };
 
-        // Mirror `flow_tool_allowed`'s Path A: a toolkit OpenHuman ships a
+        // Mirror `flow_tool_allowed`'s Path A: a toolkit Neppy ships a
         // static curated catalog for is a hard curated-only allowlist at
         // RUNTIME — `find_curated` rejects any slug that isn't one of the
         // curated actions, regardless of whether it's a real live action.
@@ -2498,7 +2498,7 @@ pub(crate) async fn validate_tool_contracts(config: &Config, graph: &WorkflowGra
                 "[flows] tool-contract check: slug is real but not curated for a statically-catalogued toolkit — rejecting to match the runtime allowlist"
             );
             errors.push(format!(
-                "Node '{}': `{slug}` is a real `{toolkit}` action but not one of OpenHuman's \
+                "Node '{}': `{slug}` is a real `{toolkit}` action but not one of Neppy's \
                  curated actions for `{toolkit}` — the runtime tool gate only allows curated \
                  actions for toolkits with a curated catalog, so this would be rejected on \
                  every run. Use search_tool_catalog {{ query: ..., toolkit: \"{toolkit}\" }} and \
@@ -3651,7 +3651,7 @@ pub async fn flows_list_connections(
 
     // 2. Named HTTP credentials — secret-free summaries (the store never hands
     //    out secret material here; injection happens server-side in
-    //    `tinyflows::caps::OpenHumanHttp`).
+    //    `tinyflows::caps::NeppyHttp`).
     let http_creds =
         match crate::openhuman::security::credentials::HttpCredentialsStore::from_config(config)
             .list()
@@ -4715,7 +4715,7 @@ fn prepare_flow_run(
     // always on the current schema here.
     //
     // Author-time validation cannot protect definitions persisted by an older
-    // OpenHuman build. Re-check immediately before compilation so an upgrade
+    // Neppy build. Re-check immediately before compilation so an upgrade
     // fails explicitly instead of silently committing incomplete merge data.
     if let Err(error) = ensure_config_aware_engine_compatible(config, &flow.graph) {
         tracing::warn!(
@@ -7641,7 +7641,7 @@ pub async fn compute_required_connections(config: &Config, graph: &WorkflowGraph
     for node in &graph.nodes {
         if node.kind == NodeKind::ToolCall {
             if let Some(slug) = node.config.get("slug").and_then(Value::as_str) {
-                // Native OpenHuman tools (`oh:<name>`) need no connection.
+                // Native Neppy tools (`oh:<name>`) need no connection.
                 if slug.starts_with("oh:") {
                     continue;
                 }
@@ -7699,8 +7699,8 @@ pub async fn flows_required_connections(
 /// ask for all of them in one shot instead of parking the run node-by-node.
 ///
 /// Mirrors — never re-implements — the runtime gating in
-/// `crate::openhuman::flows::tinyflows::caps` (`OpenHumanTools::invoke` /
-/// `OpenHumanHttp` / `OpenHumanCode`) and `approval::gate`'s Workflow-origin
+/// `crate::openhuman::flows::tinyflows::caps` (`NeppyTools::invoke` /
+/// `NeppyHttp` / `NeppyCode`) and `approval::gate`'s Workflow-origin
 /// branch. Because Rule 2 (`enforce_side_effect_approval`) forces
 /// `require_approval: true` onto every graph with outbound side-effect nodes,
 /// a run parks on EVERY gated node that lacks `(flow_id, tool_name)` trust —

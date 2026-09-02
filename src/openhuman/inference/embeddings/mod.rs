@@ -1,8 +1,8 @@
-//! Embedding providers for the OpenHuman memory system.
+//! Embedding providers for the Neppy memory system.
 //!
 //! Converts text into numerical vectors for semantic search. Providers:
 //!
-//! - **Managed** (default): Routes through the OpenHuman backend's
+//! - **Managed** (default): Routes through the Neppy backend's
 //!   `POST /openai/v1/embeddings` (Voyage-backed). The recommended path —
 //!   works on a fresh install without requiring a local Ollama daemon.
 //! - **Voyage**: Direct Voyage AI API with the user's own key.
@@ -39,7 +39,7 @@ mod schemas;
 
 pub use catalog::non_embedding_model_reason;
 pub use cloud::{
-    OpenHumanCloudEmbedding, DEFAULT_CLOUD_EMBEDDING_DIMENSIONS, DEFAULT_CLOUD_EMBEDDING_MODEL,
+    NeppyCloudEmbedding, DEFAULT_CLOUD_EMBEDDING_DIMENSIONS, DEFAULT_CLOUD_EMBEDDING_MODEL,
 };
 pub use factory::{
     create_embedding_provider, create_embedding_provider_with_config,

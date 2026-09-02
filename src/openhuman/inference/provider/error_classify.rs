@@ -1,4 +1,4 @@
-//! OpenHuman-specific policy layered on TinyAgents' provider-neutral retry classifier.
+//! Neppy-specific policy layered on TinyAgents' provider-neutral retry classifier.
 
 use tinyagents::harness::retry::{
     classify_provider_failure, parse_retry_after_ms as parse_tinyagents_retry_after,

@@ -1,7 +1,7 @@
 //! Host adapter: [`tinyagents::harness::host::ContextComposer`] backed by
-//! OpenHuman's prompt pipeline.
+//! Neppy's prompt pipeline.
 //!
-//! # Which OpenHuman domains this adapts
+//! # Which Neppy domains this adapts
 //!
 //! * [`crate::openhuman::agent::prompts`] (re-exported as
 //!   `crate::openhuman::agent::context::prompt`) — `SystemPromptBuilder`,
@@ -29,7 +29,7 @@
 //!
 //! 1. **Per-turn call vs. frozen prefix.** The crate consults a composer on
 //!    *every* turn (`context_composer.rs`: "a host whose learned context …
-//!    changes mid-session needs the later turns to see it"). OpenHuman's
+//!    changes mid-session needs the later turns to see it"). Neppy's
 //!    pipeline goes the other way: `SystemPromptBuilder::build`'s rustdoc
 //!    states the rendered bytes are "intended to be **frozen for the whole
 //!    session**" so the inference backend's prefix cache hits. Both are
@@ -39,17 +39,17 @@
 //!    output unless the host deliberately builds a new composer. The two
 //!    genuinely time-varying sections in the default chain
 //!    (`DateTimeSection`, and the on-disk files `IdentitySection` reads) are
-//!    OpenHuman's pre-existing behaviour on the main-agent path, not something
+//!    Neppy's pre-existing behaviour on the main-agent path, not something
 //!    this seam introduces.
 //! 2. **`thread_id` and `user_text` are unused inputs.** `PromptContext` has no
-//!    thread field and no turn-text field: OpenHuman scopes learned context
+//!    thread field and no turn-text field: Neppy scopes learned context
 //!    *outside* the prompt layer and pre-fetches it (see every existing
 //!    `PromptContext { learned: … }` call site). Rather than invent a
 //!    thread-keyed fetch, this adapter takes a caller-supplied
 //!    [`LearnedContextData`] snapshot — exactly the established pattern — and
 //!    logs the thread id for correlation. See the TODO on
-//!    [`OpenHumanContextComposer::learned`].
-//! 3. **`preamble` returns an empty `Vec`, always.** OpenHuman has no separate
+//!    [`NeppyContextComposer::learned`].
+//! 3. **`preamble` returns an empty `Vec`, always.** Neppy has no separate
 //!    preamble concept: goals, pinned context, and memory blocks are all
 //!    rendered *into* the system prompt as `PromptSection`s. Per the trait's
 //!    "Empty is not failure" note this is the normal, correct answer, not a
@@ -80,7 +80,7 @@ use crate::openhuman::agent::prompts::{
 use crate::openhuman::config::{Config, DEFAULT_MODEL};
 use crate::openhuman::skills::Workflow;
 
-/// Composes OpenHuman's system prompt for a TinyAgents turn.
+/// Composes Neppy's system prompt for a TinyAgents turn.
 ///
 /// Holds a snapshot of everything the prompt pipeline needs that is *not*
 /// carried on [`TurnContextRequest`]. Snapshot rather than live handles is
@@ -91,7 +91,7 @@ use crate::openhuman::skills::Workflow;
 /// genuinely needs mid-session refresh (new integration connected, learning
 /// subsystem produced new reflections) rebuilds the composer rather than
 /// mutating it.
-pub struct OpenHumanContextComposer {
+pub struct NeppyContextComposer {
     /// Host config — source of the two path roots, the fallback model name,
     /// and the `agents_md_enabled` gate.
     config: Arc<Config>,
@@ -101,7 +101,7 @@ pub struct OpenHumanContextComposer {
     /// host capability (`ModelResolver`) and this seam must not second-guess
     /// it.
     model_name: String,
-    /// How the tool catalogue renders. Left at the OpenHuman default
+    /// How the tool catalogue renders. Left at the Neppy default
     /// ([`ToolCallFormat::PFormat`]) unless the caller pins it, since the
     /// authoritative value lives on the agent's tool dispatcher, which is not
     /// reachable from a `TurnContextRequest`.
@@ -137,7 +137,7 @@ pub struct OpenHumanContextComposer {
     builder: SystemPromptBuilder,
 }
 
-impl OpenHumanContextComposer {
+impl NeppyContextComposer {
     /// A composer over `config` with no integrations and no learned context.
     ///
     /// This is the honest zero state, not a degraded one: a fresh install with
@@ -224,8 +224,8 @@ impl OpenHumanContextComposer {
 }
 
 #[async_trait]
-impl ContextComposer for OpenHumanContextComposer {
-    /// Renders the full OpenHuman system prompt for this turn.
+impl ContextComposer for NeppyContextComposer {
+    /// Renders the full Neppy system prompt for this turn.
     ///
     /// Returns `Err(TinyAgentsError::Validation)` only when a
     /// [`crate::openhuman::agent::prompts::PromptSection`] itself fails — a
@@ -311,7 +311,7 @@ impl ContextComposer for OpenHumanContextComposer {
 
     /// Always empty — see mismatch (3) in the module doc.
     ///
-    /// OpenHuman renders goals, pinned context, and memory as prompt
+    /// Neppy renders goals, pinned context, and memory as prompt
     /// *sections*, so there is nothing left over to prepend as messages.
     /// Returning `Ok(vec![])` is the trait's documented normal case.
     async fn preamble(&self, _req: &TurnContextRequest) -> TinyAgentsResult<Vec<Message>> {
@@ -351,12 +351,12 @@ mod tests {
         std::fs::write(dir.path().join("PROFILE.md"), "PROFILE_MARKER_TEXT").expect("write");
         std::fs::write(dir.path().join("MEMORY.md"), "MEMORY_MARKER_TEXT").expect("write");
 
-        let included = OpenHumanContextComposer::new(config_in(dir.path()))
+        let included = NeppyContextComposer::new(config_in(dir.path()))
             .compose_system_prompt(&request())
             .await
             .expect("compose");
 
-        let omitted = OpenHumanContextComposer::new(config_in(dir.path()))
+        let omitted = NeppyContextComposer::new(config_in(dir.path()))
             .with_omissions(false, false)
             .compose_system_prompt(&request())
             .await
@@ -382,7 +382,7 @@ mod tests {
     #[tokio::test]
     async fn composes_a_non_empty_prompt_carrying_the_agent_id() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let composer = OpenHumanContextComposer::new(config_in(dir.path()));
+        let composer = NeppyContextComposer::new(config_in(dir.path()));
         let prompt = composer
             .compose_system_prompt(&request())
             .await
@@ -401,7 +401,7 @@ mod tests {
     #[tokio::test]
     async fn preamble_is_empty_and_not_an_error() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let composer = OpenHumanContextComposer::new(config_in(dir.path()));
+        let composer = NeppyContextComposer::new(config_in(dir.path()));
         assert!(composer
             .preamble(&request())
             .await
@@ -412,11 +412,11 @@ mod tests {
     #[tokio::test]
     async fn the_prompt_is_byte_stable_across_repeated_turns() {
         // The KV-cache contract from mismatch (1): the crate calls this every
-        // turn, and OpenHuman needs the bytes frozen. `DateTimeSection` has
+        // turn, and Neppy needs the bytes frozen. `DateTimeSection` has
         // minute granularity, so two back-to-back calls agreeing is the
         // strongest cheap check that nothing *else* varies per call.
         let dir = tempfile::tempdir().expect("tempdir");
-        let composer = OpenHumanContextComposer::new(config_in(dir.path()));
+        let composer = NeppyContextComposer::new(config_in(dir.path()));
         let a = composer
             .compose_system_prompt(&request())
             .await
@@ -434,7 +434,7 @@ mod tests {
         // heard of must not fail composition — it is a prompt input, not a
         // registry lookup.
         let dir = tempfile::tempdir().expect("tempdir");
-        let composer = OpenHumanContextComposer::new(config_in(dir.path()));
+        let composer = NeppyContextComposer::new(config_in(dir.path()));
         let req = TurnContextRequest::new("no-such-agent", "thread-9", "");
         assert!(composer.compose_system_prompt(&req).await.is_ok());
     }
@@ -445,7 +445,7 @@ mod tests {
         let config = config_in(dir.path());
         std::fs::write(dir.path().join("AGENTS.md"), "global rule").expect("write global");
 
-        let composer = OpenHumanContextComposer::new(config);
+        let composer = NeppyContextComposer::new(config);
         let loaded = composer.agents_md();
         assert_eq!(loaded.global.as_deref(), Some("global rule"));
     }
@@ -460,7 +460,7 @@ mod tests {
         std::fs::create_dir_all(&config.action_dir).expect("create action dir");
         std::fs::write(dir.path().join("AGENTS.md"), "global rule").expect("write global");
 
-        let composer = OpenHumanContextComposer::new(Arc::new(config));
+        let composer = NeppyContextComposer::new(Arc::new(config));
         let loaded = composer.agents_md();
         assert!(
             loaded.is_empty(),
@@ -474,10 +474,10 @@ mod tests {
         let mut config = Config::default();
         config.workspace_dir = dir.path().to_path_buf();
         config.default_model = None;
-        let composer = OpenHumanContextComposer::new(Arc::new(config));
+        let composer = NeppyContextComposer::new(Arc::new(config));
         assert_eq!(composer.model_name, DEFAULT_MODEL);
 
-        let pinned = OpenHumanContextComposer::new(config_in(dir.path())).with_model_name("haiku");
+        let pinned = NeppyContextComposer::new(config_in(dir.path())).with_model_name("haiku");
         assert_eq!(pinned.model_name, "haiku");
     }
 
@@ -488,7 +488,7 @@ mod tests {
         // at the wiring site, not here.
         let dir = tempfile::tempdir().expect("tempdir");
         let composer: Arc<dyn ContextComposer> =
-            Arc::new(OpenHumanContextComposer::new(config_in(dir.path())));
+            Arc::new(NeppyContextComposer::new(config_in(dir.path())));
         assert!(composer.compose_system_prompt(&request()).await.is_ok());
     }
 }

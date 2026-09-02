@@ -26,7 +26,7 @@ export interface ProviderModelSelection {
 
 interface ProviderModelPickerDialogProps {
   /**
-   * Offer "Managed by OpenHuman" as the first source. Default `true`: managed
+   * Offer "Managed by Neppy" as the first source. Default `true`: managed
    * is the product's own routing and must stay reachable from anywhere a model
    * is chosen, or picking a specific model becomes a one-way door.
    *

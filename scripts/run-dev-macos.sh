@@ -22,7 +22,7 @@ else
 fi
 
 export OPENHUMAN_DEV_PORT="$dev_port"
-export APPLE_SIGNING_IDENTITY="${APPLE_SIGNING_IDENTITY:-OpenHuman Dev Signer}"
+export APPLE_SIGNING_IDENTITY="${APPLE_SIGNING_IDENTITY:-Neppy Dev Signer}"
 config_override="{\"build\":{\"devUrl\":\"http://localhost:${dev_port}\"}}"
 
 cd "$REPO_ROOT/app"

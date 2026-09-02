@@ -19,7 +19,7 @@ const LOG_PREFIX: &str = "[tinyplace]";
 
 /// Production tiny.place relay/API host — the default outside a staging build.
 const TINYPLACE_PROD_BASE_URL: &str = "https://api.tiny.place";
-/// Staging tiny.place relay/API host — the default when the OpenHuman app env
+/// Staging tiny.place relay/API host — the default when the Neppy app env
 /// is `staging` and no explicit `TINYPLACE_API_BASE_URL` is set.
 const TINYPLACE_STAGING_BASE_URL: &str = "https://staging-api.tiny.place";
 
@@ -35,7 +35,7 @@ impl TinyPlaceState {
     /// Build from the environment.
     ///
     /// Base URL precedence: an explicit `TINYPLACE_API_BASE_URL` always wins;
-    /// otherwise the default follows the OpenHuman app environment so a staging
+    /// otherwise the default follows the Neppy app environment so a staging
     /// build talks to staging tiny.place and a production build talks to prod
     /// (previously the default was hardcoded to prod regardless of app env,
     /// which silently 404'd a staging instance against prod tiny.place).
@@ -95,7 +95,7 @@ fn resolve_base_url(explicit: Option<&str>, app_env: Option<&str>) -> String {
     default_base_url_for_app_env(app_env).to_string()
 }
 
-/// The tiny.place host to default to for a given OpenHuman app environment.
+/// The tiny.place host to default to for a given Neppy app environment.
 fn default_base_url_for_app_env(app_env: Option<&str>) -> &'static str {
     if crate::api::config::is_staging_app_env(app_env) {
         TINYPLACE_STAGING_BASE_URL

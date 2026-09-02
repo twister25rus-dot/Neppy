@@ -1,13 +1,13 @@
 //! Lazily-started, process-wide in-process HTTP MCP server bound to localhost.
 //!
 //! The Claude Code provider points the sandboxed `claude` subprocess at this
-//! URL so it can reach OpenHuman's memory/tools over loopback **without** the
+//! URL so it can reach Neppy's memory/tools over loopback **without** the
 //! MCP server inheriting CC's OS jail — the server runs here, in the trusted
 //! (unjailed) core process, with full workspace access, while CC's own raw
 //! tools are denied any access to `~/.openhuman`.
 //!
 //! Loopback alone is NOT treated as sufficient isolation: any *other* local
-//! process could otherwise open sessions against OpenHuman tools/memory. The
+//! process could otherwise open sessions against Neppy tools/memory. The
 //! singleton therefore mints a per-process random bearer token and only the
 //! Claude-side MCP config (which carries the matching `Authorization` header)
 //! can talk to it.

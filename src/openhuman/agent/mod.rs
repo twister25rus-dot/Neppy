@@ -1,6 +1,6 @@
 //! Agent Domain — multi-agent orchestration, tool execution, and session management.
 //!
-//! This domain owns the core "brain" of OpenHuman. It coordinates how LLMs
+//! This domain owns the core "brain" of Neppy. It coordinates how LLMs
 //! interact with the system via tools, manages conversation history, and
 //! handles autonomous behaviors like trigger triage and episodic memory indexing.
 //!

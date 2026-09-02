@@ -1,11 +1,11 @@
 # TinyCortex Memory Migration — Plan & Audit
 
 **Status:** Historical execution plan. W1–W8 and the engine test port are landed
-(OpenHuman #4794/#4820); persona/coding-session ingest followed in #4863. The
+(Neppy #4794/#4820); persona/coding-session ingest followed in #4863. The
 remaining consolidation work is tracked in
 [`tinycortex-migration-plan-2026-07-22.md`](tinycortex-migration-plan-2026-07-22.md).
 **Anchor precedent:** the TinyAgents harness migration (#4249 / #4399 / #4473 and follow-ups).
-**Target:** migrate large portions of the OpenHuman memory subsystem onto the `tinycortex` crate, vendored as a git submodule at **`vendor/tinycortex`** (`https://github.com/tinyhumansai/tinycortex`).
+**Target:** migrate large portions of the Neppy memory subsystem onto the `tinycortex` crate, vendored as a git submodule at **`vendor/tinycortex`** (`https://github.com/tinyhumansai/tinycortex`).
 
 > **Amendment 2026-07-09 (§8 — W-SYNC + W-EMB).** The original seam contract kept live sync
 > (`memory_sync/`) host-side and TinyCortex strictly network-free. That boundary is **revised**:
@@ -30,7 +30,7 @@ remaining consolidation work is tracked in
 | `src/openhuman/memory/sync/` | ~30,700 | Live sync: Composio, MCP, OAuth, pollers |
 | `memory_queue`, `memory_sources`, `memory_diff`, `memory_goals`, `memory_entities`, `memory_graph`, `memory_archivist`, `memory_tools`, `memory_search` | ~20k combined | Engine long tail |
 
-**TinyCortex** (`vendor/tinycortex`, crate `tinycortex` v0.1.1, MIT, single crate, ~49,500 lines under `src/memory/`): an **already-completed port** of the engine layers — `store/` (content markdown + YAML, SQLite vectors, KV, entity_index, safety), `chunks/`, `tree/`, `queue/`, `retrieval/`, `score/`, `ingest/` (canonicalize/extract/pipeline), `conversations/`, `archivist/`, `diff/`, `sources/` (local readers only), `entities/`, `graph/`, `goals/`, `tool_memory/`. Its git history is explicitly "port X from OpenHuman" commits, and its types (`MemoryEntry`, `MemoryCategory`, `MemoryTaint`, `RecallOpts`, `NamespaceSummary`, the `Memory` trait) are wire-compatible with the host's `memory::traits`.
+**TinyCortex** (`vendor/tinycortex`, crate `tinycortex` v0.1.1, MIT, single crate, ~49,500 lines under `src/memory/`): an **already-completed port** of the engine layers — `store/` (content markdown + YAML, SQLite vectors, KV, entity_index, safety), `chunks/`, `tree/`, `queue/`, `retrieval/`, `score/`, `ingest/` (canonicalize/extract/pipeline), `conversations/`, `archivist/`, `diff/`, `sources/` (local readers only), `entities/`, `graph/`, `goals/`, `tool_memory/`. Its git history is explicitly "port X from Neppy" commits, and its types (`MemoryEntry`, `MemoryCategory`, `MemoryTaint`, `RecallOpts`, `NamespaceSummary`, the `Memory` trait) are wire-compatible with the host's `memory::traits`.
 
 **Wiring already pre-staged:**
 - `.gitmodules` has `vendor/tinycortex` → `tinyhumansai/tinycortex`.
@@ -48,7 +48,7 @@ TinyCortex deliberately does **not** own (per its own module docs):
 - A tokio worker pool — the host drives the queue via `queue::run_once` / `drain_until_idle`.
 - The namespace document/graph store and the Composio identity registry.
 
-This boundary is the migration contract: **engine in TinyCortex, product policy + I/O + surfaces in OpenHuman** — exactly mirroring the tinyagents split (generic runtime in the crate; prompts, security, RPC compat, UX in the host).
+This boundary is the migration contract: **engine in TinyCortex, product policy + I/O + surfaces in Neppy** — exactly mirroring the tinyagents split (generic runtime in the crate; prompts, security, RPC compat, UX in the host).
 
 ### 0.3 Submodule contribution workflow (how engine changes are made)
 
@@ -69,7 +69,7 @@ TinyCortex lives at **`vendor/tinycortex`** as a git submodule. Any change to en
 | `memory_diff/`, `memory_entities/`, `memory_graph/`, `memory_goals/`, `memory_archivist/`, `memory_sources/` (registry + local readers), `tool_memory` engine, `conversations` engine | same-named modules | Long tail |
 | `memory/traits.rs` core types | `tinycortex::memory::{Memory, MemoryEntry, MemoryCategory, MemoryTaint, RecallOpts, NamespaceSummary, …}` | Host re-exports from the crate so 30+ consumer sites keep compiling unchanged |
 
-### Stays in OpenHuman (product policy, I/O, surfaces)
+### Stays in Neppy (product policy, I/O, surfaces)
 
 - **All RPC surfaces**: `memory/ops/`, `memory/schemas/`, `memory/schema/`, `memory/read_rpc/`, `rpc_models.rs` (controller framework types `ControllerSchema`/`RpcOutcome` are host-only). JSON-RPC method names and payload shapes must not change.
 - **Agent tools**: `memory/tools/` and `memory/query/` (`Tool`/`ToolResult` impls, `SecurityPolicy` gating) — they become thin wrappers over crate retrieval primitives.
@@ -80,7 +80,7 @@ TinyCortex lives at **`vendor/tinycortex`** as a git submodule. Any change to en
 
 ### The adapter seam: `src/openhuman/memory/tinycortex/`
 
-New sibling module mirroring `src/openhuman/agent/tinyagents/`, holding every impl of a TinyCortex trait over an OpenHuman service:
+New sibling module mirroring `src/openhuman/agent/tinyagents/`, holding every impl of a TinyCortex trait over an Neppy service:
 
 - `embeddings.rs` — `impl tinycortex EmbeddingBackend` over `openhuman::embeddings` (dim/model/signature from `Config`).
 - `chat.rs` — `impl ChatProvider` + `impl Summariser` over `memory::chat::build_chat_provider` / `inference::provider`.
@@ -207,7 +207,7 @@ pure, network-free library):
 | --- | --- |
 | `memory_sync/traits.rs` (`SyncPipeline`/`SyncOutcome`/`SyncPipelineKind`) | `src/memory/sync/traits.rs` (init/tick take `&MemoryConfig` + a `SyncContext`) |
 | `memory_sync/composio/providers/*` (all 6 toolkits + registry, orchestrator, sync_state, catalogs, user_scopes) | `src/memory/sync/composio/providers/*` |
-| New Composio HTTP client (modeled on `src/openhuman/integrations/composio/client.rs`, minus keychain) | `src/memory/sync/composio/client.rs` — **direct** (BYO key → backend.composio.dev) and **proxied** (base_url + bearer; OpenHuman-backend default) modes |
+| New Composio HTTP client (modeled on `src/openhuman/integrations/composio/client.rs`, minus keychain) | `src/memory/sync/composio/client.rs` — **direct** (BYO key → backend.composio.dev) and **proxied** (base_url + bearer; Neppy-backend default) modes |
 | `memory_sync/canonicalize/` | merged into the crate's existing `ingest/canonicalize` |
 | `memory_sync/workspace/` scan logic (not the timers) | `src/memory/sync/workspace.rs` |
 | `memory_sync/sources/{audit,rebuild}.rs` | `src/memory/sync/{audit,rebuild}.rs` |

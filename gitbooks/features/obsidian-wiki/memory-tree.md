@@ -1,6 +1,6 @@
 ---
 description: >-
-  OpenHuman's local-first knowledge base. Ingest from your tools, canonicalize
+  Neppy's local-first knowledge base. Ingest from your tools, canonicalize
   into Markdown, chunk, score, and fold into hierarchical summary trees.
 icon: tree
 ---
@@ -9,7 +9,7 @@ icon: tree
 
 <figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>The Memory Tree. A highly compressed view of all your documents.</p></figcaption></figure>
 
-The Memory Tree is OpenHuman's knowledge base. It is not a vector database with a thin "memory" wrapper. It is a deterministic, bucket-sealed pipeline that turns the messy stream of your day - chats, emails, documents, integration sync results - into structured, queryable, summary-backed Markdown that lives on your machine.
+The Memory Tree is Neppy's knowledge base. It is not a vector database with a thin "memory" wrapper. It is a deterministic, bucket-sealed pipeline that turns the messy stream of your day - chats, emails, documents, integration sync results - into structured, queryable, summary-backed Markdown that lives on your machine.
 
 ## What it does
 
@@ -42,7 +42,7 @@ retrieval       search / drill_down / topic / global / fetch
 
 The hot path (canonicalize → chunk → fast-score → persist → enqueue follow-up work) is fast. Heavy work - embeddings, entity extraction, sealing summary buckets, daily digests - runs in background workers so the UI never blocks.
 
-Embeddings and summary-tree building can run **on-device via Ollama** if you turn on [Local AI](../model-routing/local-ai.md); otherwise they go through the OpenHuman backend like any other model call.
+Embeddings and summary-tree building can run **on-device via Ollama** if you turn on [Local AI](../model-routing/local-ai.md); otherwise they go through the Neppy backend like any other model call.
 
 ## Three trees, three scopes
 
@@ -171,7 +171,7 @@ Open it from the bottom navigation bar.
 
 The Memory Tree pipeline (chunker → score → seal → summarise) is the
 default. Operators who self-host [agentmemory](https://github.com/rohitg00/agentmemory)
-across multiple agents and want OpenHuman to share that same durable
+across multiple agents and want Neppy to share that same durable
 store can opt into an external backend via `MemoryConfig.backend =
 "agentmemory"`. See [agentmemory backend](agentmemory-backend.md) for
 config keys, field mapping, endpoint table, security, and failure

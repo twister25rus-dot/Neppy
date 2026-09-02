@@ -8,7 +8,7 @@
  * names, categories, descriptions, and logos for rendering.
  *
  * Source of truth for the managed-auth list:
- * https://docs.composio.dev/toolkits/managed-auth plus OpenHuman's
+ * https://docs.composio.dev/toolkits/managed-auth plus Neppy's
  * compatibility aliases (119 toolkits as of May 21, 2026).
  */
 import { type ReactNode, useState } from 'react';
@@ -319,7 +319,7 @@ function guessCategory(slug: string, name: string): SkillCategory {
  *
  * There is no shared package to hoist this into, so the guard is social and
  * deliberately cheap: this notice, the matching one on the OpenCompany side,
- * and that repository's `mapComposioCategory keeps the buckets its OpenHuman
+ * and that repository's `mapComposioCategory keeps the buckets its Neppy
  * twin produces` test, which pins the table case-by-case.
  */
 function mapComposioCategory(categories?: string[]): SkillCategory | undefined {

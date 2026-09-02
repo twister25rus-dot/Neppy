@@ -1,8 +1,8 @@
 # hosting
 
-Puts a workspace on the internet. This domain is the seam between OpenHuman and
+Puts a workspace on the internet. This domain is the seam between Neppy and
 [`tinyhosts`](../../../vendor/tinyhosts), the unified hosting API: TinyHosts owns
-everything about a provider, and this module owns everything about OpenHuman.
+everything about a provider, and this module owns everything about Neppy.
 
 ## Responsibilities
 

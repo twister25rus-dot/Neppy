@@ -114,7 +114,7 @@ allowlist = [
     "skill_creator",
     "critic",
     "archivist",
-    # Product docs/help specialist. Route OpenHuman docs, settings,
+    # Product docs/help specialist. Route Neppy docs, settings,
     # setup, and feature questions here before guessing from priors.
     "help",
     # Scheduling/reminder specialist. Owns current_time + cron tools and
@@ -149,7 +149,7 @@ allowlist = [
     # itself and must not carry every connected server's full toolset).
     "mcp_agent",
     # Skill registry specialists. `skill_setup` discovers, installs, and
-    # manages agent skills from community registries (OpenHuman, HermesHub,
+    # manages agent skills from community registries (Neppy, HermesHub,
     # ClawHub). `skill_executor` runs an installed skill by loading its
     # SKILL.md instructions and executing the procedure.
     "skill_setup",
@@ -382,7 +382,7 @@ named = [
     "skill_registry_install",
     "skill_registry_sources",
     # Self-update — lets the orchestrator answer "am I up to date" /
-    # "update OpenHuman" without sending the user to Settings →
+    # "update Neppy" without sending the user to Settings →
     # Developer Options. `update_check` is read-only; `update_apply`
     # is dangerous, requires explicit user consent through
     # `ask_user_clarification`, and respects

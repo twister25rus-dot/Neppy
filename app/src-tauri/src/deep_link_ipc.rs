@@ -1,6 +1,6 @@
 //! Pre-CEF deep-link forwarding for Linux (issue #2359).
 //!
-//! On Linux, `neppy://` OAuth callbacks launch a second OpenHuman
+//! On Linux, `neppy://` OAuth callbacks launch a second Neppy
 //! binary with the URL in argv. That secondary hits
 //! `cef_preflight::check_default_cache()` and exits before Builder::setup
 //! runs, so tauri-plugin-deep-link never gets a chance to forward the URL.
@@ -349,7 +349,7 @@ mod tests {
         // (mirrors the Windows sibling test) instead of re-implementing the
         // predicate inline — so a regression in the filter actually fails here.
         let urls = collect_deep_link_urls_from_args([
-            "OpenHuman",
+            "Neppy",
             "neppy://auth?token=abc",
             "--some-flag",
             "neppy://other",

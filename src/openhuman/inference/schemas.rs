@@ -317,7 +317,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
             function: "update_model_settings",
             description: "Persist cloud-provider routing, custom inference endpoint, and per-workload provider settings.",
             inputs: vec![
-                optional_string("api_url", "Optional OpenHuman product backend URL."),
+                optional_string("api_url", "Optional Neppy product backend URL."),
                 optional_string("inference_url", "Optional custom inference base URL."),
                 optional_string("api_key", "Optional API key for a custom inference endpoint."),
                 optional_string("default_model", "Optional default model override."),
@@ -647,7 +647,7 @@ fn handle_inference_resolve_model(params: Map<String, Value>) -> ControllerFutur
             &p.hint, &config,
         );
         // Whether the resolved model accepts image input — drives the chat UI's
-        // image-attachment affordance. Managed OpenHuman tiers consult the
+        // image-attachment affordance. Managed Neppy tiers consult the
         // core-owned per-tier map (currently all `false`); custom/BYOK models are
         // covered by the user's per-model `model_registry.vision` flag.
         let vision =
@@ -739,7 +739,7 @@ fn handle_inference_update_model_settings(params: Map<String, Value>) -> Control
                             {
                                 "bearer" => AuthStyle::Bearer,
                                 "anthropic" => AuthStyle::Anthropic,
-                                "openhuman_jwt" | "openhumanjwt" => AuthStyle::OpenhumanJwt,
+                                "openhuman_jwt" | "openhumanjwt" => AuthStyle::NeppyJwt,
                                 "none" => AuthStyle::None,
                                 other => {
                                     return Err(format!(

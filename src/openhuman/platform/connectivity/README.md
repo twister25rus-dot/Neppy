@@ -8,7 +8,7 @@ Diagnostics for the local core's reachability and the live backend Socket.IO sta
 - Resolve the configured core RPC port from the environment (`OPENHUMAN_CORE_RPC_URL` then `OPENHUMAN_CORE_PORT`, defaulting to `7788`).
 - Snapshot the backend Socket.IO connection state from the global `SocketManager` (reports `"uninitialized"` when the manager singleton isn't registered yet).
 - Probe whether a TCP port on loopback is already bound (`is_port_in_use`).
-- Pick a listen port for the embedded core HTTP listener (`pick_listen_port` / `pick_listen_port_for_host`): try preferred, retry transient `AddrInUse` races, request stale-listener takeover when another OpenHuman core owns the port (#1130), otherwise fall back to a port pool.
+- Pick a listen port for the embedded core HTTP listener (`pick_listen_port` / `pick_listen_port_for_host`): try preferred, retry transient `AddrInUse` races, request stale-listener takeover when another Neppy core owns the port (#1130), otherwise fall back to a port pool.
 - Handle Windows OS-excluded port ranges (`WSAEACCES` / os error 10013, Sentry OPENHUMAN-TAURI-500) by routing straight to fallback ports instead of failing.
 
 ## Key files
@@ -58,7 +58,7 @@ None — the module holds no state. The diag snapshot reads only the environment
 - The `pick_listen_port` flow is the real workhorse despite the module's "diag" framing; it owns the core's startup port selection and the stale-listener takeover decision (#1130).
 - Port resolution priority is `OPENHUMAN_CORE_RPC_URL` (port component) > `OPENHUMAN_CORE_PORT` > default `7788`. Invalid `OPENHUMAN_CORE_PORT` logs a warning and falls back to the default rather than failing.
 - Fallback pool: when preferred is the default `7788`, fallbacks are `7789..=7798`; otherwise `preferred+1..=preferred+10` (saturating-checked).
-- `WouldTakeOver` is only returned when something is actually listening (`AddrInUse`) **and** the listener fingerprints as an OpenHuman core (its `GET /` returns JSON with `"name":"openhuman"`). OS-excluded ports (Windows `WSAEACCES` / os error 10013) skip the takeover probe and route directly to fallbacks; `is_port_excluded_bind_error` matches on the raw OS code (10013) because Rust's `ErrorKind` mapping for it isn't stable across releases.
+- `WouldTakeOver` is only returned when something is actually listening (`AddrInUse`) **and** the listener fingerprints as an Neppy core (its `GET /` returns JSON with `"name":"openhuman"`). OS-excluded ports (Windows `WSAEACCES` / os error 10013) skip the takeover probe and route directly to fallbacks; `is_port_excluded_bind_error` matches on the raw OS code (10013) because Rust's `ErrorKind` mapping for it isn't stable across releases.
 - IPv6 probe hosts are bracketed per RFC 3986 before building the fingerprint URL so live cores on IPv6 aren't misclassified as `Other`.
 - `socket_state` is funneled through `serde_json` (not `Debug`) so the lowercased wire shape stays stable; `"uninitialized"` is reported when the `SocketManager` singleton isn't installed (early startup / tests).
 - `is_port_in_use` returns `false` on non-`AddrInUse` bind errors (e.g. permission denied) so a port isn't misreported as occupied.

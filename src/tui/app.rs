@@ -56,7 +56,7 @@ pub async fn run(
     let mut ui = UiState::new(thread_id, client_id.clone());
     load_transcript(&runtime, &mut state, &ui.thread_id).await;
     if state.entries().is_empty() {
-        state.push_system("OpenHuman is ready. Type /help for the agent cockpit.".to_string());
+        state.push_system("Neppy is ready. Type /help for the agent cockpit.".to_string());
     }
     super::controls::refresh_config(&runtime, &mut ui).await;
     super::controls::refresh_auth(&runtime, &mut ui).await;

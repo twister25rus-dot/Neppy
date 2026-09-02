@@ -130,7 +130,7 @@ use openhuman_core::openhuman::inference::provider::factory::{
     auth_key_for_slug, create_chat_model_from_string_with_model_id, provider_for_role,
     BYOK_INCOMPLETE_SENTINEL,
 };
-use openhuman_core::openhuman::inference::provider::OpenHumanBackendModel;
+use openhuman_core::openhuman::inference::provider::NeppyBackendModel;
 use openhuman_core::openhuman::inference::provider::{
     format_anyhow_chain, is_budget_exhausted_message, is_openai_compatible_unknown_model_message,
     is_provider_config_rejection_message, sanitize_api_error, scrub_secret_patterns,
@@ -1968,7 +1968,7 @@ async fn inference_openhuman_backend_provider_covers_authless_and_streaming_edge
     use tinyagents::harness::model::{ChatModel, ModelRequest};
 
     let state_dir = tempdir().expect("openhuman provider state");
-    let provider = OpenHumanBackendModel::new(
+    let provider = NeppyBackendModel::new(
         Some(" https://api.example.test/ "),
         &ProviderRuntimeOptions {
             openhuman_dir: Some(state_dir.path().to_path_buf()),

@@ -1,5 +1,5 @@
 //! The capability seam: five adapters implementing `tinyflows::caps` traits
-//! over real OpenHuman services.
+//! over real Neppy services.
 //!
 //! Each tinyflows integration node hands its **whole** `node.config` to the
 //! matching trait method — the adapter interprets a free-form JSON value the
@@ -68,7 +68,7 @@ pub(crate) use crate::openhuman::json_schema::{missing_required_args, unsupporte
 /// the trailing connection id segment. Values that don't match this shape
 /// return `None` — the caller logs and falls back to the ambient session
 /// account (only Direct mode can actually forward the id today; see
-/// [`OpenHumanTools::invoke`]'s doc for the Backend-mode gap this leaves
+/// [`NeppyTools::invoke`]'s doc for the Backend-mode gap this leaves
 /// open).
 pub(crate) fn composio_connection_id(conn: &str) -> Option<&str> {
     let rest = conn.strip_prefix("composio:")?;
@@ -76,15 +76,15 @@ pub(crate) fn composio_connection_id(conn: &str) -> Option<&str> {
     (!id.is_empty()).then_some(id)
 }
 
-/// Parses a `"http_cred:<name>"` `connection_ref` for [`OpenHumanHttp`],
+/// Parses a `"http_cred:<name>"` `connection_ref` for [`NeppyHttp`],
 /// returning the trailing credential name. The host-side
 /// [`HttpCredentialsStore`] (encrypted-at-rest bearer/basic/header
 /// templates) is real and load-bearing — [`resolve_http_credential`] looks
 /// the extracted name up in it and injects the resolved auth header
 /// server-side. This function only does the parse; a malformed or missing
 /// name (`None`) is what lets the caller fail the request closed instead of
-/// silently sending it unauthenticated. See [`OpenHumanHttp::request`]'s doc
-/// and the "Phase 2" note on the [`OpenHumanHttp`] struct for the full
+/// silently sending it unauthenticated. See [`NeppyHttp::request`]'s doc
+/// and the "Phase 2" note on the [`NeppyHttp`] struct for the full
 /// resolution flow.
 pub(crate) fn http_cred_name(conn: &str) -> Option<&str> {
     let name = conn.strip_prefix("http_cred:")?.trim();
@@ -110,7 +110,7 @@ pub(crate) fn http_cred_name(conn: &str) -> Option<&str> {
 /// curated catalog:
 /// - `toolkit_from_slug` fails to extract anything (empty/blank slug) → reject.
 /// - the extracted toolkit has no registered provider curated list AND no
-///   static `catalog_for_toolkit` entry (i.e. it isn't one of OpenHuman's
+///   static `catalog_for_toolkit` entry (i.e. it isn't one of Neppy's
 ///   known/curated toolkits at all — including a made-up prefix like
 ///   `madeupkit`, or a prefix-less slug like `noop` which `toolkit_from_slug`
 ///   degrades to treating as its own single-segment "toolkit") → reject.
@@ -124,7 +124,7 @@ pub(crate) fn http_cred_name(conn: &str) -> Option<&str> {
 /// // the gate consults the user's **live connected-toolkit set** (from the
 /// // composio domain) and allows the call iff the user holds an ACTIVE
 /// // connection for that toolkit. A genuinely-unknown/made-up toolkit is never
-/// // connected, so it still rejects. Toolkits OpenHuman *does* ship a static
+/// // connected, so it still rejects. Toolkits Neppy *does* ship a static
 /// // catalog for keep their stricter curated-action + per-user scope gating
 /// // unchanged (a connected-but-uncurated action on a cataloged toolkit is
 /// // still rejected — the catalog is the tighter allowlist there).
@@ -165,7 +165,7 @@ async fn flow_tool_allowed(
         return false;
     };
 
-    // Path A: a toolkit OpenHuman ships a static curated catalog for keeps its
+    // Path A: a toolkit Neppy ships a static curated catalog for keeps its
     // strict curated-action + per-user scope gating (unchanged from B2).
     if let Some(catalog) = get_provider(&toolkit)
         .and_then(|p| p.curated_tools())
@@ -301,7 +301,7 @@ async fn connected_toolkit_slugs(config: &Config) -> Option<Vec<String>> {
 /// allowlist (`flow_tool_allowed`'s Path B — "is this slug even visible to
 /// the agent"), not for deciding whether a real side-effecting call skips
 /// a human approval prompt. A "SEARCH"/"GET"-shaped uncurated slug must
-/// still prompt until OpenHuman has actually hand-curated it as `Read`.
+/// still prompt until Neppy has actually hand-curated it as `Read`.
 /// `pub(crate)` so `flows::ops::compute_approval_manifest` can reuse the
 /// exact runtime classifier at save time — the manifest must never drift
 /// from what actually gates (a parallel re-implementation would list
@@ -392,7 +392,7 @@ pub(crate) async fn resolve_composio_account(
 ///   `warn!` naming both the requested and actually-used account so the
 ///   mismatch is at least visible in logs, but nothing currently blocks the
 ///   call. Documented backend-API-gap stub; see `composio_connection_id`.
-/// - **Trust gate**: invocation is also routed through the OpenHuman
+/// - **Trust gate**: invocation is also routed through the Neppy
 ///   `ApprovalGate` (mirrors `tinyagents/middleware.rs::ApprovalSecurityMiddleware`)
 ///   before dispatch, closing the Codex P1 finding that flow tool nodes
 ///   bypassed the Network/tool approval gate entirely. `ops::flows_run` /
@@ -409,7 +409,7 @@ pub(crate) async fn resolve_composio_account(
 /// // the curation + scope + connection checks above and the approval gate).
 /// // For such flows authors should set `require_approval`. FOLLOW-UP: auto-force
 /// // approval when a trigger-driven run's tool/http config contains `=`-exprs.
-pub struct OpenHumanTools {
+pub struct NeppyTools {
     pub config: Arc<Config>,
     pub security: Arc<SecurityPolicy>,
 }
@@ -457,7 +457,7 @@ pub(crate) async fn preflight_composio_args(
 ///
 /// The Composio execute endpoint is a "successful HTTP request describing an
 /// unsuccessful tool call" API: a transport-level failure (network error, 5xx,
-/// bad JSON) already surfaces as `Err` via `?` in [`OpenHumanTools::invoke`],
+/// bad JSON) already surfaces as `Err` via `?` in [`NeppyTools::invoke`],
 /// but a 200 response whose body is `{successful: false, error: "..."}` (e.g.
 /// Slack rejecting `SLACK_SEND_MESSAGE` with a 400 "Invalid request data")
 /// comes back as `Ok(ComposioExecuteResponse)` — nothing downstream ever
@@ -577,7 +577,7 @@ impl ToolInvoker for PreflightToolInvoker {
 }
 
 #[async_trait]
-impl ToolInvoker for OpenHumanTools {
+impl ToolInvoker for NeppyTools {
     async fn invoke(&self, slug: &str, args: Value, conn: Option<&str>) -> Result<Value> {
         let ctx = tools::ToolCallCtx {
             config: &self.config,
@@ -591,14 +591,14 @@ impl ToolInvoker for OpenHumanTools {
 }
 
 /// Builds the [`Capabilities`] bundle for one run, wiring each supported
-/// host-injected traits to a real OpenHuman adapter (see each adapter above,
-/// and [`super::memory_adapter::OpenHumanMemory`] for `memory`, for its
+/// host-injected traits to a real Neppy adapter (see each adapter above,
+/// and [`super::memory_adapter::NeppyMemory`] for `memory`, for its
 /// contract).
 ///
 /// `state_namespace` scopes the [`FlowStateStore`] KV so two saved flows that
 /// use the same state key never read or overwrite each other — callers pass a
 /// per-flow namespace (e.g. `"flow:<id>"`). Note this is **not** the same
-/// namespace `OpenHumanMemory` writes flow-scoped memory under — that one is
+/// namespace `NeppyMemory` writes flow-scoped memory under — that one is
 /// derived independently from the run's trusted origin via
 /// `flows::flow_namespace`, so the two never need to agree on separator
 /// conventions.
@@ -612,19 +612,19 @@ pub fn build_capabilities(config: Arc<Config>, state_namespace: impl Into<String
     let http_creds = Arc::new(HttpCredentialsStore::from_config(&config));
 
     Capabilities {
-        llm: Arc::new(OpenHumanLlm {
+        llm: Arc::new(NeppyLlm {
             config: config.clone(),
         }),
-        tools: Arc::new(OpenHumanTools {
+        tools: Arc::new(NeppyTools {
             config: config.clone(),
             security: security.clone(),
         }),
-        http: Arc::new(OpenHumanHttp {
+        http: Arc::new(NeppyHttp {
             security: security.clone(),
             http_config,
             http_creds,
         }),
-        code: Arc::new(OpenHumanCode {
+        code: Arc::new(NeppyCode {
             config: config.clone(),
             security: security.clone(),
         }),
@@ -632,10 +632,10 @@ pub fn build_capabilities(config: Arc<Config>, state_namespace: impl Into<String
             config: config.clone(),
             namespace: state_namespace.into(),
         }),
-        agent: Some(Arc::new(OpenHumanAgentRunner {
+        agent: Some(Arc::new(NeppyAgentRunner {
             config: config.clone(),
         })),
-        // Shell execution needs a dedicated OpenHuman adapter that applies the
+        // Shell execution needs a dedicated Neppy adapter that applies the
         // host's autonomy and sandbox policy. Keep the capability unavailable
         // until that boundary exists rather than inheriting ambient process
         // access from the workflow engine.
@@ -649,18 +649,18 @@ pub fn build_capabilities(config: Arc<Config>, state_namespace: impl Into<String
         // tickets do not survive a restart, which is the right bound for work
         // a single run collects at its own gate.
         tasks: Some(Arc::new(TokioTaskRunner::new())),
-        // OpenHuman already persists `RunOutcome::pending_approvals` and
+        // Neppy already persists `RunOutcome::pending_approvals` and
         // resumes named gates through `flows_resume`. Leaving the optional
         // provider unset deliberately selects Tinyflows' compatible fallback
         // instead of creating a second review store beside that surface.
         approvals: None,
         memory: Some(Arc::new(
-            crate::openhuman::flows::tinyflows::memory_adapter::OpenHumanMemory {
+            crate::openhuman::flows::tinyflows::memory_adapter::NeppyMemory {
                 config: config.clone(),
                 security,
             },
         )),
-        resolver: Arc::new(OpenHumanWorkflowResolver { config }),
+        resolver: Arc::new(NeppyWorkflowResolver { config }),
     }
 }
 
@@ -1246,7 +1246,7 @@ mod tests {
         assert!(resolve_account(&integrations, "conn_unknown").is_none());
     }
 
-    /// A made-up toolkit that OpenHuman ships no static catalog for and the user
+    /// A made-up toolkit that Neppy ships no static catalog for and the user
     /// has NOT connected still rejects — even when the connected set is present
     /// but simply doesn't contain it.
     #[tokio::test]
@@ -1275,7 +1275,7 @@ mod tests {
         assert!(!flow_tool_allowed(&config, "", Some(&["flowstestkit".to_string()])).await);
     }
 
-    /// A real Composio toolkit OpenHuman ships no static catalog for now PASSES
+    /// A real Composio toolkit Neppy ships no static catalog for now PASSES
     /// once the user has an ACTIVE connection for it (the TODO(0.3) fix) AND
     /// the slug is a genuine action in its LIVE catalog (systemic tool-contract
     /// fix) — seeded here so the test never touches a live Composio backend.
@@ -1628,7 +1628,7 @@ mod tests {
         use crate::openhuman::security::AutonomyLevel;
 
         let (_dir, creds) = http_cred_store();
-        let http = OpenHumanHttp {
+        let http = NeppyHttp {
             security: Arc::new(policy(AutonomyLevel::ReadOnly)),
             http_config: HttpRequestConfig::default(),
             http_creds: Arc::new(creds),
@@ -1652,14 +1652,14 @@ mod tests {
     /// End-to-end at the adapter: a Composio `tool_call` node under a
     /// read-only tier is refused BEFORE it ever reaches the curation gate or
     /// any Composio dispatch — closes the compound bypass where the Composio
-    /// branch of `OpenHumanTools::invoke` reached `intercept_audited` without
+    /// branch of `NeppyTools::invoke` reached `intercept_audited` without
     /// ever consulting the autonomy tier, unlike the native `oh:`,
     /// `http_request`, and `code` node paths, which all gate on tier first.
     #[tokio::test]
     async fn composio_tool_call_blocks_under_readonly_tier() {
         use crate::openhuman::security::AutonomyLevel;
 
-        let tools = OpenHumanTools {
+        let tools = NeppyTools {
             config: Arc::new(Config::default()),
             security: Arc::new(policy(AutonomyLevel::ReadOnly)),
         };
@@ -1704,7 +1704,7 @@ mod tests {
         // End-to-end: the adapter itself must not refuse before dispatch —
         // it may still fail downstream (no Composio session configured in
         // this test), but never with the policy-blocked marker.
-        let tools = OpenHumanTools {
+        let tools = NeppyTools {
             config: Arc::new(Config::default()),
             security: Arc::new(policy(AutonomyLevel::ReadOnly)),
         };
@@ -1740,7 +1740,7 @@ mod tests {
             "a curated read must resolve to Allow, never Prompt, under Supervised"
         );
 
-        let tools = OpenHumanTools {
+        let tools = NeppyTools {
             config: Arc::new(Config::default()),
             security: Arc::new(policy(AutonomyLevel::Supervised)),
         };
@@ -1787,7 +1787,7 @@ mod tests {
     /// Guard: an uncurated / unrecognized slug must fail safe to
     /// `Network` (never `Read`) so it still prompts under Supervised and
     /// blocks under ReadOnly — an agent can't dodge approval just by
-    /// calling a toolkit action OpenHuman hasn't curated yet.
+    /// calling a toolkit action Neppy hasn't curated yet.
     #[tokio::test]
     async fn composio_unknown_slug_prompts_under_supervised_tier() {
         use crate::openhuman::security::AutonomyLevel;
@@ -2009,7 +2009,7 @@ mod tests {
     }
 
     /// Regression for issue #4868: the agent-node runtime path
-    /// (`OpenHumanAgentRunner::run_via_harness`) must build an `Agent` that
+    /// (`NeppyAgentRunner::run_via_harness`) must build an `Agent` that
     /// carries `agent_ref`'s definition's effective cap (50 for an
     /// extended-policy agent), not the global `config.agent.max_tool_iterations`
     /// default (10). This mirrors the exact build step `run_via_harness` takes
@@ -2088,7 +2088,7 @@ mod tests {
             .expect("create flow");
         let flow_id = flow.value.id.clone();
 
-        let resolver = OpenHumanWorkflowResolver {
+        let resolver = NeppyWorkflowResolver {
             config: config.clone(),
         };
         let graph = resolver
@@ -2105,7 +2105,7 @@ mod tests {
     async fn resolver_unknown_id_is_a_capability_error() {
         let tmp = tempfile::TempDir::new().unwrap();
         let config = Arc::new(resolver_test_config(&tmp));
-        let resolver = OpenHumanWorkflowResolver { config };
+        let resolver = NeppyWorkflowResolver { config };
 
         let err = resolver
             .resolve("does-not-exist")
@@ -2164,7 +2164,7 @@ mod tests {
             )
             .unwrap();
 
-        let error = OpenHumanWorkflowResolver { config }
+        let error = NeppyWorkflowResolver { config }
             .resolve(&flow.id)
             .await
             .expect_err("resolver must reject an incompatible legacy child");

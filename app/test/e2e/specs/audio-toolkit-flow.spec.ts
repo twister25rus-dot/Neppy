@@ -1,5 +1,5 @@
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 import { startMockServer, stopMockServer } from '../mock-server';
 
@@ -18,7 +18,7 @@ describe('Audio toolkit flow', () => {
   });
 
   it('generates an mp3 artifact and captures the email attachment in the workspace', async () => {
-    const response = await callOpenhumanRpc<{
+    const response = await callNeppyRpc<{
       result: {
         audio: { output_path: string; file_name: string; bytes_written: number; format: string };
         email: { mode: string; capture_path?: string | null; attachment_name: string };
@@ -44,7 +44,7 @@ describe('Audio toolkit flow', () => {
     expect(result?.email.mode).toBe('capture');
     expect(result?.email.capture_path).toBeTruthy();
 
-    const workspaceFiles = await callOpenhumanRpc<{
+    const workspaceFiles = await callNeppyRpc<{
       result: { entries: Array<{ rel_path: string; size: number; is_dir: boolean }> };
     }>('openhuman.test_support_list_workspace_files', { rel_root: 'artifacts', max_depth: 4 });
     expect(workspaceFiles.ok).toBe(true);
@@ -69,7 +69,7 @@ describe('Audio toolkit flow', () => {
     );
     expect(capturedEmail?.size ?? 0).toBeGreaterThan(0);
 
-    const emailRead = await callOpenhumanRpc<{ result: { content_utf8: string } }>(
+    const emailRead = await callNeppyRpc<{ result: { content_utf8: string } }>(
       'openhuman.test_support_read_workspace_file',
       { rel_path: result?.email.capture_path, max_bytes: 131072 }
     );

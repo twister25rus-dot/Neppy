@@ -26,7 +26,7 @@ check_world() {
   fi
 
   # Tauri legitimately owns reqwest 0.13 for its dev proxy/updater. Sentry
-  # must never own that tree: OpenHuman supplies its reqwest 0.12 transport.
+  # must never own that tree: Neppy supplies its reqwest 0.12 transport.
   mapfile -t reqwest_013_versions < <(
     printf '%s\n' "$tree" |
       sed -nE 's/^reqwest v(0\.13\.[^ ]+).*/\1/p' |

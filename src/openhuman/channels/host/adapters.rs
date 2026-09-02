@@ -1,7 +1,7 @@
-//! OpenHuman-side implementations of the portable `tinychannels::host`
+//! Neppy-side implementations of the portable `tinychannels::host`
 //! capability traits.
 //!
-//! Each adapter wraps existing OpenHuman internals (voice factory, inference
+//! Each adapter wraps existing Neppy internals (voice factory, inference
 //! ops, approval gate, conversation store, shutdown registry, web event bus)
 //! and exposes them through the portable, `Config`-free trait surface a ported
 //! channel provider consumes. See [`super::build_channel_host`].
@@ -54,7 +54,7 @@ impl LifecycleRegistry for CoreShutdownRegistry {
 // Transcriber → voice STT factory
 // ---------------------------------------------------------------------------
 
-/// Speech-to-text backed by the OpenHuman voice provider factory.
+/// Speech-to-text backed by the Neppy voice provider factory.
 pub struct VoiceTranscriber {
     pub config: Arc<Config>,
 }
@@ -172,7 +172,7 @@ impl ReactionGate for InferenceReactionGate {
 // ApprovalGate → approval reply parsing
 // ---------------------------------------------------------------------------
 
-/// Parses inbound approval replies via the OpenHuman approval gate. Raising
+/// Parses inbound approval replies via the Neppy approval gate. Raising
 /// interactive approvals stays host-internal (the tool gate), so only
 /// [`ApprovalGate::parse_reply`] is implemented.
 pub struct CoreApprovalGate;
@@ -205,7 +205,7 @@ impl ApprovalGate for CoreApprovalGate {
 // ConversationStore → memory_conversations
 // ---------------------------------------------------------------------------
 
-/// Durable conversation history backed by the OpenHuman conversation store.
+/// Durable conversation history backed by the Neppy conversation store.
 pub struct ConversationHistoryStore {
     pub workspace_dir: std::path::PathBuf,
 }
@@ -318,7 +318,7 @@ impl AllowlistStore for ConfigAllowlistStore {
 }
 
 // ---------------------------------------------------------------------------
-// EventSink → routes provider events to the right OpenHuman bus
+// EventSink → routes provider events to the right Neppy bus
 // ---------------------------------------------------------------------------
 
 /// Routes provider events by `domain`:
@@ -327,7 +327,7 @@ impl AllowlistStore for ConfigAllowlistStore {
 /// - `"channel"` → the global `DomainEvent` bus (telegram reaction fan-out).
 ///
 /// One capability, two backends — providers don't know which bus they hit.
-pub struct OpenHumanEventSink;
+pub struct NeppyEventSink;
 
 fn json_str(payload: &serde_json::Value, key: &str) -> String {
     payload
@@ -338,7 +338,7 @@ fn json_str(payload: &serde_json::Value, key: &str) -> String {
 }
 
 #[async_trait]
-impl EventSink for OpenHumanEventSink {
+impl EventSink for NeppyEventSink {
     async fn publish(
         &self,
         domain: &str,

@@ -2,7 +2,7 @@
 
 Reusable live-audit scenarios for `pnpm debug harness-cache-audit`.
 
-These cases require an active OpenHuman backend session in the selected user
+These cases require an active Neppy backend session in the selected user
 workspace. They spend live model credentials. Use a stable `--thread-id` per
 run so the hosted backend can group inference/cache logs like production web
 chat.
@@ -85,7 +85,7 @@ pnpm debug harness-cache-audit \
   --min-hit-rate 50 \
   --max-turns-without-cache 1 \
   --thread-id "harness-cache-audit-coding-$(date +%Y%m%d-%H%M%S)" \
-  --prompt 'Coding-agent cache audit. Delegate exactly one read-only code-repo task to the coding/code executor agent if available. The delegated task: inspect the OpenHuman repo only enough to identify where the harness cache audit script is wired into pnpm debug; do not edit files, do not run tests, do not browse, do not call external services. After the coding agent returns, reply with one concise sentence naming the script path and dispatcher path.'
+  --prompt 'Coding-agent cache audit. Delegate exactly one read-only code-repo task to the coding/code executor agent if available. The delegated task: inspect the Neppy repo only enough to identify where the harness cache audit script is wired into pnpm debug; do not edit files, do not run tests, do not browse, do not call external services. After the coding agent returns, reply with one concise sentence naming the script path and dispatcher path.'
 ```
 
 Expected behavior:

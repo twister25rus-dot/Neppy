@@ -119,7 +119,7 @@ pub enum CliLogDefault {
     Global,
 }
 
-/// Custom log formatter for the OpenHuman CLI.
+/// Custom log formatter for the Neppy CLI.
 ///
 /// It produces a clean, readable output on stderr:
 /// `14:32:01 INF:jsonrpc: Listening on http://127.0.0.1:7788`

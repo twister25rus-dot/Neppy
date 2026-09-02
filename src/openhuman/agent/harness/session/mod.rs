@@ -12,7 +12,7 @@
 //! chat turn through `turn::graph` into
 //! [`crate::openhuman::agent::tinyagents::run_turn_via_tinyagents_shared`], the
 //! shared TinyAgents harness assembly. What this module keeps is the
-//! OpenHuman product shell around that loop — transcript persistence and
+//! Neppy product shell around that loop — transcript persistence and
 //! legacy-format compatibility ([`transcript`], [`migration`]), prompt
 //! section assembly and KV-cache prefix stability, memory/context injection
 //! policy, post-turn hooks, and the persisted history shape. The migration

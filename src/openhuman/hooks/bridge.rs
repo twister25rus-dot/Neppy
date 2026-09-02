@@ -10,7 +10,7 @@
 //! ## Derived events
 //!
 //! Cursor exposes `beforeShellExecution`, `beforeReadFile` and `afterFileEdit`
-//! as first-class events. In OpenHuman those moments are not separate call
+//! as first-class events. In Neppy those moments are not separate call
 //! sites — they are the `shell`, `file_read` and `file_write`/`edit` tools
 //! going through the ordinary tool seam. So the bridge *derives* them: when a
 //! tool call matches one of those families it fires both the generic

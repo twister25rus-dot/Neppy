@@ -23,7 +23,7 @@ pub(crate) fn is_inference_budget_exceeded_error(message: &str) -> bool {
     {
         return true;
     }
-    // Align with the canonical OpenHuman-backend budget detector
+    // Align with the canonical Neppy-backend budget detector
     // (`billing_error::is_budget_exhausted_message`) so the managed
     // no-credits response — a 400 carrying "Insufficient budget" /
     // "Insufficient balance" — surfaces the actionable budget message
@@ -204,13 +204,13 @@ pub(crate) struct ClassifiedError {
     /// - `"provider"`         — upstream LLM provider 429 / rate limit
     /// - `"openhuman_budget"` — local SecurityPolicy per-hour action cap
     /// - `"agent_loop"`       — agent ran out of tool iterations
-    /// - `"openhuman_billing"` — OpenHuman credit/quota exhaustion
+    /// - `"openhuman_billing"` — Neppy credit/quota exhaustion
     /// - `"transport"`        — network / DNS / TLS / timeout
     /// - `"config"`           — auth, model, context, generic
     pub(crate) source: &'static str,
     /// Can the user retry the same prompt in the same thread? `false` for
     /// non-retryable business 429s, auth failures, model_unavailable,
-    /// context_overflow, and OpenHuman billing exhaustion.
+    /// context_overflow, and Neppy billing exhaustion.
     pub(crate) retryable: bool,
     /// Milliseconds the upstream asked us to wait. Surfaced verbatim from
     /// `Retry-After:` / `retry_after:` headers when present; `None` when
@@ -220,7 +220,7 @@ pub(crate) struct ClassifiedError {
     /// Provider name extracted from the leading
     /// `"<provider> API error (...)"` envelope emitted by
     /// `inference::provider::ops::api_error`. `None` for non-provider
-    /// errors (OpenHuman budget cap, agent loop) and for transport
+    /// errors (Neppy budget cap, agent loop) and for transport
     /// failures that don't carry an identifiable provider prefix.
     pub(crate) provider: Option<String>,
     /// `Some(false)` once the reliable-provider chain has exhausted every
@@ -351,7 +351,7 @@ pub(crate) fn retry_after_hint(secs: Option<u64>) -> String {
 /// load-bearing for issue #2364: before this check ran, any string
 /// containing "rate limit" was misclassified as a provider 429 and
 /// the user saw the generic "You're being rate-limited" copy, which
-/// hides that the cap is OpenHuman's own per-hour safety budget,
+/// hides that the cap is Neppy's own per-hour safety budget,
 /// not the upstream LLM provider.
 pub(crate) fn is_action_budget_exhausted(err_lower: &str) -> bool {
     err_lower.contains("rate limit exceeded: action budget exhausted")
@@ -565,28 +565,28 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
     // contain "rate limit" / "iteration", so they MUST be checked
     // before the generic provider-429 branch — otherwise users see
     // a confusing "your AI provider is rate-limiting you" message
-    // for limits OpenHuman itself enforced (issue #2364).
+    // for limits Neppy itself enforced (issue #2364).
     let classified = if crate::core::observability::is_session_expired_message(err) {
-        // The OpenHuman app-session JWT expired (or the scheduler gate flagged
+        // The Neppy app-session JWT expired (or the scheduler gate flagged
         // signed-out / `SESSION_EXPIRED` sentinel). There is NO client-side
         // refresh — recovery is an interactive re-auth only — so this is
         // non-retryable and must route the user to sign-in. Checked FIRST so the
         // `auth_error` arm below can't claim the backend's `401 "Invalid token"`
         // envelope (it contains "401") and mislead managed-backend users with
         // "check your API key". `is_session_expired_message` is conjunctively
-        // scoped to the OpenHuman/Embedding "Invalid token" envelopes + the
+        // scoped to the Neppy/Embedding "Invalid token" envelopes + the
         // `SESSION_EXPIRED` / "no backend session" / "session jwt required"
         // sentinels, so a BYO provider's own 401 still falls through to
         // `auth_error`.
         ClassifiedError {
             error_type: "session_expired",
-            message: "Your OpenHuman session expired while the app was idle. \
+            message: "Your Neppy session expired while the app was idle. \
                  Please sign in again to resume."
                 .to_string(),
             source: "auth",
             retryable: false,
             retry_after_ms: None,
-            // OpenHuman's own session — provider name (if any leaked into the
+            // Neppy's own session — provider name (if any leaked into the
             // surrounding chain) is irrelevant to a sign-in prompt.
             provider: None,
             fallback_available: None,
@@ -595,7 +595,7 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
         ClassifiedError {
             error_type: "action_budget_exceeded",
             message: with_provider_detail(
-                "You've hit OpenHuman's per-hour action budget — this is a local safety cap, \
+                "You've hit Neppy's per-hour action budget — this is a local safety cap, \
                  not your AI provider. The window decays gradually; you can keep chatting in \
                  this thread and tool-heavy steps will resume as the budget refills.",
                 err,
@@ -605,7 +605,7 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
             // — we just can't predict the exact wait.
             retryable: true,
             retry_after_ms: None,
-            // OpenHuman's own cap — provider name (if any was in the
+            // Neppy's own cap — provider name (if any was in the
             // surrounding error chain) is irrelevant; the limit isn't
             // from a provider.
             provider: None,
@@ -797,19 +797,19 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
     } else if lower.contains("402")
         || lower.contains("payment required")
         || lower.contains("insufficient balance")
-        // Issue #3088: the OpenHuman managed backend reports no-credits as a
+        // Issue #3088: the Neppy managed backend reports no-credits as a
         // 400 with "Insufficient budget" (not a 402), which previously fell
         // through to the generic "Something went wrong" branch. Catch the
         // canonical budget phrases here so the user gets the actionable
         // top-up / switch-to-your-own-model guidance instead.
         || is_inference_budget_exceeded_error(err)
     {
-        // `openhuman_billing` means OpenHuman's own credit/quota system —
+        // `openhuman_billing` means Neppy's own credit/quota system —
         // a 402 carrying the "openhuman" envelope (or no envelope at all,
-        // since OpenHuman's backend is the only origin without one in
+        // since Neppy's backend is the only origin without one in
         // practice). When the 402 comes from an upstream provider envelope
         // (`<provider> API error (402)`), the limit belongs to that
-        // provider, not OpenHuman billing, so tag the source as `provider`.
+        // provider, not Neppy billing, so tag the source as `provider`.
         let source: &'static str = match provider.as_deref() {
             Some("openhuman") | None => "openhuman_billing",
             Some(_) => "provider",
@@ -859,7 +859,7 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
             fallback_available: None,
         }
     } else if crate::openhuman::inference::provider::is_provider_config_rejection_message(err) {
-        // #2079 / #2076 / #2202: an OpenHuman abstract tier alias leaked to
+        // #2079 / #2076 / #2202: an Neppy abstract tier alias leaked to
         // a custom provider, a stale model pin, or a model-specific
         // temperature constraint. Checked BEFORE the generic
         // model-unavailable arm so config-rejection bodies that also
@@ -990,7 +990,7 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
         // network change, or a RAW mid-stream SSE drop — the managed backend
         // intentionally omits `errorCode` for raw upstream/network drops
         // (backend `routes/inference.ts`), so those reach here as
-        // `"OpenHuman streaming API error: <body>"` with nothing to branch on.
+        // `"Neppy streaming API error: <body>"` with nothing to branch on.
         // These previously fell to the generic catch-all ("Something went
         // wrong"). The turn's history is NOT poisoned — the agent loop bails
         // before committing the failed iteration (`engine/core.rs`) — so this is

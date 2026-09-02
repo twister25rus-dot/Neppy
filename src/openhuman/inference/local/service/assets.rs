@@ -34,7 +34,7 @@ impl LocalAiService {
             "[local_ai:assets:provider_routing] entry"
         );
 
-        // External-runtime precondition: OpenHuman no longer installs or
+        // External-runtime precondition: Neppy no longer installs or
         // starts Ollama itself, so the interesting question is whether the
         // user-managed runtime is reachable right now.
         let uses_ollama_assets = matches!(

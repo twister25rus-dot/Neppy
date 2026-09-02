@@ -1,4 +1,4 @@
-//! Startup recovery for OpenHuman processes left behind by hard exits.
+//! Startup recovery for Neppy processes left behind by hard exits.
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub(crate) struct ProcessInfo {
@@ -56,13 +56,13 @@ mod imp {
         let initial = match enumerate_openhuman_processes() {
             Ok(processes) => processes,
             Err(err) => {
-                log::warn!("[startup-recovery] failed to enumerate OpenHuman processes: {err}");
+                log::warn!("[startup-recovery] failed to enumerate Neppy processes: {err}");
                 return;
             }
         };
         let stale = filter_self_pid(&initial, std::process::id());
         if stale.is_empty() {
-            log::info!("[startup-recovery] no stale OpenHuman processes found");
+            log::info!("[startup-recovery] no stale Neppy processes found");
             return;
         }
 
@@ -70,12 +70,12 @@ mod imp {
         for process in &stale {
             match killer.term(process.pid) {
                 Ok(()) => log::warn!(
-                    "[startup-recovery] SIGTERM stale OpenHuman pid={} argv0={}",
+                    "[startup-recovery] SIGTERM stale Neppy pid={} argv0={}",
                     process.pid,
                     process.argv0
                 ),
                 Err(err) => log::warn!(
-                    "[startup-recovery] failed to SIGTERM stale OpenHuman pid={}: {err}",
+                    "[startup-recovery] failed to SIGTERM stale Neppy pid={}: {err}",
                     process.pid
                 ),
             }
@@ -168,13 +168,13 @@ mod imp {
                 Ok(()) => {
                     summary.kill += 1;
                     log::warn!(
-                        "[startup-recovery] SIGKILL stale OpenHuman pid={} argv0={}",
+                        "[startup-recovery] SIGKILL stale Neppy pid={} argv0={}",
                         process.pid,
                         process.argv0
                     );
                 }
                 Err(err) => log::warn!(
-                    "[startup-recovery] failed to SIGKILL stale OpenHuman pid={}: {err}",
+                    "[startup-recovery] failed to SIGKILL stale Neppy pid={}: {err}",
                     process.pid
                 ),
             }
@@ -288,19 +288,19 @@ mod imp {
         use super::*;
 
         fn contents_dir() -> PathBuf {
-            PathBuf::from("/Applications/OpenHuman.app/Contents")
+            PathBuf::from("/Applications/Neppy.app/Contents")
         }
 
         fn main_exe() -> PathBuf {
-            contents_dir().join("MacOS/OpenHuman")
+            contents_dir().join("MacOS/Neppy")
         }
 
         #[test]
         fn parse_ps_matches_main_and_helper_bundle_argv0() {
             let stdout = "\
-  123   1 /Applications/OpenHuman.app/Contents/MacOS/OpenHuman
-  124 123 /Applications/OpenHuman.app/Contents/Frameworks/OpenHuman Helper (Renderer).app/Contents/MacOS/OpenHuman Helper (Renderer) --type=renderer
-  999   1 /Applications/Other.app/Contents/MacOS/OpenHuman
+  123   1 /Applications/Neppy.app/Contents/MacOS/Neppy
+  124 123 /Applications/Neppy.app/Contents/Frameworks/Neppy Helper (Renderer).app/Contents/MacOS/Neppy Helper (Renderer) --type=renderer
+  999   1 /Applications/Other.app/Contents/MacOS/Neppy
 ";
             let processes = parse_ps_output(stdout, &contents_dir(), Some(&main_exe()));
             assert_eq!(processes.len(), 2);
@@ -309,7 +309,7 @@ mod imp {
             assert_eq!(processes[1].pid, 124);
             assert_eq!(
                 processes[1].argv0,
-                "/Applications/OpenHuman.app/Contents/Frameworks/OpenHuman Helper (Renderer).app/Contents/MacOS/OpenHuman Helper (Renderer)"
+                "/Applications/Neppy.app/Contents/Frameworks/Neppy Helper (Renderer).app/Contents/MacOS/Neppy Helper (Renderer)"
             );
         }
 
@@ -404,7 +404,7 @@ mod linux_imp {
         }
 
         let self_pid = std::process::id();
-        log::debug!("[startup-recovery] linux: scanning /proc for stale OpenHuman processes (self_pid={self_pid})");
+        log::debug!("[startup-recovery] linux: scanning /proc for stale Neppy processes (self_pid={self_pid})");
 
         let stale = match enumerate_openhuman_processes() {
             Ok(procs) => procs,
@@ -415,18 +415,18 @@ mod linux_imp {
         };
 
         if stale.is_empty() {
-            log::info!("[startup-recovery] linux: no stale OpenHuman processes found");
+            log::info!("[startup-recovery] linux: no stale Neppy processes found");
             return;
         }
 
         log::info!(
-            "[startup-recovery] linux: found {} stale OpenHuman process(es), sending SIGTERM",
+            "[startup-recovery] linux: found {} stale Neppy process(es), sending SIGTERM",
             stale.len()
         );
         for proc in &stale {
             match kill_pid_term(proc.pid) {
                 Ok(()) => log::warn!(
-                    "[startup-recovery] linux: SIGTERM stale OpenHuman pid={} cmd={}",
+                    "[startup-recovery] linux: SIGTERM stale Neppy pid={} cmd={}",
                     proc.pid,
                     proc.argv0
                 ),
@@ -455,7 +455,7 @@ mod linux_imp {
                     Ok(()) => {
                         kill_count += 1;
                         log::warn!(
-                            "[startup-recovery] linux: SIGKILL stale OpenHuman pid={} cmd={}",
+                            "[startup-recovery] linux: SIGKILL stale Neppy pid={} cmd={}",
                             proc.pid,
                             proc.argv0
                         );
@@ -519,7 +519,7 @@ mod linux_imp {
             let command = cmdline.join(" ");
 
             log::debug!(
-                "[startup-recovery] linux: found OpenHuman process pid={pid} argv0={argv0}"
+                "[startup-recovery] linux: found Neppy process pid={pid} argv0={argv0}"
             );
             results.push(ProcessInfo {
                 pid,
@@ -561,12 +561,12 @@ mod linux_imp {
         fn is_openhuman_executable_matches_core_binary() {
             assert!(is_openhuman_executable("/usr/local/bin/openhuman-core"));
             assert!(is_openhuman_executable("openhuman-core"));
-            assert!(is_openhuman_executable("/opt/OpenHuman/openhuman-core"));
+            assert!(is_openhuman_executable("/opt/Neppy/openhuman-core"));
         }
 
         #[test]
         fn is_openhuman_executable_matches_app_binary() {
-            assert!(is_openhuman_executable("/opt/OpenHuman/OpenHuman"));
+            assert!(is_openhuman_executable("/opt/Neppy/Neppy"));
             assert!(is_openhuman_executable("openhuman"));
         }
 
@@ -630,18 +630,18 @@ mod windows_imp {
 
         let stale = select_reapable_gui_instances(&all, self_pid);
         if stale.is_empty() {
-            log::info!("[startup-recovery] windows: no stale OpenHuman GUI instance to reap");
+            log::info!("[startup-recovery] windows: no stale Neppy GUI instance to reap");
             return;
         }
 
         log::info!(
-            "[startup-recovery] windows: found {} stale OpenHuman GUI instance(s), sending terminate",
+            "[startup-recovery] windows: found {} stale Neppy GUI instance(s), sending terminate",
             stale.len()
         );
         for proc in &stale {
             match kill_pid_term(proc.pid) {
                 Ok(()) => log::warn!(
-                    "[startup-recovery] windows: TERM stale OpenHuman GUI pid={} cmd={}",
+                    "[startup-recovery] windows: TERM stale Neppy GUI pid={} cmd={}",
                     proc.pid,
                     proc.command
                 ),
@@ -686,7 +686,7 @@ mod windows_imp {
                 Ok(()) => {
                     kill_count += 1;
                     log::warn!(
-                        "[startup-recovery] windows: force-killed stale OpenHuman GUI pid={} cmd={}",
+                        "[startup-recovery] windows: force-killed stale Neppy GUI pid={} cmd={}",
                         proc.pid,
                         proc.command
                     );
@@ -706,7 +706,7 @@ mod windows_imp {
         );
     }
 
-    /// Diagnostics listing of OpenHuman-owned processes (GUI, CLI `core`/`mcp`,
+    /// Diagnostics listing of Neppy-owned processes (GUI, CLI `core`/`mcp`,
     /// standalone core, and CEF helpers), excluding the current process. Backs
     /// the `process_diagnostics_list_owned` command — this is a *listing*, not a
     /// kill list; the reap uses [`select_reapable_gui_instances`].
@@ -800,7 +800,7 @@ mod windows_imp {
         })
     }
 
-    /// True for OpenHuman-owned processes of any role (GUI, CLI, standalone
+    /// True for Neppy-owned processes of any role (GUI, CLI, standalone
     /// core, CEF helper). Used only for the diagnostics listing.
     fn is_openhuman_process(argv0: &str) -> bool {
         let name = exe_file_name(argv0);
@@ -808,7 +808,7 @@ mod windows_imp {
     }
 
     /// True only for a wedged GUI browser process that is safe to reap: the
-    /// desktop app binary (`OpenHuman.exe`, never the standalone
+    /// desktop app binary (`Neppy.exe`, never the standalone
     /// `openhuman-core.exe`), NOT a CEF helper re-exec (`--type=`), and NOT a
     /// `core` / `mcp` / `mcp-server` CLI/MCP session — those never take the CEF
     /// mutex and may be an active user session, e.g. a Claude MCP client
@@ -920,9 +920,9 @@ mod windows_imp {
             // A command line containing commas would corrupt CSV parsing; the
             // list format must preserve it intact.
             let list = "\r\n\
-Caption=OpenHuman.exe\r\r\n\
-CommandLine=\"C:\\Program Files\\OpenHuman\\OpenHuman.exe\" --flag=a,b,c\r\r\n\
-ExecutablePath=C:\\Program Files\\OpenHuman\\OpenHuman.exe\r\r\n\
+Caption=Neppy.exe\r\r\n\
+CommandLine=\"C:\\Program Files\\Neppy\\Neppy.exe\" --flag=a,b,c\r\r\n\
+ExecutablePath=C:\\Program Files\\Neppy\\Neppy.exe\r\r\n\
 ParentProcessId=1234\r\r\n\
 ProcessId=5678\r\r\n\
 \r\r\n\
@@ -942,44 +942,44 @@ ProcessId=9000\r\r\n";
         #[test]
         fn first_subcommand_handles_quoted_and_unquoted_argv0() {
             assert_eq!(
-                first_subcommand("\"C:\\p\\OpenHuman.exe\" core --port 7788").as_deref(),
+                first_subcommand("\"C:\\p\\Neppy.exe\" core --port 7788").as_deref(),
                 Some("core")
             );
             assert_eq!(
-                first_subcommand("C:\\p\\OpenHuman.exe mcp").as_deref(),
+                first_subcommand("C:\\p\\Neppy.exe mcp").as_deref(),
                 Some("mcp")
             );
             assert_eq!(
-                first_subcommand("\"C:\\p\\OpenHuman.exe\"").as_deref(),
+                first_subcommand("\"C:\\p\\Neppy.exe\"").as_deref(),
                 None
             );
-            assert_eq!(first_subcommand("OpenHuman.exe").as_deref(), None);
+            assert_eq!(first_subcommand("Neppy.exe").as_deref(), None);
         }
 
         #[test]
         fn is_reapable_gui_instance_only_matches_the_gui_browser_process() {
             // GUI browser process (no subcommand, no --type=) → reapable.
             assert!(is_reapable_gui_instance(
-                "C:\\p\\OpenHuman.exe",
-                "\"C:\\p\\OpenHuman.exe\""
+                "C:\\p\\Neppy.exe",
+                "\"C:\\p\\Neppy.exe\""
             ));
             // #3900 P2: CLI core / MCP sessions must never be reaped.
             assert!(!is_reapable_gui_instance(
-                "C:\\p\\OpenHuman.exe",
-                "\"C:\\p\\OpenHuman.exe\" core --port 7788"
+                "C:\\p\\Neppy.exe",
+                "\"C:\\p\\Neppy.exe\" core --port 7788"
             ));
             assert!(!is_reapable_gui_instance(
-                "C:\\p\\OpenHuman.exe",
-                "\"C:\\p\\OpenHuman.exe\" mcp"
+                "C:\\p\\Neppy.exe",
+                "\"C:\\p\\Neppy.exe\" mcp"
             ));
             assert!(!is_reapable_gui_instance(
-                "C:\\p\\OpenHuman.exe",
-                "\"C:\\p\\OpenHuman.exe\" mcp-server"
+                "C:\\p\\Neppy.exe",
+                "\"C:\\p\\Neppy.exe\" mcp-server"
             ));
             // CEF helper re-execs carry --type= → not the browser process.
             assert!(!is_reapable_gui_instance(
-                "C:\\p\\OpenHuman.exe",
-                "\"C:\\p\\OpenHuman.exe\" --type=renderer --enable-features=x"
+                "C:\\p\\Neppy.exe",
+                "\"C:\\p\\Neppy.exe\" --type=renderer --enable-features=x"
             ));
             // The standalone core binary is never a GUI CEF-lock-holder.
             assert!(!is_reapable_gui_instance(
@@ -992,11 +992,11 @@ ProcessId=9000\r\r\n";
 
         #[test]
         fn collect_ancestor_pids_walks_the_parent_chain() {
-            // self(500) → parent 400 (old OpenHuman) → grandparent 300 (explorer)
+            // self(500) → parent 400 (old Neppy) → grandparent 300 (explorer)
             let all = vec![
                 proc(300, 1, "explorer.exe", "explorer.exe"),
-                proc(400, 300, "OpenHuman.exe", "\"OpenHuman.exe\""),
-                proc(500, 400, "OpenHuman.exe", "\"OpenHuman.exe\""),
+                proc(400, 300, "Neppy.exe", "\"Neppy.exe\""),
+                proc(500, 400, "Neppy.exe", "\"Neppy.exe\""),
             ];
             let ancestors = collect_ancestor_pids(&all, 500);
             assert!(ancestors.contains(&400));
@@ -1011,21 +1011,21 @@ ProcessId=9000\r\r\n";
             // to reap, 700 = a legit `core` CLI session, 800 = a CEF helper.
             let all = vec![
                 proc(300, 1, "explorer.exe", "explorer.exe"),
-                proc(400, 300, "OpenHuman.exe", "\"OpenHuman.exe\""),
-                proc(500, 400, "OpenHuman.exe", "\"OpenHuman.exe\""),
+                proc(400, 300, "Neppy.exe", "\"Neppy.exe\""),
+                proc(500, 400, "Neppy.exe", "\"Neppy.exe\""),
                 proc(
                     700,
                     1,
-                    "OpenHuman.exe",
-                    "\"OpenHuman.exe\" core --port 7788",
+                    "Neppy.exe",
+                    "\"Neppy.exe\" core --port 7788",
                 ),
                 proc(
                     800,
                     900,
-                    "OpenHuman.exe",
-                    "\"OpenHuman.exe\" --type=gpu-process",
+                    "Neppy.exe",
+                    "\"Neppy.exe\" --type=gpu-process",
                 ),
-                proc(900, 1, "OpenHuman.exe", "\"OpenHuman.exe\""),
+                proc(900, 1, "Neppy.exe", "\"Neppy.exe\""),
             ];
             let reapable: Vec<u32> = select_reapable_gui_instances(&all, 500)
                 .into_iter()
@@ -1041,9 +1041,9 @@ ProcessId=9000\r\r\n";
 
         #[test]
         fn is_openhuman_process_matches_gui_and_core_only() {
-            assert!(is_openhuman_process("C:\\p\\OpenHuman.exe"));
+            assert!(is_openhuman_process("C:\\p\\Neppy.exe"));
             assert!(is_openhuman_process("C:\\p\\openhuman-core.exe"));
-            assert!(is_openhuman_process("OpenHuman.exe"));
+            assert!(is_openhuman_process("Neppy.exe"));
             assert!(!is_openhuman_process("C:\\Chrome\\chrome.exe"));
             assert!(!is_openhuman_process("python.exe"));
         }

@@ -81,7 +81,7 @@ describe('PttSettingsPanel', () => {
   it('shows the panel title and description from the en locale', () => {
     renderPanel({ shortcut: null });
     expect(screen.getByText('Push-to-talk')).toBeInTheDocument();
-    expect(screen.getByText(/Hold a key to talk to OpenHuman/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hold a key to talk to Neppy/i)).toBeInTheDocument();
   });
 
   it('renders the localized registration error when the slice has a dictation conflict', () => {

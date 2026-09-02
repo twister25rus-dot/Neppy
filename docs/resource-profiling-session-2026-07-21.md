@@ -1,9 +1,9 @@
-# OpenHuman resource profiling session
+# Neppy resource profiling session
 
 Date: 2026-07-21  
 Platform: Apple Silicon macOS 26.5.1  
 Worktree: `worktrees/tauri-resource-profiler`  
-Primary question: What CPU and RAM does OpenHuman consume, which components account for it, and what would it take to use the Rust core as an efficient embedded library?
+Primary question: What CPU and RAM does Neppy consume, which components account for it, and what would it take to use the Rust core as an efficient embedded library?
 
 ## Executive summary
 
@@ -21,14 +21,14 @@ There is no single Rust module holding 45 MiB of live data. In the clean slim-bu
 
 - only 15.2 MiB was private physical footprint;
 - only 3.18 MiB was active heap allocation;
-- 18.7 MiB was resident executable code from the OpenHuman binary;
+- 18.7 MiB was resident executable code from the Neppy binary;
 - the malloc zones retained 9.4 MiB despite only about 3.2 MiB being live, indicating substantial allocator high-water retention/fragmentation.
 
 The most actionable module-level findings are:
 
 1. Parent and child agents each initialize full memory/SQLite infrastructure.
 2. TinyCortex's multilingual PII `RegexSet` and its regex caches dominate the identified live Rust heap growth during normal memory capture.
-3. The first turn touches about 15 MiB of previously nonresident OpenHuman executable code.
+3. The first turn touches about 15 MiB of previously nonresident Neppy executable code.
 4. Built-in agent TOML parsing, agent construction, unified-memory construction, and SQLite initialization dominate cold-path CPU.
 5. Compile-time feature selection reduces binary size dramatically but reduces live RSS only moderately.
 
@@ -73,7 +73,7 @@ These desktop results motivated isolating the Rust core: most of the shipped app
 
 ## Bare Rust agent roster
 
-The existing `rss-bench` binary constructs real OpenHuman agents without Tauri and measures stable RSS in fresh child processes.
+The existing `rss-bench` binary constructs real Neppy agents without Tauri and measures stable RSS in fresh child processes.
 
 ### Default feature build
 
@@ -175,7 +175,7 @@ A non-instrumented slim-build run with normal memory capture settled at 43,104 K
 | Live heap allocations                 |      3.18 MiB |
 | Resident malloc regions               | about 9.4 MiB |
 | Resident stacks                       |      0.97 MiB |
-| Resident OpenHuman executable text    |      18.7 MiB |
+| Resident Neppy executable text    |      18.7 MiB |
 
 These categories overlap and must not be added together. For example, active heap and stacks are part of the private footprint, while executable text is part of clean/file-backed RSS.
 
@@ -183,9 +183,9 @@ The key interpretation is that RSS is not equivalent to private heap. The proces
 
 ### First-use executable paging
 
-Before the chat turn, only about 3.3 MiB of the profiling executable's `__TEXT` segment was resident. After the turn, 18.7 MiB was resident. The first turn therefore faulted in approximately 15.4 MiB of OpenHuman's own executable code.
+Before the chat turn, only about 3.3 MiB of the profiling executable's `__TEXT` segment was resident. After the turn, 18.7 MiB was resident. The first turn therefore faulted in approximately 15.4 MiB of Neppy's own executable code.
 
-CoreFoundation, Foundation, ICU, Security, CoreAudio, and other macOS framework `__TEXT` residency was effectively identical in the controlled baseline and post-turn snapshots. The increase came from the OpenHuman executable, not from a single newly loaded macOS framework.
+CoreFoundation, Foundation, ICU, Security, CoreAudio, and other macOS framework `__TEXT` residency was effectively identical in the controlled baseline and post-turn snapshots. The increase came from the Neppy executable, not from a single newly loaded macOS framework.
 
 Executable pages are clean, file-backed, reclaimable under pressure, and shareable between identical processes. They count toward RSS but are not the same as permanently retained private data.
 
@@ -256,14 +256,14 @@ This result changes the interpretation of the cold 26-31 MiB increase. It is ove
 
 ## Library-design implications
 
-OpenHuman is feasible as a Rust library, but the current construction path behaves like an application bootstrap rather than a lightweight per-instance library API.
+Neppy is feasible as a Rust library, but the current construction path behaves like an application bootstrap rather than a lightweight per-instance library API.
 
 ### Share services between agents
 
 `Agent::build_session_agent_inner` constructs session memory and obtains a SQLite connection for the agent. Parent and child agents should instead receive shared instance services such as:
 
 ```text
-OpenHumanLibrary
+NeppyLibrary
   Arc<ConfigSnapshot>
   Arc<AgentDefinitionRegistry>
   Arc<ToolCatalog>
@@ -293,7 +293,7 @@ This lets latency-sensitive hosts choose between low startup work and predictabl
 
 ### Avoid mandatory globals
 
-The profiling harness currently has to initialize a global event bus, a global built-in registry, environment-derived workspace selection, and a global provider override. Instance-owned state would make it safer to embed multiple OpenHuman instances in one process and would improve deterministic testing.
+The profiling harness currently has to initialize a global event bus, a global built-in registry, environment-derived workspace selection, and a global provider override. Instance-owned state would make it safer to embed multiple Neppy instances in one process and would improve deterministic testing.
 
 ## Recommended optimization order
 
@@ -412,7 +412,7 @@ Repository warnings observed during builds were pre-existing unused-import/dead-
 
 ## Bottom line
 
-OpenHuman's Rust core is not holding 45 MiB of agent objects. The steady process is mostly executable working set plus runtime/allocator pages, with a small live heap. The cold first turn is expensive because it initializes and touches a broad application-oriented path. Once warmed, subagent turns are inexpensive and appear to plateau rather than grow linearly.
+Neppy's Rust core is not holding 45 MiB of agent objects. The steady process is mostly executable working set plus runtime/allocator pages, with a small live heap. The cold first turn is expensive because it initializes and touches a broad application-oriented path. Once warmed, subagent turns are inexpensive and appear to plateau rather than grow linearly.
 
 The best route to an efficient library is therefore not micro-optimizing every agent struct. It is narrowing and sharing the initialization graph: reuse memory and SQLite services, avoid rebuilding agent infrastructure for children, simplify the PII prefilter, expose an explicit warm-up lifecycle, and provide a compile-time library-minimal profile.
 

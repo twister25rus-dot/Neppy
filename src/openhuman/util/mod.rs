@@ -1,4 +1,4 @@
-//! Utility functions for `OpenHuman`.
+//! Utility functions for `Neppy`.
 //!
 //! Kernel family — always compiled, never gated. These are dependency-free
 //! helpers reused across domains; nothing here may reach into a domain.

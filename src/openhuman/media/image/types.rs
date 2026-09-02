@@ -18,7 +18,7 @@ pub struct ImageToolSpec {
     pub description: String,
     /// JSON Schema object for tool arguments.
     pub parameters: Value,
-    /// Execution permission required by OpenHuman policy gates.
+    /// Execution permission required by Neppy policy gates.
     pub permission: ImagePermission,
     /// Whether the tool payload is expected to become model-visible image
     /// content rather than plain text.

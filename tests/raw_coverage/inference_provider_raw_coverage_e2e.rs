@@ -269,10 +269,10 @@ async fn local_service_public_inference_assets_and_shutdown_use_loopback_ollama(
     let completion = service
         .inline_complete_interactive(
             &config,
-            "OpenHuman is",
+            "Neppy is",
             "concise",
             Some("short"),
-            &["OpenHuman is useful".to_string()],
+            &["Neppy is useful".to_string()],
             Some(6),
         )
         .await

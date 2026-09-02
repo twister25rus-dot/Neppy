@@ -358,7 +358,7 @@ async fn ensure_loopback_port_available(port: u16) -> anyhow::Result<()> {
 
 /// Poll a tenant core through authenticated JSON-RPC until it responds or the
 /// attempt budget is exhausted. This intentionally avoids unauthenticated
-/// `/health`: a stale OpenHuman process on the assigned port could look healthy
+/// `/health`: a stale Neppy process on the assigned port could look healthy
 /// but reject this tenant's core bearer, so authenticated readiness fails closed.
 async fn wait_authenticated_ready(
     http: &reqwest::Client,
@@ -432,7 +432,7 @@ fn readiness_body_succeeded(value: &serde_json::Value) -> bool {
 #[derive(Parser, Debug)]
 #[command(
     name = "openhuman-fleet",
-    about = "Process-per-user OpenHuman core supervisor + reverse proxy"
+    about = "Process-per-user Neppy core supervisor + reverse proxy"
 )]
 struct Args {
     /// Address the reverse proxy listens on.

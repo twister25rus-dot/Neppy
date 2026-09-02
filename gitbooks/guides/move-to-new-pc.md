@@ -1,13 +1,13 @@
 ---
 description: >-
-  Carry your OpenHuman persona, memory, workspace, and model/provider config to
+  Carry your Neppy persona, memory, workspace, and model/provider config to
   a new computer, and understand which secrets travel and which you re-enter.
 icon: truck
 ---
 
-# Move OpenHuman to a new PC
+# Move Neppy to a new PC
 
-**Goal:** set up OpenHuman on a new machine so it picks up where the old one left off (same memory, same persona, same settings), with credentials handled at a safe level of detail.
+**Goal:** set up Neppy on a new machine so it picks up where the old one left off (same memory, same persona, same settings), with credentials handled at a safe level of detail.
 
 The short version: **copy one folder, sign back in.** The nuance is in what a folder copy does and does not carry, which this guide makes explicit so you're not surprised.
 
@@ -16,12 +16,12 @@ The short version: **copy one folder, sign back in.** The nuance is in what a fo
 ## Prerequisites
 
 - Both computers available (or a backup of the old one's data folder).
-- Your OpenHuman sign-in credentials.
+- Your Neppy sign-in credentials.
 - A way to move files between them (external drive, secure file transfer, etc.).
 
 ## What lives where
 
-Everything OpenHuman persists is in a single folder:
+Everything Neppy persists is in a single folder:
 
 | Platform      | Data folder                 |
 | ------------- | --------------------------- |
@@ -42,14 +42,14 @@ Inside it, the things you care about migrating:
 | **Integration access** (Gmail, Slack, …)               | Brokered by the backend, tied to your account | ❌ No (reconnects on sign-in)     |
 
 {% hint style="info" %}
-**Why some things don't travel, and why that's fine.** OpenHuman deliberately keeps secrets out of loose files. Your session token and certain local secrets live in the operating system's secure store (Keychain / Credential Manager / Secret Service), and your integration tokens are held by the backend against your account. So the folder copy carries your _data and persona_; **signing in on the new machine re-establishes the secrets and integrations.** You never hand-copy raw tokens between machines.
+**Why some things don't travel, and why that's fine.** Neppy deliberately keeps secrets out of loose files. Your session token and certain local secrets live in the operating system's secure store (Keychain / Credential Manager / Secret Service), and your integration tokens are held by the backend against your account. So the folder copy carries your _data and persona_; **signing in on the new machine re-establishes the secrets and integrations.** You never hand-copy raw tokens between machines.
 {% endhint %}
 
 ---
 
 ## Steps
 
-### 1. Quit OpenHuman on the old machine
+### 1. Quit Neppy on the old machine
 
 Fully close the app so nothing is mid-write to the database. A clean copy needs a quiet source.
 
@@ -62,13 +62,13 @@ Copy the **entire** data folder from the old machine to the same location on the
 
 Copy the whole folder rather than cherry-picking. It keeps memory, persona, config, and history consistent with each other.
 
-The data folder holds config and memory but **not** the files the agent created or edited in its action sandbox. Also copy your **projects/action folder**, by default `~/OpenHuman/projects` (or wherever you pointed the action directory). Otherwise those project files stay behind on the old PC.
+The data folder holds config and memory but **not** the files the agent created or edited in its action sandbox. Also copy your **projects/action folder**, by default `~/Neppy/projects` (or wherever you pointed the action directory). Otherwise those project files stay behind on the old PC.
 
 {% hint style="warning" %}
 Copy it somewhere secure. This folder contains your personal memory in readable form. Treat the transfer like moving personal documents.
 {% endhint %}
 
-### 3. Install OpenHuman on the new machine
+### 3. Install Neppy on the new machine
 
 Install the current build from [tinyhumans.ai/openhuman](https://tinyhumans.ai/openhuman). If the data folder is already in place, the app will find it on launch. (Order doesn't strictly matter; installing first and copying after works too, as long as the app isn't running while you copy.)
 
@@ -86,7 +86,7 @@ Open the app and sign in with the **same account**. Signing in:
 
 ### 6. Re-check model / provider config
 
-Your `config.toml` came along, so model routing and provider choices should already match. If you used a [local model](local-model.md), remember that **Ollama/LM Studio is separate software**. Install it on the new machine too, and let OpenHuman re-pull the model weights (they aren't in the data folder).
+Your `config.toml` came along, so model routing and provider choices should already match. If you used a [local model](local-model.md), remember that **Ollama/LM Studio is separate software**. Install it on the new machine too, and let Neppy re-pull the model weights (they aren't in the data folder).
 
 ---
 

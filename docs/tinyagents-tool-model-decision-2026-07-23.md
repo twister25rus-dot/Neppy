@@ -11,14 +11,14 @@ trait rewrite or builtin-tool port by itself.
 
 | Question | Decision |
 | --- | --- |
-| One tool trait everywhere? | No. Use native `tinyagents::Tool<State>` for generic crate tools and retain OpenHuman's `Tool` for product tools. `SharedToolAdapter` is the permanent boundary between them. |
-| Where do `ToolResult` and `ToolContent` live? | Keep the MCP-style types in OpenHuman's always-compiled `skills::types`. Preserve them losslessly in TinyAgents `ToolResult::raw`; keep `content` as the model-facing rendering. |
+| One tool trait everywhere? | No. Use native `tinyagents::Tool<State>` for generic crate tools and retain Neppy's `Tool` for product tools. `SharedToolAdapter` is the permanent boundary between them. |
+| Where do `ToolResult` and `ToolContent` live? | Keep the MCP-style types in Neppy's always-compiled `skills::types`. Preserve them losslessly in TinyAgents `ToolResult::raw`; keep `content` as the model-facing rendering. |
 | How is `ToolScope::AgentOnly` enforced? | Enforce scope at every exposure boundary: `All` everywhere, `AgentOnly` only in autonomous agent registries, and `CliRpcOnly` only in explicit CLI/RPC registries. Reject an out-of-scope direct invocation as well as hiding it from discovery. |
-| Who owns security decisions? | OpenHuman. TinyAgents policy metadata is descriptive and provides generic fail-closed checks; OpenHuman still performs args-aware permission, approval, command, path, sandbox, credential, and external-effect gating. |
+| Who owns security decisions? | Neppy. TinyAgents policy metadata is descriptive and provides generic fail-closed checks; Neppy still performs args-aware permission, approval, command, path, sandbox, credential, and external-effect gating. |
 
 ## 1. Trait boundary
 
-OpenHuman should not mechanically migrate its roughly 200 product and
+Neppy should not mechanically migrate its roughly 200 product and
 integration tools onto the generic crate trait. Its trait carries product
 contracts that the crate does not: args-aware permission and approval,
 generated-tool provenance, UI scope/category, markdown rendering, and
@@ -30,12 +30,12 @@ Instead:
 - New or ported generic builtins implement `tinyagents::Tool<State>` in the
   crate.
 - Product, RPC, dynamic integration, MCP, and OS-specific tools continue to
-  implement OpenHuman `Tool`.
+  implement Neppy `Tool`.
 - `SharedToolAdapter` remains the supported host-to-harness boundary. Rename it
   only if a clearer public integration name is useful; do not delete it as
   migration debris.
 - Add the inverse adapter only when an upstream builtin must be exposed through
-  OpenHuman CLI/RPC. It must preserve the same scope and security gates as a
+  Neppy CLI/RPC. It must preserve the same scope and security gates as a
   native host tool.
 
 This is convergence by ownership, not by forcing unrelated tools through one
@@ -51,14 +51,14 @@ both on and off.
 
 The bridge must stop discarding structure:
 
-1. Render `OpenHuman ToolResult::output_for_llm(true)` into TinyAgents
+1. Render `Neppy ToolResult::output_for_llm(true)` into TinyAgents
    `ToolResult::content`.
-2. Serialize the complete OpenHuman result into TinyAgents `ToolResult::raw`,
+2. Serialize the complete Neppy result into TinyAgents `ToolResult::raw`,
    including `content`, `is_error`, and `markdownFormatted`.
 3. Populate TinyAgents `error` when the host result reports `is_error`, without
    changing the structured `raw` value.
 4. For a crate-native tool exposed back to a host surface, prefer a recognized
-   OpenHuman-result envelope in `raw`; otherwise map a JSON `raw` value to
+   Neppy-result envelope in `raw`; otherwise map a JSON `raw` value to
    `ToolContent::Json` and textual `content` to `ToolContent::Text`.
 
 The envelope is versioned by its existing serde field names; no duplicate
@@ -90,7 +90,7 @@ it as a security boundary.
 ## 4. Security and access mapping
 
 `ToolPolicy` remains useful registry metadata, but it cannot replace
-OpenHuman's live policy:
+Neppy's live policy:
 
 - Static host permission maps conservatively into TinyAgents side-effect and
   access metadata.
@@ -129,11 +129,11 @@ consumer graph with a tool-family port.
 - No structured host result is lost at the TinyAgents boundary.
 - `AgentOnly` and `CliRpcOnly` are both hidden and rejected outside their
   allowed surfaces.
-- Existing OpenHuman approval, args-aware permission, sandbox, and path checks
+- Existing Neppy approval, args-aware permission, sandbox, and path checks
   remain authoritative.
 - Generic crate tools can be registered without implementing the host trait
   directly.
-- Builds with `--no-default-features` retain the OpenHuman result types and
+- Builds with `--no-default-features` retain the Neppy result types and
   compile.
 - `SharedToolAdapter` remains until all host product tools cease to exist,
   which is not a goal of this migration.

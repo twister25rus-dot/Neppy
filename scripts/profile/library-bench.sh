@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# library-bench.sh — reproducible RSS/duration benchmark for the OpenHuman
+# library-bench.sh — reproducible RSS/duration benchmark for the Neppy
 # core as an embedded library, using the `library-profile` binary.
 #
 # Runs each scenario N times as a FRESH process (no state shared across
@@ -260,11 +260,11 @@ write_summary() {
 ## External comparison point (not apples-to-apples)
 
 ZeroClaw self-reports (unverified) idling under 5 MiB RAM and roughly 8-12 MiB
-under load. OpenHuman's Rust core currently settles around 35-50 MiB depending
+under load. Neppy's Rust core currently settles around 35-50 MiB depending
 on scenario and feature set (see docs/library-benchmarking.md and
 docs/resource-profiling-session-2026-07-21.md for scope/caveats). Treat this as
 a north star, not a like-for-like comparison: ZeroClaw's feature surface and
-scope differ substantially from the OpenHuman core.
+scope differ substantially from the Neppy core.
 EOF
     } >"$summary_md"
 }

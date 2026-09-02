@@ -8,7 +8,7 @@ icon: lock
 
 # Privacy Mode
 
-Most assistants' privacy stories are a paragraph in a system prompt. OpenHuman's is an **enforcement chokepoint in the Rust core**.
+Most assistants' privacy stories are a paragraph in a system prompt. Neppy's is an **enforcement chokepoint in the Rust core**.
 
 The `[privacy]` config block defines three modes:
 
@@ -28,14 +28,14 @@ Privacy Mode governs **data egress**. It is orthogonal to the [autonomy tiers](p
 
 ## Pairing it with local models
 
-Local-only mode is designed to work with OpenHuman's [Local AI](model-routing/local-ai.md) stack:
+Local-only mode is designed to work with Neppy's [Local AI](model-routing/local-ai.md) stack:
 
 - Chat and reasoning via **Ollama / LM Studio / MLX** models you download in Settings.
 - **In-process Whisper** speech-to-text (tiny → large-v3-turbo, one-click installer). No external binary, no cloud STT.
 - **Piper** text-to-speech, installed the same way.
 - Local embeddings for [Memory Tree](obsidian-wiki/memory-tree.md) retrieval.
 
-See the [Use OpenHuman with a local model](../guides/local-model.md) guide for a full local setup, and [Keep sensitive data private](../guides/privacy-sensitive-data.md) for a broader privacy walkthrough.
+See the [Use Neppy with a local model](../guides/local-model.md) guide for a full local setup, and [Keep sensitive data private](../guides/privacy-sensitive-data.md) for a broader privacy walkthrough.
 
 ## See also
 

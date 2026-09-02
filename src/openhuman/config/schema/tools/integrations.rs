@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// `"backend"` (default) — every Composio call (toolkits, connections,
 /// authorize, tools, execute, triggers, …) is proxied through the
-/// OpenHuman backend (`api.tinyhumans.ai/agent-integrations/composio/*`).
+/// Neppy backend (`api.tinyhumans.ai/agent-integrations/composio/*`).
 /// The backend owns the Composio API key, allowlist, billing/margin, and
 /// HMAC-verified trigger webhooks fanned out over socket.io.
 ///
@@ -46,7 +46,7 @@ pub struct ComposioConfig {
     pub triage_disabled_toolkits: Vec<String>,
 
     /// Routing mode for the main Composio integration flow. One of
-    /// [`COMPOSIO_MODE_BACKEND`] (default — proxied through the OpenHuman
+    /// [`COMPOSIO_MODE_BACKEND`] (default — proxied through the Neppy
     /// backend) or [`COMPOSIO_MODE_DIRECT`] (BYO API key, calls
     /// `backend.composio.dev` directly).
     ///
@@ -110,7 +110,7 @@ fn default_integration_mode() -> String {
 
 /// Per-integration toggle.
 ///
-/// Defaults to **OpenHuman-managed** routing: the OpenHuman backend
+/// Defaults to **Neppy-managed** routing: the Neppy backend
 /// owns the upstream API key, billing, and rate limits — the user only
 /// has to flip `enabled` to make the tools available.
 ///
@@ -126,7 +126,7 @@ pub struct IntegrationToggle {
     #[serde(default = "defaults::default_true")]
     pub enabled: bool,
     /// Routing mode. One of [`INTEGRATION_MODE_MANAGED`] (default — the
-    /// OpenHuman backend proxies the call) or [`INTEGRATION_MODE_BYO`]
+    /// Neppy backend proxies the call) or [`INTEGRATION_MODE_BYO`]
     /// (the user's own API key is required and tools refuse to
     /// register without it).
     #[serde(default = "default_integration_mode")]

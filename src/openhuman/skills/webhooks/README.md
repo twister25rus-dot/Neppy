@@ -1,6 +1,6 @@
 # webhooks
 
-Client-side webhook **tunnel routing** for OpenHuman. The backend provisions and hosts the actual tunnels (ngrok / cloudflare / etc.) and forwards incoming HTTP requests to the app over Socket.IO; this module maps each backend tunnel UUID to its owning target (a skill, the built-in echo responder, or the agent triage pipeline), dispatches incoming requests, builds responses, captures debug logs, and exposes both local routing RPCs and thin proxies to the backend's tunnel-management API.
+Client-side webhook **tunnel routing** for Neppy. The backend provisions and hosts the actual tunnels (ngrok / cloudflare / etc.) and forwards incoming HTTP requests to the app over Socket.IO; this module maps each backend tunnel UUID to its owning target (a skill, the built-in echo responder, or the agent triage pipeline), dispatches incoming requests, builds responses, captures debug logs, and exposes both local routing RPCs and thin proxies to the backend's tunnel-management API.
 
 ## Responsibilities
 

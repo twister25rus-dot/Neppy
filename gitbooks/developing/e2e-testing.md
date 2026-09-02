@@ -14,7 +14,7 @@ Desktop E2E tests use **WebDriverIO (WDIO)** to drive the Tauri app through Appi
 | **Linux / Appium Chromium** | Appium Chromium | 4723 | Debug binary  | CSS / DOM |
 | **macOS / Appium Chromium** | Appium Chromium | 4723 | `.app` bundle | CSS / DOM |
 
-OpenHuman's desktop app currently uses the CEF runtime (`tauri-runtime-cef`). CI drives the Linux debug binary with Appium's Chromium driver; manual macOS and Windows E2E use the same Chromium-driver backend.
+Neppy's desktop app currently uses the CEF runtime (`tauri-runtime-cef`). CI drives the Linux debug binary with Appium's Chromium driver; manual macOS and Windows E2E use the same Chromium-driver backend.
 
 ---
 
@@ -124,7 +124,7 @@ For release candidates, also run one manual secondary-instance smoke on Linux
 or macOS when touching CEF preflight, single-instance, or deep-link startup
 code:
 
-1. Launch OpenHuman normally and leave it running.
+1. Launch Neppy normally and leave it running.
 2. Trigger `neppy://auth?token=e2e-token&key=auth` through the OS opener.
 3. Confirm the already-running window receives the callback and does not start
    a second full CEF instance.

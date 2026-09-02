@@ -1,7 +1,7 @@
 //! Host layer over the engine's sync-status vocabulary.
 //!
 //! The domain itself lives in the engine; what stays here is its JSON-RPC
-//! surface — handlers and controller schemas name OpenHuman's `RpcOutcome` and
+//! surface — handlers and controller schemas name Neppy's `RpcOutcome` and
 //! `ControllerSchema`, which the engine crate cannot see. The re-export below
 //! keeps every historical `memory::sync::sync_status::…` path resolving.
 //!
@@ -15,7 +15,7 @@
 //! `list_sync_statuses`; `tinymemory-core`'s pair is a second declaration of
 //! the same two shapes with no producer behind it. Its own module doc says so:
 //! "today the only *producer* is the engine's SQLite-backed
-//! `list_sync_statuses`, which OpenHuman still calls directly … the serde shape
+//! `list_sync_statuses`, which Neppy still calls directly … the serde shape
 //! matches the engine's copy field for field."
 //!
 //! So this is not a substitute — it is the **same two items**, named through

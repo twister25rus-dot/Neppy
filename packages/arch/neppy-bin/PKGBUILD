@@ -1,4 +1,4 @@
-# Maintainer: OpenHuman <hello@tinyhumans.ai>
+# Maintainer: Neppy <hello@tinyhumans.ai>
 
 pkgname=openhuman-bin
 pkgver=0.54.0
@@ -16,7 +16,7 @@ provides=('openhuman')
 conflicts=('openhuman')
 options=('!strip')
 source=(
-  "OpenHuman_${pkgver}_amd64.AppImage::https://github.com/tinyhumansai/openhuman/releases/download/v${pkgver}/OpenHuman_${pkgver}_amd64.AppImage"
+  "Neppy_${pkgver}_amd64.AppImage::https://github.com/tinyhumansai/openhuman/releases/download/v${pkgver}/Neppy_${pkgver}_amd64.AppImage"
   'openhuman'
   'openhuman.desktop'
   'openhuman.svg'
@@ -31,9 +31,9 @@ sha256sums=(
 prepare() {
   cd "${srcdir}"
   rm -rf squashfs-root
-  chmod +x "OpenHuman_${pkgver}_amd64.AppImage"
-  "./OpenHuman_${pkgver}_amd64.AppImage" --appimage-extract >/dev/null
-  test -x squashfs-root/shared/bin/OpenHuman
+  chmod +x "Neppy_${pkgver}_amd64.AppImage"
+  "./Neppy_${pkgver}_amd64.AppImage" --appimage-extract >/dev/null
+  test -x squashfs-root/shared/bin/Neppy
 }
 
 package() {

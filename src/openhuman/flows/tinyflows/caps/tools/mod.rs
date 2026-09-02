@@ -1,7 +1,7 @@
 //! Tool dispatch for a `tool_call` node, split by slug namespace.
 //!
 //! A `tool_call` slug belongs to exactly one backend, chosen by prefix:
-//! `oh:` names a native OpenHuman tool, anything else is a Composio action.
+//! `oh:` names a native Neppy tool, anything else is a Composio action.
 //! Before this module the two lived in one `impl ToolInvoker` with an
 //! `if let Some(name) = slug.strip_prefix("oh:")` early return and the Composio
 //! path as the implicit fallthrough, which meant "which namespaces exist" was
@@ -35,7 +35,7 @@ use crate::openhuman::security::SecurityPolicy;
 pub(crate) use composio::ComposioToolBackend;
 pub(crate) use native::NativeToolBackend;
 
-/// Prefix marking a `tool_call` node's slug as a NATIVE OpenHuman tool (the
+/// Prefix marking a `tool_call` node's slug as a NATIVE Neppy tool (the
 /// "Tool" node) rather than a Composio action (the "App action" node). e.g.
 /// `oh:web_search`. Native tools run through the same agent tool registry the
 /// assistant uses (`runtime_node::ops::execute_tool`), so a flow can call

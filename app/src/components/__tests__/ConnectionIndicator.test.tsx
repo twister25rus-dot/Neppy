@@ -36,7 +36,7 @@ describe('ConnectionIndicator', () => {
 
   // ---- Store-driven branches (lines 43, 50, 57, 67) ----
 
-  it('shows "Connected to OpenHuman AI" when blocking=ok (line 43)', () => {
+  it('shows "Connected to Neppy AI" when blocking=ok (line 43)', () => {
     renderWithProviders(<ConnectionIndicator />, {
       preloadedState: {
         connectivity: {

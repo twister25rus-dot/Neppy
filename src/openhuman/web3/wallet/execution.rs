@@ -351,7 +351,7 @@ pub(crate) fn validate_amount(raw: &str) -> Result<u128, String> {
 /// Every arm delegates to the vendored [`tinywallet_bus`] crate, which owns the
 /// four address formats. The dispatch stays here rather than calling
 /// `tinywallet_bus::address::validate` directly because [`WalletChain`] is
-/// OpenHuman's enum, and mapping it onto `tinywallet_bus::Chain` here keeps that
+/// Neppy's enum, and mapping it onto `tinywallet_bus::Chain` here keeps that
 /// translation in one place.
 ///
 /// For Bitcoin this is the **recipient** rule — any well-formed mainnet

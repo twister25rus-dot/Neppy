@@ -90,7 +90,7 @@ fn annotated_capability_exposes_privacy_metadata() {
     let privacy = cap.privacy.expect("conversation.send_text annotated");
     assert!(privacy.leaves_device);
     assert_eq!(privacy.data_kind, PrivacyDataKind::Derived);
-    assert!(privacy.destinations.contains(&"OpenHuman backend"));
+    assert!(privacy.destinations.contains(&"Neppy backend"));
 }
 
 #[test]
@@ -198,7 +198,7 @@ fn coding_session_memory_discloses_inference_boundary() {
     assert_eq!(privacy.data_kind, PrivacyDataKind::Raw);
     assert_eq!(
         privacy.destinations,
-        &["Configured OpenHuman inference provider"]
+        &["Configured Neppy inference provider"]
     );
 }
 
@@ -363,7 +363,7 @@ fn github_repo_memory_source_is_registered_with_expected_shape() {
 
 /// Privacy: the GitHub memory source reaches out to the GitHub API directly
 /// (via `gh` / public REST), so it must report `leaves_device = true` with
-/// GitHub as the destination — not the managed OpenHuman backend. Treating it
+/// GitHub as the destination — not the managed Neppy backend. Treating it
 /// as local-only or attributing it to the backend would under-report where the
 /// sync request actually goes (the exact under-reporting failure mode #2656's
 /// review flagged for the embeddings probe).

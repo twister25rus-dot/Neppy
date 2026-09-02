@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-/// Fixed id for the single inference backend (OpenHuman API).
+/// Fixed id for the single inference backend (Neppy API).
 pub const INFERENCE_BACKEND_ID: &str = "openhuman";
 
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ pub struct ProviderInfo {
 pub fn list_providers() -> Vec<ProviderInfo> {
     vec![ProviderInfo {
         name: INFERENCE_BACKEND_ID,
-        display_name: "OpenHuman (backend)",
+        display_name: "Neppy (backend)",
         aliases: &["backend", "openhuman-backend"],
         local: false,
     }]

@@ -120,7 +120,7 @@ async fn serve_fixture_catalog() -> (
                 "source": "fixture",
                 "tags": ["git", "workflow"],
                 "platforms": ["linux", "macos"],
-                "author": "OpenHuman Test",
+                "author": "Neppy Test",
                 "version": "1.0.0",
                 "license": "MIT",
                 "envVars": [],
@@ -145,7 +145,7 @@ async fn serve_fixture_catalog() -> (
 name: git-helper
 description: Automate git status and branch triage.
 version: 1.0.0
-author: OpenHuman Test
+author: Neppy Test
 license: MIT
 metadata:
   id: git-helper

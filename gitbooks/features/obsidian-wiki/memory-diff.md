@@ -15,7 +15,7 @@ The chunk store (`mem_tree_chunks`) stays authoritative. The diff ledger is a re
 
 ## It's a git repository
 
-The whole thing is a real [libgit2](https://libgit2.org/) repository living at `<workspace>/memory_diff/repo` (`git_store.rs`). Rather than invent a snapshot format, OpenHuman maps memory-change tracking straight onto git's native primitives:
+The whole thing is a real [libgit2](https://libgit2.org/) repository living at `<workspace>/memory_diff/repo` (`git_store.rs`). Rather than invent a snapshot format, Neppy maps memory-change tracking straight onto git's native primitives:
 
 | Memory-diff concept | Git primitive                                       |
 | ------------------- | --------------------------------------------------- |

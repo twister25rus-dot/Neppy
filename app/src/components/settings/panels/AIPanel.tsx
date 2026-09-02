@@ -219,7 +219,7 @@ const AIPanel = ({
             content: (
               <div className="flex w-full flex-col gap-4">
                 {/* ═══════════════════════════════════════════════════════════════
-              ROUTING — top-level routing mode. Managed = OpenHuman decides.
+              ROUTING — top-level routing mode. Managed = Neppy decides.
               Own = one provider/model for everything. Custom = fine-grained
               per-workload routing.
               ═══════════════════════════════════════════════════════════════ */}

@@ -2179,7 +2179,7 @@ fn migrate_legacy_inference_url_clears_openhuman_backend_form() {
     cfg.api_url = Some("https://api.tinyhumans.ai/openai/v1/chat/completions".to_string());
     cfg.inference_url = None;
     migrate_legacy_inference_url(&mut cfg);
-    // The OpenHuman host is the default backend — both fields end up None so
+    // The Neppy host is the default backend — both fields end up None so
     // inference flows through the derived default `{backend}/openai/v1/...`.
     assert_eq!(cfg.api_url, None);
     assert_eq!(cfg.inference_url, None);
@@ -2213,9 +2213,9 @@ fn migrate_cloud_provider_slugs_routes_cloud_to_legacy_custom_when_primary_is_op
         crate::openhuman::config::schema::CloudProviderCreds {
             id: "p_oh".into(),
             slug: "openhuman".into(),
-            label: "OpenHuman".into(),
+            label: "Neppy".into(),
             endpoint: "https://api.openhuman.ai/v1".into(),
-            auth_style: crate::openhuman::config::schema::AuthStyle::OpenhumanJwt,
+            auth_style: crate::openhuman::config::schema::AuthStyle::NeppyJwt,
             ..Default::default()
         },
         crate::openhuman::config::schema::CloudProviderCreds {
@@ -2235,7 +2235,7 @@ fn migrate_cloud_provider_slugs_routes_cloud_to_legacy_custom_when_primary_is_op
     assert_eq!(
         cfg.reasoning_provider.as_deref(),
         Some("openhuman"),
-        "explicit OpenHuman routing must stay explicit"
+        "explicit Neppy routing must stay explicit"
     );
 }
 
@@ -2247,9 +2247,9 @@ fn migrate_cloud_provider_slugs_keeps_cloud_on_openhuman_without_legacy_custom()
     cfg.cloud_providers = vec![crate::openhuman::config::schema::CloudProviderCreds {
         id: "p_oh".into(),
         slug: "openhuman".into(),
-        label: "OpenHuman".into(),
+        label: "Neppy".into(),
         endpoint: "https://api.tinyhumans.ai/v1".into(),
-        auth_style: crate::openhuman::config::schema::AuthStyle::OpenhumanJwt,
+        auth_style: crate::openhuman::config::schema::AuthStyle::NeppyJwt,
         ..Default::default()
     }];
 
@@ -2268,9 +2268,9 @@ fn migrate_cloud_provider_slugs_does_not_pick_unmatched_custom_provider() {
         crate::openhuman::config::schema::CloudProviderCreds {
             id: "p_oh".into(),
             slug: "openhuman".into(),
-            label: "OpenHuman".into(),
+            label: "Neppy".into(),
             endpoint: "https://api.openhuman.ai/v1".into(),
-            auth_style: crate::openhuman::config::schema::AuthStyle::OpenhumanJwt,
+            auth_style: crate::openhuman::config::schema::AuthStyle::NeppyJwt,
             ..Default::default()
         },
         crate::openhuman::config::schema::CloudProviderCreds {

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Three ways to power OpenHuman: the managed subscription, your own provider key
+  Three ways to power Neppy: the managed subscription, your own provider key
   (BYOK), or fully local models via Ollama. What each one supports for chat,
   vision, and embeddings, and how to configure it.
 icon: sliders
@@ -8,7 +8,7 @@ icon: sliders
 
 # Local models & bring your own key
 
-The OpenHuman subscription is the **default**, not a requirement. Inference can come from any of three places, and you can mix them per workload: run embeddings locally, chat on your own Anthropic key, and leave vision on the managed route, all at once.
+The Neppy subscription is the **default**, not a requirement. Inference can come from any of three places, and you can mix them per workload: run embeddings locally, chat on your own Anthropic key, and leave vision on the managed route, all at once.
 
 This page covers how to set up the two self-owned options and, importantly, **what each one can actually do**. Not every local model can see images, and picking a chat-only model for vision work is the single most common way to end up with a setup that looks configured but quietly does the wrong thing.
 
@@ -22,10 +22,10 @@ This page covers how to set up the two self-owned options and, importantly, **wh
 | **Speech to text**                     | Included                      | Not routed through BYOK                     | Local Whisper available                   |
 | **Text to speech**                     | Included                      | Not routed through BYOK                     | Local Piper available                     |
 | **Web search**                         | Included, no key needed       | Bring your own Exa key                      | Not applicable                            |
-| **Inference data leaves your machine** | Yes, to the OpenHuman backend | Yes, to your chosen provider                | No                                        |
+| **Inference data leaves your machine** | Yes, to the Neppy backend | Yes, to your chosen provider                | No                                        |
 | **API keys to manage**                 | None                          | One per provider                            | None                                      |
 
-That last row is deliberately about **inference data only**. Sign-in, managed integration OAuth, billing, and hosted features such as meeting agents still use the OpenHuman backend even when inference is entirely yours, so running local models is not by itself a guarantee that nothing leaves the machine. If you want a hard guarantee that no inference leaves the machine, use [Privacy Mode](../privacy-mode.md), which enforces the local-only path in the Rust core rather than relying on configuration alone.
+That last row is deliberately about **inference data only**. Sign-in, managed integration OAuth, billing, and hosted features such as meeting agents still use the Neppy backend even when inference is entirely yours, so running local models is not by itself a guarantee that nothing leaves the machine. If you want a hard guarantee that no inference leaves the machine, use [Privacy Mode](../privacy-mode.md), which enforces the local-only path in the Rust core rather than relying on configuration alone.
 
 ## Route A: local models with Ollama
 
@@ -41,7 +41,7 @@ ollama pull moondream:1.8b-v2-q4_K_S   # vision, small
 
 ### 2. Know what each model supports
 
-This is the part that bites people. A model that only does text will still **accept** an image request on Ollama: it silently drops the image and answers from the prompt text alone, which reads as a confident but entirely invented description. OpenHuman guards against this by refusing to route a vision request at a chat-only model, but it is worth knowing which is which.
+This is the part that bites people. A model that only does text will still **accept** an image request on Ollama: it silently drops the image and answers from the prompt text alone, which reads as a confident but entirely invented description. Neppy guards against this by refusing to route a vision request at a chat-only model, but it is worth knowing which is which.
 
 | Model                      | Download | Chat    | Vision  | Embeddings                         |
 | -------------------------- | -------- | ------- | ------- | ---------------------------------- |
@@ -62,7 +62,7 @@ Two traps worth calling out:
 
 For embeddings, prefer **`bge-m3`**. The Memory Tree stores vectors in a fixed 1024-dimension on-disk format, so a 384-dimension model such as `all-minilm` or a 768-dimension model such as `nomic-embed-text` will fail the dimension check at embed time.
 
-### 3. Point OpenHuman at it
+### 3. Point Neppy at it
 
 The quickest path is the desktop app: **Settings → AI & Skills → Local AI** exposes RAM tier presets that set every model ID for you and pull the weights. The tiers are:
 
@@ -125,11 +125,11 @@ See [Local AI (optional)](local-ai.md) for the deeper runtime detail, LM Studio 
 
 ## Route B: bring your own key
 
-BYOK keeps the routing, memory, tools, and agent harness exactly as they are, and swaps out who serves the tokens. Your key, your account, your billing, no OpenHuman inference charges.
+BYOK keeps the routing, memory, tools, and agent harness exactly as they are, and swaps out who serves the tokens. Your key, your account, your billing, no Neppy inference charges.
 
 ### 1. Add the provider
 
-Add your key in the desktop app under the LLM settings, which stores it in the OS keyring rather than in plain config. OpenHuman ships presets for these slugs, so you do not need to supply an endpoint:
+Add your key in the desktop app under the LLM settings, which stores it in the OS keyring rather than in plain config. Neppy ships presets for these slugs, so you do not need to supply an endpoint:
 
 `openai`, `anthropic`, `google`, `openrouter`, `orcarouter`, `groq`, `mistral`, `deepseek`, `together`, `fireworks`, `cerebras`, `xai`, `moonshot`, `gmi`, `huggingface`, `nvidia`, `zai`, `minimax`, `stepfun`, `kilocode`, `deepinfra`, `novita`, `venice`, `vercel-ai-gateway`, `sumopod`, `modelscope`
 
@@ -146,11 +146,11 @@ coding_provider = "deepseek:deepseek-coder"
 vision_provider = "openai:gpt-5.1"
 ```
 
-To make one provider the default for everything that is not pinned, set `primary_cloud` to its slug. Every workload left on `cloud` then resolves to that provider instead of the OpenHuman backend.
+To make one provider the default for everything that is not pinned, set `primary_cloud` to its slug. Every workload left on `cloud` then resolves to that provider instead of the Neppy backend.
 
 ### 3. Check the model supports the workload
 
-BYOK inherits your provider's capabilities, not OpenHuman's. Before pinning `vision_provider`, confirm the model you named accepts image input, and before pinning `embeddings_provider`, confirm the provider serves an embeddings endpoint. Not every chat provider does.
+BYOK inherits your provider's capabilities, not Neppy's. Before pinning `vision_provider`, confirm the model you named accepts image input, and before pinning `embeddings_provider`, confirm the provider serves an embeddings endpoint. Not every chat provider does.
 
 ## Mixing routes
 

@@ -6,9 +6,9 @@
 //! ## Provider-string grammar
 //!
 //! ```text
-//! "openhuman"                    → OpenHumanBackendModel; model = config.default_model
+//! "openhuman"                    → NeppyBackendModel; model = config.default_model
 //! "cloud" / missing              → primary_cloud; legacy custom inference_url wins when
-//!                                  primary still points at OpenHuman after migration
+//!                                  primary still points at Neppy after migration
 //! "ollama:<model>[@<temp>]"      → local Ollama at config.local_ai.base_url
 //! "lmstudio:<model>[@<temp>]"    → local LM Studio
 //! "mlx:<model>[@<temp>]"         → local MLX-compatible server
@@ -31,13 +31,13 @@ use crate::openhuman::inference::provider::openai_codex::{
     openai_codex_client_version, openai_codex_user_agent, resolve_openai_codex_routing,
     OPENAI_CODEX_ACCOUNT_HEADER, OPENAI_CODEX_ORIGINATOR, OPENAI_CODEX_ORIGINATOR_HEADER,
 };
-use crate::openhuman::inference::provider::openhuman_backend_model::OpenHumanBackendModel;
+use crate::openhuman::inference::provider::openhuman_backend_model::NeppyBackendModel;
 use crate::openhuman::inference::provider::ProviderRuntimeOptions;
 use crate::openhuman::security::credentials::AuthService;
 use std::sync::Arc;
 use tinyagents::harness::model::{ChatModel, ModelRequest, ModelResponse, ModelStream};
 
-/// Sentinel meaning "use the OpenHuman backend session JWT".
+/// Sentinel meaning "use the Neppy backend session JWT".
 pub const PROVIDER_OPENHUMAN: &str = "openhuman";
 /// Prefix for Ollama-local providers: `"ollama:<model>"`.
 pub const OLLAMA_PROVIDER_PREFIX: &str = "ollama:";
@@ -57,7 +57,7 @@ pub const CLAUDE_AGENT_SDK_PROVIDER: &str = "claude_agent_sdk";
 /// (via a non-openhuman `inference_url`) but no matching `cloud_providers`
 /// entry was found. Passed through `provider_for_role` and caught early in
 /// `create_chat_model_from_string` to produce a clear configuration error
-/// instead of silently routing through the managed OpenHuman backend.
+/// instead of silently routing through the managed Neppy backend.
 pub const BYOK_INCOMPLETE_SENTINEL: &str = "__byok_incomplete__";
 
 /// Interpolation-free substring of the empty-model bail emitted by
@@ -98,7 +98,7 @@ pub fn auth_key_for_slug(slug: &str) -> String {
 /// concrete model string that the provider router would use — without
 /// constructing the actual provider.  Returns the provider-string prefix
 /// (e.g. `"openai"`) concatenated with the model when a BYOK provider is
-/// active, or the bare tier name for the managed OpenHuman backend.
+/// active, or the bare tier name for the managed Neppy backend.
 pub fn resolve_model_for_hint(hint_or_tier: &str, config: &Config) -> String {
     let hint_to_tier: &[(&str, &str)] = &[
         ("reasoning", crate::openhuman::config::MODEL_REASONING_V1),
@@ -217,7 +217,7 @@ pub fn role_for_model_tier(hint_or_tier: &str) -> &'static str {
     }
 }
 
-/// Return whether `model` is a recognized OpenHuman backend tier name.
+/// Return whether `model` is a recognized Neppy backend tier name.
 ///
 /// Used to guard against stale `default_model` values (e.g. set by older UI
 /// versions) that the backend would reject with HTTP 400.  The known tiers are
@@ -257,7 +257,7 @@ pub(crate) fn is_known_openhuman_tier(model: &str) -> bool {
 /// A raw passthrough id is any **non-empty** string that is neither a `hint:*`
 /// alias nor a known managed tier ([`is_known_openhuman_tier`]) — i.e. the model
 /// ids a user pins directly on an agent/node (e.g. `"claude-opus-4"`). The
-/// OpenHuman backend preserves such ids verbatim
+/// Neppy backend preserves such ids verbatim
 /// (the managed model's blank-id normalization) and is authoritative over
 /// their validity, so the core must **not** silently collapse them onto
 /// `reasoning-v1` (issue #4598). Managed tiers and every `hint:*` string return
@@ -267,7 +267,7 @@ pub(crate) fn is_raw_passthrough_model(model: &str) -> bool {
     !trimmed.is_empty() && !trimmed.starts_with("hint:") && !is_known_openhuman_tier(trimmed)
 }
 
-/// Per-tier vision (image-input) capability for the managed OpenHuman backend.
+/// Per-tier vision (image-input) capability for the managed Neppy backend.
 ///
 /// The remote managed backend (`api.tinyhumans.ai`) does not advertise per-tier
 /// capabilities, so the core maintains this map itself. Accepts both the tier
@@ -365,7 +365,7 @@ pub(crate) fn role_uses_implicit_cloud_fallback(role: &str, config: &Config) -> 
 /// providers are configured independently.
 ///
 /// For backwards compatibility, a legacy external `inference_url` takes
-/// precedence when `primary_cloud` still points at OpenHuman because
+/// precedence when `primary_cloud` still points at Neppy because
 /// migration 1→2 preserved the URL as a custom provider entry but older
 /// configs did not explicitly set per-workload routes.
 pub fn provider_for_role(role: &str, config: &Config) -> String {
@@ -416,13 +416,13 @@ pub fn provider_for_role(role: &str, config: &Config) -> String {
     }
 }
 
-/// #3767: Whether the OpenHuman managed-credits gate should be bypassed for a
+/// #3767: Whether the Neppy managed-credits gate should be bypassed for a
 /// single workload role.
 ///
 /// Returns true when `role` resolves (via [`provider_for_role`]) to a non-managed
 /// provider the user funds themselves — a BYO cloud key (incl. OpenAI OAuth), a
 /// local runtime, or claude-code — with usable credentials. When the role is on
-/// the OpenHuman managed backend, or a BYO route has no usable key, it returns
+/// the Neppy managed backend, or a BYO route has no usable key, it returns
 /// false (the gate stays on; #3767: "BYO key present but invalid/unverified →
 /// still gated").
 ///
@@ -572,7 +572,7 @@ pub mod test_provider_override {
 fn external_provider_label(provider: &str) -> String {
     let p = provider.trim();
     if p == PROVIDER_OPENHUMAN {
-        return "OpenHuman (managed cloud)".to_string();
+        return "Neppy (managed cloud)".to_string();
     }
     if p == BYOK_INCOMPLETE_SENTINEL {
         return "cloud (incomplete BYOK config)".to_string();
@@ -721,8 +721,8 @@ fn create_chat_model_with_model_id_inner(
     if let Some(model) = test_provider_override::current() {
         return Ok((model, "mock-model".to_string()));
     }
-    // Managed OpenHuman backend → crate-native host `ChatModel`
-    // ([`OpenHumanBackendModel`], issue #4727 Motion B) instead of a
+    // Managed Neppy backend → crate-native host `ChatModel`
+    // ([`NeppyBackendModel`], issue #4727 Motion B) instead of a
     // adapted provider. A native test-model override must still win, so only
     // take this path when no
     // override is installed. The public wrapper supplies the construction-time
@@ -769,7 +769,7 @@ fn create_chat_model_with_model_id_inner(
     ))
 }
 
-/// Whether `role` resolves to the managed OpenHuman backend (vs BYOK / local /
+/// Whether `role` resolves to the managed Neppy backend (vs BYOK / local /
 /// claude-code). Uses the same empty/`cloud`/`openhuman` normalization as
 /// [`create_chat_model_from_string`] so every managed role shares one path.
 fn resolves_to_managed_backend(role: &str, config: &Config) -> bool {
@@ -791,7 +791,7 @@ fn resolves_to_managed_backend(role: &str, config: &Config) -> bool {
 ///    unknown provider slug, local-only privacy-mode block, …) reused
 ///    verbatim so this probe never re-implements it.
 /// 2. **Managed-backend readiness** — when `role` resolves to the managed
-///    OpenHuman backend, [`OpenHumanBackendModel::probe_readiness`] makes one
+///    Neppy backend, [`NeppyBackendModel::probe_readiness`] makes one
 ///    cheap real completion attempt to catch the "account has no provider API
 ///    key configured" class of failure that construction alone cannot see
 ///    (construction only builds the client; it never calls the backend).
@@ -828,7 +828,7 @@ pub async fn probe_inference_readiness(role: &str, config: &Config) -> Result<()
     }
 
     log::debug!(
-        "[flows][inference-probe] role={role} resolves to the managed OpenHuman backend — \
+        "[flows][inference-probe] role={role} resolves to the managed Neppy backend — \
          probing readiness"
     );
     let (managed_model, model_id) =
@@ -988,7 +988,7 @@ fn unresolved_chat_model_error(role: &str, provider: &str, config: &Config) -> a
              ({inference_url}) but no matching cloud_providers entry was found for role '{role}'. \
              To complete BYOK setup add a cloud_providers entry whose endpoint matches \
              {inference_url} (or use a workload-specific route). \
-             To use the OpenHuman managed backend instead, clear inference_url from config."
+             To use the Neppy managed backend instead, clear inference_url from config."
         );
     }
 
@@ -1112,7 +1112,7 @@ fn managed_tier_for_role(role: &str) -> Option<&'static str> {
 /// The **managed-backend** summarization tier model — fixed at
 /// [`MODEL_SUMMARIZATION_V1`] (`summarization-v1`).
 ///
-/// Read **only** on the managed OpenHuman path (inside [`make_openhuman_backend`]),
+/// Read **only** on the managed Neppy path (inside [`make_openhuman_backend`]),
 /// so it is consumed iff the `summarization`/`memory` role actually resolves to
 /// the managed backend — BYOK and local routes carry their own model in the
 /// provider string and never reach here.
@@ -1127,7 +1127,7 @@ pub(crate) fn summarization_tier_model() -> &'static str {
     crate::openhuman::config::MODEL_SUMMARIZATION_V1
 }
 
-/// Build the OpenHuman backend provider (session-JWT auth).
+/// Build the Neppy backend provider (session-JWT auth).
 ///
 /// `role` is the workload name (e.g. `"chat"`, `"coding"`, `"vision"`). A
 /// specialised workload role is pinned to its canonical managed tier via
@@ -1137,15 +1137,15 @@ pub(crate) fn summarization_tier_model() -> &'static str {
 /// [`summarization_tier_model`] (fixed at `summarization-v1`) so they never
 /// collapse to `default_model`. The generic `chat` role (and background roles)
 /// keep inheriting `config.default_model`.
-/// Resolve the managed OpenHuman backend for `role` — the model id (tier /
+/// Resolve the managed Neppy backend for `role` — the model id (tier /
 /// summarization / default, with `hint:<tier>` translation) plus a configured
-/// [`OpenHumanBackendModel`]. Shared by both the `Provider` path
+/// [`NeppyBackendModel`]. Shared by both the `Provider` path
 /// ([`make_openhuman_backend`]) and the crate `ChatModel` path
 /// ([`make_openhuman_backend_model`], issue #4727 Motion B).
 fn resolve_managed_backend(
     role: &str,
     config: &Config,
-) -> anyhow::Result<(OpenHumanBackendModel, String)> {
+) -> anyhow::Result<(NeppyBackendModel, String)> {
     resolve_managed_backend_with_model_override(role, config, None)
 }
 
@@ -1153,7 +1153,7 @@ fn resolve_managed_backend_with_model_override(
     role: &str,
     config: &Config,
     model_override: Option<&str>,
-) -> anyhow::Result<(OpenHumanBackendModel, String)> {
+) -> anyhow::Result<(NeppyBackendModel, String)> {
     let model = if let Some(tier) = managed_tier_for_role(role) {
         log::debug!(
             "[providers][chat-factory] role={} pinned to managed tier model={}",
@@ -1202,7 +1202,7 @@ fn resolve_managed_backend_with_model_override(
         options.openhuman_dir,
         options.secrets_encrypt
     );
-    // Translate `hint:<tier>` model strings into the OpenHuman backend's
+    // Translate `hint:<tier>` model strings into the Neppy backend's
     // canonical tier names.  Unrecognised `hint:*` strings (e.g. `hint:reaction`
     // for lightweight models) are forwarded as-is — the backend is authoritative
     // over which hint values it accepts, and the web-chat model_override path
@@ -1240,7 +1240,7 @@ fn resolve_managed_backend_with_model_override(
                 // error for a genuinely bad id (issue #4598).
                 log::debug!(
                     "[providers][chat-factory] forwarding raw/BYOK model '{}' verbatim to the \
-                     OpenHuman backend (not a managed tier); the backend validates it",
+                     Neppy backend (not a managed tier); the backend validates it",
                     model
                 );
                 model
@@ -1263,13 +1263,13 @@ fn resolve_managed_backend_with_model_override(
         crate::openhuman::security::egress::EgressDescriptor::inference("openhuman", &model, true),
     );
     Ok((
-        OpenHumanBackendModel::new(config.api_url.as_deref(), &options, model.clone()),
+        NeppyBackendModel::new(config.api_url.as_deref(), &options, model.clone()),
         model,
     ))
 }
 
-/// The managed OpenHuman backend as a crate-native host `ChatModel`
-/// ([`OpenHumanBackendModel`], issue #4727 Motion B) — the cutover replacement
+/// The managed Neppy backend as a crate-native host `ChatModel`
+/// ([`NeppyBackendModel`], issue #4727 Motion B) — the cutover replacement
 /// for the `Provider` path. Same resolution; wraps the backend so the harness
 /// holds a crate `ChatModel` and the dynamic JWT + `thread_id` + billing envelope
 /// are bridged onto the crate wire client per call.
@@ -1293,7 +1293,7 @@ pub(crate) fn make_openhuman_backend_model(
 /// [`TurnModelSource`](crate::openhuman::agent::tinyagents::TurnModelSource) to construct
 /// the primary + each workload-tier route directly.
 ///
-/// - **Managed** → [`OpenHumanBackendModel`](super::openhuman_backend_model::OpenHumanBackendModel)
+/// - **Managed** → [`NeppyBackendModel`](super::openhuman_backend_model::NeppyBackendModel)
 ///   pinned to `model`; the backend resolves the tier from `request.model`, so a
 ///   tier alias / agent-model pin dispatches directly.
 /// - **Local / cloud** → the crate builders; the model rides the role's resolved
@@ -1564,7 +1564,7 @@ fn try_create_claude_code_chat_model_from_string(
 /// would violate by building the local model.
 ///
 /// - `provider_string` empty / `"cloud"` / [`PROVIDER_OPENHUMAN`] → managed
-///   [`OpenHumanBackendModel`] pinned to `model` (the force-managed case).
+///   [`NeppyBackendModel`] pinned to `model` (the force-managed case).
 /// - Otherwise the string equals what the role resolves to (a BYOK cloud slug), so
 ///   this delegates to [`create_turn_chat_model`] for `role`.
 ///
@@ -1862,7 +1862,7 @@ pub(crate) fn create_local_chat_model_from_string(
 
 /// Whether Neppy's local-first mode is active (default: on).
 ///
-/// Neppy is a fork of OpenHuman cut off from the TinyHumans hosted backend.
+/// Neppy is a fork of Neppy cut off from the TinyHumans hosted backend.
 /// With no backend, the app-session gates that upstream applies to custom
 /// providers have nothing to validate against, so local mode short-circuits
 /// them. Set `NEPPY_LOCAL_MODE=0` (or `false`/`off`) to restore the upstream
@@ -1884,7 +1884,7 @@ pub(crate) fn neppy_local_mode() -> bool {
     })
 }
 
-/// Verify the user has an active OpenHuman backend session.
+/// Verify the user has an active Neppy backend session.
 ///
 /// Without this check, an unregistered user can configure every workload
 /// to use a custom cloud provider and bypass the session requirement
@@ -1932,7 +1932,7 @@ pub(crate) fn verify_session_active(config: &Config) -> anyhow::Result<()> {
         .filter(|s| !s.trim().is_empty())
         .is_some();
     if !has_session {
-        anyhow::bail!("SESSION_EXPIRED: no backend session — sign in to use OpenHuman")
+        anyhow::bail!("SESSION_EXPIRED: no backend session — sign in to use Neppy")
     }
     Ok(())
 }
@@ -1947,7 +1947,7 @@ fn resolve_primary_cloud_provider_string(config: &Config) -> String {
         if let Some(legacy) = legacy_custom_inference_provider_string(config) {
             return legacy;
         }
-        // Primary is explicitly OpenHuman but inference_url points at a custom
+        // Primary is explicitly Neppy but inference_url points at a custom
         // endpoint with no matching provider entry — this is a half-migrated BYOK
         // config. Fail closed so the user sees an actionable error rather than
         // silently routing through the managed backend.
@@ -2104,7 +2104,7 @@ fn is_openhuman_cloud_entry(
     entry: &crate::openhuman::config::schema::cloud_providers::CloudProviderCreds,
 ) -> bool {
     entry.slug == PROVIDER_OPENHUMAN
-        || matches!(entry.auth_style, AuthStyle::OpenhumanJwt)
+        || matches!(entry.auth_style, AuthStyle::NeppyJwt)
         || looks_like_openhuman_backend(&entry.endpoint)
 }
 
@@ -2196,10 +2196,10 @@ fn resolve_cloud_slug<'a>(
     // unset default_model on the config entry).
     // See https://github.com/tinyhumansai/openhuman/issues/2784.
     //
-    // OpenhumanJwt entries are exempt: they always delegate to
+    // NeppyJwt entries are exempt: they always delegate to
     // make_openhuman_backend which derives the model from config.default_model,
     // ignoring whatever effective_model we computed here.
-    if entry.auth_style != AuthStyle::OpenhumanJwt && effective_model.trim().is_empty() {
+    if entry.auth_style != AuthStyle::NeppyJwt && effective_model.trim().is_empty() {
         log::warn!(
             "[nvidia-nim][chat-factory] role={} slug={} resolved to empty model — \
              provider string must include a model id (e.g. '{}:<model-id>') or \
@@ -2217,7 +2217,7 @@ fn resolve_cloud_slug<'a>(
         );
     }
 
-    if entry.auth_style != AuthStyle::OpenhumanJwt && is_abstract_tier_model(&effective_model) {
+    if entry.auth_style != AuthStyle::NeppyJwt && is_abstract_tier_model(&effective_model) {
         if let Some(default_model) = entry
             .default_model
             .as_deref()
@@ -2297,7 +2297,7 @@ fn resolve_cloud_slug<'a>(
     // saved, and failing that at construction time would be a behaviour change
     // well beyond this diagnostic.
     //
-    // Styles that carry no stored key (`OpenhumanJwt` injects a session JWT
+    // Styles that carry no stored key (`NeppyJwt` injects a session JWT
     // downstream, `None` sends no auth header at all) are legitimately blank and
     // never trip this.
     if implicit_fallback
@@ -2320,7 +2320,7 @@ fn resolve_cloud_slug<'a>(
 
 /// A `<slug>:<model>` BYOK cloud provider as a crate-native [`ChatModel`] — the
 /// Native model for every configured cloud auth style, including the managed
-/// `OpenhumanJwt` entry (issue #4727 Phase 3).
+/// `NeppyJwt` entry (issue #4727 Phase 3).
 ///
 /// Returns `None` unless the role resolves to a **configured** cloud slug. When
 /// it does:
@@ -2329,7 +2329,7 @@ fn resolve_cloud_slug<'a>(
 ///   API (`with_responses_api_primary`), with the codex account/originator
 ///   headers, user-agent, `client_version` query param, and `max_output_tokens`
 ///   omitted (the crate `/v1/responses` support, tinyagents#51);
-/// - `OpenhumanJwt` → the crate-native managed backend model.
+/// - `NeppyJwt` → the crate-native managed backend model.
 ///
 /// The legacy host's rare chat-completions-404 → `/v1/responses` **fallback** for
 /// non-codex slugs is not replicated (the crate has responses-*primary*, not
@@ -2422,7 +2422,7 @@ fn try_create_cloud_slug_chat_model_from_string_with_native_tools(
         Err(e) => return Some(Err(e)),
     };
 
-    // Every configured cloud slug builds a crate-native model. OpenhumanJwt
+    // Every configured cloud slug builds a crate-native model. NeppyJwt
     // delegates to the managed backend model; Codex OAuth routes to the
     // Responses API with its headers / UA / query; every other
     // Bearer/Anthropic/None slug uses Chat Completions (its primary path — the
@@ -2438,7 +2438,7 @@ fn try_create_cloud_slug_chat_model_from_string_with_native_tools(
     let auth = match entry.auth_style {
         AuthStyle::Anthropic => CompatAuthStyle::Anthropic,
         AuthStyle::None => CompatAuthStyle::None,
-        AuthStyle::OpenhumanJwt => {
+        AuthStyle::NeppyJwt => {
             let model_override =
                 (!effective_model.trim().is_empty()).then_some(effective_model.as_str());
             let (backend, pinned_model) =

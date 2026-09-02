@@ -1,5 +1,5 @@
 import { waitForApp, waitForAppReady } from '../helpers/app-helpers';
-import { callOpenhumanRpc, expectRpcOk } from '../helpers/core-rpc';
+import { callNeppyRpc, expectRpcOk } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
 import {
   clickText,
@@ -79,7 +79,7 @@ describe('Agent teams live coordination surface', () => {
     const messageBody = 'kick off the draft when ready';
 
     stepLog('seeding team');
-    const created = await callOpenhumanRpc<TeamCreateResult>('openhuman.agent_team_create', {
+    const created = await callNeppyRpc<TeamCreateResult>('openhuman.agent_team_create', {
       leadAgentId: 'lead',
       summary,
       members: [{ name: 'scout', agentId: 'researcher' }],
@@ -89,7 +89,7 @@ describe('Agent teams live coordination surface', () => {
     const memberId = created.result!.members[0].id;
 
     stepLog('seeding task');
-    const assigned = await callOpenhumanRpc<TaskAssignResult>('openhuman.agent_team_assign_task', {
+    const assigned = await callNeppyRpc<TaskAssignResult>('openhuman.agent_team_assign_task', {
       teamId,
       title: taskTitle,
       ownerMemberId: memberId,
@@ -98,7 +98,7 @@ describe('Agent teams live coordination surface', () => {
     expectRpcOk('agent_team_assign_task', assigned);
 
     stepLog('seeding lead message');
-    const messaged = await callOpenhumanRpc('openhuman.agent_team_message_member', {
+    const messaged = await callNeppyRpc('openhuman.agent_team_message_member', {
       teamId,
       toMemberId: memberId,
       content: messageBody,

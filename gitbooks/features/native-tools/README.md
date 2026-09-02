@@ -1,6 +1,6 @@
 ---
 description: >-
-  The full toolset OpenHuman's agent has out of the box - research, code,
+  The full toolset Neppy's agent has out of the box - research, code,
   control your machine, schedule jobs, talk back to you, and call into 118+
   third-party services.
 icon: toolbox
@@ -8,7 +8,7 @@ icon: toolbox
 
 # Native Tools
 
-OpenHuman's agent doesn't ship empty. Every model behind the agent has a curated set of tools available the moment you install - no plugin marketplace, no API keys to wire up, no MCP servers to register. The whole toolbelt is in the box.
+Neppy's agent doesn't ship empty. Every model behind the agent has a curated set of tools available the moment you install - no plugin marketplace, no API keys to wire up, no MCP servers to register. The whole toolbelt is in the box.
 
 This page is the index. Each subpage covers one family of tools.
 
@@ -19,7 +19,7 @@ A plugin-only model means tools live in different processes, behind RPC, with th
 - Consistent error handling.
 - Zero install friction.
 - All output passes through [Smart Token Compression](../token-compression.md) for free.
-- Predictable security boundary - filesystem tools respect workspace scoping, and network tools use the managed OpenHuman proxy by default unless you opt into a self-hosted path such as SearXNG.
+- Predictable security boundary - filesystem tools respect workspace scoping, and network tools use the managed Neppy proxy by default unless you opt into a self-hosted path such as SearXNG.
 
 ## The toolbelt
 

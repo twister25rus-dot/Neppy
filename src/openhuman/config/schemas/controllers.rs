@@ -321,7 +321,7 @@ fn handle_update_model_settings(params: Map<String, Value>) -> ControllerFuture 
                             {
                                 "bearer" => AuthStyle::Bearer,
                                 "anthropic" => AuthStyle::Anthropic,
-                                "openhuman_jwt" | "openhumanjwt" => AuthStyle::OpenhumanJwt,
+                                "openhuman_jwt" | "openhumanjwt" => AuthStyle::NeppyJwt,
                                 "none" => AuthStyle::None,
                                 other => {
                                     return Err(format!(

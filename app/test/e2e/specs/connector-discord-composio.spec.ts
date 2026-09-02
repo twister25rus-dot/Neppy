@@ -15,7 +15,7 @@ import {
   seedComposioConnection,
   seedComposioToolkits,
 } from '../helpers/composio-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
 import {
   textExists,
@@ -89,7 +89,7 @@ describe('Discord (Composio) connector flow', () => {
   it('auth/connect flow succeeds with mocked backend', async function () {
     this.timeout(60_000);
     clearRequestLog();
-    const out = await callOpenhumanRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
+    const out = await callNeppyRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
     expect(out.ok).toBe(true);
     const authReq = getRequestLog().find(
       r => r.method === 'POST' && r.url.includes('/composio/authorize')
@@ -101,7 +101,7 @@ describe('Discord (Composio) connector flow', () => {
 
   it('connected state persists after reconnect/reload', async function () {
     this.timeout(60_000);
-    const out = await callOpenhumanRpc('openhuman.composio_list_connections', {});
+    const out = await callNeppyRpc('openhuman.composio_list_connections', {});
     expect(out.ok).toBe(true);
     const result = (out.result as { result?: unknown })?.result ?? out.result;
     const connections = (result as { connections?: unknown[] })?.connections ?? [];
@@ -117,7 +117,7 @@ describe('Discord (Composio) connector flow', () => {
   it('composio_sync does not tear down the session', async function () {
     this.timeout(30_000);
     clearRequestLog();
-    await callOpenhumanRpc('openhuman.composio_sync', { toolkit: TOOLKIT_SLUG });
+    await callNeppyRpc('openhuman.composio_sync', { toolkit: TOOLKIT_SLUG });
     // syncReq URL check removed — composio_sync does no HTTP for
     // connectors without a native provider (the RPC short-circuits). The
     // assertSessionNotNuked() below covers the real intent: the call
@@ -129,7 +129,7 @@ describe('Discord (Composio) connector flow', () => {
   it('composio_execute routes a basic task', async function () {
     this.timeout(30_000);
     clearRequestLog();
-    await callOpenhumanRpc('openhuman.composio_execute', {
+    await callNeppyRpc('openhuman.composio_execute', {
       connection_id: 'c-discord-1',
       action: 'DISCORD_LIST_SERVERS',
       params: {},
@@ -164,7 +164,7 @@ describe('Discord (Composio) connector flow', () => {
   it('unrelated 4xx on composio route does not nuke session', async function () {
     this.timeout(60_000);
     injectComposioFault(400);
-    await callOpenhumanRpc('openhuman.composio_execute', {
+    await callNeppyRpc('openhuman.composio_execute', {
       connection_id: 'c-discord-1',
       action: 'DISCORD_LIST_SERVERS',
       params: {},
@@ -177,7 +177,7 @@ describe('Discord (Composio) connector flow', () => {
     this.timeout(60_000);
     seedComposioConnection(TOOLKIT_SLUG, 'ACTIVE', 'c-discord-1');
     clearRequestLog();
-    await callOpenhumanRpc('openhuman.composio_delete_connection', {
+    await callNeppyRpc('openhuman.composio_delete_connection', {
       connection_id: 'c-discord-1',
     });
     const deleteReq = getRequestLog().find(

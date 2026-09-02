@@ -1,6 +1,6 @@
 # credentials
 
-Credential management for the OpenHuman app session and provider/OAuth auth profiles. Owns the on-disk **auth-profiles** store (encrypted JSON + OS keychain), the `app-session` JWT lifecycle (login / logout / session-state), per-provider token storage (e.g. API keys, OAuth token sets), the backend OAuth connect/handoff flows, and the Composio direct-mode (BYO key) credential slot. Exposes everything under the `auth.*` JSON-RPC / CLI namespace and runs the canonical session-teardown when a `SessionExpired` event fires.
+Credential management for the Neppy app session and provider/OAuth auth profiles. Owns the on-disk **auth-profiles** store (encrypted JSON + OS keychain), the `app-session` JWT lifecycle (login / logout / session-state), per-provider token storage (e.g. API keys, OAuth token sets), the backend OAuth connect/handoff flows, and the Composio direct-mode (BYO key) credential slot. Exposes everything under the `auth.*` JSON-RPC / CLI namespace and runs the canonical session-teardown when a `SessionExpired` event fires.
 
 ## Responsibilities
 
@@ -78,7 +78,7 @@ None. This module owns no agent tools (`tools.rs` does not exist).
 - **OS keychain** when available (`crate::openhuman::security::keyring::is_available`): all token fields stored under key `auth:{profile_id}` namespaced by a per-user id derived from the state dir; JSON keeps no secret fields.
 - **Encrypted-JSON fallback** (headless/CI): token fields encrypted via `SecretStore` (ChaCha20-Poly1305).
 - Loads migrate legacy `enc:`/`enc2:` cipher fields and promote secrets into the keychain; unrecoverable (un-decryptable / bad-`kind`) profiles are dropped rather than poisoning the whole store; unparseable files are quarantined to `auth-profiles.corrupt-<ts>.json` and reset to empty.
-- Mutations are guarded by `auth-profiles.lock` (PID-stamped). Stale/leaked/malformed locks are reclaimed by liveness + age checks to avoid the "stuck on Initializing OpenHuman" hang.
+- Mutations are guarded by `auth-profiles.lock` (PID-stamped). Stale/leaked/malformed locks are reclaimed by liveness + age checks to avoid the "stuck on Initializing Neppy" hang.
 
 ## Dependencies
 

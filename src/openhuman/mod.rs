@@ -1,4 +1,4 @@
-//! OpenHuman — a lightweight agent runtime for human-AI collaboration.
+//! Neppy — a lightweight agent runtime for human-AI collaboration.
 //!
 //! The `openhuman` module is the heart of the agent-specific logic within the core.
 //! It provides a comprehensive set of features for building and running AI agents,

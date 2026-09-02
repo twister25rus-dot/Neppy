@@ -46,7 +46,7 @@ static RUNTIME_PROXY_CLIENT_CACHE: OnceLock<RwLock<HashMap<String, reqwest::Clie
 pub enum ProxyScope {
     Environment,
     #[default]
-    OpenHuman,
+    Neppy,
     Services,
 }
 
@@ -77,7 +77,7 @@ impl Default for ProxyConfig {
             https_proxy: None,
             all_proxy: None,
             no_proxy: Vec::new(),
-            scope: ProxyScope::OpenHuman,
+            scope: ProxyScope::Neppy,
             services: Vec::new(),
         }
     }
@@ -150,7 +150,7 @@ impl ProxyConfig {
 
         match self.scope {
             ProxyScope::Environment => false,
-            ProxyScope::OpenHuman => true,
+            ProxyScope::Neppy => true,
             ProxyScope::Services => {
                 let service_key = service_key.trim().to_ascii_lowercase();
                 if service_key.is_empty() {
@@ -493,7 +493,7 @@ pub fn build_runtime_proxy_client_with_timeouts(
 pub(crate) fn parse_proxy_scope(raw: &str) -> Option<ProxyScope> {
     match raw.trim().to_ascii_lowercase().as_str() {
         "environment" | "env" => Some(ProxyScope::Environment),
-        "openhuman" | "internal" | "core" => Some(ProxyScope::OpenHuman),
+        "openhuman" | "internal" | "core" => Some(ProxyScope::Neppy),
         "services" | "service" => Some(ProxyScope::Services),
         _ => None,
     }

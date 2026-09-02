@@ -47,7 +47,7 @@ import {
   typeIntoComposer,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -256,7 +256,7 @@ describe('Chat harness — orchestrator → subagent continuation flow', () => {
     // IN_FLIGHT must drain after chat_done.
     await browser.waitUntil(
       async () => {
-        const snap = await callOpenhumanRpc<{ result: { entries: Array<unknown> } }>(
+        const snap = await callNeppyRpc<{ result: { entries: Array<unknown> } }>(
           'openhuman.test_support_in_flight_chats',
           {}
         );
@@ -285,7 +285,7 @@ describe('Chat harness — orchestrator → subagent continuation flow', () => {
     let content = '';
     const deadline = Date.now() + 30_000;
     while (Date.now() < deadline) {
-      const read = await callOpenhumanRpc<{ result: { content_utf8: string } }>(
+      const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
         'openhuman.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 131_072 }
       );

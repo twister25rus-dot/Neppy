@@ -14,7 +14,7 @@
 //! never block the user — the caller still offers "open anyway" + "reveal
 //! folder" + a config-dir override that feeds back in here as `extra`.
 //!
-//! # Why this is OpenHuman's and not the engine's
+//! # Why this is Neppy's and not the engine's
 //!
 //! Same reasoning as [`crate::openhuman::memory::safety`] and
 //! [`crate::openhuman::util::redact`] before it, and the same route: this is

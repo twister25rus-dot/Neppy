@@ -5,7 +5,7 @@ icon: code
 
 # Coder
 
-The coder family is what makes OpenHuman a viable coding partner instead of a chat window that _pretends_ to know the codebase.
+The coder family is what makes Neppy a viable coding partner instead of a chat window that _pretends_ to know the codebase.
 
 ## Tools in the family
 

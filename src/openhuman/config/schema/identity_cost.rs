@@ -29,7 +29,7 @@ pub struct CostConfig {
 
     /// Daily spending limit in USD (default: 10.00).
     ///
-    /// Applies to **managed (OpenHuman-credit) inference only** — see
+    /// Applies to **managed (Neppy-credit) inference only** — see
     /// [`crate::openhuman::platform::cost::route`]. Bring-your-own-key and local
     /// inference is billed by the user's own provider, so it is recorded for
     /// the dashboard but never counted against this limit and can never

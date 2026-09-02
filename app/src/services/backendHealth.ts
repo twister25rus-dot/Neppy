@@ -21,7 +21,7 @@ interface CheckOptions {
 /**
  * Probes the backend `/health` endpoint.
  *
- * `GET /health` on the OpenHuman backend returns 200 `{"status":"ok"}`. We
+ * `GET /health` on the Neppy backend returns 200 `{"status":"ok"}`. We
  * treat any 2xx/3xx/4xx as "the backend is reachable at all" — the goal of
  * this probe is specifically to catch full edge/origin failures (Cloudflare
  * 5xx, DNS, offline) so we can surface them on the Welcome screen instead of

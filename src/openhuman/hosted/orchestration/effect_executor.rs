@@ -56,7 +56,7 @@ pub fn device_tool_manifest() -> Value {
             },
             {
                 "name": "run_local_agent",
-                "description": "Spawn a local device sub-agent (e.g. code_executor for repo/shell/file work, researcher, tools_agent) on the user's own machine for background work, and return an acknowledgement. LOCAL-EXECUTION: only runs for a Master-chat cycle (the human ↔ their own OpenHuman); it is refused for any agent-to-agent cycle.",
+                "description": "Spawn a local device sub-agent (e.g. code_executor for repo/shell/file work, researcher, tools_agent) on the user's own machine for background work, and return an acknowledgement. LOCAL-EXECUTION: only runs for a Master-chat cycle (the human ↔ their own Neppy); it is refused for any agent-to-agent cycle.",
                 "inputSchema": {
                     "type": "object",
                     "required": ["agent_id", "prompt"],
@@ -538,7 +538,7 @@ pub async fn execute_send_dm(effect: &SendDmEffect) -> Result<(), String> {
     Ok(())
 }
 
-/// A self-directed reply (the human↔OpenHuman Master chat, or the subconscious
+/// A self-directed reply (the human↔Neppy Master chat, or the subconscious
 /// window) — rendered into the local cache, never Signal-sent to a peer. The
 /// hosted brain ships every terminal reply as a `send_dm`; the device decides
 /// whether that reply is for a peer or for the user's own window.

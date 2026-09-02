@@ -7,7 +7,7 @@ icon: browsers
 
 # Frontend (app/src/)
 
-The OpenHuman desktop UI: a Vite + React 19 tree under `app/src/` (pnpm workspace `openhuman-app`). It uses Redux Toolkit with persistence for session state, talks to the in-process Rust core over JSON-RPC (`coreRpcClient` → local HTTP, with the Tauri `relay_http_rpc` command as a fallback relay) and socket.io (`socketService`), and reaches the cloud backend via REST (`apiClient`). Heavy logic lives in the core, not here.
+The Neppy desktop UI: a Vite + React 19 tree under `app/src/` (pnpm workspace `openhuman-app`). It uses Redux Toolkit with persistence for session state, talks to the in-process Rust core over JSON-RPC (`coreRpcClient` → local HTTP, with the Tauri `relay_http_rpc` command as a fallback relay) and socket.io (`socketService`), and reaches the cloud backend via REST (`apiClient`). Heavy logic lives in the core, not here.
 
 This is one consolidated reference. Use the table of contents above (or your reader's outline) to jump between sections.
 
@@ -54,7 +54,7 @@ app/src/
 
 ### System architecture
 
-OpenHuman’s desktop UI is a **React 19** app (`app/src/`) that:
+Neppy’s desktop UI is a **React 19** app (`app/src/`) that:
 
 - Uses **Redux Toolkit** with persistence for session-related state
 - Connects to the backend with **REST** (`apiClient`) and to the local core with **Socket.io** (`socketService` → core socket endpoint)
@@ -454,7 +454,7 @@ A routed stepper (`Onboarding.tsx` mounts nested routes inside `OnboardingLayout
                → embeddings → (activity) → vault → /chat
 ```
 
-Each custom step offers **Default** (let OpenHuman manage it) vs **Configure** (inline controls, or a deep-link callout to Settings for domains not yet embedded). Pages live in `pages/onboarding/pages/`; the legacy Composio/skills/context-gathering steps (`pages/onboarding/steps/`) are retired from the default flow but remain on disk. Completion is tracked by the core's `onboarding_completed` flag, enforced by the AppShell onboarding gate. After onboarding, `AppWalkthrough` (Joyride) runs the post-onboarding tour.
+Each custom step offers **Default** (let Neppy manage it) vs **Configure** (inline controls, or a deep-link callout to Settings for domains not yet embedded). Pages live in `pages/onboarding/pages/`; the legacy Composio/skills/context-gathering steps (`pages/onboarding/steps/`) are retired from the default flow but remain on disk. Completion is tracked by the core's `onboarding_completed` flag, enforced by the AppShell onboarding gate. After onboarding, `AppWalkthrough` (Joyride) runs the post-onboarding tour.
 
 ### Settings
 

@@ -99,7 +99,7 @@ describe('Service connectivity flow (UI ↔ Rust service)', () => {
   });
 
   it('shows the blocking gate when service is not installed', async () => {
-    await waitForText('OpenHuman Service Required', 20_000);
+    await waitForText('Neppy Service Required', 20_000);
     await waitForServiceStateText('NotInstalled');
 
     expect(await textExists('Install Service')).toBe(true);
@@ -162,7 +162,7 @@ describe('Service connectivity flow (UI ↔ Rust service)', () => {
     stepLog('Attempting start while failure is injected');
     await clickButton('Start Service');
     await waitForText('simulated start failure', 10_000);
-    await waitForText('OpenHuman Service Required', 10_000);
+    await waitForText('Neppy Service Required', 10_000);
 
     const latest = await readMockState();
     expect(latest.running).toBe(false);
@@ -195,7 +195,7 @@ describe('Service connectivity flow (UI ↔ Rust service)', () => {
     stepLog('Making service + agent healthy and refreshing');
     await clickButton('Refresh');
 
-    await browser.waitUntil(async () => !(await textExists('OpenHuman Service Required')), {
+    await browser.waitUntil(async () => !(await textExists('Neppy Service Required')), {
       timeout: 20_000,
       timeoutMsg: 'Service blocking gate did not clear after healthy status',
     });
@@ -214,7 +214,7 @@ describe('Service connectivity flow (UI ↔ Rust service)', () => {
     });
     stepLog('Injected sudden disconnect state; waiting for polling-based gate re-block');
 
-    await browser.waitUntil(async () => textExists('OpenHuman Service Required'), {
+    await browser.waitUntil(async () => textExists('Neppy Service Required'), {
       timeout: 20_000,
       interval: 500,
       timeoutMsg: 'Service blocking gate did not reappear after sudden disconnect',

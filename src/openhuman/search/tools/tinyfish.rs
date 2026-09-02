@@ -7,7 +7,7 @@
 //!   - `POST /agent-integrations/tinyfish/fetch`
 //!   - `POST /agent-integrations/tinyfish/agent/run`
 //!
-//! The OpenHuman backend proxies TinyFish calls so API keys, billing, and
+//! The Neppy backend proxies TinyFish calls so API keys, billing, and
 //! rate limits stay server-side. Search and Fetch are read-oriented tools;
 //! Agent runs execute browser workflows on remote websites.
 

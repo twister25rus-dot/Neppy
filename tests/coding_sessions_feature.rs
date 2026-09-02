@@ -1,5 +1,5 @@
 //! Feature contract for TinyCortex Codex/Claude session discovery through the
-//! OpenHuman adapter seam.
+//! Neppy adapter seam.
 
 use std::fs;
 

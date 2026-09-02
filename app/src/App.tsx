@@ -27,7 +27,7 @@ import { SidebarSlotProvider } from './components/layout/shell/SidebarSlot';
 import LocalAIDownloadSnackbar from './components/LocalAIDownloadSnackbar';
 import SecretPromptDialog from './components/mcp-setup/SecretPromptDialog';
 import NoticeCenter from './components/notices/NoticeCenter';
-import OpenhumanLinkModal from './components/OpenhumanLinkModal';
+import NeppyLinkModal from './components/NeppyLinkModal';
 import PersistRehydrationScreen from './components/PersistRehydrationScreen';
 import PttHotkeyManager from './components/PttHotkeyManager';
 import SecurityBanner from './components/SecurityBanner';
@@ -257,7 +257,7 @@ export function AppShellDesktop() {
             <RootShellLayout sidebar={<AppSidebar />}>{content}</RootShellLayout>
           )}
         </div>
-        <OpenhumanLinkModal />
+        <NeppyLinkModal />
         {/* Every notice the app raises, in one bottom-left FAB: classified
             runtime errors (#3931), the memory-embedding budget (#5324), plan
             usage limits. Mounted outside the routes so entries survive route

@@ -1,4 +1,4 @@
-//! OpenHuman JSON-RPC adapters for tinyagents' `graph::goals` domain.
+//! Neppy JSON-RPC adapters for tinyagents' `graph::goals` domain.
 //!
 //! Methods are exposed as `openhuman.thread_goals_<function>`:
 //! `get`, `set`, `complete`, `pause`, `resume`, `clear`. Handlers load the

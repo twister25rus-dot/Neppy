@@ -742,7 +742,7 @@ async fn turn_without_tools_returns_text() {
 
 /// The public [`Agent::last_turn_usage`] accessor peeks the per-turn
 /// token/cost totals **without draining** them, so a downstream crate
-/// embedding OpenHuman as a library (e.g. the OpenCompany hosting platform's
+/// embedding Neppy as a library (e.g. the OpenCompany hosting platform's
 /// cost-metering hook) can read usage after a turn while the existing
 /// web-channel `take_last_turn_usage_totals` drain path still works.
 #[tokio::test]

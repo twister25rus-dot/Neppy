@@ -1,13 +1,13 @@
 ---
 description: >-
-  Pair an iOS companion app to your desktop OpenHuman over an end-to-end
+  Pair an iOS companion app to your desktop Neppy over an end-to-end
   encrypted tunnel, scanned from a QR code.
 icon: smartphone
 ---
 
 # iOS Companion
 
-The iOS Companion lets you reach your desktop OpenHuman from your phone: you scan a QR code shown on the desktop, the two devices agree on a shared key, and from then on the phone talks to the desktop core over an encrypted channel.
+The iOS Companion lets you reach your desktop Neppy from your phone: you scan a QR code shown on the desktop, the two devices agree on a shared key, and from then on the phone talks to the desktop core over an encrypted channel.
 
 {% hint style="warning" %}
 **Experimental / non-shipping.** The iOS client is in-progress and is **not** part of the shipped desktop product. APIs, wire formats, and the pairing flow can change without notice, and an upgrade may force you to re-pair. Treat everything below as a developer preview.
@@ -90,5 +90,5 @@ Paired devices are persisted by the core in SQLite (`{workspace_dir}/devices/dev
 
 ## See also
 
-- [Privacy & Security](privacy-and-security.md): how OpenHuman handles your data and keys.
+- [Privacy & Security](privacy-and-security.md): how Neppy handles your data and keys.
 - [Voice](native-tools/voice.md): push-to-talk and dictation, the headline use case for a phone companion.

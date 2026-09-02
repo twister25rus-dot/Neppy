@@ -1,6 +1,6 @@
 ---
 description: >-
-  How OpenHuman reads back from the memory tree. A handful of deterministic
+  How Neppy reads back from the memory tree. A handful of deterministic
   retrieval primitives, canonical entity resolution, a co-occurrence graph, and
   a specialist memory sub-agent that combines them.
 icon: search

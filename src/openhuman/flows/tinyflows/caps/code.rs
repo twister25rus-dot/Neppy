@@ -41,7 +41,7 @@ use crate::openhuman::security::{CommandClass, SecurityPolicy};
 /// Supervised run then routes through the `ApprovalGate` (Write ⇒ `Prompt`); a
 /// Full run executes silently. This closes the prior gap where the code node had
 /// no policy check and no approval gate at all.
-pub struct OpenHumanCode {
+pub struct NeppyCode {
     pub config: Arc<Config>,
     pub security: Arc<SecurityPolicy>,
 }
@@ -49,14 +49,14 @@ pub struct OpenHumanCode {
 pub(crate) const CODE_RUN_TIMEOUT_SECS: u64 = 60;
 
 #[async_trait]
-impl CodeRunner for OpenHumanCode {
+impl CodeRunner for NeppyCode {
     async fn run(&self, language: CodeLanguage, source: &str, input: Value) -> Result<Value> {
         // Autonomy-tier gate (Phase 2): sandboxed arbitrary-code execution is
         // Write-class. A read-only run `Block`s here and never spawns anything;
         // Supervised/Full fall through to the ApprovalGate below.
         let tier_decision = enforce_node_tier_gate(&self.security, CommandClass::Write, "code")?;
 
-        // Approval gate (mirrors OpenHumanTools/OpenHumanHttp): `gate_call_for_tier`
+        // Approval gate (mirrors NeppyTools/NeppyHttp): `gate_call_for_tier`
         // is what turns a Supervised-tier `Prompt` decision into a real human
         // round-trip before any code runs — escalating past the flow's own
         // `require_approval` toggle when the tier itself says "ask me" (Codex P1).
@@ -169,7 +169,7 @@ impl CodeRunner for OpenHumanCode {
         .await;
 
         // Close out the approval audit with the run's success/failure (mirrors
-        // OpenHumanTools/OpenHumanHttp).
+        // NeppyTools/NeppyHttp).
         if let Some(id) = audit_id {
             if let Some(gate) = crate::openhuman::security::approval::ApprovalGate::try_global() {
                 let exec = if outcome.is_ok() {

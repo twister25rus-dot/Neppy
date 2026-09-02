@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenHuman Installer (macOS/Linux)
+# Neppy Installer (macOS/Linux)
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/tinyhumansai/openhuman/main/scripts/install.sh | bash
 
@@ -43,7 +43,7 @@ log_err() { echo -e "${RED}x${NC} $*" >&2; }
 
 usage() {
   cat <<'EOF'
-OpenHuman Installer
+Neppy Installer
 
 Usage: install.sh [OPTIONS]
 
@@ -264,12 +264,12 @@ def choose_asset():
             chosen = first_matching(names, r"x64\.dmg$")
     elif os_name == "linux" and arch == "x86_64":
         if linux_asset_kind == "deb":
-            chosen = first_matching(names, r"OpenHuman_.*_amd64\.deb$")
+            chosen = first_matching(names, r"Neppy_.*_amd64\.deb$")
         else:
             chosen = first_matching(names, r"amd64\.AppImage$")
     elif os_name == "linux" and arch == "aarch64":
         if linux_asset_kind == "deb":
-            chosen = first_matching(names, r"OpenHuman_.*_(arm64|aarch64)\.deb$")
+            chosen = first_matching(names, r"Neppy_.*_(arm64|aarch64)\.deb$")
         else:
             chosen = first_matching(names, r"(arm64|aarch64)\.AppImage$")
     if not chosen:
@@ -477,7 +477,7 @@ ensure_local_bin_path() {
   if ! grep -q '.local/bin' "${config_file}"; then
     {
       echo ""
-      echo '# OpenHuman installer - ensure local user binaries are on PATH'
+      echo '# Neppy installer - ensure local user binaries are on PATH'
       echo 'export PATH="$HOME/.local/bin:$PATH"'
     } >> "${config_file}"
     log_ok "Added ~/.local/bin to ${config_file}"
@@ -518,28 +518,28 @@ install_linux_deb() {
 
 install_macos() {
   local apps_dir="${HOME}/Applications"
-  local app_path="${apps_dir}/OpenHuman.app"
+  local app_path="${apps_dir}/Neppy.app"
   mkdir -p "${apps_dir}"
 
   if [[ "${ASSET_NAME}" =~ \.app\.tar\.gz$ ]]; then
-    log_info "Installing OpenHuman.app into ${apps_dir}"
+    log_info "Installing Neppy.app into ${apps_dir}"
     if [ "${DRY_RUN}" = true ]; then
       echo "DRY RUN: tar -xzf ${DOWNLOAD_PATH} -C ${TMP_DIR}"
       echo "DRY RUN: replace ${app_path}"
     else
       tar -xzf "${DOWNLOAD_PATH}" -C "${TMP_DIR}"
-      if [ ! -d "${TMP_DIR}/OpenHuman.app" ]; then
-        log_err "Archive did not contain OpenHuman.app"
+      if [ ! -d "${TMP_DIR}/Neppy.app" ]; then
+        log_err "Archive did not contain Neppy.app"
         exit 1
       fi
       rm -rf "${app_path}"
-      cp -R "${TMP_DIR}/OpenHuman.app" "${app_path}"
+      cp -R "${TMP_DIR}/Neppy.app" "${app_path}"
     fi
   elif [[ "${ASSET_NAME}" =~ \.dmg$ ]]; then
-    log_info "Mounting DMG and copying OpenHuman.app"
+    log_info "Mounting DMG and copying Neppy.app"
     if [ "${DRY_RUN}" = true ]; then
       echo "DRY RUN: hdiutil attach ${DOWNLOAD_PATH}"
-      echo "DRY RUN: copy OpenHuman.app to ${app_path}"
+      echo "DRY RUN: copy Neppy.app to ${app_path}"
     else
       if ! command -v hdiutil >/dev/null 2>&1; then
         log_err "hdiutil not available, cannot install from DMG."
@@ -547,13 +547,13 @@ install_macos() {
       fi
       mount_output="$(hdiutil attach "${DOWNLOAD_PATH}" -nobrowse)"
       mount_point="$(echo "${mount_output}" | awk '/\/Volumes\// {print $NF; exit}')"
-      if [ -z "${mount_point}" ] || [ ! -d "${mount_point}/OpenHuman.app" ]; then
-        log_err "Could not find OpenHuman.app in mounted DMG."
+      if [ -z "${mount_point}" ] || [ ! -d "${mount_point}/Neppy.app" ]; then
+        log_err "Could not find Neppy.app in mounted DMG."
         echo "${mount_output}"
         exit 1
       fi
       rm -rf "${app_path}"
-      cp -R "${mount_point}/OpenHuman.app" "${app_path}"
+      cp -R "${mount_point}/Neppy.app" "${app_path}"
       hdiutil detach "${mount_point}" >/dev/null
     fi
   else
@@ -563,7 +563,7 @@ install_macos() {
 
   log_ok "Installed at ${app_path}"
   echo ""
-  echo "OpenHuman is ready."
+  echo "Neppy is ready."
   echo "Launch: open \"${app_path}\""
   echo "Uninstall: rm -rf \"${app_path}\""
 }
@@ -579,7 +579,7 @@ install_linux() {
     install_linux_deb
     log_ok "Installed Debian package ${ASSET_NAME}"
     echo ""
-    echo "OpenHuman is ready."
+    echo "Neppy is ready."
     echo "Launch: openhuman"
     echo "Uninstall: $(apt_get_command_prefix) remove openhuman"
     return 0
@@ -607,8 +607,8 @@ install_linux() {
     cat > "${desktop_file}" <<EOF
 [Desktop Entry]
 Type=Application
-Name=OpenHuman
-Comment=OpenHuman desktop assistant
+Name=Neppy
+Comment=Neppy desktop assistant
 Exec=${app_path}
 TryExec=${app_path}
 Icon=${bin_dir}/openhuman.png
@@ -619,7 +619,7 @@ EOF
 
   log_ok "Installed binary at ${app_path}"
   echo ""
-  echo "OpenHuman is ready."
+  echo "Neppy is ready."
   echo "Launch: ${app_path}"
   echo "If the AppImage prints 'Interpreter not found!', unshare/uid_map errors,"
   echo "or missing system-library errors such as libgbm.so.1, use the .deb package"

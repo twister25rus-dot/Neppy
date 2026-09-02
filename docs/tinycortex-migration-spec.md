@@ -1,7 +1,7 @@
 # TinyCortex Memory Migration — Spec (Phase 0.5 / 0.6)
 
 **Status:** Post-engine-cutover reference. W1–W8 and the crate-owned engine test
-port landed in OpenHuman #4794/#4820, with persona/coding-session ingest in
+port landed in Neppy #4794/#4820, with persona/coding-session ingest in
 #4863. The remaining host consolidation is tracked by
 [`tinycortex-migration-plan-2026-07-22.md`](tinycortex-migration-plan-2026-07-22.md).
 This document retains the ownership contract and deletion ledger detail.
@@ -100,7 +100,7 @@ activation is now in place: `[dependencies] tinycortex = "0.1"` is active in the
 | `memory_diff`, `memory_entities`, `memory_graph`(engine), `memory_goals`, `memory_archivist`, `memory_sources`(registry + local readers), `memory_tools`(engine), `memory_conversations`(engine), `memory_search`(`vector`,`scoring`) | same-named crate modules | — |
 | `memory/traits.rs` core types | `tinycortex::memory::{…}` (re-export) | — |
 
-### Stays in OpenHuman (product policy, I/O, surfaces)
+### Stays in Neppy (product policy, I/O, surfaces)
 
 - **RPC surfaces:** `memory/{ops,schemas,schema,read_rpc}`, `rpc_models.rs`. Method names/payloads unchanged.
 - **Agent tools:** `memory/tools/`, `memory/query/`, `memory_search/tools/`, `memory_tools`(tool surface) — thin wrappers over crate retrieval + `SecurityPolicy` gating.
@@ -179,7 +179,7 @@ audit SHA.
 | --- | --- |
 | WP-1 namespace tier | `memory_store/unified/` removed and re-homed byte-for-byte as `memory_store/namespace_store/`; G1 re-audit found zero `sqlite_conn()` call sites. The retained ten-table product store explains why total `memory_store` remains 17.7k LOC rather than the plan's speculative 9–10k target. |
 | WP-2 sync | The default provider `sync()` and `run_connection_sync` already call the TinyCortex engine. Deleted the dead host Gmail sync parser; renamed GitHub/Notion/Linear/ClickUp product projections from `sync.rs` to `normalization.rs`. D4.1-D4.4 are CLOSED. The retained 17.2k LOC is schedulers, bus/RPC, action tools/catalogs, credentials, profiles, post-processing, and product task projections; 6.9k LOC is provider catalogs/tools/normalization/profile/RPC alone. |
-| WP-3 embeddings | Deleted host OpenAI, Cohere, Voyage, general Ollama, memory-tree cloud, and memory-tree Ollama provider implementations (746 production LOC) plus their obsolete 828-line raw-coverage suite. Provider transport now has one implementation in TinyAgents; OpenHuman retains selection and credential/privacy adapters. |
+| WP-3 embeddings | Deleted host OpenAI, Cohere, Voyage, general Ollama, memory-tree cloud, and memory-tree Ollama provider implementations (746 production LOC) plus their obsolete 828-line raw-coverage suite. Provider transport now has one implementation in TinyAgents; Neppy retains selection and credential/privacy adapters. |
 | WP-4 shims | Deleted `memory_archivist`, `memory_search::{scoring,vector}`, `memory_tools::{types,store}`, `memory_tree::tools`, and the `memory::jobs` alias. Removed the unused TinyCortex type facade; direct `tinycortex::memory::*` imports are the convention. The seam is 2,229 pre-test LOC. |
 
 **Kept host (never deleted):** `memory/{ops,schemas,schema,read_rpc,tools,query,tree_source,

@@ -16,7 +16,7 @@ Companion: [`per-turn-tool-timeline-history.md`](per-turn-tool-timeline-history.
 
 **Tab-switch context loss** — the Rust store persists **one** turn snapshot per thread (whole-file overwrite, `src/openhuman/threads/turn_state/store.rs`), so thread/tab switch rehydrates only the latest turn; live subagent prose, past-turn trails, and the streaming tail are lost.
 
-**Reference patterns adopted** (from codex `codex-rs/protocol` + TUI research; hermes-agent confirmed as the minimal counter-example; vendored `tinychannels` is transport-only — its `ChannelOutputEvent` vocabulary and `RunLedger`/`ConversationStore` host traits stay compatible, the rich timeline model remains OpenHuman-owned):
+**Reference patterns adopted** (from codex `codex-rs/protocol` + TUI research; hermes-agent confirmed as the minimal counter-example; vendored `tinychannels` is transport-only — its `ChannelOutputEvent` vocabulary and `RunLedger`/`ConversationStore` host traits stay compatible, the rich timeline model remains Neppy-owned):
 
 1. **Two-layer model**: ephemeral streaming events (deltas, begin/end pairs keyed by `call_id`) vs **durable timeline items with stable ids**; deltas mutate the item with the matching id; persist only durable items; rehydrate by chronological replay.
 2. **Typed item taxonomy**: one discriminated union, one React component per kind.

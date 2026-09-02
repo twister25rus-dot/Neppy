@@ -80,7 +80,7 @@ export async function waitForRequest(log, method, urlFragment, timeout = 15_000)
 export async function waitForHomePage(timeout = 15_000) {
   // Home page (Home.tsx) renders t('home.askAssistant') = 'Ask your assistant anything...'
   // as a stable CTA button. The animated typewriter heading ('Welcome, <name> 👋' etc.)
-  // and old strings ('Good morning', 'Message OpenHuman', 'Upgrade to Premium') are gone.
+  // and old strings ('Good morning', 'Message Neppy', 'Upgrade to Premium') are gone.
   // After the /home → /chat redirect (AppRoutes.tsx), the chat new-window hero renders
   // t('home.statusOk') instead, so include both the old CTA text and the new status copy.
   const candidates = [
@@ -526,7 +526,7 @@ export async function navigateToConversations() {
 const ONBOARDING_OVERLAY_TEXTS = [
   'Skip',
   'Welcome',
-  "Hi. I'm OpenHuman.",
+  "Hi. I'm Neppy.",
   "Let's Start",
   'Connect your Gmail',
   'Skip for Now',

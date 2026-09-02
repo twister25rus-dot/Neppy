@@ -1,4 +1,4 @@
-//! Agent-facing file-storage tools backed by the OpenHuman backend's
+//! Agent-facing file-storage tools backed by the Neppy backend's
 //! `file_storage` provider (S3 under the hood).
 //!
 //! **Endpoints** (see the file-storage API contract):

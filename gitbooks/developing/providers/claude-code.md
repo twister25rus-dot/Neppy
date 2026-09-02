@@ -1,6 +1,6 @@
 # Claude Code CLI provider
 
-OpenHuman can route any chat workload through **Anthropic's `claude` CLI** instead of calling the Anthropic HTTP API directly. The CLI handles model selection, auth, and prompt-cache management; OpenHuman drives it as a child process per turn, parses its stream-json output, and re-exposes its own read-only tools back into the CLI over MCP so the model can reach native OpenHuman state (memory, threads, channels, people).
+Neppy can route any chat workload through **Anthropic's `claude` CLI** instead of calling the Anthropic HTTP API directly. The CLI handles model selection, auth, and prompt-cache management; Neppy drives it as a child process per turn, parses its stream-json output, and re-exposes its own read-only tools back into the CLI over MCP so the model can reach native Neppy state (memory, threads, channels, people).
 
 > Locked decisions live in [`.planning/claude-code-provider/PLAN.md`](../../../.planning/claude-code-provider/PLAN.md) §13.
 
@@ -8,7 +8,7 @@ OpenHuman can route any chat workload through **Anthropic's `claude` CLI** inste
 
 - Claude Code CLI **≥ 2.0.0** on `PATH` (or `OPENHUMAN_CLAUDE_CLI=/abs/path/to/claude`).
 - An Anthropic API key in `ANTHROPIC_API_KEY`, **or** a pre-existing `~/.claude/.credentials.json` from `claude login`.
-- The `openhuman-core` binary on disk: OpenHuman spawns `openhuman-core mcp` as a stdio MCP server so the CLI can call OpenHuman tools. The path is discovered via `std::env::current_exe()`.
+- The `openhuman-core` binary on disk: Neppy spawns `openhuman-core mcp` as a stdio MCP server so the CLI can call Neppy tools. The path is discovered via `std::env::current_exe()`.
 
 ## Routing a workload through the CLI
 
@@ -54,7 +54,7 @@ Each chat turn:
 3. Spawn the CLI with:
    - `-p --input-format stream-json --output-format stream-json --verbose --include-partial-messages`
    - `--mcp-config <tmp> --strict-mcp-config` so only the configured MCP servers are visible
-   - `--disallowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,TodoWrite,Task,BashOutput,KillShell`, so that CC's own builtins stay off so OpenHuman tools (`mcp__openhuman__*`) are authoritative
+   - `--disallowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,TodoWrite,Task,BashOutput,KillShell`, so that CC's own builtins stay off so Neppy tools (`mcp__openhuman__*`) are authoritative
    - `--session-id <uuid>` on first turn, `--resume <uuid>` thereafter
    - `--model <model>` (the suffix after `claude-code:`)
    - `--append-system-prompt <…>` if the conversation carries a system message
@@ -88,4 +88,4 @@ The MCP server enforces `SecurityPolicy::ToolOperation` checks; all tools except
 
 - Vision input is not forwarded. Set the `vision_provider` to a different provider when you need images.
 - `agentic` runs share the same `Semaphore(4)`; under load a CC turn waits in queue rather than failing fast.
-- Cost accounting from the CLI's `result.total_cost_usd` is captured in the mapper but not yet wired into OpenHuman's billing layer ([`src/openhuman/platform/cost/`](../../../src/openhuman/platform/cost/)).
+- Cost accounting from the CLI's `result.total_cost_usd` is captured in the mapper but not yet wired into Neppy's billing layer ([`src/openhuman/platform/cost/`](../../../src/openhuman/platform/cost/)).

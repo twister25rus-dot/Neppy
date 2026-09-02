@@ -213,7 +213,7 @@ async fn parse_toml_off_worker(contents: String) -> Result<Config, String> {
 ///
 /// `core::observability::expected_error_kind` keys on this to keep the failure
 /// paging instead of demoting it as an unpreventable user-environment denial:
-/// a uid mismatch on a file *we* created with mode 0600 is an OpenHuman defect
+/// a uid mismatch on a file *we* created with mode 0600 is an Neppy defect
 /// (typically a container whose entrypoint chowned only the workspace
 /// directory, leaving a stale-uid `config.toml` inside it), not an ACL the user
 /// has to fix for us.

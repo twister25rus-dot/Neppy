@@ -11,7 +11,7 @@
 //! routes call [`run_turn_via_tinyagents_shared`] (default ON in production).
 //!
 //! The chat route is at functional parity with the legacy `run_turn_engine`:
-//! the [`OpenhumanEventBridge`] mirrors the harness event stream onto
+//! the [`NeppyEventBridge`] mirrors the harness event stream onto
 //! `AgentProgress` (live tool timeline, incremental text deltas, cost footer),
 //! [`native model streaming`] forwards true token streaming, multimodal markers
 //! are expanded, and history is trimmed to the context window. Mid-flight
@@ -87,8 +87,7 @@ use model::{
 };
 pub(crate) use observability::SubagentScope;
 use observability::{
-    CapPauser, IterationCursor, OpenhumanEventBridge, ProviderUsageCarry, ToolFailureMap,
-    ToolNameMap,
+    CapPauser, IterationCursor, NeppyEventBridge, ProviderUsageCarry, ToolFailureMap, ToolNameMap,
 };
 pub use resolved_route::{
     current_resolved_provider_route, current_route_slot, record_resolved_provider_route,
@@ -125,7 +124,7 @@ pub(crate) struct ToolPolicyEnforcement {
 /// The loop enforces limits from `self.policy.limits` (not the per-run
 /// `RunConfig`), so the model-call cap **must** be set here or it falls back to
 /// the tinyagents default of 25 — far more than openhuman's `max_iterations`.
-/// The recursion depth cap is also set here so TinyAgents uses OpenHuman's
+/// The recursion depth cap is also set here so TinyAgents uses Neppy's
 /// existing sub-agent spawn depth instead of the SDK default.
 /// Retry is now owned by the crate [`RetryPolicy`] (issue #4249, Phase 3a): the
 /// turn path no longer wraps its provider in `ReliableProvider` (removed in
@@ -230,7 +229,7 @@ fn run_policy_for(max_iterations: usize, response_cache_enabled: bool) -> RunPol
     // classifier in `agent::hooks::sanitize_tool_output`, which labels the result
     // `unknown_tool` by matching the "unknown tool" substring. Flipping to Rewrite
     // would drop both. The original name + args are also preserved verbatim on
-    // `AgentEvent::UnknownToolCall` and projected by `OpenhumanEventBridge`.
+    // `AgentEvent::UnknownToolCall` and projected by `NeppyEventBridge`.
     policy.unknown_tool = UnknownToolPolicy::ReturnToolError;
     // Registered tools with schema-invalid arguments should produce a tool
     // error the model can correct, not abort the entire run. TinyAgents 2.1
@@ -250,7 +249,7 @@ fn run_policy_for(max_iterations: usize, response_cache_enabled: bool) -> RunPol
     policy.cache.response_cache_enabled = response_cache_enabled;
     // Payload capture ON: the loop stamps request messages + completion onto
     // `ModelCompleted` and tool arguments + result onto `ToolCompleted`, which
-    // the `OpenhumanEventBridge` projects into content-bearing `AgentProgress`
+    // the `NeppyEventBridge` projects into content-bearing `AgentProgress`
     // events (generation/tool span input+output in trace exports). Privacy
     // posture is unchanged off-device: the durable journal passes through a
     // `RedactingSink` (on-device, same data class as the threads DB, which
@@ -495,7 +494,7 @@ pub(crate) async fn run_turn_via_tinyagents(
 /// Each registered tool is advertised via its own `spec()`.
 ///
 /// When `on_progress` is `Some`, the run streams (`invoke_stream_in_context`)
-/// and a [`OpenhumanEventBridge`] mirrors the harness event stream onto
+/// and a [`NeppyEventBridge`] mirrors the harness event stream onto
 /// `AgentProgress` (live tool timeline, text deltas, cost/token footer) and the
 /// global cost tracker — restoring the seams the legacy `run_turn_engine`
 /// produced. Pass `None` for fire-and-forget turns (channel/sub-agent) that
@@ -760,7 +759,7 @@ pub(crate) async fn run_turn_via_tinyagents_shared(
     // no spurious streaming. `events` is created unconditionally above, so the
     // bridge is always present.
     let bridge = events.as_ref().map(|events| {
-        let bridge = OpenhumanEventBridge::with_scope(
+        let bridge = NeppyEventBridge::with_scope(
             on_progress,
             model,
             provider_id.clone(),
@@ -1277,7 +1276,7 @@ impl TurnModels {
 /// the Phase 3 P3-B cutover of [`build_turn_models`]: instead of wrapping one host
 /// `Provider` per tier in a [`native model adapter`], each tier is built as a crate-native
 /// [`ChatModel`] via [`factory::create_turn_chat_model`] (managed →
-/// `OpenHumanBackendModel`, local/cloud → crate `OpenAiModel`).
+/// `NeppyBackendModel`, local/cloud → crate `OpenAiModel`).
 ///
 /// The `TurnModels` shape is identical to [`build_turn_models`] so
 /// [`assemble_turn_harness`] is unchanged. The provider metadata
@@ -1707,7 +1706,7 @@ struct AssembledTurnHarness {
     registry_snapshot: RegistrySnapshot,
     /// Health diagnostics from the projected registry.
     registry_diagnostics: Vec<RegistryDiagnostic>,
-    /// TinyAgents store index for OpenHuman action-dir tool-result artifacts.
+    /// TinyAgents store index for Neppy action-dir tool-result artifacts.
     tool_result_artifact_index: Option<Arc<ToolResultArtifactIndexStore>>,
     /// Concrete handle to the installed [`ContextCompressionMiddleware`], when the
     /// summarization step is active. Drained after the run to surface each
@@ -1839,7 +1838,7 @@ fn assemble_turn_harness(
     // cross-route swap silently — it emits no `AgentEvent::FallbackSelected`. Wrap
     // the model-resolving core with an observer that surfaces the parity event
     // whenever the resolved model differs from the primary, so a fallback is
-    // visible on the OpenHuman progress/observability bridge (and grep-logged under
+    // visible on the Neppy progress/observability bridge (and grep-logged under
     // `[fallback]`). Installed only when a fallback chain exists; it never re-issues
     // the call, so it adds no provider dispatch (no double-fallback).
     if route_fallback.is_some() {
@@ -2083,15 +2082,15 @@ fn assemble_turn_harness(
         "[registry] per-turn capability projection summary"
     );
     // SHADOW tool-exposure layer (issue #4249, 01.3 — dynamic exposure). Compose
-    // the OpenHuman exposure policy as a crate-native selection layer
+    // the Neppy exposure policy as a crate-native selection layer
     // (ToolAllowlistMiddleware + a ContextualToolSelectionMiddleware built via
     // `inheriting`) and run it in shadow: it emits the exposure decision
     // event-native (`AgentEvent::ToolsFiltered`) and logs any divergence between
-    // the crate layer's decision and the set OpenHuman actually registered as
+    // the crate layer's decision and the set Neppy actually registered as
     // callable — WITHOUT changing the callable set (byte-identical to today). The
     // ownership flip + deletion of `tool_filter.rs`/`tool_prep.rs` is the gated
     // follow-up once the `[tool-exposure]` divergence logs show parity. Tags encode
-    // the OpenHuman run context (agent id / channel / scope) for the flip; the
+    // the Neppy run context (agent id / channel / scope) for the flip; the
     // name-based `inheriting` predicate does not consult them yet.
     let exposure_tags: Vec<String> = {
         let mut tags = vec![if subagent_scope.is_some() {
@@ -2110,7 +2109,7 @@ fn assemble_turn_harness(
         tags
     };
     harness.push_middleware(Arc::new(
-        middleware::OpenHumanToolExposureShadowMiddleware::new(
+        middleware::NeppyToolExposureShadowMiddleware::new(
             &candidate_names,
             allowed.as_ref(),
             exposure_tags,
@@ -2137,7 +2136,7 @@ fn assemble_turn_harness(
     // run microcompact → compress → trim. (KV-cache-prefix drift is handled above
     // by the crate `PromptCacheGuardMiddleware`; the warn-only CacheAlign shadow
     // was deleted in C3.) Tool-result caps read the SDK registry policy snapshot,
-    // not the OpenHuman-side tool lookup.
+    // not the Neppy-side tool lookup.
     // Capture each tool call's real success + content before the harness folds the
     // result into a `Message::tool` that drops the failure flag, so the turn can
     // build honest per-call `ToolCallRecord`s (post-turn hooks + cap checkpoint).
@@ -2168,7 +2167,7 @@ fn assemble_turn_harness(
     // It also re-emits `AgentEvent::UsageRecorded` per call (on top of the
     // runtime's own emit); the event bridge dedupes those by model-call iteration
     // so the global cost tracker still records each call exactly once (see
-    // `observability::OpenhumanEventBridge::record_usage`). Enforcement STAYS with
+    // `observability::NeppyEventBridge::record_usage`). Enforcement STAYS with
     // the local `CostBudgetMiddleware` below (authoritative: reads the global
     // daily/monthly `CostTracker`).
     //
@@ -2197,7 +2196,7 @@ fn assemble_turn_harness(
     harness.push_middleware(shadow_budget);
 
     // Pre-call cost budget gate (issue #4249, Phase 5) — AUTHORITATIVE
-    // enforcement: fail before a model call when OpenHuman's daily/monthly cost
+    // enforcement: fail before a model call when Neppy's daily/monthly cost
     // budget is already exceeded. Self-gating — a no-op unless cost budgets are
     // configured. Demoted to a divergence-logging shadow owner (W2-budget-dedupe):
     // it keeps enforcing exactly as before, but ALSO compares its per-run token
@@ -2273,7 +2272,7 @@ fn assemble_turn_harness(
     // gates yet. `require_classification(true)` would currently reject an
     // unregistered hallucinated tool in `before_tool` before
     // `RunPolicy::unknown_tool` can return a recoverable tool error, while
-    // OpenHuman's existing wrappers still own HITL approval and output caps.
+    // Neppy's existing wrappers still own HITL approval and output caps.
     harness.push_middleware(Arc::new(
         TaToolPolicyMiddleware::new(harness.tools().policies()).require_sandbox(true),
     ));
@@ -2371,7 +2370,7 @@ fn assemble_turn_harness(
 /// Feed an **unobserved** turn's aggregate usage into the global cost tracker.
 ///
 /// The per-call tracker feed lives in the event bridge
-/// ([`OpenhumanEventBridge::record_usage`]), which only exists on observed runs
+/// ([`NeppyEventBridge::record_usage`]), which only exists on observed runs
 /// (`on_progress` set). Without this aggregate record a fire-and-forget turn's
 /// spend never reaches the cost dashboard / wallet surfaces (issue #4249,
 /// Phase 5 rollup gap). The bridge and this fallback are mutually exclusive,

@@ -2,7 +2,7 @@
  * Mounts a fully mocked assistant-ui runtime for the vendored `base` demo.
  *
  * Deliberately isolated from the app's real runtime
- * (`providers/AssistantUiRuntimeProvider`, which projects OpenHuman's Redux
+ * (`providers/AssistantUiRuntimeProvider`, which projects Neppy's Redux
  * state through an external store). This one owns its own in-memory state: a
  * thread list that lives for the lifetime of the page, a canned chat model, and
  * attachment/feedback adapters that never leave the browser. Mounting it cannot

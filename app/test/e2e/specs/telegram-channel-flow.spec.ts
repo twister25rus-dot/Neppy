@@ -36,7 +36,7 @@
  *          chat-harness-send-stream.spec.ts (mock server setup).
  */
 import { waitForApp } from '../helpers/app-helpers';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { resetApp } from '../helpers/reset-app';
 import {
   assertNoTelegramReply,
@@ -158,7 +158,7 @@ describe('Telegram channel — connect / receive / send / disconnect', () => {
     this.timeout(30_000);
     console.log(`${LOG_PREFIX} C.1: calling channels_list`);
 
-    const out = await callOpenhumanRpc('openhuman.channels_list', {});
+    const out = await callNeppyRpc('openhuman.channels_list', {});
     console.log(`${LOG_PREFIX} C.1: result = ${JSON.stringify(out).slice(0, 500)}`);
 
     expect(out.ok).toBe(true);
@@ -206,7 +206,7 @@ describe('Telegram channel — connect / receive / send / disconnect', () => {
     this.timeout(30_000);
     console.log(`${LOG_PREFIX} C.2: calling channels_describe`);
 
-    const out = await callOpenhumanRpc('openhuman.channels_describe', { channel: 'telegram' });
+    const out = await callNeppyRpc('openhuman.channels_describe', { channel: 'telegram' });
     console.log(`${LOG_PREFIX} C.2: result = ${JSON.stringify(out).slice(0, 800)}`);
 
     expect(out.ok).toBe(true);
@@ -301,7 +301,7 @@ describe('Telegram channel — connect / receive / send / disconnect', () => {
     // (The telegramGetMeFails behavior key affects the live polling getMe
     // call, not the RPC-level credential write. We test the RPC validation
     // here since that is the observable failure mode at the E2E boundary.)
-    const out = await callOpenhumanRpc('openhuman.channels_connect', {
+    const out = await callNeppyRpc('openhuman.channels_connect', {
       channel: 'telegram',
       authMode: 'bot_token',
       credentials: { bot_token: '' },

@@ -902,7 +902,7 @@ mod tests {
 
     // The VAD state machine and the wake-word gate moved to `tinyvoice`, which
     // carries their unit tests. What stays testable here is the piece that is
-    // genuinely OpenHuman's: turning persisted config into the module's tuning.
+    // genuinely Neppy's: turning persisted config into the module's tuning.
     #[test]
     fn vad_config_maps_persisted_seconds_to_milliseconds() {
         let mut c = crate::openhuman::config::VoiceServerConfig::default();

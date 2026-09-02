@@ -28,12 +28,12 @@ use tinyflows::model::WorkflowGraph;
 /// The engine bounds recursion (its `MAX_SUB_WORKFLOW_DEPTH` depth counter) and
 /// rejects direct self-references before a child runs, so this adapter does not
 /// itself need cycle detection — it is a pure id → graph lookup.
-pub struct OpenHumanWorkflowResolver {
+pub struct NeppyWorkflowResolver {
     pub config: Arc<Config>,
 }
 
 #[async_trait]
-impl WorkflowResolver for OpenHumanWorkflowResolver {
+impl WorkflowResolver for NeppyWorkflowResolver {
     async fn resolve(&self, workflow_id: &str) -> Result<WorkflowGraph> {
         tracing::debug!(
             target: "flows",

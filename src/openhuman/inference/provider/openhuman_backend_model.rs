@@ -1,4 +1,4 @@
-//! Crate-native managed OpenHuman backend as a host [`ChatModel`] (issue #4727,
+//! Crate-native managed Neppy backend as a host [`ChatModel`] (issue #4727,
 //! Motion B).
 //!
 //! The managed backend can't be a plain crate `OpenAiModel` preset: it uses a
@@ -40,12 +40,12 @@ use crate::api::config::effective_api_url;
 use crate::openhuman::agent::tinyagents::thread_context;
 use crate::openhuman::security::credentials::{AuthService, APP_SESSION_PROVIDER};
 
-pub const PROVIDER_LABEL: &str = "OpenHuman";
+pub const PROVIDER_LABEL: &str = "Neppy";
 
-/// The managed OpenHuman backend as a crate [`ChatModel`]. Holds the backend
+/// The managed Neppy backend as a crate [`ChatModel`]. Holds the backend
 /// connection settings (for JWT + base-URL resolution) and the default model id
 /// sent when a request doesn't override it.
-pub struct OpenHumanBackendModel {
+pub struct NeppyBackendModel {
     options: ProviderRuntimeOptions,
     api_url: Option<String>,
     default_model: String,
@@ -53,7 +53,7 @@ pub struct OpenHumanBackendModel {
     profile: ModelProfile,
 }
 
-impl OpenHumanBackendModel {
+impl NeppyBackendModel {
     pub fn new(
         api_url: Option<&str>,
         options: &ProviderRuntimeOptions,
@@ -287,7 +287,7 @@ impl OpenHumanBackendModel {
 /// for provider"` substring — never a bare `"not configured"`, which an
 /// unrelated 400 (a malformed request naming some other unconfigured field,
 /// a validation error, …) could also contain. Every other 4xx/5xx/transport
-/// failure fails open (see [`OpenHumanBackendModel::probe_readiness`]'s doc).
+/// failure fails open (see [`NeppyBackendModel::probe_readiness`]'s doc).
 fn is_provider_not_configured_error(err: &ProviderError) -> bool {
     if err.status != Some(400) {
         return false;
@@ -305,7 +305,7 @@ fn resolve_model(model: &str) -> String {
     let trimmed = model.trim();
     if trimmed.is_empty() {
         log::debug!(
-            "[providers][openhuman-backend] empty model passed to OpenHuman backend; \
+            "[providers][openhuman-backend] empty model passed to Neppy backend; \
              substituting default `{}` (TAURI-RUST-RS)",
             crate::openhuman::config::MODEL_REASONING_V1
         );
@@ -404,7 +404,7 @@ fn with_thread_id(mut request: ModelRequest) -> ModelRequest {
 }
 
 /// Publish a `SessionExpired` event when the local `exp` precheck in
-/// [`resolve_bearer`](OpenHumanBackendModel::resolve_bearer) rejects an expired
+/// [`resolve_bearer`](NeppyBackendModel::resolve_bearer) rejects an expired
 /// managed session token before a request is ever sent — mirroring
 /// [`require_live_session_token`](crate::openhuman::security::credentials::session_support::require_live_session_token)'s
 /// pre-flight publish so the credentials subscriber clears state and the UI
@@ -430,7 +430,7 @@ fn maybe_publish_local_session_expiry() {
 /// crate-native path bypasses.
 fn maybe_publish_session_expired(err: &TinyAgentsError, operation: &str) {
     if let TinyAgentsError::Provider(pe) = err {
-        if pe.provider.as_str() == "OpenHuman" && matches!(pe.status, Some(401 | 403)) {
+        if pe.provider.as_str() == "Neppy" && matches!(pe.status, Some(401 | 403)) {
             let reason =
                 crate::openhuman::inference::provider::ops::sanitize_api_error(&pe.message);
             crate::core::bus::BUS.publish(crate::core::events::DomainEvent::SessionExpired {
@@ -476,7 +476,7 @@ fn log_managed_dispatch_error(err: &TinyAgentsError, operation: &str) {
 }
 
 #[async_trait]
-impl ChatModel<()> for OpenHumanBackendModel {
+impl ChatModel<()> for NeppyBackendModel {
     fn profile(&self) -> Option<&ModelProfile> {
         Some(&self.profile)
     }
@@ -520,8 +520,8 @@ mod tests {
     use crate::openhuman::inference::provider::ProviderRuntimeOptions;
     use tinyagents::harness::message::Message;
 
-    fn backend() -> OpenHumanBackendModel {
-        OpenHumanBackendModel::new(
+    fn backend() -> NeppyBackendModel {
+        NeppyBackendModel::new(
             Some("https://api.example.test"),
             &ProviderRuntimeOptions::default(),
             "reasoning-v1",
@@ -664,7 +664,7 @@ mod tests {
     #[test]
     fn is_provider_not_configured_error_matches_exact_backend_shape() {
         let err = ProviderError {
-            provider: "OpenHuman".to_string(),
+            provider: "Neppy".to_string(),
             model: None,
             status: Some(400),
             code: Some("BAD_REQUEST".to_string()),
@@ -682,7 +682,7 @@ mod tests {
         // request shape) must NOT be classified as provider-not-configured —
         // only the exact backend-confirmed signal should ever reject.
         let err = ProviderError {
-            provider: "OpenHuman".to_string(),
+            provider: "Neppy".to_string(),
             model: None,
             status: Some(400),
             code: Some("BAD_REQUEST".to_string()),
@@ -701,7 +701,7 @@ mod tests {
         // introduced by the exact "api key" prefix — tolerance for backend
         // message wording drift, not a broadening to any "not configured".
         let err = ProviderError {
-            provider: "OpenHuman".to_string(),
+            provider: "Neppy".to_string(),
             model: None,
             status: Some(400),
             code: Some("BAD_REQUEST".to_string()),
@@ -723,7 +723,7 @@ mod tests {
         // feature is not configured for your account", …) would falsely
         // reject a run/proposal as a provider problem.
         let err = ProviderError {
-            provider: "OpenHuman".to_string(),
+            provider: "Neppy".to_string(),
             model: None,
             status: Some(400),
             code: Some("BAD_REQUEST".to_string()),
@@ -738,7 +738,7 @@ mod tests {
     #[test]
     fn is_provider_not_configured_error_rejects_non_400_status() {
         let err = ProviderError {
-            provider: "OpenHuman".to_string(),
+            provider: "Neppy".to_string(),
             model: None,
             status: Some(401),
             code: None,
@@ -786,8 +786,8 @@ mod tests {
             .expect("seed app-session token with expiry");
     }
 
-    fn backend_pointed_at(addr: &str, dir: &std::path::Path) -> OpenHumanBackendModel {
-        OpenHumanBackendModel::new(
+    fn backend_pointed_at(addr: &str, dir: &std::path::Path) -> NeppyBackendModel {
+        NeppyBackendModel::new(
             Some(&format!("http://{addr}")),
             &ProviderRuntimeOptions {
                 openhuman_dir: Some(dir.to_path_buf()),

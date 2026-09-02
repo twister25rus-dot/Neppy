@@ -54,13 +54,13 @@ rm -f "$ALL_PACKAGES"
 # ── Release file ───────────────────────────────────────────────────────────────
 RELEASE_CONF="$(mktemp)"
 cat > "$RELEASE_CONF" << 'EOF'
-APT::FTPArchive::Release::Origin "OpenHuman";
-APT::FTPArchive::Release::Label "OpenHuman";
+APT::FTPArchive::Release::Origin "Neppy";
+APT::FTPArchive::Release::Label "Neppy";
 APT::FTPArchive::Release::Suite "stable";
 APT::FTPArchive::Release::Codename "stable";
 APT::FTPArchive::Release::Architectures "amd64 arm64";
 APT::FTPArchive::Release::Components "main";
-APT::FTPArchive::Release::Description "OpenHuman official apt repository";
+APT::FTPArchive::Release::Description "Neppy official apt repository";
 EOF
 
 (cd "$OUTPUT_DIR" && apt-ftparchive -c "$RELEASE_CONF" release dists/stable) \

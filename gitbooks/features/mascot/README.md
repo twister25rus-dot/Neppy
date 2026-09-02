@@ -1,6 +1,6 @@
 ---
 description: >-
-  The on-screen face of OpenHuman, a desktop mascot that speaks, reacts, joins
+  The on-screen face of Neppy, a desktop mascot that speaks, reacts, joins
   your meetings, and thinks in the background even when you aren't looking at
   it.
 icon: face-smile
@@ -8,7 +8,7 @@ icon: face-smile
 
 # The Mascot
 
-OpenHuman has a face. The mascot is an animated character that lives on your desktop and acts as the visible surface of the agent, what it's saying, what it's thinking about, when it's idle, when it's busy, when it has something to tell you.
+Neppy has a face. The mascot is an animated character that lives on your desktop and acts as the visible surface of the agent, what it's saying, what it's thinking about, when it's idle, when it's busy, when it has something to tell you.
 
 It is not a chrome ornament. The mascot is wired into the same pieces as the rest of the agent: voice, memory, the [subconscious loop](../subconscious.md), and the [Google Meet integration](../native-tools/voice.md). When the agent talks, the mascot is the one talking; when the agent is thinking, the mascot is the one thinking.
 

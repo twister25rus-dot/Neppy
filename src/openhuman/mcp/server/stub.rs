@@ -1,4 +1,4 @@
-//! Disabled-MCP facade for [`super`] (the OpenHuman-as-an-MCP-server surface).
+//! Disabled-MCP facade for [`super`] (the Neppy-as-an-MCP-server surface).
 //!
 //! Compiled only when the `mcp` Cargo feature is OFF (see the gate in
 //! [`super`]). It mirrors the subset of the real `mcp::server` public surface
@@ -67,7 +67,7 @@ pub struct LocalMcpEndpoint {
 /// Always errors: there is no MCP server to stand up in this build.
 ///
 /// The sole always-on caller (`inference::provider::claude_code::driver`)
-/// already handles the `Err` arm by logging "…CC running without OpenHuman MCP
+/// already handles the `Err` arm by logging "…CC running without Neppy MCP
 /// tools" and continuing — so Claude Code still runs, just without our tool
 /// surface injected. That call site needs no `#[cfg]`.
 pub async fn ensure_local_http() -> anyhow::Result<LocalMcpEndpoint> {

@@ -9,14 +9,14 @@ use super::loader::{load_config_with_timeout, snapshot_config_json};
 pub struct ModelSettingsPatch {
     pub api_url: Option<String>,
     /// Custom OpenAI-compatible LLM endpoint. Empty string clears the
-    /// override (inference falls back through the OpenHuman backend).
+    /// override (inference falls back through the Neppy backend).
     pub inference_url: Option<String>,
     pub api_key: Option<String>,
     pub default_model: Option<String>,
     pub default_temperature: Option<f64>,
     /// When `Some`, REPLACES the entire `config.model_routes` array with the
     /// supplied (hint, model) pairs. Pass `Some(vec![])` to clear all routes
-    /// (e.g. when switching back to the OpenHuman backend whose built-in
+    /// (e.g. when switching back to the Neppy backend whose built-in
     /// router picks per-task models on its own). Leave `None` to keep the
     /// current routes untouched.
     pub model_routes: Option<Vec<crate::openhuman::config::ModelRouteConfig>>,
@@ -31,7 +31,7 @@ pub struct ModelSettingsPatch {
     /// model → "Supports vision"). Pass `Some(vec![])` to clear; `None` keeps it.
     pub model_registry: Option<Vec<crate::openhuman::config::schema::ModelRegistryEntry>>,
     /// Id of the `cloud_providers` entry used when a workload routes to
-    /// `"cloud"`. Empty string clears (factory falls back to OpenHuman).
+    /// `"cloud"`. Empty string clears (factory falls back to Neppy).
     pub primary_cloud: Option<String>,
     pub chat_provider: Option<String>,
     pub reasoning_provider: Option<String>,
@@ -138,7 +138,7 @@ pub async fn apply_model_settings(
             if !crate::openhuman::inference::provider::factory::is_known_openhuman_tier(m) {
                 log::warn!(
                     "[config][model-settings] default_model '{}' is not a recognized \
-                     OpenHuman backend tier — it will be replaced with the platform \
+                     Neppy backend tier — it will be replaced with the platform \
                      default at inference time.",
                     m
                 );
@@ -556,7 +556,7 @@ pub async fn get_composio_trigger_settings() -> Result<RpcOutcome<serde_json::Va
 }
 
 /// Resolve the hosted backend URL, excluding local or third-party inference
-/// overrides that must never receive OpenHuman session credentials.
+/// overrides that must never receive Neppy session credentials.
 pub(crate) fn resolve_backend_api_url(config: &Config) -> String {
     crate::api::config::effective_backend_api_url(&config.api_url)
 }

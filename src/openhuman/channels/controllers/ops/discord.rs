@@ -54,7 +54,7 @@ pub async fn discord_link_start(
     }
 
     let instructions =
-        format!("In Discord, send this message to the OpenHuman bot: !start {link_token}");
+        format!("In Discord, send this message to the Neppy bot: !start {link_token}");
 
     log::debug!(
         "[discord-link] link token created, length={}",

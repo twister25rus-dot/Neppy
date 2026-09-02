@@ -1,6 +1,6 @@
 //! Configurable hooks — user-authored scripts that observe and gate the agent.
 //!
-//! OpenHuman already had *hooks* in the sense of in-process Rust callbacks an
+//! Neppy already had *hooks* in the sense of in-process Rust callbacks an
 //! embedding host installs ([`crate::openhuman::agent::hooks`],
 //! [`crate::openhuman::agent::stop_hooks`]). Those require compiling against
 //! the core, which makes them the wrong tool for the thing people actually want

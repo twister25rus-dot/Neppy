@@ -29,7 +29,7 @@ import {
   typeIntoComposer,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { clickText, textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -139,7 +139,7 @@ describe('Chat harness — wallet flow', () => {
       { timeout: 20_000, timeoutMsg: 'Recovery Phrase panel did not mount' }
     );
 
-    const alreadyConfigured = await callOpenhumanRpc<{ result: { configured: boolean } }>(
+    const alreadyConfigured = await callNeppyRpc<{ result: { configured: boolean } }>(
       'openhuman.wallet_status',
       {}
     );
@@ -159,7 +159,7 @@ describe('Chat harness — wallet flow', () => {
 
     await browser.waitUntil(
       async () => {
-        const status = await callOpenhumanRpc<{ result: { configured: boolean } }>(
+        const status = await callNeppyRpc<{ result: { configured: boolean } }>(
           'openhuman.wallet_status',
           {}
         );
@@ -168,7 +168,7 @@ describe('Chat harness — wallet flow', () => {
       { timeout: 20_000, timeoutMsg: 'wallet_status never became configured' }
     );
 
-    const walletState = await callOpenhumanRpc<{
+    const walletState = await callNeppyRpc<{
       result: { content_utf8: string; truncated: boolean };
     }>('openhuman.test_support_read_workspace_file', {
       rel_path: 'state/wallet-state.json',
@@ -226,7 +226,7 @@ describe('Chat harness — wallet flow', () => {
     // visible-tool-set filter) instead of the crypto sub-agent's turn.
     // Assert the canary text landed (pipeline works) and check for the quote
     // only if the tools actually executed successfully.
-    const quotes = await callOpenhumanRpc<{
+    const quotes = await callNeppyRpc<{
       result: {
         count: number;
         quotes: Array<{ toAddress: string; amountRaw: string; status: string; kind: string }>;

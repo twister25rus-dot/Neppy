@@ -26,7 +26,7 @@
  */
 import { waitForAppReady, waitForAuthBootstrap } from '../helpers/app-helpers';
 import { readBool, readConfigToml, readSectionString, topLevelValue } from '../helpers/config-toml';
-import { callOpenhumanRpc } from '../helpers/core-rpc';
+import { callNeppyRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
 import { waitForWebView, waitForWindowVisible } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
@@ -103,7 +103,7 @@ async function waitForHash(prefix: string, timeout = 15_000): Promise<boolean> {
 
 async function resetOnboardingFlagAndReload(): Promise<void> {
   stepLog('Resetting onboarding_completed=false via RPC');
-  const res = await callOpenhumanRpc<{ completed: boolean }>(
+  const res = await callNeppyRpc<{ completed: boolean }>(
     'openhuman.config_set_onboarding_completed',
     { value: false }
   );
@@ -130,7 +130,7 @@ async function resetOnboardingFlagAndReload(): Promise<void> {
   // Auth bootstrap restores the server-side onboarding snapshot, which can
   // overwrite the pre-auth test flag. Apply the requested state once auth is
   // settled, then reload so the onboarding gate consumes the new snapshot.
-  const postAuthRes = await callOpenhumanRpc<{ completed: boolean }>(
+  const postAuthRes = await callNeppyRpc<{ completed: boolean }>(
     'openhuman.config_set_onboarding_completed',
     { value: false }
   );
@@ -267,7 +267,7 @@ describe('Onboarding modes — Simple (Cloud) vs Advanced (Custom)', function ()
     await waitForAuthBootstrap(15_000);
     await dismissBootCheckGateIfVisible(8_000);
     stepLog('Setting onboarding_completed=false after auth bootstrap');
-    await callOpenhumanRpc('openhuman.config_set_onboarding_completed', { value: false });
+    await callNeppyRpc('openhuman.config_set_onboarding_completed', { value: false });
     await browser.execute(() => {
       window.location.replace('#/onboarding/welcome');
       window.location.reload();

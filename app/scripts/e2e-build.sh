@@ -71,18 +71,18 @@ case "$OS" in
   Linux)
     # Linux: build debug binary only.
     echo "Building for Linux (debug binary, no bundle)..."
-    pnpm tauri build -c "$TAURI_CONFIG_OVERRIDE" --debug --no-bundle --features e2e-test-support -- --bin OpenHuman
+    pnpm tauri build -c "$TAURI_CONFIG_OVERRIDE" --debug --no-bundle --features e2e-test-support -- --bin Neppy
     ;;
   Darwin)
     # macOS: build .app bundle (wdio.conf points at
-    # src-tauri/target/debug/bundle/macos/OpenHuman.app).
+    # src-tauri/target/debug/bundle/macos/Neppy.app).
     echo "Building for macOS (.app bundle)..."
-    pnpm tauri build -c "$TAURI_CONFIG_OVERRIDE" --bundles app --debug --features e2e-test-support -- --bin OpenHuman
+    pnpm tauri build -c "$TAURI_CONFIG_OVERRIDE" --bundles app --debug --features e2e-test-support -- --bin Neppy
     ;;
   MINGW*|MSYS*|CYGWIN*|Windows_NT)
-    # Windows: bare .exe at src-tauri/target/debug/OpenHuman.exe.
+    # Windows: bare .exe at src-tauri/target/debug/Neppy.exe.
     echo "Building for Windows (.exe, no bundle)..."
-    pnpm tauri build -c "$TAURI_CONFIG_OVERRIDE" --debug --no-bundle --features e2e-test-support -- --bin OpenHuman
+    pnpm tauri build -c "$TAURI_CONFIG_OVERRIDE" --debug --no-bundle --features e2e-test-support -- --bin Neppy
     ;;
   *)
     echo "ERROR: unsupported OS for e2e build: $OS" >&2

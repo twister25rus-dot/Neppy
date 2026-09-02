@@ -175,12 +175,12 @@ async fn start_chat_emits_sanitized_chat_error_on_inference_failure() {
 #[test]
 fn detects_backend_budget_exhaustion_error() {
     assert!(is_inference_budget_exceeded_error(
-        "OpenHuman API error (402 Payment Required): Budget exceeded — add credits to continue."
+        "Neppy API error (402 Payment Required): Budget exceeded — add credits to continue."
     ));
     assert!(is_inference_budget_exceeded_error(
         "provider error: budget exceeded, please add credits"
     ));
-    // Issue #3088: the OpenHuman managed backend reports no-credits as a
+    // Issue #3088: the Neppy managed backend reports no-credits as a
     // 400 carrying these canonical phrases (see `billing_error.rs`). They
     // were previously NOT recognised here, so the error fell through to the
     // generic "Something went wrong" branch. They must now match.
@@ -191,7 +191,7 @@ fn detects_backend_budget_exhaustion_error() {
         "openhuman API error (400 Bad Request): Insufficient balance"
     ));
     assert!(!is_inference_budget_exceeded_error(
-        "OpenHuman API error (500): Internal server error"
+        "Neppy API error (500): Internal server error"
     ));
 }
 
@@ -209,7 +209,7 @@ fn budget_exceeded_copy_mentions_top_up() {
 
 #[test]
 fn classify_inference_error_managed_insufficient_budget_400_is_budget_exhausted() {
-    // Issue #3088: a managed (OpenHuman backend) no-credits failure arrives
+    // Issue #3088: a managed (Neppy backend) no-credits failure arrives
     // as a 400 with "Insufficient budget" — NOT a 402. It previously fell
     // through to the generic `inference` branch ("Something went wrong"),
     // leaving the user unable to self-diagnose. It must now classify as
@@ -219,7 +219,7 @@ fn classify_inference_error_managed_insufficient_budget_400_is_budget_exhausted(
     assert_eq!(classified.error_type, "budget_exhausted");
     assert_eq!(
         classified.source, "openhuman_billing",
-        "the OpenHuman backend's own credit system is the origin"
+        "the Neppy backend's own credit system is the origin"
     );
     assert!(
         !classified.retryable,
@@ -482,7 +482,7 @@ fn classify_inference_error_distinguishes_action_budget_from_provider_429() {
     // SecurityPolicy hourly cap (web_fetch / curl / http_request emit
     // these strings). Before #2364 these were misclassified as a
     // provider 429 and the user saw the "your AI provider is rate-
-    // limiting you" copy — which is wrong, the limit is OpenHuman's
+    // limiting you" copy — which is wrong, the limit is Neppy's
     // own per-hour safety budget.
     for raw in [
         "Rate limit exceeded: action budget exhausted",
@@ -500,7 +500,7 @@ fn classify_inference_error_distinguishes_action_budget_from_provider_429() {
         );
         assert!(
             message.contains("local safety cap"),
-            "must clarify the limit is OpenHuman-local, not upstream: {message}"
+            "must clarify the limit is Neppy-local, not upstream: {message}"
         );
         assert!(
             message.contains("can keep chatting in this thread"),
@@ -1007,16 +1007,16 @@ async fn start_chat_emits_structured_rate_limit_metadata_on_chat_error_event() {
 
 #[test]
 fn classify_inference_error_action_budget_marks_source_openhuman_not_provider() {
-    // OpenHuman's SecurityPolicy per-hour cap is NOT a provider 429 —
+    // Neppy's SecurityPolicy per-hour cap is NOT a provider 429 —
     // it's a local safety cap. The structured payload must reflect
     // that so the FE doesn't tell the user to switch providers, and
-    // doesn't promise a fallback (the cap applies to OpenHuman itself).
+    // doesn't promise a fallback (the cap applies to Neppy itself).
     let raw = "Rate limit exceeded: action budget exhausted";
     let classified = classify_inference_error(raw);
     assert_eq!(classified.error_type, "action_budget_exceeded");
     assert_eq!(
         classified.source, "openhuman_budget",
-        "OpenHuman's own per-hour cap must NOT be tagged as a provider source"
+        "Neppy's own per-hour cap must NOT be tagged as a provider source"
     );
     assert!(
         classified.retryable,
@@ -1156,8 +1156,8 @@ fn classify_inference_error_auth_marks_non_retryable_config_source() {
 #[test]
 fn classify_inference_error_billing_402_distinguished_from_provider_429() {
     // Acceptance criteria for #2606: distinguish upstream provider
-    // throttling (429) from OpenHuman budget/billing limits (402).
-    let raw = "OpenHuman API error (402 Payment Required): top up to continue";
+    // throttling (429) from Neppy budget/billing limits (402).
+    let raw = "Neppy API error (402 Payment Required): top up to continue";
     let classified = classify_inference_error(raw);
     assert_eq!(classified.error_type, "budget_exhausted");
     assert_eq!(
@@ -1171,8 +1171,8 @@ fn classify_inference_error_billing_402_distinguished_from_provider_429() {
 fn classify_inference_error_upstream_provider_402_is_not_openhuman_billing() {
     // Regression for the inverse of the #2606 acceptance criterion: a
     // 402 carrying an upstream provider envelope must be attributed to
-    // that provider, NOT to OpenHuman's own billing surface. Tagging it
-    // openhuman_billing misled the FE into pointing the user at OpenHuman
+    // that provider, NOT to Neppy's own billing surface. Tagging it
+    // openhuman_billing misled the FE into pointing the user at Neppy
     // credits when in fact their provider plan / balance is the issue.
     let cases: &[&str] = &[
         "openrouter API error (402 Payment Required): insufficient balance",
@@ -1186,7 +1186,7 @@ fn classify_inference_error_upstream_provider_402_is_not_openhuman_billing() {
         );
         assert_eq!(
             classified.source, "provider",
-            "upstream provider 402 must be sourced to the provider, not OpenHuman billing: {raw}"
+            "upstream provider 402 must be sourced to the provider, not Neppy billing: {raw}"
         );
         assert!(!classified.retryable);
     }
@@ -1405,7 +1405,7 @@ fn classify_inference_error_chat_template_wins_over_the_retry_aggregate() {
     // The template arm sits above both so neither can claim it.
     let aggregate = format!(
         "The model `qwen/qwen3.5-9b` may not be available on your provider. Configure a \
-         fallback chain via `reliability.model_fallbacks` in your OpenHuman config, or change \
+         fallback chain via `reliability.model_fallbacks` in your Neppy config, or change \
          your default model in Connections → API keys → LLM.\n\nAll providers/models failed. \
          Attempts:\nprovider=lmstudio model=qwen/qwen3.5-9b attempt 1/2: \
          {LMSTUDIO_TEMPLATE_400}\nprovider=lmstudio model=qwen/qwen3.5-9b attempt 2/2: \
@@ -1509,10 +1509,10 @@ fn classify_inference_error_model_not_found_404_stays_model_unavailable() {
 
 /// Build a flattened managed-backend error string the way it reaches
 /// `classify_inference_error` after the typed provider error is collapsed
-/// to a `String` (the `"OpenHuman API error (<status>): <body>"` envelope
+/// to a `String` (the `"Neppy API error (<status>): <body>"` envelope
 /// from `inference::provider::ops::api_error`).
 fn managed_error(status: &str, body: &str) -> String {
-    format!("OpenHuman API error ({status}): {body}")
+    format!("Neppy API error ({status}): {body}")
 }
 
 #[test]
@@ -2477,11 +2477,11 @@ fn classify_session_expired_sentinel_routes_to_signin_not_generic() {
 
 #[test]
 fn classify_session_expired_claims_managed_backend_401_invalid_token_before_auth_error() {
-    // The OpenHuman backend 401 "Invalid token" envelope contains "401", which
+    // The Neppy backend 401 "Invalid token" envelope contains "401", which
     // the `auth_error` arm would otherwise claim ("check your API key") — wrong
     // for managed-backend users. The session arm must win.
     let c = classify_inference_error(
-        "OpenHuman API error (401 Unauthorized): {\"error\":\"Invalid token\"}",
+        "Neppy API error (401 Unauthorized): {\"error\":\"Invalid token\"}",
     );
     assert_eq!(c.error_type, "session_expired");
 }
@@ -2505,7 +2505,7 @@ fn classify_connection_drop_routes_to_network_retryable() {
         "request or response body error: unexpected end of file",
         // Raw mid-stream SSE drop: managed backend leaves OFF the errorCode, so
         // it reaches the ladder as a streaming error with a transport body.
-        "OpenHuman streaming API error: error reading a body from connection: \
+        "Neppy streaming API error: error reading a body from connection: \
          end of file before message length reached",
     ] {
         let c = classify_inference_error(raw);
@@ -2524,7 +2524,7 @@ fn classify_managed_sse_badrequest_not_misread_as_network() {
     // A managed 400 frame carries errorCode → must stay provider_request_rejected
     // (claimed by the errorCode short-circuit before the transport arm).
     let c = classify_inference_error(
-        "OpenHuman streaming API error: {\"error\":{\"message\":\"Message has tool role, \
+        "Neppy streaming API error: {\"error\":{\"message\":\"Message has tool role, \
          but there was no previous assistant message with a tool call!\",\
          \"type\":\"stream_error\",\"errorCode\":\"BAD_REQUEST\"}}",
     );
@@ -2545,7 +2545,7 @@ fn classify_managed_tool_ordering_400_gets_cleared_resend_copy() {
     // send again" (not "try a different model") and be retryable, since the
     // de-poison guard already evicted the bad warm session.
     let c = classify_inference_error(
-        "OpenHuman streaming API error: {\"error\":{\"message\":\"Message at index 3 has role \
+        "Neppy streaming API error: {\"error\":{\"message\":\"Message at index 3 has role \
          'tool' but is not preceded by an assistant message with a matching tool_call\",\
          \"type\":\"stream_error\",\"errorCode\":\"BAD_REQUEST\"}}",
     );

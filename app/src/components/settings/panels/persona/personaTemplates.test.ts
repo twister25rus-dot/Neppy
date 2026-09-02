@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { parsePersonaFields } from './personaSections';
 import { applyTemplate, PERSONA_TEMPLATES } from './personaTemplates';
 
-const SOUL = `# OpenHuman
+const SOUL = `# Neppy
 
-You are OpenHuman.
+You are Neppy.
 
 ## Personality
 

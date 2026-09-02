@@ -16,8 +16,8 @@ prove the observe→stream half end-to-end:
   `afterAgentResponse` (assistant turn) to a small Node script.
 - The script normalized each turn into a tinyplace `SessionEnvelopeV1`
   (`harness.provider = "cursor"`, `scope.harness_session_id = conversation_id`)
-  and sent it as a Signal-E2E DM to the running OpenHuman identity.
-- OpenHuman's orchestration ingest decrypted it, classified it as `cursor`
+  and sent it as a Signal-E2E DM to the running Neppy identity.
+- Neppy's orchestration ingest decrypted it, classified it as `cursor`
   (`harness_type_for`, the gate widened in the recognition slice), and rendered
   it under a **Runtime · cursor** session.
 
@@ -30,7 +30,7 @@ removed after the demo. The shippable output is the recognition slice (PR #4775)
 > The `/keys/:cryptoId/*` relay routes are keyed on the **base58** cryptoId (no
 > `/`) and the backend already resolves both encodings, so the 404 only occurs
 > when a *client* puts the base64 `identityKey` in the URL path. Every current
-> send path already fetches by base58 (TS SDK ≥2.0.2 `deriveCryptoId`; OpenHuman
+> send path already fetches by base58 (TS SDK ≥2.0.2 `deriveCryptoId`; Neppy
 > `resolve_recipient_to_agent_id` → `crypto_id`). The observer's 404 was a stale
 > `@tinyhumansai/tinyplace@1.0.1` build in the prototype, not a product defect —
 > and remapping the identity would have broken the payment/wallet coupling
@@ -41,7 +41,7 @@ removed after the demo. The shippable output is the recognition slice (PR #4775)
 ## Result: observe → render works ✅
 
 A **real, live Cursor chat** (a Cursor agent window open on `~/work/k8s`,
-`conversation_id = 4c17e405…`) streamed both turns into OpenHuman and rendered as
+`conversation_id = 4c17e405…`) streamed both turns into Neppy and rendered as
 a Cursor runtime session — with no polling, driven purely by Cursor's own hooks
 firing on each turn. This confirms the observe path the adapter needs is real:
 hooks give us `{prompt}` / `{text}` plus `conversation_id` / `workspace_roots`,
@@ -63,14 +63,14 @@ the committed `adapters/cursor.mjs` already does with its `env` sentinel.)
 
 ### Gap 1 — reply address is base58↔base64 mismatched
 
-When OpenHuman tries to **reply** into the runtime session, the send fails with
+When Neppy tries to **reply** into the runtime session, the send fails with
 `No agent found for <id>`. This is the same base58/base64 encoding family as the
 correction above: the peer must be addressed and resolved by its **base58**
 `crypto_id`, not the **base64** `identityKey`. No new crypto is needed — the fix
 is base58 discipline on the reply/resolve boundary, and it is likely already
 closed once the prototype/plugin is on SDK ≥2.0.2 (whose send path fetches by
 `deriveCryptoId`). **Next step: re-test the reply path against a current-SDK
-plugin build before assuming any OpenHuman-side change is required.**
+plugin build before assuming any Neppy-side change is required.**
 
 ### Gap 2 — no Cursor GUI-chat injection API
 

@@ -1,9 +1,9 @@
 //! Host adapter: [`tinyagents::harness::host::ExperienceStore`] backed by
-//! OpenHuman's `agent_experience` domain.
+//! Neppy's `agent_experience` domain.
 //!
 //! This is `docs/specs/plan-agents.md` Phase 4. The crate's runtime records what
 //! it learned about *doing* a task and reads prior attempts back before a
-//! similar one. OpenHuman already has exactly that domain — the Hermes-style
+//! similar one. Neppy already has exactly that domain — the Hermes-style
 //! procedural memory in [`crate::openhuman::agent_experience`], written today by
 //! [`AgentExperienceCaptureHook`](crate::openhuman::agent::experience::AgentExperienceCaptureHook)
 //! and read by the retrieval path — so this adapter is a translation layer over
@@ -13,7 +13,7 @@
 //!
 //! The trait's module doc is emphatic that this is **not** `AgentMemory`:
 //! procedural (how the agent performed) versus declarative (what the user
-//! knows). OpenHuman shares one backing store between them — both go through
+//! knows). Neppy shares one backing store between them — both go through
 //! `Arc<dyn Memory>` — but they do **not** share a namespace: everything here is
 //! confined to
 //! [`AGENT_EXPERIENCE_NAMESPACE`](crate::openhuman::agent::experience::AGENT_EXPERIENCE_NAMESPACE)
@@ -23,19 +23,19 @@
 //!
 //! # Contract mismatches resolved here
 //!
-//! 1. **Ternary vs boolean outcome.** OpenHuman has
+//! 1. **Ternary vs boolean outcome.** Neppy has
 //!    [`ExperienceOutcome::Partial`]; the crate's `Experience` has only
 //!    `success: bool`. Writing collapses `false` to `Failure`; reading maps
 //!    `Success` to `true` and both `Failure` and `Partial` to `false`. Partial
 //!    is *not* a success, and rounding it up would present a recovered-after-
 //!    failure run as a clean one. The nuance survives in the prose we carry
-//!    back in `outcome`, which names the OpenHuman outcome explicitly.
+//!    back in `outcome`, which names the Neppy outcome explicitly.
 //! 2. **`lesson` is required; `Experience::outcome` may be empty.** The store
 //!    rejects a blank `lesson`
 //!    ([`AgentExperienceStore::put`]). The trait documents an empty `outcome` as
 //!    normal *and* says `record` returning `Err` means the record was lost. So a
 //!    blank outcome gets a synthesized, honest lesson line rather than an error.
-//! 3. **`agent_id` is a score bonus, not a filter.** OpenHuman's
+//! 3. **`agent_id` is a score bonus, not a filter.** Neppy's
 //!    `score_experience` only *boosts* an agent match, so a retrieval seeded
 //!    with an agent id can still return another agent's records. The trait
 //!    promises "prior attempts by `agent`", so this adapter filters the hits by
@@ -54,7 +54,7 @@
 //!    stored fields; this adapter also redacts on the way *in* before
 //!    truncating, so a secret cannot survive by being pushed past the truncation
 //!    boundary. Nothing here bypasses that guard.
-//! 5. **No profile invention.** OpenHuman partitions experience by agent
+//! 5. **No profile invention.** Neppy partitions experience by agent
 //!    profile. The crate has no notion of one, so the profile is supplied to the
 //!    adapter at construction and stamped onto every write; a profile-less
 //!    adapter reproduces the legacy, unpartitioned behaviour byte-for-byte.
@@ -113,14 +113,14 @@ const ADAPTER_CONFIDENCE: f32 = 0.6;
 
 // ── Adapter ───────────────────────────────────────────────────────────────────
 
-/// [`ExperienceStore`] over OpenHuman's `agent_experience` domain.
+/// [`ExperienceStore`] over Neppy's `agent_experience` domain.
 ///
 /// Holds an [`AgentExperienceStore`] (itself a thin façade over
 /// `Arc<dyn Memory>` pinned to the experience namespace) plus the two pieces of
 /// host context the crate cannot supply: the active agent profile and the
 /// recall bound.
 #[derive(Clone)]
-pub struct OpenHumanExperienceStore {
+pub struct NeppyExperienceStore {
     /// The namespace-scoped procedural store. All reads and writes go through
     /// it, so the `agent_experience` namespace confinement and the domain's
     /// redaction on `put` apply to everything this adapter does.
@@ -145,7 +145,7 @@ pub struct OpenHumanExperienceStore {
     max_hits: usize,
 }
 
-impl OpenHumanExperienceStore {
+impl NeppyExperienceStore {
     /// Adapter over `memory`, with no profile partition and the default recall
     /// bound.
     pub fn new(memory: Arc<dyn Memory>) -> Self {
@@ -333,7 +333,7 @@ fn reuse_hint_for(exp: &Experience) -> String {
 /// Maps a domain hit back into the crate's inert record.
 ///
 /// `outcome` reconstructs prose from the fields the domain actually stores. The
-/// OpenHuman outcome is named explicitly so `Partial` — which has no
+/// Neppy outcome is named explicitly so `Partial` — which has no
 /// representation in `success: bool` — is not silently lost.
 fn to_crate(hit: &ExperienceHit) -> Experience {
     let e = &hit.experience;
@@ -378,7 +378,7 @@ fn same_agent(a: &str, b: &str) -> bool {
 }
 
 #[async_trait]
-impl ExperienceStore for OpenHumanExperienceStore {
+impl ExperienceStore for NeppyExperienceStore {
     async fn record(&self, exp: &Experience) -> Result<()> {
         if !exp.is_recallable() {
             // Nothing could ever match a record with no agent or no task, so
@@ -483,8 +483,8 @@ mod tests {
     use super::*;
     use crate::openhuman::memory::tool_memory::test_helpers::MockMemory;
 
-    fn adapter() -> OpenHumanExperienceStore {
-        OpenHumanExperienceStore::new(Arc::new(MockMemory::default()))
+    fn adapter() -> NeppyExperienceStore {
+        NeppyExperienceStore::new(Arc::new(MockMemory::default()))
     }
 
     fn exp(agent: &str, task: &str, outcome: &str, success: bool) -> Experience {
@@ -540,7 +540,7 @@ mod tests {
         let shared: Arc<dyn Memory> = Arc::new(MockMemory::default());
 
         // Seed the shared store the way a pre-profile build did — unstamped.
-        OpenHumanExperienceStore::new(shared.clone())
+        NeppyExperienceStore::new(shared.clone())
             .record(&exp(
                 "planner",
                 "migrate the customer schema",
@@ -550,7 +550,7 @@ mod tests {
             .await
             .expect("seed the shared store");
 
-        let store = OpenHumanExperienceStore::with_profile(local.clone(), None)
+        let store = NeppyExperienceStore::with_profile(local.clone(), None)
             .with_shared_recall_memory(Some(shared.clone()));
 
         // Recall reaches the shared store even though nothing was written to
@@ -581,7 +581,7 @@ mod tests {
                 .any(|e| e.task.contains("rotate the signing key"))
         };
 
-        let shared_only = OpenHumanExperienceStore::new(shared)
+        let shared_only = NeppyExperienceStore::new(shared)
             .recall_for("planner", "rotate the signing key")
             .await
             .expect("recall from the shared store");
@@ -590,7 +590,7 @@ mod tests {
             "writes must not fan out into the shared store, got: {shared_only:?}"
         );
 
-        let local_only = OpenHumanExperienceStore::new(local)
+        let local_only = NeppyExperienceStore::new(local)
             .recall_for("planner", "rotate the signing key")
             .await
             .expect("recall from the profile-local store");
@@ -773,7 +773,7 @@ mod tests {
 
     #[test]
     fn partial_outcomes_read_as_unsuccessful() {
-        // OpenHuman's ternary outcome has no boolean equivalent; a partial run
+        // Neppy's ternary outcome has no boolean equivalent; a partial run
         // must not round up to a success.
         let hit = ExperienceHit {
             experience: AgentExperience {
@@ -812,10 +812,9 @@ mod tests {
     #[test]
     fn profile_ids_partition_the_storage_key() {
         let memory: Arc<dyn Memory> = Arc::new(MockMemory::default());
-        let none = OpenHumanExperienceStore::with_profile(memory.clone(), None);
-        let alice =
-            OpenHumanExperienceStore::with_profile(memory.clone(), Some("alice".to_string()));
-        let blank = OpenHumanExperienceStore::with_profile(memory, Some("   ".to_string()));
+        let none = NeppyExperienceStore::with_profile(memory.clone(), None);
+        let alice = NeppyExperienceStore::with_profile(memory.clone(), Some("alice".to_string()));
+        let blank = NeppyExperienceStore::with_profile(memory, Some("   ".to_string()));
 
         let e = exp("planner", "migrate the schema", "ok", true);
         let none_id = none.to_domain(&e).id;

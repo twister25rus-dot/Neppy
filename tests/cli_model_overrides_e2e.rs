@@ -6,7 +6,7 @@ use serde_json::Value;
 
 #[test]
 fn cli_model_and_provider_flags_override_the_loaded_session_without_persisting() {
-    let workspace = tempfile::tempdir().expect("temporary OpenHuman workspace");
+    let workspace = tempfile::tempdir().expect("temporary Neppy workspace");
     let output = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
         .args([
             "--provider",
@@ -19,7 +19,7 @@ fn cli_model_and_provider_flags_override_the_loaded_session_without_persisting()
         ])
         .env("OPENHUMAN_WORKSPACE", workspace.path())
         .output()
-        .expect("run OpenHuman CLI");
+        .expect("run Neppy CLI");
 
     assert!(
         output.status.success(),
@@ -56,12 +56,12 @@ fn cli_model_and_provider_flags_override_the_loaded_session_without_persisting()
 
 #[test]
 fn a_mutating_cli_command_does_not_persist_launch_overrides() {
-    let workspace = tempfile::tempdir().expect("temporary OpenHuman workspace");
+    let workspace = tempfile::tempdir().expect("temporary Neppy workspace");
     let initialize = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
         .args(["--no-tui", "config", "get"])
         .env("OPENHUMAN_WORKSPACE", workspace.path())
         .output()
-        .expect("initialize OpenHuman config");
+        .expect("initialize Neppy config");
     assert!(initialize.status.success());
 
     let config_path = workspace.path().join("config.toml");
@@ -80,7 +80,7 @@ fn a_mutating_cli_command_does_not_persist_launch_overrides() {
         ])
         .env("OPENHUMAN_WORKSPACE", workspace.path())
         .output()
-        .expect("run mutating OpenHuman command");
+        .expect("run mutating Neppy command");
     assert!(
         mutate.status.success(),
         "CLI failed: {}",
@@ -117,7 +117,7 @@ fn cli_rejects_a_missing_model_value() {
     let output = Command::new(env!("CARGO_BIN_EXE_openhuman-core"))
         .arg("--model")
         .output()
-        .expect("run OpenHuman CLI");
+        .expect("run Neppy CLI");
 
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("missing value for --model"));

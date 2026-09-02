@@ -1,7 +1,7 @@
 //! Host layer over the memory sync domain.
 //!
 //! What lives here is the JSON-RPC surface — handlers and controller schemas
-//! name OpenHuman's `RpcOutcome` and `ControllerSchema`, which no engine crate
+//! name Neppy's `RpcOutcome` and `ControllerSchema`, which no engine crate
 //! can see. The two submodules below are that surface.
 //!
 //! # Why there is no `pub use tinymemory_core::sync::*;` here any more (#5560)

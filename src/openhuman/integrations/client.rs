@@ -57,7 +57,7 @@ fn reject_backend_webhook_path(method: &str, path: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Handle a `401 Unauthorized` from the OpenHuman backend's
+/// Handle a `401 Unauthorized` from the Neppy backend's
 /// `/agent-integrations/*` routes.
 ///
 /// **Why this 401 is unambiguously a session-JWT rejection.** Every request
@@ -264,7 +264,7 @@ fn backend_egress_descriptor(path: &str) -> crate::openhuman::security::egress::
     crate::openhuman::security::egress::EgressDescriptor::integration(endpoint)
 }
 
-/// Egress spine (privacy epic S2, #4436): disclose an OpenHuman managed-backend
+/// Egress spine (privacy epic S2, #4436): disclose an Neppy managed-backend
 /// round-trip before it leaves the device. Fire-and-forget — never fails the
 /// caller.
 fn emit_backend_egress(path: &str) {
@@ -384,7 +384,7 @@ impl IntegrationClient {
         if let Some(config) = &self.budget_config {
             if crate::openhuman::hosted::team::managed_tool_budget_exhausted(config).await {
                 anyhow::bail!(
-                    "Managed cloud tools are disabled because your OpenHuman AI credits are exhausted. Add credits or route the task to user-supplied providers."
+                    "Managed cloud tools are disabled because your Neppy AI credits are exhausted. Add credits or route the task to user-supplied providers."
                 );
             }
         }

@@ -608,7 +608,7 @@ mod tests {
     ///
     /// PR #3074 introduced the `Config.action_dir` / `Config.workspace_dir`
     /// split: acting tools resolve to `action_dir` (default
-    /// `~/OpenHuman/projects`), and `workspace_dir` is reserved for
+    /// `~/Neppy/projects`), and `workspace_dir` is reserved for
     /// internal product state (memory / sessions / vault / etc.) that is
     /// denied to agent tools. The coding-agent prompts must reflect that
     /// split — saying "in a sandboxed environment" or "the workspace has

@@ -695,7 +695,7 @@ pub async fn init_stores(
     // `people::store::get()`.
     // Prune legacy bundled skills (dev-workflow / github-issue-crusher
     // / pr-review-shepherd) that older builds seeded into
-    // <workspace>/skills/. OpenHuman no longer ships bundled defaults;
+    // <workspace>/skills/. Neppy no longer ships bundled defaults;
     // this removes the stale dirs on upgrade. Idempotent.
     if plan.skills_prune {
         crate::openhuman::skills::registry::prune_legacy_default_workflows(&cfg.workspace_dir);

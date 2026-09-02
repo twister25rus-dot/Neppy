@@ -1,7 +1,7 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Push OpenHuman iOS App Store screenshots without uploading a binary"
+  desc "Push Neppy iOS App Store screenshots without uploading a binary"
   lane :push_screenshots do
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("ASC_KEY_ID"),
@@ -28,7 +28,7 @@ platform :ios do
     )
   end
 
-  desc "Push OpenHuman iOS App Store metadata and screenshots without uploading a binary"
+  desc "Push Neppy iOS App Store metadata and screenshots without uploading a binary"
   lane :push_metadata do
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("ASC_KEY_ID"),

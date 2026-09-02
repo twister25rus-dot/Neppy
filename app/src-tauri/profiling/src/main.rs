@@ -1,4 +1,4 @@
-//! Offline CPU/RAM profiler for a locally running OpenHuman Tauri process.
+//! Offline CPU/RAM profiler for a locally running Neppy Tauri process.
 //!
 //! This binary is gated by the default-OFF dev-resource-profiler feature and
 //! is never linked into the shipped app. It samples the Tauri host, which also
@@ -254,7 +254,7 @@ where
 }
 
 fn usage() -> &'static str {
-    "Usage: pnpm profile:tauri --pid PID [--duration SECONDS] [--interval-ms MS] [--out PATH] [--stacks|--no-stacks]\n\nAttach to the main OpenHuman Tauri PID, not a CEF helper PID. On macOS, CPU stack sampling is enabled by default."
+    "Usage: pnpm profile:tauri --pid PID [--duration SECONDS] [--interval-ms MS] [--out PATH] [--stacks|--no-stacks]\n\nAttach to the main Neppy Tauri PID, not a CEF helper PID. On macOS, CPU stack sampling is enabled by default."
 }
 
 fn default_out_dir() -> PathBuf {
@@ -682,21 +682,21 @@ mod tests {
     fn classifies_cef_roles() {
         assert_eq!(
             classify_process(
-                &process(2, Some(1), "OpenHuman Helper", "--type=renderer", 1, 1.0),
+                &process(2, Some(1), "Neppy Helper", "--type=renderer", 1, 1.0),
                 1
             ),
             Component::CefRenderer
         );
         assert_eq!(
             classify_process(
-                &process(3, Some(1), "OpenHuman Helper", "--type=gpu-process", 1, 1.0),
+                &process(3, Some(1), "Neppy Helper", "--type=gpu-process", 1, 1.0),
                 1
             ),
             Component::CefGpu
         );
         assert_eq!(
             classify_process(
-                &process(4, Some(1), "OpenHuman Helper", "--type=utility", 1, 1.0),
+                &process(4, Some(1), "Neppy Helper", "--type=utility", 1, 1.0),
                 1
             ),
             Component::CefUtility
@@ -706,7 +706,7 @@ mod tests {
     #[test]
     fn groups_only_host_process_tree() {
         let processes = vec![
-            process(10, Some(1), "OpenHuman", "OpenHuman", 100, 20.0),
+            process(10, Some(1), "Neppy", "Neppy", 100, 20.0),
             process(11, Some(10), "Helper", "--type=renderer", 40, 30.0),
             process(12, Some(11), "Helper", "--type=utility", 10, 5.0),
             process(99, Some(1), "unrelated", "unrelated", 1_000, 100.0),
@@ -784,11 +784,11 @@ mod tests {
     fn parses_recursive_stack_counts_into_openhuman_modules() {
         let sample = r#"
 Total number in stack (recursive counted multiple, when >=5):
-        81 openhuman_core::openhuman::agent::run  (in OpenHuman) + 10
-        34 <openhuman_core::openhuman::agent::Tool as core::future::Future>::poll  (in OpenHuman) + 2
-        17 openhuman_core::openhuman::memory::search  (in OpenHuman) + 4
-         9 openhuman::core_process::ensure_running  (in OpenHuman) + 1
-       200 tokio::runtime::park  (in OpenHuman) + 3
+        81 openhuman_core::openhuman::agent::run  (in Neppy) + 10
+        34 <openhuman_core::openhuman::agent::Tool as core::future::Future>::poll  (in Neppy) + 2
+        17 openhuman_core::openhuman::memory::search  (in Neppy) + 4
+         9 openhuman::core_process::ensure_running  (in Neppy) + 1
+       200 tokio::runtime::park  (in Neppy) + 3
 
 Sort by top of stack, same collapsed (when >= 5):
 "#;

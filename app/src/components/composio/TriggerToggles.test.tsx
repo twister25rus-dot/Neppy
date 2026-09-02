@@ -139,7 +139,7 @@ describe('<TriggerToggles>', () => {
     // The raw SESSION_EXPIRED blob is not surfaced; a clean message is.
     expect(screen.queryByText(/SESSION_EXPIRED/)).not.toBeInTheDocument();
     expect(
-      screen.getByText('Your OpenHuman session expired. Sign in again to load triggers.')
+      screen.getByText('Your Neppy session expired. Sign in again to load triggers.')
     ).toBeInTheDocument();
 
     const button = screen.getByRole('button', { name: 'Sign in again' });

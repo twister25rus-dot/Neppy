@@ -34,7 +34,7 @@ impl Tool for UpdateCheckTool {
     }
 
     fn description(&self) -> &str {
-        "Check whether a newer OpenHuman core build is available on GitHub \
+        "Check whether a newer Neppy core build is available on GitHub \
          Releases. Read-only — performs one HTTPS request to the releases \
          feed and returns version info plus, if a newer build exists, its \
          download URL, asset name, and release notes. Use this when the \

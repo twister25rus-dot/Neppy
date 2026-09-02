@@ -16,13 +16,13 @@
  *     spacing is a v4 feature; `size-*` itself exists in 3.4), so it becomes
  *     `size-[34px]`. `has-[…]:` and `empty:` variants DO exist in 3.4 and are
  *     kept as written.
- *  2. **shadcn colour names → OpenHuman semantic tokens** — upstream is written
+ *  2. **shadcn colour names → Neppy semantic tokens** — upstream is written
  *     against shadcn's palette (`bg-background`, `text-muted-foreground`,
  *     `border-input`, `ring-ring`, `bg-accent`). This app has its own var-backed
  *     semantic scale (`tailwind.config.js`), and `npm run lint:ui-tokens` fails
  *     the build on raw palette names, so every colour is remapped:
  *
- *     | shadcn                 | OpenHuman            |
+ *     | shadcn                 | Neppy            |
  *     | ---------------------- | -------------------- |
  *     | `bg-background`        | `bg-surface`         |
  *     | `text-muted-foreground`| `text-content-muted` |

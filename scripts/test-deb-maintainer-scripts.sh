@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/test-deb-maintainer-scripts.sh — regression guard for the Debian
-# maintainer scripts that make the OpenHuman binary reachable from any shell
+# maintainer scripts that make the Neppy binary reachable from any shell
 # (openhuman#5497). No CI lane executes shell packaging tests today, so run this
 # locally / in review after touching app/src-tauri/{postinst,postrm} or the deb
 # bundle config: bash scripts/test-deb-maintainer-scripts.sh
@@ -28,8 +28,8 @@ grep -q '"postInstallScript": "postinst"' "$CONF" \
   || fail "tauri.conf.json does not reference postinst via postInstallScript"
 grep -q '"postRemoveScript": "postrm"' "$CONF" \
   || fail "tauri.conf.json does not reference postrm via postRemoveScript"
-# The lowercase symlink only helps if the binary really installs as OpenHuman.
-grep -q '"productName": "OpenHuman"' "$CONF" \
+# The lowercase symlink only helps if the binary really installs as Neppy.
+grep -q '"productName": "Neppy"' "$CONF" \
   || fail "productName changed — the postinst symlink target is now stale"
 
 # --- 3. Behavioural test in a throwaway sandbox ------------------------------
@@ -37,8 +37,8 @@ grep -q '"productName": "OpenHuman"' "$CONF" \
 # override env vars, so we exercise the real logic without touching the system.
 SANDBOX="$(mktemp -d)"
 trap 'rm -rf "$SANDBOX"' EXIT
-export OPENHUMAN_DEB_BINARY="$SANDBOX/usr/bin/OpenHuman"
-export OPENHUMAN_DEB_SYMLINK="$SANDBOX/usr/local/bin/openHuman"
+export OPENHUMAN_DEB_BINARY="$SANDBOX/usr/bin/Neppy"
+export OPENHUMAN_DEB_SYMLINK="$SANDBOX/usr/local/bin/neppy"
 
 mkdir -p "$(dirname "$OPENHUMAN_DEB_BINARY")"
 printf '#!/bin/sh\nexit 0\n' >"$OPENHUMAN_DEB_BINARY"
@@ -83,4 +83,4 @@ sh "$POSTINST" configure
 [ -e "$DECOY_DIR/$(basename "$OPENHUMAN_DEB_BINARY")" ] && fail "postinst followed a symlink and wrote inside the target directory (CWE-59)"
 [ "$(readlink "$OPENHUMAN_DEB_SYMLINK")" = "$OPENHUMAN_DEB_BINARY" ] || fail "postinst did not replace the directory symlink with the launcher link"
 
-echo "PASS: deb maintainer scripts create/remove the openHuman symlink safely"
+echo "PASS: deb maintainer scripts create/remove the neppy symlink safely"

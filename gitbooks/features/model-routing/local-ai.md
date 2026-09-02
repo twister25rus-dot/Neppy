@@ -7,7 +7,7 @@ icon: microchip
 
 # Local AI (optional)
 
-OpenHuman can run a local model on your machine for workloads where keeping data on-device matters: **memory embeddings, summary-tree building, background reasoning loops, and explicitly routed chat or reasoning workloads**. It is **opt-in** and ships **off** by default.
+Neppy can run a local model on your machine for workloads where keeping data on-device matters: **memory embeddings, summary-tree building, background reasoning loops, and explicitly routed chat or reasoning workloads**. It is **opt-in** and ships **off** by default.
 
 This is deliberate scoping. The previous design tried to put every modality on-device by default, and the result was a heavy, hardware-sensitive footprint. Today, local AI stays explicit: recurring privacy-sensitive work can run locally, and chat/reasoning can also run locally when you route those workloads to a local provider.
 
@@ -42,18 +42,18 @@ Heavy hints (`hint:reasoning`, `hint:agentic`, `hint:coding`) stay cloud by defa
 
 ## How it works
 
-Under the hood, OpenHuman supports two local provider paths:
+Under the hood, Neppy supports two local provider paths:
 
 - [Ollama](https://ollama.com), used for bundled model lifecycle, embeddings, and the existing model-asset flow.
 - [LM Studio](https://lmstudio.ai), used through its local OpenAI-compatible server for chat-style local inference.
 
-For Ollama, OpenHuman talks to its OpenAI-compatible `/v1` endpoint where possible. That means:
+For Ollama, Neppy talks to its OpenAI-compatible `/v1` endpoint where possible. That means:
 
 - The `OpenAiCompatibleProvider` (`src/openhuman/providers/compatible.rs`) wraps Ollama exactly the way it wraps a remote OpenAI-style provider. No special-case code path.
 - The provider router creates a _health-gated_ local provider on startup. If Ollama is not reachable, requests transparently fall back to the remote provider, no broken state.
-- Models are pulled on demand by Ollama and cached in its own store. OpenHuman doesn't ship the weights itself.
+- Models are pulled on demand by Ollama and cached in its own store. Neppy doesn't ship the weights itself.
 
-For LM Studio, set `local_ai.provider = "lm_studio"` and ensure LM Studio's local server is running. OpenHuman defaults to `http://localhost:1234/v1`, probes `GET /v1/models`, and sends chat requests to `POST /v1/chat/completions`. You can override the endpoint with `local_ai.base_url`, `OPENHUMAN_LM_STUDIO_BASE_URL`, or `LM_STUDIO_BASE_URL`.
+For LM Studio, set `local_ai.provider = "lm_studio"` and ensure LM Studio's local server is running. Neppy defaults to `http://localhost:1234/v1`, probes `GET /v1/models`, and sends chat requests to `POST /v1/chat/completions`. You can override the endpoint with `local_ai.base_url`, `OPENHUMAN_LM_STUDIO_BASE_URL`, or `LM_STUDIO_BASE_URL`.
 
 ## Opting in
 
@@ -104,7 +104,7 @@ It is **not** worth turning on if you only have a few sources connected, the clo
 
 ## Local vision
 
-Vision is a separate capability from chat, and **most small local models cannot do it**. Ollama does not reject an image sent to a text-only model: it drops the image and answers from the prompt text, which produces a fluent description of something the model never saw. OpenHuman therefore resolves the vision model through a capability check and refuses to route a vision request at a chat-only model.
+Vision is a separate capability from chat, and **most small local models cannot do it**. Ollama does not reject an image sent to a text-only model: it drops the image and answers from the prompt text, which produces a fluent description of something the model never saw. Neppy therefore resolves the vision model through a capability check and refuses to route a vision request at a chat-only model.
 
 What that means in practice:
 
@@ -121,14 +121,14 @@ The full per-model capability table lives in [Local models & bring your own key]
 - Enough disk for the models (`gemma3:1b-it-qat` \~1.0 GB, `bge-m3` \~1.2 GB, plus \~1.7 GB if you add Moondream for vision).
 - Enough RAM to keep the model resident (8 GB+ recommended, 16 GB+ ideal).
 
-OpenHuman handles the rest: lifecycle (`src/openhuman/inference/local/service/`), API clients, health checks, and graceful fallback to remote when the local provider disappears.
+Neppy handles the rest: lifecycle (`src/openhuman/inference/local/service/`), API clients, health checks, and graceful fallback to remote when the local provider disappears.
 
 ### LM Studio troubleshooting
 
 - Confirm the LM Studio local server is enabled and reachable at `http://localhost:1234/v1`.
-- Load the selected model in LM Studio before calling OpenHuman. Diagnostics report `load_lm_studio_model` when the configured `local_ai.chat_model_id` is not present in `/v1/models`.
+- Load the selected model in LM Studio before calling Neppy. Diagnostics report `load_lm_studio_model` when the configured `local_ai.chat_model_id` is not present in `/v1/models`.
 - If LM Studio uses a different port, set `local_ai.base_url` or `OPENHUMAN_LM_STUDIO_BASE_URL`.
-- LM Studio model downloads are managed inside LM Studio. OpenHuman will not pull LM Studio models from the local asset-download controls.
+- LM Studio model downloads are managed inside LM Studio. Neppy will not pull LM Studio models from the local asset-download controls.
 
 ## See also
 

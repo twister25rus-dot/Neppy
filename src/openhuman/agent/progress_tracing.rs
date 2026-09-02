@@ -1,7 +1,7 @@
 //! Structured tracing export off the agent [`progress`](super::progress)
 //! channel (issue #3886).
 //!
-//! OpenHuman already emits rich real-time [`AgentProgress`] events for the UI,
+//! Neppy already emits rich real-time [`AgentProgress`] events for the UI,
 //! but there was no first-class trace export for offline inspection,
 //! regression analysis, or debugging long multi-agent runs. This module turns
 //! that same event stream into OpenTelemetry/Langfuse-style **spans** —

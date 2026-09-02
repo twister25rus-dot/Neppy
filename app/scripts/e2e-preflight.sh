@@ -52,7 +52,7 @@ BINARY_PATH=""
 
 case "$PLATFORM" in
   Darwin)
-    MACOS_BUNDLE="$APP_DIR/src-tauri/target/debug/bundle/macos/OpenHuman.app"
+    MACOS_BUNDLE="$APP_DIR/src-tauri/target/debug/bundle/macos/Neppy.app"
     if [[ -d "$MACOS_BUNDLE" ]]; then
       BINARY_FOUND=1
       BINARY_PATH="$MACOS_BUNDLE"

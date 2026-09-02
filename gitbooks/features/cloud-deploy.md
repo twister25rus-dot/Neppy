@@ -5,7 +5,7 @@ icon: cloud
 
 # Cloud deployment
 
-OpenHuman is a desktop app, but its **Rust core** (`openhuman-core`) is a
+Neppy is a desktop app, but its **Rust core** (`openhuman-core`) is a
 headless JSON-RPC server that can be hosted in the cloud. Deploying the core
 separately is useful for:
 
@@ -33,7 +33,7 @@ in `app/.env.local` and launch.
 
 ## Remote UI choices
 
-OpenHuman's supported remote deployment is **core remote, UI local**: run
+Neppy's supported remote deployment is **core remote, UI local**: run
 `openhuman-core` on a Linux server and point a desktop client at that RPC URL.
 The deployed core does not serve the full React/Tauri UI as a production web
 app yet. Desktop-only features still need the Tauri shell, including tray

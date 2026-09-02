@@ -1,4 +1,4 @@
-//! OpenHuman helpers and wrappers for native TinyAgents [`ChatModel`] values.
+//! Neppy helpers and wrappers for native TinyAgents [`ChatModel`] values.
 
 use std::sync::{Arc, Mutex};
 
@@ -154,7 +154,7 @@ fn response_to_model_response(
         // The crate `Usage` has no field for the provider's **charged USD** or the
         // model's **context window**, but `ModelResponse.raw` is exactly "raw
         // provider metadata preserved for callers who need it" — so stash them
-        // there (gap G1). A standalone `invoke` then round-trips the OpenHuman
+        // there (gap G1). A standalone `invoke` then round-trips the Neppy
         // managed backend's charged amount + window via
         // [`usage_info_from_response`], no crate change required. Omitted when the
         // provider reported neither (keeps non-managed responses byte-clean).
@@ -223,7 +223,7 @@ const OPENHUMAN_USAGE_META_KEY: &str = "openhuman_usage_meta";
 /// The two host [`UsageInfo`] fields with no crate [`Usage`] home, ferried
 /// through [`ModelResponse::raw`] so a standalone `invoke` stays usage-faithful.
 #[derive(Debug, Clone, Copy, Default, serde::Serialize, serde::Deserialize)]
-struct OpenhumanUsageMeta {
+struct NeppyUsageMeta {
     /// Provider-charged amount in USD (`UsageInfo::charged_amount_usd`).
     #[serde(default)]
     charged_amount_usd: f64,
@@ -240,7 +240,7 @@ fn openhuman_usage_meta_raw(usage: Option<&UsageInfo>) -> Option<serde_json::Val
     if u.charged_amount_usd <= 0.0 && u.context_window == 0 {
         return None;
     }
-    let meta = OpenhumanUsageMeta {
+    let meta = NeppyUsageMeta {
         charged_amount_usd: u.charged_amount_usd,
         context_window: u.context_window,
     };
@@ -250,7 +250,7 @@ fn openhuman_usage_meta_raw(usage: Option<&UsageInfo>) -> Option<serde_json::Val
 /// Merge the host billing/context metadata the crate [`Usage`] cannot carry into
 /// a crate [`ModelResponse::raw`] under [`OPENHUMAN_USAGE_META_KEY`], so
 /// [`usage_info_from_response`] recovers the charged-USD + context window from a
-/// crate-native model (e.g. [`OpenHumanBackendModel`](crate::openhuman::inference::provider::OpenHumanBackendModel))
+/// crate-native model (e.g. [`NeppyBackendModel`](crate::openhuman::inference::provider::NeppyBackendModel))
 /// exactly as it does from a [`native model adapter`].
 ///
 /// The crate `OpenAiModel` leaves the managed backend's `openhuman.{billing,usage}`
@@ -270,7 +270,7 @@ pub(crate) fn merge_openhuman_usage_meta(
     if charged_amount_usd <= 0.0 && context_window == 0 {
         return raw;
     }
-    let meta = match serde_json::to_value(OpenhumanUsageMeta {
+    let meta = match serde_json::to_value(NeppyUsageMeta {
         charged_amount_usd,
         context_window,
     }) {
@@ -303,7 +303,7 @@ pub(crate) fn usage_info_from_response(response: &ModelResponse) -> Option<Usage
         .raw
         .as_ref()
         .and_then(|v| v.get(OPENHUMAN_USAGE_META_KEY))
-        .and_then(|v| serde_json::from_value::<OpenhumanUsageMeta>(v.clone()).ok())
+        .and_then(|v| serde_json::from_value::<NeppyUsageMeta>(v.clone()).ok())
         .unwrap_or_default();
     Some(UsageInfo {
         input_tokens: usage.input_tokens,
@@ -318,14 +318,14 @@ pub(crate) fn usage_info_from_response(response: &ModelResponse) -> Option<Usage
 
 /// Forward one openhuman [`ProviderDelta`]. Visible text, reasoning, and
 /// tool-call **argument** fragments all become harness [`ModelStreamItem`]s (so
-/// the [`OpenhumanEventBridge`](super::OpenhumanEventBridge) mirrors them as
+/// the [`NeppyEventBridge`](super::NeppyEventBridge) mirrors them as
 /// progress deltas from the crate stream alone): text/reasoning as
 /// [`MessageDelta`], and each argument fragment as
 /// [`ModelStreamItem::ToolCallDelta`] correlated by `call_id`. The tool-call
 /// **start** marker now also rides the native stream: with the crate `ToolDelta`
 /// carrying an optional `tool_name` (G2), the call-opening delta is a
 /// `ToolCallDelta` with the name set and empty content, so the
-/// [`OpenhumanEventBridge`](super::OpenhumanEventBridge) records the name and
+/// [`NeppyEventBridge`](super::NeppyEventBridge) records the name and
 /// opens the UI timeline row off the crate stream alone — no out-of-band
 /// forwarder. The model adapter still assembles the final native tool calls from
 /// the `Completed` response (the `StreamAccumulator` treats it as
