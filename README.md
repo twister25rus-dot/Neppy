@@ -1,66 +1,74 @@
 <h1 align="center">Neppy</h1>
 
 <p align="center">
- <img src="./gitbooks/.gitbook/assets/demo.png" alt="The Tet" />
-</p>
-
-<p align="center" style="display: inline-block">
-	<a href="https://trendshift.io/repositories/23680" target="_blank" style="display: inline-block">
-		<img src="https://trendshift.io/api/badge/repositories/23680" alt="tinyhumansai%2Fopenhuman | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
-	</a>
-	<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-		<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=daily&amp;t=1778916022823">
-		</a>
-		<a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-			<img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;t=1779351403565">
-		</a>
-</p>
-<p align="center" style="display: inline-block">
- <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-  <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=268&amp;t=1779351808756">
-  </a>
-  <a href="https://www.producthunt.com/products/openhuman?embed=true&amp;utm_source=badge-top-post-topic-badge&amp;utm_medium=badge&amp;utm_campaign=badge-openhuman" target="_blank" rel="noopener noreferrer">
-   <img alt="Neppy - An open source AI harness built with the human in mind | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=1136902&amp;theme=light&amp;period=weekly&amp;topic_id=46&amp;t=1779351808756">
-   </a>
- </p>
-
-<p align="center">
- <strong>Neppy is your personal AI super intelligence: a brain that remembers everything, a fantastic orchestrator, a deep researcher. Local-first, simple, powerful.</strong>
+  <img src="./app/public/brand/NeppyLogo-Black.png" alt="Neppy" width="140" height="140" />
 </p>
 
 <p align="center">
- <a href="https://github.com/tinyhumansai/openhuman/discussions">Discussions</a> •
- <a href="https://discord.tinyhumans.ai/">Discord</a> •
- <a href="https://www.reddit.com/r/tinyhumansai/">Reddit</a> •
- <a href="https://x.com/intent/follow?screen_name=tinyhumansai">X/Twitter</a> •
- <a href="https://tinyhumans.gitbook.io/openhuman/">Docs</a> •
- <a href="https://x.com/intent/follow?screen_name=senamakel">Follow @senamakel (Creator)</a>
+  <strong>A personal, local-first AI assistant: a brain that remembers, an orchestrator, a researcher.</strong><br/>
+  Runs entirely against local models — no hosted account, no telemetry.
 </p>
 
 <p align="center">
-  🇺🇸 <a href="./README.md">English</a> | 🇨🇳 <a href="./docs/README.zh-CN.md">简体中文</a> | 🇯🇵 <a href="./docs/README.ja-JP.md">日本語</a> | 🇰🇷 <a href="./docs/README.ko.md">한국어</a> | 🇩🇪 <a href="./docs/README.de.md">Deutsch</a> | 🇵🇰 <a href="./docs/README.ur-pk.md">اردو</a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-blue" alt="GPL-3.0-only" /></a>
+  <img src="https://img.shields.io/badge/status-personal%20fork-orange" alt="Personal fork" />
 </p>
 
-<p align="center">
- <img src="https://img.shields.io/badge/status-early%20beta-orange" alt="Early Beta" />
- <a href="https://github.com/tinyhumansai/openhuman/releases/latest"><img src="https://img.shields.io/github/v/release/tinyhumansai/openhuman?label=latest" alt="Latest Release" /></a>
- <a href="https://github.com/tinyhumansai/openhuman/stargazers"><img src="https://img.shields.io/github/stars/tinyhumansai/openhuman?style=flat" alt="GitHub Stars" /></a>
- <a href="./LICENSE"><img src="https://img.shields.io/github/license/tinyhumansai/openhuman" alt="License" /></a>
-</p>
+---
 
-> **Early Beta**: Under active development. Expect rough edges.
+## Modified-work notice
 
-> Neppy is not AGI. But it is a meaningful architectural step closer, with better memory, better orchestration, and better tooling.
+**This is a modified version of [OpenHuman](https://github.com/tinyhumansai/openhuman)
+by TinyHumans, released under the GNU GPL v3.0.** Modifications by the Neppy
+maintainer began **2026-08-28** and are ongoing.
 
-> 🎉 Within one week of launch, Neppy became the number one trending repository on GitHub for nine days in a row.
+This notice satisfies GPL-3.0 §5(a). The full licence is in [`LICENSE`](./LICENSE)
+and is unchanged; upstream copyright notices are preserved throughout the source.
+
+**Neppy is not affiliated with, endorsed by, or supported by TinyHumans.** Do not
+report Neppy issues to the upstream project.
+
+### What is different from upstream
+
+| Area | Change |
+| --- | --- |
+| Hosted backend | Removed. The `hosted`, `relay` and `integrations` domain groups are disabled, so nothing proxies to the TinyHumans backend. |
+| Inference | Work that used to require the managed backend is routed to the active local provider (Ollama, MLX, LM Studio, llama.cpp) or a configured BYOK cloud provider. |
+| Embeddings | Redirected to the local runtime, guarded on vector width (the memory tree is fixed at 1024 dims). |
+| Telemetry | Analytics and usage-data sharing default to off; the unattended boot catalog fetch is off. |
+| Model choice | The curated five-model allowlist no longer overrides a user-selected local model, so Hugging Face repo ids work. |
+| Updater | Disabled — this fork has no release feed. |
+| Branding | Renamed throughout; the cat mark is original artwork, not upstream's trademark. |
+
+Upstream's name, logo and trademarks are **not** covered by the GPL and are not
+used here.
 
 # Install
 
-Download installers from [tinyhumans.ai/openhuman](https://tinyhumans.ai/openhuman?utm_source=github&utm_medium=readme) or from the [GitHub Releases](https://github.com/tinyhumansai/openhuman/releases/latest) page.
+Neppy is a personal fork and publishes no installers. Build from source:
+
+```bash
+pnpm install
+GGML_NATIVE=OFF cargo build --bin neppy-core --no-default-features \
+  --features "$(bash scripts/ci/product-features.sh)"
+cd app && ./node_modules/.bin/tauri build --debug --bundles app -- --bin Neppy
+```
+
+Requires Node 24+, pnpm, Rust 1.96+, and CMake. You also need a local model
+runtime — [Ollama](https://ollama.com) or an MLX server.
 
 For terminal installs (Homebrew, Debian/Ubuntu `.deb`, AUR, install scripts, and platform notes), see **[INSTALL.md](./INSTALL.md)**.
 
 # What is Neppy?
+
+> [!IMPORTANT]
+> **The feature descriptions below are inherited from upstream and describe the
+> hosted product.** Several do not apply to this fork: there is no Neppy
+> subscription, no managed web search, no one-click OAuth integrations
+> (the `integrations` domain is disabled), and no tiny.place agent economy
+> (the `relay` domain is disabled). Links point at upstream's documentation
+> because that is where the architecture is described — not because those
+> hosted services are available here. See the difference table above.
 
 Neppy is three things most assistants aren't: **a brain** that builds a persistent, local memory of your world; **a fantastic orchestrator** that runs fleets of agents on durable graphs; and **a deep researcher** that sweeps your data and the web before you finish asking. Every bullet links to the deeper writeup in the [docs](https://tinyhumans.gitbook.io/openhuman/).
 

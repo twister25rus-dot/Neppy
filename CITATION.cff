@@ -1,13 +1,14 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
-title: "OpenHuman"
+title: "Neppy"
 type: "software"
 authors:
+  - name: "Neppy maintainer"
   - name: "tinyhumansai"
   - name: "OpenHuman Contributors"
-repository-code: "https://github.com/tinyhumansai/openhuman"
-url: "https://github.com/tinyhumansai/openhuman"
-abstract: "OpenHuman is an open‑source AI platform for building and orchestrating autonomous agents and workflows."
+repository-code: "https://github.com/twister25rus-dot/Neppy"
+url: "https://github.com/twister25rus-dot/Neppy"
+abstract: "Neppy is a personal, local-first fork of OpenHuman (tinyhumansai/openhuman), modified to run entirely against local model runtimes with the hosted backend removed. Upstream authorship is retained; see the modified-work notice in README.md."
 license: "GPL-3.0"
 version: "0.63.1"
 date-released: "2026-07-21"
