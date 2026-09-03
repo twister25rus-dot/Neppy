@@ -1516,8 +1516,18 @@ impl TurnModelSource {
         let local_kind = provider_string
             .as_deref()
             .and_then(crate::neppy::inference::local::profile::kind_from_provider_string);
-        crate::neppy::inference::model_context::context_window_for_model_with_local_fallback(
-            model, local_kind,
+        // The user's `local_ai.num_ctx` is what the runtime was actually told to
+        // load, so it outranks the static profile default (Ollama: 8192) for a
+        // local provider. Without this the trim budget stayed at ~8k on a 32k
+        // model and evicted messages that fit fine.
+        let configured_num_ctx = self
+            .crate_native
+            .as_ref()
+            .and_then(|source| source.config.local_ai.num_ctx);
+        crate::neppy::inference::model_context::context_window_for_local_with_configured_num_ctx(
+            model,
+            local_kind,
+            configured_num_ctx,
         )
     }
 

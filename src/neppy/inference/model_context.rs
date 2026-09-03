@@ -160,6 +160,37 @@ fn tier_context_window(model: &str) -> Option<u64> {
 /// the runtime `n_ctx` (issue #3550 / Sentry TAURI-RUST-6V0). `None` is only
 /// returned when `local_kind` is `None` (cloud provider, unknown model) —
 /// where over-trimming a large window is worse than skipping the trim.
+/// Like [`context_window_for_model_with_local_fallback`], but for a LOCAL
+/// provider the user's configured `local_ai.num_ctx` wins.
+///
+/// The profile defaults are static guesses (Ollama declares 8192), and they were
+/// the *only* input to the trim budget — so a 32k-context local model was still
+/// trimmed against 8192 while `num_ctx` sat in the config doing nothing. A Phase
+/// E run showed the consequence directly: `message_trim … tokens_after=22243
+/// budget=7373` on a model that had 32768 available, evicting messages that did
+/// not need evicting.
+///
+/// `num_ctx` is the right source of truth here because it is what the runtime is
+/// actually told to load — the same value the factory bakes into the Ollama
+/// request — so it beats both the static table and the profile default.
+pub fn context_window_for_local_with_configured_num_ctx(
+    model: &str,
+    local_kind: Option<crate::neppy::inference::local::profile::LocalProviderKind>,
+    configured_num_ctx: Option<u32>,
+) -> Option<u64> {
+    if local_kind.is_some() {
+        if let Some(n) = configured_num_ctx.filter(|n| *n > 0) {
+            tracing::debug!(
+                model,
+                context_window = n,
+                "[model_context] using configured local_ai.num_ctx as the context window"
+            );
+            return Some(u64::from(n));
+        }
+    }
+    context_window_for_model_with_local_fallback(model, local_kind)
+}
+
 pub fn context_window_for_model_with_local_fallback(
     model: &str,
     local_kind: Option<crate::neppy::inference::local::profile::LocalProviderKind>,
@@ -236,6 +267,51 @@ pub fn model_supports_vision(model: &str, config: &crate::neppy::config::Config)
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    #[test]
+    fn configured_num_ctx_beats_the_static_profile_default_for_local() {
+        use crate::neppy::inference::local::profile::LocalProviderKind;
+        // Ollama's profile declares 8192. A Phase E run trimmed a 32k-context
+        // model against that (budget=7373) while num_ctx=32768 sat unused.
+        assert_eq!(
+            context_window_for_local_with_configured_num_ctx(
+                "qwythos-9b-abliterated-32k",
+                Some(LocalProviderKind::Ollama),
+                Some(32_768),
+            ),
+            Some(32_768)
+        );
+        // Unset / zero falls back to the previous behaviour.
+        assert_eq!(
+            context_window_for_local_with_configured_num_ctx(
+                "qwythos-9b-abliterated-32k",
+                Some(LocalProviderKind::Ollama),
+                None,
+            ),
+            context_window_for_model_with_local_fallback(
+                "qwythos-9b-abliterated-32k",
+                Some(LocalProviderKind::Ollama)
+            )
+        );
+        assert_eq!(
+            context_window_for_local_with_configured_num_ctx(
+                "qwythos-9b-abliterated-32k",
+                Some(LocalProviderKind::Ollama),
+                Some(0),
+            ),
+            context_window_for_model_with_local_fallback(
+                "qwythos-9b-abliterated-32k",
+                Some(LocalProviderKind::Ollama)
+            )
+        );
+        // A CLOUD provider must be unaffected: num_ctx is a local-runtime knob.
+        assert_eq!(
+            context_window_for_local_with_configured_num_ctx("gpt-5", None, Some(32_768)),
+            context_window_for_model_with_local_fallback("gpt-5", None)
+        );
+    }
+
     use super::*;
     use crate::neppy::inference::local::profile::LocalProviderKind;
 
