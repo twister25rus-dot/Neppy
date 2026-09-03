@@ -1749,8 +1749,7 @@ const messages: TranslationMap = {
   'devices.loadFailed': 'Не удалось загрузить устройства: {message}',
   'devices.pairModal.title': 'Сопряжение с iPhone',
   'devices.pairModal.loading': 'Генерация кода сопряжения…',
-  'devices.pairModal.instructions':
-    'Откройте приложение Neppy на iPhone и отсканируйте этот код.',
+  'devices.pairModal.instructions': 'Откройте приложение Neppy на iPhone и отсканируйте этот код.',
   'devices.pairModal.expiresIn': 'Срок действия кода истекает через ~{count} минуту.',
   'devices.pairModal.expiresInPlural': 'Срок действия кода истекает через ~{count} минут.',
   'devices.pairModal.showDetails': 'Показать подробности',
@@ -3399,8 +3398,7 @@ const messages: TranslationMap = {
     'Сканирование камерой не удалось. Проверьте разрешения камеры и повторите попытку.',
   'iosPair.error.connectionFailed':
     'Не удалось подключиться. Убедитесь, что десктопное приложение запущено, и повторите попытку.',
-  'iosPair.error.invalidQr':
-    'Неверный QR-код. Убедитесь, что вы сканируете код сопряжения Neppy.',
+  'iosPair.error.invalidQr': 'Неверный QR-код. Убедитесь, что вы сканируете код сопряжения Neppy.',
   'iosPair.error.unreachableDesktop':
     'Не удалось подключиться к рабочему столу. Убедитесь, что оба устройства в сети, и повторите попытку.',
   'iosPair.expired': 'QR code истек. Попросите рабочий стол повторно сгенерировать код.',
@@ -6456,8 +6454,7 @@ const messages: TranslationMap = {
   'harnessInit.retry': 'Повторить',
   'harnessInit.continueAnyway': 'Всё равно продолжить',
   'harnessInit.runInBackground': 'Запустить в фоновом режиме',
-  'harnessInit.backgroundHint':
-    'Вы можете продолжать пользоваться Neppy, пока это завершается.',
+  'harnessInit.backgroundHint': 'Вы можете продолжать пользоваться Neppy, пока это завершается.',
 
   'keyring.consent.title': 'Безопасное хранилище недоступно',
   'keyring.consent.description':

@@ -375,10 +375,7 @@ mod tests {
         // matcher must still resolve to the exe via the unquoted code path in
         // `extract_first_token` rather than relying only on the quoted path.
         let exe = PathBuf::from("C:\\Neppy\\Neppy.exe");
-        assert!(command_references_exe(
-            "C:\\Neppy\\Neppy.exe %1",
-            &exe
-        ));
+        assert!(command_references_exe("C:\\Neppy\\Neppy.exe %1", &exe));
     }
 
     #[test]
@@ -398,8 +395,8 @@ mod tests {
         // user's home directory must produce a log line that contains the
         // exe basenames but neither the username nor the parent dirs.
         let status = RegistrationStatus::Stale {
-            registered_command:
-                "\"C:\\Users\\joe\\AppData\\Local\\Neppy\\Neppy.exe\" \"%1\"".into(),
+            registered_command: "\"C:\\Users\\joe\\AppData\\Local\\Neppy\\Neppy.exe\" \"%1\""
+                .into(),
             expected_exe: "C:\\Users\\joe\\AppData\\Local\\Neppy_new\\Neppy.exe".into(),
         };
         let rendered = status.redacted();

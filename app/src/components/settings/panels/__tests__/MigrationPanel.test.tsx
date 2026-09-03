@@ -131,9 +131,7 @@ describe('MigrationPanel (#1440)', () => {
     await waitFor(() => expect(screen.getByTestId('migration-apply-button')).not.toBeDisabled());
 
     fireEvent.click(screen.getByTestId('migration-apply-button'));
-    await waitFor(() =>
-      expect(neppyMigrateOpenclaw).toHaveBeenNthCalledWith(2, undefined, false)
-    );
+    await waitFor(() => expect(neppyMigrateOpenclaw).toHaveBeenNthCalledWith(2, undefined, false));
     expect(confirmSpy).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.getByTestId('migration-report-applied')).toBeInTheDocument());
     confirmSpy.mockRestore();

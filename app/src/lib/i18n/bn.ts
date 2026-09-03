@@ -1731,8 +1731,7 @@ const messages: TranslationMap = {
   'devices.loadFailed': 'ডিভাইসগুলি লোড করতে ব্যর্থ হয়েছে: {message}',
   'devices.pairModal.title': 'পেয়ার iPhone',
   'devices.pairModal.loading': 'পেয়ারিং কোড তৈরি করা হচ্ছে...',
-  'devices.pairModal.instructions':
-    'আপনার iPhone-এ Neppy অ্যাপ খুলুন এবং এই কোডটি স্ক্যান করুন।',
+  'devices.pairModal.instructions': 'আপনার iPhone-এ Neppy অ্যাপ খুলুন এবং এই কোডটি স্ক্যান করুন।',
   'devices.pairModal.expiresIn': 'কোডের মেয়াদ ~{count} মিনিটে শেষ হবে',
   'devices.pairModal.expiresInPlural': 'কোডের মেয়াদ ~{count} মিনিটে শেষ হবে',
   'devices.pairModal.showDetails': 'বিবরণ দেখান',
@@ -6393,8 +6392,7 @@ const messages: TranslationMap = {
   'harnessInit.retry': 'পুনরায় চেষ্টা করুন',
   'harnessInit.continueAnyway': 'তবুও চালিয়ে যান',
   'harnessInit.runInBackground': 'ব্যাকগ্রাউন্ডে চালান',
-  'harnessInit.backgroundHint':
-    'এটি শেষ হওয়া পর্যন্ত আপনি Neppy ব্যবহার করা চালিয়ে যেতে পারেন।',
+  'harnessInit.backgroundHint': 'এটি শেষ হওয়া পর্যন্ত আপনি Neppy ব্যবহার করা চালিয়ে যেতে পারেন।',
 
   'keyring.consent.title': 'নিরাপদ সঞ্চয়স্থান অনুপলব্ধ',
   'keyring.consent.description':

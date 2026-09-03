@@ -22,7 +22,7 @@ cd "$REPO_ROOT"
 APP_IDENTIFIER="com.tinyhumansai.neppy"
 MOBILE_DIR="$REPO_ROOT/app/src-tauri-mobile"
 APPLE_DIR="$MOBILE_DIR/gen/apple"
-ARCHIVE_PATH="$APPLE_DIR/build/openhuman-mobile_iOS.xcarchive"
+ARCHIVE_PATH="$APPLE_DIR/build/neppy-mobile_iOS.xcarchive"
 EXPORT_DIR="$APPLE_DIR/build/appstore-export"
 PROFILE_PATH="${IOS_APPSTORE_PROVISIONING_PROFILE_PATH:-}"
 TEAM_ID="${TEAM_ID:-${APPLE_DEVELOPMENT_TEAM:-}}"
@@ -72,7 +72,7 @@ TEAM_ID="$TEAM_ID" APPLE_DEVELOPMENT_TEAM="$TEAM_ID" bash scripts/ios-init.sh
 mkdir -p "$APPLE_DIR/assets"
 rsync -a --delete app/dist/ "$APPLE_DIR/assets/"
 
-INFO_PLIST="$APPLE_DIR/openhuman-mobile_iOS/Info.plist"
+INFO_PLIST="$APPLE_DIR/neppy-mobile_iOS/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING_VERSION" "$INFO_PLIST" 2>/dev/null \
   || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $MARKETING_VERSION" "$INFO_PLIST"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$INFO_PLIST" 2>/dev/null \
@@ -80,8 +80,8 @@ INFO_PLIST="$APPLE_DIR/openhuman-mobile_iOS/Info.plist"
 
 echo "[ios-appstore] archiving iphoneos app"
 xcodebuild \
-  -workspace "$APPLE_DIR/openhuman-mobile.xcodeproj/project.xcworkspace" \
-  -scheme openhuman-mobile_iOS \
+  -workspace "$APPLE_DIR/neppy-mobile.xcodeproj/project.xcworkspace" \
+  -scheme neppy-mobile_iOS \
   -configuration release \
   -sdk iphoneos \
   -destination "generic/platform=iOS" \

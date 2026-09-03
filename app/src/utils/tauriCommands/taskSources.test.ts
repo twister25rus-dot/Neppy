@@ -148,9 +148,9 @@ describe('tauriCommands/taskSources', () => {
     await expect(neppyTaskSourcesFetch('x')).rejects.toThrow('Not running in Tauri');
     await expect(neppyTaskSourcesSync()).rejects.toThrow('Not running in Tauri');
     await expect(neppyTaskSourcesListTasks('x')).rejects.toThrow('Not running in Tauri');
-    await expect(
-      neppyTaskSourcesPreviewFilter('github', { provider: 'github' })
-    ).rejects.toThrow('Not running in Tauri');
+    await expect(neppyTaskSourcesPreviewFilter('github', { provider: 'github' })).rejects.toThrow(
+      'Not running in Tauri'
+    );
     await expect(neppyTaskSourcesStatus()).rejects.toThrow('Not running in Tauri');
     expect(mockCallCoreRpc).not.toHaveBeenCalled();
   });

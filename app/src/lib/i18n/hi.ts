@@ -168,8 +168,7 @@ const messages: TranslationMap = {
   'settings.core.statusUnreachable': 'कोर तक नहीं पहुँचा जा सकता',
   'settings.core.recheck': 'फिर से जाँचें',
   'settings.core.save': 'सहेजें और पुनरारंभ करें',
-  'settings.core.applyRestartNote':
-    'सहेजने पर Neppy फिर से कनेक्ट होने के लिए पुनरारंभ होता है।',
+  'settings.core.applyRestartNote': 'सहेजने पर Neppy फिर से कनेक्ट होने के लिए पुनरारंभ होता है।',
   // Cross-host vault (#4278)
   'crossHostVault.title': 'वॉल्ट कोर होस्ट पर है।',
   'crossHostVault.message':
@@ -2929,8 +2928,7 @@ const messages: TranslationMap = {
     'यह किसी सार्वजनिक होस्ट पर सादा HTTP URL है: ट्रैफ़िक एन्क्रिप्ट नहीं होगा। जब तक आपको इस नेटवर्क पर भरोसा न हो, HTTPS का उपयोग करें।',
   'bootCheck.chooseCoreMode': 'रनटाइम चुनें',
   'bootCheck.connectToCore': 'अपने रनटाइम से कनेक्ट करें',
-  'bootCheck.desktopDescription':
-    'Neppy को सोचने के लिए एक रनटाइम चाहिए। चुनें कि यह कहाँ रहे।',
+  'bootCheck.desktopDescription': 'Neppy को सोचने के लिए एक रनटाइम चाहिए। चुनें कि यह कहाँ रहे।',
   'bootCheck.webDescription':
     'वेब पर, Neppy आपके कंट्रोल के रनटाइम से कनेक्ट होता है। नीचे URL और auth टोकन डालें, या अपनी मशीन पर चलाने के लिए डेस्कटॉप ऐप लें।',
   'bootCheck.preferDesktop': 'सब अपने डिवाइस पर रखना चाहते हैं?',
@@ -3293,8 +3291,7 @@ const messages: TranslationMap = {
   'channels.discord.fields.guild_id.placeholder': 'वैकल्पिक: एक विशिष्ट सर्वर तक सीमित रखें',
   'channels.telegram.displayName': 'Telegram',
   'channels.telegram.description': 'Telegram के माध्यम से संदेश भेजें और प्राप्त करें।',
-  'channels.telegram.authMode.managed_dm.description':
-    'Neppy Telegram बॉट को सीधे संदेश भेजें।',
+  'channels.telegram.authMode.managed_dm.description': 'Neppy Telegram बॉट को सीधे संदेश भेजें।',
   'channels.telegram.authMode.bot_token.description':
     '@BotFather से अपना स्वयं का Telegram बॉट टोकन प्रदान करें।',
   'channels.telegram.fields.bot_token.label': 'बॉट टोकन',
@@ -6032,8 +6029,7 @@ const messages: TranslationMap = {
   'devOptions.menuMessagingDesc':
     'Telegram/Discord प्रमाणीकरण मोड और डिफ़ॉल्ट चैनल रूटिंग कॉन्फ़िगर करें',
   'devOptions.menuTools': 'उपकरण',
-  'devOptions.menuToolsDesc':
-    'क्षमताओं को सक्षम या अक्षम करें Neppy आपकी ओर से उपयोग कर सकते हैं',
+  'devOptions.menuToolsDesc': 'क्षमताओं को सक्षम या अक्षम करें Neppy आपकी ओर से उपयोग कर सकते हैं',
   'devOptions.menuAgentChat': 'एजेंट चैट',
   'devOptions.menuAgentChatDesc': 'मॉडल और तापमान ओवरराइड के साथ परीक्षण एजेंट की बातचीत',
   'devOptions.menuCronJobs': 'क्रॉन जॉब्स',

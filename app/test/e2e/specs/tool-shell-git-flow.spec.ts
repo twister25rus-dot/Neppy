@@ -186,10 +186,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     // (shell, file_read, file_write, git_operations, browser_open, browser).
     // Asserting it is registered proves the registry path that resolves
     // shell/git tools is live behind JSON-RPC.
-    const list = await callNeppyRpc<ListDefinitionsResult>(
-      'openhuman.agent_list_definitions',
-      {}
-    );
+    const list = await callNeppyRpc<ListDefinitionsResult>('openhuman.agent_list_definitions', {});
     stepLog('agent_list_definitions response (count only)', {
       count: list.result?.definitions?.length ?? 0,
     });

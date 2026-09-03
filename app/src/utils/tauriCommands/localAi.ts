@@ -348,9 +348,7 @@ export async function neppyLocalAiAnalyzeSentiment(
   });
 }
 
-export async function neppyLocalAiAssetsStatus(): Promise<
-  CommandResponse<LocalAiAssetsStatus>
-> {
+export async function neppyLocalAiAssetsStatus(): Promise<CommandResponse<LocalAiAssetsStatus>> {
   return await callCoreRpc<CommandResponse<LocalAiAssetsStatus>>({
     method: 'openhuman.inference_assets_status',
   });
@@ -401,9 +399,7 @@ export interface OllamaConnectionTestResult {
   models_count?: number | null;
 }
 
-export async function neppyLocalAiTestConnection(
-  url: string
-): Promise<OllamaConnectionTestResult> {
+export async function neppyLocalAiTestConnection(url: string): Promise<OllamaConnectionTestResult> {
   return await callCoreRpc<OllamaConnectionTestResult>({
     method: 'openhuman.inference_test_connection',
     params: { url },

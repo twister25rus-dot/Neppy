@@ -69,9 +69,7 @@ export interface CronAddParams {
   delete_after_run?: boolean;
 }
 
-export async function neppyCronAdd(
-  params: CronAddParams
-): Promise<CommandResponse<CoreCronJob>> {
+export async function neppyCronAdd(params: CronAddParams): Promise<CommandResponse<CoreCronJob>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }

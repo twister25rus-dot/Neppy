@@ -184,10 +184,7 @@ export async function neppyTaskSourcesSync(): Promise<FetchOutcome[]> {
   return await callCoreRpc<FetchOutcome[]>({ method: 'openhuman.task_sources_sync' });
 }
 
-export async function neppyTaskSourcesListTasks(
-  id: string,
-  limit = 50
-): Promise<NormalizedTask[]> {
+export async function neppyTaskSourcesListTasks(id: string, limit = 50): Promise<NormalizedTask[]> {
   ensureTauri();
   return await callCoreRpc<NormalizedTask[]>({
     method: 'openhuman.task_sources_list_tasks',

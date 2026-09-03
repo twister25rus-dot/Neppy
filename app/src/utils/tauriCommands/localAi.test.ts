@@ -28,8 +28,6 @@ describe('neppyLocalAiTestConnection', () => {
     mockCallCoreRpc.mockRejectedValueOnce(new Error('rpc down'));
 
     const { neppyLocalAiTestConnection } = await import('./localAi');
-    await expect(neppyLocalAiTestConnection('http://localhost:11434')).rejects.toThrow(
-      'rpc down'
-    );
+    await expect(neppyLocalAiTestConnection('http://localhost:11434')).rejects.toThrow('rpc down');
   });
 });

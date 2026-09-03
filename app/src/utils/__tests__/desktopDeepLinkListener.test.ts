@@ -253,9 +253,7 @@ describe('desktopDeepLinkListener', () => {
     // The web callback route (WebCallbackPage) is same-origin and not reachable
     // via the OS `neppy://` scheme, so it opts out of the C3 nonce guard.
     await import('../desktopDeepLinkListener').then(m =>
-      m.handleDeepLinkUrls(['neppy://auth?token=web-token&key=auth'], {
-        requireStateNonce: false,
-      })
+      m.handleDeepLinkUrls(['neppy://auth?token=web-token&key=auth'], { requireStateNonce: false })
     );
     await waitForAuthSettled();
 

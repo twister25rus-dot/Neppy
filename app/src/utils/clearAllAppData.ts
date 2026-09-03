@@ -1,9 +1,5 @@
 import { persistor } from '../store';
-import {
-  resetNeppyDataAndRestartCore,
-  restartApp,
-  scheduleCefProfilePurge,
-} from './tauriCommands';
+import { resetNeppyDataAndRestartCore, restartApp, scheduleCefProfilePurge } from './tauriCommands';
 
 const ACTIVE_USER_KEY = 'OPENHUMAN_ACTIVE_USER_ID';
 

@@ -53,7 +53,7 @@
     "profile:tauri": "cargo run --manifest-path app/src-tauri/profiling/Cargo.toml --",
     "test:install-ps1": "pwsh -NoProfile -File scripts/tests/NeppyWindowsInstall.Tests.ps1",
     "rust:check": "pnpm --filter neppy-app rust:check",
-    "rust:clippy": "cargo clippy -p openhuman -- -D warnings && pnpm --filter neppy-app rust:clippy",
+    "rust:clippy": "cargo clippy -p neppy -- -D warnings && pnpm --filter neppy-app rust:clippy",
     "typecheck": "pnpm --filter neppy-app compile",
     "tauri:ios:init": "bash scripts/ios-init.sh",
     "tauri:ios:dev": "pnpm --filter neppy-app tauri:ios:dev",

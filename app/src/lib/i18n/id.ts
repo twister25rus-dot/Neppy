@@ -172,8 +172,7 @@ const messages: TranslationMap = {
   'settings.core.statusUnreachable': 'Tidak dapat menjangkau core',
   'settings.core.recheck': 'Periksa ulang',
   'settings.core.save': 'Simpan & mulai ulang',
-  'settings.core.applyRestartNote':
-    'Menyimpan akan memulai ulang Neppy untuk menyambung kembali.',
+  'settings.core.applyRestartNote': 'Menyimpan akan memulai ulang Neppy untuk menyambung kembali.',
   // Cross-host vault (#4278)
   'crossHostVault.title': 'Vault berada di host core.',
   'crossHostVault.message':
@@ -1722,8 +1721,7 @@ const messages: TranslationMap = {
   'devices.title': 'Perangkat',
   'devices.pairIphone': 'Pasangkan iPhone',
   'devices.noPaired': 'Tidak ada perangkat yang dipasangkan',
-  'devices.emptyState':
-    'Pindai kode QR di iPhone Anda untuk menghubungkannya ke sesi Neppy ini.',
+  'devices.emptyState': 'Pindai kode QR di iPhone Anda untuk menghubungkannya ke sesi Neppy ini.',
   'devices.devicePairedTitle': 'Perangkat yang dipasangkan',
   'devices.devicePairedMessage': 'iPhone berhasil tersambung.',
   'devices.deviceRevokedTitle': 'Perangkat dicabut',
@@ -2083,8 +2081,7 @@ const messages: TranslationMap = {
   'settings.billing.browserNotOpen': 'Jika browser tidak terbuka, gunakan tombol di atas.',
   'settings.billing.browserOpenFailed':
     'Browser tidak dapat dibuka otomatis. Gunakan tombol di atas.',
-  'settings.tools.chooseCapabilities':
-    'Pilih kemampuan yang dapat digunakan Neppy atas nama Anda.',
+  'settings.tools.chooseCapabilities': 'Pilih kemampuan yang dapat digunakan Neppy atas nama Anda.',
   'settings.tools.saveChanges': 'Simpan Perubahan',
   'settings.tools.preferencesSaved': 'Preferensi tersimpan',
   'settings.tools.saveFailed': 'Gagal menyimpan preferensi. Coba lagi.',
@@ -3138,8 +3135,7 @@ const messages: TranslationMap = {
   'app.neppyLink.billing.trialCredit': 'Kredit pendaftaran',
   'app.neppyLink.billing.trialDesc':
     'Penawaran kredit dapat berbeda menurut promosi dan kelayakan akun.',
-  'app.neppyLink.defaultBody':
-    't siap di popup belum. Buka halaman pengaturan lengkap jika Anda',
+  'app.neppyLink.defaultBody': 't siap di popup belum. Buka halaman pengaturan lengkap jika Anda',
   'app.neppyLink.discord.intro': 'Pengantar',
   'app.neppyLink.discord.openInvite': 'Buka undangan',
   'app.neppyLink.discord.perk1': 'Keuntungan 1',

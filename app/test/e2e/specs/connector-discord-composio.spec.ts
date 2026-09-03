@@ -177,9 +177,7 @@ describe('Discord (Composio) connector flow', () => {
     this.timeout(60_000);
     seedComposioConnection(TOOLKIT_SLUG, 'ACTIVE', 'c-discord-1');
     clearRequestLog();
-    await callNeppyRpc('openhuman.composio_delete_connection', {
-      connection_id: 'c-discord-1',
-    });
+    await callNeppyRpc('openhuman.composio_delete_connection', { connection_id: 'c-discord-1' });
     const deleteReq = getRequestLog().find(
       r => r.method === 'DELETE' && r.url.includes('/composio/connections/')
     );

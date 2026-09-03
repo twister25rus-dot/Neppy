@@ -201,8 +201,7 @@ const messages: TranslationMap = {
     'Ta czynność jest zablokowana przez Twoje ustawienia bezpieczeństwa.',
   'conversations.toolFailure.blockedByPolicy.next':
     'Zezwól na nią w Ustawienia → Dostęp agenta, jeśli ma zostać wykonana.',
-  'conversations.toolFailure.modelConnection.cause':
-    'Neppy nie mógł połączyć się z modelem AI.',
+  'conversations.toolFailure.modelConnection.cause': 'Neppy nie mógł połączyć się z modelem AI.',
   'conversations.toolFailure.modelConnection.next':
     'Sprawdź połączenie lub ustawienia modelu; Neppy spróbuje ponownie.',
   'conversations.toolFailure.timeout.cause': 'Czynność trwała zbyt długo i została zatrzymana.',
@@ -3163,8 +3162,7 @@ const messages: TranslationMap = {
     'Oferty kredytów mogą się różnić w zależności od promocji i kwalifikacji konta.',
   'app.neppyLink.defaultBody':
     'Jeszcze nie gotowe w popupie. Otwórz pełną stronę ustawień, gdy będziesz potrzebować.',
-  'app.neppyLink.discord.intro':
-    'Dołącz do społeczności, dziel się opiniami i bądź na bieżąco.',
+  'app.neppyLink.discord.intro': 'Dołącz do społeczności, dziel się opiniami i bądź na bieżąco.',
   'app.neppyLink.discord.openInvite': 'Otwórz zaproszenie',
   'app.neppyLink.discord.perk1': 'Pomoc bezpośrednio od twórców',
   'app.neppyLink.discord.perk2': 'Wczesny dostęp do nowych funkcji',
@@ -3413,8 +3411,7 @@ const messages: TranslationMap = {
     'Skanowanie kamerą nieudane. Sprawdź uprawnienia do kamery i spróbuj ponownie.',
   'iosPair.error.connectionFailed':
     'Połączenie nieudane. Upewnij się, że aplikacja na komputerze działa i spróbuj ponownie.',
-  'iosPair.error.invalidQr':
-    'Nieprawidłowy kod QR. Upewnij się, że skanujesz kod parowania Neppy.',
+  'iosPair.error.invalidQr': 'Nieprawidłowy kod QR. Upewnij się, że skanujesz kod parowania Neppy.',
   'iosPair.error.unreachableDesktop':
     'Nie udało się dotrzeć do komputera. Upewnij się, że oba urządzenia są online i spróbuj ponownie.',
   'iosPair.expired': 'Kod QR wygasł. Poproś komputer o wygenerowanie nowego.',
@@ -6470,8 +6467,7 @@ const messages: TranslationMap = {
   'harnessInit.title': 'Trwa konfiguracja',
 
   'announcement.gotIt': 'Rozumiem',
-  'harnessInit.subtitle':
-    'Neppy przygotowuje komponenty potrzebne przy pierwszym uruchomieniu.',
+  'harnessInit.subtitle': 'Neppy przygotowuje komponenty potrzebne przy pierwszym uruchomieniu.',
   'harnessInit.stepPython': 'Środowisko uruchomieniowe Python',
   'harnessInit.stepSpacy': 'Model językowy',
   'harnessInit.stepNode': 'Środowisko uruchomieniowe Node.js',

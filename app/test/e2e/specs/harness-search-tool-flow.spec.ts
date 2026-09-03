@@ -313,9 +313,7 @@ describe('Harness — Search tool-flow', () => {
 
     // UI: final reply contains the file snippet phrase.
     expect(
-      await waitForAssistantReplyContaining('Neppy is an AI assistant', {
-        logPrefix: LOG_PREFIX,
-      })
+      await waitForAssistantReplyContaining('Neppy is an AI assistant', { logPrefix: LOG_PREFIX })
     ).toBe(true);
 
     const log = getRequestLog() as Array<{ method: string; url: string; body?: string }>;

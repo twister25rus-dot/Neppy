@@ -113,10 +113,10 @@ import type { ThreadMessage } from '../../types/thread';
 import { chatThreadPath } from '../../utils/chatRoutes';
 import { CHAT_ATTACHMENTS_ENABLED } from '../../utils/config';
 import {
-  notifyOverlaySttState,
   neppyVoiceStatus,
   neppyVoiceTranscribeBytes,
   neppyVoiceTts,
+  notifyOverlaySttState,
 } from '../../utils/tauriCommands';
 import { useChatSurfaceRegistration } from './hooks/useChatSurfaceRegistration';
 import { ThreadList } from './threadList/ThreadList';
@@ -500,8 +500,7 @@ const Conversations = ({
 
   // Display name for share cards (#5006): the active agent profile, or the
   // product name when no named profile is selected.
-  const shareAgentName =
-    agentProfiles.find(p => p.id === selectedAgentProfileId)?.name ?? 'Neppy';
+  const shareAgentName = agentProfiles.find(p => p.id === selectedAgentProfileId)?.name ?? 'Neppy';
 
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const composerFooterRef = useRef<HTMLDivElement>(null);

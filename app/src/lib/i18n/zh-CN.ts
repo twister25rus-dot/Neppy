@@ -1547,10 +1547,8 @@ const messages: TranslationMap = {
   'settings.embeddings.statusConfigured': '已配置',
   'settings.embeddings.statusNeedsKey': '需要 API 密钥',
   'settings.embeddings.requiresSignIn': '需要登录 Neppy',
-  'settings.embeddings.managedLoginRequired':
-    '托管嵌入需要登录 Neppy。请登录后使用 Neppy 后端。',
-  'settings.embeddings.managedBannerIntro':
-    '托管嵌入会通过 Neppy 后端，并且需要 Neppy 账号会话。',
+  'settings.embeddings.managedLoginRequired': '托管嵌入需要登录 Neppy。请登录后使用 Neppy 后端。',
+  'settings.embeddings.managedBannerIntro': '托管嵌入会通过 Neppy 后端，并且需要 Neppy 账号会话。',
   'settings.embeddings.managedBannerLocalSession':
     '退出本地会话并登录即可使用此提供商，或切换到本地/自带密钥的嵌入提供商。',
   'settings.embeddings.managedBannerRemoteSession':
@@ -2428,8 +2426,7 @@ const messages: TranslationMap = {
   'chat.attachment.tooMany': '每条消息最多 {max} 张图片',
   'chat.attachment.tooManyFiles': '每条消息最多 {max} 个文件',
   'chat.attachment.tooManyVideos': '每条消息最多 {max} 个视频',
-  'chat.attachment.videoNotSupported':
-    '此模型无法读取视频。您可以使用 Neppy 推理层级来附加视频。',
+  'chat.attachment.videoNotSupported': '此模型无法读取视频。您可以使用 Neppy 推理层级来附加视频。',
   'chat.attachment.dropToAttach': '拖放文件以添加',
   'chat.attachment.tooLarge': '图片超过 {max} 大小限制',
   'chat.attachment.unsupportedType':
@@ -2970,8 +2967,7 @@ const messages: TranslationMap = {
     '抱歉：我们这边出错了。我们会尝试自动记录这些错误，但在 Discord 上分享详情能帮助我们更快地修复问题。',
   'app.neppyLink.discordReport.openDiscord': '打开 Discord',
   'app.neppyLink.done': '完成',
-  'app.neppyLink.notifications.desktopOnly':
-    '原生通知仅在桌面应用中可用（运行 `pnpm dev:app`）。',
+  'app.neppyLink.notifications.desktopOnly': '原生通知仅在桌面应用中可用（运行 `pnpm dev:app`）。',
   'app.neppyLink.notifications.permissionOff':
     '通知权限已关闭。请在“系统设置 → 通知”中启用 Neppy，然后重试。',
   'app.neppyLink.notifications.triggerFailed':
@@ -3196,8 +3192,7 @@ const messages: TranslationMap = {
   'iosPair.error.invalidQr': '二维码无效。请确保您扫描的是 Neppy 配对码。',
   'iosPair.error.unreachableDesktop': '无法连接到桌面端。请确保两台设备均已联网，然后重试。',
   'iosPair.expired': 'QR code 已过期。要求桌面重新生成代码。',
-  'iosPair.instructions':
-    '在桌面端打开 Neppy，前往「设置 > 设备」，点击「配对手机」以显示二维码。',
+  'iosPair.instructions': '在桌面端打开 Neppy，前往「设置 > 设备」，点击「配对手机」以显示二维码。',
   'iosPair.retryScan': '重试扫描',
   'iosPair.scanQrCode': '扫描QR code',
   'iosPair.scannerOpening': '扫描仪打开...',
@@ -4890,8 +4885,7 @@ const messages: TranslationMap = {
   'settings.developerMenu.voiceDebug.desc': '语音听写运行时状态和调试设置',
   'settings.mcpServer.title': 'MCP 服务器',
   'settings.mcpServer.toolsSectionTitle': '可用工具',
-  'settings.mcpServer.toolsSectionDesc':
-    '运行 neppy-core mcp 时通过 MCP stdio 服务器暴露的工具',
+  'settings.mcpServer.toolsSectionDesc': '运行 neppy-core mcp 时通过 MCP stdio 服务器暴露的工具',
   'settings.mcpServer.configSectionTitle': '客户端配置',
   'settings.mcpServer.configSectionDesc': '选择你的 MCP 客户端以生成对应的配置代码片段',
   'settings.mcpServer.copySnippet': '复制到剪贴板',
@@ -6040,8 +6034,7 @@ const messages: TranslationMap = {
   'harnessInit.stateDone': '就绪',
   'harnessInit.stateSkipped': '已跳过',
   'harnessInit.stateFailed': '失败',
-  'harnessInit.failedMessage':
-    '部分设置步骤未完成。你可以重试或继续：Neppy 将使用内置的后备方案。',
+  'harnessInit.failedMessage': '部分设置步骤未完成。你可以重试或继续：Neppy 将使用内置的后备方案。',
   'harnessInit.retry': '重试',
   'harnessInit.continueAnyway': '仍然继续',
   'harnessInit.runInBackground': '在后台运行',
@@ -6222,8 +6215,7 @@ const messages: TranslationMap = {
   'memoryData.connectedSourcesDesc':
     '文件夹、邮箱、聊天记录和代码仓库会导入用于记忆索引：其原始文件不会被改写。',
   'memoryData.internalFiles': '内部记忆树文件',
-  'memoryData.internalFilesDesc':
-    '索引、队列状态和摘要由 Neppy 管理，以保持召回和同步的正常运行。',
+  'memoryData.internalFilesDesc': '索引、队列状态和摘要由 Neppy 管理，以保持召回和同步的正常运行。',
   'memoryData.windowError': '记忆时间窗口',
   'memoryData.windowUpdated': '记忆时间窗口已更新',
   'memoryData.windowUpdatedMsg': '已设置为 {window}。',

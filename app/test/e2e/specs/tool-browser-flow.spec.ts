@@ -105,10 +105,7 @@ describe('System tools — Browser (open URL + automation registry)', () => {
     const statusPayload = (status.result as any)?.result ?? status.result;
     expect(statusPayload?.running).toBe(true);
 
-    const list = await callNeppyRpc<ListDefinitionsResult>(
-      'openhuman.agent_list_definitions',
-      {}
-    );
+    const list = await callNeppyRpc<ListDefinitionsResult>('openhuman.agent_list_definitions', {});
     stepLog('agent_list_definitions response (count only)', {
       count: list.result?.definitions?.length ?? 0,
     });

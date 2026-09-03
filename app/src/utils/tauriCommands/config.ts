@@ -366,9 +366,7 @@ export async function neppyClaudeCodeSettings(): Promise<ClaudeCodeSettings> {
  * Persist the Claude Code full-access toggle. Returns the saved settings.
  * Takes effect on the next chat turn (the driver reads the file per-turn).
  */
-export async function neppyClaudeCodeSetFullAccess(
-  enabled: boolean
-): Promise<ClaudeCodeSettings> {
+export async function neppyClaudeCodeSetFullAccess(enabled: boolean): Promise<ClaudeCodeSettings> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -630,9 +628,7 @@ export interface MemorySyncSettingsUpdate {
   sync_interval_secs?: number | null;
 }
 
-export async function neppyGetMemorySyncSettings(): Promise<
-  CommandResponse<MemorySyncSettings>
-> {
+export async function neppyGetMemorySyncSettings(): Promise<CommandResponse<MemorySyncSettings>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
@@ -719,9 +715,7 @@ export async function neppyUpdateAnalyticsSettings(update: {
   });
 }
 
-export async function neppyGetAnalyticsSettings(): Promise<
-  CommandResponse<{ enabled: boolean }>
-> {
+export async function neppyGetAnalyticsSettings(): Promise<CommandResponse<{ enabled: boolean }>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }

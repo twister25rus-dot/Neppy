@@ -3068,8 +3068,7 @@ const messages: TranslationMap = {
   'bootCheck.portConflictFixing': 'Correction en cours…',
   'bootCheck.portConflictFixFailed':
     "La correction automatique n'a pas fonctionné. Veuillez redémarrer votre ordinateur et réessayer.",
-  'bootCheck.portConflictOwner':
-    '{name} (PID {pid}) utilise le port réseau dont Neppy a besoin.',
+  'bootCheck.portConflictOwner': '{name} (PID {pid}) utilise le port réseau dont Neppy a besoin.',
   'bootCheck.portConflictGuidance':
     'Fermez ce programme pour libérer le port, ou forcez sa fermeture ci-dessous, puis réessayez.',
   'bootCheck.portConflictForceQuit': 'Forcer la fermeture de {name}',

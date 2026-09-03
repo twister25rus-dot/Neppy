@@ -355,10 +355,7 @@ mod tests {
             "neppy://other",
             "https://example.com",
         ]);
-        assert_eq!(
-            urls,
-            vec!["neppy://auth?token=abc", "neppy://other"]
-        );
+        assert_eq!(urls, vec!["neppy://auth?token=abc", "neppy://other"]);
     }
 
     #[test]

@@ -2186,8 +2186,7 @@ const en: TranslationMap = {
     'The browser could not be opened automatically. Use the button above.',
 
   // Settings: Tools
-  'settings.tools.chooseCapabilities':
-    'Choose which capabilities Neppy can use on your behalf.',
+  'settings.tools.chooseCapabilities': 'Choose which capabilities Neppy can use on your behalf.',
   'settings.tools.saveChanges': 'Save Changes',
   'settings.tools.preferencesSaved': 'Preferences saved',
   'settings.tools.saveFailed': 'Failed to save preferences. Try again.',
@@ -2966,8 +2965,7 @@ const en: TranslationMap = {
   // Memory data panel (storage explainer)
   'memoryData.howItWorks': 'How memory storage works',
   'memoryData.workspaceVault': 'Workspace vault · write',
-  'memoryData.workspaceVaultDesc':
-    'Neppy writes generated memory notes to memory_tree/content.',
+  'memoryData.workspaceVaultDesc': 'Neppy writes generated memory notes to memory_tree/content.',
   'memoryData.connectedSources': 'Connected sources · read',
   'memoryData.connectedSourcesDesc':
     'Folders, mailboxes, chats, and repos are imported for memory indexing: their original files are never rewritten.',
@@ -3411,15 +3409,13 @@ const en: TranslationMap = {
   'app.localAiDownload.preparing': 'Preparing...',
   'app.neppyLink.accounts.continueWith': 'Continue with {label} sign-in',
   'app.neppyLink.accounts.done': 'Done',
-  'app.neppyLink.accounts.intro':
-    'Connect your apps to give Neppy access to your accounts.',
+  'app.neppyLink.accounts.intro': 'Connect your apps to give Neppy access to your accounts.',
   'app.neppyLink.accounts.webviewNote':
     'Your credentials stay on this device and are never shared.',
   'app.neppyLink.billing.openDashboard': 'Open dashboard',
   'app.neppyLink.billing.stayOnTrial': 'Stay on trial',
   'app.neppyLink.billing.trialCredit': 'Signup credits',
-  'app.neppyLink.billing.trialDesc':
-    'Credit offers can vary by promotion and account eligibility.',
+  'app.neppyLink.billing.trialDesc': 'Credit offers can vary by promotion and account eligibility.',
   'app.neppyLink.defaultBody':
     "Not ready in the popup yet. Open the full settings page when you're done.",
   'app.neppyLink.discord.intro': 'Join the Neppy community on Discord.',
@@ -3603,8 +3599,7 @@ const en: TranslationMap = {
   // Telegram
   'channels.telegram.displayName': 'Telegram',
   'channels.telegram.description': 'Send and receive messages via Telegram.',
-  'channels.telegram.authMode.managed_dm.description':
-    'Message the Neppy Telegram bot directly.',
+  'channels.telegram.authMode.managed_dm.description': 'Message the Neppy Telegram bot directly.',
   'channels.telegram.authMode.bot_token.description':
     'Provide your own Telegram Bot token from @BotFather.',
   'channels.telegram.fields.bot_token.label': 'Bot Token',
@@ -3684,8 +3679,7 @@ const en: TranslationMap = {
   'iosPair.error.camera': 'Camera scan failed. Check camera permissions and try again.',
   'iosPair.error.connectionFailed':
     'Connection failed. Make sure the desktop app is running and try again.',
-  'iosPair.error.invalidQr':
-    'Invalid QR code. Make sure you are scanning an Neppy pairing code.',
+  'iosPair.error.invalidQr': 'Invalid QR code. Make sure you are scanning an Neppy pairing code.',
   'iosPair.error.unreachableDesktop':
     'Could not reach the desktop. Make sure both devices are online and try again.',
   'iosPair.expired': 'QR code expired. Ask the desktop to regenerate the code.',
@@ -3760,8 +3754,7 @@ const en: TranslationMap = {
   'composio.triggers.heading': 'Triggers',
   'composio.triggers.listenFrom': 'Listen for events from',
   'composio.triggers.loadError': "Couldn't load triggers",
-  'composio.triggers.sessionExpired':
-    'Your Neppy session expired. Sign in again to load triggers.',
+  'composio.triggers.sessionExpired': 'Your Neppy session expired. Sign in again to load triggers.',
   'composio.triggers.needsConfiguration': 'Needs configuration',
   'composio.triggers.noneAvailable': 'No triggers are currently available for',
   'conversations.taskKanban.moveLeft': 'Move left',
@@ -3884,8 +3877,7 @@ const en: TranslationMap = {
   'conversations.toolFailure.modelConnection.next':
     'Check your connection or model settings; Neppy will retry.',
   'conversations.toolFailure.timeout.cause': 'The action took too long and was stopped.',
-  'conversations.toolFailure.timeout.next':
-    'Neppy will try again, or you can retry it manually.',
+  'conversations.toolFailure.timeout.next': 'Neppy will try again, or you can retry it manually.',
   'conversations.toolFailure.denied.cause': 'You declined this action.',
   'conversations.toolFailure.denied.next':
     'Nothing to do: it was not run. Ask again if you change your mind.',

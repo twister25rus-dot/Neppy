@@ -193,15 +193,15 @@ jobs:
           PROFILE_NAME: ${{ steps.profile.outputs.name }}
         run: |
           set -euo pipefail
-          ARCHIVE_PATH="app/src-tauri-mobile/gen/apple/build/openhuman-mobile_iOS.xcarchive"
-          INFO_PLIST="app/src-tauri-mobile/gen/apple/openhuman-mobile_iOS/Info.plist"
+          ARCHIVE_PATH="app/src-tauri-mobile/gen/apple/build/neppy-mobile_iOS.xcarchive"
+          INFO_PLIST="app/src-tauri-mobile/gen/apple/neppy-mobile_iOS/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING_VERSION" "$INFO_PLIST" 2>/dev/null \
             || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $MARKETING_VERSION" "$INFO_PLIST"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$INFO_PLIST" 2>/dev/null \
             || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" "$INFO_PLIST"
           xcodebuild \
-            -workspace app/src-tauri-mobile/gen/apple/openhuman-mobile.xcodeproj/project.xcworkspace \
-            -scheme openhuman-mobile_iOS \
+            -workspace app/src-tauri-mobile/gen/apple/neppy-mobile.xcodeproj/project.xcworkspace \
+            -scheme neppy-mobile_iOS \
             -configuration release \
             -sdk iphoneos \
             -destination "generic/platform=iOS" \
@@ -221,7 +221,7 @@ jobs:
           PROFILE_NAME: ${{ steps.profile.outputs.name }}
         run: |
           set -euo pipefail
-          ARCHIVE_PATH="app/src-tauri-mobile/gen/apple/build/openhuman-mobile_iOS.xcarchive"
+          ARCHIVE_PATH="app/src-tauri-mobile/gen/apple/build/neppy-mobile_iOS.xcarchive"
           EXPORT_OPTIONS="$RUNNER_TEMP/openhuman-export-options.plist"
           mkdir -p "$EXPORT_DIR"
           cat > "$EXPORT_OPTIONS" <<PLIST
@@ -307,5 +307,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: openhuman-ios-dsyms
-          path: app/src-tauri-mobile/gen/apple/build/openhuman-mobile_iOS.xcarchive/dSYMs
+          path: app/src-tauri-mobile/gen/apple/build/neppy-mobile_iOS.xcarchive/dSYMs
           if-no-files-found: warn

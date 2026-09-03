@@ -1266,8 +1266,7 @@ const messages: TranslationMap = {
   'onboarding.custom.embeddings.title': 'Embeddings',
   'onboarding.custom.embeddings.subtitle':
     'كيف يُولِّد Neppy تضمينات المتجهات للبحث الدلالي في الذاكرة.',
-  'onboarding.custom.embeddings.defaultDesc':
-    'يستخدم Neppy خدمة تضمين مُدارة. لا حاجة لمفتاح API.',
+  'onboarding.custom.embeddings.defaultDesc': 'يستخدم Neppy خدمة تضمين مُدارة. لا حاجة لمفتاح API.',
   'onboarding.custom.embeddings.configureDesc':
     'استخدم موفر التضمين الخاص بك (OpenAI أو Voyage أو Ollama وغيرها).',
   'onboarding.custom.memory.title': 'الذاكرة',
@@ -1950,8 +1949,7 @@ const messages: TranslationMap = {
   'mcp.connectAuth.schemeBearer': 'Bearer',
   'mcp.connectAuth.schemeRaw': 'بدون',
   'mcp.connectAuth.reconnectFailed': 'تم حفظ بيانات الاعتماد، لكن فشل الاتصال.',
-  'mcp.connectAuth.oauthHint':
-    'يستخدم هذا الخادم OAuth. سجّل الدخول عبر متصفحك للسماح لـ Neppy.',
+  'mcp.connectAuth.oauthHint': 'يستخدم هذا الخادم OAuth. سجّل الدخول عبر متصفحك للسماح لـ Neppy.',
   'mcp.connectAuth.signIn': 'تسجيل الدخول عبر المتصفح',
   'mcp.connectAuth.oauthWaiting': 'في انتظار تسجيل الدخول…',
   'mcp.connectAuth.oauthOrToken':
@@ -2026,8 +2024,7 @@ const messages: TranslationMap = {
   'settings.billing.openingBrowser': 'جارٍ فتح المتصفح...',
   'settings.billing.browserNotOpen': 'إذا لم يفتح متصفحك، استخدم الزر أعلاه.',
   'settings.billing.browserOpenFailed': 'تعذّر فتح المتصفح تلقائيًا. استخدم الزر أعلاه.',
-  'settings.tools.chooseCapabilities':
-    'اختر الإمكانات التي يمكن لـ Neppy استخدامها نيابةً عنك.',
+  'settings.tools.chooseCapabilities': 'اختر الإمكانات التي يمكن لـ Neppy استخدامها نيابةً عنك.',
   'settings.tools.saveChanges': 'حفظ التغييرات',
   'settings.tools.preferencesSaved': 'تم حفظ التفضيلات',
   'settings.tools.saveFailed': 'فشل حفظ التفضيلات. حاول مرة أخرى.',
@@ -6421,8 +6418,7 @@ const messages: TranslationMap = {
   'vaultHealth.timeDaysAgo': 'منذ {n} أيام',
   'memoryData.howItWorks': 'كيف يعمل تخزين الذاكرة',
   'memoryData.workspaceVault': 'خزينة مساحة العمل · كتابة',
-  'memoryData.workspaceVaultDesc':
-    'يكتب Neppy ملاحظات الذاكرة المُولَّدة إلى memory_tree/content.',
+  'memoryData.workspaceVaultDesc': 'يكتب Neppy ملاحظات الذاكرة المُولَّدة إلى memory_tree/content.',
   'memoryData.connectedSources': 'المصادر المتصلة · قراءة',
   'memoryData.connectedSourcesDesc':
     'تُستورد المجلدات وصناديق البريد والمحادثات والمستودعات لفهرسة الذاكرة: ولا تُعاد كتابة ملفاتها الأصلية أبدًا.',

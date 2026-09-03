@@ -2050,8 +2050,7 @@ const messages: TranslationMap = {
   'settings.billing.openingBrowser': '브라우저를 여는 중...',
   'settings.billing.browserNotOpen': '브라우저가 열리지 않았다면 위 버튼을 사용하세요.',
   'settings.billing.browserOpenFailed': '브라우저를 자동으로 열 수 없습니다. 위 버튼을 사용하세요.',
-  'settings.tools.chooseCapabilities':
-    'Neppy이 사용자를 대신해 사용할 수 있는 기능을 선택하세요.',
+  'settings.tools.chooseCapabilities': 'Neppy이 사용자를 대신해 사용할 수 있는 기능을 선택하세요.',
   'settings.tools.saveChanges': '변경 사항 저장',
   'settings.tools.preferencesSaved': '기본 설정이 저장되었습니다',
   'settings.tools.saveFailed': '기본 설정 저장에 실패했습니다. 다시 시도하세요.',
@@ -3250,8 +3249,7 @@ const messages: TranslationMap = {
   'channels.discord.authMode.bot_token.description': '자신만의 Discord 봇 토큰을 제공하세요.',
   'channels.discord.authMode.oauth.description':
     'OAuth을 통해 Neppy 봇을 Discord 서버에 설치합니다.',
-  'channels.discord.authMode.managed_dm.description':
-    '개인 Discord 계정을 Neppy 봇에 연결하세요.',
+  'channels.discord.authMode.managed_dm.description': '개인 Discord 계정을 Neppy 봇에 연결하세요.',
   'channels.discord.fields.bot_token.label': '봇 토큰',
   'channels.discord.fields.bot_token.placeholder': '귀하의 Discord 봇 토큰',
   'channels.discord.fields.guild_id.label': '서버(길드) ID',
@@ -5109,8 +5107,7 @@ const messages: TranslationMap = {
   'settings.developerMenu.voiceDebug.desc': '음성 받아쓰기 런타임 상태 및 디버그 설정',
   'settings.mcpServer.title': 'MCP 서버',
   'settings.mcpServer.toolsSectionTitle': '사용 가능한 도구',
-  'settings.mcpServer.toolsSectionDesc':
-    '도구 노출 neppy-core mcp 실행 시 MCP stdio 서버를 통해',
+  'settings.mcpServer.toolsSectionDesc': '도구 노출 neppy-core mcp 실행 시 MCP stdio 서버를 통해',
   'settings.mcpServer.configSectionTitle': '클라이언트 구성',
   'settings.mcpServer.configSectionDesc':
     '올바른 구성 조각을 생성하려면 MCP 클라이언트를 선택하세요.',
@@ -6495,8 +6492,7 @@ const messages: TranslationMap = {
   'vaultHealth.timeDaysAgo': '{n}일 전',
   'memoryData.howItWorks': '메모리 저장 방식',
   'memoryData.workspaceVault': '워크스페이스 볼트 · 쓰기',
-  'memoryData.workspaceVaultDesc':
-    'Neppy이 생성된 메모리 노트를 memory_tree/content에 기록합니다.',
+  'memoryData.workspaceVaultDesc': 'Neppy이 생성된 메모리 노트를 memory_tree/content에 기록합니다.',
   'memoryData.connectedSources': '연결된 소스 · 읽기',
   'memoryData.connectedSourcesDesc':
     '폴더, 사서함, 채팅, 저장소가 메모리 인덱싱을 위해 가져와집니다: 원본 파일은 절대 수정되지 않습니다.',

@@ -381,9 +381,7 @@ mod tests {
                 // Acceptable in a clean CI checkout where the binary hasn't
                 // been built yet. The error must be descriptive.
                 assert!(
-                    e.contains("neppy-core")
-                        || e.contains("current_exe")
-                        || e.contains("target"),
+                    e.contains("neppy-core") || e.contains("current_exe") || e.contains("target"),
                     "error message should reference the binary or path: {e}"
                 );
             }

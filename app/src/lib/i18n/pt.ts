@@ -1745,8 +1745,7 @@ const messages: TranslationMap = {
   'devices.title': 'Dispositivos',
   'devices.pairIphone': 'Emparelhar iPhone',
   'devices.noPaired': 'Nenhum dispositivo emparelhado',
-  'devices.emptyState':
-    'Escaneie um QR code no seu iPhone para conectá-lo a esta sessão do Neppy.',
+  'devices.emptyState': 'Escaneie um QR code no seu iPhone para conectá-lo a esta sessão do Neppy.',
   'devices.devicePairedTitle': 'Dispositivo emparelhado',
   'devices.devicePairedMessage': 'iPhone conectado com sucesso.',
   'devices.deviceRevokedTitle': 'Dispositivo revogado',
@@ -4417,8 +4416,7 @@ const messages: TranslationMap = {
   'privacy.dataKind.raw': 'Bruto',
   'privacy.whatLeaves.link.label': 'O que sai do meu computador?',
   'rewards.community.achievementsUnlocked': '{unlocked} de {total} conquistas desbloqueadas',
-  'rewards.community.activityStreakHint':
-    'Dias consecutivos em que você esteve ativo no Neppy.',
+  'rewards.community.activityStreakHint': 'Dias consecutivos em que você esteve ativo no Neppy.',
   'rewards.community.activityTitle': 'Sua atividade',
   'rewards.community.claimCredited': '{amount} creditados no seu saldo',
   'rewards.community.claimError': 'Não foi possível resgatar. Tente novamente.',
@@ -6124,8 +6122,7 @@ const messages: TranslationMap = {
   'devOptions.menuMessagingDesc':
     'Configurar modos de autenticação Telegram/Discord e roteamento de canal padrão',
   'devOptions.menuTools': 'Ferramentas',
-  'devOptions.menuToolsDesc':
-    'Habilitar ou desabilitar recursos que Neppy pode usar em seu nome',
+  'devOptions.menuToolsDesc': 'Habilitar ou desabilitar recursos que Neppy pode usar em seu nome',
   'devOptions.menuAgentChat': 'Bate-papo do agente',
   'devOptions.menuAgentChatDesc':
     'Testar conversação do agente com substituições de modelo e temperatura',

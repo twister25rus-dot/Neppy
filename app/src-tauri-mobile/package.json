@@ -1,5 +1,5 @@
 {
-  "name": "openhuman-mobile-tauri",
+  "name": "neppy-mobile-tauri",
   "private": true,
   "type": "module",
   "scripts": {

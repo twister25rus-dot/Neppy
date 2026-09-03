@@ -27,11 +27,7 @@ vi.mock('../../../../utils/tauriCommands/config', async () => {
   const actual = await vi.importActual<typeof import('../../../../utils/tauriCommands/config')>(
     '../../../../utils/tauriCommands/config'
   );
-  return {
-    ...actual,
-    neppyGetAutonomySettings: vi.fn(),
-    neppyUpdateAutonomySettings: vi.fn(),
-  };
+  return { ...actual, neppyGetAutonomySettings: vi.fn(), neppyUpdateAutonomySettings: vi.fn() };
 });
 
 const mockGet = vi.mocked(neppyGetAutonomySettings);

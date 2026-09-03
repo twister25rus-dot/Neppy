@@ -478,9 +478,7 @@ async fn restart_app(app: tauri::AppHandle<AppRuntime>) -> Result<(), String> {
 fn get_active_user_id() -> Result<Option<String>, String> {
     let root = neppy_core::neppy::config::default_root_neppy_dir()
         .map_err(|err| format!("resolve active-user state directory: {err}"))?;
-    Ok(neppy_core::neppy::config::read_active_user_id(
-        &root,
-    ))
+    Ok(neppy_core::neppy::config::read_active_user_id(&root))
 }
 
 /// Information about an available shell-app update returned to the frontend.
@@ -1619,13 +1617,7 @@ fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
 fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
     log::info!("[tray] setting up tray icon");
 
-    let show_item = MenuItem::with_id(
-        app,
-        "tray_show_window",
-        "Open Neppy",
-        true,
-        None::<&str>,
-    )?;
+    let show_item = MenuItem::with_id(app, "tray_show_window", "Open Neppy", true, None::<&str>)?;
     let quit_item = MenuItem::with_id(app, "tray_quit", "Quit", true, None::<&str>)?;
     // The floating mascot has a native NSPanel + WKWebView host, so the
     // tray entry only does anything on macOS. Don't surface a menu item
@@ -2406,8 +2398,7 @@ pub fn run() {
             // (domain=llm_provider, failure=transport) — flaky-network
             // timeouts/resets recovered by retry/fallback (F7). Mirrors the
             // core binary's main.rs filter.
-            if neppy_core::core::observability::is_transient_provider_transport_failure(&event)
-            {
+            if neppy_core::core::observability::is_transient_provider_transport_failure(&event) {
                 log::debug!(
                     "[sentry-transport-filter] dropping transient provider transport event_id={:?}",
                     event.event_id
@@ -2475,8 +2466,7 @@ pub fn run() {
             // CEF profile I/O) bypasses the core classifier and lands here;
             // this filter is the only net for those events (TAURI-RUST-QT0:
             // 6,050 events / 1 user).
-            if neppy_core::core::observability::is_windows_file_system_limitation_event(&event)
-            {
+            if neppy_core::core::observability::is_windows_file_system_limitation_event(&event) {
                 log::debug!(
                     "[sentry-fs-limitation-filter] dropping Windows file-system-limitation event (os error 665) event_id={:?}",
                     event.event_id

@@ -223,9 +223,8 @@ impl CoreProcessHandle {
         for startup_attempt in 0..=1u8 {
             let mut retry_after_takeover = false;
             let shutdown_token = self.fresh_shutdown_token().await;
-            let (ready_tx, mut ready_rx) = tokio::sync::oneshot::channel::<
-                neppy_core::core::jsonrpc::EmbeddedReadySignal,
-            >();
+            let (ready_tx, mut ready_rx) =
+                tokio::sync::oneshot::channel::<neppy_core::core::jsonrpc::EmbeddedReadySignal>();
             let mut received_ready = false;
 
             {

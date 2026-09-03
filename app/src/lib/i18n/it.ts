@@ -181,8 +181,7 @@ const messages: TranslationMap = {
     "Questo vault di memoria è archiviato sull'host neppy-core ({os}). Può essere aperto o mostrato solo su quella macchina, non da questo dispositivo.",
   'conversations.toolFailure.whyLabel': 'Perché',
   'conversations.toolFailure.nextLabel': 'Cosa fare ora',
-  'conversations.toolFailure.missingPermission.cause':
-    'Neppy non ha ancora il permesso di farlo.',
+  'conversations.toolFailure.missingPermission.cause': 'Neppy non ha ancora il permesso di farlo.',
   'conversations.toolFailure.missingPermission.next':
     'Concedi il permesso necessario, poi riprova.',
   'conversations.toolFailure.missingApp.cause':
@@ -206,8 +205,7 @@ const messages: TranslationMap = {
     'Controlla la connessione o le impostazioni del modello; Neppy riproverà.',
   'conversations.toolFailure.timeout.cause':
     "L'azione ha richiesto troppo tempo ed è stata interrotta.",
-  'conversations.toolFailure.timeout.next':
-    'Neppy riproverà, oppure puoi riprovare manualmente.',
+  'conversations.toolFailure.timeout.next': 'Neppy riproverà, oppure puoi riprovare manualmente.',
   'conversations.toolFailure.denied.cause': 'Hai rifiutato questa azione.',
   'conversations.toolFailure.denied.next':
     'Niente da fare: non è stata eseguita. Richiedila di nuovo se cambi idea.',
@@ -1770,8 +1768,7 @@ const messages: TranslationMap = {
   'devices.loadFailed': 'Impossibile caricare i dispositivi: {message}',
   'devices.pairModal.title': 'Accoppia iPhone',
   'devices.pairModal.loading': 'Generazione del codice di accoppiamento…',
-  'devices.pairModal.instructions':
-    "Apri l'app Neppy sul tuo iPhone e scansiona questo codice.",
+  'devices.pairModal.instructions': "Apri l'app Neppy sul tuo iPhone e scansiona questo codice.",
   'devices.pairModal.expiresIn': 'Il codice scade tra ~{count} minuto',
   'devices.pairModal.expiresInPlural': 'Il codice scade tra ~{count} minuti',
   'devices.pairModal.showDetails': 'Mostra dettagli',
@@ -5243,8 +5240,7 @@ const messages: TranslationMap = {
   'settings.developerMenu.integrationTriggers.desc':
     'Configura le impostazioni di triage IA per i trigger di integrazione Composio',
   'settings.developerMenu.mcpServer.title': 'Server MCP',
-  'settings.developerMenu.mcpServer.desc':
-    'Configura i client MCP esterni per connettersi a Neppy',
+  'settings.developerMenu.mcpServer.desc': 'Configura i client MCP esterni per connettersi a Neppy',
   'settings.developerMenu.autonomy.title': 'Autonomia agente',
   'settings.developerMenu.autonomy.desc':
     'Limiti di frequenza delle azioni degli strumenti e soglie di sicurezza',
@@ -6503,8 +6499,7 @@ const messages: TranslationMap = {
   'harnessInit.retry': 'Riprova',
   'harnessInit.continueAnyway': 'Continua comunque',
   'harnessInit.runInBackground': 'Esegui in background',
-  'harnessInit.backgroundHint':
-    'Puoi continuare a usare Neppy mentre questa operazione termina.',
+  'harnessInit.backgroundHint': 'Puoi continuare a usare Neppy mentre questa operazione termina.',
 
   'keyring.consent.title': 'Archivio sicuro non disponibile',
   'keyring.consent.description':

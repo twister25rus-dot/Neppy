@@ -32,10 +32,9 @@ describe('WebCallbackPage', () => {
 
     expect(screen.getByText('Completing sign-in')).toBeInTheDocument();
     await waitFor(() => {
-      expect(handleDeepLinkUrls).toHaveBeenCalledWith(
-        ['neppy://auth?token=jwt-token&key=auth'],
-        { requireStateNonce: false }
-      );
+      expect(handleDeepLinkUrls).toHaveBeenCalledWith(['neppy://auth?token=jwt-token&key=auth'], {
+        requireStateNonce: false,
+      });
     });
   });
 
@@ -44,10 +43,9 @@ describe('WebCallbackPage', () => {
 
     expect(screen.getByText('Completing sign-in')).toBeInTheDocument();
     await waitFor(() => {
-      expect(handleDeepLinkUrls).toHaveBeenCalledWith(
-        ['neppy://auth?token=jwt-token&key=auth'],
-        { requireStateNonce: false }
-      );
+      expect(handleDeepLinkUrls).toHaveBeenCalledWith(['neppy://auth?token=jwt-token&key=auth'], {
+        requireStateNonce: false,
+      });
     });
   });
 

@@ -4430,8 +4430,7 @@ const messages: TranslationMap = {
   'privacy.dataKind.raw': 'Sin procesar',
   'privacy.whatLeaves.link.label': '¿Qué sale de mi ordenador?',
   'rewards.community.achievementsUnlocked': '{unlocked} de {total} logros desbloqueados',
-  'rewards.community.activityStreakHint':
-    'Días consecutivos en los que estuviste activo en Neppy.',
+  'rewards.community.activityStreakHint': 'Días consecutivos en los que estuviste activo en Neppy.',
   'rewards.community.activityTitle': 'Tu actividad',
   'rewards.community.claimCredited': '{amount} añadidos a tu saldo',
   'rewards.community.claimError': 'No se pudo reclamar. Inténtalo de nuevo.',
@@ -6506,8 +6505,7 @@ const messages: TranslationMap = {
   'harnessInit.title': 'Preparando todo',
 
   'announcement.gotIt': 'Entendido',
-  'harnessInit.subtitle':
-    'Neppy está preparando los componentes que necesita en el primer inicio.',
+  'harnessInit.subtitle': 'Neppy está preparando los componentes que necesita en el primer inicio.',
   'harnessInit.stepPython': 'Entorno de ejecución de Python',
   'harnessInit.stepSpacy': 'Modelo de lenguaje',
   'harnessInit.stepNode': 'Entorno de ejecución de Node.js',

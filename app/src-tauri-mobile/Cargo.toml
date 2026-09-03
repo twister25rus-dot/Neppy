@@ -1,20 +1,20 @@
 [package]
-name = "openhuman-mobile"
+name = "neppy-mobile"
 version = "0.58.16"
 description = "Neppy mobile (iOS) — Tauri host without CEF"
 authors = ["Neppy"]
 edition = "2021"
-default-run = "openhuman-mobile"
+default-run = "neppy-mobile"
 autobins = false
 
 # Mobile host is iOS-only. Block other targets so this crate never gets pulled
 # into a desktop build by accident.
 [lib]
-name = "openhuman_mobile"
+name = "neppy_mobile"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "openhuman-mobile"
+name = "neppy-mobile"
 path = "src/main.rs"
 
 [build-dependencies]

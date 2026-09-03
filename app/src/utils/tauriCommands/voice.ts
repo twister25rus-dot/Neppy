@@ -96,9 +96,7 @@ export async function neppyVoiceServerStop(): Promise<VoiceServerStatus> {
   });
 }
 
-export async function neppyGetVoiceServerSettings(): Promise<
-  CommandResponse<VoiceServerSettings>
-> {
+export async function neppyGetVoiceServerSettings(): Promise<CommandResponse<VoiceServerSettings>> {
   return await callCoreRpc<CommandResponse<VoiceServerSettings>>({
     method: 'openhuman.config_get_voice_server_settings',
     params: {},
@@ -175,10 +173,7 @@ export async function neppyVoiceTranscribeBytes(
   });
 }
 
-export async function neppyVoiceTts(
-  text: string,
-  outputPath?: string
-): Promise<VoiceTtsResult> {
+export async function neppyVoiceTts(text: string, outputPath?: string): Promise<VoiceTtsResult> {
   return await callCoreRpc<VoiceTtsResult>({
     method: 'openhuman.voice_tts',
     params: { text, output_path: outputPath },

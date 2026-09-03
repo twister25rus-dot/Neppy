@@ -305,9 +305,7 @@ const BillingBody = ({ close }: { close: () => void }) => {
         <p className="mt-1 text-2xl font-semibold text-content">
           {t('onboarding.runtimeChoice.cloud.creditHighlight')}
         </p>
-        <p className="mt-1 text-xs text-content-muted">
-          {t('app.neppyLink.billing.trialDesc')}
-        </p>
+        <p className="mt-1 text-xs text-content-muted">{t('app.neppyLink.billing.trialDesc')}</p>
       </div>
       <Button
         onClick={() => {

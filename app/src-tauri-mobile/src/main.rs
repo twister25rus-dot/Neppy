@@ -1,3 +1,3 @@
 fn main() {
-    openhuman_mobile::run();
+    neppy_mobile::run();
 }

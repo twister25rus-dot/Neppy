@@ -826,9 +826,7 @@ describe('Mega flow — login + Gmail OAuth + Composio in one session', () => {
 
     // Step 3 — list messages for the thread and assert the appended message
     // appears in the result.
-    const msgList = await callNeppyRpc('openhuman.threads_messages_list', {
-      thread_id: threadId,
-    });
+    const msgList = await callNeppyRpc('openhuman.threads_messages_list', { thread_id: threadId });
     expect(msgList.ok).toBe(true);
 
     // threads_messages_list returns RpcOutcome<ApiEnvelope<ConversationMessagesResponse>>

@@ -223,9 +223,7 @@ vi.mock('../utils/tauriCommands', () => ({
   neppyServiceStart: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
   neppyServiceStop: vi.fn().mockResolvedValue({ result: { state: 'Stopped' }, logs: [] }),
   neppyServiceStatus: vi.fn().mockResolvedValue({ result: { state: 'Running' }, logs: [] }),
-  neppyServiceUninstall: vi
-    .fn()
-    .mockResolvedValue({ result: { state: 'NotInstalled' }, logs: [] }),
+  neppyServiceUninstall: vi.fn().mockResolvedValue({ result: { state: 'NotInstalled' }, logs: [] }),
   neppyAgentServerStatus: vi.fn().mockResolvedValue({ result: { running: true }, logs: [] }),
   neppyUpdateMeetSettings: vi
     .fn()

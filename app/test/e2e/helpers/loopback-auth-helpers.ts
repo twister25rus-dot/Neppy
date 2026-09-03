@@ -92,10 +92,7 @@ async function startWebViewListener(port: number, timeoutSecs: number): Promise<
           handle
             .awaitCallback()
             .then(url => {
-              const synthetic = url.replace(
-                /^https?:\/\/127\.0\.0\.1:\d+\/auth/,
-                'neppy://auth'
-              );
+              const synthetic = url.replace(/^https?:\/\/127\.0\.0\.1:\d+\/auth/, 'neppy://auth');
               const simulate = w.__simulateDeepLink;
               if (typeof simulate === 'function') {
                 return simulate(synthetic);

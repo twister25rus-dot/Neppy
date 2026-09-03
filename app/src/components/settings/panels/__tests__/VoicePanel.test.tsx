@@ -152,10 +152,7 @@ describe('VoicePanel', () => {
     vi.mocked(neppyVoiceStatus).mockImplementation(async () => ({ ...runtime.voiceStatus }));
     // The toggle handler ignores the resolved value (it updates React state
     // optimistically before awaiting), so a minimal cast is enough here.
-    vi.mocked(neppyUpdateVoiceServerSettings).mockResolvedValue({
-      result: {},
-      logs: [],
-    } as never);
+    vi.mocked(neppyUpdateVoiceServerSettings).mockResolvedValue({ result: {}, logs: [] } as never);
     vi.mocked(syncNotchVisibility).mockResolvedValue(undefined);
     vi.mocked(neppyVoiceSetProviders).mockImplementation(async update => {
       if (update.stt_provider) runtime.voiceStatus.stt_engine = update.stt_provider;

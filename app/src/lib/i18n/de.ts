@@ -208,8 +208,7 @@ const messages: TranslationMap = {
     'Diese Aktion wird durch deine Sicherheitseinstellungen blockiert.',
   'conversations.toolFailure.blockedByPolicy.next':
     'Erlaube sie unter Einstellungen → Agentenzugriff, wenn sie ausgeführt werden soll.',
-  'conversations.toolFailure.modelConnection.cause':
-    'Neppy konnte das KI-Modell nicht erreichen.',
+  'conversations.toolFailure.modelConnection.cause': 'Neppy konnte das KI-Modell nicht erreichen.',
   'conversations.toolFailure.modelConnection.next':
     'Prüfe deine Verbindung oder Modelleinstellungen; Neppy versucht es erneut.',
   'conversations.toolFailure.timeout.cause': 'Die Aktion hat zu lange gedauert und wurde gestoppt.',
@@ -1786,8 +1785,7 @@ const messages: TranslationMap = {
   'devices.loadFailed': 'Geräte konnten nicht geladen werden: {message}',
   'devices.pairModal.title': 'iPhone koppeln',
   'devices.pairModal.loading': 'Kopplungscode wird erzeugt…',
-  'devices.pairModal.instructions':
-    'Öffne die Neppy-App auf deinem iPhone und scanne diesen Code.',
+  'devices.pairModal.instructions': 'Öffne die Neppy-App auf deinem iPhone und scanne diesen Code.',
   'devices.pairModal.expiresIn': 'Code läuft in ~{count} Minute ab',
   'devices.pairModal.expiresInPlural': 'Code läuft in ~{count} Minuten ab',
   'devices.pairModal.showDetails': 'Details anzeigen',
@@ -3386,8 +3384,7 @@ const messages: TranslationMap = {
     'Optional: auf einen bestimmten Server beschränken',
   'channels.telegram.displayName': 'Telegram',
   'channels.telegram.description': 'Sende und empfange Nachrichten über Telegram.',
-  'channels.telegram.authMode.managed_dm.description':
-    'Schreibe dem Neppy-Telegram-Bot direkt.',
+  'channels.telegram.authMode.managed_dm.description': 'Schreibe dem Neppy-Telegram-Bot direkt.',
   'channels.telegram.authMode.bot_token.description':
     'Gib deinen eigenen Telegram-Bot-Token von @BotFather an.',
   'channels.telegram.fields.bot_token.label': 'Bot-Token',

@@ -107,9 +107,9 @@ describe('tauriCommands/config', () => {
 
     test('throws when not running in Tauri', async () => {
       mockIsTauri.mockReturnValue(false);
-      await expect(
-        neppyUpdateComposioTriggerSettings({ triage_disabled: true })
-      ).rejects.toThrow('Not running in Tauri');
+      await expect(neppyUpdateComposioTriggerSettings({ triage_disabled: true })).rejects.toThrow(
+        'Not running in Tauri'
+      );
       expect(mockCallCoreRpc).not.toHaveBeenCalled();
     });
 
@@ -136,9 +136,9 @@ describe('tauriCommands/config', () => {
 
     test('rethrows non-unknown-method errors', async () => {
       mockCallCoreRpc.mockRejectedValue(new Error('network timeout'));
-      await expect(
-        neppyUpdateComposioTriggerSettings({ triage_disabled: true })
-      ).rejects.toThrow('network timeout');
+      await expect(neppyUpdateComposioTriggerSettings({ triage_disabled: true })).rejects.toThrow(
+        'network timeout'
+      );
     });
   });
 

@@ -79,10 +79,10 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('updates the source to disabled', async () => {
-    const resp = await callNeppyRpc<{ source: MemorySource }>(
-      'openhuman.memory_sources_update',
-      { id: sourceId, enabled: false }
-    );
+    const resp = await callNeppyRpc<{ source: MemorySource }>('openhuman.memory_sources_update', {
+      id: sourceId,
+      enabled: false,
+    });
     expectRpcOk('openhuman.memory_sources_update', resp);
     const data = resp.result!;
     expect(data.source.enabled).toBe(false);

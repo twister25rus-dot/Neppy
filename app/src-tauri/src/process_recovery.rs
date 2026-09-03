@@ -518,9 +518,7 @@ mod linux_imp {
             let ppid = read_ppid(pid).unwrap_or(0);
             let command = cmdline.join(" ");
 
-            log::debug!(
-                "[startup-recovery] linux: found Neppy process pid={pid} argv0={argv0}"
-            );
+            log::debug!("[startup-recovery] linux: found Neppy process pid={pid} argv0={argv0}");
             results.push(ProcessInfo {
                 pid,
                 ppid,
@@ -949,10 +947,7 @@ ProcessId=9000\r\r\n";
                 first_subcommand("C:\\p\\Neppy.exe mcp").as_deref(),
                 Some("mcp")
             );
-            assert_eq!(
-                first_subcommand("\"C:\\p\\Neppy.exe\"").as_deref(),
-                None
-            );
+            assert_eq!(first_subcommand("\"C:\\p\\Neppy.exe\"").as_deref(), None);
             assert_eq!(first_subcommand("Neppy.exe").as_deref(), None);
         }
 
@@ -1013,18 +1008,8 @@ ProcessId=9000\r\r\n";
                 proc(300, 1, "explorer.exe", "explorer.exe"),
                 proc(400, 300, "Neppy.exe", "\"Neppy.exe\""),
                 proc(500, 400, "Neppy.exe", "\"Neppy.exe\""),
-                proc(
-                    700,
-                    1,
-                    "Neppy.exe",
-                    "\"Neppy.exe\" core --port 7788",
-                ),
-                proc(
-                    800,
-                    900,
-                    "Neppy.exe",
-                    "\"Neppy.exe\" --type=gpu-process",
-                ),
+                proc(700, 1, "Neppy.exe", "\"Neppy.exe\" core --port 7788"),
+                proc(800, 900, "Neppy.exe", "\"Neppy.exe\" --type=gpu-process"),
                 proc(900, 1, "Neppy.exe", "\"Neppy.exe\""),
             ];
             let reapable: Vec<u32> = select_reapable_gui_instances(&all, 500)
