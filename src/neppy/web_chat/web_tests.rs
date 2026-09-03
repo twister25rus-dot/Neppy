@@ -175,7 +175,7 @@ async fn start_chat_emits_sanitized_chat_error_on_inference_failure() {
 #[test]
 fn detects_backend_budget_exhaustion_error() {
     assert!(is_inference_budget_exceeded_error(
-        "OpenHuman API error (402 Payment Required): Budget exceeded — add credits to continue."
+        "Neppy API error (402 Payment Required): Budget exceeded — add credits to continue."
     ));
     assert!(is_inference_budget_exceeded_error(
         "provider error: budget exceeded, please add credits"
@@ -185,13 +185,13 @@ fn detects_backend_budget_exhaustion_error() {
     // were previously NOT recognised here, so the error fell through to the
     // generic "Something went wrong" branch. They must now match.
     assert!(is_inference_budget_exceeded_error(
-        "openhuman API error (400 Bad Request): Insufficient budget"
+        "Neppy API error (400 Bad Request): Insufficient budget"
     ));
     assert!(is_inference_budget_exceeded_error(
-        "openhuman API error (400 Bad Request): Insufficient balance"
+        "Neppy API error (400 Bad Request): Insufficient balance"
     ));
     assert!(!is_inference_budget_exceeded_error(
-        "OpenHuman API error (500): Internal server error"
+        "Neppy API error (500): Internal server error"
     ));
 }
 
@@ -214,7 +214,7 @@ fn classify_inference_error_managed_insufficient_budget_400_is_budget_exhausted(
     // through to the generic `inference` branch ("Something went wrong"),
     // leaving the user unable to self-diagnose. It must now classify as
     // budget_exhausted with actionable, non-retryable copy.
-    let raw = "openhuman API error (400 Bad Request): Insufficient budget";
+    let raw = "Neppy API error (400 Bad Request): Insufficient budget";
     let classified = classify_inference_error(raw);
     assert_eq!(classified.error_type, "budget_exhausted");
     assert_eq!(
@@ -1157,7 +1157,7 @@ fn classify_inference_error_auth_marks_non_retryable_config_source() {
 fn classify_inference_error_billing_402_distinguished_from_provider_429() {
     // Acceptance criteria for #2606: distinguish upstream provider
     // throttling (429) from Neppy budget/billing limits (402).
-    let raw = "OpenHuman API error (402 Payment Required): top up to continue";
+    let raw = "Neppy API error (402 Payment Required): top up to continue";
     let classified = classify_inference_error(raw);
     assert_eq!(classified.error_type, "budget_exhausted");
     assert_eq!(
@@ -1509,10 +1509,10 @@ fn classify_inference_error_model_not_found_404_stays_model_unavailable() {
 
 /// Build a flattened managed-backend error string the way it reaches
 /// `classify_inference_error` after the typed provider error is collapsed
-/// to a `String` (the `"OpenHuman API error (<status>): <body>"` envelope
+/// to a `String` (the `"Neppy API error (<status>): <body>"` envelope
 /// from `inference::provider::ops::api_error`).
 fn managed_error(status: &str, body: &str) -> String {
-    format!("OpenHuman API error ({status}): {body}")
+    format!("Neppy API error ({status}): {body}")
 }
 
 #[test]
@@ -2481,7 +2481,7 @@ fn classify_session_expired_claims_managed_backend_401_invalid_token_before_auth
     // the `auth_error` arm would otherwise claim ("check your API key") — wrong
     // for managed-backend users. The session arm must win.
     let c = classify_inference_error(
-        "OpenHuman API error (401 Unauthorized): {\"error\":\"Invalid token\"}",
+        "Neppy API error (401 Unauthorized): {\"error\":\"Invalid token\"}",
     );
     assert_eq!(c.error_type, "session_expired");
 }

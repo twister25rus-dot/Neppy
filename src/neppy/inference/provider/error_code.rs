@@ -27,7 +27,7 @@
 //!    (F2) and the malformed-`BAD_REQUEST` carve-out (F8/B8).
 //!
 //! Everything in this module operates on the **already-flattened error string**
-//! (`"OpenHuman API error (429 …): {…errorCode…}"`) because the typed provider
+//! (`"Neppy API error (429 …): {…errorCode…}"`) because the typed provider
 //! error is collapsed to a `String` at the native-bus boundary before it
 //! reaches the channel classifier or the higher-layer re-report sites.
 
@@ -111,7 +111,7 @@ pub fn extract_backend_error_code_token(err: &str) -> Option<String> {
 
 /// Whether the flattened error string is a **managed-backend** envelope (the
 /// `errorCode` contract only holds for errors that came through the Neppy
-/// managed backend, `"OpenHuman API error (...)"` /
+/// managed backend, `"Neppy API error (...)"` /
 /// `"Neppy streaming API error (...)"`).
 ///
 /// Load-bearing for the managed-vs-BYO distinction: a BYO / direct-provider
@@ -221,7 +221,7 @@ mod tests {
 
     #[test]
     fn extracts_known_tokens() {
-        let body = r#"OpenHuman API error (429 Too Many Requests): {"error":{"message":"slow down","errorCode":"RATE_LIMITED","retryAfter":30}}"#;
+        let body = r#"Neppy API error (429 Too Many Requests): {"error":{"message":"slow down","errorCode":"RATE_LIMITED","retryAfter":30}}"#;
         assert_eq!(
             extract_backend_error_code_token(body).as_deref(),
             Some("RATE_LIMITED")
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn malformed_bad_request_is_the_one_paging_exception() {
-        let malformed = r#"OpenHuman API error (400 Bad Request): {"error":{"errorCode":"BAD_REQUEST","malformed":true}}"#;
+        let malformed = r#"Neppy API error (400 Bad Request): {"error":{"errorCode":"BAD_REQUEST","malformed":true}}"#;
         assert!(is_backend_malformed_bad_request(malformed));
         assert!(!backend_error_code_skips_sentry(malformed));
 
@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn user_param_bad_request_does_not_page() {
-        let user_param = r#"OpenHuman API error (400 Bad Request): {"error":{"errorCode":"BAD_REQUEST","message":"unsupported parameter"}}"#;
+        let user_param = r#"Neppy API error (400 Bad Request): {"error":{"errorCode":"BAD_REQUEST","message":"unsupported parameter"}}"#;
         assert!(!is_backend_malformed_bad_request(user_param));
         assert!(backend_error_code_skips_sentry(user_param));
     }
@@ -282,19 +282,19 @@ mod tests {
         // PAYLOAD_TOO_LARGE / CONTEXT_LENGTH_EXCEEDED are limits the client
         // enforces before sending, so a backend rejection is a guard leak that
         // must page the FE — unlike genuinely backend-owned / user-state codes.
-        let payload = r#"OpenHuman API error (413 Payload Too Large): {"error":{"errorCode":"PAYLOAD_TOO_LARGE","message":"too big"}}"#;
+        let payload = r#"Neppy API error (413 Payload Too Large): {"error":{"errorCode":"PAYLOAD_TOO_LARGE","message":"too big"}}"#;
         assert!(is_backend_client_guard_leak(payload));
         assert!(!backend_error_code_skips_sentry(payload));
         assert!(!managed_error_skips_sentry(payload));
 
-        let context = r#"OpenHuman API error (400 Bad Request): {"error":{"errorCode":"CONTEXT_LENGTH_EXCEEDED","message":"start a new chat"}}"#;
+        let context = r#"Neppy API error (400 Bad Request): {"error":{"errorCode":"CONTEXT_LENGTH_EXCEEDED","message":"start a new chat"}}"#;
         assert!(is_backend_client_guard_leak(context));
         assert!(!backend_error_code_skips_sentry(context));
 
         // Contrast: these remain backend-owned / expected user-state -> suppress.
-        let rate = r#"OpenHuman API error (429): {"error":{"errorCode":"RATE_LIMITED"}}"#;
+        let rate = r#"Neppy API error (429): {"error":{"errorCode":"RATE_LIMITED"}}"#;
         let credits =
-            r#"OpenHuman API error (402): {"error":{"errorCode":"USER_INSUFFICIENT_CREDITS"}}"#;
+            r#"Neppy API error (402): {"error":{"errorCode":"USER_INSUFFICIENT_CREDITS"}}"#;
         assert!(!is_backend_client_guard_leak(rate));
         assert!(backend_error_code_skips_sentry(rate));
         assert!(backend_error_code_skips_sentry(credits));
@@ -321,7 +321,8 @@ mod tests {
     #[test]
     fn malformed_flag_with_spaced_colon_is_detected() {
         // Pretty-printed JSON `"malformed" : true` must still flag malformed.
-        let body = r#"OpenHuman API error (400 Bad Request): {"errorCode":"BAD_REQUEST","malformed" : true}"#;
+        let body =
+            r#"Neppy API error (400 Bad Request): {"errorCode":"BAD_REQUEST","malformed" : true}"#;
         assert!(is_backend_malformed_bad_request(body));
         assert!(!managed_error_skips_sentry(body));
     }
@@ -336,7 +337,8 @@ mod tests {
         assert!(!managed_error_skips_sentry(byo));
 
         // The same body under the managed envelope IS backend-owned.
-        let managed = r#"OpenHuman API error (429 Too Many Requests): {"error":{"errorCode":"RATE_LIMITED"}}"#;
+        let managed =
+            r#"Neppy API error (429 Too Many Requests): {"error":{"errorCode":"RATE_LIMITED"}}"#;
         assert!(is_managed_backend_envelope(managed));
         assert!(managed_error_skips_sentry(managed));
 

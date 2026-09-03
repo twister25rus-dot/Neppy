@@ -361,7 +361,7 @@ mod tests {
             ),
             (
                 "KB",
-                r#"OpenHuman API error (404 Not Found): {"error":{"message":"No active credentials for provider: openai","type":"invalid_request_error","code":"model_not_found"}}"#,
+                r#"Neppy API error (404 Not Found): {"error":{"message":"No active credentials for provider: openai","type":"invalid_request_error","code":"model_not_found"}}"#,
             ),
             (
                 "JK",
@@ -481,7 +481,7 @@ mod tests {
              Neppy config, or change your default model in Connections → API keys → LLM.\n\n\
              All providers/models failed. Attempts:\n\
              provider=openhuman model=reasoning-quick-v1 attempt 1/3: non_retryable; \
-             error=OpenHuman API error (401 Unauthorized): {\"success\":false,\"error\":\"Invalid token\"}",
+             error=Neppy API error (401 Unauthorized): {\"success\":false,\"error\":\"Invalid token\"}",
             // 2) Unknown-model upstream cause.
             "The model `gpt-5.5` may not be available on your provider. \
              Configure a fallback chain via `reliability.model_fallbacks` in your \
@@ -522,7 +522,7 @@ mod tests {
         // …) can demote it on a per-shape basis.
         let aggregate_with_fallbacks = "All providers/models failed. Attempts:\n\
              provider=openhuman model=gpt-5.5 attempt 1/3: non_retryable; \
-             error=OpenHuman API error (404 Not Found): {\"error\":\"unknown model\"}";
+             error=Neppy API error (404 Not Found): {\"error\":\"unknown model\"}";
         assert!(
             !is_provider_config_rejection_message(aggregate_with_fallbacks),
             "configured-fallbacks aggregate (no `reliability.model_fallbacks` anchor) \
@@ -604,8 +604,8 @@ mod tests {
         // matches whether it came from a third-party `custom_openai`
         // upstream or our own backend.
         for body in [
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
             "Model 'deepseek-v4-pro' is not available. Use GET /openai/v1/models to list available models.",
         ] {
             assert!(

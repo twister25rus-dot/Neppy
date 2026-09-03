@@ -515,7 +515,7 @@ mod tests {
         // the model not to fabricate output, and preserves the root error.
         let msg = format_subagent_failure(
             "run_code",
-            "openhuman API error (404): model 'davinci-002' does not support \
+            "Neppy API error (404): model 'davinci-002' does not support \
              the chat-completions API",
         );
         assert!(msg.contains("run_code failed"), "names the tool: {msg}");

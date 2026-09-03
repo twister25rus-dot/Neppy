@@ -22,7 +22,7 @@ pub fn is_budget_exhausted_message(body: &str) -> bool {
         // the full body is `"Your credit balance is too low to access the
         // Anthropic API. Please go to Plans & Billing to upgrade or purchase
         // credits."` (direct provider, "anthropic API error", not the managed
-        // "OpenHuman API error"). Anchored on the "credit balance is too low"
+        // "Neppy API error"). Anchored on the "credit balance is too low"
         // fragment — the "too low" qualifier keeps a positive-balance message
         // (e.g. "your credit balance is $50") from tripping, per the tight-list
         // rule above. Neppy has no lever over a third-party Anthropic

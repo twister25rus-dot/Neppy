@@ -539,8 +539,8 @@ mod provider_config_rejection_suppression {
         // `expected_error_kind` via the broader message-only
         // classifier.)
         for body in [
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
-            r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'MiniMax-M2.7-highspeed' is not available. Use GET /openai/v1/models to list available models."}"#,
+            r#"Neppy API error (400 Bad Request): {"success":false,"error":"Model 'custom:MiniMax-M2.7' is not available. Use GET /openai/v1/models to list available models."}"#,
         ] {
             assert!(
                 is_provider_config_rejection_http(
@@ -1346,7 +1346,7 @@ async fn publish_backend_session_expired_emits_sanitized_session_expired() {
     // of the SessionExpired reason rather than just emitting the event.
     let secret = "sk-LIVEA0123456789abcdefSECRET";
     let msg = format!(
-        r#"OpenHuman API error (401 Unauthorized): {{"success":false,"error":"TEST_MARKER_A Invalid token {secret}"}}"#
+        r#"Neppy API error (401 Unauthorized): {{"success":false,"error":"TEST_MARKER_A Invalid token {secret}"}}"#
     );
     publish_backend_session_expired(
         "chat_completions",

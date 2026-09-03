@@ -810,8 +810,20 @@ pub(crate) fn classify_inference_error(err: &str) -> ClassifiedError {
         // practice). When the 402 comes from an upstream provider envelope
         // (`<provider> API error (402)`), the limit belongs to that
         // provider, not Neppy billing, so tag the source as `provider`.
+        // Derived from `PROVIDER_LABEL`, never a literal: the label is what
+        // formats the `<provider> API error (...)` envelope this name is
+        // extracted from, so a rename of one must move the other. A hardcoded
+        // "openhuman" here silently retagged Neppy's own 402 as a third-party
+        // provider's once the label changed.
         let source: &'static str = match provider.as_deref() {
-            Some("openhuman") | None => "neppy_billing",
+            None => "neppy_billing",
+            Some(p)
+                if p.eq_ignore_ascii_case(
+                    crate::neppy::inference::provider::neppy_backend_model::PROVIDER_LABEL,
+                ) =>
+            {
+                "neppy_billing"
+            }
             Some(_) => "provider",
         };
         ClassifiedError {

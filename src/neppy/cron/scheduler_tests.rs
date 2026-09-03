@@ -601,14 +601,13 @@ async fn execute_job_with_retry_exhausts_attempts() {
 // TAURI-RUST-N — backend 401 ("Invalid token") leaks from a cron-fired agent
 // job through `last_agent_error` and the existing classifier in
 // `core::observability::is_session_expired_message` matches it (the
-// `OpenHuman API error (401` + `"error":"Invalid token"` conjunction was added
+// `Neppy API error (401` + `"error":"Invalid token"` conjunction was added
 // for OPENHUMAN-TAURI-4P0). `is_session_expired_failure` MUST consult that
 // classifier so the cron retry loop halts on the first occurrence instead of
 // retrying N times and reporting `failure=retries_exhausted` to Sentry.
 #[test]
 fn is_session_expired_failure_matches_neppy_backend_401_in_agent_error() {
-    let wire =
-        r#"OpenHuman API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
+    let wire = r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
     assert!(
         is_session_expired_failure(&JobType::Agent, Some(wire), AGENT_JOB_USER_FAILURE_MESSAGE),
         "raw agent error carrying the 401 wire shape must trip the halt"
@@ -622,8 +621,7 @@ fn is_session_expired_failure_matches_neppy_backend_401_in_agent_error() {
 // `None` is what guards against that silent-miss case.
 #[test]
 fn is_session_expired_failure_matches_when_only_output_carries_signal() {
-    let wire =
-        r#"OpenHuman API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
+    let wire = r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
     assert!(is_session_expired_failure(&JobType::Agent, None, wire));
 }
 
@@ -648,8 +646,7 @@ fn is_session_expired_failure_does_not_match_canned_user_message() {
 // `failure=retries_exhausted` capture exist for.
 #[test]
 fn is_session_expired_failure_does_not_match_ordinary_provider_error() {
-    let wire =
-        r#"OpenHuman API error (500 Internal Server Error): {"error":"Internal server error"}"#;
+    let wire = r#"Neppy API error (500 Internal Server Error): {"error":"Internal server error"}"#;
     assert!(!is_session_expired_failure(&JobType::Agent, Some(wire), ""));
 
     let byo_key = r#"OpenAI API error (401 Unauthorized): {"error":{"message":"Invalid API key","type":"invalid_request_error"}}"#;
@@ -667,8 +664,7 @@ fn is_session_expired_failure_does_not_match_ordinary_provider_error() {
 // retries, and the gate has no reason to be flipped from a shell exit.
 #[test]
 fn is_session_expired_failure_does_not_halt_shell_jobs() {
-    let wire =
-        r#"OpenHuman API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
+    let wire = r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Invalid token"}"#;
     assert!(
         !is_session_expired_failure(&JobType::Shell, None, wire),
         "shell jobs must retain retry semantics regardless of stdout content"
@@ -717,7 +713,7 @@ fn is_insufficient_credits_failure_does_not_match_non_credit_errors() {
         AGENT_JOB_USER_FAILURE_MESSAGE,
     ));
     let server_err =
-        r#"OpenHuman API error (500 Internal Server Error): {"error":"Internal server error"}"#;
+        r#"Neppy API error (500 Internal Server Error): {"error":"Internal server error"}"#;
     assert!(!is_insufficient_credits_failure(
         &JobType::Agent,
         Some(server_err),
@@ -756,7 +752,7 @@ fn is_insufficient_credits_failure_does_not_halt_shell_jobs() {
 // `before_send` filter never matched this cron re-report.
 #[test]
 fn is_budget_exhausted_failure_matches_verbatim_400_in_agent_error() {
-    let wire = r#"OpenHuman API error (400 Bad Request): {"success":false,"error":"Insufficient budget","errorCode":"USER_INSUFFICIENT_CREDITS"}"#;
+    let wire = r#"Neppy API error (400 Bad Request): {"success":false,"error":"Insufficient budget","errorCode":"USER_INSUFFICIENT_CREDITS"}"#;
     assert!(
         is_budget_exhausted_failure(&JobType::Agent, Some(wire), AGENT_JOB_USER_FAILURE_MESSAGE),
         "raw agent error carrying the 400 budget body must trip the halt"
@@ -767,7 +763,7 @@ fn is_budget_exhausted_failure_matches_verbatim_400_in_agent_error() {
 // `last_output` rather than `last_agent_error`.
 #[test]
 fn is_budget_exhausted_failure_matches_when_only_output_carries_signal() {
-    let wire = r#"OpenHuman API error (400 Bad Request): budget exceeded — add credits"#;
+    let wire = r#"Neppy API error (400 Bad Request): budget exceeded — add credits"#;
     assert!(is_budget_exhausted_failure(&JobType::Agent, None, wire));
 }
 
@@ -782,7 +778,7 @@ fn is_budget_exhausted_failure_does_not_match_non_budget_errors() {
         AGENT_JOB_USER_FAILURE_MESSAGE,
     ));
     let server_err =
-        r#"OpenHuman API error (500 Internal Server Error): {"error":"Internal server error"}"#;
+        r#"Neppy API error (500 Internal Server Error): {"error":"Internal server error"}"#;
     assert!(!is_budget_exhausted_failure(
         &JobType::Agent,
         Some(server_err),
@@ -794,7 +790,7 @@ fn is_budget_exhausted_failure_does_not_match_non_budget_errors() {
 // semantics — only agent jobs route through the inference layer.
 #[test]
 fn is_budget_exhausted_failure_does_not_halt_shell_jobs() {
-    let wire = r#"OpenHuman API error (400 Bad Request): {"error":"Insufficient budget"}"#;
+    let wire = r#"Neppy API error (400 Bad Request): {"error":"Insufficient budget"}"#;
     assert!(!is_budget_exhausted_failure(&JobType::Shell, None, wire));
     assert!(!is_budget_exhausted_failure(
         &JobType::Shell,
@@ -841,7 +837,7 @@ fn is_api_key_unset_failure_does_not_match_canned_rejected_or_ordinary_errors() 
         AGENT_JOB_USER_FAILURE_MESSAGE,
     ));
     let server_err =
-        r#"OpenHuman API error (500 Internal Server Error): {"error":"Internal server error"}"#;
+        r#"Neppy API error (500 Internal Server Error): {"error":"Internal server error"}"#;
     assert!(!is_api_key_unset_failure(
         &JobType::Agent,
         Some(server_err),
