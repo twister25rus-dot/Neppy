@@ -9,7 +9,7 @@ framework, test, desktop, or tooling entry points that are loaded indirectly.
 ## Scope
 
 This cleanup is limited to the `openhuman` repository and the
-`openhuman-app` workspace under `app/`. Rust code, vendored repositories,
+`neppy-app` workspace under `app/`. Rust code, vendored repositories,
 generated assets, other umbrella submodules, and unrelated refactors are out of
 scope.
 

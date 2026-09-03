@@ -11,7 +11,7 @@
 # Usage:
 #   # Build the E2E app once (slow — produces the CEF bundle):
 #   docker compose -f e2e/docker-compose.yml run --rm e2e \
-#     bash -lc "pnpm install --frozen-lockfile && pnpm --filter openhuman-app test:e2e:build"
+#     bash -lc "pnpm install --frozen-lockfile && pnpm --filter neppy-app test:e2e:build"
 #
 #   # Then run a spec (smoke / mega-flow / etc):
 #   docker compose -f e2e/docker-compose.yml run --rm e2e \

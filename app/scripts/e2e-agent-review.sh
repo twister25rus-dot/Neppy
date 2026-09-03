@@ -36,7 +36,7 @@ cd "$REPO_ROOT"
 
 if [ "$SKIP_BUILD" -eq 0 ]; then
   echo "[agent-review] building E2E app with in-process core"
-  pnpm --filter openhuman-app test:e2e:build
+  pnpm --filter neppy-app test:e2e:build
 else
   echo "[agent-review] --skip-build set; reusing existing build"
 fi

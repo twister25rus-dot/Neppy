@@ -734,7 +734,7 @@ validate_final_appimage() (
         "$appdir" \
         "$foreign_cwd" \
         "$smoke_log" \
-        "$temp_root/openhuman-appimage-smoke.profile" \
+        "$temp_root/neppy-appimage-smoke.profile" \
         || return 1
     else
       smoke_extracted_apprun "$appdir" "$foreign_cwd" "$smoke_log" || return 1

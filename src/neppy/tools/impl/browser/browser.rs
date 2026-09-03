@@ -213,7 +213,7 @@ impl BrowserTool {
                     Ok(ResolvedBackend::Playwright)
                 } else {
                     anyhow::bail!(
-                        "browser.backend='playwright' but Playwright is unavailable. Ensure app/node_modules is installed, run `pnpm --filter openhuman-app exec playwright install chromium-headless-shell`, or set OPENHUMAN_PLAYWRIGHT_CWD."
+                        "browser.backend='playwright' but Playwright is unavailable. Ensure app/node_modules is installed, run `pnpm --filter neppy-app exec playwright install chromium-headless-shell`, or set OPENHUMAN_PLAYWRIGHT_CWD."
                     )
                 }
             }

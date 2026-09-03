@@ -39,7 +39,7 @@ Required reading before editing:
   - AGENTS.md and CLAUDE.md
 
 Pre-PR validation (run all, report any blocker exactly in the PR body):
-  - pnpm --filter openhuman-app format:check
+  - pnpm --filter neppy-app format:check
   - pnpm typecheck
   - pnpm lint
   - focused vitest for changed TS/React files

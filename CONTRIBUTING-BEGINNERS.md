@@ -311,7 +311,7 @@ The defaults work for web-only development. You don't need to change anything to
 pnpm dev
 
 # Full desktop app (needs Rust + Tauri built first)
-pnpm --filter openhuman-app dev:app
+pnpm --filter neppy-app dev:app
 ```
 
 For your first contribution, `pnpm dev` is all you need.
@@ -467,7 +467,7 @@ brew install node@24
 
 These may be pre-existing issues on `main` unrelated to your change. Note them in your PR description and proceed.
 
-### Desktop build fails (`pnpm --filter openhuman-app dev:app`)
+### Desktop build fails (`pnpm --filter neppy-app dev:app`)
 
 The desktop build requires the full Rust toolchain and vendored Tauri setup. For your first contributions, stick to `pnpm dev` (web mode) and skip the desktop build entirely.
 

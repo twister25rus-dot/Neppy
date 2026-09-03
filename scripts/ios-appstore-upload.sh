@@ -46,7 +46,7 @@ if [[ "$UPLOAD" == "1" ]]; then
   [[ -f "$ASC_KEY_PATH" ]] || die "App Store Connect key not found: $ASC_KEY_PATH"
 fi
 
-PROFILE_PLIST="$(mktemp -t openhuman-appstore-profile.XXXXXX.plist)"
+PROFILE_PLIST="$(mktemp -t neppy-appstore-profile.XXXXXX.plist)"
 security cms -D -i "$PROFILE_PATH" > "$PROFILE_PLIST"
 PROFILE_UUID="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$PROFILE_PLIST")"
 PROFILE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :Name' "$PROFILE_PLIST")"
@@ -65,7 +65,7 @@ echo "[ios-appstore] installed signing identities:"
 security find-identity -v -p codesigning | sed 's/^/[ios-appstore]   /'
 
 echo "[ios-appstore] building web assets"
-bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app run build:app
+bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app run build:app
 
 echo "[ios-appstore] generating iOS Xcode project"
 TEAM_ID="$TEAM_ID" APPLE_DEVELOPMENT_TEAM="$TEAM_ID" bash scripts/ios-init.sh

@@ -201,7 +201,7 @@ Here is the split.
 - README, INSTALL, docs, gitbooks
 - `app/src-tauri/tauri.conf.json`: product name, window title, bundle identifier
 - Crate and package names: `openhuman` → `neppy`, bin `neppy-core` →
-  `neppy-core`, `neppy-fleet` → `neppy-fleet`, `openhuman-app`, `openhuman-repo`
+  `neppy-core`, `neppy-fleet` → `neppy-fleet`, `neppy-app`, `neppy-repo`
 - The directory `src/neppy/` → `src/neppy/`, and every `crate::neppy::`
   and `neppy_core::` path with it
 - Env vars `OPENHUMAN_*` → `NEPPY_*`, everywhere at once: `.env.example`,

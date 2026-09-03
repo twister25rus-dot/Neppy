@@ -7,7 +7,7 @@ icon: browsers
 
 # Frontend (app/src/)
 
-The Neppy desktop UI: a Vite + React 19 tree under `app/src/` (pnpm workspace `openhuman-app`). It uses Redux Toolkit with persistence for session state, talks to the in-process Rust core over JSON-RPC (`coreRpcClient` → local HTTP, with the Tauri `relay_http_rpc` command as a fallback relay) and socket.io (`socketService`), and reaches the cloud backend via REST (`apiClient`). Heavy logic lives in the core, not here.
+The Neppy desktop UI: a Vite + React 19 tree under `app/src/` (pnpm workspace `neppy-app`). It uses Redux Toolkit with persistence for session state, talks to the in-process Rust core over JSON-RPC (`coreRpcClient` → local HTTP, with the Tauri `relay_http_rpc` command as a fallback relay) and socket.io (`socketService`), and reaches the cloud backend via REST (`apiClient`). Heavy logic lives in the core, not here.
 
 This is one consolidated reference. Use the table of contents above (or your reader's outline) to jump between sections.
 

@@ -46,7 +46,7 @@ function script(path, body) {
 
 /** Build the AppDir that tauri-bundler 2.9.4 + linuxdeploy actually produce. */
 function makeLinuxdeployAppDir() {
-  const root = fs.mkdtempSync(join(os.tmpdir(), "openhuman-appdir-ld-"));
+  const root = fs.mkdtempSync(join(os.tmpdir(), "neppy-appdir-ld-"));
   const app = join(root, "Neppy.AppDir");
   for (const d of [
     "usr/bin",
@@ -110,7 +110,7 @@ function makeLinuxdeployAppDir() {
 
 /** Build the pre-Wry sharun AppDir, which must still validate. */
 function makeSharunAppDir() {
-  const root = fs.mkdtempSync(join(os.tmpdir(), "openhuman-appdir-sharun-"));
+  const root = fs.mkdtempSync(join(os.tmpdir(), "neppy-appdir-sharun-"));
   const app = join(root, "Neppy.AppDir");
   for (const d of ["shared/bin", "shared/lib", "bin"]) {
     fs.mkdirSync(join(app, d), { recursive: true });
@@ -183,7 +183,7 @@ test(
   "an unrecognised layout is reported as unknown, not silently accepted",
   SKIP,
   () => {
-    const root = fs.mkdtempSync(join(os.tmpdir(), "openhuman-appdir-unk-"));
+    const root = fs.mkdtempSync(join(os.tmpdir(), "neppy-appdir-unk-"));
     try {
       fs.mkdirSync(join(root, "Neppy.AppDir/random"), { recursive: true });
       fs.writeFileSync(join(root, "Neppy.AppDir/random/thing"), "");
@@ -203,7 +203,7 @@ test(
   SKIP,
   () => {
     const { root, app } = makeLinuxdeployAppDir();
-    const binDir = fs.mkdtempSync(join(os.tmpdir(), "openhuman-appdir-stub-"));
+    const binDir = fs.mkdtempSync(join(os.tmpdir(), "neppy-appdir-stub-"));
     try {
       // Stub the privileged tools so the test exercises target resolution only.
       for (const name of ["sudo", "apparmor_parser"]) {

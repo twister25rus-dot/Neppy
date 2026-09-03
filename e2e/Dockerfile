@@ -43,4 +43,4 @@ RUN cargo install tauri-driver --version 2.0.5
 WORKDIR /app
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["yarn", "workspace", "openhuman-app", "test:e2e:all"]
+CMD ["yarn", "workspace", "neppy-app", "test:e2e:all"]

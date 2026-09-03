@@ -63,7 +63,7 @@ Apply these rules to every task below:
 6. Run Prettier only on the explicitly touched files:
 
    ```bash
-   pnpm --filter openhuman-app exec prettier --check <explicit paths>
+   pnpm --filter neppy-app exec prettier --check <explicit paths>
    ```
 
 7. Review `git diff --check` and `git diff -- <explicit paths>`.
@@ -113,7 +113,7 @@ Run:
 ```bash
 source "$HOME/.nvm/nvm.sh"
 nvm use 24
-pnpm --filter openhuman-app exec knip --config knip.json --reporter compact
+pnpm --filter neppy-app exec knip --config knip.json --reporter compact
 ```
 
 Expected: non-zero with `test/wdio.conf.ts` incorrectly reported as unused,
@@ -188,10 +188,10 @@ upgrade unrelated packages.
 **Step 5: Run the green checks**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --reporter compact
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app exec tsc -p test/tsconfig.e2e.json --noEmit
-pnpm --filter openhuman-app exec prettier --check knip.json package.json
+pnpm --filter neppy-app exec knip --config knip.json --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app exec tsc -p test/tsconfig.e2e.json --noEmit
+pnpm --filter neppy-app exec prettier --check knip.json package.json
 git diff --check
 ```
 
@@ -255,7 +255,7 @@ every changed path explicitly.
 **Step 1: Red-check the file set**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include files --reporter compact
+pnpm --filter neppy-app exec knip --config knip.json --include files --reporter compact
 ```
 
 Expected: only files that survived Task 1 remain in the candidate set above.
@@ -295,10 +295,10 @@ similar.
 **Step 4: Green-check the slice**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include files --reporter compact
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
+pnpm --filter neppy-app exec knip --config knip.json --include files --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
 git diff --check
 ```
 
@@ -329,7 +329,7 @@ path list.
 **Step 1: Red-check dependency findings**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include dependencies,unlisted --reporter compact
+pnpm --filter neppy-app exec knip --config knip.json --include dependencies,unlisted --reporter compact
 rg -n "from ['\"](lottie-react|react-ga4)['\"]|import\\(['\"](lottie-react|react-ga4)['\"]\\)" \
   app/src app/test app/vite.config.ts app/scripts
 ```
@@ -347,10 +347,10 @@ to these two removals and the direct WDIO declarations from Task 1.
 **Step 3: Green-check dependencies**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include dependencies,unlisted --reporter compact
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app exec prettier --check package.json
+pnpm --filter neppy-app exec knip --config knip.json --include dependencies,unlisted --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app exec prettier --check package.json
 git diff --check
 ```
 
@@ -388,7 +388,7 @@ across:
 **Step 1: Red-check duplicates**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include duplicates --reporter compact
+pnpm --filter neppy-app exec knip --config knip.json --include duplicates --reporter compact
 ```
 
 **Step 2: Choose one canonical export per symbol**
@@ -414,10 +414,10 @@ path list becomes too large:
 Each commit must independently pass:
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include duplicates --reporter compact
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
+pnpm --filter neppy-app exec knip --config knip.json --include duplicates --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
 git diff --check
 ```
 
@@ -443,7 +443,7 @@ Expected at task completion: zero unexplained duplicate-export findings.
 **Step 1: Red-check the subsystem**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include exports,types --reporter compact \
+pnpm --filter neppy-app exec knip --config knip.json --include exports,types --reporter compact \
   | rg 'src/(agentworld|features/human/Mascot|features/meet/)'
 ```
 
@@ -462,11 +462,11 @@ manifest discovery, or Tauri resource paths.
 **Step 3: Green-check and commit**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --include exports,types --reporter compact \
+pnpm --filter neppy-app exec knip --config knip.json --include exports,types --reporter compact \
   | rg 'src/(agentworld|features/human/Mascot|features/meet/)' && exit 1 || true
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
 git diff --check
 atomic-commit "refactor(app): internalize agent world and mascot APIs" -- <explicit paths>
 ```
@@ -510,10 +510,10 @@ also show it is private and unused.
 Run the specific test files that import any changed module, followed by:
 
 ```bash
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
-pnpm --filter openhuman-app exec knip --config knip.json --include exports,types --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
+pnpm --filter neppy-app exec knip --config knip.json --include exports,types --reporter compact
 git diff --check
 ```
 
@@ -574,10 +574,10 @@ Use two commits if necessary:
 For each slice:
 
 ```bash
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
-pnpm --filter openhuman-app exec knip --config knip.json --include exports,types --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
+pnpm --filter neppy-app exec knip --config knip.json --include exports,types --reporter compact
 git diff --check
 atomic-commit "refactor(app): trim unused <subsystem> exports" -- <explicit paths>
 ```
@@ -630,10 +630,10 @@ Explicitly verify:
 For every slice:
 
 ```bash
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
-pnpm --filter openhuman-app exec knip --config knip.json --include exports,types --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
+pnpm --filter neppy-app exec knip --config knip.json --include exports,types --reporter compact
 git diff --check
 atomic-commit "refactor(app): trim unused <subsystem> exports" -- <explicit paths>
 ```
@@ -654,7 +654,7 @@ Do not batch the three slices into one commit.
 **Step 1: Red-check**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json \
+pnpm --filter neppy-app exec knip --config knip.json \
   --include exports,types,enumMembers --reporter compact
 ```
 
@@ -673,11 +673,11 @@ removing them does not alter serialized behavior.
 **Step 3: Green-check**
 
 ```bash
-pnpm --filter openhuman-app exec tsc -p test/tsconfig.e2e.json --noEmit
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
-pnpm --filter openhuman-app exec knip --config knip.json \
+pnpm --filter neppy-app exec tsc -p test/tsconfig.e2e.json --noEmit
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
+pnpm --filter neppy-app exec knip --config knip.json \
   --include exports,types,enumMembers --reporter compact
 git diff --check
 ```
@@ -700,8 +700,8 @@ atomic-commit "refactor(app): trim unused test helper exports" -- <explicit path
 **Step 1: Run the complete report**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --reporter compact
-pnpm --filter openhuman-app exec knip --config knip.json --production --reporter compact
+pnpm --filter neppy-app exec knip --config knip.json --reporter compact
+pnpm --filter neppy-app exec knip --config knip.json --production --reporter compact
 ```
 
 **Step 2: Adversarially verify every residual**
@@ -720,11 +720,11 @@ export suppression.
 **Step 3: Green-check and commit exceptions separately**
 
 ```bash
-pnpm --filter openhuman-app exec knip --config knip.json --reporter compact
-pnpm --filter openhuman-app exec knip --config knip.json --production --reporter compact
-pnpm --filter openhuman-app compile
-pnpm --filter openhuman-app test -- --run
-pnpm --filter openhuman-app lint
+pnpm --filter neppy-app exec knip --config knip.json --reporter compact
+pnpm --filter neppy-app exec knip --config knip.json --production --reporter compact
+pnpm --filter neppy-app compile
+pnpm --filter neppy-app test -- --run
+pnpm --filter neppy-app lint
 git diff --check
 atomic-commit "chore(app): document intentional knip exceptions" -- app/knip.json <explicit affected paths>
 ```

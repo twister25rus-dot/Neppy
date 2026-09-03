@@ -562,8 +562,8 @@ fi
 
 APPARMOR_BIN="$WORK/apparmor-bin"
 APPARMOR_RECORD="$WORK/apparmor-command-record"
-APPARMOR_PROFILE="$WORK/openhuman-appimage-smoke.profile"
-APPARMOR_PROFILE_SNAPSHOT="$WORK/openhuman-appimage-smoke.profile.loaded"
+APPARMOR_PROFILE="$WORK/neppy-appimage-smoke.profile"
+APPARMOR_PROFILE_SNAPSHOT="$WORK/neppy-appimage-smoke.profile.loaded"
 mkdir -p "$APPARMOR_BIN"
 printf '%s\n' '#!/usr/bin/env bash' 'exit 0' \
   >"$APPARMOR_BIN/apparmor_parser"

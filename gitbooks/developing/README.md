@@ -15,7 +15,7 @@ If you just want to use the app, head to [Getting Started](../overview/getting-s
 
 | Path        | What's there                                                                                                      |
 | ----------- | ----------------------------------------------------------------------------------------------------------------- |
-| `app/`      | pnpm workspace `openhuman-app`. Vite + React frontend (`app/src/`) and the Tauri desktop host (`app/src-tauri/`). |
+| `app/`      | pnpm workspace `neppy-app`. Vite + React frontend (`app/src/`) and the Tauri desktop host (`app/src-tauri/`). |
 | `src/`      | Rust crate `neppy_core` and the `neppy-core` CLI binary. Domains, JSON-RPC, MCP routing.                  |
 | `gitbooks/` | This site (the public-facing docs).                                                                               |
 | `docs/`     | Older deep references not yet migrated to GitBook (memory pipeline diagrams, agent flows, etc.).                  |

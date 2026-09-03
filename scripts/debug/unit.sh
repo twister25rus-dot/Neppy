@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # unit.sh [pattern] [-t "<name>"] [--watch] [--verbose] [-- <vitest-args>…]
-# Wraps `pnpm --filter openhuman-app test:unit`.
+# Wraps `pnpm --filter neppy-app test:unit`.
 
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

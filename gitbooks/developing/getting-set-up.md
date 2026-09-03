@@ -71,7 +71,7 @@ For local development instead of production build:
 pnpm dev
 
 # Desktop app development with the vendored Tauri/CEF CLI: run from the workspace root
-pnpm --filter openhuman-app dev:app
+pnpm --filter neppy-app dev:app
 ```
 
 ## Install latest stable release (macOS/Linux x64)

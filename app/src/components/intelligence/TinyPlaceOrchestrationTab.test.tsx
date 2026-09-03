@@ -175,7 +175,7 @@ describe('TinyPlaceOrchestrationTab', () => {
         {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
-          source: 'openhuman-app',
+          source: 'neppy-app',
           label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',
@@ -231,7 +231,7 @@ describe('TinyPlaceOrchestrationTab', () => {
         {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
-          source: 'openhuman-app',
+          source: 'neppy-app',
           label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',
@@ -285,7 +285,7 @@ describe('TinyPlaceOrchestrationTab', () => {
         {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
-          source: 'openhuman-app',
+          source: 'neppy-app',
           label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',
@@ -530,7 +530,7 @@ describe('TinyPlaceOrchestrationTab', () => {
         {
           sessionId: 'app-session-1',
           agentId: '@worker-alpha',
-          source: 'openhuman-app',
+          source: 'neppy-app',
           label: 'Neppy app session',
           chatKind: 'session',
           lastMessageAt: '2026-07-01T12:02:00.000Z',

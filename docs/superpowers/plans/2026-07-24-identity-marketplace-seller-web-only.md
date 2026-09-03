@@ -68,7 +68,7 @@ describe('Trading tab — seller web-only note', () => {
 
 - [ ] **Step 3: Run the test to verify it fails**
 
-Run: `pnpm --filter openhuman-app test -- IdentitiesSection --run -t "seller web-only"`
+Run: `pnpm --filter neppy-app test -- IdentitiesSection --run -t "seller web-only"`
 Expected: FAIL — `Unable to find an element by: [data-testid="sell-on-web"]`.
 
 - [ ] **Step 4: Add the `openUrl` import + web-URL constant to the component**
@@ -129,14 +129,14 @@ In the header docstring, extend the `Write flows are live x402:` list (ends with
 
 - [ ] **Step 7: Run the tests to verify they pass**
 
-Run: `pnpm --filter openhuman-app test -- IdentitiesSection --run`
+Run: `pnpm --filter neppy-app test -- IdentitiesSection --run`
 Expected: PASS — the new `seller web-only` tests pass and the pre-existing IdentitiesSection tests still pass.
 
 **E2E scope (approved exception):** no desktop WDIO E2E is added for this change. The affordance is a static info note whose CTA hands off to the OS browser via `openUrl` — there is no cross-process behavior an E2E could assert beyond the unit tests above. This is a documented exception to the standard unit-and-E2E expectation; the exception is also recorded in the design spec's Testing section and in a comment on the test's `describe` block.
 
 - [ ] **Step 8: Typecheck, lint, and format**
 
-Run: `pnpm typecheck && pnpm --filter openhuman-app lint -- --fix app/src/agentworld/pages/IdentitiesSection.tsx app/src/agentworld/pages/IdentitiesSection.test.tsx && pnpm --filter openhuman-app exec prettier --write app/src/agentworld/pages/IdentitiesSection.tsx app/src/agentworld/pages/IdentitiesSection.test.tsx`
+Run: `pnpm typecheck && pnpm --filter neppy-app lint -- --fix app/src/agentworld/pages/IdentitiesSection.tsx app/src/agentworld/pages/IdentitiesSection.test.tsx && pnpm --filter neppy-app exec prettier --write app/src/agentworld/pages/IdentitiesSection.tsx app/src/agentworld/pages/IdentitiesSection.test.tsx`
 Expected: no type errors, no lint errors, files formatted (import order may be auto-fixed).
 
 - [ ] **Step 9: Commit**

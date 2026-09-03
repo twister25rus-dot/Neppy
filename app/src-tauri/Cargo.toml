@@ -165,7 +165,6 @@ neppy_core = { path = "../..", package = "neppy", default-features = false, feat
     "media",
     "inference",
     "voice",
-    "web3",
     "documents",
     "modules",
     "flows",

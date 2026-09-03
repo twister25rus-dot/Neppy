@@ -87,7 +87,7 @@ function summarize(checks) {
 function recommendations(changedFiles, lightweight) {
   const lines = [];
   if (hasPattern(changedFiles, APP_PATTERNS)) {
-    lines.push('pnpm --filter openhuman-app format:check');
+    lines.push('pnpm --filter neppy-app format:check');
     lines.push('pnpm typecheck');
     lines.push('pnpm --dir app exec vitest run <changed-test-files> --config test/vitest.config.ts');
   }

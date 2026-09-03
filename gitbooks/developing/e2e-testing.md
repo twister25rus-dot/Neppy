@@ -28,10 +28,10 @@ npm install -g appium@3
 appium driver install --source=npm appium-chromium-driver
 
 # Build the E2E app
-pnpm --filter openhuman-app test:e2e:build
+pnpm --filter neppy-app test:e2e:build
 
 # Run all flows
-pnpm --filter openhuman-app test:e2e:all:flows
+pnpm --filter neppy-app test:e2e:all:flows
 
 # Run a single spec
 bash app/scripts/e2e-run-spec.sh test/e2e/specs/smoke.spec.ts smoke
@@ -47,10 +47,10 @@ npm install -g appium@3
 appium driver install --source=npm appium-chromium-driver
 
 # Build the .app bundle
-pnpm --filter openhuman-app test:e2e:build
+pnpm --filter neppy-app test:e2e:build
 
 # Run all flows
-pnpm --filter openhuman-app test:e2e:all:flows
+pnpm --filter neppy-app test:e2e:all:flows
 ```
 
 ### Docker on macOS (Linux harness locally)
@@ -63,7 +63,7 @@ docker compose -f e2e/docker-compose.yml run --rm e2e
 
 # Build the app first (if needed)
 docker compose -f e2e/docker-compose.yml run --rm e2e \
-  pnpm --filter openhuman-app test:e2e:build
+  pnpm --filter neppy-app test:e2e:build
 
 # Run a single spec
 docker compose -f e2e/docker-compose.yml run --rm e2e \

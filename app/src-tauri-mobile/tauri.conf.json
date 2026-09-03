@@ -4,9 +4,9 @@
   "version": "0.58.16",
   "identifier": "com.tinyhumansai.neppy",
   "build": {
-    "beforeDevCommand": "pnpm --filter openhuman-app run dev",
+    "beforeDevCommand": "pnpm --filter neppy-app run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm --filter openhuman-app run build:app",
+    "beforeBuildCommand": "pnpm --filter neppy-app run build:app",
     "frontendDist": "../dist"
   },
   "app": {

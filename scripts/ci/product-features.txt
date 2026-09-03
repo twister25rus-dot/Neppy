@@ -39,8 +39,10 @@ inference
 # v0.61.x (#4901) — the reason this whole guard exists.
 voice
 
-# Wallet / web3 / x402 domains and their agent tools.
-web3
+# web3 (wallet / x402) is DROPPED in Neppy: a personal local-first build has no
+# use for the crypto surface, and it is the largest dependency shed available
+# (bitcoin, ethers-core/signers, coins-bip39). Re-add here AND in the shell's
+# forwarding list to restore it — the gate asserts set equality both ways.
 
 # Document ingestion and conversion. The synthesis itself is NOT in the binary:
 # `.docx` / `.pptx` generation and PDF extraction run in the loaded `tinydocs`
@@ -65,7 +67,12 @@ skills
 # The MCP stdio/HTTP server, dynamic Smithery installs, and the write-audit log.
 mcp
 
-# Sentry. Without it a crash in the packaged app is invisible to us.
+# Sentry. KEPT even though Neppy has no hosted Sentry: the desktop shell calls
+# 12 `#[cfg(feature = "crash-reporting")]` event FILTERS in
+# core::observability (is_session_expired_event, is_budget_event, ...) to drop
+# sensitive/noisy events, so dropping the gate fails the shell build with 13
+# errors. It is inert in practice - sentry_dsn defaults to None and telemetry
+# is off by default (NEPPY-BUILD-SPEC.md 2.6), so nothing is ever sent.
 crash-reporting
 
 # The /rpc JSON-RPC endpoint and the Socket.IO bridge. The shell reaches the

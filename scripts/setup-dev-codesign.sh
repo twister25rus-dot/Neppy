@@ -94,7 +94,7 @@ security import "$P12" \
 # the key's trusted-applications ACL, but macOS additionally requires the
 # *partition list* to be committed via `set-key-partition-list` before that
 # access actually takes effect. Without this step, the first `codesign`
-# invocation during `pnpm --filter openhuman-app dev:app` aborts with
+# invocation during `pnpm --filter neppy-app dev:app` aborts with
 # `errSecInternalComponent` (or pops a Keychain password dialog for every
 # helper bundle, mid-build).
 #

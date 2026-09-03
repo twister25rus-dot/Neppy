@@ -18,7 +18,7 @@
 #                      Default: app/test/e2e/artifacts/YYYYMMDD-HHMMSS
 #
 # REQUIREMENTS:
-#   pnpm --filter openhuman-app test:e2e:build   (must be run first)
+#   pnpm --filter neppy-app test:e2e:build   (must be run first)
 #
 # Each spec runs to completion regardless of prior failures unless --bail is
 # passed. A per-category mini-summary and a full summary are printed at the

@@ -28,7 +28,7 @@ log() { echo "[ci][vitest-changed] $*"; }
 
 run_full() {
   log "running FULL Vitest coverage suite (reason: $1)"
-  exec bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:coverage
+  exec bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:coverage
 }
 
 if [ "${FULL}" = "true" ]; then

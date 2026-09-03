@@ -531,12 +531,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
-name = "bech32"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efbd3e1070bbdf4cd88a75264e18e8a26f7cb5c6949eadf0ceb85fb159cf08f8"
-
-[[package]]
 name = "bindgen"
 version = "0.72.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3279,16 +3273,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "keccak"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8f198d1db720e4940b5a493201d199d9f24f568f8f746bd13706243a2f71598"
-dependencies = [
- "cfg-if",
- "cpufeatures 0.3.0",
-]
-
-[[package]]
 name = "keyboard-types"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3778,7 +3762,6 @@ dependencies = [
  "chrono-tz",
  "cpal",
  "cron",
- "curve25519-dalek",
  "directories 6.0.0",
  "dirs 5.0.1",
  "dotenvy",
@@ -3841,7 +3824,6 @@ dependencies = [
  "tinyplace",
  "tinyruntime-bus",
  "tinyvoice-bus",
- "tinywallet-bus",
  "tokio",
  "tokio-stream",
  "tokio-tungstenite 0.29.0",
@@ -5400,15 +5382,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ripemd"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dd4211456b4172d7e44261920c25acf07367c4f04bb5f5d54fc21b090d9b159"
-dependencies = [
- "digest 0.11.3",
-]
-
-[[package]]
 name = "rsqlite-vfs"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6073,17 +6046,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha3"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc9bad02c26382724b2d2692c6f179285e4b54eeecd7968f52a50059c3c11759"
-dependencies = [
- "digest 0.11.3",
- "keccak",
- "sponge-cursor",
-]
-
-[[package]]
 name = "sharded-slab"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6280,12 +6242,6 @@ dependencies = [
  "base64ct",
  "der",
 ]
-
-[[package]]
-name = "sponge-cursor"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a0219bd7d979d58245a4f41f695e1ac9f8befdffadd7f61f1bae9e39abc6620"
 
 [[package]]
 name = "sqlite-wasm-rs"
@@ -7465,22 +7421,6 @@ name = "tinyvoice-bus"
 version = "0.1.2"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "tinywallet-bus"
-version = "0.5.0"
-dependencies = [
- "async-trait",
- "bech32",
- "bs58",
- "hex",
- "ripemd",
- "serde",
- "serde_json",
- "sha2 0.11.0",
- "sha3",
- "thiserror 2.0.20",
 ]
 
 [[package]]

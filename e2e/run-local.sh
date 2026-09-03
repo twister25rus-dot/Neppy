@@ -27,7 +27,7 @@ RUN=("${COMPOSE[@]}" run --rm e2e)
 ensure_built() {
   if [ ! -d "$REPO_ROOT/app/src-tauri/target/debug/bundle" ]; then
     echo "[run-local] CEF bundle not built yet — building (slow first run)..."
-    "${RUN[@]}" bash -lc "pnpm --filter openhuman-app test:e2e:build"
+    "${RUN[@]}" bash -lc "pnpm --filter neppy-app test:e2e:build"
   fi
 }
 
@@ -48,7 +48,7 @@ case "${1:-smoke}" in
     "${RUN[@]}" bash -l
     ;;
   build)
-    "${RUN[@]}" bash -lc "pnpm --filter openhuman-app test:e2e:build"
+    "${RUN[@]}" bash -lc "pnpm --filter neppy-app test:e2e:build"
     ;;
   all)
     ensure_built

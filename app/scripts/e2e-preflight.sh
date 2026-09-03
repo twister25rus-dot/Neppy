@@ -97,7 +97,7 @@ else
       fail "  Expected: $WIN_BIN"
       ;;
   esac
-  fail "  Run: pnpm --filter openhuman-app test:e2e:build"
+  fail "  Run: pnpm --filter neppy-app test:e2e:build"
 fi
 
 echo ""

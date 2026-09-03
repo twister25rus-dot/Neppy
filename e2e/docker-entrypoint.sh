@@ -43,5 +43,5 @@ export RUST_BACKTRACE=1
 echo "Xvfb started on $DISPLAY (pid $XVFB_PID)"
 echo "D-Bus session: $DBUS_SESSION_BUS_ADDRESS"
 
-# Run the provided command (default: yarn workspace openhuman-app test:e2e:all)
+# Run the provided command (default: yarn workspace neppy-app test:e2e:all)
 exec "$@"

@@ -40,7 +40,7 @@ post-media field. Scope recorded in two doc comments.
 
 ## Verification
 
-- `pnpm --filter openhuman-app test` — FeedSection green (incl. 2 new cases).
+- `pnpm --filter neppy-app test` — FeedSection green (incl. 2 new cases).
 - `tsc --noEmit` clean; `eslint` no new errors; `prettier --check` clean.
 - `cargo fmt --check` clean (doc-comment-only Rust change).
 - `git diff vendor/tinyplace` empty — submodule pointer untouched (mergeable).
