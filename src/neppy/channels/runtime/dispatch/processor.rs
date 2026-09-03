@@ -712,7 +712,7 @@ pub(crate) async fn process_channel_runtime_message(
             } else {
                 // Route through `report_error_or_expected` so
                 // transient-upstream provider HTTP errors that bubbled
-                // up via `agent.run_single` (`Neppy API error
+                // up via `agent.run_single` (`OpenHuman API error
                 // (502 Bad Gateway): …`) get demoted via
                 // `is_transient_upstream_http_message` — the agent
                 // re-emit at the dispatch layer was previously

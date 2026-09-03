@@ -330,7 +330,7 @@ pub async fn execute_job_now(config: &Config, job: &CronJob) -> (bool, String) {
 /// the existing classifier
 /// [`crate::core::observability::is_session_expired_message`] already
 /// considers this expected user state (`observability.rs` — anchored on
-/// `Neppy API error (401` + `"error":"Invalid token"`).
+/// `OpenHuman API error (401` + `"error":"Invalid token"`).
 ///
 /// We match on `last_agent_error` first because cron's `run_agent_job`
 /// routes the raw anyhow chain there (containing the provider's wire

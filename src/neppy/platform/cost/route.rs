@@ -115,7 +115,7 @@ mod tests {
             "openhuman/chat-v1",
             "hint:openhuman/chat-v1",
             "openhuman/hint:chat-v1",
-            "  HINT:Neppy/Chat-V1  ",
+            "  HINT:OpenHuman/Chat-V1  ",
         ] {
             assert_eq!(
                 route_for_model(id),

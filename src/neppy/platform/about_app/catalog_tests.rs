@@ -282,7 +282,7 @@ fn embedding_provider_test_destinations_cover_all_providers() {
     // catch a destination genuinely going missing.
     let haystack = privacy.destinations.join(" | ").to_lowercase();
 
-    for needle in ["openhuman", "openai", "cohere"] {
+    for needle in ["neppy", "openai", "cohere"] {
         assert!(
             haystack.contains(needle),
             "test probe destinations must list `{needle}` — without it the \

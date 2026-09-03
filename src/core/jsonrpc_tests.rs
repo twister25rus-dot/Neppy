@@ -907,7 +907,7 @@ fn is_session_expired_error_matches_neppy_session_expired_body() {
     // Even without an HTTP-method prefix, an explicit "Session expired" body
     // text triggers session expiry via the shared observability classifier.
     assert!(is_session_expired_error(
-        r#"Neppy API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
+        r#"OpenHuman API error (401 Unauthorized): {"success":false,"error":"Session expired. Please log in again."}"#
     ));
 }
 
