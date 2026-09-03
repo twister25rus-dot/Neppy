@@ -29,6 +29,25 @@ command -v gh >/dev/null || die "gh CLI not found"
 
 cd "$ROOT"
 
+# A dry run must not leave the tree pinned to a version that was never
+# published. Snapshot the four manifests and restore them on any exit path.
+if [ "$DRY_RUN" = "--dry-run" ]; then
+  SNAP="$(mktemp -d)"
+  for f in Cargo.toml app/src-tauri/Cargo.toml app/package.json \
+           app/src-tauri/tauri.conf.json; do
+    mkdir -p "$SNAP/$(dirname "$f")" && cp "$f" "$SNAP/$f"
+  done
+  restore_manifests() {
+    for f in Cargo.toml app/src-tauri/Cargo.toml app/package.json \
+             app/src-tauri/tauri.conf.json; do
+      cp "$SNAP/$f" "$f"
+    done
+    rm -rf "$SNAP"
+    echo "==> dry run: manifests restored to their pre-run versions"
+  }
+  trap restore_manifests EXIT
+fi
+
 # The updater compares against the version baked into the bundle, so every
 # manifest must agree or the app will re-offer an update it already installed.
 echo "==> pinning version $VERSION across all four manifests"
@@ -48,9 +67,17 @@ PY
 
 echo "==> building the bundle (this is the slow part)"
 export GGML_NATIVE=OFF
-export TAURI_SIGNING_PRIVATE_KEY="$KEY"
+# TAURI_SIGNING_PRIVATE_KEY takes the key CONTENT, not a path — the path form
+# is the separate TAURI_SIGNING_PRIVATE_KEY_PATH. Passing a path here silently
+# produces an unsigned bundle, which only surfaces as a missing .sig after the
+# full (slow) release build.
+export TAURI_SIGNING_PRIVATE_KEY="$(cat "$KEY")"
 export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-}"
-( cd app && ./node_modules/.bin/tauri build --bundles app,dmg -- --bin Neppy )
+# `app` only, deliberately. Adding `dmg` runs bundle_dmg.sh, which drives Finder
+# through AppleScript and fails in a non-interactive shell — and because the DMG
+# step runs BEFORE the updater artifacts are emitted, that failure leaves no
+# .app.tar.gz/.sig at all. The updater needs the tarball, not a disk image.
+( cd app && ./node_modules/.bin/tauri build --bundles app -- --bin Neppy )
 
 BUNDLE_DIR="$ROOT/app/src-tauri/target/release/bundle"
 TARBALL="$(find "$BUNDLE_DIR/macos" -name '*.app.tar.gz' -maxdepth 1 | head -1)"
