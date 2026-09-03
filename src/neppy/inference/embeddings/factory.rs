@@ -201,6 +201,46 @@ pub fn create_embedding_provider_with_config(
 ) -> anyhow::Result<Box<dyn EmbeddingProvider>> {
     match provider {
         "cloud" | "managed" => {
+            // Neppy: there is no hosted embedding backend, and `"cloud"` is the
+            // stock default — so an untouched install would embed against a dead
+            // endpoint and every memory write would fail. Redirect to the local
+            // runtime instead.
+            //
+            // Guarded on dimensions, deliberately. The memory tree's on-disk
+            // format is FIXED at `DEFAULT_OLLAMA_DIMENSIONS` (1024); the local
+            // default `bge-m3` matches it, but `nomic-embed-text` (768) and
+            // `all-minilm` (384) do not and would write vectors the tree cannot
+            // read. On a mismatch we stay on the cloud provider so its explicit
+            // error surfaces, rather than silently producing unreadable vectors.
+            let local_dims = super::DEFAULT_OLLAMA_DIMENSIONS;
+            if crate::neppy::inference::provider::factory::neppy_local_mode() {
+                let local_model = config.local_ai.embedding_model_id.trim();
+                if local_model.is_empty() {
+                    log::warn!(
+                        "[embeddings::factory] Neppy: no local embedding model configured; \
+                         leaving the managed embedder in place so its error is visible"
+                    );
+                } else if dims != local_dims {
+                    log::warn!(
+                        "[embeddings::factory] Neppy: not redirecting embeddings to the local \
+                         runtime — configured dims ({dims}) != local ({local_dims}); \
+                         a mismatched vector width would corrupt the memory tree"
+                    );
+                } else {
+                    log::debug!(
+                        "[embeddings::factory] Neppy: managed embedder has no host; \
+                         redirecting to local ollama model '{local_model}' at {dims} dims"
+                    );
+                    return create_embedding_provider_with_credentials(
+                        "ollama",
+                        local_model,
+                        dims,
+                        "",
+                        None,
+                    );
+                }
+            }
+
             let (state_dir, encrypt_secrets) = managed_credential_scope(config);
             // Never log `state_dir`: the user-scoped path embeds the OS username
             // and/or `users/<uid>` (PII). Log only the non-identifying flag.
