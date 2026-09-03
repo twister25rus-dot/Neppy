@@ -11,7 +11,7 @@ Architecture docs: [`gitbooks/developing/architecture.md`](gitbooks/developing/a
 | Path                    | Role                                                                                                                          |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **`app/`**              | pnpm workspace `neppy-app`: Vite + React (`app/src/`), Tauri desktop host (`app/src-tauri/`), Vitest tests                |
-| **`src/`** (root)       | Rust lib crate `openhuman` + `neppy-core` CLI binary (`src/main.rs`) — `src/core/` (transport), `src/neppy/*` domains |
+| **`src/`** (root)       | Rust lib crate `neppy` (lib name `neppy_core`) + `neppy-core` CLI binary (`src/main.rs`) — `src/core/` (transport), `src/neppy/*` domains |
 | **`Cargo.toml`** (root) | Core crate; `cargo build --bin neppy-core`. Also `neppy-fleet`, `rss-bench` and `library-profile` in `src/bin/`.                  |
 | **`docs/`**             | Deep internals. Public contributor docs in `gitbooks/developing/`.                                                            |
 

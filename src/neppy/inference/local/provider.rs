@@ -27,9 +27,22 @@ impl LocalAiProvider {
 pub(crate) fn normalize_provider(value: &str) -> String {
     match value.trim().to_ascii_lowercase().as_str() {
         "lmstudio" | "lm-studio" | "lm_studio" => LocalAiProvider::LmStudio.as_str().to_string(),
-        // OMLX is a keyed OpenAI-v1 local runtime handled by the provider factory
-        // (`omlx:<model>`), not by `LocalAiProvider`. Preserve the slug so the
-        // saved config keeps `provider = "omlx"` instead of collapsing to ollama.
+        // MLX and OMLX are keyed OpenAI-v1 local runtimes handled by the provider
+        // factory (`mlx:<model>` / `omlx:<model>`), not by `LocalAiProvider`.
+        // Preserve the slug so the saved config keeps its value instead of
+        // collapsing to ollama.
+        //
+        // `mlx` was missing here: because the catch-all arm returns `ollama`,
+        // `provider = "mlx"` silently became Ollama — the same class of quiet
+        // substitution as the model allowlist. Apple-silicon MLX is the fastest
+        // local runtime on this hardware, so it must be selectable by name.
+        "mlx" | "mlx-server" => {
+            log::trace!(
+                "[local-provider] normalized provider '{}' -> mlx (factory-resolved local runtime)",
+                value.trim()
+            );
+            "mlx".to_string()
+        }
         "omlx" | "omlx-server" => {
             log::trace!(
                 "[local-provider] normalized provider '{}' -> omlx (factory-resolved local runtime)",
@@ -38,6 +51,25 @@ pub(crate) fn normalize_provider(value: &str) -> String {
             "omlx".to_string()
         }
         _ => LocalAiProvider::Ollama.as_str().to_string(),
+    }
+}
+
+/// Map a `local_ai.provider` slug to the provider-string prefix the inference
+/// factory dispatches on (`factory::{MLX,OMLX,LM_STUDIO,…}_PROVIDER_PREFIX`).
+///
+/// Callers compose `"{prefix}{model_id}"`. Kept here, beside
+/// [`normalize_provider`], so the slug vocabulary has ONE definition: the
+/// triage fallback previously hard-coded a two-way `local-openai:` / `ollama:`
+/// choice, which silently routed `lm_studio`, `mlx` and `omlx` users to Ollama.
+pub(crate) fn local_provider_prefix(slug: &str) -> &'static str {
+    match slug.trim().to_ascii_lowercase().as_str() {
+        "lmstudio" | "lm-studio" | "lm_studio" => "lmstudio:",
+        "mlx" | "mlx-server" => "mlx:",
+        "omlx" | "omlx-server" => "omlx:",
+        "llamacpp" | "llama-server" | "custom_openai" | "local-openai" | "local_openai" => {
+            "local-openai:"
+        }
+        _ => "ollama:",
     }
 }
 
@@ -126,6 +158,28 @@ mod tests {
     #[test]
     fn normalize_provider_keeps_omlx() {
         assert_eq!(normalize_provider("omlx"), "omlx");
+        // MLX must survive normalization. Before this it hit the catch-all and
+        // became "ollama" — a silent runtime swap on the fastest local backend
+        // available on Apple silicon.
+        assert_eq!(normalize_provider("mlx"), "mlx");
+        assert_eq!(normalize_provider("MLX"), "mlx");
+        assert_eq!(normalize_provider("mlx-server"), "mlx");
+    }
+
+    #[test]
+    fn local_provider_prefix_maps_every_runtime_not_just_ollama() {
+        // The triage fallback used to pick between `local-openai:` and
+        // `ollama:` only, so lm_studio / mlx / omlx were routed to Ollama —
+        // wrong endpoint and wrong wire dialect.
+        assert_eq!(local_provider_prefix("mlx"), "mlx:");
+        assert_eq!(local_provider_prefix("mlx-server"), "mlx:");
+        assert_eq!(local_provider_prefix("omlx"), "omlx:");
+        assert_eq!(local_provider_prefix("lm_studio"), "lmstudio:");
+        assert_eq!(local_provider_prefix("lmstudio"), "lmstudio:");
+        assert_eq!(local_provider_prefix("llamacpp"), "local-openai:");
+        assert_eq!(local_provider_prefix("custom_openai"), "local-openai:");
+        assert_eq!(local_provider_prefix("ollama"), "ollama:");
+        assert_eq!(local_provider_prefix("anything-else"), "ollama:");
         assert_eq!(normalize_provider("omlx-server"), "omlx");
         assert_eq!(normalize_provider("OMLX"), "omlx");
     }

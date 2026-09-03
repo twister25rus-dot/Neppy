@@ -222,9 +222,9 @@ pub fn kind_from_provider_string(provider: &str) -> Option<LocalProviderKind> {
         || p.starts_with("lm_studio:")
     {
         Some(LocalProviderKind::LmStudio)
-    } else if p.starts_with("mlx:") {
+    } else if p.starts_with("mlx:") || p == "mlx" {
         Some(LocalProviderKind::Mlx)
-    } else if p.starts_with("omlx:") {
+    } else if p.starts_with("omlx:") || p == "omlx" {
         Some(LocalProviderKind::Omlx)
     } else if p.starts_with("local-openai:") || p.starts_with("local_openai:") {
         Some(LocalProviderKind::LocalOpenai)

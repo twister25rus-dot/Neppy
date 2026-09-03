@@ -78,13 +78,13 @@ pub fn build_local_provider_with_config(config: &Config) -> Option<ResolvedProvi
         .map(|s| s.trim().trim_end_matches('/').to_string())
         .filter(|s| !s.is_empty());
     let provider_kind = local_cfg.provider.trim().to_ascii_lowercase();
-    let use_openai_compat = override_base.is_some()
-        || matches!(
-            provider_kind.as_str(),
-            "llamacpp" | "llama-server" | "custom_openai"
-        );
-
-    let (label, provider_string) = if use_openai_compat {
+    // An explicit base-URL override still forces the generic OpenAI-compat
+    // client, since the override names an endpoint rather than a runtime.
+    // Otherwise honour the configured runtime: the previous two-way choice
+    // between `local-openai:` and `ollama:` silently routed lm_studio, mlx and
+    // omlx users to Ollama, which is the wrong endpoint AND the wrong wire
+    // dialect.
+    let (label, provider_string) = if override_base.is_some() {
         let label = if provider_kind == "custom_openai" {
             "custom_openai"
         } else {
@@ -92,7 +92,22 @@ pub fn build_local_provider_with_config(config: &Config) -> Option<ResolvedProvi
         };
         (label, format!("local-openai:{}", local_cfg.chat_model_id))
     } else {
-        ("ollama", format!("ollama:{}", local_cfg.chat_model_id))
+        let prefix =
+            crate::neppy::inference::local::provider::local_provider_prefix(&provider_kind);
+        let label: &str = match prefix {
+            "mlx:" => "mlx",
+            "omlx:" => "omlx",
+            "lmstudio:" => "lm_studio",
+            "local-openai:" => {
+                if provider_kind == "custom_openai" {
+                    "custom_openai"
+                } else {
+                    "llamacpp"
+                }
+            }
+            _ => "ollama",
+        };
+        (label, format!("{prefix}{}", local_cfg.chat_model_id))
     };
     tracing::debug!(
         provider = %label,
