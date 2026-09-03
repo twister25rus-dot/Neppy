@@ -74,6 +74,23 @@ const MVP_DEFAULT_CHAT_MODEL: &str = "gemma3:1b-it-qat";
 const MVP_ALLOWED_EMBEDDING_MODELS: &[&str] = &["bge-m3", "all-minilm:latest"];
 
 fn enforce_mvp_chat_allowlist(resolved: &str) -> String {
+    enforce_mvp_chat_allowlist_with(
+        resolved,
+        crate::neppy::inference::provider::factory::neppy_local_mode(),
+    )
+}
+
+/// Inner half of [`enforce_mvp_chat_allowlist`], with the local-mode decision
+/// passed in rather than read from the process.
+///
+/// Split out so BOTH branches are testable. `neppy_local_mode()` is hard-off
+/// under `cfg(test)` on purpose — it used to read the environment, and
+/// `load_dotenv_for_cli` pulls this repo's `.env` (which sets
+/// NEPPY_LOCAL_MODE=1) into the process during the CLI tests, so whichever test
+/// touched it first decided the flag for the whole binary. Taking the flag as an
+/// argument keeps that determinism while still letting a test pin what local
+/// mode actually does — including that a Hugging Face model id survives it.
+fn enforce_mvp_chat_allowlist_with(resolved: &str, local_mode: bool) -> String {
     // Neppy: the user's own local model wins. Upstream restricted local chat to
     // five curated gemma builds and SILENTLY rewrote anything else to
     // `gemma3:1b-it-qat` — which, on a machine that never pulled that model,
@@ -83,9 +100,11 @@ fn enforce_mvp_chat_allowlist(resolved: &str) -> String {
     //
     // A curated list is a sensible default for a hosted product shipping one
     // blessed local tier; it is the wrong default for a local-first fork whose
-    // whole point is bringing your own model. The allowlist stays for the
-    // upstream path (and its tests) — local mode just declines to enforce it.
-    if crate::neppy::inference::provider::factory::neppy_local_mode() {
+    // whole point is bringing your own model — Hugging Face repo ids
+    // (`hf.co/owner/repo:quant` through Ollama, `mlx-community/...` through
+    // MLX) can never appear on a fixed list. The allowlist stays for the
+    // upstream path; local mode declines to enforce it.
+    if local_mode {
         return resolved.to_string();
     }
 
@@ -437,6 +456,38 @@ mod tests {
         config.local_ai.chat_model_id = String::new();
         config.local_ai.model_id = String::new();
         assert_eq!(effective_chat_model_id(&config), "");
+    }
+
+    #[test]
+    fn hugging_face_model_ids_survive_local_mode() {
+        // Task: take models from Hugging Face instead of the managed tiers.
+        // Both local runtimes address HF repos directly — Ollama via
+        // `hf.co/owner/repo:quant`, MLX via the bare repo id — and neither can
+        // ever appear on a fixed five-entry allowlist. Local mode must pass
+        // them through byte-for-byte.
+        for id in [
+            "hf.co/bartowski/Qwen2.5-14B-Instruct-GGUF:Q4_K_M",
+            "mlx-community/Qwen2.5-14B-Instruct-4bit",
+            "richardyoung/qwythos-9b-abliterated:Q5_K_M",
+            "qwythos-9b-32k",
+        ] {
+            assert_eq!(
+                enforce_mvp_chat_allowlist_with(id, true),
+                id,
+                "local mode must not rewrite a user-chosen model"
+            );
+        }
+        // With local mode OFF the upstream contract is unchanged: an unlisted
+        // model is still redirected to the curated default.
+        assert_eq!(
+            enforce_mvp_chat_allowlist_with("hf.co/bartowski/Whatever:Q4_K_M", false),
+            MVP_DEFAULT_CHAT_MODEL
+        );
+        // An allowlisted model is untouched either way.
+        assert_eq!(
+            enforce_mvp_chat_allowlist_with(MVP_DEFAULT_CHAT_MODEL, false),
+            MVP_DEFAULT_CHAT_MODEL
+        );
     }
 
     #[test]
