@@ -1,4 +1,21 @@
 <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M115.876 108.652C87.9227 127.796 57.372 166.306 59.0675 211.247C60.7902 224.811 64.1817 233.29 76.8732 243.467C83.5564 248.826 99.7663 257.031 115.876 254.489L134.53 250.25C146.461 248.394 150.954 249.942 157.423 254.489C165.834 261.576 170.766 265.008 180.316 269.752C200.665 279.858 216.008 274.778 225.254 259.577C246.451 226.507 247.299 145.106 212.536 109.496C183.708 82.3649 154.977 81.9002 115.876 108.652Z" fill="#191919"/>
-<circle cx="153.275" cy="52.6289" r="27.6289" fill="#191919"/>
+  <title>Neppy</title>
+  <!-- Head + ears are unioned through a mask (white = keep); eyes, nose and
+       mouth are punched out (black = cut) so the mark reads on any background.
+       Ear tips sit ABOVE the head rather than out to the sides — placed to the
+       side, only a thin blade protrudes past the circle. Outer ear bases are
+       tucked just inside the circle so the silhouette has no nicks. -->
+  <defs>
+    <mask id="neppy-cat">
+      <rect width="300" height="300" fill="black"/>
+      <circle cx="150" cy="186" r="92" fill="white"/>
+      <polygon points="72,140 95,36 152,98" fill="white"/>
+      <polygon points="228,140 205,36 148,98" fill="white"/>
+      <circle cx="119" cy="180" r="17" fill="black"/>
+      <circle cx="181" cy="180" r="17" fill="black"/>
+      <polygon points="150,226 136,212 164,212" fill="black"/>
+      <path d="M 131,234 Q 150,249 169,234" stroke="black" stroke-width="8" fill="none" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <rect width="300" height="300" fill="#000000" mask="url(#neppy-cat)"/>
 </svg>
