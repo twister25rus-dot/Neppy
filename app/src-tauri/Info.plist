@@ -29,7 +29,7 @@
 			<string>com.neppy.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>openhuman</string>
+				<string>neppy</string>
 			</array>
 		</dict>
 	</array>
