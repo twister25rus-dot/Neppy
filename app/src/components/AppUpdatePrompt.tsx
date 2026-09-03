@@ -157,9 +157,7 @@ const AppUpdatePrompt = (props: AppUpdatePromptProps) => {
             </>
           )}
 
-          {(phase === 'downloading' ||
-            phase === 'installing' ||
-            phase === 'restarting') && (
+          {(phase === 'downloading' || phase === 'installing' || phase === 'restarting') && (
             <>
               <ProgressBar indeterminate />
               <div className="mt-2 flex items-center justify-between text-[11px] text-content-faint">

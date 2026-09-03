@@ -6,7 +6,7 @@
 //!   * [`init_for_cli_run`] — stderr only, used by `openhuman run` / CLI
 //!     subcommands.
 //!   * [`init_for_embedded`] — stderr + a daily-rotated file under
-//!     `<data_dir>/logs/openhuman-YYYY-MM-DD.log`, used by the Tauri shell
+//!     `<data_dir>/logs/neppy-YYYY-MM-DD.log`, used by the Tauri shell
 //!     where stderr is invisible in packaged builds. Both shell `log::*`
 //!     calls and core `tracing::*` calls funnel into the same file via
 //!     [`tracing_log::LogTracer`].
@@ -33,7 +33,7 @@ static INIT: Once = Once::new();
 
 /// Holds the non-blocking writer guard for the file appender. Dropping it
 /// stops the background flushing thread and releases the OS file handle on
-/// the active `openhuman-YYYY-MM-DD.log`, which on Windows is required
+/// the active `neppy-YYYY-MM-DD.log`, which on Windows is required
 /// before the parent `<data_dir>/logs/` directory can be removed (issue
 /// #1615 — the file is held by the Tauri host process, not the embedded
 /// core, so `CoreProcessHandle::shutdown` alone does not release it).
@@ -279,7 +279,7 @@ pub fn init_for_cli_run(verbose: bool, default_scope: CliLogDefault) {
 ///   * a stderr layer (for `tauri dev` / terminal launches), with ANSI when
 ///     attached to a TTY,
 ///   * a non-blocking, daily-rotated file appender at
-///     `<data_dir>/logs/openhuman-YYYY-MM-DD.log` so packaged GUI builds —
+///     `<data_dir>/logs/neppy-YYYY-MM-DD.log` so packaged GUI builds —
 ///     where stderr is invisible — still produce a log users can share for
 ///     support,
 ///   * the Sentry breadcrumb/event layer,
@@ -326,7 +326,7 @@ pub fn init_for_embedded(data_dir: &Path, verbose: bool) {
         )> = match std::fs::create_dir_all(&logs_dir) {
             Ok(()) => match tracing_appender::rolling::Builder::new()
                 .rotation(tracing_appender::rolling::Rotation::DAILY)
-                .filename_prefix("openhuman")
+                .filename_prefix("neppy")
                 .filename_suffix("log")
                 .max_log_files(7)
                 .build(&logs_dir)
@@ -424,7 +424,7 @@ pub fn init_for_embedded(data_dir: &Path, verbose: bool) {
 /// screen + raw mode); a single `tracing`/`log` line written to stdout or
 /// stderr would corrupt the rendered UI. So — unlike [`init_for_cli_run`]
 /// (stderr) and [`init_for_embedded`] (stderr + file) — this installs **only**
-/// a daily-rotated file appender at `<data_dir>/logs/openhuman-YYYY-MM-DD.log`
+/// a daily-rotated file appender at `<data_dir>/logs/neppy-YYYY-MM-DD.log`
 /// plus the Sentry layer (which keeps no console handle). Core boot logs and
 /// the `[tui]` state-transition logs land in that file for post-mortem
 /// debugging without ever touching the screen.
@@ -453,7 +453,7 @@ pub fn init_for_tui(data_dir: &Path, verbose: bool) -> Option<PathBuf> {
         )> = match std::fs::create_dir_all(&logs_dir) {
             Ok(()) => match tracing_appender::rolling::Builder::new()
                 .rotation(tracing_appender::rolling::Rotation::DAILY)
-                .filename_prefix("openhuman")
+                .filename_prefix("neppy")
                 .filename_suffix("log")
                 .max_log_files(7)
                 .build(&logs_dir)
@@ -550,7 +550,7 @@ pub fn log_directory() -> Option<&'static Path> {
     LOG_DIR.get().map(PathBuf::as_path)
 }
 
-/// Drop the file appender's worker guard so the rolling `openhuman-*.log`
+/// Drop the file appender's worker guard so the rolling `neppy-*.log`
 /// file handle held by *this* process is released.
 ///
 /// Returns `true` if a guard was taken (and dropped here), `false` if no
