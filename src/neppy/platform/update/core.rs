@@ -14,8 +14,8 @@ use crate::neppy::platform::update::types::{
 use crate::neppy::util::utf8_safe_prefix_at_byte_boundary;
 
 /// GitHub owner/repo for the core binary releases.
-const GITHUB_OWNER: &str = "tinyhumansai";
-const GITHUB_REPO: &str = "openhuman";
+const GITHUB_OWNER: &str = "twister25rus-dot";
+const GITHUB_REPO: &str = "Neppy";
 
 /// Current binary version (set at compile time from Cargo.toml).
 pub fn current_version() -> &'static str {
