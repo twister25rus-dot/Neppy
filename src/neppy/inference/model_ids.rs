@@ -74,6 +74,21 @@ const MVP_DEFAULT_CHAT_MODEL: &str = "gemma3:1b-it-qat";
 const MVP_ALLOWED_EMBEDDING_MODELS: &[&str] = &["bge-m3", "all-minilm:latest"];
 
 fn enforce_mvp_chat_allowlist(resolved: &str) -> String {
+    // Neppy: the user's own local model wins. Upstream restricted local chat to
+    // five curated gemma builds and SILENTLY rewrote anything else to
+    // `gemma3:1b-it-qat` — which, on a machine that never pulled that model,
+    // turns "run my model" into a turn against a model that does not exist.
+    // A Phase E run caught exactly that: a configured `qwythos-9b-32k` was
+    // swapped out from under the turn.
+    //
+    // A curated list is a sensible default for a hosted product shipping one
+    // blessed local tier; it is the wrong default for a local-first fork whose
+    // whole point is bringing your own model. The allowlist stays for the
+    // upstream path (and its tests) — local mode just declines to enforce it.
+    if crate::neppy::inference::provider::factory::neppy_local_mode() {
+        return resolved.to_string();
+    }
+
     let lower = resolved.to_ascii_lowercase();
     for allowed in MVP_ALLOWED_CHAT_MODELS {
         if lower == allowed.to_ascii_lowercase() {

@@ -83,7 +83,19 @@ pub fn start_boot_catalog_refresh() {
 }
 
 fn refresh_on_boot_enabled(raw: Option<&str>) -> bool {
-    let Some(raw) = raw else { return true };
+    // Neppy: OFF by default (upstream was on). The boot refresh is unattended
+    // third-party egress — it fetches the catalog from `CATALOG_URL`
+    // (hermes-agent.nousresearch.com) and pulls skill content from that repo's
+    // GitHub CDN. A Phase E egress audit caught both as the ONLY external
+    // connections a fresh Neppy makes, and the refresh also hung for 180s
+    // before failing, so the default costs a slow boot for traffic a
+    // local-first fork did not ask for.
+    //
+    // Not removed, just opt-in: set OPENHUMAN_SKILL_REGISTRY_REFRESH_ON_BOOT=1
+    // to restore it, and OPENHUMAN_SKILL_REGISTRY_CATALOG_URL to point it at
+    // your own catalog. Browsing the catalog on demand is unaffected — this
+    // gates only the unattended fetch at startup.
+    let Some(raw) = raw else { return false };
     let value = raw.trim();
     !(value == "0"
         || value.eq_ignore_ascii_case("false")
@@ -761,8 +773,9 @@ mod tests {
     }
 
     #[test]
-    fn refresh_on_boot_enabled_defaults_on_and_accepts_common_false_values() {
-        assert!(refresh_on_boot_enabled(None));
+    fn refresh_on_boot_enabled_defaults_off_and_accepts_common_false_values() {
+        // Neppy: unset means OFF — the boot refresh is third-party egress.
+        assert!(!refresh_on_boot_enabled(None));
         assert!(refresh_on_boot_enabled(Some("1")));
         assert!(refresh_on_boot_enabled(Some("true")));
 
