@@ -912,6 +912,65 @@ fn resolves_to_managed_backend_for_default_config_but_not_for_local() {
     assert!(!resolves_to_managed_backend("chat", &local));
 }
 
+// ── Neppy managed-backend redirect ─────────────────────────────────────────
+//
+// Neppy has no hosted backend, so work that upstream sends to the managed
+// provider is handed to whatever model is active instead. These test the pure
+// resolver directly; the `neppy_local_mode()` gate that engages it is off under
+// cfg(test) so the upstream tests above keep exercising the real managed path.
+
+#[test]
+fn neppy_redirect_prefers_the_users_configured_primary_provider() {
+    let mut config = Config::default();
+    config.cloud_providers = vec![oh_entry("p_oh"), openai_entry("p_oa", "openai")];
+    config.primary_cloud = Some("p_oa".to_string());
+
+    let active = super::neppy_active_provider_string(&config).expect("an active provider");
+    assert!(
+        active.starts_with("openai"),
+        "the user's chosen provider must win, got {active:?}"
+    );
+}
+
+#[test]
+fn neppy_redirect_skips_a_managed_primary_and_uses_another_configured_provider() {
+    // primary_cloud points at the managed entry, which has no host in Neppy.
+    let mut config = Config::default();
+    config.cloud_providers = vec![oh_entry("p_oh"), openai_entry("p_oa", "openai")];
+    config.primary_cloud = Some("p_oh".to_string());
+
+    let active = super::neppy_active_provider_string(&config).expect("an active provider");
+    assert!(
+        active.starts_with("openai"),
+        "a managed primary must not be handed back as the redirect target: {active:?}"
+    );
+}
+
+#[test]
+fn neppy_redirect_falls_back_to_the_local_runtime() {
+    // Nothing configured but the local runtime — the "calculated locally" case.
+    let config = Config::default();
+    assert!(
+        config.cloud_providers.is_empty(),
+        "default config has no cloud providers"
+    );
+
+    let active = super::neppy_active_provider_string(&config).expect("a local provider");
+    assert_eq!(active, "ollama:gemma3:1b-it-qat");
+}
+
+#[test]
+fn neppy_redirect_declines_when_nothing_at_all_is_configured() {
+    // No providers AND no local model: return None so the caller keeps upstream
+    // behaviour and the real "configure a provider" error still surfaces,
+    // rather than masking it with `ollama:` and an empty model.
+    let mut config = Config::default();
+    config.local_ai.chat_model_id = String::new();
+    config.local_ai.model_id = String::new();
+
+    assert!(super::neppy_active_provider_string(&config).is_none());
+}
+
 #[test]
 fn create_chat_model_routes_managed_backend_to_crate_native() {
     let _guard = crate::neppy::inference::inference_test_guard();

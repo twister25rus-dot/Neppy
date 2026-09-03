@@ -1632,7 +1632,28 @@ pub(crate) fn create_turn_chat_model_from_string_with_native_tools_and_route(
         }
     };
     let p = provider_string.trim();
-    let is_managed = p.is_empty() || p == "cloud" || p == PROVIDER_OPENHUMAN;
+    let mut is_managed = p.is_empty() || p == "cloud" || p == PROVIDER_OPENHUMAN;
+
+    // Neppy: the managed backend has no host. A caller that *forces* it — the
+    // triage router's `build_remote_provider`, per the "triage never goes local"
+    // invariant — would build a client for a dead endpoint and fail the turn.
+    // Drop the force so we fall through to the role-based builder below, whose
+    // resolution is already redirected onto the active provider by
+    // `resolve_primary_cloud_provider_string`. Only when there IS an active
+    // provider to redirect to; otherwise upstream behaviour (and its error)
+    // stands. See `neppy_active_provider_string`.
+    if neppy_local_mode()
+        && is_managed
+        && !test_override_active
+        && neppy_active_provider_string(config).is_some()
+    {
+        log::debug!(
+            "[providers][chat-factory] Neppy: role '{role}' forced the managed backend, \
+             which has no host; falling through to the active provider"
+        );
+        is_managed = false;
+    }
+
     if is_managed && !test_override_active {
         let (backend, _resolved_model) = resolve_managed_backend(role, config)?;
         return Ok((
@@ -1933,7 +1954,79 @@ pub(crate) fn verify_session_active(config: &Config) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Neppy: the provider that is **actually reachable right now**.
+///
+/// Neppy has no hosted backend, so any role that resolves to the managed
+/// provider would build a [`NeppyBackendModel`] pointed at a dead endpoint and
+/// fail the turn for a reason that has nothing to do with the turn. Instead the
+/// work is handed to whatever model is active at that moment.
+///
+/// Preference order, most explicit first:
+/// 1. the user's chosen `primary_cloud` entry, when it is a real provider —
+///    so "whatever model is active" is literally their current selection
+///    (an OpenAI/Anthropic/OpenRouter/… key they configured);
+/// 2. any other configured non-managed cloud provider;
+/// 3. the local runtime (`local_ai`), i.e. computed locally via Ollama.
+///
+/// Returns `None` when nothing at all is configured, in which case the caller
+/// keeps upstream behaviour so the existing "configure a provider" error still
+/// surfaces rather than being masked by a silent fallback.
+pub(crate) fn neppy_active_provider_string(config: &Config) -> Option<String> {
+    if let Some(entry) = config
+        .primary_cloud
+        .as_deref()
+        .and_then(|id| config.cloud_providers.iter().find(|e| e.id == id))
+    {
+        if !is_neppy_cloud_entry(entry) {
+            return Some(cloud_entry_provider_string(entry, config));
+        }
+    }
+
+    if let Some(entry) = config
+        .cloud_providers
+        .iter()
+        .find(|e| !is_neppy_cloud_entry(e))
+    {
+        return Some(cloud_entry_provider_string(entry, config));
+    }
+
+    // Local runtime. `chat_model_id` first — a chat turn is what a redirected
+    // managed role almost always is; `model_id` is the generic fallback. A
+    // managed tier slug (`chat-v1`, …) is meaningless to a local runtime, so an
+    // empty local model yields `None` rather than `ollama:chat-v1`.
+    let local = &config.local_ai;
+    let model = [local.chat_model_id.trim(), local.model_id.trim()]
+        .into_iter()
+        .find(|m| !m.is_empty())?;
+    let provider = match local.provider.trim() {
+        "" => "ollama",
+        p => p,
+    };
+    Some(format!("{provider}:{model}"))
+}
+
+/// Wrapper over [`resolve_primary_cloud_provider_string_upstream`] that applies
+/// the Neppy managed-backend redirect. See [`neppy_active_provider_string`].
 fn resolve_primary_cloud_provider_string(config: &Config) -> String {
+    let resolved = resolve_primary_cloud_provider_string_upstream(config);
+    if neppy_local_mode() && resolved == PROVIDER_OPENHUMAN {
+        if let Some(active) = neppy_active_provider_string(config) {
+            log::debug!(
+                "[providers][chat-factory] Neppy: managed backend has no host; \
+                 redirecting to the active provider '{}'",
+                active.split(':').next().unwrap_or("<unknown>")
+            );
+            return active;
+        }
+        log::debug!(
+            "[providers][chat-factory] Neppy: managed backend has no host and no \
+             active provider is configured; leaving upstream resolution in place"
+        );
+    }
+    resolved
+}
+
+fn resolve_primary_cloud_provider_string_upstream(config: &Config) -> String {
     let primary = config
         .primary_cloud
         .as_deref()

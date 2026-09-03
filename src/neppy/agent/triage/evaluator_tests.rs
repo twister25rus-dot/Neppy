@@ -104,7 +104,7 @@ fn classify_string_treats_auth_failure_as_fatal() {
 fn classify_string_recognises_budget_exceeded_as_budget_exhausted() {
     // Matches the real payload that fired OPENHUMAN-TAURI-X in Sentry.
     let err = classify_error(
-        "OpenHuman API error (400 Bad Request): {\"success\":false,\
+        "Neppy API error (400 Bad Request): {\"success\":false,\
          \"error\":\"Budget exceeded — add credits to continue\"}"
             .to_string(),
     );
@@ -465,7 +465,7 @@ async fn cloud_budget_exhausted_skips_retry_and_falls_to_local() {
             let n = counter.fetch_add(1, Ordering::SeqCst);
             if n == 0 {
                 assert_eq!(req.provider_name, "stub-cloud", "first call must hit cloud");
-                Err("OpenHuman API error (400 Bad Request): \
+                Err("Neppy API error (400 Bad Request): \
                      {\"success\":false,\"error\":\"Budget exceeded — add credits to continue\"}"
                     .to_string())
             } else {
@@ -519,7 +519,7 @@ async fn cloud_budget_exhausted_on_retry_falls_through_to_local() {
                         req.provider_name, "stub-cloud",
                         "second call must be the cloud retry"
                     );
-                    Err("OpenHuman API error (400 Bad Request): \
+                    Err("Neppy API error (400 Bad Request): \
                          {\"success\":false,\"error\":\"Budget exceeded — add credits to continue\"}"
                         .to_string())
                 }
@@ -563,7 +563,7 @@ async fn cloud_budget_exhausted_without_local_returns_deferred_not_err() {
         async move {
             counter.fetch_add(1, Ordering::SeqCst);
             Err(
-                "OpenHuman API error (400 Bad Request): Budget exceeded — add credits to continue"
+                "Neppy API error (400 Bad Request): Budget exceeded — add credits to continue"
                     .to_string(),
             )
         }
