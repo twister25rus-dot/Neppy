@@ -113,7 +113,7 @@ describe('PairPhoneModal', () => {
     const qr = await screen.findByTestId('qr-code');
     const value = qr.getAttribute('data-value') ?? '';
     const url = new URL(value);
-    expect(url.protocol).toBe('openhuman:');
+    expect(url.protocol).toBe('neppy:');
     expect(url.searchParams.get('cid')).toBe(CHANNEL_ID);
     expect(url.searchParams.get('pt')).toBe(PAIRING_TOKEN);
     expect(url.searchParams.get('cpk')).toBe(CORE_PUBKEY);

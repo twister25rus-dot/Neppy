@@ -95,7 +95,7 @@ describe('isManagedEmbeddingProvider', () => {
   });
 
   it('ignores case and surrounding whitespace', () => {
-    expect(isManagedEmbeddingProvider('  Neppy  ')).toBe(true);
+    expect(isManagedEmbeddingProvider('  OpenHuman  ')).toBe(true);
   });
 });
 

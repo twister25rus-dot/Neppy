@@ -676,7 +676,7 @@ export const handleDeepLinkUrls = async (
 
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'openhuman:') {
+    if (parsed.protocol !== 'neppy:') {
       console.warn('[DeepLink] Ignoring unsupported protocol:', parsed.protocol);
       return;
     }
@@ -740,7 +740,7 @@ export const setupDesktopDeepLinkListener = async () => {
         let effectiveUrl = url;
         try {
           const parsed = new URL(url);
-          if (parsed.protocol === 'openhuman:' && parsed.hostname === 'auth') {
+          if (parsed.protocol === 'neppy:' && parsed.hostname === 'auth') {
             const existing = parsed.searchParams.get('state');
             if (existing) {
               registerAuthDeepLinkState(existing);

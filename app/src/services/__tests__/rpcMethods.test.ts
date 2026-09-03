@@ -26,9 +26,9 @@ describe('rpcMethods catalog', () => {
     });
 
     test('trims whitespace and converts to lower case', () => {
-      expect(normalizeRpcMethod('  Neppy.Auth.Login  ')).toBe('openhuman.auth_login');
+      expect(normalizeRpcMethod('  OpenHuman.Auth.Login  ')).toBe('openhuman.auth_login');
       expect(normalizeRpcMethod('  OPENHUMAN.GET_CONFIG ')).toBe(CORE_RPC_METHODS.configGet);
-      expect(normalizeRpcMethod('Neppy.Unrecognized_Status  ')).toBe(
+      expect(normalizeRpcMethod('OpenHuman.Unrecognized_Status  ')).toBe(
         'openhuman.unrecognized_status'
       );
       expect(normalizeRpcMethod('   some_RANDOM_method  ')).toBe('some_random_method');
