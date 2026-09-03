@@ -1,11 +1,11 @@
 {
-  "version": "0.64.0",
-  "notes": "Seed feed. Equal to the shipped version, so the updater resolves 'no update available' instead of erroring on a missing endpoint. scripts/release-neppy.sh overwrites this with a real signed release; the url/signature below are placeholders and are never fetched while version <= the installed build.",
-  "pub_date": "2026-09-03T08:00:00Z",
+  "version": "0.64.1",
+  "notes": "Neppy 0.64.1",
+  "pub_date": "2026-09-03T09:40:57Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/0"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrak9wb3luM21POTdiUzZWVnRIczZXS0tLMXN4dGEvY2NKaFRWQnNQRDM3MFVqZlhkaEE2d2tqcTAweFZLek1lWDlWOFBKMVdyZXhDU1Ixc3gxM0pySGdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDI4MzY2CWZpbGU6TmVwcHkuYXBwLnRhci5negpOUThNcVVYOWJob2RKTzg1T2oxLzhOOVY0djRlYTlkUXV4ZzMvZHhzWXJmVXQwM1Rub0RaU2xCWkVTZjdUNE9pRS82TVBjazg4NzBjeXJYeG5HdFdDQT09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/542542036"
     }
   }
 }
