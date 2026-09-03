@@ -30,13 +30,20 @@ interface AppUpdatePromptProps {
 }
 
 /**
- * Phases that should surface a visible banner. Background-only phases
- * (`checking`, `available`, `downloading`) stay silent so the user isn't
- * pestered while we're working — the prompt only appears once the user
- * has a meaningful decision to make.
+ * Phases that should surface a visible banner.
+ *
+ * `downloading` is shown: the update payload is ~60MB, so staying silent from
+ * the moment a new version is found until it is ready meant minutes of nothing
+ * on a slow link, with no sign the app had found anything. Surfacing it is also
+ * what makes "tell me a new version exists" true rather than only "tell me when
+ * it is ready to restart".
+ *
+ * `checking` and `available` remain silent — both are momentary, and
+ * `available` transitions straight into `downloading`.
  */
 function shouldShow(phase: ReturnType<typeof useAppUpdate>['phase']): boolean {
   return (
+    phase === 'downloading' ||
     phase === 'ready_to_install' ||
     phase === 'installing' ||
     phase === 'restarting' ||
@@ -150,7 +157,9 @@ const AppUpdatePrompt = (props: AppUpdatePromptProps) => {
             </>
           )}
 
-          {(phase === 'installing' || phase === 'restarting') && (
+          {(phase === 'downloading' ||
+            phase === 'installing' ||
+            phase === 'restarting') && (
             <>
               <ProgressBar indeterminate />
               <div className="mt-2 flex items-center justify-between text-[11px] text-content-faint">
