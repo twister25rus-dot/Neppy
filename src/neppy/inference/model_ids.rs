@@ -153,11 +153,36 @@ fn enforce_vision_capability(resolved: &str) -> Result<String, String> {
 
 fn enforce_mvp_embedding_allowlist(resolved: &str) -> String {
     let lower = resolved.to_ascii_lowercase();
-    for allowed in MVP_ALLOWED_EMBEDDING_MODELS {
-        if lower == allowed.to_ascii_lowercase() {
-            return resolved.to_string();
-        }
+    let allowed = MVP_ALLOWED_EMBEDDING_MODELS
+        .iter()
+        .any(|a| lower == a.to_ascii_lowercase());
+    if allowed {
+        return resolved.to_string();
     }
+
+    // Neppy: never silently swap the user's model (companion to the chat
+    // allowlist fix). The swap becomes a LOUD warning instead, because the risk
+    // here is real but different from chat: the memory tree's on-disk vector
+    // width is fixed at 1024, so an embedder of another width writes vectors it
+    // cannot read back. Substituting silently hid that; refusing to honour the
+    // user's choice contradicts a bring-your-own-model fork. So we honour it and
+    // say plainly what will happen.
+    //
+    // The actual corruption guard lives one layer down, in
+    // `embeddings::factory::create_embedding_provider_with_config`, which
+    // declines to redirect to a local embedder whose dimensions do not match.
+    if crate::neppy::inference::provider::factory::neppy_local_mode() {
+        tracing::warn!(
+            resolved,
+            known_good = ?MVP_ALLOWED_EMBEDDING_MODELS,
+            "[local_ai] embedding model is outside the known-good set — honouring it \
+             (Neppy does not swap your model). Note the memory tree expects 1024-dim \
+             vectors: bge-m3 is 1024, nomic-embed-text is 768, all-minilm is 384. \
+             A width mismatch is refused at the provider factory rather than written."
+        );
+        return resolved.to_string();
+    }
+
     tracing::warn!(
         resolved,
         fallback = MVP_ALLOWED_EMBEDDING_MODELS[0],
