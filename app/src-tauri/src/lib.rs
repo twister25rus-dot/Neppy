@@ -507,8 +507,6 @@ fn no_app_update_available(current_version: String) -> AppUpdateInfo {
 /// Does NOT download or install. Pair with `apply_app_update` to actually upgrade.
 #[tauri::command]
 async fn check_app_update(app: tauri::AppHandle<AppRuntime>) -> Result<AppUpdateInfo, String> {
-    use tauri_plugin_updater::UpdaterExt;
-
     let current_version = app.package_info().version.to_string();
     log::info!("[app-update] check requested (current: {current_version})");
 
@@ -556,7 +554,6 @@ async fn apply_app_update(
     app: tauri::AppHandle<AppRuntime>,
 ) -> Result<(), String> {
     use tauri::Emitter;
-    use tauri_plugin_updater::UpdaterExt;
 
     log::info!("[app-update] manual apply_app_update invoked from frontend");
 
@@ -706,7 +703,6 @@ async fn download_app_update(
     state: tauri::State<'_, PendingAppUpdateState>,
 ) -> Result<AppUpdateDownloadResult, String> {
     use tauri::Emitter;
-    use tauri_plugin_updater::UpdaterExt;
 
     log::info!("[app-update] download_app_update invoked from frontend");
 
