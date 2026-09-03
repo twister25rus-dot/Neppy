@@ -1885,6 +1885,21 @@ pub(crate) fn create_local_chat_model_from_string(
 /// them. Set `NEPPY_LOCAL_MODE=0` (or `false`/`off`) to restore the upstream
 /// hosted-session gating. Read once and cached. See NEPPY-BUILD-SPEC.md §2.1.
 pub(crate) fn neppy_local_mode() -> bool {
+    // Under `cfg(test)` this is unconditionally OFF, and the environment is
+    // deliberately NOT consulted.
+    //
+    // Reading the env here was a real bug: `core::cli::load_dotenv_for_cli`
+    // pulls this repo's `.env` into the *process* environment during the CLI
+    // tests, and that `.env` sets `NEPPY_LOCAL_MODE=1`. Because the value is
+    // cached in a `OnceLock`, whichever test happened to touch it first decided
+    // the flag for the whole binary — so the managed-resolution tests passed
+    // alone and failed in the full suite (21 of them), depending purely on
+    // ordering. Tests exercise the redirect through the pure
+    // `neppy_active_provider_string` resolver instead, which needs no global.
+    if cfg!(test) {
+        return false;
+    }
+
     use std::sync::OnceLock;
     static LOCAL_MODE: OnceLock<bool> = OnceLock::new();
     *LOCAL_MODE.get_or_init(|| {
@@ -1893,10 +1908,8 @@ pub(crate) fn neppy_local_mode() -> bool {
                 let v = v.trim().to_ascii_lowercase();
                 !(v == "0" || v == "false" || v == "off" || v == "no")
             }
-            // Default: on in real builds, off under `cfg!(test)` so the
-            // upstream session-gate tests keep exercising the real gate. A test
-            // that wants local mode can still set `NEPPY_LOCAL_MODE=1`.
-            Err(_) => !cfg!(test),
+            // Default: on for a real Neppy build — there is no hosted backend.
+            Err(_) => true,
         }
     })
 }

@@ -1758,3 +1758,21 @@ fn the_route_resolves_to_a_provider_the_factory_can_build() {
     .expect("the per-call route builds a chat model");
     assert_eq!(model_id, "x/y");
 }
+
+#[test]
+fn local_mode_is_off_in_tests_regardless_of_the_environment() {
+    // Regression guard. `core::cli::load_dotenv_for_cli` loads this repo's
+    // `.env` into the PROCESS environment during the CLI tests, and that file
+    // sets NEPPY_LOCAL_MODE=1. While this flag read the environment, whichever
+    // test touched it first decided it for the whole binary — 21
+    // managed-resolution tests failed in the full suite while passing alone.
+    // `cfg(test)` must therefore short-circuit before the env is consulted.
+    //
+    // Deliberately does NOT call `std::env::set_var` to prove that: mutating
+    // the environment from one test while other threads read it is exactly the
+    // kind of cross-test interference this guard exists to prevent.
+    assert!(
+        !super::neppy_local_mode(),
+        "cfg(test) must win over the environment, or suite results depend on order"
+    );
+}
