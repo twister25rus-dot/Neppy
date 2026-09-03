@@ -76,7 +76,7 @@
         "installerHooks": "nsis-hooks.nsh"
       }
     },
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "macOS": {
       "minimumSystemVersion": "12.3",
       "entitlements": "entitlements.sidecar.plist",
@@ -88,10 +88,10 @@
   },
   "plugins": {
     "updater": {
-      "active": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc0OTREMjkxREFCNUIzRTEKUldUaHM3WGFrZEtVZEJzZWtMTlc5dGxnT0R2Q3hUTWVaclJWSm9JUFpPcVFUV2RBSG5oNFN6UjQK",
+      "active": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhDQTQwQkI0NjZBOTYxOTEKUldTUllhbG10QXVrakdxbmtqSXRFMUxZQ3VhZE1UREJBNnJkcVJLSXBsWTNNa2k1enBIZmlMRmsK",
       "endpoints": [
-        "http://127.0.0.1:8788/updates/latest.json"
+        "https://raw.githubusercontent.com/twister25rus-dot/Neppy/main/updater/latest.json"
       ]
     },
     "deep-link": {

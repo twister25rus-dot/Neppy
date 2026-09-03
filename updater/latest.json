@@ -1,0 +1,11 @@
+{
+  "version": "0.64.0",
+  "notes": "Seed feed. Equal to the shipped version, so the updater resolves 'no update available' instead of erroring on a missing endpoint. scripts/release-neppy.sh overwrites this with a real signed release; the url/signature below are placeholders and are never fetched while version <= the installed build.",
+  "pub_date": "2026-09-03T08:00:00Z",
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/0"
+    }
+  }
+}

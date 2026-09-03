@@ -512,9 +512,7 @@ async fn check_app_update(app: tauri::AppHandle<AppRuntime>) -> Result<AppUpdate
     let current_version = app.package_info().version.to_string();
     log::info!("[app-update] check requested (current: {current_version})");
 
-    let updater = app
-        .updater()
-        .map_err(|e| format!("updater plugin not initialized: {e}"))?;
+    let updater = crate::app_update::updater_with_auth(&app)?;
 
     match updater.check().await {
         Ok(Some(update)) => {
@@ -562,9 +560,7 @@ async fn apply_app_update(
 
     log::info!("[app-update] manual apply_app_update invoked from frontend");
 
-    let updater = app
-        .updater()
-        .map_err(|e| format!("updater plugin not initialized: {e}"))?;
+    let updater = crate::app_update::updater_with_auth(&app)?;
 
     let _ = app.emit("app-update:status", "checking");
 
@@ -714,9 +710,7 @@ async fn download_app_update(
 
     log::info!("[app-update] download_app_update invoked from frontend");
 
-    let updater = app
-        .updater()
-        .map_err(|e| format!("updater plugin not initialized: {e}"))?;
+    let updater = crate::app_update::updater_with_auth(&app)?;
 
     let _ = app.emit("app-update:status", "checking");
 

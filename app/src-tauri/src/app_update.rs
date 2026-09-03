@@ -132,3 +132,57 @@ mod tests {
         );
     }
 }
+
+/// Build an updater, attaching a bearer token when one is configured.
+///
+/// Neppy's release feed lives in a PRIVATE GitHub repository, so both the
+/// manifest fetch and the artifact download need `Authorization`. The plugin's
+/// `Config` has no `headers` field — headers can only be set on the runtime
+/// builder — which is why every call site goes through this helper instead of
+/// `app.updater()`.
+///
+/// The token is read from `NEPPY_UPDATE_TOKEN`, falling back to
+/// `~/.neppy-updater/token`. It is deliberately NOT in `tauri.conf.json`: that
+/// file is committed, and a token in it would be published to the repo.
+///
+/// Deliberately does NOT set `Accept`. The plugin defaults the download to
+/// `application/octet-stream` only when the caller left `Accept` unset, and the
+/// manifest is served raw by `raw.githubusercontent.com` — so setting one value
+/// would necessarily break the other request.
+///
+/// With no token configured this returns a plain updater, which is the correct
+/// behaviour for a public endpoint.
+pub fn updater_with_auth(
+    app: &tauri::AppHandle<crate::AppRuntime>,
+) -> Result<tauri_plugin_updater::Updater, String> {
+    use tauri_plugin_updater::UpdaterExt;
+
+    let mut builder = app.updater_builder();
+
+    let token = std::env::var("NEPPY_UPDATE_TOKEN").ok().or_else(|| {
+        let home = std::env::var_os("HOME")?;
+        let path = std::path::Path::new(&home)
+            .join(".neppy-updater")
+            .join("token");
+        std::fs::read_to_string(path).ok()
+    });
+
+    match token.as_deref().map(str::trim).filter(|t| !t.is_empty()) {
+        Some(t) => {
+            log::debug!("[app-update] attaching bearer token to updater requests");
+            builder = builder
+                .header("Authorization", format!("Bearer {t}"))
+                .map_err(|e| format!("invalid updater auth header: {e}"))?;
+        }
+        None => {
+            log::debug!(
+                "[app-update] no NEPPY_UPDATE_TOKEN / ~/.neppy-updater/token; \
+                 requesting the update feed unauthenticated"
+            );
+        }
+    }
+
+    builder
+        .build()
+        .map_err(|e| format!("updater plugin not initialized: {e}"))
+}
