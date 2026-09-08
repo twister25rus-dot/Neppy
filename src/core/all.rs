@@ -631,6 +631,12 @@ fn build_registered_controllers() -> Vec<GroupedController> {
         DomainGroup::Inference,
         crate::neppy::inference::all_local_inference_registered_controllers(),
     );
+    // Managed MLX runtime: process lifecycle, parameters, logs, memory budget.
+    push(
+        &mut controllers,
+        DomainGroup::Inference,
+        crate::neppy::inference::all_mlx_registered_controllers(),
+    );
     // Embedding provider configuration and embed RPC.
     push(
         &mut controllers,

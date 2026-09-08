@@ -51,6 +51,8 @@ pub use schemas::{
 pub use device::DeviceProfile;
 pub use local::all_local_inference_controller_schemas;
 pub use local::all_local_inference_registered_controllers;
+pub use local::all_mlx_controller_schemas;
+pub use local::all_mlx_registered_controllers;
 pub use model_context::context_window_for_model;
 pub use presets::{ModelPreset, ModelTier, VisionMode};
 pub use sentiment::SentimentResult;
