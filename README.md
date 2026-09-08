@@ -34,10 +34,11 @@ report Neppy issues to the upstream project.
 | --- | --- |
 | Hosted backend | Removed. The `hosted`, `relay` and `integrations` domain groups are disabled, so nothing proxies to the TinyHumans backend. |
 | Inference | Work that used to require the managed backend is routed to the active local provider (Ollama, MLX, LM Studio, llama.cpp) or a configured BYOK cloud provider. |
+| MLX | Neppy runs and supervises the MLX server itself: start and stop it from Settings, every `mlx_vlm.server` / `mlx_lm.server` parameter in config, live health and logs, and a memory budget that refuses a model which would not fit. |
 | Embeddings | Redirected to the local runtime, guarded on vector width (the memory tree is fixed at 1024 dims). |
 | Telemetry | Analytics and usage-data sharing default to off; the unattended boot catalog fetch is off. |
 | Model choice | The curated five-model allowlist no longer overrides a user-selected local model, so Hugging Face repo ids work. |
-| Updater | Disabled — this fork has no release feed. |
+| Updater | Points at this fork's own signed release feed on GitHub, so an installed Neppy updates itself. |
 | Branding | Renamed throughout; the cat mark is original artwork, not upstream's trademark. |
 
 Upstream's name, logo and trademarks are **not** covered by the GPL and are not
