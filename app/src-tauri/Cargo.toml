@@ -368,3 +368,12 @@ debug = false
 #   * No artifact paths, features, or runtime behaviour change.
 [profile.dev.package."*"]
 debug = false
+
+# Kept in sync with the root `Cargo.toml` — these are separate Cargo worlds, so
+# the setting has to be repeated. The shell statically embeds the whole core
+# crate, so it pays the same debuginfo cost: this target dir reached 49 GB.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.test]
+debug = "line-tables-only"

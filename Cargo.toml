@@ -1347,3 +1347,25 @@ debug = false
 #     `target/` substantially.
 [profile.dev.package."*"]
 debug = false
+
+# Our own crates in dev/test: line tables instead of full DWARF (#5541 follow-up).
+#
+# The dependency rule above left `neppy` itself emitting complete debug info,
+# and this crate is enormous — ~110k monomorphized methods, 59.5% of the
+# binary's .text in the crate itself. That produced a **1.0 GB** rlib per
+# feature-set fingerprint, and a working tree accumulated five of them
+# alongside 61 GB of incremental dep-graphs (1.1 GB per compile session), for
+# 122 GB total. The comment above cites ~12 GB as the expected size; a machine
+# that builds several feature combinations passes that by an order of
+# magnitude, and mine filled a 926 GB disk to 325 MB free.
+#
+# `line-tables-only` keeps what is actually used day to day: panics and
+# backtraces still resolve to file:line, and `cargo test` failures still point
+# at the right source. What it drops is variable inspection in a debugger,
+# which is the rarer need and recoverable with a one-off
+# `RUSTFLAGS="-C debuginfo=2" cargo build` when genuinely required.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.test]
+debug = "line-tables-only"

@@ -34,12 +34,12 @@ cd "$ROOT"
 if [ "$DRY_RUN" = "--dry-run" ]; then
   SNAP="$(mktemp -d)"
   for f in Cargo.toml app/src-tauri/Cargo.toml app/package.json \
-           app/src-tauri/tauri.conf.json; do
+           app/src-tauri/tauri.conf.json Cargo.lock app/src-tauri/Cargo.lock; do
     mkdir -p "$SNAP/$(dirname "$f")" && cp "$f" "$SNAP/$f"
   done
   restore_manifests() {
     for f in Cargo.toml app/src-tauri/Cargo.toml app/package.json \
-             app/src-tauri/tauri.conf.json; do
+             app/src-tauri/tauri.conf.json Cargo.lock app/src-tauri/Cargo.lock; do
       cp "$SNAP/$f" "$f"
     done
     rm -rf "$SNAP"
@@ -64,6 +64,23 @@ for p in ("app/package.json", "app/src-tauri/tauri.conf.json"):
     open(p, "w").write(s)
 print("  pinned:", v)
 PY
+
+# The root Cargo.lock records this crate's own version, and it is a SEPARATE
+# Cargo world from app/src-tauri (two manifests, two locks, two target dirs).
+# The bundle build below only refreshes the Tauri one, so without this the root
+# lock keeps the previous version, misses the `git add -A` below, and surfaces
+# as a dirty tree on the next root cargo command. That happened on 0.65.0,
+# 0.65.1 and 0.65.2, each needing a follow-up commit.
+#
+# `cargo metadata` re-resolves and rewrites the lock without compiling, which
+# is far cheaper than a build. It runs online deliberately: `--offline` fails
+# here because resolution reaches for target-specific packages that are not in
+# the local cache (android_system_properties, and others behind cfg gates), and
+# a command that errors on every run is not something to build a release step
+# on. The release already needs the network for gh.
+echo "==> refreshing the root Cargo.lock"
+cargo metadata --manifest-path Cargo.toml --format-version 1 >/dev/null \
+  || die "could not refresh Cargo.lock"
 
 echo "==> building the bundle (this is the slow part)"
 export GGML_NATIVE=OFF
