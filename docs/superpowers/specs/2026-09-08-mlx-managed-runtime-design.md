@@ -1,6 +1,6 @@
 # MLX as a first-class managed runtime
 
-**Status:** approved design, ready for implementation planning
+**Status:** implemented on `mlx-managed-runtime`, not yet released
 **Date:** 2026-09-08
 
 ## 1. Problem
@@ -237,3 +237,50 @@ backpressure cover most of that need.
 - Removing Ollama. `embeddings_backend` makes that a later config change once a
   1024-dim MLX embedder is chosen; the memory tree is fixed at 1024 dims.
 - Any change to `vendor/tinymemory`.
+
+
+---
+
+## 8. What was built, and where it departed from this plan
+
+All three phases landed. Four deviations, each forced by evidence rather than
+preference.
+
+**`supports_responses_api` stays `false`.** §3 originally called for `true`.
+`mlx_lm.server` serves only `/v1/chat/completions` and `/v1/models`, and one
+profile describes both binaries. Corrected in place above.
+
+**No Hugging Face downloader.** §6 phase 3 called for "browse/download/delete".
+`mlx_vlm.server` downloads on demand and `model_discovery = "hf-cache"` already
+enumerates the cache, so only the disk-cost half was missing. Building a second
+downloader would have duplicated the server, added a network egress surface, and
+gone stale against the Hub's own client. Deletion moves to the Trash.
+
+**Endpoint resolution needed a config fallback.** §5.2 assumed the pool always
+knows a running server. It does not: the pool is in-memory, so every CLI
+invocation and every core restart starts with an empty one. `stop` claimed
+success while leaving a server resident, and `unload` reported "not running"
+against a server that was answering. Both now fall back — `stop` to the spawn
+marker, `unload` to the configured port — and `stop` reports whether it actually
+killed anything.
+
+**The panel is compact, not a full parameter form.** ~30 parameters would bury
+the two questions it exists to answer. Parameters stay in `config.toml`.
+
+### Two things worth knowing before using it
+
+A hand-edit to `[mlx]` must modify the section the core already serialized. A
+second `[mlx]` table is a TOML duplicate-key error, and the whole block silently
+reverts to defaults — this cost a confusing debugging detour during testing.
+
+A block that anything outside the running core needs to reach requires a fixed
+`port`. With `port = 0` only the process that spawned the server knows where it
+went, and guessing would address someone else's server.
+
+### Verified against the real runtime
+
+`mlx-vlm` 0.7.0, on this machine, through the real RPC rather than mocks: start
+(pid, port, `ready`, 7 cached models enumerated, resident memory measured),
+stop, restart, unload, orphan reclamation across separate processes, and the
+cache listing (49.5 GiB across 7 repos). The `/health` fixtures in the tests are
+verbatim captures from that server, not invented shapes.
