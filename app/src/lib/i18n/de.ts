@@ -7073,6 +7073,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Ort',
   'devOptions.provisionedCore': 'Von dieser App gestarteter Kern',
   'devOptions.gatewayId': 'Ort',
+  'settings.ai.mlx': 'MLX',
+  'mlx.description':
+    'Neppy startet und überwacht MLX-Server für dich. Jeder Server ist ein [[mlx.server]]-Block in deiner Konfigurationsdatei, in der auch seine Parameter stehen.',
+  'mlx.disabledNotice':
+    'Die MLX-Laufzeit ist ausgeschaltet. Setze mlx.enabled in deiner Konfigurationsdatei auf true, damit Neppy diese Server starten darf.',
+  'mlx.problemsTitle': 'Probleme in der Konfiguration',
+  'mlx.memoryTitle': 'Arbeitsspeicher',
+  'mlx.memoryUsage': '{used} GiB von {budget} GiB belegt',
+  'mlx.noServers': 'Es ist noch kein MLX-Server eingerichtet.',
+  'mlx.noModelLoaded': 'Kein Modell geladen',
+  'mlx.start': 'Starten',
+  'mlx.stop': 'Stoppen',
+  'mlx.restart': 'Neu starten',
+  'mlx.unload': 'Speicher freigeben',
+  'mlx.showDetails': 'Details',
+  'mlx.hideDetails': 'Details ausblenden',
+  'mlx.command': 'Befehl',
+  'mlx.logs': 'Letzte Ausgabe',
+  'mlx.noLogs': 'Noch keine Ausgabe.',
+  'mlx.availableModels': 'Verfügbare Modelle ({count})',
+  'mlx.state.stopped': 'Gestoppt',
+  'mlx.state.starting': 'Startet',
+  'mlx.state.ready': 'Bereit',
+  'mlx.state.degraded': 'Antwortet nicht',
+  'mlx.state.crashed': 'Abgestürzt',
 };
 
 export default messages;

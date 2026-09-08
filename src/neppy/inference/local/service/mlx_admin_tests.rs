@@ -448,3 +448,63 @@ fn a_reachable_live_process_is_ready() {
     assert_eq!(state, MlxServerState::Ready);
     assert!(state.is_usable());
 }
+
+// ── endpoint resolution when the pool is empty ───────────────────────────
+//
+// Both of these regressions shipped and were caught by driving the real RPC:
+// `stop` claimed success while leaving a 14 GiB server resident, and `unload`
+// reported "not running" against a server that was answering. The shared
+// cause is that the pool is in-memory, so any operation consulting only the
+// pool misbehaves whenever the pool is empty and a server is alive — every
+// CLI invocation, and every core restart.
+
+#[tokio::test]
+async fn a_fixed_port_block_is_reachable_with_an_empty_pool() {
+    use super::pool::MlxPool;
+
+    let mut config = Config::default();
+    config.mlx.servers = vec![MlxServerConfig {
+        port: 8794,
+        ..MlxServerConfig::default()
+    }];
+
+    let pool = MlxPool::new();
+    assert_eq!(
+        pool.resolved_base_url(&config, "primary").await.as_deref(),
+        Some("http://127.0.0.1:8794/v1"),
+        "a configured port must be reachable without an in-memory handle"
+    );
+}
+
+#[tokio::test]
+async fn an_auto_port_block_is_unreachable_with_an_empty_pool() {
+    use super::pool::MlxPool;
+
+    // port = 0 is assigned at spawn time, so only the process that spawned it
+    // knows where it went. Guessing would address someone else's server.
+    let config = Config::default();
+    assert_eq!(config.mlx.servers[0].port, 0);
+
+    let pool = MlxPool::new();
+    assert_eq!(pool.resolved_base_url(&config, "primary").await, None);
+}
+
+#[tokio::test]
+async fn an_unknown_id_resolves_to_nothing() {
+    use super::pool::MlxPool;
+
+    let config = Config::default();
+    let pool = MlxPool::new();
+    assert_eq!(pool.resolved_base_url(&config, "no-such-block").await, None);
+}
+
+#[tokio::test]
+async fn stopping_a_server_that_was_never_started_reports_false() {
+    use super::pool::MlxPool;
+
+    // Honesty matters more than convenience here: a caller told the stop
+    // succeeded believes the memory came back.
+    let config = Config::default();
+    let pool = MlxPool::new();
+    assert!(!pool.stop(&config, "primary").await);
+}

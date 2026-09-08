@@ -6958,6 +6958,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Размещение',
   'devOptions.provisionedCore': 'Ядро, запущенное этим приложением',
   'devOptions.gatewayId': 'Размещение',
+  'settings.ai.mlx': 'MLX',
+  'mlx.description':
+    'Neppy сам запускает серверы MLX и следит за ними. Каждый сервер задаётся блоком [[mlx.server]] в файле настроек, там же указаны его параметры.',
+  'mlx.disabledNotice':
+    'Среда MLX выключена. Укажите mlx.enabled = true в файле настроек, чтобы Neppy мог запускать эти серверы.',
+  'mlx.problemsTitle': 'Ошибки в настройках',
+  'mlx.memoryTitle': 'Память',
+  'mlx.memoryUsage': 'Занято {used} ГиБ из {budget} ГиБ',
+  'mlx.noServers': 'Серверы MLX пока не настроены.',
+  'mlx.noModelLoaded': 'Модель не загружена',
+  'mlx.start': 'Запустить',
+  'mlx.stop': 'Остановить',
+  'mlx.restart': 'Перезапустить',
+  'mlx.unload': 'Освободить память',
+  'mlx.showDetails': 'Подробности',
+  'mlx.hideDetails': 'Скрыть подробности',
+  'mlx.command': 'Команда',
+  'mlx.logs': 'Последний вывод',
+  'mlx.noLogs': 'Вывода пока нет.',
+  'mlx.availableModels': 'Доступные модели ({count})',
+  'mlx.state.stopped': 'Остановлен',
+  'mlx.state.starting': 'Запускается',
+  'mlx.state.ready': 'Готов',
+  'mlx.state.degraded': 'Не отвечает',
+  'mlx.state.crashed': 'Аварийно завершился',
 };
 
 export default messages;

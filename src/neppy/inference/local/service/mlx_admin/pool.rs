@@ -105,6 +105,21 @@ impl MlxPool {
         Some(server_base_url(&entry.process))
     }
 
+    /// Base URL for a block, preferring the live process and falling back to
+    /// a fixed configured port.
+    ///
+    /// The fallback matters whenever the pool is empty but a server is up:
+    /// after a core restart, and on every CLI invocation, which is a fresh
+    /// process. A block with `port = 0` has no answer here, because only the
+    /// process that spawned it ever knew the port it was assigned.
+    pub(crate) async fn resolved_base_url(&self, config: &Config, id: &str) -> Option<String> {
+        if let Some(live) = self.base_url_for(id).await {
+            return Some(live);
+        }
+        let server = config.mlx.server(id)?;
+        (server.port != 0).then(|| server.base_url(server.port))
+    }
+
     /// Base URL of any ready block, preferring one that serves chat.
     ///
     /// Used by endpoint resolution so inference reaches a supervised server
@@ -196,13 +211,22 @@ impl MlxPool {
     }
 
     /// Stop the block with this id. Stopping something already stopped is fine.
-    pub(crate) async fn stop(&self, config: &Config, id: &str) {
+    ///
+    /// Falls back to the spawn marker when this process has no in-memory
+    /// record. That is not a rare path: the CLI is a fresh process per
+    /// invocation, so `mlx stop` never shares a pool with the `mlx start` that
+    /// spawned the server. Without the fallback it reported success while
+    /// leaving the server running and its weights resident, which is a worse
+    /// outcome than an honest failure.
+    pub(crate) async fn stop(&self, config: &Config, id: &str) -> bool {
         let entry = self.running.lock().await.remove(id);
         if let Some(mut entry) = entry {
             entry.process.stop(config).await;
-        } else {
-            log::debug!("[mlx] stop `{id}`: not running");
+            return true;
         }
+
+        log::debug!("[mlx] stop `{id}`: no in-memory handle, checking the spawn marker");
+        super::process::reclaim_orphan_if_ours(config, id)
     }
 
     /// Stop then start, picking up any config edits.
@@ -212,7 +236,8 @@ impl MlxPool {
         http: &reqwest::Client,
         id: &str,
     ) -> Result<MlxServerStatus, String> {
-        self.stop(config, id).await;
+        // A restart does not care whether anything was running.
+        let _ = self.stop(config, id).await;
         self.start(config, http, id).await
     }
 

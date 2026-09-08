@@ -6915,6 +6915,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Lokasi',
   'devOptions.provisionedCore': 'Core yang dijalankan aplikasi ini',
   'devOptions.gatewayId': 'Lokasi',
+  'settings.ai.mlx': 'MLX',
+  'mlx.description':
+    'Neppy menjalankan dan mengawasi server MLX untukmu. Setiap server adalah satu blok [[mlx.server]] di berkas konfigurasimu, tempat parameternya berada.',
+  'mlx.disabledNotice':
+    'Lingkungan MLX sedang dimatikan. Setel mlx.enabled menjadi true di berkas konfigurasi agar Neppy dapat menjalankan server ini.',
+  'mlx.problemsTitle': 'Masalah konfigurasi',
+  'mlx.memoryTitle': 'Memori',
+  'mlx.memoryUsage': '{used} GiB dari {budget} GiB terpakai',
+  'mlx.noServers': 'Belum ada server MLX yang dikonfigurasi.',
+  'mlx.noModelLoaded': 'Tidak ada model yang dimuat',
+  'mlx.start': 'Jalankan',
+  'mlx.stop': 'Hentikan',
+  'mlx.restart': 'Mulai ulang',
+  'mlx.unload': 'Bebaskan memori',
+  'mlx.showDetails': 'Detail',
+  'mlx.hideDetails': 'Sembunyikan detail',
+  'mlx.command': 'Perintah',
+  'mlx.logs': 'Keluaran terbaru',
+  'mlx.noLogs': 'Belum ada keluaran.',
+  'mlx.availableModels': 'Model tersedia ({count})',
+  'mlx.state.stopped': 'Berhenti',
+  'mlx.state.starting': 'Sedang dijalankan',
+  'mlx.state.ready': 'Siap',
+  'mlx.state.degraded': 'Tidak merespons',
+  'mlx.state.crashed': 'Berhenti mendadak',
 };
 
 export default messages;

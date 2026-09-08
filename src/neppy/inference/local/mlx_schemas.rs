@@ -197,10 +197,17 @@ fn handle_stop(params: Map<String, Value>) -> ControllerFuture {
         let p = deserialize_params::<ServerIdParams>(params)?;
         let config = config_rpc::load_config_with_timeout().await?;
         let service = super::global(&config);
-        service.mlx.stop(&config, p.id.trim()).await;
+        // Report what actually happened. Claiming a stop that did not occur
+        // leaves the caller believing memory was freed when the model is
+        // still resident.
+        let stopped = service.mlx.stop(&config, p.id.trim()).await;
         to_json(RpcOutcome::single_log(
-            serde_json::json!({ "id": p.id.trim(), "stopped": true }),
-            format!("stopped MLX server `{}`", p.id.trim()),
+            serde_json::json!({ "id": p.id.trim(), "stopped": stopped }),
+            if stopped {
+                format!("stopped MLX server `{}`", p.id.trim())
+            } else {
+                format!("MLX server `{}` was not running", p.id.trim())
+            },
         ))
     })
 }
@@ -244,9 +251,13 @@ fn handle_unload(params: Map<String, Value>) -> ControllerFuture {
 
         let base_url = service
             .mlx
-            .base_url_for(id)
+            .resolved_base_url(&config, id)
             .await
-            .ok_or_else(|| format!("server `{id}` is not running"))?;
+            .ok_or_else(|| {
+                format!(
+                    "cannot reach server `{id}`: it is not running in this process and its                      [[mlx.server]] block has no fixed port, so its address is unknown."
+                )
+            })?;
 
         // `/unload` sits at the server root, not under `/v1`.
         let root = base_url.trim_end_matches('/').trim_end_matches("/v1");

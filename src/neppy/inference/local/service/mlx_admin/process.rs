@@ -90,7 +90,7 @@ impl MlxProcess {
 /// Reclaims a prior orphan for the same id first, so a crashed Neppy cannot
 /// leave a model resident and the port occupied.
 pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<MlxProcess, String> {
-    reclaim_orphan_if_ours(config, &server.id);
+    let _ = reclaim_orphan_if_ours(config, &server.id);
 
     let resolved = resolve_binary(config, server)?;
     probe_binary(&resolved.path).await?;
@@ -160,12 +160,20 @@ pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<M
     })
 }
 
-/// Kill a process left behind by a previous Neppy that died without stopping
-/// its children. Only ever touches a PID we recorded ourselves.
-pub(crate) fn reclaim_orphan_if_ours(config: &Config, id: &str) {
+/// Kill a process recorded for `id` that this process does not hold a handle
+/// to. Only ever touches a PID we recorded ourselves.
+///
+/// Returns whether a live process was actually killed, so callers can report
+/// honestly instead of claiming a stop that did not happen.
+///
+/// Two callers, two reasons. `spawn` uses it so a Neppy that died without
+/// running its shutdown hook cannot leak a resident 16 GB model. `stop` uses
+/// it because the CLI is a fresh process per invocation and never shares a
+/// pool with the invocation that spawned the server.
+pub(crate) fn reclaim_orphan_if_ours(config: &Config, id: &str) -> bool {
     let path = mlx_spawn_marker_path(config, id);
     let Some(marker) = read_marker_at(&path) else {
-        return;
+        return false;
     };
 
     if !pid_is_alive(marker.pid) {
@@ -174,15 +182,16 @@ pub(crate) fn reclaim_orphan_if_ours(config: &Config, id: &str) {
             marker.pid
         );
         clear_marker_at(&path);
-        return;
+        return false;
     }
 
     log::info!(
-        "[mlx] reclaiming orphaned server `{id}` pid={} from a previous session",
+        "[mlx] reclaiming server `{id}` pid={} recorded by an earlier process",
         marker.pid
     );
     super::super::ollama_admin::kill_pid_by_id(marker.pid);
     clear_marker_at(&path);
+    true
 }
 
 /// Choose a port: honour an explicit one, otherwise ask the OS for a free one.

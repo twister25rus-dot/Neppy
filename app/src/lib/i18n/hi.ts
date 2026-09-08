@@ -6879,6 +6879,31 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'स्थान',
   'devOptions.provisionedCore': 'इस ऐप द्वारा शुरू किया गया कोर',
   'devOptions.gatewayId': 'स्थान',
+  'settings.ai.mlx': 'MLX',
+  'mlx.description':
+    'Neppy आपके लिए MLX सर्वर चलाता है और उन पर नज़र रखता है। हर सर्वर आपकी कॉन्फ़िगरेशन फ़ाइल के एक [[mlx.server]] ब्लॉक से बनता है, और उसके पैरामीटर भी वहीं रहते हैं।',
+  'mlx.disabledNotice':
+    'MLX परिवेश बंद है। Neppy इन सर्वरों को चला सके, इसके लिए कॉन्फ़िगरेशन फ़ाइल में mlx.enabled को true कर दें।',
+  'mlx.problemsTitle': 'कॉन्फ़िगरेशन में समस्याएँ',
+  'mlx.memoryTitle': 'मेमोरी',
+  'mlx.memoryUsage': '{budget} GiB में से {used} GiB इस्तेमाल में',
+  'mlx.noServers': 'अभी कोई MLX सर्वर सेट नहीं किया गया है।',
+  'mlx.noModelLoaded': 'कोई मॉडल लोड नहीं है',
+  'mlx.start': 'शुरू करें',
+  'mlx.stop': 'रोकें',
+  'mlx.restart': 'दोबारा शुरू करें',
+  'mlx.unload': 'मेमोरी खाली करें',
+  'mlx.showDetails': 'विवरण',
+  'mlx.hideDetails': 'विवरण छिपाएँ',
+  'mlx.command': 'कमांड',
+  'mlx.logs': 'हाल का आउटपुट',
+  'mlx.noLogs': 'अभी कोई आउटपुट नहीं।',
+  'mlx.availableModels': 'उपलब्ध मॉडल ({count})',
+  'mlx.state.stopped': 'रुका हुआ',
+  'mlx.state.starting': 'शुरू हो रहा है',
+  'mlx.state.ready': 'तैयार',
+  'mlx.state.degraded': 'जवाब नहीं दे रहा',
+  'mlx.state.crashed': 'बंद हो गया',
 };
 
 export default messages;

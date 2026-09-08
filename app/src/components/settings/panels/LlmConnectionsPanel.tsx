@@ -29,6 +29,7 @@ const LlmConnectionsPanel = () => {
       tabs={[
         { id: 'providers', label: t('settings.ai.llmProviders') },
         { id: 'routing', label: t('settings.ai.routing') },
+        { id: 'mlx', label: t('settings.ai.mlx') },
       ]}
       value={tab}
       onChange={setTab}
