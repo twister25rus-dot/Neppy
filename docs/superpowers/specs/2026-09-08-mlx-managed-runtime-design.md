@@ -63,10 +63,16 @@ KV-cache quantization (`--kv-bits` including TurboQuant, `--kv-group-size`,
 `--expert-cache-gb` MoE offload, and speculative decoding
 (`--draft-model`, `--draft-kind {dflash,eagle3,mtp}`).
 
-Two current profile facts are wrong and must be corrected: `mlx_vlm.server`
-does expose `/v1/responses`, and it does native tool calling
-(`tools`/`tool_choice`/`tool_calls`, with per-model parsers in
-`mlx_vlm/tool_parsers/`) rather than prompt-guided.
+One current profile fact is wrong and must be corrected: both binaries do
+native tool calling (`tools` / `tool_choice` / `tool_calls`, with per-model
+parsers in `mlx_vlm/tool_parsers/`), not prompt-guided.
+
+`supports_responses_api` stays `false`, contrary to an earlier draft of this
+spec. `mlx_vlm.server` does serve `/v1/responses`, but `mlx_lm.server` serves
+only `/v1/chat/completions` and `/v1/models` (verified against the installed
+0.31.3 source), and `MLX_PROFILE` describes both — the `mlx:` provider prefix
+does not say which binary is running. Flipping it would break every
+`kind = "lm"` block. Splitting the profile per kind is the prerequisite.
 
 ## 4. Constraint: the vendored config is not ours
 
@@ -162,7 +168,8 @@ models those roles reference; roles naming the same model share one process.
 - Keep parsing the `mlx:` and `omlx:` model prefixes for back-compat, but route
   both through the one unified provider path; retire `OMLX_PROFILE` as a
   separate kind.
-- Correct `MLX_PROFILE`: `supports_responses_api: true`, `tool_support: Native`.
+- Correct `MLX_PROFILE` and `OMLX_PROFILE` to `tool_support: Native`.
+  `supports_responses_api` stays `false` — see the note in §3.
 - When `embeddings_backend = "ollama"`, Ollama is ensured for embeddings and TTS
   only — never as a precondition for chat.
 

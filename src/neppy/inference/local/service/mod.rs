@@ -3,6 +3,7 @@
 mod assets;
 mod bootstrap;
 mod lm_studio;
+pub(crate) mod mlx_admin;
 mod model_rpc;
 pub(crate) mod ollama_admin;
 mod public_infer;

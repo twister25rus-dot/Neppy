@@ -32,6 +32,7 @@ pub use super::types;
 pub mod install;
 pub(crate) mod install_piper;
 pub(crate) mod lm_studio;
+pub(crate) mod mlx;
 pub(crate) mod model_requirements;
 mod ollama;
 // `pub(crate)` so the shared `apply_no_window` helper can be reused from the

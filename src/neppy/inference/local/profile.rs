@@ -148,10 +148,24 @@ pub const LM_STUDIO_PROFILE: LocalProviderProfile = LocalProviderProfile {
     base_url_env: "LM_STUDIO_URL",
 };
 
-/// MLX-compatible server profile (mlx_lm.server, etc.).
+/// MLX server profile, covering both `mlx_vlm.server` and `mlx_lm.server`.
+///
+/// `tool_support` is `Native`, corrected from `PromptGuided`: both binaries
+/// accept OpenAI `tools` / `tool_choice` and emit `tool_calls`, and mlx-vlm
+/// ships per-model tool parsers (`mlx_vlm/tool_parsers/`). Prompt-guided
+/// calling on a model that supports the native path costs tokens and loses the
+/// structured arguments.
+///
+/// `supports_responses_api` deliberately stays `false` even though
+/// `mlx_vlm.server` does serve `/v1/responses`. This one constant describes
+/// both binaries — the `mlx:` provider prefix does not say which is running —
+/// and `mlx_lm.server` serves only `/v1/chat/completions` and `/v1/models`.
+/// Claiming Responses here would break every `kind = "lm"` block; chat
+/// completions is the surface both share. Split the profile per kind before
+/// flipping this.
 pub const MLX_PROFILE: LocalProviderProfile = LocalProviderProfile {
     kind: LocalProviderKind::Mlx,
-    tool_support: ToolSupport::PromptGuided,
+    tool_support: ToolSupport::Native,
     default_context_window: Some(4_096),
     supports_responses_api: false,
     supports_streaming: true,
@@ -165,10 +179,14 @@ pub const MLX_PROFILE: LocalProviderProfile = LocalProviderProfile {
     base_url_env: "MLX_SERVER_URL",
 };
 
-/// OMLX profile: OpenAI v1-compatible MLX server, default port 8000, key required.
+/// OMLX profile: the same MLX server behind a bearer key, default port 8000.
+///
+/// Retained for back-compat with saved `omlx:` provider strings. New config
+/// expresses this as `auth = "bearer"` on an `[[mlx.server]]` block, so this
+/// profile tracks `MLX_PROFILE` — including the native tool support.
 pub const OMLX_PROFILE: LocalProviderProfile = LocalProviderProfile {
     kind: LocalProviderKind::Omlx,
-    tool_support: ToolSupport::PromptGuided,
+    tool_support: ToolSupport::Native,
     default_context_window: Some(4_096),
     supports_responses_api: false,
     supports_streaming: true,

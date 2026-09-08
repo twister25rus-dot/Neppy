@@ -93,6 +93,32 @@ pub(crate) fn ollama_spawn_marker_path(config: &Config) -> PathBuf {
         .join("ollama.spawn")
 }
 
+/// Spawn marker for one managed MLX server, keyed by its `[[mlx.server]]` id.
+///
+/// Per-id rather than per-runtime because several MLX processes can run at
+/// once, and reclaiming an orphan must not kill a sibling that is healthy.
+/// The id is sanitised: it reaches the filesystem, and config is user-edited.
+pub(crate) fn mlx_spawn_marker_path(config: &Config, server_id: &str) -> PathBuf {
+    let safe: String = server_id
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    let safe = if safe.is_empty() {
+        "unnamed".to_string()
+    } else {
+        safe
+    };
+    shared_root_dir(config)
+        .join("local-ai")
+        .join(format!("mlx-{safe}.spawn"))
+}
+
 /// Standard Unix locations a CLI binary may live in that are **not**
 /// guaranteed to be on the `PATH` a GUI app inherits. A macOS app launched
 /// from Finder/Dock gets the minimal launchd `PATH`

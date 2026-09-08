@@ -48,6 +48,8 @@ pub(crate) use load::CONFIG_OWNER_MISMATCH_MARKER;
 pub mod claude_agent_sdk;
 pub use claude_agent_sdk::ClaudeAgentSdkConfig;
 mod local_ai;
+pub mod mlx;
+pub use mlx::{MlxConfig, MlxServerConfig};
 mod modules;
 mod node;
 mod observability;
