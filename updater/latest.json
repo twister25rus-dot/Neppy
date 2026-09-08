@@ -1,11 +1,11 @@
 {
-  "version": "0.65.2",
-  "notes": "Neppy 0.65.2",
-  "pub_date": "2026-09-08T11:32:18Z",
+  "version": "0.65.3",
+  "notes": "Neppy 0.65.3",
+  "pub_date": "2026-09-08T13:20:33Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakxsWUs5SWlrdDdGV2ZIK0lGL1BEWk90YllRdForaW1nVEZndWFBY1MyNDZ4NEJpeW1Bc2ZoMVdGdFBteFZqQWdYaDFkVlhBbnhaMkVpOG11ZVFhSUFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODY3MTEwCWZpbGU6TmVwcHkuYXBwLnRhci5nego2cmRDVDBhanNRaXcwYU1YdEh5OUdCY2hqVVdiMTQ3VWZPTCttWjV1Z2xGbnJ4eE5vc3pNWnRrQ0w0dXQ2Q2VWdDg2RFc2RzVsTG9tWEZGUjlkdElBQT09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/550375201"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrak8wOUtkaE5xMHp5T2o1bkozTHkwcTBOdkNQeG5MeXM1Mkd3TlN4QjAzYWliYXRhRktqZUQrL1Rxa0RkVlpOcVlreHg3dldTcGM4UTN5T2dVbVhTUndzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODczNTY4CWZpbGU6TmVwcHkuYXBwLnRhci5negpLelUxMFVjeTRMaWdPZkJpejlRb2krc1NTQkUrbk9heWprNG5FdXl2bElTckFta2M5b1VTbzVQVHNIQTgyNFd6RnhEVjZjbVVEWW1IVHoycVJwV2pBZz09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/550541460"
     }
   }
 }
