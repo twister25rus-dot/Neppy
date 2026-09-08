@@ -7015,6 +7015,10 @@ const messages: TranslationMap = {
   'mlx.confirmDelete': 'Potwierdź usunięcie',
   'mlx.deleteHint':
     'Usunięte modele trafiają do kosza, więc możesz je przywrócić, dopóki go nie opróżnisz.',
+  'mlx.modelLabel': 'Model',
+  'mlx.modelNone': 'Żaden, wczytaj na żądanie',
+  'mlx.useForChat': 'Użyj do czatu',
+  'mlx.servingChat': 'Obsługuje czat',
 };
 
 export default messages;

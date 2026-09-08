@@ -23,6 +23,7 @@ vi.mock('../../../lib/i18n/I18nContext', () => ({
 }));
 
 interface ServerOverrides {
+  configured_model?: string | null;
   id?: string;
   state?: string;
   port?: number | null;
@@ -47,6 +48,7 @@ function server(overrides: ServerOverrides = {}) {
     models: [],
     detail: null,
     command: [],
+    configured_model: null,
     ...overrides,
   };
 }
@@ -79,6 +81,8 @@ function status(overrides: Record<string, unknown> = {}) {
     memory_used_gib: 0,
     memory_budget_gib: 25.2,
     problems: [],
+    chat_provider: 'openhuman',
+    chat_uses_mlx: false,
     servers: [server()],
     ...overrides,
   };
@@ -250,5 +254,125 @@ describe('MlxPanel', () => {
     await userEvent.click(screen.getByText('mlx.showDetails'));
 
     await waitFor(() => expect(screen.getByText(/--api-key \*\*\*/)).toBeInTheDocument());
+  });
+});
+
+// ── choosing a model, and routing chat to it ─────────────────────────────
+//
+// Both were missing from the first release: the panel could start a server
+// but not say which checkpoint it should load, and starting one did nothing
+// for chat because `local_ai.base_url` still pointed at another runtime.
+
+describe('MlxPanel model selection and chat routing', () => {
+  beforeEach(() => {
+    callCoreRpc.mockReset();
+  });
+
+  it('offers every cached model as a choice', async () => {
+    callCoreRpc.mockImplementation(router({}));
+    render(<MlxPanel />);
+
+    await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
+    const options = screen.getAllByRole('option').map(option => option.textContent);
+
+    expect(options.some(text => text?.includes('mlx-community/Qwen3.8-27B-nvfp4'))).toBe(true);
+    // The size is on the option, because picking a model is a memory decision.
+    expect(options.some(text => text?.includes('11.8 GiB'))).toBe(true);
+    expect(options).toContain('mlx.modelNone');
+  });
+
+  it('sets the chosen model on the addressed server', async () => {
+    callCoreRpc.mockImplementation(router({}));
+    render(<MlxPanel />);
+    await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
+
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'mlx-community/Qwen3.8-27B-nvfp4');
+
+    await waitFor(() =>
+      expect(callCoreRpc).toHaveBeenCalledWith({
+        method: 'openhuman.mlx_set_model',
+        params: { id: 'primary', model_id: 'mlx-community/Qwen3.8-27B-nvfp4' },
+      })
+    );
+  });
+
+  it('offers to route chat only to a running server', async () => {
+    callCoreRpc.mockImplementation(router({}));
+    const { unmount } = render(<MlxPanel />);
+    await waitFor(() => expect(screen.getByText('mlx.start')).toBeInTheDocument());
+    // Stopped: routing chat at it would name an address nothing is serving.
+    expect(screen.queryByText('mlx.useForChat')).not.toBeInTheDocument();
+    unmount();
+
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
+      })
+    );
+    render(<MlxPanel />);
+    await waitFor(() => expect(screen.getByText('mlx.useForChat')).toBeInTheDocument());
+  });
+
+  it('routes chat to the addressed server', async () => {
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_status': status({
+          servers: [server({ id: 'vision', state: 'ready', port: 8794 })],
+        }),
+      })
+    );
+    render(<MlxPanel />);
+    await waitFor(() => expect(screen.getByText('mlx.useForChat')).toBeInTheDocument());
+
+    await userEvent.click(screen.getByText('mlx.useForChat'));
+
+    await waitFor(() =>
+      expect(callCoreRpc).toHaveBeenCalledWith({
+        method: 'openhuman.mlx_use_for_chat',
+        params: { id: 'vision' },
+      })
+    );
+  });
+
+  it('marks the server chat is actually using', async () => {
+    // A started server that nothing routes to must look different from one
+    // that is serving, which is precisely what the first release got wrong.
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_status': status({
+          chat_provider: 'mlx:mlx-community/Qwen3.8-27B-nvfp4',
+          chat_uses_mlx: true,
+          servers: [
+            server({
+              state: 'ready',
+              port: 8794,
+              configured_model: 'mlx-community/Qwen3.8-27B-nvfp4',
+            }),
+          ],
+        }),
+      })
+    );
+    render(<MlxPanel />);
+
+    await waitFor(() => expect(screen.getByText('mlx.servingChat')).toBeInTheDocument());
+    // Already serving, so the button would be a no-op.
+    expect(screen.queryByText('mlx.useForChat')).not.toBeInTheDocument();
+  });
+
+  it('surfaces a refusal to route chat with no model chosen', async () => {
+    const refusal =
+      '`primary` has no model selected. Choose one first, or the chat provider would name nothing.';
+    callCoreRpc.mockImplementation((arg: { method: string }) => {
+      if (arg.method === 'openhuman.mlx_use_for_chat') return Promise.reject(new Error(refusal));
+      return router({
+        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
+      })(arg);
+    });
+
+    render(<MlxPanel />);
+    await waitFor(() => expect(screen.getByText('mlx.useForChat')).toBeInTheDocument());
+    await userEvent.click(screen.getByText('mlx.useForChat'));
+
+    await waitFor(() => expect(screen.getByText(refusal)).toBeInTheDocument());
   });
 });

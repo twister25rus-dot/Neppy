@@ -6989,6 +6989,10 @@ const messages: TranslationMap = {
   'mlx.confirmDelete': 'Подтвердить удаление',
   'mlx.deleteHint':
     'Удалённые модели попадают в корзину, поэтому их можно вернуть, пока вы её не очистили.',
+  'mlx.modelLabel': 'Модель',
+  'mlx.modelNone': 'Нет, загружать по запросу',
+  'mlx.useForChat': 'Использовать для чата',
+  'mlx.servingChat': 'Обслуживает чат',
 };
 
 export default messages;

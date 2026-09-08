@@ -6915,6 +6915,10 @@ const messages: TranslationMap = {
   'mlx.confirmDelete': 'মোছা নিশ্চিত করুন',
   'mlx.deleteHint':
     'মুছে ফেলা মডেল ট্র্যাশে যায়, তাই ট্র্যাশ খালি না করা পর্যন্ত সেগুলো ফিরিয়ে আনা যায়।',
+  'mlx.modelLabel': 'মডেল',
+  'mlx.modelNone': 'কোনোটি নয়, চাওয়া হলে লোড হবে',
+  'mlx.useForChat': 'চ্যাটে ব্যবহার করুন',
+  'mlx.servingChat': 'চ্যাট সামলাচ্ছে',
 };
 
 export default messages;

@@ -6835,6 +6835,10 @@ const messages: TranslationMap = {
   'mlx.delete': '삭제',
   'mlx.confirmDelete': '삭제 확인',
   'mlx.deleteHint': '삭제한 모델은 휴지통으로 이동하므로 비우기 전까지는 되돌릴 수 있습니다.',
+  'mlx.modelLabel': '모델',
+  'mlx.modelNone': '없음, 요청할 때 불러오기',
+  'mlx.useForChat': '채팅에 사용',
+  'mlx.servingChat': '채팅 담당 중',
 };
 
 export default messages;

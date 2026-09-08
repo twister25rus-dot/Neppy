@@ -7064,6 +7064,10 @@ const messages: TranslationMap = {
   'mlx.confirmDelete': 'Confirmar eliminación',
   'mlx.deleteHint':
     'Los modelos eliminados van a la papelera, así que puedes recuperarlos mientras no la vacíes.',
+  'mlx.modelLabel': 'Modelo',
+  'mlx.modelNone': 'Ninguno, cargar cuando haga falta',
+  'mlx.useForChat': 'Usar para el chat',
+  'mlx.servingChat': 'Atiende el chat',
 };
 
 export default messages;

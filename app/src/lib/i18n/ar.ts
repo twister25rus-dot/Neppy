@@ -6757,6 +6757,10 @@ const messages: TranslationMap = {
   'mlx.delete': 'حذف',
   'mlx.confirmDelete': 'تأكيد الحذف',
   'mlx.deleteHint': 'تنتقل النماذج المحذوفة إلى سلة المهملات، فيمكنك استعادتها ما لم تفرغها.',
+  'mlx.modelLabel': 'النموذج',
+  'mlx.modelNone': 'بلا نموذج، يُحمَّل عند الطلب',
+  'mlx.useForChat': 'استخدامه للدردشة',
+  'mlx.servingChat': 'يخدم الدردشة',
 };
 
 export default messages;

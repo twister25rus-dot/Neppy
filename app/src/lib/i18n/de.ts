@@ -7104,6 +7104,10 @@ const messages: TranslationMap = {
   'mlx.confirmDelete': 'Löschen bestätigen',
   'mlx.deleteHint':
     'Gelöschte Modelle landen im Papierkorb und lassen sich zurückholen, solange du ihn nicht leerst.',
+  'mlx.modelLabel': 'Modell',
+  'mlx.modelNone': 'Keins, bei Bedarf laden',
+  'mlx.useForChat': 'Für Chat verwenden',
+  'mlx.servingChat': 'Bedient den Chat',
 };
 
 export default messages;

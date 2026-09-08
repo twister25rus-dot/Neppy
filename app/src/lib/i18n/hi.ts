@@ -6910,6 +6910,10 @@ const messages: TranslationMap = {
   'mlx.confirmDelete': 'हटाने की पुष्टि करें',
   'mlx.deleteHint':
     'हटाए गए मॉडल ट्रैश में जाते हैं, इसलिए जब तक आप उसे खाली नहीं करते, उन्हें वापस लाया जा सकता है।',
+  'mlx.modelLabel': 'मॉडल',
+  'mlx.modelNone': 'कोई नहीं, माँगने पर लोड करें',
+  'mlx.useForChat': 'चैट के लिए इस्तेमाल करें',
+  'mlx.servingChat': 'चैट संभाल रहा है',
 };
 
 export default messages;

@@ -34,6 +34,8 @@ interface MlxServerStatus {
   models: string[];
   detail: string | null;
   command: string[];
+  /** The checkpoint the block is configured to launch with. */
+  configured_model: string | null;
 }
 
 interface CachedModel {
@@ -50,6 +52,8 @@ interface CacheListing {
 
 interface MlxStatus {
   enabled: boolean;
+  chat_provider: string | null;
+  chat_uses_mlx: boolean;
   embeddings_backend: string;
   memory_used_gib: number;
   memory_budget_gib: number;
@@ -72,6 +76,22 @@ const STATE_VARIANT: Record<ServerState, BadgeVariant> = {
   degraded: 'warning',
   crashed: 'danger',
 };
+
+/**
+ * The checkpoint a card is configured to load.
+ *
+ * `loaded_model` is what the server currently holds, which is not the same
+ * thing: with `model_discovery = "hf-cache"` a server can be configured for one
+ * checkpoint and holding none, or holding one a request asked for. The select
+ * reflects configuration, so it falls back to whatever is resident only when
+ * nothing is configured.
+ */
+function serverModelOf(server: MlxServerStatus, cache: CacheListing | null): string {
+  if (server.loaded_model && cache?.models?.some(model => model.id === server.loaded_model)) {
+    return server.loaded_model;
+  }
+  return server.configured_model ?? '';
+}
 
 export default function MlxPanel() {
   const { t } = useT();
@@ -138,6 +158,39 @@ export default function MlxPanel() {
         await load();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
+      }
+    },
+    [load]
+  );
+
+  const setModel = useCallback(
+    async (id: string, modelId: string) => {
+      setBusyId(id);
+      setError(null);
+      try {
+        await callCoreRpc({ method: 'openhuman.mlx_set_model', params: { id, model_id: modelId } });
+        await load();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (mounted.current) setBusyId(null);
+      }
+    },
+    [load]
+  );
+
+  const useForChat = useCallback(
+    async (id: string) => {
+      setBusyId(id);
+      setError(null);
+      try {
+        await callCoreRpc({ method: 'openhuman.mlx_use_for_chat', params: { id } });
+        await load();
+      } catch (e) {
+        // The refusal explains what is missing, usually an unchosen model.
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (mounted.current) setBusyId(null);
       }
     },
     [load]
@@ -223,6 +276,14 @@ export default function MlxPanel() {
       {status.servers.map(server => {
         const running = server.state !== 'stopped' && server.state !== 'crashed';
         const busy = busyId === server.id;
+        // Chat names a model, not a server, so a card is "the chat server"
+        // when the provider string names the checkpoint it is configured to
+        // load.
+        const configuredModel = serverModelOf(server, cache);
+        const usesThisServer =
+          status.chat_uses_mlx &&
+          configuredModel !== '' &&
+          status.chat_provider === `mlx:${configuredModel}`;
         return (
           <div key={server.id} className="rounded-md border border-border p-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -230,6 +291,7 @@ export default function MlxPanel() {
               {/* kind is the binary family: literal, not prose. */}
               <span className="text-xs text-content-muted">{server.kind}</span>
               <Badge variant={STATE_VARIANT[server.state]}>{t(`mlx.state.${server.state}`)}</Badge>
+              {usesThisServer && <Badge variant="primary">{t('mlx.servingChat')}</Badge>}
               {server.port != null && (
                 <span className="text-xs text-content-muted">:{server.port}</span>
               )}
@@ -247,6 +309,24 @@ export default function MlxPanel() {
             {server.detail && (
               <div className="mt-1 text-xs text-content-muted">{server.detail}</div>
             )}
+
+            {/* Which checkpoint this server loads. It is a launch argument,
+                so changing it restarts a running server. */}
+            <label className="mt-2 flex items-center gap-2 text-sm">
+              <span className="text-content-muted">{t('mlx.modelLabel')}</span>
+              <select
+                className="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1 text-sm"
+                value={serverModelOf(server, cache)}
+                disabled={busy}
+                onChange={event => void setModel(server.id, event.target.value)}>
+                <option value="">{t('mlx.modelNone')}</option>
+                {(cache?.models ?? []).map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.id} ({model.size_gib.toFixed(1)} GiB)
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <div className="mt-2 flex flex-wrap gap-2">
               {running ? (
@@ -280,6 +360,15 @@ export default function MlxPanel() {
                   analyticsId="mlx-server-start"
                   onClick={() => void act(server.id, 'openhuman.mlx_start')}>
                   {t('mlx.start')}
+                </Button>
+              )}
+              {running && !usesThisServer && (
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  analyticsId="mlx-server-use-for-chat"
+                  onClick={() => void useForChat(server.id)}>
+                  {t('mlx.useForChat')}
                 </Button>
               )}
               <Button

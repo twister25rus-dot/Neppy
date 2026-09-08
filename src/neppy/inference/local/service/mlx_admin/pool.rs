@@ -22,12 +22,20 @@ use super::health::{classify, probe_liveness, probe_models, MlxServerState};
 use super::memory::{admit, budget_gib, resident_gib, Admission};
 use super::process::{spawn, MlxProcess};
 
-/// How long a server may take to answer after spawning.
+/// Grace period for catching a spawn that dies immediately.
 ///
-/// Generous on purpose: a 27B checkpoint takes tens of seconds to load with
-/// the port already bound, and a tight ceiling would report a healthy start as
-/// a failure. A block with no preloaded `model` answers almost immediately.
-const READY_CEILING: Duration = Duration::from_secs(180);
+/// `start` deliberately does NOT wait for readiness. `mlx_vlm.server` does not
+/// begin serving HTTP until a preloaded `--model` has finished loading, and it
+/// re-checks the Hub revision even for a cached checkpoint, so a 27B can take
+/// minutes during which nothing answers. Blocking the RPC on that would hang
+/// the Start button for the whole load.
+///
+/// So the pool records the server as `starting` and returns; the status poll
+/// promotes it to `ready` when it answers, or to `crashed` if the process
+/// exits. This window only catches an argv or binary error that kills the
+/// process at once, which is worth reporting inline rather than as a state the
+/// caller has to poll for.
+const SPAWN_GRACE: Duration = Duration::from_millis(600);
 
 /// Log lines returned per status request.
 const LOG_TAIL: usize = 40;
@@ -55,6 +63,11 @@ pub(crate) struct MlxServerStatus {
     /// configured `model`: with `model_discovery = "hf-cache"` a block can
     /// start with nothing loaded and serve on demand.
     pub(crate) loaded_model: Option<String>,
+    /// The checkpoint the block is configured to launch with, which is not the
+    /// same as `loaded_model`: under `model_discovery = "hf-cache"` a server
+    /// can be configured for one checkpoint and holding none, or holding one a
+    /// request asked for on the fly.
+    pub(crate) configured_model: Option<String>,
     pub(crate) resident_gib: Option<f64>,
     pub(crate) estimated_gib: Option<f64>,
     pub(crate) models: Vec<String>,
@@ -75,6 +88,7 @@ impl MlxServerStatus {
             base_url: None,
             pid: None,
             loaded_model: None,
+            configured_model: non_empty(&server.model),
             resident_gib: None,
             estimated_gib: None,
             models: Vec::new(),
@@ -132,6 +146,16 @@ impl MlxPool {
             .map(|entry| server_base_url(&entry.process))
     }
 
+    /// Whether a block is running, and on which port.
+    ///
+    /// Lets a caller persist an auto-assigned port back into config, so the
+    /// address survives a core restart instead of being knowable only to the
+    /// process that spawned it.
+    pub(crate) async fn assigned_port(&self, id: &str) -> Option<u16> {
+        let running = self.running.lock().await;
+        running.get(id).map(|entry| entry.process.port)
+    }
+
     /// Start the block with this id.
     ///
     /// Refuses rather than spawning when the model would not fit alongside
@@ -161,38 +185,39 @@ impl MlxPool {
             Admission::Refuse { message } => return Err(message),
         };
 
-        let process = spawn(config, &server).await?;
-        let base_url = server_base_url(&process);
-        let bearer = server
-            .uses_bearer()
-            .then(|| server.api_key.trim().to_string());
+        let mut process = spawn(config, &server).await?;
 
         log::info!(
-            "[mlx] server `{id}` spawned pid={} port={}; waiting for readiness",
+            "[mlx] server `{id}` spawned pid={} port={}",
             process.pid,
             process.port
         );
 
-        let readiness =
-            super::health::wait_until_ready(http, &base_url, bearer.as_deref(), READY_CEILING)
-                .await;
+        // Only long enough to notice a process that refuses to start at all,
+        // e.g. an argv the binary rejects. Anything longer would be waiting on
+        // the model load.
+        tokio::time::sleep(SPAWN_GRACE).await;
 
-        let (state, has_been_ready, detail) = match readiness {
-            Ok(report) => {
-                log::info!(
-                    "[mlx] server `{id}` ready on {base_url} with {} model(s) listed",
-                    report.models.len()
-                );
-                (MlxServerState::Ready, true, None)
-            }
-            Err(detail) => {
-                // The process may still be loading, or may have died. Record
-                // what we know and let the next status call classify it —
-                // killing it here would throw away a slow but healthy load.
-                log::warn!("[mlx] server `{id}` did not become ready: {detail}");
-                (MlxServerState::Starting, false, Some(detail))
-            }
-        };
+        if let Some(exit) = process.exit_status() {
+            // Its own stderr says far more than "the process exited" does.
+            let tail = process.logs_tail(LOG_TAIL);
+            let reason = tail
+                .iter()
+                .rev()
+                .take(3)
+                .rev()
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(" | ");
+            clear_marker_for(config, &id);
+            return Err(if reason.is_empty() {
+                format!("server `{id}` {exit} immediately after starting")
+            } else {
+                format!("server `{id}` {exit} immediately after starting: {reason}")
+            });
+        }
+
+        let (state, has_been_ready, detail) = (MlxServerState::Starting, false, None);
 
         self.running.lock().await.insert(
             id.to_string(),
@@ -354,6 +379,7 @@ impl MlxPool {
             base_url: Some(base_url),
             pid: Some(pid),
             loaded_model: liveness.as_ref().and_then(|l| l.loaded_model.clone()),
+            configured_model: non_empty(&server_config.model),
             resident_gib: Some(resident_gib(&[pid])),
             estimated_gib,
             models: report.models,
@@ -384,6 +410,18 @@ impl MlxPool {
             .map(|entry| entry.process.pid)
             .collect()
     }
+}
+
+/// Drop the spawn marker for a server that failed to start, so a later stop
+/// does not try to reclaim a PID that is already gone.
+fn clear_marker_for(config: &Config, id: &str) {
+    super::process::reclaim_orphan_if_ours(config, id);
+}
+
+/// `None` for a blank slot, so the UI can tell "not configured" from "".
+fn non_empty(value: &str) -> Option<String> {
+    let trimmed = value.trim();
+    (!trimmed.is_empty()).then(|| trimmed.to_string())
 }
 
 /// Base URL for a running process, always loopback-rooted and `/v1`-suffixed.

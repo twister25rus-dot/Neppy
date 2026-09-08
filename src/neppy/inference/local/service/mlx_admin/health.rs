@@ -207,43 +207,6 @@ pub(crate) async fn probe_liveness(
     Some(response.json::<LivenessReport>().await.unwrap_or_default())
 }
 
-/// Poll until the server answers `/v1/models`, or `ceiling` elapses.
-///
-/// Returns the successful report, or the last failure detail. The interval is
-/// deliberately coarse: a model load is tens of seconds, and a tight loop
-/// against `hf-cache` discovery makes the server do real work while it is
-/// already busy loading weights.
-pub(crate) async fn wait_until_ready(
-    client: &reqwest::Client,
-    base_url: &str,
-    bearer: Option<&str>,
-    ceiling: Duration,
-) -> Result<HealthReport, String> {
-    const INTERVAL: Duration = Duration::from_secs(2);
-
-    let started = std::time::Instant::now();
-    let mut last_detail = "server did not become ready".to_string();
-
-    while started.elapsed() < ceiling {
-        let report = probe_models(client, base_url, bearer).await;
-        if report.reachable {
-            tracing::debug!(
-                target: "local_ai::mlx_admin",
-                elapsed_secs = started.elapsed().as_secs(),
-                models = report.models.len(),
-                "[mlx] server became ready"
-            );
-            return Ok(report);
-        }
-        if let Some(detail) = report.detail {
-            last_detail = detail;
-        }
-        tokio::time::sleep(INTERVAL).await;
-    }
-
-    Err(format!("{last_detail} (waited {}s)", ceiling.as_secs()))
-}
-
 /// Classify a server from a probe plus whether its process is still alive.
 ///
 /// The exit status is the deciding input: a server whose HTTP surface is not
