@@ -15,6 +15,7 @@ pub(crate) fn inference_test_guard() -> std::sync::MutexGuard<'static, ()> {
 }
 
 mod core;
+mod mlx_schemas;
 pub mod ops;
 mod schemas;
 
@@ -32,6 +33,7 @@ pub use super::types;
 pub mod install;
 pub(crate) mod install_piper;
 pub(crate) mod lm_studio;
+pub(crate) mod mlx;
 pub(crate) mod model_requirements;
 mod ollama;
 // `pub(crate)` so the shared `apply_no_window` helper can be reused from the
@@ -45,6 +47,10 @@ pub mod service;
 pub(crate) mod voice_install_common;
 
 pub use core::*;
+pub use mlx_schemas::{
+    all_controller_schemas as all_mlx_controller_schemas,
+    all_registered_controllers as all_mlx_registered_controllers,
+};
 pub use ops as rpc;
 pub use ops::*;
 pub use schemas::{

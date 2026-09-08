@@ -6997,6 +6997,37 @@ const messages: TranslationMap = {
   'devOptions.gateway': 'Local',
   'devOptions.provisionedCore': 'Núcleo iniciado por esta aplicação',
   'devOptions.gatewayId': 'ID do local',
+  'settings.ai.mlx': 'MLX',
+  'mlx.description':
+    'O Neppy inicia e supervisiona os servidores MLX por ti. Cada servidor é um bloco [[mlx.server]] no teu ficheiro de configuração, onde ficam os respetivos parâmetros.',
+  'mlx.disabledNotice':
+    'O ambiente MLX está desligado. Define mlx.enabled como true no teu ficheiro de configuração para o Neppy poder iniciar estes servidores.',
+  'mlx.problemsTitle': 'Problemas de configuração',
+  'mlx.memoryTitle': 'Memória',
+  'mlx.memoryUsage': '{used} GiB de {budget} GiB em uso',
+  'mlx.noServers': 'Ainda não há servidores MLX configurados.',
+  'mlx.noModelLoaded': 'Nenhum modelo carregado',
+  'mlx.start': 'Iniciar',
+  'mlx.stop': 'Parar',
+  'mlx.restart': 'Reiniciar',
+  'mlx.unload': 'Libertar memória',
+  'mlx.showDetails': 'Detalhes',
+  'mlx.hideDetails': 'Ocultar detalhes',
+  'mlx.command': 'Comando',
+  'mlx.logs': 'Saída recente',
+  'mlx.noLogs': 'Ainda sem saída.',
+  'mlx.availableModels': 'Modelos disponíveis ({count})',
+  'mlx.state.stopped': 'Parado',
+  'mlx.state.starting': 'A iniciar',
+  'mlx.state.ready': 'Pronto',
+  'mlx.state.degraded': 'Não responde',
+  'mlx.state.crashed': 'Falhou',
+  'mlx.cacheTitle': 'Modelos transferidos',
+  'mlx.cacheTotal': '{total} GiB no disco',
+  'mlx.delete': 'Eliminar',
+  'mlx.confirmDelete': 'Confirmar eliminação',
+  'mlx.deleteHint':
+    'Os modelos eliminados vão para a reciclagem, por isso podes recuperá-los enquanto não a esvaziares.',
 };
 
 export default messages;

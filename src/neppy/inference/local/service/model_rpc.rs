@@ -45,6 +45,23 @@ fn local_model(config: &Config, model_id: &str) -> Result<OpenAiModel, String> {
                 model_id,
             )
         }
+        LocalAiProvider::Mlx => {
+            let base = crate::neppy::inference::local::mlx::mlx_base_url(config);
+            let api_key =
+                crate::neppy::inference::local::mlx::mlx_api_key(config).unwrap_or_default();
+            tracing::debug!(
+                provider = provider.as_str(),
+                endpoint = %redact_ollama_base_url(&base),
+                has_api_key = !api_key.is_empty(),
+                model = %model_id,
+                "[local_ai:model_rpc] selecting MLX RPC model"
+            );
+            // Generic OpenAI-v1 constructor: mlx_vlm.server and mlx_lm.server
+            // both speak that surface, with the key optional.
+            Ok(OpenAiModel::compatible_provider(
+                "mlx", &api_key, &base, model_id,
+            ))
+        }
         LocalAiProvider::Ollama => {
             let base = ollama_base_url_from_config(config);
             tracing::debug!(

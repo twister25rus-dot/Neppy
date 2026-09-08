@@ -37,10 +37,14 @@ impl LocalAiService {
         // External-runtime precondition: Neppy no longer installs or
         // starts Ollama itself, so the interesting question is whether the
         // user-managed runtime is reachable right now.
+        // MLX belongs here too while embeddings stay on Ollama: the chat
+        // model moves to MLX but the embedder and TTS voice do not, so their
+        // readiness is still an Ollama question.
         let uses_ollama_assets = matches!(
             provider,
             LocalAiProvider::Ollama | LocalAiProvider::LmStudio
-        );
+        ) || (provider == LocalAiProvider::Mlx
+            && !config.mlx.embeddings_on_mlx());
         let ollama_available = if uses_ollama_assets {
             let base_url = crate::neppy::inference::local::ollama_base_url_from_config(config);
             let present = self.ollama_healthy_at(&base_url).await;

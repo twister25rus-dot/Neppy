@@ -7200,6 +7200,36 @@ const en: TranslationMap = {
   'notifications.configRecovered.body':
     'Your settings file could not be read, so it was restored from a backup or reset to defaults. The unreadable file was kept with a ".corrupted" suffix in case you need it.',
   'chat.sources.usedCount': 'Used {n} sources',
+  'settings.ai.mlx': 'MLX',
+  'mlx.description':
+    'Neppy runs and supervises MLX servers for you. Each server is one [[mlx.server]] block in your config file, where its parameters live.',
+  'mlx.disabledNotice':
+    'The MLX runtime is switched off. Set mlx.enabled to true in your config file to let Neppy start these servers.',
+  'mlx.problemsTitle': 'Configuration problems',
+  'mlx.memoryTitle': 'Memory',
+  'mlx.memoryUsage': '{used} GiB of {budget} GiB used',
+  'mlx.noServers': 'No MLX servers are configured yet.',
+  'mlx.noModelLoaded': 'No model loaded',
+  'mlx.start': 'Start',
+  'mlx.stop': 'Stop',
+  'mlx.restart': 'Restart',
+  'mlx.unload': 'Free memory',
+  'mlx.showDetails': 'Details',
+  'mlx.hideDetails': 'Hide details',
+  'mlx.command': 'Command',
+  'mlx.logs': 'Recent output',
+  'mlx.noLogs': 'No output yet.',
+  'mlx.availableModels': 'Available models ({count})',
+  'mlx.state.stopped': 'Stopped',
+  'mlx.state.starting': 'Starting',
+  'mlx.state.ready': 'Ready',
+  'mlx.state.degraded': 'Not responding',
+  'mlx.state.crashed': 'Crashed',
+  'mlx.cacheTitle': 'Downloaded models',
+  'mlx.cacheTotal': '{total} GiB on disk',
+  'mlx.delete': 'Delete',
+  'mlx.confirmDelete': 'Confirm delete',
+  'mlx.deleteHint': 'Deleted models go to the Trash, so you can put them back until you empty it.',
 };
 
 export default en;

@@ -6,6 +6,11 @@ use crate::neppy::config::Config;
 pub(crate) enum LocalAiProvider {
     Ollama,
     LmStudio,
+    /// Managed MLX runtime — `mlx_vlm.server` or `mlx_lm.server` supervised by
+    /// `service::mlx_admin`. The former `omlx` slug maps here too: it was the
+    /// same runtime behind a bearer token, which is now `auth = "bearer"` on an
+    /// `[[mlx.server]]` block rather than a provider of its own.
+    Mlx,
 }
 
 impl LocalAiProvider {
@@ -13,6 +18,7 @@ impl LocalAiProvider {
         match self {
             Self::Ollama => "ollama",
             Self::LmStudio => "lm_studio",
+            Self::Mlx => "mlx",
         }
     }
 
@@ -20,6 +26,7 @@ impl LocalAiProvider {
         match self {
             Self::Ollama => "Ollama",
             Self::LmStudio => "LM Studio",
+            Self::Mlx => "MLX",
         }
     }
 }
@@ -73,10 +80,25 @@ pub(crate) fn local_provider_prefix(slug: &str) -> &'static str {
     }
 }
 
+/// Resolve the runtime a config selects.
+///
+/// The arms are explicit and the fallback logs. This used to be
+/// `_ => Ollama`, which meant `provider = "mlx"` booted Ollama in silence —
+/// `normalize_provider` preserved the slug, and then this threw it away. A
+/// typo should degrade loudly, not swap the user's runtime.
 pub(crate) fn provider_from_config(config: &Config) -> LocalAiProvider {
-    match normalize_provider(&config.local_ai.provider).as_str() {
+    let normalized = normalize_provider(&config.local_ai.provider);
+    match normalized.as_str() {
         "lm_studio" => LocalAiProvider::LmStudio,
-        _ => LocalAiProvider::Ollama,
+        // `omlx` is MLX with a bearer token, not a separate runtime.
+        "mlx" | "omlx" => LocalAiProvider::Mlx,
+        "ollama" => LocalAiProvider::Ollama,
+        other => {
+            log::warn!(
+                "[local-provider] unknown local_ai.provider `{other}`; falling back to ollama"
+            );
+            LocalAiProvider::Ollama
+        }
     }
 }
 
@@ -182,6 +204,29 @@ mod tests {
         assert_eq!(local_provider_prefix("anything-else"), "ollama:");
         assert_eq!(normalize_provider("omlx-server"), "omlx");
         assert_eq!(normalize_provider("OMLX"), "omlx");
+    }
+
+    #[test]
+    fn provider_from_config_resolves_mlx_instead_of_silently_booting_ollama() {
+        let mut config = Config::default();
+
+        config.local_ai.provider = "mlx".to_string();
+        assert_eq!(provider_from_config(&config), LocalAiProvider::Mlx);
+
+        // omlx collapses into the one MLX runtime — it was never a separate
+        // server, only the same one behind a bearer token.
+        config.local_ai.provider = "omlx".to_string();
+        assert_eq!(provider_from_config(&config), LocalAiProvider::Mlx);
+
+        config.local_ai.provider = "lm_studio".to_string();
+        assert_eq!(provider_from_config(&config), LocalAiProvider::LmStudio);
+
+        config.local_ai.provider = "ollama".to_string();
+        assert_eq!(provider_from_config(&config), LocalAiProvider::Ollama);
+
+        // An unknown value still falls back, but loudly (see the warn above).
+        config.local_ai.provider = "nonsense".to_string();
+        assert_eq!(provider_from_config(&config), LocalAiProvider::Ollama);
     }
 
     #[test]

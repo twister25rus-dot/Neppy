@@ -364,6 +364,12 @@ pub struct Config {
     #[serde(default)]
     pub local_ai: LocalAiConfig,
 
+    /// MLX managed-runtime configuration: the servers Neppy supervises,
+    /// their parameters, and the memory budget they share. Neppy-owned —
+    /// `LocalAiConfig` belongs to the vendored tinymemory submodule.
+    #[serde(default)]
+    pub mlx: MlxConfig,
+
     /// Claude Agent SDK provider configuration — routes inference through the
     /// `claude -p` CLI subprocess using the subscriber's Claude plan credit.
     #[serde(default)]
@@ -846,6 +852,7 @@ impl Default for Config {
             agent_registry: crate::neppy::agent::registry::types::AgentRegistryConfig::default(),
             agents: HashMap::new(),
             local_ai: LocalAiConfig::default(),
+            mlx: MlxConfig::default(),
             claude_agent_sdk: ClaudeAgentSdkConfig::default(),
             cloud_providers: Vec::new(),
             primary_cloud: None,

@@ -48,6 +48,7 @@ impl LocalAiService {
             bootstrap_lock: tokio::sync::Mutex::new(()),
             last_memory_summary_at: parking_lot::Mutex::new(None),
             owned_ollama: parking_lot::Mutex::new(None),
+            mlx: super::mlx_admin::pool::MlxPool::new(),
             http: reqwest::Client::builder()
                 // Local models can take >30s on cold start and first-token generation.
                 // Keep the total timeout generous so inline autocomplete and local
@@ -281,6 +282,83 @@ impl LocalAiService {
             return;
         }
 
+        // MLX runs its own server, so it must not fall through to the Ollama
+        // path below. Before this branch existed, `provider_from_config`
+        // collapsed `mlx` to `Ollama` and selecting MLX still required an
+        // Ollama daemon — the defect this whole module exists to fix.
+        if provider_from_config(&effective_config) == LocalAiProvider::Mlx {
+            log::debug!(
+                "[local_ai] MLX bootstrap branch entry embeddings_backend={}",
+                effective_config.mlx.embeddings_backend
+            );
+
+            for problem in effective_config.mlx.validate() {
+                log::warn!("[local_ai] MLX config problem: {problem}");
+            }
+
+            if let Err(err) = self.ensure_mlx_available(&effective_config).await {
+                log::debug!("[local_ai] MLX bootstrap degraded: {err}");
+                let mut status = self.status.lock();
+                status.state = "degraded".to_string();
+                status.error_category = Some("server".to_string());
+                status.warning = Some(err);
+                return;
+            }
+
+            // Embeddings and TTS stay on Ollama unless the user moved them, so
+            // this preload mirrors the LM Studio branch. Ollama is ensured for
+            // the embedder alone here — never as a precondition for chat.
+            if !effective_config.mlx.embeddings_on_mlx()
+                && effective_config.local_ai.preload_embedding_model
+            {
+                let embedding_model = model_ids::effective_embedding_model_id(&effective_config);
+                self.status.lock().embedding_state = "downloading".to_string();
+                log::debug!(
+                    "[local_ai] MLX bootstrap embedding preload via Ollama model={embedding_model}"
+                );
+                if let Err(err) = self.ensure_ollama_server(&effective_config).await {
+                    log::warn!("[local_ai] MLX bootstrap embedding server ensure failed: {err}");
+                    self.status.lock().embedding_state = "missing".to_string();
+                } else if let Err(err) = self
+                    .ensure_ollama_model_available(&effective_config, &embedding_model, "embedding")
+                    .await
+                {
+                    log::warn!("[local_ai] MLX bootstrap embedding preload failed: {err}");
+                    self.status.lock().embedding_state = "missing".to_string();
+                } else {
+                    self.status.lock().embedding_state = "ready".to_string();
+                }
+            }
+
+            if effective_config.local_ai.preload_tts_voice {
+                if let Err(err) = self.ensure_tts_asset_available(&effective_config).await {
+                    log::warn!("[local_ai] MLX bootstrap TTS preload failed: {err}");
+                    self.status.lock().tts_state = "missing".to_string();
+                }
+            }
+
+            let mut status = self.status.lock();
+            status.state = "ready".to_string();
+            if !effective_config.local_ai.preload_embedding_model {
+                status.embedding_state = "idle".to_string();
+            } else if status.embedding_state != "ready" {
+                status.embedding_state = "missing".to_string();
+            }
+            if !effective_config.local_ai.preload_tts_voice {
+                status.tts_state = "idle".to_string();
+            }
+            status.warning = None;
+            status.error_detail = None;
+            status.error_category = None;
+            status.model_path = Some(model_path_for_config(&effective_config));
+            log::debug!(
+                "[local_ai] MLX bootstrap ready embedding_state={} tts_state={}",
+                status.embedding_state,
+                status.tts_state
+            );
+            return;
+        }
+
         if let Err(err) = self.ensure_ollama_server(&effective_config).await {
             log::warn!(
                 "[local_ai] bootstrap degraded: external runtime connectivity check failed: {err}"
@@ -413,6 +491,7 @@ fn model_path_for_config(config: &Config) -> String {
     match provider_from_config(config) {
         LocalAiProvider::Ollama => format!("ollama://{model_id}"),
         LocalAiProvider::LmStudio => format!("lmstudio://{model_id}"),
+        LocalAiProvider::Mlx => format!("mlx://{model_id}"),
     }
 }
 

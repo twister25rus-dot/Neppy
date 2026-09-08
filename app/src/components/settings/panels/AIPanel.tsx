@@ -51,12 +51,13 @@ import { useCloudProviderEditorSubmit } from './ai/useCloudProviderEditorSubmit'
 import { useProviderConnect } from './ai/useProviderConnect';
 import { WorkloadRow } from './ai/WorkloadRow';
 import { WorkloadTable } from './ai/WorkloadTable';
+import MlxPanel from './MlxPanel';
 import { useReembedBackfillModal } from './useReembedBackfillModal';
 
 export type { CloudProvider, ProviderRef, RoutingMap } from './ai/aiPanelTypes';
 export { buildRoutingDiffSummary, BackgroundLoopControls };
 
-export type AIPanelTab = 'providers' | 'routing';
+export type AIPanelTab = 'providers' | 'routing' | 'mlx';
 
 interface AIPanelProps {
   /** When true, the panel is rendered embedded inside another flow (e.g. the
@@ -322,6 +323,12 @@ const AIPanel = ({
                 )}
               </div>
             ),
+          },
+          {
+            id: 'mlx',
+            label: t('settings.ai.mlx'),
+            contentClassName: embedded || hideTabChrome ? '' : 'p-4',
+            content: <MlxPanel />,
           },
         ]}
       />
