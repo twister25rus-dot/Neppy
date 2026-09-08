@@ -24,6 +24,9 @@ pub struct LocalAiService {
     /// the daemon currently on `:11434` was started outside openhuman (and
     /// adopted via the health probe) — those are never killed on exit.
     pub(crate) owned_ollama: Mutex<Option<tokio::process::Child>>,
+    /// Supervisor for managed MLX servers. Owns every MLX process Neppy
+    /// started and is the only thing that knows an auto-assigned port.
+    pub(crate) mlx: mlx_admin::pool::MlxPool,
 }
 
 impl LocalAiService {
