@@ -6913,6 +6913,38 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'मॉडल',
   'mlx.modelNone': 'कोई नहीं, माँगने पर लोड करें',
   'mlx.servingChat': 'चैट संभाल रहा है',
+  'mlx.modelsLabel': 'मॉडल',
+  'mlx.modelsHint':
+    'चुनें कि यह सर्वर कौन से मॉडल लोड करे। एक सर्वर एक साथ कई रख सकता है, हर काम के लिए एक।',
+  'mlx.noCachedModels': 'अभी तक कोई मॉडल डाउनलोड नहीं हुआ है।',
+  'mlx.slotLabel': 'काम',
+  'mlx.slot.model': 'चैट',
+  'mlx.slot.embedding': 'एम्बेडिंग',
+  'mlx.slot.stt': 'बोली से लिखाई',
+  'mlx.slot.tts': 'लिखाई से बोली',
+  'mlx.slot.reranker': 'पुनः क्रम',
+  'mlx.slot.image': 'तस्वीरें',
+  'mlx.params.generation': 'निर्माण',
+  'mlx.params.reasoning': 'तर्क',
+  'mlx.params.memory': 'मेमोरी और रफ़्तार',
+  'mlx.params.speculative': 'अनुमानित डिकोडिंग',
+  'mlx.params.process': 'प्रक्रिया',
+  'mlx.params.zeroIsDefault': '0 रखने पर सर्वर की अपनी सेटिंग चलती है।',
+  'mlx.params.negativeIsDefault': 'ऋणात्मक मान रखने पर सर्वर की अपनी सेटिंग चलती है।',
+  'mlx.params.kvBits':
+    'KV कैश के बिट। 0 पर कोई क्वांटाइज़ेशन नहीं, 3.5 पर TurboQuant चुना जाता है।',
+  'mlx.params.maxNumSeqs':
+    'एक साथ डिकोड होने वाले अनुरोध। बाकी कतार में रहते हैं, जिससे अधिकतम मेमोरी सीमित रहती है। 0 का अर्थ कोई सीमा नहीं।',
+  'mlx.params.draftModel': 'एक छोटा मॉडल जो मुख्य मॉडल के लिए टोकन पहले सुझाता है।',
+  'mlx.params.draftKind': 'dflash, eagle3 या mtp। अपने आप पहचानने के लिए खाली छोड़ें।',
+  'mlx.params.port': '0 रखने पर शुरू होते समय खाली पोर्ट मिलता है और फिर यहीं दर्ज हो जाता है।',
+  'mlx.params.allowLan': 'बंद रखने पर सर्वर सिर्फ़ इसी कंप्यूटर तक सीमित रहता है।',
+  'mlx.params.trustRemoteCode': 'मॉडल के साथ आया कोड चलाता है। स्रोत पर भरोसा हो तभी चालू करें।',
+  'mlx.embeddingsLabel': 'एम्बेडिंग',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama मेमोरी में पहले से मौजूद वेक्टर बनाए रखता है। MLX के लिए 1024 आयाम वाला मॉडल चाहिए।',
 };
 
 export default messages;

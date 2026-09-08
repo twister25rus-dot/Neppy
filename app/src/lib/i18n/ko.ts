@@ -6838,6 +6838,37 @@ const messages: TranslationMap = {
   'mlx.modelLabel': '모델',
   'mlx.modelNone': '없음, 요청할 때 불러오기',
   'mlx.servingChat': '채팅 담당 중',
+  'mlx.modelsLabel': '모델',
+  'mlx.modelsHint':
+    '이 서버가 불러올 모델을 선택하세요. 서버 하나가 역할별로 여러 개를 동시에 가질 수 있습니다.',
+  'mlx.noCachedModels': '아직 내려받은 모델이 없습니다.',
+  'mlx.slotLabel': '역할',
+  'mlx.slot.model': '채팅',
+  'mlx.slot.embedding': '임베딩',
+  'mlx.slot.stt': '음성 인식',
+  'mlx.slot.tts': '음성 합성',
+  'mlx.slot.reranker': '재정렬',
+  'mlx.slot.image': '이미지',
+  'mlx.params.generation': '생성',
+  'mlx.params.reasoning': '추론',
+  'mlx.params.memory': '메모리와 속도',
+  'mlx.params.speculative': '추측 디코딩',
+  'mlx.params.process': '프로세스',
+  'mlx.params.zeroIsDefault': '0이면 서버 기본값을 그대로 씁니다.',
+  'mlx.params.negativeIsDefault': '음수이면 서버 기본값을 그대로 씁니다.',
+  'mlx.params.kvBits': 'KV 캐시 비트 수입니다. 0이면 양자화하지 않고, 3.5는 TurboQuant를 씁니다.',
+  'mlx.params.maxNumSeqs':
+    '동시에 디코딩할 요청 수입니다. 나머지는 대기하여 최대 메모리를 제한합니다. 0은 제한 없음입니다.',
+  'mlx.params.draftModel': '주 모델에 토큰을 미리 제안하는 작은 모델입니다.',
+  'mlx.params.draftKind': 'dflash, eagle3 또는 mtp. 비워 두면 자동으로 판단합니다.',
+  'mlx.params.port': '0이면 시작할 때 빈 포트를 배정하고, 실행 뒤 여기에 기록합니다.',
+  'mlx.params.allowLan': '꺼 두면 이 컴퓨터에서만 접근할 수 있습니다.',
+  'mlx.params.trustRemoteCode': '모델과 함께 배포된 코드를 실행합니다. 출처를 믿을 때만 켜세요.',
+  'mlx.embeddingsLabel': '임베딩',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama는 기억에 이미 저장된 벡터를 그대로 씁니다. MLX는 1024차원 모델이 필요합니다.',
 };
 
 export default messages;

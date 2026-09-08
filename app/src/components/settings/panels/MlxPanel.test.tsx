@@ -23,6 +23,7 @@ vi.mock('../../../lib/i18n/I18nContext', () => ({
 }));
 
 interface ServerOverrides {
+  settings?: Record<string, unknown>;
   configured_model?: string | null;
   id?: string;
   state?: string;
@@ -49,6 +50,19 @@ function server(overrides: ServerOverrides = {}) {
     detail: null,
     command: [],
     configured_model: null,
+    settings: {
+      model: '',
+      embedding_model: '',
+      stt_model: '',
+      tts_model: '',
+      reranker_model: '',
+      image_model: '',
+      max_tokens: 0,
+      port: 0,
+      autostart: true,
+      allow_lan: false,
+      trust_remote_code: false,
+    },
     ...overrides,
   };
 }
@@ -197,9 +211,23 @@ describe('MlxPanel', () => {
     callCoreRpc.mockImplementation(router({}));
     render(<MlxPanel />);
 
-    await waitFor(() => expect(screen.getByText('mlx.cacheTitle')).toBeInTheDocument());
-    expect(screen.getByText('mlx-community/Qwen3.8-27B-nvfp4')).toBeInTheDocument();
+    // One list: each model appears exactly once, with its size beside it.
+    await waitFor(() =>
+      expect(screen.getByText('mlx-community/Qwen3.8-27B-nvfp4')).toBeInTheDocument()
+    );
     expect(screen.getByText('11.8 GiB')).toBeInTheDocument();
+    expect(screen.getByText('mlx.cacheTotal')).toBeInTheDocument();
+  });
+
+  it('shows each model exactly once', async () => {
+    // The tick list and the disk list used to render the same rows twice.
+    callCoreRpc.mockImplementation(router({}));
+    render(<MlxPanel />);
+
+    await waitFor(() => expect(screen.getAllByRole('checkbox').length).toBe(2));
+    expect(screen.getAllByText('mlx-community/Qwen3.8-27B-nvfp4')).toHaveLength(1);
+    expect(screen.getAllByText('amazon/chronos-bolt-small')).toHaveLength(1);
+    expect(screen.getAllByText('mlx.delete')).toHaveLength(2);
   });
 
   it('requires a second click before deleting a model', async () => {
@@ -268,30 +296,72 @@ describe('MlxPanel model selection and chat routing', () => {
     callCoreRpc.mockReset();
   });
 
-  it('offers every cached model as a choice', async () => {
+  it('lists every cached model as a tick', async () => {
     callCoreRpc.mockImplementation(router({}));
     render(<MlxPanel />);
 
-    await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
-    const options = screen.getAllByRole('option').map(option => option.textContent);
-
-    expect(options.some(text => text?.includes('mlx-community/Qwen3.8-27B-nvfp4'))).toBe(true);
-    // The size is on the option, because picking a model is a memory decision.
-    expect(options.some(text => text?.includes('11.8 GiB'))).toBe(true);
-    expect(options).toContain('mlx.modelNone');
+    await waitFor(() => expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0));
+    expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+    // Sizes stay visible: picking a model is a memory decision.
+    expect(screen.getByText('11.8 GiB')).toBeInTheDocument();
   });
 
-  it('sets the chosen model on the addressed server', async () => {
+  it('ticking a model puts it in the inferred slot', async () => {
     callCoreRpc.mockImplementation(router({}));
     render(<MlxPanel />);
-    await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0));
 
-    await userEvent.selectOptions(screen.getByRole('combobox'), 'mlx-community/Qwen3.8-27B-nvfp4');
+    await userEvent.click(screen.getAllByRole('checkbox')[0]);
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mlx_set_model',
-        params: { id: 'primary', model_id: 'mlx-community/Qwen3.8-27B-nvfp4' },
+        method: 'openhuman.mlx_update_server',
+        params: { id: 'primary', patch: { model: 'mlx-community/Qwen3.8-27B-nvfp4' } },
+      })
+    );
+  });
+
+  it('unticking clears the slot the model occupied', async () => {
+    // Without this the slot would stay loaded after the user cleared it.
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_status': status({
+          servers: [
+            server({ settings: { model: 'mlx-community/Qwen3.8-27B-nvfp4', embedding_model: '' } }),
+          ],
+        }),
+      })
+    );
+    render(<MlxPanel />);
+    await waitFor(() => expect(screen.getAllByRole('checkbox')[0]).toBeChecked());
+
+    await userEvent.click(screen.getAllByRole('checkbox')[0]);
+
+    await waitFor(() =>
+      expect(callCoreRpc).toHaveBeenCalledWith({
+        method: 'openhuman.mlx_update_server',
+        params: { id: 'primary', patch: { model: '' } },
+      })
+    );
+  });
+
+  it('a speech model is inferred into the speech slot, not chat', async () => {
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_models_list': cacheListing({
+          models: [{ id: 'mlx-community/whisper-large-v3', size_gib: 3.1, looks_like_mlx: true }],
+        }),
+      })
+    );
+    render(<MlxPanel />);
+    await waitFor(() => expect(screen.getAllByRole('checkbox').length).toBe(1));
+
+    await userEvent.click(screen.getAllByRole('checkbox')[0]);
+
+    await waitFor(() =>
+      expect(callCoreRpc).toHaveBeenCalledWith({
+        method: 'openhuman.mlx_update_server',
+        params: { id: 'primary', patch: { stt_model: 'mlx-community/whisper-large-v3' } },
       })
     );
   });

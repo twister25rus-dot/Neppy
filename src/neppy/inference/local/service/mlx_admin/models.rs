@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-const BYTES_PER_GIB: f64 = 1024.0 * 1024.0 * 1024.0;
+pub(crate) const BYTES_PER_GIB: f64 = 1024.0 * 1024.0 * 1024.0;
 
 /// One cached Hugging Face repo.
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -55,7 +55,7 @@ pub(crate) fn hf_hub_dir() -> PathBuf {
     home_dir().join(".cache").join("huggingface").join("hub")
 }
 
-fn home_dir() -> PathBuf {
+pub(crate) fn home_dir() -> PathBuf {
     std::env::var_os("HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("/"))
@@ -92,7 +92,7 @@ fn looks_like_mlx(repo_id: &str) -> bool {
 }
 
 /// Total size of the regular files directly inside `dir`.
-fn directory_size_bytes(dir: &Path) -> u64 {
+pub(crate) fn directory_size_bytes(dir: &Path) -> u64 {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return 0;
     };

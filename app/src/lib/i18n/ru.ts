@@ -6992,6 +6992,38 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'Модель',
   'mlx.modelNone': 'Нет, загружать по запросу',
   'mlx.servingChat': 'Обслуживает чат',
+  'mlx.modelsLabel': 'Модели',
+  'mlx.modelsHint':
+    'Отметьте модели, которые должен загрузить этот сервер. Один сервер может держать несколько сразу, по одной на роль.',
+  'mlx.noCachedModels': 'Модели пока не загружены.',
+  'mlx.slotLabel': 'Роль',
+  'mlx.slot.model': 'Чат',
+  'mlx.slot.embedding': 'Векторы',
+  'mlx.slot.stt': 'Речь в текст',
+  'mlx.slot.tts': 'Текст в речь',
+  'mlx.slot.reranker': 'Переранжирование',
+  'mlx.slot.image': 'Изображения',
+  'mlx.params.generation': 'Генерация',
+  'mlx.params.reasoning': 'Рассуждение',
+  'mlx.params.memory': 'Память и скорость',
+  'mlx.params.speculative': 'Спекулятивное декодирование',
+  'mlx.params.process': 'Процесс',
+  'mlx.params.zeroIsDefault': '0 оставляет значение сервера по умолчанию.',
+  'mlx.params.negativeIsDefault': 'Отрицательное значение оставляет значение сервера по умолчанию.',
+  'mlx.params.kvBits': 'Биты KV-кеша. 0 оставляет его без квантизации, 3.5 включает TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'Сколько запросов декодируется одновременно. Остальные ждут, что ограничивает пиковую память. 0 без ограничения.',
+  'mlx.params.draftModel': 'Модель поменьше, которая подсказывает токены основной.',
+  'mlx.params.draftKind': 'dflash, eagle3 или mtp. Оставьте пустым для автоопределения.',
+  'mlx.params.port': '0 выбирает свободный порт при запуске и затем фиксирует его здесь.',
+  'mlx.params.allowLan': 'Если выключено, сервер доступен только на этом компьютере.',
+  'mlx.params.trustRemoteCode':
+    'Запускает код, поставляемый с моделью. Включайте, только если доверяете источнику.',
+  'mlx.embeddingsLabel': 'Векторы',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama сохраняет векторы, уже записанные в память. Для MLX нужна модель с 1024 измерениями.',
 };
 
 export default messages;

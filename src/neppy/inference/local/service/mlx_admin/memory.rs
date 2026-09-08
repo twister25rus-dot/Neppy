@@ -17,6 +17,11 @@ use std::path::PathBuf;
 
 use crate::neppy::config::Config;
 
+// The Hugging Face cache layout has one owner: `models`. Encode and decode of
+// `models--org--name` have to agree, and a second copy of that rule here is a
+// drift waiting to happen.
+use super::models::{dir_name_from_repo_id, directory_size_bytes, hf_hub_dir, BYTES_PER_GIB};
+
 /// Fraction of physical memory available to MLX when no budget is configured.
 /// The rest is macOS, Neppy itself, and whatever else is open.
 const DEFAULT_BUDGET_FRACTION: f64 = 0.70;
@@ -24,8 +29,6 @@ const DEFAULT_BUDGET_FRACTION: f64 = 0.70;
 /// Multiplier over on-disk weight size to account for KV cache, activations
 /// and allocator overhead.
 const RESIDENT_OVERHEAD: f64 = 1.20;
-
-const BYTES_PER_GIB: f64 = 1024.0 * 1024.0 * 1024.0;
 
 /// Physical memory on this machine, in GiB.
 pub(crate) fn physical_memory_gib() -> f64 {
@@ -58,25 +61,6 @@ pub(crate) fn resident_gib(pids: &[u32]) -> f64 {
         .sum()
 }
 
-/// Hugging Face cache directory, honouring the standard env overrides.
-fn hf_hub_dir() -> PathBuf {
-    if let Some(hub) = std::env::var_os("HF_HUB_CACHE") {
-        return PathBuf::from(hub);
-    }
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("/"));
-    if let Some(hf_home) = std::env::var_os("HF_HOME") {
-        return PathBuf::from(hf_home).join("hub");
-    }
-    home.join(".cache").join("huggingface").join("hub")
-}
-
-/// Cache directory name for a repo id: `org/name` → `models--org--name`.
-fn cache_dir_name(model_id: &str) -> String {
-    format!("models--{}", model_id.trim().replace('/', "--"))
-}
-
 /// Estimated resident size of `model_id`, in GiB, or `None` when it is not in
 /// the cache.
 ///
@@ -94,32 +78,18 @@ pub(crate) fn estimate_model_gib(model_id: &str) -> Option<f64> {
     } else {
         // Weights live in `blobs`; `snapshots` holds symlinks into it, so
         // measuring blobs avoids double counting or following links.
-        hf_hub_dir().join(cache_dir_name(model_id)).join("blobs")
+        hf_hub_dir()
+            .join(dir_name_from_repo_id(model_id))
+            .join("blobs")
     };
 
-    let bytes = directory_size_bytes(&weights_dir)?;
+    // Zero covers both "no such directory" and "empty", which are the same
+    // answer here: nothing cached to measure.
+    let bytes = directory_size_bytes(&weights_dir);
     if bytes == 0 {
         return None;
     }
     Some((bytes as f64 / BYTES_PER_GIB) * RESIDENT_OVERHEAD)
-}
-
-/// Sum of regular-file sizes directly inside `dir`, recursing one level.
-///
-/// Deliberately shallow and symlink-blind: `blobs` is flat, and following
-/// links would double count against `snapshots`.
-fn directory_size_bytes(dir: &PathBuf) -> Option<u64> {
-    let entries = std::fs::read_dir(dir).ok()?;
-    let mut total = 0u64;
-    for entry in entries.flatten() {
-        let Ok(metadata) = entry.metadata() else {
-            continue;
-        };
-        if metadata.is_file() {
-            total = total.saturating_add(metadata.len());
-        }
-    }
-    Some(total)
 }
 
 /// Verdict on whether a server may start.
@@ -174,16 +144,6 @@ pub(crate) fn admit(config: &Config, model_id: &str, running_pids: &[u32]) -> Ad
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn cache_dir_name_matches_the_hugging_face_layout() {
-        assert_eq!(
-            cache_dir_name("mlx-community/Qwen3.8-27B-nvfp4"),
-            "models--mlx-community--Qwen3.8-27B-nvfp4"
-        );
-        // A bare name has no org segment and still resolves.
-        assert_eq!(cache_dir_name("gpt2"), "models--gpt2");
-    }
 
     #[test]
     fn an_uncached_model_is_unknown_not_refused() {

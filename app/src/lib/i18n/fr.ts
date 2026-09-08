@@ -7095,6 +7095,38 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'Modèle',
   'mlx.modelNone': 'Aucun, charger à la demande',
   'mlx.servingChat': 'Sert le chat',
+  'mlx.modelsLabel': 'Modèles',
+  'mlx.modelsHint':
+    'Coche les modèles que ce serveur doit charger. Un serveur peut en tenir plusieurs à la fois, un par rôle.',
+  'mlx.noCachedModels': "Aucun modèle n'est encore téléchargé.",
+  'mlx.slotLabel': 'Rôle',
+  'mlx.slot.model': 'Chat',
+  'mlx.slot.embedding': 'Embeddings',
+  'mlx.slot.stt': 'Voix vers texte',
+  'mlx.slot.tts': 'Texte vers voix',
+  'mlx.slot.reranker': 'Reclassement',
+  'mlx.slot.image': 'Images',
+  'mlx.params.generation': 'Génération',
+  'mlx.params.reasoning': 'Raisonnement',
+  'mlx.params.memory': 'Mémoire et vitesse',
+  'mlx.params.speculative': 'Décodage spéculatif',
+  'mlx.params.process': 'Processus',
+  'mlx.params.zeroIsDefault': '0 conserve la valeur par défaut du serveur.',
+  'mlx.params.negativeIsDefault': 'Une valeur négative conserve la valeur par défaut du serveur.',
+  'mlx.params.kvBits': 'Bits du cache KV. 0 le laisse non quantifié, 3.5 choisit TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'Requêtes décodées en même temps. Les autres attendent, ce qui borne la mémoire maximale. 0 est sans limite.',
+  'mlx.params.draftModel': 'Un modèle plus petit qui propose des tokens au modèle principal.',
+  'mlx.params.draftKind': 'dflash, eagle3 ou mtp. Laisse vide pour le détecter automatiquement.',
+  'mlx.params.port': '0 attribue un port libre au démarrage puis le fixe ici.',
+  'mlx.params.allowLan': 'Désactivé, le serveur reste sur cette machine uniquement.',
+  'mlx.params.trustRemoteCode':
+    "Exécute du code livré avec le modèle. À n'activer que si tu fais confiance à sa source.",
+  'mlx.embeddingsLabel': 'Embeddings',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama conserve les vecteurs déjà en mémoire. MLX exige un modèle à 1024 dimensions.',
 };
 
 export default messages;

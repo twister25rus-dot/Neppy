@@ -7067,6 +7067,38 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'Modelo',
   'mlx.modelNone': 'Ninguno, cargar cuando haga falta',
   'mlx.servingChat': 'Atiende el chat',
+  'mlx.modelsLabel': 'Modelos',
+  'mlx.modelsHint':
+    'Marca los modelos que debe cargar este servidor. Un servidor puede tener varios a la vez, uno por función.',
+  'mlx.noCachedModels': 'Todavía no hay modelos descargados.',
+  'mlx.slotLabel': 'Función',
+  'mlx.slot.model': 'Chat',
+  'mlx.slot.embedding': 'Embeddings',
+  'mlx.slot.stt': 'Voz a texto',
+  'mlx.slot.tts': 'Texto a voz',
+  'mlx.slot.reranker': 'Reordenación',
+  'mlx.slot.image': 'Imágenes',
+  'mlx.params.generation': 'Generación',
+  'mlx.params.reasoning': 'Razonamiento',
+  'mlx.params.memory': 'Memoria y velocidad',
+  'mlx.params.speculative': 'Decodificación especulativa',
+  'mlx.params.process': 'Proceso',
+  'mlx.params.zeroIsDefault': '0 mantiene el valor por defecto del servidor.',
+  'mlx.params.negativeIsDefault': 'Un valor negativo mantiene el valor por defecto del servidor.',
+  'mlx.params.kvBits': 'Bits de la caché KV. 0 la deja sin cuantizar y 3.5 selecciona TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'Peticiones decodificadas a la vez. Las demás esperan, lo que limita la memoria máxima. 0 es sin límite.',
+  'mlx.params.draftModel': 'Un modelo más pequeño que propone tokens al principal.',
+  'mlx.params.draftKind': 'dflash, eagle3 o mtp. Déjalo vacío para detectarlo automáticamente.',
+  'mlx.params.port': '0 asigna un puerto libre al iniciar y lo fija aquí cuando ya está en marcha.',
+  'mlx.params.allowLan': 'Desactivado mantiene el servidor solo en este equipo.',
+  'mlx.params.trustRemoteCode':
+    'Ejecuta código incluido con el modelo. Actívalo solo si confías en su origen.',
+  'mlx.embeddingsLabel': 'Embeddings',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama conserva los vectores que ya tienes en memoria. MLX necesita un modelo de 1024 dimensiones.',
 };
 
 export default messages;

@@ -6949,6 +6949,39 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'Model',
   'mlx.modelNone': 'Tidak ada, muat saat diminta',
   'mlx.servingChat': 'Melayani obrolan',
+  'mlx.modelsLabel': 'Model',
+  'mlx.modelsHint':
+    'Centang model yang harus dimuat server ini. Satu server bisa memegang beberapa sekaligus, satu per peran.',
+  'mlx.noCachedModels': 'Belum ada model yang diunduh.',
+  'mlx.slotLabel': 'Peran',
+  'mlx.slot.model': 'Obrolan',
+  'mlx.slot.embedding': 'Embedding',
+  'mlx.slot.stt': 'Suara ke teks',
+  'mlx.slot.tts': 'Teks ke suara',
+  'mlx.slot.reranker': 'Pengurutan ulang',
+  'mlx.slot.image': 'Gambar',
+  'mlx.params.generation': 'Penghasilan',
+  'mlx.params.reasoning': 'Penalaran',
+  'mlx.params.memory': 'Memori dan kecepatan',
+  'mlx.params.speculative': 'Dekode spekulatif',
+  'mlx.params.process': 'Proses',
+  'mlx.params.zeroIsDefault': '0 memakai nilai bawaan server.',
+  'mlx.params.negativeIsDefault': 'Nilai negatif memakai nilai bawaan server.',
+  'mlx.params.kvBits':
+    'Bit untuk cache KV. 0 membiarkannya tanpa kuantisasi, 3.5 memilih TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'Permintaan yang didekode bersamaan. Sisanya mengantre sehingga memori puncak terbatas. 0 berarti tanpa batas.',
+  'mlx.params.draftModel': 'Model lebih kecil yang menyiapkan token untuk model utama.',
+  'mlx.params.draftKind': 'dflash, eagle3 atau mtp. Kosongkan agar dideteksi sendiri.',
+  'mlx.params.port': '0 memilih porta bebas saat mulai, lalu mencatatnya di sini.',
+  'mlx.params.allowLan': 'Nonaktif membuat server hanya bisa diakses dari komputer ini.',
+  'mlx.params.trustRemoteCode':
+    'Menjalankan kode bawaan model. Nyalakan hanya jika kamu memercayai sumbernya.',
+  'mlx.embeddingsLabel': 'Embedding',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama mempertahankan vektor yang sudah ada di memori. MLX memerlukan model 1024 dimensi.',
 };
 
 export default messages;

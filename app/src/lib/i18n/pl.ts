@@ -7018,6 +7018,38 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'Model',
   'mlx.modelNone': 'Żaden, wczytaj na żądanie',
   'mlx.servingChat': 'Obsługuje czat',
+  'mlx.modelsLabel': 'Modele',
+  'mlx.modelsHint':
+    'Zaznacz modele, które ten serwer ma wczytać. Jeden serwer może trzymać kilka naraz, po jednym na rolę.',
+  'mlx.noCachedModels': 'Nie pobrano jeszcze żadnego modelu.',
+  'mlx.slotLabel': 'Rola',
+  'mlx.slot.model': 'Czat',
+  'mlx.slot.embedding': 'Osadzenia',
+  'mlx.slot.stt': 'Mowa na tekst',
+  'mlx.slot.tts': 'Tekst na mowę',
+  'mlx.slot.reranker': 'Zmiana kolejności',
+  'mlx.slot.image': 'Obrazy',
+  'mlx.params.generation': 'Generowanie',
+  'mlx.params.reasoning': 'Rozumowanie',
+  'mlx.params.memory': 'Pamięć i szybkość',
+  'mlx.params.speculative': 'Dekodowanie spekulacyjne',
+  'mlx.params.process': 'Proces',
+  'mlx.params.zeroIsDefault': '0 zostawia ustawienie domyślne serwera.',
+  'mlx.params.negativeIsDefault': 'Wartość ujemna zostawia ustawienie domyślne serwera.',
+  'mlx.params.kvBits': 'Bity pamięci KV. 0 zostawia ją bez kwantyzacji, 3.5 wybiera TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'Zapytania dekodowane naraz. Pozostałe czekają, co ogranicza szczytowe zużycie pamięci. 0 oznacza brak limitu.',
+  'mlx.params.draftModel': 'Mniejszy model podpowiadający tokeny głównemu.',
+  'mlx.params.draftKind': 'dflash, eagle3 albo mtp. Zostaw puste, aby wykryć automatycznie.',
+  'mlx.params.port': '0 przydziela wolny port przy starcie i potem zapisuje go tutaj.',
+  'mlx.params.allowLan': 'Wyłączone zostawia serwer tylko na tym komputerze.',
+  'mlx.params.trustRemoteCode':
+    'Uruchamia kod dołączony do modelu. Włącz tylko, jeśli ufasz źródłu.',
+  'mlx.embeddingsLabel': 'Osadzenia',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama zachowuje wektory już zapisane w pamięci. MLX wymaga modelu o 1024 wymiarach.',
 };
 
 export default messages;

@@ -4,6 +4,8 @@ import { useT } from '../../../lib/i18n/I18nContext';
 import { callCoreRpc } from '../../../services/coreRpcClient';
 import Badge, { type BadgeVariant } from '../../ui/Badge';
 import Button from '../../ui/Button';
+import MlxServerParams, { type ParamValue } from './mlx/MlxServerParams';
+import { inferSlot, occupiedSlot, type Slot, SLOT_LABEL_KEY, SLOTS } from './mlx/slots';
 
 /**
  * The managed MLX runtime surface: one card per `[[mlx.server]]` block.
@@ -36,6 +38,8 @@ interface MlxServerStatus {
   command: string[];
   /** The checkpoint the block is configured to launch with. */
   configured_model: string | null;
+  /** Every stored field of the block, api_key redacted. */
+  settings: Record<string, ParamValue | null>;
 }
 
 interface CachedModel {
@@ -163,17 +167,51 @@ export default function MlxPanel() {
     [load]
   );
 
-  const setModel = useCallback(
-    async (id: string, modelId: string) => {
+  /**
+   * Change any subset of a server's settings.
+   *
+   * The core restarts the server only when a changed field is part of its
+   * command line, and skips the save entirely when nothing actually differs.
+   */
+  const updateServer = useCallback(
+    async (id: string, patch: Record<string, ParamValue>) => {
       setBusyId(id);
       setError(null);
       try {
-        await callCoreRpc({ method: 'openhuman.mlx_set_model', params: { id, model_id: modelId } });
+        await callCoreRpc({ method: 'openhuman.mlx_update_server', params: { id, patch } });
         await load();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
         if (mounted.current) setBusyId(null);
+      }
+    },
+    [load]
+  );
+
+  /**
+   * Tick or untick a model.
+   *
+   * Ticking puts it in a slot; unticking clears whichever slot it held. A slot
+   * holds one checkpoint, so ticking a second model for the same slot replaces
+   * the first rather than erroring — that is what the tick means.
+   */
+  const toggleModel = useCallback(
+    (server: MlxServerStatus, modelId: string, slot: Slot) => {
+      const held = occupiedSlot(modelId, server.settings as Record<Slot, string | null>);
+      void updateServer(server.id, { [held ?? slot]: held ? '' : modelId });
+    },
+    [updateServer]
+  );
+
+  const setEmbeddingsBackend = useCallback(
+    async (backend: string) => {
+      setError(null);
+      try {
+        await callCoreRpc({ method: 'openhuman.mlx_set_embeddings_backend', params: { backend } });
+        await load();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
       }
     },
     [load]
@@ -250,6 +288,20 @@ export default function MlxPanel() {
         </div>
       </div>
 
+      {/* Which backend serves embeddings. Ollama stays the default and is
+          never removed: this is a choice, not a migration. */}
+      <label className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+        <span className="font-medium">{t('mlx.embeddingsLabel')}</span>
+        <select
+          className="rounded-md border border-border bg-surface px-2 py-1 text-sm"
+          value={status.embeddings_backend}
+          onChange={event => void setEmbeddingsBackend(event.target.value)}>
+          <option value="ollama">{t('mlx.embeddingsOllama')}</option>
+          <option value="mlx">{t('mlx.embeddingsMlx')}</option>
+        </select>
+        <span className="text-xs text-content-muted">{t('mlx.embeddingsHint')}</span>
+      </label>
+
       {status.servers.length === 0 && (
         <div className="rounded-md bg-surface-subtle px-3 py-2 text-sm text-content-muted">
           {t('mlx.noServers')}
@@ -293,23 +345,92 @@ export default function MlxPanel() {
               <div className="mt-1 text-xs text-content-muted">{server.detail}</div>
             )}
 
-            {/* Which checkpoint this server loads. It is a launch argument,
-                so changing it restarts a running server. */}
-            <label className="mt-2 flex items-center gap-2 text-sm">
-              <span className="text-content-muted">{t('mlx.modelLabel')}</span>
-              <select
-                className="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1 text-sm"
-                value={serverModelOf(server, cache)}
-                disabled={busy}
-                onChange={event => void setModel(server.id, event.target.value)}>
-                <option value="">{t('mlx.modelNone')}</option>
-                {(cache?.models ?? []).map(model => (
-                  <option key={model.id} value={model.id}>
-                    {model.id} ({model.size_gib.toFixed(1)} GiB)
-                  </option>
-                ))}
-              </select>
-            </label>
+            {/* Tick the models this server should load. One process serves
+                six slots, so several can be held at once — a chat model, an
+                embedder and a speech model together. */}
+            <div className="mt-2">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs font-medium">{t('mlx.modelsLabel')}</span>
+                {/* Guarded on the number, not on `cache` being truthy: a
+                    payload that arrives without this field would otherwise
+                    throw here and blank the whole panel. */}
+                {typeof cache?.total_gib === 'number' && (
+                  <span className="text-xs text-content-muted">
+                    {t('mlx.cacheTotal').replace('{total}', cache.total_gib.toFixed(1))}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-content-muted">{t('mlx.modelsHint')}</p>
+              <ul className="mt-1 flex flex-col gap-1">
+                {(cache?.models ?? []).map(model => {
+                  const held = occupiedSlot(
+                    model.id,
+                    server.settings as Record<Slot, string | null>
+                  );
+                  const suggested = inferSlot(model.id);
+                  const id = `mlx-${server.id}-${model.id}`;
+                  return (
+                    <li key={model.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        id={id}
+                        type="checkbox"
+                        disabled={busy}
+                        checked={held !== null}
+                        onChange={() => toggleModel(server, model.id, suggested)}
+                      />
+                      <label htmlFor={id} className="min-w-0 flex-1 truncate" title={model.id}>
+                        {model.id}
+                      </label>
+                      <span className="shrink-0 text-xs text-content-muted">
+                        {model.size_gib.toFixed(1)} GiB
+                      </span>
+                      {/* The slot it occupies, or the one ticking would use.
+                          Shown rather than inferred silently, and changeable. */}
+                      <select
+                        aria-label={t('mlx.slotLabel')}
+                        className="shrink-0 rounded-md border border-border bg-surface px-1 py-0.5 text-xs"
+                        disabled={busy}
+                        value={held ?? suggested}
+                        onChange={event => {
+                          const next = event.target.value as Slot;
+                          if (held === next) return;
+                          void updateServer(server.id, {
+                            ...(held ? { [held]: '' } : {}),
+                            [next]: model.id,
+                          });
+                        }}>
+                        {SLOTS.map(slot => (
+                          <option key={slot} value={slot}>
+                            {t(SLOT_LABEL_KEY[slot])}
+                          </option>
+                        ))}
+                      </select>
+                      {/* Deleting the download lives on the same row as the
+                          tick: one list, one place per model. */}
+                      {confirmingDelete === model.id ? (
+                        <Button
+                          variant="secondary"
+                          analyticsId="mlx-model-delete-confirm"
+                          onClick={() => void deleteModel(model.id)}>
+                          {t('mlx.confirmDelete')}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="tertiary"
+                          analyticsId="mlx-model-delete"
+                          onClick={() => setConfirmingDelete(model.id)}>
+                          {t('mlx.delete')}
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              {(cache?.models ?? []).length === 0 && (
+                <p className="text-xs text-content-muted">{t('mlx.noCachedModels')}</p>
+              )}
+              <p className="mt-1 text-xs text-content-muted">{t('mlx.deleteHint')}</p>
+            </div>
 
             <div className="mt-2 flex flex-wrap gap-2">
               {running ? (
@@ -355,6 +476,12 @@ export default function MlxPanel() {
 
             {expanded === server.id && (
               <div className="mt-3 flex flex-col gap-3">
+                <MlxServerParams
+                  values={server.settings}
+                  isVlm={server.kind !== 'lm'}
+                  disabled={busy}
+                  onChange={patch => void updateServer(server.id, patch)}
+                />
                 {server.command.length > 0 && (
                   <div>
                     <div className="text-xs font-medium">{t('mlx.command')}</div>
@@ -388,50 +515,6 @@ export default function MlxPanel() {
           </div>
         );
       })}
-
-      {/* Local model cache. The server can list what is cached but not what it
-          costs on disk, and three quantizations of one model accumulate
-          without ever being noticed. */}
-      {cache?.models?.length ? (
-        <div className="rounded-md border border-border p-3">
-          <div className="flex items-baseline justify-between text-sm">
-            <span className="font-medium">{t('mlx.cacheTitle')}</span>
-            <span className="text-content-muted">
-              {t('mlx.cacheTotal').replace('{total}', cache.total_gib.toFixed(1))}
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-content-muted">{t('mlx.deleteHint')}</p>
-          <ul className="mt-2 flex flex-col gap-1">
-            {cache.models.map(model => (
-              <li key={model.id} className="flex items-center justify-between gap-2 text-sm">
-                <span className="min-w-0 truncate" title={model.id}>
-                  {model.id}
-                </span>
-                <span className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs text-content-muted">
-                    {model.size_gib.toFixed(1)} GiB
-                  </span>
-                  {confirmingDelete === model.id ? (
-                    <Button
-                      variant="secondary"
-                      analyticsId="mlx-model-delete-confirm"
-                      onClick={() => void deleteModel(model.id)}>
-                      {t('mlx.confirmDelete')}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="tertiary"
-                      analyticsId="mlx-model-delete"
-                      onClick={() => setConfirmingDelete(model.id)}>
-                      {t('mlx.delete')}
-                    </Button>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
     </div>
   );
 }

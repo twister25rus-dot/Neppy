@@ -26,17 +26,22 @@ struct ServerIdParams {
 }
 
 #[derive(Debug, Deserialize)]
-struct SetModelParams {
+struct UpdateServerParams {
     id: String,
-    /// Empty clears the slot, so the server starts with nothing preloaded and
-    /// serves whatever a request names.
+    /// Fields to change. Absent means "leave alone", so the panel can save one
+    /// field without resending the rest.
     #[serde(default)]
-    model_id: String,
+    patch: super::mlx_patch::ServerPatch,
 }
 
 #[derive(Debug, Deserialize)]
 struct ModelIdParams {
     model_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct EmbeddingsBackendParams {
+    backend: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -75,7 +80,8 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("unload"),
         schemas("models_list"),
         schemas("models_delete"),
-        schemas("set_model"),
+        schemas("update_server"),
+        schemas("set_embeddings_backend"),
     ]
 }
 
@@ -114,8 +120,12 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
             handler: handle_models_delete,
         },
         RegisteredController {
-            schema: schemas("set_model"),
-            handler: handle_set_model,
+            schema: schemas("update_server"),
+            handler: handle_update_server,
+        },
+        RegisteredController {
+            schema: schemas("set_embeddings_backend"),
+            handler: handle_set_embeddings_backend,
         },
     ]
 }
@@ -203,21 +213,32 @@ pub fn schemas(function: &str) -> ControllerSchema {
             )],
             outputs: vec![json_output("deleted", "Reclaimed size and confirmation.")],
         },
-        "set_model" => ControllerSchema {
+        "update_server" => ControllerSchema {
             namespace: "mlx",
-            function: "set_model",
-            description: "Choose which checkpoint a server loads. Persists to config and \
-                          restarts the server when it is running, because the model is fixed \
-                          at launch.",
+            function: "update_server",
+            description: "Change any subset of a server's settings: which models occupy its \
+                          slots, and every tuning flag. Absent fields are left alone. Restarts \
+                          the server when a changed field is part of its command line.",
             inputs: vec![
                 required_string("id", "The [[mlx.server]] block id."),
-                optional_string(
-                    "model_id",
-                    "Hugging Face repo id to load. Empty clears the slot so the server \
-                     preloads nothing.",
+                json_input(
+                    "patch",
+                    "Fields to change, e.g. {\"stt_model\": \"mlx-community/whisper-large-v3\", \
+                     \"max_tokens\": 1024}. Unknown field names are rejected.",
                 ),
             ],
-            outputs: vec![json_output("server", "Status after the change.")],
+            outputs: vec![json_output(
+                "server",
+                "What changed, and the status afterwards.",
+            )],
+        },
+        "set_embeddings_backend" => ControllerSchema {
+            namespace: "mlx",
+            function: "set_embeddings_backend",
+            description: "Choose which backend serves embeddings while MLX is the runtime: \
+                          `ollama` (the default) or `mlx`. Ollama is not removed either way.",
+            inputs: vec![required_string("backend", "`ollama` or `mlx`.")],
+            outputs: vec![json_output("embeddings", "The backend now in effect.")],
         },
         other => panic!("unknown mlx controller function: {other}"),
     }
@@ -225,8 +246,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
 
 fn handle_status(_params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
-        let config = config_rpc::load_config_with_timeout().await?;
-        let service = super::global(&config);
+        let (config, service) = config_and_service().await?;
         let servers = service.mlx.status_all(&config, &service.http).await;
         let (used, budget) = service.mlx.memory_summary(&config).await;
 
@@ -252,8 +272,7 @@ fn handle_status(_params: Map<String, Value>) -> ControllerFuture {
 fn handle_start(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let p = deserialize_params::<ServerIdParams>(params)?;
-        let config = config_rpc::load_config_with_timeout().await?;
-        let service = super::global(&config);
+        let (config, service) = config_and_service().await?;
         let id = p.id.trim().to_string();
         let status = service.mlx.start(&config, &service.http, &id).await?;
 
@@ -291,6 +310,15 @@ fn handle_start(params: Map<String, Value>) -> ControllerFuture {
                 ) {
                     dirty = true;
                 }
+                // Speech is a separate provider list, and the server only
+                // belongs in it while a speech slot is actually filled.
+                if crate::neppy::inference::local::mlx::upsert_voice_provider_entry(
+                    &mut persisted,
+                    &server,
+                    &base_url,
+                ) {
+                    dirty = true;
+                }
             }
 
             if dirty {
@@ -314,8 +342,7 @@ fn handle_start(params: Map<String, Value>) -> ControllerFuture {
 fn handle_stop(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let p = deserialize_params::<ServerIdParams>(params)?;
-        let config = config_rpc::load_config_with_timeout().await?;
-        let service = super::global(&config);
+        let (config, service) = config_and_service().await?;
         // Report what actually happened. Claiming a stop that did not occur
         // leaves the caller believing memory was freed when the model is
         // still resident.
@@ -334,8 +361,7 @@ fn handle_stop(params: Map<String, Value>) -> ControllerFuture {
 fn handle_restart(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let p = deserialize_params::<ServerIdParams>(params)?;
-        let config = config_rpc::load_config_with_timeout().await?;
-        let service = super::global(&config);
+        let (config, service) = config_and_service().await?;
         let status = service
             .mlx
             .restart(&config, &service.http, p.id.trim())
@@ -350,8 +376,9 @@ fn handle_restart(params: Map<String, Value>) -> ControllerFuture {
 fn handle_logs(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let p = deserialize_params::<LogsParams>(params)?;
-        let config = config_rpc::load_config_with_timeout().await?;
-        let service = super::global(&config);
+        // Logs live in the pool's ring buffer, so nothing here reads config —
+        // but resolving the service still requires loading it.
+        let (_config, service) = config_and_service().await?;
         let limit = p.limit.unwrap_or(DEFAULT_LOG_LIMIT).min(MAX_LOG_LIMIT);
         let logs = service.mlx.logs(p.id.trim(), limit).await;
         to_json(RpcOutcome::new(
@@ -364,8 +391,7 @@ fn handle_logs(params: Map<String, Value>) -> ControllerFuture {
 fn handle_unload(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let p = deserialize_params::<ServerIdParams>(params)?;
-        let config = config_rpc::load_config_with_timeout().await?;
-        let service = super::global(&config);
+        let (config, service) = config_and_service().await?;
         let id = p.id.trim();
 
         let base_url = service
@@ -428,45 +454,113 @@ fn handle_models_delete(params: Map<String, Value>) -> ControllerFuture {
     })
 }
 
-fn handle_set_model(params: Map<String, Value>) -> ControllerFuture {
+fn handle_update_server(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
-        let p = deserialize_params::<SetModelParams>(params)?;
+        let p = deserialize_params::<UpdateServerParams>(params)?;
         let id = p.id.trim().to_string();
-        let model_id = p.model_id.trim().to_string();
 
-        let mut config = config_rpc::load_config_with_timeout().await?;
-        {
+        let (mut config, service) = config_and_service().await?;
+        let outcome = {
             let server = config
                 .mlx
                 .servers
                 .iter_mut()
                 .find(|server| server.id == id)
                 .ok_or_else(|| format!("no [[mlx.server]] block with id `{id}`"))?;
-            server.model = model_id.clone();
+            super::mlx_patch::apply(server, p.patch)
+        };
+
+        // Saving and restarting on a no-op edit would bounce a loaded model
+        // for nothing, and a 27B reload costs minutes.
+        if outcome.is_empty() {
+            let status = service.mlx.status_of(&config, &service.http, &id).await;
+            return to_json(RpcOutcome::new(
+                serde_json::json!({ "id": id, "changed": [], "restarted": false, "server": status }),
+                Vec::new(),
+            ));
         }
+
         config.save().await.map_err(|err| err.to_string())?;
 
-        // The checkpoint is a launch argument, so a running server has to be
-        // restarted to pick it up. Restarting one that is stopped would start
-        // it, which is not what "choose a model" means, so only restart what
-        // was already running.
-        let service = super::global(&config);
-        let was_running = service.mlx.base_url_for(&id).await.is_some();
-        let status = if was_running {
+        // Command-line settings only take effect at spawn, so a running server
+        // has to come back. A stopped one stays stopped: editing settings is
+        // not a request to start it.
+        let running = service.mlx.base_url_for(&id).await.is_some();
+        let restart = running && outcome.needs_restart;
+        let status = if restart {
             Some(service.mlx.restart(&config, &service.http, &id).await?)
         } else {
             service.mlx.status_of(&config, &service.http, &id).await
         };
 
         to_json(RpcOutcome::single_log(
-            serde_json::json!({ "id": id, "model_id": model_id, "restarted": was_running, "server": status }),
-            if model_id.is_empty() {
-                format!("cleared the model slot on `{id}`")
-            } else {
-                format!("set `{id}` to load {model_id}")
-            },
+            serde_json::json!({
+                "id": id,
+                "changed": outcome.changed,
+                "restarted": restart,
+                "server": status,
+            }),
+            format!("updated `{id}`: {}", outcome.changed.join(", ")),
         ))
     })
+}
+
+fn handle_set_embeddings_backend(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let p = deserialize_params::<EmbeddingsBackendParams>(params)?;
+        let backend = p.backend.trim().to_ascii_lowercase();
+        if backend != "ollama" && backend != "mlx" {
+            return Err(format!(
+                "unknown embeddings backend `{backend}`: expected `ollama` or `mlx`"
+            ));
+        }
+
+        let mut config = config_rpc::load_config_with_timeout().await?;
+        if config.mlx.embeddings_backend == backend {
+            return to_json(RpcOutcome::new(
+                serde_json::json!({ "backend": backend, "changed": false }),
+                Vec::new(),
+            ));
+        }
+
+        // Switching to MLX without a 1024-dim embedder would leave the memory
+        // tree unable to read its own vectors, so say so rather than let it
+        // fail later at recall time.
+        let problems = if backend == "mlx" {
+            let has_embedder = config
+                .mlx
+                .servers
+                .iter()
+                .any(|server| server.is_vlm() && !server.embedding_model.trim().is_empty());
+            if !has_embedder {
+                vec!["No MLX server has an embedding model selected yet.".to_string()]
+            } else {
+                Vec::new()
+            }
+        } else {
+            Vec::new()
+        };
+
+        config.mlx.embeddings_backend = backend.clone();
+        config.save().await.map_err(|err| err.to_string())?;
+
+        to_json(RpcOutcome::single_log(
+            serde_json::json!({ "backend": backend, "changed": true, "problems": problems }),
+            format!("embeddings now served by {backend}"),
+        ))
+    })
+}
+
+async fn config_and_service() -> Result<
+    (
+        crate::neppy::config::Config,
+        std::sync::Arc<super::LocalAiService>,
+    ),
+    String,
+> {
+    let config = config_rpc::load_config_with_timeout().await?;
+    let service = super::global(&config);
+    Ok((config, service))
 }
 
 fn deserialize_params<T: serde::de::DeserializeOwned>(
@@ -499,6 +593,15 @@ fn optional_u64(name: &'static str, comment: &'static str) -> FieldSchema {
         ty: TypeSchema::Option(Box::new(TypeSchema::U64)),
         comment,
         required: false,
+    }
+}
+
+fn json_input(name: &'static str, comment: &'static str) -> FieldSchema {
+    FieldSchema {
+        name,
+        ty: TypeSchema::Json,
+        comment,
+        required: true,
     }
 }
 

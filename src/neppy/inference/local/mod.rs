@@ -15,6 +15,7 @@ pub(crate) fn inference_test_guard() -> std::sync::MutexGuard<'static, ()> {
 }
 
 mod core;
+mod mlx_patch;
 mod mlx_schemas;
 pub mod ops;
 mod schemas;

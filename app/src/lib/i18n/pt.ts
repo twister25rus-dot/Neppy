@@ -7031,6 +7031,38 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'Modelo',
   'mlx.modelNone': 'Nenhum, carregar quando for preciso',
   'mlx.servingChat': 'A servir o chat',
+  'mlx.modelsLabel': 'Modelos',
+  'mlx.modelsHint':
+    'Assinala os modelos que este servidor deve carregar. Um servidor pode ter vários ao mesmo tempo, um por função.',
+  'mlx.noCachedModels': 'Ainda não há modelos transferidos.',
+  'mlx.slotLabel': 'Função',
+  'mlx.slot.model': 'Conversa',
+  'mlx.slot.embedding': 'Embeddings',
+  'mlx.slot.stt': 'Voz para texto',
+  'mlx.slot.tts': 'Texto para voz',
+  'mlx.slot.reranker': 'Reordenação',
+  'mlx.slot.image': 'Imagens',
+  'mlx.params.generation': 'Geração',
+  'mlx.params.reasoning': 'Raciocínio',
+  'mlx.params.memory': 'Memória e velocidade',
+  'mlx.params.speculative': 'Descodificação especulativa',
+  'mlx.params.process': 'Processo',
+  'mlx.params.zeroIsDefault': '0 mantém a predefinição do servidor.',
+  'mlx.params.negativeIsDefault': 'Um valor negativo mantém a predefinição do servidor.',
+  'mlx.params.kvBits': 'Bits da cache KV. 0 deixa-a sem quantização e 3.5 escolhe TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'Pedidos descodificados ao mesmo tempo. Os restantes esperam, o que limita a memória máxima. 0 é sem limite.',
+  'mlx.params.draftModel': 'Um modelo mais pequeno que sugere tokens ao principal.',
+  'mlx.params.draftKind': 'dflash, eagle3 ou mtp. Deixa vazio para detetar automaticamente.',
+  'mlx.params.port': '0 atribui uma porta livre no arranque e fixa-a aqui depois.',
+  'mlx.params.allowLan': 'Desligado mantém o servidor apenas neste computador.',
+  'mlx.params.trustRemoteCode':
+    'Executa código que vem com o modelo. Liga apenas se confiares na origem.',
+  'mlx.embeddingsLabel': 'Embeddings',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'O Ollama mantém os vetores que já estão na memória. O MLX precisa de um modelo de 1024 dimensões.',
 };
 
 export default messages;

@@ -63,6 +63,7 @@ const INTENTIONAL_ENGLISH = new Set([
   "intelligence.diagram.skillInstallCommand",
   "intelligence.memoryChunk.detail.embeddingInfo",
   "mcp.playground.argsLabel",
+  "mlx.embeddingsOllama", // "Ollama (bge-m3)" — a product name and a model id, neither of which is prose
   "mcp.tab.source.smithery",
   "memorySources.globPatternPlaceholder",
   "rewards.community.discordDetails", // "Discord" — brand/product name, same in every locale

@@ -73,6 +73,92 @@ pub(crate) fn mlx_api_key(config: &Config) -> Option<String> {
         .map(str::to_string)
 }
 
+/// Register (or withdraw) a running MLX server as a voice provider.
+///
+/// `mlx_vlm.server` serves `/v1/audio/transcriptions` and `/v1/audio/speech`
+/// in the OpenAI shapes, which is exactly what `SttApiStyle::OpenaiAudio` and
+/// `TtsApiStyle::OpenaiAudio` already speak — so speech needs no new client,
+/// only an entry pointing at the server.
+///
+/// The entry is withdrawn when neither speech slot is filled. A stale entry
+/// would leave voice routed at a server that cannot answer it, which fails at
+/// the microphone rather than at the point the model was unticked.
+///
+/// Ollama and the cloud engines are untouched: this adds `mlx` to the list of
+/// choices, it does not become the choice.
+pub(crate) fn upsert_voice_provider_entry(
+    config: &mut Config,
+    server: &crate::neppy::config::schema::MlxServerConfig,
+    base_url: &str,
+) -> bool {
+    use crate::neppy::config::schema::cloud_providers::AuthStyle;
+    use crate::neppy::config::schema::voice_providers::{
+        SttApiStyle, TtsApiStyle, VoiceCapability, VoiceProviderCreds,
+    };
+
+    let slug = provider_slug_for(&server.id);
+    let stt = server.stt_model.trim();
+    let tts = server.tts_model.trim();
+
+    let capability = match (stt.is_empty(), tts.is_empty()) {
+        (true, true) => {
+            // Nothing to serve: drop any entry we previously added.
+            let before = config.voice_providers.len();
+            config.voice_providers.retain(|entry| entry.slug != slug);
+            return config.voice_providers.len() != before;
+        }
+        (false, true) => VoiceCapability::Stt,
+        (true, false) => VoiceCapability::Tts,
+        (false, false) => VoiceCapability::Both,
+    };
+
+    let label = provider_label_for(&server.id);
+    let default_stt_model = (!stt.is_empty()).then(|| stt.to_string());
+    let default_tts_voice = (!tts.is_empty()).then(|| tts.to_string());
+    let auth_style = if server.uses_bearer() {
+        AuthStyle::Bearer
+    } else {
+        AuthStyle::None
+    };
+
+    if let Some(existing) = config
+        .voice_providers
+        .iter_mut()
+        .find(|entry| entry.slug == slug)
+    {
+        let unchanged = existing.endpoint == base_url
+            && existing.capability == capability
+            && existing.default_stt_model == default_stt_model
+            && existing.default_tts_voice == default_tts_voice
+            && existing.auth_style == auth_style;
+        if unchanged {
+            return false;
+        }
+        existing.endpoint = base_url.to_string();
+        existing.label = label;
+        existing.capability = capability;
+        existing.default_stt_model = default_stt_model;
+        existing.default_tts_voice = default_tts_voice;
+        existing.auth_style = auth_style;
+        return true;
+    }
+
+    config.voice_providers.push(VoiceProviderCreds {
+        id: format!("vp_mlx_{}", server.id),
+        slug,
+        label,
+        endpoint: base_url.to_string(),
+        auth_style,
+        capability,
+        // The server speaks the OpenAI audio shapes, which are the defaults.
+        stt_api_style: SttApiStyle::OpenaiAudio,
+        tts_api_style: TtsApiStyle::OpenaiAudio,
+        default_stt_model,
+        default_tts_voice,
+    });
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,6 +227,76 @@ mod tests {
             .collect();
         assert_eq!(entries.len(), 1, "must not accumulate duplicates");
         assert_eq!(entries[0].endpoint, "http://127.0.0.1:9001/v1");
+    }
+
+    #[test]
+    fn a_speech_slot_registers_a_voice_provider() {
+        // mlx_vlm.server serves the OpenAI audio shapes, so speech needs an
+        // entry pointing at it and no new client.
+        let mut config = Config::default();
+        let mut server = server_with("primary", "some/chat-model");
+        server.stt_model = "mlx-community/whisper-large-v3".to_string();
+
+        assert!(upsert_voice_provider_entry(
+            &mut config,
+            &server,
+            "http://127.0.0.1:8794/v1"
+        ));
+
+        let entry = config
+            .voice_providers
+            .iter()
+            .find(|entry| entry.slug == "mlx")
+            .expect("an mlx voice provider");
+        assert!(entry.capability.supports_stt());
+        assert!(!entry.capability.supports_tts(), "no tts model was set");
+        assert_eq!(
+            entry.default_stt_model.as_deref(),
+            Some("mlx-community/whisper-large-v3")
+        );
+    }
+
+    #[test]
+    fn both_speech_slots_give_a_both_capability() {
+        let mut config = Config::default();
+        let mut server = server_with("primary", "");
+        server.stt_model = "some/whisper".to_string();
+        server.tts_model = "some/kokoro".to_string();
+
+        upsert_voice_provider_entry(&mut config, &server, "http://127.0.0.1:8794/v1");
+
+        let entry = &config.voice_providers[0];
+        assert!(entry.capability.supports_stt() && entry.capability.supports_tts());
+    }
+
+    #[test]
+    fn clearing_the_speech_slots_withdraws_the_voice_provider() {
+        // A stale entry would leave voice routed at a server that cannot
+        // answer it, failing at the microphone rather than at the untick.
+        let mut config = Config::default();
+        let mut server = server_with("primary", "");
+        server.stt_model = "some/whisper".to_string();
+        upsert_voice_provider_entry(&mut config, &server, "http://127.0.0.1:8794/v1");
+        assert_eq!(config.voice_providers.len(), 1);
+
+        server.stt_model = String::new();
+        let changed = upsert_voice_provider_entry(&mut config, &server, "http://127.0.0.1:8794/v1");
+
+        assert!(changed);
+        assert!(config.voice_providers.is_empty());
+    }
+
+    #[test]
+    fn a_chat_only_server_registers_no_voice_provider() {
+        let mut config = Config::default();
+        let server = server_with("primary", "some/chat-model");
+
+        assert!(!upsert_voice_provider_entry(
+            &mut config,
+            &server,
+            "http://127.0.0.1:8794/v1"
+        ));
+        assert!(config.voice_providers.is_empty());
     }
 
     #[test]

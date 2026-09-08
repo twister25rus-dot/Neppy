@@ -68,6 +68,10 @@ pub(crate) struct MlxServerStatus {
     /// can be configured for one checkpoint and holding none, or holding one a
     /// request asked for on the fly.
     pub(crate) configured_model: Option<String>,
+    /// The block's stored settings, so the panel can render every slot and
+    /// parameter without a second round trip. The api_key is redacted — this
+    /// crosses to the renderer, and a bearer token has no business there.
+    pub(crate) settings: serde_json::Value,
     pub(crate) resident_gib: Option<f64>,
     pub(crate) estimated_gib: Option<f64>,
     pub(crate) models: Vec<String>,
@@ -89,6 +93,7 @@ impl MlxServerStatus {
             pid: None,
             loaded_model: None,
             configured_model: non_empty(&server.model),
+            settings: redacted_settings(server),
             resident_gib: None,
             estimated_gib: None,
             models: Vec::new(),
@@ -340,12 +345,20 @@ impl MlxPool {
             )
         };
 
-        let report = probe_models(http, &base_url, bearer.as_deref()).await;
-        let liveness = if server_config.is_vlm() {
-            probe_liveness(http, &base_url).await
-        } else {
-            None
-        };
+        // Both probes hit the same server and neither depends on the other, so
+        // run them together: the panel polls this every 5s per server, and
+        // awaiting them in turn paid two round trips where one would do.
+        // `/v1/models` under hf-cache discovery also scans the cache directory,
+        // so it is the slower of the two.
+        let (report, liveness) =
+            tokio::join!(probe_models(http, &base_url, bearer.as_deref()), async {
+                // mlx_lm.server serves no /health, so asking is pure waste.
+                if server_config.is_vlm() {
+                    probe_liveness(http, &base_url).await
+                } else {
+                    None
+                }
+            });
 
         let mut running = self.running.lock().await;
         let entry = running.get_mut(id)?;
@@ -380,6 +393,7 @@ impl MlxPool {
             pid: Some(pid),
             loaded_model: liveness.as_ref().and_then(|l| l.loaded_model.clone()),
             configured_model: non_empty(&server_config.model),
+            settings: redacted_settings(&server_config),
             resident_gib: Some(resident_gib(&[pid])),
             estimated_gib,
             models: report.models,
@@ -416,6 +430,24 @@ impl MlxPool {
 /// does not try to reclaim a PID that is already gone.
 fn clear_marker_for(config: &Config, id: &str) {
     super::process::reclaim_orphan_if_ours(config, id);
+}
+
+/// The block's settings as JSON, with the bearer token replaced by a marker.
+///
+/// The panel needs every field to render its form, but the key is the one
+/// value that must not leave the core. A boolean marker still lets the UI say
+/// "a key is set" without carrying it.
+fn redacted_settings(server: &MlxServerConfig) -> serde_json::Value {
+    let mut value = serde_json::to_value(server).unwrap_or(serde_json::Value::Null);
+    if let Some(object) = value.as_object_mut() {
+        let has_key = !server.api_key.trim().is_empty();
+        object.insert(
+            "api_key".to_string(),
+            serde_json::Value::String(String::new()),
+        );
+        object.insert("api_key_set".to_string(), serde_json::Value::Bool(has_key));
+    }
+    value
 }
 
 /// `None` for a blank slot, so the UI can tell "not configured" from "".

@@ -7233,6 +7233,38 @@ const en: TranslationMap = {
   'mlx.modelLabel': 'Model',
   'mlx.modelNone': 'None, load on request',
   'mlx.servingChat': 'Serving chat',
+  'mlx.modelsLabel': 'Models',
+  'mlx.modelsHint':
+    'Tick the models this server should load. One server can hold several at once, one per role.',
+  'mlx.noCachedModels': 'No models are downloaded yet.',
+  'mlx.slotLabel': 'Role',
+  'mlx.slot.model': 'Chat',
+  'mlx.slot.embedding': 'Embeddings',
+  'mlx.slot.stt': 'Speech to text',
+  'mlx.slot.tts': 'Text to speech',
+  'mlx.slot.reranker': 'Reranking',
+  'mlx.slot.image': 'Images',
+  'mlx.params.generation': 'Generation',
+  'mlx.params.reasoning': 'Reasoning',
+  'mlx.params.memory': 'Memory and speed',
+  'mlx.params.speculative': 'Speculative decoding',
+  'mlx.params.process': 'Process',
+  'mlx.params.zeroIsDefault': '0 keeps the server default.',
+  'mlx.params.negativeIsDefault': 'A negative value keeps the server default.',
+  'mlx.params.kvBits': 'Bits for the KV cache. 0 leaves it unquantized, 3.5 selects TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'Requests decoded at once. Extra ones queue, which bounds peak memory. 0 is unbounded.',
+  'mlx.params.draftModel': 'A smaller model used to draft tokens ahead of the main one.',
+  'mlx.params.draftKind': 'dflash, eagle3 or mtp. Leave empty to detect it from the drafter.',
+  'mlx.params.port': '0 assigns a free port at start, and pins it here once running.',
+  'mlx.params.allowLan': 'Off keeps the server on this machine only.',
+  'mlx.params.trustRemoteCode':
+    'Runs code shipped with the model. Leave off unless you trust its source.',
+  'mlx.embeddingsLabel': 'Embeddings',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'Ollama keeps the vectors already in your memory. MLX needs a 1024 dimension model.',
 };
 
 export default en;

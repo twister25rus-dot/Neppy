@@ -6760,6 +6760,37 @@ const messages: TranslationMap = {
   'mlx.modelLabel': 'النموذج',
   'mlx.modelNone': 'بلا نموذج، يُحمَّل عند الطلب',
   'mlx.servingChat': 'يخدم الدردشة',
+  'mlx.modelsLabel': 'النماذج',
+  'mlx.modelsHint':
+    'حدّد النماذج التي يحمّلها هذا الخادم. يمكن للخادم الواحد أن يحمل عدة نماذج معًا، واحدًا لكل مهمة.',
+  'mlx.noCachedModels': 'لم يتم تنزيل أي نموذج بعد.',
+  'mlx.slotLabel': 'المهمة',
+  'mlx.slot.model': 'الدردشة',
+  'mlx.slot.embedding': 'التضمينات',
+  'mlx.slot.stt': 'من الصوت إلى النص',
+  'mlx.slot.tts': 'من النص إلى الصوت',
+  'mlx.slot.reranker': 'إعادة الترتيب',
+  'mlx.slot.image': 'الصور',
+  'mlx.params.generation': 'التوليد',
+  'mlx.params.reasoning': 'الاستدلال',
+  'mlx.params.memory': 'الذاكرة والسرعة',
+  'mlx.params.speculative': 'فك التشفير التخميني',
+  'mlx.params.process': 'العملية',
+  'mlx.params.zeroIsDefault': 'القيمة 0 تُبقي الإعداد الافتراضي للخادم.',
+  'mlx.params.negativeIsDefault': 'القيمة السالبة تُبقي الإعداد الافتراضي للخادم.',
+  'mlx.params.kvBits': 'عدد بتات ذاكرة KV. القيمة 0 تتركها دون تكميم، و3.5 تختار TurboQuant.',
+  'mlx.params.maxNumSeqs':
+    'عدد الطلبات التي تُفك معًا. تنتظر البقية، ما يحدّ من ذروة الذاكرة. القيمة 0 تعني بلا حد.',
+  'mlx.params.draftModel': 'نموذج أصغر يقترح الرموز مسبقًا للنموذج الأساسي.',
+  'mlx.params.draftKind': 'dflash أو eagle3 أو mtp. اتركه فارغًا ليُحدَّد تلقائيًا.',
+  'mlx.params.port': 'القيمة 0 تختار منفذًا متاحًا عند التشغيل ثم تثبّته هنا.',
+  'mlx.params.allowLan': 'إيقافه يُبقي الخادم على هذا الجهاز وحده.',
+  'mlx.params.trustRemoteCode': 'يشغّل شفرة مرفقة مع النموذج. لا تفعّله إلا إذا كنت تثق بالمصدر.',
+  'mlx.embeddingsLabel': 'التضمينات',
+  'mlx.embeddingsOllama': 'Ollama (bge-m3)',
+  'mlx.embeddingsMlx': 'MLX',
+  'mlx.embeddingsHint':
+    'يُبقي Ollama المتجهات الموجودة في الذاكرة. أما MLX فيحتاج نموذجًا بـ1024 بُعدًا.',
 };
 
 export default messages;
