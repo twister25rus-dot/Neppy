@@ -76,7 +76,6 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("models_list"),
         schemas("models_delete"),
         schemas("set_model"),
-        schemas("use_for_chat"),
     ]
 }
 
@@ -117,10 +116,6 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("set_model"),
             handler: handle_set_model,
-        },
-        RegisteredController {
-            schema: schemas("use_for_chat"),
-            handler: handle_use_for_chat,
         },
     ]
 }
@@ -224,14 +219,6 @@ pub fn schemas(function: &str) -> ControllerSchema {
             ],
             outputs: vec![json_output("server", "Status after the change.")],
         },
-        "use_for_chat" => ControllerSchema {
-            namespace: "mlx",
-            function: "use_for_chat",
-            description: "Route chat, reasoning and vision to this MLX server, pointing the \
-                          local runtime at its address.",
-            inputs: vec![required_string("id", "The [[mlx.server]] block id.")],
-            outputs: vec![json_output("routing", "The routing that was applied.")],
-        },
         other => panic!("unknown mlx controller function: {other}"),
     }
 }
@@ -270,31 +257,49 @@ fn handle_start(params: Map<String, Value>) -> ControllerFuture {
         let id = p.id.trim().to_string();
         let status = service.mlx.start(&config, &service.http, &id).await?;
 
-        // Pin an auto-assigned port into config. Without this the address is
-        // known only to this process, so a core restart leaves a running
-        // server that nothing can address, and `use_for_chat` has nothing to
-        // point `local_ai.base_url` at.
-        if config
-            .mlx
-            .server(&id)
-            .is_some_and(|server| server.port == 0)
+        // Two durable consequences of a successful start, written in one save:
+        // pin an auto-assigned port, and register the server as a provider.
+        //
+        // The port matters because an assigned one is otherwise known only to
+        // this process, so a core restart leaves a running server nothing can
+        // address. The provider entry matters because a started server that no
+        // model picker lists is not actually usable — which is exactly how the
+        // first version of this shipped.
         {
+            let mut persisted = config.clone();
+            let mut dirty = false;
+
             if let Some(port) = service.mlx.assigned_port(&id).await {
-                let mut persisted = config.clone();
-                if let Some(server) = persisted
-                    .mlx
-                    .servers
-                    .iter_mut()
-                    .find(|server| server.id == id)
-                {
-                    server.port = port;
+                if let Some(server) = persisted.mlx.servers.iter_mut().find(|s| s.id == id) {
+                    if server.port != port {
+                        server.port = port;
+                        dirty = true;
+                    }
                 }
+            }
+
+            if let Some(server) = persisted.mlx.server(&id).cloned() {
+                let base_url = service
+                    .mlx
+                    .resolved_base_url(&persisted, &id)
+                    .await
+                    .unwrap_or_else(|| server.base_url(server.port));
+                if crate::neppy::inference::local::mlx::upsert_provider_entry(
+                    &mut persisted,
+                    &server,
+                    &base_url,
+                ) {
+                    dirty = true;
+                }
+            }
+
+            if dirty {
                 if let Err(err) = persisted.save().await {
-                    // The server is up and usable; only the address is not
-                    // durable, so this is a warning rather than a failure.
-                    log::warn!("[mlx] could not persist the assigned port for `{id}`: {err}");
+                    // The server is up and serving; only its registration is
+                    // not durable, so this degrades rather than fails.
+                    log::warn!("[mlx] could not persist start-time config for `{id}`: {err}");
                 } else {
-                    log::info!("[mlx] pinned `{id}` to its assigned port {port}");
+                    log::info!("[mlx] `{id}` registered as a provider and pinned to its port");
                 }
             }
         }
@@ -460,70 +465,6 @@ fn handle_set_model(params: Map<String, Value>) -> ControllerFuture {
             } else {
                 format!("set `{id}` to load {model_id}")
             },
-        ))
-    })
-}
-
-fn handle_use_for_chat(params: Map<String, Value>) -> ControllerFuture {
-    Box::pin(async move {
-        let p = deserialize_params::<ServerIdParams>(params)?;
-        let id = p.id.trim().to_string();
-
-        let mut config = config_rpc::load_config_with_timeout().await?;
-        let service = super::global(&config);
-
-        // The address has to be pinned into `local_ai.base_url`, because that
-        // is what the provider factory reads for an `mlx:` model string. On
-        // this machine it pointed at LM Studio, so routing chat to MLX without
-        // this would have reached the wrong server entirely.
-        let base_url = service
-            .mlx
-            .resolved_base_url(&config, &id)
-            .await
-            .ok_or_else(|| {
-                format!(
-                    "`{id}` has no known address: start it first, or give its                      [[mlx.server]] block a fixed port."
-                )
-            })?;
-
-        let server = config
-            .mlx
-            .server(&id)
-            .ok_or_else(|| format!("no [[mlx.server]] block with id `{id}`"))?
-            .clone();
-
-        if server.model.trim().is_empty() {
-            return Err(format!(
-                "`{id}` has no model selected. Choose one first, or the chat provider                  would name nothing."
-            ));
-        }
-
-        let provider_string = format!("mlx:{}", server.model.trim());
-
-        config.local_ai.provider = "mlx".to_string();
-        config.local_ai.base_url = Some(base_url.clone());
-        config.local_ai.model_id = server.model.trim().to_string();
-        config.local_ai.chat_model_id = server.model.trim().to_string();
-        config.chat_provider = Some(provider_string.clone());
-        config.reasoning_provider = Some(provider_string.clone());
-        // Vision only when the checkpoint can actually see; a text model
-        // routed here would fail every image turn.
-        if server.is_vlm() {
-            config.vision_provider = Some(provider_string.clone());
-        }
-        // Embeddings deliberately untouched: the memory tree is fixed at 1024
-        // dims and bge-m3 is what filled it.
-        config.save().await.map_err(|err| err.to_string())?;
-
-        to_json(RpcOutcome::single_log(
-            serde_json::json!({
-                "id": id,
-                "base_url": base_url,
-                "provider": provider_string,
-                "vision": server.is_vlm(),
-                "embeddings_unchanged": config.embeddings_provider.clone(),
-            }),
-            format!("chat now routes to MLX server `{id}` ({provider_string})"),
         ))
     })
 }

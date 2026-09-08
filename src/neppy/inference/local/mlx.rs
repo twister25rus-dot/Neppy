@@ -78,6 +78,88 @@ mod tests {
     use super::*;
     use crate::neppy::config::schema::MlxServerConfig;
 
+    fn server_with(id: &str, model: &str) -> MlxServerConfig {
+        MlxServerConfig {
+            id: id.to_string(),
+            model: model.to_string(),
+            ..MlxServerConfig::default()
+        }
+    }
+
+    #[test]
+    fn the_primary_block_takes_the_bare_mlx_slug() {
+        // So its provider strings read `mlx:<model>` and match the factory's
+        // own MLX branch, which is also what already-saved routing uses.
+        assert_eq!(provider_slug_for("primary"), "mlx");
+        assert_eq!(provider_slug_for("vision"), "mlx-vision");
+    }
+
+    #[test]
+    fn starting_a_server_registers_it_as_a_provider() {
+        // This is what puts MLX in "Choose provider and model" beside every
+        // other provider. Without it a started server is invisible to every
+        // model picker in the app.
+        let mut config = Config::default();
+        let before = config.cloud_providers.len();
+
+        let changed = upsert_provider_entry(
+            &mut config,
+            &server_with("primary", "mlx-community/Qwen3.8-27B-nvfp4"),
+            "http://127.0.0.1:8794/v1",
+        );
+
+        assert!(changed);
+        assert_eq!(config.cloud_providers.len(), before + 1);
+        let entry = config
+            .cloud_providers
+            .iter()
+            .find(|provider| provider.slug == "mlx")
+            .expect("an mlx provider entry");
+        assert_eq!(entry.label, "MLX");
+        assert_eq!(entry.endpoint, "http://127.0.0.1:8794/v1");
+        assert_eq!(
+            entry.default_model.as_deref(),
+            Some("mlx-community/Qwen3.8-27B-nvfp4")
+        );
+    }
+
+    #[test]
+    fn restarting_on_a_new_port_updates_the_endpoint_instead_of_duplicating() {
+        // An auto-assigned port moves across restarts; a second entry would
+        // leave a stale one pointing at a dead address.
+        let mut config = Config::default();
+        let server = server_with("primary", "some/model");
+
+        upsert_provider_entry(&mut config, &server, "http://127.0.0.1:8794/v1");
+        let changed = upsert_provider_entry(&mut config, &server, "http://127.0.0.1:9001/v1");
+
+        assert!(changed);
+        let entries: Vec<_> = config
+            .cloud_providers
+            .iter()
+            .filter(|provider| provider.slug == "mlx")
+            .collect();
+        assert_eq!(entries.len(), 1, "must not accumulate duplicates");
+        assert_eq!(entries[0].endpoint, "http://127.0.0.1:9001/v1");
+    }
+
+    #[test]
+    fn an_unchanged_server_reports_no_change_so_the_save_can_be_skipped() {
+        let mut config = Config::default();
+        let server = server_with("primary", "some/model");
+
+        assert!(upsert_provider_entry(
+            &mut config,
+            &server,
+            "http://127.0.0.1:8794/v1"
+        ));
+        assert!(!upsert_provider_entry(
+            &mut config,
+            &server,
+            "http://127.0.0.1:8794/v1"
+        ));
+    }
+
     #[test]
     fn explicit_base_url_wins() {
         let mut config = Config::default();
@@ -122,4 +204,95 @@ mod tests {
         let config = Config::default();
         assert_eq!(mlx_api_key(&config), None);
     }
+}
+
+// ── provider registration ────────────────────────────────────────────────
+
+/// Provider slug for a server block.
+///
+/// The block named `primary` takes the bare `mlx` slug, so its provider
+/// strings read `mlx:<model>` and match the factory's own MLX branch. Extra
+/// blocks are suffixed, and reach the same server through the generic
+/// OpenAI-compatible provider path, which is what an MLX server speaks anyway.
+pub(crate) fn provider_slug_for(server_id: &str) -> String {
+    if server_id == "primary" {
+        "mlx".to_string()
+    } else {
+        let safe: String = server_id
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+            .collect();
+        format!("mlx-{safe}")
+    }
+}
+
+/// Human label for the provider list.
+fn provider_label_for(server_id: &str) -> String {
+    if server_id == "primary" {
+        "MLX".to_string()
+    } else {
+        format!("MLX ({server_id})")
+    }
+}
+
+/// Register (or refresh) a running MLX server as a configured provider.
+///
+/// This is what makes MLX appear in "Choose provider and model" beside every
+/// other provider, with its models listed from the server's own `/v1/models`.
+/// Before this, a started server was invisible to every model picker in the
+/// app and could only be reached by hand-editing routing — which is not what
+/// "manage the runtime" should mean.
+///
+/// Returns whether the config changed, so the caller can skip a save.
+pub(crate) fn upsert_provider_entry(
+    config: &mut Config,
+    server: &crate::neppy::config::schema::MlxServerConfig,
+    base_url: &str,
+) -> bool {
+    use crate::neppy::config::schema::cloud_providers::{AuthStyle, CloudProviderCreds};
+
+    let slug = provider_slug_for(&server.id);
+    let label = provider_label_for(&server.id);
+    // The server takes a bearer token only when the block asked for one.
+    let auth_style = if server.uses_bearer() {
+        AuthStyle::Bearer
+    } else {
+        AuthStyle::None
+    };
+    let default_model = {
+        let model = server.model.trim();
+        (!model.is_empty()).then(|| model.to_string())
+    };
+
+    if let Some(existing) = config
+        .cloud_providers
+        .iter_mut()
+        .find(|provider| provider.slug == slug)
+    {
+        // A restart usually moves the port, so the endpoint is the field that
+        // actually needs refreshing.
+        let unchanged = existing.endpoint == base_url
+            && existing.label == label
+            && existing.auth_style == auth_style
+            && existing.default_model == default_model;
+        if unchanged {
+            return false;
+        }
+        existing.endpoint = base_url.to_string();
+        existing.label = label;
+        existing.auth_style = auth_style;
+        existing.default_model = default_model;
+        return true;
+    }
+
+    config.cloud_providers.push(CloudProviderCreds {
+        id: format!("mlx-{}", server.id),
+        slug,
+        label,
+        endpoint: base_url.to_string(),
+        auth_style,
+        default_model,
+        ..Default::default()
+    });
+    true
 }

@@ -6540,7 +6540,6 @@ const messages: TranslationMap = {
   'mlx.deleteHint': '删除的模型会移到废纸篓，在清空之前都可以还原。',
   'mlx.modelLabel': '模型',
   'mlx.modelNone': '不预载，按需加载',
-  'mlx.useForChat': '用于聊天',
   'mlx.servingChat': '正在服务聊天',
 };
 

@@ -7232,7 +7232,6 @@ const en: TranslationMap = {
   'mlx.deleteHint': 'Deleted models go to the Trash, so you can put them back until you empty it.',
   'mlx.modelLabel': 'Model',
   'mlx.modelNone': 'None, load on request',
-  'mlx.useForChat': 'Use for chat',
   'mlx.servingChat': 'Serving chat',
 };
 

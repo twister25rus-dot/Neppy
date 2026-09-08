@@ -296,44 +296,6 @@ describe('MlxPanel model selection and chat routing', () => {
     );
   });
 
-  it('offers to route chat only to a running server', async () => {
-    callCoreRpc.mockImplementation(router({}));
-    const { unmount } = render(<MlxPanel />);
-    await waitFor(() => expect(screen.getByText('mlx.start')).toBeInTheDocument());
-    // Stopped: routing chat at it would name an address nothing is serving.
-    expect(screen.queryByText('mlx.useForChat')).not.toBeInTheDocument();
-    unmount();
-
-    callCoreRpc.mockImplementation(
-      router({
-        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
-      })
-    );
-    render(<MlxPanel />);
-    await waitFor(() => expect(screen.getByText('mlx.useForChat')).toBeInTheDocument());
-  });
-
-  it('routes chat to the addressed server', async () => {
-    callCoreRpc.mockImplementation(
-      router({
-        'openhuman.mlx_status': status({
-          servers: [server({ id: 'vision', state: 'ready', port: 8794 })],
-        }),
-      })
-    );
-    render(<MlxPanel />);
-    await waitFor(() => expect(screen.getByText('mlx.useForChat')).toBeInTheDocument());
-
-    await userEvent.click(screen.getByText('mlx.useForChat'));
-
-    await waitFor(() =>
-      expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mlx_use_for_chat',
-        params: { id: 'vision' },
-      })
-    );
-  });
-
   it('marks the server chat is actually using', async () => {
     // A started server that nothing routes to must look different from one
     // that is serving, which is precisely what the first release got wrong.
@@ -355,24 +317,5 @@ describe('MlxPanel model selection and chat routing', () => {
     render(<MlxPanel />);
 
     await waitFor(() => expect(screen.getByText('mlx.servingChat')).toBeInTheDocument());
-    // Already serving, so the button would be a no-op.
-    expect(screen.queryByText('mlx.useForChat')).not.toBeInTheDocument();
-  });
-
-  it('surfaces a refusal to route chat with no model chosen', async () => {
-    const refusal =
-      '`primary` has no model selected. Choose one first, or the chat provider would name nothing.';
-    callCoreRpc.mockImplementation((arg: { method: string }) => {
-      if (arg.method === 'openhuman.mlx_use_for_chat') return Promise.reject(new Error(refusal));
-      return router({
-        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
-      })(arg);
-    });
-
-    render(<MlxPanel />);
-    await waitFor(() => expect(screen.getByText('mlx.useForChat')).toBeInTheDocument());
-    await userEvent.click(screen.getByText('mlx.useForChat'));
-
-    await waitFor(() => expect(screen.getByText(refusal)).toBeInTheDocument());
   });
 });

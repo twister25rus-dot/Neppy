@@ -7094,7 +7094,6 @@ const messages: TranslationMap = {
     "Les modèles supprimés vont à la corbeille, tu peux donc les récupérer tant que tu ne l'as pas vidée.",
   'mlx.modelLabel': 'Modèle',
   'mlx.modelNone': 'Aucun, charger à la demande',
-  'mlx.useForChat': 'Utiliser pour le chat',
   'mlx.servingChat': 'Sert le chat',
 };
 

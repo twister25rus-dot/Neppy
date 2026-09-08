@@ -7045,7 +7045,6 @@ const messages: TranslationMap = {
     'I modelli eliminati finiscono nel cestino, quindi puoi recuperarli finché non lo svuoti.',
   'mlx.modelLabel': 'Modello',
   'mlx.modelNone': 'Nessuno, carica su richiesta',
-  'mlx.useForChat': 'Usa per la chat',
   'mlx.servingChat': 'Serve la chat',
 };
 

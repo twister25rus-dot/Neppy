@@ -6948,7 +6948,6 @@ const messages: TranslationMap = {
     'Model yang dihapus masuk ke Tong Sampah, jadi bisa dikembalikan selama belum dikosongkan.',
   'mlx.modelLabel': 'Model',
   'mlx.modelNone': 'Tidak ada, muat saat diminta',
-  'mlx.useForChat': 'Pakai untuk obrolan',
   'mlx.servingChat': 'Melayani obrolan',
 };
 

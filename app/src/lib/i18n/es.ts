@@ -7066,7 +7066,6 @@ const messages: TranslationMap = {
     'Los modelos eliminados van a la papelera, así que puedes recuperarlos mientras no la vacíes.',
   'mlx.modelLabel': 'Modelo',
   'mlx.modelNone': 'Ninguno, cargar cuando haga falta',
-  'mlx.useForChat': 'Usar para el chat',
   'mlx.servingChat': 'Atiende el chat',
 };
 

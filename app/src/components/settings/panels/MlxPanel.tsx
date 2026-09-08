@@ -179,23 +179,6 @@ export default function MlxPanel() {
     [load]
   );
 
-  const routeChatTo = useCallback(
-    async (id: string) => {
-      setBusyId(id);
-      setError(null);
-      try {
-        await callCoreRpc({ method: 'openhuman.mlx_use_for_chat', params: { id } });
-        await load();
-      } catch (e) {
-        // The refusal explains what is missing, usually an unchosen model.
-        setError(e instanceof Error ? e.message : String(e));
-      } finally {
-        if (mounted.current) setBusyId(null);
-      }
-    },
-    [load]
-  );
-
   const toggleDetails = useCallback(
     async (id: string) => {
       if (expanded === id) {
@@ -360,15 +343,6 @@ export default function MlxPanel() {
                   analyticsId="mlx-server-start"
                   onClick={() => void act(server.id, 'openhuman.mlx_start')}>
                   {t('mlx.start')}
-                </Button>
-              )}
-              {running && !usesThisServer && (
-                <Button
-                  variant="secondary"
-                  disabled={busy}
-                  analyticsId="mlx-server-use-for-chat"
-                  onClick={() => void routeChatTo(server.id)}>
-                  {t('mlx.useForChat')}
                 </Button>
               )}
               <Button
