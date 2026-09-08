@@ -179,7 +179,7 @@ export default function MlxPanel() {
     [load]
   );
 
-  const useForChat = useCallback(
+  const routeChatTo = useCallback(
     async (id: string) => {
       setBusyId(id);
       setError(null);
@@ -367,7 +367,7 @@ export default function MlxPanel() {
                   variant="secondary"
                   disabled={busy}
                   analyticsId="mlx-server-use-for-chat"
-                  onClick={() => void useForChat(server.id)}>
+                  onClick={() => void routeChatTo(server.id)}>
                   {t('mlx.useForChat')}
                 </Button>
               )}

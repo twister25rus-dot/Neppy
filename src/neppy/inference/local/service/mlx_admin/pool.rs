@@ -209,7 +209,7 @@ impl MlxPool {
                 .cloned()
                 .collect::<Vec<_>>()
                 .join(" | ");
-            clear_marker_for(config, &id);
+            clear_marker_for(config, id);
             return Err(if reason.is_empty() {
                 format!("server `{id}` {exit} immediately after starting")
             } else {
