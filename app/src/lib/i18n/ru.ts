@@ -6983,6 +6983,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'Готов',
   'mlx.state.degraded': 'Не отвечает',
   'mlx.state.crashed': 'Аварийно завершился',
+  'mlx.cacheTitle': 'Загруженные модели',
+  'mlx.cacheTotal': '{total} ГиБ на диске',
+  'mlx.delete': 'Удалить',
+  'mlx.confirmDelete': 'Подтвердить удаление',
+  'mlx.deleteHint':
+    'Удалённые модели попадают в корзину, поэтому их можно вернуть, пока вы её не очистили.',
 };
 
 export default messages;

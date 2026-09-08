@@ -51,6 +51,27 @@ function server(overrides: ServerOverrides = {}) {
   };
 }
 
+function cacheListing(overrides: Record<string, unknown> = {}) {
+  return {
+    models: [
+      { id: 'mlx-community/Qwen3.8-27B-nvfp4', size_gib: 11.8, looks_like_mlx: true },
+      { id: 'amazon/chronos-bolt-small', size_gib: 0.18, looks_like_mlx: false },
+    ],
+    total_gib: 11.98,
+    cache_dir: '/Users/test/.cache/huggingface/hub',
+    ...overrides,
+  };
+}
+
+/** Route a mocked RPC call to the right fixture. */
+function router(handlers: Record<string, unknown>) {
+  return (arg: { method: string }) => {
+    if (arg.method in handlers) return Promise.resolve(handlers[arg.method]);
+    if (arg.method === 'openhuman.mlx_models_list') return Promise.resolve(cacheListing());
+    return Promise.resolve(status());
+  };
+}
+
 function status(overrides: Record<string, unknown> = {}) {
   return {
     enabled: true,
@@ -71,7 +92,9 @@ describe('MlxPanel', () => {
   it('shows memory use against the shared budget', async () => {
     // This is the number that decides whether a second server can start, so
     // it is the one thing the panel must always surface.
-    callCoreRpc.mockResolvedValue(status({ memory_used_gib: 14.4 }));
+    callCoreRpc.mockImplementation(
+      router({ 'openhuman.mlx_status': status({ memory_used_gib: 14.4 }) })
+    );
     render(<MlxPanel />);
 
     await waitFor(() => expect(screen.getByText('mlx.memoryTitle')).toBeInTheDocument());
@@ -80,13 +103,17 @@ describe('MlxPanel', () => {
   });
 
   it('offers Start for a stopped server and Stop for a running one', async () => {
-    callCoreRpc.mockResolvedValue(status());
+    callCoreRpc.mockImplementation(router({}));
     const { unmount } = render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.start')).toBeInTheDocument());
     expect(screen.queryByText('mlx.stop')).not.toBeInTheDocument();
     unmount();
 
-    callCoreRpc.mockResolvedValue(status({ servers: [server({ state: 'ready', port: 8794 })] }));
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
+      })
+    );
     render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.stop')).toBeInTheDocument());
     expect(screen.getByText('mlx.unload')).toBeInTheDocument();
@@ -94,7 +121,9 @@ describe('MlxPanel', () => {
   });
 
   it('starts the addressed server by id', async () => {
-    callCoreRpc.mockResolvedValue(status({ servers: [server({ id: 'vision' })] }));
+    callCoreRpc.mockImplementation(
+      router({ 'openhuman.mlx_status': status({ servers: [server({ id: 'vision' })] }) })
+    );
     render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.start')).toBeInTheDocument());
 
@@ -115,7 +144,7 @@ describe('MlxPanel', () => {
       'mlx-community/Qwen3.8-27B-nvfp4 needs about 14.4 GiB but only 9.1 GiB of the 25.2 GiB MLX budget is free. Stop another MLX server first, or raise mlx.memory_budget_gib.';
     callCoreRpc.mockImplementation((arg: { method: string }) => {
       if (arg.method === 'openhuman.mlx_start') return Promise.reject(new Error(refusal));
-      return Promise.resolve(status());
+      return router({})(arg);
     });
 
     render(<MlxPanel />);
@@ -135,19 +164,19 @@ describe('MlxPanel', () => {
   });
 
   it('says when the runtime is switched off', async () => {
-    callCoreRpc.mockResolvedValue(status({ enabled: false }));
+    callCoreRpc.mockImplementation(router({ 'openhuman.mlx_status': status({ enabled: false }) }));
     render(<MlxPanel />);
 
     await waitFor(() => expect(screen.getByText('mlx.disabledNotice')).toBeInTheDocument());
   });
 
   it('loads the log tail only when details are opened', async () => {
-    callCoreRpc.mockImplementation((arg: { method: string }) => {
-      if (arg.method === 'openhuman.mlx_logs') {
-        return Promise.resolve({ id: 'primary', lines: ['[err] out of memory'] });
-      }
-      return Promise.resolve(status({ servers: [server({ state: 'ready', port: 8794 })] }));
-    });
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_logs': { id: 'primary', lines: ['[err] out of memory'] },
+        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
+      })
+    );
 
     render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.showDetails')).toBeInTheDocument());
@@ -160,13 +189,51 @@ describe('MlxPanel', () => {
     await waitFor(() => expect(screen.getByText('[err] out of memory')).toBeInTheDocument());
   });
 
+  it('lists cached models with their disk cost', async () => {
+    callCoreRpc.mockImplementation(router({}));
+    render(<MlxPanel />);
+
+    await waitFor(() => expect(screen.getByText('mlx.cacheTitle')).toBeInTheDocument());
+    expect(screen.getByText('mlx-community/Qwen3.8-27B-nvfp4')).toBeInTheDocument();
+    expect(screen.getByText('11.8 GiB')).toBeInTheDocument();
+  });
+
+  it('requires a second click before deleting a model', async () => {
+    callCoreRpc.mockImplementation(router({}));
+    render(<MlxPanel />);
+    await waitFor(() => expect(screen.getAllByText('mlx.delete').length).toBeGreaterThan(0));
+
+    await userEvent.click(screen.getAllByText('mlx.delete')[0]);
+
+    // First click only arms the confirmation; nothing is deleted yet.
+    expect(callCoreRpc).not.toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'openhuman.mlx_models_delete' })
+    );
+
+    await userEvent.click(screen.getByText('mlx.confirmDelete'));
+
+    await waitFor(() =>
+      expect(callCoreRpc).toHaveBeenCalledWith({
+        method: 'openhuman.mlx_models_delete',
+        params: { model_id: 'mlx-community/Qwen3.8-27B-nvfp4' },
+      })
+    );
+  });
+
+  it('survives a malformed cache payload rather than blanking the panel', async () => {
+    // A shape change upstream must not take down the server cards above it.
+    callCoreRpc.mockImplementation(router({ 'openhuman.mlx_models_list': { unexpected: true } }));
+    render(<MlxPanel />);
+
+    await waitFor(() => expect(screen.getByText('mlx.start')).toBeInTheDocument());
+    expect(screen.queryByText('mlx.cacheTitle')).not.toBeInTheDocument();
+  });
+
   it('renders the redacted command rather than hiding what ran', async () => {
-    callCoreRpc.mockImplementation((arg: { method: string }) => {
-      if (arg.method === 'openhuman.mlx_logs') {
-        return Promise.resolve({ id: 'primary', lines: [] });
-      }
-      return Promise.resolve(
-        status({
+    callCoreRpc.mockImplementation(
+      router({
+        'openhuman.mlx_logs': { id: 'primary', lines: [] },
+        'openhuman.mlx_status': status({
           servers: [
             server({
               state: 'ready',
@@ -174,9 +241,9 @@ describe('MlxPanel', () => {
               command: ['--host', '127.0.0.1', '--port', '8794', '--api-key', '***'],
             }),
           ],
-        })
-      );
-    });
+        }),
+      })
+    );
 
     render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.showDetails')).toBeInTheDocument());

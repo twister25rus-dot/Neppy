@@ -6909,6 +6909,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'প্রস্তুত',
   'mlx.state.degraded': 'সাড়া দিচ্ছে না',
   'mlx.state.crashed': 'বন্ধ হয়ে গেছে',
+  'mlx.cacheTitle': 'ডাউনলোড করা মডেল',
+  'mlx.cacheTotal': 'ডিস্কে {total} GiB',
+  'mlx.delete': 'মুছুন',
+  'mlx.confirmDelete': 'মোছা নিশ্চিত করুন',
+  'mlx.deleteHint':
+    'মুছে ফেলা মডেল ট্র্যাশে যায়, তাই ট্র্যাশ খালি না করা পর্যন্ত সেগুলো ফিরিয়ে আনা যায়।',
 };
 
 export default messages;

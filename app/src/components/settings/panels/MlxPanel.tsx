@@ -36,6 +36,18 @@ interface MlxServerStatus {
   command: string[];
 }
 
+interface CachedModel {
+  id: string;
+  size_gib: number;
+  looks_like_mlx: boolean;
+}
+
+interface CacheListing {
+  models: CachedModel[];
+  total_gib: number;
+  cache_dir: string;
+}
+
 interface MlxStatus {
   enabled: boolean;
   embeddings_backend: string;
@@ -68,13 +80,20 @@ export default function MlxPanel() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [logs, setLogs] = useState<Record<string, string[]>>({});
+  const [cache, setCache] = useState<CacheListing | null>(null);
+  // Deleting a multi-gigabyte download is worth a second click.
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const mounted = useRef(true);
 
   const load = useCallback(async () => {
     try {
-      const resp = await callCoreRpc<MlxStatus>({ method: 'openhuman.mlx_status', params: {} });
+      const [statusResp, cacheResp] = await Promise.all([
+        callCoreRpc<MlxStatus>({ method: 'openhuman.mlx_status', params: {} }),
+        callCoreRpc<CacheListing>({ method: 'openhuman.mlx_models_list', params: {} }),
+      ]);
       if (!mounted.current) return;
-      setStatus(resp);
+      setStatus(statusResp);
+      setCache(cacheResp);
       setError(null);
     } catch (e) {
       if (!mounted.current) return;
@@ -105,6 +124,20 @@ export default function MlxPanel() {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
         if (mounted.current) setBusyId(null);
+      }
+    },
+    [load]
+  );
+
+  const deleteModel = useCallback(
+    async (modelId: string) => {
+      setError(null);
+      try {
+        await callCoreRpc({ method: 'openhuman.mlx_models_delete', params: { model_id: modelId } });
+        setConfirmingDelete(null);
+        await load();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
       }
     },
     [load]
@@ -292,6 +325,50 @@ export default function MlxPanel() {
           </div>
         );
       })}
+
+      {/* Local model cache. The server can list what is cached but not what it
+          costs on disk, and three quantizations of one model accumulate
+          without ever being noticed. */}
+      {cache?.models?.length ? (
+        <div className="rounded-md border border-border p-3">
+          <div className="flex items-baseline justify-between text-sm">
+            <span className="font-medium">{t('mlx.cacheTitle')}</span>
+            <span className="text-content-muted">
+              {t('mlx.cacheTotal').replace('{total}', cache.total_gib.toFixed(1))}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-content-muted">{t('mlx.deleteHint')}</p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {cache.models.map(model => (
+              <li key={model.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="min-w-0 truncate" title={model.id}>
+                  {model.id}
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <span className="text-xs text-content-muted">
+                    {model.size_gib.toFixed(1)} GiB
+                  </span>
+                  {confirmingDelete === model.id ? (
+                    <Button
+                      variant="secondary"
+                      analyticsId="mlx-model-delete-confirm"
+                      onClick={() => void deleteModel(model.id)}>
+                      {t('mlx.confirmDelete')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="tertiary"
+                      analyticsId="mlx-model-delete"
+                      onClick={() => setConfirmingDelete(model.id)}>
+                      {t('mlx.delete')}
+                    </Button>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

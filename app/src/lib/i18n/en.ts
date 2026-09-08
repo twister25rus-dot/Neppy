@@ -7225,6 +7225,11 @@ const en: TranslationMap = {
   'mlx.state.ready': 'Ready',
   'mlx.state.degraded': 'Not responding',
   'mlx.state.crashed': 'Crashed',
+  'mlx.cacheTitle': 'Downloaded models',
+  'mlx.cacheTotal': '{total} GiB on disk',
+  'mlx.delete': 'Delete',
+  'mlx.confirmDelete': 'Confirm delete',
+  'mlx.deleteHint': 'Deleted models go to the Trash, so you can put them back until you empty it.',
 };
 
 export default en;

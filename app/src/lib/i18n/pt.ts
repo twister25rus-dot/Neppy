@@ -7022,6 +7022,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'Pronto',
   'mlx.state.degraded': 'Não responde',
   'mlx.state.crashed': 'Falhou',
+  'mlx.cacheTitle': 'Modelos transferidos',
+  'mlx.cacheTotal': '{total} GiB no disco',
+  'mlx.delete': 'Eliminar',
+  'mlx.confirmDelete': 'Confirmar eliminação',
+  'mlx.deleteHint':
+    'Os modelos eliminados vão para a reciclagem, por isso podes recuperá-los enquanto não a esvaziares.',
 };
 
 export default messages;

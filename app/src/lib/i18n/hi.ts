@@ -6904,6 +6904,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'तैयार',
   'mlx.state.degraded': 'जवाब नहीं दे रहा',
   'mlx.state.crashed': 'बंद हो गया',
+  'mlx.cacheTitle': 'डाउनलोड किए गए मॉडल',
+  'mlx.cacheTotal': 'डिस्क पर {total} GiB',
+  'mlx.delete': 'हटाएँ',
+  'mlx.confirmDelete': 'हटाने की पुष्टि करें',
+  'mlx.deleteHint':
+    'हटाए गए मॉडल ट्रैश में जाते हैं, इसलिए जब तक आप उसे खाली नहीं करते, उन्हें वापस लाया जा सकता है।',
 };
 
 export default messages;

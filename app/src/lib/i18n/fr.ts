@@ -7086,6 +7086,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'Prêt',
   'mlx.state.degraded': 'Ne répond pas',
   'mlx.state.crashed': 'Planté',
+  'mlx.cacheTitle': 'Modèles téléchargés',
+  'mlx.cacheTotal': '{total} Gio sur le disque',
+  'mlx.delete': 'Supprimer',
+  'mlx.confirmDelete': 'Confirmer la suppression',
+  'mlx.deleteHint':
+    "Les modèles supprimés vont à la corbeille, tu peux donc les récupérer tant que tu ne l'as pas vidée.",
 };
 
 export default messages;

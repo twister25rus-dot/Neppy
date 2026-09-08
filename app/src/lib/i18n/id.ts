@@ -6940,6 +6940,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'Siap',
   'mlx.state.degraded': 'Tidak merespons',
   'mlx.state.crashed': 'Berhenti mendadak',
+  'mlx.cacheTitle': 'Model yang diunduh',
+  'mlx.cacheTotal': '{total} GiB di disk',
+  'mlx.delete': 'Hapus',
+  'mlx.confirmDelete': 'Konfirmasi hapus',
+  'mlx.deleteHint':
+    'Model yang dihapus masuk ke Tong Sampah, jadi bisa dikembalikan selama belum dikosongkan.',
 };
 
 export default messages;

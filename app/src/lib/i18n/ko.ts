@@ -6830,6 +6830,11 @@ const messages: TranslationMap = {
   'mlx.state.ready': '준비됨',
   'mlx.state.degraded': '응답 없음',
   'mlx.state.crashed': '비정상 종료',
+  'mlx.cacheTitle': '내려받은 모델',
+  'mlx.cacheTotal': '디스크 {total} GiB 사용',
+  'mlx.delete': '삭제',
+  'mlx.confirmDelete': '삭제 확인',
+  'mlx.deleteHint': '삭제한 모델은 휴지통으로 이동하므로 비우기 전까지는 되돌릴 수 있습니다.',
 };
 
 export default messages;

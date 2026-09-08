@@ -6533,6 +6533,11 @@ const messages: TranslationMap = {
   'mlx.state.ready': '就绪',
   'mlx.state.degraded': '无响应',
   'mlx.state.crashed': '已崩溃',
+  'mlx.cacheTitle': '已下载的模型',
+  'mlx.cacheTotal': '占用磁盘 {total} GiB',
+  'mlx.delete': '删除',
+  'mlx.confirmDelete': '确认删除',
+  'mlx.deleteHint': '删除的模型会移到废纸篓，在清空之前都可以还原。',
 };
 
 export default messages;

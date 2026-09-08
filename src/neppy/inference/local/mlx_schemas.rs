@@ -26,6 +26,11 @@ struct ServerIdParams {
 }
 
 #[derive(Debug, Deserialize)]
+struct ModelIdParams {
+    model_id: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct LogsParams {
     id: String,
     #[serde(default)]
@@ -54,6 +59,8 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("restart"),
         schemas("logs"),
         schemas("unload"),
+        schemas("models_list"),
+        schemas("models_delete"),
     ]
 }
 
@@ -82,6 +89,14 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("unload"),
             handler: handle_unload,
+        },
+        RegisteredController {
+            schema: schemas("models_list"),
+            handler: handle_models_list,
+        },
+        RegisteredController {
+            schema: schemas("models_delete"),
+            handler: handle_models_delete,
         },
     ]
 }
@@ -150,6 +165,24 @@ pub fn schemas(function: &str) -> ControllerSchema {
                           without stopping the process.",
             inputs: vec![required_string("id", "The [[mlx.server]] block id.")],
             outputs: vec![json_output("unloaded", "Confirmation payload.")],
+        },
+        "models_list" => ControllerSchema {
+            namespace: "mlx",
+            function: "models_list",
+            description: "Locally cached models with their on-disk size, largest first.",
+            inputs: vec![],
+            outputs: vec![json_output("cache", "Cached models and total disk use.")],
+        },
+        "models_delete" => ControllerSchema {
+            namespace: "mlx",
+            function: "models_delete",
+            description: "Move one cached model to the Trash, reclaiming its disk space. \
+                          Recoverable from the Trash until it is emptied.",
+            inputs: vec![required_string(
+                "model_id",
+                "Hugging Face repo id, e.g. mlx-community/Qwen3.8-27B-nvfp4.",
+            )],
+            outputs: vec![json_output("deleted", "Reclaimed size and confirmation.")],
         },
         other => panic!("unknown mlx controller function: {other}"),
     }
@@ -279,6 +312,32 @@ fn handle_unload(params: Map<String, Value>) -> ControllerFuture {
         to_json(RpcOutcome::single_log(
             serde_json::json!({ "id": id, "unloaded": true }),
             format!("unloaded models on MLX server `{id}`"),
+        ))
+    })
+}
+
+fn handle_models_list(_params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        // A pure filesystem scan: no config and no running server needed.
+        to_json(RpcOutcome::new(
+            super::service::mlx_admin::models::list_cached_models(),
+            Vec::new(),
+        ))
+    })
+}
+
+fn handle_models_delete(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let p = deserialize_params::<ModelIdParams>(params)?;
+        let model_id = p.model_id.trim().to_string();
+        let reclaimed = super::service::mlx_admin::models::delete_cached_model(&model_id)?;
+        to_json(RpcOutcome::single_log(
+            serde_json::json!({
+                "model_id": model_id,
+                "reclaimed_gib": reclaimed,
+                "recoverable_from_trash": true,
+            }),
+            format!("moved `{model_id}` to the Trash, reclaiming {reclaimed:.1} GiB"),
         ))
     })
 }

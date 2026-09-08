@@ -6752,6 +6752,11 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'جاهز',
   'mlx.state.degraded': 'لا يستجيب',
   'mlx.state.crashed': 'تعطّل',
+  'mlx.cacheTitle': 'النماذج المنزَّلة',
+  'mlx.cacheTotal': '{total} غيبي على القرص',
+  'mlx.delete': 'حذف',
+  'mlx.confirmDelete': 'تأكيد الحذف',
+  'mlx.deleteHint': 'تنتقل النماذج المحذوفة إلى سلة المهملات، فيمكنك استعادتها ما لم تفرغها.',
 };
 
 export default messages;

@@ -7098,6 +7098,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'Bereit',
   'mlx.state.degraded': 'Antwortet nicht',
   'mlx.state.crashed': 'Abgestürzt',
+  'mlx.cacheTitle': 'Heruntergeladene Modelle',
+  'mlx.cacheTotal': '{total} GiB auf der Festplatte',
+  'mlx.delete': 'Löschen',
+  'mlx.confirmDelete': 'Löschen bestätigen',
+  'mlx.deleteHint':
+    'Gelöschte Modelle landen im Papierkorb und lassen sich zurückholen, solange du ihn nicht leerst.',
 };
 
 export default messages;

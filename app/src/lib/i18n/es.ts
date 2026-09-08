@@ -7058,6 +7058,12 @@ const messages: TranslationMap = {
   'mlx.state.ready': 'Listo',
   'mlx.state.degraded': 'No responde',
   'mlx.state.crashed': 'Se ha bloqueado',
+  'mlx.cacheTitle': 'Modelos descargados',
+  'mlx.cacheTotal': '{total} GiB en disco',
+  'mlx.delete': 'Eliminar',
+  'mlx.confirmDelete': 'Confirmar eliminación',
+  'mlx.deleteHint':
+    'Los modelos eliminados van a la papelera, así que puedes recuperarlos mientras no la vacíes.',
 };
 
 export default messages;
