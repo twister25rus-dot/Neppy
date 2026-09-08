@@ -8,6 +8,7 @@
 
 use super::argv::{build_argv, redact_argv};
 use super::binary::resolve_binary;
+use super::health::{classify, HealthReport, LivenessReport, MlxServerState};
 use crate::neppy::config::schema::{MlxConfig, MlxServerConfig};
 use crate::neppy::config::Config;
 
@@ -354,4 +355,96 @@ fn default_config_is_usable() {
     // Ollama stays the embedding backend by default so existing 1024-dim
     // vectors in the memory tree remain valid.
     assert!(!config.embeddings_on_mlx());
+}
+
+// ── /health payload ──────────────────────────────────────────────────────
+//
+// The literals below are the verbatim response from mlx-vlm 0.7.0, captured
+// by starting the server with the argv `build_argv` produces. Pinning real
+// output rather than an invented shape is the point: the payload has grown
+// across releases, and a hand-written fixture would only ever prove that the
+// parser matches the fixture.
+
+const REAL_IDLE_HEALTH: &str = r#"{"status":"healthy","loaded_model":null,"loaded_adapter":null,"loaded_models":{},"loaded_context_size":null,"configured_context_limit":null,"effective_context_limit":null,"loaded_tool_parser":null,"continuous_batching_enabled":false,"apc_enabled":false}"#;
+
+#[test]
+fn health_payload_parses_with_nothing_loaded() {
+    let report: LivenessReport =
+        serde_json::from_str(REAL_IDLE_HEALTH).expect("real payload parses");
+
+    assert_eq!(report.loaded_model, None);
+    assert!(report.loaded_models.is_empty());
+    assert!(!report.has_resident_model());
+    assert!(!report.continuous_batching_enabled);
+}
+
+#[test]
+fn health_payload_reports_a_resident_model() {
+    let loaded = r#"{"status":"healthy","loaded_model":"mlx-community/Qwen3.8-27B-nvfp4","loaded_models":{"language":"mlx-community/Qwen3.8-27B-nvfp4"},"loaded_context_size":8192,"effective_context_limit":8192,"loaded_tool_parser":"qwen3","continuous_batching_enabled":true}"#;
+    let report: LivenessReport = serde_json::from_str(loaded).expect("payload parses");
+
+    assert!(report.has_resident_model());
+    assert_eq!(
+        report.loaded_model.as_deref(),
+        Some("mlx-community/Qwen3.8-27B-nvfp4")
+    );
+    assert_eq!(report.loaded_context_size, Some(8192));
+    assert_eq!(report.loaded_tool_parser.as_deref(), Some("qwen3"));
+}
+
+#[test]
+fn health_payload_survives_fields_we_do_not_know() {
+    // The server gains keys between releases; an unknown one must not turn a
+    // healthy server into an unreachable one.
+    let future = r#"{"status":"healthy","loaded_model":null,"loaded_models":{},"some_new_field":{"nested":true}}"#;
+    assert!(serde_json::from_str::<LivenessReport>(future).is_ok());
+}
+
+// ── state machine ────────────────────────────────────────────────────────
+
+fn reachable() -> HealthReport {
+    HealthReport {
+        reachable: true,
+        models: vec!["mlx-community/Qwen3.8-27B-nvfp4".to_string()],
+        detail: None,
+    }
+}
+
+fn unreachable() -> HealthReport {
+    HealthReport {
+        reachable: false,
+        models: Vec::new(),
+        detail: Some("connection refused".to_string()),
+    }
+}
+
+#[test]
+fn a_dead_process_is_crashed_whatever_the_probe_said() {
+    assert_eq!(classify(&reachable(), false, true), MlxServerState::Crashed);
+}
+
+#[test]
+fn silence_before_the_first_success_is_startup_not_failure() {
+    // Loading a 27B checkpoint takes tens of seconds with the port already
+    // bound. Reporting that as degraded would cry wolf on every start.
+    assert_eq!(
+        classify(&unreachable(), true, false),
+        MlxServerState::Starting
+    );
+}
+
+#[test]
+fn silence_after_a_success_is_degraded() {
+    assert_eq!(
+        classify(&unreachable(), true, true),
+        MlxServerState::Degraded
+    );
+    assert!(!MlxServerState::Degraded.is_usable());
+}
+
+#[test]
+fn a_reachable_live_process_is_ready() {
+    let state = classify(&reachable(), true, false);
+    assert_eq!(state, MlxServerState::Ready);
+    assert!(state.is_usable());
 }

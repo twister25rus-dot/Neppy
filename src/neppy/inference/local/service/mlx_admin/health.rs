@@ -85,6 +85,47 @@ struct ModelEntry {
     id: String,
 }
 
+/// `mlx_vlm.server`'s `/health` payload.
+///
+/// Richer than a status code, and the reason liveness is worth probing
+/// separately: it names which checkpoints are actually resident, which is what
+/// the status UI needs and what `/v1/models` cannot say — under
+/// `model_discovery = "hf-cache"` that endpoint lists the whole cache, loaded
+/// or not.
+///
+/// Every field is optional. `mlx_lm.server` has no `/health` at all, and the
+/// payload has grown across releases, so a missing key must degrade rather
+/// than fail the probe.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub(crate) struct LivenessReport {
+    /// Checkpoint currently serving `/v1/chat/completions`, if any.
+    #[serde(default)]
+    pub(crate) loaded_model: Option<String>,
+    /// Every resident slot, keyed by role. This is the multi-slot process
+    /// reporting what it actually holds in memory.
+    #[serde(default)]
+    pub(crate) loaded_models: std::collections::HashMap<String, serde_json::Value>,
+    /// Context window the loaded model was opened with.
+    #[serde(default)]
+    pub(crate) loaded_context_size: Option<u32>,
+    /// Ceiling the server will enforce, after its own clamping.
+    #[serde(default)]
+    pub(crate) effective_context_limit: Option<u32>,
+    /// Tool-call parser selected for the loaded model. `None` with a model
+    /// loaded means tool calls will not be parsed out of the reply.
+    #[serde(default)]
+    pub(crate) loaded_tool_parser: Option<String>,
+    #[serde(default)]
+    pub(crate) continuous_batching_enabled: bool,
+}
+
+impl LivenessReport {
+    /// Whether any model slot is resident.
+    pub(crate) fn has_resident_model(&self) -> bool {
+        self.loaded_model.is_some() || !self.loaded_models.is_empty()
+    }
+}
+
 /// Probe the OpenAI surface at `base_url` (which ends in `/v1`).
 pub(crate) async fn probe_models(
     client: &reqwest::Client,
@@ -145,15 +186,25 @@ pub(crate) async fn probe_models(
 /// Cheap liveness check, `mlx_vlm.server` only.
 ///
 /// Derived from the `/v1` base by trimming the suffix, so callers hold one URL.
-pub(crate) async fn probe_liveness(client: &reqwest::Client, base_url: &str) -> bool {
+pub(crate) async fn probe_liveness(
+    client: &reqwest::Client,
+    base_url: &str,
+) -> Option<LivenessReport> {
     let root = base_url.trim_end_matches('/').trim_end_matches("/v1");
-    client
+    let response = client
         .get(format!("{root}/health"))
         .timeout(Duration::from_secs(2))
         .send()
         .await
-        .map(|response| response.status().is_success())
-        .unwrap_or(false)
+        .ok()?;
+
+    if !response.status().is_success() {
+        return None;
+    }
+
+    // A 200 that will not parse still proves liveness, so fall back to an
+    // empty report rather than reporting the server down.
+    Some(response.json::<LivenessReport>().await.unwrap_or_default())
 }
 
 /// Poll until the server answers `/v1/models`, or `ceiling` elapses.
