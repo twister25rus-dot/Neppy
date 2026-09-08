@@ -9,6 +9,8 @@
 //! - `argv`   — pure `MlxServerConfig` → command line
 //! - `binary` — locating `mlx_vlm.server` / `mlx_lm.server`
 //! - `health`  — `/v1/models` probing and the per-server state machine
+//! - `memory`  — admission control against a shared memory budget
+//! - `pool`    — the supervisor: start/stop/status, resolved ports
 //! - `process` — spawn, log capture, stop, orphan reclamation
 //! - `service` — the `LocalAiService` methods bootstrap calls
 //!
@@ -20,6 +22,8 @@
 pub(crate) mod argv;
 pub(crate) mod binary;
 pub(crate) mod health;
+pub(crate) mod memory;
+pub(crate) mod pool;
 pub(crate) mod process;
 mod service;
 

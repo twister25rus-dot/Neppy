@@ -1,0 +1,367 @@
+//! The supervisor: reconciles running processes against configured blocks.
+//!
+//! One `[[mlx.server]]` block is the unit. The pool owns every process it
+//! started, keyed by block id, and is the only thing that knows a block's
+//! *resolved* port — which matters because `port = 0` means "assign at start",
+//! so `local::mlx::mlx_base_url` can only see blocks with a fixed port. Once a
+//! block is running, `base_url_for` is the authoritative answer.
+//!
+//! Locking is `tokio::sync::Mutex` rather than `parking_lot`, because starting
+//! a server awaits both the spawn and the readiness poll.
+
+use std::collections::HashMap;
+use std::time::Duration;
+
+use serde::Serialize;
+use tokio::sync::Mutex;
+
+use crate::neppy::config::schema::MlxServerConfig;
+use crate::neppy::config::Config;
+
+use super::health::{classify, probe_liveness, probe_models, MlxServerState};
+use super::memory::{admit, budget_gib, resident_gib, Admission};
+use super::process::{spawn, MlxProcess};
+
+/// How long a server may take to answer after spawning.
+///
+/// Generous on purpose: a 27B checkpoint takes tens of seconds to load with
+/// the port already bound, and a tight ceiling would report a healthy start as
+/// a failure. A block with no preloaded `model` answers almost immediately.
+const READY_CEILING: Duration = Duration::from_secs(180);
+
+/// Log lines returned per status request.
+const LOG_TAIL: usize = 40;
+
+struct RunningServer {
+    process: MlxProcess,
+    state: MlxServerState,
+    /// Set once the server has answered, so a later silence reads as
+    /// `Degraded` rather than as a fresh startup.
+    has_been_ready: bool,
+    detail: Option<String>,
+    estimated_gib: Option<f64>,
+}
+
+/// One server's state, as the RPC surface and the UI see it.
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct MlxServerStatus {
+    pub(crate) id: String,
+    pub(crate) kind: String,
+    pub(crate) state: String,
+    pub(crate) port: Option<u16>,
+    pub(crate) base_url: Option<String>,
+    pub(crate) pid: Option<u32>,
+    /// Checkpoint the server reports as resident, which is not the same as the
+    /// configured `model`: with `model_discovery = "hf-cache"` a block can
+    /// start with nothing loaded and serve on demand.
+    pub(crate) loaded_model: Option<String>,
+    pub(crate) resident_gib: Option<f64>,
+    pub(crate) estimated_gib: Option<f64>,
+    pub(crate) models: Vec<String>,
+    pub(crate) detail: Option<String>,
+    /// Argv with the bearer token redacted, so "what did you actually run?"
+    /// is answerable from the UI.
+    pub(crate) command: Vec<String>,
+}
+
+impl MlxServerStatus {
+    /// A block that is configured but not running.
+    fn stopped(server: &MlxServerConfig) -> Self {
+        Self {
+            id: server.id.clone(),
+            kind: if server.is_vlm() { "vlm" } else { "lm" }.to_string(),
+            state: MlxServerState::Stopped.as_str().to_string(),
+            port: (server.port != 0).then_some(server.port),
+            base_url: None,
+            pid: None,
+            loaded_model: None,
+            resident_gib: None,
+            estimated_gib: None,
+            models: Vec::new(),
+            detail: None,
+            command: Vec::new(),
+        }
+    }
+}
+
+/// Supervises every managed MLX process.
+#[derive(Default)]
+pub(crate) struct MlxPool {
+    running: Mutex<HashMap<String, RunningServer>>,
+}
+
+impl MlxPool {
+    pub(crate) fn new() -> Self {
+        Self::default()
+    }
+
+    /// Base URL of a running block, or `None` when it is not running.
+    ///
+    /// This is what closes the `port = 0` gap: only the pool knows the port a
+    /// block was actually assigned.
+    pub(crate) async fn base_url_for(&self, id: &str) -> Option<String> {
+        let running = self.running.lock().await;
+        let entry = running.get(id)?;
+        Some(server_base_url(&entry.process))
+    }
+
+    /// Base URL of any ready block, preferring one that serves chat.
+    ///
+    /// Used by endpoint resolution so inference reaches a supervised server
+    /// without the user having to pin a fixed port.
+    pub(crate) async fn any_ready_base_url(&self) -> Option<String> {
+        let running = self.running.lock().await;
+        running
+            .values()
+            .find(|entry| entry.state.is_usable())
+            .map(|entry| server_base_url(&entry.process))
+    }
+
+    /// Start the block with this id.
+    ///
+    /// Refuses rather than spawning when the model would not fit alongside
+    /// what is already resident.
+    pub(crate) async fn start(
+        &self,
+        config: &Config,
+        http: &reqwest::Client,
+        id: &str,
+    ) -> Result<MlxServerStatus, String> {
+        let server = config
+            .mlx
+            .server(id)
+            .ok_or_else(|| format!("no [[mlx.server]] block with id `{id}`"))?
+            .clone();
+
+        {
+            let running = self.running.lock().await;
+            if running.contains_key(id) {
+                return Err(format!("server `{id}` is already running"));
+            }
+        }
+
+        let estimated_gib = match admit(config, &server.model, &self.running_pids().await) {
+            Admission::Allow { estimated_gib } => Some(estimated_gib),
+            Admission::Unknown => None,
+            Admission::Refuse { message } => return Err(message),
+        };
+
+        let process = spawn(config, &server).await?;
+        let base_url = server_base_url(&process);
+        let bearer = server
+            .uses_bearer()
+            .then(|| server.api_key.trim().to_string());
+
+        log::info!(
+            "[mlx] server `{id}` spawned pid={} port={}; waiting for readiness",
+            process.pid,
+            process.port
+        );
+
+        let readiness =
+            super::health::wait_until_ready(http, &base_url, bearer.as_deref(), READY_CEILING)
+                .await;
+
+        let (state, has_been_ready, detail) = match readiness {
+            Ok(report) => {
+                log::info!(
+                    "[mlx] server `{id}` ready on {base_url} with {} model(s) listed",
+                    report.models.len()
+                );
+                (MlxServerState::Ready, true, None)
+            }
+            Err(detail) => {
+                // The process may still be loading, or may have died. Record
+                // what we know and let the next status call classify it —
+                // killing it here would throw away a slow but healthy load.
+                log::warn!("[mlx] server `{id}` did not become ready: {detail}");
+                (MlxServerState::Starting, false, Some(detail))
+            }
+        };
+
+        self.running.lock().await.insert(
+            id.to_string(),
+            RunningServer {
+                process,
+                state,
+                has_been_ready,
+                detail,
+                estimated_gib,
+            },
+        );
+
+        self.status_of(config, http, id)
+            .await
+            .ok_or_else(|| format!("server `{id}` vanished immediately after starting"))
+    }
+
+    /// Stop the block with this id. Stopping something already stopped is fine.
+    pub(crate) async fn stop(&self, config: &Config, id: &str) {
+        let entry = self.running.lock().await.remove(id);
+        if let Some(mut entry) = entry {
+            entry.process.stop(config).await;
+        } else {
+            log::debug!("[mlx] stop `{id}`: not running");
+        }
+    }
+
+    /// Stop then start, picking up any config edits.
+    pub(crate) async fn restart(
+        &self,
+        config: &Config,
+        http: &reqwest::Client,
+        id: &str,
+    ) -> Result<MlxServerStatus, String> {
+        self.stop(config, id).await;
+        self.start(config, http, id).await
+    }
+
+    /// Stop every managed process. Called on shutdown.
+    pub(crate) async fn shutdown_all(&self, config: &Config) {
+        let mut running = self.running.lock().await;
+        for (id, mut entry) in running.drain() {
+            log::info!("[mlx] shutting down server `{id}`");
+            entry.process.stop(config).await;
+        }
+    }
+
+    /// Start every block marked `autostart` that is not already running.
+    ///
+    /// Failures are logged, not propagated: one misconfigured block must not
+    /// stop the others from coming up.
+    pub(crate) async fn reconcile(&self, config: &Config, http: &reqwest::Client) {
+        if !config.mlx.enabled {
+            log::debug!("[mlx] reconcile skipped: mlx.enabled is false");
+            return;
+        }
+
+        for server in &config.mlx.servers {
+            if !server.autostart {
+                continue;
+            }
+            if self.running.lock().await.contains_key(&server.id) {
+                continue;
+            }
+            if let Err(err) = self.start(config, http, &server.id).await {
+                log::warn!("[mlx] autostart of `{}` failed: {err}", server.id);
+            }
+        }
+    }
+
+    /// Status of every configured block, running or not.
+    pub(crate) async fn status_all(
+        &self,
+        config: &Config,
+        http: &reqwest::Client,
+    ) -> Vec<MlxServerStatus> {
+        let mut out = Vec::with_capacity(config.mlx.servers.len());
+        for server in &config.mlx.servers {
+            match self.status_of(config, http, &server.id).await {
+                Some(status) => out.push(status),
+                None => out.push(MlxServerStatus::stopped(server)),
+            }
+        }
+        out
+    }
+
+    /// Status of one running block, re-probing it. `None` when not running.
+    pub(crate) async fn status_of(
+        &self,
+        config: &Config,
+        http: &reqwest::Client,
+        id: &str,
+    ) -> Option<MlxServerStatus> {
+        let server_config = config.mlx.server(id)?.clone();
+        let bearer = server_config
+            .uses_bearer()
+            .then(|| server_config.api_key.trim().to_string());
+
+        // Snapshot what the probe needs, then release the lock: probing takes
+        // seconds, and holding the map would block every other caller.
+        let (base_url, pid, command, estimated_gib, has_been_ready) = {
+            let running = self.running.lock().await;
+            let entry = running.get(id)?;
+            (
+                server_base_url(&entry.process),
+                entry.process.pid,
+                entry.process.redacted_argv.clone(),
+                entry.estimated_gib,
+                entry.has_been_ready,
+            )
+        };
+
+        let report = probe_models(http, &base_url, bearer.as_deref()).await;
+        let liveness = if server_config.is_vlm() {
+            probe_liveness(http, &base_url).await
+        } else {
+            None
+        };
+
+        let mut running = self.running.lock().await;
+        let entry = running.get_mut(id)?;
+
+        let process_alive = entry.process.exit_status().is_none();
+        let state = classify(&report, process_alive, has_been_ready);
+
+        entry.state = state;
+        entry.has_been_ready = has_been_ready || state == MlxServerState::Ready;
+        entry.detail = if state == MlxServerState::Crashed {
+            // The stderr tail is the only useful thing about a crash.
+            let tail = entry.process.logs_tail(LOG_TAIL);
+            Some(
+                tail.iter()
+                    .rev()
+                    .take(3)
+                    .rev()
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(" | "),
+            )
+        } else {
+            report.detail.clone()
+        };
+
+        Some(MlxServerStatus {
+            id: id.to_string(),
+            kind: if server_config.is_vlm() { "vlm" } else { "lm" }.to_string(),
+            state: state.as_str().to_string(),
+            port: Some(entry.process.port),
+            base_url: Some(base_url),
+            pid: Some(pid),
+            loaded_model: liveness.as_ref().and_then(|l| l.loaded_model.clone()),
+            resident_gib: Some(resident_gib(&[pid])),
+            estimated_gib,
+            models: report.models,
+            detail: entry.detail.clone(),
+            command,
+        })
+    }
+
+    /// Recent output from one block.
+    pub(crate) async fn logs(&self, id: &str, limit: usize) -> Vec<String> {
+        let running = self.running.lock().await;
+        running
+            .get(id)
+            .map(|entry| entry.process.logs_tail(limit))
+            .unwrap_or_default()
+    }
+
+    /// Memory in use by managed servers, and the ceiling they share.
+    pub(crate) async fn memory_summary(&self, config: &Config) -> (f64, f64) {
+        (resident_gib(&self.running_pids().await), budget_gib(config))
+    }
+
+    async fn running_pids(&self) -> Vec<u32> {
+        self.running
+            .lock()
+            .await
+            .values()
+            .map(|entry| entry.process.pid)
+            .collect()
+    }
+}
+
+/// Base URL for a running process, always loopback-rooted and `/v1`-suffixed.
+fn server_base_url(process: &MlxProcess) -> String {
+    format!("http://127.0.0.1:{}/v1", process.port)
+}
