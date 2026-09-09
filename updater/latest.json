@@ -1,11 +1,11 @@
 {
-  "version": "0.66.3",
-  "notes": "## What's Changed\n\n- Redesigned LLM settings into an at-a-glance provider grid with direct connection toggles, Codex and Claude Code controls, custom providers, and routing on the same page.\n- Opened desktop Settings as a large, self-contained window over the current page, with its own navigation, close button, Escape handling, and safe deep-link behavior.\n- Added a maintained Git changelog and made releases commit their version and notes before tagging the exact release commit.\n- Limited explicit release uploads to the signed Neppy updater bundle and signature. GitHub's automatic source snapshots remain available as part of every GitHub Release.",
-  "pub_date": "2026-09-09T08:58:03Z",
+  "version": "0.66.4",
+  "notes": "## What's Changed\n\n- Chat reaches the MLX server the app manages, and keeps the model you picked ([`4cc609fe`](https://github.com/twister25rus-dot/Neppy/commit/4cc609fee7f22f664fae9010e3fba53ea3d4da72))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/6e6407fa6f12c7bd12202973e3be711054a0787c...4cc609fee7f22f664fae9010e3fba53ea3d4da72",
+  "pub_date": "2026-09-09T09:59:16Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakp6Zng3UlU0WkhYTlFjNWxlUk9ZcTZtZk9za2daQ2F6WkNTc2hrNWY3SVdyN253NmhkSWRySFArNmpFVVpLUklFNjBWOVNjRVJFMkw4YWlFZ1ZlclFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4OTQ0MTg3CWZpbGU6TmVwcHkuYXBwLnRhci5negpCTWltTyt6cHFBVDlRYXZBNXpybXpUTkxPQnkzWTYrQW44V01kaXF2YTk5ODIzczdmdCttSExrQXB3Z1dMU3NHeXJtT1ZsUG5WQUU2NGdyWjJRbDNCUT09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/552380101"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrak0xaFVvMjVFVUJDeWtSUlI0ZGFsUnR6aUI1S2g5d0gvYS9RS0xPbjc3dXVFMTBvYkRNcVh6VE1tZlZ1TFhOTm9iZjNFZnhrNVozYnJhUmdIem5lWndBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4OTQ3NjgzCWZpbGU6TmVwcHkuYXBwLnRhci5negplZkhoeG5oaEdjN2llU214ckZwc1FSeEhUSTdwbzNyQkJaclNQRUc5bnE5VC8yTmNPYjg5eU5wYU5OVGZtdnRmL0JlRHd5SGtmcnBLRDlJLytvQ3hCdz09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/552486984"
     }
   }
 }
