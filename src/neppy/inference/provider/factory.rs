@@ -369,6 +369,41 @@ pub(crate) fn role_uses_implicit_cloud_fallback(role: &str, config: &Config) -> 
 /// migration 1→2 preserved the URL as a custom provider entry but older
 /// configs did not explicitly set per-workload routes.
 pub fn provider_for_role(role: &str, config: &Config) -> String {
+    provider_for_role_with_mode(role, config, neppy_local_mode())
+}
+
+/// [`provider_for_role`] with the Neppy local-mode gate passed in.
+///
+/// Neppy has no hosted backend, so a role that resolves to the managed provider
+/// builds a [`NeppyBackendModel`] against `DEFAULT_API_BASE_URL` — nothing
+/// listens there in this build — and every turn dies mid-stream for a reason
+/// that has nothing to do with the turn. The unset spelling is already
+/// redirected onto the reachable provider by
+/// [`resolve_primary_cloud_provider_string`]; a role that names the managed
+/// backend *outright* has to redirect identically, because naming it is exactly
+/// what the settings panel writes (`chat_provider = "openhuman"`), so the
+/// upstream-only path was the one every real config took.
+///
+/// `local_mode` is a parameter rather than a [`neppy_local_mode`] call so the
+/// redirect stays testable — that gate is unconditionally off under `cfg(test)`.
+pub(crate) fn provider_for_role_with_mode(role: &str, config: &Config, local_mode: bool) -> String {
+    let resolved = provider_for_role_upstream(role, config);
+    if local_mode && resolved.trim() == PROVIDER_OPENHUMAN {
+        if let Some(active) = neppy_active_provider_string(config) {
+            log::debug!(
+                "[providers][chat-factory] Neppy: role '{}' resolves to the managed backend, \
+                 which has no host; redirecting to the active provider '{}'",
+                role,
+                active.split(':').next().unwrap_or("<unknown>")
+            );
+            return active;
+        }
+    }
+    resolved
+}
+
+/// Upstream role → provider-string resolution, before the Neppy redirect.
+fn provider_for_role_upstream(role: &str, config: &Config) -> String {
     let opt = configured_route_for_role(role, config);
     let s = opt.unwrap_or("").trim();
     if s.is_empty() || s == "cloud" {
@@ -1985,22 +2020,21 @@ pub(crate) fn verify_session_active(config: &Config) -> anyhow::Result<()> {
 /// keeps upstream behaviour so the existing "configure a provider" error still
 /// surfaces rather than being masked by a silent fallback.
 pub(crate) fn neppy_active_provider_string(config: &Config) -> Option<String> {
-    if let Some(entry) = config
+    if let Some(active) = config
         .primary_cloud
         .as_deref()
         .and_then(|id| config.cloud_providers.iter().find(|e| e.id == id))
+        .and_then(|entry| usable_redirect_target(entry, config))
     {
-        if !is_neppy_cloud_entry(entry) {
-            return Some(cloud_entry_provider_string(entry, config));
-        }
+        return Some(active);
     }
 
-    if let Some(entry) = config
+    if let Some(active) = config
         .cloud_providers
         .iter()
-        .find(|e| !is_neppy_cloud_entry(e))
+        .find_map(|entry| usable_redirect_target(entry, config))
     {
-        return Some(cloud_entry_provider_string(entry, config));
+        return Some(active);
     }
 
     // Local runtime. `chat_model_id` first — a chat turn is what a redirected
@@ -2008,14 +2042,66 @@ pub(crate) fn neppy_active_provider_string(config: &Config) -> Option<String> {
     // managed tier slug (`chat-v1`, …) is meaningless to a local runtime, so an
     // empty local model yields `None` rather than `ollama:chat-v1`.
     let local = &config.local_ai;
-    let model = [local.chat_model_id.trim(), local.model_id.trim()]
-        .into_iter()
-        .find(|m| !m.is_empty())?;
     let provider = match local.provider.trim() {
         "" => "ollama",
         p => p,
     };
+    // Under MLX, the chat slot on the server block wins. `mlx_vlm.server`
+    // serves the models ticked into that block, and the MLX panel writes it
+    // whenever a checkpoint is ticked into the chat slot — a later and more
+    // specific statement of "the MLX chat model" than the `local_ai` ids, which
+    // the older local-AI panel wrote and nothing since has kept in step.
+    let mlx_slot_model = (provider == "mlx")
+        .then(|| {
+            config
+                .mlx
+                .servers
+                .iter()
+                .map(|server| server.model.trim())
+                .find(|model| !model.is_empty())
+        })
+        .flatten();
+    let model = mlx_slot_model.or_else(|| {
+        [local.chat_model_id.trim(), local.model_id.trim()]
+            .into_iter()
+            .find(|m| !m.is_empty())
+    })?;
     Some(format!("{provider}:{model}"))
+}
+
+/// A configured cloud-provider entry as a redirect target, or `None` when it
+/// cannot serve one.
+///
+/// Skips the managed entry (it is the thing being redirected away from), and
+/// skips a *local-runtime* entry — the `mlx:`/`ollama:` rows the connections
+/// panel writes for a local server — whose model resolves to a managed tier
+/// name. An entry with no `default_model` inherits `config.default_model`,
+/// which is `chat-v1` on any install that has not changed it, and no local
+/// runtime serves a name like that: handing it back would trade a dead endpoint
+/// for a 404 model. Same rationale as the `local_ai` branch of
+/// [`neppy_active_provider_string`], which already guards this.
+fn usable_redirect_target(
+    entry: &crate::neppy::config::schema::cloud_providers::CloudProviderCreds,
+    config: &Config,
+) -> Option<String> {
+    use crate::neppy::inference::local::profile::LocalProviderKind;
+
+    if is_neppy_cloud_entry(entry) {
+        return None;
+    }
+    let provider = cloud_entry_provider_string(entry, config);
+    if let Some((slug, model)) = provider.split_once(':') {
+        if LocalProviderKind::from_str_loose(slug).is_some() && is_known_neppy_tier(model) {
+            log::debug!(
+                "[providers][chat-factory] Neppy: skipping local provider entry '{}' as a \
+                 redirect target — it carries the managed tier '{}', which it cannot serve",
+                entry.id,
+                model
+            );
+            return None;
+        }
+    }
+    Some(provider)
 }
 
 /// Wrapper over [`resolve_primary_cloud_provider_string_upstream`] that applies

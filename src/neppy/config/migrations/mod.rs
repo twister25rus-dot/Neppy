@@ -33,10 +33,11 @@ mod remove_write_auto_approve;
 mod repair_http_request_limits;
 mod retire_chat_v1_model;
 mod retire_local_whisper_stt;
+mod route_managed_roles_to_local;
 mod unify_ai_provider_settings;
 
 /// Current target schema version. Bumped alongside every new migration.
-pub const CURRENT_SCHEMA_VERSION: u32 = 10;
+pub const CURRENT_SCHEMA_VERSION: u32 = 11;
 
 /// Run any migrations whose `schema_version` gate hasn't yet been
 /// crossed for this workspace.
@@ -506,6 +507,66 @@ pub async fn run_pending(config: &mut Config) {
             Err(err) => {
                 log::warn!(
                     "[migrations] retire_local_whisper_stt failed: {err:#} — \
+                     will retry on next launch"
+                );
+            }
+        }
+    }
+
+    // 10 -> 11: point role providers parked on the managed backend at the
+    // runtime that actually exists. Neppy has no hosted backend, so
+    // `chat_provider = "openhuman"` — what the settings panel writes for a
+    // default route — built a client for an endpoint nothing listens on.
+    // Pure in-memory mutation, so it runs inline.
+    if config.schema_version == 10 {
+        let previous_roles = (
+            config.chat_provider.clone(),
+            config.reasoning_provider.clone(),
+            config.agentic_provider.clone(),
+            config.coding_provider.clone(),
+            config.vision_provider.clone(),
+            config.memory_provider.clone(),
+            config.heartbeat_provider.clone(),
+            config.learning_provider.clone(),
+            config.subconscious_provider.clone(),
+        );
+        match route_managed_roles_to_local::run(config) {
+            Ok(stats) => {
+                let previous_version = config.schema_version;
+                config.schema_version = 11;
+                if let Err(err) = config.save().await {
+                    // Roll back BOTH the version and the rewritten routes so a
+                    // failed save doesn't leave `load_or_init` returning a
+                    // half-migrated in-memory config; next launch retries.
+                    (
+                        config.chat_provider,
+                        config.reasoning_provider,
+                        config.agentic_provider,
+                        config.coding_provider,
+                        config.vision_provider,
+                        config.memory_provider,
+                        config.heartbeat_provider,
+                        config.learning_provider,
+                        config.subconscious_provider,
+                    ) = previous_roles;
+                    config.schema_version = previous_version;
+                    log::warn!(
+                        "[migrations] route_managed_roles_to_local ran but config.save failed: \
+                         {err:#} — rolled in-memory schema_version back to {previous_version}, \
+                         will retry on next launch"
+                    );
+                    return;
+                }
+                log::info!(
+                    "[migrations] schema_version bumped to 11 (route_managed_roles_to_local \
+                     roles_rerouted={} target={:?})",
+                    stats.roles_rerouted,
+                    stats.target,
+                );
+            }
+            Err(err) => {
+                log::warn!(
+                    "[migrations] route_managed_roles_to_local failed: {err:#} — \
                      will retry on next launch"
                 );
             }

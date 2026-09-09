@@ -971,6 +971,88 @@ fn neppy_redirect_declines_when_nothing_at_all_is_configured() {
     assert!(super::neppy_active_provider_string(&config).is_none());
 }
 
+/// A local-runtime server registered as a provider entry (the MLX/Ollama
+/// entries the connections panel writes), carrying no default model of its own.
+fn local_runtime_entry(id: &str, slug: &str, endpoint: &str) -> CloudProviderCreds {
+    CloudProviderCreds {
+        id: id.to_string(),
+        slug: slug.to_string(),
+        label: slug.to_string(),
+        endpoint: endpoint.to_string(),
+        auth_style: AuthStyle::None,
+        default_model: None,
+        ..Default::default()
+    }
+}
+
+#[test]
+fn neppy_redirect_engages_for_an_explicit_managed_role_provider() {
+    // The settings panel writes the managed provider as a literal string
+    // (`chat_provider = "openhuman"`), not as an empty/`cloud` value. That
+    // spelling has to redirect exactly like the unset one: Neppy has no host
+    // for the managed backend, so the role otherwise builds a client for
+    // `DEFAULT_API_BASE_URL` and every turn dies mid-stream.
+    let mut config = Config::default();
+    config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
+
+    let resolved = super::provider_for_role_with_mode("chat", &config, true);
+    assert_ne!(
+        resolved.trim(),
+        PROVIDER_OPENHUMAN,
+        "an explicit managed role provider must be redirected in local mode"
+    );
+    assert_eq!(resolved, "ollama:gemma3:1b-it-qat");
+}
+
+#[test]
+fn explicit_managed_role_provider_is_untouched_when_local_mode_is_off() {
+    // `NEPPY_LOCAL_MODE=0` restores upstream hosted routing: the role keeps
+    // resolving to the managed backend.
+    let mut config = Config::default();
+    config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
+
+    assert_eq!(
+        super::provider_for_role_with_mode("chat", &config, false),
+        PROVIDER_OPENHUMAN
+    );
+}
+
+#[test]
+fn neppy_redirect_skips_a_local_entry_carrying_a_managed_tier_slug() {
+    // A local-runtime entry with no default model inherits `default_model`,
+    // which on a fresh install is the managed tier `chat-v1` — a name no local
+    // runtime serves. Handing that back trades a dead endpoint for a 404 model,
+    // so the entry is skipped in favour of the configured local runtime.
+    let mut config = Config::default();
+    config.cloud_providers = vec![local_runtime_entry(
+        "p_ollama",
+        "ollama",
+        "http://localhost:11434/v1",
+    )];
+    config.local_ai.provider = "mlx".to_string();
+    config.local_ai.chat_model_id = "LiquidAI/LFM2.5-1.2B-Instruct-MLX-4bit".to_string();
+
+    assert_eq!(
+        super::neppy_active_provider_string(&config).expect("an active provider"),
+        "mlx:LiquidAI/LFM2.5-1.2B-Instruct-MLX-4bit"
+    );
+}
+
+#[test]
+fn neppy_redirect_uses_a_local_entry_that_names_a_real_model() {
+    // The same entry with a model of its own is a usable route and wins over
+    // the local-runtime fallback.
+    let mut config = Config::default();
+    let mut entry = local_runtime_entry("p_ollama", "ollama", "http://localhost:11434/v1");
+    entry.default_model = Some("qwen3:8b".to_string());
+    config.cloud_providers = vec![entry];
+
+    assert_eq!(
+        super::neppy_active_provider_string(&config).expect("an active provider"),
+        "ollama:qwen3:8b"
+    );
+}
+
 #[test]
 fn create_chat_model_routes_managed_backend_to_crate_native() {
     let _guard = crate::neppy::inference::inference_test_guard();
