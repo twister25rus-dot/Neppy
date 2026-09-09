@@ -27,6 +27,21 @@ VERSION=""
 DRY_RUN=""
 NOTES_OVERRIDE=""
 RELEASE_BRANCH="${NEPPY_RELEASE_BRANCH:-main}"
+# The release build compiles into a directory of its own, never the dev tree's.
+#
+# Sharing one is how 0.66.4's first attempt failed. A copy of this repo under
+# /tmp had `app/src-tauri/target` symlinked back to the original checkout, so
+# two source roots compiled into one set of artifacts and the next build linked
+# a mix of them: 27 errors of the shape "expected tinymcp_bus::X, found
+# tinymcp::X", in a tree whose own `cargo check` was clean. Nothing in the repo
+# pointed at the copy — the whole of the damage lived in the build cache, which
+# is the hardest place to go looking.
+#
+# A private directory makes that unreachable in both directions: another
+# checkout cannot poison a release, and a release cannot poison a dev tree. It
+# is stable rather than temporary so successive releases still reuse the cache;
+# the first build after this lands is necessarily cold.
+RELEASE_TARGET_DIR="${NEPPY_RELEASE_TARGET_DIR:-$ROOT/app/src-tauri/target-release}"
 TAG=""
 SNAP=""
 NOTES_FILE=""
@@ -229,6 +244,11 @@ cargo metadata --manifest-path Cargo.toml --format-version 1 >/dev/null \
   || die "could not refresh Cargo.lock"
 
 echo "==> building the bundle (this is the slow part)"
+# A symlink here would re-create exactly the sharing this refuses, while still
+# looking like a private directory from the outside.
+[ ! -L "$RELEASE_TARGET_DIR" ] \
+  || die "release target dir is a symlink ($RELEASE_TARGET_DIR) — that is the sharing this build refuses"
+export CARGO_TARGET_DIR="$RELEASE_TARGET_DIR"
 export GGML_NATIVE=OFF
 # TAURI_SIGNING_PRIVATE_KEY takes the key content, not a path. The path form is
 # the separate TAURI_SIGNING_PRIVATE_KEY_PATH variable.
@@ -238,7 +258,7 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
 # the updater only needs the signed app tarball.
 ( cd app && ./node_modules/.bin/tauri build --bundles app -- --bin Neppy )
 
-BUNDLE_DIR="$ROOT/app/src-tauri/target/release/bundle"
+BUNDLE_DIR="$RELEASE_TARGET_DIR/release/bundle"
 TARBALL="$(find "$BUNDLE_DIR/macos" -maxdepth 1 -name '*.app.tar.gz' | head -1)"
 SIGFILE="${TARBALL}.sig"
 [ -n "$TARBALL" ] || die "no .app.tar.gz produced; is bundle.createUpdaterArtifacts true?"

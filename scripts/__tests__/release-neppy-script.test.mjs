@@ -46,3 +46,31 @@ test("notes fall back to filtered commit bullets and accept a curated override",
   assert.match(script, /grep -Eq '\^\[\*-\]\[\[:space:\]\]\+'/);
   assert.match(script, /matching release commit is after that tag/);
 });
+
+test("the release build compiles into a target directory of its own", () => {
+  // A shared target directory let a second checkout's artifacts into a release
+  // build, which then linked a mix of two source roots and failed to compile a
+  // tree that was clean on its own.
+  assert.match(
+    script,
+    /RELEASE_TARGET_DIR="\$\{NEPPY_RELEASE_TARGET_DIR:-\$ROOT\/app\/src-tauri\/target-release\}"/,
+  );
+  assert.match(script, /export CARGO_TARGET_DIR="\$RELEASE_TARGET_DIR"/);
+
+  // The bundle is collected from where that build actually wrote it.
+  assert.match(script, /BUNDLE_DIR="\$RELEASE_TARGET_DIR\/release\/bundle"/);
+  assert.doesNotMatch(
+    script,
+    /BUNDLE_DIR="\$ROOT\/app\/src-tauri\/target\/release\/bundle"/,
+  );
+
+  // And a symlinked directory is refused: it is the same sharing wearing a
+  // private directory's clothes, which is how this went unnoticed.
+  assert.match(script, /! -L "\$RELEASE_TARGET_DIR"/);
+
+  // The export has to precede the build it governs.
+  const exported = script.indexOf('export CARGO_TARGET_DIR="$RELEASE_TARGET_DIR"');
+  const built = script.indexOf("tauri build");
+  assert.ok(exported >= 0);
+  assert.ok(exported < built);
+});
