@@ -1835,6 +1835,80 @@ fn event_session_id_for_is_stable() {
 }
 
 #[test]
+fn a_local_model_pick_routes_the_turn_at_that_runtime() {
+    // Without this the pick set `default_model` only, and a local route reads
+    // its model from the provider string — so the composer changed nothing.
+    let config = crate::neppy::config::Config::default();
+
+    let picked = super::session::config_with_model_pick(
+        &config,
+        Some("mlx:ornith-ai/Ornith-1.5-9B-MLX-8bit".to_string()),
+    );
+    assert_eq!(
+        picked.chat_provider.as_deref(),
+        Some("mlx:ornith-ai/Ornith-1.5-9B-MLX-8bit"),
+        "the pick must repoint the route, not just the model"
+    );
+    assert_eq!(
+        picked.default_model.as_deref(),
+        Some("mlx:ornith-ai/Ornith-1.5-9B-MLX-8bit")
+    );
+
+    let colon_in_model =
+        super::session::config_with_model_pick(&config, Some("ollama:qwen3:8b".to_string()));
+    assert_eq!(
+        colon_in_model.chat_provider.as_deref(),
+        Some("ollama:qwen3:8b"),
+        "a model id may hold a colon of its own"
+    );
+}
+
+#[test]
+fn a_configured_cloud_pick_routes_the_turn_at_that_provider() {
+    let mut config = crate::neppy::config::Config::default();
+    config.cloud_providers = vec![
+        crate::neppy::config::schema::cloud_providers::CloudProviderCreds {
+            id: "p_openai".to_string(),
+            slug: "openai".to_string(),
+            label: "OpenAI".to_string(),
+            endpoint: "https://api.openai.com/v1".to_string(),
+            auth_style: crate::neppy::config::schema::cloud_providers::AuthStyle::Bearer,
+            ..Default::default()
+        },
+    ];
+
+    let picked = super::session::config_with_model_pick(&config, Some("openai:gpt-4o".to_string()));
+    assert_eq!(picked.chat_provider.as_deref(), Some("openai:gpt-4o"));
+}
+
+#[test]
+fn managed_tiers_hints_and_unknown_slugs_leave_the_route_alone() {
+    let config = crate::neppy::config::Config::default();
+
+    let mut config = config;
+    config.chat_provider = Some("mlx:ornith-ai/Ornith-1.5-9B-MLX-8bit".to_string());
+
+    for pick in ["chat-v1", "hint:reasoning", "reasoning-v1", "", "   "] {
+        let picked = super::session::config_with_model_pick(&config, Some(pick.to_string()));
+        assert_eq!(
+            picked.chat_provider.as_deref(),
+            Some("mlx:ornith-ai/Ornith-1.5-9B-MLX-8bit"),
+            "{pick:?} must not repoint the route"
+        );
+    }
+    assert!(
+        super::session::route_for_model_pick("qwen3:8b", &config).is_none(),
+        "a bare model id whose prefix is not a configured provider must not be \
+         read as one — routing at a runtime that does not exist is worse than \
+         leaving the role's own route in place"
+    );
+    assert!(
+        super::session::route_for_model_pick("mlx:", &config).is_none(),
+        "a slug with no model names no model to run"
+    );
+}
+
+#[test]
 fn normalize_model_override_returns_none_for_empty_or_whitespace() {
     assert!(normalize_model_override(None).is_none());
     assert!(normalize_model_override(Some("".into())).is_none());

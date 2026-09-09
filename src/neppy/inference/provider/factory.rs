@@ -1733,6 +1733,26 @@ pub(crate) fn create_turn_chat_model_from_string_with_native_tools_and_route(
 type ResolvedChatModel = (Arc<dyn ChatModel<()>>, String);
 type OptionalChatModelResult = Option<anyhow::Result<ResolvedChatModel>>;
 
+/// Endpoint for the `mlx:` provider.
+///
+/// Delegates to [`mlx_base_url`](crate::neppy::inference::local::mlx::mlx_base_url) —
+/// the same resolution the MLX panel, the model listing and the supervisor use —
+/// so a chat turn reaches the server this host actually manages. Resolving it
+/// separately here is what let the two disagree: the factory read only
+/// `local_ai.base_url` and the env, never the `[[mlx.server]]` block, so moving
+/// a supervised server to another port left the panel working and chat dialling
+/// the old address.
+///
+/// `OPENHUMAN_LOCAL_INFERENCE_URL` still wins, because it is the cross-runtime
+/// override every other local branch honours through `env_or_config_url`.
+fn mlx_endpoint(config: &Config) -> String {
+    std::env::var("OPENHUMAN_LOCAL_INFERENCE_URL")
+        .ok()
+        .map(|url| url.trim().to_string())
+        .filter(|url| !url.is_empty())
+        .unwrap_or_else(|| crate::neppy::inference::local::mlx::mlx_base_url(config))
+}
+
 fn try_create_local_runtime_chat_model(role: &str, config: &Config) -> OptionalChatModelResult {
     let resolved = provider_for_role(role, config);
     try_create_local_runtime_chat_model_from_string(role, &resolved, config, true)
@@ -1744,9 +1764,7 @@ fn try_create_local_runtime_chat_model_from_string(
     config: &Config,
     require_session: bool,
 ) -> OptionalChatModelResult {
-    use crate::neppy::inference::local::profile::{
-        LOCAL_OPENAI_PROFILE, MLX_PROFILE, OMLX_PROFILE,
-    };
+    use crate::neppy::inference::local::profile::{LOCAL_OPENAI_PROFILE, OMLX_PROFILE};
 
     let p = provider.trim().to_string();
     let is_local = p.starts_with(OLLAMA_PROVIDER_PREFIX)
@@ -1848,12 +1866,18 @@ fn try_create_local_runtime_chat_model_from_string(
         if model.is_empty() {
             return Some(Err(empty_model_err(&p, "mlx:<model-id>")));
         }
-        let endpoint = env_or_config_url("MLX_SERVER_URL", MLX_PROFILE.default_base_url);
+        let endpoint = mlx_endpoint(config);
+        let api_key = crate::neppy::inference::local::mlx::mlx_api_key(config).unwrap_or_default();
+        let auth = if api_key.trim().is_empty() {
+            CompatAuthStyle::None
+        } else {
+            CompatAuthStyle::Bearer
+        };
         let chat = super::crate_openai::make_crate_local_runtime_chat_model(
             "mlx",
             &endpoint,
-            "",
-            CompatAuthStyle::None,
+            &api_key,
+            auth,
             &model,
             &unsupported,
             temp,

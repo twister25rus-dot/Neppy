@@ -88,6 +88,7 @@ import {
   type ProcessingTranscriptItem,
   type QueuedFollowup,
   registerParallelRequest,
+  setComposerModel,
   setTaskBoardForThread,
   setToolTimelineForThread,
   type ToolTimelineEntry,
@@ -438,15 +439,18 @@ const Conversations = ({
     onCancel: () => {},
   });
   const [resolvedModel, setResolvedModel] = useState<string | null>(null);
-  // A picker choice belongs to this composer session. It overrides the active
-  // profile route for subsequent sends without mutating the shared profile.
-  const [composerModelOverride, setComposerModelOverride] = useState<string | null>(null);
+  // A picker choice overrides the active profile route for subsequent sends
+  // without mutating the shared profile. It lives in the (persisted) store
+  // rather than in component state: the choice outlives this composer, and as
+  // local state it was lost on every restart, so the model had to be picked
+  // again each launch.
+  const composerModelOverride = useAppSelector(state => state.chatRuntime.composerModel);
   // `undefined` means no explicit picker selection, so usage-reported context
   // remains authoritative. `null` means the selected model did not report a
   // window, and the meter deliberately shows an unknown limit.
-  const [composerModelContextWindow, setComposerModelContextWindow] = useState<
-    number | null | undefined
-  >(undefined);
+  const composerModelContextWindow = useAppSelector(
+    state => state.chatRuntime.composerModelContextWindow
+  );
   // Whether the resolved model for the active profile accepts image input.
   // Managed tiers do; custom/BYOK models only when the user flagged them. Gates
   // the composer's image-attachment affordance (docs flow regardless). Resolved
@@ -2319,8 +2323,7 @@ const Conversations = ({
               mascotDock={mascotDock}
               modelOverride={composerModelOverride ?? resolvedModel}
               onModelOverrideChange={(value, contextWindow) => {
-                setComposerModelOverride(value);
-                setComposerModelContextWindow(contextWindow ?? null);
+                dispatch(setComposerModel({ model: value, contextWindow }));
               }}
             />
           </>
@@ -2526,8 +2529,7 @@ const Conversations = ({
         onNeppyMode={() => navigate('/human')}
         onSwitchToMicCloud={() => setComposerOverride('mic-cloud')}
         onModelChange={(value, contextWindow) => {
-          setComposerModelOverride(value);
-          setComposerModelContextWindow(contextWindow ?? null);
+          dispatch(setComposerModel({ model: value, contextWindow }));
         }}
       />
     </div>

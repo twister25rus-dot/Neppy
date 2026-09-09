@@ -52,6 +52,23 @@ pub fn run(config: &mut Config) -> anyhow::Result<MigrationStats> {
         return Ok(MigrationStats::default());
     };
 
+    // A local-runtime target on a workspace where the runtime was never turned
+    // on is the shipped default model, not a choice — `local_ai` carries a
+    // model id whether or not anything was ever set up. Writing it would claim
+    // a route the user never picked, and a fresh install would come up
+    // "configured" for a model that is not installed. The runtime redirect
+    // still resolves the same way at turn time, so nothing stops working;
+    // the config simply keeps saying "not chosen yet".
+    let target_is_local =
+        crate::neppy::inference::local::profile::is_local_provider_string(&target);
+    if target_is_local && !config.local_ai.runtime_enabled {
+        log::debug!(
+            "[migrations][route-managed-roles] the only target is the local runtime \
+             default and the runtime is off — leaving managed roles alone"
+        );
+        return Ok(MigrationStats::default());
+    }
+
     let mut stats = MigrationStats::default();
     {
         // Every workload route the settings panel can park on the managed
@@ -99,6 +116,7 @@ mod tests {
         config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
         config.reasoning_provider = Some(PROVIDER_OPENHUMAN.to_string());
         config.vision_provider = Some(PROVIDER_OPENHUMAN.to_string());
+        config.local_ai.runtime_enabled = true;
         config.local_ai.provider = "mlx".to_string();
         config.local_ai.chat_model_id = "LiquidAI/LFM2.5-1.2B-Instruct-MLX-4bit".to_string();
         config
@@ -170,6 +188,24 @@ mod tests {
             Some(PROVIDER_OPENHUMAN),
             "an unreachable rewrite would hide the real setup error"
         );
+    }
+
+    #[test]
+    fn leaves_a_fresh_install_alone_when_the_local_runtime_was_never_turned_on() {
+        // `local_ai` ships with a model id, so a redirect target always exists.
+        // That is a default, not a choice — writing it would make a fresh
+        // install claim to be configured for a model nobody installed.
+        let mut config = Config::default();
+        config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
+        assert!(
+            !config.local_ai.runtime_enabled,
+            "the local runtime ships off"
+        );
+
+        let stats = run(&mut config).expect("migration should succeed");
+
+        assert_eq!(stats.roles_rerouted, 0);
+        assert_eq!(config.chat_provider.as_deref(), Some(PROVIDER_OPENHUMAN));
     }
 
     #[test]

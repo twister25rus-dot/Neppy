@@ -602,6 +602,22 @@ export interface ArtifactSnapshot {
  * `chat_done` / `chat_error`, not on each persisted segment.
  */
 interface ChatRuntimeState {
+  /**
+   * The model the composer's picker is set to, as `<slug>:<model>` — or `null`
+   * for the product's own routing. Persisted: a model choice is a preference,
+   * and re-picking it every launch was the whole of the complaint. It is not
+   * per-thread, because "the model I work with" is not something a user tracks
+   * per conversation.
+   */
+  composerModel: string | null;
+  /**
+   * Context window the picked model reported. `undefined` means no explicit
+   * pick, so usage-reported context stays authoritative; `null` means the model
+   * reported no window and the meter shows an unknown limit. The distinction
+   * survives persistence because JSON drops an `undefined` field entirely and
+   * rehydration then falls back to this initial value.
+   */
+  composerModelContextWindow: number | null | undefined;
   inferenceStatusByThread: Record<string, InferenceStatus>;
   streamingAssistantByThread: Record<string, StreamingAssistantState>;
   /**
@@ -778,6 +794,8 @@ const initialState: ChatRuntimeState = {
   usageByThread: {},
   queueStatusByThread: {},
   queuedFollowupsByThread: {},
+  composerModel: null,
+  composerModelContextWindow: undefined,
 };
 
 /**
@@ -1052,6 +1070,18 @@ const chatRuntimeSlice = createSlice({
   name: 'chatRuntime',
   initialState,
   reducers: {
+    /**
+     * Record the composer's model pick. `model: null` clears it back to the
+     * product's routing, which is a choice like any other and is persisted as
+     * one.
+     */
+    setComposerModel: (
+      state,
+      action: PayloadAction<{ model: string | null; contextWindow?: number | null }>
+    ) => {
+      state.composerModel = action.payload.model;
+      state.composerModelContextWindow = action.payload.contextWindow ?? null;
+    },
     setInferenceStatusForThread: (
       state,
       action: PayloadAction<{ threadId: string; status: InferenceStatus }>
@@ -2281,6 +2311,7 @@ const chatRuntimeSlice = createSlice({
 });
 
 export const {
+  setComposerModel,
   setInferenceStatusForThread,
   clearInferenceStatusForThread,
   bumpInferenceHeartbeatForThread,

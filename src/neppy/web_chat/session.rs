@@ -41,6 +41,65 @@ pub(crate) fn provider_role_for_model_override(model_override: Option<&str>) -> 
     }
 }
 
+/// The provider route a composer model pick names, if it names one.
+///
+/// The picker encodes a choice as `<slug>:<model>`, and for anything that is
+/// not the managed backend the slug is the only statement of *where* the turn
+/// should run. `None` means "leave the role's route alone": a managed tier
+/// (`chat-v1`), a `hint:`, a bare model id, or a slug this install has never
+/// heard of — the last of those matters because a model id may itself contain a
+/// colon (`qwen3:8b`), and reading `qwen3` as a provider would route the turn
+/// at a runtime that does not exist.
+pub(super) fn route_for_model_pick(pick: &str, config: &Config) -> Option<String> {
+    use crate::neppy::inference::local::profile::LocalProviderKind;
+
+    let pick = pick.trim();
+    if pick.is_empty()
+        || pick.starts_with("hint:")
+        || crate::neppy::inference::provider::factory::is_known_neppy_tier(pick)
+    {
+        return None;
+    }
+    let (slug, model) = pick.split_once(':')?;
+    if model.trim().is_empty() {
+        return None;
+    }
+    let known = LocalProviderKind::from_str_loose(slug).is_some()
+        || slug == "claude-code"
+        || config
+            .cloud_providers
+            .iter()
+            .any(|entry| entry.slug == slug);
+    known.then(|| pick.to_string())
+}
+
+/// The config a turn runs under once the composer's model pick is applied.
+///
+/// A pick like `mlx:<id>` names a provider as well as a model, and on a local
+/// runtime the *route* decides the model — the provider string carries its own
+/// and `default_model` is never consulted. Setting the model alone therefore
+/// left the turn on whatever the role already pointed at, so changing models in
+/// the composer changed nothing at all. The pick sets both.
+///
+/// A managed tier or a `hint:` sets only `default_model`, exactly as before:
+/// there the model *is* the tier and the backend resolves it.
+pub(super) fn config_with_model_pick(config: &Config, pick: Option<String>) -> Config {
+    let mut effective = config.clone();
+    let Some(model) = pick else {
+        return effective;
+    };
+    if let Some(route) = route_for_model_pick(&model, &effective) {
+        log::debug!(
+            "[web-chat] model pick '{}' names provider '{}' — routing the chat turn there",
+            model,
+            route.split(':').next().unwrap_or("<unknown>")
+        );
+        effective.chat_provider = Some(route);
+    }
+    effective.default_model = Some(model);
+    effective
+}
+
 pub(super) fn build_session_agent(
     config: &Config,
     client_id: &str,
@@ -51,10 +110,7 @@ pub(super) fn build_session_agent(
     temperature: Option<f64>,
     locale: Option<&str>,
 ) -> Result<Agent, String> {
-    let mut effective = config.clone();
-    if let Some(model) = model_override {
-        effective.default_model = Some(model);
-    }
+    let mut effective = config_with_model_pick(config, model_override);
     let provider_role = provider_role_for_model_override(effective.default_model.as_deref());
     if let Some(temp) = temperature {
         effective.default_temperature = temp;

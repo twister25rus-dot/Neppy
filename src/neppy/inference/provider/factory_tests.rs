@@ -232,6 +232,87 @@ fn local_openai_provider_string_resolves() {
     assert_eq!(model, "phi3");
 }
 
+/// Clears the URL overrides `mlx_endpoint` consults, restoring them on drop.
+///
+/// The endpoint is resolved from process env as well as config, and other
+/// inference tests set these — so a test that asserts config-derived resolution
+/// has to own the env for its duration or it passes alone and fails in a full
+/// run. Pair with `inference_test_guard()`, which serialises those tests.
+struct MlxUrlEnvGuard(Vec<(&'static str, Option<String>)>);
+
+impl MlxUrlEnvGuard {
+    fn clear() -> Self {
+        let saved = [
+            "OPENHUMAN_LOCAL_INFERENCE_URL",
+            "MLX_SERVER_URL",
+            "OMLX_SERVER_URL",
+        ]
+        .into_iter()
+        .map(|key| {
+            let previous = std::env::var(key).ok();
+            std::env::remove_var(key);
+            (key, previous)
+        })
+        .collect();
+        Self(saved)
+    }
+}
+
+impl Drop for MlxUrlEnvGuard {
+    fn drop(&mut self) {
+        for (key, previous) in self.0.drain(..) {
+            match previous {
+                Some(value) => std::env::set_var(key, value),
+                None => std::env::remove_var(key),
+            }
+        }
+    }
+}
+
+#[test]
+fn mlx_endpoint_follows_the_supervised_server_block() {
+    let _serialise = crate::neppy::inference::inference_test_guard();
+    let _env = MlxUrlEnvGuard::clear();
+    // The MLX panel owns host/port on the `[[mlx.server]]` block. Chat has to
+    // read the same block or moving a server leaves the panel working and the
+    // turn dialling the old address.
+    let mut config = Config::default();
+    config.mlx.servers[0].port = 9999;
+
+    assert_eq!(super::mlx_endpoint(&config), "http://127.0.0.1:9999/v1");
+}
+
+#[test]
+fn mlx_endpoint_prefers_an_explicit_local_ai_base_url() {
+    let _serialise = crate::neppy::inference::inference_test_guard();
+    let _env = MlxUrlEnvGuard::clear();
+    // A server started outside Neppy is addressed by `local_ai.base_url`, and
+    // that stays the most explicit statement of where MLX is.
+    let mut config = Config::default();
+    config.mlx.servers[0].port = 9999;
+    config.local_ai.base_url = Some("http://127.0.0.1:64744/v1".to_string());
+
+    assert_eq!(super::mlx_endpoint(&config), "http://127.0.0.1:64744/v1");
+}
+
+#[test]
+fn mlx_endpoint_falls_back_to_the_profile_default() {
+    let _serialise = crate::neppy::inference::inference_test_guard();
+    let _env = MlxUrlEnvGuard::clear();
+    // Nothing configured: an unspawned block carries `port = 0`, whose port is
+    // only known once the pool assigns it.
+    let config = Config::default();
+    assert_eq!(
+        config.mlx.servers[0].port, 0,
+        "an unspawned block has no port"
+    );
+
+    assert_eq!(
+        super::mlx_endpoint(&config),
+        crate::neppy::inference::local::profile::MLX_PROFILE.default_base_url
+    );
+}
+
 #[test]
 fn mlx_provider_empty_model_errors() {
     let _guard = crate::neppy::inference::inference_test_guard();
