@@ -122,6 +122,28 @@ describe('ComposioPanel', () => {
     expect(screen.getByText(/Managed Composio auth is unavailable here/i)).toBeInTheDocument();
   });
 
+  test('keeps the API-key field visible in local mode when getMode rejects', async () => {
+    coreStateMock.mockReturnValue({ snapshot: { sessionToken: 'header.payload.local' } });
+    hoisted.getMode.mockRejectedValue(new Error('core unavailable'));
+    const Panel = await importPanel();
+    renderWithProviders(<Panel embedded />);
+    await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
+
+    expect(screen.getByLabelText('Composio API key')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  });
+
+  test('keeps the API-key field visible in local mode when getMode omits its result', async () => {
+    coreStateMock.mockReturnValue({ snapshot: { sessionToken: 'header.payload.local' } });
+    hoisted.getMode.mockResolvedValue({ result: undefined, logs: [] });
+    const Panel = await importPanel();
+    renderWithProviders(<Panel embedded />);
+    await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
+
+    expect(screen.getByLabelText('Composio API key')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  });
+
   test('saving Direct mode with a key calls setApiKey and masks the field', async () => {
     const Panel = await importPanel();
     renderWithProviders(<Panel />);

@@ -64,13 +64,16 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
     managedAuthEnabled ??
     (Boolean(snapshot.sessionToken) && !isLocalSessionToken(snapshot.sessionToken));
 
-  const [mode, setMode] = useState<Mode>('backend');
+  // A local/offline session cannot use backend-managed auth. Start in Direct
+  // mode so a failed or malformed get-mode response can never leave the panel
+  // showing a Direct-only notice while hiding the API-key field.
+  const [mode, setMode] = useState<Mode>(allowManagedAuth ? 'backend' : 'direct');
   // Tracks the mode that's actually persisted on disk — distinct from
   // the in-flight `mode` radio selection so we can tell whether a Save
   // click constitutes a Backend → Direct *transition* (which needs a
   // confirmation gate) vs. just persisting a new API key while already
   // in Direct mode.
-  const [persistedMode, setPersistedMode] = useState<Mode>('backend');
+  const [persistedMode, setPersistedMode] = useState<Mode>(allowManagedAuth ? 'backend' : 'direct');
   const [apiKey, setApiKey] = useState('');
   const [apiKeyStored, setApiKeyStored] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -93,7 +96,14 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
       .then(res => {
         if (!isMounted) return;
         const status: ComposioModeStatus | undefined = res.result;
-        if (!status) return;
+        if (!status) {
+          if (!allowManagedAuth) {
+            setMode('direct');
+            setPersistedMode('direct');
+            setApiKeyStored(false);
+          }
+          return;
+        }
         const normalizedMode: Mode =
           !allowManagedAuth || status.mode === 'direct' ? 'direct' : 'backend';
         setMode(normalizedMode);
@@ -102,6 +112,11 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
       })
       .catch(err => {
         if (!isMounted) return;
+        if (!allowManagedAuth) {
+          setMode('direct');
+          setPersistedMode('direct');
+          setApiKeyStored(false);
+        }
         // [composio-direct] never re-throw — settings panel should
         // still render so the user can recover by toggling manually.
         console.warn('[ComposioPanel] failed to load mode:', err);
