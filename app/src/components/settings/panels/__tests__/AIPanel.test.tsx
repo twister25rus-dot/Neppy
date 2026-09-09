@@ -151,26 +151,23 @@ const selectPickerProvider = async (name: RegExp) => {
 
 const openCustomProviderEditor = async () => {
   fireEvent.click(await screen.findByTestId('add-provider-open'));
-  fireEvent.click(await screen.findByTestId('add-provider-custom'));
 };
 
 const openProviderConnectDialog = async (
   slug: string,
-  category: 'cloud' | 'local' | 'cli' = 'cloud'
+  _category: 'cloud' | 'local' | 'cli' = 'cloud'
 ) => {
-  fireEvent.click(await screen.findByTestId('add-provider-open'));
-  const trigger = await screen.findByTestId(`add-provider-select-${category}`);
-  trigger.focus();
-  fireEvent.keyDown(trigger, { key: 'Enter' });
-  fireEvent.keyDown(await screen.findByTestId(`add-provider-option-${slug}`), { key: 'Enter' });
+  if (slug === 'codex') {
+    fireEvent.click(await screen.findByRole('button', { name: /^Connect Codex$/i }));
+    return;
+  }
+  const chip = await screen.findByTestId(`provider-chip-${slug}`);
+  fireEvent.click(within(chip).getByRole('switch'));
 };
 
-const openProviderRowAction = async (slug: string, action: RegExp) => {
-  const row = await screen.findByTestId(`provider-row-${slug}`);
-  const trigger = within(row).getByRole('button');
-  trigger.focus();
-  fireEvent.keyDown(trigger, { key: 'Enter' });
-  fireEvent.click(await screen.findByRole('menuitem', { name: action }));
+const openProviderRowAction = async (slug: string, _action: RegExp) => {
+  const chip = await screen.findByTestId(`provider-chip-${slug}`);
+  fireEvent.click(within(chip).getByRole('button'));
 };
 
 const baseUsage = {
@@ -293,12 +290,9 @@ describe('AIPanel', () => {
     expect(screen.queryByText(/rejected the API key/i)).not.toBeInTheDocument();
   });
 
-  it('renders the Neppy primary card after load', async () => {
+  it('renders the Managed provider chip after load', async () => {
     renderWithProviders(<AIPanel />);
-    // The Neppy label now appears in multiple places (provider card,
-    // each workload routing row's "↳ Neppy" resolution hint), so we
-    // assert at-least-one match rather than getByText.
-    await waitFor(() => expect(screen.getAllByText(/Neppy/i).length).toBeGreaterThan(0));
+    expect(await screen.findByTestId('provider-chip-openhuman')).toHaveTextContent(/Managed/i);
   });
 
   it('renders Managed as an always-on badge, not a switchable toggle (#3760)', async () => {
@@ -1226,17 +1220,13 @@ describe('AIPanel', () => {
     expect(within(dialog).queryByRole('link', { name: /^Get API key$/i })).not.toBeInTheDocument();
   });
 
-  it('renders Phase 1 built-in providers in the add-provider catalog including SumoPod', async () => {
+  it('keeps all built-in providers visible in the provider grid', async () => {
     vi.mocked(loadAISettings).mockResolvedValue({ ...baseSettings, cloudProviders: [] });
 
     renderWithProviders(<AIPanel />);
 
-    fireEvent.click(await screen.findByTestId('add-provider-open'));
-    const trigger = await screen.findByTestId('add-provider-select-cloud');
-    trigger.focus();
-    fireEvent.keyDown(trigger, { key: 'Enter' });
     for (const slug of ['groq', 'deepseek', 'minimax', 'sumopod']) {
-      expect(await screen.findByTestId(`add-provider-option-${slug}`)).toBeInTheDocument();
+      expect(await screen.findByTestId(`provider-chip-${slug}`)).toBeInTheDocument();
     }
   });
 
@@ -1355,24 +1345,11 @@ describe('AIPanel', () => {
     );
   });
 
-  // Regression: picking a provider in the add-provider modal has to hand off to
-  // that provider's own connect dialog. Two Radix dialogs are involved (the
-  // picker unmounts as the key dialog mounts), so this asserts the handoff
-  // end to end rather than that `onOpenKeyDialog` was called.
-  it('picking a cloud provider opens its connect dialog', async () => {
+  it('toggling a cloud provider opens its connect dialog', async () => {
     vi.mocked(loadAISettings).mockResolvedValue({ ...baseSettings, cloudProviders: [] });
 
     renderWithProviders(<AIPanel />);
-    fireEvent.click(await screen.findByTestId('add-provider-open'));
-
-    // Keyboard, not pointer: a pointer open depends on pointer capture and a
-    // popper measurement pass over a zero-sized jsdom layout. This is the path
-    // `ui/Select.test.tsx` documents as the stable one.
-    const trigger = await screen.findByTestId('add-provider-select-cloud');
-    trigger.focus();
-    fireEvent.keyDown(trigger, { key: 'Enter' });
-
-    fireEvent.keyDown(await screen.findByTestId('add-provider-option-openai'), { key: 'Enter' });
+    await openProviderConnectDialog('openai');
 
     expect(await screen.findByRole('dialog', { name: /Connect OpenAI/i })).toBeInTheDocument();
   });
@@ -1563,11 +1540,7 @@ describe('AIPanel', () => {
     vi.mocked(loadAISettings).mockResolvedValue({ ...baseSettings, cloudProviders: [] });
 
     renderWithProviders(<AIPanel />);
-    fireEvent.click(await screen.findByTestId('add-provider-open'));
-    const trigger = await screen.findByTestId('add-provider-select-cli');
-    trigger.focus();
-    fireEvent.keyDown(trigger, { key: 'Enter' });
-    expect(await screen.findByTestId('add-provider-option-codex')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Connect Codex$/i })).toBeInTheDocument();
     // The Korean fallback must be gone from the English onboarding screen.
     expect(screen.queryByText(/인증/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Codex 인증/i })).not.toBeInTheDocument();
@@ -1845,7 +1818,7 @@ describe('AIPanel', () => {
     vi.mocked(loadAISettings).mockResolvedValue(settingsWithOllama);
     renderWithProviders(<AIPanel />);
 
-    const row = await screen.findByTestId('provider-row-ollama');
+    const row = await screen.findByTestId('provider-chip-ollama');
     expect(within(row).getByRole('button')).toBeInTheDocument();
   });
 
@@ -1879,11 +1852,7 @@ describe('AIPanel', () => {
     vi.mocked(loadAISettings).mockResolvedValue({ ...baseSettings, cloudProviders: [] });
     renderWithProviders(<AIPanel />);
 
-    fireEvent.click(await screen.findByTestId('add-provider-open'));
-    const trigger = await screen.findByTestId('add-provider-select-local');
-    trigger.focus();
-    fireEvent.keyDown(trigger, { key: 'Enter' });
-    expect(await screen.findByTestId('add-provider-option-ollama')).toBeInTheDocument();
+    expect(await screen.findByTestId('provider-chip-ollama')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Edit endpoint/i })).not.toBeInTheDocument();
   });
 

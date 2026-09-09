@@ -11,7 +11,10 @@ This runbook describes how we avoid users completing **OAuth** (including **Gmai
 
 - **GitHub Releases** for [tinyhumansai/openhuman](https://github.com/tinyhumansai/openhuman/releases) are the primary source for desktop builds.
 - The **Tauri updater** endpoint (see `scripts/prepareTauriConfig.js` and release workflows) should point users at the current release artifacts.
+- GitHub automatically adds **Source code (zip)** and **Source code (tar.gz)** snapshots to every GitHub Release. They are not uploaded release assets and GitHub does not offer a switch to remove them. Release tooling must upload only the installable or updater artifacts that users need.
 - **Retiring old stable artifacts:** When dropping a release line, remove or hide obsolete installer assets on **GitHub Releases**, update **website / CDN** download links to **releases/latest** (or current), refresh the **updater manifest** (e.g. Gist / `latest.json`) so it does not point users at deprecated builds, and spot-check that old direct URLs are **redirected, 404, or 410** where appropriate. Verification: try known-old asset URLs from docs or bookmarks and confirm they no longer deliver primary install paths.
+
+The local `scripts/release-neppy.sh` helper publishes exactly two custom assets: the signed `.app.tar.gz` updater bundle and its `.sig`. It generates one notes body for both the GitHub Release and `CHANGELOG.md`, falling back to useful commit bullets when GitHub has no PR bullets. The version and changelog are committed and tagged before the GitHub Release is created; `updater/latest.json` is committed separately after GitHub assigns the uploaded asset ID. Run it with `--dry-run` to build and validate without committing, tagging, pushing, or publishing. Pass `--notes-file <path>` when a release needs carefully curated notes, such as the first cut after correcting an older misplaced tag.
 
 ## Minimum app version for OAuth
 

@@ -5,7 +5,6 @@
  */
 import { cn } from '../../../../lib/cn';
 import { useT } from '../../../../lib/i18n/I18nContext';
-import Card from '../../../ui/Card';
 import Label from '../../../ui/Label';
 import { RadioGroupItem, RadioGroupRoot } from '../../../ui/RadioGroup';
 import type { RoutingMode } from './aiPanelTypes';
@@ -27,13 +26,16 @@ const ModeOption = ({
     data-slot="routing-mode-option"
     data-selected={selected}
     className={cn(
-      'flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-      selected ? 'bg-surface-muted' : 'hover:bg-surface-hover'
+      'relative flex min-h-36 cursor-pointer flex-col items-start gap-3 rounded-xl border p-5 transition-colors',
+      'focus-within:outline-hidden focus-within:ring-2 focus-within:ring-primary-500/25',
+      selected
+        ? 'border-sage-500/60 bg-sage-50 dark:bg-sage-500/10'
+        : 'border-line bg-surface hover:border-line-strong hover:bg-surface-hover'
     )}>
-    <RadioGroupItem value={value} size="md" className="flex-none" />
-    <span className="flex min-w-0 flex-col gap-0.5">
-      <span className="text-sm font-medium text-content">{title}</span>
-      <span className="text-[11px] leading-4 text-content-muted">{description}</span>
+    <RadioGroupItem value={value} size="md" className="sr-only" />
+    <span className="flex min-w-0 flex-col gap-3">
+      <span className="text-base font-semibold text-content">{title}</span>
+      <span className="text-sm leading-6 text-content-muted">{description}</span>
     </span>
   </Label>
 );
@@ -51,38 +53,42 @@ export const RoutingModeCards = ({
 }) => {
   const { t } = useT();
   return (
-    <Card className="w-full">
-      <div className="flex flex-col gap-3 p-4">
-        <RadioGroupRoot
-          aria-label={t('settings.ai.routing')}
-          value={effectiveRoutingMode}
-          onValueChange={next => {
-            if (next === 'managed') onSelectManaged();
-            else if (next === 'own') onSelectOwn();
-            else if (next === 'custom') onSelectCustom();
-          }}
-          className="grid w-full gap-1">
-          <ModeOption
-            value="managed"
-            selected={effectiveRoutingMode === 'managed'}
-            title={t('settings.ai.routing.managed')}
-            description={t('settings.ai.routing.managedDesc')}
-          />
-          <ModeOption
-            value="own"
-            selected={effectiveRoutingMode === 'own'}
-            title={t('settings.ai.routing.useYourOwn')}
-            description={t('settings.ai.routing.useYourOwnDesc')}
-          />
-          <ModeOption
-            value="custom"
-            selected={effectiveRoutingMode === 'custom'}
-            title={t('settings.ai.routing.advanced')}
-            description={t('settings.ai.routing.advancedDesc')}
-          />
-        </RadioGroupRoot>
+    <section className="flex w-full flex-col gap-4">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight text-content">
+          {t('settings.ai.routing')}
+        </h2>
+        <p className="mt-1 text-sm text-content-muted">{t('settings.ai.routingDesc')}</p>
       </div>
-    </Card>
+      <RadioGroupRoot
+        aria-label={t('settings.ai.routing')}
+        value={effectiveRoutingMode}
+        onValueChange={next => {
+          if (next === 'managed') onSelectManaged();
+          else if (next === 'own') onSelectOwn();
+          else if (next === 'custom') onSelectCustom();
+        }}
+        className="grid w-full gap-3 md:grid-cols-3">
+        <ModeOption
+          value="managed"
+          selected={effectiveRoutingMode === 'managed'}
+          title={t('settings.ai.routing.managed')}
+          description={t('settings.ai.routing.managedDesc')}
+        />
+        <ModeOption
+          value="own"
+          selected={effectiveRoutingMode === 'own'}
+          title={t('settings.ai.routing.useYourOwn')}
+          description={t('settings.ai.routing.useYourOwnDesc')}
+        />
+        <ModeOption
+          value="custom"
+          selected={effectiveRoutingMode === 'custom'}
+          title={t('settings.ai.routing.advanced')}
+          description={t('settings.ai.routing.advancedDesc')}
+        />
+      </RadioGroupRoot>
+    </section>
   );
 };
 

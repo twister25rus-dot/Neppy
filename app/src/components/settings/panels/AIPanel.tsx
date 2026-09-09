@@ -70,6 +70,9 @@ interface AIPanelProps {
   onTabChange?: (tab: AIPanelTab) => void;
   /** Suppress PanelPage's internal tab chrome for a host-rendered chip row. */
   hideTabChrome?: boolean;
+  /** Show provider setup and routing in one continuous page. Connections uses
+   *  this presentation; standalone hosts keep the existing separate tabs. */
+  combineProvidersAndRouting?: boolean;
 }
 
 const AIPanel = ({
@@ -77,6 +80,7 @@ const AIPanel = ({
   tab: controlledTab,
   onTabChange,
   hideTabChrome = false,
+  combineProvidersAndRouting = false,
 }: AIPanelProps = {}) => {
   const { t } = useT();
   const { navigateBack } = useSettingsNavigation();
@@ -160,6 +164,99 @@ const AIPanel = ({
         : inferredRoutingModeRaw;
   const sharedModelRef = inferSharedModelRef(draft.routing);
 
+  const routingContent = (
+    <div className="flex w-full flex-col gap-4">
+      <RoutingModeCards
+        effectiveRoutingMode={effectiveRoutingMode}
+        onSelectManaged={() => {
+          setRoutingEditorMode(null);
+          void persist({ ...draft, routing: routingWithAllWorkloads({ kind: 'openhuman' }) });
+        }}
+        onSelectOwn={() => setRoutingEditorMode('own')}
+        onSelectCustom={() => setRoutingEditorMode('custom')}
+      />
+
+      {effectiveRoutingMode === 'managed' ? (
+        <Card className="w-full">
+          <Alert variant="success">{t('settings.ai.routing.managedMsg')}</Alert>
+        </Card>
+      ) : null}
+
+      {effectiveRoutingMode === 'own' ? (
+        <GlobalOwnModelSelector
+          current={sharedModelRef}
+          saved={inferSharedModelRef(saved.routing)}
+          cloudProviders={draft.cloudProviders}
+          localModels={installed}
+          ollamaRunning={ollama.state === 'running'}
+          modelRegistry={draft.modelRegistry}
+          onApply={async (next, vision) => {
+            const reg =
+              next.kind === 'cloud'
+                ? { slug: next.providerSlug, model: next.model }
+                : next.kind === 'local'
+                  ? { slug: 'ollama', model: next.model }
+                  : next.kind === 'claude-code'
+                    ? { slug: 'claude-code', model: next.model }
+                    : null;
+            await persist({
+              ...draft,
+              routing: routingWithAllWorkloads(next),
+              modelRegistry: reg
+                ? upsertModelRegistryVision(draft.modelRegistry, reg.slug, reg.model, vision)
+                : draft.modelRegistry,
+            });
+          }}
+        />
+      ) : null}
+
+      {effectiveRoutingMode === 'custom' ? (
+        <>
+          <Card className="w-full">
+            <WorkloadTable
+              title={t('settings.ai.routing.chatAndConversations')}
+              description={t('settings.ai.routing.chatDesc')}>
+              {chatRows.map(w => (
+                <WorkloadRow
+                  key={w.id}
+                  workload={w}
+                  ref_={draft.routing[w.id]}
+                  cloudProviders={draft.cloudProviders}
+                  onCustomClick={() => setPickerFor(w.id)}
+                />
+              ))}
+            </WorkloadTable>
+          </Card>
+
+          <Card className="w-full">
+            <WorkloadTable
+              title={t('settings.ai.routing.backgroundTasks')}
+              description={t('settings.ai.routing.bgTasksDesc')}>
+              {bgRows.map(w => (
+                <WorkloadRow
+                  key={w.id}
+                  workload={w}
+                  ref_={draft.routing[w.id]}
+                  cloudProviders={draft.cloudProviders}
+                  onCustomClick={() => setPickerFor(w.id)}
+                />
+              ))}
+            </WorkloadTable>
+          </Card>
+        </>
+      ) : null}
+
+      {isDirty && (
+        <SaveBar
+          diffSummary={diffSummary}
+          changeCount={diffSummary.length}
+          onSave={() => void handleSave()}
+          onDiscard={discard}
+        />
+      )}
+    </div>
+  );
+
   return (
     <>
       <PanelPage
@@ -202,7 +299,10 @@ const AIPanel = ({
                   onAddCustomProvider={() => setEditing('new')}
                   onEditCustomProvider={provider => setEditing(provider)}
                 />
-                {isDirty && (
+                {combineProvidersAndRouting ? (
+                  <div className="mx-4 mb-4 border-t border-line pt-6">{routingContent}</div>
+                ) : null}
+                {!combineProvidersAndRouting && isDirty && (
                   <SaveBar
                     diffSummary={diffSummary}
                     changeCount={diffSummary.length}
@@ -217,112 +317,7 @@ const AIPanel = ({
             id: 'routing',
             label: t('settings.ai.routing'),
             contentClassName: embedded || hideTabChrome ? '' : 'p-4',
-            content: (
-              <div className="flex w-full flex-col gap-4">
-                {/* ═══════════════════════════════════════════════════════════════
-              ROUTING — top-level routing mode. Managed = Neppy decides.
-              Own = one provider/model for everything. Custom = fine-grained
-              per-workload routing.
-              ═══════════════════════════════════════════════════════════════ */}
-                <>
-                  <RoutingModeCards
-                    effectiveRoutingMode={effectiveRoutingMode}
-                    onSelectManaged={() => {
-                      setRoutingEditorMode(null);
-                      void persist({
-                        ...draft,
-                        routing: routingWithAllWorkloads({ kind: 'openhuman' }),
-                      });
-                    }}
-                    onSelectOwn={() => setRoutingEditorMode('own')}
-                    onSelectCustom={() => setRoutingEditorMode('custom')}
-                  />
-
-                  {effectiveRoutingMode === 'managed' ? (
-                    <Card className="w-full">
-                      <Alert variant="success">{t('settings.ai.routing.managedMsg')}</Alert>
-                    </Card>
-                  ) : null}
-
-                  {effectiveRoutingMode === 'own' ? (
-                    <GlobalOwnModelSelector
-                      current={sharedModelRef}
-                      saved={inferSharedModelRef(saved.routing)}
-                      cloudProviders={draft.cloudProviders}
-                      localModels={installed}
-                      ollamaRunning={ollama.state === 'running'}
-                      modelRegistry={draft.modelRegistry}
-                      onApply={async (next, vision) => {
-                        const reg =
-                          next.kind === 'cloud'
-                            ? { slug: next.providerSlug, model: next.model }
-                            : next.kind === 'local'
-                              ? { slug: 'ollama', model: next.model }
-                              : next.kind === 'claude-code'
-                                ? { slug: 'claude-code', model: next.model }
-                                : null;
-                        await persist({
-                          ...draft,
-                          routing: routingWithAllWorkloads(next),
-                          modelRegistry: reg
-                            ? upsertModelRegistryVision(
-                                draft.modelRegistry,
-                                reg.slug,
-                                reg.model,
-                                vision
-                              )
-                            : draft.modelRegistry,
-                        });
-                      }}
-                    />
-                  ) : null}
-
-                  {effectiveRoutingMode === 'custom' ? (
-                    <>
-                      <Card className="w-full">
-                        <WorkloadTable
-                          title={t('settings.ai.routing.chatAndConversations')}
-                          description={t('settings.ai.routing.chatDesc')}>
-                          {chatRows.map(w => (
-                            <WorkloadRow
-                              key={w.id}
-                              workload={w}
-                              ref_={draft.routing[w.id]}
-                              cloudProviders={draft.cloudProviders}
-                              onCustomClick={() => setPickerFor(w.id)}
-                            />
-                          ))}
-                        </WorkloadTable>
-                      </Card>
-
-                      <Card className="w-full">
-                        <WorkloadTable
-                          title={t('settings.ai.routing.backgroundTasks')}
-                          description={t('settings.ai.routing.bgTasksDesc')}>
-                          {bgRows.map(w => (
-                            <WorkloadRow
-                              key={w.id}
-                              workload={w}
-                              ref_={draft.routing[w.id]}
-                              cloudProviders={draft.cloudProviders}
-                              onCustomClick={() => setPickerFor(w.id)}
-                            />
-                          ))}
-                        </WorkloadTable>
-                      </Card>
-                    </>
-                  ) : null}
-                </>
-                {isDirty && (
-                  <SaveBar
-                    diffSummary={diffSummary}
-                    changeCount={diffSummary.length}
-                    onSave={() => void handleSave()}
-                    onDiscard={discard}
-                  />
-                )}
-              </div>
-            ),
+            content: routingContent,
           },
           {
             id: 'mlx',

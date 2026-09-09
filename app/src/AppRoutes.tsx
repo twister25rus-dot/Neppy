@@ -28,11 +28,9 @@ import WorkflowsRun from './pages/WorkflowsRun';
 
 interface AppRoutesProps {
   /**
-   * Optional location override. Nothing passes one today — the router uses the
-   * ambient location. It existed for the desktop Settings modal, which rendered
-   * the page *behind* it from a stashed background location; Settings is a
-   * routed page now. Kept because `<Routes location=…>` is the standard escape
-   * hatch for any future overlay-over-a-page surface.
+   * Optional location override. Desktop Settings uses this to keep the prior
+   * page rendered beneath its dialog while the ambient URL remains a
+   * `/settings/*` deep link.
    */
   location?: Location | string;
 }
@@ -302,11 +300,9 @@ const AppRoutes = ({ location }: AppRoutesProps = {}) => {
       {/* Webhooks retired from the UI — land on the Integrations settings. */}
       <Route path="/webhooks" element={<Navigate to="/settings/integrations" replace />} />
 
-      {/* Settings is a routed page like every other surface: the shared route
-          table renders inside `SettingsLayout`, which projects the settings nav
-          into the app sidebar's dynamic region. It was a modal overlay (the
-          backgroundLocation pattern) until this route replaced it. iOS keeps
-          its own /settings/* route in AppRoutesIOS.tsx. */}
+      {/* The URL route remains authoritative on every target. AppShellDesktop
+          presents it in a modal over a stashed background location; mobile
+          reaches this element directly and keeps the full-page presentation. */}
       <Route
         path="/settings/*"
         element={

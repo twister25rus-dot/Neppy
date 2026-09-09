@@ -31,11 +31,13 @@ describe('LlmConnectionsPanel', () => {
     }
   );
 
-  it('renders provider and routing chips below the page description', () => {
+  it('renders the combined API-key/routing tab and the separate MLX tab', () => {
     renderWithProviders(<LlmConnectionsPanel />, { initialEntries: ['/connections?tab=llm'] });
 
     expect(screen.getByRole('tablist', { name: 'pages.settings.ai.llm' })).toBeInTheDocument();
     expect(screen.getByTestId('ai-tab-providers')).toBeInTheDocument();
-    expect(screen.getByTestId('ai-tab-routing')).toBeInTheDocument();
+    expect(screen.getByTestId('ai-tab-providers')).toHaveTextContent('connections.llm.apiKeys');
+    expect(screen.getByTestId('ai-tab-mlx')).toBeInTheDocument();
+    expect(screen.queryByTestId('ai-tab-routing')).not.toBeInTheDocument();
   });
 });

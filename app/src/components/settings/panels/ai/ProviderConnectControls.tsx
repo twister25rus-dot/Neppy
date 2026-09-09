@@ -27,14 +27,20 @@ import {
 export const ProviderToggleChip = ({
   slug,
   label,
+  tone,
   enabled,
   busy,
   locked = false,
   alwaysOn = false,
   onToggle,
+  onLabelClick,
+  labelAction,
+  'data-testid': testId,
 }: {
   slug: string;
   label: string;
+  /** Optional display tone for local runtimes and user-defined providers. */
+  tone?: string;
   enabled: boolean;
   busy?: boolean;
   locked?: boolean;
@@ -43,13 +49,28 @@ export const ProviderToggleChip = ({
   // as switchable-but-broken (#3760); a badge has no affordance to fight.
   alwaysOn?: boolean;
   onToggle?: () => void;
+  /** Connected providers expose their edit action through the chip label. */
+  onLabelClick?: () => void;
+  labelAction?: string;
+  'data-testid'?: string;
 }) => {
   const { t } = useT();
-  const tone = slugTone(slug);
+  const chipTone = tone ?? slugTone(slug);
   return (
     <div
-      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-colors ${tone}`}>
-      <span>{label}</span>
+      data-testid={testId}
+      className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ring-1 transition-colors ${chipTone}`}>
+      {onLabelClick ? (
+        <button
+          type="button"
+          className="rounded-full text-start focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500/30"
+          aria-label={labelAction}
+          onClick={onLabelClick}>
+          {label}
+        </button>
+      ) : (
+        <span>{label}</span>
+      )}
       {alwaysOn ? (
         <Badge variant="success" className="gap-1 border-transparent bg-transparent">
           <LuCheck className="h-3 w-3" />

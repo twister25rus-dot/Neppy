@@ -139,11 +139,8 @@ const baseUsage = {
 
 describe('AIPanel OMLX connect', () => {
   const openOmlxConnectDialog = async () => {
-    fireEvent.click(await screen.findByTestId('add-provider-open'));
-    const trigger = await screen.findByTestId('add-provider-select-local');
-    trigger.focus();
-    fireEvent.keyDown(trigger, { key: 'Enter' });
-    fireEvent.keyDown(await screen.findByTestId('add-provider-option-omlx'), { key: 'Enter' });
+    const chip = await screen.findByTestId('provider-chip-omlx');
+    fireEvent.click(within(chip).getByRole('switch'));
     return await screen.findByRole('dialog', { name: /Connect OMLX/i });
   };
 
@@ -167,13 +164,11 @@ describe('AIPanel OMLX connect', () => {
     vi.mocked(listComposioConnections).mockResolvedValue({ connections: [] });
   });
 
-  it('offers OMLX in the local-provider catalogue', async () => {
+  it('shows OMLX in the provider grid', async () => {
     renderWithProviders(<AIPanel />);
-    fireEvent.click(await screen.findByTestId('add-provider-open'));
-    const trigger = await screen.findByTestId('add-provider-select-local');
-    trigger.focus();
-    fireEvent.keyDown(trigger, { key: 'Enter' });
-    expect(await screen.findByTestId('add-provider-option-omlx')).toBeInTheDocument();
+    const chip = await screen.findByTestId('provider-chip-omlx');
+    expect(chip).toHaveTextContent('OMLX');
+    expect(within(chip).getByRole('switch', { name: /Connect OMLX/i })).toBeInTheDocument();
   });
 
   it('toggling OMLX ON shows BOTH an endpoint field (localhost:8000) and an API key field', async () => {

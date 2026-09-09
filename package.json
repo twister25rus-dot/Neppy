@@ -32,7 +32,7 @@
     "test:rust": "pnpm --filter neppy-app test:rust",
     "test:rust:e2e": "bash scripts/test-rust-e2e.sh",
     "test:rust:e2e:coverage": "node scripts/check-domain-e2e-coverage.mjs",
-    "test:release-notes": "node --test scripts/__tests__/generate-release-notes.test.mjs",
+    "test:release-notes": "node --test scripts/__tests__/generate-release-notes.test.mjs scripts/__tests__/update-changelog.test.mjs scripts/__tests__/release-neppy-script.test.mjs",
     "test:e2e": "pnpm --filter neppy-app test:e2e:all",
     "test:e2e:flows": "pnpm --filter neppy-app test:e2e:all:flows",
     "mascot:render": "pnpm --dir remotion render:runtime-assets",

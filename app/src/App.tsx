@@ -1,8 +1,11 @@
 import * as Sentry from '@sentry/react';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Provider } from 'react-redux';
 import {
+  type Location,
+  Route,
   HashRouter as Router,
+  Routes,
   useLocation,
   useNavigate,
   useNavigationType,
@@ -39,6 +42,7 @@ import {
   stopNativeNotificationsService,
 } from './lib/nativeNotifications';
 import { getIsMobile } from './lib/platform';
+import Settings from './pages/Settings';
 import ChatRuntimeProvider from './providers/ChatRuntimeProvider';
 import CoreStateProvider, { useCoreState } from './providers/CoreStateProvider';
 import SocketProvider from './providers/SocketProvider';
@@ -66,6 +70,11 @@ export function stopBootServicesForHmr(): void {
 if (import.meta.hot) {
   import.meta.hot.dispose(stopBootServicesForHmr);
 }
+
+// These compatibility-only routes immediately redirect into Settings. They
+// cannot serve as a desktop modal backdrop or closing onto them would reopen
+// the dialog in a loop.
+const SETTINGS_REDIRECT_ONLY_PATHS = new Set(['/activity', '/intelligence', '/webhooks']);
 
 function App() {
   const onMobile = getIsMobile();
@@ -176,8 +185,24 @@ export function AppShellDesktop() {
   const navigate = useNavigate();
   const { snapshot, isBootstrapping } = useCoreState();
   const onOnboardingRoute = location.pathname.startsWith('/onboarding');
+  const onSettingsRoute =
+    location.pathname === '/settings' || location.pathname.startsWith('/settings/');
   const onboardingPending =
     !!snapshot.sessionToken && (DEV_FORCE_ONBOARDING || !snapshot.onboardingCompleted);
+
+  // Settings is still URL-addressable, but on desktop it is presented over
+  // the route the user came from. Keep the last real page (and its history
+  // index) so changing settings sub-routes does not replace the backdrop or
+  // make the close button walk backwards through every visited settings pane.
+  const lastNonSettingsLocationRef = useRef<Location | null>(null);
+  const lastNonSettingsHistoryIndexRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (onSettingsRoute) return;
+    lastNonSettingsLocationRef.current = location;
+    const index = (window.history.state as { idx?: unknown } | null)?.idx;
+    lastNonSettingsHistoryIndexRef.current = typeof index === 'number' ? index : null;
+  }, [location, onSettingsRoute]);
 
   // Onboarding gate: while `onboarding_completed=false`, force any non-
   // onboarding route back to `/onboarding`. Once completed, bounce the
@@ -230,12 +255,50 @@ export function AppShellDesktop() {
   const onWorkflowCanvas = location.pathname.startsWith('/flows/');
   const chromeless = !token || onOnboardingRoute || onHiddenChromePath || onWorkflowCanvas;
 
+  const showSettingsDialog = !!token && !isBootstrapping && !onboardingPending && onSettingsRoute;
+  const previousLocation = lastNonSettingsLocationRef.current;
+  const settingsBackgroundLocation =
+    previousLocation && !SETTINGS_REDIRECT_ONLY_PATHS.has(previousLocation.pathname)
+      ? previousLocation
+      : '/chat';
+
+  const closeSettingsDialog = useCallback(() => {
+    const currentIndex = (window.history.state as { idx?: unknown } | null)?.idx;
+    const backgroundIndex = lastNonSettingsHistoryIndexRef.current;
+
+    // When Settings was pushed from another in-app page, jump over every
+    // settings-only history entry in one step. This restores the exact page
+    // and keeps Back from reopening a previously visited settings panel.
+    if (
+      typeof currentIndex === 'number' &&
+      typeof backgroundIndex === 'number' &&
+      currentIndex > backgroundIndex
+    ) {
+      navigate(backgroundIndex - currentIndex);
+      return;
+    }
+
+    // A direct/deep link has no usable background history entry. Keep the URL
+    // behavior deterministic and close onto the last known page, or Chat for a
+    // cold launch. The three legacy aliases below immediately redirect back to
+    // Settings, so they are intentionally not restored as backdrops.
+    const previous = lastNonSettingsLocationRef.current;
+    if (previous && !SETTINGS_REDIRECT_ONLY_PATHS.has(previous.pathname)) {
+      navigate(`${previous.pathname}${previous.search}${previous.hash}`, {
+        replace: true,
+        state: previous.state,
+      });
+      return;
+    }
+    navigate('/chat', { replace: true });
+  }, [navigate]);
+
   const content = (
     <div ref={scrollRef} className="relative h-full overflow-y-auto">
       {/* The plan-usage upsell and the #5324 memory-embedding warning used to
           be full-width banners here, pushing every route down. Both are
           notices in `NoticeCenter` now — see its docs for why. */}
-      <AppRoutes />
+      <AppRoutes location={showSettingsDialog ? settingsBackgroundLocation : undefined} />
     </div>
   );
 
@@ -268,6 +331,14 @@ export function AppShellDesktop() {
             sidebar nav so it must stay mounted while the user moves between routes. */}
         {!isBootstrapping && !onOnboardingRoute && (
           <AppWalkthrough onboarded={!!snapshot.onboardingCompleted} />
+        )}
+        {showSettingsDialog && (
+          <Routes>
+            <Route
+              path="/settings/*"
+              element={<Settings presentation="dialog" onClose={closeSettingsDialog} />}
+            />
+          </Routes>
         )}
       </div>
     </SidebarSlotProvider>
