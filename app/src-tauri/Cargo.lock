@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "Neppy"
-version = "0.66.0"
+version = "0.66.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3745,7 +3745,7 @@ dependencies = [
 
 [[package]]
 name = "neppy"
-version = "0.66.0"
+version = "0.66.1"
 dependencies = [
  "aes-gcm",
  "aho-corasick",
