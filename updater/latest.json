@@ -1,11 +1,11 @@
 {
-  "version": "0.66.2",
-  "notes": "Neppy 0.66.2",
-  "pub_date": "2026-09-09T07:28:27Z",
+  "version": "0.66.3",
+  "notes": "## What's Changed\n\n- Redesigned LLM settings into an at-a-glance provider grid with direct connection toggles, Codex and Claude Code controls, custom providers, and routing on the same page.\n- Opened desktop Settings as a large, self-contained window over the current page, with its own navigation, close button, Escape handling, and safe deep-link behavior.\n- Added a maintained Git changelog and made releases commit their version and notes before tagging the exact release commit.\n- Limited explicit release uploads to the signed Neppy updater bundle and signature. GitHub's automatic source snapshots remain available as part of every GitHub Release.",
+  "pub_date": "2026-09-09T08:58:03Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakhQbTVqVytaelYyMjBjUnhzZ0RqMnJVaDdEdk9wTkNwb3ZJMm12ZWRVN2syejVEeVBIbnZNRUtOODRnemlXNHVXeVdXSUJTY2FZeEdaRW5PM2NuSlFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4OTM4ODkzCWZpbGU6TmVwcHkuYXBwLnRhci5nego1YllCY0J4cE1vbHBCUVhoOWpDa05OUnM2SmRmcFQ5a2dMWUFBaFJTUU5RVmVDVktDTnhhQzRZcEUzZnRtVVUyZ2xZcm1sWHJINmdOeXJMaFdVTFhDQT09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/552241283"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakp6Zng3UlU0WkhYTlFjNWxlUk9ZcTZtZk9za2daQ2F6WkNTc2hrNWY3SVdyN253NmhkSWRySFArNmpFVVpLUklFNjBWOVNjRVJFMkw4YWlFZ1ZlclFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4OTQ0MTg3CWZpbGU6TmVwcHkuYXBwLnRhci5negpCTWltTyt6cHFBVDlRYXZBNXpybXpUTkxPQnkzWTYrQW44V01kaXF2YTk5ODIzczdmdCttSExrQXB3Z1dMU3NHeXJtT1ZsUG5WQUU2NGdyWjJRbDNCUT09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/552380101"
     }
   }
 }
