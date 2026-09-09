@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.4] - 2026-09-09
+
+### What's Changed
+
+- Chat reaches the MLX server the app manages, and keeps the model you picked ([`4cc609fe`](https://github.com/twister25rus-dot/Neppy/commit/4cc609fee7f22f664fae9010e3fba53ea3d4da72))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/6e6407fa6f12c7bd12202973e3be711054a0787c...4cc609fee7f22f664fae9010e3fba53ea3d4da72
+
 ## [0.66.3] - 2026-09-09
 
 ### What's Changed
