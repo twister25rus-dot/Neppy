@@ -4,6 +4,18 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.6] - 2026-09-11
+
+### What's Changed
+
+- Find the Claude Code CLI the way it is actually installed, and rotate the arrows ([`c39ec200`](https://github.com/twister25rus-dot/Neppy/commit/c39ec2007f09c4ac423c15836458fbbbbf6813ef))
+- Show the model's thinking while it is thinking ([`06a55d45`](https://github.com/twister25rus-dot/Neppy/commit/06a55d45380ad222b6905cc892b022602b0bfdbe))
+- Resolve local-model settings from a named preset ([`d1e49264`](https://github.com/twister25rus-dot/Neppy/commit/d1e492645daa22e2438ba71ab967bcbb30212ce5))
+- Pick how hard the local model works, from the chat bar or settings ([`2b4ebe49`](https://github.com/twister25rus-dot/Neppy/commit/2b4ebe4948e06b3de42517487e033858865b9582))
+- Format the preset and thinking work to house style ([`00c36ca1`](https://github.com/twister25rus-dot/Neppy/commit/00c36ca1c4b7e72a48abf412e5b57959e67187f9))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/d635dbf7376e313254321c9c17511ce90138c634...00c36ca1c4b7e72a48abf412e5b57959e67187f9
+
 ## [0.66.5] - 2026-09-11
 
 ### What's Changed
