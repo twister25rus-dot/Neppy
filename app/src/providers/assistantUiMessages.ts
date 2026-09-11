@@ -248,7 +248,18 @@ export function streamingTailMessage(
   const parts = assistantParts(text, timeline, transcript);
   if (streaming?.thinking.trim()) {
     const hasTranscriptThinking = transcript.some(item => item.kind === 'thinking');
-    if (!hasTranscriptThinking) parts.unshift({ type: 'reasoning', text: streaming.thinking });
+    if (!hasTranscriptThinking) {
+      // The running status is what makes the thinking visible while it streams.
+      // `ReasoningGroupImpl` only holds the disclosure open when the message is
+      // running AND the part itself reports running; without a part status the
+      // group reads as settled, stays collapsed, and the live reasoning is
+      // written to a panel nobody opened.
+      parts.unshift({
+        type: 'reasoning',
+        text: streaming.thinking,
+        status: { type: 'running' },
+      });
+    }
   }
   if (parts.length === 0) return null;
   return {

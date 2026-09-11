@@ -80,10 +80,14 @@ describe('streamingTailMessage', () => {
     });
   });
 
-  it('projects streamed thinking as a reasoning part before visible text', () => {
+  it('projects streamed thinking as a running reasoning part before visible text', () => {
     const tail = streamingTailMessage({ requestId: 'r', content: 'answer', thinking: 'reasoning' });
     expect(tail?.content).toEqual([
-      { type: 'reasoning', text: 'reasoning' },
+      // The running status is what opens the disclosure while tokens arrive:
+      // the reasoning group holds itself open only when the message *and* the
+      // part both report running. Without it the thinking streams into a panel
+      // that stays collapsed, so the user sees nothing while the model works.
+      { type: 'reasoning', text: 'reasoning', status: { type: 'running' } },
       { type: 'text', text: 'answer' },
     ]);
   });
