@@ -416,6 +416,32 @@ describe('chatService.subscribeChatEvents', () => {
     });
   });
 
+  it('forwards the turn\'s reasoning and sampling ask', async () => {
+    const socket = createMockSocket();
+    bindMockSocket(socket);
+
+    await chatSend({
+      threadId: 'thread-1',
+      message: 'hello',
+      reasoningEffort: 'medium',
+      topP: 0.9,
+      maxTokens: 512,
+    });
+
+    expect(mockCallCoreRpc).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'openhuman.channel_web_chat',
+        params: expect.objectContaining({
+          // `reasoning_effort` is the portable field: mlx_vlm.server and the
+          // OpenAI reasoning models both read it, so this is not local-only.
+          reasoning_effort: 'medium',
+          top_p: 0.9,
+          max_tokens: 512,
+        }),
+      })
+    );
+  });
+
   it('forwards speak_reply, source, session_id when provided', async () => {
     const socket = createMockSocket();
     bindMockSocket(socket);

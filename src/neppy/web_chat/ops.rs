@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::neppy::inference::turn_controls::TurnModelControls;
 use std::time::{Duration, Instant};
 
 use once_cell::sync::Lazy;
@@ -434,6 +435,7 @@ pub async fn start_chat(
     message: &str,
     model_override: Option<String>,
     temperature: Option<f64>,
+    controls: TurnModelControls,
     profile_id: Option<String>,
     locale: Option<String>,
     queue_mode: Option<String>,
@@ -646,6 +648,7 @@ pub async fn start_chat(
             &message,
             model_override,
             temperature,
+            controls,
             profile_id,
             locale,
             metadata,
@@ -672,6 +675,7 @@ pub async fn start_chat(
                     .as_millis() as u64,
                 model_override: model_override.clone(),
                 temperature,
+                controls,
                 profile_id: profile_id.clone(),
                 locale: locale.clone(),
             };
@@ -771,6 +775,7 @@ pub async fn start_chat(
                 &user_message,
                 model_override,
                 temperature,
+                controls,
                 profile_id,
                 locale,
                 turn_run_queue_task,
@@ -933,6 +938,7 @@ fn dispatch_followups(followups: Vec<crate::neppy::agent::harness::run_queue::Qu
                 &fup.text,
                 fup.model_override,
                 fup.temperature,
+                fup.controls,
                 fup.profile_id,
                 fup.locale,
                 Some("followup".to_string()),
@@ -964,6 +970,7 @@ async fn spawn_parallel_turn(
     message: &str,
     model_override: Option<String>,
     temperature: Option<f64>,
+    controls: TurnModelControls,
     profile_id: Option<String>,
     locale: Option<String>,
     metadata: ChatRequestMetadata,
@@ -1000,6 +1007,7 @@ async fn spawn_parallel_turn(
                 &user_message,
                 model_override,
                 temperature,
+                controls,
                 profile_id,
                 locale,
                 run_queue,
@@ -1329,6 +1337,7 @@ pub async fn channel_web_chat(
     message: &str,
     model_override: Option<String>,
     temperature: Option<f64>,
+    controls: TurnModelControls,
     profile_id: Option<String>,
     locale: Option<String>,
     queue_mode: Option<String>,
@@ -1340,6 +1349,7 @@ pub async fn channel_web_chat(
         message,
         model_override,
         temperature,
+        controls,
         profile_id,
         locale,
         queue_mode,

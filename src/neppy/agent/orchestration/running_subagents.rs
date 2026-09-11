@@ -998,6 +998,8 @@ pub async fn steer(
         .metadata
         .run_queue
         .push(QueuedMessage {
+            // Sub-agent replay carries no composer ask of its own.
+            controls: Default::default(),
             text,
             mode,
             client_id: "steer_subagent".to_string(),
@@ -1053,6 +1055,8 @@ pub(crate) async fn steer_control(
         .metadata
         .run_queue
         .push(QueuedMessage {
+            // Sub-agent replay carries no composer ask of its own.
+            controls: Default::default(),
             text,
             mode,
             client_id: "subagent_control_rpc".to_string(),

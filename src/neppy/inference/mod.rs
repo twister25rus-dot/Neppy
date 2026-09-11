@@ -32,6 +32,7 @@ pub mod ops;
 pub mod parse;
 pub mod paths;
 pub mod presets;
+pub mod turn_controls;
 pub mod provider;
 mod schemas;
 pub mod sentiment;

@@ -96,6 +96,9 @@ impl EventHandler<DomainEvent> for ChannelInboundSubscriber {
             message,
             None,
             None,
+            // An inbound provider message expresses no sampling or reasoning
+            // ask of its own.
+            Default::default(),
             None,
             None,
             None,

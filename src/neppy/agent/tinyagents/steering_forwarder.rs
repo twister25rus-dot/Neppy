@@ -267,6 +267,7 @@ impl Drop for SteeringForwarderGuard {
                     for (text, mode) in requeue_texts {
                         queue
                             .push(QueuedMessage {
+                                controls: Default::default(),
                                 text,
                                 mode,
                                 client_id: String::new(),

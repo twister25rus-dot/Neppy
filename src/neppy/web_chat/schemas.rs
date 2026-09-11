@@ -1,4 +1,5 @@
 use serde_json::{Map, Value};
+use crate::neppy::inference::turn_controls::{ReasoningEffort, TurnModelControls};
 
 use crate::core::all::{ControllerFuture, RegisteredController};
 use crate::core::{ControllerSchema, FieldSchema, TypeSchema};
@@ -51,6 +52,12 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 required_string("message", "User message."),
                 optional_string("model_override", "Optional model override."),
                 optional_f64("temperature", "Optional temperature override."),
+                optional_f64("top_p", "Optional nucleus-sampling override for this turn."),
+                optional_f64("max_tokens", "Optional output-token ceiling for this turn."),
+                optional_string(
+                    "reasoning_effort",
+                    "How much thinking to ask for: \"off\" | \"low\" | \"medium\" | \"high\". Sent to the provider as the OpenAI-compatible `reasoning_effort` (plus a thinking budget where the server takes one).",
+                ),
                 optional_string("profile_id", "Optional agent profile id."),
                 optional_string(
                     "locale",
@@ -119,6 +126,18 @@ fn handle_chat(params: Map<String, Value>) -> ControllerFuture {
                 &p.message,
                 p.model_override,
                 p.temperature,
+                TurnModelControls {
+                    // Temperature keeps its own long-standing argument rather
+                    // than moving in here, so this change adds a lane instead
+                    // of rerouting one every caller already uses.
+                    temperature: None,
+                    top_p: p.top_p,
+                    max_tokens: p.max_tokens,
+                    reasoning_effort: p
+                        .reasoning_effort
+                        .as_deref()
+                        .and_then(ReasoningEffort::from_wire),
+                },
                 p.profile_id,
                 p.locale,
                 p.queue_mode,

@@ -1,4 +1,5 @@
 use crate::neppy::agent::profiles::{AgentProfile, DEFAULT_PROFILE_ID};
+use crate::neppy::inference::turn_controls::TurnModelControls;
 use crate::neppy::agent::Agent;
 use crate::neppy::config::Config;
 use serde_json::json;
@@ -108,10 +109,12 @@ pub(super) fn build_session_agent(
     profile: &AgentProfile,
     model_override: Option<String>,
     temperature: Option<f64>,
+    controls: TurnModelControls,
     locale: Option<&str>,
 ) -> Result<Agent, String> {
     let mut effective = config_with_model_pick(config, model_override);
     let provider_role = provider_role_for_model_override(effective.default_model.as_deref());
+    effective.turn_controls = (!controls.is_empty()).then_some(controls);
     if let Some(temp) = temperature {
         effective.default_temperature = temp;
     }
@@ -201,11 +204,13 @@ pub(super) fn build_session_fingerprint(
     config: &Config,
     model_override: Option<String>,
     temperature: Option<f64>,
+    controls: TurnModelControls,
     target_agent_id: String,
     provider_role: &str,
     profile: &AgentProfile,
 ) -> SessionCacheFingerprint {
     SessionCacheFingerprint {
+        controls,
         model_override,
         temperature,
         provider_binding: crate::neppy::inference::provider::provider_for_role(

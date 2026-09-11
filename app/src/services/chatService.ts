@@ -1218,6 +1218,18 @@ interface ChatSendParams {
   threadId: string;
   message: string;
   model?: string;
+  /**
+   * How much thinking to ask for this turn: `off` | `low` | `medium` | `high`.
+   *
+   * Sent to the provider as the OpenAI-compatible `reasoning_effort`, which
+   * `mlx_vlm.server` and the OpenAI reasoning models both read, so this is not
+   * a local-only control.
+   */
+  reasoningEffort?: string | null;
+  /** Per-turn nucleus sampling, when the composer asked for one. */
+  topP?: number | null;
+  /** Per-turn output-token ceiling, when the composer asked for one. */
+  maxTokens?: number | null;
   profileId?: string | null;
   /**
    * BCP-47 UI locale (e.g. `'ar'`, `'zh-CN'`) — drives the core's
@@ -1275,6 +1287,9 @@ export async function chatSend(params: ChatSendParams): Promise<string | undefin
       thread_id: params.threadId,
       message: params.message,
       model_override: params.model ?? undefined,
+      reasoning_effort: params.reasoningEffort ?? undefined,
+      top_p: params.topP ?? undefined,
+      max_tokens: params.maxTokens ?? undefined,
       profile_id: params.profileId ?? undefined,
       locale: params.locale ?? undefined,
       speak_reply: params.speakReply ?? undefined,

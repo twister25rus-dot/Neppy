@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::neppy::inference::turn_controls::TurnModelControls;
 
 use crate::neppy::agent::profiles::AgentProfileStore;
 use crate::neppy::config::rpc as config_rpc;
@@ -27,6 +28,7 @@ pub(crate) async fn run_chat_task(
     message: &str,
     model_override: Option<String>,
     temperature: Option<f64>,
+    controls: TurnModelControls,
     profile_id: Option<String>,
     locale: Option<String>,
     run_queue: Arc<crate::neppy::agent::harness::run_queue::RunQueue>,
@@ -98,6 +100,7 @@ pub(crate) async fn run_chat_task(
         &config,
         model_override.clone(),
         temperature,
+                controls,
         target_agent_id.clone(),
         provider_role,
         &profile,
@@ -143,6 +146,7 @@ pub(crate) async fn run_chat_task(
                     &profile,
                     model_override.clone(),
                     temperature,
+                    controls,
                     locale.as_deref(),
                 )?,
                 true,
@@ -157,6 +161,7 @@ pub(crate) async fn run_chat_task(
                 &profile,
                 model_override.clone(),
                 temperature,
+                controls,
                 locale.as_deref(),
             )?,
             true,

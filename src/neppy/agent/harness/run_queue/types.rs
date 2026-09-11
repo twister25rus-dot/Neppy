@@ -1,6 +1,7 @@
 //! Types for the active-run queue model.
 
 use std::fmt;
+use crate::neppy::inference::turn_controls::TurnModelControls;
 
 /// How a message arriving during an active agent turn should be handled.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -48,6 +49,10 @@ pub struct QueuedMessage {
     pub queued_at_ms: u64,
     pub model_override: Option<String>,
     pub temperature: Option<f64>,
+    /// Sampling and reasoning the queued turn asked for. Carried so a message
+    /// sent while another turn is running still runs with the effort the user
+    /// chose, rather than silently reverting to the role's default.
+    pub controls: TurnModelControls,
     pub profile_id: Option<String>,
     pub locale: Option<String>,
 }

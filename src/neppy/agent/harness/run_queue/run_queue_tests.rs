@@ -2,6 +2,7 @@ use super::*;
 
 fn msg(text: &str, mode: QueueMode) -> QueuedMessage {
     QueuedMessage {
+        controls: Default::default(),
         text: text.to_string(),
         mode,
         client_id: "c1".to_string(),

@@ -444,6 +444,11 @@ const Conversations = ({
   // rather than in component state: the choice outlives this composer, and as
   // local state it was lost on every restart, so the model had to be picked
   // again each launch.
+  // The Quick/Reasoning pill picks an agent profile, and now also says how hard
+  // the model should think: Quick turns thinking off outright rather than
+  // budgeting it to nothing, and Reasoning asks for a bounded amount. The
+  // provider reads it as `reasoning_effort`, so this is not MLX-only.
+  const reasoningEffort = selectedAgentProfileId === 'reasoning' ? 'medium' : 'off';
   const composerModelOverride = useAppSelector(state => state.chatRuntime.composerModel);
   // `undefined` means no explicit picker selection, so usage-reported context
   // remains authoritative. `null` means the selected model did not report a
@@ -1142,6 +1147,7 @@ const Conversations = ({
         threadId: sendingThreadId,
         message: messageText,
         model: modelOverride,
+        reasoningEffort,
         profileId: selectedAgentProfileId,
         locale: uiLocale,
       });
@@ -1243,6 +1249,7 @@ const Conversations = ({
         threadId,
         message: messageText,
         model: modelOverride,
+        reasoningEffort,
         profileId: selectedAgentProfileId,
         locale: uiLocale,
         queueMode: 'parallel',
@@ -1326,6 +1333,7 @@ const Conversations = ({
         threadId,
         message: messageText,
         model: modelOverride,
+        reasoningEffort,
         profileId: selectedAgentProfileId,
         locale: uiLocale,
         queueMode: 'followup',

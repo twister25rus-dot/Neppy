@@ -565,6 +565,9 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                         &payload.message,
                         model_override,
                         payload.temperature,
+                        // The socket payload carries no composer controls yet;
+                        // the turn runs on the role's own defaults.
+                        Default::default(),
                         payload.profile_id,
                         payload.locale,
                         payload.queue_mode,

@@ -133,6 +133,17 @@ pub struct Config {
     pub default_model: Option<String>,
     #[serde(default = "default_temperature_value")]
     pub default_temperature: f64,
+    /// Sampling and reasoning this one turn asked for, or `None` for the role's
+    /// own defaults.
+    ///
+    /// Never persisted and never read from disk: the web-chat path clones the
+    /// config per turn and sets this on the clone, the same way a per-turn
+    /// `default_temperature` already travels. Making it a `Config` field rather
+    /// than a new builder argument is what keeps it out of the ~40 call sites
+    /// between the turn and the model constructor.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub turn_controls: Option<crate::neppy::inference::turn_controls::TurnModelControls>,
 
     /// Optional language for background LLM artifacts such as memory-tree
     /// summaries, extraction reasons, and learning reflections. Accepts either
@@ -800,6 +811,7 @@ impl Default for Config {
             ephemeral_route: None,
             default_model: Some(DEFAULT_MODEL.to_string()),
             default_temperature: DEFAULT_TEMPERATURE,
+            turn_controls: None,
             output_language: None,
             temperature_unsupported_models: default_temperature_unsupported_models(),
             observability: ObservabilityConfig::default(),

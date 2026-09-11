@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use crate::neppy::inference::turn_controls::TurnModelControls;
 
 use crate::neppy::agent::Agent;
 
@@ -16,6 +17,12 @@ use crate::neppy::agent::Agent;
 pub(crate) struct SessionCacheFingerprint {
     pub(super) model_override: Option<String>,
     pub(super) temperature: Option<f64>,
+    /// Sampling and reasoning this turn asked for. Part of the fingerprint
+    /// because the controls are applied by a wrapper installed when the session
+    /// is built: a cached session would keep serving the effort the thread
+    /// started with, and changing it in the composer would appear to do
+    /// nothing.
+    pub(super) controls: TurnModelControls,
     pub(super) target_agent_id: String,
     pub(super) provider_binding: String,
     pub(super) autonomy_signature: String,
@@ -98,6 +105,17 @@ pub(crate) struct WebChatParams {
     pub(super) message: String,
     pub(super) model_override: Option<String>,
     pub(super) temperature: Option<f64>,
+    /// Nucleus sampling for this turn only.
+    #[serde(default)]
+    pub(super) top_p: Option<f64>,
+    /// Output-token ceiling for this turn only.
+    #[serde(default)]
+    pub(super) max_tokens: Option<u32>,
+    /// How much thinking to ask for: `off` | `low` | `medium` | `high`.
+    /// Unparseable values are ignored rather than failing the turn — a chat
+    /// message is a bad place to surface a typo in an optional knob.
+    #[serde(default)]
+    pub(super) reasoning_effort: Option<String>,
     pub(super) profile_id: Option<String>,
     /// BCP-47 locale of the frontend UI (e.g. `ar`, `zh-CN`). When set
     /// and not English, the system prompt is augmented to ask the

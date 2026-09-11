@@ -28,6 +28,7 @@ use crate::neppy::config::Config;
 use crate::neppy::inference::provider::auth::AuthStyle as CompatAuthStyle;
 use crate::neppy::inference::provider::claude_agent_sdk::subprocess::ClaudeAgentSdkProvider;
 use crate::neppy::inference::provider::neppy_backend_model::NeppyBackendModel;
+use crate::neppy::inference::turn_controls::TurnModelControls;
 use crate::neppy::inference::provider::openai_codex::{
     openai_codex_client_version, openai_codex_user_agent, resolve_openai_codex_routing,
     OPENAI_CODEX_ACCOUNT_HEADER, OPENAI_CODEX_ORIGINATOR, OPENAI_CODEX_ORIGINATOR_HEADER,
@@ -742,7 +743,8 @@ pub fn create_chat_model_with_model_id(
     temperature: f64,
 ) -> anyhow::Result<(Arc<dyn ChatModel<()>>, String)> {
     let (model, model_id) = create_chat_model_with_model_id_inner(role, config)?;
-    Ok((with_default_temperature(model, temperature), model_id))
+    let model = with_default_temperature(model, temperature);
+    Ok((with_turn_controls(model, config.turn_controls), model_id))
 }
 
 fn create_chat_model_with_model_id_inner(
@@ -983,6 +985,87 @@ impl ChatModel<()> for DefaultTemperatureChatModel {
             request.temperature = Some(self.temperature);
         }
         self.inner.stream(state, request).await
+    }
+}
+
+/// Applies a turn's [`TurnModelControls`] to every request the model sees.
+///
+/// Mirrors [`DefaultTemperatureChatModel`]: it fills fields the caller left
+/// unset and never overrides one that is already there, so an explicit value
+/// from deeper in the harness still wins. Reasoning rides `provider_options`,
+/// which the OpenAI-compatible transport merges into the request body — the
+/// same escape hatch `num_ctx` already uses.
+struct TurnControlsChatModel {
+    inner: Arc<dyn ChatModel<()>>,
+    controls: TurnModelControls,
+}
+
+impl TurnControlsChatModel {
+    fn apply(&self, request: &mut ModelRequest) {
+        if request.temperature.is_none() {
+            request.temperature = self.controls.temperature;
+        }
+        if request.top_p.is_none() {
+            request.top_p = self.controls.top_p;
+        }
+        if request.max_tokens.is_none() {
+            request.max_tokens = self.controls.max_tokens;
+        }
+
+        let asked = self.controls.provider_options();
+        let (Some(asked), Some(existing)) = (asked.as_object(), request.provider_options.as_object_mut())
+        else {
+            // Nothing asked, or the request carries no object to merge into —
+            // in the latter case the ask becomes the whole value.
+            if !asked.is_null() && !request.provider_options.is_object() {
+                request.provider_options = asked;
+            }
+            return;
+        };
+        for (key, value) in asked {
+            // A key the caller set explicitly wins: this is a default, not an
+            // override, and the harness knows things this turn's controls do not.
+            existing.entry(key.clone()).or_insert_with(|| value.clone());
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl ChatModel<()> for TurnControlsChatModel {
+    fn profile(&self) -> Option<&tinyagents::harness::model::ModelProfile> {
+        self.inner.profile()
+    }
+
+    async fn invoke(
+        &self,
+        state: &(),
+        mut request: ModelRequest,
+    ) -> tinyagents::Result<ModelResponse> {
+        self.apply(&mut request);
+        self.inner.invoke(state, request).await
+    }
+
+    async fn stream(
+        &self,
+        state: &(),
+        mut request: ModelRequest,
+    ) -> tinyagents::Result<ModelStream> {
+        self.apply(&mut request);
+        self.inner.stream(state, request).await
+    }
+}
+
+/// Wraps `model` when the turn asked for anything; returns it untouched when it
+/// did not, so a turn with no controls pays nothing.
+fn with_turn_controls(
+    model: Arc<dyn ChatModel<()>>,
+    controls: Option<TurnModelControls>,
+) -> Arc<dyn ChatModel<()>> {
+    match controls {
+        Some(controls) if !controls.is_empty() => {
+            Arc::new(TurnControlsChatModel { inner: model, controls })
+        }
+        _ => model,
     }
 }
 
@@ -1383,7 +1466,10 @@ pub(crate) fn create_turn_chat_model_with_native_tools_and_route(
         model,
         native_tool_calling,
     )
-    .map(|(chat, provider, model)| (with_default_temperature(chat, temperature), provider, model))
+    .map(|(chat, provider, model)| {
+        let chat = with_default_temperature(chat, temperature);
+        (with_turn_controls(chat, config.turn_controls), provider, model)
+    })
 }
 
 fn create_turn_chat_model_with_native_tools_and_route_inner(
