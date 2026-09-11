@@ -1,11 +1,11 @@
 {
-  "version": "0.66.7",
-  "notes": "## What's Changed\n\n- Say why Claude Code sign-in could not be determined, and open the right terminal ([`5a585245`](https://github.com/twister25rus-dot/Neppy/commit/5a585245d8ee955dd8ecdeead638b3aafd32c08f))\n- Ease the section and new-chat transitions, and drop the duplicate effort control ([`f1432c93`](https://github.com/twister25rus-dot/Neppy/commit/f1432c93b964255a6cd9526ae97574f9a63336a0))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/1521f86135cdc09c4f7ca1a0eb9fb672ad05cb2a...f1432c93b964255a6cd9526ae97574f9a63336a0",
-  "pub_date": "2026-09-11T07:57:42Z",
+  "version": "0.66.8",
+  "notes": "## What's Changed\n\n- List the models Claude Code actually offers ([`b89c3ea2`](https://github.com/twister25rus-dot/Neppy/commit/b89c3ea29d95c55bea43cc5a838a6b636b3f8dc3))\n- Keep the sidebar clear of the window controls, and ease it open ([`1a3b7615`](https://github.com/twister25rus-dot/Neppy/commit/1a3b76154c43a5e2b4cd7048493afdd6185016bf))\n- Ask before downloading an update ([`6c8fd25b`](https://github.com/twister25rus-dot/Neppy/commit/6c8fd25b916bd1a7c752c79807cda1815f9bb0f2))\n- Give the client-config snapshot test a workspace of its own ([`7bc023b9`](https://github.com/twister25rus-dot/Neppy/commit/7bc023b97e72ca8251bc9db8e2467858f08dd1a3))\n- Replace a regenerated answer instead of stacking it, and make the composer drop ([`b6c65d25`](https://github.com/twister25rus-dot/Neppy/commit/b6c65d25e39ad4a985c214e7353a92b304ae131c))\n- Withdraw Human mode from the desktop app ([`96497ca9`](https://github.com/twister25rus-dot/Neppy/commit/96497ca93e015d80bb386a16158058adc23009d4))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/4cda17b4e907d170da43e5c34df1e90bda72dca3...96497ca93e015d80bb386a16158058adc23009d4",
+  "pub_date": "2026-09-11T13:10:58Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVralBGcmZmcTNWTERZblRUSnhEb2Nmdm50VDFKNVF5UWZVK1lRcm91WnN4ak51SXZQM2R2ZU9TWHNIZ3dCZ3hMTEw5YVhtcGI5VWx3RUhteExaMUpCMlE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5MTEyOTM4CWZpbGU6TmVwcHkuYXBwLnRhci5negpUZldOSlR2ZVRCd3hBL285eGx6RXJDdUlaZC95SlhhejFmQnYwN1k4bVRramZDN3AyY1dheFZvWXlETUpPQWpUdElabVBFQUcveTdmQ01rRWRJYXJDUT09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/556772620"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrak5ZNTRsN2hZTDdlUVdpV0N5dXFOMUgwTWVNMGw5TGhYUVhPRWFVbG9HRHlKQmxwOWVJcUYvc3JVVmNPcEdPcDJ6NHNpbFlpL3p6dG9SZmhQa1lJUVFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5MTMxOTYxCWZpbGU6TmVwcHkuYXBwLnRhci5negpYZE5EbENZdi9CeFJQOWNFK05WMGYxSWJWc3Jlb0hYK0FnK1BXbzVicndJeEl5OWlVN0VVVlNSVWJMcHBsMlArM2NsYU5FVHVYWlhmZlBPakJRZ1lEdz09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/557275640"
     }
   }
 }
