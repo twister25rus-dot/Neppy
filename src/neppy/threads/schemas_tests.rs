@@ -12,6 +12,7 @@ const ALL_FUNCTIONS: &[&str] = &[
     "update_labels",
     "update_title",
     "message_update",
+    "message_set_active_variant",
     "delete",
     "purge",
     "turn_state_get",

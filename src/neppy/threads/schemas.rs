@@ -9,8 +9,9 @@ use crate::neppy::agent::task_board::{TaskBoard, TaskBoardCard, TaskBoardStore};
 use crate::neppy::memory::{
     AppendConversationMessageRequest, ConversationMessagesRequest, CreateConversationThreadRequest,
     DeleteConversationThreadRequest, EmptyRequest, GenerateConversationThreadTitleRequest,
-    UpdateConversationMessageRequest, UpdateConversationThreadLabelsRequest,
-    UpdateConversationThreadTitleRequest, UpsertConversationThreadRequest,
+    SetActiveVariantRequest, UpdateConversationMessageRequest,
+    UpdateConversationThreadLabelsRequest, UpdateConversationThreadTitleRequest,
+    UpsertConversationThreadRequest,
 };
 use crate::neppy::threads::turn_state::{
     ClearTurnStateRequest, GetTurnStateForRequestRequest, GetTurnStateRequest,
@@ -29,6 +30,7 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("update_labels"),
         schemas("update_title"),
         schemas("message_update"),
+        schemas("message_set_active_variant"),
         schemas("delete"),
         schemas("purge"),
         schemas("turn_state_get"),
@@ -80,6 +82,10 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("message_update"),
             handler: handle_message_update,
+        },
+        RegisteredController {
+            schema: schemas("message_set_active_variant"),
+            handler: handle_message_set_active_variant,
         },
         RegisteredController {
             schema: schemas("delete"),
@@ -266,6 +272,37 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 name: "result",
                 ty: TypeSchema::Json,
                 comment: "Envelope with the updated message payload.",
+                required: true,
+            }],
+        },
+        "message_set_active_variant" => ControllerSchema {
+            namespace: "threads",
+            function: "message_set_active_variant",
+            description: "Choose which of a question's answers is the one in effect.",
+            inputs: vec![
+                FieldSchema {
+                    name: "thread_id",
+                    ty: TypeSchema::String,
+                    comment: "Thread identifier.",
+                    required: true,
+                },
+                FieldSchema {
+                    name: "message_id",
+                    ty: TypeSchema::String,
+                    comment: "The user message whose answer is being chosen.",
+                    required: true,
+                },
+                FieldSchema {
+                    name: "variant_id",
+                    ty: TypeSchema::String,
+                    comment: "The assistant message to put in effect.",
+                    required: true,
+                },
+            ],
+            outputs: vec![FieldSchema {
+                name: "result",
+                ty: TypeSchema::Json,
+                comment: "Envelope with the updated question message.",
                 required: true,
             }],
         },
@@ -638,6 +675,13 @@ fn handle_message_update(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let p = parse::<UpdateConversationMessageRequest>(params)?;
         to_json(ops::message_update(p).await?)
+    })
+}
+
+fn handle_message_set_active_variant(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let p = parse::<SetActiveVariantRequest>(params)?;
+        to_json(ops::message_set_active_variant(p).await?)
     })
 }
 

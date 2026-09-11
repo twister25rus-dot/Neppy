@@ -28,12 +28,12 @@ use crate::neppy::config::Config;
 use crate::neppy::inference::provider::auth::AuthStyle as CompatAuthStyle;
 use crate::neppy::inference::provider::claude_agent_sdk::subprocess::ClaudeAgentSdkProvider;
 use crate::neppy::inference::provider::neppy_backend_model::NeppyBackendModel;
-use crate::neppy::inference::turn_controls::TurnModelControls;
 use crate::neppy::inference::provider::openai_codex::{
     openai_codex_client_version, openai_codex_user_agent, resolve_openai_codex_routing,
     OPENAI_CODEX_ACCOUNT_HEADER, OPENAI_CODEX_ORIGINATOR, OPENAI_CODEX_ORIGINATOR_HEADER,
 };
 use crate::neppy::inference::provider::ProviderRuntimeOptions;
+use crate::neppy::inference::turn_controls::TurnModelControls;
 use crate::neppy::security::credentials::AuthService;
 use std::sync::Arc;
 use tinyagents::harness::model::{ChatModel, ModelRequest, ModelResponse, ModelStream};
@@ -1013,7 +1013,8 @@ impl TurnControlsChatModel {
         }
 
         let asked = self.controls.provider_options();
-        let (Some(asked), Some(existing)) = (asked.as_object(), request.provider_options.as_object_mut())
+        let (Some(asked), Some(existing)) =
+            (asked.as_object(), request.provider_options.as_object_mut())
         else {
             // Nothing asked, or the request carries no object to merge into —
             // in the latter case the ask becomes the whole value.
@@ -1062,9 +1063,10 @@ fn with_turn_controls(
     controls: Option<TurnModelControls>,
 ) -> Arc<dyn ChatModel<()>> {
     match controls {
-        Some(controls) if !controls.is_empty() => {
-            Arc::new(TurnControlsChatModel { inner: model, controls })
-        }
+        Some(controls) if !controls.is_empty() => Arc::new(TurnControlsChatModel {
+            inner: model,
+            controls,
+        }),
         _ => model,
     }
 }
@@ -1468,7 +1470,11 @@ pub(crate) fn create_turn_chat_model_with_native_tools_and_route(
     )
     .map(|(chat, provider, model)| {
         let chat = with_default_temperature(chat, temperature);
-        (with_turn_controls(chat, config.turn_controls), provider, model)
+        (
+            with_turn_controls(chat, config.turn_controls),
+            provider,
+            model,
+        )
     })
 }
 

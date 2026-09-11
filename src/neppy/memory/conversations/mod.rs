@@ -23,6 +23,7 @@
 //! one-line difference the move made.
 
 pub mod blocking;
+pub mod variants;
 
 mod bus;
 

@@ -1,7 +1,7 @@
 //! Types for the active-run queue model.
 
-use std::fmt;
 use crate::neppy::inference::turn_controls::TurnModelControls;
+use std::fmt;
 
 /// How a message arriving during an active agent turn should be handled.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::neppy::inference::turn_controls::TurnModelControls;
+use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 use once_cell::sync::Lazy;

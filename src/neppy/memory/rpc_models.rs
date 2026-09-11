@@ -168,6 +168,16 @@ pub struct UpsertConversationThreadRequest {
     pub personality_id: Option<String>,
 }
 
+/// Request to choose which answer to a question is the one in effect.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SetActiveVariantRequest {
+    pub thread_id: String,
+    /// The user message whose answer is being chosen.
+    pub message_id: String,
+    /// The assistant message to put in effect.
+    pub variant_id: String,
+}
+
 /// Request to update labels for a conversation thread.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

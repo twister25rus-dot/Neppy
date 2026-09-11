@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use crate::neppy::inference::turn_controls::TurnModelControls;
+use std::sync::Arc;
 
 use crate::neppy::agent::profiles::AgentProfileStore;
 use crate::neppy::config::rpc as config_rpc;
@@ -100,7 +100,7 @@ pub(crate) async fn run_chat_task(
         &config,
         model_override.clone(),
         temperature,
-                controls,
+        controls,
         target_agent_id.clone(),
         provider_role,
         &profile,
@@ -197,9 +197,17 @@ pub(crate) async fn run_chat_task(
             .await
             {
                 Ok(prior_messages) if !prior_messages.is_empty() => {
-                    let pairs: Vec<(String, String)> = prior_messages
+                    // Only the answer in effect for each question. A regenerated
+                    // turn keeps its predecessors in the log, and seeding all of
+                    // them would hand the model a transcript in which it
+                    // answered the same question twice, differently — and every
+                    // later turn would reason over that.
+                    let pairs: Vec<(String, String)> =
+                        crate::neppy::memory::conversations::variants::active_messages(
+                            &prior_messages,
+                        )
                         .into_iter()
-                        .map(|m| (m.sender, m.content))
+                        .map(|m| (m.sender.clone(), m.content.clone()))
                         .collect();
                     if let Err(err) = agent.seed_resume_from_messages(pairs, message) {
                         log::warn!(

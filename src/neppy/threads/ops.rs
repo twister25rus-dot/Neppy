@@ -9,8 +9,9 @@ use crate::neppy::memory::{
     ConversationThreadsListResponse, CreateConversationThreadRequest,
     DeleteConversationThreadRequest, DeleteConversationThreadResponse, EmptyRequest,
     GenerateConversationThreadTitleRequest, PaginationMeta, PurgeConversationThreadsResponse,
-    UpdateConversationMessageRequest, UpdateConversationThreadLabelsRequest,
-    UpdateConversationThreadTitleRequest, UpsertConversationThreadRequest,
+    SetActiveVariantRequest, UpdateConversationMessageRequest,
+    UpdateConversationThreadLabelsRequest, UpdateConversationThreadTitleRequest,
+    UpsertConversationThreadRequest,
 };
 // Every conversation-store call in this module goes through
 // `conversations::blocking::*`, which runs the store's synchronous,
@@ -572,6 +573,67 @@ pub async fn thread_update_title(
 }
 
 /// Updates metadata on an existing conversation message.
+/// Choose which answer to a question is the one in effect.
+///
+/// Three things have to happen together, which is why this is an operation and
+/// not a `message_update` from the client. The id is validated against the
+/// question's real answers, so a wrong one fails here instead of being stored
+/// and quietly ignored at read time. The selection is merged into the message's
+/// metadata rather than replacing it, because the store's patch takes a whole
+/// object. And the thread's cached session is evicted, because a turn resumes
+/// from the session the agent already holds — without the eviction the model
+/// would keep the context it was built with and switching would change only
+/// what is on screen.
+pub async fn message_set_active_variant(
+    request: SetActiveVariantRequest,
+) -> Result<RpcOutcome<ApiEnvelope<ConversationMessageRecord>>, String> {
+    use crate::neppy::memory::conversations::variants;
+
+    let dir = workspace_dir().await?;
+    let messages =
+        conversations::blocking::get_messages(dir.clone(), request.thread_id.clone()).await?;
+
+    if !variants::is_variant_of(&messages, &request.message_id, &request.variant_id) {
+        return Err(format!(
+            "message '{}' is not an answer to '{}' in thread '{}'",
+            request.variant_id, request.message_id, request.thread_id
+        ));
+    }
+
+    let existing = messages
+        .iter()
+        .find(|message| message.id == request.message_id)
+        .map(|message| message.extra_metadata.clone())
+        .unwrap_or(serde_json::Value::Null);
+
+    let updated = conversations::blocking::update_message(
+        dir,
+        request.thread_id.clone(),
+        request.message_id.clone(),
+        ConversationMessagePatch {
+            extra_metadata: Some(variants::metadata_with_selection(
+                &existing,
+                &request.variant_id,
+            )),
+        },
+    )
+    .await?;
+
+    crate::neppy::web_chat::invalidate_thread_sessions(&request.thread_id).await;
+    log::info!(
+        "[threads] active answer for message_id={} in thread_id={} is now variant_id={}",
+        request.message_id,
+        request.thread_id,
+        request.variant_id
+    );
+
+    Ok(envelope(
+        message_to_record(updated),
+        Some(counts([("num_messages", 1)])),
+        None,
+    ))
+}
+
 pub async fn message_update(
     request: UpdateConversationMessageRequest,
 ) -> Result<RpcOutcome<ApiEnvelope<ConversationMessageRecord>>, String> {

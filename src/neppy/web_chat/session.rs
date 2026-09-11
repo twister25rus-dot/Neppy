@@ -1,7 +1,7 @@
 use crate::neppy::agent::profiles::{AgentProfile, DEFAULT_PROFILE_ID};
-use crate::neppy::inference::turn_controls::TurnModelControls;
 use crate::neppy::agent::Agent;
 use crate::neppy::config::Config;
+use crate::neppy::inference::turn_controls::TurnModelControls;
 use serde_json::json;
 
 use super::types::SessionCacheFingerprint;

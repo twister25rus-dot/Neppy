@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::neppy::inference::turn_controls::TurnModelControls;
+use serde::Deserialize;
 
 use crate::neppy::agent::Agent;
 

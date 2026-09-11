@@ -169,12 +169,18 @@ mod tests {
 
     #[test]
     fn wire_values_cover_the_names_a_composer_would_send() {
-        assert_eq!(ReasoningEffort::from_wire("quick"), Some(ReasoningEffort::Off));
+        assert_eq!(
+            ReasoningEffort::from_wire("quick"),
+            Some(ReasoningEffort::Off)
+        );
         assert_eq!(
             ReasoningEffort::from_wire("Reasoning"),
             Some(ReasoningEffort::Medium)
         );
-        assert_eq!(ReasoningEffort::from_wire(" HIGH "), Some(ReasoningEffort::High));
+        assert_eq!(
+            ReasoningEffort::from_wire(" HIGH "),
+            Some(ReasoningEffort::High)
+        );
         assert_eq!(ReasoningEffort::from_wire("sideways"), None);
     }
 

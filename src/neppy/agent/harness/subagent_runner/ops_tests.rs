@@ -608,7 +608,7 @@ async fn run_queue_steer_lands_in_subagent_history() {
     let run_queue = RunQueue::new();
     run_queue
         .push(QueuedMessage {
-        controls: Default::default(),
+            controls: Default::default(),
             text: "switch focus to memory safety".into(),
             mode: QueueMode::Steer,
             client_id: "steer_subagent".into(),
