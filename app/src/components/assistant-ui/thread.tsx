@@ -48,6 +48,8 @@ import {
   useAui,
   useAuiState,
 } from '@assistant-ui/react';
+
+import AnswerSwitcher from '@/components/chat/AnswerSwitcher';
 import { LexicalComposerInput } from '@assistant-ui/react-lexical';
 import {
   ArrowDownIcon,
@@ -672,10 +674,26 @@ const AssistantMessage: FC = () => {
           </span>
         </AuiIf>
         <BranchPicker />
+        <AnswerVariantSwitcher />
         <AssistantActionBar />
       </div>
     </MessagePrimitive.Root>
   );
+};
+
+/**
+ * `‹ 2/3 ›` when this question has been answered more than once.
+ *
+ * Separate from `BranchPicker` above, which is assistant-ui's own control over
+ * branches the runtime tracks in its repository. Regenerated answers are ours:
+ * they live in the message log, survive a reload, and are what the core seeds
+ * the model from — so the switcher reads them from the store rather than from
+ * the runtime.
+ */
+const AnswerVariantSwitcher: FC = () => {
+  const messageId = useAuiState(s => s.message.id);
+  if (!messageId) return null;
+  return <AnswerSwitcher messageId={messageId} />;
 };
 
 const AssistantActionBar: FC = () => {

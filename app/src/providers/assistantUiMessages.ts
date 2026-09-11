@@ -5,6 +5,7 @@ import type {
 } from '@assistant-ui/react';
 
 import { parseMessageImages } from '../lib/attachments';
+import { isActiveAnswer } from './answerVariants';
 import { unwrapToolCallEnvelope } from '../lib/chat/toolCallEnvelope';
 import type {
   ProcessingTranscriptItem,
@@ -282,6 +283,11 @@ export function buildRuntimeMessages(
   const out: ThreadMessageLike[] = [];
   for (const msg of messages) {
     if (msg.extraMetadata?.hidden) continue;
+    // A regenerated question keeps its earlier answers in the log; the
+    // transcript shows the one in effect and the switcher moves between them.
+    // The core applies the same rule when it seeds the model, so what it reads
+    // is what is drawn here.
+    if (!isActiveAnswer(messages, msg)) continue;
     const requestId =
       msg.sender === 'agent' && typeof msg.extraMetadata?.requestId === 'string'
         ? msg.extraMetadata.requestId
