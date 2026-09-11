@@ -1,6 +1,4 @@
 import { convertFileSrc } from '@tauri-apps/api/core';
-import ChatPresetPill, { type PresetId } from '../../components/chat/ChatPresetPill';
-import { getLocalModelPreset, setLocalModelPreset } from '../../services/api/localPresetApi';
 import debugFactory from 'debug';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -13,6 +11,7 @@ import ArtifactCard from '../../components/chat/ArtifactCard';
 import ChatComposer from '../../components/chat/ChatComposer';
 import ChatFilesChip from '../../components/chat/ChatFilesChip';
 import ChatNewWindowHero from '../../components/chat/ChatNewWindowHero';
+import ChatPresetPill, { type PresetId } from '../../components/chat/ChatPresetPill';
 import ComposerTokenStats from '../../components/chat/ComposerTokenStats';
 import { FlowApprovalRequestCard } from '../../components/chat/FlowApprovalRequestCard';
 import IntegrationConnectCard from '../../components/chat/IntegrationConnectCard';
@@ -61,6 +60,7 @@ import {
   validateAndReadFile,
 } from '../../lib/attachments';
 import { useT } from '../../lib/i18n/I18nContext';
+import { getLocalModelPreset, setLocalModelPreset } from '../../services/api/localPresetApi';
 import { threadApi } from '../../services/api/threadApi';
 import { fetchThreadTokenUsage } from '../../services/api/threadUsageApi';
 import {

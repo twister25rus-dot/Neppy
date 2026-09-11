@@ -254,11 +254,7 @@ export function streamingTailMessage(
       // running AND the part itself reports running; without a part status the
       // group reads as settled, stays collapsed, and the live reasoning is
       // written to a panel nobody opened.
-      parts.unshift({
-        type: 'reasoning',
-        text: streaming.thinking,
-        status: { type: 'running' },
-      });
+      parts.unshift({ type: 'reasoning', text: streaming.thinking, status: { type: 'running' } });
     }
   }
   if (parts.length === 0) return null;

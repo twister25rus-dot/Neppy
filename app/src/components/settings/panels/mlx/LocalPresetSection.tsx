@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { PRESETS, type PresetId } from '../../../chat/ChatPresetPill';
 import { getLocalModelPreset, setLocalModelPreset } from '../../../../services/api/localPresetApi';
+import { type PresetId, PRESETS } from '../../../chat/ChatPresetPill';
 
 /**
  * How a local model is run, as one choice rather than seven dials.
@@ -30,22 +30,27 @@ export default function LocalPresetSection() {
     };
   }, []);
 
-  const choose = useCallback(async (next: PresetId) => {
-    const previous = preset;
-    setPreset(next);
-    setSaving(true);
-    try {
-      await setLocalModelPreset(next);
-    } catch {
-      // Put the selection back rather than showing a choice that did not save.
-      setPreset(previous);
-    } finally {
-      setSaving(false);
-    }
-  }, [preset]);
+  const choose = useCallback(
+    async (next: PresetId) => {
+      const previous = preset;
+      setPreset(next);
+      setSaving(true);
+      try {
+        await setLocalModelPreset(next);
+      } catch {
+        // Put the selection back rather than showing a choice that did not save.
+        setPreset(previous);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [preset]
+  );
 
   return (
-    <section className="rounded-xl border border-line bg-surface-subtle p-3" data-testid="local-preset-section">
+    <section
+      className="rounded-xl border border-line bg-surface-subtle p-3"
+      data-testid="local-preset-section">
       <h3 className="text-sm font-semibold text-content">Run preset</h3>
       <p className="mt-0.5 text-xs text-content-muted">
         Auto decides per request. The parameters below stay available, and are what a preset

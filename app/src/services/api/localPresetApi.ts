@@ -1,5 +1,5 @@
-import { callCoreRpc } from '../coreRpcClient';
 import type { PresetId } from '../../components/chat/ChatPresetPill';
+import { callCoreRpc } from '../coreRpcClient';
 
 /**
  * The local-model run preset, read and written where the core keeps it.
@@ -23,14 +23,7 @@ export async function setLocalModelPreset(preset: PresetId): Promise<void> {
   });
 }
 
-const PRESET_IDS = [
-  'auto',
-  'fast',
-  'balanced',
-  'deep',
-  'long_context',
-  'maximum_quality',
-] as const;
+const PRESET_IDS = ['auto', 'fast', 'balanced', 'deep', 'long_context', 'maximum_quality'] as const;
 
 function isPresetId(value: unknown): value is PresetId {
   return typeof value === 'string' && (PRESET_IDS as readonly string[]).includes(value);

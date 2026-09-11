@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import LocalPresetSection from './mlx/LocalPresetSection';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import { callCoreRpc } from '../../../services/coreRpcClient';
 import Badge, { type BadgeVariant } from '../../ui/Badge';
 import Button from '../../ui/Button';
+import LocalPresetSection from './mlx/LocalPresetSection';
 import MlxServerParams, { type ParamValue } from './mlx/MlxServerParams';
 import { inferSlot, occupiedSlot, type Slot, SLOT_LABEL_KEY, SLOTS } from './mlx/slots';
 

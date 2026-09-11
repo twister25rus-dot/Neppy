@@ -22,9 +22,7 @@ const source = readFileSync(
  */
 describe('ToolTimelineBlock disclosure arrows', () => {
   it('scopes every rotate variant to a group this file declares', () => {
-    const declared = new Set(
-      [...source.matchAll(/\bgroup\/([A-Za-z0-9_-]+)/g)].map(m => m[1])
-    );
+    const declared = new Set([...source.matchAll(/\bgroup\/([A-Za-z0-9_-]+)/g)].map(m => m[1]));
     expect(declared.size).toBeGreaterThan(0);
 
     const variants = [...source.matchAll(/group-data-\[state=open\](\/([A-Za-z0-9_-]+))?:/g)];
