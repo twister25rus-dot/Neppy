@@ -675,6 +675,8 @@ fn handle_inference_update_model_settings(params: Map<String, Value>) -> Control
     Box::pin(async move {
         let update = deserialize_params::<InferenceUpdateModelSettingsParams>(params)?;
         let patch = config_rpc::ModelSettingsPatch {
+            // This path saves inference endpoints, not the run preset.
+            local_model_preset: None,
             api_url: update.api_url,
             inference_url: update.inference_url,
             api_key: update.api_key,

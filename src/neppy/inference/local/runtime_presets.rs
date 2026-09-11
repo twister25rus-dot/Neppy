@@ -20,6 +20,7 @@
 //! native limit is 8K resolves to 8K, because exceeding it is not a degraded
 //! answer but a failed request.
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// How hard the model should think.
@@ -56,7 +57,7 @@ pub enum MemoryPolicy {
 }
 
 /// The six choices a user actually sees.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Preset {
     /// Decide per request. The default, and the only adaptive one.
@@ -288,6 +289,33 @@ fn clamp_to_model(settings: ResolvedSettings, inputs: AutoInputs) -> ResolvedSet
     }
 }
 
+/// The per-turn controls a preset implies.
+///
+/// Only the settings a request can actually carry are mapped here. Context
+/// window, KV precision, concurrency and the memory policy are properties of
+/// how the server was launched, not of a single request — changing those means
+/// restarting the model, which is a settings action rather than something a
+/// chat turn does. Mapping them per turn would silently do nothing, which is
+/// worse than not offering it.
+pub fn turn_controls_for(
+    preset: Preset,
+    inputs: AutoInputs,
+) -> crate::neppy::inference::turn_controls::TurnModelControls {
+    use crate::neppy::inference::turn_controls::{ReasoningEffort, TurnModelControls};
+
+    let resolved = preset.resolve(inputs);
+    TurnModelControls {
+        temperature: None,
+        top_p: None,
+        max_tokens: Some(resolved.max_output_tokens),
+        reasoning_effort: Some(match resolved.reasoning {
+            ReasoningLevel::Low => ReasoningEffort::Low,
+            ReasoningLevel::Normal => ReasoningEffort::Medium,
+            ReasoningLevel::High | ReasoningLevel::Maximum => ReasoningEffort::High,
+        }),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -434,6 +462,23 @@ mod tests {
         });
 
         assert_eq!(unknown.reasoning, ReasoningLevel::High);
+    }
+
+    #[test]
+    fn a_preset_carries_only_what_a_request_can_carry() {
+        use crate::neppy::inference::turn_controls::ReasoningEffort;
+
+        let fast = turn_controls_for(Preset::Fast, inputs());
+        assert_eq!(fast.reasoning_effort, Some(ReasoningEffort::Low));
+        assert_eq!(fast.max_tokens, Some(2_048));
+        assert_eq!(
+            fast.temperature, None,
+            "sampling is the user's to set; a preset must not silently take it over"
+        );
+
+        let best = turn_controls_for(Preset::MaximumQuality, inputs());
+        assert_eq!(best.reasoning_effort, Some(ReasoningEffort::High));
+        assert!(best.max_tokens > fast.max_tokens);
     }
 
     #[test]

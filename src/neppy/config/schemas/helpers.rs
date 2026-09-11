@@ -51,6 +51,9 @@ pub(super) struct ModelSettingsUpdate {
     pub(super) api_key: Option<String>,
     pub(super) default_model: Option<String>,
     pub(super) default_temperature: Option<f64>,
+    /// Named local-model run preset: `auto` | `fast` | `balanced` | `deep` |
+    /// `long_context` | `maximum_quality`.
+    pub(super) local_model_preset: Option<String>,
     /// When present, REPLACES `config.model_routes` wholesale with these
     /// `(hint, model)` pairs. Send `Some([])` to clear all routes (used when
     /// the user switches back to the Neppy backend whose built-in router

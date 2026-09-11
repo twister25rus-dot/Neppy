@@ -114,7 +114,30 @@ pub(super) fn build_session_agent(
 ) -> Result<Agent, String> {
     let mut effective = config_with_model_pick(config, model_override);
     let provider_role = provider_role_for_model_override(effective.default_model.as_deref());
-    effective.turn_controls = (!controls.is_empty()).then_some(controls);
+    // The composer's own ask wins; the preset fills in what it left unset, so a
+    // per-turn override stays an override rather than being overwritten by a
+    // preference. A preset that resolves to nothing leaves the role's defaults
+    // exactly as they were.
+    let from_preset = crate::neppy::inference::local::runtime_presets::turn_controls_for(
+        effective.local_model_preset,
+        crate::neppy::inference::local::runtime_presets::AutoInputs {
+            // The turn's own size is not known here — the transcript is
+            // assembled further in — so Auto decides on the task rather than on
+            // a number it would have to invent.
+            prompt_tokens: 0,
+            complex_task: provider_role_for_model_override(effective.default_model.as_deref())
+                != "chat",
+            available_memory_gib: None,
+            model_context_limit: effective.local_ai.num_ctx.unwrap_or(32_768),
+        },
+    );
+    let merged = TurnModelControls {
+        temperature: controls.temperature.or(from_preset.temperature),
+        top_p: controls.top_p.or(from_preset.top_p),
+        max_tokens: controls.max_tokens.or(from_preset.max_tokens),
+        reasoning_effort: controls.reasoning_effort.or(from_preset.reasoning_effort),
+    };
+    effective.turn_controls = (!merged.is_empty()).then_some(merged);
     if let Some(temp) = temperature {
         effective.default_temperature = temp;
     }

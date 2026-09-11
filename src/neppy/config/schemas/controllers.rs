@@ -261,6 +261,7 @@ fn handle_update_model_settings(params: Map<String, Value>) -> ControllerFuture 
             api_key: update.api_key,
             default_model: update.default_model,
             default_temperature: update.default_temperature,
+            local_model_preset: update.local_model_preset,
             model_routes: update.model_routes.map(|routes| {
                 routes
                     .into_iter()

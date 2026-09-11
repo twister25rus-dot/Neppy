@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import LocalPresetSection from './mlx/LocalPresetSection';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import { callCoreRpc } from '../../../services/coreRpcClient';
@@ -250,6 +251,7 @@ export default function MlxPanel() {
   return (
     <div className="flex w-full flex-col gap-4">
       <p className="text-sm text-content-muted">{t('mlx.description')}</p>
+      <LocalPresetSection />
 
       {!status.enabled && (
         <div className="rounded-md bg-surface-subtle px-3 py-2 text-sm text-content-muted">

@@ -14,6 +14,10 @@ pub struct ModelSettingsPatch {
     pub api_key: Option<String>,
     pub default_model: Option<String>,
     pub default_temperature: Option<f64>,
+    /// Named local-model preset (`auto` | `fast` | `balanced` | `deep` |
+    /// `long_context` | `maximum_quality`). Unparseable values are ignored
+    /// rather than failing the save, so a stale UI cannot lock the panel.
+    pub local_model_preset: Option<String>,
     /// When `Some`, REPLACES the entire `config.model_routes` array with the
     /// supplied (hint, model) pairs. Pass `Some(vec![])` to clear all routes
     /// (e.g. when switching back to the Neppy backend whose built-in
@@ -147,6 +151,20 @@ pub async fn apply_model_settings(
     }
     if let Some(temp) = update.default_temperature {
         config.default_temperature = temp;
+    }
+    if let Some(preset) = update.local_model_preset.as_deref() {
+        match crate::neppy::inference::local::runtime_presets::Preset::from_wire(preset) {
+            Some(parsed) => {
+                log::info!(
+                    "[config][model-settings] local model preset -> {}",
+                    parsed.as_str()
+                );
+                config.local_model_preset = parsed;
+            }
+            None => log::warn!(
+                "[config][model-settings] ignoring unknown local model preset '{preset}'"
+            ),
+        }
     }
     if let Some(routes) = update.model_routes {
         config.model_routes = routes;

@@ -133,6 +133,13 @@ pub struct Config {
     pub default_model: Option<String>,
     #[serde(default = "default_temperature_value")]
     pub default_temperature: f64,
+    /// How a local model should be run: the named intent a user picks instead
+    /// of the individual dials. `Auto` decides per request.
+    ///
+    /// Persisted, because it is a preference rather than a per-turn ask — the
+    /// composer's own controls still override it for a single turn.
+    #[serde(default)]
+    pub local_model_preset: crate::neppy::inference::local::runtime_presets::Preset,
     /// Sampling and reasoning this one turn asked for, or `None` for the role's
     /// own defaults.
     ///
@@ -811,6 +818,7 @@ impl Default for Config {
             ephemeral_route: None,
             default_model: Some(DEFAULT_MODEL.to_string()),
             default_temperature: DEFAULT_TEMPERATURE,
+            local_model_preset: Default::default(),
             turn_controls: None,
             output_language: None,
             temperature_unsupported_models: default_temperature_unsupported_models(),

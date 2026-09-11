@@ -1,4 +1,6 @@
 import { convertFileSrc } from '@tauri-apps/api/core';
+import ChatPresetPill, { type PresetId } from '../../components/chat/ChatPresetPill';
+import { getLocalModelPreset, setLocalModelPreset } from '../../services/api/localPresetApi';
 import debugFactory from 'debug';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -452,6 +454,30 @@ const Conversations = ({
   // budgeting it to nothing, and Reasoning asks for a bounded amount. The
   // provider reads it as `reasoning_effort`, so this is not MLX-only.
   const reasoningEffort = selectedAgentProfileId === 'reasoning' ? 'medium' : 'off';
+  // How hard the local model should work. Persisted in core config rather than
+  // component state, because the settings panel shows the same value and the
+  // two must not disagree about what is selected.
+  const [localPreset, setLocalPreset] = useState<PresetId>('auto');
+  useEffect(() => {
+    let cancelled = false;
+    void getLocalModelPreset()
+      .then(preset => {
+        if (!cancelled) setLocalPreset(preset);
+      })
+      .catch(() => {
+        // A preset that cannot be read is not worth blocking the composer for;
+        // the default is the same one the core falls back to.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const handlePresetChange = useCallback((next: PresetId) => {
+    // Optimistic: the control is a preference, and a failed save should not
+    // leave the pill showing something the user did not pick.
+    setLocalPreset(next);
+    void setLocalModelPreset(next).catch(() => setLocalPreset(current => current));
+  }, []);
   const composerSampling = useAppSelector(state => state.chatRuntime.composerSampling);
   const composerModelOverride = useAppSelector(state => state.chatRuntime.composerModel);
   // `undefined` means no explicit picker selection, so usage-reported context
@@ -2478,6 +2504,7 @@ const Conversations = ({
           </div>
           {!isSidebar && (
             <div className="flex shrink-0 items-center gap-2">
+              <ChatPresetPill value={localPreset} onChange={handlePresetChange} />
               <div
                 className="flex h-7 items-center rounded-full border border-line bg-surface-subtle p-0.5"
                 role="radiogroup"

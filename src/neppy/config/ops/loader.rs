@@ -455,6 +455,10 @@ pub fn client_config_json(config: &Config) -> serde_json::Value {
                     "reasoning", config,
                 ),
         },
+        // How hard a local model should work. On the client snapshot because the
+        // chat bar and the settings panel are two views of one setting, and a
+        // value cached per-surface is how they come to disagree.
+        "local_model_preset": config.local_model_preset,
         "chat_provider": config.chat_provider,
         "reasoning_provider": config.reasoning_provider,
         "agentic_provider": config.agentic_provider,
