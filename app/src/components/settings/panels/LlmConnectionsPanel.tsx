@@ -17,6 +17,7 @@ const LlmConnectionsPanel = () => {
 
   return (
     <SettingsTabbedPage
+      narrow
       title={t('pages.settings.ai.llm')}
       description={t('connections.header.llm')}
       tabs={[

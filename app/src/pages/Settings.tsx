@@ -35,10 +35,20 @@ const Settings = ({ presentation = 'page', onClose }: SettingsProps) => {
   if (presentation === 'dialog') {
     return (
       <DialogRoot open onOpenChange={open => !open && onClose?.()}>
+        {/*
+          Size is bounded by the close button, not by the content: the button
+          sits 3.5rem ABOVE the window (`-top-14`), so the window's own top
+          margin has to clear that plus the button's height or it is drawn
+          off-screen. At the previous `100vh-5.5rem` the margin was 2.75rem and
+          the button was clipped by the top of the display. `100vh-10rem` leaves
+          5rem, and the `52rem` cap stops a tall display stretching the window
+          past what the panels can fill. Anything that shrinks the window only
+          adds margin, so the button stays visible.
+        */}
         <DialogContent
           aria-describedby={undefined}
           overlayClassName="bg-surface-overlay/70 backdrop-blur-md"
-          className="h-[calc(100vh-5.5rem)] w-[calc(100vw-5rem)] max-w-[112rem] overflow-visible bg-transparent shadow-none">
+          className="h-[min(52rem,calc(100vh-10rem))] w-[calc(100vw-12rem)] max-w-[84rem] overflow-visible bg-transparent shadow-none">
           <DialogTitle className="sr-only">{t('nav.settings')}</DialogTitle>
           <DialogClose asChild>
             <Button

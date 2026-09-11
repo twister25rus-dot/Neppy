@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import ChipTabs, { type ChipTabItem } from '../../layout/ChipTabs';
+import { cn } from '../../../lib/cn';
 
 export interface SettingsTabbedPageProps<T extends string> {
   title: ReactNode;
@@ -26,6 +27,19 @@ export interface SettingsTabbedPageProps<T extends string> {
   /** Let the active child own scrolling (for a fixed controls + results layout). */
   scrollable?: boolean;
   children: ReactNode;
+  /**
+   * Cap the page at a readable measure instead of filling the pane.
+   *
+   * Off by default, which keeps every existing page exactly as it was — the
+   * layout deliberately does not cap its column (see `SettingsLayout`), because
+   * a gutter there made settings look inset next to the other routed pages.
+   * The connector pages are the exception that motivated this: their provider
+   * grid and routing cards stretch to whatever width the display has, so on a
+   * wide screen a row of toggles ends up metres from the label it belongs to.
+   * The cap covers the header as well as the body, so the title stays aligned
+   * with the content beneath it.
+   */
+  narrow?: boolean;
 }
 
 /**
@@ -59,9 +73,12 @@ export default function SettingsTabbedPage<T extends string>({
   tabsTestIdPrefix,
   scrollable = true,
   children,
+  narrow = false,
 }: SettingsTabbedPageProps<T>) {
   return (
-    <div className="flex h-full flex-col">
+    <div
+      className={cn('flex h-full flex-col', narrow && 'mx-auto w-full max-w-[72rem]')}
+      data-testid={narrow ? 'settings-page-narrow' : undefined}>
       <div className="space-y-4 pb-4">
         <header className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-2">
