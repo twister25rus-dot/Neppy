@@ -8,6 +8,42 @@ import { isTauri } from '../../../utils/tauriCommands/common';
 export const WINDOW_DRAG_BAR_HEIGHT = 28;
 
 /**
+ * Whether macOS is painting its window controls over our content.
+ *
+ * The two things that make it true are independent of each other — the overlay
+ * title bar is a macOS window style, and outside Tauri there is no window at
+ * all — so both are checked in one place rather than at each call site.
+ */
+export function hasOverlayWindowControls(): boolean {
+  return isTauri() && isMac();
+}
+
+/**
+ * A draggable strip the height of the window-control band, or nothing at all
+ * where the platform draws its own title bar.
+ *
+ * Chrome at the top of the sidebar has to sit below this, not beside it: the
+ * traffic lights are ~70px wide and the column can be dragged down to 188px, so
+ * "right-align the icons and they will stay clear" holds at the default width and
+ * breaks at the narrow end — and even when it holds, the icons still share the
+ * band with the lights, which is what reads as UI sitting on the window
+ * controls. Reserving the band costs 28px of column height and cannot collide at
+ * any width, in either sidebar state.
+ */
+export function WindowControlsSpacer({ className }: { className?: string }) {
+  if (!hasOverlayWindowControls()) return null;
+  return (
+    <div
+      data-tauri-drag-region
+      data-testid="window-controls-spacer"
+      aria-hidden="true"
+      className={`w-full flex-none ${className ?? ''}`}
+      style={{ height: WINDOW_DRAG_BAR_HEIGHT }}
+    />
+  );
+}
+
+/**
  * Transparent macOS window-drag band for the overlay title bar.
  *
  * The main window runs with `titleBarStyle: "Overlay"` + `hiddenTitle` (see
@@ -30,7 +66,7 @@ export const WINDOW_DRAG_BAR_HEIGHT = 28;
  * drag, so it renders nothing.
  */
 export default function WindowDragBar() {
-  if (!isTauri() || !isMac()) return null;
+  if (!hasOverlayWindowControls()) return null;
   return (
     <div
       data-tauri-drag-region

@@ -30,11 +30,13 @@ export default function SidebarHeader() {
 
   return (
     // The primitive's header slot supplies the px-3/pb-2/pt-3 band; this only
-    // turns it into a right-aligned row. Right-aligned so the macOS traffic
-    // lights (top-left, overlay title bar) sit in the empty left space — the
-    // icons stay clear of the window controls and inline with them (no extra
-    // top padding). `data-tauri-drag-region` lives directly on the primitive
-    // (rather than a wrapping div in `AppSidebar`) so the header band is
+    // turns it into a right-aligned row. It no longer has to dodge the macOS
+    // traffic lights by hugging the right edge — `AppSidebar` reserves a
+    // `WindowControlsSpacer` above it, so the whole row sits below the window
+    // controls at every column width. (Right-aligning alone was the previous
+    // answer and held only while the column was wide: dragged to its 188px
+    // minimum, the row reached back under the lights.)
+    // `data-tauri-drag-region` stays on the primitive so the header band is
     // draggable window chrome without an extra hand-rolled layout element.
     <SidebarHeaderShell data-tauri-drag-region className="flex-row items-center justify-end gap-1">
       <div className="flex items-center gap-0.5">

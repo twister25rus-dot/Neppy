@@ -68,6 +68,18 @@ export interface SidebarContextValue {
   setWidth: (next: number) => void;
   minWidth: number;
   maxWidth: number;
+  /**
+   * Whether a rail drag is in flight.
+   *
+   * The column's width is an inline style, so collapsing it can be eased with
+   * a `transition` — but only when the change came from the toggle. A drag sets
+   * a new width on every pointermove frame, and an eased width would chase the
+   * cursor a quarter-second behind it. So the transition is switched off for
+   * the length of the gesture, and this is the flag that does it.
+   */
+  isResizing: boolean;
+  /** Brackets a drag. Called by {@link SidebarRail}; rarely useful elsewhere. */
+  setResizing: (next: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
@@ -133,6 +145,7 @@ export const SidebarProvider = forwardRef<HTMLDivElement, SidebarProviderProps>(
     const [uncontrolledWidth, setUncontrolledWidth] = useState(() =>
       clampWidth(defaultWidth, minWidth, maxWidth)
     );
+    const [isResizing, setResizing] = useState(false);
     const width = clampWidth(widthProp ?? uncontrolledWidth, minWidth, maxWidth);
 
     const setOpen = useCallback(
@@ -176,8 +189,10 @@ export const SidebarProvider = forwardRef<HTMLDivElement, SidebarProviderProps>(
         setWidth,
         minWidth,
         maxWidth,
+        isResizing,
+        setResizing,
       }),
-      [open, setOpen, toggleSidebar, width, setWidth, minWidth, maxWidth]
+      [open, setOpen, toggleSidebar, width, setWidth, minWidth, maxWidth, isResizing]
     );
 
     return (
@@ -212,7 +227,7 @@ export interface SidebarProps extends HTMLAttributes<HTMLDivElement> {
 /** The sidebar column itself. Width comes from the provider, not from props. */
 export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
   ({ side = 'left', collapsible = 'offcanvas', className, style, children, ...rest }, ref) => {
-    const { state, width } = useSidebar();
+    const { state, width, isResizing } = useSidebar();
     const collapsed = state === 'collapsed' && collapsible !== 'none';
 
     if (collapsed && collapsible === 'offcanvas') return null;
@@ -226,6 +241,11 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         data-collapsible={collapsible}
         className={cn(
           'flex h-full min-h-0 min-w-0 flex-none flex-col overflow-hidden text-content',
+          // Collapsing and reopening are eased; a drag is not (see
+          // `isResizing`). The content pane is `flex-1`, so it is carried along
+          // by the same frames and needs no transition of its own.
+          !isResizing &&
+            'transition-[width] duration-[260ms] ease-out motion-reduce:transition-none',
           className
         )}
         style={{ width: collapsed ? SIDEBAR_ICON_WIDTH : width, ...(style ?? {}) }}
@@ -259,7 +279,7 @@ const DEFAULT_RAIL_INDICATOR = 'group-hover:bg-line-chrome group-focus:bg-line-c
  */
 export const SidebarRail = forwardRef<HTMLDivElement, SidebarRailProps>(
   ({ className, indicatorClassName, onPointerDown, onKeyDown, ...rest }, ref) => {
-    const { width, setWidth, minWidth, maxWidth, open } = useSidebar();
+    const { width, setWidth, minWidth, maxWidth, open, setResizing } = useSidebar();
     const detachRef = useRef<(() => void) | null>(null);
 
     // Drop global listeners if we unmount mid-drag.
@@ -273,6 +293,10 @@ export const SidebarRail = forwardRef<HTMLDivElement, SidebarRailProps>(
         const startX = event.clientX;
         const startWidth = width;
 
+        // Unease the column before the first frame lands, or the drag starts a
+        // quarter-second behind the cursor and snaps to catch up.
+        setResizing(true);
+
         const handleMove = (moveEvent: PointerEvent) => {
           setWidth(startWidth + (moveEvent.clientX - startX));
         };
@@ -282,6 +306,7 @@ export const SidebarRail = forwardRef<HTMLDivElement, SidebarRailProps>(
           window.removeEventListener('pointercancel', detach);
           window.removeEventListener('blur-sm', detach);
           detachRef.current = null;
+          setResizing(false);
         };
 
         detachRef.current = detach;
@@ -290,7 +315,7 @@ export const SidebarRail = forwardRef<HTMLDivElement, SidebarRailProps>(
         window.addEventListener('pointercancel', detach);
         window.addEventListener('blur', detach);
       },
-      [onPointerDown, width, setWidth]
+      [onPointerDown, width, setWidth, setResizing]
     );
 
     const handleKeyDown = useCallback(

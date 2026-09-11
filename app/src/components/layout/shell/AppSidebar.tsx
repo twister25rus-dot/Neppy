@@ -16,6 +16,7 @@ import CollapsedNavRail from './CollapsedNavRail';
 import SidebarHeader from './SidebarHeader';
 import SidebarNav from './SidebarNav';
 import { SidebarSlotOutlet } from './SidebarSlot';
+import { WindowControlsSpacer } from './WindowDragBar';
 
 const log = debugFactory('sidebar');
 
@@ -64,13 +65,15 @@ export default function AppSidebar() {
       // body below — no fill of its own, chrome shows through (see the
       // expanded-branch comment for why). `items-center` centers the
       // fixed-size trigger/rail buttons in the narrow column.
-      <div className="flex h-full min-h-0 flex-col items-center gap-0.5">
-        {/* macOS overlay title bar (titleBarStyle: Overlay) floats the traffic
-            lights over the top-left. The expanded SidebarHeader dodges them by
-            right-aligning, but this narrow rail can't — so reserve a draggable
-            strip the height of the window controls and start the rail below
-            it, clear of the lights. */}
-        <div className="h-7 w-full flex-none" data-tauri-drag-region />
+      // Fades in as the column narrows around it. The body swaps to the rail in
+      // one frame while the width eases over 260ms (`Sidebar`), so without this
+      // the icons appear full-size in a wide column and then get squeezed.
+      <div className="animate-in fade-in flex h-full min-h-0 flex-col items-center gap-0.5 duration-200 motion-reduce:animate-none">
+        {/* macOS floats the traffic lights over the top-left, so the rail
+            starts below them. One shared spacer rather than a hand-rolled
+            `h-7` here and a different guess in the expanded header — the band's
+            height is the window controls', and it is written down once. */}
+        <WindowControlsSpacer />
         <Tooltip label={t('layout.showSidebar')}>
           {/* The primitive's own trigger, so reopening goes through the same
               controlled `onOpenChange` `RootShellLayout` drives every other
@@ -108,7 +111,12 @@ export default function AppSidebar() {
     // two-layer look exists to remove. Regions below are separated by spacing
     // alone; the hairline seams the old opaque panel needed would draw lines
     // across the chrome.
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="animate-in fade-in flex h-full min-h-0 flex-col duration-200 motion-reduce:animate-none">
+      {/* The same band the collapsed rail reserves. The header used to sit
+          *inside* it and dodge the lights by right-aligning its icons, which
+          only holds while the column is wide: at the 188px minimum the row
+          reaches back into the lights and the two overlap. */}
+      <WindowControlsSpacer />
       <SidebarHeader />
       <SidebarNav />
       <SidebarScrollRegion className="gap-0">
