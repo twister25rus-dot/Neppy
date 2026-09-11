@@ -78,6 +78,29 @@ export const threadApi = {
     return unwrapEnvelope(response);
   },
 
+  /**
+   * Choose which of a question's answers is the one in effect.
+   *
+   * A dedicated method rather than `appendMessage`/metadata patching because
+   * the core also evicts the thread's cached agent session: a turn resumes from
+   * the session it already holds, so without that the switch would change the
+   * screen and leave the model on the old answer's context.
+   */
+  setActiveAnswer: async (
+    threadId: string,
+    questionMessageId: string,
+    variantTurnId: string
+  ): Promise<void> => {
+    await callCoreRpc({
+      method: 'openhuman.threads_message_set_active_variant',
+      params: {
+        thread_id: threadId,
+        message_id: questionMessageId,
+        variant_id: variantTurnId,
+      },
+    });
+  },
+
   generateTitleIfNeeded: async (threadId: string, assistantMessage?: string): Promise<Thread> => {
     generateTitleLog('enter threadId=%s assistantMessage=%o', threadId, assistantMessage);
     try {

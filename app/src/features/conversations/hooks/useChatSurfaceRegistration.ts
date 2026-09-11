@@ -31,7 +31,8 @@ export function useChatSurfaceRegistration(
   threadId: string | null,
   sendRef: RefObject<((text?: string) => Promise<void>) | null>,
   stopRef: RefObject<(() => void) | null>,
-  registerWithoutThread = false
+  registerWithoutThread = false,
+  reloadRef?: RefObject<((questionMessageId?: string) => Promise<void>) | null>
 ): void {
   useEffect(() => {
     if (!threadId && !registerWithoutThread) return;
@@ -43,14 +44,21 @@ export function useChatSurfaceRegistration(
       cancel: async () => {
         stopRef.current?.();
       },
-      // `reload` is deliberately absent. This surface has no
-      // regenerate-the-last-turn path (`ai_regenerate` re-runs a failed
-      // ARTIFACT, not a chat turn), and an `onReload` that silently does
+      // `reload` regenerates: it asks the same question again and keeps the
+      // previous answer, so the two can be switched between. Still absent when
+      // the surface passes no handler — an `onReload` that silently does
       // nothing is worse than one the runtime can report as unavailable.
+      ...(reloadRef
+        ? {
+            reload: async (questionMessageId?: string) => {
+              await reloadRef.current?.(questionMessageId);
+            },
+          }
+        : {}),
     });
     return () => {
       debug('[chat] unregistering assistant-ui chat surface thread=%s', threadId);
       dispose();
     };
-  }, [registerWithoutThread, threadId, sendRef, stopRef]);
+  }, [registerWithoutThread, threadId, sendRef, stopRef, reloadRef]);
 }

@@ -609,6 +609,16 @@ interface ChatRuntimeState {
    * per-thread, because "the model I work with" is not something a user tracks
    * per conversation.
    */
+  /**
+   * Per thread, the question a regenerated answer belongs to, and the turn id
+   * to group its messages under.
+   *
+   * Live turn state, deliberately not persisted: it is meaningful only between
+   * asking for a regenerate and the answer landing. One turn can append several
+   * assistant messages, so the turn id is what groups them — tagging each
+   * message on its own would count one segmented answer as several.
+   */
+  pendingVariantByThread: Record<string, { variantOf: string; variantTurn: string }>;
   composerModel: string | null;
   /**
    * Context window the picked model reported. `undefined` means no explicit
@@ -794,6 +804,7 @@ const initialState: ChatRuntimeState = {
   usageByThread: {},
   queueStatusByThread: {},
   queuedFollowupsByThread: {},
+  pendingVariantByThread: {},
   composerModel: null,
   composerModelContextWindow: undefined,
 };
@@ -1075,6 +1086,18 @@ const chatRuntimeSlice = createSlice({
      * product's routing, which is a choice like any other and is persisted as
      * one.
      */
+    /** Mark the next answer on this thread as another answer to a question. */
+    beginAnswerVariant: (
+      state,
+      action: PayloadAction<{ threadId: string; variantOf: string; variantTurn: string }>
+    ) => {
+      const { threadId, variantOf, variantTurn } = action.payload;
+      state.pendingVariantByThread[threadId] = { variantOf, variantTurn };
+    },
+    /** Clear it once the turn has produced its answer, or failed. */
+    endAnswerVariant: (state, action: PayloadAction<{ threadId: string }>) => {
+      delete state.pendingVariantByThread[action.payload.threadId];
+    },
     setComposerModel: (
       state,
       action: PayloadAction<{ model: string | null; contextWindow?: number | null }>
@@ -2311,6 +2334,8 @@ const chatRuntimeSlice = createSlice({
 });
 
 export const {
+  beginAnswerVariant,
+  endAnswerVariant,
   setComposerModel,
   setInferenceStatusForThread,
   clearInferenceStatusForThread,

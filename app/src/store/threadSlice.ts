@@ -268,7 +268,12 @@ export const addInferenceResponse = createAsyncThunk(
     },
     { dispatch, getState, rejectWithValue }
   ) => {
-    const state = getState() as { thread: ThreadState };
+    const state = getState() as {
+      thread: ThreadState;
+      chatRuntime?: {
+        pendingVariantByThread?: Record<string, { variantOf: string; variantTurn: string }>;
+      };
+    };
     // All real callers pass an explicit `threadId` (the event's `thread_id`).
     // The fallback to the selected thread is a last-resort for legacy callers
     // that omit it; under parallel inference there is no single "active" thread
@@ -282,7 +287,15 @@ export const addInferenceResponse = createAsyncThunk(
         `msg_${globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`}`,
       content: payload.content,
       type: payload.type ?? 'text',
-      extraMetadata: payload.extraMetadata ?? {},
+      extraMetadata: {
+        ...(payload.extraMetadata ?? {}),
+        // Regenerating keeps the previous answer, so this one is tagged with
+        // the question it answers and the turn that produced it. Tagged here
+        // rather than at the four call sites because every reply lands through
+        // this thunk, and a segmented reply arrives as several of them — all of
+        // which belong to the same answer and must carry the same turn id.
+        ...(state.chatRuntime?.pendingVariantByThread?.[targetThreadId] ?? {}),
+      },
       sender: 'agent',
       createdAt: new Date().toISOString(),
     };

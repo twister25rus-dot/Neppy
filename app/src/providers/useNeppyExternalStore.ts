@@ -96,6 +96,21 @@ export function useNeppyExternalStore(threadId: string | null) {
     await getChatSurface(threadId)?.cancel?.();
   }, [threadId]);
 
+  // Regenerate. `parentId` is the message the answer replies to — the question —
+  // and runtime ids are the persisted message ids, so it forwards straight
+  // through. Like sending, the adapter does not implement it: the surface owns
+  // the send path and this is the same path with the question left in place.
+  const onReload = useCallback(
+    async (parentId: string | null) => {
+      const surface = getChatSurface(threadId);
+      if (!surface?.reload) {
+        throw new Error(`Regenerate is not available for thread ${threadId ?? '(none)'}`);
+      }
+      await surface.reload(parentId ?? undefined);
+    },
+    [threadId]
+  );
+
   return useMemo(
     () => ({
       messages: runtimeMessages,
@@ -105,7 +120,8 @@ export function useNeppyExternalStore(threadId: string | null) {
       convertMessage: (m: (typeof runtimeMessages)[number]) => m,
       onNew,
       onCancel,
+      onReload,
     }),
-    [runtimeMessages, isRunning, isLoading, onNew, onCancel]
+    [runtimeMessages, isRunning, isLoading, onNew, onCancel, onReload]
   );
 }

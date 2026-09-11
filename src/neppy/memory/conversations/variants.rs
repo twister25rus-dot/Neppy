@@ -25,7 +25,14 @@ use tinycortex::memory::conversations::ConversationMessage;
 
 /// On an assistant message: the id of the user message it answers.
 pub const VARIANT_OF: &str = "variantOf";
-/// On a user message: which of its answers is the chosen one.
+/// On an assistant message: the turn that produced it.
+///
+/// The unit of an answer is the turn, not the message: one turn can append
+/// several assistant messages (a segmented reply), and all of them belong to
+/// the same answer. Grouping by message instead would keep the last segment of
+/// a regenerated answer and silently drop the rest.
+pub const VARIANT_TURN: &str = "variantTurn";
+/// On a user message: which of its answers is the chosen one, by turn id.
 pub const ACTIVE_VARIANT: &str = "activeVariant";
 
 fn metadata_str<'a>(metadata: &'a Value, key: &str) -> Option<&'a str> {
@@ -41,13 +48,21 @@ pub fn variant_of(message: &ConversationMessage) -> Option<&str> {
     metadata_str(&message.extra_metadata, VARIANT_OF)
 }
 
+/// The turn that produced this message, falling back to its own id.
+///
+/// The fallback makes a single-message answer its own turn, so a caller that
+/// records no turn id still gets one coherent group per answer.
+pub fn variant_turn(message: &ConversationMessage) -> &str {
+    metadata_str(&message.extra_metadata, VARIANT_TURN).unwrap_or(message.id.as_str())
+}
+
 /// The variant this user message has selected, when one was chosen explicitly.
 pub fn active_variant_choice(message: &ConversationMessage) -> Option<&str> {
     metadata_str(&message.extra_metadata, ACTIVE_VARIANT)
 }
 
-/// Every answer to `user_message_id`, in the order they were produced.
-pub fn variants_for<'a>(
+/// Every message answering `user_message_id`, in log order.
+pub fn variant_messages<'a>(
     messages: &'a [ConversationMessage],
     user_message_id: &str,
 ) -> Vec<&'a ConversationMessage> {
@@ -55,6 +70,22 @@ pub fn variants_for<'a>(
         .iter()
         .filter(|message| variant_of(message) == Some(user_message_id))
         .collect()
+}
+
+/// The distinct answers to `user_message_id`, as turn ids in the order they
+/// were produced. This is what the switcher counts.
+pub fn variant_turns<'a>(
+    messages: &'a [ConversationMessage],
+    user_message_id: &str,
+) -> Vec<&'a str> {
+    let mut turns: Vec<&str> = Vec::new();
+    for message in variant_messages(messages, user_message_id) {
+        let turn = variant_turn(message);
+        if !turns.contains(&turn) {
+            turns.push(turn);
+        }
+    }
+    turns
 }
 
 /// The id of the answer in effect for `user_message_id`.
@@ -67,8 +98,8 @@ pub fn active_variant_id<'a>(
     messages: &'a [ConversationMessage],
     user_message_id: &str,
 ) -> Option<&'a str> {
-    let group = variants_for(messages, user_message_id);
-    if group.is_empty() {
+    let turns = variant_turns(messages, user_message_id);
+    if turns.is_empty() {
         return None;
     }
     let chosen = messages
@@ -76,11 +107,11 @@ pub fn active_variant_id<'a>(
         .find(|message| message.id == user_message_id)
         .and_then(active_variant_choice);
     if let Some(chosen) = chosen {
-        if let Some(found) = group.iter().find(|message| message.id == chosen) {
-            return Some(found.id.as_str());
+        if let Some(found) = turns.iter().find(|turn| **turn == chosen) {
+            return Some(found);
         }
     }
-    group.last().map(|message| message.id.as_str())
+    turns.last().copied()
 }
 
 /// The log with only the answer in effect kept for each question.
@@ -92,7 +123,7 @@ pub fn active_messages(messages: &[ConversationMessage]) -> Vec<&ConversationMes
         .iter()
         .filter(|message| match variant_of(message) {
             None => true,
-            Some(group) => active_variant_id(messages, group) == Some(message.id.as_str()),
+            Some(group) => active_variant_id(messages, group) == Some(variant_turn(message)),
         })
         .collect()
 }
@@ -146,9 +177,7 @@ pub fn is_variant_of(
     user_message_id: &str,
     variant_id: &str,
 ) -> bool {
-    variants_for(messages, user_message_id)
-        .iter()
-        .any(|message| message.id == variant_id)
+    variant_turns(messages, user_message_id).contains(&variant_id)
 }
 
 #[cfg(test)]
@@ -242,12 +271,55 @@ mod tests {
     fn variants_are_listed_in_the_order_they_were_produced() {
         let messages = three_answers();
 
-        let ids: Vec<&str> = variants_for(&messages, "u1")
+        assert_eq!(
+            variant_turns(&messages, "u1"),
+            ["a1", "a2", "a3"],
+            "the switcher counts in this order"
+        );
+    }
+
+    #[test]
+    fn a_segmented_answer_is_one_variant_and_survives_switching_whole() {
+        // One turn, three assistant messages. Counting messages would show
+        // "3 answers" and switching would keep only the last segment.
+        let messages = vec![
+            message("u1", "user", json!({})),
+            message(
+                "s1",
+                "assistant",
+                json!({ VARIANT_OF: "u1", VARIANT_TURN: "turn-1" }),
+            ),
+            message(
+                "s2",
+                "assistant",
+                json!({ VARIANT_OF: "u1", VARIANT_TURN: "turn-1" }),
+            ),
+            message(
+                "s3",
+                "assistant",
+                json!({ VARIANT_OF: "u1", VARIANT_TURN: "turn-1" }),
+            ),
+            message(
+                "r1",
+                "assistant",
+                json!({ VARIANT_OF: "u1", VARIANT_TURN: "turn-2" }),
+            ),
+        ];
+
+        assert_eq!(variant_turns(&messages, "u1"), ["turn-1", "turn-2"]);
+        assert_eq!(active_variant_id(&messages, "u1"), Some("turn-2"));
+
+        let mut chose_first = messages.clone();
+        chose_first[0].extra_metadata = json!({ ACTIVE_VARIANT: "turn-1" });
+        let kept: Vec<&str> = active_messages(&chose_first)
             .into_iter()
             .map(|m| m.id.as_str())
             .collect();
-
-        assert_eq!(ids, ["a1", "a2", "a3"], "the switcher counts in this order");
+        assert_eq!(
+            kept,
+            ["u1", "s1", "s2", "s3"],
+            "every segment of the chosen answer must survive"
+        );
     }
 
     #[test]

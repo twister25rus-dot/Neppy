@@ -87,6 +87,8 @@ import {
   markThreadSendPending,
   type ProcessingTranscriptItem,
   type QueuedFollowup,
+  beginAnswerVariant,
+  endAnswerVariant,
   registerParallelRequest,
   setComposerModel,
   setTaskBoardForThread,
@@ -1020,7 +1022,15 @@ const Conversations = ({
     }
   };
 
-  const handleSendMessage = async (text?: string) => {
+  /**
+   * @param options.regenerateOf When set, this send is another answer to an
+   *   existing question rather than a new one: the question is not appended a
+   *   second time, and the answer is tagged so the two can be switched between.
+   *   Everything else — lifecycle, timers, queue decision, analytics — runs
+   *   exactly as an ordinary send, which is the point of routing through here
+   *   instead of writing a second send path.
+   */
+  const handleSendMessage = async (text?: string, options?: { regenerateOf?: string }) => {
     // Guard double-submit to the SAME thread only; a send to another thread
     // may proceed concurrently.
     if (selectedThreadId && pendingSendsRef.current.has(selectedThreadId)) return;
@@ -1100,8 +1110,25 @@ const Conversations = ({
       createdAt: new Date().toISOString(),
     };
 
+    if (options?.regenerateOf) {
+      // The question is already in the transcript; appending it again would
+      // show it twice and give the model a duplicated turn. Tag the answer
+      // instead, under a fresh turn id so a segmented reply stays one answer.
+      dispatch(
+        beginAnswerVariant({
+          threadId: sendingThreadId,
+          variantOf: options.regenerateOf,
+          variantTurn: userMessage.id,
+        })
+      );
+    }
+
     try {
-      await dispatch(addMessageLocal({ threadId: sendingThreadId, message: userMessage })).unwrap();
+      if (!options?.regenerateOf) {
+        await dispatch(
+          addMessageLocal({ threadId: sendingThreadId, message: userMessage })
+        ).unwrap();
+      }
     } catch (error) {
       // RTK's unwrap() re-throws the rejectWithValue payload directly (a plain
       // string, not an Error). Check for the stale-thread sentinel before
@@ -1143,6 +1170,10 @@ const Conversations = ({
     // Local model (Ollama) is used only for supplementary features
     // (auto-react, autocomplete, etc.) — never as a primary chat path.
     try {
+      // An ordinary send is an answer to itself, never another answer to an
+      // earlier question. Clearing here means a regenerate that was never
+      // answered cannot mis-file the next reply.
+      dispatch(endAnswerVariant({ threadId: sendingThreadId }));
       await chatSend({
         threadId: sendingThreadId,
         message: messageText,
@@ -1449,11 +1480,33 @@ const Conversations = ({
   // follow-up vs. fresh turn) is made in exactly one place, and
   // `handleSendMessage`'s `evaluateComposerSend` block/allow half runs
   // unchanged. Re-deriving either here is the drift this seam exists to stop.
+  // Regenerate: ask the same question again, keeping the previous answer.
+  // A plain function, not a `useCallback`: it is assigned to a ref on every
+  // render anyway, so memoising it buys nothing — and wrapping it made the hook
+  // linter trace `handleSendMessage`'s whole body as a dependency, where it
+  // reads state declared further down the component.
+  const handleRegenerate = async (questionMessageId?: string) => {
+    if (!selectedThreadId) return;
+    const transcript = messages ?? [];
+    // With no id, regenerate the newest question — what "reload the last
+    // turn" means. With one, that specific question.
+    const question = questionMessageId
+      ? transcript.find(m => m.id === questionMessageId && m.sender === 'user')
+      : [...transcript].reverse().find(m => m.sender === 'user');
+    if (!question) {
+      return;
+    }
+    await handleSendMessage(question.content, { regenerateOf: question.id });
+  };
+  const handleRegenerateRef = useRef<((questionMessageId?: string) => Promise<void>) | null>(null);
+  handleRegenerateRef.current = handleRegenerate;
+
   useChatSurfaceRegistration(
     selectedThreadId,
     handleComposerSendRef,
     handleStopGenerationRef,
-    true
+    true,
+    handleRegenerateRef
   );
 
   const transcribeAndSendAudio = async (mimeType: string) => {

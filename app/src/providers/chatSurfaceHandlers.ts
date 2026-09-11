@@ -22,8 +22,11 @@ export interface ChatSurfaceHandlers {
   send: (text: string) => Promise<void>;
   /** Cancel the in-flight turn, if the surface supports it. */
   cancel?: () => Promise<void>;
-  /** Re-run the last turn, if the surface supports it. */
-  reload?: () => Promise<void>;
+  /**
+   * Ask a question again, keeping the previous answer so the two can be
+   * switched between. No id means the newest question.
+   */
+  reload?: (questionMessageId?: string) => Promise<void>;
 }
 
 const registry = new Map<string, ChatSurfaceHandlers>();
