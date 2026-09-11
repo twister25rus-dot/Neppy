@@ -5,6 +5,30 @@ use axum::{routing::post, Json, Router};
 use chrono::{Duration, Utc};
 use tempfile::tempdir;
 
+/// Points config resolution at a throwaway workspace for the duration of a test.
+///
+/// `OPENHUMAN_WORKSPACE` is process-global, so every user of this must also hold
+/// `TEST_ENV_LOCK`; the guard restores the previous value on drop so a test that
+/// sets it cannot leak into one that does not.
+struct WorkspaceEnvGuard(Option<std::ffi::OsString>);
+
+impl WorkspaceEnvGuard {
+    fn set(path: &std::path::Path) -> Self {
+        let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
+        std::env::set_var("OPENHUMAN_WORKSPACE", path);
+        Self(previous)
+    }
+}
+
+impl Drop for WorkspaceEnvGuard {
+    fn drop(&mut self) {
+        match &self.0 {
+            Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
+            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+        }
+    }
+}
+
 fn disabled_config() -> (Config, tempfile::TempDir) {
     let tmp = tempdir().expect("tempdir");
     let mut config = Config {
@@ -153,7 +177,19 @@ async fn inference_analyze_sentiment_handles_empty_message() {
 
 #[tokio::test]
 async fn inference_get_client_config_returns_safe_snapshot() {
+    // `inference_get_client_config` takes no config argument — it loads one
+    // through the process-global resolution, so without an isolated workspace
+    // this asserts against whatever the developer running it has configured.
+    // It does fail that way: configure any BYO chat provider locally and
+    // `credits_bypass.chat` is legitimately `true`. Point the resolution at a
+    // tempdir (named `workspace`, so the config lands beside it inside the
+    // tempdir rather than in the shared temp root) and the snapshot is a fresh
+    // default config, which is what the assertions below describe.
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
     let (config, _tmp) = disabled_config();
+    let _workspace_guard = WorkspaceEnvGuard::set(&config.workspace_dir);
     config.save().await.expect("save config");
 
     let outcome = inference_get_client_config()
