@@ -873,6 +873,11 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
       threadId: thread.id,
       message: 'hello cloud',
       model: 'hint:chat',
+      reasoningEffort: 'off',
+      // Unset by default: the turn runs on whatever the role resolves to.
+      temperature: null,
+      topP: null,
+      maxTokens: null,
       profileId: 'default',
       locale: 'en',
     });
@@ -897,6 +902,11 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
         threadId: thread.id,
         message: 'play highway to hell',
         model: 'hint:chat',
+        reasoningEffort: 'off',
+        // Unset by default: the turn runs on whatever the role resolves to.
+        temperature: null,
+        topP: null,
+        maxTokens: null,
         profileId: 'default',
         locale: 'en',
       });
@@ -949,6 +959,11 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
       threadId: thread.id,
       message: 'slow backend',
       model: 'hint:chat',
+      reasoningEffort: 'off',
+      // Unset by default: the turn runs on whatever the role resolves to.
+      temperature: null,
+      topP: null,
+      maxTokens: null,
       profileId: 'default',
       locale: 'en',
     });
@@ -1585,6 +1600,11 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
         threadId: thread.id,
         message: 'enter send',
         model: 'hint:chat',
+        reasoningEffort: 'off',
+        // Unset by default: the turn runs on whatever the role resolves to.
+        temperature: null,
+        topP: null,
+        maxTokens: null,
         profileId: 'default',
         locale: 'en',
       });
@@ -1660,6 +1680,11 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
         threadId: thread.id,
         message: '안녕',
         model: 'hint:chat',
+        reasoningEffort: 'off',
+        // Unset by default: the turn runs on whatever the role resolves to.
+        temperature: null,
+        topP: null,
+        maxTokens: null,
         profileId: 'default',
         locale: 'en',
       });

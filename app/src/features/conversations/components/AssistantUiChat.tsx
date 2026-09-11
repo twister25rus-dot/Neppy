@@ -1,4 +1,7 @@
 import { Thread, type ThreadComponents } from '@/components/assistant-ui/thread';
+import ComposerSamplingPill, {
+  type ComposerSampling,
+} from '../../../components/chat/ComposerSamplingPill';
 import { type AssistantState, useAui, useAuiState } from '@assistant-ui/react';
 import { PlusIcon } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -63,6 +66,8 @@ export function AssistantUiChat({
   model,
   modelContextWindow,
   onModelChange,
+  sampling,
+  onSamplingChange,
   composerHeader,
   inputValue,
   onInputValueChange,
@@ -81,6 +86,9 @@ export function AssistantUiChat({
   model: string | null;
   modelContextWindow?: number | null;
   onModelChange: (value: string | null, contextWindow?: number | null) => void;
+  /** Per-turn generation settings, and the setter that persists them. */
+  sampling: ComposerSampling;
+  onSamplingChange: (next: ComposerSampling) => void;
   composerHeader?: ReactNode;
   inputValue: string;
   onInputValueChange: (value: string) => void;
@@ -137,6 +145,7 @@ export function AssistantUiChat({
   const ComposerExtras = useCallback(
     () => (
       <>
+        <ComposerSamplingPill value={sampling} onChange={onSamplingChange} />
         <ContextWindowPill usage={contextUsage} />
         <div className="absolute right-0 bottom-full left-0 pb-2">
           <ThreadGoalEditorPanel ctl={threadGoal} />
@@ -144,7 +153,7 @@ export function AssistantUiChat({
         <ThreadGoalFooterTrigger ctl={threadGoal} />
       </>
     ),
-    [contextUsage, threadGoal]
+    [contextUsage, threadGoal, sampling, onSamplingChange]
   );
   const ComposerHeader = useCallback(() => <>{composerHeader}</>, [composerHeader]);
   const ComposerAttachments = useCallback(

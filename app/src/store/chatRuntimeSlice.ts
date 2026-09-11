@@ -619,6 +619,12 @@ interface ChatRuntimeState {
    * message on its own would count one segmented answer as several.
    */
   pendingVariantByThread: Record<string, { variantOf: string; variantTurn: string }>;
+  /**
+   * Per-turn generation settings the composer is set to. `null` per field means
+   * "leave it to the provider". Persisted for the same reason as the model
+   * pick: it is a preference the user set, not live turn state.
+   */
+  composerSampling: { temperature: number | null; topP: number | null; maxTokens: number | null };
   composerModel: string | null;
   /**
    * Context window the picked model reported. `undefined` means no explicit
@@ -805,6 +811,7 @@ const initialState: ChatRuntimeState = {
   queueStatusByThread: {},
   queuedFollowupsByThread: {},
   pendingVariantByThread: {},
+  composerSampling: { temperature: null, topP: null, maxTokens: null },
   composerModel: null,
   composerModelContextWindow: undefined,
 };
@@ -1097,6 +1104,17 @@ const chatRuntimeSlice = createSlice({
     /** Clear it once the turn has produced its answer, or failed. */
     endAnswerVariant: (state, action: PayloadAction<{ threadId: string }>) => {
       delete state.pendingVariantByThread[action.payload.threadId];
+    },
+    /** Replace the composer's generation settings wholesale. */
+    setComposerSampling: (
+      state,
+      action: PayloadAction<{
+        temperature: number | null;
+        topP: number | null;
+        maxTokens: number | null;
+      }>
+    ) => {
+      state.composerSampling = action.payload;
     },
     setComposerModel: (
       state,
@@ -2335,6 +2353,7 @@ const chatRuntimeSlice = createSlice({
 
 export const {
   beginAnswerVariant,
+  setComposerSampling,
   endAnswerVariant,
   setComposerModel,
   setInferenceStatusForThread,

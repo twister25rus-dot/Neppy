@@ -91,6 +91,7 @@ import {
   endAnswerVariant,
   registerParallelRequest,
   setComposerModel,
+  setComposerSampling,
   setTaskBoardForThread,
   setToolTimelineForThread,
   type ToolTimelineEntry,
@@ -451,6 +452,7 @@ const Conversations = ({
   // budgeting it to nothing, and Reasoning asks for a bounded amount. The
   // provider reads it as `reasoning_effort`, so this is not MLX-only.
   const reasoningEffort = selectedAgentProfileId === 'reasoning' ? 'medium' : 'off';
+  const composerSampling = useAppSelector(state => state.chatRuntime.composerSampling);
   const composerModelOverride = useAppSelector(state => state.chatRuntime.composerModel);
   // `undefined` means no explicit picker selection, so usage-reported context
   // remains authoritative. `null` means the selected model did not report a
@@ -1179,6 +1181,9 @@ const Conversations = ({
         message: messageText,
         model: modelOverride,
         reasoningEffort,
+        temperature: composerSampling.temperature,
+        topP: composerSampling.topP,
+        maxTokens: composerSampling.maxTokens,
         profileId: selectedAgentProfileId,
         locale: uiLocale,
       });
@@ -1281,6 +1286,9 @@ const Conversations = ({
         message: messageText,
         model: modelOverride,
         reasoningEffort,
+        temperature: composerSampling.temperature,
+        topP: composerSampling.topP,
+        maxTokens: composerSampling.maxTokens,
         profileId: selectedAgentProfileId,
         locale: uiLocale,
         queueMode: 'parallel',
@@ -1365,6 +1373,9 @@ const Conversations = ({
         message: messageText,
         model: modelOverride,
         reasoningEffort,
+        temperature: composerSampling.temperature,
+        topP: composerSampling.topP,
+        maxTokens: composerSampling.maxTokens,
         profileId: selectedAgentProfileId,
         locale: uiLocale,
         queueMode: 'followup',
@@ -2589,6 +2600,8 @@ const Conversations = ({
         // same conversation partner, not a second one.
         onNeppyMode={() => navigate('/human')}
         onSwitchToMicCloud={() => setComposerOverride('mic-cloud')}
+        sampling={composerSampling}
+        onSamplingChange={next => dispatch(setComposerSampling(next))}
         onModelChange={(value, contextWindow) => {
           dispatch(setComposerModel({ model: value, contextWindow }));
         }}

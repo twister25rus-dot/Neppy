@@ -1226,6 +1226,8 @@ interface ChatSendParams {
    * a local-only control.
    */
   reasoningEffort?: string | null;
+  /** Per-turn sampling temperature, when the composer asked for one. */
+  temperature?: number | null;
   /** Per-turn nucleus sampling, when the composer asked for one. */
   topP?: number | null;
   /** Per-turn output-token ceiling, when the composer asked for one. */
@@ -1288,6 +1290,7 @@ export async function chatSend(params: ChatSendParams): Promise<string | undefin
       message: params.message,
       model_override: params.model ?? undefined,
       reasoning_effort: params.reasoningEffort ?? undefined,
+      temperature: params.temperature ?? undefined,
       top_p: params.topP ?? undefined,
       max_tokens: params.maxTokens ?? undefined,
       profile_id: params.profileId ?? undefined,

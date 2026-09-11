@@ -230,7 +230,12 @@ const chatRuntimePersistConfig = {
   // `composerModel` joins the exception for the same reason as artifacts: it is
   // a preference the user set, not live turn state, and losing it every launch
   // meant re-picking the model on every restart.
-  whitelist: ['artifactsByThread', 'composerModel', 'composerModelContextWindow'],
+  whitelist: [
+    'artifactsByThread',
+    'composerModel',
+    'composerModelContextWindow',
+    'composerSampling',
+  ],
   transforms: [artifactsReadyOnlyTransform],
 };
 const persistedChatRuntimeReducer = persistReducer(chatRuntimePersistConfig, chatRuntimeReducer);
