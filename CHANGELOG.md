@@ -4,6 +4,22 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.5] - 2026-09-11
+
+### What's Changed
+
+- Give the release build a target directory of its own ([`f5e72c39`](https://github.com/twister25rus-dot/Neppy/commit/f5e72c39dd76905a26bd4aa2ea73e9198f1e1335))
+- Fit the settings window on screen, and give connector pages a measure ([`8d1a75b2`](https://github.com/twister25rus-dot/Neppy/commit/8d1a75b2c0dc78f0169af03b0a8cd432e1b97cd3))
+- Let a turn ask for sampling and reasoning effort ([`2b647cee`](https://github.com/twister25rus-dot/Neppy/commit/2b647cee88eb5a98c19f907b115a23f9f2a21ad6))
+- Keep every answer to a question, and let one of them be in effect ([`620bd6e7`](https://github.com/twister25rus-dot/Neppy/commit/620bd6e7fa8c03003c686cb56b1824cc7f0594ff))
+- Regenerate an answer without losing the one before it ([`ccd0a2af`](https://github.com/twister25rus-dot/Neppy/commit/ccd0a2afae4bf89a464bb994508b03c692eae5bb))
+- Switch between a question's answers ([`70fc32a9`](https://github.com/twister25rus-dot/Neppy/commit/70fc32a9bd8ad0c252b5de55ba998f681ed7d469))
+- Set sampling for a turn from the composer ([`0bde427e`](https://github.com/twister25rus-dot/Neppy/commit/0bde427e154c7e3f1874a18cd82d19eb891e1c03))
+- Format the chat and settings work to house style ([`5666a3ac`](https://github.com/twister25rus-dot/Neppy/commit/5666a3ac32f8d855d4ec5e68cc1e0be6dd35351b))
+- Ignore the release target dir where the rule actually applies ([`ddfe70ac`](https://github.com/twister25rus-dot/Neppy/commit/ddfe70ac3aff9ee5db4a402d872bf5411142eda2))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/6b9f9491feef65bbcc6ff2a5e8773f66d086fb26...ddfe70ac3aff9ee5db4a402d872bf5411142eda2
+
 ## [0.66.4] - 2026-09-09
 
 ### What's Changed
