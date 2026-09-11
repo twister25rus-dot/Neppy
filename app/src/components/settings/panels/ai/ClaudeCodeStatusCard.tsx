@@ -176,6 +176,18 @@ function InlineSummary({
         {looksNotInstalled(auth.reason)
           ? t('settings.ai.claudeCode.cliNotInstalled')
           : t('settings.ai.claudeCode.signInUnknown')}
+        {/*
+          The reason, verbatim, when we have one. The sentence above is a guess
+          — "your CLI may predate auth status" — and on a CLI that supports the
+          subcommand perfectly well it sends the user to fix the wrong thing.
+          The probe already knows why it could not tell; showing it turns an
+          unactionable message into one.
+        */}
+        {!looksNotInstalled(auth.reason) && auth.reason ? (
+          <span className="mt-1 block text-xs text-content-muted" data-testid="claude-auth-reason">
+            {auth.reason}
+          </span>
+        ) : null}
       </span>
     );
   }

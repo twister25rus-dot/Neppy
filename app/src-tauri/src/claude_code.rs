@@ -35,14 +35,38 @@ pub fn claude_code_login_launch() -> Result<String, String> {
 
     #[cfg(target_os = "macos")]
     {
-        let script = r#"tell application "Terminal"
-    activate
-    do script "claude login"
-end tell"#;
-        Command::new("osascript")
-            .args(["-e", script])
-            .spawn()
-            .map_err(|e| format!("failed to open Terminal.app: {e}"))?;
+        // The resolved path, not the bare name. Terminal runs a login shell so
+        // `claude` is usually on its PATH, but the app found a specific binary
+        // and a second, different one in the user's shell would sign the wrong
+        // install in — which is precisely the state that made this feature look
+        // broken in the first place.
+        let program = neppy_core::neppy::inference::provider::claude_code::resolved_cli_path()
+            .map(|path| path.display().to_string())
+            .unwrap_or_else(|| "claude".to_string());
+        // AppleScript string literal: a path with a quote or backslash would
+        // otherwise end the literal and change the command.
+        let quoted = program.replace('\\', "\\\\").replace('"', "\\\"");
+        let script = format!(
+            "tell application \"Terminal\"\n    activate\n    do script \"{quoted} login\"\nend tell"
+        );
+
+        // Wait for it. `spawn` alone returns Ok as soon as the process starts,
+        // so an Automation (TCC) denial — this app is ad-hoc signed, which is
+        // exactly when that happens — produced a success here and a window that
+        // never appeared.
+        let output = Command::new("osascript")
+            .args(["-e", &script])
+            .output()
+            .map_err(|e| format!("failed to run osascript: {e}"))?;
+        if !output.status.success() {
+            let detail = String::from_utf8_lossy(&output.stderr);
+            let detail = detail.trim();
+            return Err(if detail.is_empty() {
+                format!("Terminal.app did not open (osascript exited {})", output.status)
+            } else {
+                format!("Terminal.app did not open: {detail}")
+            });
+        }
         Ok("Terminal.app".into())
     }
 

@@ -154,7 +154,7 @@ pub fn parse_auth_status_json(raw: &str) -> AuthSource {
 /// `OPENHUMAN_CLAUDE_CLI` override via [`version_check::resolve_binary`].
 fn probe_via_cli() -> AuthSource {
     let Some(bin) = version_check::resolve_binary() else {
-        log::debug!("[claude-code][auth] no `claude` binary on PATH; auth state unknown");
+        log::warn!("[claude-code][auth] no usable `claude` binary found; auth state unknown");
         return AuthSource::Unknown {
             reason: Some("`claude` CLI not found on PATH".to_string()),
         };
@@ -213,13 +213,21 @@ fn probe_via_cli() -> AuthSource {
         if let Some(mut s) = child.stderr.take() {
             let _ = s.read_to_string(&mut stderr);
         }
-        log::debug!(
-            "[claude-code][auth] `claude auth status` exit={} stderr={}",
+        // Warn, not debug: this is the branch that renders as "couldn't
+        // determine sign-in state", and at debug level the one fact that
+        // explains it is missing from the log the user would send.
+        log::warn!(
+            "[claude-code][auth] `claude auth status` exit={} bin={bin_str} stderr={}",
             status,
             stderr.trim()
         );
+        let detail = stderr.trim();
         return AuthSource::Unknown {
-            reason: Some(format!("`claude auth status` exited {status}")),
+            reason: Some(if detail.is_empty() {
+                format!("`claude auth status` exited {status}")
+            } else {
+                format!("`claude auth status` exited {status}: {detail}")
+            }),
         };
     }
 

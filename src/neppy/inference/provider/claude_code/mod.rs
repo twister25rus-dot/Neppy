@@ -8,6 +8,15 @@
 //! (no `--allowedTools` set means CC's own tools simply don't fire
 //! during a non-interactive `-p` turn).
 
+/// The `claude` binary this host would use, for callers outside the core.
+///
+/// The desktop shell's login launcher needs the same answer the provider uses:
+/// telling a terminal to run a bare `claude` can sign a different install in
+/// from the one the app talks to.
+pub fn resolved_cli_path() -> Option<std::path::PathBuf> {
+    version_check::resolve_binary()
+}
+
 pub mod auth;
 pub mod auth_status;
 pub mod driver;
