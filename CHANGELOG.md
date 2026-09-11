@@ -4,6 +4,19 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.8] - 2026-09-11
+
+### What's Changed
+
+- List the models Claude Code actually offers ([`b89c3ea2`](https://github.com/twister25rus-dot/Neppy/commit/b89c3ea29d95c55bea43cc5a838a6b636b3f8dc3))
+- Keep the sidebar clear of the window controls, and ease it open ([`1a3b7615`](https://github.com/twister25rus-dot/Neppy/commit/1a3b76154c43a5e2b4cd7048493afdd6185016bf))
+- Ask before downloading an update ([`6c8fd25b`](https://github.com/twister25rus-dot/Neppy/commit/6c8fd25b916bd1a7c752c79807cda1815f9bb0f2))
+- Give the client-config snapshot test a workspace of its own ([`7bc023b9`](https://github.com/twister25rus-dot/Neppy/commit/7bc023b97e72ca8251bc9db8e2467858f08dd1a3))
+- Replace a regenerated answer instead of stacking it, and make the composer drop ([`b6c65d25`](https://github.com/twister25rus-dot/Neppy/commit/b6c65d25e39ad4a985c214e7353a92b304ae131c))
+- Withdraw Human mode from the desktop app ([`96497ca9`](https://github.com/twister25rus-dot/Neppy/commit/96497ca93e015d80bb386a16158058adc23009d4))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/4cda17b4e907d170da43e5c34df1e90bda72dca3...96497ca93e015d80bb386a16158058adc23009d4
+
 ## [0.66.7] - 2026-09-11
 
 ### What's Changed
