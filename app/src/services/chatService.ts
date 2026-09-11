@@ -1256,6 +1256,15 @@ interface ChatSendParams {
    */
   sessionId?: number;
   /**
+   * The message id of a question this turn answers again (regenerate).
+   *
+   * The core needs it to seed the turn *without* the answer being replaced:
+   * resuming from the session transcript as usual would leave that answer in
+   * the model's history, and what comes back is a follow-up, not another
+   * answer.
+   */
+  regenerateOf?: string;
+  /**
    * Queue mode for concurrent messages. When a turn is already in
    * flight: `steer` injects at the next iteration boundary, `followup`
    * queues for after the turn, `collect` adds as context. `interrupt`
@@ -1299,6 +1308,7 @@ export async function chatSend(params: ChatSendParams): Promise<string | undefin
       source: params.source ?? undefined,
       session_id: params.sessionId ?? undefined,
       queue_mode: params.queueMode ?? undefined,
+      regenerate_of: params.regenerateOf ?? undefined,
     },
   });
 

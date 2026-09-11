@@ -96,6 +96,14 @@ pub struct ChatRequestMetadata {
     /// is resolved — used purely for trace attribution (Langfuse `agent.id` /
     /// `agent.turn:<id>` trace name), never for routing.
     pub agent_id: Option<String>,
+    /// Set when this turn is another answer to a question already in the log,
+    /// naming that question's message id.
+    ///
+    /// A regenerate has to reach the resume path, which is the only place that
+    /// decides what history the model is handed. Without it the turn rebuilds
+    /// from the session transcript — which still holds the answer being
+    /// replaced — and the model writes a follow-up instead of another answer.
+    pub regenerate_of: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -139,6 +147,12 @@ pub(crate) struct WebChatParams {
     /// `followup`, or `collect`.
     #[serde(default)]
     pub(super) queue_mode: Option<String>,
+    /// The question this turn is answering again, when it is a regenerate.
+    /// The client tags the reply with the same id, so the two halves of an
+    /// answer variant — what the model reads and what the transcript shows —
+    /// are keyed the same way.
+    #[serde(default)]
+    pub(super) regenerate_of: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

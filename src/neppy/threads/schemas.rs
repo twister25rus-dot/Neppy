@@ -7,11 +7,11 @@ use crate::core::all::{ControllerFuture, RegisteredController};
 use crate::core::{ControllerSchema, FieldSchema, TypeSchema};
 use crate::neppy::agent::task_board::{TaskBoard, TaskBoardCard, TaskBoardStore};
 use crate::neppy::memory::{
-    AppendConversationMessageRequest, ConversationMessagesRequest, CreateConversationThreadRequest,
-    DeleteConversationThreadRequest, EmptyRequest, GenerateConversationThreadTitleRequest,
-    SetActiveVariantRequest, UpdateConversationMessageRequest,
-    UpdateConversationThreadLabelsRequest, UpdateConversationThreadTitleRequest,
-    UpsertConversationThreadRequest,
+    AppendConversationMessageRequest, BeginAnswerVariantRequest, ConversationMessagesRequest,
+    CreateConversationThreadRequest, DeleteConversationThreadRequest, EmptyRequest,
+    GenerateConversationThreadTitleRequest, SetActiveVariantRequest,
+    UpdateConversationMessageRequest, UpdateConversationThreadLabelsRequest,
+    UpdateConversationThreadTitleRequest, UpsertConversationThreadRequest,
 };
 use crate::neppy::threads::turn_state::{
     ClearTurnStateRequest, GetTurnStateForRequestRequest, GetTurnStateRequest,
@@ -31,6 +31,7 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("update_title"),
         schemas("message_update"),
         schemas("message_set_active_variant"),
+        schemas("message_begin_answer_variant"),
         schemas("delete"),
         schemas("purge"),
         schemas("turn_state_get"),
@@ -86,6 +87,10 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("message_set_active_variant"),
             handler: handle_message_set_active_variant,
+        },
+        RegisteredController {
+            schema: schemas("message_begin_answer_variant"),
+            handler: handle_message_begin_answer_variant,
         },
         RegisteredController {
             schema: schemas("delete"),
@@ -303,6 +308,31 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 name: "result",
                 ty: TypeSchema::Json,
                 comment: "Envelope with the updated question message.",
+                required: true,
+            }],
+        },
+        "message_begin_answer_variant" => ControllerSchema {
+            namespace: "threads",
+            function: "message_begin_answer_variant",
+            description: "Keep a question's existing answer as a variant before another is produced.",
+            inputs: vec![
+                FieldSchema {
+                    name: "thread_id",
+                    ty: TypeSchema::String,
+                    comment: "Thread identifier.",
+                    required: true,
+                },
+                FieldSchema {
+                    name: "message_id",
+                    ty: TypeSchema::String,
+                    comment: "The user message about to be answered again.",
+                    required: true,
+                },
+            ],
+            outputs: vec![FieldSchema {
+                name: "result",
+                ty: TypeSchema::Json,
+                comment: "Envelope with the turn id the existing answer now carries.",
                 required: true,
             }],
         },
@@ -682,6 +712,13 @@ fn handle_message_set_active_variant(params: Map<String, Value>) -> ControllerFu
     Box::pin(async move {
         let p = parse::<SetActiveVariantRequest>(params)?;
         to_json(ops::message_set_active_variant(p).await?)
+    })
+}
+
+fn handle_message_begin_answer_variant(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let p = parse::<BeginAnswerVariantRequest>(params)?;
+        to_json(ops::message_begin_answer_variant(p).await?)
     })
 }
 

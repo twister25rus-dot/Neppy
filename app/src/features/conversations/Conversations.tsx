@@ -1144,6 +1144,17 @@ const Conversations = ({
           variantTurn: userMessage.id,
         })
       );
+      // And make the answer already on disk the first variant, so the reply
+      // about to arrive replaces it instead of stacking under it. Core-side
+      // because it has to persist: the tags are what the switcher counts and
+      // what the next cold boot seeds the model from. A failure here is not
+      // fatal — the turn still runs, and the old answer simply stays visible —
+      // so it is logged rather than aborting the send.
+      try {
+        await threadApi.beginAnswerVariant(sendingThreadId, options.regenerateOf);
+      } catch (error) {
+        console.warn('[chat] could not keep the previous answer as a variant:', error);
+      }
     }
 
     try {
@@ -1195,8 +1206,12 @@ const Conversations = ({
     try {
       // An ordinary send is an answer to itself, never another answer to an
       // earlier question. Clearing here means a regenerate that was never
-      // answered cannot mis-file the next reply.
-      dispatch(endAnswerVariant({ threadId: sendingThreadId }));
+      // answered cannot mis-file the next reply — but only for an ordinary
+      // send: clearing it on a regenerate would drop the tag set moments ago
+      // and the new answer would land untagged, which is the whole mechanism.
+      if (!options?.regenerateOf) {
+        dispatch(endAnswerVariant({ threadId: sendingThreadId }));
+      }
       await chatSend({
         threadId: sendingThreadId,
         message: messageText,
@@ -1206,6 +1221,7 @@ const Conversations = ({
         maxTokens: composerSampling.maxTokens,
         profileId: selectedAgentProfileId,
         locale: uiLocale,
+        regenerateOf: options?.regenerateOf,
       });
       trackAnalyticsEvent('chat_message_sent', {
         send_mode: 'standard',
@@ -2374,10 +2390,11 @@ const Conversations = ({
               setInputValue={setInputValue}
               onSend={handleComposerSend}
               onStopGeneration={rustChat ? handleStopGeneration : undefined}
-              // Idle-composer shortcut to the full-bleed mascot stage. Chat and
-              // Human share one mascot (mascotSlice), so this is a change of
-              // venue for the same conversation partner, not a second one.
-              onNeppyMode={() => navigate('/human')}
+              // Human mode is withdrawn for now, so the idle-composer shortcut
+              // to the mascot stage is not offered: without `onNeppyMode` the
+              // control renders nothing. Restore by passing
+              // `onNeppyMode={() => navigate('/human')}` and un-redirecting the
+              // route in `AppRoutes`.
               textInputRef={textInputRef}
               fileInputRef={fileInputRef}
               composerInteractionBlocked={composerInteractionBlocked}
@@ -2583,10 +2600,8 @@ const Conversations = ({
         attachmentsEnabled={CHAT_ATTACHMENTS_ENABLED}
         attachmentInteractionBlocked={composerInteractionBlocked || isSending}
         onAttachmentOnlySend={() => void handleComposerSend()}
-        // Idle-composer shortcut to the full-bleed mascot stage. Chat and Human
-        // share one mascot (mascotSlice), so this is a change of venue for the
-        // same conversation partner, not a second one.
-        onNeppyMode={() => navigate('/human')}
+        // Human mode is withdrawn for now — see the note on the other composer
+        // above for what to pass to bring the mascot stage back.
         onSwitchToMicCloud={() => setComposerOverride('mic-cloud')}
         sampling={composerSampling}
         onSamplingChange={next => dispatch(setComposerSampling(next))}

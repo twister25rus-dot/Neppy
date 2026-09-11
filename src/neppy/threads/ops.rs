@@ -4,14 +4,14 @@ use crate::core::runtime::context::CoreContext;
 use crate::neppy::config::Config;
 use crate::neppy::inference::provider;
 use crate::neppy::memory::{
-    ApiEnvelope, ApiMeta, AppendConversationMessageRequest, ConversationMessageRecord,
-    ConversationMessagesRequest, ConversationMessagesResponse, ConversationThreadSummary,
-    ConversationThreadsListResponse, CreateConversationThreadRequest,
-    DeleteConversationThreadRequest, DeleteConversationThreadResponse, EmptyRequest,
-    GenerateConversationThreadTitleRequest, PaginationMeta, PurgeConversationThreadsResponse,
-    SetActiveVariantRequest, UpdateConversationMessageRequest,
-    UpdateConversationThreadLabelsRequest, UpdateConversationThreadTitleRequest,
-    UpsertConversationThreadRequest,
+    ApiEnvelope, ApiMeta, AppendConversationMessageRequest, BeginAnswerVariantRequest,
+    BeginAnswerVariantResponse, ConversationMessageRecord, ConversationMessagesRequest,
+    ConversationMessagesResponse, ConversationThreadSummary, ConversationThreadsListResponse,
+    CreateConversationThreadRequest, DeleteConversationThreadRequest,
+    DeleteConversationThreadResponse, EmptyRequest, GenerateConversationThreadTitleRequest,
+    PaginationMeta, PurgeConversationThreadsResponse, SetActiveVariantRequest,
+    UpdateConversationMessageRequest, UpdateConversationThreadLabelsRequest,
+    UpdateConversationThreadTitleRequest, UpsertConversationThreadRequest,
 };
 // Every conversation-store call in this module goes through
 // `conversations::blocking::*`, which runs the store's synchronous,
@@ -572,7 +572,117 @@ pub async fn thread_update_title(
     ))
 }
 
-/// Updates metadata on an existing conversation message.
+/// Start another answer to a question, keeping the one it already has.
+///
+/// Called before a regenerate sends, and it is what makes the existing answer a
+/// variant rather than a stray message: it is tagged with the question it
+/// answers and with a turn id of its own, so the reply about to arrive becomes
+/// the second answer instead of the first one anybody can see. Tagging only the
+/// new answer leaves the original untagged, and an untagged message is not part
+/// of any group — it would stay on screen next to its replacement, the count
+/// would be one short, and the first regenerate would show no switcher at all.
+///
+/// Two more things happen here for the same reason they happen when switching.
+/// Any stored selection on the question is cleared, so "newest wins" puts the
+/// incoming answer in effect — without that, regenerating after switching back
+/// would produce an answer that is superseded the moment it lands. And the
+/// thread's cached session is evicted, because a turn resumes from the session
+/// the agent already holds: left alone, the model would answer again with the
+/// previous answer still in its transcript, which is a follow-up, not a
+/// regeneration.
+///
+/// Idempotent: tagging an already-tagged answer writes nothing, so a retried
+/// send cannot split one answer across two turns.
+pub async fn message_begin_answer_variant(
+    request: BeginAnswerVariantRequest,
+) -> Result<RpcOutcome<ApiEnvelope<BeginAnswerVariantResponse>>, String> {
+    use crate::neppy::memory::conversations::variants;
+
+    let dir = workspace_dir().await?;
+    let messages =
+        conversations::blocking::get_messages(dir.clone(), request.thread_id.clone()).await?;
+
+    let question = messages
+        .iter()
+        .find(|message| message.id == request.message_id && message.sender == "user")
+        .ok_or_else(|| {
+            format!(
+                "message '{}' is not a question in thread '{}'",
+                request.message_id, request.thread_id
+            )
+        })?;
+    let question_metadata = question.extra_metadata.clone();
+
+    // The turn id is the first untagged answer message's id, so a segmented
+    // answer groups under its opening segment and the id stays stable if this
+    // runs twice.
+    let untagged: Vec<(String, serde_json::Value)> =
+        variants::untagged_answers(&messages, &request.message_id)
+            .into_iter()
+            .map(|message| (message.id.clone(), message.extra_metadata.clone()))
+            .collect();
+    let turn_id = untagged.first().map(|(id, _)| id.clone());
+
+    let mut tagged = 0usize;
+    if let Some(turn_id) = turn_id.as_deref() {
+        for (message_id, metadata) in &untagged {
+            conversations::blocking::update_message(
+                dir.clone(),
+                request.thread_id.clone(),
+                message_id.clone(),
+                ConversationMessagePatch {
+                    extra_metadata: Some(variants::metadata_with_variant(
+                        metadata,
+                        &request.message_id,
+                        turn_id,
+                    )),
+                },
+            )
+            .await?;
+            tagged += 1;
+        }
+    }
+
+    if variants::active_variant_choice(question).is_some() {
+        conversations::blocking::update_message(
+            dir.clone(),
+            request.thread_id.clone(),
+            request.message_id.clone(),
+            ConversationMessagePatch {
+                extra_metadata: Some(variants::metadata_without_selection(&question_metadata)),
+            },
+        )
+        .await?;
+    }
+
+    // Re-read rather than counting from the pre-tag snapshot: the existing
+    // answers are the ones just tagged plus any from earlier regenerates, and
+    // the store is what knows how that landed. `+ 1` for the answer about to be
+    // produced, which is what the switcher will show.
+    let after = conversations::blocking::get_messages(dir, request.thread_id.clone()).await?;
+    let variant_count = variants::variant_turns(&after, &request.message_id).len() + 1;
+
+    crate::neppy::web_chat::invalidate_thread_sessions(&request.thread_id).await;
+    log::info!(
+        "[threads] begin answer variant thread_id={} message_id={} turn_id={:?} tagged={} variant_count={}",
+        request.thread_id,
+        request.message_id,
+        turn_id,
+        tagged,
+        variant_count
+    );
+
+    Ok(envelope(
+        BeginAnswerVariantResponse {
+            variant_turn_id: turn_id,
+            tagged,
+            variant_count,
+        },
+        Some(counts([("num_messages", tagged)])),
+        None,
+    ))
+}
+
 /// Choose which answer to a question is the one in effect.
 ///
 /// Three things have to happen together, which is why this is an operation and
@@ -634,6 +744,7 @@ pub async fn message_set_active_variant(
     ))
 }
 
+/// Updates metadata on an existing conversation message.
 pub async fn message_update(
     request: UpdateConversationMessageRequest,
 ) -> Result<RpcOutcome<ApiEnvelope<ConversationMessageRecord>>, String> {

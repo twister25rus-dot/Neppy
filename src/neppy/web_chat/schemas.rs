@@ -70,6 +70,10 @@ pub fn schemas(function: &str) -> ControllerSchema {
                     "queue_mode",
                     "Queue mode: 'interrupt' (default), 'steer', 'followup', 'collect', or 'parallel'.",
                 ),
+                optional_string(
+                    "regenerate_of",
+                    "The message id of a question this turn is answering again. Makes the turn resume without the answer it replaces, so the model writes another answer rather than a follow-up.",
+                ),
             ],
             outputs: vec![json_output("ack", "Acceptance payload.")],
         },
@@ -148,6 +152,7 @@ fn handle_chat(params: Map<String, Value>) -> ControllerFuture {
                     // Attribution is stamped later by run_chat_task once the
                     // target agent is resolved.
                     agent_id: None,
+                    regenerate_of: p.regenerate_of,
                 },
             )
             .await?,

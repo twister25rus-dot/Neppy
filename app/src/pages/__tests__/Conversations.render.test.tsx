@@ -14,6 +14,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SidebarSlotOutlet, SidebarSlotProvider } from '../../components/layout/shell/SidebarSlot';
+import { getChatSurface } from '../../providers/chatSurfaceHandlers';
 import { threadApi } from '../../services/api/threadApi';
 import { chatCancel, chatClearQueue, chatSend } from '../../services/chatService';
 import { CoreRpcError } from '../../services/coreRpcClient';
@@ -93,6 +94,10 @@ vi.mock('../../services/api/threadApi', () => ({
     updateLabels: vi.fn().mockResolvedValue({}),
     updateTitle: vi.fn().mockResolvedValue({}),
     persistReaction: vi.fn().mockResolvedValue({}),
+    setActiveAnswer: vi.fn().mockResolvedValue(undefined),
+    beginAnswerVariant: vi
+      .fn()
+      .mockResolvedValue({ variantTurnId: 'a-1', tagged: 1, variantCount: 2 }),
   },
 }));
 
@@ -882,6 +887,67 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
     });
   });
 
+  it('regenerating keeps the old answer as a variant and tells the core it is a regenerate', async () => {
+    const thread = makeThread({ id: 'regen-thread', title: 'Regenerate' });
+    const question: ThreadMessage = {
+      id: 'u-1',
+      content: 'why is the sky blue?',
+      type: 'text',
+      sender: 'user',
+      createdAt: '2026-05-04T10:00:00Z',
+      extraMetadata: {},
+    };
+    const answer: ThreadMessage = {
+      id: 'a-1',
+      content: 'rayleigh scattering',
+      type: 'text',
+      sender: 'agent',
+      createdAt: '2026-05-04T10:00:01Z',
+      extraMetadata: {},
+    };
+    mockGetThreads.mockResolvedValue({ threads: [thread], count: 1 });
+    mockGetThreadMessages.mockResolvedValue({ messages: [question, answer], count: 2 });
+    await act(async () => {
+      await renderConversations({
+        thread: {
+          ...emptyThreadState,
+          threads: [thread],
+          selectedThreadId: thread.id,
+          messagesByThreadId: { [thread.id]: [question, answer] },
+          messages: [question, answer],
+        },
+        socket: socketState('connected'),
+      });
+    });
+    vi.mocked(chatSend).mockClear();
+    vi.mocked(threadApi.appendMessage).mockClear();
+
+    // The runtime reaches regenerate through the registered surface, which is
+    // the same path the action bar's reload button takes.
+    const surface = getChatSurface(thread.id);
+    expect(surface?.reload).toBeTypeOf('function');
+    await act(async () => {
+      await surface?.reload?.(question.id);
+    });
+
+    // The answer already on disk becomes variant one, so the new answer
+    // replaces it rather than stacking under it.
+    await waitFor(() => {
+      expect(threadApi.beginAnswerVariant).toHaveBeenCalledWith(thread.id, question.id);
+    });
+    // The question is NOT appended again — it is already in the transcript.
+    expect(threadApi.appendMessage).not.toHaveBeenCalled();
+    expect(chatSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        threadId: thread.id,
+        message: question.content,
+        // Without this the core resumes from a transcript that still holds the
+        // answer being replaced, and the model writes a follow-up.
+        regenerateOf: question.id,
+      })
+    );
+  });
+
   it('auto-sends a dictation transcript (autoSend) straight to chat without the composer', async () => {
     const { thread } = await renderSelectedConversation();
 
@@ -1254,12 +1320,13 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
     await renderSelectedConversation();
 
     expect(screen.queryByRole('button', { name: 'Stop generating' })).not.toBeInTheDocument();
-    // An idle thread with an empty composer gives the primary slot to the
-    // Human-page shortcut rather than a Send button that would refuse the
-    // click; Send returns as soon as there is something to send, which
-    // `queues via the Send button while a turn streams` covers. What #4862
-    // pins here is the absence of Stop.
-    expect(screen.getByTestId('composer-human-mode')).toBeInTheDocument();
+    // An idle thread with an empty composer has nothing to put in the primary
+    // slot: Send would refuse the click, and the Human-page shortcut that used
+    // to stand in for it is withdrawn with Human mode (`AppRoutes`). Send
+    // returns as soon as there is something to send, which `queues via the Send
+    // button while a turn streams` covers. What #4862 pins here is the absence
+    // of Stop.
+    expect(screen.queryByTestId('composer-human-mode')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Send message' })).not.toBeInTheDocument();
   });
 

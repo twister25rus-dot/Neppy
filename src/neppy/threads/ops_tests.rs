@@ -807,3 +807,191 @@ async fn run_to_completion_runs_the_tail_after_the_caller_is_dropped() {
     .await
     .expect("cleanup must still run after the caller's future was dropped");
 }
+
+// ── begin answer variant (regenerate) ─────────────────────────
+use crate::neppy::memory::conversations::variants;
+
+/// Appends a message through the real op so the store sees what the app writes.
+async fn append(thread_id: &str, id: &str, sender: &str, content: &str, metadata: Value) {
+    message_append(AppendConversationMessageRequest {
+        thread_id: thread_id.to_string(),
+        message: ConversationMessageRecord {
+            id: id.to_string(),
+            content: content.to_string(),
+            message_type: "text".to_string(),
+            extra_metadata: metadata,
+            sender: sender.to_string(),
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+        },
+    })
+    .await
+    .expect("append");
+}
+
+async fn stored(thread_id: &str) -> Vec<tinycortex::memory::conversations::ConversationMessage> {
+    let dir = crate::neppy::config::Config::load_or_init()
+        .await
+        .expect("load config")
+        .workspace_dir;
+    crate::neppy::memory::conversations::blocking::get_messages(dir, thread_id.to_string())
+        .await
+        .expect("messages")
+}
+
+/// The answer a question already has becomes variant one, so the reply about to
+/// arrive replaces it on screen instead of stacking under it.
+#[tokio::test]
+async fn beginning_a_variant_tags_the_existing_answer() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let thread_id = "t-regen";
+    create_thread_with_title(&workspace, thread_id, "Regenerate").await;
+    append(thread_id, "u1", "user", "why?", Value::Null).await;
+    // A segmented answer: two messages, one answer.
+    append(
+        thread_id,
+        "a1",
+        "agent",
+        "because",
+        json!({ "requestId": "req-1" }),
+    )
+    .await;
+    append(thread_id, "a1b", "agent", "and also", Value::Null).await;
+
+    let outcome = message_begin_answer_variant(BeginAnswerVariantRequest {
+        thread_id: thread_id.to_string(),
+        message_id: "u1".to_string(),
+    })
+    .await
+    .expect("begin variant");
+
+    let data = outcome.value.data.expect("envelope carries the response");
+    assert_eq!(data.variant_turn_id.as_deref(), Some("a1"));
+    assert_eq!(data.tagged, 2);
+    // One answer on disk plus the one about to be produced.
+    assert_eq!(data.variant_count, 2);
+
+    let messages = stored(thread_id).await;
+    for id in ["a1", "a1b"] {
+        let message = messages.iter().find(|m| m.id == id).expect("answer kept");
+        assert_eq!(variants::variant_of(message), Some("u1"));
+        // Both segments group under the first, so switching moves the whole
+        // answer rather than its last paragraph.
+        assert_eq!(variants::variant_turn(message), "a1");
+    }
+    // The merge kept what the reply already carried.
+    assert_eq!(messages[1].extra_metadata["requestId"], "req-1");
+}
+
+/// Running twice must not split one answer across two turns — a retried send
+/// would otherwise invent a variant nobody asked for.
+#[tokio::test]
+async fn beginning_a_variant_twice_changes_nothing_the_second_time() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let thread_id = "t-regen-twice";
+    create_thread_with_title(&workspace, thread_id, "Regenerate").await;
+    append(thread_id, "u1", "user", "why?", Value::Null).await;
+    append(thread_id, "a1", "agent", "because", Value::Null).await;
+
+    let request = || BeginAnswerVariantRequest {
+        thread_id: thread_id.to_string(),
+        message_id: "u1".to_string(),
+    };
+    message_begin_answer_variant(request())
+        .await
+        .expect("first");
+    let second = message_begin_answer_variant(request())
+        .await
+        .expect("second");
+
+    let data = second.value.data.expect("envelope carries the response");
+    assert_eq!(data.tagged, 0);
+    assert_eq!(data.variant_turn_id, None);
+    assert_eq!(data.variant_count, 2);
+    let messages = stored(thread_id).await;
+    assert_eq!(variants::variant_turns(&messages, "u1"), ["a1"]);
+}
+
+/// Regenerating after switching back must clear the stored choice, or the new
+/// answer lands already superseded and invisible.
+#[tokio::test]
+async fn beginning_a_variant_clears_an_earlier_choice() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let thread_id = "t-regen-choice";
+    create_thread_with_title(&workspace, thread_id, "Regenerate").await;
+    append(thread_id, "u1", "user", "why?", Value::Null).await;
+    append(
+        thread_id,
+        "a1",
+        "agent",
+        "first",
+        json!({ "variantOf": "u1", "variantTurn": "a1" }),
+    )
+    .await;
+    append(
+        thread_id,
+        "a2",
+        "agent",
+        "second",
+        json!({ "variantOf": "u1", "variantTurn": "a2" }),
+    )
+    .await;
+    // The user switched back to the first answer.
+    message_set_active_variant(SetActiveVariantRequest {
+        thread_id: thread_id.to_string(),
+        message_id: "u1".to_string(),
+        variant_id: "a1".to_string(),
+    })
+    .await
+    .expect("switch back");
+
+    message_begin_answer_variant(BeginAnswerVariantRequest {
+        thread_id: thread_id.to_string(),
+        message_id: "u1".to_string(),
+    })
+    .await
+    .expect("begin variant");
+
+    let messages = stored(thread_id).await;
+    let question = messages.iter().find(|m| m.id == "u1").expect("question");
+    assert_eq!(variants::active_variant_choice(question), None);
+    // Newest wins again, so the answer about to arrive will be the visible one.
+    assert_eq!(variants::active_variant_id(&messages, "u1"), Some("a2"));
+}
+
+/// A message id that is not a question fails the call rather than writing tags
+/// onto whatever happened to follow it.
+#[tokio::test]
+async fn beginning_a_variant_on_something_that_is_not_a_question_fails() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let thread_id = "t-regen-bad";
+    create_thread_with_title(&workspace, thread_id, "Regenerate").await;
+    append(thread_id, "u1", "user", "why?", Value::Null).await;
+    append(thread_id, "a1", "agent", "because", Value::Null).await;
+
+    let err = message_begin_answer_variant(BeginAnswerVariantRequest {
+        thread_id: thread_id.to_string(),
+        message_id: "a1".to_string(),
+    })
+    .await
+    .expect_err("an assistant message is not a question");
+
+    assert!(err.contains("is not a question"), "unexpected error: {err}");
+    let messages = stored(thread_id).await;
+    assert!(variants::variant_of(&messages[1]).is_none());
+}

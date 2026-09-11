@@ -106,13 +106,33 @@ pub(crate) async fn run_chat_task(
         &profile,
     );
 
+    // Set when this turn answers a question already in the log. Read twice: here,
+    // to refuse a cached session, and below, to decide what history is seeded.
+    let regenerate_of = metadata.regenerate_of.clone();
+
     // A forked (parallel) turn never reuses or evicts the shared cached agent —
     // it always builds fresh from the history snapshot below.
     let prior = if fork {
         None
     } else {
         let mut sessions = THREAD_SESSIONS.lock().await;
-        sessions.remove(&map_key)
+        let entry = sessions.remove(&map_key);
+        if regenerate_of.is_some() {
+            // A cached session holds the answer being replaced in its own
+            // history, and nothing about this turn's inputs differs, so the
+            // fingerprint would match and the model would continue from it —
+            // writing a follow-up. The begin-variant RPC evicts the session
+            // before the send for the same reason; dropping it here means a
+            // regenerate is correct even when that call failed.
+            log::info!(
+                "[web-channel] regenerate of message_id={} — discarding any cached session for thread={}",
+                regenerate_of.as_deref().unwrap_or("?"),
+                thread_id
+            );
+            None
+        } else {
+            entry
+        }
     };
 
     let (mut agent, was_built_fresh) = match prior {
@@ -175,36 +195,60 @@ pub(crate) async fn run_chat_task(
     // no root transcript exists for the thread or it fails to load; the two
     // sources overlap (user prompts + final assistant text), so we take one
     // or the other, never both, to avoid duplicated context.
+    //
+    // A thread with answer variants takes the second path on purpose — a
+    // regenerate always, and any turn on a thread that has more than one answer
+    // to some question. The session transcript is the richer source, but it is
+    // an append-only record of what the agent actually said and has no notion of
+    // variants to filter by: it holds every answer, including the one the user
+    // switched away from and the one a regenerate is replacing. Replaying it
+    // hands the model answers that are not on screen, and a regenerate comes
+    // back as "here is another angle" rather than another answer. The
+    // conversation log does know, so those threads trade tool-call fidelity for
+    // a history that matches the transcript the user is looking at.
     if was_built_fresh {
-        if agent.seed_resume_from_thread_transcript(thread_id) {
+        // Read first, decide second: the log is the only thing that knows
+        // whether this thread has variants at all, and the fallback needs it
+        // anyway — so this is one read, not an extra one.
+        //
+        // Blocking pool: the store takes a process-global mutex and reads the
+        // thread's whole JSONL under it, so doing this inline parked an async
+        // worker on the chat hot path (#5156).
+        let prior_messages = crate::neppy::memory::conversations::blocking::get_messages(
+            config.workspace_dir.clone(),
+            thread_id.to_string(),
+        )
+        .await;
+        let has_variants = prior_messages.as_ref().is_ok_and(|messages| {
+            !crate::neppy::memory::conversations::variants::selection_signature(messages).is_empty()
+        });
+        let resumed_from_transcript = regenerate_of.is_none()
+            && !has_variants
+            && agent.seed_resume_from_thread_transcript(thread_id);
+        if resumed_from_transcript {
             log::info!(
                 "[web-channel] cold-boot resumed thread={} from full-fidelity session transcript",
                 thread_id
             );
         } else {
             log::debug!(
-                "[web-channel] no usable session transcript for thread={} — seeding resume \
-                 from conversation-log prose",
-                thread_id
+                "[web-channel] seeding resume from conversation-log prose thread={} \
+                 (regenerate={} has_variants={})",
+                thread_id,
+                regenerate_of.is_some(),
+                has_variants
             );
-            // Blocking pool: the store takes a process-global mutex and reads
-            // the thread's whole JSONL under it, so doing this inline parked an
-            // async worker on the chat hot path (#5156).
-            match crate::neppy::memory::conversations::blocking::get_messages(
-                config.workspace_dir.clone(),
-                thread_id.to_string(),
-            )
-            .await
-            {
+            match prior_messages {
                 Ok(prior_messages) if !prior_messages.is_empty() => {
-                    // Only the answer in effect for each question. A regenerated
-                    // turn keeps its predecessors in the log, and seeding all of
-                    // them would hand the model a transcript in which it
-                    // answered the same question twice, differently — and every
-                    // later turn would reason over that.
+                    // Only the answer in effect for each question, and on a
+                    // regenerate not even that one — see `resume_messages`.
+                    // Seeding every answer would hand the model a transcript in
+                    // which it answered the same question twice, differently,
+                    // and every later turn would reason over that.
                     let pairs: Vec<(String, String)> =
-                        crate::neppy::memory::conversations::variants::active_messages(
+                        crate::neppy::memory::conversations::variants::resume_messages(
                             &prior_messages,
+                            regenerate_of.as_deref(),
                         )
                         .into_iter()
                         .map(|m| (m.sender.clone(), m.content.clone()))

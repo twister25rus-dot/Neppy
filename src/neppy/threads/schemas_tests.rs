@@ -13,6 +13,7 @@ const ALL_FUNCTIONS: &[&str] = &[
     "update_title",
     "message_update",
     "message_set_active_variant",
+    "message_begin_answer_variant",
     "delete",
     "purge",
     "turn_state_get",

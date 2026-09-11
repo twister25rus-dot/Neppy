@@ -97,6 +97,32 @@ export const threadApi = {
     });
   },
 
+  /**
+   * Keep a question's existing answer as a variant, before another is produced.
+   *
+   * Called before a regenerate sends. The core tags the answer already on disk
+   * with the question it answers and a turn id of its own, clears any stored
+   * choice so the incoming answer becomes the one in effect, and evicts the
+   * thread's cached session so the model does not resume holding the answer it
+   * is about to replace.
+   *
+   * Tagging only the new answer would leave the old one outside the group: it
+   * would stay on screen beside its replacement, and a first regenerate would
+   * show no switcher at all.
+   */
+  beginAnswerVariant: async (
+    threadId: string,
+    questionMessageId: string
+  ): Promise<{ variantTurnId: string | null; tagged: number; variantCount: number }> => {
+    const response = await callCoreRpc<
+      Envelope<{ variantTurnId: string | null; tagged: number; variantCount: number }>
+    >({
+      method: 'openhuman.threads_message_begin_answer_variant',
+      params: { thread_id: threadId, message_id: questionMessageId },
+    });
+    return unwrapEnvelope(response);
+  },
+
   generateTitleIfNeeded: async (threadId: string, assistantMessage?: string): Promise<Thread> => {
     generateTitleLog('enter threadId=%s assistantMessage=%o', threadId, assistantMessage);
     try {

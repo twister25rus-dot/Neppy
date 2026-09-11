@@ -27,6 +27,7 @@ import {
 import { TooltipIconButton } from '@/components/assistant-ui/tooltip-icon-button';
 import { Button } from '@/components/assistant-ui/ui/button';
 import { Skeleton } from '@/components/assistant-ui/ui/skeleton';
+import { useFirstTurnDrop } from '@/components/assistant-ui/useFirstTurnDrop';
 import AnswerSwitcher from '@/components/chat/AnswerSwitcher';
 import ModelQualityPill from '@/components/chat/ModelQualityPill';
 import {
@@ -34,7 +35,6 @@ import {
   ActionBarPrimitive,
   type AssistantState,
   AuiIf,
-  BranchPickerPrimitive,
   ComposerPrimitive,
   ErrorPrimitive,
   type FileMessagePartComponent,
@@ -54,8 +54,6 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   CopyIcon,
   DownloadIcon,
   MicIcon,
@@ -211,6 +209,10 @@ const ThreadRoot: FC<{
   onEscape?: () => void;
 }> = ({ isEmpty, model, onModelChange, loadError, onEscape }) => {
   const { Welcome = ThreadWelcome } = useContext(ThreadComponentsContext);
+  // The composer's travel from the centre of a new session to the bottom is
+  // measured and played, because the declarations that move it cannot be
+  // transitioned. See `useFirstTurnDrop`.
+  const footerRef = useFirstTurnDrop<HTMLDivElement>(isEmpty);
 
   return (
     <ThreadPrimitive.Root
@@ -229,12 +231,11 @@ const ThreadRoot: FC<{
           className={cn(
             'mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4',
             // A new session centres the composer and drops it to the bottom the
-            // moment the first message lands. `justify-content` is not an
-            // animatable property, so the ease has to come from the pieces that
-            // move: the footer's padding as it becomes sticky, and the message
-            // group sliding up into the space. Without it the whole column
-            // jumps in a single frame.
-            'transition-[padding,gap] duration-300 ease-out motion-reduce:transition-none',
+            // moment the first message lands. Neither half of that is a
+            // transitionable change — `justify-content` has no interpolation and
+            // the footer's `margin-top: auto` has no value to interpolate — so
+            // the motion is played from a measured offset by `useFirstTurnDrop`
+            // rather than declared here.
             isEmpty && 'justify-center'
           )}>
           {loadError ? (
@@ -255,18 +256,23 @@ const ThreadRoot: FC<{
 
           <div
             data-slot="aui_message-group"
-            // Carries the motion of the transition: the first turn slides up
-            // into the space the composer just left, so the eye follows the
-            // conversation down rather than finding it already there.
-            className="mb-14 flex flex-col gap-y-6 duration-300 ease-out empty:hidden data-[has-messages]:animate-in data-[has-messages]:fade-in data-[has-messages]:slide-in-from-bottom-2 motion-reduce:animate-none"
+            // The first turn rises into the space the composer just left, so the
+            // eye follows the conversation instead of finding it already there.
+            // Paced with the composer's drop (600ms) and travelling far enough
+            // to be seen — at 8px over 300ms the whole thing read as a flicker.
+            className="mb-14 flex flex-col gap-y-6 duration-500 ease-out empty:hidden data-[has-messages]:animate-in data-[has-messages]:fade-in data-[has-messages]:slide-in-from-bottom-6 motion-reduce:animate-none"
             data-has-messages={!isEmpty || undefined}>
             <ThreadPrimitive.Messages>{() => <ThreadMessage />}</ThreadPrimitive.Messages>
           </div>
 
           <ThreadPrimitive.ViewportFooter
+            ref={footerRef}
             className={cn(
               'aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6',
-              'transition-[margin,padding,border-radius] duration-300 ease-out motion-reduce:transition-none',
+              // Only the corner rounding is declared here; the drop itself is
+              // the measured transform above, which is the only thing that can
+              // animate a move driven by `justify-content` / `margin: auto`.
+              'transition-[border-radius] duration-500 ease-out motion-reduce:transition-none',
               !isEmpty && 'sticky bottom-0 mt-auto rounded-t-(--composer-radius)'
             )}>
             <ThreadScrollToBottom />
@@ -686,7 +692,6 @@ const AssistantMessage: FC = () => {
             Stopped
           </span>
         </AuiIf>
-        <BranchPicker />
         <AnswerVariantSwitcher />
         <AssistantActionBar />
       </div>
@@ -697,11 +702,20 @@ const AssistantMessage: FC = () => {
 /**
  * `‹ 2/3 ›` when this question has been answered more than once.
  *
- * Separate from `BranchPicker` above, which is assistant-ui's own control over
- * branches the runtime tracks in its repository. Regenerated answers are ours:
- * they live in the message log, survive a reload, and are what the core seeds
- * the model from — so the switcher reads them from the store rather than from
- * the runtime.
+ * This is the only answer counter in the transcript. assistant-ui's own
+ * `BranchPickerPrimitive` used to sit beside it and had to go: with an external
+ * store its repository is append-only (`store.messages` adds every incoming
+ * message and deletes nothing that vanished), so the streaming tail and the
+ * optimistic placeholder stay behind as siblings of the persisted reply and
+ * *every* finished answer reported `2/2`. The arrows could not fix it either —
+ * switching a branch needs `setMessages`, which the adapter does not implement,
+ * so the capability is false and the control was inert. See
+ * `useAuiEditCapabilities` in `aui/auiThreadState`, which says exactly this.
+ *
+ * Regenerated answers are ours instead: they live in the message log, survive a
+ * reload, and are what the core seeds the model from — so the switcher reads
+ * them from the store, and appears only for a question that really has more
+ * than one answer.
  */
 const AnswerVariantSwitcher: FC = () => {
   const messageId = useAuiState(s => s.message.id);
@@ -781,11 +795,6 @@ const UserMessage: FC = () => {
           <UserActionBar />
         </div>
       </div>
-
-      <BranchPicker
-        data-slot="aui_user-branch-picker"
-        className="col-span-full col-start-1 row-start-3 -me-1 justify-end"
-      />
     </MessagePrimitive.Root>
   );
 };
@@ -834,31 +843,5 @@ const EditComposer: FC = () => {
         </div>
       </ComposerPrimitive.Root>
     </MessagePrimitive.Root>
-  );
-};
-
-const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({ className, ...rest }) => {
-  return (
-    <BranchPickerPrimitive.Root
-      hideWhenSingleBranch
-      className={cn(
-        'aui-branch-picker-root text-muted-foreground -ms-2 me-2 inline-flex items-center text-xs',
-        className
-      )}
-      {...rest}>
-      <BranchPickerPrimitive.Previous asChild>
-        <TooltipIconButton tooltip="Previous">
-          <ChevronLeftIcon />
-        </TooltipIconButton>
-      </BranchPickerPrimitive.Previous>
-      <span className="aui-branch-picker-state font-medium">
-        <BranchPickerPrimitive.Number /> / <BranchPickerPrimitive.Count />
-      </span>
-      <BranchPickerPrimitive.Next asChild>
-        <TooltipIconButton tooltip="Next">
-          <ChevronRightIcon />
-        </TooltipIconButton>
-      </BranchPickerPrimitive.Next>
-    </BranchPickerPrimitive.Root>
   );
 };

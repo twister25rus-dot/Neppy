@@ -178,6 +178,27 @@ pub struct SetActiveVariantRequest {
     pub variant_id: String,
 }
 
+/// Request to start another answer to a question, keeping the one it has.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct BeginAnswerVariantRequest {
+    pub thread_id: String,
+    /// The user message about to be answered again.
+    pub message_id: String,
+}
+
+/// What tagging the existing answer produced.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BeginAnswerVariantResponse {
+    /// The turn id the existing answer now carries, so the caller can name it
+    /// when switching back. Absent when the question had no answer yet.
+    pub variant_turn_id: Option<String>,
+    /// How many messages were tagged. A segmented answer is several.
+    pub tagged: usize,
+    /// Answers this question has, counting the one about to be produced.
+    pub variant_count: usize,
+}
+
 /// Request to update labels for a conversation thread.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
