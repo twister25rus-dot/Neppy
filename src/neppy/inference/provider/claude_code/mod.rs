@@ -8,6 +8,14 @@
 //! (no `--allowedTools` set means CC's own tools simply don't fire
 //! during a non-interactive `-p` turn).
 
+/// The provider slug for the Claude Code CLI.
+///
+/// A constant because this string decides routing in several places — the
+/// provider factory, the model listing, the composer's route check — and a
+/// typo in any of them is a silent fallthrough to a different provider rather
+/// than an error.
+pub const PROVIDER_SLUG: &str = "claude-code";
+
 /// The `claude` binary this host would use, for callers outside the core.
 ///
 /// The desktop shell's login launcher needs the same answer the provider uses:

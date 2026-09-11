@@ -222,6 +222,42 @@ fn openai_codex_models_url_includes_client_version_query() {
 }
 
 #[tokio::test]
+async fn claude_code_models_come_from_the_cli_not_an_http_probe() {
+    // Its endpoint is the placeholder `cli://claude-code`, which is not a URL.
+    // The generic path built `cli://claude-code/models`, and the picker showed
+    // "Could not load models from this provider" over a reqwest builder error.
+    use crate::neppy::config::schema::cloud_providers::{AuthStyle, CloudProviderCreds};
+
+    let mut config = crate::neppy::config::Config::default();
+    config.cloud_providers = vec![CloudProviderCreds {
+        id: "p_cc".to_string(),
+        slug: crate::neppy::inference::provider::claude_code::PROVIDER_SLUG.to_string(),
+        label: "claude-code".to_string(),
+        endpoint: "cli://claude-code".to_string(),
+        auth_style: AuthStyle::None,
+        ..Default::default()
+    }];
+
+    let outcome =
+        crate::neppy::inference::provider::ops::models::list_configured_models_from_config(
+            "p_cc", &config,
+        )
+        .await
+        .expect("claude-code listing must not attempt HTTP");
+
+    let models = outcome.value["models"].as_array().expect("models array");
+    let ids: Vec<&str> = models.iter().filter_map(|m| m["id"].as_str()).collect();
+    assert!(
+        ids.contains(&"sonnet") && ids.contains(&"opus"),
+        "expected the documented aliases, got {ids:?}"
+    );
+    assert!(
+        !ids.iter().any(|id| id.contains("claude-sonnet-4")),
+        "aliases, not pinned versions: a pinned id goes stale on the next CLI release"
+    );
+}
+
+#[tokio::test]
 async fn openrouter_invalid_key_fails_before_models_catalog_probe() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let (endpoint, state) = spawn_openrouter_probe_server(StatusCode::UNAUTHORIZED).await;

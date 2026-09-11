@@ -66,7 +66,7 @@ pub(super) fn route_for_model_pick(pick: &str, config: &Config) -> Option<String
         return None;
     }
     let known = LocalProviderKind::from_str_loose(slug).is_some()
-        || slug == "claude-code"
+        || slug == crate::neppy::inference::provider::claude_code::PROVIDER_SLUG
         || config
             .cloud_providers
             .iter()

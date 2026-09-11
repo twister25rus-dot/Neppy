@@ -65,6 +65,29 @@ pub async fn list_configured_models_from_config(
 
     log::debug!("[providers][list_models] provider_id={}", provider_id);
 
+    // Claude Code is a subprocess, not an HTTP endpoint. Its `cloud_providers`
+    // entry carries the placeholder `cli://claude-code`, and the generic path
+    // below would try to GET `cli://claude-code/models` — which is not a URL, so
+    // the picker showed "Could not load models from this provider" with a
+    // reqwest builder error behind it.
+    //
+    // The CLI has no subcommand that enumerates models, so this returns what
+    // `claude --model` documents it accepts. Aliases rather than pinned version
+    // strings on purpose: the CLI resolves each alias to the newest model of
+    // that family, so this list does not go stale on the next release the way a
+    // hardcoded `claude-sonnet-4-6` would.
+    if entry_slug_is_claude_code(&provider_id, config) {
+        let models = claude_code_models();
+        log::info!(
+            "[providers][list_models] slug=claude-code returning {} documented aliases (no HTTP: the CLI is a subprocess)",
+            models.len()
+        );
+        return Ok(crate::rpc::RpcOutcome::new(
+            serde_json::json!({ "models": models }),
+            vec![format!("{} models", models.len())],
+        ));
+    }
+
     // Explicit `cloud_providers` entry wins (e.g. a user-pointed remote
     // ollama box at https://ollama.example.com/v1). Falling back to the
     // local-runtime synthesis below only happens when no entry matches.
@@ -277,6 +300,38 @@ pub async fn list_configured_models_from_config(
 /// Per-entry parsing ignores entries that don't have a usable string id/slug
 /// (lax on purpose — many OpenAI-compatible servers include malformed rows for
 /// capabilities they don't fully implement).
+/// Whether this id/slug names the Claude Code CLI provider.
+///
+/// Matches on the slug rather than the endpoint so a user who edits the
+/// placeholder endpoint does not silently fall back to an HTTP probe that
+/// cannot work.
+fn entry_slug_is_claude_code(provider_id: &str, config: &crate::neppy::config::Config) -> bool {
+    if provider_id == crate::neppy::inference::provider::claude_code::PROVIDER_SLUG {
+        return true;
+    }
+    config.cloud_providers.iter().any(|e| {
+        e.id == provider_id
+            && e.slug == crate::neppy::inference::provider::claude_code::PROVIDER_SLUG
+    })
+}
+
+/// The model names `claude --model` documents.
+///
+/// Aliases first, because they are what the CLI resolves to the newest model of
+/// each family and therefore what a user should normally pick. The configured
+/// default is appended when it is not already one of them, so a pinned full
+/// name a user has set stays selectable.
+fn claude_code_models() -> Vec<ModelInfo> {
+    ["fable", "opus", "sonnet", "haiku"]
+        .into_iter()
+        .map(|id| ModelInfo {
+            id: id.to_string(),
+            owned_by: Some("claude-code".to_string()),
+            context_window: None,
+        })
+        .collect()
+}
+
 pub fn parse_models_response(body: &serde_json::Value) -> Result<Vec<ModelInfo>, String> {
     let obj = body.as_object().ok_or_else(|| {
         format!(
