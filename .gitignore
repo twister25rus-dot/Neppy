@@ -96,7 +96,6 @@ tauri.key
 tauri.key.pub
 /target/
 src-tauri/target/
-src-tauri/target-release/
 app/src-tauri-mobile/gen/
 app/src-tauri-mobile/target/
 .target-codex/
