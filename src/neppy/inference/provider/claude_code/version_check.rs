@@ -10,10 +10,27 @@ use std::process::Command;
 
 use super::types::{CliStatus, MIN_CLI_VERSION};
 
-/// Locate the `claude` CLI binary on `PATH`.
+/// Locate the `claude` CLI binary.
 ///
-/// Honors `OPENHUMAN_CLAUDE_CLI` env override so tests and power users can
-/// point at a specific binary.
+/// `PATH` alone is not enough, and this is the whole reason the CLI reads as
+/// missing in the desktop app while working fine in a terminal. A macOS app
+/// launched from Finder or the Dock inherits the minimal launchd `PATH`
+/// (`/usr/bin:/bin:/usr/sbin:/sbin`), so a `claude` installed by a node version
+/// manager (`~/.nvm/versions/node/<v>/bin`), by the native installer
+/// (`~/.local/bin`), or by Homebrew is invisible — the same class of bug as
+/// #3425 for piper, which `inference::paths` already works around for its own
+/// binaries.
+///
+/// Candidates are tried in order and the first that **works** wins, not the
+/// first that exists: a stale install can leave a `claude` that is not runnable
+/// here at all — on this author's machine `/usr/local/bin/claude` is a symlink
+/// to a Windows `claude.exe` — and picking it would swap "not found" for a
+/// spawn failure on every turn. If none runs, the first that exists is returned
+/// anyway so [`probe`] can report `Unusable` against a real path instead of
+/// claiming nothing is installed.
+///
+/// Honors `OPENHUMAN_CLAUDE_CLI` so tests and power users can point at one
+/// exactly; that path is taken as given and never probed.
 pub fn resolve_binary() -> Option<PathBuf> {
     if let Ok(explicit) = std::env::var("OPENHUMAN_CLAUDE_CLI") {
         let p = PathBuf::from(explicit);
@@ -21,7 +38,91 @@ pub fn resolve_binary() -> Option<PathBuf> {
             return Some(p);
         }
     }
-    which_on_path("claude")
+
+    let candidates = candidate_paths();
+    let mut first_existing: Option<PathBuf> = None;
+    for candidate in candidates {
+        if !candidate.is_file() {
+            continue;
+        }
+        if first_existing.is_none() {
+            first_existing = Some(candidate.clone());
+        }
+        if runs(&candidate) {
+            return Some(candidate);
+        }
+        log::debug!(
+            "[claude-code][version] {} exists but does not run; trying the next candidate",
+            candidate.display()
+        );
+    }
+    first_existing
+}
+
+/// Whether this binary answers `--version` with something parseable.
+fn runs(path: &std::path::Path) -> bool {
+    Command::new(path)
+        .arg("--version")
+        .output()
+        .ok()
+        .filter(|out| out.status.success())
+        .map(|out| parse_version(&String::from_utf8_lossy(&out.stdout)).is_some())
+        .unwrap_or(false)
+}
+
+/// Everywhere a `claude` may live, most specific first.
+///
+/// `PATH` leads because a user who put it there means it. The rest are the
+/// locations an installer uses without touching a GUI app's environment.
+fn candidate_paths() -> Vec<PathBuf> {
+    candidate_paths_from(
+        which_on_path("claude"),
+        directories::UserDirs::new().map(|d| d.home_dir().to_path_buf()),
+    )
+}
+
+/// The candidate list, given what `PATH` produced and where home is.
+///
+/// Split out from [`candidate_paths`] so the order can be pinned in a test
+/// without a real `HOME` or a real `PATH` — the order is the whole behaviour
+/// here, and it is not observable from the outside once a binary is picked.
+fn candidate_paths_from(path_hit: Option<PathBuf>, home: Option<PathBuf>) -> Vec<PathBuf> {
+    let name = if cfg!(windows) { "claude.exe" } else { "claude" };
+    let mut out: Vec<PathBuf> = Vec::new();
+
+    if let Some(from_path) = path_hit {
+        out.push(from_path);
+    }
+    if cfg!(windows) {
+        return out;
+    }
+
+    if let Some(home) = home {
+        // The native installer's symlink, and Claude Code's own local install.
+        out.push(home.join(".local").join("bin").join(name));
+        out.push(home.join(".claude").join("local").join(name));
+        // Node version managers put a global npm install under a versioned
+        // directory that no GUI app has on its PATH. Newest first, so a current
+        // CLI is preferred over one left behind by an older runtime.
+        let nvm_versions = home.join(".nvm").join("versions").join("node");
+        if let Ok(entries) = std::fs::read_dir(&nvm_versions) {
+            let mut versions: Vec<PathBuf> = entries
+                .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+                .collect();
+            versions.sort();
+            versions.reverse();
+            out.extend(versions.into_iter().map(|v| v.join("bin").join(name)));
+        }
+        out.push(home.join(".volta").join("bin").join(name));
+        out.push(home.join(".bun").join("bin").join(name));
+    }
+
+    // Homebrew and the system dirs, last: a broken leftover most often lives in
+    // `/usr/local/bin`.
+    for dir in ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"] {
+        out.push(PathBuf::from(dir).join(name));
+    }
+    out
 }
 
 fn which_on_path(name: &str) -> Option<PathBuf> {
@@ -158,6 +259,66 @@ mod tests {
         assert!(version_lt("2.0.0", "2.0.1"));
         assert!(!version_lt("2.0.0", "2.0.0"));
         assert!(!version_lt("2.1.0", "2.0.9"));
+    }
+
+    #[test]
+    fn a_path_hit_leads_but_is_not_the_only_candidate() {
+        // The GUI-launched app is the case that matters: with nothing on PATH
+        // there must still be somewhere to look, or the CLI reads as missing
+        // while working fine in a terminal.
+        let home = PathBuf::from("/home/someone");
+        let with_path = candidate_paths_from(Some(PathBuf::from("/w/bin/claude")), Some(home.clone()));
+        assert_eq!(with_path.first(), Some(&PathBuf::from("/w/bin/claude")));
+
+        let without_path = candidate_paths_from(None, Some(home.clone()));
+        assert!(
+            !without_path.is_empty(),
+            "an empty PATH must not mean an empty candidate list"
+        );
+        assert!(without_path.contains(&home.join(".local").join("bin").join("claude")));
+        assert!(without_path.contains(&home.join(".claude").join("local").join("claude")));
+    }
+
+    #[test]
+    fn homebrew_and_usr_local_come_after_the_user_installs() {
+        // `/usr/local/bin/claude` is where a stale or wrong-platform install
+        // tends to linger, so it must never outrank a user's own.
+        let home = PathBuf::from("/home/someone");
+        let candidates = candidate_paths_from(None, Some(home.clone()));
+
+        let local_bin = candidates
+            .iter()
+            .position(|c| *c == home.join(".local").join("bin").join("claude"))
+            .expect("~/.local/bin is a candidate");
+        let usr_local = candidates
+            .iter()
+            .position(|c| *c == PathBuf::from("/usr/local/bin/claude"))
+            .expect("/usr/local/bin is a candidate");
+
+        assert!(local_bin < usr_local, "a user install must be preferred");
+    }
+
+    #[test]
+    fn node_version_manager_installs_are_found_newest_first() {
+        // An npm global install lands under a versioned directory no GUI app
+        // has on its PATH. Two runtimes installed, the newer one wins.
+        let home = tempfile::tempdir().expect("tempdir");
+        let versions = home.path().join(".nvm").join("versions").join("node");
+        for version in ["v20.11.0", "v24.16.0"] {
+            std::fs::create_dir_all(versions.join(version).join("bin")).expect("mkdir");
+        }
+
+        let candidates = candidate_paths_from(None, Some(home.path().to_path_buf()));
+        let nvm: Vec<&PathBuf> = candidates
+            .iter()
+            .filter(|c| c.starts_with(&versions))
+            .collect();
+
+        assert_eq!(nvm.len(), 2);
+        assert!(
+            nvm[0].to_string_lossy().contains("v24.16.0"),
+            "newest runtime first, got {nvm:?}"
+        );
     }
 
     #[test]

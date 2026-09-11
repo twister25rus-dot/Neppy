@@ -73,7 +73,7 @@ function LiveResponseBlock({ text }: { text: string }) {
         </span>
         <span
           aria-hidden
-          className="text-[10px] text-content-faint transition-transform group-data-[state=open]:rotate-90">
+          className="text-[10px] text-content-faint transition-transform group-data-[state=open]/resp:rotate-90">
           ▶
         </span>
       </CollapsibleTrigger>
@@ -164,7 +164,7 @@ function TimelineRowDisclosure({
         <RepeatCount count={count} />
         <span
           aria-hidden
-          className="text-[11px] text-content-faint transition-transform group-data-[state=open]:rotate-90">
+          className="text-[11px] text-content-faint transition-transform group-data-[state=open]/row:rotate-90">
           ▶
         </span>
       </CollapsibleTrigger>
@@ -608,7 +608,7 @@ export function ToolTimelineBlock({
           </span>
           <span
             aria-hidden
-            className="text-[11px] text-content-faint transition-transform group-data-[state=open]:rotate-90">
+            className="text-[11px] text-content-faint transition-transform group-data-[state=open]/insights:rotate-90">
             ▶
           </span>
         </CollapsibleTrigger>
