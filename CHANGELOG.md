@@ -4,6 +4,15 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.7] - 2026-09-11
+
+### What's Changed
+
+- Say why Claude Code sign-in could not be determined, and open the right terminal ([`5a585245`](https://github.com/twister25rus-dot/Neppy/commit/5a585245d8ee955dd8ecdeead638b3aafd32c08f))
+- Ease the section and new-chat transitions, and drop the duplicate effort control ([`f1432c93`](https://github.com/twister25rus-dot/Neppy/commit/f1432c93b964255a6cd9526ae97574f9a63336a0))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/1521f86135cdc09c4f7ca1a0eb9fb672ad05cb2a...f1432c93b964255a6cd9526ae97574f9a63336a0
+
 ## [0.66.6] - 2026-09-11
 
 ### What's Changed
