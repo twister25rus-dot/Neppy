@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { ThreadMessage } from '../../types/thread';
 import {
   ACTIVE_VARIANT,
   activeTurnFor,
@@ -9,7 +10,6 @@ import {
   VARIANT_TURN,
   variantTurnsFor,
 } from '../answerVariants';
-import type { ThreadMessage } from '../../types/thread';
 
 const msg = (
   id: string,

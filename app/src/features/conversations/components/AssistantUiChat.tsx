@@ -1,12 +1,12 @@
 import { Thread, type ThreadComponents } from '@/components/assistant-ui/thread';
-import ComposerSamplingPill, {
-  type ComposerSampling,
-} from '../../../components/chat/ComposerSamplingPill';
 import { type AssistantState, useAui, useAuiState } from '@assistant-ui/react';
 import { PlusIcon } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import AttachmentPreview from '../../../components/chat/AttachmentPreview';
+import ComposerSamplingPill, {
+  type ComposerSampling,
+} from '../../../components/chat/ComposerSamplingPill';
 import { Button } from '../../../components/ui';
 import type { Attachment } from '../../../lib/attachments';
 import { useRegisterAction } from '../../../lib/commands/useRegisterAction';

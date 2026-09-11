@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import AnswerSwitcher from '../AnswerSwitcher';
 import { renderWithProviders } from '../../../test/test-utils';
 import type { ThreadMessage } from '../../../types/thread';
+import AnswerSwitcher from '../AnswerSwitcher';
 
 const setActiveAnswer = vi.fn().mockResolvedValue(undefined);
 vi.mock('../../../services/api/threadApi', () => ({
@@ -28,10 +28,7 @@ const msg = (
 
 const withMessages = (messages: ThreadMessage[]) => ({
   preloadedState: {
-    thread: {
-      selectedThreadId: 't1',
-      messagesByThreadId: { t1: messages },
-    },
+    thread: { selectedThreadId: 't1', messagesByThreadId: { t1: messages } },
   } as never,
 });
 

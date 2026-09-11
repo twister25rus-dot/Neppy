@@ -76,10 +76,12 @@ import {
   selectAgentProfiles,
 } from '../../store/agentProfileSlice';
 import {
+  beginAnswerVariant,
   beginInferenceTurn,
   clearFollowupsForThread,
   clearRuntimeForThread,
   clearThreadSendPending,
+  endAnswerVariant,
   enqueueFollowup,
   fetchAndHydrateDerivedTranscript,
   fetchAndHydrateTurnState,
@@ -87,8 +89,6 @@ import {
   markThreadSendPending,
   type ProcessingTranscriptItem,
   type QueuedFollowup,
-  beginAnswerVariant,
-  endAnswerVariant,
   registerParallelRequest,
   setComposerModel,
   setComposerSampling,

@@ -27,6 +27,7 @@ import {
 import { TooltipIconButton } from '@/components/assistant-ui/tooltip-icon-button';
 import { Button } from '@/components/assistant-ui/ui/button';
 import { Skeleton } from '@/components/assistant-ui/ui/skeleton';
+import AnswerSwitcher from '@/components/chat/AnswerSwitcher';
 import ModelQualityPill from '@/components/chat/ModelQualityPill';
 import {
   ActionBarMorePrimitive,
@@ -48,8 +49,6 @@ import {
   useAui,
   useAuiState,
 } from '@assistant-ui/react';
-
-import AnswerSwitcher from '@/components/chat/AnswerSwitcher';
 import { LexicalComposerInput } from '@assistant-ui/react-lexical';
 import {
   ArrowDownIcon,

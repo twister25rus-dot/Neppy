@@ -46,10 +46,7 @@ export function variantTurn(message: ThreadMessage): string {
 }
 
 /** The distinct answers to a question, as turn ids in the order produced. */
-export function variantTurnsFor(
-  messages: readonly ThreadMessage[],
-  questionId: string
-): string[] {
+export function variantTurnsFor(messages: readonly ThreadMessage[], questionId: string): string[] {
   const turns: string[] = [];
   for (const message of messages) {
     if (variantOf(message) !== questionId) continue;

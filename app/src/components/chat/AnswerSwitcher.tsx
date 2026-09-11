@@ -3,8 +3,8 @@ import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 import { answerPosition } from '../../providers/answerVariants';
 import { threadApi } from '../../services/api/threadApi';
-import { loadThreadMessages } from '../../store/threadSlice';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { loadThreadMessages } from '../../store/threadSlice';
 import type { ThreadMessage } from '../../types/thread';
 
 /** Stable empty array so the selector does not return a new one each render. */

@@ -416,7 +416,7 @@ describe('chatService.subscribeChatEvents', () => {
     });
   });
 
-  it('forwards the turn\'s reasoning and sampling ask', async () => {
+  it("forwards the turn's reasoning and sampling ask", async () => {
     const socket = createMockSocket();
     bindMockSocket(socket);
 

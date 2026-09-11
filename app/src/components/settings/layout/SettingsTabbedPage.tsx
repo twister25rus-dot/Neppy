@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import ChipTabs, { type ChipTabItem } from '../../layout/ChipTabs';
 import { cn } from '../../../lib/cn';
+import ChipTabs, { type ChipTabItem } from '../../layout/ChipTabs';
 
 export interface SettingsTabbedPageProps<T extends string> {
   title: ReactNode;

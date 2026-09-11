@@ -1,8 +1,8 @@
 import { LuSlidersHorizontal } from 'react-icons/lu';
 
 import { useT } from '../../lib/i18n/I18nContext';
-import { PopoverContent, PopoverRoot, PopoverTrigger } from '../ui/Popover';
 import Button from '../ui/Button';
+import { PopoverContent, PopoverRoot, PopoverTrigger } from '../ui/Popover';
 
 /** Generation settings for one turn. `null` means "leave it to the provider". */
 export interface ComposerSampling {
@@ -11,11 +11,7 @@ export interface ComposerSampling {
   maxTokens: number | null;
 }
 
-export const EMPTY_SAMPLING: ComposerSampling = {
-  temperature: null,
-  topP: null,
-  maxTokens: null,
-};
+export const EMPTY_SAMPLING: ComposerSampling = { temperature: null, topP: null, maxTokens: null };
 
 interface ComposerSamplingPillProps {
   value: ComposerSampling;
@@ -42,8 +38,7 @@ export default function ComposerSamplingPill({
   className,
 }: ComposerSamplingPillProps) {
   const { t } = useT();
-  const active =
-    value.temperature != null || value.topP != null || value.maxTokens != null;
+  const active = value.temperature != null || value.topP != null || value.maxTokens != null;
 
   const set = (key: keyof ComposerSampling) => (raw: string) => {
     const trimmed = raw.trim();
@@ -58,12 +53,7 @@ export default function ComposerSamplingPill({
     onChange({ ...value, [key]: parsed });
   };
 
-  const field = (
-    key: keyof ComposerSampling,
-    label: string,
-    step: string,
-    placeholder: string
-  ) => (
+  const field = (key: keyof ComposerSampling, label: string, step: string, placeholder: string) => (
     <label className="flex items-center justify-between gap-3 text-xs">
       <span className="font-mono text-content-secondary">{label}</span>
       <input

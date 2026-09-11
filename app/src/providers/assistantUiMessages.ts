@@ -5,7 +5,6 @@ import type {
 } from '@assistant-ui/react';
 
 import { parseMessageImages } from '../lib/attachments';
-import { isActiveAnswer } from './answerVariants';
 import { unwrapToolCallEnvelope } from '../lib/chat/toolCallEnvelope';
 import type {
   ProcessingTranscriptItem,
@@ -13,6 +12,7 @@ import type {
   ToolTimelineEntry,
 } from '../store/chatRuntimeSlice';
 import type { ThreadMessage } from '../types/thread';
+import { isActiveAnswer } from './answerVariants';
 
 /**
  * Redux -> assistant-ui message mapping.

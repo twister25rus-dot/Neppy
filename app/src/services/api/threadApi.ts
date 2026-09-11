@@ -93,11 +93,7 @@ export const threadApi = {
   ): Promise<void> => {
     await callCoreRpc({
       method: 'openhuman.threads_message_set_active_variant',
-      params: {
-        thread_id: threadId,
-        message_id: questionMessageId,
-        variant_id: variantTurnId,
-      },
+      params: { thread_id: threadId, message_id: questionMessageId, variant_id: variantTurnId },
     });
   },
 

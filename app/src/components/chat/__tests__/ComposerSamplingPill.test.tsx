@@ -1,8 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import ComposerSamplingPill, { EMPTY_SAMPLING } from '../ComposerSamplingPill';
 import { renderWithProviders } from '../../../test/test-utils';
+import ComposerSamplingPill, { EMPTY_SAMPLING } from '../ComposerSamplingPill';
 
 const open = () => fireEvent.click(screen.getByTestId('composer-sampling-trigger'));
 
@@ -48,7 +48,10 @@ describe('ComposerSamplingPill', () => {
     unmount();
 
     renderWithProviders(
-      <ComposerSamplingPill value={{ temperature: 0.2, topP: 0.9, maxTokens: 512 }} onChange={onChange} />
+      <ComposerSamplingPill
+        value={{ temperature: 0.2, topP: 0.9, maxTokens: 512 }}
+        onChange={onChange}
+      />
     );
     open();
     fireEvent.click(screen.getByRole('button', { name: /reset/i }));
