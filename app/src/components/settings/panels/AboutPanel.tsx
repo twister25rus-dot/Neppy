@@ -2,9 +2,14 @@
  * About / Updates settings panel.
  *
  * Surfaces the running app version, the user-triggered "Check for updates"
- * action, and a link to the GitHub releases page. The actual install flow
- * is driven by the globally-mounted `<AppUpdatePrompt />` — calling `apply()`
- * here would race with that component's own state machine.
+ * action, and a link to the GitHub releases page.
+ *
+ * It also carries the download / restart buttons, because this is where a user
+ * who dismissed the notice comes back to. Both go through the same Tauri
+ * commands the banner uses and the shell holds one staged update, so the two
+ * surfaces agree by construction — what must NOT be called here is `apply()`,
+ * the combined check-download-install path, which would run a second flow
+ * alongside the banner's.
  */
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
@@ -25,7 +30,7 @@ const AboutPanel = () => {
   const { t } = useT();
   // The auto-cadence is already running via the global <AppUpdatePrompt />;
   // disable it here so opening the panel doesn't double-trigger probes.
-  const { phase, info, error, check } = useAppUpdate({ autoCheck: false });
+  const { phase, info, error, check, download, install } = useAppUpdate({ autoCheck: false });
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
   const coreMode = useAppSelector(state => state.coreMode.mode);
   const [rpcUrl, setRpcUrl] = useState<string | null>(null);
@@ -59,6 +64,11 @@ const AboutPanel = () => {
 
   const isChecking = phase === 'checking';
   const summary = summaryFor(phase, info, error, t);
+  // Nothing is fetched until asked for, so the panel needs the ask. `available`
+  // offers the download; once bytes are staged the same row offers the restart.
+  const canDownload = phase === 'available' && Boolean(info?.available);
+  const canInstall = phase === 'ready_to_install';
+  const isBusy = phase === 'downloading' || phase === 'installing' || phase === 'restarting';
 
   const handleCheck = async () => {
     console.debug('[app-update] AboutPanel: manual check');
@@ -87,14 +97,36 @@ const AboutPanel = () => {
           label={t('settings.about.softwareUpdates')}
           description={summary}
           control={
-            <Button
-              type="button"
-              variant="primary"
-              size="xs"
-              onClick={handleCheck}
-              disabled={isChecking}>
-              {isChecking ? t('settings.about.checking') : t('settings.about.checkForUpdates')}
-            </Button>
+            <div className="flex items-center gap-2">
+              {canDownload && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="xs"
+                  data-testid="about-download-update"
+                  onClick={() => void download()}>
+                  {t('app.update.downloadNow')}
+                </Button>
+              )}
+              {canInstall && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="xs"
+                  data-testid="about-restart-to-update"
+                  onClick={() => void install()}>
+                  {t('app.update.restartNow')}
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant={canDownload || canInstall ? 'secondary' : 'primary'}
+                size="xs"
+                onClick={handleCheck}
+                disabled={isChecking || isBusy}>
+                {isChecking ? t('settings.about.checking') : t('settings.about.checkForUpdates')}
+              </Button>
+            </div>
           }
         />
         {lastCheckedAt && (

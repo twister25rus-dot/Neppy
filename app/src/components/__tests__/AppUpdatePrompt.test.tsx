@@ -3,7 +3,10 @@
  *
  * Drives the underlying `useAppUpdate` hook through the shared mocks and
  * asserts the user-visible UX contract:
- *   - silent during background download (no banner on `available`/`downloading`)
+ *   - a found update NOTIFIES and downloads nothing until asked
+ *     ("Download" / "Later" on `available`)
+ *   - "Later" is remembered for that version, so the 15-minute re-check does
+ *     not bring the same notice back
  *   - prompt with "Restart now" / "Later" once bytes are staged
  *     (`ready_to_install`)
  *   - error surface with retry path
@@ -66,28 +69,70 @@ describe('AppUpdatePrompt', () => {
     mockIsTauri.mockReturnValue(true);
   });
 
-  it('stays silent while a download is in progress', async () => {
-    mockCheckAppUpdate.mockResolvedValueOnce({
+  it('notifies that a version is available and downloads nothing on its own', async () => {
+    mockCheckAppUpdate.mockResolvedValue({
       current_version: '0.50.0',
       available: true,
       available_version: '0.51.0',
       body: null,
     });
-    // Simulate a check that finds an update + a download that's still
-    // running — the hook will move into "available" then "downloading".
-    mockDownloadAppUpdate.mockImplementation(
-      () =>
-        new Promise(() => {
-          /* never resolves during the test */
-        })
-    );
 
     renderWithProviders(<AppUpdatePrompt initialCheckDelayMs={0} recheckIntervalMs={0} />);
 
-    // Give the auto-check + auto-download timers a chance to run.
+    await waitFor(() => {
+      expect(screen.getByText('Update available')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Version 0.51.0 is available.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Download/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Later/ })).toBeInTheDocument();
+    // The whole point: the bytes are the user's bandwidth to spend. Waited out
+    // the old auto-download grace window before asserting, so this would fail
+    // if the default came back.
     await new Promise(resolve => setTimeout(resolve, 50));
+    expect(mockDownloadAppUpdate).not.toHaveBeenCalled();
+  });
 
-    expect(screen.queryByTestId('app-update-prompt')).not.toBeInTheDocument();
+  it('clicking "Download" starts the download', async () => {
+    mockCheckAppUpdate.mockResolvedValue({
+      current_version: '0.50.0',
+      available: true,
+      available_version: '0.51.0',
+      body: null,
+    });
+    mockDownloadAppUpdate.mockResolvedValue({ ready: true, version: '0.51.0', body: null });
+
+    renderWithProviders(<AppUpdatePrompt initialCheckDelayMs={0} recheckIntervalMs={0} />);
+
+    const downloadBtn = await screen.findByTestId('app-update-download');
+    fireEvent.click(downloadBtn);
+
+    await waitFor(() => expect(mockDownloadAppUpdate).toHaveBeenCalledTimes(1));
+    expect(mockApplyAppUpdate).not.toHaveBeenCalled();
+  });
+
+  it('remembers "Later" for that version across the re-check cadence', async () => {
+    mockCheckAppUpdate.mockResolvedValue({
+      current_version: '0.50.0',
+      available: true,
+      available_version: '0.51.0',
+      body: null,
+    });
+
+    // A 50ms re-check, so the cadence runs several times inside the test: the
+    // dismissal has to survive re-entering `available`, not just one render.
+    renderWithProviders(<AppUpdatePrompt initialCheckDelayMs={0} recheckIntervalMs={50} />);
+
+    const laterBtn = await screen.findByRole('button', { name: /Later/ });
+    fireEvent.click(laterBtn);
+    await waitFor(() => {
+      expect(screen.queryByText('Update available')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 180));
+    });
+    expect(screen.queryByText('Update available')).not.toBeInTheDocument();
+    expect(mockDownloadAppUpdate).not.toHaveBeenCalled();
   });
 
   it('shows the "Restart now" prompt once the download is staged', async () => {

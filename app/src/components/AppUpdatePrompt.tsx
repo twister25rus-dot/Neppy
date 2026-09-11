@@ -2,13 +2,18 @@
  * App auto-update prompt.
  *
  * Globally-mounted banner that surfaces the Tauri shell updater to the user.
- * The state machine, listeners, and auto-download orchestration all live in
- * `useAppUpdate`; this component is a thin presentational layer on top.
+ * The state machine and the updater event listeners live in `useAppUpdate`; this
+ * component is the decision surface on top of it.
  *
- * UX contract: the banner is **silent during background download**. The user
- * only sees a prompt once bytes are staged (`ready_to_install`) — at which
- * point they can choose "Restart now" or "Later". Errors and the active
- * install/restart flow also surface visually.
+ * UX contract: **nothing is downloaded until the user says so.** A check that
+ * finds a new version shows a notice with "Download" and "Later"; choosing
+ * Download shows progress, and once bytes are staged the same card offers
+ * "Restart now" / "Later". Errors and the active install/restart flow also
+ * surface visually.
+ *
+ * "Later" is remembered per version, not per session: the hook re-checks every
+ * 15 minutes, and without that the notice the user dismissed would come back
+ * four times an hour. A newer version than the dismissed one shows again.
  *
  * Visual conventions mirror `LocalAIDownloadSnackbar` — bottom-right portal,
  * stone-900 panel, primary gradient progress bar.
@@ -32,17 +37,17 @@ interface AppUpdatePromptProps {
 /**
  * Phases that should surface a visible banner.
  *
- * `downloading` is shown: the update payload is ~60MB, so staying silent from
- * the moment a new version is found until it is ready meant minutes of nothing
- * on a slow link, with no sign the app had found anything. Surfacing it is also
- * what makes "tell me a new version exists" true rather than only "tell me when
- * it is ready to restart".
+ * `available` is the one the user asked for: the notice that a version exists,
+ * with the decision to fetch it left to them. `downloading` is shown too — the
+ * payload is ~60MB, so a slow link would otherwise be minutes of nothing after
+ * a click.
  *
- * `checking` and `available` remain silent — both are momentary, and
- * `available` transitions straight into `downloading`.
+ * `checking` stays silent: it is momentary, and a background probe that found
+ * nothing is not news.
  */
 function shouldShow(phase: ReturnType<typeof useAppUpdate>['phase']): boolean {
   return (
+    phase === 'available' ||
     phase === 'downloading' ||
     phase === 'ready_to_install' ||
     phase === 'installing' ||
@@ -59,6 +64,12 @@ const AppUpdatePrompt = (props: AppUpdatePromptProps) => {
   const [dismissed, setDismissed] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
   const dismissedErrorRef = useRef<string | null>(null);
+  // The version whose *notice* the user dismissed. Separate from `dismissed`
+  // because the re-check cadence re-enters `available` every 15 minutes, and a
+  // notice that returns on a timer after being dismissed is nagging, not
+  // notifying. Staged bytes are a different matter — "Restart now" is worth
+  // re-offering once the download the user asked for has finished.
+  const dismissedVersionRef = useRef<string | null>(null);
   const currentErrorKey = error ?? 'Update failed. See logs for details.';
   // Re-show on every transition INTO a visible non-error phase, or when a new
   // error differs from the one the user already dismissed this session.
@@ -73,9 +84,14 @@ const AppUpdatePrompt = (props: AppUpdatePromptProps) => {
     void install();
   }, [install]);
 
+  const handleDownload = useCallback(() => {
+    void download();
+  }, [download]);
+
   const handleLater = useCallback(() => {
+    if (phase === 'available') dismissedVersionRef.current = info?.available_version ?? null;
     setDismissed(true);
-  }, []);
+  }, [phase, info?.available_version]);
 
   const handleRetryDownload = useCallback(() => {
     dismissedErrorRef.current = null;
@@ -91,6 +107,15 @@ const AppUpdatePrompt = (props: AppUpdatePromptProps) => {
   }, [currentErrorKey, reset]);
 
   if (!shouldShow(phase) || dismissed) return null;
+  // A notice for a version the user already said "Later" to stays hidden, even
+  // though the re-check walks back through `available` on its own.
+  if (
+    phase === 'available' &&
+    dismissedVersionRef.current !== null &&
+    dismissedVersionRef.current === (info?.available_version ?? null)
+  ) {
+    return null;
+  }
 
   const newVersion = info?.available_version ?? null;
   const currentVersion = info?.current_version ?? null;
@@ -115,7 +140,7 @@ const AppUpdatePrompt = (props: AppUpdatePromptProps) => {
             <UpdateIcon className="w-4 h-4 text-primary-400" />
             <span className="text-sm font-medium text-white">{headerLabel(phase, t)}</span>
           </div>
-          {(phase === 'ready_to_install' || phase === 'error') && (
+          {(phase === 'available' || phase === 'ready_to_install' || phase === 'error') && (
             <Button
               iconOnly
               variant="tertiary"
@@ -129,6 +154,38 @@ const AppUpdatePrompt = (props: AppUpdatePromptProps) => {
 
         {/* Body */}
         <div className="px-4 pt-1 pb-3">
+          {phase === 'available' && (
+            <>
+              <p className="text-xs text-content-faint leading-relaxed">
+                {newVersion
+                  ? t('app.update.versionAvailable').replace('{newVersion}', newVersion)
+                  : t('app.update.newVersionAvailable')}
+                {currentVersion && (
+                  <span className="text-content-muted">
+                    {' '}
+                    {t('app.update.currentlyOn').replace('{version}', currentVersion)}
+                  </span>
+                )}
+              </p>
+              {info?.body && <ReleaseNotes body={info.body} />}
+              <p className="mt-2 text-[11px] text-content-muted leading-relaxed">
+                {t('app.update.downloadNote')}
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleDownload}
+                  className="flex-1"
+                  data-testid="app-update-download">
+                  {t('app.update.downloadNow')}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleLater}>
+                  {t('app.update.later')}
+                </Button>
+              </div>
+            </>
+          )}
+
           {phase === 'ready_to_install' && (
             <>
               <p className="text-xs text-content-faint leading-relaxed">
@@ -194,6 +251,8 @@ function headerLabel(
   t: (k: string) => string
 ): string {
   switch (phase) {
+    case 'available':
+      return t('app.update.header.available');
     case 'ready_to_install':
       return t('app.update.header.readyToInstall');
     case 'installing':

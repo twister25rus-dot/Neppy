@@ -573,6 +573,36 @@ describe('useAppUpdate', () => {
       expect(result.current.phase).toBe('ready_to_install');
     });
 
+    it('does not download by default — finding an update and fetching it are separate decisions', async () => {
+      mockCheckAppUpdate.mockResolvedValueOnce({
+        current_version: '0.50.0',
+        available: true,
+        available_version: '0.51.0',
+        body: null,
+      });
+
+      // No `autoDownload` at all: this pins the DEFAULT, which is what the
+      // update notice depends on. Passing `false` explicitly (below) would keep
+      // passing if the default flipped back to true.
+      const { result } = renderHook(() => useAppUpdate({ autoCheck: false }));
+      await flush();
+
+      await act(async () => {
+        await result.current.check();
+      });
+      expect(result.current.phase).toBe('available');
+
+      await act(async () => {
+        vi.advanceTimersByTime(5000);
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockDownloadAppUpdate).not.toHaveBeenCalled();
+      expect(result.current.phase).toBe('available');
+    });
+
     it('does not auto-download when autoDownload is false', async () => {
       mockCheckAppUpdate.mockResolvedValueOnce({
         current_version: '0.50.0',

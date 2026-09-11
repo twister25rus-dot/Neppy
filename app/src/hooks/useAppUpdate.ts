@@ -9,12 +9,17 @@
  *    emitted by the Rust download/install commands
  *  - an opt-in auto-check cadence: one probe shortly after launch, then
  *    a periodic re-probe while the app stays open
- *  - an opt-in auto-download: when a check reports "available", the hook
- *    automatically calls `download_app_update` so the user only sees a
- *    "Restart to apply" prompt — never a "click to start downloading" one
+ *  - an opt-in auto-download (OFF by default): checking is something the app
+ *    may do on its own, but spending the user's bandwidth on a ~60MB payload is
+ *    their call, so a detected update stops at `available` and waits for
+ *    `download()`. Pass `autoDownload: true` for a surface that genuinely wants
+ *    the old behaviour.
  *
  * Pairs with the Rust side in `app/src-tauri/src/lib.rs` (`check_app_update`,
- * `download_app_update`, `install_app_update`). See `gitbooks/overview/auto-update.md`.
+ * `download_app_update`, `install_app_update`) — three commands, deliberately,
+ * so the UI can stop between any two of them. `apply_app_update` runs all three
+ * and exists only for a caller that wants one button; the banner does not use
+ * it.
  */
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -61,9 +66,12 @@ interface UseAppUpdateOptions {
    */
   recheckIntervalMs?: number;
   /**
-   * When a check reports an available update, automatically start the
-   * download in the background so the user is only ever prompted to
-   * restart. Default: true.
+   * When a check reports an available update, start the download immediately
+   * instead of waiting for {@link UseAppUpdateResult.download}.
+   *
+   * Default: **false**. The update is ~60MB and the user may be on a metered or
+   * slow connection, so finding it and fetching it are two decisions, and only
+   * the first one is ours to make.
    */
   autoDownload?: boolean;
 }
@@ -81,8 +89,8 @@ interface UseAppUpdateResult {
   /** Manually run a check (does not download). */
   check: () => Promise<AppUpdateInfo | null>;
   /**
-   * Start a background download. Normally called automatically when a check
-   * reports an available update; exposed so callers can retry on error.
+   * Start the download. The normal way an update is fetched: a check leaves the
+   * hook in `available` and this is what the user's "Download" button calls.
    */
   download: () => Promise<void>;
   /**
@@ -131,7 +139,7 @@ export function useAppUpdate(options: UseAppUpdateOptions = {}): UseAppUpdateRes
     autoCheck = true,
     initialCheckDelayMs = DEFAULT_INITIAL_DELAY_MS,
     recheckIntervalMs = DEFAULT_RECHECK_INTERVAL_MS,
-    autoDownload = true,
+    autoDownload = false,
   } = options;
 
   const [phase, setPhase] = useState<AppUpdatePhase>('idle');
@@ -196,7 +204,7 @@ export function useAppUpdate(options: UseAppUpdateOptions = {}): UseAppUpdateRes
     }
   }, []);
 
-  /** Download bytes in the background. Normally fires automatically. */
+  /** Download bytes in the background. Driven by the user unless `autoDownload`. */
   const download = useCallback(async (): Promise<void> => {
     if (!isTauri()) {
       console.debug('[app-update] hook.download: skipped — not running in Tauri');
@@ -399,9 +407,8 @@ export function useAppUpdate(options: UseAppUpdateOptions = {}): UseAppUpdateRes
     };
   }, [autoCheck, initialCheckDelayMs, recheckIntervalMs, check]);
 
-  // Auto-download: when a check transitions us to `available`, kick off a
-  // background download so the user is only ever asked to restart, never to
-  // download.
+  // Opt-in auto-download. Off by default (see `autoDownload`): a check leaves
+  // the hook in `available` and the UI asks before spending the bandwidth.
   useEffect(() => {
     if (!autoDownload || !isTauri()) return;
     if (phase !== 'available') return;
