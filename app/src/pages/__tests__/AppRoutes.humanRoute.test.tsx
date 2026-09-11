@@ -1,9 +1,11 @@
 /**
  * Desktop `/human` and `/chat` routes.
  *
- * Both surfaces carry the mascot on purpose — `/human` is the dedicated stage,
- * `/chat` docks it on the composer — so this pins that each route serves its own
- * page and neither silently redirects to the other.
+ * Human mode is withdrawn from the desktop app for now, so `/human` is a
+ * redirect to `/chat` rather than the mascot stage — a window left open on it
+ * must land somewhere rather than on a blank route. The page itself is still in
+ * the tree and still routed on iOS, so this pins the *desktop* decision, which
+ * is the one that can be reverted by editing a single route.
  *
  * Renders the REAL `AppRoutes` with a location probe. An earlier version of this
  * file declared its own local route tree, which meant it asserted a fixture
@@ -41,11 +43,11 @@ const renderAt = (path: string) =>
   );
 
 describe('Desktop /human + /chat routes', () => {
-  it('serves the Human page at /human without redirecting', () => {
+  it('redirects /human to the chat surface while Human mode is withdrawn', () => {
     renderAt('/human');
-    expect(screen.getByTestId('pathname')).toHaveTextContent('/human');
-    expect(screen.getByTestId('human-page')).toBeInTheDocument();
-    expect(screen.queryByTestId('chat-page')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/chat');
+    expect(screen.getByTestId('chat-page')).toBeInTheDocument();
+    expect(screen.queryByTestId('human-page')).not.toBeInTheDocument();
   });
 
   it('serves the chat surface at /chat', () => {
