@@ -74,7 +74,6 @@ import { callCoreRpc } from '../../services/coreRpcClient';
 import {
   loadAgentProfiles,
   selectActiveAgentProfileId,
-  selectAgentProfile,
   selectAgentProfiles,
 } from '../../store/agentProfileSlice';
 import {
@@ -453,7 +452,11 @@ const Conversations = ({
   // the model should think: Quick turns thinking off outright rather than
   // budgeting it to nothing, and Reasoning asks for a bounded amount. The
   // provider reads it as `reasoning_effort`, so this is not MLX-only.
-  const reasoningEffort = selectedAgentProfileId === 'reasoning' ? 'medium' : 'off';
+  // No reasoning effort is sent from the composer any more. It used to be
+  // derived from the Quick/Reasoning pill, which meant every send carried an
+  // explicit value — `off` by default — and the composer's ask outranks the
+  // preset, so a preset's reasoning could never take effect. The preset owns
+  // how hard the model thinks; leaving this unset is what lets it.
   // How hard the local model should work. Persisted in core config rather than
   // component state, because the settings panel shows the same value and the
   // two must not disagree about what is selected.
@@ -648,14 +651,6 @@ const Conversations = ({
           err instanceof Error ? err.message : String(err)
         )
       );
-  };
-
-  const handleSelectAgentProfile = async (profileId: string) => {
-    try {
-      await dispatch(selectAgentProfile(profileId)).unwrap();
-    } catch (error) {
-      debug('agent profile select failed: %o', error);
-    }
   };
 
   // Seed the composer footer with the selected thread's persisted token/cost
@@ -1206,7 +1201,6 @@ const Conversations = ({
         threadId: sendingThreadId,
         message: messageText,
         model: modelOverride,
-        reasoningEffort,
         temperature: composerSampling.temperature,
         topP: composerSampling.topP,
         maxTokens: composerSampling.maxTokens,
@@ -1311,7 +1305,6 @@ const Conversations = ({
         threadId,
         message: messageText,
         model: modelOverride,
-        reasoningEffort,
         temperature: composerSampling.temperature,
         topP: composerSampling.topP,
         maxTokens: composerSampling.maxTokens,
@@ -1398,7 +1391,6 @@ const Conversations = ({
         threadId,
         message: messageText,
         model: modelOverride,
-        reasoningEffort,
         temperature: composerSampling.temperature,
         topP: composerSampling.topP,
         maxTokens: composerSampling.maxTokens,
@@ -2505,37 +2497,6 @@ const Conversations = ({
           {!isSidebar && (
             <div className="flex shrink-0 items-center gap-2">
               <ChatPresetPill value={localPreset} onChange={handlePresetChange} />
-              <div
-                className="flex h-7 items-center rounded-full border border-line bg-surface-subtle p-0.5"
-                role="radiogroup"
-                aria-label={t('chat.agentProfile.label')}>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedAgentProfileId === 'default'}
-                  data-analytics-id="chat-header-mode-quick"
-                  onClick={() => void handleSelectAgentProfile('default')}
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-all ${
-                    selectedAgentProfileId === 'default'
-                      ? 'bg-surface text-content shadow-xs'
-                      : 'text-content-muted hover:text-content-secondary'
-                  }`}>
-                  {t('chat.agentProfile.quick')}
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedAgentProfileId === 'reasoning'}
-                  data-analytics-id="chat-header-mode-reasoning"
-                  onClick={() => void handleSelectAgentProfile('reasoning')}
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-all ${
-                    selectedAgentProfileId === 'reasoning'
-                      ? 'bg-surface text-content shadow-xs'
-                      : 'text-content-muted hover:text-content-secondary'
-                  }`}>
-                  {t('chat.agentProfile.reasoning')}
-                </button>
-              </div>
               {selectedThreadId && (
                 <button
                   type="button"

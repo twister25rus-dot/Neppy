@@ -62,7 +62,10 @@ pub fn claude_code_login_launch() -> Result<String, String> {
             let detail = String::from_utf8_lossy(&output.stderr);
             let detail = detail.trim();
             return Err(if detail.is_empty() {
-                format!("Terminal.app did not open (osascript exited {})", output.status)
+                format!(
+                    "Terminal.app did not open (osascript exited {})",
+                    output.status
+                )
             } else {
                 format!("Terminal.app did not open: {detail}")
             });

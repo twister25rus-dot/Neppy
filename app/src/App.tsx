@@ -293,8 +293,27 @@ export function AppShellDesktop() {
     navigate('/chat', { replace: true });
   }, [navigate]);
 
+  // Which top-level section is on screen — `/chat`, `/brain`, `/connections`.
+  //
+  // The entrance animation below replays by remounting, so the key has to
+  // change exactly when the user moves between sections and not a moment more.
+  // Keying on the full pathname would remount the chat on every thread switch,
+  // throwing away its scroll position and refetching a transcript the user was
+  // already reading. And it follows the *routed* location, so opening the
+  // settings dialog — which renders the previous route underneath — does not
+  // animate the page behind it.
+  const routedPathname = showSettingsDialog
+    ? typeof settingsBackgroundLocation === 'string'
+      ? settingsBackgroundLocation
+      : settingsBackgroundLocation.pathname
+    : location.pathname;
+  const sectionKey = `/${routedPathname.split('/')[1] ?? ''}`;
+
   const content = (
-    <div ref={scrollRef} className="relative h-full overflow-y-auto">
+    <div
+      key={sectionKey}
+      ref={scrollRef}
+      className="animate-in fade-in slide-in-from-bottom-1 relative h-full overflow-y-auto duration-200 ease-out motion-reduce:animate-none">
       {/* The plan-usage upsell and the #5324 memory-embedding warning used to
           be full-width banners here, pushing every route down. Both are
           notices in `NoticeCenter` now — see its docs for why. */}

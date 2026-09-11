@@ -228,6 +228,13 @@ const ThreadRoot: FC<{
         <div
           className={cn(
             'mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4',
+            // A new session centres the composer and drops it to the bottom the
+            // moment the first message lands. `justify-content` is not an
+            // animatable property, so the ease has to come from the pieces that
+            // move: the footer's padding as it becomes sticky, and the message
+            // group sliding up into the space. Without it the whole column
+            // jumps in a single frame.
+            'transition-[padding,gap] duration-300 ease-out motion-reduce:transition-none',
             isEmpty && 'justify-center'
           )}>
           {loadError ? (
@@ -246,13 +253,20 @@ const ThreadRoot: FC<{
             </>
           )}
 
-          <div data-slot="aui_message-group" className="mb-14 flex flex-col gap-y-6 empty:hidden">
+          <div
+            data-slot="aui_message-group"
+            // Carries the motion of the transition: the first turn slides up
+            // into the space the composer just left, so the eye follows the
+            // conversation down rather than finding it already there.
+            className="mb-14 flex flex-col gap-y-6 duration-300 ease-out empty:hidden data-[has-messages]:animate-in data-[has-messages]:fade-in data-[has-messages]:slide-in-from-bottom-2 motion-reduce:animate-none"
+            data-has-messages={!isEmpty || undefined}>
             <ThreadPrimitive.Messages>{() => <ThreadMessage />}</ThreadPrimitive.Messages>
           </div>
 
           <ThreadPrimitive.ViewportFooter
             className={cn(
               'aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6',
+              'transition-[margin,padding,border-radius] duration-300 ease-out motion-reduce:transition-none',
               !isEmpty && 'sticky bottom-0 mt-auto rounded-t-(--composer-radius)'
             )}>
             <ThreadScrollToBottom />
