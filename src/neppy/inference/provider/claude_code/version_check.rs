@@ -87,7 +87,11 @@ fn candidate_paths() -> Vec<PathBuf> {
 /// without a real `HOME` or a real `PATH` — the order is the whole behaviour
 /// here, and it is not observable from the outside once a binary is picked.
 fn candidate_paths_from(path_hit: Option<PathBuf>, home: Option<PathBuf>) -> Vec<PathBuf> {
-    let name = if cfg!(windows) { "claude.exe" } else { "claude" };
+    let name = if cfg!(windows) {
+        "claude.exe"
+    } else {
+        "claude"
+    };
     let mut out: Vec<PathBuf> = Vec::new();
 
     if let Some(from_path) = path_hit {
@@ -267,7 +271,8 @@ mod tests {
         // there must still be somewhere to look, or the CLI reads as missing
         // while working fine in a terminal.
         let home = PathBuf::from("/home/someone");
-        let with_path = candidate_paths_from(Some(PathBuf::from("/w/bin/claude")), Some(home.clone()));
+        let with_path =
+            candidate_paths_from(Some(PathBuf::from("/w/bin/claude")), Some(home.clone()));
         assert_eq!(with_path.first(), Some(&PathBuf::from("/w/bin/claude")));
 
         let without_path = candidate_paths_from(None, Some(home.clone()));

@@ -18,6 +18,7 @@ mod core;
 mod mlx_patch;
 mod mlx_schemas;
 pub mod ops;
+pub mod runtime_presets;
 mod schemas;
 
 // Re-expose inference-level modules under `local::` so that files that
