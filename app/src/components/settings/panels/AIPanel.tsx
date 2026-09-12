@@ -39,6 +39,7 @@ import {
   WORKLOADS,
 } from './ai/aiPanelTypes';
 import { BackgroundLoopControls } from './ai/BackgroundLoopControls';
+import ChatModelVisibilitySection from './ai/ChatModelVisibilitySection';
 import { CloudProviderEditor } from './ai/CloudProviderEditor';
 import { CustomRoutingDialog } from './ai/CustomRoutingDialog';
 import { GlobalOwnModelSelector } from './ai/GlobalOwnModelSelector';
@@ -299,6 +300,9 @@ const AIPanel = ({
                   onAddCustomProvider={() => setEditing('new')}
                   onEditCustomProvider={provider => setEditing(provider)}
                 />
+                <div className="mx-4">
+                  <ChatModelVisibilitySection cloudProviders={draft.cloudProviders} />
+                </div>
                 {combineProvidersAndRouting ? (
                   <div className="mx-4 mb-4 border-t border-line pt-6">{routingContent}</div>
                 ) : null}
