@@ -7,6 +7,9 @@
   },
   "scripts": {
     "build": "pnpm --filter neppy-app build",
+    "clean:cache": "bash scripts/clean-build-cache.sh",
+    "clean:cache:dry": "bash scripts/clean-build-cache.sh --dry-run",
+    "clean:cache:all": "bash scripts/clean-build-cache.sh --all",
     "docs:generate": "node scripts/generate-architecture-docs.mjs",
     "docs:check": "node scripts/generate-architecture-docs.mjs --check",
     "docs:test": "node --test scripts/__tests__/generate-architecture-docs.test.mjs",

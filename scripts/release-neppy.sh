@@ -248,6 +248,14 @@ echo "==> building the bundle (this is the slow part)"
 # looking like a private directory from the outside.
 [ ! -L "$RELEASE_TARGET_DIR" ] \
   || die "release target dir is a symlink ($RELEASE_TARGET_DIR) — that is the sharing this build refuses"
+# This script only ever builds `--release`, so a `debug/` tree in here is always
+# fallout from an interactive cargo command that inherited the CARGO_TARGET_DIR
+# exported just below. Nothing downstream reads it and it has reached 14 GiB in
+# practice, so drop it rather than let it keep growing behind the release build.
+if [ -d "$RELEASE_TARGET_DIR/debug" ]; then
+  echo "==> discarding leaked debug output in the private release target dir ($(du -sh "$RELEASE_TARGET_DIR/debug" | cut -f1))"
+  rm -rf "$RELEASE_TARGET_DIR/debug"
+fi
 export CARGO_TARGET_DIR="$RELEASE_TARGET_DIR"
 export GGML_NATIVE=OFF
 # TAURI_SIGNING_PRIVATE_KEY takes the key content, not a path. The path form is
