@@ -181,10 +181,30 @@ Two positions:
 
 ### 2.10 Integrations
 
-Composio-backed OAuth (`src/neppy/integrations/composio`). This is the one
-that has no local replacement. Cut it and rebuild the services you need as MCP
-servers — the `mcp` domain already supports both config-declared static servers
-and dynamically installed ones. `observed`.
+**Revised.** The original call was to cut Composio wholesale on the grounds that
+it has no local replacement. That was half right: the *managed* path is an OAuth
+proxy through the hosted backend and is genuinely dead here, but
+`ComposioClientKind::Direct` takes the user's own API key and talks to
+`app.composio.dev` directly, reaching the hosted backend at no point. Cutting the
+whole `Integrations` domain took that working local-first path with it, and the
+symptom was a settings panel whose Save produced `unknown method:
+openhuman.composio_set_api_key` — a feature that looked broken rather than absent.
+
+So `DomainSet::full_local()` keeps `integrations` ON, and the split is enforced
+elsewhere:
+
+- **Direct mode works** — your API key, your Composio tenant, no hosted call.
+- **Managed auth stays unavailable** — the panel reports it, so backend mode
+  cannot be selected.
+- **The hosted sync stays off** via `services.integrations = false` in
+  `jsonrpc.rs`, which is what actually prevents the `SessionExpired` cascade.
+- **`file_storage`'s agent tools** are the one hosted-only surface this
+  re-admits; they fail against a backend this fork does not run.
+
+MCP servers remain the better answer for services you can reach directly — the
+`mcp` domain supports both config-declared and dynamically installed servers.
+Composio direct mode is for the 250+ integrations you would not want to rebuild
+by hand.
 
 ---
 
