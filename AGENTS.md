@@ -1094,6 +1094,19 @@ upstream  git@github.com:tinyhumansai/openhuman.git     (fetch-only)
 ```
 
 - **Never write code on `main`.** Branch off `upstream/main` for all work.
+  - **Exception: tooling.** Scripts, docs, config and other changes that cannot
+    reach the shipped app — nothing under `src/`, `app/src/`, `app/src-tauri/`
+    — may be committed straight to `main`. The rule exists so shipped code goes
+    through CI Lite and the >= 80% diff-coverage gate, which a shell script in
+    `scripts/` does not benefit from; branching it only strands it. This was
+    learned the expensive way: a disk-cleanup script sat unmerged on a branch
+    while the repo it was written to shrink grew back from 52 GB to 77 GB.
+  - **`main` is not a private branch.** The updater feed installed apps poll is
+    served from it (`raw.githubusercontent.com/<owner>/Neppy/main/updater/latest.json`),
+    so a push to `main` is visible to every installed copy's next update check.
+    Treat `updater/`, the version in `package.json`, and anything
+    `scripts/release-neppy.sh` reads as shipped surface regardless of this
+    exception.
 - Issues and PRs on upstream `tinyhumansai/openhuman`.
 - Push to `origin` (fork), never `upstream`. PRs with `--head <your-username>:<branch>`.
 - Use issue/PR templates verbatim.
