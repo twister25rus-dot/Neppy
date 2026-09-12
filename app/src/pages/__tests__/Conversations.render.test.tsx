@@ -882,6 +882,7 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
       temperature: null,
       topP: null,
       maxTokens: null,
+      reasoningEffort: null,
       profileId: 'default',
       locale: 'en',
     });
@@ -971,6 +972,7 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
         temperature: null,
         topP: null,
         maxTokens: null,
+        reasoningEffort: null,
         profileId: 'default',
         locale: 'en',
       });
@@ -1027,6 +1029,7 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
       temperature: null,
       topP: null,
       maxTokens: null,
+      reasoningEffort: null,
       profileId: 'default',
       locale: 'en',
     });
@@ -1668,6 +1671,7 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
         temperature: null,
         topP: null,
         maxTokens: null,
+        reasoningEffort: null,
         profileId: 'default',
         locale: 'en',
       });
@@ -1747,6 +1751,7 @@ describe('Conversations — smoke render (#1123 welcome-lock removal)', () => {
         temperature: null,
         topP: null,
         maxTokens: null,
+        reasoningEffort: null,
         profileId: 'default',
         locale: 'en',
       });
