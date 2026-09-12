@@ -147,15 +147,28 @@ export function AssistantUiChat({
       <>
         <ComposerEffortPill value={sampling} onChange={onSamplingChange} />
         <ContextWindowPill usage={contextUsage} />
-        <div className="absolute right-0 bottom-full left-0 pb-2">
-          <ThreadGoalEditorPanel ctl={threadGoal} />
-        </div>
         <ThreadGoalFooterTrigger ctl={threadGoal} />
       </>
     ),
     [contextUsage, threadGoal, sampling, onSamplingChange]
   );
-  const ComposerHeader = useCallback(() => <>{composerHeader}</>, [composerHeader]);
+  // The goal editor belongs in the header slot, which `thread.tsx` renders
+  // OUTSIDE the bordered composer shell. It used to live in `ComposerExtras`
+  // under `absolute bottom-full`, and `ComposerExtras` sits in the action row
+  // (`+ / model / mic`) — so "above that row" meant on top of the textarea, and
+  // opening a goal covered the message you were writing. Here it flows, pushing
+  // the composer down instead of covering it, and needs no positioning at all.
+  const ComposerHeader = useCallback(
+    () => (
+      <>
+        {composerHeader}
+        <div className="pb-2">
+          <ThreadGoalEditorPanel ctl={threadGoal} />
+        </div>
+      </>
+    ),
+    [composerHeader, threadGoal]
+  );
   const ComposerAttachments = useCallback(
     () => (
       <AttachmentPreview
