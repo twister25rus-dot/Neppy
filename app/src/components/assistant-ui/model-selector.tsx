@@ -12,7 +12,6 @@ import {
 } from '@/components/assistant-ui/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/assistant-ui/ui/popover';
 import { useAui } from '@assistant-ui/react';
-import { Slider } from '@base-ui/react/slider';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon } from 'lucide-react';
 import {
@@ -415,7 +414,6 @@ function ModelSelectorContent({
           <>
             {searchable && <ModelSelectorSearch />}
             <ModelSelectorList />
-            <ModelSelectorEffort />
           </>
         )}
       </Command>
@@ -531,108 +529,6 @@ function ModelSelectorItem({
   );
 }
 
-export type ModelSelectorEffortProps = ComponentPropsWithoutRef<'div'> & { label?: ReactNode };
-
-function ModelSelectorEffort({
-  label = 'Thinking',
-  className,
-  onKeyDown,
-  onKeyDownCapture,
-  ...props
-}: ModelSelectorEffortProps) {
-  const { efforts, effort, setEffort } = useModelSelectorEfforts();
-
-  if (!efforts?.length) return null;
-
-  const lastIndex = efforts.length - 1;
-  // An unset or unrecognised effort sits at the first stop rather than leaving
-  // the thumb undefined, which would render the track with no handle at all.
-  const foundIndex = efforts.findIndex(option => option.id === effort);
-  const activeIndex = foundIndex === -1 ? 0 : foundIndex;
-
-  return (
-    <div
-      data-slot="model-selector-effort"
-      className={cn('flex cursor-default flex-col gap-1.5 border-t px-3 py-2.5', className)}
-      onKeyDownCapture={e => {
-        onKeyDownCapture?.(e);
-        if (e.defaultPrevented) return;
-        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-        // The slider claims vertical arrows as well as horizontal ones, so
-        // intercept them in capture and hand the keypress to cmdk: the model
-        // list owns vertical navigation, and cmdk's Enter is inert while the
-        // thumb has focus. Left/Right are left alone — those are the slider's.
-        onKeyDown?.(e);
-        if (e.defaultPrevented) return;
-        const input = e.currentTarget
-          .closest('[cmdk-root]')
-          ?.querySelector<HTMLInputElement>('[cmdk-input]');
-        if (!input) return;
-        e.preventDefault();
-        e.stopPropagation();
-        input.focus();
-        input.dispatchEvent(new KeyboardEvent('keydown', e.nativeEvent));
-      }}
-      onKeyDown={e => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') return;
-        onKeyDown?.(e);
-        if (e.defaultPrevented) return;
-        // cmdk's Command root would claim Home/End to jump the model list;
-        // hand focus to the thumb so the slider's own min/max jump runs
-        // instead.
-        if (e.key === 'Home' || e.key === 'End') {
-          e.preventDefault();
-          e.stopPropagation();
-          e.currentTarget.querySelector<HTMLElement>('[role="slider"]')?.focus();
-        }
-      }}
-      {...props}>
-      <span className="text-muted-foreground text-xs">{label}</span>
-      <Slider.Root
-        value={activeIndex}
-        min={0}
-        max={lastIndex}
-        step={1}
-        // Base UI hands back a bare number when it was given one.
-        onValueChange={next => {
-          const option = efforts[Math.round(next)];
-          if (option) setEffort(option.id);
-        }}
-        aria-label={typeof label === 'string' ? label : 'Reasoning effort'}
-        className="w-full">
-        <Slider.Control className="flex h-4 w-full touch-none items-center select-none">
-          <Slider.Track className="bg-muted relative h-1 w-full rounded-full">
-            <Slider.Indicator className="bg-primary rounded-full" />
-            <Slider.Thumb
-              // The stop names are the visible scale, so read those out rather
-              // than "1", which says nothing about what the position buys.
-              getAriaValueText={(_formatted, value) =>
-                efforts[Math.round(value)]?.name ?? String(value)
-              }
-              className="focus-visible:ring-ring/50 bg-primary block size-3.5 rounded-full shadow-sm transition-transform outline-none hover:scale-110 focus-visible:ring-2"
-            />
-          </Slider.Track>
-        </Slider.Control>
-      </Slider.Root>
-      {/* The scale itself. `justify-between` puts three labels under the three
-          stops the thumb can occupy; the active one is the only one at full
-          contrast, so the current setting is readable without a second row. */}
-      <div aria-hidden="true" className="flex justify-between gap-1 text-[10px]">
-        {efforts.map((option, index) => (
-          <span
-            key={option.id}
-            className={cn(
-              'transition-colors',
-              index === activeIndex ? 'text-foreground font-medium' : 'text-muted-foreground'
-            )}>
-            {option.name}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export type ModelSelectorProps = Omit<ModelSelectorRootProps, 'children'> &
   VariantProps<typeof modelSelectorTriggerVariants> & {
     /** Render a search input above the model list. */
@@ -699,7 +595,6 @@ type ModelSelectorComponent = typeof ModelSelectorImpl & {
   Group: typeof ModelSelectorGroup;
   Separator: typeof ModelSelectorSeparator;
   Item: typeof ModelSelectorItem;
-  Effort: typeof ModelSelectorEffort;
 };
 
 const ModelSelector = memo(ModelSelectorImpl) as unknown as ModelSelectorComponent;
@@ -716,7 +611,6 @@ ModelSelector.Empty = ModelSelectorEmpty;
 ModelSelector.Group = ModelSelectorGroup;
 ModelSelector.Separator = ModelSelectorSeparator;
 ModelSelector.Item = ModelSelectorItem;
-ModelSelector.Effort = ModelSelectorEffort;
 
 export {
   ModelSelector,
@@ -731,5 +625,4 @@ export {
   ModelSelectorGroup,
   ModelSelectorSeparator,
   ModelSelectorItem,
-  ModelSelectorEffort,
 };
