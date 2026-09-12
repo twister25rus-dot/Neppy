@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SessionSummary } from '../../../lib/orchestration/orchestrationClient';
+import { renderWithProviders as render } from '../../../test/test-utils';
 import AgentChatPanel from '../AgentChatPanel';
 
 vi.mock('../../../lib/i18n/I18nContext', () => ({ useT: () => ({ t: (k: string) => k }) }));

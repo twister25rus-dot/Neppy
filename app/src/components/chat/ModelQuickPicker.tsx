@@ -39,7 +39,12 @@ export default function ModelQuickPicker({
   children,
 }: ModelQuickPickerProps) {
   const { t } = useT();
-  const visibleModels = useAppSelector(state => state.chatRuntime.visibleModels);
+  // Optional-chained and defaulted, because the selector is not always backed
+  // by a real store: panels that mount a composer but assert something else
+  // stub `useAppSelector` wholesale, and a stub answers `undefined` for a
+  // selector it was never told about. An empty list is the same thing this
+  // renders for "nothing pinned yet", so the degradation is already defined.
+  const visibleModels = useAppSelector(state => state.chatRuntime?.visibleModels) ?? [];
 
   // A pinned list that has lost the current selection would offer no way back
   // to it without opening the dialog, so it is always included.
