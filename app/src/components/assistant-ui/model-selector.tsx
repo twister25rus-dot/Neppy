@@ -12,8 +12,6 @@ import {
 } from '@/components/assistant-ui/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/assistant-ui/ui/popover';
 import { useAui } from '@assistant-ui/react';
-import { Radio } from '@base-ui/react/radio';
-import { RadioGroup } from '@base-ui/react/radio-group';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon } from 'lucide-react';
 import {
@@ -31,10 +29,16 @@ import {
 
 export type ModelSelectorEffortOption = { id: string; name: string };
 
+/**
+ * The ids are the wire values (`reasoning_effort`) and must not change; the
+ * names are what the slider reads out. "Low / Med / High" described the knob,
+ * not the decision being made with it — the question is whether you want an
+ * answer now or a better one.
+ */
 export const DEFAULT_EFFORT_OPTIONS: readonly ModelSelectorEffortOption[] = [
-  { id: 'low', name: 'Low' },
-  { id: 'medium', name: 'Med' },
-  { id: 'high', name: 'High' },
+  { id: 'low', name: 'Quick' },
+  { id: 'medium', name: 'Balanced' },
+  { id: 'high', name: 'Thorough' },
 ];
 
 export type ModelOption = {
@@ -410,7 +414,6 @@ function ModelSelectorContent({
           <>
             {searchable && <ModelSelectorSearch />}
             <ModelSelectorList />
-            <ModelSelectorEffort />
           </>
         )}
       </Command>
@@ -526,84 +529,6 @@ function ModelSelectorItem({
   );
 }
 
-export type ModelSelectorEffortProps = ComponentPropsWithoutRef<'div'> & { label?: ReactNode };
-
-function ModelSelectorEffort({
-  label = 'Thinking',
-  className,
-  onKeyDown,
-  onKeyDownCapture,
-  ...props
-}: ModelSelectorEffortProps) {
-  const { efforts, effort, setEffort } = useModelSelectorEfforts();
-
-  if (!efforts?.length) return null;
-
-  return (
-    <div
-      data-slot="model-selector-effort"
-      className={cn(
-        'flex cursor-default items-center justify-between gap-3 border-t px-3 py-2',
-        className
-      )}
-      onKeyDownCapture={e => {
-        onKeyDownCapture?.(e);
-        if (e.defaultPrevented) return;
-        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-        // Base UI's RadioGroup composite claims vertical arrows for roving
-        // focus (orientation "both", not configurable), so intercept them in
-        // capture and hand the keypress to cmdk: the model list owns vertical
-        // navigation, and cmdk's Enter is inert while a radio has focus.
-        onKeyDown?.(e);
-        if (e.defaultPrevented) return;
-        const input = e.currentTarget
-          .closest('[cmdk-root]')
-          ?.querySelector<HTMLInputElement>('[cmdk-input]');
-        if (!input) return;
-        e.preventDefault();
-        e.stopPropagation();
-        input.focus();
-        input.dispatchEvent(new KeyboardEvent('keydown', e.nativeEvent));
-      }}
-      onKeyDown={e => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') return;
-        onKeyDown?.(e);
-        if (e.defaultPrevented) return;
-        // Base UI's radio composite ignores Home/End and cmdk's Command
-        // root would claim them to jump the model list; move radio focus
-        // here so only the radiogroup reacts.
-        if (e.key === 'Home' || e.key === 'End') {
-          e.preventDefault();
-          e.stopPropagation();
-          const radios = Array.from(
-            e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]:not([data-disabled])')
-          );
-          (e.key === 'Home' ? radios[0] : radios[radios.length - 1])?.focus();
-        }
-      }}
-      {...props}>
-      <span className="text-muted-foreground text-xs">{label}</span>
-      <RadioGroup
-        value={effort ?? ''}
-        onValueChange={setEffort}
-        aria-label={typeof label === 'string' ? label : 'Reasoning effort'}
-        className="flex items-center gap-0.5">
-        {efforts.map(option => (
-          <Radio.Root
-            key={option.id}
-            value={option.id}
-            className={cn(
-              'focus-visible:ring-ring/50 text-muted-foreground hover:text-foreground rounded-md px-2 py-1 text-xs transition-colors outline-none focus-visible:ring-1',
-              'data-checked:bg-accent data-checked:text-accent-foreground data-checked:font-medium'
-            )}>
-            {option.name}
-          </Radio.Root>
-        ))}
-      </RadioGroup>
-    </div>
-  );
-}
-
 export type ModelSelectorProps = Omit<ModelSelectorRootProps, 'children'> &
   VariantProps<typeof modelSelectorTriggerVariants> & {
     /** Render a search input above the model list. */
@@ -670,7 +595,6 @@ type ModelSelectorComponent = typeof ModelSelectorImpl & {
   Group: typeof ModelSelectorGroup;
   Separator: typeof ModelSelectorSeparator;
   Item: typeof ModelSelectorItem;
-  Effort: typeof ModelSelectorEffort;
 };
 
 const ModelSelector = memo(ModelSelectorImpl) as unknown as ModelSelectorComponent;
@@ -687,7 +611,6 @@ ModelSelector.Empty = ModelSelectorEmpty;
 ModelSelector.Group = ModelSelectorGroup;
 ModelSelector.Separator = ModelSelectorSeparator;
 ModelSelector.Item = ModelSelectorItem;
-ModelSelector.Effort = ModelSelectorEffort;
 
 export {
   ModelSelector,
@@ -702,5 +625,4 @@ export {
   ModelSelectorGroup,
   ModelSelectorSeparator,
   ModelSelectorItem,
-  ModelSelectorEffort,
 };

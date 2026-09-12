@@ -9,7 +9,15 @@ import RootShellLayout, { APP_SHELL_LAYOUT_ID } from './RootShellLayout';
 // Render i18n keys verbatim so assertions don't depend on locale copy.
 vi.mock('../../../lib/i18n/I18nContext', () => ({ useT: () => ({ t: (k: string) => k }) }));
 // macOS/Tauri-gated, and covered by its own spec.
-vi.mock('./WindowDragBar', () => ({ default: () => null }));
+// `ContentSurface` reads `hasOverlayWindowControls` to decide the card's top
+// inset, so the mock has to carry it too — a default-only mock makes every
+// test in this file fail on the import rather than on anything it asserts.
+vi.mock('./WindowDragBar', () => ({
+  default: () => null,
+  hasOverlayWindowControls: () => false,
+  WindowControlsSpacer: () => null,
+  WINDOW_DRAG_BAR_HEIGHT: 40,
+}));
 
 /** Seeds the persisted `app-shell` geometry the shell reads on mount. */
 function withLayout(sidebarVisible: boolean, sidebarWidth: number) {

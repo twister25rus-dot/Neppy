@@ -1,7 +1,13 @@
 import { type RefObject, useEffect, useLayoutEffect, useRef } from 'react';
 
-/** Long enough to read as a move rather than a flicker, short of feeling slow. */
-const DEFAULT_DURATION_MS = 600;
+/**
+ * Long enough to read as a move rather than a flicker, short of feeling slow.
+ *
+ * 600ms read as slightly clipped at the ends: the curve below spends real time
+ * accelerating, so a shorter duration gives the middle of the travel — the part
+ * actually worth seeing — proportionally fewer frames than the ramps.
+ */
+const DEFAULT_DURATION_MS = 760;
 
 /**
  * Symmetric ease (the material "standard" curve), not an ease-out.
@@ -10,8 +16,12 @@ const DEFAULT_DURATION_MS = 600;
  * the first fifth of the duration, which is why the earlier pass still read as a
  * jump followed by a settle no matter how long the duration got. This one
  * accelerates and decelerates, so the travel itself is what you see.
+ *
+ * Softened from the material curve (0.4, 0, 0.2, 1): the shallower entry eases
+ * off the start instead of leaving it, and the longer tail lands rather than
+ * stops. Both ends are where a transform animation reads as stepped.
  */
-const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
+const EASE = 'cubic-bezier(0.33, 0.01, 0.18, 1)';
 
 /**
  * Animate the composer's drop from the middle of a new session to the bottom.
@@ -62,6 +72,10 @@ export function useFirstTurnDrop<T extends HTMLElement>(
     if (Math.abs(from - top) < 2) return;
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
 
+    // Hint the compositor before the parked position is read back, so the layer
+    // exists for the first animated frame rather than being promoted during it —
+    // that promotion is itself a dropped frame at the start of the travel.
+    node.style.willChange = 'transform';
     node.style.transition = 'none';
     node.style.transform = `translateY(${from - top}px)`;
     // Read back to force the parked position into its own style change; without
@@ -85,6 +99,9 @@ export function useFirstTurnDrop<T extends HTMLElement>(
       }
       node.style.transition = '';
       node.style.transform = '';
+      // Releasing the hint matters as much as setting it: a layer kept alive
+      // costs memory on every thread that ever ran this.
+      node.style.willChange = '';
     };
     node.addEventListener('transitionend', done, { once: true });
     settleTimer.current = setTimeout(done, durationMs + 100);

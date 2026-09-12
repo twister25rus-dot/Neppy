@@ -49,7 +49,7 @@ describe('ComposerSamplingPill', () => {
 
     renderWithProviders(
       <ComposerSamplingPill
-        value={{ temperature: 0.2, topP: 0.9, maxTokens: 512 }}
+        value={{ temperature: 0.2, topP: 0.9, maxTokens: 512, effort: null }}
         onChange={onChange}
       />
     );

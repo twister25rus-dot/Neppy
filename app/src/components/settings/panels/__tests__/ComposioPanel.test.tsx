@@ -292,8 +292,12 @@ describe('ComposioPanel', () => {
     expect(hoisted.clearApiKey).toHaveBeenCalledTimes(1);
   });
 
-  test('shows error status when RPC throws', async () => {
-    hoisted.setApiKey.mockRejectedValue(new Error('rpc error'));
+  test('surfaces the reason the RPC gave rather than blaming an empty key', async () => {
+    // The core phrases these for a reader: an invalid key comes back as
+    // COMPOSIO_INVALID_API_KEY_USER_MESSAGE, a keychain failure names itself.
+    // This used to render the empty-key string for every one of them, which is
+    // how a rejected key read as "you left the field blank".
+    hoisted.setApiKey.mockRejectedValue(new Error('Composio rejected this API key.'));
     const Panel = await importPanel();
     renderWithProviders(<Panel />);
     await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
@@ -307,10 +311,11 @@ describe('ComposioPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /I understand, switch to Direct/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Failed to save. Direct mode requires a non-empty API key.')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Composio rejected this API key.')).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText('Failed to save. Direct mode requires a non-empty API key.')
+    ).toBeNull();
   });
 
   test('panel still renders if getMode rejects (defaults to backend)', async () => {

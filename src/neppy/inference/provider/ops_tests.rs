@@ -251,9 +251,31 @@ async fn claude_code_models_come_from_the_cli_not_an_http_probe() {
         ids.contains(&"sonnet") && ids.contains(&"opus"),
         "expected the documented aliases, got {ids:?}"
     );
+    // Both, and the ordering matters: aliases first because they track the
+    // newest model of each family, versioned names after so a user can pin one
+    // and then see *which* Opus is running rather than the word "opus".
+    //
+    // This replaces an earlier assertion that no pinned id could appear at all,
+    // on the grounds that a pin goes stale on the next CLI release. That cost is
+    // real and is now accepted deliberately: the list needs a visit when a new
+    // model ships. What it buys is that the family alias is no longer the only
+    // thing on offer, which left the picker and the composer chip unable to say
+    // anything more specific than "opus".
     assert!(
-        !ids.iter().any(|id| id.contains("claude-sonnet-4")),
-        "aliases, not pinned versions: a pinned id goes stale on the next CLI release"
+        ids.contains(&"claude-opus-5") && ids.contains(&"claude-opus-4-8"),
+        "expected concrete versions alongside the aliases, got {ids:?}"
+    );
+    let first_versioned = ids
+        .iter()
+        .position(|id| id.starts_with("claude-"))
+        .expect("a versioned id");
+    let last_alias = ids
+        .iter()
+        .rposition(|id| !id.starts_with("claude-"))
+        .expect("an alias");
+    assert!(
+        last_alias < first_versioned,
+        "aliases lead the list, versions follow: {ids:?}"
     );
 }
 

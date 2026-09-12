@@ -258,9 +258,12 @@ const ThreadRoot: FC<{
             data-slot="aui_message-group"
             // The first turn rises into the space the composer just left, so the
             // eye follows the conversation instead of finding it already there.
-            // Paced with the composer's drop (600ms) and travelling far enough
+            // Paced with the composer's drop (760ms) and travelling far enough
             // to be seen — at 8px over 300ms the whole thing read as a flicker.
-            className="mb-14 flex flex-col gap-y-6 duration-500 ease-out empty:hidden data-[has-messages]:animate-in data-[has-messages]:fade-in data-[has-messages]:slide-in-from-bottom-6 motion-reduce:animate-none"
+            // The two have to stay within sight of each other: when the rise
+            // finished 260ms before the drop did, the pair read as two separate
+            // animations rather than one movement.
+            className="mb-14 flex flex-col gap-y-6 duration-700 ease-out empty:hidden data-[has-messages]:animate-in data-[has-messages]:fade-in data-[has-messages]:slide-in-from-bottom-6 motion-reduce:animate-none"
             data-has-messages={!isEmpty || undefined}>
             <ThreadPrimitive.Messages>{() => <ThreadMessage />}</ThreadPrimitive.Messages>
           </div>
@@ -272,7 +275,7 @@ const ThreadRoot: FC<{
               // Only the corner rounding is declared here; the drop itself is
               // the measured transform above, which is the only thing that can
               // animate a move driven by `justify-content` / `margin: auto`.
-              'transition-[border-radius] duration-500 ease-out motion-reduce:transition-none',
+              'transition-[border-radius] duration-700 ease-out motion-reduce:transition-none',
               !isEmpty && 'sticky bottom-0 mt-auto rounded-t-(--composer-radius)'
             )}>
             <ThreadScrollToBottom />

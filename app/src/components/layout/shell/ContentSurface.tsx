@@ -1,7 +1,9 @@
 import debugFactory from 'debug';
 import type { ReactNode } from 'react';
 
+import { cn } from '../../../lib/cn';
 import { SidebarInset } from '../../ui';
+import { hasOverlayWindowControls } from './WindowDragBar';
 
 const log = debugFactory('shell:content-surface');
 
@@ -42,7 +44,16 @@ interface ContentSurfaceProps {
 export default function ContentSurface({ children, unframed = false }: ContentSurfaceProps) {
   log('render: unframed=%s', unframed);
   return (
-    <SidebarInset unframed={unframed} data-testid="app-content-surface">
+    <SidebarInset
+      unframed={unframed}
+      data-testid="app-content-surface"
+      // The framed card's own `my-3` puts its top edge at 12px, level with the
+      // traffic lights. Nothing collides — the card starts well right of them —
+      // but the edge cutting through the window-control band reads as the card
+      // sitting on the chrome. Dropping it to 32px clears the band, and only
+      // where macOS actually floats those controls: elsewhere the native title
+      // bar already owns that space and this would just waste height.
+      className={cn(!unframed && hasOverlayWindowControls() && 'mt-8')}>
       {children}
     </SidebarInset>
   );

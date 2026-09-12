@@ -1,10 +1,12 @@
 import { LuKeyboard, LuMegaphone, LuPanelLeftClose, LuSettings } from 'react-icons/lu';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { cn } from '../../../lib/cn';
 import { registry } from '../../../lib/commands/registry';
 import { useT } from '../../../lib/i18n/I18nContext';
 import { Button, SidebarHeader as SidebarHeaderShell, Tooltip } from '../../ui';
 import { useRootSidebar } from './RootShellLayout';
+import { hasOverlayWindowControls } from './WindowDragBar';
 
 /**
  * Header footprint layered on `<Button variant="tertiary" iconOnly>`: 28px
@@ -30,15 +32,28 @@ export default function SidebarHeader() {
 
   return (
     // The primitive's header slot supplies the px-3/pb-2/pt-3 band; this only
-    // turns it into a right-aligned row. It no longer has to dodge the macOS
-    // traffic lights by hugging the right edge — `AppSidebar` reserves a
-    // `WindowControlsSpacer` above it, so the whole row sits below the window
-    // controls at every column width. (Right-aligning alone was the previous
-    // answer and held only while the column was wide: dragged to its 188px
-    // minimum, the row reached back under the lights.)
+    // turns it into a right-aligned row.
+    //
+    // The row sits at the TOP of the column, level with the macOS traffic
+    // lights rather than below them, because it runs horizontally and the
+    // lights end at x=70 — on this axis there is room beside them, and a
+    // reserved band above bought nothing but a gap.
+    //
+    // What keeps it clear at every width is a start inset, not right
+    // alignment. Right-aligning alone was the previous answer and held only
+    // while the column was wide: dragged to its 188px minimum the row reached
+    // back under the lights. `ps-[76px]` puts a floor under that — content
+    // cannot begin before the lights end, at any width — while `justify-end`
+    // still parks the icons at the right in the normal case.
+    //
     // `data-tauri-drag-region` stays on the primitive so the header band is
     // draggable window chrome without an extra hand-rolled layout element.
-    <SidebarHeaderShell data-tauri-drag-region className="flex-row items-center justify-end gap-1">
+    <SidebarHeaderShell
+      data-tauri-drag-region
+      className={cn(
+        'flex-row items-center justify-end gap-1',
+        hasOverlayWindowControls() && 'ps-[76px] pt-1.5'
+      )}>
       <div className="flex items-center gap-0.5">
         {/* Keyboard shortcuts — one-click open of the help directory (also ? / ⌘/). */}
         <Tooltip label={t('shortcuts.title')}>

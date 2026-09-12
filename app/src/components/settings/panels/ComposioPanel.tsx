@@ -79,6 +79,11 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error' | 'cleared'>('idle');
+  // Why the save failed, in the core's own words. Without this every failure
+  // rendered as the empty-key string below, so a key the core had *rejected*
+  // (or a keychain write that never happened) read as "you left the field
+  // blank" — with the field visibly full and a key already stored.
+  const [saveError, setSaveError] = useState<string | null>(null);
   // Confirmation gate for the Backend → Direct transition. The state
   // machine has two arms: `idle` (Save acts immediately) and
   // `awaiting` (Save was clicked while transitioning Backend → Direct
@@ -134,6 +139,7 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
   }, [allowManagedAuth]);
 
   const flashSaved = (status: 'saved' | 'cleared') => {
+    setSaveError(null);
     setSaveStatus(status);
     if (saveStatusTimer.current !== null) {
       clearTimeout(saveStatusTimer.current);
@@ -199,6 +205,13 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
         clearTimeout(saveStatusTimer.current);
         saveStatusTimer.current = null;
       }
+      // The core already phrases these for a reader — an invalid key gets
+      // COMPOSIO_INVALID_API_KEY_USER_MESSAGE, a keychain write failure names
+      // itself. Show that rather than a guess about which field is at fault.
+      // It is server-supplied text, so it is not a translated UI string; the
+      // fallback is, for the case where nothing usable came back.
+      const message = err instanceof Error ? err.message : String(err ?? '');
+      setSaveError(message.trim().length > 0 ? message : t('composio.saveFailed'));
       setSaveStatus('error');
     } finally {
       setSaving(false);
@@ -211,6 +224,7 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
     if (mode === 'direct' && trimmed.length === 0 && !apiKeyStored) {
       // Direct mode without a key is a no-op — flag it clearly instead
       // of round-tripping to the backend just to get an error string.
+      setSaveError(t('settings.composio.saveErrorNoKey'));
       setSaveStatus('error');
       return;
     }
@@ -403,7 +417,11 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
                     ? t('settings.composio.clearedToBackend')
                     : null
               }
-              error={saveStatus === 'error' ? t('settings.composio.saveErrorNoKey') : null}
+              error={
+                saveStatus === 'error'
+                  ? (saveError ?? t('settings.composio.saveErrorNoKey'))
+                  : null
+              }
               savingLabel=""
             />
           </div>

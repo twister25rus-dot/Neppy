@@ -2,10 +2,14 @@ import { isMac } from '../../../lib/commands/shortcut';
 import { isTauri } from '../../../utils/tauriCommands/common';
 
 /**
- * Height (px) of the drag strip. Matches the macOS traffic-light zone so the
- * native window controls sit within the band.
+ * Height (px) of the drag strip.
+ *
+ * 28px is the traffic-light zone itself, which put the first control flush
+ * against the bottom of the lights — technically clear, visually crowded, and
+ * it read as the window overlapping its own chrome. 40px clears the band and
+ * leaves the gap the lights need to look deliberate rather than avoided.
  */
-export const WINDOW_DRAG_BAR_HEIGHT = 28;
+export const WINDOW_DRAG_BAR_HEIGHT = 40;
 
 /**
  * Whether macOS is painting its window controls over our content.

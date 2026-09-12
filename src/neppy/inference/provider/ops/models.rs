@@ -315,15 +315,44 @@ fn entry_slug_is_claude_code(provider_id: &str, config: &crate::neppy::config::C
     })
 }
 
+/// The family aliases `claude --model` documents. Each resolves to the newest
+/// model of its family, which is why they stay first in the list.
+const CLAUDE_CODE_ALIASES: [&str; 4] = ["fable", "opus", "sonnet", "haiku"];
+
+/// Concrete, versioned names `claude --model` accepts alongside the aliases.
+///
+/// The aliases alone gave the picker nothing to show but a family — "opus",
+/// with no way to tell Opus 5 from Opus 4.8 either before choosing or in the
+/// composer chip afterwards. These are the full names, so a user who wants a
+/// specific version can pin it and then see which one is running.
+///
+/// Deliberately NOT a rename of the aliases. An alias tracks the newest model
+/// of its family and a full name does not, so collapsing the two would turn
+/// "always current" into a pin that silently goes stale — the failure
+/// `config_rejection.rs` already documents for `claude-opus-4-7`-shaped pins.
+/// Both are offered and the distinction stays visible.
+const CLAUDE_CODE_VERSIONED: [&str; 9] = [
+    "claude-fable-5-1",
+    "claude-fable-5",
+    "claude-opus-5",
+    "claude-opus-4-8",
+    "claude-opus-4-7",
+    "claude-opus-4-6",
+    "claude-sonnet-5",
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5",
+];
+
 /// The model names `claude --model` documents.
 ///
 /// Aliases first, because they are what the CLI resolves to the newest model of
-/// each family and therefore what a user should normally pick. The configured
-/// default is appended when it is not already one of them, so a pinned full
-/// name a user has set stays selectable.
+/// each family and therefore what a user should normally pick; the versioned
+/// names follow for pinning. The configured default is appended when it is not
+/// already one of them, so a pinned full name a user has set stays selectable.
 fn claude_code_models() -> Vec<ModelInfo> {
-    ["fable", "opus", "sonnet", "haiku"]
+    CLAUDE_CODE_ALIASES
         .into_iter()
+        .chain(CLAUDE_CODE_VERSIONED)
         .map(|id| ModelInfo {
             id: id.to_string(),
             owned_by: Some("claude-code".to_string()),
