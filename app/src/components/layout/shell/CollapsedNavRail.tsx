@@ -35,6 +35,11 @@ function matchActive(path: string, pathname: string): boolean {
  */
 const RAIL_BTN = 'relative h-8 w-8 justify-center rounded-lg p-0';
 
+// Icons are h-4 w-4 here, matching `SidebarNav`'s expanded rows rather than the
+// larger glyph the rail used to draw. The rail and the expanded body swap in a
+// single frame while the column's width eases, so any difference between them —
+// position OR size — reads as the icons jumping at the moment of the swap.
+
 /**
  * Icon-only navigation shown in the collapsed root-shell rail: the Home action
  * plus every primary {@link NAV_TABS} destination. Mirrors {@link SidebarNav}'s
@@ -90,7 +95,7 @@ export default function CollapsedNavRail() {
               onClick={handleHome}
               aria-label={t('nav.home')}
               className={RAIL_BTN}>
-              <NavIcon id="home" className="h-5 w-5" />
+              <NavIcon id="home" className="h-4 w-4" />
             </SidebarMenuButton>
           </Tooltip>
         </SidebarMenuItem>
@@ -104,7 +109,7 @@ export default function CollapsedNavRail() {
               aria-label={t('shortcuts.title')}
               data-analytics-id="collapsed-rail-shortcuts"
               className={RAIL_BTN}>
-              <NavIcon id="keyboard" className="h-5 w-5" />
+              <NavIcon id="keyboard" className="h-4 w-4" />
             </SidebarMenuButton>
           </Tooltip>
         </SidebarMenuItem>
@@ -122,7 +127,7 @@ export default function CollapsedNavRail() {
                   onClick={() => handleClick(tab, active)}
                   aria-label={tab.label}
                   className={RAIL_BTN}>
-                  <NavIcon id={tab.id} className="h-5 w-5" />
+                  <NavIcon id={tab.id} className="h-4 w-4" />
                   {showBadge && (
                     <SidebarMenuBadge
                       tone="attention"
@@ -146,7 +151,7 @@ export default function CollapsedNavRail() {
             aria-label={t('nav.settings')}
             data-analytics-id="collapsed-rail-settings"
             className={RAIL_BTN}>
-            <NavIcon id="settings" className="h-5 w-5" />
+            <NavIcon id="settings" className="h-4 w-4" />
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

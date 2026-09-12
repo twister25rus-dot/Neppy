@@ -70,12 +70,17 @@ export default function AppSidebar() {
       // re-centring these buttons against a column that was still growing:
       // opening the sidebar slid every icon rightwards and then snapped it back
       // when the expanded body took over. Pinned to the start, the icons simply
-      // stay where they are and the labels arrive beside them. `ps-2.5` matches
-      // `SidebarMenuButton`'s own inner padding, so the icon sits on the same
-      // x in both states and the swap moves nothing.
+      // stay where they are and the labels arrive beside them.
+      //
+      // `ps-3.5` is arithmetic, not taste. Expanded, `SidebarNav`'s row starts
+      // at x=12 and `SidebarMenuButton` adds px-2.5, so its 16px icon is
+      // centred on x=30. Collapsed, the icon sits in a 32px square, so the
+      // square has to start at 30-16 = 14px for the two centres to coincide.
+      // An earlier pass used `ps-2.5` by matching the button's padding rather
+      // than solving for the centre, which left a 4px step on every open.
       // Fades in as the column narrows around it, so the icons never appear
       // full-size in a wide column and then get squeezed.
-      <div className="animate-in fade-in flex h-full min-h-0 flex-col items-start gap-0.5 ps-2.5 duration-200 motion-reduce:animate-none">
+      <div className="animate-in fade-in flex h-full min-h-0 flex-col items-start gap-0.5 ps-3.5 duration-200 motion-reduce:animate-none">
         {/* macOS floats the traffic lights over the top-left, so the rail
             starts below them. One shared spacer rather than a hand-rolled
             `h-7` here and a different guess in the expanded header — the band's

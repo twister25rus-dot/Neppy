@@ -11,22 +11,19 @@ describe('ModelQualityPill', () => {
     expect(screen.getByText('Neppy')).toBeInTheDocument();
   });
 
-  it('has chevron icon', () => {
+  it('draws no chevron', () => {
     const { container } = render(<ModelQualityPill />);
-    const svg = container.querySelector('svg');
-    expect(svg).toBeInTheDocument();
+    // The pill carried a trailing chevron, which #3292 had to add padding for
+    // so it would not clip. It is gone: the model name alone reads as the
+    // control, and with nothing trailing there is nothing left to clip.
+    expect(container.querySelector('svg')).toBeNull();
   });
 
-  it('gives the pill trailing padding so the chevron is not clipped (#3292)', () => {
+  it('keeps the pill padding and shape the label needs', () => {
     render(<ModelQualityPill />);
     const button = screen.getByRole('button', { name: 'composer.modelSelector' });
-    // Horizontal padding + rounded shape keep the trailing chevron fully
-    // inside the pill instead of flush against its right edge.
     expect(button).toHaveClass('px-2');
     expect(button).toHaveClass('rounded-md');
-    // The chevron itself must not shrink/clip when space is tight.
-    const svg = button.querySelector('svg');
-    expect(svg).toHaveClass('shrink-0');
   });
 
   it('has model selector aria-label', () => {

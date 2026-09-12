@@ -624,12 +624,7 @@ interface ChatRuntimeState {
    * "leave it to the provider". Persisted for the same reason as the model
    * pick: it is a preference the user set, not live turn state.
    */
-  composerSampling: {
-    temperature: number | null;
-    topP: number | null;
-    maxTokens: number | null;
-    effort: string | null;
-  };
+  composerSampling: { effort: string | null };
   composerModel: string | null;
   /**
    * Context window the picked model reported. `undefined` means no explicit
@@ -816,7 +811,7 @@ const initialState: ChatRuntimeState = {
   queueStatusByThread: {},
   queuedFollowupsByThread: {},
   pendingVariantByThread: {},
-  composerSampling: { temperature: null, topP: null, maxTokens: null, effort: null },
+  composerSampling: { effort: null },
   composerModel: null,
   composerModelContextWindow: undefined,
 };
@@ -1111,15 +1106,7 @@ const chatRuntimeSlice = createSlice({
       delete state.pendingVariantByThread[action.payload.threadId];
     },
     /** Replace the composer's generation settings wholesale. */
-    setComposerSampling: (
-      state,
-      action: PayloadAction<{
-        temperature: number | null;
-        topP: number | null;
-        maxTokens: number | null;
-        effort: string | null;
-      }>
-    ) => {
+    setComposerSampling: (state, action: PayloadAction<{ effort: string | null }>) => {
       state.composerSampling = action.payload;
     },
     setComposerModel: (

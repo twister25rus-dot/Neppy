@@ -110,14 +110,6 @@ export default function ModelQualityPill({
         <span className="min-w-0 truncate font-medium">
           {loading ? 'Loading models…' : displayValue(value)}
         </span>
-        <svg
-          className="ml-1 size-3.5 shrink-0 opacity-50"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6" />
-        </svg>
       </Button>
       {open && !loading && (
         <ProviderModelPickerDialog
