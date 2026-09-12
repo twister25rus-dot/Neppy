@@ -4,6 +4,23 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.9] - 2026-09-12
+
+### What's Changed
+
+- Reclaim the build-cache disk, and stop the release target dir collecting debug output ([`1b69507c`](https://github.com/twister25rus-dot/Neppy/commit/1b69507cf9562af42461c4e679cfb56fb17f3e8d))
+- Clean the build cache at the end of a successful release ([`bd315ce8`](https://github.com/twister25rus-dot/Neppy/commit/bd315ce8ef8d836213ccd953f3ff2160917aa798))
+- Slide the thinking control, pin the rail left, and ease the composer drop ([`28f194b3`](https://github.com/twister25rus-dot/Neppy/commit/28f194b3aaa4b9e74cb366926095069839713559))
+- Put the sidebar header icons at the top and drop the content card clear ([`00080b15`](https://github.com/twister25rus-dot/Neppy/commit/00080b15cfdbc0a6ea69483310876ac724296559))
+- Move the thinking slider to the composer's per-turn controls ([`d9c58614`](https://github.com/twister25rus-dot/Neppy/commit/d9c58614263943711d11bcd7fa7ccd9ea6cd77d2))
+- Name the Claude Code model versions, and say why a Composio save failed ([`2bc47360`](https://github.com/twister25rus-dot/Neppy/commit/2bc473601ba3ecec760378813d5b5c2db1a7209d))
+- Let tooling changes land on main, and say why main is not private ([`9f53d36f`](https://github.com/twister25rus-dot/Neppy/commit/9f53d36fe773aadae023eb924361da977acb33b8))
+- Merge the sidebar, composer and Composio work ([`c91dd72d`](https://github.com/twister25rus-dot/Neppy/commit/c91dd72d257fdf6cefc98e1f4ab878bacc8d5f05))
+- Reformat the Composio panel ([`6c076ff3`](https://github.com/twister25rus-dot/Neppy/commit/6c076ff38be718e4e7a8544683a142e1850941ff))
+- Expect the effort the composer now sends ([`e86dff26`](https://github.com/twister25rus-dot/Neppy/commit/e86dff263a6d1e0bca0f0773c9364fbe2adb50b7))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/7d366085bf95473dd4e2641dc36d985827370da3...e86dff263a6d1e0bca0f0773c9364fbe2adb50b7
+
 ## [0.66.8] - 2026-09-11
 
 ### What's Changed

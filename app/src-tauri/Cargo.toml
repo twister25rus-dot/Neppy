@@ -1,6 +1,6 @@
 [package]
 name = "Neppy"
-version = "0.66.8"
+version = "0.66.9"
 description = "Neppy - AI-powered Super Assistant"
 authors = ["Neppy"]
 edition = "2021"
