@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { KNOWN_CHANNEL_TYPES } from '../../../types/channels';
-import type { ChannelDefinition } from '../../../types/channels';
+import { type ChannelDefinition, KNOWN_CHANNEL_TYPES } from '../../../types/channels';
 import { channelConfigFor } from '../channelConfigFor';
 
 const definitionFor = (id: string): ChannelDefinition =>

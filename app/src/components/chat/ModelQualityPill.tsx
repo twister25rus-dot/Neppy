@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useT } from '../../lib/i18n/I18nContext';
 import { loadAISettings } from '../../services/api/aiSettingsApi';
-import { type CloudProvider } from '../settings/panels/ai/aiPanelTypes';
-import type { OllamaModel } from '../settings/panels/ai/aiPanelTypes';
+import type { CloudProvider, OllamaModel } from '../settings/panels/ai/aiPanelTypes';
 import {
   ProviderModelPickerDialog,
   type ProviderModelSelection,
