@@ -418,9 +418,7 @@ const ComposioPanel = ({ embedded = false, managedAuthEnabled }: ComposioPanelPr
                     : null
               }
               error={
-                saveStatus === 'error'
-                  ? (saveError ?? t('settings.composio.saveErrorNoKey'))
-                  : null
+                saveStatus === 'error' ? (saveError ?? t('settings.composio.saveErrorNoKey')) : null
               }
               savingLabel=""
             />
