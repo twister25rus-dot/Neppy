@@ -9,6 +9,7 @@ import {
   type ProviderModelSelection,
 } from '../settings/panels/ai/ProviderModelPickerDialog';
 import { Button } from '../ui';
+import ModelQuickPicker from './ModelQuickPicker';
 
 interface ModelQualityPillProps {
   className?: string;
@@ -110,20 +111,26 @@ export default function ModelQualityPill({
 
   return (
     <>
-      <Button
-        type="button"
-        variant="tertiary"
-        size="xs"
-        analyticsId="chat-model-selector"
-        aria-label={t('composer.modelSelector')}
-        title={t('composer.modelSelector')}
-        disabled={!onValueChange || loading}
-        onClick={() => setOpen(true)}
-        className={`h-7 min-w-0 rounded-md px-2 text-xs text-content-muted hover:bg-surface-hover hover:text-content ${className ?? ''}`}>
-        <span className="min-w-0 truncate font-medium">
-          {loading ? 'Loading models…' : displayValue(value)}
-        </span>
-      </Button>
+      <ModelQuickPicker
+        value={value}
+        onSelect={next => {
+          onValueChange?.(next);
+        }}
+        onBrowseAll={() => setOpen(true)}>
+        <Button
+          type="button"
+          variant="tertiary"
+          size="xs"
+          analyticsId="chat-model-selector"
+          aria-label={t('composer.modelSelector')}
+          title={t('composer.modelSelector')}
+          disabled={!onValueChange || loading}
+          className={`h-7 min-w-0 rounded-md px-2 text-xs text-content-muted hover:bg-surface-hover hover:text-content ${className ?? ''}`}>
+          <span className="min-w-0 truncate font-medium">
+            {loading ? 'Loading models…' : displayValue(value)}
+          </span>
+        </Button>
+      </ModelQuickPicker>
       {open && !loading && (
         <ProviderModelPickerDialog
           cloudProviders={providers}

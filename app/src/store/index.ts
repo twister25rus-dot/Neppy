@@ -235,6 +235,7 @@ const chatRuntimePersistConfig = {
     'composerModel',
     'composerModelContextWindow',
     'composerSampling',
+    'visibleModels',
   ],
   transforms: [artifactsReadyOnlyTransform],
 };
