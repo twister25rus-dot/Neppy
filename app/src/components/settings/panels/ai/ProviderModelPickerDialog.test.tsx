@@ -7,6 +7,43 @@ import { ProviderModelPickerDialog } from './ProviderModelPickerDialog';
 vi.mock('../../../../services/api/aiSettingsApi', () => ({ listProviderModels: vi.fn() }));
 
 describe('ProviderModelPickerDialog', () => {
+  it('fetches the catalog once when the caller re-renders with a fresh array', async () => {
+    // The catalog effect used to depend on the `localModels` prop by reference.
+    // A caller writing `localModels={[]}` inline handed it a new array on every
+    // render, so the effect re-armed, cleared the catalog and refetched — which
+    // re-rendered the caller, producing another `[]`. The list never settled:
+    // it sat on "Loading models…" and restarted every couple of seconds.
+    vi.mocked(listProviderModels).mockResolvedValue([
+      { id: 'gpt-4o-mini', owned_by: 'openai', context_window: 128_000 },
+    ]);
+    const providers = [
+      {
+        id: 'openai',
+        slug: 'openai',
+        label: 'OpenAI',
+        endpoint: 'https://api.openai.com/v1',
+        authStyle: 'bearer' as const,
+        maskedKey: '••••',
+      },
+    ];
+    const props = {
+      cloudProviders: providers,
+      ollamaRunning: false,
+      claudeCodeEnabled: false,
+      initial: { source: { kind: 'cloud' as const, providerSlug: 'openai' }, model: '' },
+      onClose: () => {},
+      onSelect: () => {},
+    };
+
+    // A fresh array literal each render is exactly what the caller wrote.
+    const { rerender } = render(<ProviderModelPickerDialog {...props} localModels={[]} />);
+    await waitFor(() => expect(listProviderModels).toHaveBeenCalled());
+    rerender(<ProviderModelPickerDialog {...props} localModels={[]} />);
+    rerender(<ProviderModelPickerDialog {...props} localModels={[]} />);
+
+    expect(listProviderModels).toHaveBeenCalledTimes(1);
+  });
+
   it('returns the provider-reported context window with a catalog selection', async () => {
     vi.mocked(listProviderModels).mockResolvedValue([
       { id: 'gpt-4o-mini', owned_by: 'openai', context_window: 128_000 },

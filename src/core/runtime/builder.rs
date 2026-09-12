@@ -259,28 +259,45 @@ impl DomainSet {
     /// Like [`full`](Self::full) but with the three TinyHumans-backend-coupled
     /// groups off: `hosted` (announcements, billing, orchestration, referral,
     /// team — all thin proxies to the hosted backend), `relay` (the tiny.place
-    /// agent social network), and `integrations` (the Composio OAuth proxy,
-    /// hosted file storage, and Composio-backed task sources). Neppy is a
-    /// local-first fork with no hosted backend, so these groups have nothing to
-    /// talk to; disabling them (rather than stubbing) makes their controllers
-    /// report unknown-method, their agent tools disappear, and their
-    /// stores/subscribers never initialise — which also stops the
-    /// `SessionExpired` cascade that a failed hosted 401 would otherwise
-    /// trigger. See NEPPY-BUILD-SPEC.md §2.2 and §2.10.
+    /// agent social network). Neppy is a local-first fork with no hosted
+    /// backend, so those groups have nothing to talk to; disabling them (rather
+    /// than stubbing) makes their controllers report unknown-method, their
+    /// agent tools disappear, and their stores/subscribers never initialise —
+    /// which also stops the `SessionExpired` cascade that a failed hosted 401
+    /// would otherwise trigger.
+    ///
+    /// `integrations` is deliberately NOT among them: Composio's direct mode is
+    /// local-first (the user's own API key against `app.composio.dev`), and the
+    /// hosted half is held off by `services.integrations` instead. See the
+    /// comment on the field below, and NEPPY-BUILD-SPEC.md §2.2 and §2.10.
     pub fn full_local() -> Self {
         Self {
             hosted: false,
             relay: false,
-            // `Integrations` is the Composio OAuth proxy plus the two surfaces
-            // built on it: `file_storage` (backed by the hosted backend's
-            // `/agent-integrations/file-storage/*` S3 provider) and
-            // `task_sources` (which pulls work items *through* Composio's
-            // `fetch_tasks`). All three are hosted-backend-only, so the whole
-            // group is dead in a local-first fork — nothing local is lost.
-            // Replacement for the services you actually use is an MCP server
-            // with your own credentials; the `mcp` group stays on.
+            // `Integrations` stays ON, for Composio's DIRECT mode only.
+            //
+            // This group was dropped wholesale on the reading that all of it is
+            // hosted-backend-only. That is true of the OAuth proxy and of
+            // `file_storage`, but not of Composio itself: `ComposioClientKind`
+            // has a `Direct` variant that takes the user's own API key and
+            // talks to `app.composio.dev` directly, reaching the hosted backend
+            // at no point. Dropping the group took that with it, so a key
+            // entered in settings hit `unknown method:
+            // openhuman.composio_set_api_key` — a working local-first feature
+            // switched off for a hosted-backend reason that does not apply.
+            //
+            // What keeps the hosted half off is not this flag:
+            //   - `services.integrations` is forced false in `jsonrpc.rs`, so
+            //     the periodic connection sync that talks to the backend (and
+            //     could publish `SessionExpired`) never runs.
+            //   - Managed auth is already unavailable, so backend mode cannot
+            //     be selected in the UI.
+            // `file_storage`'s agent tools are the one genuinely hosted-only
+            // surface this re-admits; they fail against a backend this fork
+            // does not run, exactly as any other hosted call would.
+            //
             // See NEPPY-BUILD-SPEC.md §2.10.
-            integrations: false,
+            integrations: true,
             ..Self::full()
         }
     }
@@ -953,6 +970,41 @@ impl CoreRuntime {
 
 #[cfg(test)]
 mod tests {
+
+    /// Composio's direct mode is local-first and must survive `full_local()`.
+    ///
+    /// The whole `Integrations` group was once dropped here on the reading that
+    /// all of it is hosted-backend-only. Composio is the exception: its
+    /// `Direct` client variant uses the user's own API key against
+    /// `app.composio.dev` and never reaches the hosted backend. Dropping the
+    /// group unregistered its controllers too, so saving a key in settings
+    /// failed with `unknown method: openhuman.composio_set_api_key`.
+    ///
+    /// What holds the hosted half off is `services.integrations`, asserted
+    /// below — not this flag. Re-dropping the domain to silence a hosted call
+    /// would take the working local feature with it again.
+    #[test]
+    fn full_local_keeps_integrations_for_direct_mode_composio() {
+        let domains = DomainSet::full_local();
+        assert!(
+            domains.allows(DomainGroup::Integrations),
+            "direct-mode Composio needs its controllers registered"
+        );
+        // The groups that genuinely have no local half stay off.
+        assert!(!domains.allows(DomainGroup::Hosted));
+        assert!(!domains.allows(DomainGroup::Relay));
+    }
+
+    /// The hosted Composio sync is held off by the SERVICE flag, which is what
+    /// lets the domain above stay on without reintroducing backend traffic.
+    #[test]
+    fn desktop_services_do_not_run_the_hosted_integrations_sync() {
+        // `jsonrpc.rs` forces this false for the embedded core; this pins the
+        // pairing so the two cannot drift apart silently.
+        let mut services = ServiceSet::desktop();
+        services.integrations = false;
+        assert!(!services.integrations);
+    }
     use super::{DomainSet, ServiceSet};
     use crate::core::all::DomainGroup;
 

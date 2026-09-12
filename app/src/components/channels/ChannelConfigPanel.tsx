@@ -1,11 +1,8 @@
 import { useT } from '../../lib/i18n/I18nContext';
 import type { ChannelDefinition, ChannelType } from '../../types/channels';
 import ChannelCapabilities from './ChannelCapabilities';
-import CredentialChannelConfig from './CredentialChannelConfig';
-import DiscordConfig from './DiscordConfig';
+import { channelConfigFor } from './channelConfigFor';
 import McpServersTab from './mcp/McpServersTab';
-import TelegramConfig from './TelegramConfig';
-import WebChannelConfig from './WebChannelConfig';
 
 interface ChannelConfigPanelProps {
   selectedChannel: ChannelType;
@@ -44,12 +41,10 @@ const ChannelConfigPanel = ({ selectedChannel, definitions }: ChannelConfigPanel
             {t(`channels.${definition.id}.description`, definition.description)}
           </p>
         </div>
-        {selectedChannel === 'telegram' && <TelegramConfig definition={definition} />}
-        {selectedChannel === 'discord' && <DiscordConfig definition={definition} />}
-        {selectedChannel === 'web' && <WebChannelConfig definition={definition} />}
-        {(selectedChannel === 'lark' ||
-          selectedChannel === 'dingtalk' ||
-          selectedChannel === 'email') && <CredentialChannelConfig definition={definition} />}
+        {/* Shared with `ChannelSetupModal`; this copy was the one missing
+            `yuanbao`. Rendering nothing for an unmapped channel is this
+            surface's fallback — the modal words it instead. */}
+        {channelConfigFor(selectedChannel, definition)}
       </section>
 
       <ChannelCapabilities capabilities={definition.capabilities} />

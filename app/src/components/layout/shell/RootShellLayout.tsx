@@ -19,6 +19,7 @@ import {
   SidebarRail,
 } from '../../ui';
 import ContentSurface from './ContentSurface';
+import QuickSettingsButton from './QuickSettingsButton';
 import WindowDragBar from './WindowDragBar';
 
 const log = debugFactory('sidebar');
@@ -259,6 +260,13 @@ export default function RootShellLayout({ sidebar, children, unframed }: RootShe
             the routed surface keeps its full height. No-op off macOS / outside
             Tauri, where the native title bar already owns this area. */}
         <WindowDragBar />
+        {/* Sits above the drag band (z-20 over its z-10) so the button stays
+            clickable rather than being swallowed by the region that makes the
+            title bar draggable. Top-RIGHT: the top-left of this strip is where
+            macOS floats its traffic lights. */}
+        <div className="absolute end-2 top-1.5 z-20">
+          <QuickSettingsButton />
+        </div>
         <ContentSurface unframed={unframed}>{children}</ContentSurface>
       </div>
     </SidebarProvider>

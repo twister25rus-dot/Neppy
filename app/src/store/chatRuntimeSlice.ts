@@ -624,12 +624,14 @@ interface ChatRuntimeState {
    * "leave it to the provider". Persisted for the same reason as the model
    * pick: it is a preference the user set, not live turn state.
    */
-  composerSampling: {
-    temperature: number | null;
-    topP: number | null;
-    maxTokens: number | null;
-    effort: string | null;
-  };
+  composerSampling: { effort: string | null };
+  /**
+   * Models the composer's quick picker offers, as `provider:model` keys — the
+   * same encoding the pill already round-trips. Chosen in Connections → LLM;
+   * empty means "nothing pinned yet", which the picker renders as the current
+   * selection plus a way to reach the full list.
+   */
+  visibleModels: string[];
   composerModel: string | null;
   /**
    * Context window the picked model reported. `undefined` means no explicit
@@ -816,7 +818,8 @@ const initialState: ChatRuntimeState = {
   queueStatusByThread: {},
   queuedFollowupsByThread: {},
   pendingVariantByThread: {},
-  composerSampling: { temperature: null, topP: null, maxTokens: null, effort: null },
+  composerSampling: { effort: null },
+  visibleModels: [],
   composerModel: null,
   composerModelContextWindow: undefined,
 };
@@ -1111,15 +1114,18 @@ const chatRuntimeSlice = createSlice({
       delete state.pendingVariantByThread[action.payload.threadId];
     },
     /** Replace the composer's generation settings wholesale. */
-    setComposerSampling: (
-      state,
-      action: PayloadAction<{
-        temperature: number | null;
-        topP: number | null;
-        maxTokens: number | null;
-        effort: string | null;
-      }>
-    ) => {
+    /** Add or remove one `provider:model` key from the quick picker. */
+    toggleVisibleModel: (state, action: PayloadAction<string>) => {
+      const key = action.payload;
+      state.visibleModels = state.visibleModels.includes(key)
+        ? state.visibleModels.filter(entry => entry !== key)
+        : [...state.visibleModels, key];
+    },
+    /** Replace the whole set — used when a provider's list is bulk-toggled. */
+    setVisibleModels: (state, action: PayloadAction<string[]>) => {
+      state.visibleModels = action.payload;
+    },
+    setComposerSampling: (state, action: PayloadAction<{ effort: string | null }>) => {
       state.composerSampling = action.payload;
     },
     setComposerModel: (
@@ -2360,6 +2366,8 @@ const chatRuntimeSlice = createSlice({
 export const {
   beginAnswerVariant,
   setComposerSampling,
+  setVisibleModels,
+  toggleVisibleModel,
   endAnswerVariant,
   setComposerModel,
   setInferenceStatusForThread,

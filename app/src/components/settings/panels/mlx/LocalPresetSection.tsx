@@ -69,11 +69,20 @@ export default function LocalPresetSection() {
               data-testid={`local-preset-${option.id}`}
               data-analytics-id="settings-local-preset"
               onClick={() => void choose(option.id)}
-              className={`rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-60 ${
+              // Three separate signals, because the old single one did not read
+              // as a reaction. `active:` is the press itself — there was none,
+              // so a click looked like nothing happened until the border
+              // changed colour. The ring widens the selected state past a 1px
+              // border, which at this size was easy to miss. And the dimming is
+              // now on the UNSELECTED buttons only: `disabled:opacity-60`
+              // applied to all of them, so choosing one faded the whole grid —
+              // including the button just pressed, which is the opposite of
+              // feedback.
+              className={`rounded-lg border px-3 py-2 text-left transition-all active:scale-[0.99] ${
                 selected
-                  ? 'border-primary-500 bg-surface'
-                  : 'border-line bg-surface hover:border-line-strong'
-              }`}>
+                  ? 'border-primary-500 bg-surface ring-1 ring-primary-500/40'
+                  : 'border-line bg-surface hover:border-line-strong hover:bg-surface-hover active:bg-surface-hover'
+              } ${saving && !selected ? 'opacity-60' : ''}`}>
               <span className="block text-sm font-medium text-content">{option.label}</span>
               <span className="block text-xs text-content-muted">{option.hint}</span>
             </button>

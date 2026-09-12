@@ -9,12 +9,9 @@ import { useT } from '../../lib/i18n/I18nContext';
 import type { ChannelDefinition, ChannelType } from '../../types/channels';
 import Badge from '../ui/Badge';
 import { ModalShell } from '../ui/ModalShell';
+import { channelConfigFor } from './channelConfigFor';
 import ChannelConnectHelp from './ChannelConnectHelp';
 import { renderChannelIcon } from './channelIcon';
-import CredentialChannelConfig from './CredentialChannelConfig';
-import DiscordConfig from './DiscordConfig';
-import TelegramConfig from './TelegramConfig';
-import YuanbaoConfig from './YuanbaoConfig';
 
 interface ChannelSetupModalProps {
   definition: ChannelDefinition;
@@ -26,27 +23,16 @@ function renderChannelConfig(
   channelId: ChannelType,
   t: (key: string, fallback?: string) => string
 ) {
-  switch (channelId) {
-    case 'telegram':
-      return <TelegramConfig definition={definition} />;
-    case 'discord':
-      return <DiscordConfig definition={definition} />;
-    case 'yuanbao':
-      return <YuanbaoConfig definition={definition} />;
-    // Credential-form channels (Lark/DingTalk/Email) render the same generic
-    // form here as on the Channels page — otherwise clicking their Skills-grid
-    // tile fell through to "config not available" (#4280 review).
-    case 'lark':
-    case 'dingtalk':
-    case 'email':
-      return <CredentialChannelConfig definition={definition} />;
-    default:
-      return (
-        <p className="py-4 text-sm text-content-faint">
-          {t('channels.configNotAvailable')} {definition.display_name}
-        </p>
-      );
-  }
+  // The mapping lives in `channelConfigFor` so this and the Channels page
+  // cannot drift again — they had, in both directions. This copy is the one
+  // that was missing `web` and `mcp`.
+  const config = channelConfigFor(channelId, definition);
+  if (config) return config;
+  return (
+    <p className="py-4 text-sm text-content-faint">
+      {t('channels.configNotAvailable')} {definition.display_name}
+    </p>
+  );
 }
 
 function ChannelConfigContent({ definition }: { definition: ChannelDefinition }) {

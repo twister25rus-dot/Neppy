@@ -4,9 +4,9 @@ import { PlusIcon } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import AttachmentPreview from '../../../components/chat/AttachmentPreview';
-import ComposerSamplingPill, {
-  type ComposerSampling,
-} from '../../../components/chat/ComposerSamplingPill';
+import ComposerEffortPill, {
+  type ComposerEffort,
+} from '../../../components/chat/ComposerEffortPill';
 import { Button } from '../../../components/ui';
 import type { Attachment } from '../../../lib/attachments';
 import { useRegisterAction } from '../../../lib/commands/useRegisterAction';
@@ -87,8 +87,8 @@ export function AssistantUiChat({
   modelContextWindow?: number | null;
   onModelChange: (value: string | null, contextWindow?: number | null) => void;
   /** Per-turn generation settings, and the setter that persists them. */
-  sampling: ComposerSampling;
-  onSamplingChange: (next: ComposerSampling) => void;
+  sampling: ComposerEffort;
+  onSamplingChange: (next: ComposerEffort) => void;
   composerHeader?: ReactNode;
   inputValue: string;
   onInputValueChange: (value: string) => void;
@@ -145,17 +145,30 @@ export function AssistantUiChat({
   const ComposerExtras = useCallback(
     () => (
       <>
-        <ComposerSamplingPill value={sampling} onChange={onSamplingChange} />
+        <ComposerEffortPill value={sampling} onChange={onSamplingChange} />
         <ContextWindowPill usage={contextUsage} />
-        <div className="absolute right-0 bottom-full left-0 pb-2">
-          <ThreadGoalEditorPanel ctl={threadGoal} />
-        </div>
         <ThreadGoalFooterTrigger ctl={threadGoal} />
       </>
     ),
     [contextUsage, threadGoal, sampling, onSamplingChange]
   );
-  const ComposerHeader = useCallback(() => <>{composerHeader}</>, [composerHeader]);
+  // The goal editor belongs in the header slot, which `thread.tsx` renders
+  // OUTSIDE the bordered composer shell. It used to live in `ComposerExtras`
+  // under `absolute bottom-full`, and `ComposerExtras` sits in the action row
+  // (`+ / model / mic`) — so "above that row" meant on top of the textarea, and
+  // opening a goal covered the message you were writing. Here it flows, pushing
+  // the composer down instead of covering it, and needs no positioning at all.
+  const ComposerHeader = useCallback(
+    () => (
+      <>
+        {composerHeader}
+        <div className="pb-2">
+          <ThreadGoalEditorPanel ctl={threadGoal} />
+        </div>
+      </>
+    ),
+    [composerHeader, threadGoal]
+  );
   const ComposerAttachments = useCallback(
     () => (
       <AttachmentPreview

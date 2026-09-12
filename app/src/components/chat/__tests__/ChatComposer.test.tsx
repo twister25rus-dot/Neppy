@@ -6,9 +6,11 @@ import {
 } from '@assistant-ui/react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { createRef, type ReactNode, useEffect, useState } from 'react';
+import { Provider } from 'react-redux';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Attachment } from '../../../lib/attachments';
+import { createTestStore } from '../../../test/test-utils';
 import ChatComposer, { type ChatComposerProps } from '../ChatComposer';
 
 vi.mock('../../../lib/i18n/I18nContext', () => ({ useT: () => ({ t: (k: string) => k }) }));
@@ -23,6 +25,15 @@ vi.mock('../../../lib/i18n/I18nContext', () => ({ useT: () => ({ t: (k: string) 
  */
 const EMPTY_RUNTIME_MESSAGES: ThreadMessageLike[] = [];
 
+/**
+ * Store without an assistant-ui runtime. The runtime-boundary test below proves
+ * the composer survives a host that mounts no runtime; the Redux store is a
+ * separate dependency and withholding it would test the wrong absence.
+ */
+function StoreOnly({ children }: { children: ReactNode }) {
+  return <Provider store={createTestStore()}>{children}</Provider>;
+}
+
 function Runtime({
   children,
   onNew = async () => {},
@@ -36,7 +47,13 @@ function Runtime({
     convertMessage: m => m,
     onNew,
   });
-  return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>;
+  // The model pill's quick picker reads `visibleModels` from the store, so the
+  // composer can no longer render without one.
+  return (
+    <Provider store={createTestStore()}>
+      <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>
+    </Provider>
+  );
 }
 
 function makeAttachment(overrides: Partial<Attachment> = {}): Attachment {
@@ -263,7 +280,8 @@ describe('ChatComposer', () => {
           maxAttachments={0}
           allowedMimeTypes={[]}
           attachmentsEnabled={false}
-        />
+        />,
+        { wrapper: StoreOnly }
       );
       expect(screen.getByRole('textbox')).toHaveValue('standalone');
       expect(screen.getByTestId('send-message-button')).toBeInTheDocument();
