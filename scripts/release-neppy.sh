@@ -340,3 +340,21 @@ git push origin "HEAD:$RELEASE_BRANCH"
 echo
 echo "done: $TAG published with release notes and its signed app assets."
 echo "An installed Neppy will offer $VERSION on its next update check."
+
+# A release build is the single biggest producer of regenerable output in this
+# repo -- the incremental caches alone had reached 72 GiB the first time this was
+# measured -- and by this line the artifacts that matter are published and signed
+# on GitHub. The safe tier keeps `target/debug/deps` warm, so the next build is
+# not punished for it, and it leaves the bundle in place for local testing.
+#
+# This runs last and its failure is swallowed on purpose: the release is already
+# out, and `set -e` would otherwise turn a failed `rm` into a non-zero exit on a
+# release that actually succeeded.
+if [ "${NEPPY_SKIP_POST_RELEASE_CLEAN:-0}" = "1" ]; then
+  echo "==> skipping the post-release cache clean (NEPPY_SKIP_POST_RELEASE_CLEAN=1)"
+else
+  echo
+  echo "==> reclaiming build-cache disk"
+  bash "$ROOT/scripts/clean-build-cache.sh" \
+    || echo "    clean failed; $TAG is published and unaffected"
+fi
