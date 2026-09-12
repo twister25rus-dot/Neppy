@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useT } from '../../lib/i18n/I18nContext';
 import { loadAISettings } from '../../services/api/aiSettingsApi';
 import { type CloudProvider } from '../settings/panels/ai/aiPanelTypes';
+import type { OllamaModel } from '../settings/panels/ai/aiPanelTypes';
 import {
   ProviderModelPickerDialog,
   type ProviderModelSelection,
@@ -20,6 +21,18 @@ interface ModelQualityPillProps {
    */
   onValueChange?: (value: string | null, contextWindow?: number | null) => void;
 }
+
+/**
+ * Hoisted so its identity is stable across renders.
+ *
+ * Written inline as an empty array literal, this was a NEW array every render, and
+ * the dialog's catalog effect depends on that prop — so it re-ran, cleared the
+ * catalog, refetched, re-rendered, and produced another `[]`. The models list
+ * never settled: it sat on "Loading models…" and started over every couple of
+ * seconds. The composer pill has no Ollama list to offer, and "none" is a
+ * constant.
+ */
+const NO_LOCAL_MODELS: OllamaModel[] = [];
 
 function selectionFromValue(value: string | null | undefined): ProviderModelSelection | null {
   if (!value || value.startsWith('hint:')) return null;
@@ -114,7 +127,7 @@ export default function ModelQualityPill({
       {open && !loading && (
         <ProviderModelPickerDialog
           cloudProviders={providers}
-          localModels={[]}
+          localModels={NO_LOCAL_MODELS}
           ollamaRunning={false}
           claudeCodeEnabled={false}
           initial={initial}

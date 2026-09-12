@@ -126,6 +126,12 @@ export function ProviderModelPickerDialog({
     catalogIds: catalog.map(candidate => candidate.id),
   });
 
+  // Stable descriptions of the two inputs the effect below actually cares
+  // about: which source is selected, and which local models exist. `sourceKey`
+  // is the module-level helper already used for source comparison.
+  const selectedSourceKey = source ? sourceKey(source) : 'none';
+  const localModelsKey = localModels.map(entry => entry.id).join('\u0000');
+
   useEffect(() => {
     if (!source || source.kind !== 'cloud') {
       setCatalog(source?.kind === 'local' ? localModels : []);
@@ -150,7 +156,14 @@ export function ProviderModelPickerDialog({
     return () => {
       active = false;
     };
-  }, [catalogRequest, localModels, source]);
+    // Keyed on the source's IDENTITY-FREE description and on the local list's
+    // CONTENTS, never on the prop objects themselves. Depending on
+    // `localModels` by reference meant a caller writing `localModels={[]}`
+    // inline re-armed this effect on every render — clear, refetch, re-render,
+    // repeat — which is what made the catalog reload every few seconds instead
+    // of settling. A caller should not be able to cause that by writing an
+    // ordinary literal.
+  }, [catalogRequest, localModelsKey, selectedSourceKey]);
 
   const filteredSources = sources.filter(candidate =>
     sourceLabel(candidate, cloudProviders, t)
