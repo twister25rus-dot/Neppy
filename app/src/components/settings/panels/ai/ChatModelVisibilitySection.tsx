@@ -101,7 +101,7 @@ export default function ChatModelVisibilitySection({
       {selectedSlug && (
         <div className="mt-3 space-y-1" data-testid="chat-models-list">
           {loading && <p className="text-xs text-content-faint">{t('common.loading')}</p>}
-          {error && <p className="text-xs text-danger-600">{error}</p>}
+          {error && <p className="text-xs text-coral-600">{error}</p>}
           {!loading && !error && models.length === 0 && (
             <p className="text-xs text-content-faint">
               {t('settings.ai.chatModels.none', 'No models reported by this provider.')}
