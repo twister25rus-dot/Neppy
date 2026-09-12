@@ -12,7 +12,7 @@ export type ChannelType =
  *  from the core (which is typed `string`). `satisfies` keeps this list in
  *  lockstep with the `ChannelType` union — adding a member there without updating
  *  here is a compile error. */
-const KNOWN_CHANNEL_TYPES = [
+export const KNOWN_CHANNEL_TYPES = [
   'telegram',
   'discord',
   'web',
