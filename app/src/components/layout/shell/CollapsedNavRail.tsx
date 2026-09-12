@@ -79,7 +79,9 @@ export default function CollapsedNavRail() {
 
   return (
     <nav aria-label={t('nav.home')}>
-      <SidebarMenu className="items-center gap-2">
+      {/* Start-aligned for the same reason as the rail wrapper in `AppSidebar`:
+          centring re-positions every icon while the column animates open. */}
+      <SidebarMenu className="items-start gap-2">
         {/* Home */}
         <SidebarMenuItem>
           <Tooltip label={t('nav.home')}>

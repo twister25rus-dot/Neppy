@@ -12,8 +12,7 @@ import {
 } from '@/components/assistant-ui/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/assistant-ui/ui/popover';
 import { useAui } from '@assistant-ui/react';
-import { Radio } from '@base-ui/react/radio';
-import { RadioGroup } from '@base-ui/react/radio-group';
+import { Slider } from '@base-ui/react/slider';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon } from 'lucide-react';
 import {
@@ -31,10 +30,16 @@ import {
 
 export type ModelSelectorEffortOption = { id: string; name: string };
 
+/**
+ * The ids are the wire values (`reasoning_effort`) and must not change; the
+ * names are what the slider reads out. "Low / Med / High" described the knob,
+ * not the decision being made with it — the question is whether you want an
+ * answer now or a better one.
+ */
 export const DEFAULT_EFFORT_OPTIONS: readonly ModelSelectorEffortOption[] = [
-  { id: 'low', name: 'Low' },
-  { id: 'medium', name: 'Med' },
-  { id: 'high', name: 'High' },
+  { id: 'low', name: 'Quick' },
+  { id: 'medium', name: 'Balanced' },
+  { id: 'high', name: 'Thorough' },
 ];
 
 export type ModelOption = {
@@ -539,21 +544,24 @@ function ModelSelectorEffort({
 
   if (!efforts?.length) return null;
 
+  const lastIndex = efforts.length - 1;
+  // An unset or unrecognised effort sits at the first stop rather than leaving
+  // the thumb undefined, which would render the track with no handle at all.
+  const foundIndex = efforts.findIndex(option => option.id === effort);
+  const activeIndex = foundIndex === -1 ? 0 : foundIndex;
+
   return (
     <div
       data-slot="model-selector-effort"
-      className={cn(
-        'flex cursor-default items-center justify-between gap-3 border-t px-3 py-2',
-        className
-      )}
+      className={cn('flex cursor-default flex-col gap-1.5 border-t px-3 py-2.5', className)}
       onKeyDownCapture={e => {
         onKeyDownCapture?.(e);
         if (e.defaultPrevented) return;
         if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-        // Base UI's RadioGroup composite claims vertical arrows for roving
-        // focus (orientation "both", not configurable), so intercept them in
-        // capture and hand the keypress to cmdk: the model list owns vertical
-        // navigation, and cmdk's Enter is inert while a radio has focus.
+        // The slider claims vertical arrows as well as horizontal ones, so
+        // intercept them in capture and hand the keypress to cmdk: the model
+        // list owns vertical navigation, and cmdk's Enter is inert while the
+        // thumb has focus. Left/Right are left alone — those are the slider's.
         onKeyDown?.(e);
         if (e.defaultPrevented) return;
         const input = e.currentTarget
@@ -569,37 +577,58 @@ function ModelSelectorEffort({
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') return;
         onKeyDown?.(e);
         if (e.defaultPrevented) return;
-        // Base UI's radio composite ignores Home/End and cmdk's Command
-        // root would claim them to jump the model list; move radio focus
-        // here so only the radiogroup reacts.
+        // cmdk's Command root would claim Home/End to jump the model list;
+        // hand focus to the thumb so the slider's own min/max jump runs
+        // instead.
         if (e.key === 'Home' || e.key === 'End') {
           e.preventDefault();
           e.stopPropagation();
-          const radios = Array.from(
-            e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]:not([data-disabled])')
-          );
-          (e.key === 'Home' ? radios[0] : radios[radios.length - 1])?.focus();
+          e.currentTarget.querySelector<HTMLElement>('[role="slider"]')?.focus();
         }
       }}
       {...props}>
       <span className="text-muted-foreground text-xs">{label}</span>
-      <RadioGroup
-        value={effort ?? ''}
-        onValueChange={setEffort}
+      <Slider.Root
+        value={activeIndex}
+        min={0}
+        max={lastIndex}
+        step={1}
+        // Base UI hands back a bare number when it was given one.
+        onValueChange={next => {
+          const option = efforts[Math.round(next)];
+          if (option) setEffort(option.id);
+        }}
         aria-label={typeof label === 'string' ? label : 'Reasoning effort'}
-        className="flex items-center gap-0.5">
-        {efforts.map(option => (
-          <Radio.Root
+        className="w-full">
+        <Slider.Control className="flex h-4 w-full touch-none items-center select-none">
+          <Slider.Track className="bg-muted relative h-1 w-full rounded-full">
+            <Slider.Indicator className="bg-primary rounded-full" />
+            <Slider.Thumb
+              // The stop names are the visible scale, so read those out rather
+              // than "1", which says nothing about what the position buys.
+              getAriaValueText={(_formatted, value) =>
+                efforts[Math.round(value)]?.name ?? String(value)
+              }
+              className="focus-visible:ring-ring/50 bg-primary block size-3.5 rounded-full shadow-sm transition-transform outline-none hover:scale-110 focus-visible:ring-2"
+            />
+          </Slider.Track>
+        </Slider.Control>
+      </Slider.Root>
+      {/* The scale itself. `justify-between` puts three labels under the three
+          stops the thumb can occupy; the active one is the only one at full
+          contrast, so the current setting is readable without a second row. */}
+      <div aria-hidden="true" className="flex justify-between gap-1 text-[10px]">
+        {efforts.map((option, index) => (
+          <span
             key={option.id}
-            value={option.id}
             className={cn(
-              'focus-visible:ring-ring/50 text-muted-foreground hover:text-foreground rounded-md px-2 py-1 text-xs transition-colors outline-none focus-visible:ring-1',
-              'data-checked:bg-accent data-checked:text-accent-foreground data-checked:font-medium'
+              'transition-colors',
+              index === activeIndex ? 'text-foreground font-medium' : 'text-muted-foreground'
             )}>
             {option.name}
-          </Radio.Root>
+          </span>
         ))}
-      </RadioGroup>
+      </div>
     </div>
   );
 }

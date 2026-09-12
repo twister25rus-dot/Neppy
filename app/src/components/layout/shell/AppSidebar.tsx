@@ -63,12 +63,19 @@ export default function AppSidebar() {
     return (
       // Occupies the same {@link SIDEBAR_ICON_WIDTH} column as the expanded
       // body below — no fill of its own, chrome shows through (see the
-      // expanded-branch comment for why). `items-center` centers the
-      // fixed-size trigger/rail buttons in the narrow column.
-      // Fades in as the column narrows around it. The body swaps to the rail in
-      // one frame while the width eases over 260ms (`Sidebar`), so without this
-      // the icons appear full-size in a wide column and then get squeezed.
-      <div className="animate-in fade-in flex h-full min-h-0 flex-col items-center gap-0.5 duration-200 motion-reduce:animate-none">
+      // expanded-branch comment for why).
+      //
+      // Left-aligned, NOT centred. The body swaps to the rail in one frame
+      // while the width eases over 260ms (`Sidebar`), so `items-center` was
+      // re-centring these buttons against a column that was still growing:
+      // opening the sidebar slid every icon rightwards and then snapped it back
+      // when the expanded body took over. Pinned to the start, the icons simply
+      // stay where they are and the labels arrive beside them. `ps-2.5` matches
+      // `SidebarMenuButton`'s own inner padding, so the icon sits on the same
+      // x in both states and the swap moves nothing.
+      // Fades in as the column narrows around it, so the icons never appear
+      // full-size in a wide column and then get squeezed.
+      <div className="animate-in fade-in flex h-full min-h-0 flex-col items-start gap-0.5 ps-2.5 duration-200 motion-reduce:animate-none">
         {/* macOS floats the traffic lights over the top-left, so the rail
             starts below them. One shared spacer rather than a hand-rolled
             `h-7` here and a different guess in the expanded header — the band's
