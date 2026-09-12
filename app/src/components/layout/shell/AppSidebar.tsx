@@ -119,11 +119,13 @@ export default function AppSidebar() {
     // alone; the hairline seams the old opaque panel needed would draw lines
     // across the chrome.
     <div className="animate-in fade-in flex h-full min-h-0 flex-col duration-200 motion-reduce:animate-none">
-      {/* The same band the collapsed rail reserves. The header used to sit
-          *inside* it and dodge the lights by right-aligning its icons, which
-          only holds while the column is wide: at the 188px minimum the row
-          reaches back into the lights and the two overlap. */}
-      <WindowControlsSpacer />
+      {/* No `WindowControlsSpacer` here, unlike the collapsed rail. The icons
+          are a horizontal row to the RIGHT of the traffic lights, not a column
+          underneath them, so reserving a band above only pushed them down for
+          a collision that cannot happen on this axis. `SidebarHeader` keeps
+          them clear with a start inset instead — see the note there. The rail
+          still reserves the band, because a left-aligned vertical column of
+          icons sits directly under the lights. */}
       <SidebarHeader />
       <SidebarNav />
       <SidebarScrollRegion className="gap-0">
