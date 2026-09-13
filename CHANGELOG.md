@@ -4,6 +4,24 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.10] - 2026-09-13
+
+### What's Changed
+
+- Keep Composio's direct mode in the local-first build ([`86f21701`](https://github.com/twister25rus-dot/Neppy/commit/86f21701ed5c433b8ab92c742e92316d1c3ee5f2))
+- Stop the rail icons stepping, make the effort scale the control, drop the chevron ([`bc341d49`](https://github.com/twister25rus-dot/Neppy/commit/bc341d49dde8de6bfc6bcca291aeb5a02396e10f))
+- Move the goal editor out of the composer, give presets a press state, add quick settings ([`8c2b7414`](https://github.com/twister25rus-dot/Neppy/commit/8c2b741436cf5d72249454b53df6ca3c67abe6c5))
+- Stop the model catalog reloading every few seconds ([`b031e318`](https://github.com/twister25rus-dot/Neppy/commit/b031e318326b300d97ac1e8a4415b8fc540178b0))
+- Give the channel config one dispatch instead of two that drifted ([`2eb62a44`](https://github.com/twister25rus-dot/Neppy/commit/2eb62a44f48734cf69630d7b67ff576ec3e1af8b))
+- Pick a model from a popover instead of a full-screen dialog ([`b6175df2`](https://github.com/twister25rus-dot/Neppy/commit/b6175df21bf68f682df61c472646cfe946f822a5))
+- Choose which models the chat picker offers ([`9c526480`](https://github.com/twister25rus-dot/Neppy/commit/9c5264801d82da73e15960a205e5cf6efcf2c44e))
+- Merge the channels, composer and Composio round ([`07e5c969`](https://github.com/twister25rus-dot/Neppy/commit/07e5c969a6a536170d00c0142ae2bbac9ebd5d33))
+- Let the model picker render without a real store behind it ([`d380f086`](https://github.com/twister25rus-dot/Neppy/commit/d380f0863761ecf151a75a3db444afce5e4df655))
+- Merge the duplicated type imports that blocked the push ([`ab54c20a`](https://github.com/twister25rus-dot/Neppy/commit/ab54c20a8947f9d1b0837449da5e97a665a4a9e2))
+- Use a colour scale the theme actually defines ([`74f26ed6`](https://github.com/twister25rus-dot/Neppy/commit/74f26ed62eb97e53a2d2eddd6ff0e06eb5dcfaca))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/781923be66922b6b4aa5fb8e055ccd2058efe3dd...74f26ed62eb97e53a2d2eddd6ff0e06eb5dcfaca
+
 ## [0.66.9] - 2026-09-12
 
 ### What's Changed
