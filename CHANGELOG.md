@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.11] - 2026-09-15
+
+### What's Changed
+
+- Fix chat reasoning placement, the menu bar icon, MLX presets, Composio errors, skills routing and folder sources ([`c8ea1003`](https://github.com/twister25rus-dot/Neppy/commit/c8ea100348817f8ab11c8afed2ac20cb4c6ae39c))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/854ca131d4aee5672bcc1389457c071338f829ec...c8ea100348817f8ab11c8afed2ac20cb4c6ae39c
+
 ## [0.66.10] - 2026-09-13
 
 ### What's Changed
