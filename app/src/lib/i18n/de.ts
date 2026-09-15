@@ -2930,6 +2930,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'Umschalten fehlgeschlagen',
   'memorySources.removeFailed': 'Entfernen fehlgeschlagen',
   'memorySources.folderPath': 'Ordnerpfad',
+  'memorySources.absolutePathRequired':
+    'Geben Sie den vollständigen Ordnerpfad an, beginnend mit /. Mit Durchsuchen können Sie ihn auswählen.',
   'memorySources.globPattern': 'Glob-Muster',
   'memorySources.repoUrl': 'Repository-URL',
   'memorySources.branch': 'Zweigstelle',
@@ -3315,6 +3317,11 @@ const messages: TranslationMap = {
   'channels.telegram.savedRestartRequired':
     'Kanal gespeichert. Starte die App neu, um sie zu aktivieren.',
   'channels.web.alwaysAvailable': 'Immer verfügbar',
+  'channels.web.proactiveTitle': 'Proaktive Nachrichten',
+  'channels.web.proactiveAlways':
+    'Briefings, Erinnerungen und geplante Ergebnisse kommen immer zuerst hier an. Der Web-Chat lässt sich nicht abschalten.',
+  'channels.web.proactiveMirror': 'Eine Kopie geht zusätzlich an {channel}.',
+  'channels.web.proactiveNoMirror': 'Kein anderer Kanal erhält eine Kopie.',
   'chat.approval.approve': 'Genehmigen',
   'chat.approval.alwaysAllow': 'Immer zulassen',
   'chat.approval.alwaysAllowHint':
@@ -7084,6 +7091,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'Die MLX-Laufzeit ist ausgeschaltet. Setze mlx.enabled in deiner Konfigurationsdatei auf true, damit Neppy diese Server starten darf.',
   'mlx.problemsTitle': 'Probleme in der Konfiguration',
+  'mlx.preset.title': 'Ausführungsprofil',
+  'mlx.preset.description':
+    'Automatisch entscheidet pro Anfrage. Denkaufwand und Antwortlänge gelten ab der nächsten Runde; Kontextfenster und Speichereinstellungen gelten nach einem Neustart des Servers.',
+  'mlx.quick.openSettings': 'MLX-Einstellungen',
+  'mlx.quick.allSettings': 'Alle Einstellungen',
   'mlx.memoryTitle': 'Arbeitsspeicher',
   'mlx.memoryUsage': '{used} GiB von {budget} GiB belegt',
   'mlx.noServers': 'Es ist noch kein MLX-Server eingerichtet.',
@@ -7125,6 +7137,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'Bilder',
   'mlx.params.generation': 'Erzeugung',
   'chat.thinking.label': 'Nachdenken',
+  'chat.thinking.auto': 'Automatisch',
   'chat.thinking.quick': 'Schnell',
   'chat.thinking.balanced': 'Ausgewogen',
   'chat.thinking.thorough': 'Gründlich',

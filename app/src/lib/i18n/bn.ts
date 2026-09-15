@@ -2853,6 +2853,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'ব্যর্থ',
   'memorySources.removeFailed': 'মুছে ফেলা যায়নি',
   'memorySources.folderPath': 'ফোল্ডারের পাথ',
+  'memorySources.absolutePathRequired':
+    'ফোল্ডারের সম্পূর্ণ পাথ দিন, / দিয়ে শুরু করে। বেছে নিতে ব্রাউজ ব্যবহার করুন।',
   'memorySources.globPattern': 'বিন্যাস',
   'memorySources.repoUrl': 'সংরক্ষণস্থল xqxqxqx',
   'memorySources.branch': 'ব্রাঞ্চ',
@@ -3228,6 +3230,11 @@ const messages: TranslationMap = {
   'channels.telegram.reconnect': 'পুনরায় সংযুক্ত করুন',
   'channels.telegram.savedRestartRequired': 'চ্যানেল সংরক্ষিত। সক্রিয় করতে অ্যাপ রিস্টার্ট করুন।',
   'channels.web.alwaysAvailable': 'সর্বদা পাওয়া যায়',
+  'channels.web.proactiveTitle': 'সক্রিয় বার্তা',
+  'channels.web.proactiveAlways':
+    'ব্রিফিং, অনুস্মারক ও নির্ধারিত ফলাফল সবসময় প্রথমে এখানেই আসে। ওয়েব চ্যাট বন্ধ করা যায় না।',
+  'channels.web.proactiveMirror': '{channel}-এও একটি অনুলিপি পাঠানো হয়।',
+  'channels.web.proactiveNoMirror': 'অন্য কোনো চ্যানেল অনুলিপি পায় না।',
   'chat.approval.approve': 'লিইরোভ',
   'chat.approval.alwaysAllow': 'সর্বদা অনুমতি প্রদান করা হবে',
   'chat.approval.alwaysAllowHint':
@@ -6895,6 +6902,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'MLX পরিবেশ বন্ধ আছে। Neppy যাতে এই সার্ভারগুলো চালাতে পারে, তার জন্য কনফিগারেশন ফাইলে mlx.enabled কে true করুন।',
   'mlx.problemsTitle': 'কনফিগারেশনের সমস্যা',
+  'mlx.preset.title': 'রান প্রিসেট',
+  'mlx.preset.description':
+    'অটো প্রতিটি অনুরোধের জন্য সিদ্ধান্ত নেয়। যুক্তির মাত্রা ও উত্তরের দৈর্ঘ্য পরের বার থেকে কার্যকর হয়; প্রসঙ্গ উইন্ডো ও মেমরি সেটিংস সার্ভার পুনরায় চালু হলে কার্যকর হয়।',
+  'mlx.quick.openSettings': 'MLX সেটিংস',
+  'mlx.quick.allSettings': 'সব সেটিংস',
   'mlx.memoryTitle': 'মেমরি',
   'mlx.memoryUsage': '{budget} GiB এর মধ্যে {used} GiB ব্যবহৃত',
   'mlx.noServers': 'এখনও কোনো MLX সার্ভার সাজানো হয়নি।',
@@ -6936,6 +6948,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'ছবি',
   'mlx.params.generation': 'তৈরি',
   'chat.thinking.label': 'চিন্তাভাবনা',
+  'chat.thinking.auto': 'স্বয়ংক্রিয়',
   'chat.thinking.quick': 'দ্রুত',
   'chat.thinking.balanced': 'ভারসাম্যপূর্ণ',
   'chat.thinking.thorough': 'বিশদ',

@@ -2882,6 +2882,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'Nie udało się przełączyć',
   'memorySources.removeFailed': 'Nie udało się usunąć',
   'memorySources.folderPath': 'Ścieżka folderu',
+  'memorySources.absolutePathRequired':
+    'Podaj pełną ścieżkę folderu, zaczynającą się od /. Użyj przycisku Przeglądaj, aby ją wybrać.',
   'memorySources.globPattern': 'Wzorzec glob',
   'memorySources.repoUrl': 'URL repozytorium',
   'memorySources.branch': 'Gałąź',
@@ -3266,6 +3268,11 @@ const messages: TranslationMap = {
   'channels.telegram.savedRestartRequired':
     'Kanał zapisany. Zrestartuj aplikację, aby go aktywować.',
   'channels.web.alwaysAvailable': 'Zawsze dostępny',
+  'channels.web.proactiveTitle': 'Wiadomości proaktywne',
+  'channels.web.proactiveAlways':
+    'Podsumowania, przypomnienia i zaplanowane wyniki zawsze trafiają najpierw tutaj. Czatu w przeglądarce nie można wyłączyć.',
+  'channels.web.proactiveMirror': 'Kopia trafia dodatkowo do {channel}.',
+  'channels.web.proactiveNoMirror': 'Żaden inny kanał nie otrzymuje kopii.',
   'chat.approval.approve': 'Zatwierdź',
   'chat.approval.alwaysAllow': 'Zawsze zezwalaj',
   'chat.approval.alwaysAllowHint':
@@ -6995,6 +7002,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'Środowisko MLX jest wyłączone. Ustaw mlx.enabled na true w pliku konfiguracyjnym, aby Neppy mógł uruchamiać te serwery.',
   'mlx.problemsTitle': 'Problemy z konfiguracją',
+  'mlx.preset.title': 'Profil działania',
+  'mlx.preset.description':
+    'Automatycznie decyduje przy każdym żądaniu. Wysiłek rozumowania i długość odpowiedzi działają od następnej tury; okno kontekstu i ustawienia pamięci działają po ponownym uruchomieniu serwera.',
+  'mlx.quick.openSettings': 'Ustawienia MLX',
+  'mlx.quick.allSettings': 'Wszystkie ustawienia',
   'mlx.memoryTitle': 'Pamięć',
   'mlx.memoryUsage': 'Zajęte {used} GiB z {budget} GiB',
   'mlx.noServers': 'Nie skonfigurowano jeszcze żadnego serwera MLX.',
@@ -7036,6 +7048,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'Obrazy',
   'mlx.params.generation': 'Generowanie',
   'chat.thinking.label': 'Myślenie',
+  'chat.thinking.auto': 'Automatycznie',
   'chat.thinking.quick': 'Szybko',
   'chat.thinking.balanced': 'Zrównoważone',
   'chat.thinking.thorough': 'Dokładnie',

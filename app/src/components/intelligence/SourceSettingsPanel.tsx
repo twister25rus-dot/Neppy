@@ -9,7 +9,7 @@
  * On Save calls `updateMemorySource` and notifies the parent via
  * `onSaved` with the updated entry.
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useT } from '../../lib/i18n/I18nContext';
 import {
@@ -17,8 +17,11 @@ import {
   type SourceKind,
   updateMemorySource,
 } from '../../services/memorySourcesService';
+import { isTauri } from '../../utils/tauriCommands/common';
+import { pickFolderViaDialog } from '../../utils/tauriCommands/workspacePaths';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import { isAbsoluteFolderPath } from './folderPath';
 
 // Which limit fields are relevant per kind. Order determines display order.
 // Only caps that are actually enforced at sync time are surfaced — the
@@ -74,7 +77,9 @@ export function SourceSettingsPanel({
   onToast,
 }: SourceSettingsPanelProps) {
   const { t } = useT();
-  const fields = KIND_FIELDS[source.kind] ?? [];
+  // Memoised because `handleSave` depends on it: a fresh array literal each
+  // render gave that callback a new identity every time.
+  const fields = useMemo(() => KIND_FIELDS[source.kind] ?? [], [source.kind]);
 
   // Hold each field as a string so inputs can be freely edited. Seeded from the
   // entry's stored cap (fetched from the backend — the single source of truth;
@@ -91,6 +96,30 @@ export function SourceSettingsPanel({
 
   const [saving, setSaving] = useState(false);
 
+  // A folder source's path is editable here, which is the only way to repair
+  // one that was stored wrong. The old `webkitdirectory` picker saved the
+  // folder's NAME rather than its path (see `folderPath.ts`), and with no path
+  // field anywhere the only remedy was to delete the source and re-add it,
+  // losing whatever it had already synced.
+  const isFolder = source.kind === 'folder';
+  const [path, setPath] = useState(() => source.path ?? '');
+  const pathChanged = isFolder && path.trim() !== (source.path ?? '').trim();
+  const pathInvalid = isFolder && path.trim().length > 0 && !isAbsoluteFolderPath(path);
+
+  const browse = useCallback(async () => {
+    try {
+      const picked = await pickFolderViaDialog();
+      // `null` is a cancelled dialog, not a cleared path.
+      if (picked) setPath(picked);
+    } catch (err) {
+      onToast?.({
+        type: 'error',
+        title: t('memorySources.settings.saveFailed'),
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }, [onToast, t]);
+
   const handleChange = useCallback((field: string, value: string) => {
     setValues(prev => ({ ...prev, [field]: value }));
   }, []);
@@ -98,7 +127,18 @@ export function SourceSettingsPanel({
   const handleSave = useCallback(async () => {
     setSaving(true);
     try {
-      const patch: Partial<LimitFields> = {};
+      const patch: Partial<LimitFields> & { path?: string } = {};
+      if (pathChanged) {
+        if (!isAbsoluteFolderPath(path)) {
+          onToast?.({
+            type: 'error',
+            title: t('memorySources.settings.saveFailed'),
+            message: t('memorySources.absolutePathRequired'),
+          });
+          return;
+        }
+        patch.path = path.trim();
+      }
       for (const f of fields) {
         const raw = values[f];
         if (raw !== '' && raw !== undefined) {
@@ -123,9 +163,9 @@ export function SourceSettingsPanel({
     } finally {
       setSaving(false);
     }
-  }, [fields, source.id, values, onSaved, onToast, t]);
+  }, [fields, source.id, values, path, pathChanged, onSaved, onToast, t]);
 
-  if (fields.length === 0) return null;
+  if (fields.length === 0 && !isFolder) return null;
 
   // Display name for the tooltip — the toolkit slug (title-cased) for Composio
   // sources, else the source label.
@@ -144,6 +184,42 @@ export function SourceSettingsPanel({
       <p className="mb-2 text-xs font-semibold text-content-secondary">
         {t('memorySources.settings.title')}
       </p>
+      {isFolder && (
+        <div className="mb-3">
+          <label
+            htmlFor={`src-setting-${source.id}-path`}
+            className="mb-0.5 block text-xs font-medium text-content-secondary">
+            {t('memorySources.folderPath')}
+          </label>
+          <div className="flex gap-2">
+            <Input
+              id={`src-setting-${source.id}-path`}
+              type="text"
+              inputSize="sm"
+              monospace
+              value={path}
+              onChange={e => setPath(e.target.value)}
+              data-testid={`source-settings-path-${source.id}`}
+              className="text-xs"
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!isTauri()}
+              data-testid={`source-settings-browse-${source.id}`}
+              onClick={() => void browse()}>
+              {t('memorySources.browse')}
+            </Button>
+          </div>
+          {pathInvalid && (
+            <p
+              data-testid={`source-settings-path-hint-${source.id}`}
+              className="mt-1 text-xs text-warning">
+              {t('memorySources.absolutePathRequired')}
+            </p>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {fields.map(field => {
           const cap = Number(values[field]);

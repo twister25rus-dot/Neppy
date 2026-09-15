@@ -36,9 +36,20 @@ pub(crate) fn fingerprint_api_key(api_key: &str) -> u64 {
     hasher.finish()
 }
 
+/// Composio's stable identifier for a rejected key, observed on the live v3
+/// API alongside `{"status":401,"code":801}`. Matched lowercase because the
+/// whole haystack is lowercased first.
+pub(crate) const COMPOSIO_INVALID_KEY_SLUG: &str = "apikey_invalidapikey";
+
 pub(crate) fn is_invalid_api_key_error(message: &str) -> bool {
     let lower = message.to_ascii_lowercase();
-    lower.contains("invalid api key")
+    // Slug first: it is the half of the response upstream cannot reword, and
+    // the prose beside it carries a redacted key fingerprint
+    // (`Invalid API key: def**_000`) that could drift at any release. Prose
+    // matching stays as the fallback for older bodies and for wrappers that
+    // only forward a message.
+    lower.contains(COMPOSIO_INVALID_KEY_SLUG)
+        || lower.contains("invalid api key")
         || (lower.contains("401") && lower.contains("api key") && lower.contains("invalid"))
 }
 
@@ -95,6 +106,29 @@ mod tests {
     fn generic_http_401_is_not_classified_as_invalid_api_key() {
         assert!(!is_invalid_api_key_error("HTTP 401"));
         assert!(is_invalid_api_key_error("HTTP 401: Invalid API key"));
+    }
+
+    #[test]
+    fn the_slug_classifies_a_rejected_key_without_help_from_the_prose() {
+        // Shape observed on the live v3 API: the prose carries a redacted
+        // fingerprint of the key, so it is not a fixed string.
+        assert!(is_invalid_api_key_error(
+            "HTTP 401: Invalid API key: def**_000 (APIKey_InvalidAPIKey)"
+        ));
+        // The point of keying on the slug: a reworded message still classifies,
+        // and therefore still gets REJECTED rather than stored as a good key.
+        assert!(is_invalid_api_key_error(
+            "HTTP 401: That key is not recognised (APIKey_InvalidAPIKey)"
+        ));
+    }
+
+    #[test]
+    fn a_missing_key_is_not_a_rejected_key() {
+        // `Auth_NoAuthProvided` means nothing was sent, which is our bug rather
+        // than the user's, and must not be reported as "re-enter your key".
+        assert!(!is_invalid_api_key_error(
+            "HTTP 401: No authentication provided (Auth_NoAuthProvided)"
+        ));
     }
 
     #[test]

@@ -12,11 +12,19 @@ export interface ComposerEffort {
 export const EMPTY_EFFORT: ComposerEffort = { effort: null };
 
 /**
- * The scale, low to high. The ids are the wire values and must not change; the
+ * The scale, lowest first. The ids are the wire values and must not change; the
  * labels name the decision rather than the knob — the question is whether you
  * want an answer now or a better one.
+ *
+ * `Auto` is a real stop, not a blank state. `null` means "send nothing and let
+ * the run preset decide", which is the default and the only way a preset's own
+ * reasoning level can take effect — but as an *unrepresented* value it left the
+ * control with no segment lit at rest, which reads as a broken or decorative
+ * row of buttons rather than as a setting. Giving that value a stop makes the
+ * resting state legible and gives the override somewhere to return to.
  */
 const EFFORT_STOPS = [
+  { id: null, labelKey: 'chat.thinking.auto' },
   { id: 'low', labelKey: 'chat.thinking.quick' },
   { id: 'medium', labelKey: 'chat.thinking.balanced' },
   { id: 'high', labelKey: 'chat.thinking.thorough' },
@@ -48,12 +56,6 @@ export default function ComposerEffortPill({
   className,
 }: ComposerEffortPillProps) {
   const { t } = useT();
-  // An unset effort shows the first stop as current without having been chosen,
-  // so the control always reads as *something* rather than rendering blank.
-  const activeIndex = Math.max(
-    0,
-    EFFORT_STOPS.findIndex(stop => stop.id === value.effort)
-  );
 
   return (
     <div
@@ -61,15 +63,15 @@ export default function ComposerEffortPill({
       aria-label={t('chat.thinking.label')}
       data-testid="composer-effort"
       className={`flex items-center gap-0.5 rounded-full bg-surface-strong p-0.5 ${className ?? ''}`}>
-      {EFFORT_STOPS.map((stop, index) => {
-        const selected = index === activeIndex && value.effort != null;
+      {EFFORT_STOPS.map(stop => {
+        const selected = stop.id === value.effort;
         return (
           <button
-            key={stop.id}
+            key={stop.id ?? 'auto'}
             type="button"
             role="radio"
             aria-checked={selected}
-            data-analytics-id={`composer-effort-${stop.id}`}
+            data-analytics-id={`composer-effort-${stop.id ?? 'auto'}`}
             onClick={() => onChange({ effort: stop.id })}
             className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
               selected

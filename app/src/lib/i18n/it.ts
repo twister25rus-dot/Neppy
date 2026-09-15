@@ -2903,6 +2903,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'Commutazione fallita',
   'memorySources.removeFailed': 'Rimozione fallita',
   'memorySources.folderPath': 'Percorso della cartella',
+  'memorySources.absolutePathRequired':
+    'Inserisci il percorso completo della cartella, che inizia con /. Usa Sfoglia per selezionarla.',
   'memorySources.globPattern': 'Modello glob',
   'memorySources.repoUrl': 'URL del repository',
   'memorySources.branch': 'Ramo',
@@ -3283,6 +3285,11 @@ const messages: TranslationMap = {
   'channels.telegram.reconnect': 'Riconnetti',
   'channels.telegram.savedRestartRequired': "Canale salvato. Riavvia l'app per attivarlo.",
   'channels.web.alwaysAvailable': 'Sempre disponibile',
+  'channels.web.proactiveTitle': 'Messaggi proattivi',
+  'channels.web.proactiveAlways':
+    'Riepiloghi, promemoria e risultati pianificati arrivano sempre prima qui. La chat web non può essere disattivata.',
+  'channels.web.proactiveMirror': 'Una copia viene inviata anche a {channel}.',
+  'channels.web.proactiveNoMirror': 'Nessun altro canale riceve una copia.',
   'chat.approval.approve': 'Approvare',
   'chat.approval.alwaysAllow': 'Consenti sempre',
   'chat.approval.alwaysAllowHint':
@@ -7023,6 +7030,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     "L'ambiente MLX è disattivato. Imposta mlx.enabled su true nel file di configurazione per permettere a Neppy di avviare questi server.",
   'mlx.problemsTitle': 'Problemi di configurazione',
+  'mlx.preset.title': 'Profilo di esecuzione',
+  'mlx.preset.description':
+    'Automatico decide per ogni richiesta. Lo sforzo di ragionamento e la lunghezza della risposta valgono dal turno successivo; la finestra di contesto e le impostazioni di memoria valgono al riavvio del server.',
+  'mlx.quick.openSettings': 'Impostazioni MLX',
+  'mlx.quick.allSettings': 'Tutte le impostazioni',
   'mlx.memoryTitle': 'Memoria',
   'mlx.memoryUsage': '{used} GiB di {budget} GiB in uso',
   'mlx.noServers': 'Non è ancora configurato nessun server MLX.',
@@ -7064,6 +7076,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'Immagini',
   'mlx.params.generation': 'Generazione',
   'chat.thinking.label': 'Ragionamento',
+  'chat.thinking.auto': 'Automatico',
   'chat.thinking.quick': 'Rapido',
   'chat.thinking.balanced': 'Bilanciato',
   'chat.thinking.thorough': 'Approfondito',

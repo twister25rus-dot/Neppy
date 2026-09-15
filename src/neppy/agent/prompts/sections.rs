@@ -429,6 +429,17 @@ impl PromptSection for SafetySection {
 /// external services", "pull slugs from `composio_list_tools`") stays in that
 /// agent's own `prompt.md`, not here.
 ///
+/// The `use_skill` clause is not redundant with the first one, and removing it
+/// re-opens a real contradiction. `run_workflow` belongs to the `workflows`
+/// pack, whose owners are `workflow_builder` and `flow_discovery`; every other
+/// agent — including the orchestrator the user actually chats with — has it
+/// stripped from its visible tool list by `strip_packed_from_visible`, because
+/// `ToolGroups` defaults to withholding every group and the desktop shell never
+/// overrides that. So this block was simultaneously telling a model that skills
+/// run ONLY via `run_workflow` and that a tool absent from its list does not
+/// exist. A model obeying both concludes, correctly and uselessly, that it
+/// cannot run any skill. Naming the route restores the one it actually has.
+///
 /// Byte-stable (no time / RNG / host) so it lives in the KV-cache-friendly
 /// prefix. Must contain no em-dashes per [`super::builder::GLOBAL_STYLE_SUFFIX`].
 /// Heading the grounding contract renders under, in both the global
@@ -445,7 +456,8 @@ pub const GROUNDING_BODY: &str = "## Grounding and tool use\n\n\
     - Never substitute plausible looking but fabricated output (made up data, invented file contents, synthesised tool or API responses) for results you could not actually produce. If a step failed, say it failed.\n\
     - When a tool or delegated sub-agent hands back an incomplete or blocked result (for example a [SUBAGENT_INCOMPLETE] envelope), relay what it did accomplish and the blocker to the user. Do not present it as finished, fabricate the rest, or silently re-run the identical call: change the approach or ask the user.\n\
     - Ground every factual claim in evidence you actually observed: a tool result, the user's message, or cited memory. If the evidence is missing, partial, or truncated, say so or fetch more instead of guessing.\n\
-    - Skills run only via `run_workflow`, and only the skills listed as installed exist. Do not invent skill ids.";
+    - Skills run only via `run_workflow`, and only the skills listed as installed exist. Do not invent skill ids.\n\
+    - If `run_workflow` is not in your tool list it is packed, not missing: call `use_skill` with skill `workflows` and tool `run_workflow` to reach it. The same holds for any other tool a pack listing names.";
 
 impl PromptSection for GroundingSection {
     fn name(&self) -> &str {

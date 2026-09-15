@@ -272,7 +272,22 @@ export type AssistantUiProjection = {
   liveTranscript?: readonly ProcessingTranscriptItem[];
   turnTimelines?: Readonly<Record<string, readonly ToolTimelineEntry[]>>;
   turnTranscripts?: Readonly<Record<string, readonly ProcessingTranscriptItem[]>>;
+  /**
+   * Whether a turn is in flight. Decides who owns the live process arrays:
+   * the streaming tail while the turn runs, the answer it produced once it
+   * settles. Absent is read as "not running", which is the safe default — it
+   * attaches rather than duplicating.
+   */
+  isRunning?: boolean;
 };
+
+/** Index of the newest agent message, or -1 when the turn produced none. */
+function lastAgentIndex(messages: readonly ThreadMessage[]): number {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    if (messages[index]?.sender === 'agent') return index;
+  }
+  return -1;
+}
 
 /**
  * The full thread as assistant-ui sees it: settled transcript, then the live
@@ -287,31 +302,52 @@ export function buildRuntimeMessages(
   streaming: StreamingAssistantState | null,
   projection: AssistantUiProjection = {}
 ): ThreadMessageLike[] {
+  // A regenerated question keeps its earlier answers in the log; the transcript
+  // shows the one in effect and the switcher moves between them. The core
+  // applies the same rule when it seeds the model, so what it reads is what is
+  // drawn here.
+  const visible = messages.filter(
+    msg => !msg.extraMetadata?.hidden && isActiveAnswer(messages, msg)
+  );
+  const liveTimeline = projection.liveTimeline ?? EMPTY_TIMELINE;
+  const liveTranscript = projection.liveTranscript ?? EMPTY_TRANSCRIPT;
+  // `processingByThread` is the NEWEST turn's trail and is deliberately kept
+  // after that turn settles (past turns move to `turnTranscriptsByThread`).
+  // While the turn runs it belongs to the streaming tail. Once it settles it
+  // belongs to the answer it produced — handing it to that message puts the
+  // reasoning above the prose inside ONE message. Emitting it as a tail instead
+  // is what rendered a second assistant bubble, holding only a Reasoning
+  // disclosure and carrying its own action bar, BELOW the answer it explained.
+  const running = projection.isRunning === true || streaming !== null;
+  const attachIndex = running ? -1 : lastAgentIndex(visible);
+
   const out: ThreadMessageLike[] = [];
-  for (const msg of messages) {
-    if (msg.extraMetadata?.hidden) continue;
-    // A regenerated question keeps its earlier answers in the log; the
-    // transcript shows the one in effect and the switcher moves between them.
-    // The core applies the same rule when it seeds the model, so what it reads
-    // is what is drawn here.
-    if (!isActiveAnswer(messages, msg)) continue;
+  for (const [index, msg] of visible.entries()) {
     const requestId =
       msg.sender === 'agent' && typeof msg.extraMetadata?.requestId === 'string'
         ? msg.extraMetadata.requestId
         : undefined;
-    out.push(
-      toThreadMessageLike(
-        msg,
-        requestId ? (projection.turnTimelines?.[requestId] ?? EMPTY_TIMELINE) : EMPTY_TIMELINE,
-        requestId ? (projection.turnTranscripts?.[requestId] ?? EMPTY_TRANSCRIPT) : EMPTY_TRANSCRIPT
-      )
-    );
+    let timeline = requestId
+      ? (projection.turnTimelines?.[requestId] ?? EMPTY_TIMELINE)
+      : EMPTY_TIMELINE;
+    let transcript = requestId
+      ? (projection.turnTranscripts?.[requestId] ?? EMPTY_TRANSCRIPT)
+      : EMPTY_TRANSCRIPT;
+    // Only when the turn has no persisted trail of its own: a settled turn that
+    // already moved into the per-turn maps must not also absorb the live ones.
+    if (index === attachIndex && timeline.length === 0 && transcript.length === 0) {
+      timeline = liveTimeline;
+      transcript = liveTranscript;
+    }
+    out.push(toThreadMessageLike(msg, timeline, transcript));
   }
-  const tail = streamingTailMessage(
-    streaming,
-    projection.liveTimeline ?? EMPTY_TIMELINE,
-    projection.liveTranscript ?? EMPTY_TRANSCRIPT
-  );
-  if (tail) out.push(tail);
+
+  // A settled turn that produced no agent message at all (it failed, or was cut
+  // off before any prose landed) still has work worth showing, and there is
+  // nothing to attach it to — so it keeps the tail rather than vanishing.
+  if (running || attachIndex === -1) {
+    const tail = streamingTailMessage(streaming, liveTimeline, liveTranscript);
+    if (tail) out.push(tail);
+  }
   return out;
 }

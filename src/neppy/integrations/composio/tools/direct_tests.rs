@@ -238,6 +238,40 @@ fn extract_api_error_message_from_common_shapes() {
 }
 
 #[test]
+fn extract_api_error_message_carries_composios_slug() {
+    // Verbatim shape from the live v3 API for a rejected key. The prose holds a
+    // redacted fingerprint of the key, so the SLUG is the only stable half and
+    // has to survive into the string the auth classifier reads.
+    let body = r#"{"error":{"message":"Invalid API key: def**_000","code":801,"slug":"APIKey_InvalidAPIKey","status":401,"suggested_fix":"Please check you are using a valid API key."}}"#;
+
+    let rendered = extract_api_error_message(body).expect("a message");
+    assert_eq!(
+        rendered,
+        "Invalid API key: def**_000 (APIKey_InvalidAPIKey)"
+    );
+    assert!(
+        crate::neppy::integrations::composio::direct_auth::is_invalid_api_key_error(&rendered),
+        "the rendered message must classify as a rejected key"
+    );
+}
+
+#[test]
+fn extract_api_error_message_omits_an_absent_or_blank_slug() {
+    let no_slug = r#"{"error":{"message":"tool not found"}}"#;
+    let blank_slug = r#"{"error":{"message":"tool not found","slug":"  "}}"#;
+
+    // No trailing "()" on bodies that carry no slug.
+    assert_eq!(
+        extract_api_error_message(no_slug).as_deref(),
+        Some("tool not found")
+    );
+    assert_eq!(
+        extract_api_error_message(blank_slug).as_deref(),
+        Some("tool not found")
+    );
+}
+
+#[test]
 fn composio_action_with_null_fields() {
     let json_str =
         r#"{"name": "TEST_ACTION", "appName": null, "description": null, "enabled": false}"#;

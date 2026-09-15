@@ -2175,3 +2175,48 @@ fn subagent_renderer_omits_agents_md_when_none() {
         "public wrapper passes None/None and must emit no AGENTS.md block"
     );
 }
+
+/// The grounding block tells every agent that skills run via `run_workflow`.
+/// For all but the pack's owners that tool is withheld, so the same block must
+/// also name the route to it or it contradicts its own first clause ("a tool
+/// not in your list does not exist") and the model concludes it cannot run any
+/// skill. These assertions are drift guards over the THREE facts that make the
+/// instruction true, each of which can move independently.
+#[test]
+fn grounding_names_a_route_to_run_workflow_for_agents_that_cannot_see_it() {
+    use crate::neppy::tools::toolpacks::registry;
+
+    let pack = registry::pack_for_tool("run_workflow")
+        .expect("`run_workflow` is packed; if it stopped being, the prompt clause is now wrong");
+
+    // 1. The pack id the prompt tells the model to pass to `use_skill`.
+    assert_eq!(
+        pack.id, "workflows",
+        "GROUNDING_BODY names pack `workflows`; rename it here and the prompt sends \
+         the model to a pack that does not exist"
+    );
+
+    // 2. The orchestrator is not an owner, so it really is withheld there.
+    assert!(
+        !pack.owners.contains(&"orchestrator"),
+        "if the orchestrator owns this pack it sees `run_workflow` directly and the \
+         clause is dead weight"
+    );
+
+    // 3. The prompt actually carries both halves.
+    assert!(
+        GROUNDING_BODY.contains("run_workflow"),
+        "the skills clause names the tool"
+    );
+    assert!(
+        GROUNDING_BODY.contains("use_skill"),
+        "the skills clause must name the route, not just the tool"
+    );
+}
+
+/// `GROUNDING_BODY` sits in the KV-cache-friendly prefix and the house style
+/// bans em dashes there.
+#[test]
+fn grounding_stays_free_of_em_dashes() {
+    assert!(!GROUNDING_BODY.contains('\u{2014}'));
+}

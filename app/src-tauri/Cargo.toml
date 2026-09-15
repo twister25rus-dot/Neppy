@@ -31,6 +31,9 @@ tauri = { version = "2.11", default-features = false, features = [
     "wry",
     "common-controls-v6",
     "devtools",
+    # Decodes the embedded macOS tray template PNG (`setup_tray`). Without it
+    # `Image::from_bytes` is not compiled in.
+    "image-png",
     "macos-private-api",
     "tray-icon",
     "unstable",

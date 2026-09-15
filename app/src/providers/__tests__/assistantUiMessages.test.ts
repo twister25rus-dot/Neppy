@@ -241,3 +241,71 @@ describe('buildRuntimeMessages', () => {
     parse.mockRestore();
   });
 });
+
+describe('the settled turn owns its own reasoning', () => {
+  const thinking = [{ kind: 'thinking' as const, text: 'weighing it up', round: 1, seq: 0 }];
+
+  it('puts the reasoning of a finished turn inside its answer, above the prose', () => {
+    const answer = msg({ id: 'a', sender: 'agent', content: 'the answer' });
+
+    const built = buildRuntimeMessages([answer], null, {
+      liveTranscript: thinking,
+      isRunning: false,
+    });
+
+    // ONE message, not two: a trailing synthetic message holding only the
+    // reasoning is what rendered a second bubble with its own action bar below
+    // the answer it explained.
+    expect(built).toHaveLength(1);
+    expect(built[0].id).toBe('a');
+    expect(built[0].content).toEqual([
+      { type: 'reasoning', text: 'weighing it up' },
+      { type: 'text', text: 'the answer' },
+    ]);
+  });
+
+  it('keeps the trail on the tail while the turn is still running', () => {
+    const answer = msg({ id: 'a', sender: 'agent', content: 'the answer' });
+
+    const built = buildRuntimeMessages([answer], null, {
+      liveTranscript: thinking,
+      isRunning: true,
+    });
+
+    // Mid-turn the live trail is the tail's, and the settled answer above must
+    // not absorb it.
+    expect(built.map(m => m.id)).toEqual(['a', STREAMING_TAIL_ID]);
+    expect(built[0].content).toEqual([{ type: 'text', text: 'the answer' }]);
+  });
+
+  it('does not overwrite a turn that already persisted its own trail', () => {
+    const answer = msg({
+      id: 'a',
+      sender: 'agent',
+      content: 'the answer',
+      extraMetadata: { requestId: 'r1' },
+    });
+
+    const built = buildRuntimeMessages([answer], null, {
+      liveTranscript: thinking,
+      turnTranscripts: { r1: [{ kind: 'thinking', text: 'the persisted one', round: 1, seq: 0 }] },
+      isRunning: false,
+    });
+
+    expect(built[0].content).toEqual([
+      { type: 'reasoning', text: 'the persisted one' },
+      { type: 'text', text: 'the answer' },
+    ]);
+  });
+
+  it('still shows a settled trail that has no answer to attach to', () => {
+    // A turn that failed before any prose landed has work worth seeing and
+    // nowhere to put it, so it keeps the tail rather than vanishing.
+    const built = buildRuntimeMessages([msg({ id: 'q' })], null, {
+      liveTranscript: thinking,
+      isRunning: false,
+    });
+
+    expect(built.map(m => m.id)).toEqual(['q', STREAMING_TAIL_ID]);
+  });
+});

@@ -984,7 +984,7 @@ fn sanitize_error_message(message: &str) -> String {
 
 fn extract_api_error_message(body: &str) -> Option<String> {
     let parsed: serde_json::Value = serde_json::from_str(body).ok()?;
-    parsed
+    let message = parsed
         .get("error")
         .and_then(|v| v.get("message"))
         .and_then(|v| v.as_str())
@@ -994,7 +994,22 @@ fn extract_api_error_message(body: &str) -> Option<String> {
                 .get("message")
                 .and_then(|v| v.as_str())
                 .map(ToString::to_string)
-        })
+        })?;
+
+    // Composio tags each failure with a stable `slug` beside the prose
+    // (`APIKey_InvalidAPIKey`, `Auth_NoAuthProvided`, …). Carrying it through
+    // is what lets the auth classifier key on an identifier instead of on
+    // English that upstream is free to reword — and a reworded message would
+    // not merely degrade the wording, it would make a rejected key read as a
+    // transient failure and be STORED as if it were good.
+    match parsed
+        .get("error")
+        .and_then(|v| v.get("slug"))
+        .and_then(|v| v.as_str())
+    {
+        Some(slug) if !slug.trim().is_empty() => Some(format!("{message} ({slug})")),
+        _ => Some(message),
+    }
 }
 
 // ── API response types ──────────────────────────────────────────

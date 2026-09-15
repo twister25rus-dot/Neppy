@@ -2851,6 +2851,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'Toggle विफल',
   'memorySources.removeFailed': 'असफल',
   'memorySources.folderPath': 'फ़ोल्डर पथ',
+  'memorySources.absolutePathRequired':
+    'फ़ोल्डर का पूरा पथ दर्ज करें, जो / से शुरू हो। चुनने के लिए ब्राउज़ का उपयोग करें।',
   'memorySources.globPattern': 'ग्लोब पैटर्न',
   'memorySources.repoUrl': 'रिपॉजिटरी URL',
   'memorySources.branch': 'शाखा',
@@ -3229,6 +3231,11 @@ const messages: TranslationMap = {
   'channels.telegram.savedRestartRequired':
     'चैनल सेव हो गया। एक्टिवेट करने के लिए ऐप रीस्टार्ट करें।',
   'channels.web.alwaysAvailable': 'हमेशा उपलब्ध',
+  'channels.web.proactiveTitle': 'सक्रिय संदेश',
+  'channels.web.proactiveAlways':
+    'ब्रीफ़िंग, अनुस्मारक और निर्धारित परिणाम हमेशा सबसे पहले यहीं आते हैं। वेब चैट को बंद नहीं किया जा सकता।',
+  'channels.web.proactiveMirror': '{channel} पर भी एक प्रति भेजी जाती है।',
+  'channels.web.proactiveNoMirror': 'कोई अन्य चैनल प्रति प्राप्त नहीं करता।',
   'chat.approval.approve': 'स्वीकृति',
   'chat.approval.alwaysAllow': 'हमेशा अनुमति दें',
   'chat.approval.alwaysAllowHint':
@@ -6890,6 +6897,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'MLX परिवेश बंद है। Neppy इन सर्वरों को चला सके, इसके लिए कॉन्फ़िगरेशन फ़ाइल में mlx.enabled को true कर दें।',
   'mlx.problemsTitle': 'कॉन्फ़िगरेशन में समस्याएँ',
+  'mlx.preset.title': 'रन प्रीसेट',
+  'mlx.preset.description':
+    'ऑटो हर अनुरोध के लिए तय करता है। तर्क स्तर और उत्तर की लंबाई अगली बार से लागू होती है; संदर्भ विंडो और मेमोरी सेटिंग्स सर्वर पुनः आरंभ होने पर लागू होती हैं।',
+  'mlx.quick.openSettings': 'MLX सेटिंग्स',
+  'mlx.quick.allSettings': 'सभी सेटिंग्स',
   'mlx.memoryTitle': 'मेमोरी',
   'mlx.memoryUsage': '{budget} GiB में से {used} GiB इस्तेमाल में',
   'mlx.noServers': 'अभी कोई MLX सर्वर सेट नहीं किया गया है।',
@@ -6931,6 +6943,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'तस्वीरें',
   'mlx.params.generation': 'निर्माण',
   'chat.thinking.label': 'सोच',
+  'chat.thinking.auto': 'स्वचालित',
   'chat.thinking.quick': 'तेज़',
   'chat.thinking.balanced': 'संतुलित',
   'chat.thinking.thorough': 'विस्तृत',

@@ -2785,6 +2785,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'فشل',
   'memorySources.removeFailed': 'التطهير فشل',
   'memorySources.folderPath': 'طريق الجواد',
+  'memorySources.absolutePathRequired':
+    'أدخل المسار الكامل للمجلد، بادئًا بالرمز /. استخدم زر الاستعراض لاختياره.',
   'memorySources.globPattern': 'نمط Glob',
   'memorySources.repoUrl': 'رابط المستودع',
   'memorySources.branch': 'الفرع',
@@ -3155,6 +3157,11 @@ const messages: TranslationMap = {
   'channels.telegram.reconnect': 'إعادة الاتصال',
   'channels.telegram.savedRestartRequired': 'تم حفظ القناة. أعد تشغيل التطبيق لتفعيلها.',
   'channels.web.alwaysAvailable': 'متاح دائمًا',
+  'channels.web.proactiveTitle': 'الرسائل الاستباقية',
+  'channels.web.proactiveAlways':
+    'تصل الملخصات والتذكيرات والنتائج المجدولة إلى هنا أولًا دائمًا، ولا يمكن إيقاف دردشة الويب.',
+  'channels.web.proactiveMirror': 'تُرسل نسخة أيضًا إلى {channel}.',
+  'channels.web.proactiveNoMirror': 'لا تستقبل أي قناة أخرى نسخة.',
   'chat.approval.approve': 'الموافقة',
   'chat.approval.alwaysAllow': 'دائماً ما تسمح',
   'chat.approval.alwaysAllowHint': 'توقّف عن طلب هذه الأداة - إضافتها إلى قائمتك دائماً -',
@@ -6738,6 +6745,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'بيئة MLX متوقفة. اضبط mlx.enabled على true في ملف الإعدادات كي يتمكن Neppy من تشغيل هذه الخوادم.',
   'mlx.problemsTitle': 'مشكلات في الإعدادات',
+  'mlx.preset.title': 'نمط التشغيل',
+  'mlx.preset.description':
+    'يقرر الوضع التلقائي لكل طلب. يسري مقدار الاستدلال وطول الإجابة في الدور التالي، بينما تسري نافذة السياق وإعدادات الذاكرة عند إعادة تشغيل الخادم.',
+  'mlx.quick.openSettings': 'إعدادات MLX',
+  'mlx.quick.allSettings': 'كل الإعدادات',
   'mlx.memoryTitle': 'الذاكرة',
   'mlx.memoryUsage': 'المستخدم {used} غيبي من أصل {budget} غيبي',
   'mlx.noServers': 'لم يتم إعداد أي خادم MLX بعد.',
@@ -6778,6 +6790,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'الصور',
   'mlx.params.generation': 'التوليد',
   'chat.thinking.label': 'التفكير',
+  'chat.thinking.auto': 'تلقائي',
   'chat.thinking.quick': 'سريع',
   'chat.thinking.balanced': 'متوازن',
   'chat.thinking.thorough': 'دقيق',

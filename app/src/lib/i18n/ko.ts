@@ -2817,6 +2817,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': '전환 실패',
   'memorySources.removeFailed': '제거 실패',
   'memorySources.folderPath': '폴더 경로',
+  'memorySources.absolutePathRequired':
+    '폴더의 전체 경로를 /로 시작하여 입력하세요. 찾아보기로 선택할 수 있습니다.',
   'memorySources.globPattern': 'Glob 패턴',
   'memorySources.repoUrl': '리포지토리 URL',
   'memorySources.branch': '브랜치',
@@ -3196,6 +3198,11 @@ const messages: TranslationMap = {
   'channels.telegram.savedRestartRequired':
     '채널이 저장되었습니다. 활성화하려면 앱을 다시 시작하세요.',
   'channels.web.alwaysAvailable': '항상 사용 가능',
+  'channels.web.proactiveTitle': '사전 알림 메시지',
+  'channels.web.proactiveAlways':
+    '브리핑, 알림, 예약된 결과는 항상 여기에 먼저 도착합니다. 웹 채팅은 끌 수 없습니다.',
+  'channels.web.proactiveMirror': '{channel}에도 사본이 전송됩니다.',
+  'channels.web.proactiveNoMirror': '사본을 받는 다른 채널이 없습니다.',
   'chat.approval.approve': '승인',
   'chat.approval.alwaysAllow': '항상 허용',
   'chat.approval.alwaysAllowHint': '이 도구에 대해 다시 묻지 않도록 항상 허용 목록에 추가합니다',
@@ -6816,6 +6823,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'MLX 런타임이 꺼져 있습니다. 설정 파일에서 mlx.enabled를 true로 바꾸면 Neppy가 이 서버들을 시작할 수 있습니다.',
   'mlx.problemsTitle': '설정 문제',
+  'mlx.preset.title': '실행 프리셋',
+  'mlx.preset.description':
+    '자동은 요청마다 결정합니다. 추론 강도와 답변 길이는 다음 턴부터 적용되고, 컨텍스트 창과 메모리 설정은 서버를 다시 시작할 때 적용됩니다.',
+  'mlx.quick.openSettings': 'MLX 설정',
+  'mlx.quick.allSettings': '전체 설정',
   'mlx.memoryTitle': '메모리',
   'mlx.memoryUsage': '{budget} GiB 중 {used} GiB 사용 중',
   'mlx.noServers': '아직 설정된 MLX 서버가 없습니다.',
@@ -6856,6 +6868,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': '이미지',
   'mlx.params.generation': '생성',
   'chat.thinking.label': '사고',
+  'chat.thinking.auto': '자동',
   'chat.thinking.quick': '빠르게',
   'chat.thinking.balanced': '균형',
   'chat.thinking.thorough': '꼼꼼하게',

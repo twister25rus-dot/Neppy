@@ -15,8 +15,19 @@
 /// splits `Invalid … api key` — does not match the X9 anchor, so it needs its own
 /// arm. Reword the tail freely, but keep the anchor phrase or the drift-coupling
 /// test `demotes_composio_set_key_invalid_key_rejection` fails CI.
+///
+/// The tail names the key TYPE because Composio issues two and only one works
+/// here: `x-api-key` takes a project key, while an organization key belongs on
+/// `x-org-api-key` and is accepted only by org-scoped routes. The probe reads
+/// `/api/v3/connected_accounts`, which is project-scoped, so an org key comes
+/// back as a plain 401 indistinguishable from a typo. "Re-enter a valid key"
+/// gave someone holding the wrong KIND of key nothing to act on; the call site
+/// additionally appends what Composio itself said, which carries a redacted
+/// fingerprint of the key that was rejected.
 pub(crate) const COMPOSIO_INVALID_API_KEY_USER_MESSAGE: &str =
-    "Invalid Composio API key. Re-enter a valid key in Connections > Composio.";
+    "Invalid Composio API key. Paste a PROJECT key (app.composio.dev > Settings > Project \
+     Settings > API Keys) in Connections > Composio. An organization key will not work here: \
+     this reads project-scoped data.";
 
 /// Lowercase substring the observability classifier's TAURI-RUST-K27 arm matches
 /// on to demote the set-key rejection. Shared with the runtime matcher so the

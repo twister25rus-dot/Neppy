@@ -19,7 +19,7 @@ import {
   SidebarRail,
 } from '../../ui';
 import ContentSurface from './ContentSurface';
-import QuickSettingsButton from './QuickSettingsButton';
+import MlxQuickButton from './MlxQuickButton';
 import WindowDragBar from './WindowDragBar';
 
 const log = debugFactory('sidebar');
@@ -265,7 +265,7 @@ export default function RootShellLayout({ sidebar, children, unframed }: RootShe
             title bar draggable. Top-RIGHT: the top-left of this strip is where
             macOS floats its traffic lights. */}
         <div className="absolute end-2 top-1.5 z-20">
-          <QuickSettingsButton />
+          <MlxQuickButton />
         </div>
         <ContentSurface unframed={unframed}>{children}</ContentSurface>
       </div>

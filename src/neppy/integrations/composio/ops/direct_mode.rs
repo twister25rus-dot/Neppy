@@ -9,6 +9,27 @@ use super::super::{
 };
 use super::error_utils::OpResult;
 
+/// The reportable tail of a failed key probe.
+///
+/// `response_error` has already sanitised the upstream body and the API key
+/// travels as a header, so nothing secret reaches here — this only trims the
+/// internal wrapper prefixes off the front and bounds the length, so the panel
+/// shows `HTTP 401: Invalid API key` rather than a nested anyhow chain.
+fn probe_failure_detail(rendered: &str) -> String {
+    const MAX: usize = 200;
+    let collapsed = rendered.split_whitespace().collect::<Vec<_>>().join(" ");
+    // Every wrapper in this path prefixes the upstream text, so the last HTTP
+    // marker is the upstream answer itself.
+    let tail = match collapsed.rfind("HTTP ") {
+        Some(at) => collapsed[at..].to_string(),
+        None => collapsed,
+    };
+    if tail.chars().count() <= MAX {
+        return tail;
+    }
+    tail.chars().take(MAX).collect::<String>() + "…"
+}
+
 async fn validate_direct_api_key_before_store(config: &Config, api_key: &str) -> OpResult<()> {
     let key_id = direct_auth::fingerprint_api_key(api_key);
     direct_auth::reset_direct_auth_failure(key_id);
@@ -25,10 +46,24 @@ async fn validate_direct_api_key_before_store(config: &Config, api_key: &str) ->
         Err(error) => {
             let rendered = format!("{error:#}");
             if direct_auth::is_invalid_api_key_error(&rendered) {
+                let detail = probe_failure_detail(&rendered);
                 tracing::warn!(
+                    detail = %detail,
                     "[composio-direct] validate_api_key: rejected invalid API key before storage"
                 );
-                Err(direct_auth::COMPOSIO_INVALID_API_KEY_USER_MESSAGE.into())
+                // The canonical sentence stays FIRST and verbatim: the
+                // observability classifier matches
+                // `COMPOSIO_INVALID_API_KEY_ANCHOR` inside it, and the settings
+                // panel keys its copy on it. What follows is what Composio
+                // actually answered, which is the only part that distinguishes
+                // a mistyped key from a revoked one from a key scoped to a
+                // different project. Without it every one of those rendered as
+                // the same unactionable string, with a key visibly stored and
+                // no way to tell which.
+                Err(format!(
+                    "{} (Composio said: {detail})",
+                    direct_auth::COMPOSIO_INVALID_API_KEY_USER_MESSAGE
+                ))
             } else {
                 tracing::warn!(
                     error = %rendered,
@@ -157,4 +192,52 @@ pub async fn composio_clear_api_key(config: &Config) -> OpResult<RpcOutcome<serd
         serde_json::json!({ "cleared": true, "mode": "backend" }),
         vec!["composio: api key cleared, mode reset to backend".into()],
     ))
+}
+
+#[cfg(test)]
+mod direct_mode_tests {
+    use super::*;
+
+    #[test]
+    fn probe_detail_keeps_the_upstream_answer_and_drops_our_wrappers() {
+        // Every layer in this path prefixes the upstream text, so the tail from
+        // the last HTTP marker is what Composio actually said.
+        let rendered = "[composio-direct] validate_api_key: Composio v3 connected_accounts                         failed: HTTP 401: Invalid API key: def**_000 (APIKey_InvalidAPIKey)";
+
+        assert_eq!(
+            probe_failure_detail(rendered),
+            "HTTP 401: Invalid API key: def**_000 (APIKey_InvalidAPIKey)"
+        );
+    }
+
+    #[test]
+    fn probe_detail_collapses_whitespace_from_a_nested_error_chain() {
+        assert_eq!(
+            probe_failure_detail("outer:\n   HTTP 500:   upstream   fell over"),
+            "HTTP 500: upstream fell over"
+        );
+    }
+
+    #[test]
+    fn probe_detail_falls_back_to_the_whole_message_without_an_http_marker() {
+        assert_eq!(
+            probe_failure_detail("connection refused"),
+            "connection refused"
+        );
+    }
+
+    #[test]
+    fn probe_detail_is_bounded() {
+        // Bounded by CHARACTERS, not bytes: slicing a multi-byte error on a
+        // byte index would panic on exactly the inputs worth reporting.
+        let long = format!("HTTP 500: {}", "é".repeat(400));
+        let detail = probe_failure_detail(&long);
+
+        assert_eq!(
+            detail.chars().count(),
+            201,
+            "200 characters plus the ellipsis"
+        );
+        assert!(detail.ends_with('…'));
+    }
 }

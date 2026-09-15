@@ -9,6 +9,7 @@
 import debug from 'debug';
 import {
   type KeyboardEvent as ReactKeyboardEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -18,7 +19,10 @@ import {
 import type { ComposioConnection } from '../../lib/composio/types';
 import { useT } from '../../lib/i18n/I18nContext';
 import type { SourceKind } from '../../services/memorySourcesService';
+import { isTauri } from '../../utils/tauriCommands/common';
+import { pickFolderViaDialog } from '../../utils/tauriCommands/workspacePaths';
 import TextField from '../ui/TextField';
+import { isAbsoluteFolderPath } from './folderPath';
 
 const log = debug('intelligence:add-memory-source-dialog');
 
@@ -32,7 +36,9 @@ export function isKindFieldsValid(
     case 'conversation':
       return true;
     case 'folder':
-      return fields.path.trim().length > 0;
+      // Absolute, not merely non-empty. A bare folder name passes a
+      // non-empty check and then fails every sync — see `folderPath.ts`.
+      return isAbsoluteFolderPath(fields.path);
     case 'github_repo':
     case 'rss_feed':
     case 'web_page':
@@ -60,6 +66,37 @@ interface FolderFieldProps {
 
 function FolderField({ label, value, onChange }: FolderFieldProps) {
   const { t } = useT();
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Ask the host for a directory.
+   *
+   * This replaced `<input type="file" webkitdirectory>`, which could not work
+   * here. That input reads `File.path` to recover an absolute path, and
+   * `File.path` is a Chromium/Electron extension — this app has run on Wry
+   * (WebKit on macOS) since #5456, where it is `undefined`. The code then fell
+   * through to `webkitRelativePath.split('/')[0]`, which is the folder's NAME,
+   * so picking the vault stored `"AI Memory Hub"` and every sync of that source
+   * failed with `folder does not exist: AI Memory Hub`. Silently, because a
+   * name IS a valid relative path as far as the field was concerned.
+   *
+   * A directory handle is a capability only the host has, so the native dialog
+   * is the only route to one. The text field stays editable for typing a path
+   * by hand, which is also the fallback outside Tauri.
+   */
+  const browse = useCallback(async () => {
+    setError(null);
+    try {
+      const picked = await pickFolderViaDialog();
+      // `null` is a cancelled dialog, which is not an error and must not wipe
+      // a path the user already typed.
+      if (picked) onChange(picked);
+    } catch (e) {
+      log('[folder-field] native folder picker failed: %o', e);
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }, [onChange]);
+
   return (
     <label className="block">
       <span className="text-xs font-medium text-content-secondary">{label}</span>
@@ -70,40 +107,33 @@ function FolderField({ label, value, onChange }: FolderFieldProps) {
           onChange={e => onChange(e.target.value)}
           placeholder={t('memorySources.folderPathPlaceholder')}
         />
-        <label
+        <button
+          type="button"
+          data-analytics-id="memory-source-browse-folder"
+          data-testid="memory-source-browse"
+          disabled={!isTauri()}
+          onClick={() => void browse()}
           className="shrink-0 cursor-pointer rounded-md border border-line-strong bg-surface px-3 py-2
                      text-xs font-medium text-content-secondary transition-colors
                      hover:border-primary-400 hover:text-primary-600
+                     disabled:cursor-not-allowed disabled:opacity-50
                      dark:bg-surface-muted dark:text-content-secondary
                      dark:hover:border-primary-500 dark:hover:text-primary-400">
           {t('memorySources.browse')}
-          <input
-            type="file"
-            // @ts-expect-error — non-standard but supported in CEF/Chromium
-            webkitdirectory=""
-            multiple
-            className="hidden"
-            onChange={e => {
-              const files = e.target.files;
-              if (!files || files.length === 0) return;
-              // Chromium exposes the chosen directory path on the first file's `path`
-              // attribute when the renderer has filesystem-aware integration (CEF).
-              // Fall back to webkitRelativePath split if `path` isn't available.
-              const first = files[0] as File & { path?: string };
-              if (first.path) {
-                // first.path is the absolute path to the file. Derive the directory
-                // by trimming the relative portion (everything after the chosen root).
-                const rel = first.webkitRelativePath || first.name;
-                const abs = first.path;
-                const idx = abs.lastIndexOf(rel);
-                onChange(idx > 0 ? abs.slice(0, idx).replace(/\/$/, '') : abs);
-              } else if (first.webkitRelativePath) {
-                onChange(first.webkitRelativePath.split('/')[0]);
-              }
-            }}
-          />
-        </label>
+        </button>
       </div>
+      {error ? (
+        <p data-testid="memory-source-browse-error" className="mt-1 text-xs text-danger">
+          {error}
+        </p>
+      ) : (
+        value.trim().length > 0 &&
+        !isAbsoluteFolderPath(value) && (
+          <p data-testid="memory-source-path-hint" className="mt-1 text-xs text-warning">
+            {t('memorySources.absolutePathRequired')}
+          </p>
+        )
+      )}
     </label>
   );
 }

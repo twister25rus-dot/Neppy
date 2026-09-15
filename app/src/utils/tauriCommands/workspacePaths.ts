@@ -57,3 +57,17 @@ export async function resolveWorkspaceAbsolutePath(path: string): Promise<string
   assertTauri();
   return invoke<string>('resolve_workspace_absolute_path', { path });
 }
+
+/**
+ * Open the OS-native folder picker; resolves to the chosen absolute path, or
+ * `null` when the user cancelled.
+ *
+ * The renderer has no other way to obtain a directory path. `<input
+ * type="file" webkitdirectory>` only ever yields file names plus a relative
+ * path under the chosen root, and the `File.path` extension that Chromium adds
+ * does not exist in Wry's WebKit (#5456) — so the host has to hand it over.
+ */
+export async function pickFolderViaDialog(): Promise<string | null> {
+  assertTauri();
+  return invoke<string | null>('pick_folder_via_dialog');
+}

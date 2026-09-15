@@ -1627,14 +1627,30 @@ fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
     #[cfg(not(target_os = "macos"))]
     let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 
+    // macOS draws a status item from a TEMPLATE image: it reads the alpha
+    // channel only and tints the result for the current appearance, which is
+    // what makes every other menu bar icon white on a dark bar and in full
+    // screen. The full-colour app icon is not a template, so it shipped as a
+    // near-black blob that disappeared against exactly those backgrounds.
+    // `tray-template.png` is the same artwork reduced to its silhouette, and
+    // `icon_as_template` is what tells AppKit to treat it as one.
+    #[cfg(target_os = "macos")]
+    let icon = {
+        log::debug!("[tray] using macOS template icon (tinted by the system appearance)");
+        tauri::image::Image::from_bytes(include_bytes!("../icons/tray-template.png"))?
+    };
+    #[cfg(not(target_os = "macos"))]
     let icon = app
         .default_window_icon()
         .cloned()
         .ok_or_else(|| tauri::Error::AssetNotFound("default window icon".to_string()))?;
 
-    TrayIconBuilder::with_id("openhuman-tray")
-        .icon(icon)
-        .menu(&menu)
+    let tray = TrayIconBuilder::with_id("openhuman-tray").icon(icon);
+    // Template rendering is a macOS concept; no other platform has one.
+    #[cfg(target_os = "macos")]
+    let tray = tray.icon_as_template(true);
+
+    tray.menu(&menu)
         .on_menu_event(|app, event| match event.id().as_ref() {
             "tray_show_window" => {
                 log::info!("[tray] action=show_window source=menu");
@@ -3390,6 +3406,7 @@ pub fn run() {
             workspace_paths::reveal_workspace_path,
             workspace_paths::preview_workspace_text,
             workspace_paths::resolve_workspace_absolute_path,
+            workspace_paths::pick_folder_via_dialog,
             mcp_commands::mcp_resolve_binary_path,
             mcp_commands::mcp_open_client_config,
             loopback_oauth::start_loopback_oauth_listener,

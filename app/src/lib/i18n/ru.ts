@@ -2871,6 +2871,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'Переключить не удалось',
   'memorySources.removeFailed': 'Удалить не удалось',
   'memorySources.folderPath': 'Путь к папке',
+  'memorySources.absolutePathRequired':
+    'Укажите полный путь к папке, начиная с /. Нажмите «Обзор», чтобы выбрать её.',
   'memorySources.globPattern': 'Шаблон глобуса',
   'memorySources.repoUrl': 'Репозиторий URL',
   'memorySources.branch': 'Ветвь',
@@ -3252,6 +3254,11 @@ const messages: TranslationMap = {
   'channels.telegram.reconnect': 'Переподключить',
   'channels.telegram.savedRestartRequired': 'Канал сохранён. Перезапусти приложение для активации.',
   'channels.web.alwaysAvailable': 'Всегда доступно',
+  'channels.web.proactiveTitle': 'Проактивные сообщения',
+  'channels.web.proactiveAlways':
+    'Сводки, напоминания и результаты по расписанию всегда приходят сюда первыми. Веб-чат нельзя отключить.',
+  'channels.web.proactiveMirror': 'Копия также отправляется в {channel}.',
+  'channels.web.proactiveNoMirror': 'Ни один другой канал не получает копию.',
   'chat.approval.approve': 'Утвердить',
   'chat.approval.alwaysAllow': 'Всегда разрешать',
   'chat.approval.alwaysAllowHint':
@@ -6969,6 +6976,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'Среда MLX выключена. Укажите mlx.enabled = true в файле настроек, чтобы Neppy мог запускать эти серверы.',
   'mlx.problemsTitle': 'Ошибки в настройках',
+  'mlx.preset.title': 'Режим работы',
+  'mlx.preset.description':
+    'Авто решает для каждого запроса. Уровень рассуждений и длина ответа действуют со следующего хода; окно контекста и настройки памяти действуют после перезапуска сервера.',
+  'mlx.quick.openSettings': 'Настройки MLX',
+  'mlx.quick.allSettings': 'Все настройки',
   'mlx.memoryTitle': 'Память',
   'mlx.memoryUsage': 'Занято {used} ГиБ из {budget} ГиБ',
   'mlx.noServers': 'Серверы MLX пока не настроены.',
@@ -7010,6 +7022,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'Изображения',
   'mlx.params.generation': 'Генерация',
   'chat.thinking.label': 'Размышление',
+  'chat.thinking.auto': 'Авто',
   'chat.thinking.quick': 'Быстро',
   'chat.thinking.balanced': 'Сбалансированно',
   'chat.thinking.thorough': 'Тщательно',

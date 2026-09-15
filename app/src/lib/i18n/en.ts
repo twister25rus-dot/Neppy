@@ -3100,6 +3100,8 @@ const en: TranslationMap = {
   'memorySources.toggleFailed': 'Toggle failed',
   'memorySources.removeFailed': 'Remove failed',
   'memorySources.folderPath': 'Folder path',
+  'memorySources.absolutePathRequired':
+    "Enter the folder's full path, starting with /. Use Browse to pick it.",
   'memorySources.globPattern': 'Glob pattern',
   'memorySources.repoUrl': 'Repository URL',
   'memorySources.branch': 'Branch',
@@ -3518,6 +3520,11 @@ const en: TranslationMap = {
   'channels.telegram.reconnect': 'Reconnect',
   'channels.telegram.savedRestartRequired': 'Channel saved. Restart the app to activate it.',
   'channels.web.alwaysAvailable': 'Always available',
+  'channels.web.proactiveTitle': 'Proactive messages',
+  'channels.web.proactiveAlways':
+    'Briefings, reminders and scheduled results always arrive here first. The web chat cannot be turned off.',
+  'channels.web.proactiveMirror': 'A copy is also sent to {channel}.',
+  'channels.web.proactiveNoMirror': 'No other channel is set to receive a copy.',
   'chat.approval.approve': 'Approve',
   'chat.approval.alwaysAllow': 'Always allow',
   'chat.approval.alwaysAllowHint': 'Stop asking for this tool: add it to your Always-allow list',
@@ -7211,6 +7218,11 @@ const en: TranslationMap = {
   'mlx.disabledNotice':
     'The MLX runtime is switched off. Set mlx.enabled to true in your config file to let Neppy start these servers.',
   'mlx.problemsTitle': 'Configuration problems',
+  'mlx.preset.title': 'Run preset',
+  'mlx.preset.description':
+    'Auto decides per request. Reasoning effort and answer length take effect on the next turn; context window and memory settings take effect when the server restarts.',
+  'mlx.quick.openSettings': 'MLX settings',
+  'mlx.quick.allSettings': 'All settings',
   'mlx.memoryTitle': 'Memory',
   'mlx.memoryUsage': '{used} GiB of {budget} GiB used',
   'mlx.noServers': 'No MLX servers are configured yet.',
@@ -7251,6 +7263,7 @@ const en: TranslationMap = {
   'mlx.slot.image': 'Images',
   'mlx.params.generation': 'Generation',
   'chat.thinking.label': 'Thinking',
+  'chat.thinking.auto': 'Auto',
   'chat.thinking.quick': 'Quick',
   'chat.thinking.balanced': 'Balanced',
   'chat.thinking.thorough': 'Thorough',

@@ -16,6 +16,40 @@ pub struct WorkspaceTextPreview {
     pub size_bytes: u64,
 }
 
+/// Open the OS-native folder picker and return the chosen absolute path.
+///
+/// Exists because the renderer cannot obtain one. The memory-source dialog used
+/// `<input type="file" webkitdirectory>` and read `File.path`, which is a
+/// Chromium/Electron extension; this app runs on Wry (WebKit on macOS) as of
+/// #5456, so that property is `undefined` and the code silently fell through to
+/// `webkitRelativePath.split('/')[0]` — the folder's NAME. A source added that
+/// way stored `"AI Memory Hub"` instead of its path and every sync failed with
+/// `folder does not exist`. A real directory handle is a capability only the
+/// host has, so it has to be a command.
+///
+/// No path validation here, deliberately: the value comes from the user's own
+/// selection in a native dialog, not from the renderer, so there is nothing to
+/// re-validate against. Reading it is the memory source's business and is
+/// gated core-side.
+#[tauri::command]
+pub async fn pick_folder_via_dialog() -> Result<Option<String>, String> {
+    // `rfd` drives the OS-native dialog — the xdg-desktop portal on Linux, the
+    // system panel on macOS/Windows. Already a dependency for artifact Save-As.
+    let handle = rfd::AsyncFileDialog::new().pick_folder().await;
+
+    let Some(dir) = handle else {
+        log::info!("[workspace_paths] pick_folder_via_dialog cancelled by user");
+        return Ok(None);
+    };
+
+    let path = dir.path().to_path_buf();
+    log::info!(
+        "[workspace_paths] pick_folder_via_dialog chose path={}",
+        path.display()
+    );
+    Ok(Some(path.display().to_string()))
+}
+
 #[tauri::command]
 pub async fn open_workspace_path(path: String) -> Result<(), String> {
     let workspace = active_workspace_root().await?;

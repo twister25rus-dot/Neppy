@@ -184,7 +184,13 @@ impl Preset {
                 context_tokens: 65_536,
                 kv_cache: true,
                 kv_precision: KvPrecision::FourBit,
-                max_output_tokens: 4_096,
+                // Smaller than Balanced on purpose. This preset exists for a
+                // window that is mostly prompt, so reserving less of it for the
+                // answer is the intent rather than a downgrade — and it is what
+                // separates Long Context from Balanced in the only two settings
+                // a turn can actually carry. `clamp_to_model` narrows this
+                // further when a real prompt arrives.
+                max_output_tokens: 3_072,
                 concurrency: 1,
                 memory_policy: MemoryPolicy::ContextPriority,
             },
@@ -193,7 +199,15 @@ impl Preset {
                 context_tokens: 32_768,
                 kv_cache: true,
                 kv_precision: KvPrecision::Fp16,
-                max_output_tokens: 8_192,
+                // Larger than Deep. `ReasoningEffort` tops out at `High`, so
+                // Maximum and High reach the provider as the same ask and this
+                // budget is the ONLY per-turn setting left to tell the two
+                // apart — without it "Maximum Quality" and "Deep" were byte
+                // identical on the wire, six buttons resolving to four
+                // outcomes. A bigger answer budget is what "when speed matters
+                // least" means, so this stays inside the preset's own intent
+                // rather than inventing a new knob for it.
+                max_output_tokens: 16_384,
                 concurrency: 1,
                 memory_policy: MemoryPolicy::QualityPriority,
             },
@@ -479,6 +493,32 @@ mod tests {
         let best = turn_controls_for(Preset::MaximumQuality, inputs());
         assert_eq!(best.reasoning_effort, Some(ReasoningEffort::High));
         assert!(best.max_tokens > fast.max_tokens);
+    }
+
+    #[test]
+    fn every_preset_reaches_the_provider_as_a_distinct_ask() {
+        // The six named intents must not collapse into four. Only
+        // `reasoning_effort` and `max_tokens` survive into a request — context
+        // window, KV precision, concurrency and the memory policy are all
+        // launch-time properties — so those two are the whole of what a user
+        // gets when they change this setting. Deep and Maximum Quality were
+        // identical here (both `High` / 8_192), as were Balanced and Long
+        // Context (both `Medium` / 4_096).
+        // Auto is excluded: it is the adaptive one, and landing on the same
+        // answer as a named preset for a given request is it working.
+        let mut seen = Vec::new();
+        for preset in Preset::ALL.into_iter().filter(|p| *p != Preset::Auto) {
+            let controls = turn_controls_for(preset, inputs());
+            let ask = (controls.reasoning_effort, controls.max_tokens);
+            assert!(
+                !seen.iter().any(|(_, other)| *other == ask),
+                "{preset:?} resolves to the same request as {:?}: {ask:?}",
+                seen.iter()
+                    .find(|(_, other)| *other == ask)
+                    .map(|(name, _)| name),
+            );
+            seen.push((preset, ask));
+        }
     }
 
     #[test]

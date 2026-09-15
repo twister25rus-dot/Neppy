@@ -2861,6 +2861,8 @@ const messages: TranslationMap = {
   'memorySources.toggleFailed': 'Gagal mengalihkan',
   'memorySources.removeFailed': 'Gagal menghapus',
   'memorySources.folderPath': 'Path folder',
+  'memorySources.absolutePathRequired':
+    'Masukkan jalur lengkap folder, diawali dengan /. Gunakan Telusuri untuk memilihnya.',
   'memorySources.globPattern': 'Pola glob',
   'memorySources.repoUrl': 'URL repositori',
   'memorySources.branch': 'Branch',
@@ -3239,6 +3241,11 @@ const messages: TranslationMap = {
   'channels.telegram.savedRestartRequired':
     'Kanal tersimpan. Mulai ulang aplikasi untuk mengaktifkannya.',
   'channels.web.alwaysAvailable': 'Selalu tersedia',
+  'channels.web.proactiveTitle': 'Pesan proaktif',
+  'channels.web.proactiveAlways':
+    'Ringkasan, pengingat, dan hasil terjadwal selalu tiba di sini lebih dulu. Obrolan web tidak dapat dimatikan.',
+  'channels.web.proactiveMirror': 'Salinan juga dikirim ke {channel}.',
+  'channels.web.proactiveNoMirror': 'Tidak ada saluran lain yang menerima salinan.',
   'chat.approval.approve': 'Setujui',
   'chat.approval.alwaysAllow': 'Selalu izinkan',
   'chat.approval.alwaysAllowHint':
@@ -6926,6 +6933,11 @@ const messages: TranslationMap = {
   'mlx.disabledNotice':
     'Lingkungan MLX sedang dimatikan. Setel mlx.enabled menjadi true di berkas konfigurasi agar Neppy dapat menjalankan server ini.',
   'mlx.problemsTitle': 'Masalah konfigurasi',
+  'mlx.preset.title': 'Profil menjalankan',
+  'mlx.preset.description':
+    'Otomatis memutuskan per permintaan. Upaya penalaran dan panjang jawaban berlaku pada giliran berikutnya; jendela konteks dan pengaturan memori berlaku saat server dimulai ulang.',
+  'mlx.quick.openSettings': 'Pengaturan MLX',
+  'mlx.quick.allSettings': 'Semua pengaturan',
   'mlx.memoryTitle': 'Memori',
   'mlx.memoryUsage': '{used} GiB dari {budget} GiB terpakai',
   'mlx.noServers': 'Belum ada server MLX yang dikonfigurasi.',
@@ -6967,6 +6979,7 @@ const messages: TranslationMap = {
   'mlx.slot.image': 'Gambar',
   'mlx.params.generation': 'Penghasilan',
   'chat.thinking.label': 'Berpikir',
+  'chat.thinking.auto': 'Otomatis',
   'chat.thinking.quick': 'Cepat',
   'chat.thinking.balanced': 'Seimbang',
   'chat.thinking.thorough': 'Menyeluruh',

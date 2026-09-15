@@ -59,6 +59,15 @@ export function useNeppyExternalStore(threadId: string | null) {
       : EMPTY_TURN_MAP
   );
 
+  // `started` and `streaming` are both in-flight; the row is deleted on
+  // completion, so a present lifecycle (other than the cold-boot `interrupted`
+  // marker, which has no live driver) means a turn is running.
+  //
+  // Read before the projection because the projection needs it: it decides
+  // whether the live process arrays belong to the streaming tail or to the
+  // answer the finished turn produced.
+  const isRunning = lifecycle === 'started' || lifecycle === 'streaming';
+
   // Recomputed only when the settled transcript or the live tail changes.
   // Settled messages are converted through an identity-keyed cache, so a token
   // landing on the tail re-converts exactly one message, never the transcript.
@@ -69,14 +78,10 @@ export function useNeppyExternalStore(threadId: string | null) {
         liveTranscript,
         turnTimelines,
         turnTranscripts,
+        isRunning,
       }),
-    [messages, streaming, liveTimeline, liveTranscript, turnTimelines, turnTranscripts]
+    [messages, streaming, liveTimeline, liveTranscript, turnTimelines, turnTranscripts, isRunning]
   );
-
-  // `started` and `streaming` are both in-flight; the row is deleted on
-  // completion, so a present lifecycle (other than the cold-boot `interrupted`
-  // marker, which has no live driver) means a turn is running.
-  const isRunning = lifecycle === 'started' || lifecycle === 'streaming';
 
   const onNew = useCallback(
     async (message: AppendMessage) => {
