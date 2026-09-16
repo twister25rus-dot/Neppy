@@ -3022,7 +3022,7 @@ const messages: TranslationMap = {
   'app.update.later': '稍后',
   'app.update.newVersionAvailable': '有新版本可用。',
   'app.update.newVersionReady': '新版本已准备好安装。',
-  'app.update.progress.downloaded': '已下载',
+  'app.update.progress.downloaded': '已下载 {amount}',
   'app.update.progress.installing': '正在安装新版本…',
   'app.update.progress.restarting': '正在重新启动应用…',
   'app.update.progress.working': '{percent}%',

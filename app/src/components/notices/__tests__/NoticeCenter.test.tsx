@@ -92,9 +92,12 @@ describe('NoticeCenter', () => {
     renderCenter([memoryError]);
 
     const center = screen.getByTestId('notice-center');
-    expect(center.className).toContain('bottom-2');
-    expect(center.className).toContain('right-2');
-    expect(center.className).not.toContain('left-2');
+    // 24px, not 8px: the content card is inset 12px and rounds at 16px, so an
+    // 8px inset left this circle straddling that curve and reading as clipped
+    // by the window. The anchor is still the bottom-right corner.
+    expect(center.className).toContain('bottom-6');
+    expect(center.className).toContain('right-6');
+    expect(center.className).not.toContain('left-');
   });
 
   it('badges the active count and opens the panel on click', async () => {

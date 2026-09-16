@@ -3485,7 +3485,7 @@ const en: TranslationMap = {
   'app.update.later': 'Later',
   'app.update.newVersionAvailable': 'A new version is available.',
   'app.update.newVersionReady': 'A new version is ready to install.',
-  'app.update.progress.downloaded': '${formatBytes(downloaded)} downloaded',
+  'app.update.progress.downloaded': '{amount} downloaded',
   'app.update.progress.installing': 'Installing the new version…',
   'app.update.progress.restarting': 'Relaunching the app…',
   'app.update.progress.working': '{percent}%',

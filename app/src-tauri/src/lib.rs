@@ -3407,6 +3407,7 @@ pub fn run() {
             workspace_paths::preview_workspace_text,
             workspace_paths::resolve_workspace_absolute_path,
             workspace_paths::pick_folder_via_dialog,
+            workspace_paths::default_memory_folder_path,
             mcp_commands::mcp_resolve_binary_path,
             mcp_commands::mcp_open_client_config,
             loopback_oauth::start_loopback_oauth_listener,

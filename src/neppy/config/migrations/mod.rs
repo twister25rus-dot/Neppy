@@ -31,13 +31,14 @@ mod phase_out_profile_md;
 mod reconcile_orphaned_providers;
 mod remove_write_auto_approve;
 mod repair_http_request_limits;
+mod resolve_relative_folder_sources;
 mod retire_chat_v1_model;
 mod retire_local_whisper_stt;
 mod route_managed_roles_to_local;
 mod unify_ai_provider_settings;
 
 /// Current target schema version. Bumped alongside every new migration.
-pub const CURRENT_SCHEMA_VERSION: u32 = 11;
+pub const CURRENT_SCHEMA_VERSION: u32 = 12;
 
 /// Run any migrations whose `schema_version` gate hasn't yet been
 /// crossed for this workspace.
@@ -567,6 +568,53 @@ pub async fn run_pending(config: &mut Config) {
             Err(err) => {
                 log::warn!(
                     "[migrations] route_managed_roles_to_local failed: {err:#} — \
+                     will retry on next launch"
+                );
+            }
+        }
+    }
+
+    // 11 -> 12: give folder memory sources that recorded a NAME a real path.
+    // The old `webkitdirectory` picker read `File.path`, which Wry's WebKit
+    // does not expose, and fell through to storing the folder's name; every
+    // sync of such a source then failed with `folder does not exist`. The
+    // picker is fixed, but configs written before it still carry the value.
+    // Resolution is against known notes roots only and never invents a path —
+    // an unresolvable name keeps its original value so the error stays legible.
+    if config.schema_version == 11 {
+        let previous_paths: Vec<Option<String>> = config
+            .memory_sources
+            .iter()
+            .map(|s| s.path.clone())
+            .collect();
+        match resolve_relative_folder_sources::run(config) {
+            Ok(stats) => {
+                let previous_version = config.schema_version;
+                config.schema_version = 12;
+                if let Err(err) = config.save().await {
+                    // Roll BOTH the version and the rewritten paths back, so a
+                    // failed save cannot leave a half-migrated in-memory config.
+                    for (source, previous) in config.memory_sources.iter_mut().zip(previous_paths) {
+                        source.path = previous;
+                    }
+                    config.schema_version = previous_version;
+                    log::warn!(
+                        "[migrations] resolve_relative_folder_sources ran but config.save \
+                         failed: {err:#} — rolled in-memory schema_version back to \
+                         {previous_version}, will retry on next launch"
+                    );
+                    return;
+                }
+                log::info!(
+                    "[migrations] schema_version bumped to 12 \
+                     (resolve_relative_folder_sources repaired={} unresolved={})",
+                    stats.repaired,
+                    stats.unresolved,
+                );
+            }
+            Err(err) => {
+                log::warn!(
+                    "[migrations] resolve_relative_folder_sources failed: {err:#} — \
                      will retry on next launch"
                 );
             }

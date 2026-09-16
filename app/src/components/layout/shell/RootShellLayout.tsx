@@ -263,8 +263,15 @@ export default function RootShellLayout({ sidebar, children, unframed }: RootShe
         {/* Sits above the drag band (z-20 over its z-10) so the button stays
             clickable rather than being swallowed by the region that makes the
             title bar draggable. Top-RIGHT: the top-left of this strip is where
-            macOS floats its traffic lights. */}
-        <div className="absolute end-2 top-1.5 z-20">
+            macOS floats its traffic lights.
+            Offsets are the CARD's, not the window's, because the card is what
+            the eye lines this up against. `end-3` is `SidebarInset`'s own
+            `mr-3`, so the button's right edge and the card's agree. `top-0.5`
+            centres a 28px (`h-7`) button in the 32px band the card's `mt-8`
+            leaves above it: (32 - 28) / 2 = 2px. The previous `top-1.5` centred
+            it in the 40px DRAG BAR instead, which put its bottom edge at 34px —
+            2px over the card's top edge, and visibly low. */}
+        <div className="absolute end-3 top-0.5 z-20">
           <MlxQuickButton />
         </div>
         <ContentSurface unframed={unframed}>{children}</ContentSurface>

@@ -65,6 +65,7 @@
 
 pub use tinymemory_core::sources::*;
 
+pub mod folder_roots;
 pub mod rpc;
 pub mod schemas;
 

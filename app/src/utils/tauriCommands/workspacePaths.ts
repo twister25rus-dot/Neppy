@@ -71,3 +71,13 @@ export async function pickFolderViaDialog(): Promise<string | null> {
   assertTauri();
   return invoke<string | null>('pick_folder_via_dialog');
 }
+
+/**
+ * Where the folder picker should start, or `null` when nothing plausible was
+ * found. Resolved by the core, which owns the same root list the config
+ * migration uses to repair sources that only stored a folder name.
+ */
+export async function defaultMemoryFolderPath(): Promise<string | null> {
+  assertTauri();
+  return invoke<string | null>('default_memory_folder_path');
+}

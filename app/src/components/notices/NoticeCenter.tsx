@@ -129,7 +129,13 @@ export default function NoticeCenter() {
 
   return (
     <div
-      className="fixed bottom-2 right-2 z-50 flex flex-col items-end gap-2"
+      // 24px, not 8px. The content card is inset 12px (`SidebarInset`'s
+      // `my-3 mr-3`) and rounds its corners at 16px, so an 8px inset put this
+      // 40px circle outside the card, straddling that curve and reading as
+      // clipped by the window. 24px leaves it 12px inside both card edges,
+      // clear of the radius. `AppUpdatePrompt` stacks above it and its offset
+      // is derived from this one.
+      className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2"
       data-testid="notice-center">
       {open && (
         <div

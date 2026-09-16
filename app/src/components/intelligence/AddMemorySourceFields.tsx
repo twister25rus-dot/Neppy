@@ -20,7 +20,10 @@ import type { ComposioConnection } from '../../lib/composio/types';
 import { useT } from '../../lib/i18n/I18nContext';
 import type { SourceKind } from '../../services/memorySourcesService';
 import { isTauri } from '../../utils/tauriCommands/common';
-import { pickFolderViaDialog } from '../../utils/tauriCommands/workspacePaths';
+import {
+  defaultMemoryFolderPath,
+  pickFolderViaDialog,
+} from '../../utils/tauriCommands/workspacePaths';
 import TextField from '../ui/TextField';
 import { isAbsoluteFolderPath } from './folderPath';
 
@@ -67,6 +70,26 @@ interface FolderFieldProps {
 function FolderField({ label, value, onChange }: FolderFieldProps) {
   const { t } = useT();
   const [error, setError] = useState<string | null>(null);
+
+  // Seed an empty field with wherever notes actually live on this machine, so
+  // the common case is one click rather than a blank box. Only when empty: a
+  // path the user already typed is theirs and must not be overwritten.
+  useEffect(() => {
+    if (value.trim().length > 0 || !isTauri()) return;
+    let cancelled = false;
+    void defaultMemoryFolderPath()
+      .then(suggested => {
+        if (!cancelled && suggested) onChange(suggested);
+      })
+      .catch(() => {
+        // No suggestion is not an error; the field simply stays empty.
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Runs once on mount: re-running as the user types would fight their input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Ask the host for a directory.

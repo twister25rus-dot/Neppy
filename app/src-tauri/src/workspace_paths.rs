@@ -16,6 +16,21 @@ pub struct WorkspaceTextPreview {
     pub size_bytes: u64,
 }
 
+/// A folder confident enough to pre-fill the Add Memory Source field with.
+///
+/// Deliberately strict: the field it fills is submittable, so this answers only
+/// when there is exactly one Obsidian vault. `None` means the field stays empty
+/// and the user picks — `pick_folder_via_dialog` still opens in the right place.
+/// The core owns the rule, so it has one definition shared with the 11 -> 12
+/// migration that repairs sources holding a bare folder name.
+#[tauri::command]
+pub async fn default_memory_folder_path() -> Result<Option<String>, String> {
+    let resolved = neppy_core::neppy::memory::sources::folder_roots::default_notes_folder()
+        .map(|path| path.display().to_string());
+    log::debug!("[workspace_paths] default_memory_folder_path -> {resolved:?}");
+    Ok(resolved)
+}
+
 /// Open the OS-native folder picker and return the chosen absolute path.
 ///
 /// Exists because the renderer cannot obtain one. The memory-source dialog used
@@ -35,7 +50,20 @@ pub struct WorkspaceTextPreview {
 pub async fn pick_folder_via_dialog() -> Result<Option<String>, String> {
     // `rfd` drives the OS-native dialog — the xdg-desktop portal on Linux, the
     // system panel on macOS/Windows. Already a dependency for artifact Save-As.
-    let handle = rfd::AsyncFileDialog::new().pick_folder().await;
+    //
+    // Opening on the notes root is the point of detecting it: with several
+    // vaults it is the only thing that can point the user at them, since the
+    // field is left empty in that case precisely so nothing over-broad is one
+    // click from being saved.
+    let mut dialog = rfd::AsyncFileDialog::new();
+    if let Some(start) = neppy_core::neppy::memory::sources::folder_roots::notes_browse_start() {
+        log::debug!(
+            "[workspace_paths] pick_folder_via_dialog opening at {}",
+            start.display()
+        );
+        dialog = dialog.set_directory(start);
+    }
+    let handle = dialog.pick_folder().await;
 
     let Some(dir) = handle else {
         log::info!("[workspace_paths] pick_folder_via_dialog cancelled by user");
