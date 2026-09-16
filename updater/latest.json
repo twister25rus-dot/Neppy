@@ -1,11 +1,11 @@
 {
-  "version": "0.66.11",
-  "notes": "## What's Changed\n\n- Fix chat reasoning placement, the menu bar icon, MLX presets, Composio errors, skills routing and folder sources ([`c8ea1003`](https://github.com/twister25rus-dot/Neppy/commit/c8ea100348817f8ab11c8afed2ac20cb4c6ae39c))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/854ca131d4aee5672bcc1389457c071338f829ec...c8ea100348817f8ab11c8afed2ac20cb4c6ae39c",
-  "pub_date": "2026-09-15T05:05:19Z",
+  "version": "0.66.12",
+  "notes": "## What's Changed\n\n- Repair folder memory sources, align the shell buttons, and fix two update-progress strings ([`dc23d7ec`](https://github.com/twister25rus-dot/Neppy/commit/dc23d7ecd84eae90a1e0139e8b72c42b17eb6fcc))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/5ad7c84b08d8d5b0d282e98ae0bffa133145945a...dc23d7ecd84eae90a1e0139e8b72c42b17eb6fcc",
+  "pub_date": "2026-09-16T05:01:46Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakg0VUFBNWlMcjZ2K3JBblgzYURseWpjcXdHV0I3S0hWWkdmRndOSXFlYVNiaEZTUzd1Y0hGN240U1FaeEtkRUNXcStSWWZmK2MyMnZuNWxiQ3Vkb2dJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NDQ4MTgzCWZpbGU6TmVwcHkuYXBwLnRhci5negpKOTRpR0xxRjFHM1JGZlBQSVFHZjNkUUpBOHRxR0xZb1hhWnVDd21qYmdjT1lza3RZcmFiTThKNDk3aG5vb3doTlJtSk1LUmJScjVXaUtWODl5cGRCdz09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/564933478"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVralBaUCtnY3U2RzFwQUxFR2hIVG5KQkl4NzEySEVFbGNCQmlTWWJhZWVpUEtDUkQ4NUxiV09BNjBROUk1WlpRdmNMK0RGOGNEUjAxeVZpd2NGSCtyb0FvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NTM0NDk5CWZpbGU6TmVwcHkuYXBwLnRhci5negpGQUZydU8yMHBhRTJJbUlHbWJkNUtwenNKcEZvQ1Z2ZTV2UEZuaXdVem9QSktpTkZDcFN2bUhQMDJDOGo0QmtETitwVW81SHM5RXVVanJyR2ZzbUNCUT09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/567219027"
     }
   }
 }
