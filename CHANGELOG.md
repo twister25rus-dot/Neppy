@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.66.12] - 2026-09-16
+
+### What's Changed
+
+- Repair folder memory sources, align the shell buttons, and fix two update-progress strings ([`dc23d7ec`](https://github.com/twister25rus-dot/Neppy/commit/dc23d7ecd84eae90a1e0139e8b72c42b17eb6fcc))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/5ad7c84b08d8d5b0d282e98ae0bffa133145945a...dc23d7ecd84eae90a1e0139e8b72c42b17eb6fcc
+
 ## [0.66.11] - 2026-09-15
 
 ### What's Changed
