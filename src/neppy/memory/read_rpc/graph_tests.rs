@@ -27,8 +27,8 @@
 
 use chrono::{TimeZone, Utc};
 
-use super::shape_summary_nodes;
-use crate::neppy::memory::api::tree::TreeSummary;
+use super::{scope_display_label, shape_leaf_nodes, shape_summary_nodes, LeafAttachment};
+use crate::neppy::memory::api::tree::{TreeLeaf, TreeSummary};
 
 const BUDGET: usize = 10_000;
 
@@ -242,4 +242,145 @@ fn an_empty_forest_shapes_to_no_nodes_at_all() {
     // store that has sealed nothing renders as empty rather than as one bare
     // root per scope it has never seen.
     assert!(shape_summary_nodes(Vec::new(), BUDGET).is_empty());
+}
+
+// ── Leaf attachment ─────────────────────────────────────────────────────────
+//
+// The regression these pin: a store whose seal jobs never succeeded (every
+// chunk `buffered`, `mem_tree_summaries` empty) exported one chunk node per
+// leaf with no `parent_id`, and the Brain graph rendered them as disconnected
+// dots with "0 links". Unsealed leaves now hang off their source root.
+
+fn leaf(chunk_id: &str, source_id: &str, parent: Option<&str>) -> TreeLeaf {
+    TreeLeaf {
+        chunk_id: chunk_id.to_string(),
+        parent_summary_id: parent.map(str::to_string),
+        source_id: source_id.to_string(),
+        preview: format!("preview of {chunk_id}"),
+        time_range_start: Utc.timestamp_opt(1_700_000_000, 0).unwrap(),
+        time_range_end: Utc.timestamp_opt(1_700_000_900, 0).unwrap(),
+    }
+}
+
+#[test]
+fn unsealed_leaves_hang_off_one_synthetic_root_per_source() {
+    let mut nodes = Vec::new();
+    let attached = shape_leaf_nodes(
+        &mut nodes,
+        vec![
+            leaf("c1", "mem_src:src_1:notes/a.md", None),
+            leaf("c2", "mem_src:src_1:notes/a.md", None),
+            leaf("c3", "mem_src:src_1:notes/b.md", None),
+        ],
+        BUDGET,
+    );
+
+    assert_eq!(
+        attached,
+        LeafAttachment {
+            to_summary: 0,
+            to_source_root: 3,
+            unattached: 0
+        }
+    );
+    let roots: Vec<_> = nodes.iter().filter(|n| n.kind == "source").collect();
+    assert_eq!(
+        roots.len(),
+        2,
+        "one root per distinct source, got {roots:?}"
+    );
+    let root_a = roots
+        .iter()
+        .find(|n| n.id == "source:mem_src:src_1:notes/a.md")
+        .expect("root for a.md");
+    assert_eq!(root_a.label, "notes/a.md");
+    assert_eq!(root_a.parent_id, None);
+
+    for (chunk, parent) in [
+        ("c1", "source:mem_src:src_1:notes/a.md"),
+        ("c2", "source:mem_src:src_1:notes/a.md"),
+        ("c3", "source:mem_src:src_1:notes/b.md"),
+    ] {
+        let node = nodes.iter().find(|n| n.id == chunk).expect("chunk node");
+        assert_eq!(node.kind, "chunk");
+        assert_eq!(node.parent_id.as_deref(), Some(parent), "{chunk}");
+        assert!(
+            nodes.iter().any(|n| Some(&n.id) == node.parent_id.as_ref()),
+            "every parent id must name a node in the response"
+        );
+    }
+}
+
+#[test]
+fn a_leaf_keeps_its_sealing_summary_when_that_summary_is_present() {
+    let mut nodes = shape_summary_nodes(
+        vec![summary(
+            "summary:s1",
+            "mem_src:src_1:a.md",
+            1,
+            None,
+            &["summary:x"],
+        )],
+        BUDGET,
+    );
+    let attached = shape_leaf_nodes(
+        &mut nodes,
+        vec![leaf("c1", "mem_src:src_1:a.md", Some("summary:s1"))],
+        BUDGET,
+    );
+    assert_eq!(attached.to_summary, 1);
+    let chunk = nodes.iter().find(|n| n.id == "c1").unwrap();
+    assert_eq!(chunk.parent_id.as_deref(), Some("summary:s1"));
+    // The summary already minted this scope's root; the leaf must not add one.
+    assert_eq!(nodes.iter().filter(|n| n.kind == "source").count(), 1);
+}
+
+#[test]
+fn a_leaf_whose_summary_was_cut_falls_back_to_its_source_root() {
+    let mut nodes = Vec::new();
+    shape_leaf_nodes(
+        &mut nodes,
+        vec![leaf("c1", "slack:#eng", Some("summary:not-in-forest"))],
+        BUDGET,
+    );
+    let chunk = nodes.iter().find(|n| n.id == "c1").unwrap();
+    assert_eq!(chunk.parent_id.as_deref(), Some("source:slack:#eng"));
+    assert_eq!(chunk.tree_scope.as_deref(), Some("slack:#eng"));
+}
+
+#[test]
+fn a_leaf_with_no_source_and_no_summary_stays_unattached() {
+    let mut nodes = Vec::new();
+    let attached = shape_leaf_nodes(&mut nodes, vec![leaf("c1", "", None)], BUDGET);
+    assert_eq!(attached.unattached, 1);
+    assert_eq!(nodes.len(), 1);
+    assert_eq!(nodes[0].parent_id, None);
+}
+
+#[test]
+fn leaf_shaping_respects_the_node_budget_including_new_roots() {
+    let mut nodes = Vec::new();
+    shape_leaf_nodes(
+        &mut nodes,
+        vec![
+            leaf("c1", "s:a", None),
+            leaf("c2", "s:b", None),
+            leaf("c3", "s:a", None),
+        ],
+        3,
+    );
+    // c1 + its root fit (2); c2 would need a second root (2 more) and is cut,
+    // and the walk stops there rather than skipping ahead.
+    assert_eq!(nodes.len(), 2, "got {nodes:?}");
+    assert!(nodes.len() <= 3);
+}
+
+#[test]
+fn memory_source_scopes_display_their_relative_path() {
+    assert_eq!(
+        scope_display_label("mem_src:src_abc:05_Research/Notes.md"),
+        "05_Research/Notes.md"
+    );
+    assert_eq!(scope_display_label("mem_src:src_abc"), "mem_src:src_abc");
+    assert_eq!(scope_display_label("slack:#eng"), "Slack · #eng");
 }

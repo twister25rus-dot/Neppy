@@ -329,6 +329,7 @@ export default function Brain() {
                           edges={graph.edges}
                           mode={mode}
                           emptyHint={t('brain.empty')}
+                          showNodeDetails
                         />
                       ) : error ? (
                         <div

@@ -13,7 +13,6 @@ import {
   PopoverContent,
   PopoverRoot,
   PopoverTrigger,
-  Tooltip,
 } from '../../ui';
 
 /**
@@ -190,25 +189,26 @@ export default function MlxQuickButton() {
 
   return (
     <PopoverRoot open={open} onOpenChange={setOpen}>
-      <Tooltip label={t('settings.ai.mlx')}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="tertiary"
-            size="xs"
-            aria-label={t('settings.ai.mlx')}
-            analyticsId="mlx-quick-open"
-            data-testid="mlx-quick-trigger"
-            className="h-7 gap-1.5 rounded-md px-2 text-xs font-medium text-content-muted hover:text-content-secondary">
-            <span
-              aria-hidden
-              data-testid="mlx-quick-dot"
-              className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATE_DOT[state]}`}
-            />
-            MLX
-          </Button>
-        </PopoverTrigger>
-      </Tooltip>
+      {/* No Tooltip: the button already reads "MLX", and the pill's default
+          `side="right"` pushed it past the window edge from this top-right
+          corner, leaving a clipped white sliver on hover. */}
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="tertiary"
+          size="xs"
+          aria-label={t('settings.ai.mlx')}
+          analyticsId="mlx-quick-open"
+          data-testid="mlx-quick-trigger"
+          className="h-7 gap-1.5 rounded-md px-2 text-xs font-medium text-content-muted hover:text-content-secondary">
+          <span
+            aria-hidden
+            data-testid="mlx-quick-dot"
+            className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATE_DOT[state]}`}
+          />
+          MLX
+        </Button>
+      </PopoverTrigger>
 
       <PopoverContent align="end" className="w-72 p-2">
         <div className="flex items-center justify-between gap-2 px-1 pb-1.5">

@@ -632,9 +632,20 @@ pub struct GetChunkRequest {
 }
 
 /// Response shape for the `get_chunk` RPC.
+///
+/// `body` and `content_path` are additive (the Brain graph's node detail view
+/// reads them). `Chunk::content` is only the stored ≤500-char preview for a
+/// chunk whose body went to the content vault, so a viewer that wants the
+/// whole note needs the vault read `chunk_detail` does. `body = None` means
+/// that read failed or the driver has no vault body — fall back to
+/// `chunk.content`, never render nothing.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GetChunkResponse {
     pub chunk: Option<Chunk>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content_path: Option<String>,
 }
 
 /// `get_chunk` RPC handler. Returns the chunk identified by `id`, or `None`.
@@ -643,11 +654,25 @@ pub async fn get_chunk_rpc(
     req: GetChunkRequest,
 ) -> Result<RpcOutcome<GetChunkResponse>, String> {
     let binding = crate::neppy::memory::binding::for_config(config)?;
-    let chunk = match binding.provider().as_chunks() {
-        Some(chunks) => chunks
-            .get_chunk(&req.id)
+    let (chunk, body, content_path) = match binding.provider().as_chunks() {
+        // `chunk_detail` rather than `get_chunk`: the same row plus the vault
+        // body in one call, which is what a detail view needs.
+        Some(chunks) => match chunks
+            .chunk_detail(&req.id)
             .await
-            .map_err(|e| format!("get_chunk: {e}"))?,
+            .map_err(|e| format!("get_chunk: {e}"))?
+        {
+            Some(detail) => {
+                log::debug!(
+                    "[memory-tree][rpc] get_chunk: id={} body={} content_path={}",
+                    req.id,
+                    detail.body.is_some(),
+                    detail.content_path.is_some()
+                );
+                (Some(detail.chunk), detail.body, detail.content_path)
+            }
+            None => (None, None, None),
+        },
         // `None` is already this handler's answer for an id the store does not
         // hold, and a driver with no chunk tier holds none — so the degrade is
         // indistinguishable from the ordinary miss, which is what makes it safe
@@ -657,11 +682,15 @@ pub async fn get_chunk_rpc(
                 "[memory-tree][rpc] get_chunk: driver '{}' does not serve Chunks; reporting none",
                 binding.driver_id()
             );
-            None
+            (None, None, None)
         }
     };
     Ok(RpcOutcome::single_log(
-        GetChunkResponse { chunk },
+        GetChunkResponse {
+            chunk,
+            body,
+            content_path,
+        },
         format!("memory_tree: get_chunk id={}", req.id),
     ))
 }

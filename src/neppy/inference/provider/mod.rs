@@ -21,6 +21,9 @@ pub(crate) mod fallback_diagnostics;
 /// Crate-native managed Neppy backend as a host `ChatModel` (issue #4727).
 pub mod neppy_backend_model;
 pub(crate) mod openai_codex;
+/// Streaming Responses-API `ChatModel` for the ChatGPT Codex (OAuth) backend.
+pub(crate) mod openai_codex_model;
+pub(crate) mod openai_codex_sse;
 pub mod ops;
 pub mod schemas;
 pub mod types;

@@ -204,10 +204,13 @@ fn openrouter_detection_matches_builtin_slug_or_host() {
 
 #[test]
 fn openai_codex_models_url_includes_client_version_query() {
+    // Resolve once: the resolver reads process env that sibling tests mutate,
+    // so two calls can disagree when tests run in parallel.
+    let version = openai_codex_client_version();
     let url = append_query_param(
         "https://chatgpt.com/backend-api/codex/models",
         "client_version",
-        &openai_codex_client_version(),
+        &version,
     );
     let parsed = reqwest::Url::parse(&url).expect("url");
 
@@ -217,7 +220,7 @@ fn openai_codex_models_url_includes_client_version_query() {
             .query_pairs()
             .find(|(key, _)| key == "client_version")
             .map(|(_, value)| value.into_owned()),
-        Some(openai_codex_client_version().to_string())
+        Some(version)
     );
 }
 

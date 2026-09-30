@@ -172,37 +172,15 @@ async fn collect_tree_graph(cfg: &Config) -> Result<(Vec<GraphNode>, Vec<GraphEd
             "[memory_tree::read::graph_tree] leaves={} budget={chunk_budget}",
             leaves.len()
         );
-        for leaf in leaves {
-            let TreeLeaf {
-                chunk_id,
-                parent_summary_id,
-                // Selected by the read this replaced and discarded there too:
-                // a leaf node draws its edge from its summary, not its source.
-                source_id: _,
-                preview,
-                time_range_start,
-                time_range_end,
-            } = leaf;
-            let label = preview.chars().take(CHUNK_LABEL_CHARS).collect::<String>();
-            nodes.push(GraphNode {
-                kind: "chunk".into(),
-                id: chunk_id,
-                label,
-                tree_kind: None,
-                tree_scope: None,
-                tree_id: None,
-                level: None,
-                // The contract's driver already drops the empty string; kept
-                // here so a driver that does not cannot draw an edge to a node
-                // named "".
-                parent_id: parent_summary_id.filter(|s| !s.is_empty()),
-                child_count: None,
-                time_range_start_ms: Some(time_range_start.timestamp_millis()),
-                time_range_end_ms: Some(time_range_end.timestamp_millis()),
-                file_basename: None,
-                entity_kind: None,
-            });
-        }
+        let before = nodes.len();
+        let attached = shape_leaf_nodes(&mut nodes, leaves, MAX_TREE_NODES);
+        log::debug!(
+            "[memory_tree::read::graph_tree] leaf shaping: added_nodes={} to_summary={} to_source_root={} unattached={}",
+            nodes.len() - before,
+            attached.to_summary,
+            attached.to_source_root,
+            attached.unattached
+        );
     }
 
     Ok((nodes, Vec::new()))
@@ -367,6 +345,128 @@ fn shape_summary_nodes(summaries: Vec<TreeSummary>, max_nodes: usize) -> Vec<Gra
     nodes
 }
 
+/// How [`shape_leaf_nodes`] attached the leaves it emitted. Logged, and
+/// asserted by the sibling tests.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct LeafAttachment {
+    /// Leaves whose sealing summary is in the response.
+    to_summary: usize,
+    /// Leaves hung off their source's synthetic root instead.
+    to_source_root: usize,
+    /// Leaves with neither a present summary nor a source id.
+    unattached: usize,
+}
+
+/// Shape the forest's bottom edge into chunk nodes, giving every leaf a parent
+/// that is actually in the response.
+///
+/// A leaf's own parent is the summary that sealed over it, and `None` is the
+/// normal state of content the seal worker has not reached. Before this, such a
+/// leaf was emitted with no parent at all, so a store whose seals were stalled
+/// (every chunk still `buffered`, no summary written) rendered as a cloud of
+/// disconnected dots with zero links: the leaves were present, and the only
+/// thing the UI draws an edge from, `parent_id`, was empty on every one of them.
+///
+/// So an unsealed leaf, or one whose sealing summary was cut from a truncated
+/// forest, is attached to the synthetic `source:<source_id>` root instead,
+/// which is the same root its summaries hang off once they exist (a document
+/// source's tree scope *is* its chunks' `source_id`). The root is created on
+/// demand when no summary has minted it yet.
+///
+/// `max_nodes` bounds the whole response, synthetic roots included.
+fn shape_leaf_nodes(
+    nodes: &mut Vec<GraphNode>,
+    leaves: Vec<TreeLeaf>,
+    max_nodes: usize,
+) -> LeafAttachment {
+    let mut present: std::collections::HashSet<String> =
+        nodes.iter().map(|n| n.id.clone()).collect();
+    let mut attached = LeafAttachment::default();
+
+    for leaf in leaves {
+        let TreeLeaf {
+            chunk_id,
+            parent_summary_id,
+            source_id,
+            preview,
+            time_range_start,
+            time_range_end,
+        } = leaf;
+        // One slot for the leaf, and a second when its source root is new.
+        let source_root_id = (!source_id.is_empty()).then(|| format!("source:{source_id}"));
+        // The contract's driver already drops the empty string; kept here so
+        // a driver that does not cannot draw an edge to a node named "".
+        let sealed_parent = parent_summary_id
+            .filter(|s| !s.is_empty())
+            .filter(|pid| present.contains(pid));
+        let needs_root = sealed_parent.is_none()
+            && source_root_id
+                .as_ref()
+                .is_some_and(|root| !present.contains(root));
+        let needed = if needs_root { 2 } else { 1 };
+        if nodes.len() + needed > max_nodes {
+            log::debug!(
+                "[memory_tree::read::graph_tree] node budget {max_nodes} reached; remaining leaves dropped"
+            );
+            break;
+        }
+
+        let parent_id = match (sealed_parent, source_root_id) {
+            (Some(pid), _) => {
+                attached.to_summary += 1;
+                Some(pid)
+            }
+            (None, Some(root_id)) => {
+                if needs_root {
+                    present.insert(root_id.clone());
+                    nodes.push(GraphNode {
+                        kind: "source".into(),
+                        id: root_id.clone(),
+                        label: scope_display_label(&source_id),
+                        tree_kind: None,
+                        tree_scope: Some(source_id.clone()),
+                        tree_id: None,
+                        level: None,
+                        parent_id: None,
+                        child_count: None,
+                        time_range_start_ms: None,
+                        time_range_end_ms: None,
+                        file_basename: None,
+                        entity_kind: None,
+                    });
+                }
+                attached.to_source_root += 1;
+                Some(root_id)
+            }
+            (None, None) => {
+                attached.unattached += 1;
+                None
+            }
+        };
+
+        let label = preview.chars().take(CHUNK_LABEL_CHARS).collect::<String>();
+        present.insert(chunk_id.clone());
+        nodes.push(GraphNode {
+            kind: "chunk".into(),
+            id: chunk_id,
+            label,
+            tree_kind: None,
+            // Carried so the node's detail view can name its source; the UI
+            // keys nothing else off it for a chunk.
+            tree_scope: (!source_id.is_empty()).then_some(source_id),
+            tree_id: None,
+            level: None,
+            parent_id,
+            child_count: None,
+            time_range_start_ms: Some(time_range_start.timestamp_millis()),
+            time_range_end_ms: Some(time_range_end.timestamp_millis()),
+            file_basename: None,
+            entity_kind: None,
+        });
+    }
+    attached
+}
+
 fn scope_display_label(scope: &str) -> String {
     if scope.starts_with("github:") {
         let repo = scope.strip_prefix("github:").unwrap_or(scope);
@@ -381,6 +481,14 @@ fn scope_display_label(scope: &str) -> String {
     } else if scope.starts_with("slack:") {
         let channel = scope.strip_prefix("slack:").unwrap_or(scope);
         format!("Slack · {channel}")
+    } else if let Some(rest) = scope.strip_prefix("mem_src:") {
+        // `mem_src:<source registry id>:<relative path>` — a file from a
+        // registered memory source. The registry id is an opaque hash; the
+        // path is what a person recognises.
+        match rest.split_once(':') {
+            Some((_, path)) if !path.is_empty() => path.to_string(),
+            _ => scope.to_string(),
+        }
     } else {
         scope.to_string()
     }

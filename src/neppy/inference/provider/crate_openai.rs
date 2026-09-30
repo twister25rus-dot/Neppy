@@ -141,6 +141,30 @@ pub(crate) fn build_crate_openai_model(config: CrateOpenAiConfig<'_>) -> Arc<dyn
         model = model.with_responses_omit_max_output_tokens();
     }
 
+    // Codex OAuth backend: it only accepts `stream: true`, which the crate's
+    // non-streaming Responses path never sends (HTTP 400 "Stream must be set to
+    // true"). The crate model stays as the profile / cache-identity source; the
+    // wire is the host's streaming client. API-key OpenAI never gets here.
+    if config.responses_api_primary {
+        log::debug!(
+            "[providers][openai-codex] routing provider={} model={} through the streaming codex client",
+            config.provider_name,
+            config.model
+        );
+        return Arc::new(super::openai_codex_model::CodexResponsesModel::new(
+            model,
+            super::openai_codex_model::CodexWireConfig {
+                provider_name: config.provider_name,
+                endpoint: config.endpoint,
+                api_key: config.api_key,
+                model: config.model,
+                headers: config.extra_headers,
+                query_params: config.extra_query_params,
+                user_agent: config.user_agent,
+            },
+        ));
+    }
+
     Arc::new(model)
 }
 

@@ -15,10 +15,13 @@
  * stay a quiet slate.
  *
  * Interaction: drag a node to reposition it, drag the background to pan,
- * scroll to zoom, and "Reset view" recentres. Click a summary node →
- * opens the matching `.md` file through the shared workspace path
- * command (skipped when the pointer was dragging). This keeps Memory
- * graph file actions on the same guarded contract as chat workspace links.
+ * scroll to zoom, and "Reset view" recentres. With `showNodeDetails` (the
+ * Brain page) clicking any node opens {@link MemoryGraphNodeDetails}, a side
+ * sheet with the node's metadata, neighbours and stored content. Without it
+ * (graph reuses such as the orchestration overview) a summary click opens the
+ * matching `.md` file through the shared workspace path command. Clicks are
+ * skipped when the pointer was dragging either way, and file opens stay on the
+ * same guarded contract as chat workspace links.
  *
  * Rendering: where WebGL is available we use a Pixi.js + d3-force canvas
  * ({@link PixiGraph}) — the same stack Obsidian's graph runs on, smooth
@@ -56,6 +59,7 @@ import {
   ZOOM_MAX,
   ZOOM_MIN,
 } from './memoryGraphLayout';
+import { MemoryGraphNodeDetails } from './MemoryGraphNodeDetails';
 import { summaryWorkspacePath } from './memoryWorkspacePaths';
 import { PixiGraph } from './PixiGraph';
 import { seedSvgLayout } from './seedSvgLayout';
@@ -128,6 +132,11 @@ interface MemoryGraphProps {
    * A loading overlay (e.g. the Brain page) waits on this to reveal the graph.
    */
   onReady?: () => void;
+  /**
+   * Open a detail sheet (metadata, neighbours, stored content) when a node is
+   * clicked. Off by default so non-memory reuses keep their click behaviour.
+   */
+  showNodeDetails?: boolean;
 }
 
 interface SummaryPreviewState {
@@ -225,6 +234,7 @@ export function MemoryGraph({
   showLabels,
   tuning,
   onReady,
+  showNodeDetails,
 }: MemoryGraphProps) {
   const { t } = useT();
   const themeMode = useAppSelector(state => state.theme?.mode ?? 'system') as ThemeMode;
@@ -245,6 +255,8 @@ export function MemoryGraph({
   }, []);
   const [preview, setPreview] = useState<SummaryPreviewState | null>(null);
   const [previewingPath, setPreviewingPath] = useState<string | null>(null);
+  // Node whose detail sheet is open (only with `showNodeDetails`).
+  const [selected, setSelected] = useState<GraphNode | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Pan / zoom transform applied to the graph group, plus the live drag
@@ -380,6 +392,34 @@ export function MemoryGraph({
       console.error('[memory-graph] openWorkspacePath failed', err);
     }
   }, []);
+
+  const openWorkspaceFile = useCallback(async (path: string) => {
+    console.debug('[memory-graph] open workspace path=%s (details sheet)', path);
+    try {
+      await openWorkspacePath(path);
+    } catch (err) {
+      console.error('[memory-graph] openWorkspacePath failed', err);
+    }
+  }, []);
+
+  // One entry point for a node click from either renderer. The Pixi path hands
+  // back its physics node, so resolve the canonical graph node by id.
+  const activateNode = useCallback(
+    (node: GraphNode) => {
+      if (showNodeDetails) {
+        if (node.kind === 'root') {
+          console.debug('[memory-graph] click root: no details');
+          return;
+        }
+        const canonical = nodes.find(n => n.id === node.id) ?? node;
+        console.debug('[memory-graph] open details kind=%s id=%s', canonical.kind, canonical.id);
+        setSelected(canonical);
+        return;
+      }
+      if (node.kind === 'summary') void openSummary(node);
+    },
+    [nodes, openSummary, showNodeDetails]
+  );
 
   const previewSummary = useCallback(async (node: GraphNode) => {
     const path = summaryWorkspacePath(node);
@@ -679,9 +719,7 @@ export function MemoryGraph({
           }
           resetSignal={resetSignal}
           onHover={setHovered}
-          onOpen={n => {
-            if (n.kind === 'summary') void openSummary(n);
-          }}
+          onOpen={activateNode}
           onError={() => setPixiFailed(true)}
           onReady={fireReady}
         />
@@ -755,7 +793,7 @@ export function MemoryGraph({
                       // A drag ends with a click event too — skip the open
                       // when the pointer actually moved.
                       if (movedRef.current) return;
-                      if (n.kind === 'summary') void openSummary(n);
+                      activateNode(n);
                     }}
                     data-testid={`memory-graph-node-${n.id}`}>
                     <title>{tooltipFor(n, t)}</title>
@@ -860,6 +898,17 @@ export function MemoryGraph({
             {preview.truncated ? '\n…' : ''}
           </pre>
         </div>
+      )}
+      {showNodeDetails && selected && (
+        <MemoryGraphNodeDetails
+          node={selected}
+          nodes={nodes}
+          edges={edges}
+          mode={mode}
+          onClose={() => setSelected(null)}
+          onSelectNode={setSelected}
+          onOpenFile={path => void openWorkspaceFile(path)}
+        />
       )}
     </div>
   );

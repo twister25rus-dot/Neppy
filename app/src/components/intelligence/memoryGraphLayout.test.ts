@@ -76,6 +76,19 @@ describe('memoryGraphLayout', () => {
     expect(pairs).not.toContain('orphan->missing');
   });
 
+  it('buildGraph connects unsealed leaves through their source root to the hub (WebGL path)', () => {
+    // No summaries at all (seals stalled): the export parents each chunk to a
+    // synthetic source root, which must still yield a connected graph.
+    const nodes: GraphNode[] = [
+      { kind: 'source', id: 'source:s1', label: 's1' },
+      chunk({ id: 'a', parent_id: 'source:s1' }),
+      chunk({ id: 'b', parent_id: 'source:s1' }),
+    ];
+    const { links } = buildGraph(nodes, [], 'tree');
+    const pairs = links.map(l => `${String(l.source)}->${String(l.target)}`);
+    expect(pairs).toEqual(['source:s1->__root__', 'a->source:s1', 'b->source:s1']);
+  });
+
   it('buildGraph uses explicit edges in contacts mode and drops danglers', () => {
     const nodes = [chunk({ id: 'c1' }), contact({ id: 'p1' })];
     const edges: GraphEdge[] = [

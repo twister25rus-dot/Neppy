@@ -288,7 +288,10 @@ fn module_config(config: &Config, id: &str) -> serde_json::Value {
         "memory_sources": config.memory_sources,
         "embedding_routes": config.embedding_routes,
         "storage_provider": config.storage.provider.config,
-        "ollama_base_url": crate::neppy::inference::local::ollama_base_url_from_config(config),
+        // Memory embeddings stay on Ollama even when the local chat runtime is
+        // MLX / LM Studio, whose `local_ai.base_url` is an OpenAI `/v1` endpoint
+        // the Ollama embedder refuses (every seal job failed on it).
+        "ollama_base_url": crate::neppy::memory::host_impls::memory_ollama_base_url(config),
         // The module's `EmbeddingHost::default_cloud_embedding_model`: what the
         // engine switches to when the opted-in local model is unreachable
         // (`store::factories`). That is the host's managed-cloud default, the

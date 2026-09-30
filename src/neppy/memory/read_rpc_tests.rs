@@ -997,10 +997,15 @@ async fn tree_graph_includes_leaf_chunks_linked_to_their_summary() {
     assert_eq!(sealed.parent_id.as_deref(), Some("summary:1:L1-aaa"));
     assert_eq!(sealed.label, "first line of sealed chunk");
 
+    // An unsealed chunk used to be exported with no parent, so a store whose
+    // seals had stalled rendered as disconnected dots with zero links. It now
+    // hangs off its source's root — the same one its summaries use, so no
+    // extra node is minted for a scope that already has one.
     let orphan = resp.nodes.iter().find(|n| n.id == "chunk-orphan").unwrap();
-    assert!(
-        orphan.parent_id.is_none(),
-        "unsealed chunk has no parent → renders as an orphan node"
+    assert_eq!(
+        orphan.parent_id.as_deref(),
+        Some(source_root.id.as_str()),
+        "unsealed chunk attaches to its source root"
     );
 
     assert!(resp.edges.is_empty());

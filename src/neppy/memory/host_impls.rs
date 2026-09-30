@@ -60,7 +60,7 @@ impl EmbeddingHost for NeppyEmbeddingHost {
     }
 
     fn ollama_base_url(&self) -> String {
-        crate::neppy::inference::local::ollama_base_url_from_config(&self.config)
+        memory_ollama_base_url(&self.config)
     }
 
     fn default_embedding_provider(&self) -> Arc<dyn EmbeddingProvider> {
@@ -130,6 +130,87 @@ impl EmbeddingHost for NeppyEmbeddingHost {
     ) -> Result<Box<dyn EmbeddingProvider>, String> {
         self.create_embedding_provider_with_credentials("ollama", model, dims, "", Some(base_url))
     }
+}
+
+/// The Ollama server root memory embeddings should talk to.
+///
+/// `local_ai.base_url` is the *active local runtime's* URL, not Ollama's. With
+/// `local_ai.provider = "mlx"` (or LM Studio / OMLX) it holds an
+/// OpenAI-compatible endpoint such as `http://127.0.0.1:64744/v1`, while
+/// `mlx.embeddings_backend = "ollama"` (the default) deliberately keeps memory
+/// embeddings on Ollama. `inference::local::ollama_base_url_from_config`
+/// returns `local_ai.base_url` unconditionally, so the embedder was built
+/// against the MLX server and `tinyagents`' Ollama validator refused it:
+///
+///   invalid Ollama base_url `http://127.0.0.1:64744/v1`: configure the Ollama
+///   server root, not an API endpoint
+///
+/// That is a *build* failure, not an embed failure, so it is not softened by
+/// `embedding_strict = false`: `seal_one_level` propagates it and every seal
+/// job fails. Observed live: 91 `seal` jobs stuck retrying on exactly this
+/// error, `mem_tree_summaries` empty, zero chunk embeddings, and the Brain
+/// graph showing no parent/child links.
+///
+/// Resolution:
+/// - Runtime *is* Ollama: the previous behaviour, unchanged —
+///   `local_ai.base_url` (unless it is an OpenAI `/v1` endpoint), else
+///   `OPENHUMAN_OLLAMA_BASE_URL` / `OLLAMA_HOST` / `http://localhost:11434`.
+///   The `ollama` provider entry is never consulted here, so memory cannot be
+///   redirected to a different (possibly remote) host than the runtime uses.
+/// - Runtime is not Ollama (MLX, LM Studio): a configured `ollama`
+///   cloud-provider entry normalised to its server root, else the env/default
+///   fallback above.
+pub(crate) fn memory_ollama_base_url(config: &Config) -> String {
+    use crate::neppy::inference::local::provider::{
+        endpoint_is_openai_v1, provider_from_config, LocalAiProvider,
+    };
+
+    let configured = config
+        .local_ai
+        .base_url
+        .as_deref()
+        .map(str::trim)
+        .filter(|url| !url.is_empty());
+    let runtime_is_ollama = provider_from_config(config) == LocalAiProvider::Ollama;
+    if runtime_is_ollama {
+        // Ollama as the local runtime keeps its pre-existing resolution
+        // (base_url, then env, then default) so memory embeds on the same
+        // server the runtime admin uses. Only a `/v1` base_url is skipped,
+        // because the embedder refuses it.
+        if configured.is_some_and(|url| !endpoint_is_openai_v1(url)) {
+            log::debug!("[memory:host] ollama base url: local_ai.base_url (runtime is Ollama)");
+            return crate::neppy::inference::local::ollama_base_url_from_config(config);
+        }
+        log::debug!("[memory:host] ollama base url: runtime is Ollama, env/default fallback");
+        return crate::neppy::inference::local::ollama_base_url();
+    }
+    if let Some(url) = configured {
+        log::debug!(
+            "[memory:host] ollama base url: ignoring local_ai.base_url (provider={}, openai_v1={}) — it is not an Ollama server root",
+            config.local_ai.provider,
+            endpoint_is_openai_v1(url)
+        );
+    }
+
+    // Only reached when the local runtime is NOT Ollama (MLX, LM Studio): the
+    // `ollama` provider entry is then the only record of where Ollama lives.
+    if let Some(entry) = config.cloud_providers.iter().find(|entry| {
+        entry.slug.eq_ignore_ascii_case("ollama") && !entry.endpoint.trim().is_empty()
+    }) {
+        match crate::neppy::inference::local::validate_ollama_url(&entry.endpoint) {
+            Ok(root) => {
+                log::debug!("[memory:host] ollama base url: from the `ollama` provider entry");
+                return root;
+            }
+            Err(error) => log::debug!(
+                "[memory:host] ollama base url: `ollama` provider entry unusable ({error}); falling back"
+            ),
+        }
+    }
+
+    let fallback = crate::neppy::inference::local::ollama_base_url();
+    log::debug!("[memory:host] ollama base url: env/default fallback");
+    fallback
 }
 
 // ── Chat models ─────────────────────────────────────────────────────────────
@@ -578,6 +659,94 @@ mod chunk_store_reset_tests {
         assert!(
             !entries.iter().any(|name| name.contains(".corrupt-")),
             "a healthy or absent store must never be quarantined by the reset: {entries:?}"
+        );
+    }
+}
+
+#[cfg(test)]
+mod ollama_base_url_tests {
+    use super::*;
+    use crate::neppy::config::schema::cloud_providers::{AuthStyle, CloudProviderCreds};
+
+    fn ollama_entry(endpoint: &str) -> CloudProviderCreds {
+        CloudProviderCreds {
+            id: "p_ollama".to_string(),
+            slug: "ollama".to_string(),
+            label: "Ollama".to_string(),
+            endpoint: endpoint.to_string(),
+            auth_style: AuthStyle::None,
+            legacy_type: None,
+            default_model: None,
+        }
+    }
+
+    /// The live failure: MLX is the local runtime, so `local_ai.base_url` is
+    /// its OpenAI `/v1` endpoint, and memory embeddings must not be sent there.
+    #[test]
+    fn an_mlx_runtime_url_is_never_used_as_the_ollama_root() {
+        let mut config = Config::default();
+        config.local_ai.provider = "mlx".to_string();
+        config.local_ai.base_url = Some("http://127.0.0.1:64744/v1".to_string());
+        config.cloud_providers = vec![ollama_entry("http://localhost:11434/v1")];
+
+        let url = memory_ollama_base_url(&config);
+        assert_eq!(url, "http://localhost:11434");
+        assert!(
+            !url.contains("64744"),
+            "MLX port leaked into the Ollama root: {url}"
+        );
+    }
+
+    #[test]
+    fn an_openai_v1_url_is_ignored_even_when_the_provider_says_ollama() {
+        let mut config = Config::default();
+        config.local_ai.provider = "ollama".to_string();
+        config.local_ai.base_url = Some("http://127.0.0.1:1234/v1".to_string());
+        config.cloud_providers = vec![ollama_entry("http://ollama.lan:11434")];
+
+        let url = memory_ollama_base_url(&config);
+        assert!(!url.contains(":1234"), "the /v1 endpoint leaked: {url}");
+        assert_eq!(url, crate::neppy::inference::local::ollama_base_url());
+    }
+
+    /// With Ollama as the runtime, the provider entry must not redirect memory
+    /// to a different (possibly remote) host than the runtime admin resolves.
+    #[test]
+    fn an_ollama_runtime_never_consults_the_provider_entry() {
+        let mut config = Config::default();
+        config.local_ai.provider = "ollama".to_string();
+        config.local_ai.base_url = None;
+        config.cloud_providers = vec![ollama_entry("https://gpu-box.example")];
+
+        let url = memory_ollama_base_url(&config);
+        assert!(!url.contains("gpu-box"), "provider entry leaked: {url}");
+        assert_eq!(
+            url,
+            crate::neppy::inference::local::ollama_base_url_from_config(&config)
+        );
+    }
+
+    #[test]
+    fn an_ollama_runtime_keeps_its_configured_root() {
+        let mut config = Config::default();
+        config.local_ai.provider = "ollama".to_string();
+        config.local_ai.base_url = Some("http://127.0.0.1:22434".to_string());
+        config.cloud_providers = vec![ollama_entry("http://localhost:11434/v1")];
+
+        assert_eq!(memory_ollama_base_url(&config), "http://127.0.0.1:22434");
+    }
+
+    #[test]
+    fn the_result_never_ends_in_an_api_suffix() {
+        let mut config = Config::default();
+        config.local_ai.provider = "mlx".to_string();
+        config.local_ai.base_url = Some("http://127.0.0.1:64744/v1".to_string());
+        config.cloud_providers.clear();
+
+        let url = memory_ollama_base_url(&config);
+        assert!(
+            !crate::neppy::inference::local::provider::endpoint_is_openai_v1(&url),
+            "fallback must be a server root, got {url}"
         );
     }
 }
