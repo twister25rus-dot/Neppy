@@ -1257,17 +1257,31 @@ impl ToolPolicyMiddleware {
             );
         }
         // For `use_skill`, also validate the resolved inner tool against the
-        // session allowlist. Role-hidden packed tools are not checked by the
-        // outer policy name; without this check `use_skill` would bypass the
-        // session's effective allowlist for any packed tool.
-        if call.name == "use_skill" {
+        // session. The outer check above only saw the proxy's name.
+        //
+        // `HideFromPrompt` alone cannot be the test: packed tools are withheld
+        // from the visible set *before* this session is built, so every packed
+        // tool is hidden here — including the ones this agent is meant to run
+        // through `use_skill`. Treating that as a denial refused the whole
+        // packed surface on this path. A hidden tool passes only when the
+        // agent's own `use_skill` reaches it, which is exactly the set that was
+        // withheld from its scope; a channel deny always blocks.
+        if call.name == crate::neppy::tools::toolpacks::USE_SKILL {
             if let Some(inner_tool) = call
                 .arguments
                 .get("tool")
                 .and_then(serde_json::Value::as_str)
             {
                 let inner_decision = self.session.decision_for(inner_tool);
-                if inner_decision.is_denied() {
+                let withheld_into_reach = inner_decision.action
+                    == crate::neppy::tools::agent_policy::ToolPolicyAction::HideFromPrompt
+                    && self.use_skill_reaches(inner_tool);
+                if inner_decision.is_denied() && !withheld_into_reach {
+                    tracing::debug!(
+                        inner_tool,
+                        action = ?inner_decision.action,
+                        "[tinyagents::mw] use_skill inner tool outside session scope"
+                    );
                     return Some(format!(
                         "Tool `{inner_tool}` is not allowed in the current session and cannot be used through `use_skill`."
                     ));
@@ -1275,6 +1289,15 @@ impl ToolPolicyMiddleware {
             }
         }
         None
+    }
+
+    /// Whether this session's `use_skill` may reach `tool` — see
+    /// `toolpacks::PackRegistryHandle`'s reach. No `use_skill` in the tool
+    /// sets, or one with no handle, reaches nothing.
+    fn use_skill_reaches(&self, tool: &str) -> bool {
+        self.resolve_tool(crate::neppy::tools::toolpacks::USE_SKILL)
+            .and_then(|t| t.pack_registry_handle())
+            .is_some_and(|handle| handle.reaches(tool))
     }
 
     fn generated_context(
@@ -4891,3 +4914,7 @@ mod tests {
         assert_eq!(post[0].2, Some(true));
     }
 }
+
+#[cfg(test)]
+#[path = "middleware_use_skill_tests.rs"]
+mod use_skill_tests;

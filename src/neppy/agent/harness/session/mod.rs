@@ -47,6 +47,8 @@ mod types;
 pub use migration::{migrate_session_layout_if_needed, MigrationOutcome};
 
 #[cfg(test)]
+mod pack_scope_tests;
+#[cfg(test)]
 mod tests;
 
 pub use types::{Agent, AgentBuilder};

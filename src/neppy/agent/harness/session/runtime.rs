@@ -384,11 +384,18 @@ impl Agent {
         }
         // Seeding from `tool_specs` above materialises the "all visible"
         // sentinel into a concrete set, which would re-admit packed tools that
-        // the builder withheld. Re-apply the withholding.
-        crate::neppy::tools::toolpacks::strip_packed_from_visible(
+        // the builder withheld. Re-apply the withholding. Anything withheld here
+        // came from an "all visible" set, so it is in scope; grant it before
+        // revoking, so a hidden name can never survive in the reach.
+        let withheld = crate::neppy::tools::toolpacks::strip_packed_from_visible(
             &mut self.visible_tool_names,
             &self.agent_definition_name,
         );
+        crate::neppy::tools::toolpacks::grant_pack_reach(self.tools.as_slice(), &withheld);
+        // A withheld tool is not in the visible set, so the removal above did
+        // nothing to it — it would stay reachable through `use_skill`. Hiding
+        // has to reach the pack surface too.
+        crate::neppy::tools::toolpacks::revoke_pack_reach(self.tools.as_slice(), names);
         self.rebuild_tool_policy_session();
     }
 
