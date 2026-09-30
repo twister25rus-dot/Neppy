@@ -7000,6 +7000,7 @@ const messages: TranslationMap = {
     'Авто решает для каждого запроса. Уровень рассуждений и длина ответа действуют со следующего хода; окно контекста и настройки памяти действуют после перезапуска сервера.',
   'mlx.quick.openSettings': 'Настройки MLX',
   'mlx.quick.allSettings': 'Все настройки',
+  'mlx.quick.tooltip': 'Среда выполнения MLX: {state}',
   'mlx.memoryTitle': 'Память',
   'mlx.memoryUsage': 'Занято {used} ГиБ из {budget} ГиБ',
   'mlx.noServers': 'Серверы MLX пока не настроены.',

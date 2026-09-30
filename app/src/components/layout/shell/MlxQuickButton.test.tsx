@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,6 +15,7 @@ vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
 // Keys render verbatim, so assertions stay independent of English copy.
 const INTERPOLATED: Record<string, string> = {
   'mlx.memoryUsage': '{used} GiB of {budget} GiB used',
+  'mlx.quick.tooltip': 'runtime: {state}',
 };
 vi.mock('../../../lib/i18n/I18nContext', () => ({
   useT: () => ({ t: (key: string) => INTERPOLATED[key] ?? key }),
@@ -92,6 +93,88 @@ describe('MlxQuickButton', () => {
     callCoreRpc.mockReset();
     navigate.mockReset();
     respond(status());
+  });
+
+  describe('hover hint', () => {
+    async function hover() {
+      await userEvent.hover(await screen.findByTestId('mlx-quick-trigger'));
+      return screen.findByTestId('tooltip');
+    }
+
+    it('names the runtime state, not just the button text', async () => {
+      respond(status({ servers: [server({ state: 'ready' })] }));
+      render(<MlxQuickButton />);
+      // Wait for the first read, or the hint would (correctly) still say loading.
+      await waitFor(() => {
+        expect(screen.getByTestId('mlx-quick-dot').className).toContain('bg-success');
+      });
+
+      expect(await hover()).toHaveTextContent('runtime: mlx.state.ready');
+    });
+
+    it('lets the worst server speak for the runtime', async () => {
+      respond(
+        status({
+          servers: [server({ id: 'a', state: 'ready' }), server({ id: 'b', state: 'crashed' })],
+        })
+      );
+      render(<MlxQuickButton />);
+      await waitFor(() => {
+        expect(screen.getByTestId('mlx-quick-dot').className).toContain('bg-danger');
+      });
+
+      expect(await hover()).toHaveTextContent('runtime: mlx.state.crashed');
+    });
+
+    it('does not claim Stopped for a runtime that could not be read', async () => {
+      callCoreRpc.mockRejectedValue(new Error('core is not listening'));
+      render(<MlxQuickButton />);
+      await waitFor(() => expect(callCoreRpc).toHaveBeenCalled());
+      // Let the rejected load settle into the error state before hovering.
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      const tip = await hover();
+      expect(tip).toHaveTextContent('runtime: common.error');
+      expect(tip).not.toHaveTextContent('mlx.state.stopped');
+    });
+
+    it('anchors below the trigger with its right edge on the trigger right edge', async () => {
+      render(<MlxQuickButton />);
+      const trigger = await screen.findByTestId('mlx-quick-trigger');
+      // jsdom has no layout, so give the trigger a rect near the window's right edge.
+      const rect = {
+        top: 2,
+        bottom: 30,
+        left: 1180,
+        right: 1260,
+        width: 80,
+        height: 28,
+        x: 1180,
+        y: 2,
+        toJSON: () => ({}),
+      } as DOMRect;
+      trigger.getBoundingClientRect = () => rect;
+
+      const tip = await hover();
+
+      // `side="bottom" align="end"`: pinned at the trigger's right edge and
+      // translated back by its own width, so it grows leftwards into the window.
+      expect(tip.style.left).toBe('1260px');
+      expect(tip.style.top).toBe('38px');
+      expect(tip.style.transform).toBe('translate(-100%, 0)');
+    });
+
+    it('hides once the menu takes focus, so it cannot sit over the menu', async () => {
+      render(<MlxQuickButton />);
+      await userEvent.hover(await screen.findByTestId('mlx-quick-trigger'));
+      expect(await screen.findByTestId('tooltip')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByTestId('mlx-quick-trigger'));
+
+      await waitFor(() => expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument());
+    });
   });
 
   it('shows the runtime state on the trigger without being opened', async () => {

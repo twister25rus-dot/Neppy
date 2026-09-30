@@ -6769,6 +6769,7 @@ const messages: TranslationMap = {
     'يقرر الوضع التلقائي لكل طلب. يسري مقدار الاستدلال وطول الإجابة في الدور التالي، بينما تسري نافذة السياق وإعدادات الذاكرة عند إعادة تشغيل الخادم.',
   'mlx.quick.openSettings': 'إعدادات MLX',
   'mlx.quick.allSettings': 'كل الإعدادات',
+  'mlx.quick.tooltip': 'بيئة تشغيل MLX: {state}',
   'mlx.memoryTitle': 'الذاكرة',
   'mlx.memoryUsage': 'المستخدم {used} غيبي من أصل {budget} غيبي',
   'mlx.noServers': 'لم يتم إعداد أي خادم MLX بعد.',

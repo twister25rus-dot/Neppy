@@ -6957,6 +6957,7 @@ const messages: TranslationMap = {
     'Otomatis memutuskan per permintaan. Upaya penalaran dan panjang jawaban berlaku pada giliran berikutnya; jendela konteks dan pengaturan memori berlaku saat server dimulai ulang.',
   'mlx.quick.openSettings': 'Pengaturan MLX',
   'mlx.quick.allSettings': 'Semua pengaturan',
+  'mlx.quick.tooltip': 'Runtime MLX: {state}',
   'mlx.memoryTitle': 'Memori',
   'mlx.memoryUsage': '{used} GiB dari {budget} GiB terpakai',
   'mlx.noServers': 'Belum ada server MLX yang dikonfigurasi.',

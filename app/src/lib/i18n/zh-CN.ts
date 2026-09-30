@@ -6549,6 +6549,7 @@ const messages: TranslationMap = {
     '自动会为每个请求决定。推理强度和回答长度在下一轮生效；上下文窗口和内存设置在服务器重启后生效。',
   'mlx.quick.openSettings': 'MLX 设置',
   'mlx.quick.allSettings': '全部设置',
+  'mlx.quick.tooltip': 'MLX 运行时：{state}',
   'mlx.memoryTitle': '内存',
   'mlx.memoryUsage': '已用 {used} GiB，共 {budget} GiB',
   'mlx.noServers': '尚未配置任何 MLX 服务器。',

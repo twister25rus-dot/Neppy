@@ -449,7 +449,11 @@ pub(super) async fn fold_sse(
             Ok(None) => break,
             Ok(Some(Err(err))) => {
                 log::warn!("{LOG} stream read failed model={model}: {err}");
-                return Err(fail(format!("codex stream read failed: {err}"), None));
+                // A whole-request deadline (`ModelRequest::timeout_ms`) fires
+                // here as a reqwest timeout on the body; name it like the
+                // idle timeout so callers classify both the same way.
+                let code = err.is_timeout().then_some("timeout");
+                return Err(fail(format!("codex stream read failed: {err}"), code));
             }
             Ok(Some(Ok(chunk))) => chunk,
         };

@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverRoot,
   PopoverTrigger,
+  Tooltip,
 } from '../../ui';
 
 /**
@@ -176,6 +177,14 @@ export default function MlxQuickButton() {
 
   const servers = status?.servers ?? [];
   const state = aggregateState(servers);
+  // Never claim "Stopped" for a runtime that has not answered: before the first
+  // read it is loading, and after a failed one it is unreadable.
+  const stateText = status
+    ? t(STATE_LABEL_KEY[state])
+    : error
+      ? t('common.error')
+      : t('common.loading');
+  const tooltipLabel = t('mlx.quick.tooltip').replace('{state}', stateText);
 
   // Checkpoints that can serve chat: the ones whose id reads like a chat model,
   // plus whatever is already ticked into the chat slot — a slot is correctable
@@ -189,26 +198,30 @@ export default function MlxQuickButton() {
 
   return (
     <PopoverRoot open={open} onOpenChange={setOpen}>
-      {/* No Tooltip: the button already reads "MLX", and the pill's default
-          `side="right"` pushed it past the window edge from this top-right
-          corner, leaving a clipped white sliver on hover. */}
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="tertiary"
-          size="xs"
-          aria-label={t('settings.ai.mlx')}
-          analyticsId="mlx-quick-open"
-          data-testid="mlx-quick-trigger"
-          className="h-7 gap-1.5 rounded-md px-2 text-xs font-medium text-content-muted hover:text-content-secondary">
-          <span
-            aria-hidden
-            data-testid="mlx-quick-dot"
-            className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATE_DOT[state]}`}
-          />
-          MLX
-        </Button>
-      </PopoverTrigger>
+      {/* `side="bottom" align="end"` keeps the pill's right edge on the trigger's
+          right edge. The default `side="right"` pushed it past the window edge
+          from this top-right corner, leaving a clipped white sliver on hover.
+          The label carries the runtime state: the button text already says
+          "MLX", so repeating the name would tell the user nothing. */}
+      <Tooltip label={tooltipLabel} side="bottom" align="end">
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="tertiary"
+            size="xs"
+            aria-label={t('settings.ai.mlx')}
+            analyticsId="mlx-quick-open"
+            data-testid="mlx-quick-trigger"
+            className="h-7 gap-1.5 rounded-md px-2 text-xs font-medium text-content-muted hover:text-content-secondary">
+            <span
+              aria-hidden
+              data-testid="mlx-quick-dot"
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATE_DOT[state]}`}
+            />
+            MLX
+          </Button>
+        </PopoverTrigger>
+      </Tooltip>
 
       <PopoverContent align="end" className="w-72 p-2">
         <div className="flex items-center justify-between gap-2 px-1 pb-1.5">

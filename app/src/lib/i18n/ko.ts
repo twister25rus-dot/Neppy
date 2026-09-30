@@ -6847,6 +6847,7 @@ const messages: TranslationMap = {
     '자동은 요청마다 결정합니다. 추론 강도와 답변 길이는 다음 턴부터 적용되고, 컨텍스트 창과 메모리 설정은 서버를 다시 시작할 때 적용됩니다.',
   'mlx.quick.openSettings': 'MLX 설정',
   'mlx.quick.allSettings': '전체 설정',
+  'mlx.quick.tooltip': 'MLX 런타임: {state}',
   'mlx.memoryTitle': '메모리',
   'mlx.memoryUsage': '{budget} GiB 중 {used} GiB 사용 중',
   'mlx.noServers': '아직 설정된 MLX 서버가 없습니다.',

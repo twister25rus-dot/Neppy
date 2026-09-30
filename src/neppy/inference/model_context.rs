@@ -312,7 +312,6 @@ mod tests {
         );
     }
 
-    use super::*;
     use crate::neppy::inference::local::profile::LocalProviderKind;
 
     #[test]

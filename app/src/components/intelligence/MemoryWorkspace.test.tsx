@@ -7,7 +7,15 @@ import { MemoryWorkspace } from './MemoryWorkspace';
 // Stub the i18n hook and the heavy child panels so the test renders just the
 // MemoryWorkspace shell (graph fetch effect + the refresh control + poll).
 vi.mock('../../lib/i18n/I18nContext', () => ({ useT: () => ({ t: (k: string) => k }) }));
-vi.mock('./MemoryGraph', () => ({ MemoryGraph: () => null }));
+const { memoryGraphProps } = vi.hoisted(() => ({
+  memoryGraphProps: vi.fn<(props: Record<string, unknown>) => void>(),
+}));
+vi.mock('./MemoryGraph', () => ({
+  MemoryGraph: (props: Record<string, unknown>) => {
+    memoryGraphProps(props);
+    return null;
+  },
+}));
 vi.mock('./MemorySourcesRegistry', () => ({ MemorySourcesRegistry: () => null }));
 vi.mock('./MemoryTreeStatusPanel', () => ({ MemoryTreeStatusPanel: () => null }));
 vi.mock('./ObsidianVaultSection', () => ({ ObsidianVaultSection: () => null }));
@@ -24,9 +32,18 @@ const graphExportMock = vi.mocked(memoryTreeGraphExport);
 describe('<MemoryWorkspace />', () => {
   beforeEach(() => {
     graphExportMock.mockClear();
+    memoryGraphProps.mockClear();
   });
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('opens node details on click, like the Brain page, instead of opening the .md file', async () => {
+    render(<MemoryWorkspace />);
+
+    await waitFor(() => expect(memoryGraphProps).toHaveBeenCalled());
+
+    expect(memoryGraphProps.mock.lastCall?.[0]).toMatchObject({ showNodeDetails: true });
   });
 
   it('re-exports the graph when the refresh button is clicked', async () => {

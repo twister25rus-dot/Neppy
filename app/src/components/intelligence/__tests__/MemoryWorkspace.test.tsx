@@ -258,10 +258,16 @@ describe('MemoryWorkspace (graph view)', () => {
     expect(errorToast.message).toContain('reveal failed');
   });
 
-  it('clicking a summary node opens that file through the shared workspace path command', async () => {
+  it('clicking a summary node opens its detail sheet, and the sheet opens the file through the shared workspace path command', async () => {
     renderWithProviders(<MemoryWorkspace />);
     const node = await screen.findByTestId('memory-graph-node-child-1');
     fireEvent.click(node);
+
+    // The click alone shows details; it no longer jumps straight to the file.
+    expect(await screen.findByTestId('memory-graph-node-details')).toBeInTheDocument();
+    expect(openWorkspacePath).not.toHaveBeenCalled();
+
+    fireEvent.click(await screen.findByTestId('memory-graph-node-details-open-file'));
     const expectedRel = 'wiki/summaries/source-alice-x-com/L1/summary-L1-abc.md';
     await waitFor(() => {
       expect(openWorkspacePath).toHaveBeenCalledWith(`memory_tree/content/${expectedRel}`);

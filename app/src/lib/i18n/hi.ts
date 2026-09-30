@@ -6921,6 +6921,7 @@ const messages: TranslationMap = {
     'ऑटो हर अनुरोध के लिए तय करता है। तर्क स्तर और उत्तर की लंबाई अगली बार से लागू होती है; संदर्भ विंडो और मेमोरी सेटिंग्स सर्वर पुनः आरंभ होने पर लागू होती हैं।',
   'mlx.quick.openSettings': 'MLX सेटिंग्स',
   'mlx.quick.allSettings': 'सभी सेटिंग्स',
+  'mlx.quick.tooltip': 'MLX रनटाइम: {state}',
   'mlx.memoryTitle': 'मेमोरी',
   'mlx.memoryUsage': '{budget} GiB में से {used} GiB इस्तेमाल में',
   'mlx.noServers': 'अभी कोई MLX सर्वर सेट नहीं किया गया है।',

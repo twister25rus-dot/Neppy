@@ -7103,6 +7103,7 @@ const messages: TranslationMap = {
     "Automatique décide à chaque requête. L'effort de raisonnement et la longueur de réponse s'appliquent au tour suivant ; la fenêtre de contexte et les réglages mémoire s'appliquent au redémarrage du serveur.",
   'mlx.quick.openSettings': 'Réglages MLX',
   'mlx.quick.allSettings': 'Tous les réglages',
+  'mlx.quick.tooltip': 'Environnement d’exécution MLX : {state}',
   'mlx.memoryTitle': 'Mémoire',
   'mlx.memoryUsage': '{used} Gio sur {budget} Gio utilisés',
   'mlx.noServers': "Aucun serveur MLX n'est encore configuré.",

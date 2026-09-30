@@ -168,12 +168,26 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 comment: "Chunk id (32 hex chars).",
                 required: true,
             }],
-            outputs: vec![FieldSchema {
-                name: "chunk",
-                ty: TypeSchema::Option(Box::new(TypeSchema::Ref("Chunk"))),
-                comment: "The chunk if found, otherwise null.",
-                required: false,
-            }],
+            outputs: vec![
+                FieldSchema {
+                    name: "chunk",
+                    ty: TypeSchema::Option(Box::new(TypeSchema::Ref("Chunk"))),
+                    comment: "The chunk if found, otherwise null. `chunk.content` is only the stored preview.",
+                    required: false,
+                },
+                FieldSchema {
+                    name: "body",
+                    ty: TypeSchema::Option(Box::new(TypeSchema::String)),
+                    comment: "Full chunk body read from the content vault. Omitted when the chunk is not found, has no vault body, or the read failed; fall back to `chunk.content`.",
+                    required: false,
+                },
+                FieldSchema {
+                    name: "content_path",
+                    ty: TypeSchema::Option(Box::new(TypeSchema::String)),
+                    comment: "Vault-relative path of the body file. Omitted when the chunk has no vault file.",
+                    required: false,
+                },
+            ],
         },
         "list_sources" => ControllerSchema {
             namespace: NAMESPACE,

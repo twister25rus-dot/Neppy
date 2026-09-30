@@ -997,13 +997,11 @@ async fn drive_cleanup_targets_are_connection_scoped() {
     crate::neppy::memory::host_impls::install_for_tests();
     let tmp = tempfile::tempdir().unwrap();
     let config = test_config(&tmp);
-    // The drive arm never touches the store, but discovery takes the caller's
-    // client unconditionally — the parameter is the seam the notion tests
-    // inject through.
-    let drive_memory = std::sync::Arc::new(
-        MemoryClient::from_workspace_dir(config.workspace_dir.clone())
-            .expect("memory client should initialise"),
-    );
+    // The drive arm never reads the store, but discovery resolves the bound
+    // driver before it picks an arm. Bind one over this workspace so the test
+    // does not depend on whatever an unbound config would resolve to (the
+    // module host, which a unit test process cannot load reliably).
+    crate::neppy::memory::test_support::install_tinycortex_for_test(&config);
 
     let targets = composio_memory_targets_for_connection(&config, Some("google_drive"), "conn-1")
         .await

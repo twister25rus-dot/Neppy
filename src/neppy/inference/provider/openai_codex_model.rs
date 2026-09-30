@@ -128,6 +128,20 @@ impl CodexResponsesModel {
     async fn post(&self, request: &ModelRequest) -> TaResult<reqwest::Response> {
         let model = request.model.clone().unwrap_or_else(|| self.model.clone());
         let body = build_request_body(&model, request, self.native_tools);
+        // The backend has nothing to answer when every message was empty or
+        // whitespace, and `input: []` only buys a round trip to an opaque 400.
+        // Fail here, by name, and not retryably: resending the same empty
+        // transcript cannot succeed.
+        if body["input"].as_array().map_or(true, Vec::is_empty) {
+            log::warn!(
+                "{LOG} refusing to send an empty transcript model={model} messages={}",
+                request.messages.len()
+            );
+            return Err(TinyAgentsError::from_provider_error(empty_input_error(
+                &self.provider,
+                &self.model,
+            )));
+        }
         log::debug!(
             "{LOG} request start model={model} stream=true input_items={} tools={}",
             body["input"].as_array().map_or(0, Vec::len),
@@ -148,18 +162,30 @@ impl CodexResponsesModel {
         if !self.query.is_empty() {
             builder = builder.query(&self.query);
         }
-        let wait = request
-            .timeout_ms
-            .map(Duration::from_millis)
-            .unwrap_or(HEADER_TIMEOUT);
+        // `request.timeout_ms` bounds the WHOLE request: reqwest's per-request
+        // timeout runs from connect until the response body has been read, so
+        // it covers the SSE body and not only the wait for headers. The body's
+        // own 300s idle timeout (`fold_sse`) still applies inside it. Without
+        // a caller deadline only the header wait and the idle timeout bound it.
+        let total = request.timeout_ms.map(Duration::from_millis);
+        if let Some(total) = total {
+            builder = builder.timeout(total);
+        }
+        let wait = total.unwrap_or(HEADER_TIMEOUT);
+        log::debug!(
+            "{LOG} deadlines model={model} header_wait_s={} whole_request_s={:?}",
+            wait.as_secs(),
+            total.map(|t| t.as_secs())
+        );
         let response = match tokio::time::timeout(wait, builder.send()).await {
             Ok(Ok(response)) => response,
             Ok(Err(err)) => {
                 log::warn!("{LOG} transport failure model={model}: {err}");
+                let code = err.is_timeout().then(|| "timeout".to_string());
                 return Err(TinyAgentsError::from_provider_error(self.provider_error(
                     format!("codex responses request failed: {err}"),
                     None,
-                    None,
+                    code,
                 )));
             }
             Err(_) => {
@@ -237,6 +263,24 @@ impl CodexResponsesModel {
             native: self.native_tools,
             has_tools: !request.tools.is_empty(),
         }
+    }
+}
+
+/// The error for a transcript that produced no `input` items.
+///
+/// Built directly rather than through [`make_provider_error`], which would
+/// classify it from the message text: this one is never retryable.
+fn empty_input_error(provider: &str, model: &str) -> ProviderError {
+    ProviderError {
+        provider: provider.to_string(),
+        model: Some(model.to_string()),
+        status: None,
+        code: Some("invalid_request".to_string()),
+        message: "codex responses request has no input: every message was empty or whitespace"
+            .to_string(),
+        retryable: false,
+        retry_after_ms: None,
+        raw: None,
     }
 }
 
@@ -459,3 +503,7 @@ fn build_input(messages: &[Message], native_tools: bool) -> (String, Vec<Value>)
 #[cfg(test)]
 #[path = "openai_codex_model_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "openai_codex_model_deadline_tests.rs"]
+mod deadline_tests;

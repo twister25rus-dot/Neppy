@@ -7039,6 +7039,7 @@ const messages: TranslationMap = {
     'Automático decide a cada pedido. O esforço de raciocínio e o comprimento da resposta aplicam-se no turno seguinte; a janela de contexto e as definições de memória aplicam-se ao reiniciar o servidor.',
   'mlx.quick.openSettings': 'Definições do MLX',
   'mlx.quick.allSettings': 'Todas as definições',
+  'mlx.quick.tooltip': 'Runtime do MLX: {state}',
   'mlx.memoryTitle': 'Memória',
   'mlx.memoryUsage': '{used} GiB de {budget} GiB em uso',
   'mlx.noServers': 'Ainda não há servidores MLX configurados.',

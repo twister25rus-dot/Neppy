@@ -143,7 +143,11 @@ export function MemoryWorkspace({ onToast }: MemoryWorkspaceProps) {
           {t('workspace.loadingGraph')}
         </div>
       ) : (
-        <MemoryGraph nodes={graph.nodes} edges={graph.edges} mode={mode} />
+        // Clicking a node opens its detail sheet (metadata, neighbours, stored
+        // content), as on the Brain page. This is a user-facing memory view
+        // (Settings > Data and the Intelligence memory section), not the
+        // orchestration overview where a click keeps opening the `.md` file.
+        <MemoryGraph nodes={graph.nodes} edges={graph.edges} mode={mode} showNodeDetails />
       )}
     </div>
   );

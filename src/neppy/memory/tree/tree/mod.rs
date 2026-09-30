@@ -23,3 +23,6 @@
 pub use tinymemory_core::tree::tree::*;
 
 pub mod rpc;
+
+#[cfg(test)]
+mod rpc_get_chunk_tests;

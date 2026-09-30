@@ -6926,6 +6926,7 @@ const messages: TranslationMap = {
     'অটো প্রতিটি অনুরোধের জন্য সিদ্ধান্ত নেয়। যুক্তির মাত্রা ও উত্তরের দৈর্ঘ্য পরের বার থেকে কার্যকর হয়; প্রসঙ্গ উইন্ডো ও মেমরি সেটিংস সার্ভার পুনরায় চালু হলে কার্যকর হয়।',
   'mlx.quick.openSettings': 'MLX সেটিংস',
   'mlx.quick.allSettings': 'সব সেটিংস',
+  'mlx.quick.tooltip': 'MLX রানটাইম: {state}',
   'mlx.memoryTitle': 'মেমরি',
   'mlx.memoryUsage': '{budget} GiB এর মধ্যে {used} GiB ব্যবহৃত',
   'mlx.noServers': 'এখনও কোনো MLX সার্ভার সাজানো হয়নি।',

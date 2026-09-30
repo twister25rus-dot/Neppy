@@ -703,7 +703,7 @@ async fn phase2_exactly_one_tree_ingest_per_segment_close() {
 
 async fn phase2_exactly_one_tree_ingest_per_segment_close_inner() {
     let (_tmp, cfg) = test_config_with_tree();
-    let (client, provider) = provider_over(&cfg.workspace_dir);
+    let (_, provider) = provider_over(&cfg.workspace_dir);
     let hook = hook_with_stubs_and_tree_config(provider.clone(), cfg.clone());
 
     let session = "phase2-one-ingest";
@@ -885,7 +885,7 @@ async fn phase2_ingested_content_is_raw_prose_not_recap() {
 
 async fn phase2_ingested_content_is_raw_prose_not_recap_inner() {
     let (_tmp, cfg) = test_config_with_tree();
-    let (client, provider) = provider_over(&cfg.workspace_dir);
+    let (_, provider) = provider_over(&cfg.workspace_dir);
     let hook = hook_with_stubs_and_tree_config(provider.clone(), cfg.clone());
 
     let session = "phase2-raw-prose";
@@ -953,7 +953,7 @@ async fn phase2_flush_also_triggers_tree_ingest() {
 
 async fn phase2_flush_also_triggers_tree_ingest_inner() {
     let (_tmp, cfg) = test_config_with_tree();
-    let (client, provider) = provider_over(&cfg.workspace_dir);
+    let (_, provider) = provider_over(&cfg.workspace_dir);
     let hook = hook_with_stubs_and_tree_config(provider.clone(), cfg.clone());
 
     let session = "phase2-flush-tree";

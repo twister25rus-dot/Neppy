@@ -7116,6 +7116,7 @@ const messages: TranslationMap = {
     'Automatisch entscheidet pro Anfrage. Denkaufwand und Antwortlänge gelten ab der nächsten Runde; Kontextfenster und Speichereinstellungen gelten nach einem Neustart des Servers.',
   'mlx.quick.openSettings': 'MLX-Einstellungen',
   'mlx.quick.allSettings': 'Alle Einstellungen',
+  'mlx.quick.tooltip': 'MLX-Laufzeit: {state}',
   'mlx.memoryTitle': 'Arbeitsspeicher',
   'mlx.memoryUsage': '{used} GiB von {budget} GiB belegt',
   'mlx.noServers': 'Es ist noch kein MLX-Server eingerichtet.',

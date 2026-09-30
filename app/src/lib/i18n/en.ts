@@ -7242,6 +7242,7 @@ const en: TranslationMap = {
     'Auto decides per request. Reasoning effort and answer length take effect on the next turn; context window and memory settings take effect when the server restarts.',
   'mlx.quick.openSettings': 'MLX settings',
   'mlx.quick.allSettings': 'All settings',
+  'mlx.quick.tooltip': 'MLX runtime: {state}',
   'mlx.memoryTitle': 'Memory',
   'mlx.memoryUsage': '{used} GiB of {budget} GiB used',
   'mlx.noServers': 'No MLX servers are configured yet.',
