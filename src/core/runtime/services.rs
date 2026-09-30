@@ -143,6 +143,11 @@ pub fn spawn_cron_service() {
                         "[flows] boot reconciliation of schedule-trigger cron jobs failed: {e}"
                     );
                 }
+                // Pet mode: repair the research job of an enabled pet (deleted
+                // or mismatched job) — idempotent, creates nothing without a pet.
+                if let Err(e) = crate::neppy::pet::ops::reconcile_on_boot(&config).await {
+                    log::warn!("[pet] boot reconcile failed: {e}");
+                }
                 if let Err(e) = crate::neppy::cron::scheduler::run(config).await {
                     log::error!("[cron] scheduler loop ended with error: {e}");
                 }

@@ -20,6 +20,8 @@ pub mod mcp_agent;
 pub mod mcp_setup;
 pub mod morning_briefing;
 pub mod orchestrator;
+// Pet mode's background read-only research lane (cron-driven).
+pub mod pet_research;
 pub mod planner;
 pub mod presentation_agent;
 pub mod profile_memory_agent;

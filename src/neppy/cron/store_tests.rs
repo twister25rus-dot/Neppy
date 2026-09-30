@@ -612,3 +612,49 @@ fn dedup_named_jobs_ignores_unnamed_jobs() {
     assert_eq!(removed, 0);
     assert_eq!(list_jobs(&config).unwrap().len(), 2);
 }
+
+// ── Catch-up collapse (Pet mode "only while awake") ─────────────────────────
+
+/// A host asleep across ten hourly slots wakes to exactly one due run; after
+/// it runs, the next run is computed from `now`, so the missed slots collapse
+/// into that single run instead of replaying.
+#[test]
+fn overdue_job_runs_once_after_wake_then_reschedules_from_now() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let job = add_agent_job(
+        &config,
+        Some("hourly".into()),
+        Schedule::Cron {
+            expr: "0 * * * *".into(),
+            tz: None,
+            active_hours: None,
+        },
+        "do the thing",
+        SessionTarget::Isolated,
+        None,
+        None,
+        false,
+    )
+    .unwrap();
+    let now = Utc::now();
+    let ten_hours_ago = now - ChronoDuration::hours(10);
+    with_connection(&config, |conn| {
+        conn.execute(
+            "UPDATE cron_jobs SET next_run = ?1 WHERE id = ?2",
+            params![ten_hours_ago.to_rfc3339(), job.id],
+        )?;
+        Ok(())
+    })
+    .unwrap();
+
+    let due = due_jobs(&config, now).unwrap();
+    assert_eq!(due.iter().filter(|j| j.id == job.id).count(), 1);
+
+    reschedule_after_run(&config, &due[0], true, "ok").unwrap();
+    let after = Utc::now();
+    assert!(due_jobs(&config, after).unwrap().is_empty());
+    let stored = get_job(&config, &job.id).unwrap();
+    assert!(stored.next_run > after, "next_run must be in the future");
+    assert!(stored.next_run <= after + ChronoDuration::hours(1));
+}

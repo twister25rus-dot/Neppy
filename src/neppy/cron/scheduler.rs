@@ -174,6 +174,11 @@ pub async fn run(config: Config) -> Result<()> {
 
     let poll_secs = config.reliability.scheduler_poll_secs.max(MIN_POLL_SECONDS);
     let mut interval = time::interval(Duration::from_secs(poll_secs));
+    // After the host wakes from sleep the default `Burst` behaviour fires every
+    // missed tick back-to-back. Those are harmless (ticks run sequentially and
+    // due jobs are rescheduled from `now`, so N missed slots collapse to one
+    // run), but `Delay` avoids the pointless polling burst.
+    interval.set_missed_tick_behavior(time::MissedTickBehavior::Delay);
     let security = Arc::new(SecurityPolicy::from_config(
         &config.autonomy,
         &config.workspace_dir,
@@ -793,11 +798,31 @@ async fn execute_and_persist_job(
         job_id: job.id.clone(),
         success,
         output: crate::neppy::util::truncate_with_ellipsis(&output, 512),
+        agent_id: job.agent_id.clone(),
     });
     let failure_message =
         (!success).then(|| crate::neppy::util::truncate_with_ellipsis(&output, 256));
 
     (job.id.clone(), success, failure_message)
+}
+
+/// The turn origin a cron agent job runs under. Every job keeps
+/// `TrustedAutomation { Cron }` except the Pet research lane (`agent_id ==
+/// pet_research`), which gets the most restricted automation origin,
+/// `PetResearch` — the approval gate denies its external_effect calls.
+pub(crate) fn origin_for_agent_job(
+    job: &CronJob,
+) -> crate::neppy::agent::turn_origin::AgentTurnOrigin {
+    use crate::neppy::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource};
+    let source = if job.agent_id.as_deref() == Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID) {
+        TrustedAutomationSource::PetResearch
+    } else {
+        TrustedAutomationSource::Cron
+    };
+    AgentTurnOrigin::TrustedAutomation {
+        job_id: job.id.clone(),
+        source,
+    }
 }
 
 async fn run_agent_job(config: &Config, job: &CronJob) -> (bool, String, Option<String>) {
@@ -917,16 +942,20 @@ async fn run_agent_job(config: &Config, job: &CronJob) -> (bool, String, Option<
                     // cron-triggered turns. `cron` is the channel so the
                     // event bus can filter from other flows (`cli`, `web`…).
                     agent.set_event_context(format!("cron:{}", job.id), "cron");
-                    // Scope a `TrustedAutomation { Cron }` origin around the
-                    // turn. The approval gate treats this as user-authorized
-                    // automation and lets external_effect tools run without
-                    // an in-app prompt — the user explicitly created this
-                    // cron job and authorized its prompt at the same time.
-                    let origin =
-                        crate::neppy::agent::turn_origin::AgentTurnOrigin::TrustedAutomation {
-                            job_id: job.id.clone(),
-                            source: crate::neppy::agent::turn_origin::TrustedAutomationSource::Cron,
-                        };
+                    // Scope a `TrustedAutomation` origin around the turn. For
+                    // ordinary jobs this is `Cron`: the approval gate treats it
+                    // as user-authorized automation and lets external_effect
+                    // tools run without an in-app prompt — the user explicitly
+                    // created this cron job and authorized its prompt at the
+                    // same time. The Pet research lane gets `PetResearch`
+                    // instead, which the gate denies outright (read-only lane
+                    // over untrusted content). See `origin_for_agent_job`.
+                    let origin = origin_for_agent_job(job);
+                    tracing::debug!(
+                        job_id = %job.id,
+                        "[cron] turn origin class={}",
+                        origin.class()
+                    );
                     let turn = crate::neppy::memory::source_scope::with_source_scope(
                         profile.and_then(|profile| profile.memory_sources),
                         crate::neppy::agent::turn_origin::with_origin(

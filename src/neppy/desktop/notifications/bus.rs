@@ -82,6 +82,12 @@ fn now_ms() -> u64 {
 pub fn event_to_notification(event: &DomainEvent) -> Option<CoreNotificationEvent> {
     let ts = now_ms();
     match event {
+        // A Pet research pass is surfaced by `pet::bus` (digest / urgent-note
+        // notifications of its own); the generic cron toast would be noise.
+        DomainEvent::CronJobCompleted {
+            agent_id: Some(agent_id),
+            ..
+        } if agent_id == crate::neppy::pet::PET_RESEARCH_AGENT_ID => None,
         DomainEvent::CronJobCompleted {
             job_id, success, ..
         } => Some(CoreNotificationEvent {
@@ -189,6 +195,46 @@ pub fn event_to_notification(event: &DomainEvent) -> Option<CoreNotificationEven
                 actions: None,
             })
         }
+        DomainEvent::PetNoteSurfaced {
+            note_id,
+            title,
+            source,
+            ..
+        } => Some(CoreNotificationEvent {
+            id: format!("pet-note:{note_id}"),
+            category: CoreNotificationCategory::Important,
+            title: format!("{source}: needs you"),
+            body: crate::neppy::util::truncate_with_ellipsis(title, 137),
+            deep_link: Some(format!("/pet?tab=feed&note={note_id}")),
+            timestamp_ms: ts,
+            actions: None,
+        }),
+        DomainEvent::PetDigestReady {
+            digest_id,
+            item_count,
+            ..
+        } => Some(CoreNotificationEvent {
+            id: format!("pet-digest:{digest_id}"),
+            category: CoreNotificationCategory::Agents,
+            title: "Your pet digest is ready".into(),
+            body: format!("{item_count} items"),
+            deep_link: Some(format!("/pet?tab=feed&digest={digest_id}")),
+            timestamp_ms: ts,
+            actions: None,
+        }),
+        DomainEvent::PetApprovalNeeded {
+            request_id,
+            tool_name,
+            action_summary,
+        } => Some(CoreNotificationEvent {
+            id: format!("pet-approval:{request_id}"),
+            category: CoreNotificationCategory::Important,
+            title: "Neppy needs your approval".into(),
+            body: format!("{tool_name}: {action_summary}"),
+            deep_link: Some("/pet?tab=inbox".into()),
+            timestamp_ms: ts,
+            actions: None,
+        }),
         DomainEvent::ProviderApiKeyRejected { provider, message } => Some(CoreNotificationEvent {
             id: format!("provider-key-rejected:{}:{}", provider, ts),
             category: CoreNotificationCategory::System,
@@ -280,6 +326,7 @@ mod tests {
             job_id: "job-1".into(),
             success: true,
             output: "done".into(),
+            agent_id: None,
         };
         let n = event_to_notification(&ev).expect("should produce notification");
         assert_eq!(n.category, CoreNotificationCategory::Agents);
@@ -310,6 +357,7 @@ mod tests {
             job_id: "job-1".into(),
             success: false,
             output: "error".into(),
+            agent_id: None,
         };
         let n = event_to_notification(&ev).unwrap();
         assert_eq!(n.title, "Cron job failed");

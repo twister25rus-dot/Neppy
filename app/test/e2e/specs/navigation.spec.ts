@@ -44,6 +44,7 @@ const ROUTES: Route[] = [
   { hash: '/rewards' },
   { hash: '/settings' },
   { hash: '/flows' },
+  { hash: '/pet' },
   // Orchestration folded under Brain; `/orchestration` now redirects to
   // `/brain?tab=orchestration`, so we assert the Brain destination instead
   // (the bare `/orchestration` hash would settle on the redirect target and

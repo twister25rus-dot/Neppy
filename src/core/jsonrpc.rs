@@ -1892,6 +1892,8 @@ pub struct DomainSubscriberPlan {
     pub hosted: bool,
     /// mcp::registry lifecycle bus init.
     pub mcp: bool,
+    /// Pet mode: post-pass surfacing + background-approval surfacing.
+    pub automation: bool,
 }
 
 impl DomainSubscriberPlan {
@@ -1910,6 +1912,7 @@ impl DomainSubscriberPlan {
             agent: domains.allows(DomainGroup::Agent),
             hosted: domains.allows(DomainGroup::Hosted),
             mcp: domains.allows(DomainGroup::Mcp),
+            automation: domains.allows(DomainGroup::Automation),
         }
     }
 }
@@ -2187,6 +2190,35 @@ fn register_domain_subscribers(
     log::debug!(
         "[event_bus] Channels subscribers (inbound + web-only proactive) SKIPPED — channels feature disabled at compile time"
     );
+
+    // Pet mode (Automation): surface a scheduled research pass on
+    // `CronJobCompleted` for the `pet_research` agent, and surface background
+    // approvals (no chat thread, no flow context) that would otherwise
+    // silently TTL-deny. Ungated at compile time — the domain adds no deps.
+    if plan.automation {
+        if group_first_time(DomainGroup::Automation) {
+            if let Some(handle) = crate::core::bus::BUS
+                .subscribe(Arc::new(crate::neppy::pet::bus::PetPassCompletedSubscriber))
+            {
+                std::mem::forget(handle);
+            } else {
+                log::warn!(
+                    "[event_bus] failed to register pet pass subscriber — bus not initialized"
+                );
+            }
+            if let Some(handle) = crate::core::bus::BUS.subscribe(Arc::new(
+                crate::neppy::pet::bus::PetApprovalSurfaceSubscriber,
+            )) {
+                std::mem::forget(handle);
+            } else {
+                log::warn!(
+                    "[event_bus] failed to register pet approval subscriber — bus not initialized"
+                );
+            }
+        }
+    } else {
+        log::debug!("[event_bus] Pet subscribers SKIPPED — Automation domain disabled");
+    }
 
     // Flows trigger dispatch (issue B2): maps FlowScheduleTick /
     // ComposioTriggerReceived / WebhookIncomingRequest onto enabled flows and

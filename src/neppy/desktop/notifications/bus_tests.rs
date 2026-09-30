@@ -103,6 +103,7 @@ fn cron_notification_id_contains_job_id() {
         job_id: "daily-report".into(),
         success: true,
         output: "ok".into(),
+        agent_id: None,
     };
     let n = event_to_notification(&ev).unwrap();
     assert!(
@@ -121,6 +122,7 @@ fn cron_deep_link_points_to_cron_jobs_settings() {
         job_id: "j1".into(),
         success: false,
         output: String::new(),
+        agent_id: None,
     };
     let n = event_to_notification(&ev).unwrap();
     assert_eq!(
@@ -295,6 +297,7 @@ async fn subscriber_persists_core_notification_so_it_survives_disconnect() {
             job_id: "daily-digest".into(),
             success: true,
             output: "ok".into(),
+            agent_id: None,
         })
         .await;
 
@@ -315,8 +318,100 @@ async fn subscriber_without_config_does_not_persist_but_still_translates() {
             job_id: "j".into(),
             success: false,
             output: String::new(),
+            agent_id: None,
         })
         .await;
     // Nothing to assert beyond "did not panic / persist" — the translation is
     // covered by event_to_notification tests above.
+}
+
+// ── Pet mode ────────────────────────────────────────────────────────────────
+
+#[test]
+fn pet_research_cron_completion_is_silent() {
+    let ev = DomainEvent::CronJobCompleted {
+        job_id: "pet-job".into(),
+        success: true,
+        output: "Recorded 3 notes.".into(),
+        agent_id: Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into()),
+    };
+    assert!(event_to_notification(&ev).is_none());
+    // Other agents keep the generic toast.
+    let ev = DomainEvent::CronJobCompleted {
+        job_id: "brief".into(),
+        success: true,
+        output: "ok".into(),
+        agent_id: Some("morning_briefing".into()),
+    };
+    assert_eq!(
+        event_to_notification(&ev).unwrap().title,
+        "Cron job completed"
+    );
+}
+
+#[test]
+fn pet_note_surfaced_maps_to_important_notification() {
+    let long_title = "x".repeat(200);
+    let n = event_to_notification(&DomainEvent::PetNoteSurfaced {
+        pet_id: "p".into(),
+        note_id: "n1".into(),
+        title: long_title,
+        source: "email".into(),
+    })
+    .unwrap();
+    assert_eq!(n.id, "pet-note:n1");
+    assert_eq!(n.category, CoreNotificationCategory::Important);
+    assert_eq!(n.title, "email: needs you");
+    assert!(n.body.chars().count() <= 140);
+    assert_eq!(n.deep_link.as_deref(), Some("/pet?tab=feed&note=n1"));
+}
+
+#[test]
+fn pet_digest_ready_maps_to_agents_notification() {
+    let n = event_to_notification(&DomainEvent::PetDigestReady {
+        pet_id: "p".into(),
+        digest_id: "d1".into(),
+        item_count: 4,
+    })
+    .unwrap();
+    assert_eq!(n.id, "pet-digest:d1");
+    assert_eq!(n.category, CoreNotificationCategory::Agents);
+    assert_eq!(n.title, "Your pet digest is ready");
+    assert_eq!(n.body, "4 items");
+    assert_eq!(n.deep_link.as_deref(), Some("/pet?tab=feed&digest=d1"));
+}
+
+#[test]
+fn pet_approval_needed_links_to_inbox() {
+    let n = event_to_notification(&DomainEvent::PetApprovalNeeded {
+        request_id: "r1".into(),
+        tool_name: "composio_execute".into(),
+        action_summary: "send 1 email".into(),
+    })
+    .unwrap();
+    assert_eq!(n.id, "pet-approval:r1");
+    assert_eq!(n.category, CoreNotificationCategory::Important);
+    assert_eq!(n.title, "Neppy needs your approval");
+    assert_eq!(n.body, "composio_execute: send 1 email");
+    assert_eq!(n.deep_link.as_deref(), Some("/pet?tab=inbox"));
+}
+
+#[tokio::test]
+async fn pet_digest_notification_is_persisted() {
+    use crate::neppy::desktop::notifications::store;
+    use tempfile::TempDir;
+
+    let dir = TempDir::new().unwrap();
+    let mut config = crate::neppy::config::Config::default();
+    config.workspace_dir = dir.path().to_path_buf();
+    NotificationBridgeSubscriber::new(config.clone())
+        .handle(&DomainEvent::PetDigestReady {
+            pet_id: "p".into(),
+            digest_id: "d9".into(),
+            item_count: 1,
+        })
+        .await;
+    let items = store::list_core_notifications(&config, true, 50).unwrap();
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].id, "pet-digest:d9");
 }

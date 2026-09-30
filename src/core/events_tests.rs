@@ -184,6 +184,7 @@ fn all_variants_have_correct_domain() {
                 job_id: "j".into(),
                 success: true,
                 output: "ok".into(),
+                agent_id: None,
             },
             "cron",
         ),
@@ -209,6 +210,32 @@ fn all_variants_have_correct_domain() {
                 flow_id: "flow-1".into(),
             },
             "cron",
+        ),
+        // Pet mode
+        (
+            DomainEvent::PetNoteSurfaced {
+                pet_id: "p".into(),
+                note_id: "n".into(),
+                title: "t".into(),
+                source: "email".into(),
+            },
+            "pet",
+        ),
+        (
+            DomainEvent::PetDigestReady {
+                pet_id: "p".into(),
+                digest_id: "d".into(),
+                item_count: 2,
+            },
+            "pet",
+        ),
+        (
+            DomainEvent::PetApprovalNeeded {
+                request_id: "r".into(),
+                tool_name: "composio".into(),
+                action_summary: "send".into(),
+            },
+            "pet",
         ),
         // Workflow
         (
@@ -559,4 +586,45 @@ fn memory_driver_bind_failed_domain_and_name() {
     };
     assert_eq!(event.domain(), "memory");
     assert_eq!(event.variant_name(), "MemoryDriverBindFailed");
+}
+
+#[test]
+fn pet_events_domain_and_name() {
+    let surfaced = DomainEvent::PetNoteSurfaced {
+        pet_id: "p".into(),
+        note_id: "n".into(),
+        title: "t".into(),
+        source: "email".into(),
+    };
+    assert_eq!(surfaced.domain(), "pet");
+    assert_eq!(surfaced.variant_name(), "PetNoteSurfaced");
+    let digest = DomainEvent::PetDigestReady {
+        pet_id: "p".into(),
+        digest_id: "d".into(),
+        item_count: 1,
+    };
+    assert_eq!(digest.variant_name(), "PetDigestReady");
+    let approval = DomainEvent::PetApprovalNeeded {
+        request_id: "r".into(),
+        tool_name: "x".into(),
+        action_summary: "y".into(),
+    };
+    assert_eq!(approval.variant_name(), "PetApprovalNeeded");
+}
+
+#[test]
+fn cron_job_completed_carries_agent_id() {
+    let event = DomainEvent::CronJobCompleted {
+        job_id: "j".into(),
+        success: true,
+        output: String::new(),
+        agent_id: Some("pet_research".into()),
+    };
+    assert_eq!(event.domain(), "cron");
+    match event {
+        DomainEvent::CronJobCompleted { agent_id, .. } => {
+            assert_eq!(agent_id.as_deref(), Some("pet_research"))
+        }
+        _ => unreachable!(),
+    }
 }

@@ -1,0 +1,38 @@
+id = "pet_research"
+display_name = "Pet research pass"
+when_to_use = "Background, read-only research lane for the user's Pet. Scans enabled sources and records private notes via pet_note. Never acts."
+temperature = 0.3
+max_iterations = 16
+sandbox_mode = "read_only"
+
+# The lane pulls its own windowed memory via `pet_recent_memory` and its own
+# context via `pet_context`, so the all-time memory blob, identity and skills
+# catalog are dropped. The safety preamble STAYS: this agent reads untrusted
+# mail, pages and tasks.
+omit_identity = true
+omit_memory_context = true
+omit_skills_catalog = true
+omit_safety_preamble = false
+
+[model]
+# MUST equal the orchestrator's `[model] hint` — the Pet uses the same model
+# as chat. Test-enforced (`pet_research_is_read_only_and_named`).
+hint = "coding"
+
+[tools]
+# Closed allowlist — must equal `pet::PET_RESEARCH_TOOL_ALLOWLIST` (test-
+# enforced). `web_fetch` is deliberately absent (exfiltration channel), and
+# so is `memory_tree` (it has an `ingest_document` write mode). The
+# `composio_*` tools are absent too: they are packed, and a packed tool this
+# agent does not own is swapped for `load_skill`/`use_skill`, which can reach
+# every pack in the registry (see the allowlist's doc comment).
+named = [
+    "pet_context",
+    "pet_recent_memory",
+    "pet_note",
+    "memory_recall",
+    "task_source_list",
+    "task_source_list_tasks",
+    "task_source_status",
+    "web_search_tool",
+]

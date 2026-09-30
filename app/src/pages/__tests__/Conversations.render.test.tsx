@@ -2002,3 +2002,77 @@ describe('Conversations — external-transfer disclosure card removed', () => {
     expect(screen.queryByText('Leaving your device')).toBeNull();
   });
 });
+
+describe('Conversations — composer seed from route state (Pet proposals)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.localStorage.clear();
+    mockGetThreads.mockResolvedValue({ threads: [], count: 0 });
+    mockGetThreadMessages.mockResolvedValue({ messages: [], count: 0 });
+  });
+
+  function RouteStateProbe() {
+    const location = useLocation();
+    const state = location.state as { openThreadId?: string; composerSeed?: string } | null;
+    return (
+      <span data-testid="route-state">
+        {JSON.stringify({
+          path: location.pathname,
+          open: state?.openThreadId,
+          seed: state?.composerSeed,
+        })}
+      </span>
+    );
+  }
+
+  it('fills the composer from route state, never sends, and clears the seed', async () => {
+    const thread = makeThread({ id: 'seed-thread', title: 'Seed Thread' });
+    mockGetThreads.mockResolvedValue({ threads: [thread], count: 1 });
+    const store = buildStore({
+      thread: selectedThreadState(thread),
+      socket: socketState('connected'),
+    });
+    const { default: Conversations } = await import('../../features/conversations/Conversations');
+
+    await act(async () => {
+      render(
+        <Provider store={store}>
+          <MemoryRouter
+            initialEntries={[
+              {
+                pathname: '/chat/seed-thread',
+                state: { openThreadId: 'seed-thread', composerSeed: 'Please help me reply' },
+              },
+            ]}>
+            <SidebarSlotProvider>
+              <SidebarSlotOutlet />
+              <Routes>
+                <Route
+                  path="/chat/:threadId?"
+                  element={
+                    <>
+                      <RouteStateProbe />
+                      <Conversations />
+                    </>
+                  }
+                />
+              </Routes>
+            </SidebarSlotProvider>
+          </MemoryRouter>
+        </Provider>
+      );
+    });
+
+    const textarea = await screen.findByRole('textbox', { name: 'Message input' });
+    await waitFor(() => {
+      expect(textarea).toHaveTextContent('Please help me reply');
+    });
+    expect(chatSend).not.toHaveBeenCalled();
+    await waitFor(() => {
+      const probe = JSON.parse(screen.getByTestId('route-state').textContent ?? '{}');
+      expect(probe.seed).toBeUndefined();
+      expect(probe.open).toBe('seed-thread');
+      expect(probe.path).toBe('/chat/seed-thread');
+    });
+  });
+});

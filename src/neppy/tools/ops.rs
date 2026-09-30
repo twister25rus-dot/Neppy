@@ -291,6 +291,16 @@ pub fn all_tools_with_runtime(
         Box::new(CronUpdateTool::new(config.clone(), security.clone())),
         Box::new(CronRunTool::new(config.clone())),
         Box::new(CronRunsTool::new(config.clone())),
+        // Pet research lane tools. Each refuses unless the turn origin is
+        // `TrustedAutomation { PetResearch }`; only the `pet_research` agent's
+        // closed allowlist names them. No external effect.
+        Box::new(crate::neppy::pet::tools::PetContextTool::new(
+            config.clone(),
+        )),
+        Box::new(crate::neppy::pet::tools::PetRecentMemoryTool::new(
+            config.clone(),
+        )),
+        Box::new(crate::neppy::pet::tools::PetNoteTool::new(config.clone())),
         // Agent-first Workflow authoring (issue B4): validates a candidate
         // graph and returns a proposal summary — never creates/enables a
         // flow itself. Only the chat UI's WorkflowProposalCard "Save &
@@ -1381,9 +1391,13 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
     // the leak the #4808 review flagged for whatsapp_data. Keep these in
     // lockstep with the `push(...)` tags in `core::all`.
     //
-    // Automation: scheduled jobs (`cron_*`) plus the subconscious monitor +
-    // proactive-notify surface.
-    if name.starts_with("cron_") || name == "schedule" || MONITORS.contains(&name) {
+    // Automation: scheduled jobs (`cron_*`), the Pet research lane (`pet_*`)
+    // plus the subconscious monitor + proactive-notify surface.
+    if name.starts_with("cron_")
+        || name.starts_with("pet_")
+        || name == "schedule"
+        || MONITORS.contains(&name)
+    {
         return DomainGroup::Automation;
     }
     // Integrations: every external connector reached on the user's behalf.

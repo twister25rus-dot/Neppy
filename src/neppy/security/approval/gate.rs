@@ -514,6 +514,18 @@ impl ApprovalGate {
             "[approval::gate] evaluating approval request"
         );
 
+        // Pet research lane (pet domain): decided FIRST, before the flow-trust
+        // shortcut, the `auto_approve_all` bypass and the `auto_approve`
+        // allowlist — none of those may widen a lane that reads untrusted
+        // content unattended. Never parks, never persists a pending row.
+        if let AgentTurnOrigin::TrustedAutomation {
+            source: TrustedAutomationSource::PetResearch,
+            job_id,
+        } = &origin
+        {
+            return pet_research_decision(tool_name, job_id);
+        }
+
         // Per-flow tool trust shortcut (flow-approval-surface, PR2): a prior
         // `ApproveAlwaysForFlow` decision on this exact `(flow_id, tool_name)`
         // pair short-circuits to `Allow` for every future Workflow-origin call
@@ -731,6 +743,15 @@ impl ApprovalGate {
                     "[approval::gate] trusted cron automation — allowing without prompt"
                 );
                 return (GateOutcome::Allow, None);
+            }
+            // Defensive: unreachable after the early return at the top of this
+            // function, but keeps the match exhaustive and the decision in one
+            // place should that early return ever move.
+            AgentTurnOrigin::TrustedAutomation {
+                source: TrustedAutomationSource::PetResearch,
+                job_id,
+            } => {
+                return pet_research_decision(tool_name, job_id);
             }
             AgentTurnOrigin::TrustedAutomation {
                 source: TrustedAutomationSource::Subconscious,
@@ -1363,6 +1384,55 @@ impl ApprovalGate {
             map.remove(thread_id);
         }
     }
+
+    /// Request ids of the approvals currently parked on a chat thread (the
+    /// values of the thread → request routing map). The Pet inbox uses this to
+    /// hide approvals that already have an in-chat approval card.
+    pub fn chat_routed_request_ids(&self) -> std::collections::HashSet<String> {
+        self.thread_to_request.lock().values().cloned().collect()
+    }
+}
+
+/// Decision for an `external_effect` tool call made under the
+/// [`TrustedAutomationSource::PetResearch`] origin (the Pet's background
+/// research lane). The lane reads untrusted content unattended, so it may
+/// never send, edit or act: every call is denied except `composio_execute`
+/// while the agent's sandbox is `ReadOnly` — that tool itself refuses write
+/// and admin scopes (and unknown slugs) under `ReadOnly`. Never parks and never
+/// persists a pending row, so nothing is left for a later approval to resume.
+fn pet_research_decision(tool_name: &str, job_id: &str) -> (GateOutcome, Option<String>) {
+    use crate::neppy::agent::harness::definition::SandboxMode;
+    let read_only = matches!(
+        crate::neppy::agent::harness::current_sandbox_mode(),
+        Some(SandboxMode::ReadOnly)
+    );
+    if tool_name == "composio_execute" && read_only {
+        tracing::debug!(
+            tool = tool_name,
+            job_id = %job_id,
+            "[approval::gate] pet research lane — allow (read-scoped composio_execute)"
+        );
+        return (GateOutcome::Allow, None);
+    }
+    tracing::info!(
+        tool = tool_name,
+        read_only_sandbox = read_only,
+        "[approval::gate] pet research lane — deny"
+    );
+    tracing::debug!(
+        tool = tool_name,
+        job_id = %job_id,
+        "[approval::gate] pet research lane — deny (job)"
+    );
+    (
+        GateOutcome::Deny {
+            reason: format!(
+                "{POLICY_DENIED_MARKER} '{tool_name}' blocked: the Pet research pass is read-only \
+                 and may not send, edit or act. Record a pet_note with proposed_action instead."
+            ),
+        },
+        None,
+    )
 }
 
 /// Wall-clock milliseconds since the Unix epoch, for `CoreNotificationEvent::timestamp_ms`.
@@ -2671,6 +2741,143 @@ mod tests {
             gate.list_pending().unwrap().is_empty(),
             "trusted cron must not persist a pending row"
         );
+    }
+
+    fn pet_origin() -> AgentTurnOrigin {
+        AgentTurnOrigin::TrustedAutomation {
+            job_id: "pet-job-1".into(),
+            source: TrustedAutomationSource::PetResearch,
+        }
+    }
+
+    /// The Pet research lane is denied even when the tool is in the user's
+    /// `auto_approve` allowlist AND `auto_approve_all` is on, and no pending
+    /// row is ever created.
+    #[tokio::test]
+    #[allow(clippy::await_holding_lock)] // same TEST_ENV_LOCK pattern as the auto_approve tests
+    async fn pet_research_denies_external_tool_despite_auto_approve_and_auto_approve_all() {
+        let _env = crate::neppy::config::TEST_ENV_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let (gate, dir) = test_gate();
+        let tool = "neppy_test_pet_send";
+        let policy = crate::neppy::security::SecurityPolicy {
+            auto_approve: vec![tool.into(), "composio_execute".into()],
+            auto_approve_all: true,
+            ..crate::neppy::security::SecurityPolicy::default()
+        };
+        let _policy_guard = crate::neppy::security::live_policy::install_scoped(
+            Arc::new(policy),
+            dir.path().to_path_buf(),
+            dir.path().to_path_buf(),
+        );
+
+        let outcome = turn_origin::with_origin(
+            pet_origin(),
+            APPROVAL_CHAT_CONTEXT.scope(
+                chat_ctx(),
+                gate.intercept(tool, "send mail", serde_json::json!({})),
+            ),
+        )
+        .await;
+        match outcome {
+            GateOutcome::Deny { reason } => {
+                assert!(reason.contains(POLICY_DENIED_MARKER));
+                assert!(reason.contains("Pet research pass is read-only"));
+            }
+            other => panic!("expected deny, got {other:?}"),
+        }
+        // composio_execute without a ReadOnly sandbox scope is denied too,
+        // even though it is allow-listed.
+        let outcome = turn_origin::with_origin(
+            pet_origin(),
+            gate.intercept("composio_execute", "send mail", serde_json::json!({})),
+        )
+        .await;
+        assert!(matches!(outcome, GateOutcome::Deny { .. }));
+        assert!(
+            gate.list_pending().unwrap().is_empty(),
+            "the pet research lane must never persist a pending row"
+        );
+        assert!(gate.pending_for_thread("t-test").is_none());
+    }
+
+    /// `composio_execute` is the one external tool the lane may call, and only
+    /// inside a `ReadOnly` sandbox scope (the tool refuses write scopes there).
+    #[tokio::test]
+    async fn pet_research_allows_composio_execute_only_under_read_only_sandbox() {
+        use crate::neppy::agent::harness::definition::SandboxMode;
+        use crate::neppy::agent::harness::with_current_sandbox_mode;
+        let (gate, _dir) = test_gate();
+
+        let allowed = with_current_sandbox_mode(
+            SandboxMode::ReadOnly,
+            turn_origin::with_origin(
+                pet_origin(),
+                gate.intercept("composio_execute", "read calendar", serde_json::json!({})),
+            ),
+        )
+        .await;
+        assert!(matches!(allowed, GateOutcome::Allow));
+
+        let no_sandbox = turn_origin::with_origin(
+            pet_origin(),
+            gate.intercept("composio_execute", "read calendar", serde_json::json!({})),
+        )
+        .await;
+        assert!(matches!(no_sandbox, GateOutcome::Deny { .. }));
+
+        let sandboxed = with_current_sandbox_mode(
+            SandboxMode::Sandboxed,
+            turn_origin::with_origin(
+                pet_origin(),
+                gate.intercept("composio_execute", "read calendar", serde_json::json!({})),
+            ),
+        )
+        .await;
+        assert!(matches!(sandboxed, GateOutcome::Deny { .. }));
+
+        // Any other external tool stays denied even under ReadOnly.
+        let other = with_current_sandbox_mode(
+            SandboxMode::ReadOnly,
+            turn_origin::with_origin(
+                pet_origin(),
+                gate.intercept("gmail_send", "send", serde_json::json!({})),
+            ),
+        )
+        .await;
+        assert!(matches!(other, GateOutcome::Deny { .. }));
+        assert!(gate.list_pending().unwrap().is_empty());
+    }
+
+    /// Regression: a plain `Cron` origin keeps its trusted-automation allow
+    /// even while the pet lane exists (morning_briefing and every other cron
+    /// job are unaffected).
+    #[tokio::test]
+    async fn cron_origin_still_allows_alongside_pet_research() {
+        let (gate, _dir) = test_gate();
+        let origin = AgentTurnOrigin::TrustedAutomation {
+            job_id: "morning-briefing".into(),
+            source: TrustedAutomationSource::Cron,
+        };
+        let outcome = turn_origin::with_origin(
+            origin,
+            gate.intercept("composio_execute", "send", serde_json::json!({})),
+        )
+        .await;
+        assert!(matches!(outcome, GateOutcome::Allow));
+    }
+
+    #[test]
+    fn chat_routed_request_ids_lists_thread_routed_requests() {
+        let (gate, _dir) = test_gate();
+        assert!(gate.chat_routed_request_ids().is_empty());
+        gate.thread_to_request
+            .lock()
+            .insert("thread-1".into(), "req-1".into());
+        let ids = gate.chat_routed_request_ids();
+        assert!(ids.contains("req-1"));
+        assert_eq!(ids.len(), 1);
     }
 
     #[tokio::test]

@@ -59,6 +59,9 @@ pub mod medulla;
 pub mod memory;
 #[cfg(feature = "modules")]
 pub mod modules;
+// Pet mode: background read-only research + ranked digest. Ungated — it adds
+// no dependencies; the runtime `DomainSet.automation` flag gates it with cron.
+pub mod pet;
 pub mod platform;
 pub mod runtime;
 pub mod sandbox;
