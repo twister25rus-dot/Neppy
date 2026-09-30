@@ -14,6 +14,12 @@
 //! - `pool`    — the supervisor: start/stop/status, resolved ports
 //! - `process` — spawn, log capture, stop, orphan reclamation
 //! - `service` — the `LocalAiService` methods bootstrap calls
+//! - `pressure` — sudo-free memory readings and the pressure state machine
+//! - `gate`    — the single-flight inference gate every `mlx:` call takes
+//! - `worker`  — lazy start, crash restart budget, model switch, unload
+//! - `watchdog` — the idle/pressure policy (`decide`) and its loop
+//! - `metrics` — bounded sample/event rings and daily JSONL files
+//! - `worker_rpc` — payloads for `mlx.worker_status` / `mlx.worker_metrics`
 //!
 //! The unit of everything is one `[[mlx.server]]` block. The default config
 //! declares a single `primary` block running `mlx_vlm.server`, which serves
@@ -22,12 +28,18 @@
 
 pub(crate) mod argv;
 pub(crate) mod binary;
+pub(crate) mod gate;
 pub(crate) mod health;
 pub(crate) mod memory;
+pub(crate) mod metrics;
 pub(crate) mod models;
 pub(crate) mod pool;
+pub(crate) mod pressure;
 pub(crate) mod process;
 mod service;
+pub(crate) mod watchdog;
+pub(crate) mod worker;
+pub(crate) mod worker_rpc;
 
 #[cfg(test)]
 #[path = "../mlx_admin_tests.rs"]

@@ -85,6 +85,23 @@ impl MlxProcess {
     }
 }
 
+#[cfg(test)]
+impl MlxProcess {
+    /// Wrap an arbitrary child, for pool tests that need a real process
+    /// without an MLX binary.
+    pub(crate) fn from_child_for_test(id: &str, port: u16, child: tokio::process::Child) -> Self {
+        Self {
+            id: id.to_string(),
+            port,
+            pid: child.id().unwrap_or(0),
+            binary_path: PathBuf::new(),
+            redacted_argv: Vec::new(),
+            child: Some(child),
+            logs: Arc::new(Mutex::new(VecDeque::new())),
+        }
+    }
+}
+
 /// Start the server described by `server`.
 ///
 /// Reclaims a prior orphan for the same id first, so a crashed Neppy cannot

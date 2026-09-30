@@ -9,6 +9,7 @@ use super::LocalAiService;
 
 impl LocalAiService {
     pub fn new(config: &Config) -> Self {
+        let metrics = std::sync::Arc::new(super::mlx_admin::metrics::MetricsSink::new());
         let model_id = model_ids::effective_chat_model_id(config);
         let vision_model_id = model_ids::effective_vision_model_id(config);
         let embedding_model_id = model_ids::effective_embedding_model_id(config);
@@ -48,7 +49,10 @@ impl LocalAiService {
             bootstrap_lock: tokio::sync::Mutex::new(()),
             last_memory_summary_at: parking_lot::Mutex::new(None),
             owned_ollama: parking_lot::Mutex::new(None),
-            mlx: super::mlx_admin::pool::MlxPool::new(),
+            mlx: super::mlx_admin::pool::MlxPool::with_metrics(std::sync::Arc::clone(&metrics)),
+            gate: std::sync::Arc::new(super::mlx_admin::gate::InferenceGate::new()),
+            metrics,
+            worker: super::mlx_admin::worker::WorkerControl::default(),
             http: reqwest::Client::builder()
                 // Local models can take >30s on cold start and first-token generation.
                 // Keep the total timeout generous so inline autocomplete and local

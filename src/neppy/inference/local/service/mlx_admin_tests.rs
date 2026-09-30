@@ -504,7 +504,17 @@ async fn stopping_a_server_that_was_never_started_reports_false() {
 
     // Honesty matters more than convenience here: a caller told the stop
     // succeeded believes the memory came back.
+    //
+    // Hermetic on purpose: with no in-memory handle, `stop` falls back to the
+    // spawn marker under the shared `~/.neppy` root and kills a live PID it
+    // names. Using `primary` here could reclaim the developer's own running
+    // server, so the id is one no real install has.
+    let id = format!("test-never-started-{}", std::process::id());
     let config = Config::default();
     let pool = MlxPool::new();
-    assert!(!pool.stop(&config, "primary").await);
+    assert!(
+        !super::process::reclaim_orphan_if_ours(&config, &id),
+        "precondition: no marker exists for a fresh test id"
+    );
+    assert!(!pool.stop(&config, &id).await);
 }

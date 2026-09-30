@@ -1975,6 +1975,10 @@ fn try_create_local_runtime_chat_model_from_string(
             temp,
             None,
         );
+        // Single-flight + lazy start + idle/pressure policy for the managed
+        // worker. A no-op unless `mlx.enabled`.
+        let chat =
+            crate::neppy::inference::local::gated_model::gate_mlx_chat_model(chat, &model, config);
         return Some(Ok((chat, model)));
     }
     if let Some(rest) = p.strip_prefix(OMLX_PROVIDER_PREFIX) {

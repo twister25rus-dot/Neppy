@@ -66,6 +66,11 @@ pub struct MlxConfig {
     /// Configured servers. Defaults to a single `primary` block.
     #[serde(default = "default_servers", rename = "server")]
     pub servers: Vec<MlxServerConfig>,
+
+    /// `[mlx.worker]`: single-flight gate, memory-pressure thresholds, idle
+    /// unload/stop timers and metrics retention for the managed worker.
+    #[serde(default)]
+    pub worker: super::mlx_worker::MlxWorkerConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -314,6 +319,7 @@ impl Default for MlxConfig {
             memory_budget_gib: 0.0,
             embeddings_backend: default_embeddings_backend(),
             servers: default_servers(),
+            worker: super::mlx_worker::MlxWorkerConfig::default(),
         }
     }
 }

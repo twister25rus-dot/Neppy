@@ -27,6 +27,13 @@ pub struct LocalAiService {
     /// Supervisor for managed MLX servers. Owns every MLX process Neppy
     /// started and is the only thing that knows an auto-assigned port.
     pub(crate) mlx: mlx_admin::pool::MlxPool,
+    /// Single-flight gate every `mlx:` model call takes before it reaches
+    /// the worker.
+    pub(crate) gate: std::sync::Arc<mlx_admin::gate::InferenceGate>,
+    /// Bounded worker metrics: sample/event rings and daily JSONL files.
+    pub(crate) metrics: std::sync::Arc<mlx_admin::metrics::MetricsSink>,
+    /// Pressure tracker, restart budget and probe caches for the watchdog.
+    pub(crate) worker: mlx_admin::worker::WorkerControl,
 }
 
 impl LocalAiService {

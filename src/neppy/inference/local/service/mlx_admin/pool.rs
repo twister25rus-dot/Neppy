@@ -10,6 +10,7 @@
 //! a server awaits both the spawn and the readiness poll.
 
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 
 use serde::Serialize;
@@ -20,6 +21,7 @@ use crate::neppy::config::Config;
 
 use super::health::{classify, probe_liveness, probe_models, MlxServerState};
 use super::memory::{admit, budget_gib, resident_gib, Admission};
+use super::metrics::{event, MetricsSink};
 use super::process::{spawn, MlxProcess};
 
 /// Grace period for catching a spawn that dies immediately.
@@ -107,6 +109,20 @@ impl MlxServerStatus {
 #[derive(Default)]
 pub(crate) struct MlxPool {
     running: Mutex<HashMap<String, RunningServer>>,
+    /// Where spawn/stop/crash events are recorded. `None` in bare test pools.
+    metrics: Option<Arc<MetricsSink>>,
+}
+
+// Worker-control additions (reaping, PID lookup) live beside this file so the
+// supervisor stays readable; a child module can reach the private map.
+#[path = "pool_worker.rs"]
+mod worker;
+
+/// A running entry's process, as the watchdog sees it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct WorkerProcess {
+    pub(crate) pid: u32,
+    pub(crate) alive: bool,
 }
 
 impl MlxPool {
@@ -187,7 +203,10 @@ impl MlxPool {
         let estimated_gib = match admit(config, &server.model, &self.running_pids().await) {
             Admission::Allow { estimated_gib } => Some(estimated_gib),
             Admission::Unknown => None,
-            Admission::Refuse { message } => return Err(message),
+            Admission::Refuse { message } => {
+                self.record(event::ADMISSION_REFUSED, id, message.clone());
+                return Err(message);
+            }
         };
 
         let mut process = spawn(config, &server).await?;
@@ -197,6 +216,18 @@ impl MlxPool {
             process.pid,
             process.port
         );
+        self.record(
+            event::WORKER_SPAWN,
+            id,
+            format!("pid={} port={}", process.pid, process.port),
+        );
+        if !server.model.trim().is_empty() {
+            self.record(
+                event::MODEL_LOAD_START,
+                id,
+                format!("model={}", server.model.trim()),
+            );
+        }
 
         // Only long enough to notice a process that refuses to start at all,
         // e.g. an argv the binary rejects. Anything longer would be waiting on
@@ -215,6 +246,11 @@ impl MlxPool {
                 .collect::<Vec<_>>()
                 .join(" | ");
             clear_marker_for(config, id);
+            self.record(
+                event::WORKER_CRASH,
+                id,
+                format!("{exit} immediately after starting"),
+            );
             return Err(if reason.is_empty() {
                 format!("server `{id}` {exit} immediately after starting")
             } else {
@@ -252,6 +288,7 @@ impl MlxPool {
         let entry = self.running.lock().await.remove(id);
         if let Some(mut entry) = entry {
             entry.process.stop(config).await;
+            self.record(event::WORKER_STOP, id, format!("pid={}", entry.process.pid));
             return true;
         }
 

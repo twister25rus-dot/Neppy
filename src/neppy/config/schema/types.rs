@@ -388,6 +388,11 @@ pub struct Config {
     #[serde(default)]
     pub mlx: MlxConfig,
 
+    /// On-device assistant budgets: context limit, per-step and per-task
+    /// token budgets, project-index and checkpoint bounds.
+    #[serde(default)]
+    pub local_assistant: LocalAssistantConfig,
+
     /// Claude Agent SDK provider configuration — routes inference through the
     /// `claude -p` CLI subprocess using the subscriber's Claude plan credit.
     #[serde(default)]
@@ -873,6 +878,7 @@ impl Default for Config {
             agents: HashMap::new(),
             local_ai: LocalAiConfig::default(),
             mlx: MlxConfig::default(),
+            local_assistant: LocalAssistantConfig::default(),
             claude_agent_sdk: ClaudeAgentSdkConfig::default(),
             cloud_providers: Vec::new(),
             primary_cloud: None,

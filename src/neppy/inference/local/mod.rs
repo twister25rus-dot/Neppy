@@ -15,6 +15,7 @@ pub(crate) fn inference_test_guard() -> std::sync::MutexGuard<'static, ()> {
 }
 
 mod core;
+pub(crate) mod gated_model;
 mod mlx_patch;
 mod mlx_schemas;
 pub mod ops;
@@ -59,4 +60,5 @@ pub use schemas::{
     all_controller_schemas as all_local_inference_controller_schemas,
     all_registered_controllers as all_local_inference_registered_controllers,
 };
+pub use service::mlx_admin::watchdog::spawn_worker_watchdog;
 pub use service::LocalAiService;

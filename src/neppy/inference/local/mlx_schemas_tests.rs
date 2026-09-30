@@ -90,3 +90,70 @@ fn an_unknown_function_panics_rather_than_returning_a_wrong_schema() {
     // reached only by a programming error in the registration list.
     let _ = schemas("not_a_real_function");
 }
+
+#[test]
+fn worker_control_functions_are_on_the_surface() {
+    let functions: Vec<&str> = all_controller_schemas()
+        .iter()
+        .map(|schema| schema.function)
+        .collect();
+    for expected in ["worker_status", "worker_metrics"] {
+        assert!(
+            functions.contains(&expected),
+            "`mlx.{expected}` is missing from the surface"
+        );
+    }
+    // The existing surface is unchanged: every earlier function still exists.
+    for existing in [
+        "status",
+        "start",
+        "stop",
+        "restart",
+        "logs",
+        "unload",
+        "models_list",
+        "models_delete",
+        "update_server",
+        "set_embeddings_backend",
+    ] {
+        assert!(
+            functions.contains(&existing),
+            "`mlx.{existing}` went missing"
+        );
+    }
+}
+
+#[test]
+fn worker_metrics_inputs_are_all_optional() {
+    let schema = schemas("worker_metrics");
+    assert_eq!(schema.inputs.len(), 3);
+    assert!(schema.inputs.iter().all(|field| !field.required));
+    assert!(schemas("worker_status").inputs.is_empty());
+}
+
+#[test]
+fn worker_metrics_params_parse_and_reject_bad_types() {
+    let params: super::super::service::mlx_admin::worker_rpc::WorkerMetricsParams =
+        deserialize_params(
+            serde_json::json!({ "since_ms": 5, "limit": 10, "events_only": true })
+                .as_object()
+                .cloned()
+                .expect("object"),
+        )
+        .expect("valid params");
+    assert_eq!(params.since_ms, Some(5));
+    assert_eq!(params.limit, Some(10));
+    assert_eq!(params.events_only, Some(true));
+
+    let empty: super::super::service::mlx_admin::worker_rpc::WorkerMetricsParams =
+        deserialize_params(Map::new()).expect("empty params");
+    assert!(empty.limit.is_none());
+
+    let bad = deserialize_params::<super::super::service::mlx_admin::worker_rpc::WorkerMetricsParams>(
+        serde_json::json!({ "limit": "many" })
+            .as_object()
+            .cloned()
+            .expect("object"),
+    );
+    assert!(bad.is_err());
+}

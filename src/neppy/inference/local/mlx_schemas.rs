@@ -82,6 +82,8 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("models_delete"),
         schemas("update_server"),
         schemas("set_embeddings_backend"),
+        schemas("worker_status"),
+        schemas("worker_metrics"),
     ]
 }
 
@@ -126,6 +128,14 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("set_embeddings_backend"),
             handler: handle_set_embeddings_backend,
+        },
+        RegisteredController {
+            schema: schemas("worker_status"),
+            handler: handle_worker_status,
+        },
+        RegisteredController {
+            schema: schemas("worker_metrics"),
+            handler: handle_worker_metrics,
         },
     ]
 }
@@ -239,6 +249,30 @@ pub fn schemas(function: &str) -> ControllerSchema {
                           `ollama` (the default) or `mlx`. Ollama is not removed either way.",
             inputs: vec![required_string("backend", "`ollama` or `mlx`.")],
             outputs: vec![json_output("embeddings", "The backend now in effect.")],
+        },
+        "worker_status" => ControllerSchema {
+            namespace: "mlx",
+            function: "worker_status",
+            description: "Worker control state: memory pressure, the managed worker's process \
+                          and footprint, the single-flight gate, restarts, and the latest \
+                          metrics sample. Starts the idle/pressure watchdog when MLX is enabled.",
+            inputs: vec![],
+            outputs: vec![json_output("worker", "Worker, gate and pressure snapshot.")],
+        },
+        "worker_metrics" => ControllerSchema {
+            namespace: "mlx",
+            function: "worker_metrics",
+            description: "Recent worker metrics samples and lifecycle events (spawn, load, \
+                          unload, stop, crash, restart, pressure transitions, preemption).",
+            inputs: vec![
+                optional_i64("since_ms", "Only entries at or after this Unix time in ms."),
+                optional_u64(
+                    "limit",
+                    "Maximum entries of each kind. Defaults to 200, capped at 2000.",
+                ),
+                optional_bool("events_only", "Return events without samples."),
+            ],
+            outputs: vec![json_output("metrics", "Samples and events, oldest first.")],
         },
         other => panic!("unknown mlx controller function: {other}"),
     }
@@ -551,6 +585,25 @@ fn handle_set_embeddings_backend(params: Map<String, Value>) -> ControllerFuture
     })
 }
 
+fn handle_worker_status(_params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let (config, service) = config_and_service().await?;
+        let status = super::service::mlx_admin::worker_rpc::worker_status(&service, &config).await;
+        to_json(RpcOutcome::new(status, Vec::new()))
+    })
+}
+
+fn handle_worker_metrics(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let p = deserialize_params::<super::service::mlx_admin::worker_rpc::WorkerMetricsParams>(
+            params,
+        )?;
+        let (_config, service) = config_and_service().await?;
+        let window = super::service::mlx_admin::worker_rpc::worker_metrics(&service, &p);
+        to_json(RpcOutcome::new(window, Vec::new()))
+    })
+}
+
 async fn config_and_service() -> Result<
     (
         crate::neppy::config::Config,
@@ -591,6 +644,24 @@ fn optional_u64(name: &'static str, comment: &'static str) -> FieldSchema {
     FieldSchema {
         name,
         ty: TypeSchema::Option(Box::new(TypeSchema::U64)),
+        comment,
+        required: false,
+    }
+}
+
+fn optional_i64(name: &'static str, comment: &'static str) -> FieldSchema {
+    FieldSchema {
+        name,
+        ty: TypeSchema::Option(Box::new(TypeSchema::I64)),
+        comment,
+        required: false,
+    }
+}
+
+fn optional_bool(name: &'static str, comment: &'static str) -> FieldSchema {
+    FieldSchema {
+        name,
+        ty: TypeSchema::Option(Box::new(TypeSchema::Bool)),
         comment,
         required: false,
     }

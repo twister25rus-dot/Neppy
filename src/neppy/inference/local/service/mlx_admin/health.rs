@@ -117,6 +117,9 @@ pub(crate) struct LivenessReport {
     pub(crate) loaded_tool_parser: Option<String>,
     #[serde(default)]
     pub(crate) continuous_batching_enabled: bool,
+    /// Requests queued inside the server, behind the one being decoded.
+    #[serde(default)]
+    pub(crate) request_queue_depth: Option<u64>,
 }
 
 impl LivenessReport {
@@ -205,6 +208,43 @@ pub(crate) async fn probe_liveness(
     // A 200 that will not parse still proves liveness, so fall back to an
     // empty report rather than reporting the server down.
     Some(response.json::<LivenessReport>().await.unwrap_or_default())
+}
+
+/// Requests the server is decoding, from `GET /metrics` (`summary.in_flight`
+/// on mlx_vlm). `None` when the endpoint is absent (mlx_lm) or the probe
+/// fails — callers treat that as "not busy" rather than wedging on it.
+pub(crate) async fn probe_in_flight(
+    client: &reqwest::Client,
+    base_url: &str,
+    bearer: Option<&str>,
+) -> Option<u64> {
+    let root = base_url.trim_end_matches('/').trim_end_matches("/v1");
+    let mut request = client
+        .get(format!("{root}/metrics"))
+        .timeout(Duration::from_secs(2));
+    if let Some(token) = bearer {
+        request = request.bearer_auth(token);
+    }
+    let response = request.send().await.ok()?;
+    if !response.status().is_success() {
+        return None;
+    }
+    let body: serde_json::Value = response.json().await.ok()?;
+    parse_in_flight(&body)
+}
+
+/// `summary.in_flight` from an mlx_vlm `/metrics` payload, tolerating a
+/// top-level `in_flight` too.
+pub(crate) fn parse_in_flight(body: &serde_json::Value) -> Option<u64> {
+    body.pointer("/summary/in_flight")
+        .or_else(|| body.get("in_flight"))
+        .and_then(serde_json::Value::as_u64)
+}
+
+/// Whether the server has work of its own: anything queued or decoding.
+/// Unknown readings count as idle.
+pub(crate) fn server_busy(queue_depth: Option<u64>, in_flight: Option<u64>) -> bool {
+    queue_depth.unwrap_or(0) > 0 || in_flight.unwrap_or(0) > 0
 }
 
 /// Classify a server from a probe plus whether its process is still alive.
