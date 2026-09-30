@@ -50,10 +50,13 @@ pub use schemas::{
 
 // Re-export the types that external callers (voice, agent, etc.) import from inference
 pub use device::DeviceProfile;
+pub use local::all_local_assistant_controller_schemas;
+pub use local::all_local_assistant_registered_controllers;
 pub use local::all_local_inference_controller_schemas;
 pub use local::all_local_inference_registered_controllers;
 pub use local::all_mlx_controller_schemas;
 pub use local::all_mlx_registered_controllers;
+pub use local::resume_interrupted_on_boot as resume_local_assistant_on_boot;
 pub use model_context::context_window_for_model;
 pub use presets::{ModelPreset, ModelTier, VisionMode};
 pub use sentiment::SentimentResult;

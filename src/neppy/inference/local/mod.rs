@@ -14,6 +14,7 @@ pub(crate) fn inference_test_guard() -> std::sync::MutexGuard<'static, ()> {
         .unwrap_or_else(|p| p.into_inner())
 }
 
+pub mod assistant;
 mod core;
 pub(crate) mod gated_model;
 mod mlx_patch;
@@ -49,6 +50,11 @@ pub(crate) use ollama::{ollama_base_url, ollama_base_url_from_config, validate_o
 pub mod service;
 pub(crate) mod voice_install_common;
 
+pub use assistant::{
+    all_controller_schemas as all_local_assistant_controller_schemas,
+    all_registered_controllers as all_local_assistant_registered_controllers,
+    resume_interrupted_on_boot,
+};
 pub use core::*;
 pub use mlx_schemas::{
     all_controller_schemas as all_mlx_controller_schemas,
