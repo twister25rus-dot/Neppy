@@ -41,6 +41,7 @@ fn domain_subscriber_plan_full_registers_every_gated_subscriber() {
             agent: true,
             hosted: true,
             mcp: true,
+            automation: true,
         },
         "full() must register every gated domain subscriber"
     );
@@ -63,6 +64,7 @@ fn domain_subscriber_plan_none_registers_no_gated_subscriber() {
             agent: false,
             hosted: false,
             mcp: false,
+            automation: false,
         },
         "none() must register no gated domain subscriber (core infra still runs, ungated)"
     );
@@ -92,6 +94,7 @@ fn domain_subscriber_plan_harness_gates_by_owning_group() {
         "harness must skip hosted orchestration ingest"
     );
     assert!(!plan.mcp, "harness must skip mcp_registry bus init");
+    assert!(!plan.automation, "harness must skip Pet mode subscribers");
 }
 
 /// #5027 — the tool-execution timeout must be seeded on the always-on core boot

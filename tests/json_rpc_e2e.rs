@@ -14466,3 +14466,308 @@ async fn memory_flavour_agent_tool_e2e_5172() {
         .expect_err("an unrecognized flavour slug must be rejected");
     assert!(unknown.to_string().contains("Unknown flavour"));
 }
+
+// ── Pet mode: research pass → ranked digest, nothing sent ─────────────────────
+
+/// Every (method, path) the mock upstream received during the Pet arc.
+static PET_UPSTREAM_REQUESTS: OnceLock<Mutex<Vec<(String, String)>>> = OnceLock::new();
+
+fn with_pet_upstream_requests<T>(f: impl FnOnce(&mut Vec<(String, String)>) -> T) -> T {
+    let mutex = PET_UPSTREAM_REQUESTS.get_or_init(|| Mutex::new(Vec::new()));
+    match mutex.lock() {
+        Ok(mut guard) => f(&mut guard),
+        Err(poisoned) => f(&mut poisoned.into_inner()),
+    }
+}
+
+async fn record_pet_upstream_request(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let entry = (req.method().to_string(), req.uri().path().to_string());
+    with_pet_upstream_requests(|log| log.push(entry));
+    next.run(req).await
+}
+
+fn write_pet_config(neppy_dir: &Path, api_origin: &str) {
+    let cfg = format!(
+        r#"api_url = "{api_origin}"
+default_model = "chat-v1"
+default_temperature = 0.7
+chat_onboarding_completed = true
+
+[secrets]
+encrypt = false
+
+[local_ai]
+enabled = false
+
+[context]
+compaction_enabled = false
+"#
+    );
+    std::fs::create_dir_all(neppy_dir).expect("mkdir config dir");
+    std::fs::write(neppy_dir.join("config.toml"), &cfg).expect("write config");
+    let _: neppy_core::neppy::config::Config =
+        toml::from_str(&cfg).expect("config toml must match Config schema");
+}
+
+/// The Pet exit test: with the UI closed, a research pass records notes via
+/// `pet_note`, the deterministic surfacer ranks them (notify 1 / queue 1 /
+/// drop 1), a digest lists them in rank order, a suggested action lands in the
+/// inbox as a proposal — and nothing is sent: no pending or decided approvals,
+/// and the only upstream traffic besides chat completions is read-only.
+#[test]
+fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending() {
+    run_json_rpc_e2e_on_agent_stack(
+        "json_rpc_pet_research_pass_produces_ranked_digest_without_sending",
+        json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner,
+    );
+}
+
+async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let _fifo_guard = ScriptedFifoGuard;
+    // Production boot installs the agent registry; the transport-only router
+    // does not. The pass must run as the real `pet_research` definition
+    // (closed allowlist, read-only sandbox), not the generic fallback agent.
+    neppy_core::neppy::agent::harness::AgentDefinitionRegistry::init_global_builtins()
+        .expect("init agent registry");
+    let tmp = tempdir().expect("tempdir");
+    let home = tmp.path();
+    let neppy_home = home.join(".neppy");
+
+    let _home_guard = EnvVarGuard::set_to_path("HOME", home);
+    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
+    let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
+    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+
+    let mock = mock_upstream_router().layer(axum::middleware::from_fn(record_pet_upstream_request));
+    let (mock_addr, mock_join) = serve_on_ephemeral(mock).await;
+    let mock_origin = format!("http://{mock_addr}");
+    write_pet_config(&neppy_home, &mock_origin);
+    write_pet_config(&neppy_home.join("users").join("local"), &mock_origin);
+    write_pet_config(&neppy_home.join("users").join("e2e-user"), &mock_origin);
+
+    let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
+    let rpc_base = format!("http://{rpc_addr}");
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let store = post_json_rpc(
+        &rpc_base,
+        91_000,
+        "openhuman.auth_store_session",
+        json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
+    )
+    .await;
+    assert_no_jsonrpc_error(&store, "store_session");
+
+    // Route chat (and so `coding`, which inherits it — the Pet uses the same
+    // model as chat) to an explicit OpenAI-compatible provider whose base is
+    // the mock's scripted `/openai/v1` route. An explicit route is immune to
+    // the Neppy build's process-cached managed→local redirect.
+    let models = post_json_rpc(
+        &rpc_base,
+        90_998,
+        "openhuman.update_model_settings",
+        json!({
+            "cloud_providers": [{
+                "id": "p_openai_pet",
+                "slug": "openai",
+                "label": "OpenAI",
+                "endpoint": format!("{mock_origin}/openai/v1"),
+                "auth_style": "bearer"
+            }],
+            "chat_provider": "openai:gpt-4.1-mini"
+        }),
+    )
+    .await;
+    assert_no_jsonrpc_error(&models, "update_model_settings");
+    let key = post_json_rpc(
+        &rpc_base,
+        90_999,
+        "openhuman.auth_store_provider_credentials",
+        json!({
+            "provider": "provider:openai",
+            "profile": "default",
+            "token": "sk-pet-e2e-key",
+            "setActive": true
+        }),
+    )
+    .await;
+    assert_no_jsonrpc_error(&key, "auth_store_provider_credentials");
+
+    // ── 1. The pet starts disabled; enable it, name it, add a goal ──
+    let got = post_json_rpc(&rpc_base, 91_001, "openhuman.pet_get", json!({})).await;
+    let got = peel_logs_envelope(assert_no_jsonrpc_error(&got, "pet_get")).clone();
+    assert_eq!(
+        got["enabled"], false,
+        "a new pet is created disabled: {got}"
+    );
+    assert_eq!(got["name"], "Pet");
+
+    let updated = post_json_rpc(
+        &rpc_base,
+        91_002,
+        "openhuman.pet_update",
+        json!({ "patch": {
+            "enabled": true, "name": "Pip",
+            // quiet_start == quiet_end disables quiet hours, so the wall clock
+            // cannot demote the urgent note.
+            "quiet_start": "00:00", "quiet_end": "00:00"
+        } }),
+    )
+    .await;
+    let updated = peel_logs_envelope(assert_no_jsonrpc_error(&updated, "pet_update")).clone();
+    assert_eq!(updated["enabled"], true);
+    assert_eq!(updated["name"], "Pip");
+    assert!(updated["research_job_id"].is_string(), "{updated}");
+    assert!(updated["next_digest_at"].is_string(), "{updated}");
+
+    let bad = post_json_rpc(
+        &rpc_base,
+        91_003,
+        "openhuman.pet_update",
+        json!({ "patch": { "digest_time": "7am" } }),
+    )
+    .await;
+    assert!(
+        bad.to_string().contains("invalid 'digest_time'"),
+        "validation errors name the field: {bad}"
+    );
+
+    let goal = post_json_rpc(
+        &rpc_base,
+        91_004,
+        "openhuman.pet_goal_add",
+        json!({ "text": "Finish the PGCE portfolio" }),
+    )
+    .await;
+    assert_no_jsonrpc_error(&goal, "pet_goal_add");
+
+    // ── 2. Script the research pass: three pet_note calls, then the summary ──
+    clear_forced_chat_completions();
+    with_chat_completion_requests(|requests| requests.clear());
+    with_pet_upstream_requests(|log| log.clear());
+    let now = chrono::Utc::now();
+    let notes = [
+        json!({ "source": "email", "kind": "request",
+                "title": "Mentor asks for PGCE portfolio draft", "urgency": 3,
+                "due_at": (now + chrono::Duration::hours(2)).to_rfc3339(),
+                "proposed_action": "Reply to mentor with the draft date" }),
+        json!({ "source": "memory", "kind": "fyi", "title": "Newsletter arrived", "urgency": 0 }),
+        json!({ "source": "tasks", "kind": "deadline", "title": "Lesson plan due", "urgency": 2,
+                "due_at": (now + chrono::Duration::hours(48)).to_rfc3339() }),
+    ];
+    // "pet_note" is present only in the pet_research agent's tool schema.
+    for args in notes {
+        push_forced_chat_completion_when("pet_note", forced_tool_call_completion("pet_note", args));
+    }
+    push_forced_chat_completion_when("pet_note", forced_text_completion("Recorded 3 notes."));
+
+    // ── 3. Run a pass and wait for surfacing ──
+    let run = post_json_rpc(
+        &rpc_base,
+        91_010,
+        "openhuman.pet_run_now",
+        json!({ "wait": true }),
+    )
+    .await;
+    let run = peel_logs_envelope(assert_no_jsonrpc_error(&run, "pet_run_now")).clone();
+    if run["status"] != "completed" {
+        let job_id = updated["research_job_id"].as_str().unwrap_or_default();
+        let runs = post_json_rpc(
+            &rpc_base,
+            91_099,
+            "openhuman.cron_runs",
+            json!({ "job_id": job_id }),
+        )
+        .await;
+        let llm_calls = with_chat_completion_requests(|r| r.len());
+        let upstream = with_pet_upstream_requests(|log| log.clone());
+        panic!(
+            "pass must complete: {run}\ncron runs: {runs}\nchat completions: {llm_calls}\nupstream: {upstream:?}"
+        );
+    }
+    assert_eq!(run["trigger"], "manual");
+    assert_eq!(run["notes_seen"], 3, "{run}");
+    assert_eq!(run["notified"], 1, "{run}");
+    assert_eq!(run["queued"], 1, "{run}");
+    assert_eq!(run["dropped"], 1, "{run}");
+
+    // ── 4. The digest lists the request before the deadline, drops the fyi ──
+    let digest = post_json_rpc(&rpc_base, 91_011, "openhuman.pet_digest_now", json!({})).await;
+    let digest = peel_logs_envelope(assert_no_jsonrpc_error(&digest, "pet_digest_now")).clone();
+    let body = digest["body_md"]
+        .as_str()
+        .expect("digest built")
+        .to_string();
+    assert!(body.starts_with("**Pip: your digest for "), "{body}");
+    let request_at = body
+        .find("Mentor asks for PGCE portfolio draft")
+        .expect(&body);
+    let deadline_at = body.find("Lesson plan due").expect(&body);
+    assert!(request_at < deadline_at, "ranked order: {body}");
+    assert!(
+        !body.contains("Newsletter"),
+        "dropped notes stay out: {body}"
+    );
+    assert_eq!(digest["item_count"], 2);
+
+    // ── 5. Feed shows the digest; the suggestion waits in the inbox ──
+    let feed = post_json_rpc(&rpc_base, 91_012, "openhuman.pet_feed", json!({})).await;
+    let feed = peel_logs_envelope(assert_no_jsonrpc_error(&feed, "pet_feed")).clone();
+    assert_eq!(feed["digests"].as_array().map(Vec::len), Some(1), "{feed}");
+    assert_eq!(feed["last_run"]["notes_seen"], 3);
+    let inbox = post_json_rpc(&rpc_base, 91_013, "openhuman.pet_inbox_list", json!({})).await;
+    let inbox = peel_logs_envelope(assert_no_jsonrpc_error(&inbox, "pet_inbox_list")).clone();
+    let proposals = inbox["proposals"].as_array().cloned().unwrap_or_default();
+    assert_eq!(proposals.len(), 1, "{inbox}");
+    assert_eq!(
+        proposals[0]["action_text"],
+        "Reply to mentor with the draft date"
+    );
+
+    // ── 6. Nothing was sent ──
+    let pending = post_json_rpc(
+        &rpc_base,
+        91_014,
+        "openhuman.approval_list_pending",
+        json!({}),
+    )
+    .await;
+    let pending = peel_logs_envelope(assert_no_jsonrpc_error(&pending, "approval_list_pending"));
+    assert_eq!(pending.as_array().map(Vec::len), Some(0), "{pending}");
+    let decided = post_json_rpc(
+        &rpc_base,
+        91_015,
+        "openhuman.approval_list_recent_decisions",
+        json!({}),
+    )
+    .await;
+    let decided = peel_logs_envelope(assert_no_jsonrpc_error(
+        &decided,
+        "approval_list_recent_decisions",
+    ));
+    assert_eq!(decided.as_array().map(Vec::len), Some(0), "{decided}");
+    let upstream = with_pet_upstream_requests(|log| log.clone());
+    assert!(
+        upstream
+            .iter()
+            .any(|(_, path)| path.ends_with("/chat/completions")),
+        "the pass must have used the chat model: {upstream:?}"
+    );
+    let non_llm_writes: Vec<&(String, String)> = upstream
+        .iter()
+        .filter(|(method, path)| method != "GET" && !path.ends_with("/chat/completions"))
+        .collect();
+    assert!(
+        non_llm_writes.is_empty(),
+        "the research pass must make no non-LLM outbound writes: {non_llm_writes:?}"
+    );
+
+    clear_forced_chat_completions();
+    mock_join.abort();
+    rpc_join.abort();
+}

@@ -125,8 +125,9 @@ pub enum DomainGroup {
     /// External connectors reached on the user's behalf — Composio, calendar,
     /// file storage, task sources (`integrations/`).
     Integrations,
-    /// Background initiative: scheduled jobs and the subconscious tick loop
-    /// (`cron/`, `subconscious/`). Pairs with `ServiceSet::{cron, heartbeat}`.
+    /// Background initiative: scheduled jobs, the subconscious tick loop and
+    /// Pet mode (`cron/`, `subconscious/`, `pet/`). Pairs with
+    /// `ServiceSet::{cron, heartbeat}` — Pet mode runs on the cron scheduler.
     Automation,
     /// Code-execution substrate: the managed Node/Python runtimes, the worker
     /// pool, and the sandbox/CWD-jail confinement (`runtime/`, `sandbox/`).
@@ -422,6 +423,13 @@ fn build_registered_controllers() -> Vec<GroupedController> {
         &mut controllers,
         DomainGroup::Automation,
         crate::neppy::cron::all_cron_registered_controllers(),
+    );
+    // Pet mode (background read-only research + ranked digest). Tagged with
+    // Automation: it cannot run without the cron scheduler.
+    push(
+        &mut controllers,
+        DomainGroup::Automation,
+        crate::neppy::pet::all_pet_registered_controllers(),
     );
     // Saved automation workflows (tinyflows graphs): create/get/list/update/delete/run
     // (gated with flows).

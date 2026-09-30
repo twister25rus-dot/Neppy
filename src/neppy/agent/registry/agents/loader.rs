@@ -228,6 +228,14 @@ pub const BUILTINS: &[BuiltinAgent] = &[
         prompt_fn: super::morning_briefing::prompt::build,
         graph_fn: None,
     },
+    // Pet mode's background research lane. Run only by the Pet's cron job
+    // (never listed as an orchestrator subagent); read-only, closed allowlist.
+    BuiltinAgent {
+        id: "pet_research",
+        toml: include_str!("pet_research/agent.toml"),
+        prompt_fn: super::pet_research::prompt::build,
+        graph_fn: None,
+    },
     BuiltinAgent {
         id: "summarizer",
         toml: include_str!("summarizer/agent.toml"),
@@ -1370,6 +1378,43 @@ mod tests {
         assert!(def.omit_identity);
         assert!(def.omit_safety_preamble);
         assert_eq!(def.max_iterations, 8);
+    }
+
+    #[test]
+    fn pet_research_is_read_only_and_named() {
+        let def = find("pet_research");
+        assert_eq!(def.sandbox_mode, SandboxMode::ReadOnly);
+        match &def.tools {
+            ToolScope::Named(names) => {
+                let got: std::collections::HashSet<&str> =
+                    names.iter().map(String::as_str).collect();
+                let want: std::collections::HashSet<&str> =
+                    crate::neppy::pet::PET_RESEARCH_TOOL_ALLOWLIST
+                        .iter()
+                        .copied()
+                        .collect();
+                assert_eq!(
+                    got, want,
+                    "agent.toml [tools] named must equal the allowlist"
+                );
+                assert_eq!(names.len(), want.len(), "no duplicate tool names");
+                assert!(!got.contains("web_fetch"));
+            }
+            ToolScope::Wildcard => panic!("pet_research must have a Named tool scope"),
+        }
+        // Same model as chat: the pet's hint must track the orchestrator's.
+        assert_eq!(
+            format!("{:?}", def.model),
+            format!("{:?}", find("orchestrator").model)
+        );
+        assert!(
+            !def.omit_safety_preamble,
+            "reads untrusted content — keep the preamble"
+        );
+        assert!(
+            def.subagents.is_empty(),
+            "the research lane must not delegate"
+        );
     }
 
     #[test]

@@ -1271,6 +1271,7 @@ fn carved_out_families_report_their_own_group() {
         #[cfg(feature = "flows")]
         ("flows", DomainGroup::Flows),
         ("cron", DomainGroup::Automation),
+        ("pet", DomainGroup::Automation),
         ("composio", DomainGroup::Integrations),
         ("task_sources", DomainGroup::Integrations),
         ("billing", DomainGroup::Hosted),
@@ -1532,6 +1533,8 @@ fn every_domain_group_is_accounted_for_in_subscriber_plan() {
         DomainGroup::Security,
         DomainGroup::Desktop,
         DomainGroup::Skills,
+        // Pet mode's pass-completed + approval-surface subscribers.
+        DomainGroup::Automation,
     ];
     const NO_SUBSCRIBERS: &[DomainGroup] = &[
         DomainGroup::Threads,
@@ -1541,7 +1544,6 @@ fn every_domain_group_is_accounted_for_in_subscriber_plan() {
         DomainGroup::Media,
         DomainGroup::Medulla,
         DomainGroup::Inference,
-        DomainGroup::Automation,
         DomainGroup::Runtimes,
         DomainGroup::Hosted,
         DomainGroup::Relay,

@@ -1532,6 +1532,16 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         privacy: None,
     },
     Capability {
+        id: "pet.daily_digest",
+        name: "Pet (proactive digest)",
+        domain: "pet",
+        category: CapabilityCategory::Automation,
+        description: "A background, read-only Pet scans your sources while your Mac is awake and sends one ranked daily digest plus rare urgent alerts. It never sends or changes anything: suggested actions wait in the Pet inbox for you.",
+        how_to: "Pet",
+        status: CapabilityStatus::Beta,
+        privacy: None,
+    },
+    Capability {
         id: "automation.crypto_agent",
         name: "Crypto Agent",
         domain: "automation",

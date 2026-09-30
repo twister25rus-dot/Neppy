@@ -447,6 +447,11 @@ pub enum DomainEvent {
         job_id: String,
         success: bool,
         output: String,
+        /// The job's built-in agent definition id, when it has one (mirrors
+        /// `CronJobTriggered::job_name` carrying identity). Lets subscribers
+        /// react to a specific agent's runs — `pet::bus` surfaces a Pet pass —
+        /// and lets the notification bridge suppress the generic toast for them.
+        agent_id: Option<String>,
     },
     /// A cron job requests delivery of its output to a channel.
     CronDeliveryRequested {
@@ -1278,6 +1283,34 @@ pub enum DomainEvent {
         /// New status: `"connecting"`, `"connected"`, `"disconnected"`, `"failed"`.
         status: String,
     },
+
+    // ── Pet mode ────────────────────────────────────────────────────────
+    /// A Pet research note ranked high enough to interrupt the user (bucket
+    /// `notify`). Published by `pet::surface` after a pass; the notification
+    /// bridge turns it into a persisted `Important` core notification.
+    PetNoteSurfaced {
+        pet_id: String,
+        note_id: String,
+        /// Factual note title (<= 140 chars, control chars stripped). Never
+        /// logged above `debug`.
+        title: String,
+        /// Note source (`email`, `tasks`, ...).
+        source: String,
+    },
+    /// A Pet digest was assembled and stored. Published by `pet::surface`.
+    PetDigestReady {
+        pet_id: String,
+        digest_id: String,
+        item_count: u32,
+    },
+    /// A background (non-chat, non-flow) approval is parked and waiting —
+    /// surfaced so it does not silently TTL-deny. Published by
+    /// `pet::bus::PetApprovalSurfaceSubscriber`.
+    PetApprovalNeeded {
+        request_id: String,
+        tool_name: String,
+        action_summary: String,
+    },
 }
 
 impl DomainEvent {
@@ -1413,6 +1446,10 @@ impl DomainEvent {
             | Self::ApprovalGateDisabled { .. }
             | Self::FlowApprovalRequested { .. } => "approval",
 
+            Self::PetNoteSurfaced { .. }
+            | Self::PetDigestReady { .. }
+            | Self::PetApprovalNeeded { .. } => "pet",
+
             Self::PlanReviewRequested { .. } | Self::PlanReviewDecided { .. } => "plan_review",
 
             Self::ExternalTransferPending { .. } => "egress",
@@ -1537,6 +1574,9 @@ impl DomainEvent {
             Self::ApprovalRequested { .. } => "ApprovalRequested",
             Self::ApprovalDecided { .. } => "ApprovalDecided",
             Self::FlowApprovalRequested { .. } => "FlowApprovalRequested",
+            Self::PetNoteSurfaced { .. } => "PetNoteSurfaced",
+            Self::PetDigestReady { .. } => "PetDigestReady",
+            Self::PetApprovalNeeded { .. } => "PetApprovalNeeded",
             Self::PlanReviewRequested { .. } => "PlanReviewRequested",
             Self::PlanReviewDecided { .. } => "PlanReviewDecided",
             Self::ExternalTransferPending { .. } => "ExternalTransferPending",

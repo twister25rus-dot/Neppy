@@ -2098,3 +2098,37 @@ async fn cron_agent_job_short_loopback_send_error_stays_retryable() {
         "provider-generated short loopback send error must stay retryable without refused errno/tcp-connect evidence; got raw={raw:?}"
     );
 }
+
+// ── Pet mode: turn origin selection ─────────────────────────────────────────
+
+#[test]
+fn origin_for_agent_job_gives_pet_research_only_to_the_pet_agent() {
+    use crate::neppy::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource};
+    let source_of = |agent_id: Option<&str>| {
+        let mut job = test_job("");
+        job.job_type = JobType::Agent;
+        job.agent_id = agent_id.map(str::to_string);
+        match origin_for_agent_job(&job) {
+            AgentTurnOrigin::TrustedAutomation { job_id, source } => {
+                assert_eq!(job_id, "test-job");
+                source
+            }
+            other => panic!("expected TrustedAutomation, got {other:?}"),
+        }
+    };
+    assert_eq!(
+        source_of(Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID)),
+        TrustedAutomationSource::PetResearch
+    );
+    // Existing cron behaviour is unchanged: morning_briefing and plain jobs
+    // keep the Cron origin.
+    assert_eq!(
+        source_of(Some("morning_briefing")),
+        TrustedAutomationSource::Cron
+    );
+    assert_eq!(source_of(None), TrustedAutomationSource::Cron);
+    assert_eq!(
+        origin_for_agent_job(&test_job("")).class(),
+        "TrustedAutomation(Cron)"
+    );
+}
