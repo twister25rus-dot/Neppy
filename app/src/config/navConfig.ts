@@ -28,7 +28,7 @@ export interface NavTab {
 
 /**
  * Ordered list of sidebar nav entries:
- *   chat → brain → flows → connections → rewards
+ *   chat → pet → brain → flows → connections → rewards
  *
  * Orchestration (TinyPlace multi-agent coordination) is no longer a top-level
  * tab — it was folded back under Brain as the `/brain?tab=orchestration`
@@ -53,6 +53,8 @@ export interface NavTab {
  */
 export const NAV_TABS: NavTab[] = [
   { id: 'chat', labelKey: 'nav.chat', path: '/chat', walkthroughAttr: 'tab-chat' },
+  // Pet mode: a read-only background researcher that leaves a daily digest.
+  { id: 'pet', labelKey: 'nav.pet', path: '/pet', walkthroughAttr: 'tab-pet' },
   { id: 'brain', labelKey: 'nav.brain', path: '/brain', walkthroughAttr: 'tab-brain' },
   { id: 'flows', labelKey: 'nav.flows', path: '/flows', walkthroughAttr: 'tab-flows' },
   {

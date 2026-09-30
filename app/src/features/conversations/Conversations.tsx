@@ -822,6 +822,25 @@ const Conversations = ({
       window.removeEventListener('dictation://insert-text', onDictationInsert as EventListener);
   }, []);
 
+  // One-shot composer seed handed over through route state (e.g. accepting a
+  // Pet proposal). It only fills the composer so the user can review and edit
+  // it: this effect never sends. The seed is cleared from the route state
+  // afterwards so a reload or re-render does not re-seed.
+  const composerSeed = (location.state as { composerSeed?: string } | null)?.composerSeed;
+  useEffect(() => {
+    if (!composerSeed) return;
+    debug('[chat][route] seeding composer from route state len=%d', composerSeed.length);
+    setInputMode('text');
+    setInputValue(composerSeed);
+    window.requestAnimationFrame(() => {
+      textInputRef.current?.focus();
+    });
+    const openThreadId = (location.state as { openThreadId?: string } | null)?.openThreadId;
+    navigate(location.pathname, { replace: true, state: openThreadId ? { openThreadId } : null });
+    // Keyed on the seed only: `location`/`navigate` change on the replace below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [composerSeed]);
+
   useEffect(() => {
     if (sendErrorRef.current && inputValue.length > 0) {
       setSendError(null);

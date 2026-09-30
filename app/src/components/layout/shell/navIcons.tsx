@@ -8,6 +8,7 @@ import {
   LuMegaphone,
   LuMessageCircle,
   LuNetwork,
+  LuPawPrint,
   LuSettings,
   LuUserRound,
   LuWallet,
@@ -39,6 +40,7 @@ const ICONS: Record<string, IconType> = {
   brain: LuBrain,
   keyboard: LuKeyboard,
   rewards: LuGift,
+  pet: LuPawPrint,
 };
 
 interface NavIconProps {

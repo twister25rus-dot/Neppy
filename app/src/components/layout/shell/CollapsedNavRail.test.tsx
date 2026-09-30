@@ -26,6 +26,7 @@ describe('CollapsedNavRail', () => {
       'nav.home',
       'shortcuts.title',
       'nav.chat',
+      'nav.pet',
       'nav.brain',
       'nav.flows',
       'nav.connections',

@@ -17,6 +17,7 @@ import FlowsPage from './pages/FlowsPage';
 import Invites from './pages/Invites';
 import Notifications from './pages/Notifications';
 import Onboarding from './pages/onboarding/Onboarding';
+import PetPage from './pages/PetPage';
 import { PttOverlayPage } from './pages/PttOverlayPage';
 import Rewards from './pages/Rewards';
 import Settings from './pages/Settings';
@@ -136,6 +137,18 @@ const AppRoutes = ({ location }: AppRoutesProps = {}) => {
         element={
           <ProtectedRoute requireAuth={true}>
             <Brain />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Pet mode — the read-only background researcher's feed, inbox, notes
+          and settings. Deep links from pet core notifications land here with
+          `?tab=feed|inbox&note=<id>&digest=<id>`. */}
+      <Route
+        path="/pet"
+        element={
+          <ProtectedRoute requireAuth={true}>
+            <PetPage />
           </ProtectedRoute>
         }
       />
