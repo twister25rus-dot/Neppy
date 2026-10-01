@@ -165,6 +165,18 @@ pub fn spawn_cron_service() {
 /// messages are never polled. Skipped entirely when
 /// `OPENHUMAN_DISABLE_CHANNEL_LISTENERS` is set to `1`/`true`, and returns early
 /// when no channel integrations are configured.
+/// Local assistant background service: the MLX worker watchdog (idle unload,
+/// pressure stop, crash reaping, metrics) plus resumption of any local
+/// assistant task a previous run left interrupted. Both are idempotent.
+pub fn spawn_local_assistant_service() {
+    log::debug!("[runtime.local_assistant] starting worker watchdog and boot resume");
+    crate::neppy::inference::local::spawn_worker_watchdog();
+    tokio::spawn(async {
+        let resumed = crate::neppy::inference::resume_local_assistant_on_boot().await;
+        log::info!("[runtime.local_assistant] boot resume re-queued {resumed} task(s)");
+    });
+}
+
 pub fn spawn_channels_service() {
     // Compile-time `channels` gate: the body names `channels::start_channels`,
     // so the whole thing is `#[cfg]`-gated. With the feature off there are no

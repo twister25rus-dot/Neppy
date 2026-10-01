@@ -645,6 +645,12 @@ fn build_registered_controllers() -> Vec<GroupedController> {
         DomainGroup::Inference,
         crate::neppy::inference::all_mlx_registered_controllers(),
     );
+    // Local assistant: memory-bounded project tasks over the gated MLX worker.
+    push(
+        &mut controllers,
+        DomainGroup::Inference,
+        crate::neppy::inference::all_local_assistant_registered_controllers(),
+    );
     // Embedding provider configuration and embed RPC.
     push(
         &mut controllers,

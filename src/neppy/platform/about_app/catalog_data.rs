@@ -944,6 +944,16 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         privacy: None,
     },
     Capability {
+        id: "local_ai.local_assistant",
+        name: "Local Assistant",
+        domain: "local_ai",
+        category: CapabilityCategory::LocalAI,
+        description: "Run multi-step project tasks on an on-device MLX model with bounded memory: one request at a time, idle unload, pressure-aware stop and resume, an incremental project index, and resumable checkpoints.",
+        how_to: "RPC: openhuman.local_assistant_start_task; worker state via openhuman.mlx_worker_status",
+        status: CapabilityStatus::Beta,
+        privacy: None,
+    },
+    Capability {
         id: "local_ai.manage_model_assets",
         name: "Manage Model Assets",
         domain: "local_ai",

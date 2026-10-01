@@ -956,6 +956,12 @@ impl CoreRuntime {
         if self.services.cron {
             services::spawn_cron_service();
         }
+        // Local assistant: the memory-aware MLX worker watchdog and resumption
+        // of tasks a restart interrupted. A background service like cron, and
+        // meaningless without the inference domain.
+        if self.services.cron && self.ctx.domains().inference {
+            services::spawn_local_assistant_service();
+        }
         // Flow-run boot reconciliation is selected by the flows *domain*, not by
         // a background service — runs can be started without cron in the
         // ServiceSet, so their orphans must be reconcilable without it too.
