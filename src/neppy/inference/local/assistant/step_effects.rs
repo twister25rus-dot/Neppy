@@ -126,7 +126,7 @@ pub(super) async fn run_step_tests(
     check(env.faults.as_ref(), FaultPoint::TestIntent)?;
     // Re-checked on every run, not only when the task was accepted: the policy
     // can change while a task waits, and the action budget is charged here.
-    let result = match authorize_run(&env.policy, command) {
+    let result = match authorize_run(&env.policy, command, root) {
         Err(why) => {
             log::warn!(
                 "[local_assistant] task {} test command refused: {why}",

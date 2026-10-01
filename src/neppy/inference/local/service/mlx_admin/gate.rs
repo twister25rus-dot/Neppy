@@ -41,6 +41,9 @@ use super::pressure::PressureState;
 tokio::task_local! {
     /// Set for the duration of a background caller's model call.
     static BACKGROUND: bool;
+    /// Set inside [`background_scope`] to take the caller out of the yielding
+    /// game: it queues like chat does and is never cancelled to make room.
+    static PINNED: bool;
 }
 
 /// Run `fut` as a background caller: its gate acquisitions yield to
@@ -48,6 +51,18 @@ tokio::task_local! {
 /// that run on the same task, which is the shape of a model call.
 pub(crate) async fn background_scope<F: Future>(fut: F) -> F::Output {
     BACKGROUND.scope(true, fut).await
+}
+
+/// Run `fut` with background callers inside it *pinned*: they wait their turn
+/// in line like any caller and cannot be asked to yield. The assistant uses it
+/// once a step has yielded too often, so a busy chat cannot starve a step
+/// forever.
+pub(crate) async fn pinned_scope<F: Future>(pinned: bool, fut: F) -> F::Output {
+    PINNED.scope(pinned, fut).await
+}
+
+pub(crate) fn is_pinned() -> bool {
+    PINNED.try_with(|pinned| *pinned).unwrap_or(false)
 }
 
 fn is_background() -> bool {
@@ -233,7 +248,7 @@ impl InferenceGate {
     /// Wait for the single slot, honouring `max_waiters`,
     /// `acquire_timeout_secs` and a pressure pause.
     pub(crate) async fn acquire(&self, cfg: &MlxWorkerConfig) -> Result<GatePermit, GateError> {
-        let priority = if is_background() {
+        let priority = if is_background() && !is_pinned() {
             Priority::Background
         } else {
             Priority::Interactive

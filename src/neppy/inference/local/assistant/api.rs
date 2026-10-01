@@ -14,7 +14,7 @@ use crate::neppy::config::schema::LocalAssistantConfig;
 use crate::neppy::security::SecurityPolicy;
 
 use super::command_policy::check_command;
-use super::guards;
+use super::guards::{self, RootUse};
 use super::index::{open_index, IndexStatus, RefreshStats};
 use super::ops::{Controller, QueueItem};
 use super::store::StateStore;
@@ -79,12 +79,12 @@ pub(crate) struct EnabledReply {
     pub(crate) resumed: usize,
 }
 
-/// A directory the assistant may work on. `allow_edits` selects the write
-/// rules: the same checks the agent's file tools apply to a write root, plus a
-/// git repository requirement (see `guards`).
-pub(crate) fn resolve_root(ctx: &ApiCtx, root: &Path, allow_edits: bool) -> Result<PathBuf> {
-    guards::validate_root(&ctx.policy, &ctx.workspace, root, allow_edits).map_err(|why| {
-        log::warn!("[local_assistant] project_root refused: {why}");
+/// A directory the assistant may work on, checked for `usage`: reading is the
+/// loosest; running a test command adds the write-root checks the agent's file
+/// tools apply; editing adds a git repository requirement (see `guards`).
+pub(crate) fn resolve_root(ctx: &ApiCtx, root: &Path, usage: RootUse) -> Result<PathBuf> {
+    guards::validate_root(&ctx.policy, &ctx.workspace, root, usage).map_err(|why| {
+        log::warn!("[local_assistant] project_root refused ({usage:?}): {why}");
         AssistantError::Invalid(why)
     })
 }
@@ -108,27 +108,31 @@ pub(crate) fn start_task(ctx: &ApiCtx, spec: TaskSpec) -> Result<TaskRecord> {
             goal.len()
         )));
     }
-    let root = resolve_root(
-        ctx,
-        &spec.project_root,
-        spec.allow_edits && ctx.policy.can_act(),
-    )?;
-    if spec.allow_edits && !ctx.policy.can_act() {
-        return Err(AssistantError::Invalid(
-            "allow_edits was requested but the autonomy tier is read-only".into(),
-        ));
-    }
+    let can_act = ctx.policy.can_act();
     let test_command = spec
         .test_command
         .as_deref()
         .map(str::trim)
         .filter(|c| !c.is_empty());
+    // A directory that exists and is a plausible project first, so a bad path
+    // is reported as one; the command is judged next; then the root again for
+    // what it will really be used for.
+    let root = resolve_root(ctx, &spec.project_root, RootUse::Read)?;
+    if spec.allow_edits && !can_act {
+        return Err(AssistantError::Invalid(
+            "allow_edits was requested but the autonomy tier is read-only".into(),
+        ));
+    }
     if let Some(command) = test_command {
         if command.len() > COMMAND_LIMIT {
             return Err(AssistantError::Invalid("test_command is too long".into()));
         }
-        check_command(&ctx.policy, command)
+        check_command(&ctx.policy, command, &root)
             .map_err(|why| AssistantError::Invalid(format!("test_command refused: {why}")))?;
+    }
+    let usage = RootUse::for_task(spec.allow_edits, test_command.is_some(), can_act);
+    if usage != RootUse::Read {
+        resolve_root(ctx, &spec.project_root, usage)?;
     }
     let max_steps = spec
         .max_steps
@@ -327,13 +331,13 @@ pub(crate) fn resume_after_restart(ctx: &ApiCtx) -> Result<usize> {
 }
 
 pub(crate) async fn index_refresh(ctx: &ApiCtx, root: &Path) -> Result<RefreshStats> {
-    let root = resolve_root(ctx, root, false)?;
+    let root = resolve_root(ctx, root, RootUse::Read)?;
     let index = Arc::new(open_index(&ctx.workspace, &root)?);
     index.refresh_async(&ctx.cfg).await
 }
 
 pub(crate) fn index_status(ctx: &ApiCtx, root: &Path) -> Result<IndexStatus> {
-    let root = resolve_root(ctx, root, false)?;
+    let root = resolve_root(ctx, root, RootUse::Read)?;
     open_index(&ctx.workspace, &root)?.status()
 }
 
@@ -345,7 +349,7 @@ pub(crate) fn search(
     query: &str,
     limit: Option<usize>,
 ) -> Result<Vec<Snippet>> {
-    let root = resolve_root(ctx, root, false)?;
+    let root = resolve_root(ctx, root, RootUse::Read)?;
     let index = open_index(&ctx.workspace, &root)?;
     let terms = super::index::query_terms(&[query]);
     let mut cfg = ctx.cfg.clone();

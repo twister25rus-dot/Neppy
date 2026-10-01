@@ -144,15 +144,18 @@ async fn drive(env: &RunEnv, task: TaskRecord, stop: &StopSignal) -> Result<RunO
     let edits_allowed = task.allow_edits && env.policy.can_act();
     // The root was checked when the task was accepted; the config, the tree and
     // the tier can all have changed since. Same rules, applied again.
-    super::guards::validate_root(&env.policy, &env.workspace, &root, edits_allowed).map_err(
-        |why| {
-            log::warn!(
-                "[local_assistant] task {} root no longer allowed: {why}",
-                task.id
-            );
-            AssistantError::Invalid(format!("project root is no longer allowed: {why}"))
-        },
-    )?;
+    let usage = super::guards::RootUse::for_task(
+        edits_allowed,
+        task.test_command.is_some(),
+        env.policy.can_act(),
+    );
+    super::guards::validate_root(&env.policy, &env.workspace, &root, usage).map_err(|why| {
+        log::warn!(
+            "[local_assistant] task {} root no longer allowed: {why}",
+            task.id
+        );
+        AssistantError::Invalid(format!("project root is no longer allowed: {why}"))
+    })?;
     let mut estimator = TokenEstimator::default();
     let result = step_loop(
         env,

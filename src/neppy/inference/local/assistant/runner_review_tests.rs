@@ -7,8 +7,11 @@ use std::time::{Duration, Instant};
 
 use crate::neppy::security::policy::AutonomyLevel;
 
+use super::super::model::{ModelFailure, ModelReply, StepModel};
+use super::super::planning::yields_for_test;
 use super::super::test_support::*;
 use super::*;
+use crate::neppy::inference::local::service::mlx_admin::gate::{is_pinned, GateError};
 
 const SEARCH: &str = "pub fn alpha() {}";
 const REPLACE: &str = "pub fn alpha() { /* v2 */ }";
@@ -249,4 +252,157 @@ async fn disabling_the_assistant_stops_a_running_test_and_pauses_the_task() {
     let rows = fx.store.effects_of_step(&id, 1).unwrap();
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].status, EffectStatus::Intent);
+}
+
+// ---- yielding is bounded, and cancelled calls are charged ----------------
+
+/// Fails the first `fail_first` calls with a gate error, then answers.
+struct GateModel {
+    fail_first: usize,
+    failure: fn() -> ModelFailure,
+    calls: std::sync::atomic::AtomicUsize,
+    pinned: parking_lot::Mutex<Vec<bool>>,
+    max_tokens: parking_lot::Mutex<Vec<u32>>,
+    reply: String,
+}
+
+impl GateModel {
+    fn new(fail_first: usize, failure: fn() -> ModelFailure) -> Arc<Self> {
+        Arc::new(Self {
+            fail_first,
+            failure,
+            calls: std::sync::atomic::AtomicUsize::new(0),
+            pinned: parking_lot::Mutex::new(Vec::new()),
+            max_tokens: parking_lot::Mutex::new(Vec::new()),
+            reply: plan_json("s", &[], false, "n", true),
+        })
+    }
+}
+
+#[async_trait::async_trait]
+impl StepModel for GateModel {
+    async fn complete(
+        &self,
+        _system: &str,
+        _user: &str,
+        max_tokens: u32,
+    ) -> std::result::Result<ModelReply, ModelFailure> {
+        let n = self.calls.fetch_add(1, Ordering::SeqCst);
+        self.pinned.lock().push(is_pinned());
+        self.max_tokens.lock().push(max_tokens);
+        if n < self.fail_first {
+            return Err((self.failure)());
+        }
+        Ok(ModelReply {
+            text: self.reply.clone(),
+            prompt_tokens: Some(100),
+            completion_tokens: Some(10),
+        })
+    }
+}
+
+fn yielded() -> ModelFailure {
+    ModelFailure::Gate(GateError::Yielded)
+}
+
+#[tokio::test]
+async fn after_three_yields_a_step_is_pinned_and_cannot_be_starved() {
+    let fx = Fixture::new();
+    let id = fx.new_task(false, false);
+    let model = GateModel::new(3, yielded);
+    let env = fx.plain_env(model.clone());
+    let mut outcomes = Vec::new();
+    for _ in 0..6 {
+        let outcome = run(&env, &id).await.unwrap();
+        outcomes.push(outcome.clone());
+        if matches!(outcome, RunOutcome::Finished(_)) {
+            break;
+        }
+        assert_eq!(yields_for_test(&id, 1), outcomes.len() as u32);
+    }
+    assert_eq!(
+        outcomes.len(),
+        4,
+        "three yields, then the step goes through"
+    );
+    assert!(outcomes[..3]
+        .iter()
+        .all(|o| matches!(o, RunOutcome::Preempted(why) if why == "Yielded")));
+    assert_eq!(outcomes[3], RunOutcome::Finished(TaskStatus::Done));
+    assert_eq!(
+        *model.pinned.lock(),
+        vec![false, false, false, true],
+        "the fourth call may no longer be cancelled to make room"
+    );
+    assert_eq!(
+        yields_for_test(&id, 1),
+        0,
+        "forgotten once the plan is stored"
+    );
+}
+
+#[tokio::test]
+async fn yields_are_counted_per_step_not_per_task() {
+    let fx = Fixture::new();
+    let id = fx.new_task(false, false);
+    // Step 1 yields once; step 2 has no yields of its own.
+    let first = GateModel::new(1, yielded);
+    let env = fx.plain_env(first.clone());
+    assert!(matches!(
+        run(&env, &id).await.unwrap(),
+        RunOutcome::Preempted(_)
+    ));
+    assert_eq!(yields_for_test(&id, 1), 1);
+    assert_eq!(yields_for_test(&id, 2), 0);
+}
+
+#[tokio::test]
+async fn a_call_cancelled_while_generating_is_charged_at_its_full_max_tokens() {
+    let mut fx = Fixture::new();
+    fx.cfg.step_max_tokens = 300;
+    fx.cfg.task_max_completion_tokens = 500;
+    let id = fx.new_task(false, false);
+    let model = GateModel::new(10, || ModelFailure::GateAfterStart(GateError::Preempted));
+    let env = fx.plain_env(model.clone());
+
+    assert!(matches!(
+        run(&env, &id).await.unwrap(),
+        RunOutcome::Preempted(_)
+    ));
+    assert_eq!(
+        fx.store.require_task(&id).unwrap().completion_tokens_used,
+        300
+    );
+    // 200 left: the next call asks for 200 and is charged 200.
+    assert!(matches!(
+        run(&env, &id).await.unwrap(),
+        RunOutcome::Preempted(_)
+    ));
+    assert_eq!(
+        fx.store.require_task(&id).unwrap().completion_tokens_used,
+        500
+    );
+    assert_eq!(*model.max_tokens.lock(), vec![300, 200]);
+    // Nothing left: the task ends without asking again. The budget held.
+    assert_eq!(
+        run(&env, &id).await.unwrap(),
+        RunOutcome::Finished(TaskStatus::BudgetExhausted)
+    );
+    assert_eq!(model.calls.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn a_call_cancelled_before_it_generated_costs_nothing() {
+    let fx = Fixture::new();
+    let id = fx.new_task(false, false);
+    let model = GateModel::new(1, || ModelFailure::Gate(GateError::Preempted));
+    let env = fx.plain_env(model);
+    assert!(matches!(
+        run(&env, &id).await.unwrap(),
+        RunOutcome::Preempted(_)
+    ));
+    assert_eq!(
+        fx.store.require_task(&id).unwrap().completion_tokens_used,
+        0
+    );
 }

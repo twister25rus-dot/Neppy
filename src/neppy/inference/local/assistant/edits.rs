@@ -162,7 +162,7 @@ fn resolve_target(ctx: &EditCtx<'_>, rel: &str) -> std::result::Result<PathBuf, 
     if ctx.policy.is_workspace_internal_path(&abs) {
         return Err("the path is internal application state".into());
     }
-    super::guards::check_edit_target(ctx.policy, ctx.cfg, &rel_str, &abs)?;
+    super::guards::check_edit_target(ctx.policy, ctx.cfg, ctx.root, &rel_str, &abs)?;
     Ok(abs)
 }
 

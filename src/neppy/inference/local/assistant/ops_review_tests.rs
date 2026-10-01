@@ -3,27 +3,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::neppy::security::{TrustedAccess, TrustedRoot};
-
 use super::*;
-
-/// The project gets a repository marker and a read-write grant, which is what a
-/// root that is to be edited needs.
-fn trust_project(e: &mut Env) {
-    std::fs::create_dir_all(e.project.path().join(".git")).unwrap();
-    let mut policy = (*e.ctx.policy).clone();
-    policy.trusted_roots = vec![TrustedRoot {
-        path: e
-            .project
-            .path()
-            .canonicalize()
-            .unwrap()
-            .to_string_lossy()
-            .into_owned(),
-        access: TrustedAccess::ReadWrite,
-    }];
-    e.ctx.policy = Arc::new(policy);
-}
 
 fn edit_spec(e: &Env) -> TaskSpec {
     TaskSpec {
@@ -111,7 +91,7 @@ async fn the_home_directory_is_not_a_project_even_to_read() {
 
 #[tokio::test]
 async fn supervised_refuses_a_test_command_that_needs_approval_when_the_task_is_accepted() {
-    let e = env(4, FakeRunner::new(false, vec![]), AutonomyLevel::Supervised);
+    let mut e = env(4, FakeRunner::new(false, vec![]), AutonomyLevel::Supervised);
     let err = api::start_task(
         &e.ctx,
         TaskSpec {
@@ -123,7 +103,8 @@ async fn supervised_refuses_a_test_command_that_needs_approval_when_the_task_is_
     .to_string();
     assert!(err.contains("test_command refused"), "{err}");
     assert!(err.contains("approval"), "{err}");
-    // A read-only command is fine in the same tier.
+    // A read-only command is fine in the same tier, in a project it may run in.
+    trust_project(&mut e);
     assert!(api::start_task(
         &e.ctx,
         TaskSpec {
@@ -281,4 +262,28 @@ fn only_a_yield_is_recognised_as_a_yield() {
     for other in ["Preempted", "Paused(Critical)", "Busy", ""] {
         assert!(!is_yield(other), "{other}");
     }
+}
+
+#[tokio::test]
+async fn a_test_command_needs_a_root_the_agent_may_write_even_without_edits() {
+    let mut e = env(4, FakeRunner::new(false, vec![]), AutonomyLevel::Full);
+    let with_command = TaskSpec {
+        test_command: Some("cargo test".into()),
+        ..e.spec("run the tests")
+    };
+    // Untrusted: the command could write anywhere under the directory.
+    let err = api::start_task(&e.ctx, with_command.clone())
+        .unwrap_err()
+        .to_string();
+    assert!(
+        err.contains("forbidden") || err.contains("trusted_roots"),
+        "{err}"
+    );
+    assert_eq!(e.ctx.store.list_tasks(10).unwrap().len(), 0);
+    // Reading the same directory, with no command, is still fine.
+    assert!(api::start_task(&e.ctx, e.spec("just read")).is_ok());
+    // Trusted: accepted, with no repository required for a run.
+    trust_project(&mut e);
+    std::fs::remove_dir_all(e.project.path().join(".git")).unwrap();
+    assert!(api::start_task(&e.ctx, with_command).is_ok());
 }

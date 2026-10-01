@@ -1,19 +1,29 @@
 //! Whether the user's test command may run.
 //!
-//! The same checks a cron shell job gets (`cron::scheduler::run_job_command`),
-//! in the same order: the tier must allow acting, the rate limit must not be
-//! hit, the command must pass `is_command_allowed`, no path argument may be
-//! forbidden, and the action budget is charged. On top of that the harness
-//! gate's verdict is applied *without* an approval step, because a task runs
-//! unattended: a command the gate would stop to ask about (`Prompt`) is
-//! refused in Supervised rather than quietly treated as approved. Only the
-//! Full tier runs a `Prompt`-class command (network, installs), and a
-//! destructive one is refused everywhere.
+//! The checks a cron shell job gets (`cron::scheduler::run_job_command`): the
+//! tier must allow acting, the rate limit must not be hit, the command must
+//! pass `is_command_allowed`, no path argument may be forbidden, and the action
+//! budget is charged. On top of that the harness gate's verdict is applied
+//! *without* an approval step, because a task runs unattended: a command the
+//! gate would stop to ask about (`Prompt`) is refused in Supervised rather than
+//! quietly treated as approved. Only the Full tier runs a `Prompt`-class
+//! command (network, installs).
+//!
+//! Two deliberate differences from cron, both stricter: a command classified
+//! `Destructive` is refused in *every* tier, Full included (cron's Full tier
+//! would run it after an approval prompt, and a task cannot be prompted). The
+//! classifier sees the outer command only, so a destructive command wrapped in
+//! `sh -c '…'` is classed by its wrapper; in Full that runs, as it would for
+//! cron. The command text is always the user's, never the model's; and
+//! relative path arguments are resolved against the project root the command
+//! runs in, not the agent's action directory.
 //!
 //! `check_command` is the budget-free half, used when a task is accepted so a
 //! bad command is rejected up front. `authorize_run` adds the rate limit and
 //! charges the budget, and is called again each time the command is about to
 //! run, because the policy can change while a task waits.
+
+use std::path::Path;
 
 use crate::neppy::security::policy::{AutonomyLevel, CommandClass, GateDecision};
 use crate::neppy::security::SecurityPolicy;
@@ -31,8 +41,15 @@ fn strip_wrapping_quotes(token: &str) -> &str {
 }
 
 /// The first path-looking argument the policy forbids. A copy of the cron
-/// scheduler's private helper of the same name; the two must stay equivalent.
-pub(crate) fn forbidden_path_argument(security: &SecurityPolicy, command: &str) -> Option<String> {
+/// scheduler's private helper of the same name, plus one addition: a relative
+/// path argument is also judged where it lands under `cwd`, the directory the
+/// command runs in. The policy's own check resolves relative paths against the
+/// action directory, which is not where this command runs.
+pub(crate) fn forbidden_path_argument(
+    security: &SecurityPolicy,
+    command: &str,
+    cwd: &Path,
+) -> Option<String> {
     let mut normalized = command.to_string();
     for sep in ["&&", "||"] {
         normalized = normalized.replace(sep, "\x00");
@@ -64,6 +81,15 @@ pub(crate) fn forbidden_path_argument(security: &SecurityPolicy, command: &str) 
             if looks_like_path && !security.is_path_string_allowed(candidate) {
                 return Some(candidate.to_string());
             }
+            if looks_like_path && !Path::new(candidate).is_absolute() && !candidate.starts_with('~')
+            {
+                let landing = cwd.join(candidate);
+                if !security.is_path_string_allowed(&landing.to_string_lossy())
+                    || super::guards::forbidden_hit(security, &landing, false).is_some()
+                {
+                    return Some(candidate.to_string());
+                }
+            }
         }
     }
     None
@@ -73,6 +99,7 @@ pub(crate) fn forbidden_path_argument(security: &SecurityPolicy, command: &str) 
 pub(crate) fn check_command(
     policy: &SecurityPolicy,
     command: &str,
+    cwd: &Path,
 ) -> std::result::Result<(), String> {
     if !policy.can_act() {
         return Err("the autonomy tier is read-only; commands are not allowed".into());
@@ -84,7 +111,7 @@ pub(crate) fn check_command(
     if class == CommandClass::Destructive {
         return Err("a destructive command cannot be used as a test command".into());
     }
-    if let Some(path) = forbidden_path_argument(policy, command) {
+    if let Some(path) = forbidden_path_argument(policy, command, cwd) {
         return Err(format!("forbidden path argument: {path}"));
     }
     match policy.gate_decision(class) {
@@ -104,8 +131,9 @@ pub(crate) fn check_command(
 pub(crate) fn authorize_run(
     policy: &SecurityPolicy,
     command: &str,
+    cwd: &Path,
 ) -> std::result::Result<(), String> {
-    check_command(policy, command)?;
+    check_command(policy, command, cwd)?;
     if policy.is_rate_limited() {
         return Err("rate limit exceeded".into());
     }

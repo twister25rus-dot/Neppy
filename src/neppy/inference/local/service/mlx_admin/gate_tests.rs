@@ -428,3 +428,42 @@ async fn maintenance_works_while_the_gate_is_paused() {
     gate.pause(PressureState::Critical);
     assert!(gate.try_acquire().is_some());
 }
+
+#[tokio::test]
+async fn a_pinned_background_holder_is_never_asked_to_yield() {
+    let gate = quick_gate();
+    let holder = {
+        let gate = Arc::clone(&gate);
+        tokio::spawn(background_scope(pinned_scope(true, async move {
+            let permit = gate.acquire(&cfg()).await.expect("acquires");
+            tokio::select! {
+                _ = permit.cancelled() => Err(permit.cancel_error()),
+                _ = tokio::time::sleep(Duration::from_millis(400)) => Ok(()),
+            }
+        })))
+    };
+    for _ in 0..100 {
+        if gate.snapshot().active == 1 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let chat = gate
+        .acquire(&cfg())
+        .await
+        .expect("chat gets in once the step is done");
+    assert_eq!(
+        holder.await.expect("task"),
+        Ok(()),
+        "chat waited several yield periods and the pinned step still was not cancelled"
+    );
+    drop(chat);
+}
+
+#[tokio::test]
+async fn pinned_scope_is_off_by_default_and_scoped() {
+    assert!(!is_pinned());
+    pinned_scope(true, async { assert!(is_pinned()) }).await;
+    pinned_scope(false, async { assert!(!is_pinned()) }).await;
+    assert!(!is_pinned());
+}

@@ -16,7 +16,7 @@ use tinyagents::harness::model::{ChatModel, ModelRequest};
 
 use crate::neppy::config::Config;
 
-use super::super::gated_model::gate_error_of;
+use super::super::gated_model::{gate_error_of, generation_started};
 use super::super::service::mlx_admin::gate::{background_scope, GateError};
 
 /// A whole step's model call, gate wait and first load included, must finish
@@ -34,8 +34,11 @@ pub(crate) struct ModelReply {
 
 #[derive(Debug, Clone)]
 pub(crate) enum ModelFailure {
-    /// The gate refused, paused or preempted the call.
+    /// The gate refused, paused or preempted the call before it generated.
     Gate(GateError),
+    /// The gate cancelled the call while it was generating. Tokens may have
+    /// been spent that the server never reported.
+    GateAfterStart(GateError),
     Other(String),
 }
 
@@ -91,6 +94,7 @@ impl StepModel for MlxStepModel {
             Ok(Ok(response)) => response,
             Ok(Err(err)) => {
                 return Err(match gate_error_of(&err) {
+                    Some(gate) if generation_started(&err) => ModelFailure::GateAfterStart(gate),
                     Some(gate) => ModelFailure::Gate(gate),
                     None => ModelFailure::Other(err.to_string()),
                 })

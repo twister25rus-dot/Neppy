@@ -115,6 +115,22 @@ pub(crate) fn gate_error(err: GateError) -> TinyAgentsError {
     TinyAgentsError::Model(err.message())
 }
 
+/// Appended to a gate error raised after the inner model was already running,
+/// so the caller can tell a cancellation that may have cost tokens from one
+/// that happened while still queued or loading.
+const GENERATING_MARK: &str = " [generating]";
+
+/// [`gate_error`] for a cancellation that interrupted a running call.
+fn gate_error_while_generating(err: GateError) -> TinyAgentsError {
+    TinyAgentsError::Model(format!("{}{GENERATING_MARK}", err.message()))
+}
+
+/// Whether a gate error came from interrupting a call that had started
+/// generating.
+pub(crate) fn generation_started(err: &TinyAgentsError) -> bool {
+    err.to_string().contains(GENERATING_MARK)
+}
+
 /// Recover a [`GateError`] from a model error, if the gate produced it.
 pub(crate) fn gate_error_of(err: &TinyAgentsError) -> Option<GateError> {
     GateError::from_message(&err.to_string())
@@ -144,7 +160,7 @@ impl ChatModel<()> for GatedLocalModel {
             biased;
             _ = permit.cancelled() => {
                 self.metrics.event(event::REQUEST_PREEMPTED, None, "during invoke");
-                Err(gate_error(permit.cancel_error()))
+                Err(gate_error_while_generating(permit.cancel_error()))
             }
             result = self.inner.invoke(state, request) => result,
         };

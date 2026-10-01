@@ -61,7 +61,17 @@ impl Machine {
         root: &Path,
         edits: bool,
     ) -> std::result::Result<PathBuf, String> {
-        validate_root_with_home(policy, &self.workspace, root, edits, Some(&self.home))
+        let usage = if edits { RootUse::Edit } else { RootUse::Read };
+        self.check_use(policy, root, usage)
+    }
+
+    fn check_use(
+        &self,
+        policy: &SecurityPolicy,
+        root: &Path,
+        usage: RootUse,
+    ) -> std::result::Result<PathBuf, String> {
+        validate_root_with_home(policy, &self.workspace, root, usage, Some(&self.home))
     }
 }
 
@@ -250,6 +260,45 @@ fn sensitive_paths_are_the_ones_that_run_code_on_their_own() {
         ".npmrc",
         ".git/hooks/pre-commit",
         ".devcontainer/devcontainer.json",
+        // The wider denylist.
+        "Makefile",
+        "makefile",
+        "GNUmakefile",
+        "sub/Makefile",
+        "rules.mk",
+        "mk/common.MK",
+        "pyproject.toml",
+        "setup.py",
+        "setup.cfg",
+        "tests/conftest.py",
+        "tox.ini",
+        "noxfile.py",
+        "Cargo.toml",
+        "crates/x/Cargo.toml",
+        ".yarn/releases/yarn-4.0.0.cjs",
+        ".yarn/plugins/p.cjs",
+        ".yarnrc.yml",
+        ".pnpmfile.cjs",
+        ".mise.toml",
+        ".tool-versions",
+        ".github/workflows/ci.yml",
+        ".github/actions/setup/action.yml",
+        ".github/CODEOWNERS",
+        ".github/ISSUE_TEMPLATE/bug.md",
+        "justfile",
+        "Rakefile",
+        "Gemfile",
+        ".bashrc",
+        ".zshrc",
+        ".zshenv",
+        ".profile",
+        ".bash_profile",
+        // A bare repository planted inside the project.
+        "HEAD",
+        "evil/HEAD",
+        "evil/config",
+        "evil.git/objects/x",
+        "x/y.git/refs/heads/main",
     ];
     for path in sensitive {
         assert!(
@@ -260,15 +309,18 @@ fn sensitive_paths_are_the_ones_that_run_code_on_their_own() {
     let ordinary = [
         "src/lib.rs",
         "README.md",
-        ".github/ISSUE_TEMPLATE/bug.md",
-        ".github/CODEOWNERS",
         ".cargo/notes.md",
         "docs/build.rs.md",
         "src/buildrs.rs",
         "package.json.md",
         "my-package.json",
         "src/vscode/mod.rs",
-        "Cargo.toml",
+        "Cargo.lock.md",
+        "src/make.rs",
+        "docs/config.md",
+        "src/config/mod.rs",
+        "src/head.rs",
+        "README.git.md",
     ];
     for path in ordinary {
         assert!(
@@ -295,14 +347,22 @@ fn an_edit_to_a_sensitive_path_is_refused_unless_the_config_allows_it() {
         ".envrc",
     ] {
         let abs = project.join(rel);
-        let err = check_edit_target(&policy, &cfg, rel, &abs).unwrap_err();
+        let err = check_edit_target(&policy, &cfg, &project, rel, &abs).unwrap_err();
         assert!(err.contains("allow_sensitive_paths"), "{rel}: {err}");
     }
-    assert!(check_edit_target(&policy, &cfg, "src/lib.rs", &project.join("src/lib.rs")).is_ok());
+    assert!(check_edit_target(
+        &policy,
+        &cfg,
+        &project,
+        "src/lib.rs",
+        &project.join("src/lib.rs")
+    )
+    .is_ok());
     cfg.allow_sensitive_paths = true;
     assert!(check_edit_target(
         &policy,
         &cfg,
+        &project,
         ".husky/pre-commit",
         &project.join(".husky/pre-commit")
     )
@@ -318,16 +378,43 @@ fn an_edit_target_is_judged_again_against_the_policy() {
 
     // A forbidden path added after the task was accepted.
     let fenced = m.policy(&[(&project, RW)], &[&vault]);
-    let err =
-        check_edit_target(&fenced, &cfg, "vault/key.txt", &vault.join("key.txt")).unwrap_err();
+    let err = check_edit_target(
+        &fenced,
+        &cfg,
+        &project,
+        "vault/key.txt",
+        &vault.join("key.txt"),
+    )
+    .unwrap_err();
     assert!(err.contains("forbidden"), "{err}");
-    assert!(check_edit_target(&fenced, &cfg, "src/a.rs", &project.join("src/a.rs")).is_ok());
+    assert!(check_edit_target(
+        &fenced,
+        &cfg,
+        &project,
+        "src/a.rs",
+        &project.join("src/a.rs")
+    )
+    .is_ok());
 
     // A grant that was withdrawn, or downgraded to read-only.
     let revoked = m.policy(&[], &[]);
-    assert!(check_edit_target(&revoked, &cfg, "src/a.rs", &project.join("src/a.rs")).is_err());
+    assert!(check_edit_target(
+        &revoked,
+        &cfg,
+        &project,
+        "src/a.rs",
+        &project.join("src/a.rs")
+    )
+    .is_err());
     let read_only = m.policy(&[(&project, TrustedAccess::Read)], &[]);
-    assert!(check_edit_target(&read_only, &cfg, "src/a.rs", &project.join("src/a.rs")).is_err());
+    assert!(check_edit_target(
+        &read_only,
+        &cfg,
+        &project,
+        "src/a.rs",
+        &project.join("src/a.rs")
+    )
+    .is_err());
 }
 
 #[test]
@@ -336,7 +423,197 @@ fn an_edit_target_that_resolves_into_a_persistence_location_is_refused() {
     let agents = m.project("Library/LaunchAgents", true);
     let policy = m.policy(&[(&agents, RW)], &[]);
     let cfg = LocalAssistantConfig::default();
-    let err =
-        check_edit_target(&policy, &cfg, "evil.plist", &agents.join("evil.plist")).unwrap_err();
+    let err = check_edit_target(
+        &policy,
+        &cfg,
+        &agents,
+        "evil.plist",
+        &agents.join("evil.plist"),
+    )
+    .unwrap_err();
     assert!(err.contains("persistence"), "{err}");
+}
+
+// ---- names are not trusted as written ------------------------------------
+
+fn permissive() -> LocalAssistantConfig {
+    LocalAssistantConfig::default()
+}
+
+#[test]
+fn unicode_lookalikes_of_sensitive_names_are_refused() {
+    let m = machine();
+    let project = m.project("work/app", true);
+    let policy = edit_policy(&m, &project);
+    let cfg = permissive();
+    // Create the real entries, so that on a volume that folds names the
+    // lookalike resolves to something that exists.
+    std::fs::create_dir_all(project.join(".husky")).unwrap();
+    std::fs::write(project.join(".husky/pre-commit"), "#!/bin/sh\n").unwrap();
+    std::fs::create_dir_all(project.join(".vscode")).unwrap();
+    std::fs::write(project.join(".vscode/tasks.json"), "{}\n").unwrap();
+    std::fs::create_dir_all(project.join(".github/workflows")).unwrap();
+    std::fs::write(project.join(".github/workflows/ci.yml"), "on: push\n").unwrap();
+    std::fs::write(project.join("package.json"), "{}\n").unwrap();
+    std::fs::write(project.join("build.rs"), "fn main() {}\n").unwrap();
+
+    let lookalikes = [
+        ".hu\u{17F}ky/pre-commit",
+        ".v\u{17F}code/tasks.json",
+        "package.j\u{17F}on",
+        "build.r\u{17F}",
+        ".github/workflow\u{17F}/ci.yml",
+        ".github/workflows/ci.yml\u{17F}",
+        ".HU\u{17F}KY/pre-commit",
+        // The Kelvin sign folds to `k`.
+        ".hus\u{212A}y/pre-commit",
+        "pac\u{212A}age.json",
+    ];
+    for rel in lookalikes {
+        let err = check_edit_target(&policy, &cfg, &project, rel, &project.join(rel))
+            .expect_err(&format!("{rel:?} must be refused"));
+        assert!(err.contains("allow_sensitive_paths"), "{rel:?}: {err}");
+    }
+}
+
+#[test]
+fn a_non_ascii_edit_path_is_refused_by_default() {
+    let m = machine();
+    let project = m.project("work/app", true);
+    let policy = edit_policy(&m, &project);
+    let mut cfg = permissive();
+    for rel in [
+        "docs/r\u{E9}sum\u{E9}.md",
+        "\u{65E5}\u{672C}/a.rs",
+        "src/caf\u{E9}/mod.rs",
+    ] {
+        let err = check_edit_target(&policy, &cfg, &project, rel, &project.join(rel))
+            .expect_err(&format!("{rel:?} must be refused"));
+        assert!(err.contains("non-ASCII"), "{rel:?}: {err}");
+    }
+    cfg.allow_sensitive_paths = true;
+    let rel = "docs/r\u{E9}sum\u{E9}.md";
+    assert!(check_edit_target(&policy, &cfg, &project, rel, &project.join(rel)).is_ok());
+}
+
+#[test]
+fn the_on_disk_name_is_what_the_denylist_sees() {
+    let m = machine();
+    let project = m.project("work/app", true);
+    std::fs::create_dir_all(project.join(".husky")).unwrap();
+    std::fs::write(project.join(".husky/pre-commit"), "x").unwrap();
+    // Wherever the lookup folds the given name onto the real entry (a
+    // case-insensitive volume), the real name comes back.
+    for given in [
+        ".HUSKY/pre-commit",
+        ".Husky/PRE-COMMIT",
+        ".hu\u{17F}ky/pre-commit",
+    ] {
+        if project.join(given).exists() {
+            assert_eq!(
+                on_disk_rel(&project, Path::new(given)),
+                ".husky/pre-commit",
+                "{given:?} resolves on this volume"
+            );
+        }
+    }
+    // A name that resolves to nothing keeps its spelling.
+    assert_eq!(
+        on_disk_rel(&project, Path::new("src/new/file.rs")),
+        "src/new/file.rs"
+    );
+    // The part that exists is reported by its on-disk name, the rest as given.
+    assert_eq!(
+        on_disk_rel(&project, Path::new(".husky/new.sh")),
+        ".husky/new.sh"
+    );
+}
+
+#[test]
+fn a_case_variant_of_a_sensitive_name_is_refused_even_when_ascii() {
+    let m = machine();
+    let project = m.project("work/app", true);
+    let policy = edit_policy(&m, &project);
+    let cfg = permissive();
+    std::fs::create_dir_all(project.join(".husky")).unwrap();
+    for rel in [
+        ".HUSKY/pre-commit",
+        "PACKAGE.JSON",
+        "makeFILE",
+        "cargo.TOML",
+        ".GitHub/Workflows/x.yml",
+    ] {
+        assert!(
+            check_edit_target(&policy, &cfg, &project, rel, &project.join(rel)).is_err(),
+            "{rel}"
+        );
+    }
+}
+
+#[test]
+fn a_symlinked_directory_does_not_hide_a_sensitive_target() {
+    let m = machine();
+    let project = m.project("work/app", true);
+    let policy = edit_policy(&m, &project);
+    let cfg = permissive();
+    std::fs::create_dir_all(project.join(".husky")).unwrap();
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(project.join(".husky"), project.join("hooks_alias")).unwrap();
+        let rel = "hooks_alias/pre-commit";
+        let err = check_edit_target(&policy, &cfg, &project, rel, &project.join(rel)).unwrap_err();
+        assert!(err.contains("resolves to"), "{err}");
+    }
+}
+
+// ---- what a root is used for ---------------------------------------------
+
+#[test]
+fn a_root_for_a_test_command_gets_the_write_root_checks_but_not_the_git_one() {
+    let m = machine();
+    let plain = m.project("work/plain", false);
+    let trusted = m.policy(&[(&plain, RW)], &[]);
+    assert_eq!(
+        m.check_use(&trusted, &plain, RootUse::Run),
+        Ok(plain.clone())
+    );
+    // Not trusted: the command could write anywhere under it.
+    let untrusted = m.policy(&[], &[]);
+    let err = m.check_use(&untrusted, &plain, RootUse::Run).unwrap_err();
+    assert!(err.contains("trusted_roots"), "{err}");
+    // A forbidden path applies.
+    let fenced = m.policy(&[(&plain, RW)], &[&plain]);
+    assert!(
+        m.check_use(&fenced, &plain, RootUse::Run).is_ok(),
+        "the grant carves it out"
+    );
+    let broad = m.policy(&[], &[&plain]);
+    assert!(m.check_use(&broad, &plain, RootUse::Run).is_err());
+    // Reading needs none of it.
+    assert!(m.check_use(&untrusted, &plain, RootUse::Read).is_ok());
+    // Editing also wants the repository.
+    assert!(m.check_use(&trusted, &plain, RootUse::Edit).is_err());
+}
+
+#[test]
+fn the_use_of_a_root_follows_the_task_and_the_tier() {
+    assert_eq!(RootUse::for_task(true, true, true), RootUse::Edit);
+    assert_eq!(RootUse::for_task(true, false, true), RootUse::Edit);
+    assert_eq!(RootUse::for_task(false, true, true), RootUse::Run);
+    assert_eq!(RootUse::for_task(false, false, true), RootUse::Read);
+    // A tier that cannot act runs and edits nothing.
+    assert_eq!(RootUse::for_task(true, true, false), RootUse::Read);
+    assert_eq!(RootUse::for_task(false, true, false), RootUse::Read);
+}
+
+#[test]
+fn folding_covers_the_cases_apfs_resolves() {
+    assert_eq!(fold("Package.J\u{17F}on"), "package.json");
+    assert_eq!(fold(".HUS\u{212A}Y"), ".husky");
+    assert_eq!(fold("Makefile"), "makefile");
+    assert_eq!(
+        first_non_ascii_component("a/b\u{17F}/c").as_deref(),
+        Some("b\u{17F}")
+    );
+    assert_eq!(first_non_ascii_component("a/b/c"), None);
 }

@@ -5,8 +5,12 @@
 //! plan. Everything before `save_plan` is repeatable; nothing after it asks the
 //! model again.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
+use parking_lot::Mutex;
+
+use super::super::service::mlx_admin::gate::{pinned_scope, GateError};
 use super::index::{query_terms, ProjectIndex};
 use super::model::{ModelFailure, ModelReply};
 use super::prompt::{
@@ -17,6 +21,49 @@ use super::types::*;
 
 /// Attempts at one model call before the step fails.
 const MAX_CALL_ATTEMPTS: u32 = 3;
+/// Times one step's call may be cancelled to make room for chat. After that
+/// the call is pinned: it queues like chat and is not cancelled again, so the
+/// step is guaranteed to finish however busy the chat is.
+pub(super) const MAX_YIELDS_PER_STEP: u32 = 3;
+/// Yield counts of steps still being planned, by `task|step`. Process-wide
+/// because a yielded task is run again by the controller with a fresh env.
+static YIELDS: Mutex<Option<HashMap<String, u32>>> = Mutex::new(None);
+/// Entries kept at most; the map only ever holds steps in flight.
+const YIELDS_CAP: usize = 256;
+
+fn yield_key(task_id: &str, step_no: u32) -> String {
+    format!("{task_id}|{step_no}")
+}
+
+fn yields_so_far(key: &str) -> u32 {
+    YIELDS
+        .lock()
+        .as_ref()
+        .and_then(|m| m.get(key).copied())
+        .unwrap_or(0)
+}
+
+fn note_yield(key: &str) -> u32 {
+    let mut guard = YIELDS.lock();
+    let map = guard.get_or_insert_with(HashMap::new);
+    if map.len() >= YIELDS_CAP && !map.contains_key(key) {
+        map.clear();
+    }
+    let count = map.entry(key.to_string()).or_insert(0);
+    *count += 1;
+    *count
+}
+
+fn forget_yields(key: &str) {
+    if let Some(map) = YIELDS.lock().as_mut() {
+        map.remove(key);
+    }
+}
+
+#[cfg(test)]
+pub(super) fn yields_for_test(task_id: &str, step_no: u32) -> u32 {
+    yields_so_far(&yield_key(task_id, step_no))
+}
 
 pub(super) enum PlanStep {
     Planned,
@@ -114,10 +161,17 @@ pub(super) async fn plan_step(
             built.snippets_used,
             estimator.chars_per_token()
         );
-        let reply = match call_model(env, stop, &built.user, max_tokens).await {
+        let reply = match call_model(env, stop, &built.user, max_tokens, &task.id, step_no).await {
             Ok(reply) => reply,
-            Err(CallFail::Preempt(why)) => return Ok(PlanStep::Preempted(why)),
-            Err(CallFail::Cancelled) => return Ok(PlanStep::Cancelled),
+            Err(CallFail::Preempt(why)) => {
+                // Tokens an earlier attempt of this step already spent count.
+                env.store.add_tokens(&task.id, spent)?;
+                return Ok(PlanStep::Preempted(why));
+            }
+            Err(CallFail::Cancelled) => {
+                env.store.add_tokens(&task.id, spent)?;
+                return Ok(PlanStep::Cancelled);
+            }
             Err(CallFail::Failed(msg)) => {
                 env.store.add_tokens(&task.id, spent)?;
                 return Err(AssistantError::Model(msg));
@@ -142,6 +196,7 @@ pub(super) async fn plan_step(
             Ok(plan) => {
                 env.store
                     .save_plan(&task.id, step_no, &plan, prompt_tokens, spent)?;
+                forget_yields(&yield_key(&task.id, step_no));
                 env.event(
                     "task_checkpoint",
                     format!(
@@ -178,22 +233,59 @@ pub(super) fn step_token_cap(step_max_tokens: u32, remaining: u64) -> u32 {
     u32::try_from(remaining).map_or(step_max_tokens, |left| step_max_tokens.min(left))
 }
 
+/// What a gate cancellation costs and means. A yield is counted against the
+/// step; a cancellation that interrupted generation is charged to the task at
+/// the call's full `max_tokens`, because the server never reported what it
+/// had produced and the task budget is a hard ceiling.
+fn gate_cancelled(
+    env: &RunEnv,
+    task_id: &str,
+    key: &str,
+    gate: GateError,
+    generating: bool,
+    max_tokens: u32,
+) -> CallFail {
+    if gate == GateError::Yielded {
+        let n = note_yield(key);
+        log::info!("[local_assistant] task {task_id} step call yielded to chat ({n} so far)");
+    }
+    if generating {
+        if let Err(err) = env.store.add_tokens(task_id, u64::from(max_tokens)) {
+            log::warn!("[local_assistant] could not charge a cancelled call: {err}");
+        } else {
+            log::debug!(
+                "[local_assistant] task {task_id}: charged {max_tokens} tokens for a cancelled call"
+            );
+        }
+    }
+    CallFail::Preempt(format!("{gate:?}"))
+}
+
 async fn call_model(
     env: &RunEnv,
     stop: &StopSignal,
     user: &str,
     max_tokens: u32,
+    task_id: &str,
+    step_no: u32,
 ) -> std::result::Result<ModelReply, CallFail> {
+    let key = yield_key(task_id, step_no);
     let mut last = String::new();
     for attempt in 1..=MAX_CALL_ATTEMPTS {
+        let pinned = yields_so_far(&key) >= MAX_YIELDS_PER_STEP;
         let outcome = tokio::select! {
             biased;
             _ = stop.cancel.cancelled() => return Err(CallFail::Cancelled),
-            outcome = env.model.complete(SYSTEM_PROMPT, user, max_tokens) => outcome,
+            outcome = pinned_scope(pinned, env.model.complete(SYSTEM_PROMPT, user, max_tokens)) => outcome,
         };
         match outcome {
             Ok(reply) => return Ok(reply),
-            Err(ModelFailure::Gate(gate)) => return Err(CallFail::Preempt(format!("{gate:?}"))),
+            Err(ModelFailure::Gate(gate)) => {
+                return Err(gate_cancelled(env, task_id, &key, gate, false, max_tokens))
+            }
+            Err(ModelFailure::GateAfterStart(gate)) => {
+                return Err(gate_cancelled(env, task_id, &key, gate, true, max_tokens))
+            }
             Err(ModelFailure::Other(msg)) => {
                 log::warn!("[local_assistant] model call attempt {attempt} failed: {msg}");
                 last = msg;
@@ -214,14 +306,20 @@ async fn call_model(
             "task_fallback_model",
             "primary model not admitted; using fallback (degraded quality)",
         );
+        let pinned = yields_so_far(&key) >= MAX_YIELDS_PER_STEP;
         let outcome = tokio::select! {
             biased;
             _ = stop.cancel.cancelled() => return Err(CallFail::Cancelled),
-            outcome = fallback.complete(SYSTEM_PROMPT, user, max_tokens) => outcome,
+            outcome = pinned_scope(pinned, fallback.complete(SYSTEM_PROMPT, user, max_tokens)) => outcome,
         };
         match outcome {
             Ok(reply) => return Ok(reply),
-            Err(ModelFailure::Gate(gate)) => return Err(CallFail::Preempt(format!("{gate:?}"))),
+            Err(ModelFailure::Gate(gate)) => {
+                return Err(gate_cancelled(env, task_id, &key, gate, false, max_tokens))
+            }
+            Err(ModelFailure::GateAfterStart(gate)) => {
+                return Err(gate_cancelled(env, task_id, &key, gate, true, max_tokens))
+            }
             Err(ModelFailure::Other(msg)) => last = msg,
         }
     }

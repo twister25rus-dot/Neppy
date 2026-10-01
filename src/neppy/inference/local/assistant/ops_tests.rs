@@ -116,6 +116,25 @@ impl Env {
     }
 }
 
+/// Give the project a repository marker and a read-write grant: what a root
+/// needs to run a test command or be edited.
+fn trust_project(e: &mut Env) {
+    use crate::neppy::security::{TrustedAccess, TrustedRoot};
+    std::fs::create_dir_all(e.project.path().join(".git")).unwrap();
+    let mut policy = (*e.ctx.policy).clone();
+    policy.trusted_roots = vec![TrustedRoot {
+        path: e
+            .project
+            .path()
+            .canonicalize()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned(),
+        access: TrustedAccess::ReadWrite,
+    }];
+    e.ctx.policy = Arc::new(policy);
+}
+
 async fn until(what: &str, mut cond: impl FnMut() -> bool) {
     for _ in 0..500 {
         if cond() {
@@ -204,7 +223,7 @@ async fn a_task_preempted_forever_is_given_up_not_spun() {
 
 #[tokio::test]
 async fn start_task_validates_before_queueing() {
-    let e = env(4, FakeRunner::new(true, vec![]), AutonomyLevel::Full);
+    let mut e = env(4, FakeRunner::new(true, vec![]), AutonomyLevel::Full);
     let bad = |spec: TaskSpec| api::start_task(&e.ctx, spec).unwrap_err().to_string();
 
     assert!(bad(e.spec("   ")).contains("goal is empty"));
@@ -237,6 +256,8 @@ async fn start_task_validates_before_queueing() {
         "failed validation holds no slot"
     );
 
+    // A command runs in the project, so the project must be one it may write.
+    trust_project(&mut e);
     let ok = api::start_task(
         &e.ctx,
         TaskSpec {

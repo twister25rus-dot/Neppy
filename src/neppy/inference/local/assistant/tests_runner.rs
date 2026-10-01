@@ -72,6 +72,30 @@ fn kill_group(pid: u32) {
     }
 }
 
+/// Resolves when `pid` has exited, *without reaping it*. The caller kills the
+/// process group while the leader is still a zombie: a reaped leader frees its
+/// pid, and a signal sent to that number afterwards could reach an unrelated
+/// group that was handed the same id.
+#[cfg(unix)]
+fn watch_exit(pid: u32) -> tokio::task::JoinHandle<()> {
+    tokio::task::spawn_blocking(move || loop {
+        // SAFETY: `waitid` only writes `info`; `WNOWAIT` leaves the child
+        // waitable, so tokio's own `wait` still collects the status.
+        let mut info: libc::siginfo_t = unsafe { std::mem::zeroed() };
+        let rc = unsafe {
+            libc::waitid(
+                libc::P_PID,
+                pid as libc::id_t,
+                &mut info,
+                libc::WEXITED | libc::WNOWAIT,
+            )
+        };
+        if rc == 0 || std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR) {
+            return;
+        }
+    })
+}
+
 /// How a stoppable test run ended.
 pub(crate) enum TestOutcome {
     /// The command ran to an end, or was killed by its timeout.
@@ -153,20 +177,34 @@ pub(crate) async fn run_test_command_until(
     tokio::pin!(deadline);
     let mut poll = tokio::time::interval(SWITCH_POLL);
     let mut stopped: Option<StopReason> = None;
-    let (exit_code, timed_out) = loop {
+    // Whether the command ended by itself, as opposed to being killed here.
+    let mut exited_by_itself = false;
+    #[cfg(unix)]
+    let mut exited = pid.map(watch_exit);
+    let (mut exit_code, timed_out) = loop {
         tokio::select! {
             biased;
             _ = stop.cancel.cancelled() => {
                 stopped = Some(StopReason::Cancelled);
                 break (-1, false);
             }
-            status = child.wait() => match status {
-                Ok(status) => break (status.code().unwrap_or(-1), false),
-                Err(err) => {
-                    log::warn!("[local_assistant:test] wait failed: {err}");
-                    break (-1, false);
+            // Unix: the exit is noticed without reaping, so the group can be
+            // killed before the leader's pid is released.
+            _ = async {
+                #[cfg(unix)]
+                if let Some(watch) = exited.as_mut() {
+                    let _ = watch.await;
+                    return;
                 }
-            },
+                std::future::pending::<()>().await
+            } => {
+                exited_by_itself = true;
+                break (-1, false);
+            }
+            status = child.wait(), if cfg!(not(unix)) => {
+                exited_by_itself = true;
+                break (status.ok().and_then(|s| s.code()).unwrap_or(-1), false);
+            }
             _ = &mut deadline => {
                 log::warn!(
                     "[local_assistant:test] timed out after {}s; killing",
@@ -191,6 +229,15 @@ pub(crate) async fn run_test_command_until(
     if stopped.is_some() || timed_out {
         let _ = child.kill().await;
         let _ = child.wait().await;
+    } else if exited_by_itself && cfg!(unix) {
+        // Now reap the leader and take its status.
+        exit_code = match child.wait().await {
+            Ok(status) => status.code().unwrap_or(-1),
+            Err(err) => {
+                log::warn!("[local_assistant:test] wait failed: {err}");
+                -1
+            }
+        };
     }
     for reader in readers {
         if tokio::time::timeout(READER_GRACE, reader).await.is_err() {

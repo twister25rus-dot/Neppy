@@ -53,11 +53,32 @@ pub struct LocalAssistantConfig {
     pub keep_days: u32,
     /// Seconds a test command may run before it is killed.
     pub test_timeout_secs: u64,
-    /// Let the assistant edit files that run code on their own: git hooks
-    /// (`.husky/`, `.githooks/`), editor and CI configuration (`.vscode/`,
-    /// `.idea/`, `.github/workflows/`), `.cargo/config*`, `build.rs`,
-    /// `.envrc` and `package.json`. Off by default, so a model reading a hostile
-    /// repository cannot plant something the user's next build or commit runs.
+    /// Let the assistant edit files that run code on their own or configure the
+    /// tooling that does. Off by default, so a model reading a hostile
+    /// repository cannot plant something the user's next build, commit or shell
+    /// runs. Refused unless this is `true`:
+    ///
+    /// - git hooks and editor, CI and package-manager configuration:
+    ///   `.husky/`, `.githooks/`, `.vscode/`, `.idea/`, `.devcontainer/`,
+    ///   `.circleci/`, `.github/` (actions and workflows), `.yarn/`,
+    ///   `.cargo/config*`;
+    /// - build and package manifests and scripts: `Cargo.toml` (its `build =`
+    ///   key can name any file as a build script), `build.rs`, `package.json`,
+    ///   `.npmrc`, `.yarnrc`, `.yarnrc.yml`, `.pnpmfile.cjs`, `Makefile`,
+    ///   `GNUmakefile`, `*.mk`, `justfile`, `Rakefile`, `Gemfile`,
+    ///   `pyproject.toml`, `setup.py`, `setup.cfg`, `conftest.py`, `tox.ini`,
+    ///   `noxfile.py`, `CMakeLists.txt`, `build.gradle(.kts)`,
+    ///   `settings.gradle(.kts)`, `pom.xml`;
+    /// - environment and shell files: `.envrc`, `.mise.toml`, `.tool-versions`,
+    ///   `.bashrc`, `.bash_profile`, `.profile`, `.zshrc`, `.zshenv` and their
+    ///   siblings, `.gitconfig`, `.gitmodules`, `.pre-commit-config.yaml`,
+    ///   `.gitlab-ci.yml`;
+    /// - bare-repository plants: any file named `HEAD` or `config`, and any
+    ///   directory whose name ends in `.git`;
+    /// - any path with a non-ASCII component. Filesystems such as APFS fold
+    ///   names (`package.jſon` opens `package.json`), so a spelling check alone
+    ///   can be walked around; the check also runs on the name each component
+    ///   has on disk.
     pub allow_sensitive_paths: bool,
 }
 
