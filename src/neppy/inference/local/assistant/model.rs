@@ -67,8 +67,14 @@ impl StepModel for MlxStepModel {
             max_tokens: Some(max_tokens),
             temperature: Some(TEMPERATURE),
             // Hidden reasoning would spend the step's token budget before the
-            // JSON starts.
+            // JSON starts. `enable_thinking` at the top level is what
+            // mlx_vlm.server reads (the convention `turn_controls` uses);
+            // `chat_template_kwargs` alone is ignored by it. Measured against a
+            // server started with `--enable-thinking`, which is how the MLX
+            // panel launches it: with only the nested form, 1536 tokens went
+            // into reasoning and the reply was empty.
             provider_options: serde_json::json!({
+                "enable_thinking": false,
                 "chat_template_kwargs": { "enable_thinking": false }
             }),
             ..ModelRequest::default()

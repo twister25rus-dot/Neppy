@@ -18,14 +18,19 @@ pub(crate) const SYSTEM_PROMPT: &str = "You are a careful coding assistant worki
 that lives on disk. You see only short excerpts. Work in small steps. Reply with one JSON object \
 and nothing else.";
 
+/// Edits and the next step come first on purpose. A small model that falls into
+/// a repetition loop does so in the free-text arrays, and the reply is then cut
+/// at `max_tokens`: measured with the 9B on a real step prompt, the old order
+/// (summary, decisions, edits, ...) looped inside `decisions` and never reached
+/// the edits, which made the whole step unusable.
 const REPLY_SCHEMA: &str = r#"{
-  "summary": "the UPDATED summary of the whole task so far, at most 1500 characters",
-  "decisions": ["decisions made in this step, each one short"],
   "edits": [{"path": "relative/path", "search": "exact text that occurs once", "replace": "new text"}],
-  "run_tests": false,
-  "next_step": "what the next step should do",
+  "next_step": "what the next step should do, one sentence",
   "done": false,
-  "search_queries": ["identifiers or words to look up for the next step"]
+  "run_tests": false,
+  "summary": "the UPDATED summary of the whole task so far, at most 1500 characters",
+  "decisions": ["at most 5 short decisions, never repeated"],
+  "search_queries": ["at most 5 identifiers or words to look up"]
 }"#;
 
 /// Characters of the goal kept in a prompt.
@@ -164,7 +169,7 @@ fn header(input: &PromptInput<'_>) -> String {
 
 fn footer() -> String {
     format!(
-        "\nReply with ONE JSON object in exactly this shape and nothing else:\n{REPLY_SCHEMA}\n"
+        "\nReply with ONE JSON object in exactly this shape and nothing else. Put edits first. Keep the whole reply under 700 tokens, and never repeat an item:\n{REPLY_SCHEMA}\n"
     )
 }
 
@@ -301,7 +306,12 @@ pub(crate) fn parse_plan(reply: &str) -> std::result::Result<StepPlan, String> {
         let Some(candidate) = balanced_object(&cleaned, start) else {
             continue;
         };
-        match serde_json::from_str::<StepPlan>(candidate) {
+        // Through `Value` first: serde rejects a repeated key in a struct
+        // ("duplicate field `summary`"), which the 9B does emit when it starts
+        // the object over mid-reply. A `Value` keeps the last one.
+        let parsed = serde_json::from_str::<serde_json::Value>(candidate)
+            .and_then(serde_json::from_value::<StepPlan>);
+        match parsed {
             Ok(plan) => return normalize(plan),
             Err(err) => last_err = format!("invalid JSON: {err}"),
         }

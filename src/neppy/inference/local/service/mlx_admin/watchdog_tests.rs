@@ -237,3 +237,20 @@ fn health_reports_queue_depth() {
             .expect("parses");
     assert_eq!(live.request_queue_depth, Some(2));
 }
+
+#[test]
+fn an_unload_that_frees_nothing_is_ineffective() {
+    const GIB: u64 = 1024 * 1024 * 1024;
+    // Measured on mlx_vlm 0.7.0 with a 9 GiB model: 9.9 GiB before, 9.4 GiB after.
+    assert!(!unload_released_memory(
+        10_400 * 1024 * 1024,
+        9_830 * 1024 * 1024
+    ));
+    // Weights actually freed.
+    assert!(unload_released_memory(10 * GIB, 600 * 1024 * 1024));
+    // Exactly half counts as freed; a hair under does not.
+    assert!(unload_released_memory(10 * GIB, 5 * GIB));
+    assert!(!unload_released_memory(10 * GIB, 5 * GIB + 1));
+    // A small worker is never judged: there is nothing worth escalating for.
+    assert!(unload_released_memory(512 * 1024 * 1024, 512 * 1024 * 1024));
+}

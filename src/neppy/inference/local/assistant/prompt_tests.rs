@@ -181,9 +181,45 @@ fn unusable_replies_say_why() {
         .contains("no JSON"));
     assert!(parse_plan(r#"{"summary": "cut off"#).is_err());
     assert!(parse_plan("{}").unwrap_err().contains("empty"));
-    assert!(parse_plan(r#"{"decisions": "not a list"}"#)
+    assert!(parse_plan(r#"{"decisions": 5}"#)
         .unwrap_err()
         .contains("invalid JSON"));
+}
+
+#[test]
+fn list_fields_accept_a_bare_string_or_null() {
+    // Seen from the 9B in a soak: "invalid type: string ..., expected a sequence".
+    let plan = parse_plan(
+        r#"{"summary":"s","decisions":"track spawn sites","search_queries":null,"next_step":"n"}"#,
+    )
+    .unwrap();
+    assert_eq!(plan.decisions, vec!["track spawn sites".to_string()]);
+    assert!(plan.search_queries.is_empty());
+    // A bare string alone is still not a plan.
+    assert!(parse_plan(r#"{"decisions": "not a list"}"#)
+        .unwrap_err()
+        .contains("empty"));
+}
+
+#[test]
+fn the_reply_schema_puts_edits_before_the_free_text_arrays() {
+    let t = task();
+    let built = build_prompt(
+        &input(&t),
+        &[],
+        &LocalAssistantConfig::default(),
+        &TokenEstimator::default(),
+    )
+    .unwrap();
+    let at = |needle: &str| {
+        built
+            .user
+            .rfind(needle)
+            .unwrap_or_else(|| panic!("missing {needle}"))
+    };
+    assert!(at("\"edits\"") < at("\"summary\""));
+    assert!(at("\"summary\"") < at("\"decisions\""));
+    assert!(built.user.contains("Put edits first"));
 }
 
 #[test]
@@ -220,4 +256,15 @@ fn plan_fields_are_bounded() {
     assert!(plan.next_step.len() <= NEXT_STEP_MAX);
     assert_eq!(plan.decisions.len(), 10);
     assert_eq!(plan.search_queries.len(), QUERIES_PER_STEP);
+}
+
+#[test]
+fn a_repeated_key_keeps_the_last_value_instead_of_failing_the_step() {
+    // Seen from the 9B in a soak: "duplicate field `search_queries`".
+    let plan = parse_plan(
+        r#"{"summary":"first","next_step":"n","search_queries":["a"],"summary":"second","search_queries":["b"]}"#,
+    )
+    .unwrap();
+    assert_eq!(plan.summary, "second");
+    assert_eq!(plan.search_queries, vec!["b".to_string()]);
 }

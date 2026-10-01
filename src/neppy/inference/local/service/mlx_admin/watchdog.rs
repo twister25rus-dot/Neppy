@@ -306,6 +306,20 @@ pub(crate) async fn tick(svc: &Arc<LocalAiService>, config: &Config) -> Duration
     }
 }
 
+/// Footprints below this are not worth judging an unload by.
+const UNLOAD_JUDGED_ABOVE_BYTES: u64 = 1024 * MIB;
+
+/// Whether an `/unload` actually gave memory back: the footprint at least
+/// halved. A worker that was small to begin with is never judged ineffective.
+pub(crate) fn unload_released_memory(before: u64, after: u64) -> bool {
+    before < UNLOAD_JUDGED_ABOVE_BYTES || after.saturating_mul(2) <= before
+}
+
+async fn worker_footprint(svc: &Arc<LocalAiService>, id: &str) -> Option<u64> {
+    let process = svc.mlx.process_of(id).await.filter(|p| p.alive)?;
+    sample_process(process.pid).map(|m| m.footprint_bytes)
+}
+
 async fn apply(
     svc: &Arc<LocalAiService>,
     config: &Config,
@@ -320,8 +334,37 @@ async fn apply(
             let Some(base) = svc.mlx.resolved_base_url(config, id).await else {
                 return;
             };
+            let before = worker_footprint(svc, id).await;
             match unload(svc, &base).await {
-                Ok(()) => svc.metrics.event(event::MODEL_UNLOAD, Some(id), "idle"),
+                Ok(()) => {
+                    svc.metrics.event(event::MODEL_UNLOAD, Some(id), "idle");
+                    // `/unload` clears the server's model registry and MLX's
+                    // buffer cache, but measured on mlx_vlm 0.7.0 the 9 GiB of
+                    // Metal weight buffers stay resident in the process. An
+                    // unload that frees nothing is not an idle policy, so stop
+                    // the process instead; the next request respawns it.
+                    let after = worker_footprint(svc, id).await;
+                    if let (Some(before), Some(after)) = (before, after) {
+                        if !unload_released_memory(before, after) {
+                            log::warn!(
+                                "[mlx:worker] unload of `{id}` left {} MiB resident (was {} MiB); stopping the process to return the memory",
+                                after / MIB,
+                                before / MIB
+                            );
+                            svc.metrics.event(
+                                event::UNLOAD_INEFFECTIVE,
+                                Some(id),
+                                format!(
+                                    "footprint {} -> {} MiB; stopping the worker instead",
+                                    before / MIB,
+                                    after / MIB
+                                ),
+                            );
+                            svc.mlx.stop(config, id).await;
+                            svc.worker.tracker.lock().set_swap_baseline(None);
+                        }
+                    }
+                }
                 Err(err) => log::warn!("[mlx:worker] idle unload of `{id}` failed: {err}"),
             }
         }

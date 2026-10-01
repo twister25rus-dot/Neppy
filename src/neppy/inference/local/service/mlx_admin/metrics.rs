@@ -36,6 +36,7 @@ pub(crate) mod event {
     pub(crate) const REQUEST_PREEMPTED: &str = "request_preempted";
     pub(crate) const ADMISSION_REFUSED: &str = "admission_refused";
     pub(crate) const OLLAMA_UNLOAD: &str = "ollama_unload";
+    pub(crate) const UNLOAD_INEFFECTIVE: &str = "unload_ineffective";
 }
 
 /// A model Ollama reports as resident.

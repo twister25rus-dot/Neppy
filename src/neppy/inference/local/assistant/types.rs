@@ -234,7 +234,8 @@ pub struct EditOp {
 pub struct StepPlan {
     /// The updated cumulative summary of the whole task so far.
     pub summary: String,
-    /// Decisions made in this step.
+    /// Decisions made in this step. A bare string is read as one decision.
+    #[serde(deserialize_with = "string_or_list")]
     pub decisions: Vec<String>,
     pub edits: Vec<EditOp>,
     pub run_tests: bool,
@@ -242,8 +243,31 @@ pub struct StepPlan {
     pub next_step: String,
     /// The goal is met.
     pub done: bool,
-    /// What to look up in the project for the next step.
+    /// What to look up in the project for the next step. A bare string is
+    /// read as one query.
+    #[serde(deserialize_with = "string_or_list")]
     pub search_queries: Vec<String>,
+}
+
+/// Small models sometimes answer a list field with one string, or null. Take
+/// both; anything else is still an error.
+fn string_or_list<'de, D>(de: D) -> std::result::Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum OneOrMany {
+        Many(Vec<String>),
+        One(String),
+        Nothing(()),
+    }
+    Ok(match OneOrMany::deserialize(de)? {
+        OneOrMany::Many(v) => v,
+        OneOrMany::One(s) if s.trim().is_empty() => Vec::new(),
+        OneOrMany::One(s) => vec![s],
+        OneOrMany::Nothing(()) => Vec::new(),
+    })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
