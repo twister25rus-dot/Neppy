@@ -6704,7 +6704,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': '例如：冷静、简洁、喜欢列要点',
   'pet.settings.enabled': '宠物模式',
   'pet.settings.enabledHint':
-    '开启后，你的宠物会在后台运行。每次运行都会调用一次你的聊天模型，因此会消耗你的额度或配额。只有在 Mac 处于唤醒状态时才会运行。',
+    '开启后，你的宠物会在后台运行。每次运行都会调用一次你的聊天模型，因此会消耗你的额度或配额。只有在电脑处于唤醒状态时才会运行。',
   'pet.settings.preset': '运行频率',
   'pet.settings.presetOption.light': '轻度',
   'pet.settings.presetOption.standard': '标准',
@@ -6737,7 +6737,7 @@ const messages: TranslationMap = {
   'pet.settings.save': '保存更改',
   'pet.settings.saved': '已保存',
   'pet.settings.awakeNote':
-    '你的宠物只在 Mac 处于唤醒状态时工作。如果错过了某次运行，会在 Mac 唤醒后补跑一次。',
+    '你的宠物只在电脑处于唤醒状态时工作。如果错过了某次运行，会在电脑唤醒后补跑一次。',
   'pet.errors.loadFailed': '无法连接到你的宠物，请重试。',
   'pet.errors.saveFailed': '无法保存更改，请重试。',
   'pet.errors.runFailed': '无法开始运行，请重试。',

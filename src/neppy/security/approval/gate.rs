@@ -197,6 +197,11 @@ pub struct ApprovalGate {
     /// In-memory only (session-scoped — a parked approval doesn't survive a
     /// restart, and the oneshot waiter is in-memory anyway).
     thread_to_request: Mutex<HashMap<String, String>>,
+    /// Request ids parked by an `ExternalChannel` turn (remote Telegram /
+    /// Discord / Slack input). In-memory only, like `thread_to_request`. The
+    /// Pet approval surface reads it so remote-originated parks keep their
+    /// silent TTL-deny by design instead of becoming a desktop notification.
+    remote_origin_requests: Mutex<std::collections::HashSet<String>>,
 }
 
 /// RAII guard that tears the parked waiter down even when the surrounding turn
@@ -305,6 +310,7 @@ impl ApprovalGate {
             ttl,
             waiters: Mutex::new(HashMap::new()),
             thread_to_request: Mutex::new(HashMap::new()),
+            remote_origin_requests: Mutex::new(std::collections::HashSet::new()),
         }
     }
 
@@ -933,6 +939,13 @@ impl ApprovalGate {
                 .lock()
                 .insert(thread_id.clone(), request_id.clone());
         }
+        // Recorded BEFORE `ApprovalRequested` is published so a subscriber
+        // reacting to the event can already ask `is_remote_origin_request`.
+        if matches!(origin, AgentTurnOrigin::ExternalChannel { .. }) {
+            self.remote_origin_requests
+                .lock()
+                .insert(request_id.clone());
+        }
         if let Err(err) = store::insert_pending(&self.config, &pending, &self.session_id) {
             self.evict_waiter(&request_id);
             self.clear_thread(&chat_thread_id, &request_id);
@@ -1351,13 +1364,22 @@ impl ApprovalGate {
     }
 
     fn take_waiter(&self, request_id: &str) -> Option<oneshot::Sender<ApprovalDecision>> {
+        self.remote_origin_requests.lock().remove(request_id);
         let mut waiters = self.waiters.lock();
         waiters.remove(request_id)
     }
 
     fn evict_waiter(&self, request_id: &str) {
+        self.remote_origin_requests.lock().remove(request_id);
         let mut waiters = self.waiters.lock();
         waiters.remove(request_id);
+    }
+
+    /// Whether `request_id` is currently parked by an `ExternalChannel` turn
+    /// (remote, untrusted input). Such parks must not be surfaced as desktop
+    /// notifications: the remote sender could otherwise trigger them at will.
+    pub fn is_remote_origin_request(&self, request_id: &str) -> bool {
+        self.remote_origin_requests.lock().contains(request_id)
     }
 
     /// The request_id of the approval currently parked on `thread_id`, if any.
@@ -3088,9 +3110,18 @@ mod tests {
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
 
+        // The park is remembered as remote-origin while it is open (the Pet
+        // approval surface keys off this), and forgotten once it resolves.
+        let pending_id = gate.list_pending().unwrap()[0].request_id.clone();
+        assert!(gate.is_remote_origin_request(&pending_id));
+
         // Without a routable channel approval surface, the parked future
         // TTL-denies (2s — matches the test_gate fixture).
         let outcome = handle.await.unwrap();
+        assert!(
+            !gate.is_remote_origin_request(&pending_id),
+            "remote-origin tracking must be released when the park ends"
+        );
         match outcome {
             GateOutcome::Deny { reason } => assert!(reason.contains("timed out")),
             other => panic!("expected deny, got {other:?}"),

@@ -7281,7 +7281,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'Zum Beispiel: ruhig, knapp, mag Stichpunkte',
   'pet.settings.enabled': 'Haustier-Modus',
   'pet.settings.enabledHint':
-    'Wenn aktiv, führt dein Haustier Durchläufe im Hintergrund aus. Jeder Durchlauf ist ein Aufruf deines Chat-Modells und verbraucht daher dein Guthaben oder Kontingent. Er läuft nur, solange dein Mac wach ist.',
+    'Wenn aktiv, führt dein Haustier Durchläufe im Hintergrund aus. Jeder Durchlauf ist ein Aufruf deines Chat-Modells und verbraucht daher dein Guthaben oder Kontingent. Er läuft nur, solange dein Computer wach ist.',
   'pet.settings.preset': 'Wie oft',
   'pet.settings.presetOption.light': 'Selten',
   'pet.settings.presetOption.standard': 'Standard',
@@ -7316,7 +7316,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'Änderungen speichern',
   'pet.settings.saved': 'Gespeichert',
   'pet.settings.awakeNote':
-    'Dein Haustier arbeitet nur, solange dein Mac wach ist. Wurde ein Durchlauf verpasst, läuft er einmal, sobald der Mac aufwacht.',
+    'Dein Haustier arbeitet nur, solange dein Computer wach ist. Wurde ein Durchlauf verpasst, läuft er einmal, sobald der Computer aufwacht.',
   'pet.errors.loadFailed': 'Dein Haustier ist nicht erreichbar. Bitte versuche es erneut.',
   'pet.errors.saveFailed':
     'Die Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut.',

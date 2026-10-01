@@ -7008,7 +7008,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': '예: 차분하고 간결하며 글머리 기호를 좋아함',
   'pet.settings.enabled': '펫 모드',
   'pet.settings.enabledHint':
-    '켜 두면 펫이 백그라운드에서 작업을 실행합니다. 매번의 실행은 채팅 모델 호출이므로 크레딧이나 사용량이 소모됩니다. Mac이 깨어 있는 동안에만 실행됩니다.',
+    '켜 두면 펫이 백그라운드에서 작업을 실행합니다. 매번의 실행은 채팅 모델 호출이므로 크레딧이나 사용량이 소모됩니다. 컴퓨터가 깨어 있는 동안에만 실행됩니다.',
   'pet.settings.preset': '실행 빈도',
   'pet.settings.presetOption.light': '가볍게',
   'pet.settings.presetOption.standard': '표준',
@@ -7043,7 +7043,7 @@ const messages: TranslationMap = {
   'pet.settings.save': '변경 사항 저장',
   'pet.settings.saved': '저장됨',
   'pet.settings.awakeNote':
-    '펫은 Mac이 깨어 있는 동안에만 작동합니다. 놓친 실행이 있으면 Mac이 깨어날 때 한 번 실행됩니다.',
+    '펫은 컴퓨터가 깨어 있는 동안에만 작동합니다. 놓친 실행이 있으면 컴퓨터가 깨어날 때 한 번 실행됩니다.',
   'pet.errors.loadFailed': '펫에 연결할 수 없습니다. 다시 시도해 주세요.',
   'pet.errors.saveFailed': '변경 사항을 저장할 수 없습니다. 다시 시도해 주세요.',
   'pet.errors.runFailed': '실행을 시작할 수 없습니다. 다시 시도해 주세요.',

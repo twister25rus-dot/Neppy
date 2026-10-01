@@ -6930,7 +6930,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'مثال: هادئ وموجز ويحب النقاط',
   'pet.settings.enabled': 'وضع الحيوان الأليف',
   'pet.settings.enabledHint':
-    'عند التفعيل، يجري حيوانك جولات في الخلفية. كل جولة هي استدعاء لنموذج المحادثة لديك، لذا تستهلك رصيدك أو حصتك. ولا تعمل إلا أثناء يقظة جهاز Mac.',
+    'عند التفعيل، يجري حيوانك جولات في الخلفية. كل جولة هي استدعاء لنموذج المحادثة لديك، لذا تستهلك رصيدك أو حصتك. ولا تعمل إلا أثناء يقظة جهاز الكمبيوتر.',
   'pet.settings.preset': 'عدد المرات',
   'pet.settings.presetOption.light': 'خفيف',
   'pet.settings.presetOption.standard': 'قياسي',
@@ -6965,7 +6965,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'حفظ التغييرات',
   'pet.settings.saved': 'تم الحفظ',
   'pet.settings.awakeNote':
-    'يعمل حيوانك فقط أثناء يقظة جهاز Mac. إذا فاتت جولة، فستعمل مرة واحدة عند استيقاظه.',
+    'يعمل حيوانك فقط أثناء يقظة جهاز الكمبيوتر. إذا فاتت جولة، فستعمل مرة واحدة عند استيقاظه.',
   'pet.errors.loadFailed': 'تعذر الوصول إلى حيوانك الأليف. يرجى المحاولة مرة أخرى.',
   'pet.errors.saveFailed': 'تعذر حفظ التغييرات. يرجى المحاولة مرة أخرى.',
   'pet.errors.runFailed': 'تعذر بدء جولة. يرجى المحاولة مرة أخرى.',

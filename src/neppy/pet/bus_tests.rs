@@ -77,7 +77,7 @@ fn background_approval_without_thread_or_flow_is_surfaced() {
     });
     let pending = vec![plain, flow];
 
-    match approval_needs_surface(&requested("r1", None), &pending) {
+    match approval_needs_surface(&requested("r1", None), &pending, |_| false) {
         Some(DomainEvent::PetApprovalNeeded {
             request_id,
             tool_name,
@@ -90,13 +90,29 @@ fn background_approval_without_thread_or_flow_is_surfaced() {
         other => panic!("expected PetApprovalNeeded, got {other:?}"),
     }
     // Chat-routed requests already have a card.
-    assert!(approval_needs_surface(&requested("r1", Some("thread")), &pending).is_none());
+    assert!(
+        approval_needs_surface(&requested("r1", Some("thread")), &pending, |_| false).is_none()
+    );
     // Flow parks publish their own notification.
-    assert!(approval_needs_surface(&requested("r2", None), &pending).is_none());
+    assert!(approval_needs_surface(&requested("r2", None), &pending, |_| false).is_none());
     // Unknown (already decided) requests are ignored.
-    assert!(approval_needs_surface(&requested("gone", None), &pending).is_none());
+    assert!(approval_needs_surface(&requested("gone", None), &pending, |_| false).is_none());
     // Other events are ignored.
-    assert!(approval_needs_surface(&completed("j", None), &pending).is_none());
+    assert!(approval_needs_surface(&completed("j", None), &pending, |_| false).is_none());
+}
+
+#[test]
+fn remote_origin_approvals_are_not_surfaced() {
+    let pending = vec![
+        PendingApproval::new("remote", "shell", "run ls", serde_json::json!({}), None),
+        PendingApproval::new("local", "shell", "run ls", serde_json::json!({}), None),
+    ];
+    let is_remote = |id: &str| id == "remote";
+    assert!(
+        approval_needs_surface(&requested("remote", None), &pending, is_remote).is_none(),
+        "an ExternalChannel park keeps its silent TTL-deny"
+    );
+    assert!(approval_needs_surface(&requested("local", None), &pending, is_remote).is_some());
 }
 
 #[test]

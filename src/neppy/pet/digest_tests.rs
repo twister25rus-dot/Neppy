@@ -93,7 +93,11 @@ fn untrusted_markdown_renders_inert() {
     let build = build_digest("Pet_*", &[evil], &HashSet::new(), 0, 0, now(), &Utc).unwrap();
     let body = &build.body_md;
     assert!(!body.contains("[here]("), "link must be escaped: {body}");
-    assert!(body.contains(r"\[here\]\(http://evil.example\)"));
+    assert!(body.contains(r"\[here\]\(http\://evil.example\)"));
+    assert!(
+        !body.contains("http://"),
+        "no bare scheme separator may survive the digest: {body}"
+    );
     assert!(body.contains(r"\!\[x\]"));
     assert!(body.contains(r"\`code\`"));
     assert!(body.starts_with(r"**Pet\_\*: "));
@@ -117,4 +121,36 @@ fn flagged_notes_are_withheld_and_counted() {
         .contains("1 note(s) withheld for review (possible prompt injection)"));
     assert_eq!(build.withheld, vec!["x".to_string()]);
     assert_eq!(build.shown, vec!["o".to_string()]);
+}
+
+#[test]
+fn bare_urls_cannot_autolink_in_the_digest() {
+    let note = scored(
+        "u",
+        PetNoteKind::Fyi,
+        40,
+        "See https://evil.example/x and WWW.evil.example or mail a@evil.example now",
+    );
+    let build = build_digest("Pet", &[note], &HashSet::new(), 0, 0, now(), &Utc).unwrap();
+    let body = &build.body_md;
+    assert!(
+        !body.contains("http://") && !body.contains("https://"),
+        "scheme separator must be broken: {body}"
+    );
+    assert!(
+        !body.to_lowercase().contains("www."),
+        "www host must be broken: {body}"
+    );
+    assert!(
+        !body.contains('@') || body.contains("\\@"),
+        "address must be escaped: {body}"
+    );
+    assert!(body.contains(r"https\://evil.example"));
+    assert!(body.contains(r"WWW\.evil.example"));
+    assert_eq!(escape_md("ftp://x"), r"ftp\://x");
+    assert_eq!(
+        escape_md("awww.x"),
+        "awww.x",
+        "only a word-initial www. is a host"
+    );
 }

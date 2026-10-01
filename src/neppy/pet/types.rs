@@ -96,6 +96,33 @@ impl ResearchPreset {
             ResearchPreset::Frequent => "0 8-20/2 * * *",
         }
     }
+
+    /// Local hours (minute 0) at which this preset runs a pass. Always agrees
+    /// with [`Self::cron_expr`] (test-enforced).
+    pub fn hours(self) -> Vec<u32> {
+        match self {
+            ResearchPreset::Light => vec![7],
+            ResearchPreset::Standard => vec![7, 12, 17],
+            ResearchPreset::Frequent => (8..=20).step_by(2).collect(),
+        }
+    }
+
+    /// Cron expression for this preset PLUS one extra pass at `digest_hour`.
+    /// A digest is only delivered when a pass completes at or after the pet's
+    /// digest time, so without this a digest time between two passes (Light
+    /// preset at 07:00, digest at 18:00) arrives at the next morning's pass.
+    /// The preset's own expression is returned unchanged when it already runs at
+    /// that hour.
+    pub fn cron_expr_with_digest_hour(self, digest_hour: u32) -> String {
+        let mut hours = self.hours();
+        if hours.contains(&digest_hour) {
+            return self.cron_expr().to_string();
+        }
+        hours.push(digest_hour);
+        hours.sort_unstable();
+        let list: Vec<String> = hours.iter().map(u32::to_string).collect();
+        format!("0 {} * * *", list.join(","))
+    }
 }
 
 str_enum!(

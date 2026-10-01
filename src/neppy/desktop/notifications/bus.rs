@@ -230,7 +230,12 @@ pub fn event_to_notification(event: &DomainEvent) -> Option<CoreNotificationEven
             id: format!("pet-approval:{request_id}"),
             category: CoreNotificationCategory::Important,
             title: "Neppy needs your approval".into(),
-            body: format!("{tool_name}: {action_summary}"),
+            // `action_summary` can carry content derived from untrusted input;
+            // keep the toast short (same 140-char budget as a surfaced note).
+            body: crate::neppy::util::truncate_with_ellipsis(
+                &format!("{tool_name}: {action_summary}"),
+                137,
+            ),
             deep_link: Some("/pet?tab=inbox".into()),
             timestamp_ms: ts,
             actions: None,

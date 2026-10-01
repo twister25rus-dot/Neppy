@@ -825,6 +825,33 @@ pub(crate) fn origin_for_agent_job(
     }
 }
 
+/// Message recorded when the Pet research lane cannot resolve its read-only
+/// agent definition. The lane fails closed: running it on the generic agent
+/// (full tool belt) while the turn is still stamped `PetResearch` would leave
+/// every tool the approval gate does not classify as `external_effect`
+/// (web_fetch, memory writes, cron_add, shell, file_write, spawn_*) reachable.
+pub(crate) const PET_AGENT_UNAVAILABLE_MESSAGE: &str =
+    "[cron] pet research agent unavailable; refusing to run without its read-only definition";
+
+fn is_pet_research_job(job: &CronJob) -> bool {
+    job.agent_id.as_deref() == Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID)
+}
+
+/// `Some(error)` when `job` is the Pet research lane and its definition could
+/// not be resolved (`reason` is logged, never shown). Every other job returns
+/// `None` and keeps the generic-agent fallback.
+fn pet_fail_closed(job: &CronJob, reason: &str) -> Option<anyhow::Error> {
+    if !is_pet_research_job(job) {
+        return None;
+    }
+    tracing::error!(
+        job_id = %job.id,
+        reason = %reason,
+        "{PET_AGENT_UNAVAILABLE_MESSAGE}"
+    );
+    Some(anyhow::anyhow!("{PET_AGENT_UNAVAILABLE_MESSAGE}: {reason}"))
+}
+
 async fn run_agent_job(config: &Config, job: &CronJob) -> (bool, String, Option<String>) {
     let name = job.name.clone().unwrap_or_else(|| "cron-job".to_string());
     let prompt = job.prompt.clone().unwrap_or_default();
@@ -834,7 +861,9 @@ async fn run_agent_job(config: &Config, job: &CronJob) -> (bool, String, Option<
     // sees it through the normal `default_model` path without mutating
     // the caller's config.
     let mut effective = config.clone();
-    if let Some(model) = job.model.clone() {
+    // The Pet research lane always runs on chat's model: a pinned job model is
+    // ignored for it (defence in depth next to `pet::ops::ensure_research_job`).
+    if let Some(model) = job.model.clone().filter(|_| !is_pet_research_job(job)) {
         effective.default_model = Some(model);
     }
 
@@ -915,6 +944,13 @@ async fn run_agent_job(config: &Config, job: &CronJob) -> (bool, String, Option<
                 // `iteration_policy = "extended"` agents (e.g. `tools_agent`
                 // getting 50, not the raw `max_iterations = 10`).
             } else {
+                if let Some(err) = pet_fail_closed(job, "agent_id not found in registry") {
+                    return (
+                        false,
+                        PET_AGENT_UNAVAILABLE_MESSAGE.to_string(),
+                        Some(format!("{err:#}")),
+                    );
+                }
                 tracing::warn!(
                     job_id = %job.id,
                     agent_id = %agent_id,
@@ -922,6 +958,13 @@ async fn run_agent_job(config: &Config, job: &CronJob) -> (bool, String, Option<
                 );
             }
         } else {
+            if let Some(err) = pet_fail_closed(job, "AgentDefinitionRegistry not initialized") {
+                return (
+                    false,
+                    PET_AGENT_UNAVAILABLE_MESSAGE.to_string(),
+                    Some(format!("{err:#}")),
+                );
+            }
             tracing::warn!(
                 job_id = %job.id,
                 "[cron] AgentDefinitionRegistry not initialized — falling back to generic agent"
@@ -1060,6 +1103,16 @@ fn resolve_cron_profile(
     let Some(profile_id) = job.profile_id.as_deref() else {
         return Ok(None);
     };
+    if is_pet_research_job(job) {
+        // The Pet lane never runs under an attributed profile: a profile's
+        // tool allowlist / memory scope would replace the lane's closed one.
+        tracing::warn!(
+            job_id = %job.id,
+            profile_id = %profile_id,
+            "[cron] ignoring profile attribution on the pet research job"
+        );
+        return Ok(None);
+    }
     match crate::neppy::agent::profiles::load_profiles(&config.workspace_dir) {
         Ok(state) => {
             let found = state.profiles.into_iter().find(|p| p.id == profile_id);
@@ -1104,6 +1157,27 @@ fn apply_cron_profile_runtime_defaults(
 }
 
 fn build_agent_for_cron_job(config: &Config, job: &CronJob) -> anyhow::Result<BuiltCronAgent> {
+    let mut built = build_agent_for_cron_job_with(config, job, Agent::from_config_for_agent)?;
+    if is_pet_research_job(job) {
+        // The pet's `sources` setting is enforced here, not just in the prompt:
+        // a source family the user switched off has its tool hidden, which
+        // resolves to Deny at the tool-call boundary.
+        let hidden = crate::neppy::pet::ops::tools_hidden_for_job(config, &job.id);
+        if !hidden.is_empty() {
+            tracing::debug!(job_id = %job.id, ?hidden, "[cron] hiding pet tools for disabled sources");
+            built.agent.hide_tools(&hidden);
+        }
+    }
+    Ok(built)
+}
+
+/// [`build_agent_for_cron_job`] with the definition-backed builder injected so
+/// the fail-closed path can be driven without a broken registry.
+fn build_agent_for_cron_job_with(
+    config: &Config,
+    job: &CronJob,
+    build_from_definition: impl Fn(&Config, &str) -> anyhow::Result<Agent>,
+) -> anyhow::Result<BuiltCronAgent> {
     // 2b — profile attribution. When the job names a profile that still exists,
     // build the run under it via the SAME profile-aware session path the task
     // dispatcher uses (`from_config_for_agent_with_profile`), so the run inherits
@@ -1152,7 +1226,7 @@ fn build_agent_for_cron_job(config: &Config, job: &CronJob) -> anyhow::Result<Bu
     }
 
     if let Some(agent_id) = job.agent_id.as_deref() {
-        match Agent::from_config_for_agent(config, agent_id) {
+        match build_from_definition(config, agent_id) {
             Ok(agent) => {
                 tracing::debug!(
                     job_id = %job.id,
@@ -1165,6 +1239,9 @@ fn build_agent_for_cron_job(config: &Config, job: &CronJob) -> anyhow::Result<Bu
                 })
             }
             Err(e) => {
+                if let Some(err) = pet_fail_closed(job, &format!("{e:#}")) {
+                    return Err(err);
+                }
                 tracing::warn!(
                     job_id = %job.id,
                     agent_id = %agent_id,

@@ -7240,7 +7240,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'Por ejemplo: tranquila, breve, le gustan las viñetas',
   'pet.settings.enabled': 'Modo mascota',
   'pet.settings.enabledHint':
-    'Cuando está activado, tu mascota ejecuta pasadas en segundo plano. Cada pasada es una llamada a tu modelo de chat, así que consume tus créditos o tu cuota. Solo se ejecuta mientras tu Mac está despierto.',
+    'Cuando está activado, tu mascota ejecuta pasadas en segundo plano. Cada pasada es una llamada a tu modelo de chat, así que consume tus créditos o tu cuota. Solo se ejecuta mientras tu ordenador está despierto.',
   'pet.settings.preset': 'Con qué frecuencia',
   'pet.settings.presetOption.light': 'Ligera',
   'pet.settings.presetOption.standard': 'Estándar',
@@ -7275,7 +7275,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'Guardar cambios',
   'pet.settings.saved': 'Guardado',
   'pet.settings.awakeNote':
-    'Tu mascota solo trabaja mientras tu Mac está despierto. Si se pierde una pasada, se ejecuta una vez cuando el Mac se despierta.',
+    'Tu mascota solo trabaja mientras tu ordenador está despierto. Si se pierde una pasada, se ejecuta una vez cuando el ordenador se despierta.',
   'pet.errors.loadFailed': 'No se pudo contactar con tu mascota. Inténtalo de nuevo.',
   'pet.errors.saveFailed': 'No se pudieron guardar los cambios. Inténtalo de nuevo.',
   'pet.errors.runFailed': 'No se pudo iniciar una pasada. Inténtalo de nuevo.',

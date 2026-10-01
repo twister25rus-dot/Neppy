@@ -205,6 +205,23 @@ fn clean(s: &str) -> String {
         .join(" ")
 }
 
+/// Placeholder a stripped URL is replaced with.
+pub(crate) const LINK_REMOVED: &str = "[link removed]";
+
+/// Replace every URL-like token (any `scheme://`, `www.` hosts, `mailto:`, `javascript:`) with
+/// [`LINK_REMOVED`]. Pet titles come from untrusted mail and pages and end up in
+/// chat digests and notifications, so no clickable link may survive them.
+pub(crate) fn strip_urls(s: &str) -> String {
+    static URL: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let re = URL.get_or_init(|| {
+        regex::Regex::new(
+            r"(?i)(?:\b[a-z][a-z0-9+.\-]*://\S*|\bwww\.\S*|\b(?:mailto|javascript):\S*)",
+        )
+        .expect("static URL regex")
+    });
+    re.replace_all(s, LINK_REMOVED).into_owned()
+}
+
 fn opt_str(args: &Value, key: &str) -> Result<Option<String>, String> {
     match args.get(key) {
         None | Some(Value::Null) => Ok(None),
@@ -254,8 +271,13 @@ pub(crate) fn parse_note_args(args: &Value, pet_id: &str, job_id: &str) -> Resul
                 PetNoteKind::ALL.iter().map(|s| s.as_str()).collect(),
             )
         })?;
-    let title = bounded("title", opt_str(args, "title")?, MAX_TITLE)?
-        .ok_or_else(|| "invalid 'title': required".to_string())?;
+    // Titles are rendered in chat digests and notifications: URLs never survive.
+    let title = bounded(
+        "title",
+        opt_str(args, "title")?.map(|t| strip_urls(&clean(&t))),
+        MAX_TITLE,
+    )?
+    .ok_or_else(|| "invalid 'title': required".to_string())?;
     let body = bounded("body", opt_str(args, "body")?, MAX_BODY)?.unwrap_or_default();
     let urgency = match args.get("urgency") {
         None | Some(Value::Null) => 1,
@@ -368,8 +390,13 @@ impl Tool for PetNoteTool {
     }
 
     fn permission_level(&self) -> PermissionLevel {
-        // Writes only the pet's own DB; no external effect.
-        PermissionLevel::Write
+        // Internal bookkeeping: writes only the pet's own `pet.db`, never the
+        // user's files or anything external. Declared `None`, like the agent's
+        // `todo` / `update_task` tools, so the read-only autonomy tier (which
+        // refuses everything above `ReadOnly`) does not silently turn every
+        // research pass into a no-op. The read-only guarantee of the lane is
+        // the closed tool allowlist plus the `PetResearch` origin, not this level.
+        PermissionLevel::None
     }
 
     async fn execute(&self, args: Value) -> anyhow::Result<ToolResult> {

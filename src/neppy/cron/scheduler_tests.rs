@@ -2132,3 +2132,125 @@ fn origin_for_agent_job_gives_pet_research_only_to_the_pet_agent() {
         "TrustedAutomation(Cron)"
     );
 }
+
+// ── Pet mode: fail closed when the read-only definition cannot be built ─────
+
+#[tokio::test]
+async fn pet_job_whose_definition_cannot_be_built_fails_closed_without_generic_fallback() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let mut job = test_job("");
+    job.job_type = JobType::Agent;
+    job.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+
+    let calls = std::cell::Cell::new(0u32);
+    let result = build_agent_for_cron_job_with(&config, &job, |_, agent_id| {
+        calls.set(calls.get() + 1);
+        assert_eq!(agent_id, crate::neppy::pet::PET_RESEARCH_AGENT_ID);
+        Err(anyhow::anyhow!("definition could not be resolved"))
+    });
+    let error = match result {
+        Ok(_) => panic!("a pet job must not fall back to the generic full-belt agent"),
+        Err(e) => e,
+    };
+    assert_eq!(calls.get(), 1, "only the definition builder may be tried");
+    let text = format!("{error:#}");
+    assert!(text.contains(PET_AGENT_UNAVAILABLE_MESSAGE), "got {text}");
+    assert!(
+        text.contains("refusing to run without its read-only definition"),
+        "got {text}"
+    );
+}
+
+#[tokio::test]
+async fn non_pet_job_keeps_generic_fallback_when_definition_cannot_be_built() {
+    crate::neppy::memory::host_impls::install_for_tests();
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let mut job = test_job("");
+    job.job_type = JobType::Agent;
+    job.agent_id = Some("some_other_agent".into());
+
+    let result = build_agent_for_cron_job_with(&config, &job, |_, _| {
+        Err(anyhow::anyhow!("definition could not be resolved"))
+    });
+    // Behaviour for other agents is unchanged: the generic builder runs, and
+    // whatever it returns is never the pet fail-closed error.
+    if let Err(e) = result {
+        assert!(!format!("{e:#}").contains(PET_AGENT_UNAVAILABLE_MESSAGE));
+    }
+}
+
+#[test]
+fn pet_fail_closed_applies_to_the_pet_lane_only() {
+    let mut job = test_job("");
+    job.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+    let err = pet_fail_closed(&job, "registry not initialized").expect("pet job fails closed");
+    assert!(err.to_string().contains(PET_AGENT_UNAVAILABLE_MESSAGE));
+    job.agent_id = Some("morning_briefing".into());
+    assert!(pet_fail_closed(&job, "x").is_none());
+    job.agent_id = None;
+    assert!(pet_fail_closed(&job, "x").is_none());
+}
+
+#[tokio::test]
+async fn pet_job_without_web_source_cannot_see_web_search() {
+    use crate::neppy::pet::ops::{pet_update, WEB_SEARCH_TOOL};
+    crate::neppy::memory::host_impls::install_for_tests();
+    crate::neppy::agent::harness::definition::AgentDefinitionRegistry::init_global_builtins()
+        .expect("init built-in agent definitions");
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let patch = |v: serde_json::Value| serde_json::from_value(v).unwrap();
+
+    let profile = pet_update(
+        &config,
+        patch(serde_json::json!({ "enabled": true, "sources": ["memory", "tasks"] })),
+    )
+    .await
+    .unwrap()
+    .value;
+    let job = crate::neppy::cron::get_job(&config, profile.research_job_id.as_deref().unwrap())
+        .expect("research job");
+
+    let built = build_agent_for_cron_job(&config, &job).expect("build pet agent");
+    let visible = built.agent.visible_tool_names_for_test();
+    assert!(
+        !visible.contains(WEB_SEARCH_TOOL),
+        "web search must be withheld when `web` is not an enabled source: {visible:?}"
+    );
+    assert!(visible.contains("pet_note"), "the rest of the belt remains");
+
+    pet_update(
+        &config,
+        patch(serde_json::json!({ "sources": ["memory", "web"] })),
+    )
+    .await
+    .unwrap();
+    let built = build_agent_for_cron_job(&config, &job).expect("build pet agent");
+    assert!(built
+        .agent
+        .visible_tool_names_for_test()
+        .contains(WEB_SEARCH_TOOL));
+}
+
+#[tokio::test]
+async fn pet_job_ignores_a_pinned_profile() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let mut profile = crate::neppy::agent::profiles::store::built_in_default_profile();
+    profile.id = "alice".into();
+    profile.built_in = false;
+    crate::neppy::agent::profiles::store::AgentProfileStore::new(config.workspace_dir.clone())
+        .upsert(profile)
+        .expect("seed profile");
+    let mut job = test_job("");
+    job.job_type = JobType::Agent;
+    job.profile_id = Some("alice".into());
+    assert!(resolve_cron_profile(&config, &job).unwrap().is_some());
+    job.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+    assert!(
+        resolve_cron_profile(&config, &job).unwrap().is_none(),
+        "the pet lane never runs under an attributed profile"
+    );
+}
