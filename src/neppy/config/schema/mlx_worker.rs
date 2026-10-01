@@ -34,11 +34,15 @@ pub struct MlxWorkerConfig {
     /// Available memory, percent, below which the state becomes Critical.
     pub critical_avail_pct: f64,
     /// Available memory, percent, that must hold before returning to Normal.
+    /// `0.0` (the default) means `elevated_avail_pct + 5`, so a machine that
+    /// normally sits just above the Elevated line is not paused indefinitely.
+    /// An explicit value is never taken below `elevated_avail_pct`.
     pub recover_avail_pct: f64,
     /// Seconds the recovery condition must hold before returning to Normal.
     pub recover_hold_secs: u64,
-    /// Memory, GiB, that must stay available after a model load. `0.0` means
-    /// `max(8, 25% of physical memory)`.
+    /// Memory, GiB, that must stay available after a managed (lazy) model load.
+    /// `0.0` means `clamp(15% of physical memory, 2 GiB, 8 GiB)`. An explicit
+    /// `mlx.start` is held only to the memory budget and a 2 GiB floor.
     pub reserve_gib: f64,
     /// Callers allowed to wait for the single inference slot. One more is
     /// refused as busy rather than queued without bound.
@@ -66,7 +70,7 @@ impl Default for MlxWorkerConfig {
             idle_stop_secs: 900,
             elevated_avail_pct: 20.0,
             critical_avail_pct: 10.0,
-            recover_avail_pct: 30.0,
+            recover_avail_pct: 0.0,
             recover_hold_secs: 30,
             reserve_gib: 0.0,
             max_waiters: 4,

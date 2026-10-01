@@ -2,6 +2,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::neppy::security::policy::AutonomyLevel;
+use crate::neppy::security::{TrustedAccess, TrustedRoot};
 
 use super::super::faults::NoFaults;
 use super::super::test_support::{spec, store};
@@ -22,9 +23,21 @@ fn env() -> Env {
     let ws = tempfile::tempdir().unwrap();
     let (sd, store) = store();
     let task = store.create_task(&spec("g"), "/p", 8).unwrap().id;
+    // The project is a read-write trusted root, as it must be for a task to
+    // have been accepted; the default forbidden list (`/tmp`, `/var`, ...) is
+    // left in place, which is what the grant has to carve out of.
     let policy = SecurityPolicy {
         autonomy: AutonomyLevel::Full,
         workspace_dir: ws.path().to_path_buf(),
+        trusted_roots: vec![TrustedRoot {
+            path: root
+                .path()
+                .canonicalize()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned(),
+            access: TrustedAccess::ReadWrite,
+        }],
         ..SecurityPolicy::default()
     };
     Env {
@@ -351,4 +364,182 @@ fn keys_differ_by_position_and_content_but_not_by_call() {
     assert_ne!(effect_key("t", 1, 0, &a), effect_key("t", 2, 0, &a));
     assert_ne!(effect_key("t", 1, 0, &a), effect_key("t", 1, 0, &b));
     let _ = Path::new("");
+}
+
+// ---- review fixes --------------------------------------------------------
+
+#[test]
+fn files_that_run_code_on_their_own_are_refused_by_default() {
+    let e = env();
+    for (n, path) in [
+        ".husky/pre-commit",
+        ".githooks/pre-push",
+        ".vscode/tasks.json",
+        ".idea/runConfigurations/x.xml",
+        ".github/workflows/ci.yml",
+        ".cargo/config.toml",
+        "build.rs",
+        ".envrc",
+        "package.json",
+    ]
+    .iter()
+    .enumerate()
+    {
+        let outcome = e.apply(1, n, &edit(path, "", "echo planted\n"));
+        assert!(
+            refused(&outcome).contains("allow_sensitive_paths"),
+            "{path}: {outcome:?}"
+        );
+        assert!(!e.root.path().join(path).exists(), "{path} was written");
+    }
+    // An ordinary file in the same tree is fine.
+    assert_eq!(
+        e.apply(1, 99, &edit("src/ok.rs", "", "fn ok() {}\n")),
+        EditOutcome::Applied
+    );
+}
+
+#[test]
+fn sensitive_paths_can_be_enabled_in_config() {
+    let mut e = env();
+    e.cfg.allow_sensitive_paths = true;
+    assert_eq!(
+        e.apply(1, 0, &edit(".husky/pre-commit", "", "#!/bin/sh\n")),
+        EditOutcome::Applied
+    );
+    assert_eq!(e.read(".husky/pre-commit"), "#!/bin/sh\n");
+    // `.git` stays off limits whatever the setting.
+    refused(&e.apply(1, 1, &edit(".git/hooks/pre-commit", "", "x")));
+}
+
+#[test]
+fn a_forbidden_path_inside_the_project_is_honoured_for_each_edit() {
+    let mut e = env();
+    let vault = e.root().join("vault");
+    e.write("vault/key.txt", "k\n");
+    e.policy.forbidden_paths = vec![vault.to_string_lossy().into_owned()];
+    let outcome = e.apply(1, 0, &edit("vault/key.txt", "k", "x"));
+    assert!(refused(&outcome).contains("forbidden"), "{outcome:?}");
+    assert_eq!(e.read("vault/key.txt"), "k\n");
+}
+
+#[test]
+fn an_edit_is_refused_once_the_write_grant_is_gone() {
+    let mut e = env();
+    e.write("a.rs", "one\n");
+    e.policy.trusted_roots.clear();
+    // With the grant gone the default forbidden list (which covers the scratch
+    // directory the test runs in) applies again, and the path is refused.
+    let outcome = e.apply(1, 0, &edit("a.rs", "one", "two"));
+    assert!(!refused(&outcome).is_empty(), "{outcome:?}");
+    assert_eq!(e.read("a.rs"), "one\n");
+}
+
+#[test]
+fn an_applied_edit_stays_applied_when_the_resume_would_refuse_its_path() {
+    let mut e = env();
+    e.write("a.rs", "one\n");
+    let op = edit("a.rs", "one", "two");
+    assert_eq!(e.apply(1, 0, &op), EditOutcome::Applied);
+    let key = effect_key(&e.task, 1, 0, &op);
+
+    // Between the crash and the resume the grant is withdrawn, so the path
+    // would now be refused. The edit already landed.
+    e.policy.trusted_roots.clear();
+    assert_eq!(e.apply(1, 0, &op), EditOutcome::AlreadyApplied);
+    let row = e.store.get_effect(&key).unwrap().unwrap();
+    assert_eq!(
+        row.status,
+        EffectStatus::Applied,
+        "not overwritten to refused"
+    );
+    assert!(row.result.is_none());
+    assert_eq!(e.read("a.rs"), "two\n");
+}
+
+#[test]
+fn a_conflict_also_survives_a_policy_change() {
+    let mut e = env();
+    e.write("a.rs", "beta\n");
+    let op = edit("a.rs", "alpha", "gamma");
+    assert!(matches!(e.apply(1, 0, &op), EditOutcome::Conflict(_)));
+    e.policy.trusted_roots.clear();
+    assert!(matches!(e.apply(1, 0, &op), EditOutcome::Conflict(_)));
+}
+
+#[test]
+fn git_ignore_rules_apply_when_the_root_is_a_subdirectory_of_the_repository() {
+    let e = env();
+    let git = |args: &[&str]| {
+        assert!(std::process::Command::new("git")
+            .arg("-C")
+            .arg(e.root.path())
+            .args(args)
+            .status()
+            .unwrap()
+            .success());
+    };
+    git(&["init", "-q"]);
+    e.write(".gitignore", "services/api/secret.txt\n*.log\n");
+    e.write("services/api/secret.txt", "s\n");
+    e.write("services/api/ok.txt", "o\n");
+    let sub = e.root().join("services/api");
+    assert!(!sub.join(".git").exists(), "the root is not the repo top");
+
+    assert!(
+        git_ignored(&sub, "secret.txt"),
+        "ignored from a subdirectory"
+    );
+    assert!(git_ignored(&sub, "debug.log"));
+    assert!(!git_ignored(&sub, "ok.txt"));
+    assert!(!git_ignored(&sub, "src/new.rs"));
+    // Not a repository at all: no rule applies.
+    let plain = tempfile::tempdir().unwrap();
+    assert!(!git_ignored(plain.path(), "secret.txt"));
+}
+
+#[test]
+fn an_intent_whose_write_landed_is_applied_even_if_the_path_is_refused_on_resume() {
+    use super::super::faults::{FaultPoint, Faults};
+
+    struct CrashAfterWrite;
+    impl Faults for CrashAfterWrite {
+        fn crash_at(&self, point: FaultPoint) -> bool {
+            point == FaultPoint::Write(0)
+        }
+    }
+
+    let mut e = env();
+    e.write("a.rs", "one\n");
+    let op = edit("a.rs", "one", "two");
+    // The process dies after the file is written but before the row says so.
+    let crashed = {
+        let root = e.root();
+        let ctx = EditCtx {
+            root: &root,
+            policy: &e.policy,
+            workspace: e.ws.path(),
+            cfg: &e.cfg,
+            store: &e.store,
+            task_id: &e.task,
+            step_no: 1,
+            faults: &CrashAfterWrite,
+        };
+        apply_edit(&ctx, 0, &op)
+    };
+    assert!(crashed.is_err(), "the simulated crash");
+    assert_eq!(e.read("a.rs"), "two\n");
+    let key = effect_key(&e.task, 1, 0, &op);
+    assert_eq!(
+        e.store.get_effect(&key).unwrap().unwrap().status,
+        EffectStatus::Intent
+    );
+
+    // On resume the grant is gone. The edit is on disk: it is applied, not refused.
+    e.policy.trusted_roots.clear();
+    assert_eq!(e.apply(1, 0, &op), EditOutcome::AlreadyApplied);
+    assert_eq!(
+        e.store.get_effect(&key).unwrap().unwrap().status,
+        EffectStatus::Applied
+    );
 }

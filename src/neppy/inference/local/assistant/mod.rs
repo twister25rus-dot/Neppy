@@ -7,6 +7,8 @@
 //! - `runner`   — the step state machine and the resume rules.
 //! - `edits`    — safe, exactly-once application of the model's edits.
 //! - `tests_runner` — the user-supplied test command, with timeout and cap.
+//! - `command_policy` — the cron-equivalent gate that command passes first.
+//! - `guards`   — which roots may be worked on and which paths edited.
 //! - `prompt`   — prompt assembly under a token budget, and reply parsing.
 //! - `ops`      — the controller: bounded queue, one task at a time.
 //! - `api`, `schemas` — the `local_assistant.*` RPCs.
@@ -15,8 +17,10 @@
 //! [`all_controller_schemas`] and [`all_registered_controllers`].
 
 mod api;
+mod command_policy;
 mod edits;
 pub(crate) mod faults;
+mod guards;
 pub mod index;
 mod model;
 mod ops;

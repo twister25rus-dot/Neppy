@@ -170,15 +170,28 @@ impl StateStore {
                 now
             ],
         )?;
+        // A cancel that landed while the step ran wins over the step's own
+        // verdict: the task stays cancelled, and so does any other terminal
+        // status already written.
+        let mut finished = false;
         if let Some(finish) = update.finish {
-            tx.execute(
-                "UPDATE tasks SET status=?2 WHERE id=?1",
+            let changed = tx.execute(
+                "UPDATE tasks SET status=?2
+                 WHERE id=?1 AND status NOT IN ('cancelled','done','failed','budget_exhausted')",
                 params![task_id, finish.as_str()],
             )?;
+            finished = changed > 0;
+            if !finished {
+                log::info!(
+                    "[local_assistant:store] task {task_id} was already terminal; \
+                     not setting {}",
+                    finish.as_str()
+                );
+            }
         }
         tx.commit()?;
         drop(conn);
-        if let Some(finish) = update.finish {
+        if let (Some(finish), true) = (update.finish, finished) {
             self.compact_finished_plans(task_id)?;
             log::info!(
                 "[local_assistant:store] task {task_id} finished status={}",
@@ -220,19 +233,34 @@ impl StateStore {
     /// At start-up nothing is running, whatever the database says: tasks left
     /// `running` or `queued` by a previous process become `interrupted`.
     pub fn mark_interrupted_on_boot(&self) -> Result<Vec<TaskId>> {
+        self.mark_interrupted_on_boot_except(&[])
+    }
+
+    /// [`Self::mark_interrupted_on_boot`], leaving alone the tasks in `live`:
+    /// ones the controller of *this* process already holds. A task accepted in
+    /// the gap between the controller starting and the boot pass running is
+    /// `queued` in the database too, and marking it interrupted would queue it
+    /// a second time.
+    pub fn mark_interrupted_on_boot_except(&self, live: &[TaskId]) -> Result<Vec<TaskId>> {
         let conn = self.conn.lock();
         let ids: Vec<String> = {
             let mut stmt = conn.prepare(
                 "SELECT id FROM tasks WHERE status IN ('running','queued') ORDER BY created_at",
             )?;
             let mapped = stmt.query_map([], |r| r.get::<_, String>(0))?;
-            mapped.collect::<rusqlite::Result<Vec<_>>>()?
+            mapped
+                .collect::<rusqlite::Result<Vec<_>>>()?
+                .into_iter()
+                .filter(|id| !live.contains(id))
+                .collect()
         };
-        conn.execute(
-            "UPDATE tasks SET status='interrupted', updated_at=?1
-             WHERE status IN ('running','queued')",
-            [now_ms()],
-        )?;
+        for id in &ids {
+            conn.execute(
+                "UPDATE tasks SET status='interrupted', updated_at=?2
+                 WHERE id=?1 AND status IN ('running','queued')",
+                params![id, now_ms()],
+            )?;
+        }
         if !ids.is_empty() {
             log::info!(
                 "[local_assistant:store] {} task(s) interrupted by a restart",
@@ -242,8 +270,22 @@ impl StateStore {
         Ok(ids)
     }
 
+    /// Ids of every `interrupted` task, oldest first: what a restart left
+    /// behind plus what a pressure give-up parked.
+    pub fn interrupted_ids(&self) -> Result<Vec<TaskId>> {
+        let conn = self.conn.lock();
+        let mut stmt = conn.prepare(
+            "SELECT id FROM tasks WHERE status='interrupted' ORDER BY created_at, rowid",
+        )?;
+        let mapped = stmt.query_map([], |r| r.get::<_, String>(0))?;
+        Ok(mapped.collect::<rusqlite::Result<Vec<_>>>()?)
+    }
+
     /// Finished tasks: keep the newest `keep_tasks`, and none older than
-    /// `keep_days`. Unfinished tasks are never pruned. Returns rows removed.
+    /// `keep_days`. Queued and running tasks are never pruned. A paused or
+    /// interrupted task nobody resumed within `keep_days` is abandoned work and
+    /// goes with them, so a task that can never run again does not pin its rows
+    /// (and its plan text) forever. Returns rows removed.
     pub fn prune(&self, keep_tasks: usize, keep_days: u32, now: i64) -> Result<usize> {
         let cutoff = now - i64::from(keep_days) * 86_400_000;
         let mut conn = self.conn.lock();
@@ -251,11 +293,12 @@ impl StateStore {
         let doomed: Vec<String> = {
             let mut stmt = tx.prepare(
                 "SELECT id FROM tasks
-                 WHERE status IN ('done','failed','budget_exhausted','cancelled')
-                   AND (updated_at < ?1
-                        OR id NOT IN (SELECT id FROM tasks
-                                      WHERE status IN ('done','failed','budget_exhausted','cancelled')
-                                      ORDER BY updated_at DESC, rowid DESC LIMIT ?2))",
+                 WHERE (status IN ('done','failed','budget_exhausted','cancelled')
+                        AND (updated_at < ?1
+                             OR id NOT IN (SELECT id FROM tasks
+                                           WHERE status IN ('done','failed','budget_exhausted','cancelled')
+                                           ORDER BY updated_at DESC, rowid DESC LIMIT ?2)))
+                    OR (status IN ('paused','interrupted') AND updated_at < ?1)",
             )?;
             let mapped = stmt.query_map(params![cutoff, keep_tasks as i64], |r| {
                 r.get::<_, String>(0)

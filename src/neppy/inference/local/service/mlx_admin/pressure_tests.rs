@@ -18,8 +18,13 @@ fn reading(level: u8, avail_pct: f64) -> SystemMemory {
     }
 }
 
+/// The explicit 30% recover threshold the hysteresis table below was written
+/// against. The shipped default is automatic; see `automatic_recovery_*`.
 fn cfg() -> MlxWorkerConfig {
-    MlxWorkerConfig::default()
+    MlxWorkerConfig {
+        recover_avail_pct: 30.0,
+        ..MlxWorkerConfig::default()
+    }
 }
 
 /// `(offset_secs, level, avail_pct, footprint)`.
@@ -174,15 +179,84 @@ fn transitions_are_reported_once() {
 }
 
 #[test]
-fn reserve_defaults_to_the_larger_of_8_gib_and_a_quarter() {
-    let config = cfg();
-    assert_eq!(reserve_bytes(&config, 36 * GIB), 9 * GIB);
-    assert_eq!(reserve_bytes(&config, 16 * GIB), 8 * GIB);
+fn reserve_scales_with_the_machine_between_two_and_eight_gib() {
+    // clamp(15% of RAM, 2 GiB, 8 GiB).
+    let config = MlxWorkerConfig::default();
+    let table: [(u64, f64); 7] = [
+        (4, 2.0), // 0.6 clamps up to the floor
+        (16, 2.4),
+        (24, 3.6),
+        (36, 5.4),
+        (48, 7.2),
+        (64, 8.0), // 9.6 clamps down to the ceiling
+        (128, 8.0),
+    ];
+    for (total, expect_gib) in table {
+        let got = reserve_bytes(&config, total * GIB) as f64 / GIB as f64;
+        assert!(
+            (got - expect_gib).abs() < 0.01,
+            "{total} GiB machine: reserve {got:.3} GiB, expected {expect_gib}"
+        );
+    }
     let explicit = MlxWorkerConfig {
         reserve_gib: 2.5,
         ..cfg()
     };
     assert_eq!(reserve_bytes(&explicit, 36 * GIB), 5 * GIB / 2);
+    assert_eq!(
+        reserve_bytes(&explicit, 128 * GIB),
+        5 * GIB / 2,
+        "an explicit value is used as given, not clamped"
+    );
+}
+
+#[test]
+fn the_recover_threshold_is_relative_to_the_elevated_one() {
+    let auto = MlxWorkerConfig::default();
+    assert_eq!(auto.recover_avail_pct, 0.0, "automatic by default");
+    assert_eq!(recover_threshold_pct(&auto), 25.0, "20 + 5");
+    let table: [(f64, f64, f64); 5] = [
+        // (elevated, recover configured, effective)
+        (20.0, 0.0, 25.0),
+        (30.0, 0.0, 35.0),
+        (20.0, 40.0, 40.0), // an explicit value is honoured
+        (20.0, 10.0, 20.0), // but never below the elevated line
+        (15.0, 0.0, 20.0),
+    ];
+    for (elevated, recover, expect) in table {
+        let c = MlxWorkerConfig {
+            elevated_avail_pct: elevated,
+            recover_avail_pct: recover,
+            ..MlxWorkerConfig::default()
+        };
+        assert_eq!(recover_threshold_pct(&c), expect, "{elevated}/{recover}");
+    }
+}
+
+#[test]
+fn automatic_recovery_is_reachable_on_a_machine_that_idles_at_26_percent() {
+    // Idle availability of 26% is above the Elevated line (20%) but was below
+    // the old fixed 30% recovery line, which held the gate paused forever.
+    let base = Instant::now();
+    let auto = MlxWorkerConfig::default();
+    let mut tracker = PressureTracker::new();
+    let at = |secs| base + Duration::from_secs(secs);
+    let (s, _) = tracker.observe(&reading(1, 15.0), None, 0, at(0), &auto);
+    assert_eq!(s, E);
+    let (s, _) = tracker.observe(&reading(1, 26.0), None, 0, at(10), &auto);
+    assert_eq!(s, E, "holding, not yet recovered");
+    let (s, _) = tracker.observe(&reading(1, 26.0), None, 0, at(45), &auto);
+    assert_eq!(s, N, "26% held for the 30s hold");
+
+    let fixed = MlxWorkerConfig {
+        recover_avail_pct: 30.0,
+        ..MlxWorkerConfig::default()
+    };
+    let mut tracker = PressureTracker::new();
+    tracker.observe(&reading(1, 15.0), None, 0, at(0), &fixed);
+    tracker.observe(&reading(1, 26.0), None, 0, at(10), &fixed);
+    let (s, _) = tracker.observe(&reading(1, 26.0), None, 0, at(100), &fixed);
+    assert_eq!(s, E, "an explicit 30% still needs 30%");
 }
 
 #[test]

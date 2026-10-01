@@ -125,7 +125,12 @@ impl MlxProcess {
 /// Reclaims a prior orphan for the same id first, so a crashed Neppy cannot
 /// leave a model resident and the port occupied.
 pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<MlxProcess, String> {
-    let _ = reclaim_orphan_if_ours(config, &server.id);
+    // Only a worker a dead supervised core left behind is reclaimed here; a
+    // server the user (or a live core, or a one-shot CLI) started is not ours.
+    let _ = reclaim_stale_supervised(config, &server.id);
+    // Limits the assistant relies on, applied to this launch only. The stored
+    // block is never rewritten.
+    let server = &super::argv::apply_spawn_limits(config, server);
 
     let resolved = resolve_binary(config, server)?;
     probe_binary(&resolved.path).await?;
@@ -200,16 +205,108 @@ pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<M
     })
 }
 
+/// Remove the spawn marker for `id` without touching the process it names.
+/// For a server that is known to be gone (it exited, or failed to start): the
+/// recorded PID may have been recycled since, so it must not be signalled.
+pub(crate) fn clear_marker_only(config: &Config, id: &str) {
+    let path = mlx_spawn_marker_path(config, id);
+    if let Some(marker) = read_marker_at(&path) {
+        super::reaper::forget(marker.pid);
+    }
+    clear_marker_at(&path);
+}
+
+fn marker_binary_name(marker: &SpawnMarker) -> Option<String> {
+    std::path::Path::new(&marker.binary_path)
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .filter(|n| !n.is_empty())
+}
+
+/// Reclaim the worker a *dead supervised core* left behind for `id`, so a crash
+/// cannot leave a model resident and the port taken. Everything else is left
+/// alone and its marker kept or cleared as appropriate:
+///
+/// - a marker from a one-shot CLI start (`supervised = false`) is meant to
+///   outlive that CLI;
+/// - a marker whose owning core is still running belongs to that core;
+/// - a recorded PID whose command line does not name the recorded binary has
+///   been recycled, so only the marker is dropped.
+///
+/// Returns whether a live process was killed.
+pub(crate) fn reclaim_stale_supervised(config: &Config, id: &str) -> bool {
+    let path = mlx_spawn_marker_path(config, id);
+    let Some(marker) = read_marker_at(&path) else {
+        return false;
+    };
+    reclaim_stale_marker(&path, &marker, std::process::id(), id)
+}
+
+pub(crate) fn reclaim_stale_marker(
+    path: &std::path::Path,
+    marker: &SpawnMarker,
+    our_pid: u32,
+    id: &str,
+) -> bool {
+    if !super::reaper::pid_running(marker.pid) {
+        log::debug!(
+            "[mlx] stale spawn marker for `{id}` (pid={} no longer running); clearing",
+            marker.pid
+        );
+        super::reaper::forget(marker.pid);
+        clear_marker_at(path);
+        return false;
+    }
+    if !marker.supervised {
+        log::info!(
+            "[mlx] `{id}` pid={} was started by a one-shot CLI, not a supervised core; leaving it",
+            marker.pid
+        );
+        return false;
+    }
+    if marker.neppy_pid != our_pid && super::reaper::pid_running(marker.neppy_pid) {
+        log::info!(
+            "[mlx] `{id}` pid={} belongs to the live core pid={}; leaving it",
+            marker.pid,
+            marker.neppy_pid
+        );
+        return false;
+    }
+    let confirmed = marker_binary_name(marker)
+        .is_some_and(|name| super::reaper::cmdline_names(marker.pid, &name) == Some(true));
+    if !confirmed {
+        log::warn!(
+            "[mlx] marker for `{id}` names pid={} but it does not look like `{}`; clearing the marker only",
+            marker.pid,
+            marker.binary_path
+        );
+        clear_marker_at(path);
+        return false;
+    }
+    log::info!(
+        "[mlx] reclaiming server `{id}` pid={} orphaned by core pid={}",
+        marker.pid,
+        marker.neppy_pid
+    );
+    super::super::ollama_admin::kill_pid_by_id(marker.pid);
+    super::reaper::forget(marker.pid);
+    clear_marker_at(path);
+    true
+}
+
 /// Kill a process recorded for `id` that this process does not hold a handle
-/// to. Only ever touches a PID we recorded ourselves.
+/// to, because the user asked for that server to be stopped.
 ///
 /// Returns whether a live process was actually killed, so callers can report
 /// honestly instead of claiming a stop that did not happen.
 ///
-/// Two callers, two reasons. `spawn` uses it so a Neppy that died without
-/// running its shutdown hook cannot leak a resident 16 GB model. `stop` uses
-/// it because the CLI is a fresh process per invocation and never shares a
-/// pool with the invocation that spawned the server.
+/// Only the explicit-stop path uses this (`MlxPool::stop`): the CLI is a fresh
+/// process per invocation and never shares a pool with the invocation that
+/// spawned the server. Automatic callers must not: use
+/// [`reclaim_stale_supervised`] to clean up after a dead core and
+/// [`clear_marker_only`] for a server known to be gone. A recorded PID that is
+/// readable and does not look like the recorded binary is treated as recycled
+/// and is not killed.
 pub(crate) fn reclaim_orphan_if_ours(config: &Config, id: &str) -> bool {
     let path = mlx_spawn_marker_path(config, id);
     let Some(marker) = read_marker_at(&path) else {
@@ -224,6 +321,17 @@ pub(crate) fn reclaim_orphan_if_ours(config: &Config, id: &str) -> bool {
         super::reaper::forget(marker.pid);
         clear_marker_at(&path);
         return false;
+    }
+    if let Some(name) = marker_binary_name(&marker) {
+        if super::reaper::cmdline_names(marker.pid, &name) == Some(false) {
+            log::warn!(
+                "[mlx] marker for `{id}` names pid={} but it does not look like `{name}`; clearing the marker only",
+                marker.pid
+            );
+            super::reaper::forget(marker.pid);
+            clear_marker_at(&path);
+            return false;
+        }
     }
 
     log::info!(
@@ -274,3 +382,7 @@ where
         log::debug!("[mlx] `{id}` {tag} stream closed");
     });
 }
+
+#[cfg(test)]
+#[path = "process_tests.rs"]
+mod tests;

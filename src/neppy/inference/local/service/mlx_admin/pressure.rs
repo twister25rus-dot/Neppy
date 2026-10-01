@@ -19,8 +19,18 @@ use crate::neppy::config::schema::MlxWorkerConfig;
 /// Swap growth since the worker loaded that counts as pressure on its own.
 pub(crate) const SWAP_GROWTH_LIMIT_BYTES: u64 = 512 * 1024 * 1024;
 
-/// Floor of the load reserve when none is configured.
-const MIN_RESERVE_BYTES: u64 = 8 * 1024 * 1024 * 1024;
+const GIB: u64 = 1024 * 1024 * 1024;
+/// Floor and ceiling of the derived load reserve.
+const MIN_RESERVE_BYTES: u64 = 2 * GIB;
+const MAX_RESERVE_BYTES: u64 = 8 * GIB;
+/// Share of physical memory the derived load reserve starts from, percent.
+const RESERVE_PCT: u64 = 15;
+/// What an explicitly requested start (`mlx.start`, autostart) must leave
+/// available once the model is loaded, whatever the reserve says.
+pub(crate) const EXPLICIT_START_FLOOR_BYTES: u64 = 2 * GIB;
+/// Percentage points above `elevated_avail_pct` that availability must reach
+/// to recover when `recover_avail_pct` is left at `0` (automatic).
+pub(crate) const AUTO_RECOVER_MARGIN_PCT: f64 = 5.0;
 
 /// One system-wide memory reading.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)]
@@ -111,7 +121,7 @@ impl PressureTracker {
     /// - Critical: level 4, or available below `critical_avail_pct`.
     /// - Elevated: level ≥ 2, available below `elevated_avail_pct`, the worker
     ///   over `budget_bytes`, or swap grown past 512 MiB since load.
-    /// - Back to Normal only after level 1, available ≥ `recover_avail_pct`
+    /// - Back to Normal only after level 1, available ≥ [`recover_threshold_pct`]
     ///   and no worker/swap signal have held for `recover_hold_secs`.
     ///   Critical steps down to Elevated as soon as the critical signal clears.
     pub(crate) fn observe(
@@ -132,7 +142,7 @@ impl PressureTracker {
         } else {
             let recovered = raw == PressureState::Normal
                 && sample.pressure_level <= 1
-                && sample.avail_pct >= cfg.recover_avail_pct;
+                && sample.avail_pct >= recover_threshold_pct(cfg);
             if recovered {
                 let since = *self.recovering_since.get_or_insert(now);
                 if now.saturating_duration_since(since)
@@ -234,13 +244,33 @@ impl PressureTracker {
 
 const MIB: u64 = 1024 * 1024;
 
-/// Memory that must stay available after a load: the configured reserve, or
-/// `max(8 GiB, 25% of total)`.
+/// Memory that must stay available after a managed (lazy) load: the configured
+/// reserve, or `clamp(15% of total, 2 GiB, 8 GiB)`.
+///
+/// The derived reserve used to be `max(8 GiB, 25% of total)`, which on a 16 or
+/// 24 GiB Mac is half the machine or more: nearly every model was refused, even
+/// ones that fit comfortably. 15% scales with the machine (2.4 / 3.6 / 5.4 /
+/// 8.0 GiB at 16 / 24 / 36 / 64 GiB), the floor keeps a small machine from
+/// reserving nothing, and the ceiling stops a big one from reserving more than
+/// macOS and a few apps need.
 pub(crate) fn reserve_bytes(cfg: &MlxWorkerConfig, total_bytes: u64) -> u64 {
     if cfg.reserve_gib > 0.0 {
-        return (cfg.reserve_gib * (1024.0 * 1024.0 * 1024.0)) as u64;
+        return (cfg.reserve_gib * GIB as f64) as u64;
     }
-    MIN_RESERVE_BYTES.max(total_bytes / 4)
+    (total_bytes.saturating_mul(RESERVE_PCT) / 100).clamp(MIN_RESERVE_BYTES, MAX_RESERVE_BYTES)
+}
+
+/// Available memory, percent, that must hold before pressure returns to
+/// Normal. `recover_avail_pct = 0` means `elevated_avail_pct + 5`, so recovery
+/// is always reachable from wherever Elevated starts; an explicit value is
+/// honoured but never taken below the elevated threshold, since recovering
+/// below the level that raised the alarm would flap.
+pub(crate) fn recover_threshold_pct(cfg: &MlxWorkerConfig) -> f64 {
+    if cfg.recover_avail_pct > 0.0 {
+        cfg.recover_avail_pct.max(cfg.elevated_avail_pct)
+    } else {
+        cfg.elevated_avail_pct + AUTO_RECOVER_MARGIN_PCT
+    }
 }
 
 /// Sample system-wide memory.

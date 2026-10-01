@@ -82,6 +82,16 @@ pub(super) async fn plan_step(
     let mut correction: Option<String> = None;
     let mut spent: u64 = 0;
     for attempt in 1..=2u32 {
+        // What the task may still spend. A step asks for no more than that, so
+        // the task budget is a ceiling on tokens generated, not a threshold
+        // checked after the fact.
+        let remaining = u64::from(env.cfg.task_max_completion_tokens)
+            .saturating_sub(task.completion_tokens_used + spent);
+        if remaining == 0 {
+            env.store.add_tokens(&task.id, spent)?;
+            return Ok(PlanStep::BudgetExhausted);
+        }
+        let max_tokens = step_token_cap(env.cfg.step_max_tokens, remaining);
         let input = PromptInput {
             task,
             step_no,
@@ -104,7 +114,7 @@ pub(super) async fn plan_step(
             built.snippets_used,
             estimator.chars_per_token()
         );
-        let reply = match call_model(env, stop, &built.user).await {
+        let reply = match call_model(env, stop, &built.user, max_tokens).await {
             Ok(reply) => reply,
             Err(CallFail::Preempt(why)) => return Ok(PlanStep::Preempted(why)),
             Err(CallFail::Cancelled) => return Ok(PlanStep::Cancelled),
@@ -162,12 +172,18 @@ pub(super) async fn plan_step(
     )))
 }
 
+/// `max_tokens` for one call: the per-step limit, capped at what is left of the
+/// task's completion-token budget.
+pub(super) fn step_token_cap(step_max_tokens: u32, remaining: u64) -> u32 {
+    u32::try_from(remaining).map_or(step_max_tokens, |left| step_max_tokens.min(left))
+}
+
 async fn call_model(
     env: &RunEnv,
     stop: &StopSignal,
     user: &str,
+    max_tokens: u32,
 ) -> std::result::Result<ModelReply, CallFail> {
-    let max_tokens = env.cfg.step_max_tokens;
     let mut last = String::new();
     for attempt in 1..=MAX_CALL_ATTEMPTS {
         let outcome = tokio::select! {

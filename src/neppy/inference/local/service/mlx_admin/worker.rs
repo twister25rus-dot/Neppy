@@ -23,6 +23,7 @@ use crate::neppy::config::Config;
 
 use super::super::LocalAiService;
 use super::health::{probe_liveness, probe_models};
+use super::memory::AdmitMode;
 use super::metrics::{event, MetricsSink, OllamaLoaded};
 use super::pressure::{gpu_in_use_bytes, sample_system, PressureTracker};
 
@@ -208,7 +209,10 @@ pub(crate) async fn ensure_started(
     }
 
     log::info!("[mlx:worker] lazily starting `{id}`");
-    svc.mlx.start(config, &svc.http, &id).await.map(|_| ())?;
+    svc.mlx
+        .start_with(config, &svc.http, &id, AdmitMode::Managed)
+        .await
+        .map(|_| ())?;
     svc.worker.crash_pending.store(false, Ordering::SeqCst);
     svc.worker
         .tracker
@@ -297,6 +301,20 @@ pub(crate) async fn prepare_model(
     match live.loaded_model.as_deref() {
         Some(loaded) if same_model(loaded, model_id) => Ok(false),
         Some(loaded) => {
+            // Only a worker this process holds may be unloaded. One it does not
+            // (the user's own server, another core's) is used as it stands, the
+            // same rule `ensure_started` applies; unloading it would take the
+            // model out from under whoever started it.
+            if !svc.mlx.is_running(&id).await {
+                log::warn!(
+                    "[mlx:worker] `{id}` has `{loaded}` loaded and is not supervised here; refusing to unload it for {model_id}"
+                );
+                return Err(format!(
+                    "the MLX server `{id}` was not started by Neppy and has `{loaded}` loaded; \
+                     Neppy will not unload it to load {model_id}. Stop that server, or use the \
+                     model it has loaded."
+                ));
+            }
             log::info!("[mlx:worker] model switch on `{id}`: unloading before {model_id}");
             unload(svc, &base_url).await?;
             svc.metrics.event(

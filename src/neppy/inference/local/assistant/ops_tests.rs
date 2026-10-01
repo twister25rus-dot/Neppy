@@ -458,3 +458,6 @@ async fn index_operations_go_through_the_same_root_checks() {
     assert!(api::index_refresh(&e.ctx, &e.ctx.workspace).await.is_err());
     assert!(api::search(&e.ctx, &e.ctx.workspace, "x", None).is_err());
 }
+
+#[path = "ops_review_tests.rs"]
+mod review;

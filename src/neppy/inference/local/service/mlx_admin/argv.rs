@@ -11,6 +11,45 @@
 //! unrecognised argument.
 
 use crate::neppy::config::schema::MlxServerConfig;
+use crate::neppy::config::Config;
+
+/// The block as it is launched for the assistant's worker: with a server-side
+/// context limit and a single sequence slot when the stored block leaves them
+/// unset.
+///
+/// `local_assistant.context_limit_tokens` is documented as "must not exceed the
+/// server's `max_kv_size`", but nothing enforced that, so a long prompt could
+/// grow the KV cache without bound. Passing the limit to the server makes the
+/// cap real. `max_num_seqs = 1` matches the single-flight gate: a second
+/// sequence is a second KV slice the memory policy never admitted.
+///
+/// Applies only to the worker block (`worker_server_id`) and only while the
+/// assistant is enabled, so a user's other blocks and a user running plain
+/// chat with the assistant off are untouched. A value the user set is kept. The
+/// stored config is never rewritten; this is a copy used for one spawn.
+pub(crate) fn apply_spawn_limits(config: &Config, server: &MlxServerConfig) -> MlxServerConfig {
+    let mut effective = server.clone();
+    let is_worker = super::worker::worker_server_id(config).as_deref() == Some(server.id.as_str());
+    if !is_worker || !config.local_assistant.enabled {
+        return effective;
+    }
+    if effective.max_kv_size == 0 {
+        effective.max_kv_size = config.local_assistant.context_limit_tokens;
+        log::info!(
+            "[mlx] `{}` has no max_kv_size; launching with local_assistant.context_limit_tokens={}",
+            server.id,
+            effective.max_kv_size
+        );
+    }
+    if effective.max_num_seqs == 0 {
+        effective.max_num_seqs = 1;
+        log::info!(
+            "[mlx] `{}` has no max_num_seqs; launching with 1",
+            server.id
+        );
+    }
+    effective
+}
 
 /// Build the argument vector for `server`, bound to `resolved_port`.
 ///
@@ -192,4 +231,60 @@ pub(crate) fn redact_argv(args: &[String]) -> Vec<String> {
         out.push(arg.clone());
     }
     out
+}
+
+#[cfg(test)]
+mod limits_tests {
+    use super::*;
+
+    fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
+        args.iter()
+            .position(|a| a == name)
+            .and_then(|i| args.get(i + 1))
+            .map(String::as_str)
+    }
+
+    #[test]
+    fn an_unset_context_limit_is_passed_to_the_worker_at_spawn() {
+        let config = Config::default();
+        let stored = config.mlx.servers[0].clone();
+        assert_eq!(stored.max_kv_size, 0);
+        assert_eq!(stored.max_num_seqs, 0);
+        assert!(stored.is_vlm());
+
+        let launched = apply_spawn_limits(&config, &stored);
+        let args = build_argv(&launched, 8123);
+        let limit = config.local_assistant.context_limit_tokens.to_string();
+        assert_eq!(flag(&args, "--max-kv-size"), Some(limit.as_str()));
+        assert_eq!(flag(&args, "--max-num-seqs"), Some("1"));
+        // The stored block is a copy's source, never rewritten.
+        assert_eq!(config.mlx.servers[0].max_kv_size, 0);
+        assert!(flag(&build_argv(&stored, 8123), "--max-kv-size").is_none());
+    }
+
+    #[test]
+    fn a_limit_the_user_set_is_kept() {
+        let mut config = Config::default();
+        config.mlx.servers[0].max_kv_size = 4096;
+        config.mlx.servers[0].max_num_seqs = 3;
+        let launched = apply_spawn_limits(&config, &config.mlx.servers[0]);
+        let args = build_argv(&launched, 8123);
+        assert_eq!(flag(&args, "--max-kv-size"), Some("4096"));
+        assert_eq!(flag(&args, "--max-num-seqs"), Some("3"));
+    }
+
+    #[test]
+    fn only_the_worker_block_and_only_while_the_assistant_is_on() {
+        let mut config = Config::default();
+        let mut other = config.mlx.servers[0].clone();
+        other.id = "embeddings-only".into();
+        config.mlx.servers.push(other.clone());
+        assert_eq!(apply_spawn_limits(&config, &other).max_kv_size, 0);
+
+        config.local_assistant.enabled = false;
+        let worker = config.mlx.servers[0].clone();
+        let launched = apply_spawn_limits(&config, &worker);
+        assert_eq!(launched.max_kv_size, 0);
+        assert_eq!(launched.max_num_seqs, 0);
+    }
 }

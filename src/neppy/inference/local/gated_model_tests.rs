@@ -409,3 +409,98 @@ fn the_factory_gates_mlx_models_only_when_the_supervisor_is_on() {
     config.mlx.enabled = false;
     assert!(!test_hook::is_gated(&factory("mlx:org/model", &config)));
 }
+
+// ---- priority ------------------------------------------------------------
+
+fn model_on(gate: &Arc<InferenceGate>, inner: Arc<ScriptedModel>) -> Arc<GatedLocalModel> {
+    Arc::new(GatedLocalModel::new(
+        inner as Arc<dyn ChatModel<()>>,
+        "m",
+        Arc::clone(gate),
+        Arc::new(MetricsSink::new()),
+        Arc::new(FakeWorker {
+            calls: AtomicUsize::new(0),
+            fail: false,
+            loading: false,
+        }),
+        MlxWorkerConfig {
+            max_waiters: 64,
+            acquire_timeout_secs: 30,
+            ..MlxWorkerConfig::default()
+        },
+    ))
+}
+
+#[tokio::test]
+async fn a_background_call_yields_to_chat_and_the_error_says_it_yielded() {
+    use crate::neppy::inference::local::service::mlx_admin::gate::background_scope;
+
+    let gate = Arc::new(InferenceGate::new().with_yield_after(Duration::from_millis(60)));
+    let background = model_on(&gate, ScriptedModel::new(Script::Hang));
+    let chat = model_on(&gate, ScriptedModel::new(Script::Ok));
+
+    let task = {
+        let background = Arc::clone(&background);
+        tokio::spawn(background_scope(async move {
+            background.invoke(&(), ModelRequest::default()).await
+        }))
+    };
+    for _ in 0..200 {
+        if gate.snapshot().active == 1 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    assert_eq!(
+        gate.snapshot().active,
+        1,
+        "the background call holds the slot"
+    );
+
+    // Chat waits behind a call that would never end by itself.
+    let reply = tokio::time::timeout(
+        Duration::from_secs(5),
+        chat.invoke(&(), ModelRequest::default()),
+    )
+    .await
+    .expect("chat was not starved by the background call")
+    .expect("chat answers");
+    assert_eq!(reply.usage.map(|u| u.output_tokens), Some(7));
+
+    let err = task
+        .await
+        .expect("task")
+        .expect_err("the background call was cancelled");
+    assert_eq!(
+        gate_error_of(&err),
+        Some(GateError::Yielded),
+        "a yield, not a memory preemption: {err}"
+    );
+    assert_eq!(gate.snapshot().active, 0);
+}
+
+#[tokio::test]
+async fn a_call_outside_the_background_scope_is_never_asked_to_yield() {
+    let gate = Arc::new(InferenceGate::new().with_yield_after(Duration::from_millis(40)));
+    let holder = model_on(&gate, ScriptedModel::new(Script::Hang));
+    let waiting = model_on(&gate, ScriptedModel::new(Script::Ok));
+    let held = {
+        let holder = Arc::clone(&holder);
+        tokio::spawn(async move { holder.invoke(&(), ModelRequest::default()).await })
+    };
+    for _ in 0..200 {
+        if gate.snapshot().active == 1 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let second = {
+        let waiting = Arc::clone(&waiting);
+        tokio::spawn(async move { waiting.invoke(&(), ModelRequest::default()).await })
+    };
+    tokio::time::sleep(Duration::from_millis(250)).await;
+    assert!(!held.is_finished(), "an interactive holder keeps its slot");
+    assert!(!second.is_finished());
+    held.abort();
+    second.abort();
+}

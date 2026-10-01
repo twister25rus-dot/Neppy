@@ -286,7 +286,7 @@ export function contextScaling(labeled, marks) {
 }
 
 /** Pass criteria for the worker kill test (plan section 3, kill test). */
-export function evaluateKillTest({ killMs, events, taskStatus, testRuns, stackedNoteLines, orphanWorkerPids }) {
+export function evaluateKillTest({ killMs, events, taskStatus, testRuns, stackedNoteLines, editsApplied, orphanWorkerPids }) {
   const terminal = ['done', 'budget_exhausted'].includes(taskStatus);
   const runs = testRuns ?? { invocations: 0, ledgerRows: 0 };
   const crash = events.find((e) => e.event === 'worker_crash' && e.ts_ms >= killMs - 1000);
@@ -301,7 +301,14 @@ export function evaluateKillTest({ killMs, events, taskStatus, testRuns, stacked
       exercised: runs.ledgerRows > 0,
       detail: runs.ledgerRows > 0 ? `${runs.invocations} invocations for ${runs.ledgerRows} ledger rows` : 'no step requested the test command: not exercised',
     },
-    { name: 'each edit applied once (no stacked NOTE(soak) lines)', pass: stackedNoteLines === 0, detail: `${stackedNoteLines} stacked` },
+    {
+      // A run in which no edit landed cannot show that edits are applied once:
+      // zero stacked lines is then vacuously true, so say it was not exercised.
+      name: 'each edit applied once (no stacked NOTE(soak) lines)',
+      pass: stackedNoteLines === 0,
+      exercised: (editsApplied ?? 0) > 0,
+      detail: (editsApplied ?? 0) > 0 ? `${stackedNoteLines} stacked across ${editsApplied} applied edit(s)` : 'no edit was applied: not exercised',
+    },
     { name: 'no orphan mlx worker', pass: (orphanWorkerPids ?? []).length === 0, detail: JSON.stringify(orphanWorkerPids ?? []) },
   ];
   return { pass: checks.every((c) => c.pass), checks };

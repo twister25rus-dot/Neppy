@@ -155,7 +155,12 @@ pub(crate) fn is_generated_path(rel: &str) -> bool {
     let mut parts = rel.split('/').peekable();
     while let Some(part) = parts.next() {
         if parts.peek().is_some() {
-            if GENERATED_DIRS.contains(&part) {
+            // Case-insensitive: `Target/`, `Build/` and `NODE_MODULES/` are the
+            // same directory on a case-insensitive filesystem.
+            if GENERATED_DIRS
+                .iter()
+                .any(|dir| dir.eq_ignore_ascii_case(part))
+            {
                 return true;
             }
         } else {

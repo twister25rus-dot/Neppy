@@ -50,6 +50,21 @@ impl MlxPool {
         })
     }
 
+    /// Stop `id` only if this pool holds its process. Unlike [`Self::stop`]
+    /// there is no spawn-marker fallback: a server this process did not start
+    /// (the user's own, another core's, a CLI start) is never touched.
+    pub(crate) async fn stop_if_held(&self, config: &Config, id: &str) -> bool {
+        let entry = self.running.lock().await.remove(id);
+        match entry {
+            Some(mut entry) => {
+                entry.process.stop(config).await;
+                self.record(event::WORKER_STOP, id, format!("pid={}", entry.process.pid));
+                true
+            }
+            None => false,
+        }
+    }
+
     /// Remove every entry whose process has exited, clearing its spawn marker.
     ///
     /// Without this a crashed server stays in the map as `Crashed` forever,
@@ -75,7 +90,7 @@ impl MlxPool {
                         entry.process.pid
                     );
                     // The child is already gone; this only clears its marker.
-                    super::super::process::reclaim_orphan_if_ours(config, &id);
+                    super::super::process::clear_marker_only(config, &id);
                     self.record(
                         event::WORKER_CRASH,
                         &id,

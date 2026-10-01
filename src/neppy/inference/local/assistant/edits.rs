@@ -92,11 +92,13 @@ pub(crate) fn validate_rel(rel: &str) -> std::result::Result<PathBuf, String> {
     Ok(path.to_path_buf())
 }
 
-/// Whether git (if this is a repository) says `rel` is ignored.
+/// Whether git says `rel` is ignored.
+///
+/// `git -C root check-ignore` resolves the repository itself, so it works when
+/// `root` is a subdirectory of a repository, and `rel` is read relative to
+/// `root`. Exit 0 is "ignored"; 1 is "not ignored"; anything else (not a
+/// repository, git missing) is "no rule applies".
 fn git_ignored(root: &Path, rel: &str) -> bool {
-    if !root.join(".git").exists() {
-        return false;
-    }
     Command::new("git")
         .arg("-C")
         .arg(root)
@@ -160,6 +162,7 @@ fn resolve_target(ctx: &EditCtx<'_>, rel: &str) -> std::result::Result<PathBuf, 
     if ctx.policy.is_workspace_internal_path(&abs) {
         return Err("the path is internal application state".into());
     }
+    super::guards::check_edit_target(ctx.policy, ctx.cfg, &rel_str, &abs)?;
     Ok(abs)
 }
 
@@ -264,14 +267,29 @@ pub(crate) fn refuse_disabled(
     refuse(ctx, &key, edit, why.to_string())
 }
 
+/// Whether an `intent` row's edit is already on disk: the file at the edit's
+/// (plain, project-relative) path hashes to the row's recorded result.
+fn landed_before_crash(ctx: &EditCtx<'_>, edit: &EditOp, prior: Option<&EffectRecord>) -> bool {
+    let Some(prior) = prior.filter(|p| p.status == EffectStatus::Intent && !p.post_sha.is_empty())
+    else {
+        return false;
+    };
+    let Ok(rel) = validate_rel(&edit.path) else {
+        return false;
+    };
+    std::fs::read(ctx.root.join(rel))
+        .ok()
+        .is_some_and(|bytes| sha_hex(&bytes) == prior.post_sha)
+}
+
 /// Apply edit number `idx` of the step, at most once however often this is
 /// called for the same step.
 pub(crate) fn apply_edit(ctx: &EditCtx<'_>, idx: usize, edit: &EditOp) -> Result<EditOutcome> {
     let key = effect_key(ctx.task_id, ctx.step_no, idx, edit);
-    let target = match resolve_target(ctx, &edit.path) {
-        Ok(target) => target,
-        Err(why) => return refuse(ctx, &key, edit, why),
-    };
+    // The ledger comes first. An edit that already landed stays applied on a
+    // resume even if the path would be refused now (the policy, the config or
+    // the ignore rules may have changed); judging the path first would
+    // overwrite an `applied` row with `refused`.
     let prior = ctx.store.get_effect(&key)?;
     if let Some(prior) = &prior {
         match prior.status {
@@ -290,6 +308,19 @@ pub(crate) fn apply_edit(ctx: &EditCtx<'_>, idx: usize, edit: &EditOp) -> Result
             EffectStatus::Intent | EffectStatus::Refused => {}
         }
     }
+    let target = match resolve_target(ctx, &edit.path) {
+        Ok(target) => target,
+        Err(why) => {
+            // A crash left an intent: the write may have landed before the path
+            // started being refused. If the file already holds the result, it
+            // is applied, whatever the policy says now.
+            if landed_before_crash(ctx, edit, prior.as_ref()) {
+                ctx.store.mark_effect(&key, EffectStatus::Applied, None)?;
+                return Ok(EditOutcome::AlreadyApplied);
+            }
+            return refuse(ctx, &key, edit, why);
+        }
+    };
 
     let meta = std::fs::symlink_metadata(&target).ok();
     let current = match &meta {

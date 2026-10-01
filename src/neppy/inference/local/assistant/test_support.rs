@@ -11,7 +11,7 @@ use parking_lot::Mutex;
 
 use crate::neppy::config::schema::LocalAssistantConfig;
 use crate::neppy::security::policy::AutonomyLevel;
-use crate::neppy::security::SecurityPolicy;
+use crate::neppy::security::{SecurityPolicy, TrustedAccess, TrustedRoot};
 
 use super::faults::{FaultPoint, Faults, NoFaults};
 use super::model::{ModelFailure, ModelReply, StepModel};
@@ -40,6 +40,8 @@ pub(crate) struct ScriptedModel {
     replies: Mutex<VecDeque<Result<ModelReply, ModelFailure>>>,
     pub(crate) calls: AtomicUsize,
     pub(crate) prompts: Mutex<Vec<String>>,
+    /// The `max_tokens` each call asked for.
+    pub(crate) max_tokens: Mutex<Vec<u32>>,
 }
 
 impl ScriptedModel {
@@ -48,6 +50,7 @@ impl ScriptedModel {
             replies: Mutex::new(replies.into()),
             calls: AtomicUsize::new(0),
             prompts: Mutex::new(Vec::new()),
+            max_tokens: Mutex::new(Vec::new()),
         })
     }
 
@@ -62,9 +65,10 @@ impl StepModel for ScriptedModel {
         &self,
         _system: &str,
         user: &str,
-        _max_tokens: u32,
+        max_tokens: u32,
     ) -> Result<ModelReply, ModelFailure> {
         self.calls.fetch_add(1, Ordering::SeqCst);
+        self.max_tokens.lock().push(max_tokens);
         self.prompts.lock().push(user.to_string());
         self.replies
             .lock()
@@ -163,6 +167,8 @@ impl Fixture {
     pub(crate) fn new() -> Self {
         let project = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(project.path().join("src")).unwrap();
+        // A repository marker: a project that is edited must be inside one.
+        std::fs::create_dir_all(project.path().join(".git")).unwrap();
         std::fs::write(project.path().join("src/lib.rs"), "pub fn alpha() {}\n").unwrap();
         let workspace = tempfile::tempdir().unwrap();
         let store = Arc::new(StateStore::open(workspace.path()).unwrap());
@@ -215,16 +221,37 @@ impl Fixture {
             store: Arc::clone(&self.store),
             workspace: self.workspace.path().to_path_buf(),
             cfg: self.cfg.clone(),
-            policy: Arc::new(SecurityPolicy {
-                autonomy: self.autonomy,
-                workspace_dir: self.workspace.path().to_path_buf(),
-                ..SecurityPolicy::default()
-            }),
+            policy: Arc::new(self.policy()),
             model,
             fallback: None,
             faults,
             metrics: None,
             retry_delay: Duration::ZERO,
+        }
+    }
+
+    /// The policy a task on this project is accepted under: the project is a
+    /// read-write trusted root, as it has to be for edits.
+    pub(crate) fn policy(&self) -> SecurityPolicy {
+        SecurityPolicy {
+            autonomy: self.autonomy,
+            workspace_dir: self.workspace.path().to_path_buf(),
+            // The project, and the directory the test command appends its
+            // counter to (the command policy only lets a path argument through
+            // when it is inside a trusted root).
+            trusted_roots: [self.project.path(), self.counter_dir.path()]
+                .iter()
+                .flat_map(|dir| {
+                    // As written (the test command names the temp path as
+                    // created) and canonical (`/var` is `/private/var` on macOS).
+                    [dir.to_path_buf(), dir.canonicalize().unwrap()]
+                })
+                .map(|dir| TrustedRoot {
+                    path: dir.to_string_lossy().into_owned(),
+                    access: TrustedAccess::ReadWrite,
+                })
+                .collect(),
+            ..SecurityPolicy::default()
         }
     }
 

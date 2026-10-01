@@ -53,6 +53,12 @@ pub struct LocalAssistantConfig {
     pub keep_days: u32,
     /// Seconds a test command may run before it is killed.
     pub test_timeout_secs: u64,
+    /// Let the assistant edit files that run code on their own: git hooks
+    /// (`.husky/`, `.githooks/`), editor and CI configuration (`.vscode/`,
+    /// `.idea/`, `.github/workflows/`), `.cargo/config*`, `build.rs`,
+    /// `.envrc` and `package.json`. Off by default, so a model reading a hostile
+    /// repository cannot plant something the user's next build or commit runs.
+    pub allow_sensitive_paths: bool,
 }
 
 impl Default for LocalAssistantConfig {
@@ -76,6 +82,7 @@ impl Default for LocalAssistantConfig {
             keep_tasks: 50,
             keep_days: 30,
             test_timeout_secs: 600,
+            allow_sensitive_paths: false,
         }
     }
 }
@@ -99,6 +106,15 @@ mod tests {
             config.prompt_budget_tokens + config.step_max_tokens < config.context_limit_tokens,
             "a step's prompt plus completion must fit the context window"
         );
+    }
+
+    #[test]
+    fn sensitive_paths_are_off_unless_opted_in() {
+        assert!(!LocalAssistantConfig::default().allow_sensitive_paths);
+        let parsed: LocalAssistantConfig =
+            toml::from_str("allow_sensitive_paths = true\n").expect("parses");
+        assert!(parsed.allow_sensitive_paths);
+        assert_eq!(parsed.max_steps, LocalAssistantConfig::default().max_steps);
     }
 
     #[test]

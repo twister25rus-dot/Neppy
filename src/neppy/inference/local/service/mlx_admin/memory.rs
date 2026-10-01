@@ -21,7 +21,9 @@ use crate::neppy::config::Config;
 // `models--org--name` have to agree, and a second copy of that rule here is a
 // drift waiting to happen.
 use super::models::{dir_name_from_repo_id, directory_size_bytes, hf_hub_dir, BYTES_PER_GIB};
-use super::pressure::{reserve_bytes, sample_process, sample_system, SystemMemory};
+use super::pressure::{
+    reserve_bytes, sample_process, sample_system, SystemMemory, EXPLICIT_START_FLOOR_BYTES,
+};
 
 /// Fraction of physical memory available to MLX when no budget is configured.
 /// The rest is macOS, Neppy itself, and whatever else is open.
@@ -89,6 +91,19 @@ pub(crate) fn estimate_model_gib(model_id: &str) -> Option<f64> {
     Some((bytes as f64 / BYTES_PER_GIB) * RESIDENT_OVERHEAD)
 }
 
+/// Who is asking for the start, which decides how much free memory it leaves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum AdmitMode {
+    /// A lazy start on behalf of a request (`ensure_started`): nobody is
+    /// watching, so the system reserve applies in full.
+    Managed,
+    /// The user asked for this server (`mlx.start`, autostart, restart). The
+    /// MLX budget still applies, but the only extra condition is a hard floor
+    /// of 2 GiB available after the load. Someone who started a model on
+    /// purpose should not be refused by a conservative reserve.
+    Explicit,
+}
+
 /// Verdict on whether a server may start.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Admission {
@@ -104,8 +119,13 @@ pub(crate) enum Admission {
 
 /// Decide whether a server holding `model_id` may start, given what is already
 /// resident in `running_pids` and what the system has available right now.
-pub(crate) fn admit(config: &Config, model_id: &str, running_pids: &[u32]) -> Admission {
-    admit_with(config, model_id, running_pids, &sample_system())
+pub(crate) fn admit(
+    config: &Config,
+    mode: AdmitMode,
+    model_id: &str,
+    running_pids: &[u32],
+) -> Admission {
+    admit_with(config, mode, model_id, running_pids, &sample_system())
 }
 
 /// [`admit`] with the system reading injected, so both checks are testable.
@@ -113,11 +133,14 @@ pub(crate) fn admit(config: &Config, model_id: &str, running_pids: &[u32]) -> Ad
 /// Two ceilings, both must hold:
 /// - the MLX budget (`memory_budget_gib`, or 70% of RAM) minus what managed
 ///   servers already hold;
-/// - what the machine actually has available minus a reserve
-///   (`[mlx.worker] reserve_gib`, or `max(8 GiB, 25% of RAM)`). The budget
-///   alone ignores every other app, so it would admit a load that swaps.
+/// - what the machine actually has available minus a reserve. For a
+///   [`AdmitMode::Managed`] start that is `[mlx.worker] reserve_gib`, or
+///   `clamp(15% of RAM, 2 GiB, 8 GiB)`; for an [`AdmitMode::Explicit`] start
+///   it is a flat 2 GiB. The budget alone ignores every other app, so it would
+///   admit a load that swaps.
 pub(crate) fn admit_with(
     config: &Config,
+    mode: AdmitMode,
     model_id: &str,
     running_pids: &[u32],
     system: &SystemMemory,
@@ -156,14 +179,24 @@ pub(crate) fn admit_with(
 
     if system.total_bytes > 0 {
         let avail = system.avail_bytes as f64 / BYTES_PER_GIB;
-        let reserve = reserve_bytes(&config.mlx.worker, system.total_bytes) as f64 / BYTES_PER_GIB;
+        let required = match mode {
+            AdmitMode::Managed => reserve_bytes(&config.mlx.worker, system.total_bytes),
+            AdmitMode::Explicit => EXPLICIT_START_FLOOR_BYTES,
+        };
+        let reserve = required as f64 / BYTES_PER_GIB;
         if avail - estimated_gib < reserve {
+            let advice = match mode {
+                AdmitMode::Managed => {
+                    "Close other apps, lower mlx.worker.reserve_gib, or choose a smaller \
+                     quantization."
+                }
+                AdmitMode::Explicit => "Close other apps, or choose a smaller quantization.",
+            };
             return Admission::Refuse {
                 message: format!(
                     "{model_id} needs about {estimated_gib:.1} GiB but only {avail:.1} GiB of \
                      memory is available and {reserve:.1} GiB must stay free for the system. \
-                     Close other apps, lower mlx.worker.reserve_gib, or choose a smaller \
-                     quantization."
+                     {advice}"
                 ),
             };
         }
@@ -182,7 +215,12 @@ mod tests {
         // server has had a chance to download anything.
         let config = Config::default();
         assert_eq!(
-            admit(&config, "definitely/not-a-real-model-xyz", &[]),
+            admit(
+                &config,
+                AdmitMode::Managed,
+                "definitely/not-a-real-model-xyz",
+                &[]
+            ),
             Admission::Unknown
         );
     }
@@ -232,7 +270,13 @@ mod tests {
         config.mlx.memory_budget_gib = 100.0;
         config.mlx.worker.reserve_gib = 9.0;
 
-        match admit_with(&config, &model, &[], &system(36.0, 9.0005)) {
+        match admit_with(
+            &config,
+            AdmitMode::Managed,
+            &model,
+            &[],
+            &system(36.0, 9.0005),
+        ) {
             Admission::Refuse { message } => {
                 assert!(message.contains("must stay free"), "{message}");
                 assert!(message.contains("reserve_gib"), "{message}");
@@ -240,7 +284,13 @@ mod tests {
             other => panic!("expected refusal, got {other:?}"),
         }
         assert!(matches!(
-            admit_with(&config, &model, &[], &system(36.0, 20.0)),
+            admit_with(
+                &config,
+                AdmitMode::Managed,
+                &model,
+                &[],
+                &system(36.0, 20.0)
+            ),
             Admission::Allow { .. }
         ));
     }
@@ -251,18 +301,24 @@ mod tests {
         let model = dir.path().to_string_lossy().into_owned();
         let mut config = Config::default();
         config.mlx.memory_budget_gib = 100.0;
-        // 36 GiB total: reserve is max(8, 9) = 9 GiB.
+        // 36 GiB total: reserve is clamp(15%, 2, 8) = 5.4 GiB.
         assert!(matches!(
-            admit_with(&config, &model, &[], &system(36.0, 8.5)),
+            admit_with(&config, AdmitMode::Managed, &model, &[], &system(36.0, 5.0)),
             Admission::Refuse { .. }
         ));
         assert!(matches!(
-            admit_with(&config, &model, &[], &system(36.0, 9.5)),
+            admit_with(&config, AdmitMode::Managed, &model, &[], &system(36.0, 6.0)),
             Admission::Allow { .. }
         ));
         // An unreadable system reading does not block on the reserve.
         assert!(matches!(
-            admit_with(&config, &model, &[], &SystemMemory::default()),
+            admit_with(
+                &config,
+                AdmitMode::Managed,
+                &model,
+                &[],
+                &SystemMemory::default()
+            ),
             Admission::Allow { .. }
         ));
     }
@@ -273,7 +329,13 @@ mod tests {
         let model = dir.path().to_string_lossy().into_owned();
         let mut config = Config::default();
         config.mlx.memory_budget_gib = 0.000_001;
-        match admit_with(&config, &model, &[], &system(36.0, 30.0)) {
+        match admit_with(
+            &config,
+            AdmitMode::Managed,
+            &model,
+            &[],
+            &system(36.0, 30.0),
+        ) {
             Admission::Refuse { message } => assert!(message.contains("memory_budget_gib")),
             other => panic!("expected refusal, got {other:?}"),
         }
@@ -299,7 +361,7 @@ mod tests {
 
         let cached = "mlx-community/Qwen3.8-27B-nvfp4";
         if estimate_model_gib(cached).is_some() {
-            match admit(&config, cached, &[]) {
+            match admit(&config, AdmitMode::Explicit, cached, &[]) {
                 Admission::Refuse { message } => {
                     assert!(
                         message.contains("GiB"),
@@ -313,5 +375,104 @@ mod tests {
                 other => panic!("expected a refusal, got {other:?}"),
             }
         }
+    }
+
+    /// A model file of `gib` GiB, sparse so the test costs no disk. The
+    /// estimate is 1.2x the file, so a 5 GiB file is a 6 GiB model.
+    fn sparse_model_dir(gib: u64) -> tempfile::TempDir {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let file = std::fs::File::create(dir.path().join("weights.safetensors")).expect("create");
+        file.set_len(gib * 1024 * 1024 * 1024).expect("sparse");
+        dir
+    }
+
+    fn verdict(mode: AdmitMode, total: f64, avail: f64) -> Admission {
+        let dir = sparse_model_dir(5);
+        let model = dir.path().to_string_lossy().into_owned();
+        let mut config = Config::default();
+        config.mlx.memory_budget_gib = 1000.0;
+        admit_with(&config, mode, &model, &[], &system(total, avail))
+    }
+
+    fn allowed(admission: &Admission) -> bool {
+        matches!(admission, Admission::Allow { .. })
+    }
+
+    #[test]
+    fn a_managed_start_scales_its_reserve_to_the_machine() {
+        // (total GiB, available GiB, allowed). A 6 GiB model leaves
+        // `avail - 6`; the reserve is 2.4 / 3.6 / 5.4 / 8.0 GiB.
+        let table = [
+            (16.0, 11.0, true),  // 5.0 left vs 2.4
+            (16.0, 8.2, false),  // 2.2 left vs 2.4
+            (24.0, 10.0, true),  // 4.0 vs 3.6
+            (24.0, 9.5, false),  // 3.5 vs 3.6
+            (36.0, 12.0, true),  // 6.0 vs 5.4
+            (36.0, 11.0, false), // 5.0 vs 5.4
+            (64.0, 14.5, true),  // 8.5 vs 8.0 (ceiling)
+            (64.0, 13.5, false), // 7.5 vs 8.0
+        ];
+        for (total, avail, expect) in table {
+            let got = verdict(AdmitMode::Managed, total, avail);
+            assert_eq!(
+                allowed(&got),
+                expect,
+                "{total} GiB machine, {avail} avail: {got:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_old_reserve_would_have_refused_the_ordinary_start_on_a_small_mac() {
+        // The regression this fixes: max(8 GiB, 25%) refused a 6 GiB model on a
+        // 16 GiB Mac that had 11 GiB free.
+        assert!(allowed(&verdict(AdmitMode::Managed, 16.0, 11.0)));
+        assert!(allowed(&verdict(AdmitMode::Explicit, 16.0, 11.0)));
+    }
+
+    #[test]
+    fn an_explicit_start_keeps_only_a_two_gib_floor() {
+        let table = [
+            (16.0, 8.2, true),  // 2.2 left: refused when lazy, fine when asked for
+            (24.0, 9.5, true),  // 3.5 left
+            (36.0, 11.0, true), // 5.0 left
+            (64.0, 13.5, true), // 7.5 left
+            (16.0, 7.5, false), // 1.5 left: under the hard floor
+            (64.0, 7.5, false), // 1.5 left, on a big machine too
+        ];
+        for (total, avail, expect) in table {
+            let got = verdict(AdmitMode::Explicit, total, avail);
+            assert_eq!(
+                allowed(&got),
+                expect,
+                "{total} GiB machine, {avail} avail: {got:?}"
+            );
+        }
+        match verdict(AdmitMode::Explicit, 16.0, 7.5) {
+            Admission::Refuse { message } => {
+                assert!(message.contains("must stay free"), "{message}");
+                assert!(!message.contains("reserve_gib"), "{message}");
+            }
+            other => panic!("expected refusal, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn an_explicit_start_is_still_held_to_the_memory_budget() {
+        let dir = sparse_model_dir(5);
+        let model = dir.path().to_string_lossy().into_owned();
+        let mut config = Config::default();
+        config.mlx.memory_budget_gib = 4.0;
+        let got = admit_with(
+            &config,
+            AdmitMode::Explicit,
+            &model,
+            &[],
+            &system(64.0, 50.0),
+        );
+        assert!(
+            matches!(got, Admission::Refuse { ref message } if message.contains("memory_budget_gib")),
+            "{got:?}"
+        );
     }
 }

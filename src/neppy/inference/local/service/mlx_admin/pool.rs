@@ -20,7 +20,7 @@ use crate::neppy::config::schema::MlxServerConfig;
 use crate::neppy::config::Config;
 
 use super::health::{classify, probe_liveness, probe_models, MlxServerState};
-use super::memory::{admit, budget_gib, resident_gib, Admission};
+use super::memory::{admit, budget_gib, resident_gib, Admission, AdmitMode};
 use super::metrics::{event, MetricsSink};
 use super::process::{spawn, MlxProcess};
 
@@ -177,7 +177,7 @@ impl MlxPool {
         running.get(id).map(|entry| entry.process.port)
     }
 
-    /// Start the block with this id.
+    /// Start the block with this id because the user asked for it.
     ///
     /// Refuses rather than spawning when the model would not fit alongside
     /// what is already resident.
@@ -186,6 +186,18 @@ impl MlxPool {
         config: &Config,
         http: &reqwest::Client,
         id: &str,
+    ) -> Result<MlxServerStatus, String> {
+        self.start_with(config, http, id, AdmitMode::Explicit).await
+    }
+
+    /// [`Self::start`] with the admission mode named: the lazy path
+    /// (`ensure_started`) passes [`AdmitMode::Managed`].
+    pub(crate) async fn start_with(
+        &self,
+        config: &Config,
+        http: &reqwest::Client,
+        id: &str,
+        mode: AdmitMode,
     ) -> Result<MlxServerStatus, String> {
         let server = config
             .mlx
@@ -200,7 +212,7 @@ impl MlxPool {
             }
         }
 
-        let estimated_gib = match admit(config, &server.model, &self.running_pids().await) {
+        let estimated_gib = match admit(config, mode, &server.model, &self.running_pids().await) {
             Admission::Allow { estimated_gib } => Some(estimated_gib),
             Admission::Unknown => None,
             Admission::Refuse { message } => {
@@ -486,7 +498,7 @@ impl MlxPool {
 /// Drop the spawn marker for a server that failed to start, so a later stop
 /// does not try to reclaim a PID that is already gone.
 fn clear_marker_for(config: &Config, id: &str) {
-    super::process::reclaim_orphan_if_ours(config, id);
+    super::process::clear_marker_only(config, id);
 }
 
 /// The block's settings as JSON, with the bearer token replaced by a marker.

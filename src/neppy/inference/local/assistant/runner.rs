@@ -27,8 +27,9 @@ use super::index::{open_index, ProjectIndex};
 use super::model::StepModel;
 use super::planning::{plan_step, PlanStep};
 use super::prompt::TokenEstimator;
-use super::step_effects::{apply_step_edits, run_step_tests, stored_test_result};
+use super::step_effects::{apply_step_edits, run_step_tests, stored_test_result, TestsStep};
 use super::store::StateStore;
+use super::tests_runner::StopReason;
 use super::types::*;
 
 /// Edit problems reported back to the model per step.
@@ -90,6 +91,8 @@ enum StepResult {
     Completed,
     Preempted(String),
     Cancelled,
+    /// The assistant was disabled while the step's tests were running.
+    Paused,
     BudgetExhausted,
 }
 
@@ -139,6 +142,17 @@ async fn drive(env: &RunEnv, task: TaskRecord, stop: &StopSignal) -> Result<RunO
         .map_err(|e| AssistantError::Invalid(format!("project root is not available: {e}")))?;
     let index = Arc::new(open_index(&env.workspace, &root)?);
     let edits_allowed = task.allow_edits && env.policy.can_act();
+    // The root was checked when the task was accepted; the config, the tree and
+    // the tier can all have changed since. Same rules, applied again.
+    super::guards::validate_root(&env.policy, &env.workspace, &root, edits_allowed).map_err(
+        |why| {
+            log::warn!(
+                "[local_assistant] task {} root no longer allowed: {why}",
+                task.id
+            );
+            AssistantError::Invalid(format!("project root is no longer allowed: {why}"))
+        },
+    )?;
     let mut estimator = TokenEstimator::default();
     let result = step_loop(
         env,
@@ -177,6 +191,16 @@ fn finish_cancelled(env: &RunEnv, id: &str) -> Result<RunOutcome> {
     Ok(RunOutcome::Finished(TaskStatus::Cancelled))
 }
 
+fn pause_disabled(env: &RunEnv, id: &str) -> Result<RunOutcome> {
+    env.store.set_status(id, TaskStatus::Paused, None)?;
+    log::info!("[local_assistant] task {id} paused: the assistant is disabled");
+    env.event(
+        "task_checkpoint",
+        format!("task {id} paused at a step boundary"),
+    );
+    Ok(RunOutcome::Paused)
+}
+
 fn budget_exhausted(env: &RunEnv, id: &str, why: &str) -> Result<RunOutcome> {
     env.store
         .set_status(id, TaskStatus::BudgetExhausted, Some(why))?;
@@ -202,13 +226,7 @@ async fn step_loop(
             return finish_cancelled(env, id);
         }
         if !stop.enabled.load(Ordering::SeqCst) {
-            env.store.set_status(id, TaskStatus::Paused, None)?;
-            log::info!("[local_assistant] task {id} paused: the assistant is disabled");
-            env.event(
-                "task_checkpoint",
-                format!("task {id} paused at a step boundary"),
-            );
-            return Ok(RunOutcome::Paused);
+            return pause_disabled(env, id);
         }
         let task = env.store.require_task(id)?;
         if task.status.is_terminal() {
@@ -247,6 +265,7 @@ async fn step_loop(
         {
             StepResult::Completed => {}
             StepResult::Cancelled => return finish_cancelled(env, id),
+            StepResult::Paused => return pause_disabled(env, id),
             StepResult::BudgetExhausted => {
                 return budget_exhausted(env, id, "completion token budget reached mid-step");
             }
@@ -309,7 +328,11 @@ async fn run_step(
     }
 
     let test = if step.state < StepState::Tested {
-        let result = run_step_tests(env, root, task, step_no, &plan).await?;
+        let result = match run_step_tests(env, root, task, step_no, &plan, stop).await? {
+            TestsStep::Result(result) => result,
+            TestsStep::Stopped(StopReason::Cancelled) => return Ok(StepResult::Cancelled),
+            TestsStep::Stopped(StopReason::Disabled) => return Ok(StepResult::Paused),
+        };
         store.set_step_state(&task.id, step_no, StepState::Tested)?;
         check(env.faults.as_ref(), FaultPoint::Tested)?;
         result
@@ -381,3 +404,7 @@ async fn run_step(
 #[cfg(test)]
 #[path = "runner_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "runner_review_tests.rs"]
+mod review_tests;

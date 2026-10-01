@@ -98,7 +98,7 @@ impl GatedLocalModel {
             biased;
             _ = permit.cancelled() => {
                 self.metrics.event(event::REQUEST_PREEMPTED, None, "while preparing the worker");
-                return Err(gate_error(GateError::Preempted));
+                return Err(gate_error(permit.cancel_error()));
             }
             prepared = self.worker.prepare(&self.model_id) => prepared.map_err(|err| {
                 log::warn!("[mlx:worker] model={} not ready: {err}", self.model_id);
@@ -144,7 +144,7 @@ impl ChatModel<()> for GatedLocalModel {
             biased;
             _ = permit.cancelled() => {
                 self.metrics.event(event::REQUEST_PREEMPTED, None, "during invoke");
-                Err(gate_error(GateError::Preempted))
+                Err(gate_error(permit.cancel_error()))
             }
             result = self.inner.invoke(state, request) => result,
         };
@@ -178,7 +178,7 @@ impl ChatModel<()> for GatedLocalModel {
             biased;
             _ = permit.cancelled() => {
                 self.metrics.event(event::REQUEST_PREEMPTED, None, "opening stream");
-                return Err(gate_error(GateError::Preempted));
+                return Err(gate_error(permit.cancel_error()));
             }
             opened = self.inner.stream(state, request) => opened?,
         };
@@ -211,7 +211,10 @@ fn gated_stream(state: GatedStream) -> ModelStream {
             _ = st.permit.cancelled() => {
                 st.metrics.event(event::REQUEST_PREEMPTED, None, "during stream");
                 // Ending here drops `st`, and with it the permit.
-                return Some((ModelStreamItem::Failed(GateError::Preempted.message()), None));
+                return Some((
+                    ModelStreamItem::Failed(st.permit.cancel_error().message()),
+                    None,
+                ));
             }
             item = st.inner.next() => item,
         };

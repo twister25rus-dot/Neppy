@@ -304,3 +304,150 @@ fn retention_prunes_old_and_excess_finished_tasks_but_never_live_ones() {
     assert_eq!(store.prune(50, 30, now).unwrap(), 1);
     assert!(store.load_task(&live.id).unwrap().is_some());
 }
+
+// ---- review fixes --------------------------------------------------------
+
+fn update(finish: Option<TaskStatus>) -> TaskUpdate {
+    TaskUpdate {
+        summary: "s".into(),
+        new_decisions: Vec::new(),
+        new_changed_files: Vec::new(),
+        last_test: None,
+        next_step: "n".into(),
+        finish,
+    }
+}
+
+#[test]
+fn a_cancel_that_lands_during_a_step_wins_over_the_steps_done() {
+    let (_d, store) = store();
+    let task = store.create_task(&spec("g"), "/p", 8).unwrap();
+    store
+        .set_status(&task.id, TaskStatus::Running, None)
+        .unwrap();
+    store.begin_step(&task.id, 1).unwrap();
+    // The user cancels while the step is still working.
+    assert!(store
+        .transition(&task.id, &[TaskStatus::Running], TaskStatus::Cancelled)
+        .unwrap());
+    store
+        .complete_step(&task.id, 1, &update(Some(TaskStatus::Done)))
+        .unwrap();
+    let after = store.require_task(&task.id).unwrap();
+    assert_eq!(
+        after.status,
+        TaskStatus::Cancelled,
+        "not resurrected as done"
+    );
+    assert_eq!(after.steps_done, 1, "the step itself is still recorded");
+}
+
+#[test]
+fn a_step_still_finishes_a_running_task() {
+    let (_d, store) = store();
+    let task = store.create_task(&spec("g"), "/p", 8).unwrap();
+    store
+        .set_status(&task.id, TaskStatus::Running, None)
+        .unwrap();
+    store.begin_step(&task.id, 1).unwrap();
+    store
+        .complete_step(&task.id, 1, &update(Some(TaskStatus::Done)))
+        .unwrap();
+    assert_eq!(
+        store.require_task(&task.id).unwrap().status,
+        TaskStatus::Done
+    );
+}
+
+#[test]
+fn a_terminal_status_is_never_overwritten_by_a_late_step() {
+    let (_d, store) = store();
+    for terminal in [
+        TaskStatus::Failed,
+        TaskStatus::BudgetExhausted,
+        TaskStatus::Done,
+    ] {
+        let task = store.create_task(&spec("g"), "/p", 8).unwrap();
+        store.set_status(&task.id, terminal, Some("x")).unwrap();
+        store.begin_step(&task.id, 1).unwrap();
+        store
+            .complete_step(&task.id, 1, &update(Some(TaskStatus::Done)))
+            .unwrap();
+        assert_eq!(store.require_task(&task.id).unwrap().status, terminal);
+    }
+}
+
+#[test]
+fn paused_and_interrupted_tasks_are_pruned_once_abandoned() {
+    let (_d, store) = store();
+    let now = now_ms();
+    let day = 86_400_000;
+    let mk = |status: TaskStatus, age_days: i64| {
+        let t = store.create_task(&spec("g"), "/p", 8).unwrap();
+        store.set_status(&t.id, status, None).unwrap();
+        store.begin_step(&t.id, 1).unwrap();
+        store.backdate(&t.id, now - age_days * day);
+        t.id
+    };
+    let old_paused = mk(TaskStatus::Paused, 31);
+    let old_interrupted = mk(TaskStatus::Interrupted, 45);
+    let fresh_paused = mk(TaskStatus::Paused, 2);
+    let fresh_interrupted = mk(TaskStatus::Interrupted, 29);
+    let old_running = mk(TaskStatus::Running, 90);
+    let old_queued = mk(TaskStatus::Queued, 90);
+
+    assert_eq!(store.prune(50, 30, now).unwrap(), 2);
+    assert!(store.load_task(&old_paused).unwrap().is_none());
+    assert!(store.load_task(&old_interrupted).unwrap().is_none());
+    assert!(store.load_task(&fresh_paused).unwrap().is_some());
+    assert!(store.load_task(&fresh_interrupted).unwrap().is_some());
+    assert!(
+        store.load_task(&old_running).unwrap().is_some(),
+        "a running task is never pruned"
+    );
+    assert!(store.load_task(&old_queued).unwrap().is_some());
+    assert_eq!(
+        store.count("steps"),
+        4,
+        "the abandoned tasks' steps went too"
+    );
+}
+
+#[test]
+fn the_boot_pass_skips_what_this_process_already_holds() {
+    let (_d, store) = store();
+    let stale = store.create_task(&spec("stale"), "/p", 8).unwrap();
+    store
+        .set_status(&stale.id, TaskStatus::Running, None)
+        .unwrap();
+    let live = store.create_task(&spec("live"), "/p", 8).unwrap();
+    let marked = store
+        .mark_interrupted_on_boot_except(&[live.id.clone()])
+        .unwrap();
+    assert_eq!(marked, vec![stale.id.clone()]);
+    assert_eq!(
+        store.require_task(&live.id).unwrap().status,
+        TaskStatus::Queued
+    );
+    assert_eq!(
+        store.require_task(&stale.id).unwrap().status,
+        TaskStatus::Interrupted
+    );
+    assert_eq!(store.interrupted_ids().unwrap(), vec![stale.id]);
+}
+
+#[test]
+fn interrupted_ids_are_oldest_first_and_only_interrupted() {
+    let (_d, store) = store();
+    let a = store.create_task(&spec("a"), "/p", 8).unwrap();
+    let b = store.create_task(&spec("b"), "/p", 8).unwrap();
+    let c = store.create_task(&spec("c"), "/p", 8).unwrap();
+    store
+        .set_status(&b.id, TaskStatus::Interrupted, None)
+        .unwrap();
+    store
+        .set_status(&a.id, TaskStatus::Interrupted, None)
+        .unwrap();
+    store.set_status(&c.id, TaskStatus::Paused, None).unwrap();
+    assert_eq!(store.interrupted_ids().unwrap(), vec![a.id, b.id]);
+}

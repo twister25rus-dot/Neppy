@@ -19,7 +19,9 @@ use super::health::{probe_in_flight, probe_liveness, server_busy};
 use super::memory::budget_gib;
 use super::metrics::{event, MetricsSample};
 use super::models::BYTES_PER_GIB;
-use super::pressure::{sample_process, sample_system, PressureState, ProcMem, SystemMemory};
+use super::pressure::{
+    sample_process, sample_system, PressureState, ProcMem, SystemMemory, Transition,
+};
 use super::worker::{configure_metrics, unload, unload_ollama, worker_server_id};
 
 const MIB: u64 = 1024 * 1024;
@@ -123,6 +125,12 @@ pub(crate) fn decide(inputs: &WatchInputs) -> WorkerAction {
     WorkerAction::None
 }
 
+/// Whether a pressure transition warrants dropping Ollama's resident models:
+/// only on *entering* Critical, never on Elevated.
+pub(crate) fn ollama_unload_due(transition: &Transition) -> bool {
+    transition.to == PressureState::Critical && transition.from < PressureState::Critical
+}
+
 static STARTED: AtomicBool = AtomicBool::new(false);
 
 /// Start the watchdog for `svc`. Idempotent; a no-op outside a tokio runtime.
@@ -214,7 +222,11 @@ pub(crate) async fn tick(svc: &Arc<LocalAiService>, config: &Config) -> Duration
                 svc.metrics
                     .event(event::REQUEST_PREEMPTED, Some(&id), "memory critical");
             }
-            if transition.from == PressureState::Normal {
+            // Ollama is not ours; touching its models is a last resort. Elevated
+            // already pauses chat and stops the worker once idle, which is
+            // enough for ordinary pressure, so its models are dropped only when
+            // the machine is actually in trouble.
+            if ollama_unload_due(&transition) {
                 let models = svc.worker.ollama_loaded(&svc.http).await;
                 unload_ollama(svc, &models).await;
             }
@@ -331,6 +343,14 @@ async fn apply(
         WorkerAction::None => {}
         WorkerAction::Resume => svc.gate.resume(),
         WorkerAction::Unload => {
+            // The verdict was made from a snapshot, then probes were awaited.
+            // Take the gate slot for the whole unload (and the stop it may turn
+            // into) so a request that arrived in between is not cut off; if
+            // one holds the slot, skip and decide again next tick.
+            let Some(_gate) = svc.gate.try_acquire() else {
+                log::debug!("[mlx:worker] unload of `{id}` skipped: the gate is busy");
+                return;
+            };
             let Some(base) = svc.mlx.resolved_base_url(config, id).await else {
                 return;
             };
@@ -360,7 +380,7 @@ async fn apply(
                                     after / MIB
                                 ),
                             );
-                            svc.mlx.stop(config, id).await;
+                            svc.mlx.stop_if_held(config, id).await;
                             svc.worker.tracker.lock().set_swap_baseline(None);
                         }
                     }
@@ -368,12 +388,35 @@ async fn apply(
                 Err(err) => log::warn!("[mlx:worker] idle unload of `{id}` failed: {err}"),
             }
         }
-        WorkerAction::Stop | WorkerAction::StopNow => {
+        WorkerAction::Stop => {
+            let Some(_gate) = svc.gate.try_acquire() else {
+                log::debug!("[mlx:worker] stop of `{id}` skipped: the gate is busy");
+                return;
+            };
             log::info!(
-                "[mlx:worker] stopping `{id}` ({action:?}, pressure {})",
+                "[mlx:worker] stopping `{id}` (idle/elevated, pressure {})",
                 pressure.as_str()
             );
-            svc.mlx.stop(config, id).await;
+            svc.mlx.stop_if_held(config, id).await;
+            svc.worker.tracker.lock().set_swap_baseline(None);
+        }
+        WorkerAction::StopNow => {
+            // Critical: the request is cancelled first, so it ends cleanly with
+            // a preempted error rather than a connection reset, then the worker
+            // goes without waiting for it to drain.
+            if svc.gate.snapshot().active > 0 {
+                svc.gate.preempt();
+                svc.metrics.event(
+                    event::REQUEST_PREEMPTED,
+                    Some(id),
+                    "memory critical; stopping now",
+                );
+            }
+            log::info!(
+                "[mlx:worker] stopping `{id}` now (pressure {})",
+                pressure.as_str()
+            );
+            svc.mlx.stop_if_held(config, id).await;
             svc.worker.tracker.lock().set_swap_baseline(None);
         }
         WorkerAction::ReapCrashed => {

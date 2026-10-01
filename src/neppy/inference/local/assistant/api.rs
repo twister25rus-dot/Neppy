@@ -13,10 +13,11 @@ use serde::Serialize;
 use crate::neppy::config::schema::LocalAssistantConfig;
 use crate::neppy::security::SecurityPolicy;
 
+use super::command_policy::check_command;
+use super::guards;
 use super::index::{open_index, IndexStatus, RefreshStats};
 use super::ops::{Controller, QueueItem};
 use super::store::StateStore;
-use super::tests_runner::check_command;
 use super::types::*;
 
 /// Most tasks `list` returns, and its default.
@@ -78,32 +79,14 @@ pub(crate) struct EnabledReply {
     pub(crate) resumed: usize,
 }
 
-/// A directory the assistant may work on: it exists, is not a protected
-/// location, and neither contains nor sits inside the Neppy workspace.
-pub(crate) fn resolve_root(ctx: &ApiCtx, root: &Path) -> Result<PathBuf> {
-    let canon = root
-        .canonicalize()
-        .map_err(|e| AssistantError::Invalid(format!("project_root `{}`: {e}", root.display())))?;
-    if !canon.is_dir() {
-        return Err(AssistantError::Invalid(
-            "project_root is not a directory".into(),
-        ));
-    }
-    if SecurityPolicy::is_always_forbidden(&canon) {
-        return Err(AssistantError::Invalid(
-            "project_root is a protected location".into(),
-        ));
-    }
-    let ws = ctx
-        .workspace
-        .canonicalize()
-        .unwrap_or_else(|_| ctx.workspace.clone());
-    if canon.starts_with(&ws) || ws.starts_with(&canon) {
-        return Err(AssistantError::Invalid(
-            "project_root must not contain, or be inside, the Neppy workspace".into(),
-        ));
-    }
-    Ok(canon)
+/// A directory the assistant may work on. `allow_edits` selects the write
+/// rules: the same checks the agent's file tools apply to a write root, plus a
+/// git repository requirement (see `guards`).
+pub(crate) fn resolve_root(ctx: &ApiCtx, root: &Path, allow_edits: bool) -> Result<PathBuf> {
+    guards::validate_root(&ctx.policy, &ctx.workspace, root, allow_edits).map_err(|why| {
+        log::warn!("[local_assistant] project_root refused: {why}");
+        AssistantError::Invalid(why)
+    })
 }
 
 fn accepting(ctx: &ApiCtx) -> Result<()> {
@@ -125,7 +108,11 @@ pub(crate) fn start_task(ctx: &ApiCtx, spec: TaskSpec) -> Result<TaskRecord> {
             goal.len()
         )));
     }
-    let root = resolve_root(ctx, &spec.project_root)?;
+    let root = resolve_root(
+        ctx,
+        &spec.project_root,
+        spec.allow_edits && ctx.policy.can_act(),
+    )?;
     if spec.allow_edits && !ctx.policy.can_act() {
         return Err(AssistantError::Invalid(
             "allow_edits was requested but the autonomy tier is read-only".into(),
@@ -298,14 +285,20 @@ pub(crate) fn set_enabled(ctx: &ApiCtx, enabled: bool) -> Result<EnabledReply> {
 }
 
 /// After a restart: whatever was running or queued is interrupted, and (when
-/// enabled) goes back in the queue. Returns how many were re-queued.
+/// enabled) every interrupted task goes back in the queue, including ones a
+/// pressure give-up parked in an earlier run. Tasks this process's controller
+/// already holds are left alone. Returns how many were re-queued.
 pub(crate) fn resume_after_restart(ctx: &ApiCtx) -> Result<usize> {
-    let interrupted = ctx.store.mark_interrupted_on_boot()?;
+    let live = ctx.controller.tracked_ids();
+    ctx.store.mark_interrupted_on_boot_except(&live)?;
     if !ctx.cfg.enabled || !ctx.controller.enabled() {
         return Ok(0);
     }
     let mut queued = 0;
-    for id in interrupted {
+    for id in ctx.store.interrupted_ids()? {
+        if live.contains(&id) {
+            continue;
+        }
         let Ok(slot) = ctx.controller.reserve() else {
             log::warn!(
                 "[local_assistant] queue full while resuming after restart; {id} stays interrupted"
@@ -334,13 +327,13 @@ pub(crate) fn resume_after_restart(ctx: &ApiCtx) -> Result<usize> {
 }
 
 pub(crate) async fn index_refresh(ctx: &ApiCtx, root: &Path) -> Result<RefreshStats> {
-    let root = resolve_root(ctx, root)?;
+    let root = resolve_root(ctx, root, false)?;
     let index = Arc::new(open_index(&ctx.workspace, &root)?);
     index.refresh_async(&ctx.cfg).await
 }
 
 pub(crate) fn index_status(ctx: &ApiCtx, root: &Path) -> Result<IndexStatus> {
-    let root = resolve_root(ctx, root)?;
+    let root = resolve_root(ctx, root, false)?;
     open_index(&ctx.workspace, &root)?.status()
 }
 
@@ -352,7 +345,7 @@ pub(crate) fn search(
     query: &str,
     limit: Option<usize>,
 ) -> Result<Vec<Snippet>> {
-    let root = resolve_root(ctx, root)?;
+    let root = resolve_root(ctx, root, false)?;
     let index = open_index(&ctx.workspace, &root)?;
     let terms = super::index::query_terms(&[query]);
     let mut cfg = ctx.cfg.clone();

@@ -130,7 +130,7 @@ pub(crate) fn pid_running(pid: u32) -> bool {
 /// process, and the number may since belong to something unrelated. When the
 /// command line cannot be read (some platforms, other users' processes) the
 /// answer is `unknown`, which the caller decides how to treat.
-fn cmdline_names(pid: u32, binary_name: &str) -> Option<bool> {
+pub(crate) fn cmdline_names(pid: u32, binary_name: &str) -> Option<bool> {
     use sysinfo::{Pid, ProcessesToUpdate, System, UpdateKind};
     let target = Pid::from_u32(pid);
     let mut sys = System::new();

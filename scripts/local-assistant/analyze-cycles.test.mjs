@@ -188,9 +188,10 @@ test('kill test: passes when everything holds, names the failing criterion other
   const good = evaluateKillTest({
     killMs: 10_000,
     events: [{ event: 'worker_crash', ts_ms: 10_800 }, { event: 'worker_restart', ts_ms: 14_000 }],
-    taskStatus: 'done', testRuns: { invocations: 2, ledgerRows: 2 }, stackedNoteLines: 0, orphanWorkerPids: [],
+    taskStatus: 'done', testRuns: { invocations: 2, ledgerRows: 2 }, stackedNoteLines: 0, editsApplied: 3, orphanWorkerPids: [],
   });
   assert.equal(good.pass, true);
+  assert.equal(good.checks.find((c) => c.name.startsWith('each edit')).exercised, true);
   const slow = evaluateKillTest({
     killMs: 10_000,
     events: [{ event: 'worker_crash', ts_ms: 17_000 }, { event: 'worker_restart', ts_ms: 18_000 }],
@@ -201,6 +202,24 @@ test('kill test: passes when everything holds, names the failing criterion other
   const none = evaluateKillTest({ killMs: 1, events: [], taskStatus: 'budget_exhausted', testRuns: { invocations: 0, ledgerRows: 0 }, stackedNoteLines: 0, orphanWorkerPids: [] });
   assert.equal(none.pass, false); // no crash event recorded
   assert.equal(none.checks.find((c) => c.name.startsWith('test command')).exercised, false);
+});
+
+test('kill test: "each edit applied once" is not exercised when no edit landed', () => {
+  const base = {
+    killMs: 10_000,
+    events: [{ event: 'worker_crash', ts_ms: 10_800 }, { event: 'worker_restart', ts_ms: 14_000 }],
+    taskStatus: 'done', testRuns: { invocations: 1, ledgerRows: 1 }, stackedNoteLines: 0, orphanWorkerPids: [],
+  };
+  const edits = (r) => r.checks.find((c) => c.name.startsWith('each edit'));
+  const noneApplied = edits(evaluateKillTest({ ...base, editsApplied: 0 }));
+  assert.equal(noneApplied.exercised, false);
+  assert.match(noneApplied.detail, /not exercised/);
+  assert.equal(edits(evaluateKillTest({ ...base })).exercised, false, 'a missing count reads as none');
+  const some = edits(evaluateKillTest({ ...base, editsApplied: 2 }));
+  assert.equal(some.exercised, true);
+  assert.equal(some.pass, true);
+  // Stacking still fails the check whether or not it was exercised.
+  assert.equal(edits(evaluateKillTest({ ...base, editsApplied: 2, stackedNoteLines: 1 })).pass, false);
 });
 
 test('classifySeries rejects a noisy-but-flat series and renderMarkdown mentions verdicts', () => {

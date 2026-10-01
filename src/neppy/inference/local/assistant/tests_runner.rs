@@ -5,9 +5,17 @@
 //! that means. It runs through `sh -c` in the project root, in its own process
 //! group, with a timeout that kills the whole group and an output cap that
 //! keeps only the last bytes.
+//!
+//! Not sandboxed. The policy gate in `command_policy` is the control. The
+//! sandbox family (`neppy::sandbox::cwd_jail`) has a one-shot `spawn`, but it
+//! builds the wrapped command without stdio redirection, so output could not be
+//! captured through it, and the Landlock backend cannot deny network at all.
+//! Wiring it up needs an upstream change (stdio passthrough on `JailBackend`),
+//! tracked as a follow-up rather than done by approximation here.
 
 use std::path::Path;
 use std::process::Stdio;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -15,36 +23,12 @@ use parking_lot::Mutex;
 use tokio::io::AsyncReadExt;
 use tokio::process::Command;
 
-use crate::neppy::security::policy::{CommandClass, GateDecision};
-use crate::neppy::security::SecurityPolicy;
-
+use super::runner::StopSignal;
 use super::types::*;
 
 /// How long to wait for output readers after the process ends. A backgrounded
 /// grandchild can hold a pipe open indefinitely.
 const READER_GRACE: Duration = Duration::from_secs(2);
-
-/// Whether the policy lets this command run at all.
-///
-/// `Block` is refused outright (a read-only tier allows only read commands).
-/// `Prompt` is allowed: the user wrote the command into the task request, which
-/// is the approval. `Destructive` is refused regardless, because a test command
-/// has no business being catastrophic.
-pub(crate) fn check_command(
-    policy: &SecurityPolicy,
-    command: &str,
-) -> std::result::Result<(), String> {
-    let class = policy.classify_command(command);
-    if policy.gate_decision(class) == GateDecision::Block {
-        return Err(format!(
-            "blocked by the autonomy tier (command class {class:?})"
-        ));
-    }
-    if class == CommandClass::Destructive {
-        return Err("a destructive command cannot be used as a test command".into());
-    }
-    Ok(())
-}
 
 /// A result recording that the command was not run, and why.
 pub(crate) fn refused_result(why: &str) -> TestResult {
@@ -88,9 +72,47 @@ fn kill_group(pid: u32) {
     }
 }
 
+/// How a stoppable test run ended.
+pub(crate) enum TestOutcome {
+    /// The command ran to an end, or was killed by its timeout.
+    Finished(TestResult),
+    /// The run was stopped from outside; the command was killed and there is no
+    /// result to record.
+    Stopped(StopReason),
+}
+
+/// Who stopped a test run.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum StopReason {
+    Cancelled,
+    Disabled,
+}
+
+/// How often a running test looks at the master switch.
+const SWITCH_POLL: Duration = Duration::from_millis(200);
+
 /// Run `command` in `root`. Never fails: a spawn error is a result with a
-/// non-zero exit code, so the step can record it and carry on.
+/// non-zero exit code, so the step can record it and carry on. Cannot be
+/// stopped from outside; see [`run_test_command_until`].
 pub(crate) async fn run_test_command(root: &Path, command: &str, timeout: Duration) -> TestResult {
+    match run_test_command_until(root, command, timeout, &StopSignal::new()).await {
+        TestOutcome::Finished(result) => result,
+        TestOutcome::Stopped(_) => unreachable!("a fresh StopSignal is never raised"),
+    }
+}
+
+/// [`run_test_command`], killed promptly if `stop` is cancelled or the
+/// assistant is disabled while it runs.
+///
+/// The whole process group is killed however the command ends (exit, timeout,
+/// cancel): a `sleep 300 &` left behind by a test script would otherwise outlive
+/// the task and keep the output pipes open.
+pub(crate) async fn run_test_command_until(
+    root: &Path,
+    command: &str,
+    timeout: Duration,
+    stop: &StopSignal,
+) -> TestOutcome {
     let started = Instant::now();
     log::debug!(
         "[local_assistant:test] running test command ({} chars) timeout={}s",
@@ -110,12 +132,12 @@ pub(crate) async fn run_test_command(root: &Path, command: &str, timeout: Durati
     let mut child = match cmd.spawn() {
         Ok(child) => child,
         Err(err) => {
-            return TestResult {
+            return TestOutcome::Finished(TestResult {
                 exit_code: -1,
                 duration_ms: 0,
                 tail: format!("could not start the test command: {err}"),
                 timed_out: false,
-            }
+            })
         }
     };
     let pid = child.id();
@@ -127,30 +149,57 @@ pub(crate) async fn run_test_command(root: &Path, command: &str, timeout: Durati
     if let Some(err) = child.stderr.take() {
         readers.push(tokio::spawn(drain(err, Arc::clone(&tail))));
     }
-    let (exit_code, timed_out) = match tokio::time::timeout(timeout, child.wait()).await {
-        Ok(Ok(status)) => (status.code().unwrap_or(-1), false),
-        Ok(Err(err)) => {
-            log::warn!("[local_assistant:test] wait failed: {err}");
-            (-1, false)
-        }
-        Err(_) => {
-            log::warn!(
-                "[local_assistant:test] timed out after {}s; killing",
-                timeout.as_secs()
-            );
-            #[cfg(unix)]
-            if let Some(pid) = pid {
-                kill_group(pid);
+    let deadline = tokio::time::sleep(timeout);
+    tokio::pin!(deadline);
+    let mut poll = tokio::time::interval(SWITCH_POLL);
+    let mut stopped: Option<StopReason> = None;
+    let (exit_code, timed_out) = loop {
+        tokio::select! {
+            biased;
+            _ = stop.cancel.cancelled() => {
+                stopped = Some(StopReason::Cancelled);
+                break (-1, false);
             }
-            let _ = child.kill().await;
-            let _ = child.wait().await;
-            (-1, true)
+            status = child.wait() => match status {
+                Ok(status) => break (status.code().unwrap_or(-1), false),
+                Err(err) => {
+                    log::warn!("[local_assistant:test] wait failed: {err}");
+                    break (-1, false);
+                }
+            },
+            _ = &mut deadline => {
+                log::warn!(
+                    "[local_assistant:test] timed out after {}s; killing",
+                    timeout.as_secs()
+                );
+                break (-1, true);
+            }
+            _ = poll.tick() => {
+                if !stop.enabled.load(Ordering::SeqCst) {
+                    stopped = Some(StopReason::Disabled);
+                    break (-1, false);
+                }
+            }
         }
     };
+    // Whatever ended it, nothing the command started may outlive it. A command
+    // that already exited may have left background children in its group.
+    #[cfg(unix)]
+    if let Some(pid) = pid {
+        kill_group(pid);
+    }
+    if stopped.is_some() || timed_out {
+        let _ = child.kill().await;
+        let _ = child.wait().await;
+    }
     for reader in readers {
         if tokio::time::timeout(READER_GRACE, reader).await.is_err() {
             log::debug!("[local_assistant:test] output reader still open; detaching");
         }
+    }
+    if let Some(reason) = stopped {
+        log::info!("[local_assistant:test] stopped ({reason:?}); command killed");
+        return TestOutcome::Stopped(reason);
     }
     let raw = tail.lock().0.clone();
     let mut text = String::from_utf8_lossy(&raw).into_owned();
@@ -171,7 +220,7 @@ pub(crate) async fn run_test_command(root: &Path, command: &str, timeout: Durati
         result.duration_ms,
         result.tail.len()
     );
-    result
+    TestOutcome::Finished(result)
 }
 
 #[cfg(test)]

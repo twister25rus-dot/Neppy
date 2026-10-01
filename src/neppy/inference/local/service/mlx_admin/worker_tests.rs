@@ -212,3 +212,101 @@ async fn gpu_and_ollama_probes_are_cached_and_test_safe() {
     );
     assert_eq!(control.restarts_in_window(), 0);
 }
+
+// ---- never unload a server this process does not hold --------------------
+
+/// A stand-in for `mlx_vlm.server`: `/health` reports `loaded`, `/unload`
+/// succeeds and is counted. Returns its port and the unload counter.
+async fn mock_worker(loaded: &str) -> (u16, Arc<std::sync::atomic::AtomicUsize>) {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0))
+        .await
+        .expect("bind");
+    let port = listener.local_addr().expect("addr").port();
+    let unloads = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&unloads);
+    let health = format!(
+        r#"{{"status":"healthy","loaded_model":"{loaded}","loaded_models":{{"language":"{loaded}"}}}}"#
+    );
+    tokio::spawn(async move {
+        loop {
+            let Ok((mut socket, _)) = listener.accept().await else {
+                return;
+            };
+            let (counter, health) = (Arc::clone(&counter), health.clone());
+            tokio::spawn(async move {
+                let mut buf = vec![0u8; 4096];
+                let n = socket.read(&mut buf).await.unwrap_or(0);
+                let head = String::from_utf8_lossy(&buf[..n]).into_owned();
+                let body = if head.starts_with("POST /unload") {
+                    counter.fetch_add(1, Ordering::SeqCst);
+                    "{}".to_string()
+                } else if head.starts_with("GET /health") {
+                    health
+                } else {
+                    "{}".to_string()
+                };
+                let reply = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                let _ = socket.write_all(reply.as_bytes()).await;
+            });
+        }
+    });
+    (port, unloads)
+}
+
+fn config_for_port(port: u16) -> Config {
+    let mut config = Config::default();
+    config.mlx.servers[0].port = port;
+    config
+}
+
+#[tokio::test]
+async fn a_model_switch_never_unloads_a_server_this_process_does_not_hold() {
+    use std::sync::atomic::Ordering;
+    let (port, unloads) = mock_worker("someone/elses-model").await;
+    let config = config_for_port(port);
+    let svc = Arc::new(LocalAiService::new(&config));
+
+    let err = prepare_model(&svc, &config, "wanted/model")
+        .await
+        .expect_err("another process's server must not be unloaded");
+    assert!(err.contains("was not started by Neppy"), "{err}");
+    assert!(err.contains("someone/elses-model"), "{err}");
+    assert_eq!(unloads.load(Ordering::SeqCst), 0, "no /unload was sent");
+}
+
+#[tokio::test]
+async fn an_unsupervised_server_that_already_has_the_wanted_model_is_used_as_is() {
+    use std::sync::atomic::Ordering;
+    let (port, unloads) = mock_worker("wanted/model").await;
+    let config = config_for_port(port);
+    let svc = Arc::new(LocalAiService::new(&config));
+    assert_eq!(
+        prepare_model(&svc, &config, "wanted/model").await,
+        Ok(false)
+    );
+    assert_eq!(unloads.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test]
+async fn a_held_worker_still_switches_models_by_unloading() {
+    use std::sync::atomic::Ordering;
+    let (port, unloads) = mock_worker("old/model").await;
+    let config = config_for_port(port);
+    let svc = Arc::new(LocalAiService::new(&config));
+    let child = tokio::process::Command::new("sleep")
+        .arg("30")
+        .kill_on_drop(true)
+        .spawn()
+        .expect("spawn sleep");
+    svc.mlx
+        .insert_for_test(MlxProcess::from_child_for_test("primary", port, child))
+        .await;
+    assert_eq!(prepare_model(&svc, &config, "wanted/model").await, Ok(true));
+    assert_eq!(unloads.load(Ordering::SeqCst), 1);
+}

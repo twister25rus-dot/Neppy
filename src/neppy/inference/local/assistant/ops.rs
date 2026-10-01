@@ -10,6 +10,7 @@
 //! by the gated model (see `gated_model`), so an idle controller holds no
 //! model memory at all.
 
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
@@ -24,6 +25,7 @@ use crate::neppy::config::rpc as config_rpc;
 use crate::neppy::config::Config;
 use crate::neppy::security::SecurityPolicy;
 
+use super::super::service::mlx_admin::gate::GateError;
 use super::api::{self, ApiCtx};
 use super::faults::NoFaults;
 use super::model::build_models;
@@ -44,6 +46,11 @@ const STORES_OPEN: usize = 4;
 /// How long a disable waits for the running step before stopping the worker.
 const STOP_WORKER_WAIT: Duration = Duration::from_secs(120);
 
+/// Whether a preemption reason is a yield to an interactive request.
+fn is_yield(why: &str) -> bool {
+    why == format!("{:?}", GateError::Yielded)
+}
+
 pub(crate) struct QueueItem {
     pub(crate) workspace: PathBuf,
     pub(crate) task_id: TaskId,
@@ -63,6 +70,9 @@ pub(crate) struct Controller {
     /// Queued plus running.
     pending: AtomicUsize,
     cap: usize,
+    /// Ids queued or running. A task is in the queue at most once, however
+    /// many paths (accept, resume, the boot pass) try to put it there.
+    tracked: Mutex<HashSet<TaskId>>,
     enabled: Arc<AtomicBool>,
     current: Mutex<Option<(TaskId, CancellationToken)>>,
     runner: Arc<dyn TaskRunner>,
@@ -75,9 +85,22 @@ pub(crate) struct Slot<'a> {
 }
 
 impl Slot<'_> {
+    /// Queue `item`. A task already queued or running is not queued again:
+    /// the place is given back and the call succeeds, because the task *is*
+    /// in the queue, which is what the caller wanted.
     pub(crate) fn submit(mut self, item: QueueItem) -> Result<()> {
         self.used = true;
+        if !self.ctl.tracked.lock().insert(item.task_id.clone()) {
+            self.ctl.pending.fetch_sub(1, Ordering::SeqCst);
+            log::info!(
+                "[local_assistant] task {} is already queued or running; not queued again",
+                item.task_id
+            );
+            return Ok(());
+        }
+        let id = item.task_id.clone();
         if self.ctl.tx.try_send(item).is_err() {
+            self.ctl.tracked.lock().remove(&id);
             self.ctl.pending.fetch_sub(1, Ordering::SeqCst);
             return Err(AssistantError::QueueFull(self.ctl.cap));
         }
@@ -102,6 +125,7 @@ impl Controller {
             tx,
             pending: AtomicUsize::new(0),
             cap,
+            tracked: Mutex::new(HashSet::new()),
             enabled: Arc::new(AtomicBool::new(enabled)),
             current: Mutex::new(None),
             runner,
@@ -123,6 +147,11 @@ impl Controller {
             ctl: self,
             used: false,
         })
+    }
+
+    /// Ids of the tasks queued or running right now.
+    pub(crate) fn tracked_ids(&self) -> Vec<TaskId> {
+        self.tracked.lock().iter().cloned().collect()
     }
 
     pub(crate) fn pending(&self) -> usize {
@@ -176,7 +205,12 @@ impl Controller {
             loop {
                 match self.runner.run(&item, &stop).await {
                     Ok(RunOutcome::Preempted(why)) => {
-                        requeues += 1;
+                        // Stepping aside for an interactive request is not memory
+                        // pressure and says nothing about whether the task is
+                        // healthy, so it does not use up the requeue budget.
+                        if !is_yield(&why) {
+                            requeues += 1;
+                        }
                         if requeues > MAX_REQUEUES {
                             log::warn!(
                                 "[local_assistant] task {} preempted {MAX_REQUEUES} times; leaving it interrupted",
@@ -210,6 +244,7 @@ impl Controller {
                 }
             }
             *self.current.lock() = None;
+            self.tracked.lock().remove(&item.task_id);
             self.pending.fetch_sub(1, Ordering::SeqCst);
         }
     }
@@ -357,6 +392,12 @@ pub async fn resume_interrupted_on_boot() -> usize {
 
 /// After a disable: wait for the running step to reach its checkpoint, then
 /// stop the worker so the model's memory is returned.
+///
+/// Only a worker this process started is stopped (`stop_if_held`: no spawn
+/// marker fallback, so a server the user or another core started is left
+/// alone), and only while no request holds the inference gate. A chat request
+/// that arrived since the disable keeps the worker; the idle policy stops it
+/// later.
 pub(crate) fn stop_worker_when_idle(ctl: Arc<Controller>) {
     tokio::spawn(async move {
         let deadline = Instant::now() + STOP_WORKER_WAIT;
@@ -371,7 +412,13 @@ pub(crate) fn stop_worker_when_idle(ctl: Arc<Controller>) {
         };
         let service = super::super::global(&config);
         if let Some(id) = super::super::service::mlx_admin::worker::worker_server_id(&config) {
-            let stopped = service.mlx.stop(&config, &id).await;
+            let Some(_gate) = service.gate.try_acquire() else {
+                log::info!(
+                    "[local_assistant] disabled: worker `{id}` kept, the inference gate is busy"
+                );
+                return;
+            };
+            let stopped = service.mlx.stop_if_held(&config, &id).await;
             log::info!("[local_assistant] disabled: worker `{id}` stopped={stopped}");
         }
     });

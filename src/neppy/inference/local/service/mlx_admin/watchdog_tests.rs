@@ -254,3 +254,152 @@ fn an_unload_that_frees_nothing_is_ineffective() {
     // A small worker is never judged: there is nothing worth escalating for.
     assert!(unload_released_memory(512 * 1024 * 1024, 512 * 1024 * 1024));
 }
+
+// ---- Ollama is only touched on Critical ----------------------------------
+
+fn transition(from: PressureState, to: PressureState) -> Transition {
+    Transition {
+        from,
+        to,
+        reason: "test".into(),
+    }
+}
+
+#[test]
+fn ollama_models_are_dropped_only_on_entering_critical() {
+    let table = [
+        (N, E, false), // the first Elevated used to unload them
+        (E, N, false),
+        (N, C, true),
+        (E, C, true),
+        (C, E, false),
+        (C, N, false),
+    ];
+    for (from, to, expect) in table {
+        assert_eq!(
+            ollama_unload_due(&transition(from, to)),
+            expect,
+            "{from:?} -> {to:?}"
+        );
+    }
+}
+
+// ---- Stop and Unload do not race a request -------------------------------
+
+use super::super::process::MlxProcess;
+
+async fn svc_with_worker(tag: &str) -> (Arc<LocalAiService>, Config, String) {
+    let config = Config::default();
+    let svc = Arc::new(LocalAiService::new(&config));
+    let id = format!("t2-{tag}-{}", std::process::id());
+    let child = tokio::process::Command::new("sleep")
+        .arg("30")
+        .kill_on_drop(true)
+        .spawn()
+        .expect("spawn sleep");
+    svc.mlx
+        .insert_for_test(MlxProcess::from_child_for_test(&id, 1, child))
+        .await;
+    (svc, config, id)
+}
+
+fn gate_cfg() -> crate::neppy::config::schema::MlxWorkerConfig {
+    crate::neppy::config::schema::MlxWorkerConfig::default()
+}
+
+#[tokio::test]
+async fn an_elevated_stop_is_skipped_while_a_request_holds_the_gate() {
+    let (svc, config, id) = svc_with_worker("busy").await;
+    let request = svc.gate.acquire(&gate_cfg()).await.expect("request");
+    apply(
+        &svc,
+        &config,
+        &id,
+        WorkerAction::Stop,
+        PressureState::Elevated,
+    )
+    .await;
+    assert!(
+        svc.mlx.is_running(&id).await,
+        "the worker must survive: a request was admitted after the verdict"
+    );
+    drop(request);
+    apply(
+        &svc,
+        &config,
+        &id,
+        WorkerAction::Stop,
+        PressureState::Elevated,
+    )
+    .await;
+    assert!(svc.mlx.process_of(&id).await.is_none(), "stopped once idle");
+}
+
+#[tokio::test]
+async fn an_idle_unload_is_skipped_while_a_request_holds_the_gate() {
+    let (svc, config, id) = svc_with_worker("unload").await;
+    let request = svc.gate.acquire(&gate_cfg()).await.expect("request");
+    apply(
+        &svc,
+        &config,
+        &id,
+        WorkerAction::Unload,
+        PressureState::Normal,
+    )
+    .await;
+    assert!(svc.mlx.is_running(&id).await);
+    assert!(
+        svc.metrics.recent(0, 10, true).events.is_empty(),
+        "no unload event: nothing was unloaded"
+    );
+    drop(request);
+    assert!(svc.mlx.stop_if_held(&config, &id).await);
+}
+
+#[tokio::test]
+async fn a_critical_stop_cancels_the_request_first_and_does_not_wait() {
+    let (svc, config, id) = svc_with_worker("critical").await;
+    let request = svc.gate.acquire(&gate_cfg()).await.expect("request");
+    apply(
+        &svc,
+        &config,
+        &id,
+        WorkerAction::StopNow,
+        PressureState::Critical,
+    )
+    .await;
+    assert!(
+        request.is_cancelled(),
+        "the in-flight request was preempted"
+    );
+    assert!(
+        svc.mlx.process_of(&id).await.is_none(),
+        "and the worker stopped"
+    );
+}
+
+#[tokio::test]
+async fn the_watchdog_stops_only_a_worker_it_holds() {
+    let config = Config::default();
+    let svc = Arc::new(LocalAiService::new(&config));
+    let id = format!("t2-unheld-{}", std::process::id());
+    // No handle: `stop` would fall back to the spawn marker; the watchdog
+    // must not.
+    assert!(!svc.mlx.stop_if_held(&config, &id).await);
+    apply(
+        &svc,
+        &config,
+        &id,
+        WorkerAction::StopNow,
+        PressureState::Critical,
+    )
+    .await;
+    apply(
+        &svc,
+        &config,
+        &id,
+        WorkerAction::Stop,
+        PressureState::Elevated,
+    )
+    .await;
+}

@@ -17,7 +17,7 @@ use tinyagents::harness::model::{ChatModel, ModelRequest};
 use crate::neppy::config::Config;
 
 use super::super::gated_model::gate_error_of;
-use super::super::service::mlx_admin::gate::GateError;
+use super::super::service::mlx_admin::gate::{background_scope, GateError};
 
 /// A whole step's model call, gate wait and first load included, must finish
 /// inside this.
@@ -84,22 +84,24 @@ impl StepModel for MlxStepModel {
             self.label,
             system.len() + user.len()
         );
-        let response =
-            match tokio::time::timeout(CALL_TIMEOUT, self.model.invoke(&(), request)).await {
-                Ok(Ok(response)) => response,
-                Ok(Err(err)) => {
-                    return Err(match gate_error_of(&err) {
-                        Some(gate) => ModelFailure::Gate(gate),
-                        None => ModelFailure::Other(err.to_string()),
-                    })
-                }
-                Err(_) => {
-                    return Err(ModelFailure::Other(format!(
-                        "the model call timed out after {}s",
-                        CALL_TIMEOUT.as_secs()
-                    )))
-                }
-            };
+        // The assistant is background work: it yields the inference slot to
+        // chat rather than holding it for a whole step.
+        let call = background_scope(self.model.invoke(&(), request));
+        let response = match tokio::time::timeout(CALL_TIMEOUT, call).await {
+            Ok(Ok(response)) => response,
+            Ok(Err(err)) => {
+                return Err(match gate_error_of(&err) {
+                    Some(gate) => ModelFailure::Gate(gate),
+                    None => ModelFailure::Other(err.to_string()),
+                })
+            }
+            Err(_) => {
+                return Err(ModelFailure::Other(format!(
+                    "the model call timed out after {}s",
+                    CALL_TIMEOUT.as_secs()
+                )))
+            }
+        };
         let usage = response.usage.or(response.message.usage);
         let text = Message::Assistant(response.message).text();
         if text.trim().is_empty() {
