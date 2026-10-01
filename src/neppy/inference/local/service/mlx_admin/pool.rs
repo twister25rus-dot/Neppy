@@ -309,12 +309,32 @@ impl MlxPool {
     }
 
     /// Stop every managed process. Called on shutdown.
-    pub(crate) async fn shutdown_all(&self, config: &Config) {
-        let mut running = self.running.lock().await;
-        for (id, mut entry) in running.drain() {
-            log::info!("[mlx] shutting down server `{id}`");
-            entry.process.stop(config).await;
+    ///
+    /// Graceful first (SIGTERM), then SIGKILL after `grace`, and bounded: a
+    /// wedged worker cannot hold shutdown up. Needs no `Config` because each
+    /// process remembers its own marker path. Returns how many were stopped.
+    pub(crate) async fn shutdown_all(&self, grace: Duration) -> usize {
+        let entries: Vec<(String, RunningServer)> = self.running.lock().await.drain().collect();
+        if entries.is_empty() {
+            return 0;
         }
+        let workers: Vec<super::reaper::Tracked> = entries
+            .iter()
+            .map(|(_, entry)| entry.process.tracked())
+            .collect();
+        for (id, entry) in &entries {
+            log::info!(
+                "[mlx] shutting down server `{id}` pid={}",
+                entry.process.pid
+            );
+        }
+        let stopped = super::reaper::stop_pids(workers, grace).await;
+        for (id, entry) in &entries {
+            self.record(event::WORKER_STOP, id, format!("pid={}", entry.process.pid));
+        }
+        // Dropping the handles last: `kill_on_drop` then finds nothing alive.
+        drop(entries);
+        stopped
     }
 
     /// Start every block marked `autostart` that is not already running.

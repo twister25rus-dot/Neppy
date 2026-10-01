@@ -40,6 +40,9 @@ pub(crate) struct MlxProcess {
     /// The argv used to start it, with any bearer token redacted. Shown in the
     /// UI so "what exactly did you run?" is answerable without guessing.
     pub(crate) redacted_argv: Vec<String>,
+    /// Where this process's spawn marker lives, so a stop that has no
+    /// `Config` in reach (shutdown) can still clear it.
+    marker_path: PathBuf,
     child: Option<tokio::process::Child>,
     logs: Arc<Mutex<VecDeque<String>>>,
 }
@@ -50,6 +53,19 @@ impl MlxProcess {
         let buffer = self.logs.lock();
         let skip = buffer.len().saturating_sub(limit);
         buffer.iter().skip(skip).cloned().collect()
+    }
+
+    /// This process as the reaper tracks it.
+    pub(crate) fn tracked(&self) -> super::reaper::Tracked {
+        super::reaper::Tracked {
+            pid: self.pid,
+            marker_path: self.marker_path.clone(),
+            binary_name: self
+                .binary_path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .filter(|n| !n.is_empty()),
+        }
     }
 
     /// Whether the child has exited, and with what status.
@@ -81,6 +97,7 @@ impl MlxProcess {
                 log::info!("[mlx] stopped server `{}` pid={}", self.id, self.pid);
             }
         }
+        super::reaper::forget(self.pid);
         clear_marker_at(&mlx_spawn_marker_path(config, &self.id));
     }
 }
@@ -96,6 +113,7 @@ impl MlxProcess {
             pid: child.id().unwrap_or(0),
             binary_path: PathBuf::new(),
             redacted_argv: Vec::new(),
+            marker_path: PathBuf::new(),
             child: Some(child),
             logs: Arc::new(Mutex::new(VecDeque::new())),
         }
@@ -156,8 +174,12 @@ pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<M
         pump_output(stderr, Arc::clone(&logs), server.id.clone(), "err");
     }
 
-    let marker = SpawnMarker::new(pid, &resolved.path);
-    if let Err(err) = write_marker_at(&mlx_spawn_marker_path(config, &server.id), &marker) {
+    let marker_path = mlx_spawn_marker_path(config, &server.id);
+    let mut marker = SpawnMarker::new(pid, &resolved.path);
+    marker.supervised = super::reaper::is_supervised_host();
+    // From here on shutdown can find this worker without the pool or a config.
+    super::reaper::track(pid, &marker_path, &resolved.path);
+    if let Err(err) = write_marker_at(&marker_path, &marker) {
         // Not fatal: the process is running and usable. It just means a crash
         // before shutdown would leave an orphan we cannot later identify.
         log::warn!(
@@ -172,6 +194,7 @@ pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<M
         pid,
         binary_path: resolved.path,
         redacted_argv,
+        marker_path,
         child: Some(child),
         logs,
     })
@@ -198,6 +221,7 @@ pub(crate) fn reclaim_orphan_if_ours(config: &Config, id: &str) -> bool {
             "[mlx] stale spawn marker for `{id}` (pid={} no longer alive); clearing",
             marker.pid
         );
+        super::reaper::forget(marker.pid);
         clear_marker_at(&path);
         return false;
     }
@@ -207,6 +231,7 @@ pub(crate) fn reclaim_orphan_if_ours(config: &Config, id: &str) -> bool {
         marker.pid
     );
     super::super::ollama_admin::kill_pid_by_id(marker.pid);
+    super::reaper::forget(marker.pid);
     clear_marker_at(&path);
     true
 }

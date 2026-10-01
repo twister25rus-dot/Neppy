@@ -13,6 +13,8 @@
 //! - `models`  — what the local model cache holds, and reclaiming it
 //! - `pool`    — the supervisor: start/stop/status, resolved ports
 //! - `process` — spawn, log capture, stop, orphan reclamation
+//! - `reaper` — graceful stop of every spawned worker on shutdown, and reaping
+//!   of workers a dead core left behind
 //! - `service` — the `LocalAiService` methods bootstrap calls
 //! - `pressure` — sudo-free memory readings and the pressure state machine
 //! - `gate`    — the single-flight inference gate every `mlx:` call takes
@@ -36,6 +38,7 @@ pub(crate) mod models;
 pub(crate) mod pool;
 pub(crate) mod pressure;
 pub(crate) mod process;
+pub(crate) mod reaper;
 mod service;
 pub(crate) mod watchdog;
 pub(crate) mod worker;

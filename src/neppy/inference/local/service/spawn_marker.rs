@@ -26,6 +26,12 @@ pub(crate) struct OllamaSpawnMarker {
     pub started_at_unix: u64,
     pub binary_path: String,
     pub neppy_pid: u32,
+    /// Written by a long-lived host (`serve`, the embedded desktop core) that
+    /// stops its own workers on shutdown. Only such a marker may be reaped when
+    /// its `neppy_pid` is gone; a one-shot CLI start is meant to outlive the
+    /// CLI. Absent in markers from older builds, which read as `false`.
+    #[serde(default)]
+    pub supervised: bool,
 }
 
 impl OllamaSpawnMarker {
@@ -39,6 +45,7 @@ impl OllamaSpawnMarker {
             started_at_unix,
             binary_path: binary_path.display().to_string(),
             neppy_pid: std::process::id(),
+            supervised: false,
         }
     }
 }
@@ -146,6 +153,7 @@ mod tests {
             started_at_unix: 1_700_000_000,
             binary_path: "C:\\fake\\ollama.exe".to_string(),
             neppy_pid: 9001,
+            supervised: false,
         };
 
         write_marker_at(&path, &m).expect("write marker");

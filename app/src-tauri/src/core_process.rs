@@ -688,6 +688,18 @@ impl CoreProcessHandle {
     /// immediately.
     pub async fn send_terminate_signal(&self) {
         self.cancel_shutdown_token(" on app shutdown").await;
+        // The abort below skips everything after `axum::serve` in the core, so
+        // the managed MLX workers (several GiB each) must be stopped here or
+        // they outlive the app. Graceful then kill, bounded to ~2 s; a no-op
+        // when no worker was ever spawned.
+        match tokio::task::spawn_blocking(
+            neppy_core::neppy::inference::local::shutdown_mlx_workers_blocking,
+        )
+        .await
+        {
+            Ok(n) => log::info!("[core] stopped {n} MLX worker process(es) on app shutdown"),
+            Err(err) => log::warn!("[core] MLX worker shutdown task failed: {err}"),
+        }
         self.abort_task(" on app shutdown").await;
     }
 }

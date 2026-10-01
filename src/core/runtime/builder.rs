@@ -880,6 +880,10 @@ impl CoreRuntime {
         // background writers to touch their crate-backed stores.
         self.start_selected_services().await;
 
+        // This process now owns whatever MLX workers it spawns: hook SIGTERM /
+        // SIGINT to stop them, and reap any a dead predecessor left behind.
+        crate::neppy::inference::local::supervise_mlx_workers();
+
         log::info!(
             "[core] Neppy core is ready — listening on http://{bind_addr} (version {})",
             env!("CARGO_PKG_VERSION")
@@ -912,6 +916,12 @@ impl CoreRuntime {
                 .with_graceful_shutdown(crate::core::shutdown::signal())
                 .await?;
         }
+
+        // Stop the MLX workers first and unconditionally: they hold the model
+        // weights, and the desktop's cancellation-token path never runs the
+        // signal hook. Idempotent after it, and bounded (~3 s) so it cannot hold
+        // up exit.
+        crate::neppy::inference::local::shutdown_mlx_workers().await;
 
         // Server has stopped accepting and in-flight requests drained. Kill any
         // `ollama serve` openhuman itself spawned (no-op when externally
