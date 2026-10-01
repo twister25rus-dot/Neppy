@@ -56,23 +56,29 @@ fn local_midnight_utc<Tz: TimeZone>(now: DateTime<Utc>, tz: &Tz) -> DateTime<Utc
         .unwrap_or(now - Duration::hours(24))
 }
 
+/// Origin classes (`AgentTurnOrigin::class()`) whose parks the Pet may offer.
+///
+/// An ALLOWLIST, so a new origin kind is not surfaced until someone decides it
+/// should be. `WebChat`: the user's own chat. A row that is no longer chat-routed
+/// (its card went away) is still shown on purpose: approving it only updates the
+/// stored decision (the parked call is gone or the row is an orphan), so it is
+/// harmless, and it keeps a pending approval findable. `GoalContinuation`: the
+/// user's own autonomous goal run, which has no other surface.
+const SURFACEABLE_ORIGIN_CLASSES: &[&str] = &["WebChat", "TrustedAutomation(GoalContinuation)"];
+
 /// Whether a parked approval may be offered to the user from the Pet (inbox,
 /// digest count, notification). Single source of truth for all three.
 ///
-/// Only approvals the user themselves could have caused qualify: rows with a
-/// flow context have their own surface, rows raised from a remote
-/// `ExternalChannel` turn (Telegram, Discord, ...) are untrusted input that
-/// TTL-denies silently by design, and a row with no recorded origin (written
-/// before the column existed, or by an older launch) is unknown, so it fails
-/// closed.
+/// Rows with a flow context have their own surface; remote `ExternalChannel`
+/// input (Telegram, Discord, ...) is untrusted and TTL-denies silently by
+/// design; any origin not on [`SURFACEABLE_ORIGIN_CLASSES`], including an
+/// unknown one (a row written before the column existed), is not surfaced.
 pub(crate) fn is_pet_surfaceable(row: &crate::neppy::security::approval::PendingApproval) -> bool {
-    if row.source_context.is_some() {
-        return false;
-    }
-    match row.origin_class.as_deref() {
-        Some(class) => !class.starts_with("ExternalChannel"),
-        None => false,
-    }
+    row.source_context.is_none()
+        && row
+            .origin_class
+            .as_deref()
+            .is_some_and(|class| SURFACEABLE_ORIGIN_CLASSES.contains(&class))
 }
 
 /// [`background_approvals`] over explicit rows (the seam tests drive).

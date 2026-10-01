@@ -789,6 +789,26 @@ async fn execute_and_persist_job(
 ) -> (String, bool, Option<String>) {
     warn_if_high_frequency_agent_job(job);
 
+    // A scheduled Pet tick takes the same per-pet guard as `pet_run_now` and
+    // the manual cron run: if a manual pass is running, skip this tick (it is
+    // rescheduled, nothing is recorded or surfaced) instead of running two
+    // passes over the same notes. The guard is held until the run is persisted.
+    let _pet_tick_guard = match crate::neppy::pet::ops::begin_scheduled_tick(config, job) {
+        crate::neppy::pet::ops::ScheduledTick::Proceed(guard) => guard,
+        crate::neppy::pet::ops::ScheduledTick::Skip => {
+            tracing::debug!(
+                job_id = %job.id,
+                "[cron] skipping scheduled pet tick: a manual Pet pass is running"
+            );
+            if let Err(e) =
+                reschedule_after_run(config, job, true, "skipped: a manual Pet pass was running")
+            {
+                tracing::warn!("[cron] failed to reschedule skipped pet tick: {e}");
+            }
+            return (job.id.clone(), true, None);
+        }
+    };
+
     let started_at = Utc::now();
 
     BUS.publish(DomainEvent::CronJobTriggered {
@@ -1399,6 +1419,19 @@ async fn deliver_if_configured(
     output: &str,
     success: bool,
 ) -> Result<()> {
+    // The Pet research pass never delivers anywhere, whatever the job's
+    // delivery says (a user or agent can edit it to announce/proactive): its
+    // output comes from untrusted content, and the Pet surfaces its own results
+    // (digest, notifications) in-app. Enforced here at run time rather than
+    // only by the repair in `pet::ops::ensure_research_job`.
+    if is_pet_research_job(job) {
+        tracing::debug!(
+            job_id = %job.id,
+            mode = %job.delivery.mode,
+            "[cron] pet research job — delivery and alerts suppressed"
+        );
+        return Ok(());
+    }
     let delivery: &DeliveryConfig = &job.delivery;
 
     // Don't post failed or empty cron runs into the user's chat: a failed turn

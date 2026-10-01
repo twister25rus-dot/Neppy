@@ -867,12 +867,23 @@ async fn pet_research_definition_overrides_fail_closed() {
     }
     let mut extras = shipped.clone();
     extras.extra_tools = vec!["web_fetch".into()];
+    let mut memory_agent = shipped.clone();
+    memory_agent.trigger_memory_agent =
+        crate::neppy::agent::harness::definition::TriggerMemoryAgent::Always;
+    let mut no_preamble = shipped.clone();
+    no_preamble.omit_safety_preamble = true;
+    let mut inline_prompt = shipped.clone();
+    inline_prompt.system_prompt =
+        crate::neppy::agent::harness::definition::PromptSource::Inline("be helpful".into());
     for (label, def) in [
         ("wildcard scope", &wildcard),
         ("sandbox none", &unsandboxed),
         ("extra tool", &extra_tool),
         ("missing tool", &missing_tool),
         ("extra_tools", &extras),
+        ("memory agent trigger", &memory_agent),
+        ("omitted safety preamble", &no_preamble),
+        ("replaced prompt", &inline_prompt),
     ] {
         let err = build(Some(def))
             .err()

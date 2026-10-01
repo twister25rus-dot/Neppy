@@ -64,3 +64,36 @@ async fn cron_run_of_a_pet_job_surfaces_the_pass_afterwards() {
     // The guard was released afterwards.
     assert!(RunNowGuard::try_acquire(&pet_id).unwrap().is_some());
 }
+
+#[tokio::test]
+async fn scheduled_pet_tick_skips_while_a_manual_pass_runs() {
+    use super::run::{begin_scheduled_tick, ScheduledTick};
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let (pet_id, job) = enabled_pet(&config).await;
+
+    // Free: the tick proceeds and holds the per-pet guard while it runs.
+    let tick = begin_scheduled_tick(&config, &job);
+    let ScheduledTick::Proceed(Some(guard)) = tick else {
+        panic!("a free pet must let the tick proceed with the guard");
+    };
+    assert!(RunNowGuard::try_acquire(&pet_id).unwrap().is_none());
+    // While a tick (or a manual pass) holds it, the next tick is skipped.
+    assert!(matches!(
+        begin_scheduled_tick(&config, &job),
+        ScheduledTick::Skip
+    ));
+    drop(guard);
+    assert!(matches!(
+        begin_scheduled_tick(&config, &job),
+        ScheduledTick::Proceed(Some(_))
+    ));
+
+    // Non-pet jobs never take the guard.
+    let mut other = job.clone();
+    other.agent_id = Some("morning_briefing".into());
+    assert!(matches!(
+        begin_scheduled_tick(&config, &other),
+        ScheduledTick::Proceed(None)
+    ));
+}

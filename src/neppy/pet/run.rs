@@ -96,6 +96,34 @@ pub async fn pet_run_now(config: &Config, wait: bool) -> Result<RpcOutcome<PetRu
     Ok(RpcOutcome::new(PetRunSummary::started("manual"), vec![]))
 }
 
+/// What the scheduler should do with a due tick of a (possible) pet job.
+pub(crate) enum ScheduledTick {
+    /// Run it; hold the guard (if any) until the run is persisted.
+    Proceed(Option<RunNowGuard>),
+    /// A manual pass for this pet is running: skip this tick.
+    Skip,
+}
+
+/// Decide a due scheduler tick of `job`. Non-pet jobs and pet jobs with no
+/// owning pet proceed unguarded; a pet's tick takes the same per-pet guard as
+/// `pet_run_now` and the manual cron run.
+pub(crate) fn begin_scheduled_tick(config: &Config, job: &CronJob) -> ScheduledTick {
+    if job.agent_id.as_deref() != Some(super::types::PET_RESEARCH_AGENT_ID) {
+        return ScheduledTick::Proceed(None);
+    }
+    let Ok(Some(pet_id)) = store::find_pet_by_job(config, &job.id) else {
+        return ScheduledTick::Proceed(None);
+    };
+    match RunNowGuard::try_acquire(&pet_id) {
+        Ok(Some(guard)) => ScheduledTick::Proceed(Some(guard)),
+        Ok(None) => ScheduledTick::Skip,
+        Err(e) => {
+            log::warn!("[pet] scheduled tick guard unavailable: {e}");
+            ScheduledTick::Proceed(None)
+        }
+    }
+}
+
 /// A manual execution of `job` that did not come through [`pet_run_now`]
 /// (Automations "Run now", the `cron_run` RPC or tool). Takes the same
 /// in-flight guard as `pet_run_now`, runs the job, and surfaces the pass

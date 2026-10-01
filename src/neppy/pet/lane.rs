@@ -6,7 +6,9 @@
 //! (custom definitions override built-ins on id collision), so the builder
 //! re-checks the resolved definition and refuses to build the lane otherwise.
 
-use crate::neppy::agent::harness::definition::{AgentDefinition, SandboxMode, ToolScope};
+use crate::neppy::agent::harness::definition::{
+    AgentDefinition, PromptSource, SandboxMode, ToolScope, TriggerMemoryAgent,
+};
 
 use super::types::{PET_RESEARCH_AGENT_ID, PET_RESEARCH_TOOL_ALLOWLIST};
 
@@ -19,8 +21,9 @@ pub fn agent_forbids_memory_writes(agent_id: &str) -> bool {
 
 /// `Ok` only when `def` is exactly the read-only research lane: sandbox
 /// `read_only`, tool scope `Named` equal (as a set) to
-/// [`PET_RESEARCH_TOOL_ALLOWLIST`], no extra tools, no skill filter and no
-/// subagents. The error text is for logs and the run record.
+/// [`PET_RESEARCH_TOOL_ALLOWLIST`], no extra tools, no skill filter, no
+/// subagents, `trigger_memory_agent = never`, the safety preamble kept, and the
+/// built-in (function-built) prompt. The error text is for logs and the run record.
 pub fn validate_research_definition(def: &AgentDefinition) -> Result<(), String> {
     if def.sandbox_mode != SandboxMode::ReadOnly {
         return Err(format!(
@@ -42,6 +45,17 @@ pub fn validate_research_definition(def: &AgentDefinition) -> Result<(), String>
     }
     if def.skill_filter.is_some() {
         return Err("skill_filter must be unset".into());
+    }
+    if def.trigger_memory_agent != TriggerMemoryAgent::Never {
+        return Err("trigger_memory_agent must be never (no memory agent before the pass)".into());
+    }
+    if def.omit_safety_preamble {
+        return Err("the safety preamble may not be omitted".into());
+    }
+    // Only the built-in definition carries a function-built prompt (a TOML
+    // override can only be `inline` or `file`), so this pins the shipped prompt.
+    if !matches!(def.system_prompt, PromptSource::Dynamic(_)) {
+        return Err("system prompt is not the built-in pet research prompt".into());
     }
     if !def.subagents.is_empty() {
         return Err("the pet research lane may not delegate to subagents".into());

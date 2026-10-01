@@ -389,6 +389,7 @@ pub async fn pet_goal_remove(config: &Config, goal_id: &str) -> RpcResult<serde_
     ok(serde_json::json!({ "removed": removed }))
 }
 
+pub(crate) use super::run::{begin_scheduled_tick, ScheduledTick};
 pub use super::run::{execute_manual_job, pet_run_now};
 
 // ── Feed, notes, inbox ───────────────────────────────────────────────────
@@ -548,4 +549,12 @@ pub async fn pet_digest_now(config: &Config) -> RpcResult<Option<PetDigest>> {
     let digest = surface::build_and_store_digest(config, &pet, Utc::now(), &Local).map_err(err)?;
     log::debug!("[pet] digest_now built={}", digest.is_some());
     ok(digest)
+}
+
+/// Holds `pet_id`'s manual-pass guard (tests simulating a pass in flight).
+#[cfg(test)]
+pub(crate) fn hold_run_guard_for_test(pet_id: &str) -> impl Drop {
+    super::run::RunNowGuard::try_acquire(pet_id)
+        .unwrap()
+        .expect("guard free")
 }

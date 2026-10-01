@@ -603,3 +603,62 @@ async fn adopting_a_same_named_non_agent_job_replaces_it() {
         "squatter removed"
     );
 }
+
+#[test]
+fn only_allowlisted_origin_classes_are_surfaceable() {
+    use crate::neppy::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource as S};
+    let class_ok = |origin: AgentTurnOrigin| {
+        let row = approval_row("r").with_origin_class(origin.class());
+        super::surface::is_pet_surfaceable(&row)
+    };
+    let trusted = |source| AgentTurnOrigin::TrustedAutomation {
+        job_id: "j".into(),
+        source,
+    };
+    // Allowed: the user's own chat and goal continuation.
+    assert!(class_ok(AgentTurnOrigin::WebChat {
+        thread_id: "t".into(),
+        client_id: "c".into(),
+        request_id: None,
+    }));
+    assert!(class_ok(trusted(S::GoalContinuation)));
+    // Everything else, by the real `class()` strings, is not.
+    for origin in [
+        AgentTurnOrigin::ExternalChannel {
+            channel: "telegram".into(),
+            sender: None,
+            reply_target: "x".into(),
+            message_id: "m".into(),
+        },
+        AgentTurnOrigin::Cli,
+        AgentTurnOrigin::Unknown,
+        trusted(S::Cron),
+        trusted(S::Subconscious),
+        trusted(S::SubconsciousTainted),
+        trusted(S::PetResearch),
+        trusted(S::Workflow {
+            require_approval: true,
+        }),
+        trusted(S::Workflow {
+            require_approval: false,
+        }),
+    ] {
+        assert!(
+            !class_ok(origin.clone()),
+            "{} must not surface",
+            origin.class()
+        );
+    }
+    // No recorded origin (legacy row) and a flow context both fail closed.
+    assert!(!super::surface::is_pet_surfaceable(&approval_row("legacy")));
+    let with_flow = approval_row("f")
+        .with_origin_class("WebChat")
+        .with_source_context(
+            crate::neppy::security::approval::ApprovalSourceContext::Flow {
+                flow_id: "f".into(),
+                run_id: "r".into(),
+                node_id: None,
+            },
+        );
+    assert!(!super::surface::is_pet_surfaceable(&with_flow));
+}

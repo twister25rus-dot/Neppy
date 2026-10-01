@@ -2254,3 +2254,97 @@ async fn pet_job_ignores_a_pinned_profile() {
         "the pet lane never runs under an attributed profile"
     );
 }
+
+// ── Pet mode: delivery suppression and manual-pass guard ────────────────────
+
+fn announce_delivery() -> DeliveryConfig {
+    DeliveryConfig {
+        mode: "announce".into(),
+        channel: None, // announce with no channel is an error: proves the arm ran
+        to: None,
+        best_effort: false,
+    }
+}
+
+#[tokio::test]
+async fn pet_job_never_delivers_or_alerts_whatever_its_delivery_says() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+
+    // A normal job with this delivery reaches the announce arm (and errors on
+    // the missing channel), so a pet job returning Ok proves delivery is skipped.
+    let mut normal = test_job("");
+    normal.job_type = JobType::Agent;
+    normal.delivery = announce_delivery();
+    assert!(deliver_if_configured(&config, &normal, "hello", true)
+        .await
+        .is_err());
+
+    let mut pet = normal.clone();
+    pet.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+    for mode in ["announce", "proactive", "none"] {
+        pet.delivery.mode = mode.into();
+        pet.delivery.channel = Some("telegram".into());
+        pet.delivery.to = Some("chat-1".into());
+        deliver_if_configured(&config, &pet, "Recorded 3 notes.", true)
+            .await
+            .expect("pet delivery is a no-op");
+        // A failed pet pass is not pushed to the alerts tab either: the Pet
+        // reports its own runs.
+        deliver_if_configured(&config, &pet, "boom", false)
+            .await
+            .unwrap();
+    }
+    let alerts =
+        crate::neppy::desktop::notifications::store::list(&config, 10, 0, Some("cron"), None)
+            .unwrap();
+    assert!(
+        alerts.is_empty(),
+        "pet runs must not create cron alerts: {alerts:?}"
+    );
+
+    // Control: a normal failed job still alerts.
+    let mut ordinary = test_job("");
+    ordinary.job_type = JobType::Agent;
+    deliver_if_configured(&config, &ordinary, "boom", false)
+        .await
+        .unwrap();
+    assert_eq!(
+        crate::neppy::desktop::notifications::store::list(&config, 10, 0, Some("cron"), None)
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[tokio::test]
+async fn scheduled_pet_tick_is_skipped_and_rescheduled_while_a_manual_pass_runs() {
+    use crate::neppy::pet::ops::pet_update;
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let patch = serde_json::from_value(serde_json::json!({ "enabled": true })).unwrap();
+    let profile = pet_update(&config, patch).await.unwrap().value;
+    let job =
+        crate::neppy::cron::get_job(&config, profile.research_job_id.as_deref().unwrap()).unwrap();
+
+    // A manual pass holds the guard.
+    let guard = crate::neppy::pet::ops::hold_run_guard_for_test(&profile.id);
+    let security = SecurityPolicy::default();
+    let (job_id, success, failure) = execute_and_persist_job(&config, &security, &job).await;
+    assert_eq!(job_id, job.id);
+    assert!(success && failure.is_none());
+
+    // Skipped: no agent ran (no run recorded), but the schedule advanced so the
+    // tick is not re-selected on every poll.
+    assert!(crate::neppy::cron::list_runs(&config, &job.id, 10)
+        .unwrap()
+        .is_empty());
+    let after = crate::neppy::cron::get_job(&config, &job.id).unwrap();
+    assert!(after.next_run >= job.next_run);
+    assert!(after
+        .last_output
+        .as_deref()
+        .unwrap_or_default()
+        .contains("skipped"));
+    drop(guard);
+}
