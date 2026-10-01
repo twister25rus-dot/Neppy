@@ -193,7 +193,7 @@ async fn pet_note_records_and_creates_a_proposal_only_when_clean() {
     let tmp = TempDir::new().unwrap();
     let (config, pet_id) = setup(&tmp);
     let tool = PetNoteTool::new(config.clone());
-    assert_eq!(tool.permission_level(), PermissionLevel::Write);
+    assert_eq!(tool.permission_level(), PermissionLevel::None);
 
     let clean = json_of(
         &as_pet(
@@ -399,6 +399,86 @@ async fn composio_execute_refuses_write_actions_in_the_lane() {
             result.text().contains("read-only"),
             "{slug}: {}",
             result.text()
+        );
+    }
+}
+
+#[test]
+fn pet_note_titles_never_carry_urls() {
+    let parse = |title: &str| {
+        parse_note_args(
+            &json!({ "source": "email", "kind": "fyi", "title": title }),
+            "pet",
+            JOB,
+        )
+        .unwrap()
+        .title
+    };
+    assert_eq!(
+        parse("Verify at http://evil.example/login now"),
+        "Verify at [link removed] now"
+    );
+    assert_eq!(
+        parse("Open HTTPS://Evil.example/a?b=c and www.evil.example/x"),
+        "Open [link removed] and [link removed]"
+    );
+    assert_eq!(
+        parse("ftp://h/p mailto:a@b.c done"),
+        "[link removed] [link removed] done"
+    );
+    assert_eq!(parse("javascript:alert(1)"), "[link removed]");
+    // Plain words with a colon or a dot are untouched.
+    assert_eq!(
+        parse("Update data: Q3 review, v1.2"),
+        "Update data: Q3 review, v1.2"
+    );
+    // The default fingerprint is derived from the sanitised title.
+    let note = parse_note_args(
+        &json!({ "source": "email", "kind": "fyi", "title": "x http://a.example" }),
+        "pet",
+        JOB,
+    )
+    .unwrap();
+    assert_eq!(
+        note.fingerprint,
+        default_fingerprint(PetNoteSource::Email, "x [link removed]")
+    );
+}
+
+#[tokio::test]
+async fn pet_note_passes_the_security_gate_on_the_readonly_tier() {
+    use crate::neppy::agent::tinyagents::host::NeppySecurityGate;
+    use crate::neppy::security::policy::{AutonomyLevel, SecurityPolicy};
+    use tinyagents::harness::host::security_gate::{SecurityGate, ToolCallRequest};
+
+    let tmp = TempDir::new().unwrap();
+    let (config, _) = setup(&tmp);
+    let registry: Vec<Arc<Vec<Box<dyn Tool>>>> =
+        vec![Arc::new(vec![
+            Box::new(PetNoteTool::new(config.clone())) as Box<dyn Tool>
+        ])];
+    for tier in [
+        AutonomyLevel::ReadOnly,
+        AutonomyLevel::Supervised,
+        AutonomyLevel::Full,
+    ] {
+        let policy = Arc::new(SecurityPolicy {
+            autonomy: tier,
+            ..SecurityPolicy::default()
+        });
+        let gate = NeppySecurityGate::new(policy, registry.clone());
+        let decision = gate
+            .authorize_tool(&ToolCallRequest::new(
+                "pet_note",
+                json!({ "source": "email", "kind": "fyi", "title": "t", "urgency": 1 }),
+                "pet_research",
+            ))
+            .await
+            .unwrap();
+        assert!(
+            decision.is_allowed(),
+            "pet_note must be allowed on {tier:?}: {:?}",
+            decision.denial_reason()
         );
     }
 }

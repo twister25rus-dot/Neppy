@@ -2132,3 +2132,219 @@ fn origin_for_agent_job_gives_pet_research_only_to_the_pet_agent() {
         "TrustedAutomation(Cron)"
     );
 }
+
+// ── Pet mode: fail closed when the read-only definition cannot be built ─────
+
+#[tokio::test]
+async fn pet_job_whose_definition_cannot_be_built_fails_closed_without_generic_fallback() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let mut job = test_job("");
+    job.job_type = JobType::Agent;
+    job.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+
+    let calls = std::cell::Cell::new(0u32);
+    let result = build_agent_for_cron_job_with(&config, &job, |_, agent_id| {
+        calls.set(calls.get() + 1);
+        assert_eq!(agent_id, crate::neppy::pet::PET_RESEARCH_AGENT_ID);
+        Err(anyhow::anyhow!("definition could not be resolved"))
+    });
+    let error = match result {
+        Ok(_) => panic!("a pet job must not fall back to the generic full-belt agent"),
+        Err(e) => e,
+    };
+    assert_eq!(calls.get(), 1, "only the definition builder may be tried");
+    let text = format!("{error:#}");
+    assert!(text.contains(PET_AGENT_UNAVAILABLE_MESSAGE), "got {text}");
+    assert!(
+        text.contains("refusing to run without its read-only definition"),
+        "got {text}"
+    );
+}
+
+#[tokio::test]
+async fn non_pet_job_keeps_generic_fallback_when_definition_cannot_be_built() {
+    crate::neppy::memory::host_impls::install_for_tests();
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let mut job = test_job("");
+    job.job_type = JobType::Agent;
+    job.agent_id = Some("some_other_agent".into());
+
+    let result = build_agent_for_cron_job_with(&config, &job, |_, _| {
+        Err(anyhow::anyhow!("definition could not be resolved"))
+    });
+    // Behaviour for other agents is unchanged: the generic builder runs, and
+    // whatever it returns is never the pet fail-closed error.
+    if let Err(e) = result {
+        assert!(!format!("{e:#}").contains(PET_AGENT_UNAVAILABLE_MESSAGE));
+    }
+}
+
+#[test]
+fn pet_fail_closed_applies_to_the_pet_lane_only() {
+    let mut job = test_job("");
+    job.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+    let err = pet_fail_closed(&job, "registry not initialized").expect("pet job fails closed");
+    assert!(err.to_string().contains(PET_AGENT_UNAVAILABLE_MESSAGE));
+    job.agent_id = Some("morning_briefing".into());
+    assert!(pet_fail_closed(&job, "x").is_none());
+    job.agent_id = None;
+    assert!(pet_fail_closed(&job, "x").is_none());
+}
+
+#[tokio::test]
+async fn pet_job_without_web_source_cannot_see_web_search() {
+    use crate::neppy::pet::ops::{pet_update, WEB_SEARCH_TOOL};
+    crate::neppy::memory::host_impls::install_for_tests();
+    crate::neppy::agent::harness::definition::AgentDefinitionRegistry::init_global_builtins()
+        .expect("init built-in agent definitions");
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let patch = |v: serde_json::Value| serde_json::from_value(v).unwrap();
+
+    let profile = pet_update(
+        &config,
+        patch(serde_json::json!({ "enabled": true, "sources": ["memory", "tasks"] })),
+    )
+    .await
+    .unwrap()
+    .value;
+    let job = crate::neppy::cron::get_job(&config, profile.research_job_id.as_deref().unwrap())
+        .expect("research job");
+
+    let built = build_agent_for_cron_job(&config, &job).expect("build pet agent");
+    let visible = built.agent.visible_tool_names_for_test();
+    assert!(
+        !visible.contains(WEB_SEARCH_TOOL),
+        "web search must be withheld when `web` is not an enabled source: {visible:?}"
+    );
+    assert!(visible.contains("pet_note"), "the rest of the belt remains");
+
+    pet_update(
+        &config,
+        patch(serde_json::json!({ "sources": ["memory", "web"] })),
+    )
+    .await
+    .unwrap();
+    let built = build_agent_for_cron_job(&config, &job).expect("build pet agent");
+    assert!(built
+        .agent
+        .visible_tool_names_for_test()
+        .contains(WEB_SEARCH_TOOL));
+}
+
+#[tokio::test]
+async fn pet_job_ignores_a_pinned_profile() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let mut profile = crate::neppy::agent::profiles::store::built_in_default_profile();
+    profile.id = "alice".into();
+    profile.built_in = false;
+    crate::neppy::agent::profiles::store::AgentProfileStore::new(config.workspace_dir.clone())
+        .upsert(profile)
+        .expect("seed profile");
+    let mut job = test_job("");
+    job.job_type = JobType::Agent;
+    job.profile_id = Some("alice".into());
+    assert!(resolve_cron_profile(&config, &job).unwrap().is_some());
+    job.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+    assert!(
+        resolve_cron_profile(&config, &job).unwrap().is_none(),
+        "the pet lane never runs under an attributed profile"
+    );
+}
+
+// ── Pet mode: delivery suppression and manual-pass guard ────────────────────
+
+fn announce_delivery() -> DeliveryConfig {
+    DeliveryConfig {
+        mode: "announce".into(),
+        channel: None, // announce with no channel is an error: proves the arm ran
+        to: None,
+        best_effort: false,
+    }
+}
+
+#[tokio::test]
+async fn pet_job_never_delivers_or_alerts_whatever_its_delivery_says() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+
+    // A normal job with this delivery reaches the announce arm (and errors on
+    // the missing channel), so a pet job returning Ok proves delivery is skipped.
+    let mut normal = test_job("");
+    normal.job_type = JobType::Agent;
+    normal.delivery = announce_delivery();
+    assert!(deliver_if_configured(&config, &normal, "hello", true)
+        .await
+        .is_err());
+
+    let mut pet = normal.clone();
+    pet.agent_id = Some(crate::neppy::pet::PET_RESEARCH_AGENT_ID.into());
+    for mode in ["announce", "proactive", "none"] {
+        pet.delivery.mode = mode.into();
+        pet.delivery.channel = Some("telegram".into());
+        pet.delivery.to = Some("chat-1".into());
+        deliver_if_configured(&config, &pet, "Recorded 3 notes.", true)
+            .await
+            .expect("pet delivery is a no-op");
+        // A failed pet pass is not pushed to the alerts tab either: the Pet
+        // reports its own runs.
+        deliver_if_configured(&config, &pet, "boom", false)
+            .await
+            .unwrap();
+    }
+    let alerts =
+        crate::neppy::desktop::notifications::store::list(&config, 10, 0, Some("cron"), None)
+            .unwrap();
+    assert!(
+        alerts.is_empty(),
+        "pet runs must not create cron alerts: {alerts:?}"
+    );
+
+    // Control: a normal failed job still alerts.
+    let mut ordinary = test_job("");
+    ordinary.job_type = JobType::Agent;
+    deliver_if_configured(&config, &ordinary, "boom", false)
+        .await
+        .unwrap();
+    assert_eq!(
+        crate::neppy::desktop::notifications::store::list(&config, 10, 0, Some("cron"), None)
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[tokio::test]
+async fn scheduled_pet_tick_is_skipped_and_rescheduled_while_a_manual_pass_runs() {
+    use crate::neppy::pet::ops::pet_update;
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp).await;
+    let patch = serde_json::from_value(serde_json::json!({ "enabled": true })).unwrap();
+    let profile = pet_update(&config, patch).await.unwrap().value;
+    let job =
+        crate::neppy::cron::get_job(&config, profile.research_job_id.as_deref().unwrap()).unwrap();
+
+    // A manual pass holds the guard.
+    let guard = crate::neppy::pet::ops::hold_run_guard_for_test(&profile.id);
+    let security = SecurityPolicy::default();
+    let (job_id, success, failure) = execute_and_persist_job(&config, &security, &job).await;
+    assert_eq!(job_id, job.id);
+    assert!(success && failure.is_none());
+
+    // Skipped: no agent ran (no run recorded), but the schedule advanced so the
+    // tick is not re-selected on every poll.
+    assert!(crate::neppy::cron::list_runs(&config, &job.id, 10)
+        .unwrap()
+        .is_empty());
+    let after = crate::neppy::cron::get_job(&config, &job.id).unwrap();
+    assert!(after.next_run >= job.next_run);
+    assert!(after
+        .last_output
+        .as_deref()
+        .unwrap_or_default()
+        .contains("skipped"));
+    drop(guard);
+}

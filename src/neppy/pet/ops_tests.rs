@@ -116,7 +116,9 @@ async fn enabling_creates_and_disabling_disables_the_research_job() {
     assert_eq!(p.research_job_id.as_deref(), Some(job_id.as_str()));
     assert_eq!(
         cron::get_job(&config, &job_id).unwrap().expression,
-        ResearchPreset::Frequent.cron_expr()
+        // The default 07:00 digest is outside the frequent preset's 08-20
+        // window, so the schedule gains a 07:00 pass.
+        "0 7,8,10,12,14,16,18,20 * * *"
     );
 
     // Disabling keeps the job but disables it.
@@ -362,4 +364,301 @@ async fn feed_notes_and_dismiss_round_trip() {
         .unwrap_err()
         .starts_with("invalid 'note_id'"));
     assert!(pet_digest_now(&config).await.unwrap().value.is_none());
+}
+
+// ── Digest-hour pass (N6) ────────────────────────────────────────────────
+
+#[test]
+fn research_schedule_includes_the_digest_hour() {
+    use ResearchPreset::*;
+    // Digest hour already covered by the preset → expression unchanged.
+    assert_eq!(cron_expr_for(Light, "07:00"), Light.cron_expr());
+    assert_eq!(cron_expr_for(Standard, "12:00"), Standard.cron_expr());
+    assert_eq!(cron_expr_for(Frequent, "18:00"), Frequent.cron_expr());
+    // The Light preset (07:00) with an 18:00 digest gets an 18:00 pass too.
+    assert_eq!(cron_expr_for(Light, "18:00"), "0 7,18 * * *");
+    assert_eq!(cron_expr_for(Standard, "18:00"), "0 7,12,17,18 * * *");
+    assert_eq!(
+        cron_expr_for(Frequent, "19:00"),
+        "0 8,10,12,14,16,18,19,20 * * *"
+    );
+    // A digest time with minutes rounds UP so the pass is at/after it.
+    assert_eq!(digest_pass_hour("18:30"), 19);
+    assert_eq!(cron_expr_for(Light, "18:30"), "0 7,19 * * *");
+    assert_eq!(digest_pass_hour("23:30"), 0);
+    assert_eq!(cron_expr_for(Light, "23:30"), "0 0,7 * * *");
+    // Malformed falls back to 07:00 like the surfacer.
+    assert_eq!(digest_pass_hour("nonsense"), 7);
+    // Every preset's hours agree with its documented expression.
+    assert_eq!(Light.hours(), vec![7]);
+    assert_eq!(Standard.hours(), vec![7, 12, 17]);
+    assert_eq!(Frequent.hours(), (8..=20).step_by(2).collect::<Vec<u32>>());
+}
+
+#[tokio::test]
+async fn changing_the_digest_time_reschedules_the_research_job() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let p = pet_update(
+        &config,
+        patch(serde_json::json!({ "enabled": true, "research_preset": "light" })),
+    )
+    .await
+    .unwrap()
+    .value;
+    let job_id = p.research_job_id.clone().unwrap();
+    assert_eq!(
+        cron::get_job(&config, &job_id).unwrap().expression,
+        "0 7 * * *"
+    );
+
+    pet_update(
+        &config,
+        patch(serde_json::json!({ "digest_time": "18:00" })),
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        cron::get_job(&config, &job_id).unwrap().expression,
+        "0 7,18 * * *",
+        "the job must run at the digest hour so the digest is not a day late"
+    );
+}
+
+// ── Adoption repair (N7) ─────────────────────────────────────────────────
+
+#[tokio::test]
+async fn adopting_a_job_clears_a_pinned_model_and_profile() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let pet = store::ensure_primary(&config, Utc::now()).unwrap();
+    // A pre-existing job with our name, pinned to a model and a profile.
+    let orphan = cron::add_agent_job_with_definition(
+        &config,
+        Some(format!("{PET_JOB_NAME_PREFIX}{}:research", pet.id)),
+        cron::Schedule::Cron {
+            expr: "0 7 * * *".into(),
+            tz: None,
+            active_hours: None,
+        },
+        PET_RESEARCH_JOB_PROMPT,
+        cron::SessionTarget::Isolated,
+        Some("some-pinned-model".into()),
+        Some(cron::DeliveryConfig::default()),
+        false,
+        Some(PET_RESEARCH_AGENT_ID.into()),
+        true,
+        Some("some-profile".into()),
+    )
+    .unwrap();
+    assert_eq!(orphan.model.as_deref(), Some("some-pinned-model"));
+
+    let p = pet_update(&config, patch(serde_json::json!({ "enabled": true })))
+        .await
+        .unwrap()
+        .value;
+    let job = cron::get_job(&config, p.research_job_id.as_deref().unwrap()).unwrap();
+    assert!(job.model.is_none(), "pinned model must be cleared: {job:?}");
+    assert!(job.profile_id.is_none(), "pinned profile must be cleared");
+    assert_eq!(job.agent_id.as_deref(), Some(PET_RESEARCH_AGENT_ID));
+    assert_eq!(
+        cron::list_jobs(&config)
+            .unwrap()
+            .iter()
+            .filter(|j| j.name == job.name)
+            .count(),
+        1,
+        "exactly one research job remains"
+    );
+
+    // Same for a job whose id is already linked (not just orphans).
+    cron::update_job(
+        &config,
+        &job.id,
+        cron::CronJobPatch {
+            model: Some("another-model".into()),
+            profile_id: Some(Some("p2".into())),
+            ..cron::CronJobPatch::default()
+        },
+    )
+    .unwrap();
+    reconcile_on_boot(&config).await.unwrap();
+    let pet = store::primary_pet(&config).unwrap().unwrap();
+    let job = cron::get_job(&config, pet.research_job_id.as_deref().unwrap()).unwrap();
+    assert!(job.model.is_none() && job.profile_id.is_none());
+}
+
+// ── Web search follows the pet's sources (N4) ────────────────────────────
+
+#[test]
+fn web_search_is_hidden_unless_web_is_an_enabled_source() {
+    assert_eq!(
+        tools_hidden_for_sources(&[PetSource::Memory, PetSource::Tasks]),
+        vec![WEB_SEARCH_TOOL]
+    );
+    assert!(tools_hidden_for_sources(&[PetSource::Memory, PetSource::Web]).is_empty());
+    assert_eq!(WEB_SEARCH_TOOL, "web_search_tool");
+    assert!(PET_RESEARCH_TOOL_ALLOWLIST.contains(&WEB_SEARCH_TOOL));
+}
+
+#[tokio::test]
+async fn tools_hidden_for_job_reads_the_pets_sources_and_fails_closed() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let p = pet_update(
+        &config,
+        patch(serde_json::json!({ "enabled": true, "sources": ["memory"] })),
+    )
+    .await
+    .unwrap()
+    .value;
+    let job_id = p.research_job_id.unwrap();
+    assert_eq!(
+        tools_hidden_for_job(&config, &job_id),
+        vec![WEB_SEARCH_TOOL]
+    );
+    pet_update(
+        &config,
+        patch(serde_json::json!({ "sources": ["memory", "web"] })),
+    )
+    .await
+    .unwrap();
+    assert!(tools_hidden_for_job(&config, &job_id).is_empty());
+    // Unknown job → fail closed.
+    assert_eq!(
+        tools_hidden_for_job(&config, "no-such-job"),
+        vec![WEB_SEARCH_TOOL]
+    );
+}
+
+// ── Inbox approvals: remote / flow / unknown origins never surface ───────
+
+fn approval_row(id: &str) -> crate::neppy::security::approval::PendingApproval {
+    crate::neppy::security::approval::PendingApproval::new(
+        id,
+        "shell",
+        "run ls",
+        serde_json::json!({}),
+        None,
+    )
+}
+
+#[tokio::test]
+async fn pet_inbox_lists_only_local_known_origin_approvals() {
+    use crate::neppy::security::approval::ApprovalSourceContext;
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let rows = vec![
+        approval_row("local").with_origin_class("TrustedAutomation(GoalContinuation)"),
+        approval_row("remote").with_origin_class("ExternalChannel(telegram)"),
+        approval_row("flow")
+            .with_origin_class("TrustedAutomation(Workflow { require_approval: true })")
+            .with_source_context(ApprovalSourceContext::Flow {
+                flow_id: "f".into(),
+                run_id: "r".into(),
+                node_id: None,
+            }),
+        approval_row("legacy"),
+        approval_row("routed").with_origin_class("WebChat"),
+    ];
+    let routed: std::collections::HashSet<String> = ["routed".to_string()].into();
+    let inbox = inbox_with_pending(&config, rows, &routed).unwrap().value;
+    let ids: Vec<&str> = inbox
+        .approvals
+        .iter()
+        .map(|a| a.request_id.as_str())
+        .collect();
+    assert_eq!(ids, vec!["local"]);
+}
+
+#[tokio::test]
+async fn adopting_a_same_named_non_agent_job_replaces_it() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let pet = store::ensure_primary(&config, Utc::now()).unwrap();
+    // A shell job squatting on the pet's job name (with an arbitrary command).
+    let squatter = cron::add_shell_job(
+        &config,
+        Some(format!("{PET_JOB_NAME_PREFIX}{}:research", pet.id)),
+        cron::Schedule::Cron {
+            expr: "0 7 * * *".into(),
+            tz: None,
+            active_hours: None,
+        },
+        "echo not-an-agent",
+    )
+    .unwrap();
+    assert_eq!(squatter.job_type, cron::JobType::Shell);
+
+    let p = pet_update(&config, patch(serde_json::json!({ "enabled": true })))
+        .await
+        .unwrap()
+        .value;
+    let job = cron::get_job(&config, p.research_job_id.as_deref().unwrap()).unwrap();
+    assert_ne!(job.id, squatter.id, "the shell job must not be adopted");
+    assert_eq!(job.job_type, cron::JobType::Agent);
+    assert_eq!(job.agent_id.as_deref(), Some(PET_RESEARCH_AGENT_ID));
+    assert!(
+        cron::get_job(&config, &squatter.id).is_err(),
+        "squatter removed"
+    );
+}
+
+#[test]
+fn only_allowlisted_origin_classes_are_surfaceable() {
+    use crate::neppy::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource as S};
+    let class_ok = |origin: AgentTurnOrigin| {
+        let row = approval_row("r").with_origin_class(origin.class());
+        super::surface::is_pet_surfaceable(&row)
+    };
+    let trusted = |source| AgentTurnOrigin::TrustedAutomation {
+        job_id: "j".into(),
+        source,
+    };
+    // Allowed: the user's own chat and goal continuation.
+    assert!(class_ok(AgentTurnOrigin::WebChat {
+        thread_id: "t".into(),
+        client_id: "c".into(),
+        request_id: None,
+    }));
+    assert!(class_ok(trusted(S::GoalContinuation)));
+    // Everything else, by the real `class()` strings, is not.
+    for origin in [
+        AgentTurnOrigin::ExternalChannel {
+            channel: "telegram".into(),
+            sender: None,
+            reply_target: "x".into(),
+            message_id: "m".into(),
+        },
+        AgentTurnOrigin::Cli,
+        AgentTurnOrigin::Unknown,
+        trusted(S::Cron),
+        trusted(S::Subconscious),
+        trusted(S::SubconsciousTainted),
+        trusted(S::PetResearch),
+        trusted(S::Workflow {
+            require_approval: true,
+        }),
+        trusted(S::Workflow {
+            require_approval: false,
+        }),
+    ] {
+        assert!(
+            !class_ok(origin.clone()),
+            "{} must not surface",
+            origin.class()
+        );
+    }
+    // No recorded origin (legacy row) and a flow context both fail closed.
+    assert!(!super::surface::is_pet_surfaceable(&approval_row("legacy")));
+    let with_flow = approval_row("f")
+        .with_origin_class("WebChat")
+        .with_source_context(
+            crate::neppy::security::approval::ApprovalSourceContext::Flow {
+                flow_id: "f".into(),
+                run_id: "r".into(),
+                node_id: None,
+            },
+        );
+    assert!(!super::surface::is_pet_surfaceable(&with_flow));
 }

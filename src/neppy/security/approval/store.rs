@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS pending_approvals (
     executed_at       TEXT,
     execution_outcome TEXT,
     execution_error   TEXT,
-    source_context    TEXT
+    source_context    TEXT,
+    origin_class      TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_pending_approvals_pending
     ON pending_approvals(decided_at);
@@ -112,6 +113,10 @@ fn migrate_columns(conn: &Connection) -> Result<()> {
         (
             "source_context",
             "ALTER TABLE pending_approvals ADD COLUMN source_context TEXT",
+        ),
+        (
+            "origin_class",
+            "ALTER TABLE pending_approvals ADD COLUMN origin_class TEXT",
         ),
     ] {
         if !have.contains(col) {
@@ -215,8 +220,8 @@ pub fn insert_pending(config: &Config, pending: &PendingApproval, session_id: &s
         conn.execute(
             "INSERT INTO pending_approvals
                 (request_id, tool_name, action_summary, args_redacted,
-                 session_id, created_at, expires_at, source_context)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                 session_id, created_at, expires_at, source_context, origin_class)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 pending.request_id,
                 pending.tool_name,
@@ -226,6 +231,7 @@ pub fn insert_pending(config: &Config, pending: &PendingApproval, session_id: &s
                 created,
                 expires,
                 source_context,
+                pending.origin_class,
             ],
         )
         .context("[approval::store] insert pending row")?;
@@ -299,7 +305,7 @@ pub fn list_pending(config: &Config) -> Result<Vec<PendingApproval>> {
         let mut stmt = conn
             .prepare(
                 "SELECT request_id, tool_name, action_summary, args_redacted,
-                        session_id, created_at, expires_at, source_context
+                        session_id, created_at, expires_at, source_context, origin_class
                  FROM pending_approvals
                  WHERE decided_at IS NULL
                  ORDER BY created_at ASC",
@@ -370,7 +376,7 @@ pub fn decide(
         let mut stmt = conn
             .prepare(
                 "SELECT request_id, tool_name, action_summary, args_redacted,
-                        session_id, created_at, expires_at, source_context
+                        session_id, created_at, expires_at, source_context, origin_class
                  FROM pending_approvals WHERE request_id = ?1",
             )
             .context("[approval::store] prepare select decided")?;
@@ -686,6 +692,9 @@ fn row_to_pending(row: &rusqlite::Row<'_>) -> rusqlite::Result<PendingApproval> 
             .ok()
     });
 
+    // Column 8 (`origin_class`) is NULL on rows written before it existed.
+    let origin_class: Option<String> = row.get(8).unwrap_or(None);
+
     // Note: column index 4 (`session_id`) is read on the SELECT but
     // intentionally not surfaced — see `PendingApproval` doc-comment.
     Ok(PendingApproval {
@@ -696,6 +705,7 @@ fn row_to_pending(row: &rusqlite::Row<'_>) -> rusqlite::Result<PendingApproval> 
         created_at: parse_rfc3339(&created_str),
         expires_at: expires_opt.as_deref().map(parse_rfc3339),
         source_context,
+        origin_class,
     })
 }
 
@@ -748,6 +758,7 @@ mod tests {
             created_at: Utc::now(),
             expires_at,
             source_context: None,
+            origin_class: None,
         }
     }
 
@@ -771,6 +782,21 @@ mod tests {
             }
         })
         .unwrap()
+    }
+
+    #[test]
+    fn origin_class_round_trips_and_legacy_rows_read_as_none() {
+        let (config, _dir) = test_config();
+        let p = sample("with-origin", "s").with_origin_class("ExternalChannel(telegram)");
+        insert_pending(&config, &p, "session-a").unwrap();
+        insert_pending(&config, &sample("legacy", "s"), "session-a").unwrap();
+        let rows = list_pending(&config).unwrap();
+        let find = |id: &str| rows.iter().find(|r| r.request_id == id).unwrap();
+        assert_eq!(
+            find("with-origin").origin_class.as_deref(),
+            Some("ExternalChannel(telegram)")
+        );
+        assert_eq!(find("legacy").origin_class, None);
     }
 
     #[test]

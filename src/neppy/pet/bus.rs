@@ -90,8 +90,12 @@ impl EventHandler<DomainEvent> for PetPassCompletedSubscriber {
 pub struct PetApprovalSurfaceSubscriber;
 
 /// The `PetApprovalNeeded` event for `event`, when it is a background park:
-/// no chat thread, and a pending row with no flow context (flows publish their
-/// own notification).
+/// no chat thread, a pending row with no flow context (flows publish their own
+/// notification) and a known, non-remote origin. Input from Telegram/Discord/...
+/// is untrusted and its parks TTL-deny silently by design, so a remote sender
+/// must not be able to raise desktop notifications by provoking an
+/// `external_effect` call. The rule is [`surface::is_pet_surfaceable`], shared
+/// with the inbox and the digest count.
 pub(crate) fn approval_needs_surface(
     event: &DomainEvent,
     pending: &[PendingApproval],
@@ -107,7 +111,8 @@ pub(crate) fn approval_needs_surface(
         return None;
     };
     let row = pending.iter().find(|p| &p.request_id == request_id)?;
-    if row.source_context.is_some() {
+    if !surface::is_pet_surfaceable(row) {
+        log::debug!("[pet::bus] approval not surfaced (remote, flow or unknown origin) request_id={request_id}");
         return None;
     }
     Some(DomainEvent::PetApprovalNeeded {

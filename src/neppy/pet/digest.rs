@@ -32,14 +32,27 @@ impl DigestBuild {
 }
 
 /// Escape markdown control characters so untrusted text cannot form links,
-/// images, emphasis, headings, HTML or tables.
+/// images, emphasis, headings, HTML or tables. Bare URLs are neutralised too
+/// (GFM-style renderers autolink them): the scheme separator, `www.` hosts and
+/// `@` of an address are backslash-escaped so no autolink can form.
 pub(crate) fn escape_md(s: &str) -> String {
+    let chars: Vec<char> = s.chars().collect();
     let mut out = String::with_capacity(s.len());
-    for c in s.chars() {
-        if matches!(
-            c,
-            '\\' | '*' | '_' | '`' | '[' | ']' | '(' | ')' | '#' | '<' | '>' | '!' | '|'
-        ) {
+    for (i, &c) in chars.iter().enumerate() {
+        let www_dot = c == '.'
+            && i >= 3
+            && chars[i - 3..i].iter().all(|w| w.eq_ignore_ascii_case(&'w'))
+            && (i == 3 || !chars[i - 4].is_alphanumeric());
+        let scheme_sep =
+            c == ':' && chars.get(i + 1) == Some(&'/') && chars.get(i + 2) == Some(&'/');
+        if www_dot
+            || scheme_sep
+            || c == '@'
+            || matches!(
+                c,
+                '\\' | '*' | '_' | '`' | '[' | ']' | '(' | ')' | '#' | '<' | '>' | '!' | '|'
+            )
+        {
             out.push('\\');
         }
         if c.is_control() {

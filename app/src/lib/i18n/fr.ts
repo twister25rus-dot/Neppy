@@ -7268,7 +7268,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'Par exemple : calme, concis, aime les listes à puces',
   'pet.settings.enabled': 'Mode compagnon',
   'pet.settings.enabledHint':
-    "Quand il est activé, ton compagnon effectue des passages en arrière-plan. Chaque passage est un appel à ton modèle de chat, donc il consomme tes crédits ou ton quota. Il ne s'exécute que lorsque ton Mac est éveillé.",
+    "Quand il est activé, ton compagnon effectue des passages en arrière-plan. Chaque passage est un appel à ton modèle de chat, donc il consomme tes crédits ou ton quota. Il ne s'exécute que lorsque ton ordinateur est éveillé.",
   'pet.settings.preset': 'Fréquence',
   'pet.settings.presetOption.light': 'Léger',
   'pet.settings.presetOption.standard': 'Standard',
@@ -7304,7 +7304,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'Enregistrer les modifications',
   'pet.settings.saved': 'Enregistré',
   'pet.settings.awakeNote':
-    "Ton compagnon ne travaille que lorsque ton Mac est éveillé. Si un passage est manqué, il s'exécute une fois au réveil du Mac.",
+    "Ton compagnon ne travaille que lorsque ton ordinateur est éveillé. Si un passage est manqué, il s'exécute une fois au réveil de l'ordinateur.",
   'pet.errors.loadFailed': 'Impossible de joindre ton compagnon. Veuillez réessayer.',
   'pet.errors.saveFailed': "Impossible d'enregistrer les modifications. Veuillez réessayer.",
   'pet.errors.runFailed': 'Impossible de lancer un passage. Veuillez réessayer.',

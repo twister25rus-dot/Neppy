@@ -62,7 +62,8 @@ fn background_approval_without_thread_or_flow_is_surfaced() {
         "send 1 email",
         serde_json::json!({}),
         None,
-    );
+    )
+    .with_origin_class("TrustedAutomation(GoalContinuation)");
     let flow = PendingApproval::new(
         "r2",
         "composio_execute",
@@ -97,6 +98,22 @@ fn background_approval_without_thread_or_flow_is_surfaced() {
     assert!(approval_needs_surface(&requested("gone", None), &pending).is_none());
     // Other events are ignored.
     assert!(approval_needs_surface(&completed("j", None), &pending).is_none());
+}
+
+#[test]
+fn remote_and_unknown_origin_approvals_are_not_surfaced() {
+    let row = |id: &str| PendingApproval::new(id, "shell", "run ls", serde_json::json!({}), None);
+    let pending = vec![
+        row("remote").with_origin_class("ExternalChannel(telegram)"),
+        row("local").with_origin_class("TrustedAutomation(GoalContinuation)"),
+        row("legacy"), // no recorded origin: unknown, fails closed
+    ];
+    assert!(
+        approval_needs_surface(&requested("remote", None), &pending).is_none(),
+        "an ExternalChannel park keeps its silent TTL-deny"
+    );
+    assert!(approval_needs_surface(&requested("legacy", None), &pending).is_none());
+    assert!(approval_needs_surface(&requested("local", None), &pending).is_some());
 }
 
 #[test]

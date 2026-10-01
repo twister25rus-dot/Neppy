@@ -7219,7 +7219,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'Ad esempio: calmo, conciso, ama gli elenchi puntati',
   'pet.settings.enabled': 'Modalità cucciolo',
   'pet.settings.enabledHint':
-    'Quando è attiva, il tuo cucciolo esegue passaggi in background. Ogni passaggio è una chiamata al tuo modello di chat, quindi consuma i tuoi crediti o la tua quota. Funziona solo mentre il Mac è attivo.',
+    'Quando è attiva, il tuo cucciolo esegue passaggi in background. Ogni passaggio è una chiamata al tuo modello di chat, quindi consuma i tuoi crediti o la tua quota. Funziona solo mentre il computer è attivo.',
   'pet.settings.preset': 'Con che frequenza',
   'pet.settings.presetOption.light': 'Leggera',
   'pet.settings.presetOption.standard': 'Standard',
@@ -7255,7 +7255,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'Salva modifiche',
   'pet.settings.saved': 'Salvato',
   'pet.settings.awakeNote':
-    'Il tuo cucciolo lavora solo mentre il Mac è attivo. Se un passaggio viene saltato, viene eseguito una volta quando il Mac si riattiva.',
+    'Il tuo cucciolo lavora solo mentre il computer è attivo. Se un passaggio viene saltato, viene eseguito una volta quando il computer si riattiva.',
   'pet.errors.loadFailed': 'Impossibile raggiungere il tuo cucciolo. Riprova.',
   'pet.errors.saveFailed': 'Impossibile salvare le modifiche. Riprova.',
   'pet.errors.runFailed': 'Impossibile avviare un passaggio. Riprova.',

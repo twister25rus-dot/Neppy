@@ -35,6 +35,14 @@ pub struct PendingApproval {
     /// optional and additive so the chat path's wire shape never changes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source_context: Option<ApprovalSourceContext>,
+    /// PII-free class of the turn origin that raised the park
+    /// (`AgentTurnOrigin::class()`, e.g. `WebChat`, `ExternalChannel(telegram)`,
+    /// `TrustedAutomation(GoalContinuation)`). Persisted so it survives a
+    /// restart. `None` for rows written before the column existed, and
+    /// consumers that decide from it (the Pet inbox) treat `None` as unknown
+    /// and fail closed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_class: Option<String>,
 }
 
 impl PendingApproval {
@@ -55,7 +63,14 @@ impl PendingApproval {
             created_at: Utc::now(),
             expires_at,
             source_context: None,
+            origin_class: None,
         }
+    }
+
+    /// Attach the turn-origin class (see [`Self::origin_class`]).
+    pub fn with_origin_class(mut self, class: impl Into<String>) -> Self {
+        self.origin_class = Some(class.into());
+        self
     }
 
     /// Attach an [`ApprovalSourceContext`] — used by
@@ -379,6 +394,7 @@ mod tests {
             created_at: Utc::now(),
             expires_at: None,
             source_context: None,
+            origin_class: None,
         };
         let dbg = format!("{p:?}");
         assert!(

@@ -17,7 +17,9 @@ use super::store::{self, PetRow};
 use super::store_feed;
 use super::store_notes;
 use super::surfacer::{self, RankCtx};
-use super::types::{PetDigest, PetNoteState, PetRunSummary};
+use super::types::{
+    PetDigest, PetNoteState, PetRunSummary, PET_DIGEST_JOB_NAME, PET_PROACTIVE_SOURCE_PREFIX,
+};
 
 /// Per-pet surfacing lock so a scheduled pass and a manual one never rank the
 /// same `new` notes concurrently.
@@ -54,23 +56,67 @@ fn local_midnight_utc<Tz: TimeZone>(now: DateTime<Utc>, tz: &Tz) -> DateTime<Utc
         .unwrap_or(now - Duration::hours(24))
 }
 
-/// Pending background approvals without a chat card (for digest footers and
-/// the inbox). Empty when no gate is installed.
-pub(crate) fn background_approvals() -> Vec<crate::neppy::security::approval::PendingApproval> {
+/// Origin classes (`AgentTurnOrigin::class()`) whose parks the Pet may offer.
+///
+/// An ALLOWLIST, so a new origin kind is not surfaced until someone decides it
+/// should be. `WebChat`: the user's own chat. A row that is no longer chat-routed
+/// (its card went away) is still shown on purpose: approving it only updates the
+/// stored decision (the parked call is gone or the row is an orphan), so it is
+/// harmless, and it keeps a pending approval findable. `GoalContinuation`: the
+/// user's own autonomous goal run, which has no other surface.
+const SURFACEABLE_ORIGIN_CLASSES: &[&str] = &["WebChat", "TrustedAutomation(GoalContinuation)"];
+
+/// Whether a parked approval may be offered to the user from the Pet (inbox,
+/// digest count, notification). Single source of truth for all three.
+///
+/// Rows with a flow context have their own surface; remote `ExternalChannel`
+/// input (Telegram, Discord, ...) is untrusted and TTL-denies silently by
+/// design; any origin not on [`SURFACEABLE_ORIGIN_CLASSES`], including an
+/// unknown one (a row written before the column existed), is not surfaced.
+pub(crate) fn is_pet_surfaceable(row: &crate::neppy::security::approval::PendingApproval) -> bool {
+    row.source_context.is_none()
+        && row
+            .origin_class
+            .as_deref()
+            .is_some_and(|class| SURFACEABLE_ORIGIN_CLASSES.contains(&class))
+}
+
+/// [`background_approvals`] over explicit rows (the seam tests drive).
+pub(crate) fn filter_background_approvals(
+    rows: Vec<crate::neppy::security::approval::PendingApproval>,
+    chat_routed: &HashSet<String>,
+) -> Vec<crate::neppy::security::approval::PendingApproval> {
+    rows.into_iter()
+        .filter(|r| !chat_routed.contains(&r.request_id) && is_pet_surfaceable(r))
+        .collect()
+}
+
+/// All undecided approvals plus the ids already routed to a chat card, or empty
+/// when no gate is installed. Unfiltered: callers apply
+/// [`filter_background_approvals`].
+pub(crate) fn pending_with_routed() -> (
+    Vec<crate::neppy::security::approval::PendingApproval>,
+    HashSet<String>,
+) {
     let Some(gate) = crate::neppy::security::approval::ApprovalGate::try_global() else {
-        return Vec::new();
+        return (Vec::new(), HashSet::new());
     };
     let routed = gate.chat_routed_request_ids();
     match gate.list_pending() {
-        Ok(rows) => rows
-            .into_iter()
-            .filter(|r| !routed.contains(&r.request_id))
-            .collect(),
+        Ok(rows) => (rows, routed),
         Err(e) => {
             log::warn!("[pet] listing pending approvals failed: {e}");
-            Vec::new()
+            (Vec::new(), HashSet::new())
         }
     }
+}
+
+/// Pending background approvals without a chat card (for digest footers and
+/// the inbox), excluding remote-origin and flow parks (see
+/// [`is_pet_surfaceable`]). Empty when no gate is installed.
+pub(crate) fn background_approvals() -> Vec<crate::neppy::security::approval::PendingApproval> {
+    let (rows, routed) = pending_with_routed();
+    filter_background_approvals(rows, &routed)
 }
 
 /// Build and store a digest from the current candidates. Returns `None` when
@@ -224,9 +270,9 @@ where
                     item_count: digest.item_count,
                 });
                 BUS.publish(DomainEvent::ProactiveMessageRequested {
-                    source: format!("pet:{}", pet.id),
+                    source: format!("{PET_PROACTIVE_SOURCE_PREFIX}{}", pet.id),
                     message: digest.body_md.clone(),
-                    job_name: Some("pet_digest".into()),
+                    job_name: Some(PET_DIGEST_JOB_NAME.into()),
                 });
             }
             // Always from `now`, never `due + 1 day`: two days asleep still

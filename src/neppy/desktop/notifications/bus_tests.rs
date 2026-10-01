@@ -396,6 +396,23 @@ fn pet_approval_needed_links_to_inbox() {
     assert_eq!(n.deep_link.as_deref(), Some("/pet?tab=inbox"));
 }
 
+#[test]
+fn pet_approval_notification_body_is_truncated_to_140_chars() {
+    let n = event_to_notification(&DomainEvent::PetApprovalNeeded {
+        request_id: "r2".into(),
+        tool_name: "composio_execute".into(),
+        action_summary: "x".repeat(2000),
+    })
+    .unwrap();
+    assert!(
+        n.body.chars().count() <= 140,
+        "body was {} chars",
+        n.body.chars().count()
+    );
+    assert!(n.body.starts_with("composio_execute: xxx"));
+    assert!(n.body.ends_with('…') || n.body.ends_with("..."));
+}
+
 #[tokio::test]
 async fn pet_digest_notification_is_persisted() {
     use crate::neppy::desktop::notifications::store;

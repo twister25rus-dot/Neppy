@@ -914,6 +914,9 @@ impl ApprovalGate {
             created_at: now,
             expires_at,
             source_context: source_context.clone(),
+            // Persisted so the Pet inbox can tell a remote (ExternalChannel)
+            // park from a local one even after a restart.
+            origin_class: Some(origin.class()),
         };
 
         // Register the waiter BEFORE persisting the row so a fast
@@ -1396,27 +1399,13 @@ impl ApprovalGate {
 /// Decision for an `external_effect` tool call made under the
 /// [`TrustedAutomationSource::PetResearch`] origin (the Pet's background
 /// research lane). The lane reads untrusted content unattended, so it may
-/// never send, edit or act: every call is denied except `composio_execute`
-/// while the agent's sandbox is `ReadOnly` — that tool itself refuses write
-/// and admin scopes (and unknown slugs) under `ReadOnly`. Never parks and never
-/// persists a pending row, so nothing is left for a later approval to resume.
+/// never send, edit or act: EVERY external-effect call is denied,
+/// unconditionally (no tool is exempt, whatever the sandbox mode or the user's
+/// auto-approve settings). Never parks and never persists a pending row, so
+/// nothing is left for a later approval to resume.
 fn pet_research_decision(tool_name: &str, job_id: &str) -> (GateOutcome, Option<String>) {
-    use crate::neppy::agent::harness::definition::SandboxMode;
-    let read_only = matches!(
-        crate::neppy::agent::harness::current_sandbox_mode(),
-        Some(SandboxMode::ReadOnly)
-    );
-    if tool_name == "composio_execute" && read_only {
-        tracing::debug!(
-            tool = tool_name,
-            job_id = %job_id,
-            "[approval::gate] pet research lane — allow (read-scoped composio_execute)"
-        );
-        return (GateOutcome::Allow, None);
-    }
     tracing::info!(
         tool = tool_name,
-        read_only_sandbox = read_only,
         "[approval::gate] pet research lane — deny"
     );
     tracing::debug!(
@@ -2787,8 +2776,7 @@ mod tests {
             }
             other => panic!("expected deny, got {other:?}"),
         }
-        // composio_execute without a ReadOnly sandbox scope is denied too,
-        // even though it is allow-listed.
+        // composio_execute is denied too, even though it is allow-listed.
         let outcome = turn_origin::with_origin(
             pet_origin(),
             gate.intercept("composio_execute", "send mail", serde_json::json!({})),
@@ -2802,51 +2790,34 @@ mod tests {
         assert!(gate.pending_for_thread("t-test").is_none());
     }
 
-    /// `composio_execute` is the one external tool the lane may call, and only
-    /// inside a `ReadOnly` sandbox scope (the tool refuses write scopes there).
+    /// The lane denies every external-effect tool unconditionally, including
+    /// `composio_execute` under a `ReadOnly` sandbox scope.
     #[tokio::test]
-    async fn pet_research_allows_composio_execute_only_under_read_only_sandbox() {
+    async fn pet_research_denies_every_external_tool_even_composio_execute_under_read_only() {
         use crate::neppy::agent::harness::definition::SandboxMode;
         use crate::neppy::agent::harness::with_current_sandbox_mode;
         let (gate, _dir) = test_gate();
 
-        let allowed = with_current_sandbox_mode(
-            SandboxMode::ReadOnly,
-            turn_origin::with_origin(
-                pet_origin(),
-                gate.intercept("composio_execute", "read calendar", serde_json::json!({})),
-            ),
-        )
-        .await;
-        assert!(matches!(allowed, GateOutcome::Allow));
-
-        let no_sandbox = turn_origin::with_origin(
-            pet_origin(),
-            gate.intercept("composio_execute", "read calendar", serde_json::json!({})),
-        )
-        .await;
-        assert!(matches!(no_sandbox, GateOutcome::Deny { .. }));
-
-        let sandboxed = with_current_sandbox_mode(
-            SandboxMode::Sandboxed,
-            turn_origin::with_origin(
-                pet_origin(),
-                gate.intercept("composio_execute", "read calendar", serde_json::json!({})),
-            ),
-        )
-        .await;
-        assert!(matches!(sandboxed, GateOutcome::Deny { .. }));
-
-        // Any other external tool stays denied even under ReadOnly.
-        let other = with_current_sandbox_mode(
-            SandboxMode::ReadOnly,
-            turn_origin::with_origin(
-                pet_origin(),
-                gate.intercept("gmail_send", "send", serde_json::json!({})),
-            ),
-        )
-        .await;
-        assert!(matches!(other, GateOutcome::Deny { .. }));
+        for mode in [
+            None,
+            Some(SandboxMode::ReadOnly),
+            Some(SandboxMode::Sandboxed),
+        ] {
+            for tool in ["composio_execute", "gmail_send"] {
+                let fut = turn_origin::with_origin(
+                    pet_origin(),
+                    gate.intercept(tool, "read calendar", serde_json::json!({})),
+                );
+                let outcome = match mode {
+                    Some(m) => with_current_sandbox_mode(m, fut).await,
+                    None => fut.await,
+                };
+                assert!(
+                    matches!(outcome, GateOutcome::Deny { .. }),
+                    "{tool} must be denied (sandbox {mode:?}), got {outcome:?}"
+                );
+            }
+        }
         assert!(gate.list_pending().unwrap().is_empty());
     }
 
@@ -3088,9 +3059,16 @@ mod tests {
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
 
+        // The origin class is persisted on the row (survives a restart).
+        assert_eq!(
+            gate.list_pending().unwrap()[0].origin_class.as_deref(),
+            Some("ExternalChannel(telegram)")
+        );
+
         // Without a routable channel approval surface, the parked future
         // TTL-denies (2s — matches the test_gate fixture).
         let outcome = handle.await.unwrap();
+
         match outcome {
             GateOutcome::Deny { reason } => assert!(reason.contains("timed out")),
             other => panic!("expected deny, got {other:?}"),

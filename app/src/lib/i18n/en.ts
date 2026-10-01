@@ -7404,7 +7404,7 @@ const en: TranslationMap = {
   'pet.settings.personaPlaceholder': 'For example: calm, brief, likes bullet points',
   'pet.settings.enabled': 'Pet mode',
   'pet.settings.enabledHint':
-    'When on, your pet runs background passes. Each pass is a model call on your chat model, so it uses your credits or quota. It only runs while your Mac is awake.',
+    'When on, your pet runs background passes. Each pass is a model call on your chat model, so it uses your credits or quota. It only runs while your computer is awake.',
   'pet.settings.preset': 'How often',
   'pet.settings.presetOption.light': 'Light',
   'pet.settings.presetOption.standard': 'Standard',
@@ -7439,7 +7439,7 @@ const en: TranslationMap = {
   'pet.settings.save': 'Save changes',
   'pet.settings.saved': 'Saved',
   'pet.settings.awakeNote':
-    'Your pet only works while your Mac is awake. If a pass was missed, it runs once when your Mac wakes up.',
+    'Your pet only works while your computer is awake. If a pass was missed, it runs once when your computer wakes up.',
   'pet.errors.loadFailed': 'Could not reach your pet. Please try again.',
   'pet.errors.saveFailed': 'Could not save your changes. Please try again.',
   'pet.errors.runFailed': 'Could not start a pass. Please try again.',

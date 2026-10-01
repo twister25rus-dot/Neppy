@@ -7192,7 +7192,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'Na przykład: spokojny, zwięzły, lubi punkty',
   'pet.settings.enabled': 'Tryb pupila',
   'pet.settings.enabledHint':
-    'Gdy tryb jest włączony, twój pupil wykonuje przebiegi w tle. Każdy przebieg to wywołanie twojego modelu czatu, więc zużywa kredyty lub limit. Działa tylko wtedy, gdy Mac jest wybudzony.',
+    'Gdy tryb jest włączony, twój pupil wykonuje przebiegi w tle. Każdy przebieg to wywołanie twojego modelu czatu, więc zużywa kredyty lub limit. Działa tylko wtedy, gdy komputer jest wybudzony.',
   'pet.settings.preset': 'Jak często',
   'pet.settings.presetOption.light': 'Rzadko',
   'pet.settings.presetOption.standard': 'Standardowo',
@@ -7227,7 +7227,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'Zapisz zmiany',
   'pet.settings.saved': 'Zapisano',
   'pet.settings.awakeNote':
-    'Twój pupil pracuje tylko wtedy, gdy Mac jest wybudzony. Jeśli przebieg został pominięty, zostanie wykonany raz po wybudzeniu Maca.',
+    'Twój pupil pracuje tylko wtedy, gdy komputer jest wybudzony. Jeśli przebieg został pominięty, zostanie wykonany raz po wybudzeniu komputera.',
   'pet.errors.loadFailed': 'Nie udało się połączyć z twoim pupilem. Spróbuj ponownie.',
   'pet.errors.saveFailed': 'Nie udało się zapisać zmian. Spróbuj ponownie.',
   'pet.errors.runFailed': 'Nie udało się uruchomić przebiegu. Spróbuj ponownie.',

@@ -7204,7 +7204,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'Por exemplo: calmo, breve, gosta de tópicos',
   'pet.settings.enabled': 'Modo mascote',
   'pet.settings.enabledHint':
-    'Quando ativado, seu mascote executa passadas em segundo plano. Cada passada é uma chamada ao seu modelo de chat, então consome seus créditos ou sua cota. Ele só é executado enquanto o Mac estiver ativo.',
+    'Quando ativado, seu mascote executa passadas em segundo plano. Cada passada é uma chamada ao seu modelo de chat, então consome seus créditos ou sua cota. Ele só é executado enquanto o computador estiver ativo.',
   'pet.settings.preset': 'Com que frequência',
   'pet.settings.presetOption.light': 'Leve',
   'pet.settings.presetOption.standard': 'Padrão',
@@ -7239,7 +7239,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'Salvar alterações',
   'pet.settings.saved': 'Salvo',
   'pet.settings.awakeNote':
-    'Seu mascote só trabalha enquanto o Mac estiver ativo. Se uma passada for perdida, ela será executada uma vez quando o Mac despertar.',
+    'Seu mascote só trabalha enquanto o computador estiver ativo. Se uma passada for perdida, ela será executada uma vez quando o computador despertar.',
   'pet.errors.loadFailed': 'Não foi possível falar com seu mascote. Tente novamente.',
   'pet.errors.saveFailed': 'Não foi possível salvar as alterações. Tente novamente.',
   'pet.errors.runFailed': 'Não foi possível iniciar uma passada. Tente novamente.',

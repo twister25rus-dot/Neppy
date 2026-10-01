@@ -7124,7 +7124,7 @@ const messages: TranslationMap = {
   'pet.settings.personaPlaceholder': 'Contoh: tenang, singkat, suka poin-poin',
   'pet.settings.enabled': 'Mode hewan peliharaan',
   'pet.settings.enabledHint':
-    'Saat aktif, hewan peliharaanmu menjalankan putaran di latar belakang. Setiap putaran adalah panggilan ke model obrolanmu, jadi memakai kredit atau kuotamu. Hanya berjalan saat Mac kamu menyala.',
+    'Saat aktif, hewan peliharaanmu menjalankan putaran di latar belakang. Setiap putaran adalah panggilan ke model obrolanmu, jadi memakai kredit atau kuotamu. Hanya berjalan saat komputermu menyala.',
   'pet.settings.preset': 'Seberapa sering',
   'pet.settings.presetOption.light': 'Ringan',
   'pet.settings.presetOption.standard': 'Standar',
@@ -7159,7 +7159,7 @@ const messages: TranslationMap = {
   'pet.settings.save': 'Simpan perubahan',
   'pet.settings.saved': 'Tersimpan',
   'pet.settings.awakeNote':
-    'Hewan peliharaanmu hanya bekerja saat Mac kamu menyala. Jika ada putaran terlewat, putaran itu berjalan sekali saat Mac bangun.',
+    'Hewan peliharaanmu hanya bekerja saat komputermu menyala. Jika ada putaran terlewat, putaran itu berjalan sekali saat komputer bangun.',
   'pet.errors.loadFailed': 'Tidak dapat menjangkau hewan peliharaanmu. Silakan coba lagi.',
   'pet.errors.saveFailed': 'Perubahan gagal disimpan. Silakan coba lagi.',
   'pet.errors.runFailed': 'Putaran gagal dimulai. Silakan coba lagi.',
