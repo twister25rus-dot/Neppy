@@ -91,14 +91,14 @@ pub struct PetApprovalSurfaceSubscriber;
 
 /// The `PetApprovalNeeded` event for `event`, when it is a background park:
 /// no chat thread, a pending row with no flow context (flows publish their own
-/// notification), and not parked by a remote `ExternalChannel` turn
-/// (`is_remote_origin`): input from Telegram/Discord/... is untrusted and its
-/// parks TTL-deny silently by design, so a remote sender must not be able to
-/// raise desktop notifications by provoking an `external_effect` call.
+/// notification) and a known, non-remote origin. Input from Telegram/Discord/...
+/// is untrusted and its parks TTL-deny silently by design, so a remote sender
+/// must not be able to raise desktop notifications by provoking an
+/// `external_effect` call. The rule is [`surface::is_pet_surfaceable`], shared
+/// with the inbox and the digest count.
 pub(crate) fn approval_needs_surface(
     event: &DomainEvent,
     pending: &[PendingApproval],
-    is_remote_origin: impl Fn(&str) -> bool,
 ) -> Option<DomainEvent> {
     let DomainEvent::ApprovalRequested {
         request_id,
@@ -111,11 +111,8 @@ pub(crate) fn approval_needs_surface(
         return None;
     };
     let row = pending.iter().find(|p| &p.request_id == request_id)?;
-    if row.source_context.is_some() {
-        return None;
-    }
-    if is_remote_origin(request_id) {
-        log::debug!("[pet::bus] remote-origin approval not surfaced request_id={request_id}");
+    if !surface::is_pet_surfaceable(row) {
+        log::debug!("[pet::bus] approval not surfaced (remote, flow or unknown origin) request_id={request_id}");
         return None;
     }
     Some(DomainEvent::PetApprovalNeeded {
@@ -155,9 +152,7 @@ impl EventHandler<DomainEvent> for PetApprovalSurfaceSubscriber {
                 return;
             }
         };
-        if let Some(surfaced) =
-            approval_needs_surface(event, &pending, |id| gate.is_remote_origin_request(id))
-        {
+        if let Some(surfaced) = approval_needs_surface(event, &pending) {
             log::info!("[pet::bus] background approval waiting — surfacing");
             BUS.publish(surfaced);
         }

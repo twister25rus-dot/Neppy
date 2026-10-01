@@ -226,6 +226,17 @@ impl EventHandler<DomainEvent> for ProactiveMessageSubscriber {
             seq: None,
         });
 
+        // The Pet never sends: its digest lives in the in-app proactive thread
+        // only. No external echo, whatever the `channels.proactive_send`
+        // approval settings (auto_approve included) would have allowed.
+        if crate::neppy::pet::is_pet_proactive_message(source, job_name.as_deref()) {
+            tracing::debug!(
+                source = %source,
+                "[proactive] pet digest is in-app only — skipping external channel delivery"
+            );
+            return;
+        }
+
         // 2. If an active external channel is configured, deliver there too.
         //    The `channels_set_default` RPC mutates this handle in place (issue
         //    #3712), so reading it here picks up a live default-channel switch.
@@ -495,6 +506,41 @@ mod tests {
         sub.handle(&proactive_event()).await;
 
         assert_eq!(send_count.load(Ordering::SeqCst), 0);
+    }
+
+    #[tokio::test]
+    async fn pet_digest_is_never_echoed_to_an_external_channel() {
+        let send_count = Arc::new(AtomicUsize::new(0));
+        let ch: Arc<dyn Channel> = Arc::new(MockChannel::new("telegram", Arc::clone(&send_count)));
+        let map: HashMap<String, Arc<dyn Channel>> = [("telegram".into(), ch)].into();
+        let sub = ProactiveMessageSubscriber::new(Arc::new(map), Some("telegram".into()));
+
+        // The exact event `pet::surface` publishes for a digest.
+        sub.handle(&DomainEvent::ProactiveMessageRequested {
+            source: format!(
+                "{}pet-1",
+                crate::neppy::pet::types::PET_PROACTIVE_SOURCE_PREFIX
+            ),
+            message: "digest".into(),
+            job_name: Some(crate::neppy::pet::types::PET_DIGEST_JOB_NAME.into()),
+        })
+        .await;
+        assert_eq!(
+            send_count.load(Ordering::SeqCst),
+            0,
+            "the pet must never send"
+        );
+
+        // Either marker alone is enough; ordinary proactive messages still go out.
+        sub.handle(&DomainEvent::ProactiveMessageRequested {
+            source: "pet:p".into(),
+            message: "x".into(),
+            job_name: None,
+        })
+        .await;
+        assert_eq!(send_count.load(Ordering::SeqCst), 0);
+        sub.handle(&proactive_event()).await;
+        assert_eq!(send_count.load(Ordering::SeqCst), 1);
     }
 
     #[tokio::test]

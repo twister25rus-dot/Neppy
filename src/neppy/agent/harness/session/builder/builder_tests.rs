@@ -774,3 +774,114 @@ async fn from_config_for_agent_still_errors_for_a_genuinely_unknown_id() {
         "error should name the unresolved agent id: {err}"
     );
 }
+
+// ── Pet research lane: no post-turn memory writers ──────────────────────────
+
+fn config_with_every_memory_writer(tmp: &tempfile::TempDir) -> crate::neppy::config::Config {
+    let mut config = test_config(tmp);
+    config.memory.auto_save = true;
+    config.learning.enabled = true;
+    config.learning.reflection_enabled = true;
+    config.learning.reflection_source = crate::neppy::config::ReflectionSource::Local;
+    config.learning.user_profile_enabled = true;
+    config.learning.tool_tracking_enabled = true;
+    config.learning.tool_memory_capture_enabled = true;
+    config.learning.episodic_capture_enabled = true;
+    config
+}
+
+#[tokio::test]
+async fn pet_research_session_installs_no_post_turn_memory_writer() {
+    crate::neppy::memory::host_impls::install_for_tests();
+    use crate::neppy::agent::harness::session::types::Agent;
+
+    let tmp = tempfile::TempDir::new().unwrap();
+    let config = config_with_every_memory_writer(&tmp);
+
+    // Control: an ordinary agent under the same config gets the writers.
+    let def = builtin_def("code_executor");
+    let ordinary =
+        Agent::build_session_agent_inner(&config, "code_executor", Some(&def), None, false, None)
+            .expect("ordinary agent builds");
+    assert!(
+        ordinary.post_turn_hook_count_for_test() >= 2,
+        "control: learning + archivist hooks must be installed for ordinary agents"
+    );
+    assert!(ordinary.auto_save_for_test());
+
+    // The pet lane writes only pet notes.
+    let def = builtin_def(crate::neppy::pet::PET_RESEARCH_AGENT_ID);
+    let pet = Agent::build_session_agent_inner(
+        &config,
+        crate::neppy::pet::PET_RESEARCH_AGENT_ID,
+        Some(&def),
+        None,
+        false,
+        None,
+    )
+    .expect("pet agent builds");
+    assert!(
+        !pet.auto_save_for_test(),
+        "no transcript auto-save for the pet lane"
+    );
+    assert!(
+        pet.post_turn_hook_count_for_test() <= crate::neppy::agent::hooks::embedder_post_turn_hooks().len(),
+        "no archivist or learning hook may be installed for the pet lane (only embedder-installed hooks)"
+    );
+}
+
+#[tokio::test]
+async fn pet_research_definition_overrides_fail_closed() {
+    crate::neppy::memory::host_impls::install_for_tests();
+    use crate::neppy::agent::harness::definition::{SandboxMode, ToolScope};
+    use crate::neppy::agent::harness::session::types::Agent;
+
+    let tmp = tempfile::TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let id = crate::neppy::pet::PET_RESEARCH_AGENT_ID;
+    let build = |def: Option<&crate::neppy::agent::harness::definition::AgentDefinition>| {
+        Agent::build_session_agent_inner(&config, id, def, None, false, None)
+    };
+
+    // The shipped definition is accepted (and tool order is irrelevant).
+    let shipped = builtin_def(id);
+    assert!(build(Some(&shipped)).is_ok());
+    let mut reordered = shipped.clone();
+    if let ToolScope::Named(names) = &mut reordered.tools {
+        names.reverse();
+    }
+    assert!(build(Some(&reordered)).is_ok());
+
+    // A workspace override that loosens anything is refused.
+    let mut wildcard = shipped.clone();
+    wildcard.tools = ToolScope::Wildcard;
+    let mut unsandboxed = shipped.clone();
+    unsandboxed.sandbox_mode = SandboxMode::None;
+    let mut extra_tool = shipped.clone();
+    if let ToolScope::Named(names) = &mut extra_tool.tools {
+        names.push("shell".into());
+    }
+    let mut missing_tool = shipped.clone();
+    if let ToolScope::Named(names) = &mut missing_tool.tools {
+        names.pop();
+    }
+    let mut extras = shipped.clone();
+    extras.extra_tools = vec!["web_fetch".into()];
+    for (label, def) in [
+        ("wildcard scope", &wildcard),
+        ("sandbox none", &unsandboxed),
+        ("extra tool", &extra_tool),
+        ("missing tool", &missing_tool),
+        ("extra_tools", &extras),
+    ] {
+        let err = build(Some(def))
+            .err()
+            .unwrap_or_else(|| panic!("{label} must be refused"));
+        assert!(
+            err.to_string().contains("not the read-only research lane"),
+            "{label}: {err:#}"
+        );
+    }
+    // No resolved definition at all is refused too.
+    assert!(build(None).is_err());
+}

@@ -530,3 +530,76 @@ async fn tools_hidden_for_job_reads_the_pets_sources_and_fails_closed() {
         vec![WEB_SEARCH_TOOL]
     );
 }
+
+// ── Inbox approvals: remote / flow / unknown origins never surface ───────
+
+fn approval_row(id: &str) -> crate::neppy::security::approval::PendingApproval {
+    crate::neppy::security::approval::PendingApproval::new(
+        id,
+        "shell",
+        "run ls",
+        serde_json::json!({}),
+        None,
+    )
+}
+
+#[tokio::test]
+async fn pet_inbox_lists_only_local_known_origin_approvals() {
+    use crate::neppy::security::approval::ApprovalSourceContext;
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let rows = vec![
+        approval_row("local").with_origin_class("TrustedAutomation(GoalContinuation)"),
+        approval_row("remote").with_origin_class("ExternalChannel(telegram)"),
+        approval_row("flow")
+            .with_origin_class("TrustedAutomation(Workflow { require_approval: true })")
+            .with_source_context(ApprovalSourceContext::Flow {
+                flow_id: "f".into(),
+                run_id: "r".into(),
+                node_id: None,
+            }),
+        approval_row("legacy"),
+        approval_row("routed").with_origin_class("WebChat"),
+    ];
+    let routed: std::collections::HashSet<String> = ["routed".to_string()].into();
+    let inbox = inbox_with_pending(&config, rows, &routed).unwrap().value;
+    let ids: Vec<&str> = inbox
+        .approvals
+        .iter()
+        .map(|a| a.request_id.as_str())
+        .collect();
+    assert_eq!(ids, vec!["local"]);
+}
+
+#[tokio::test]
+async fn adopting_a_same_named_non_agent_job_replaces_it() {
+    let tmp = TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let pet = store::ensure_primary(&config, Utc::now()).unwrap();
+    // A shell job squatting on the pet's job name (with an arbitrary command).
+    let squatter = cron::add_shell_job(
+        &config,
+        Some(format!("{PET_JOB_NAME_PREFIX}{}:research", pet.id)),
+        cron::Schedule::Cron {
+            expr: "0 7 * * *".into(),
+            tz: None,
+            active_hours: None,
+        },
+        "echo not-an-agent",
+    )
+    .unwrap();
+    assert_eq!(squatter.job_type, cron::JobType::Shell);
+
+    let p = pet_update(&config, patch(serde_json::json!({ "enabled": true })))
+        .await
+        .unwrap()
+        .value;
+    let job = cron::get_job(&config, p.research_job_id.as_deref().unwrap()).unwrap();
+    assert_ne!(job.id, squatter.id, "the shell job must not be adopted");
+    assert_eq!(job.job_type, cron::JobType::Agent);
+    assert_eq!(job.agent_id.as_deref(), Some(PET_RESEARCH_AGENT_ID));
+    assert!(
+        cron::get_job(&config, &squatter.id).is_err(),
+        "squatter removed"
+    );
+}

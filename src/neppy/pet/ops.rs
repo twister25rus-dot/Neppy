@@ -1,7 +1,6 @@
 //! Pet mode business logic behind the `pet` RPC namespace.
 
 use std::collections::HashSet;
-use std::sync::{Mutex, OnceLock};
 
 use anyhow::Result;
 use chrono::{DateTime, Local, Utc};
@@ -13,7 +12,7 @@ use crate::rpc::RpcOutcome;
 use super::store::{self, PetRow, PetUpdate};
 use super::store_feed;
 use super::store_notes;
-use super::surface::{self, background_approvals, parse_hhmm};
+use super::surface::{self, parse_hhmm};
 use super::surfacer;
 use super::types::*;
 
@@ -214,10 +213,12 @@ pub(crate) fn ensure_research_job(config: &Config, pet: &PetRow) -> Result<CronJ
     // patch can set a model but never clear one), so it is replaced: the pass
     // must always run on chat's model. The scheduler also ignores a pinned
     // model on the pet lane, so a job that slips through still cannot use it.
+    // The same goes for a job of the wrong type: adopting a same-named shell
+    // job would leave an arbitrary `command` on the pet's schedule.
     let existing = match existing {
-        Some(job) if job.model.is_some() => {
+        Some(job) if job.model.is_some() || job.job_type != cron::JobType::Agent => {
             log::warn!(
-                "[pet] research job job_id={} pins a model; replacing it so the pass uses chat's model",
+                "[pet] research job job_id={} pins a model or is not an agent job; replacing it",
                 job.id
             );
             cron::remove_job(config, &job.id)?;
@@ -388,71 +389,7 @@ pub async fn pet_goal_remove(config: &Config, goal_id: &str) -> RpcResult<serde_
     ok(serde_json::json!({ "removed": removed }))
 }
 
-// ── Run now ──────────────────────────────────────────────────────────────
-
-fn run_now_in_flight() -> &'static Mutex<HashSet<String>> {
-    static IN_FLIGHT: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
-    IN_FLIGHT.get_or_init(|| Mutex::new(HashSet::new()))
-}
-
-struct RunNowGuard(String);
-
-impl Drop for RunNowGuard {
-    fn drop(&mut self) {
-        if let Ok(mut set) = run_now_in_flight().lock() {
-            set.remove(&self.0);
-        }
-    }
-}
-
-async fn run_pass(
-    config: Config,
-    pet_id: String,
-    job: CronJob,
-    _guard: RunNowGuard,
-) -> Result<PetRunSummary> {
-    let started_at = Utc::now();
-    let (success, output) = cron::scheduler::execute_job_now(&config, &job).await;
-    let finished_at = Utc::now();
-    let status = if success { "ok" } else { "error" };
-    let _ = cron::record_run(
-        &config,
-        &job.id,
-        started_at,
-        finished_at,
-        status,
-        Some(&output),
-        (finished_at - started_at).num_milliseconds(),
-    );
-    let _ = cron::record_last_run(&config, &job.id, finished_at, success, &output);
-    log::info!("[pet] manual pass finished success={success}");
-    surface::surface_after_pass(&config, &pet_id, Some(&job.id), "manual", success).await
-}
-
-pub async fn pet_run_now(config: &Config, wait: bool) -> RpcResult<PetRunSummary> {
-    let pet = store::ensure_primary(config, Utc::now()).map_err(err)?;
-    {
-        let mut set = run_now_in_flight()
-            .lock()
-            .map_err(|_| "run-now lock poisoned")?;
-        if !set.insert(pet.id.clone()) {
-            return Err("a Pet pass is already running".into());
-        }
-    }
-    let guard = RunNowGuard(pet.id.clone());
-    let job = ensure_research_job(config, &pet).map_err(err)?;
-    log::info!("[pet] run_now pet_id={} wait={wait}", pet.id);
-    let fut = run_pass(config.clone(), pet.id.clone(), job, guard);
-    if wait {
-        return ok(fut.await.map_err(err)?);
-    }
-    tokio::spawn(async move {
-        if let Err(e) = fut.await {
-            log::warn!("[pet] background pass failed: {e}");
-        }
-    });
-    ok(PetRunSummary::started("manual"))
-}
+pub use super::run::{execute_manual_job, pet_run_now};
 
 // ── Feed, notes, inbox ───────────────────────────────────────────────────
 
@@ -522,9 +459,21 @@ pub async fn pet_note_dismiss(config: &Config, note_id: &str) -> RpcResult<PetNo
 }
 
 pub async fn pet_inbox_list(config: &Config) -> RpcResult<PetInbox> {
+    let (rows, routed) = surface::pending_with_routed();
+    inbox_with_pending(config, rows, &routed)
+}
+
+/// [`pet_inbox_list`] over explicit gate rows (the process-global gate cannot
+/// be swapped in tests). Applies the same [`surface::is_pet_surfaceable`] rule
+/// as the digest count and the notification.
+pub(crate) fn inbox_with_pending(
+    config: &Config,
+    rows: Vec<crate::neppy::security::approval::PendingApproval>,
+    routed: &HashSet<String>,
+) -> RpcResult<PetInbox> {
+    let approvals = surface::filter_background_approvals(rows, routed);
     let pet = store::ensure_primary(config, Utc::now()).map_err(err)?;
     let proposals = store_feed::list_pending_proposals(config, &pet.id, Utc::now()).map_err(err)?;
-    let approvals = background_approvals();
     log::debug!(
         "[pet] inbox proposals={} approvals={}",
         proposals.len(),

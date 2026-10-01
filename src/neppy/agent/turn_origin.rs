@@ -105,9 +105,8 @@ pub enum TrustedAutomationSource {
     /// untrusted content (mail, pages, tasks), so it is the most restricted
     /// automation origin: the approval gate denies every `external_effect`
     /// call under it — before the `auto_approve` / `auto_approve_all`
-    /// shortcuts — except a read-scoped `composio_execute` while the agent's
-    /// sandbox is `ReadOnly`. Set only by `cron::scheduler` for jobs whose
-    /// `agent_id` is `pet_research`.
+    /// shortcuts — with no exceptions. Set only by `cron::scheduler` for jobs
+    /// whose `agent_id` is `pet_research`.
     PetResearch,
 }
 

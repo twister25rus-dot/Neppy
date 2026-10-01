@@ -15,7 +15,9 @@
 
 pub mod bus;
 mod digest;
+mod lane;
 pub mod ops;
+mod run;
 mod schemas;
 mod store;
 mod store_feed;
@@ -25,12 +27,23 @@ mod surfacer;
 pub mod tools;
 pub mod types;
 
+pub use lane::{agent_forbids_memory_writes, validate_research_definition};
 pub use schemas::{
     all_controller_schemas as all_pet_controller_schemas,
     all_registered_controllers as all_pet_registered_controllers,
 };
 pub use surface::surface_after_pass;
+
 pub use types::{PET_JOB_NAME_PREFIX, PET_RESEARCH_AGENT_ID, PET_RESEARCH_TOOL_ALLOWLIST};
+
+/// Whether a `ProactiveMessageRequested` is the pet digest. The pet never
+/// sends: that message belongs to the in-app thread only and must not be
+/// echoed to an external channel (Telegram, Discord, ...), whatever the
+/// user's approval settings are.
+pub fn is_pet_proactive_message(source: &str, job_name: Option<&str>) -> bool {
+    job_name == Some(types::PET_DIGEST_JOB_NAME)
+        || source.starts_with(types::PET_PROACTIVE_SOURCE_PREFIX)
+}
 
 #[cfg(test)]
 #[path = "bus_tests.rs"]
@@ -41,6 +54,9 @@ mod digest_tests;
 #[cfg(test)]
 #[path = "ops_tests.rs"]
 mod ops_tests;
+#[cfg(test)]
+#[path = "run_tests.rs"]
+mod run_tests;
 #[cfg(test)]
 #[path = "store_tests.rs"]
 mod store_tests;

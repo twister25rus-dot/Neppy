@@ -96,6 +96,16 @@ impl Agent {
     }
 
     #[cfg(test)]
+    pub(crate) fn post_turn_hook_count_for_test(&self) -> usize {
+        self.post_turn_hooks.len()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn auto_save_for_test(&self) -> bool {
+        self.auto_save
+    }
+
+    #[cfg(test)]
     pub(crate) fn subagent_tool_ceiling_names_for_test(
         &self,
     ) -> &std::collections::HashSet<String> {

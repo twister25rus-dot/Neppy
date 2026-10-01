@@ -305,6 +305,21 @@ pub async fn deliver_job(config: &Config, job: &CronJob, output: &str) {
 }
 
 pub async fn execute_job_now(config: &Config, job: &CronJob) -> (bool, String) {
+    if is_pet_research_job(job) {
+        // Any manual execution of the Pet research job (Automations "Run now",
+        // the `cron_run` RPC / tool) goes through the Pet's own in-flight guard
+        // and surfaces the pass afterwards, exactly like `pet_run_now`.
+        tracing::debug!(job_id = %job.id, "[cron] manual run of the pet research job — routing via pet");
+        return crate::neppy::pet::ops::execute_manual_job(config, job).await;
+    }
+    execute_job_now_unrouted(config, job).await
+}
+
+/// [`execute_job_now`] without the Pet routing: runs the job once with the
+/// scheduler's retry policy and nothing else. `pet::ops` calls this directly
+/// (it owns the guard and the surfacing); everything else uses
+/// [`execute_job_now`].
+pub async fn execute_job_now_unrouted(config: &Config, job: &CronJob) -> (bool, String) {
     let security =
         SecurityPolicy::from_config(&config.autonomy, &config.workspace_dir, &config.action_dir);
     execute_job_with_retry(config, &security, job).await

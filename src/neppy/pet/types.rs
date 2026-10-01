@@ -10,6 +10,11 @@ use crate::neppy::security::approval::PendingApproval;
 
 /// Built-in agent id of the background research lane.
 pub const PET_RESEARCH_AGENT_ID: &str = "pet_research";
+/// `job_name` of the proactive chat message that carries the pet digest (the
+/// in-app thread is `proactive:pet_digest`).
+pub const PET_DIGEST_JOB_NAME: &str = "pet_digest";
+/// Prefix of a pet's `ProactiveMessageRequested.source` (`pet:<pet_id>`).
+pub const PET_PROACTIVE_SOURCE_PREFIX: &str = "pet:";
 /// Prefix of the research cron job name — the full name is `pet:<pet_id>:research`.
 pub const PET_JOB_NAME_PREFIX: &str = "pet:";
 /// Prompt the research cron job carries. The agent's own system prompt holds

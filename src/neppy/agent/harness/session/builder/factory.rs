@@ -142,6 +142,23 @@ impl Agent {
         read_only_tools_only: bool,
         profile: Option<&crate::neppy::agent::profiles::AgentProfile>,
     ) -> Result<Self> {
+        if crate::neppy::pet::agent_forbids_memory_writes(agent_id) {
+            // A workspace TOML can replace the built-in definition; refuse to
+            // build the lane unless it is still the closed read-only one.
+            let verdict = match target_def {
+                Some(def) => crate::neppy::pet::validate_research_definition(def),
+                None => Err("no definition resolved".to_string()),
+            };
+            if let Err(reason) = verdict {
+                log::error!(
+                    "[session-builder] refusing to build {agent_id}: definition is not the \
+                     read-only research lane ({reason})"
+                );
+                return Err(anyhow::anyhow!(
+                    "agent '{agent_id}' definition rejected: not the read-only research lane ({reason})"
+                ));
+            }
+        }
         if let Some(p) = profile {
             tracing::debug!(
                 profile_id = %p.id,
@@ -649,10 +666,25 @@ impl Agent {
             prompt_builder = prompt_builder.add_section(Box::new(section));
         }
 
+        // The Pet research pass reads untrusted mail, pages and tasks and may
+        // write ONLY pet notes. Every post-turn memory writer below (transcript
+        // auto-save, archivist episodic capture, the learning hooks) would put
+        // that text into the user's main memory, where a later pass or chat
+        // turn reads it back, so none is installed for that lane. Keyed on the
+        // agent id because `AgentDefinition` has ~13 construction sites outside
+        // this module; a definition-level flag would touch all of them.
+        let memory_writes_disabled = crate::neppy::pet::agent_forbids_memory_writes(agent_id);
+        if memory_writes_disabled {
+            log::info!(
+                "[session-builder] agent_id={agent_id} is a read-only lane — no post-turn \
+                 memory writers (auto_save, archivist, learning hooks)"
+            );
+        }
+
         // Build post-turn hooks when learning is enabled
         let mut post_turn_hooks: Vec<Arc<dyn crate::neppy::agent::hooks::PostTurnHook>> =
             Vec::new();
-        if config.learning.enabled {
+        if config.learning.enabled && !memory_writes_disabled {
             if config.learning.reflection_enabled {
                 // The reflection hook needs an owned `Arc<Config>`; reuse the
                 // shared base config (a refcount bump) rather than a second deep
@@ -737,7 +769,7 @@ impl Agent {
         // using the explicit SQLite resource returned by the session factory.
         let archivist_hook_arc: Option<
             Arc<crate::neppy::agent::harness::archivist::ArchivistHook>,
-        > = if config.learning.episodic_capture_enabled {
+        > = if config.learning.episodic_capture_enabled && !memory_writes_disabled {
             let hook = Arc::new(
                 crate::neppy::agent::harness::archivist::ArchivistHook::new(
                     archivist_provider,
@@ -1244,7 +1276,7 @@ impl Agent {
                 &config.workspace_dir,
                 profile_skills_root.as_deref(),
             ))
-            .auto_save(config.memory.auto_save)
+            .auto_save(config.memory.auto_save && !memory_writes_disabled)
             .post_turn_hooks(post_turn_hooks)
             .learning_enabled(config.learning.enabled)
             .explicit_preferences_enabled(config.learning.explicit_preferences_enabled)
