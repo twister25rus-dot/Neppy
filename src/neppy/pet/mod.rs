@@ -14,6 +14,7 @@
 //! scheduler). Storage: `{workspace}/pet/pet.db`.
 
 pub mod bus;
+pub mod companion;
 mod digest;
 mod lane;
 pub mod ops;
