@@ -512,7 +512,7 @@ describe('chatRuntimeSlice', () => {
         undefined,
         setPendingApprovalForThread({ threadId: 'thread-1', approval })
       );
-      expect(withApproval.pendingApprovalByThread['thread-1']).toEqual(approval);
+      expect(withApproval.pendingApprovalByThread['thread-1']).toEqual([approval]);
 
       const cleared = reducer(
         withApproval,
@@ -532,7 +532,63 @@ describe('chatRuntimeSlice', () => {
       );
       const clearedT1 = reducer(b, clearPendingApprovalForThread({ threadId: 't1' }));
       expect(clearedT1.pendingApprovalByThread['t1']).toBeUndefined();
-      expect(clearedT1.pendingApprovalByThread['t2']?.requestId).toBe('req-2');
+      expect(clearedT1.pendingApprovalByThread['t2']?.[0]?.requestId).toBe('req-2');
+    });
+
+    it('queues concurrent approvals in one thread instead of overwriting', () => {
+      const a = reducer(undefined, setPendingApprovalForThread({ threadId: 't1', approval }));
+      const second = { ...approval, requestId: 'req-2', toolName: 'file_write' };
+      const b = reducer(a, setPendingApprovalForThread({ threadId: 't1', approval: second }));
+      expect(b.pendingApprovalByThread['t1'].map(x => x.requestId)).toEqual([
+        'req-approval-1',
+        'req-2',
+      ]);
+    });
+
+    it('re-announcing the same requestId replaces in place without duplicating', () => {
+      const a = reducer(undefined, setPendingApprovalForThread({ threadId: 't1', approval }));
+      const b = reducer(
+        a,
+        setPendingApprovalForThread({ threadId: 't1', approval: { ...approval, message: 'again' } })
+      );
+      expect(b.pendingApprovalByThread['t1']).toHaveLength(1);
+      expect(b.pendingApprovalByThread['t1'][0].message).toBe('again');
+    });
+
+    it('clearing one requestId leaves its siblings; the last removal drops the key', () => {
+      let state = reducer(undefined, setPendingApprovalForThread({ threadId: 't1', approval }));
+      state = reducer(
+        state,
+        setPendingApprovalForThread({
+          threadId: 't1',
+          approval: { ...approval, requestId: 'req-2' },
+        })
+      );
+      state = reducer(
+        state,
+        clearPendingApprovalForThread({ threadId: 't1', requestId: 'req-approval-1' })
+      );
+      expect(state.pendingApprovalByThread['t1'].map(x => x.requestId)).toEqual(['req-2']);
+      state = reducer(state, clearPendingApprovalForThread({ threadId: 't1', requestId: 'req-2' }));
+      expect(state.pendingApprovalByThread['t1']).toBeUndefined();
+      // Unknown thread / request is a no-op.
+      expect(
+        reducer(state, clearPendingApprovalForThread({ threadId: 'zz', requestId: 'x' }))
+          .pendingApprovalByThread
+      ).toEqual({});
+    });
+
+    it('a thread-wide clear (turn end) drops every queued approval', () => {
+      let state = reducer(undefined, setPendingApprovalForThread({ threadId: 't1', approval }));
+      state = reducer(
+        state,
+        setPendingApprovalForThread({
+          threadId: 't1',
+          approval: { ...approval, requestId: 'req-2' },
+        })
+      );
+      state = reducer(state, clearPendingApprovalForThread({ threadId: 't1' }));
+      expect(state.pendingApprovalByThread['t1']).toBeUndefined();
     });
 
     it('clearRuntimeForThread drops a stale parked approval', () => {

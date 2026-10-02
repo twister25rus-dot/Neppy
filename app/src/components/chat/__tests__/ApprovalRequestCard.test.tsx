@@ -129,7 +129,7 @@ describe('ApprovalRequestCard', () => {
       expect(screen.getByText(/Could not record your decision/)).toBeInTheDocument();
     });
     // Decision failed → approval stays parked, buttons remain actionable.
-    expect(store.getState().chatRuntime.pendingApprovalByThread[THREAD]).toEqual(approval);
+    expect(store.getState().chatRuntime.pendingApprovalByThread[THREAD]).toEqual([approval]);
     expect(screen.getByText('Approve')).toBeInTheDocument();
   });
 

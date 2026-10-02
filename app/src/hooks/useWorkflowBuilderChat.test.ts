@@ -32,7 +32,7 @@ const selectorState = vi.hoisted(() => ({
   toolTimelineByThread: {} as Record<string, unknown[]>,
   streamingAssistantByThread: {} as Record<string, { content: string }>,
   inferenceTurnLifecycleByThread: {} as Record<string, InferenceTurnLifecycle>,
-  pendingApprovalByThread: {} as Record<string, PendingApproval>,
+  pendingApprovalByThread: {} as Record<string, PendingApproval[]>,
 }));
 vi.mock('../store/hooks', () => ({
   useAppDispatch: () => dispatch,
@@ -491,9 +491,22 @@ describe('useWorkflowBuilderChat', () => {
         toolName: 'run_flow',
         message: 'Run the saved flow "Daily digest"?',
       };
-      selectorState.pendingApprovalByThread = { 'builder-1': approval };
+      selectorState.pendingApprovalByThread = { 'builder-1': [approval] };
       const { result } = renderHook(() => useWorkflowBuilderChat('builder-1'));
       expect(result.current.pendingApproval).toEqual(approval);
+    });
+
+    it('exposes every concurrently parked approval, oldest first', () => {
+      const first: PendingApproval = { requestId: 'req-1', toolName: 'run_flow', message: 'a' };
+      const second: PendingApproval = {
+        requestId: 'req-2',
+        toolName: 'resume_flow_run',
+        message: 'b',
+      };
+      selectorState.pendingApprovalByThread = { 'builder-1': [first, second] };
+      const { result } = renderHook(() => useWorkflowBuilderChat('builder-1'));
+      expect(result.current.pendingApprovals).toEqual([first, second]);
+      expect(result.current.pendingApproval).toEqual(first);
     });
 
     it('does not surface an approval parked on a DIFFERENT thread', () => {
@@ -502,7 +515,7 @@ describe('useWorkflowBuilderChat', () => {
         toolName: 'run_flow',
         message: 'Run the saved flow "Daily digest"?',
       };
-      selectorState.pendingApprovalByThread = { 'some-other-thread': approval };
+      selectorState.pendingApprovalByThread = { 'some-other-thread': [approval] };
       const { result } = renderHook(() => useWorkflowBuilderChat('builder-1'));
       expect(result.current.pendingApproval).toBeNull();
     });

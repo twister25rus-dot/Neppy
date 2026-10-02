@@ -47,7 +47,7 @@ const ApprovalRequestCard: React.FC<Props> = ({ threadId, approval }) => {
         params: { request_id: approval.requestId, decision },
       });
       // Resolve optimistically; ChatRuntimeProvider also clears on turn end.
-      dispatch(clearPendingApprovalForThread({ threadId }));
+      dispatch(clearPendingApprovalForThread({ threadId, requestId: approval.requestId }));
     } catch (e) {
       // Keep raw RPC error detail in namespaced dev logs only; show the user the
       // localized fallback — never leak internal error text into the UI.

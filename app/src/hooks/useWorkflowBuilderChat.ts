@@ -126,6 +126,12 @@ interface UseWorkflowBuilderChat {
    */
   pendingApproval: PendingApproval | null;
   /**
+   * Every approval currently parked on the dedicated thread, oldest first. The
+   * core can park several concurrent approvals in one thread; `pendingApproval`
+   * above is the oldest of them, kept for callers that render a single card.
+   */
+  pendingApprovals: PendingApproval[];
+  /**
    * `true` when the most recently settled turn paused because it hit the
    * agent's tool-call budget with no proposal yet (B34) — the caller should
    * render a "Continue building" affordance instead of treating
@@ -191,6 +197,7 @@ interface UseWorkflowBuilderChat {
 }
 
 const EMPTY_MESSAGES: ThreadMessage[] = [];
+const EMPTY_APPROVALS: PendingApproval[] = [];
 const EMPTY_TIMELINE: ToolTimelineEntry[] = [];
 
 /**
@@ -275,10 +282,11 @@ export function useWorkflowBuilderChat(seedThreadId?: string | null): UseWorkflo
   // shared `pendingApprovalByThread` slice scoped to this hook's dedicated
   // thread, so a parked `run_flow`/`resume_flow_run` call surfaces here the
   // same way `Conversations.tsx` surfaces one for the main chat.
-  const pendingApproval = useMemo(
-    () => (threadId ? (pendingApprovalByThread[threadId] ?? null) : null),
+  const pendingApprovals = useMemo(
+    () => (threadId ? (pendingApprovalByThread[threadId] ?? EMPTY_APPROVALS) : EMPTY_APPROVALS),
     [threadId, pendingApprovalByThread]
   );
+  const pendingApproval = pendingApprovals[0] ?? null;
 
   const messages = useMemo(
     () => (threadId ? (messagesByThreadId[threadId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES),
@@ -575,6 +583,7 @@ export function useWorkflowBuilderChat(seedThreadId?: string | null): UseWorkflo
     turnActive,
     proposal,
     pendingApproval,
+    pendingApprovals,
     capped,
     messages,
     displayMessages,

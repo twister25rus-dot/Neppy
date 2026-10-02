@@ -684,7 +684,7 @@ describe('hydrateRuntimeFromSnapshot — live-driver guard', () => {
     expect(state.toolTimelineByThread['t-live'].map(e => e.id)).toEqual(['c1', 'c2']);
     expect(state.toolTimelineByThread['t-live'][0].result).toBe('found 3 hits');
     // …the pending approval card is not wiped mid-turn…
-    expect(state.pendingApprovalByThread['t-live']?.requestId).toBe('req-live');
+    expect(state.pendingApprovalByThread['t-live']?.[0]?.requestId).toBe('req-live');
     // …and the lifecycle stays live.
     expect(state.inferenceTurnLifecycleByThread['t-live']).toBe('streaming');
     // The task board (monotonic, cheap) is still applied.

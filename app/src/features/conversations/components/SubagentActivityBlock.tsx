@@ -272,3 +272,35 @@ export function SubagentActivityBlock({
     </div>
   );
 }
+
+/**
+ * Mode-aware wrapper around {@link SubagentActivityBlock}. In Chat mode the
+ * helper's activity sits behind a collapsed disclosure so the transcript reads
+ * as a single assistant; in Orchestration mode (or with no conversation mode at
+ * all) it renders open exactly as before.
+ */
+export function SubagentActivityDisclosure({
+  subagent,
+  mode,
+  onView,
+}: {
+  subagent: SubagentActivity;
+  mode: 'chat' | 'orchestration' | null;
+  onView?: () => void;
+}) {
+  const { t } = useT();
+  if (mode !== 'chat') return <SubagentActivityBlock subagent={subagent} onView={onView} />;
+  return (
+    <details className="group/subagent" data-testid="subagent-disclosure">
+      <summary className="flex cursor-pointer list-none items-center gap-1 text-[12px] font-medium text-content-muted hover:text-content-secondary">
+        <span
+          aria-hidden
+          className="text-[9px] text-content-faint transition-transform group-open/subagent:rotate-90">
+          ▶
+        </span>
+        {t('conversations.subagent.details')}
+      </summary>
+      <SubagentActivityBlock subagent={subagent} onView={onView} />
+    </details>
+  );
+}

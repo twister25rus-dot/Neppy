@@ -13,10 +13,11 @@ import type {
   ToolTimelineEntry,
 } from '../../../store/chatRuntimeSlice';
 import { formatTimelineEntry, stripToolCallEnvelopes } from '../../../utils/toolTimelineFormatting';
+import { useThreadModeContext } from '../threadModeContext';
 import { parseWorkerThreadRef } from '../utils/workerThreadRef';
 import { agentNameTone, AgentTimelineRail } from './AgentTimelineRail';
 import { ProcessingTranscriptView } from './ProcessingTranscriptView';
-import { SubagentActivityBlock } from './SubagentActivityBlock';
+import { SubagentActivityBlock, SubagentActivityDisclosure } from './SubagentActivityBlock';
 import {
   coalesceTimelineEntries,
   normalizeToolBody,
@@ -240,6 +241,10 @@ export function ToolTimelineBlock({
   transcript?: ProcessingTranscriptItem[];
 }) {
   const { t } = useT();
+  // Chat shows one assistant, so helper detail stays collapsed; Orchestration
+  // is about supervising the team, so it opens. `null` (no conversation around
+  // this block) keeps the original behaviour.
+  const threadMode = useThreadModeContext();
 
   // Sticky override for the outer "Agentic task insights" group: `null` means
   // the user hasn't explicitly toggled it on THIS mount yet, so the group
@@ -426,8 +431,9 @@ export function ToolTimelineBlock({
             transcript={transcript}
             entries={ordered}
             renderSubagent={subagent => (
-              <SubagentActivityBlock
+              <SubagentActivityDisclosure
                 subagent={subagent}
+                mode={expandAllRows ? 'orchestration' : threadMode}
                 onView={onViewSubagent ? () => onViewSubagent(subagent) : undefined}
               />
             )}
@@ -448,7 +454,9 @@ export function ToolTimelineBlock({
               const expandable = detailContent != null || subagent != null || resultContent != null;
               const isLatestRunning =
                 latestRunningEntryId != null && latestRunningEntryId === entry.id;
-              const shouldAutoExpand = expandAllRows || isLatestRunning;
+              const shouldAutoExpand =
+                expandAllRows ||
+                (subagent && threadMode ? threadMode === 'orchestration' : isLatestRunning);
               const nameTone = agentNameTone(entry.status);
               // Chat mode: the currently-running step stays expanded inline in the
               // main UI; finished steps collapse to a compact "View details →" link

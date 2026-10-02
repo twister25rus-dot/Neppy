@@ -33,6 +33,7 @@ vi.mock('../DiscoverPanel', () => ({ default: () => <div data-testid="panel-disc
 vi.mock('../UsagePanel', () => ({ default: () => <div data-testid="panel-usage" /> }));
 vi.mock('../OverviewPanel', () => ({ default: () => <div data-testid="panel-graph" /> }));
 vi.mock('../OrchestratorTaskBoard', () => ({ default: () => <div data-testid="panel-tasks" /> }));
+vi.mock('../AgentRunsPanel', () => ({ default: () => <div data-testid="panel-runs" /> }));
 vi.mock('../demo/MedullaDemoChat', () => ({ default: () => <div data-testid="orch-demo-chat" /> }));
 vi.mock('../demo/MedullaDemoGraph', () => ({
   default: () => <div data-testid="orch-demo-graph" />,
@@ -74,6 +75,23 @@ describe('OrchestrationView (Medulla access)', () => {
       renderWithProviders(<OrchestrationView />, { initialEntries: [`${BASE}&ov=tasks`] });
     });
     expect(screen.getByTestId('panel-tasks')).toBeInTheDocument();
+  });
+
+  it('renders the cross-conversation agent runs from ?ov=runs', async () => {
+    await act(async () => {
+      renderWithProviders(<OrchestrationView />, { initialEntries: [`${BASE}&ov=runs`] });
+    });
+    expect(screen.getByTestId('panel-runs')).toBeInTheDocument();
+  });
+
+  it('reaches agent runs via the chip nav', async () => {
+    await act(async () => {
+      renderWithProviders(<OrchestrationView />, { initialEntries: [BASE] });
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('orch-view-runs'));
+    });
+    await waitFor(() => expect(screen.getByTestId('panel-runs')).toBeInTheDocument());
   });
 
   it.each([

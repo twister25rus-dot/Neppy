@@ -500,6 +500,98 @@ describe('ChatRuntimeProvider — dedupe, proactive resolution, mid-turn invaria
       });
     });
 
+    it('queues concurrent approval_request events instead of overwriting', () => {
+      const listeners = renderProvider();
+      act(() => {
+        listeners.onApprovalRequest?.({
+          thread_id: 't-appr',
+          request_id: 'ap-1',
+          tool_name: 'shell',
+          message: 'first',
+          args: { command: 'ls' },
+        });
+        listeners.onApprovalRequest?.({
+          thread_id: 't-appr',
+          request_id: 'ap-2',
+          tool_name: 'file_write',
+          message: 'second',
+          args: { path: '/tmp/x' },
+        });
+      });
+      const queue = store.getState().chatRuntime.pendingApprovalByThread['t-appr'];
+      expect(queue.map(a => a.requestId)).toEqual(['ap-1', 'ap-2']);
+      expect(queue[0].command).toBe('ls');
+      expect(queue[1].command).toBe('/tmp/x');
+
+      // A turn ending drops the whole queue.
+      act(() => {
+        listeners.onError?.({
+          thread_id: 't-appr',
+          request_id: 'r',
+          error_type: 'provider_error',
+          message: 'x',
+        } as chatService.ChatErrorEvent);
+      });
+      expect(store.getState().chatRuntime.pendingApprovalByThread['t-appr']).toBeUndefined();
+    });
+
+    it('expires each parked approval on its own after the gate TTL', () => {
+      vi.useFakeTimers();
+      try {
+        const listeners = renderProvider();
+        act(() => {
+          listeners.onApprovalRequest?.({
+            thread_id: 't-ttl',
+            request_id: 'old',
+            tool_name: 'shell',
+            message: 'a',
+          });
+        });
+        act(() => {
+          vi.advanceTimersByTime(5 * 60 * 1000);
+          listeners.onApprovalRequest?.({
+            thread_id: 't-ttl',
+            request_id: 'new',
+            tool_name: 'shell',
+            message: 'b',
+          });
+        });
+        // 6 more minutes: `old` (parked 11 min ago) expired, `new` (6 min) did not.
+        act(() => {
+          vi.advanceTimersByTime(6 * 60 * 1000);
+        });
+        const queue = store.getState().chatRuntime.pendingApprovalByThread['t-ttl'];
+        expect(queue.map(a => a.requestId)).toEqual(['new']);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('reflects a thread_mode_changed event on the matching thread only', () => {
+      const listeners = renderProvider();
+      store.dispatch({
+        type: 'thread/loadThreads/fulfilled',
+        payload: {
+          threads: [
+            { id: 'tm-1', title: 'a', labels: [], mode: 'chat' },
+            { id: 'tm-2', title: 'b', labels: [], mode: 'chat' },
+          ],
+          count: 2,
+        },
+      });
+      act(() => {
+        listeners.onThreadModeChanged?.({
+          thread_id: 'tm-1',
+          args: { from: 'chat', to: 'orchestration', source: 'rpc' },
+        });
+        // Malformed / unknown target is ignored.
+        listeners.onThreadModeChanged?.({ thread_id: 'tm-2', args: { to: 'bogus' } });
+      });
+      const threads = store.getState().thread.threads;
+      expect(threads.find(t => t.id === 'tm-1')?.mode).toBe('orchestration');
+      expect(threads.find(t => t.id === 'tm-2')?.mode).toBe('chat');
+    });
+
     it('clears a parked plan review when the turn ends or errors', () => {
       const listeners = renderProvider();
       const park = () =>

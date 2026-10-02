@@ -6,7 +6,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { type ChatSendError, chatSendError } from '../../chat/chatSendError';
 import { checkPromptInjection, promptGuardMessage } from '../../chat/promptInjectionGuard';
 import { trackAnalyticsEvent } from '../../components/analytics';
-import ApprovalRequestCard from '../../components/chat/ApprovalRequestCard';
 import ArtifactCard from '../../components/chat/ArtifactCard';
 import ChatComposer from '../../components/chat/ChatComposer';
 import ChatFilesChip from '../../components/chat/ChatFilesChip';
@@ -14,7 +13,7 @@ import ChatNewWindowHero from '../../components/chat/ChatNewWindowHero';
 import ChatPresetPill, { type PresetId } from '../../components/chat/ChatPresetPill';
 import ComposerTokenStats from '../../components/chat/ComposerTokenStats';
 import { FlowApprovalRequestCard } from '../../components/chat/FlowApprovalRequestCard';
-import IntegrationConnectCard from '../../components/chat/IntegrationConnectCard';
+import PendingApprovalQueue from '../../components/chat/PendingApprovalQueue';
 import QueuedFollowups from '../../components/chat/QueuedFollowups';
 import WorkflowProposalCard from '../../components/chat/WorkflowProposalCard';
 import { ConfirmationModal } from '../../components/intelligence/ConfirmationModal';
@@ -123,6 +122,7 @@ import {
   neppyVoiceTts,
   notifyOverlaySttState,
 } from '../../utils/tauriCommands';
+import ThreadModeBar from './components/ThreadModeBar';
 import { useChatSurfaceRegistration } from './hooks/useChatSurfaceRegistration';
 import { ThreadList } from './threadList/ThreadList';
 
@@ -2218,37 +2218,16 @@ const Conversations = ({
           </div>
         )}
 
+        {/* Every parked ApprovalGate request for the shown thread, just above
+            the composer so they stay visible regardless of scroll. */}
         {(() => {
-          // Surface a parked ApprovalGate request for the shown thread just
-          // above the composer, so it stays visible regardless of scroll.
           const approvalThreadId = selectedThreadId ?? firstActiveThreadId;
-          const pendingApproval = approvalThreadId
-            ? pendingApprovalByThread[approvalThreadId]
-            : undefined;
-          if (!pendingApproval || !approvalThreadId) return null;
-          // `composio_connect` parks on the same gate but needs a Connect
-          // button + OAuth poll rather than approve/deny (#3993).
-          const isConnect = pendingApproval.toolName === 'composio_connect';
+          if (!approvalThreadId) return null;
           return (
-            <div className="mb-2">
-              {isConnect ? (
-                // Key by requestId so switching from one parked approval to
-                // another remounts the card with fresh local state (phase,
-                // field values, cancellation refs, poll timers) instead of
-                // bleeding the previous request's state in (#4062, coderabbit).
-                <IntegrationConnectCard
-                  key={pendingApproval.requestId}
-                  threadId={approvalThreadId}
-                  approval={pendingApproval}
-                />
-              ) : (
-                <ApprovalRequestCard
-                  key={pendingApproval.requestId}
-                  threadId={approvalThreadId}
-                  approval={pendingApproval}
-                />
-              )}
-            </div>
+            <PendingApprovalQueue
+              threadId={approvalThreadId}
+              approvals={pendingApprovalByThread[approvalThreadId] ?? []}
+            />
           );
         })()}
 
@@ -2588,6 +2567,10 @@ const Conversations = ({
           onClear={() => void handleClearQueuedFollowups()}
         />
       ) : null}
+      <ThreadModeBar
+        threadId={selectedThreadId}
+        onOpenAllRuns={() => navigate('/brain?tab=orchestration&ov=runs')}
+      />
     </>
   );
 

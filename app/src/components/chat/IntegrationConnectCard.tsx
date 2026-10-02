@@ -125,7 +125,7 @@ const IntegrationConnectCard: React.FC<Props> = ({ threadId, approval }) => {
         setErrorMsg(t('chat.approval.error'));
         return;
       }
-      dispatch(clearPendingApprovalForThread({ threadId }));
+      dispatch(clearPendingApprovalForThread({ threadId, requestId: approval.requestId }));
     },
     [approval.requestId, dispatch, threadId, t]
   );

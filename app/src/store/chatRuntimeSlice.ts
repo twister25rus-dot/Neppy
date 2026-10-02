@@ -729,7 +729,14 @@ interface ChatRuntimeState {
   processingByThread: Record<string, ProcessingTranscriptItem[]>;
   taskBoardByThread: Record<string, TaskBoard>;
   inferenceTurnLifecycleByThread: Record<string, InferenceTurnLifecycle>;
-  pendingApprovalByThread: Record<string, PendingApproval>;
+  /**
+   * Parked ApprovalGate requests per thread, oldest first. The core can park
+   * several concurrent approvals in one thread (one `approval_request` event
+   * per park), so this is a queue keyed by `requestId` rather than a single
+   * slot: a later request must not overwrite an earlier one, or the earlier
+   * call would stall until its TTL.
+   */
+  pendingApprovalByThread: Record<string, PendingApproval[]>;
   pendingPlanReviewByThread: Record<string, PendingPlanReview>;
   /**
    * Thread-scoped candidate workflow proposed by the `propose_workflow` agent
@@ -1824,10 +1831,39 @@ const chatRuntimeSlice = createSlice({
       state,
       action: PayloadAction<{ threadId: string; approval: PendingApproval }>
     ) => {
-      state.pendingApprovalByThread[action.payload.threadId] = action.payload.approval;
+      const { threadId, approval } = action.payload;
+      const queue = state.pendingApprovalByThread[threadId] ?? [];
+      const existing = queue.findIndex(a => a.requestId === approval.requestId);
+      if (existing >= 0) {
+        // Same park re-announced: replace in place, keep its queue position.
+        queue[existing] = approval;
+      } else {
+        queue.push(approval);
+      }
+      state.pendingApprovalByThread[threadId] = queue;
     },
-    clearPendingApprovalForThread: (state, action: PayloadAction<{ threadId: string }>) => {
-      delete state.pendingApprovalByThread[action.payload.threadId];
+    /**
+     * With `requestId`, removes only that approval (its own decision or
+     * expiry); without it, drops the whole thread queue (turn end / cancel /
+     * disconnect, when every parked gate future is dead).
+     */
+    clearPendingApprovalForThread: (
+      state,
+      action: PayloadAction<{ threadId: string; requestId?: string }>
+    ) => {
+      const { threadId, requestId } = action.payload;
+      if (requestId === undefined) {
+        delete state.pendingApprovalByThread[threadId];
+        return;
+      }
+      const queue = state.pendingApprovalByThread[threadId];
+      if (!queue) return;
+      const next = queue.filter(a => a.requestId !== requestId);
+      if (next.length === 0) {
+        delete state.pendingApprovalByThread[threadId];
+      } else {
+        state.pendingApprovalByThread[threadId] = next;
+      }
     },
     setPendingPlanReviewForThread: (
       state,

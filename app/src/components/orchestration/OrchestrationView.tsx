@@ -28,6 +28,7 @@ import PageSectionHeader from '../layout/PageSectionHeader';
 import PanelPage from '../layout/PanelPage';
 import ActiveSubagentsRail from './ActiveSubagentsRail';
 import AgentChatPanel from './AgentChatPanel';
+import AgentRunsPanel from './AgentRunsPanel';
 import ConnectionsPanel from './ConnectionsPanel';
 import MedullaDemoChat from './demo/MedullaDemoChat';
 import MedullaDemoGraph from './demo/MedullaDemoGraph';
@@ -38,10 +39,17 @@ import OrchestratorTaskBoard from './OrchestratorTaskBoard';
 import OverviewPanel from './OverviewPanel';
 import UsagePanel from './UsagePanel';
 
-type OrchestrationTab = 'medulla' | 'overview' | 'agent' | 'tasks' | 'network';
+type OrchestrationTab = 'medulla' | 'overview' | 'agent' | 'tasks' | 'runs' | 'network';
 type NetworkSub = 'connections' | 'discover' | 'usage';
 
-const ORCH_TABS: readonly OrchestrationTab[] = ['medulla', 'agent', 'overview', 'tasks', 'network'];
+const ORCH_TABS: readonly OrchestrationTab[] = [
+  'medulla',
+  'agent',
+  'overview',
+  'tasks',
+  'runs',
+  'network',
+];
 const NETWORK_SUBS: readonly NetworkSub[] = ['connections', 'discover', 'usage'];
 
 export default function OrchestrationView() {
@@ -134,6 +142,7 @@ export default function OrchestrationView() {
       { id: 'agent' as const, label: t('orchPage.agent.nav') },
       { id: 'overview' as const, label: t('orchPage.overview.nav') },
       { id: 'tasks' as const, label: t('orchPage.tasks.nav') },
+      { id: 'runs' as const, label: t('orchPage.runs.nav') },
       { id: 'network' as const, label: t('orchPage.group.network') },
     ],
     [t]
@@ -201,6 +210,20 @@ export default function OrchestrationView() {
                   description={t('orchPage.tasks.subtitle')}
                 />
                 <OrchestratorTaskBoard />
+              </div>
+            </PanelPage>
+          </div>
+        ) : activeTab === 'runs' ? (
+          // Cross-conversation execution history of the supervisor's helper
+          // agents (read-only run-ledger projection). Local, so no Medulla gate.
+          <div className="mx-auto h-full w-full max-w-3xl">
+            <PanelPage contentClassName="p-4">
+              <div className="animate-fade-up space-y-4">
+                <PageSectionHeader
+                  title={t('orchPage.runs.nav')}
+                  description={t('orchPage.runs.subtitle')}
+                />
+                <AgentRunsPanel />
               </div>
             </PanelPage>
           </div>

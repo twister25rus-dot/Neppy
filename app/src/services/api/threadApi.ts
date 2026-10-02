@@ -10,6 +10,8 @@ import type {
   ThreadDeleteData,
   ThreadMessage,
   ThreadMessagesData,
+  ThreadMode,
+  ThreadSetModeData,
   ThreadsListData,
 } from '../../types/thread';
 import type {
@@ -51,6 +53,23 @@ export const threadApi = {
     const response = await callCoreRpc<Envelope<Thread>>({
       method: 'openhuman.threads_create_new',
       params: { labels },
+    });
+    return unwrapEnvelope(response);
+  },
+
+  /**
+   * Persist a thread's Chat / Orchestration mode. Switching keeps the thread
+   * id and history; the core rebuilds the next turn for the new mode.
+   * `source` is a content-free audit tag.
+   */
+  setMode: async (
+    threadId: string,
+    mode: ThreadMode,
+    source = 'composer_toggle'
+  ): Promise<ThreadSetModeData> => {
+    const response = await callCoreRpc<Envelope<ThreadSetModeData>>({
+      method: 'openhuman.threads_set_mode',
+      params: { thread_id: threadId, mode, source },
     });
     return unwrapEnvelope(response);
   },

@@ -17,6 +17,7 @@ import { emptySessionTokenUsage } from '../../../store/chatRuntimeSlice';
 import { useAppSelector } from '../../../store/hooks';
 import { DEFAULT_MASCOT_COLOR } from '../../../store/mascotSlice';
 import { MascotChipAvatar } from '../../human/Mascot/MascotChipAvatar';
+import { SelectedThreadModeProvider } from '../threadModeContext';
 import { ChatToolFallback, ChatToolGroup } from './ChatToolParts';
 import { contextUsageFromTokenUsage, ContextWindowPill } from './composer/ContextWindowPill';
 import {
@@ -266,15 +267,17 @@ export function AssistantUiChat({
 
   return (
     <AssistantUiRuntimeProvider>
-      <ComposerTextBridge value={inputValue} onChange={onInputValueChange} />
-      <Thread
-        components={components}
-        model={model}
-        onModelChange={onModelChange}
-        loadError={loadError}
-        onEscape={onEscape}
-        slashCommands={slashCommands}
-      />
+      <SelectedThreadModeProvider>
+        <ComposerTextBridge value={inputValue} onChange={onInputValueChange} />
+        <Thread
+          components={components}
+          model={model}
+          onModelChange={onModelChange}
+          loadError={loadError}
+          onEscape={onEscape}
+          slashCommands={slashCommands}
+        />
+      </SelectedThreadModeProvider>
     </AssistantUiRuntimeProvider>
   );
 }

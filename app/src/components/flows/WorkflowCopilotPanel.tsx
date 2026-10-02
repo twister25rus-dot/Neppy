@@ -38,9 +38,8 @@ import type { WorkflowGraph } from '../../lib/flows/types';
 import { useT } from '../../lib/i18n/I18nContext';
 import { AssistantUiRuntimeProvider } from '../../providers/AssistantUiRuntimeProvider';
 import type { WorkflowProposal } from '../../store/chatRuntimeSlice';
-import ApprovalRequestCard from '../chat/ApprovalRequestCard';
 import ChatComposer from '../chat/ChatComposer';
-import IntegrationConnectCard from '../chat/IntegrationConnectCard';
+import PendingApprovalQueue from '../chat/PendingApprovalQueue';
 import Button from '../ui/Button';
 
 const log = createDebug('app:flows:copilot-panel');
@@ -163,8 +162,21 @@ export default function WorkflowCopilotPanel({
   fullWidth = false,
 }: Props) {
   const { t } = useT();
-  const { threadId, sending, proposal, pendingApproval, capped, error, send, stop, clearProposal } =
-    useWorkflowBuilderChat(seedThreadId);
+  const {
+    threadId,
+    sending,
+    proposal,
+    pendingApproval,
+    pendingApprovals,
+    capped,
+    error,
+    send,
+    stop,
+    clearProposal,
+  } = useWorkflowBuilderChat(seedThreadId);
+  // Every parked approval (the core can park several in one thread). Falls back
+  // to the single oldest one for callers/mocks that only supply `pendingApproval`.
+  const approvals = pendingApprovals ?? (pendingApproval ? [pendingApproval] : []);
   const [text, setText] = useState('');
 
   // Report the (lazily-created) thread id up so the host persists it per flow —
@@ -660,21 +672,9 @@ export default function WorkflowCopilotPanel({
             approve/deny, mirroring `Conversations.tsx`'s branch. Rendered above
             the composer, outside the scrollable transcript, so it stays visible
             regardless of scroll position. */}
-        {pendingApproval && threadId && (
+        {approvals.length > 0 && threadId && (
           <div data-testid="workflow-copilot-approval">
-            {pendingApproval.toolName === 'composio_connect' ? (
-              <IntegrationConnectCard
-                key={pendingApproval.requestId}
-                threadId={threadId}
-                approval={pendingApproval}
-              />
-            ) : (
-              <ApprovalRequestCard
-                key={pendingApproval.requestId}
-                threadId={threadId}
-                approval={pendingApproval}
-              />
-            )}
+            <PendingApprovalQueue threadId={threadId} approvals={approvals} />
           </div>
         )}
 

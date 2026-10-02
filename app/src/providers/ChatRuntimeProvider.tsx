@@ -22,6 +22,7 @@ import {
   type ChatSubagentTextDeltaEvent,
   type ChatSubagentThinkingDeltaEvent,
   type ChatTaskBoardUpdatedEvent,
+  type ChatThreadModeChangedEvent,
   type ChatToolCallEvent,
   type ChatToolResultEvent,
   type ProactiveMessageEvent,
@@ -71,6 +72,7 @@ import { selectSocketStatus } from '../store/socketSelectors';
 import {
   addInferenceResponse,
   addMessageLocal,
+  applyThreadMode,
   clearThreadInferenceActive,
   createNewThread,
   generateThreadTitleIfNeeded,
@@ -87,6 +89,8 @@ const USER_FACING_AGENT_ERROR_MESSAGE =
 
 const SEGMENT_DELIVERY_TTL_MS = 5 * 60 * 1000;
 const MAX_SEGMENT_DELIVERIES = 100;
+/** Mirrors the core approval gate's 10-minute TTL (parked request -> Deny). */
+const APPROVAL_CLIENT_TTL_MS = 10 * 60 * 1000;
 
 type SegmentDelivery = { segments: Map<number, string>; createdAt: number; lastSeenAt: number };
 
@@ -281,6 +285,10 @@ const ChatRuntimeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const seenChatEventsRef = useRef<Map<string, number>>(new Map());
   const segmentDeliveriesRef = useRef<Map<string, SegmentDelivery>>(new Map());
+  // Per-request expiry timers for parked approvals. The core denies a parked
+  // approval after its TTL; without a matching client-side expiry a stale card
+  // would linger in a long-running turn after the gate already moved on.
+  const approvalExpiryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const proactiveThreadCreationPromiseRef = useRef<Promise<string | null> | null>(null);
   const proactiveDispatchQueueRef = useRef<Promise<void>>(Promise.resolve());
   const toolTimelineRef = useRef(toolTimelineByThread);
@@ -1030,6 +1038,12 @@ const ChatRuntimeProvider = ({ children }: { children: React.ReactNode }) => {
           })
         );
       },
+      onThreadModeChanged: (event: ChatThreadModeChangedEvent) => {
+        const to = event.args?.to;
+        if (!event.thread_id || (to !== 'chat' && to !== 'orchestration')) return;
+        rtLog('thread_mode_changed', { thread: event.thread_id, to });
+        dispatch(applyThreadMode({ threadId: event.thread_id, mode: to }));
+      },
       onApprovalRequest: (event: ChatApprovalRequestEvent) => {
         rtLog('approval_request', {
           thread: event.thread_id,
@@ -1060,6 +1074,23 @@ const ChatRuntimeProvider = ({ children }: { children: React.ReactNode }) => {
               toolkit,
             },
           })
+        );
+        // Each parked request expires on its own (not with its siblings).
+        const timers = approvalExpiryTimersRef.current;
+        const prior = timers.get(event.request_id);
+        if (prior) clearTimeout(prior);
+        timers.set(
+          event.request_id,
+          setTimeout(() => {
+            timers.delete(event.request_id);
+            rtLog('approval_expired', { thread: event.thread_id, request: event.request_id });
+            dispatch(
+              clearPendingApprovalForThread({
+                threadId: event.thread_id,
+                requestId: event.request_id,
+              })
+            );
+          }, APPROVAL_CLIENT_TTL_MS)
         );
       },
       onPlanReviewRequest: (event: ChatPlanReviewRequestEvent) => {
@@ -1377,6 +1408,14 @@ const ChatRuntimeProvider = ({ children }: { children: React.ReactNode }) => {
   // inference status, end the lifecycle row, and release `activeThreadId`
   // so the composer is immediately typeable again. Streaming assistant
   // text is preserved so the partial reply stays visible.
+  useEffect(
+    () => () => {
+      for (const timer of approvalExpiryTimersRef.current.values()) clearTimeout(timer);
+      approvalExpiryTimersRef.current.clear();
+    },
+    []
+  );
+
   useEffect(() => {
     if (socketStatus === 'connected') return;
     const state = store.getState();

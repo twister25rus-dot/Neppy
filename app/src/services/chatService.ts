@@ -553,7 +553,19 @@ export interface ChatTaskBoardUpdatedEvent {
   task_board: TaskBoard;
 }
 
+/**
+ * Emitted (to every connected client) when a thread's Chat / Orchestration
+ * mode actually changes. `args` is the generic web-channel bag; no message
+ * content. Filter on `thread_id` — the event is broadcast on the system room.
+ */
+export interface ChatThreadModeChangedEvent {
+  thread_id: string;
+  request_id?: string;
+  args?: { from?: string; to?: string; source?: string };
+}
+
 export interface ChatEventListeners {
+  onThreadModeChanged?: (event: ChatThreadModeChangedEvent) => void;
   onInferenceStart?: (event: ChatInferenceStartEvent) => void;
   onInferenceHeartbeat?: (event: ChatInferenceHeartbeatEvent) => void;
   onIterationStart?: (event: ChatIterationStartEvent) => void;
@@ -623,6 +635,7 @@ export function subscribeChatEvents(listeners: ChatEventListeners): () => void {
     proactiveMessage: 'proactive_message',
     approvalRequest: 'approval_request',
     planReviewRequest: 'plan_review_request',
+    threadModeChanged: 'thread_mode_changed',
     artifactPending: 'artifact_pending',
     artifactReady: 'artifact_ready',
     artifactFailed: 'artifact_failed',
@@ -976,6 +989,23 @@ export function subscribeChatEvents(listeners: ChatEventListeners): () => void {
     handlers.push([EVENTS.approvalRequest, cb]);
   }
 
+  if (listeners.onThreadModeChanged) {
+    const cb = (payload: unknown) => {
+      const e = payload as ChatThreadModeChangedEvent;
+      chatLog(
+        '%s thread_id=%s %s->%s source=%s',
+        EVENTS.threadModeChanged,
+        e.thread_id,
+        e.args?.from,
+        e.args?.to,
+        e.args?.source
+      );
+      listeners.onThreadModeChanged?.(e);
+    };
+    socket.on(EVENTS.threadModeChanged, cb);
+    handlers.push([EVENTS.threadModeChanged, cb]);
+  }
+
   if (listeners.onPlanReviewRequest) {
     const cb = (payload: unknown) => {
       const e = payload as ChatPlanReviewRequestEvent;
@@ -1271,6 +1301,12 @@ interface ChatSendParams {
    * (default) aborts the running turn.
    */
   queueMode?: QueueMode | null;
+  /**
+   * Apply (and persist) a Chat / Orchestration mode atomically with this send.
+   * Omit to keep the thread's persisted mode; a plain toggle uses
+   * `threads_set_mode` instead.
+   */
+  mode?: 'chat' | 'orchestration';
 }
 
 /**
@@ -1309,6 +1345,7 @@ export async function chatSend(params: ChatSendParams): Promise<string | undefin
       session_id: params.sessionId ?? undefined,
       queue_mode: params.queueMode ?? undefined,
       regenerate_of: params.regenerateOf ?? undefined,
+      mode: params.mode ?? undefined,
     },
   });
 

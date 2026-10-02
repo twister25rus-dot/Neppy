@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/tool
 import { extractWorkflowProposalFromMessages } from '../lib/workflows/workflowProposal';
 import { threadApi } from '../services/api/threadApi';
 import { isThreadNotFoundCoreRpcError } from '../services/coreRpcClient';
-import type { Thread, ThreadMessage } from '../types/thread';
+import type { Thread, ThreadMessage, ThreadMode } from '../types/thread';
 import { IS_DEV } from '../utils/config';
 import { setWorkflowProposalForThread } from './chatRuntimeSlice';
 import { resetUserScopedState } from './resetActions';
@@ -389,6 +389,28 @@ export const updateThreadTitle = createAsyncThunk(
   }
 );
 
+/**
+ * Switch a thread between Chat and Orchestration. Optimistic: the toggle
+ * flips immediately and reverts to `previous` if the core rejects it, so the
+ * header never shows a mode the thread is not in. The same thread id and
+ * history carry across (the core re-seeds the next turn).
+ */
+export const setThreadMode = createAsyncThunk(
+  'thread/setThreadMode',
+  async (
+    payload: { threadId: string; mode: ThreadMode; previous: ThreadMode; source?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      return await threadApi.setMode(payload.threadId, payload.mode, payload.source);
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Failed to change the thread mode'
+      );
+    }
+  }
+);
+
 // ── Slice ─────────────────────────────────────────────────────────
 
 const threadSlice = createSlice({
@@ -401,6 +423,15 @@ const threadSlice = createSlice({
      */
     clearCreateThreadError: state => {
       state.createThreadError = null;
+    },
+    /**
+     * Apply a mode change observed elsewhere (the `thread_mode_changed` web
+     * channel event, e.g. another window toggled it). Unknown threads are
+     * ignored; the next `loadThreads` carries the persisted value anyway.
+     */
+    applyThreadMode: (state, action: PayloadAction<{ threadId: string; mode: ThreadMode }>) => {
+      const thread = state.threads.find(t => t.id === action.payload.threadId);
+      if (thread) thread.mode = action.payload.mode;
     },
     setSelectedThread: (state, action: { payload: string }) => {
       state.selectedThreadId = action.payload;
@@ -577,6 +608,18 @@ const threadSlice = createSlice({
       .addCase(deleteThread.fulfilled, (state, action) => {
         delete state.messagesByThreadId[action.payload.threadId];
       })
+      .addCase(setThreadMode.pending, (state, action) => {
+        const thread = state.threads.find(t => t.id === action.meta.arg.threadId);
+        if (thread) thread.mode = action.meta.arg.mode;
+      })
+      .addCase(setThreadMode.fulfilled, (state, action) => {
+        const idx = state.threads.findIndex(t => t.id === action.payload.thread.id);
+        if (idx >= 0) state.threads[idx] = { ...state.threads[idx], ...action.payload.thread };
+      })
+      .addCase(setThreadMode.rejected, (state, action) => {
+        const thread = state.threads.find(t => t.id === action.meta.arg.threadId);
+        if (thread) thread.mode = action.meta.arg.previous;
+      })
       .addCase(updateThreadTitle.fulfilled, (state, action) => {
         const idx = state.threads.findIndex(t => t.id === action.payload.id);
         if (idx >= 0) {
@@ -588,6 +631,7 @@ const threadSlice = createSlice({
 });
 
 export const {
+  applyThreadMode,
   clearCreateThreadError,
   setSelectedThread,
   clearSelectedThread,
