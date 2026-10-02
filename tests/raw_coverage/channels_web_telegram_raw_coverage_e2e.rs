@@ -17,14 +17,14 @@ use axum::{
 use neppy_core::core::bus::BUS;
 use neppy_core::core::events::DomainEvent;
 use neppy_core::neppy::channels::providers::telegram::TelegramChannel;
-use neppy_core::neppy::web_chat::{
-    cancel_chat, register_approval_surface_subscriber, start_chat, subscribe_web_channel_events,
-    test_support as web_test_support, ChatRequestMetadata,
-};
 use neppy_core::neppy::channels::providers::yuanbao::{YuanbaoChannel, YuanbaoConfig};
 use neppy_core::neppy::channels::LarkChannel;
 use neppy_core::neppy::channels::{Channel, SendMessage};
 use neppy_core::neppy::config::{schema::LarkConfig, StreamMode};
+use neppy_core::neppy::web_chat::{
+    cancel_chat, register_approval_surface_subscriber, start_chat, subscribe_web_channel_events,
+    test_support as web_test_support, ChatRequestMetadata,
+};
 use serde_json::{json, Value};
 use tokio::time::timeout;
 
@@ -310,6 +310,7 @@ async fn web_channel_approval_bridge_forced_errors_and_newer_request_cancellatio
         "trigger the forced provider error",
         Some("gpt-test".to_string()),
         Some(0.3),
+        Default::default(),
         Some("missing-profile".to_string()),
         Some("en-US".to_string()),
         None,
@@ -336,6 +337,7 @@ async fn web_channel_approval_bridge_forced_errors_and_newer_request_cancellatio
         "first request should be superseded",
         None,
         None,
+        Default::default(),
         None,
         None,
         None,
@@ -349,6 +351,7 @@ async fn web_channel_approval_bridge_forced_errors_and_newer_request_cancellatio
         "second request cancels the first",
         None,
         None,
+        Default::default(),
         None,
         None,
         None,

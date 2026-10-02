@@ -17,12 +17,12 @@ use neppy_core::neppy::channels::providers::mattermost::{
     test_support as mattermost_support, MattermostChannel,
 };
 use neppy_core::neppy::channels::providers::telegram::test_support as telegram_support;
-use neppy_core::neppy::web_chat::{self as web, test_support as web_support};
 use neppy_core::neppy::channels::test_support::{
     build_channel_context_block_for_test, run_dispatch_harness,
     select_acknowledgment_reaction_for_test, DispatchHarnessOptions, TestMemoryEntry,
 };
 use neppy_core::neppy::channels::traits::{Channel, ChannelMessage, SendMessage};
+use neppy_core::neppy::web_chat::{self as web, test_support as web_support};
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast::error::RecvError;
@@ -119,6 +119,7 @@ async fn web_channel_validation_cancellation_and_error_events_are_observable() {
         "hello",
         None,
         None,
+        Default::default(),
         None,
         None,
         None,
@@ -143,6 +144,7 @@ async fn web_channel_validation_cancellation_and_error_events_are_observable() {
         "hello from round25",
         Some("gpt-5".to_string()),
         Some(0.2),
+        Default::default(),
         None,
         Some("en-US".to_string()),
         None,

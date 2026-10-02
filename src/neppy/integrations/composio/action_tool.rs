@@ -680,14 +680,19 @@ mod tests {
         // session's `Arc<Config>`, and the next sub-agent spawn picks
         // up the fresh `Arc<Config>` from
         // `Config::load_or_init().await`. Here we simulate that by
-        // rewriting `OPENHUMAN_WORKSPACE/config.toml` between the two
-        // halves while holding `TEST_ENV_LOCK`.
-        use crate::neppy::config::TEST_ENV_LOCK;
-        let _env_guard = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        // rewriting config.toml between the two halves.
+        //
+        // Deliberately NO `OPENHUMAN_WORKSPACE` mutation: `execute` reloads
+        // from the snapshot's own `config_path` (`reload_config_snapshot_*`
+        // never reads the env var), so the env var adds nothing to what is
+        // under test. With it set, the direct half intermittently reloaded a
+        // default (`composio.mode = "backend"`) config, surfacing "no backend
+        // session token" (~1 in 5 full-suite runs before this change, none in
+        // 60+ runs after). The writer of that default config was not isolated;
+        // dropping the process-global env dependency is what removed the flake.
 
         // ── Backend half ────────────────────────────────────────────
         let tmp_backend = tempfile::tempdir().expect("tempdir backend");
-        let _workspace_guard = WorkspaceEnvGuard::set(tmp_backend.path());
         let mut backend_config = Config::default();
         backend_config.config_path = tmp_backend.path().join("config.toml");
         backend_config.workspace_dir = tmp_backend.path().join("workspace");
@@ -712,7 +717,6 @@ mod tests {
 
         // ── Direct half ─────────────────────────────────────────────
         let tmp_direct = tempfile::tempdir().expect("tempdir direct");
-        WorkspaceEnvGuard::set_current(tmp_direct.path());
         let mut direct_config = Config::default();
         direct_config.config_path = tmp_direct.path().join("config.toml");
         direct_config.workspace_dir = tmp_direct.path().join("workspace");

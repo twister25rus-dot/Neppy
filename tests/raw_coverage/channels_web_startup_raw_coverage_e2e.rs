@@ -11,12 +11,12 @@ use neppy_core::neppy::channels::start_channels;
 use neppy_core::neppy::channels::test_support::{
     lock_agent_handler, run_dispatch_harness, DispatchHarnessOptions, TestMemoryEntry,
 };
+use neppy_core::neppy::config::Config;
 use neppy_core::neppy::web_chat::{
     all_web_channel_controller_schemas, all_web_channel_registered_controllers, channel_web_cancel,
     channel_web_chat, schemas, start_chat, subscribe_web_channel_events,
     test_support as web_test_support, ChatRequestMetadata,
 };
-use neppy_core::neppy::config::Config;
 use tempfile::tempdir;
 use tokio::time::timeout;
 
@@ -28,9 +28,9 @@ fn ensure_memory_seams() {
             .name("channels-web-startup-raw-coverage-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                neppy_core::neppy::memory::host_impls::install_memory_host_seams(
-                    Arc::new(Config::default()),
-                );
+                neppy_core::neppy::memory::host_impls::install_memory_host_seams(Arc::new(
+                    Config::default(),
+                ));
             })
             .expect("spawn channels web startup raw coverage seam installer")
             .join()
@@ -138,6 +138,7 @@ async fn web_controllers_validate_inputs_and_emit_structured_forced_errors() {
         "   ",
         None,
         None,
+        Default::default(),
         None,
         None,
         None,
@@ -166,6 +167,7 @@ async fn web_controllers_validate_inputs_and_emit_structured_forced_errors() {
         "Summarize this safely.",
         Some(" hint:reasoning ".to_string()),
         Some(0.2),
+        Default::default(),
         None,
         Some("zh-CN".to_string()),
         None,
@@ -212,6 +214,7 @@ async fn web_chat_cancel_aborts_in_flight_thread_without_real_provider() {
         "This request should be cancelled before inference completes.",
         None,
         None,
+        Default::default(),
         None,
         None,
         None,

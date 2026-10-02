@@ -619,45 +619,23 @@ mod tests {
     use super::*;
     use crate::neppy::inference::local::voice_install_common::reset_status;
 
-    /// Point [`paths::shared_root_dir`] at a test's own `TempDir`.
-    ///
-    /// `shared_root_dir` only honours `config.workspace_dir` when
-    /// `OPENHUMAN_WORKSPACE` is set; without it every write below lands in the
-    /// developer's real `~/.neppy/bin/piper` and the cleanup deletes their
-    /// installed Piper (CodeRabbit, #5253). Setting the variable for the
-    /// duration keeps writes *and* cleanup inside the `TempDir`, so the
-    /// `TempDir`'s own `Drop` is the cleanup and it runs on unwind too: a
-    /// failing assertion can no longer leave a stub binary behind for the next
-    /// test to trip over.
-    ///
-    /// Callers must already hold [`shared_install_lock`] — this mutates
-    /// process-wide environment state.
-    ///
-    /// `#[cfg(unix)]` because its only consumer is the unix-only permissions
-    /// test; unconditional would be dead code on Windows, where clippy runs
-    /// with `-D warnings`.
-    #[cfg(unix)]
-    struct SharedRootOverride {
-        previous: Option<std::ffi::OsString>,
-    }
+    /// Hermetic install-test guard: see
+    /// [`crate::neppy::inference::HermeticSharedRoot`]. Every test in this module
+    /// writes install artifacts through `paths::workspace_piper_*`, which
+    /// resolve under the shared root (the developer's real `~/.neppy`) unless
+    /// `OPENHUMAN_WORKSPACE` points at the test's own `TempDir` (CodeRabbit,
+    /// #5253). The guard also serialises with every sibling that touches the
+    /// process-wide env or the shared install status, so a concurrent test can
+    /// neither unset the override mid-test nor overwrite the install status.
+    type HermeticInstall = crate::neppy::inference::HermeticSharedRoot;
 
-    #[cfg(unix)]
-    impl SharedRootOverride {
-        fn set(root: &std::path::Path) -> Self {
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-            std::env::set_var("OPENHUMAN_WORKSPACE", root);
-            Self { previous }
-        }
-    }
-
-    #[cfg(unix)]
-    impl Drop for SharedRootOverride {
-        fn drop(&mut self) {
-            match self.previous.as_ref() {
-                Some(previous) => std::env::set_var("OPENHUMAN_WORKSPACE", previous),
-                None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
-            }
-        }
+    /// Lock, build a `TempDir`-backed config, and point the shared root at it.
+    /// Drop order matters at the call site: bind the guard first so it is
+    /// released last (after the `TempDir` is gone).
+    fn hermetic_install() -> (HermeticInstall, tempfile::TempDir, Config) {
+        let (dir, config) = temp_config();
+        let guard = HermeticInstall::lock_and_set(&config.workspace_dir);
+        (guard, dir, config)
     }
 
     #[cfg(unix)]
@@ -667,21 +645,13 @@ mod tests {
         // 0644 workspace copy anyway pins resolution to a binary that cannot
         // launch and makes the PIPER_BIN/PATH fallback unreachable.
         //
-        // This test must hold the module lock: it mutates OPENHUMAN_WORKSPACE,
-        // which is process-wide, and `reset_status`/install state is shared
-        // with every sibling install_piper / paths test.
-        //
-        // `workspace_piper_binary_candidates` resolves through
-        // `paths::shared_root_dir`, which ignores `config.workspace_dir` unless
-        // OPENHUMAN_WORKSPACE is set and otherwise returns the real
-        // `~/.neppy/bin/piper`. `SharedRootOverride` sets it to this test's
-        // TempDir so the stub written below, and its cleanup, stay inside the
-        // TempDir instead of touching a developer's installed Piper.
+        // `HermeticInstall` holds the module locks and points
+        // `paths::shared_root_dir` at this test's TempDir, so the stub written
+        // below, and its cleanup, stay inside the TempDir instead of touching a
+        // developer's installed Piper.
         use std::os::unix::fs::PermissionsExt;
-        let _g = shared_install_lock();
-        let (_dir, config) = temp_config();
-        let _root = SharedRootOverride::set(&config.workspace_dir);
-        wipe_shared_install_dir(&config);
+        let (_hermetic, _dir, config) = hermetic_install();
+        reset_status(ENGINE_PIPER);
         let candidates = paths::workspace_piper_binary_candidates(&config);
         let candidate = candidates.first().expect("at least one candidate").clone();
         std::fs::create_dir_all(candidate.parent().unwrap()).unwrap();
@@ -701,7 +671,7 @@ mod tests {
         );
 
         // No tail cleanup: it would only run when every assertion above passed.
-        // `_dir` (TempDir) and `_root` (SharedRootOverride) clean up on drop,
+        // `_dir` (TempDir) and `_hermetic` (HermeticInstall) clean up on drop,
         // which happens on the panic path too.
     }
 
@@ -783,13 +753,6 @@ mod tests {
         }
     }
 
-    /// Serialise tests that write into the shared `~/.neppy/bin/piper/`
-    /// directory; reuses the module-wide `local_ai_test_guard` so paths +
-    /// sibling installer tests are serialised through the same lock.
-    fn shared_install_lock() -> std::sync::MutexGuard<'static, ()> {
-        crate::neppy::inference::inference_test_guard()
-    }
-
     fn wipe_shared_install_dir(config: &Config) {
         let dir = paths::workspace_piper_dir(config);
         let _ = std::fs::remove_dir_all(&dir);
@@ -797,9 +760,8 @@ mod tests {
 
     #[test]
     fn status_reports_missing_for_fresh_workspace() {
-        let _g = shared_install_lock();
+        let (_hermetic, _tmp, config) = hermetic_install();
         reset_status(ENGINE_PIPER);
-        let (_tmp, config) = temp_config();
         wipe_shared_install_dir(&config);
         let snapshot = status(&config);
         assert_eq!(snapshot.state, VoiceInstallState::Missing);
@@ -820,9 +782,8 @@ mod tests {
 
     #[test]
     fn status_promotes_to_installed_when_voice_and_binary_present() {
-        let _g = shared_install_lock();
+        let (_hermetic, _tmp, config) = hermetic_install();
         reset_status(ENGINE_PIPER);
-        let (_tmp, config) = temp_config();
         wipe_shared_install_dir(&config);
         // Voice files.
         let (onnx, json) =
@@ -847,9 +808,8 @@ mod tests {
     #[allow(clippy::await_holding_lock)]
     #[tokio::test]
     async fn install_short_circuits_when_already_installed() {
-        let _g = shared_install_lock();
+        let (_hermetic, _tmp, config) = hermetic_install();
         reset_status(ENGINE_PIPER);
-        let (_tmp, config) = temp_config();
         wipe_shared_install_dir(&config);
         let (onnx, json) =
             paths::workspace_piper_voice_paths(&config, DEFAULT_PIPER_VOICE).expect("voice paths");
@@ -869,8 +829,7 @@ mod tests {
 
     #[test]
     fn find_workspace_piper_binary_returns_path_when_present() {
-        let _g = shared_install_lock();
-        let (_tmp, config) = temp_config();
+        let (_hermetic, _tmp, config) = hermetic_install();
         wipe_shared_install_dir(&config);
         let target = paths::workspace_piper_binary_candidates(&config)[0].clone();
         std::fs::create_dir_all(target.parent().unwrap()).unwrap();
@@ -891,8 +850,7 @@ mod tests {
 
     #[test]
     fn find_workspace_piper_binary_returns_none_without_install() {
-        let _g = shared_install_lock();
-        let (_tmp, config) = temp_config();
+        let (_hermetic, _tmp, config) = hermetic_install();
         wipe_shared_install_dir(&config);
         assert!(find_workspace_piper_binary(&config).is_none());
     }

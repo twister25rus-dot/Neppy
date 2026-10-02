@@ -13,10 +13,6 @@ use axum::{
     Router,
 };
 use neppy_core::neppy::channels::providers::telegram::TelegramChannel;
-use neppy_core::neppy::web_chat::{
-    cancel_chat, start_chat, subscribe_web_channel_events, test_support as web_test_support,
-    ChatRequestMetadata,
-};
 use neppy_core::neppy::channels::providers::yuanbao::{
     connection::test_support as yuanbao_connection_test_support,
     cos::{cos_sign, get_cos_credentials, upload_to_cos, CosCredentials, CosSignInput},
@@ -26,6 +22,10 @@ use neppy_core::neppy::channels::test_support::resolve_yuanbao_app_secret_for_te
 use neppy_core::neppy::channels::{Channel, SendMessage};
 use neppy_core::neppy::config::Config;
 use neppy_core::neppy::security::credentials::AuthService;
+use neppy_core::neppy::web_chat::{
+    cancel_chat, start_chat, subscribe_web_channel_events, test_support as web_test_support,
+    ChatRequestMetadata,
+};
 use serde_json::{json, Value};
 use tempfile::tempdir;
 use tokio::time::{timeout, Duration};
@@ -208,6 +208,7 @@ async fn web_start_chat_validation_forced_error_and_cancel_paths_are_structured(
             "hello",
             None,
             None,
+            Default::default(),
             None,
             None,
             None,
@@ -224,6 +225,7 @@ async fn web_start_chat_validation_forced_error_and_cancel_paths_are_structured(
             "hello",
             None,
             None,
+            Default::default(),
             None,
             None,
             None,
@@ -245,6 +247,7 @@ async fn web_start_chat_validation_forced_error_and_cancel_paths_are_structured(
         "Please respond through the forced error seam.",
         Some(" ".to_string()),
         Some(0.4),
+        Default::default(),
         None,
         None,
         None,

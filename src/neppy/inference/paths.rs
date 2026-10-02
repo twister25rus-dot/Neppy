@@ -389,18 +389,29 @@ pub(crate) fn tts_model_target_path(config: &Config) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::neppy::inference::HermeticSharedRoot;
 
-    fn temp_config() -> (tempfile::TempDir, Config) {
+    /// A `TempDir`-backed config **with the shared root pointed at it**.
+    ///
+    /// `shared_root_dir` ignores `config.workspace_dir` unless
+    /// `OPENHUMAN_WORKSPACE` is set, and otherwise resolves to the developer's
+    /// real `~/.neppy`. Several tests below write stubs through
+    /// `workspace_*_dir(&config)` (and one deletes the Piper dir), so every test
+    /// here runs under [`HermeticSharedRoot`], which also serialises it with
+    /// the other tests that touch that env var or the install status. Bind the
+    /// guard first so it is released last.
+    fn temp_config() -> (HermeticSharedRoot, tempfile::TempDir, Config) {
         let dir = tempfile::tempdir().expect("tempdir");
         let mut config = Config::default();
         config.workspace_dir = dir.path().join("workspace");
         config.config_path = dir.path().join("config.toml");
-        (dir, config)
+        let root = HermeticSharedRoot::lock_and_set(&config.workspace_dir);
+        (root, dir, config)
     }
 
     #[test]
     fn resolve_stt_model_path_prefers_workspace_relative_artifact() {
-        let (_tmp, mut config) = temp_config();
+        let (_root, _tmp, mut config) = temp_config();
         config.local_ai.stt_model_id = "tiny.bin".to_string();
         let model_path = workspace_local_models_dir(&config)
             .join("stt")
@@ -422,8 +433,7 @@ mod tests {
         // assertion fails. Serialise via the shared install guard and
         // wipe the installer path so the legacy `models/local-ai/tts/`
         // candidate is the only match.
-        let _g = shared_install_lock();
-        let (_tmp, mut config) = temp_config();
+        let (_root, _tmp, mut config) = temp_config();
         config.local_ai.tts_voice_id = "en_US-lessac-medium".to_string();
         let installer_onnx = workspace_piper_voice_paths(&config, "en_US-lessac-medium")
             .map(|(onnx, _)| onnx)
@@ -441,7 +451,7 @@ mod tests {
 
     #[test]
     fn target_paths_preserve_absolute_overrides() {
-        let (_tmp, mut config) = temp_config();
+        let (_root, _tmp, mut config) = temp_config();
         let stt = if cfg!(windows) {
             "C:\\tmp\\stt-model.bin"
         } else {
@@ -461,7 +471,7 @@ mod tests {
 
     #[test]
     fn workspace_ollama_binary_matches_platform_layout() {
-        let (_tmp, config) = temp_config();
+        let (_root, _tmp, config) = temp_config();
         let root = workspace_ollama_dir(&config);
 
         if cfg!(target_os = "linux") {
@@ -478,7 +488,7 @@ mod tests {
 
     #[test]
     fn find_workspace_ollama_binary_supports_legacy_flat_layout() {
-        let (_tmp, config) = temp_config();
+        let (_root, _tmp, config) = temp_config();
         let dir = workspace_ollama_dir(&config);
         std::fs::create_dir_all(&dir).expect("create workspace ollama dir");
 
@@ -495,7 +505,7 @@ mod tests {
 
     #[test]
     fn workspace_piper_voice_paths_returns_onnx_pair() {
-        let (_tmp, config) = temp_config();
+        let (_root, _tmp, config) = temp_config();
         let (onnx, json) =
             workspace_piper_voice_paths(&config, "en_US-lessac-medium").expect("voice paths");
         assert!(onnx.to_string_lossy().ends_with("en_US-lessac-medium.onnx"));
@@ -509,7 +519,7 @@ mod tests {
 
     #[test]
     fn workspace_piper_binary_candidates_include_flat_layout() {
-        let (_tmp, config) = temp_config();
+        let (_root, _tmp, config) = temp_config();
         let candidates = workspace_piper_binary_candidates(&config);
         let suffix = if cfg!(windows) { "piper.exe" } else { "piper" };
         assert!(
@@ -518,18 +528,9 @@ mod tests {
         );
     }
 
-    /// Serialise with sibling install_piper tests that
-    /// write into the same shared `~/.neppy/bin/...` directory. Uses
-    /// the existing module-wide guard so all readers/writers go through
-    /// one critical section.
-    fn shared_install_lock() -> std::sync::MutexGuard<'static, ()> {
-        crate::neppy::inference::inference_test_guard()
-    }
-
     #[test]
     fn resolve_piper_binary_with_config_prefers_workspace_install() {
-        let _g = shared_install_lock();
-        let (_tmp, config) = temp_config();
+        let (_root, _tmp, config) = temp_config();
         let target = workspace_piper_binary_candidates(&config)
             .into_iter()
             .next()
@@ -537,6 +538,15 @@ mod tests {
         let _ = std::fs::remove_dir_all(workspace_piper_dir(&config));
         std::fs::create_dir_all(target.parent().expect("parent")).expect("mkdir");
         std::fs::write(&target, b"stub").expect("write stub");
+        // "Present" means present AND executable (#5045): a 0644 file is not a
+        // usable binary and `find_workspace_piper_binary` skips it, so grant the
+        // bit explicitly (`fs::write` creates 0644).
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o755))
+                .expect("chmod stub");
+        }
         let resolved = resolve_piper_binary_with_config(&config).expect("workspace resolve");
         assert_eq!(resolved, target);
         let _ = std::fs::remove_dir_all(workspace_piper_dir(&config));

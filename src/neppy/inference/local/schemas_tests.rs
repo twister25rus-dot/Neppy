@@ -114,7 +114,12 @@ use tempfile::TempDir;
 #[tokio::test]
 async fn install_piper_handler_serializes_concurrent_calls() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    // The Piper install slot and status are process-wide and are also driven by
+    // the `install_piper` unit tests; serialise with them (same lock order as
+    // `install_piper::tests::HermeticInstall`: env lock, then inference guard).
+    let _inference = crate::neppy::inference::inference_test_guard();
     let tmp = TempDir::new().unwrap();
+    let previous_workspace = std::env::var_os("OPENHUMAN_WORKSPACE");
     unsafe {
         std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
     }
@@ -143,7 +148,10 @@ async fn install_piper_handler_serializes_concurrent_calls() {
     );
 
     unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
+        match previous_workspace {
+            Some(previous) => std::env::set_var("OPENHUMAN_WORKSPACE", previous),
+            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+        }
     }
     drop(slot);
     crate::neppy::inference::local::voice_install_common::reset_status(

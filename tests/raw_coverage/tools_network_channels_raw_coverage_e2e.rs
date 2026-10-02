@@ -18,15 +18,15 @@ use tempfile::{tempdir, TempDir};
 use tokio::time::timeout;
 
 use neppy_core::core::socketio::WebChannelEvent;
-use neppy_core::neppy::web_chat::{
-    all_web_channel_controller_schemas, all_web_channel_registered_controllers, cancel_chat,
-    channel_web_cancel, publish_web_channel_event, schemas as web_channel_schema, start_chat,
-    subscribe_web_channel_events, ChatRequestMetadata,
-};
 use neppy_core::neppy::config::{AutonomyConfig, Config};
 use neppy_core::neppy::security::{AutonomyLevel, SecurityPolicy};
 use neppy_core::neppy::tools::{
     ComposioTool, GitOperationsTool, ScheduleTool, Tool, ToolCallOptions,
+};
+use neppy_core::neppy::web_chat::{
+    all_web_channel_controller_schemas, all_web_channel_registered_controllers, cancel_chat,
+    channel_web_cancel, publish_web_channel_event, schemas as web_channel_schema, start_chat,
+    subscribe_web_channel_events, ChatRequestMetadata,
 };
 
 #[derive(Clone, Debug)]
@@ -335,6 +335,7 @@ async fn web_channel_public_paths_cover_validation_cancel_schema_and_event_bus()
         "hello",
         None,
         None,
+        Default::default(),
         None,
         None,
         None,

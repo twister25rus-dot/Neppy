@@ -348,7 +348,7 @@ mod tests {
     fn paths_equal_loose_is_case_insensitive_and_slash_agnostic() {
         assert!(paths_equal_loose(
             "C:\\Program Files\\Neppy\\Neppy.exe",
-            "c:/program files/openhuman/openhuman.exe"
+            "c:/program files/neppy/neppy.exe"
         ));
     }
 

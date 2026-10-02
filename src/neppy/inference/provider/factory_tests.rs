@@ -813,10 +813,14 @@ fn enforce_local_only_inference_errors_on_external_when_local_only() {
     // local provider passes. Factory tests use `inference_test_guard`; take the
     // same lock before mutating the process-global live policy so parallel
     // cloud-model construction cannot observe this temporary LocalOnly mode.
-    let _inference = crate::neppy::inference::inference_test_guard();
+    //
+    // Lock order is env lock, THEN inference guard: `inference::HermeticSharedRoot`
+    // and `local::schemas_tests` take them in that order, so the reverse here is a
+    // lock-order inversion that can deadlock the whole lib test run.
     let _env = crate::neppy::config::TEST_ENV_LOCK
         .lock()
         .unwrap_or_else(|e| e.into_inner());
+    let _inference = crate::neppy::inference::inference_test_guard();
     use crate::neppy::config::PrivacyMode;
     use crate::neppy::security::SecurityPolicy;
     let ws = std::env::temp_dir().join("neppy_factory_privacy_test");

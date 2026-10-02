@@ -20,9 +20,9 @@ use tempfile::{tempdir, TempDir};
 
 use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use neppy_core::core::events::DomainEvent;
-use tinybus::EventHandler;
 use neppy_core::core::jsonrpc::build_core_http_router;
 use neppy_core::core::socketio::WebChannelEvent;
+use neppy_core::neppy::agent::context::prompt::ConnectedIntegration;
 use neppy_core::neppy::agent::harness::definition::{
     AgentDefinition, AgentDefinitionRegistry, AgentTier, DefinitionSource, ModelSpec, PromptSource,
     SandboxMode, SkillsWildcard, SubagentEntry, ToolScope as AgentToolScope,
@@ -72,21 +72,25 @@ use neppy_core::neppy::channels::{
     IrcChannel, LinqChannel, MattermostChannel, QQChannel, SendMessage, SignalChannel,
     SlackChannel, WhatsAppChannel,
 };
-use neppy_core::neppy::integrations::composio::all_composio_agent_tools;
 use neppy_core::neppy::config::schema::{
     CapabilityProviderConfig, CapabilityProviderTrustState, NodeConfig, WhatsAppConfig,
 };
 use neppy_core::neppy::config::{Config, IMessageConfig, WebhookConfig};
-use neppy_core::neppy::agent::context::prompt::ConnectedIntegration;
-use neppy_core::neppy::security::credentials::{
-    AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
-};
-use neppy_core::neppy::runtime::javascript::NodeBootstrap;
+use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::integrations::composio::all_composio_agent_tools;
 use neppy_core::neppy::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
+use neppy_core::neppy::runtime::javascript::NodeBootstrap;
+use neppy_core::neppy::security::credentials::{
+    AuthService, APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
+};
 use neppy_core::neppy::security::{AuditLogger, AutonomyLevel, SecurityPolicy};
-use neppy_core::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
+use neppy_core::neppy::tools::generated::{
+    admit_generated_tool_definitions, generated_tools_from_definitions, GeneratedToolAdapter,
+    GeneratedToolAdmissionConfig, GeneratedToolDefinition, GeneratedToolRisk,
+};
+use neppy_core::neppy::tools::orchestrator_tools::collect_orchestrator_tools;
 use neppy_core::neppy::tools::registry::ops::diagnostics_for_config;
 use neppy_core::neppy::tools::registry::{
     all_tool_registry_controller_schemas, all_tool_registry_registered_controllers,
@@ -95,21 +99,17 @@ use neppy_core::neppy::tools::registry::{
     list_tools, normalize_capability_provider_id, registry_entries,
     CapabilityProviderRegistryError,
 };
-use neppy_core::neppy::tools::generated::{
-    admit_generated_tool_definitions, generated_tools_from_definitions, GeneratedToolAdapter,
-    GeneratedToolAdmissionConfig, GeneratedToolDefinition, GeneratedToolRisk,
-};
-use neppy_core::neppy::tools::orchestrator_tools::collect_orchestrator_tools;
 use neppy_core::neppy::tools::{
-    all_tools, all_tools_controller_schemas, all_tools_registered_controllers,
-    default_tools, ApplyPatchTool, BrowserTool, CleaningStrategy,
-    ComputerUseConfig, CsvExportTool, CurrentTimeTool, DefaultToolPolicy, DetectToolsTool,
-    EditFileTool, FileReadTool, FileWriteTool, GitbooksGetPageTool, GitbooksSearchTool, GlobTool,
-    GrepTool, InsertSqlRecordTool, ListFilesTool, LspTool, NodeExecTool, NpmExecTool,
-    PermissionLevel, PolicyDecision, ProxyConfigTool, ReadDiffTool, RunLinterTool, RunTestsTool,
-    SchemaCleanr, Tool, ToolCallOptions, ToolCategory, ToolPolicy, ToolResult, ToolScope,
-    UpdateApplyTool, UpdateMemoryMdTool, WebFetchTool, WorkspaceStateTool,
+    all_tools, all_tools_controller_schemas, all_tools_registered_controllers, default_tools,
+    ApplyPatchTool, BrowserTool, CleaningStrategy, ComputerUseConfig, CsvExportTool,
+    CurrentTimeTool, DefaultToolPolicy, DetectToolsTool, EditFileTool, FileReadTool, FileWriteTool,
+    GitbooksGetPageTool, GitbooksSearchTool, GlobTool, GrepTool, InsertSqlRecordTool,
+    ListFilesTool, LspTool, NodeExecTool, NpmExecTool, PermissionLevel, PolicyDecision,
+    ProxyConfigTool, ReadDiffTool, RunLinterTool, RunTestsTool, SchemaCleanr, Tool,
+    ToolCallOptions, ToolCategory, ToolPolicy, ToolResult, ToolScope, UpdateApplyTool,
+    UpdateMemoryMdTool, WebFetchTool, WorkspaceStateTool,
 };
+use tinybus::EventHandler;
 
 const TEST_RPC_TOKEN: &str = "tools-approval-channels-raw-e2e-token";
 
@@ -2048,6 +2048,7 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
             "hello",
             None,
             None,
+            Default::default(),
             None,
             None,
             None,
@@ -2064,6 +2065,7 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
             "hello",
             None,
             None,
+            Default::default(),
             None,
             None,
             None,
@@ -2080,6 +2082,7 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
             "   ",
             None,
             None,
+            Default::default(),
             None,
             None,
             None,
@@ -2109,11 +2112,9 @@ async fn web_channel_public_paths_cover_event_delivery_and_validation_errors() {
             .is_none()
     );
     neppy_core::neppy::web_chat::invalidate_thread_sessions("thread-1").await;
-    assert!(
-        neppy_core::neppy::web_chat::in_flight_entries_for_test()
-            .await
-            .is_empty()
-    );
+    assert!(neppy_core::neppy::web_chat::in_flight_entries_for_test()
+        .await
+        .is_empty());
 }
 
 #[tokio::test]

@@ -50,7 +50,12 @@ pub use factory::{
 // configs whose dimension the fixed-1024 tree can't store (#4056). Not part of
 // the public surface, so it can't ride the `pub use` above (E0364).
 // Its sole caller is `memory::host_impls`, which is unconditional again.
-pub(crate) use factory::{model_supports_dimensions, MODELS_SUPPORTING_DIMENSIONS};
+pub(crate) use factory::model_supports_dimensions;
+// The one consumer of the list is `modules::ops::module_config`, which only
+// exists with the `modules` gate; ungated, a `--no-default-features` build
+// warns about an unused import.
+#[cfg(feature = "modules")]
+pub(crate) use factory::MODELS_SUPPORTING_DIMENSIONS;
 // #002 FR-015: the memory-tree OpenAI-compat embedder reuses the same key
 // resolution the embeddings RPC uses, so there is one source of truth.
 pub use noop::NoopEmbedding;
