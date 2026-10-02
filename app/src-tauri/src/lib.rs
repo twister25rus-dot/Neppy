@@ -66,6 +66,7 @@ mod native_notifications;
 #[cfg(target_os = "macos")]
 mod notch_window;
 mod notification_settings;
+mod pet_companion;
 mod process_kill;
 mod process_recovery;
 mod ptt_hotkeys;
@@ -1609,6 +1610,7 @@ fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
 
     let show_item = MenuItem::with_id(app, "tray_show_window", "Open Neppy", true, None::<&str>)?;
     let quit_item = MenuItem::with_id(app, "tray_quit", "Quit", true, None::<&str>)?;
+    let (pet_toggle_item, pet_open_item) = pet_companion::create_menu_items(app)?;
     // The floating mascot has a native NSPanel + WKWebView host, so the
     // tray entry only does anything on macOS. Don't surface a menu item
     // on Windows that's guaranteed to error — gate it to the platform
@@ -1622,10 +1624,22 @@ fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
             true,
             None::<&str>,
         )?;
-        Menu::with_items(app, &[&show_item, &mascot_item, &quit_item])?
+        Menu::with_items(
+            app,
+            &[
+                &show_item,
+                &mascot_item,
+                &pet_toggle_item,
+                &pet_open_item,
+                &quit_item,
+            ],
+        )?
     };
     #[cfg(not(target_os = "macos"))]
-    let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+    let menu = Menu::with_items(
+        app,
+        &[&show_item, &pet_toggle_item, &pet_open_item, &quit_item],
+    )?;
 
     // macOS draws a status item from a TEMPLATE image: it reads the alpha
     // channel only and tints the result for the current appearance, which is
@@ -1668,6 +1682,14 @@ fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
                     log::error!("[tray] failed to show mascot window: {err}");
                 }
             }
+            "tray_pet_toggle" => {
+                log::info!("[tray] action=pet_toggle source=menu");
+                pet_companion::tray_toggle(app);
+            }
+            "tray_pet_open" => {
+                log::info!("[tray] action=pet_open source=menu");
+                pet_companion::tray_open(app);
+            }
             "tray_quit" => {
                 log::info!("[tray] action=quit source=menu");
                 shutdown_app_sync(app, 0);
@@ -1693,6 +1715,10 @@ fn setup_tray(app: &AppHandle<AppRuntime>) -> tauri::Result<()> {
     Ok(())
 }
 
+fn shutdown_pet_companion(app: &AppHandle<AppRuntime>) {
+    pet_companion::shutdown(app);
+}
+
 fn shutdown_imessage_scanner<R: tauri::Runtime>(app: &AppHandle<R>) {
     if let Some(registry) = app.try_state::<std::sync::Arc<imessage_scanner::ScannerRegistry>>() {
         registry.inner().shutdown();
@@ -1711,6 +1737,7 @@ fn perform_early_teardown_sync(app_handle: &AppHandle<AppRuntime>) {
     log::info!("[app] perform_early_teardown_sync — early teardown");
 
     shutdown_imessage_scanner(app_handle);
+    shutdown_pet_companion(app_handle);
 
     // A provisioned gateway is a container or a remote process this app
     // started. Nothing else will stop it: an SSH tunnel dies with this process
@@ -1754,6 +1781,7 @@ async fn perform_early_teardown_async(app_handle: &AppHandle<AppRuntime>) {
     log::info!("[app] perform_early_teardown_async — early teardown");
 
     shutdown_imessage_scanner(app_handle);
+    shutdown_pet_companion(app_handle);
 
     // Same teardown as the synchronous path, awaited rather than blocked on:
     // `block_on` inside an async fn runs a runtime inside a runtime.
@@ -3424,6 +3452,9 @@ pub fn run() {
                     "[tray] failed to setup tray icon (non-fatal in headless environment): {err}"
                 );
                 }
+                // Pet companion indicator lease + hotkeys. Runs even when the
+                // tray failed: it then reports visible:false and no lease is granted.
+                pet_companion::start(app_handle);
             }
             // Intercept the main window's close request on macOS so the user
             // can re-open the app from the tray icon. Letting the OS destroy
