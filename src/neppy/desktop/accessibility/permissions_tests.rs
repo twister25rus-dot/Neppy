@@ -182,3 +182,29 @@ mod automation_state_stale_cache {
         );
     }
 }
+
+// ── screen recording ──────────────────────────────────────────────────────
+
+#[cfg(not(target_os = "macos"))]
+#[test]
+fn screen_recording_is_unsupported_off_macos() {
+    assert_eq!(
+        detect_screen_recording_permission(),
+        PermissionState::Unsupported
+    );
+    assert_eq!(
+        request_screen_recording_access(),
+        PermissionState::Unsupported
+    );
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn screen_recording_detect_never_prompts_and_is_granted_or_denied() {
+    // Preflight only: safe in CI, never shows a dialog.
+    let s = detect_screen_recording_permission();
+    assert!(matches!(
+        s,
+        PermissionState::Granted | PermissionState::Denied
+    ));
+}

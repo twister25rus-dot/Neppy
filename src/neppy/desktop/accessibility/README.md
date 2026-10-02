@@ -15,6 +15,18 @@ Cross-platform accessibility middleware. Owns macOS AX / CGEvent / IOKit FFI, th
 - `pub fn normalize_ax_value` / `parse_ax_number` / `truncate_tail` — `text_util.rs` — AX value normalization.
 - `pub struct ElementBounds` / `FocusedTextContext` / `PermissionKind` / `PermissionState` / `PermissionStatus` — `types.rs`.
 
+## Pet Mode sensors
+
+Side-effect-free sensing for the Pet Mode companion. All blocking; call from `spawn_blocking`. Non-macOS builds return `SensorError::Unsupported`.
+
+- `frontmost_snapshot(SnapshotOpts) -> Result<FrontmostSnapshot, SensorError>` / `secure_entry_active` / `frontmost_pid` / `bundle_dir_from_exe_path` — `frontmost.rs` — native AX FFI (0.25 s messaging timeout). Never reads `AXValue`, never sets `AXEnhancedUserInterface`. Selection is read only when requested and no secure field / secure event input is active.
+- `clipboard_peek` (changeCount only) / `clipboard_read(max_chars)` — `clipboard.rs` — via the Swift helper; concealed / transient / auto-generated pasteboards (password managers) yield no text (checked in the helper and again host-side).
+- `capture_region_interactive(timeout, &OcrOpts)` — `capture.rs` — user drags a region (`screencapture -i -x`), OCR'd on-device, image deleted at once.
+- `ScreenWatcher::observe(&AutonomousCaptureOpts)` — `capture.rs` — autonomous silent capture (`screencapture -x -o -l <window>` / `-m`) after Screen Recording is granted; downscaled-grid change detection (`change_detector.rs`) so Vision OCR (`ocr.rs`) runs only when the frame changed. Images live in a 0600 `TempPng` deleted on drop (also on error / panic) and are never returned: only `OcrText` leaves.
+- `detect_screen_recording_permission` / `request_screen_recording_access` (prompts at most once per process) — `permissions.rs`.
+- `helper_sensors_swift.rs` holds the Swift commands (`clipboard_peek`, `clipboard_read`, `frontmost_window`, `frame_signature`, `ocr`) spliced into the helper; `helper_send_receive_with_timeout` gives them per-call deadlines (1.5 s / OCR 15 s) that also bound the wait for the helper.
+- OCR languages are always explicit (default `en-US`): `automaticallyDetectsLanguage` measured ~19 s on a Retina frame versus ~0.2 s with an explicit list.
+
 ## Calls into
 
 - macOS frameworks (`ApplicationServices`, `CoreGraphics`, `IOKit`, `AVFoundation`) via FFI.

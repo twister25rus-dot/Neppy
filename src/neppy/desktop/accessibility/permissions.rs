@@ -39,6 +39,13 @@ extern "C" {
 }
 
 #[cfg(target_os = "macos")]
+#[link(name = "CoreGraphics", kind = "framework")]
+extern "C" {
+    fn CGPreflightScreenCaptureAccess() -> bool;
+    fn CGRequestScreenCaptureAccess() -> bool;
+}
+
+#[cfg(target_os = "macos")]
 #[link(name = "IOKit", kind = "framework")]
 extern "C" {
     fn IOHIDCheckAccess(request_type: i32) -> isize;
@@ -107,6 +114,60 @@ pub fn detect_input_monitoring_permission() -> PermissionState {
         IOHID_ACCESS_UNKNOWN => PermissionState::Unknown,
         _ => PermissionState::Unknown,
     }
+}
+
+// ---------------------------------------------------------------------------
+// Screen Recording permission (needed to see other apps' windows)
+// ---------------------------------------------------------------------------
+
+/// Whether Screen Recording is granted. `CGPreflightScreenCaptureAccess` cannot tell
+/// "never asked" from "denied", so a missing grant is reported as `Denied`.
+/// Never prompts.
+#[cfg(target_os = "macos")]
+pub fn detect_screen_recording_permission() -> PermissionState {
+    if unsafe { CGPreflightScreenCaptureAccess() } {
+        PermissionState::Granted
+    } else {
+        PermissionState::Denied
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn detect_screen_recording_permission() -> PermissionState {
+    PermissionState::Unsupported
+}
+
+/// Process-wide guard so the system prompt is requested at most once per run.
+#[cfg(target_os = "macos")]
+static SCREEN_RECORDING_REQUESTED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Show the system Screen Recording prompt, **once per process, on first need**.
+/// Later calls do not prompt again and just return the current state (the
+/// caller can then open `Privacy_ScreenCapture` via [`open_macos_privacy_pane`]).
+/// Returns the state after the request; a fresh grant may only apply after the
+/// user toggles it in System Settings.
+#[cfg(target_os = "macos")]
+pub fn request_screen_recording_access() -> PermissionState {
+    if detect_screen_recording_permission() == PermissionState::Granted {
+        return PermissionState::Granted;
+    }
+    if SCREEN_RECORDING_REQUESTED.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        log::debug!("[permissions] screen recording already requested this run; not prompting");
+        return detect_screen_recording_permission();
+    }
+    log::debug!("[permissions] requesting screen recording access (first need)");
+    let granted = unsafe { CGRequestScreenCaptureAccess() };
+    if granted {
+        PermissionState::Granted
+    } else {
+        PermissionState::Denied
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn request_screen_recording_access() -> PermissionState {
+    PermissionState::Unsupported
 }
 
 // ---------------------------------------------------------------------------

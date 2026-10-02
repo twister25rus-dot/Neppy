@@ -83,10 +83,49 @@ const HELPER_RECV_TIMEOUT: Duration = Duration::from_secs(8);
 pub(crate) fn helper_send_receive(
     request: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
+    helper_round_trip(request, HELPER_RECV_TIMEOUT, false)
+}
+
+/// Like [`helper_send_receive`] with a caller-chosen deadline. The deadline also
+/// bounds the wait for the serialiser, so a sampler is never parked behind a
+/// slow call (an OCR pass) for longer than its own budget. Sensors use 1.5 s;
+/// OCR 15 s.
+#[cfg(target_os = "macos")]
+pub(crate) fn helper_send_receive_with_timeout(
+    request: &serde_json::Value,
+    timeout: Duration,
+) -> Result<serde_json::Value, String> {
+    helper_round_trip(request, timeout, true)
+}
+
+#[cfg(target_os = "macos")]
+fn helper_round_trip(
+    request: &serde_json::Value,
+    timeout: Duration,
+    bounded_lock_wait: bool,
+) -> Result<serde_json::Value, String> {
+    let started = Instant::now();
     // Serialise request/response pairs — prevents interleaved reads.
-    let _rr_guard = RECV_SERIALISER
-        .lock()
-        .map_err(|_| "recv serialiser lock poisoned".to_string())?;
+    let _rr_guard = if bounded_lock_wait {
+        loop {
+            match RECV_SERIALISER.try_lock() {
+                Ok(g) => break g,
+                Err(std::sync::TryLockError::Poisoned(_)) => {
+                    return Err("recv serialiser lock poisoned".to_string())
+                }
+                Err(std::sync::TryLockError::WouldBlock) => {
+                    if started.elapsed() >= timeout {
+                        return Err("helper busy: timed out waiting for serialiser".to_string());
+                    }
+                    std::thread::sleep(Duration::from_millis(5));
+                }
+            }
+        }
+    } else {
+        RECV_SERIALISER
+            .lock()
+            .map_err(|_| "recv serialiser lock poisoned".to_string())?
+    };
 
     ensure_helper_running()?;
 
@@ -117,7 +156,7 @@ pub(crate) fn helper_send_receive(
     } // UNIFIED_HELPER released here — fire-and-forget callers can proceed
 
     // Read until the line matches `id` (discards stale lines after a timeout or reordering).
-    let deadline = Instant::now() + HELPER_RECV_TIMEOUT;
+    let deadline = Instant::now() + timeout;
     loop {
         let remaining = deadline.saturating_duration_since(Instant::now());
         if remaining.is_zero() {
@@ -347,6 +386,8 @@ fn ensure_helper_binary() -> Result<PathBuf, String> {
                 "Cocoa",
                 "-framework",
                 "ApplicationServices",
+                "-framework",
+                "Vision",
             ])
             .arg(&source_path)
             .arg("-o")
@@ -360,6 +401,8 @@ fn ensure_helper_binary() -> Result<PathBuf, String> {
                         "Cocoa",
                         "-framework",
                         "ApplicationServices",
+                        "-framework",
+                        "Vision",
                     ])
                     .arg(&source_path)
                     .arg("-o")
@@ -386,7 +429,14 @@ fn ensure_helper_binary() -> Result<PathBuf, String> {
 
 #[cfg(target_os = "macos")]
 fn unified_swift_source() -> String {
-    r##"import Cocoa
+    UNIFIED_SWIFT_BASE.replace(
+        "// @@SENSORS_SWIFT@@",
+        super::helper_sensors_swift::SENSORS_SWIFT,
+    )
+}
+
+#[cfg(target_os = "macos")]
+const UNIFIED_SWIFT_BASE: &str = r##"import Cocoa
 import Foundation
 import ApplicationServices
 
@@ -925,6 +975,8 @@ final class OverlayController {
     }
 }
 
+// @@SENSORS_SWIFT@@
+
 // MARK: - Main Entry Point
 
 let app = NSApplication.shared
@@ -949,6 +1001,35 @@ DispatchQueue.global(qos: .userInitiated).async {
             let text = (payload["text"] as? String) ?? ""
             let response = pasteText(id: id, text: text)
             writeResponse(response)
+
+        case "clipboard_peek":
+            writeResponse(clipboardPeek(id: id))
+
+        case "clipboard_read":
+            let maxChars = (payload["max_chars"] as? NSNumber)?.intValue ?? 4000
+            writeResponse(clipboardRead(id: id, maxChars: maxChars))
+
+        case "frontmost_window":
+            writeResponse(frontmostWindow(id: id))
+
+        // Image work runs off the reader loop so show/hide are never queued behind it.
+        case "frame_signature":
+            let path = (payload["path"] as? String) ?? ""
+            let cols = (payload["cols"] as? NSNumber)?.intValue ?? 64
+            let rows = (payload["rows"] as? NSNumber)?.intValue ?? 36
+            DispatchQueue.global(qos: .utility).async {
+                writeResponse(frameSignature(id: id, path: path, cols: cols, rows: rows))
+            }
+
+        case "ocr":
+            let path = (payload["path"] as? String) ?? ""
+            let maxChars = (payload["max_chars"] as? NSNumber)?.intValue ?? 4000
+            let accurate = ((payload["level"] as? String) ?? "accurate") != "fast"
+            let maxDim = (payload["max_dim"] as? NSNumber)?.intValue ?? 0
+            let languages = (payload["languages"] as? [String]) ?? []
+            DispatchQueue.global(qos: .utility).async {
+                writeResponse(ocrImage(id: id, path: path, maxChars: maxChars, accurate: accurate, maxDim: maxDim, languages: languages))
+            }
 
         case "ax_list":
             let appName = (payload["app_name"] as? String) ?? ""
@@ -996,8 +1077,11 @@ DispatchQueue.global(qos: .userInitiated).async {
             break
         }
     }
+    // stdin closed (parent exited without `quit`): do not linger as an orphan.
+    DispatchQueue.main.async {
+        NSApplication.shared.terminate(nil)
+    }
 }
 
 app.run()
-"##.to_string()
-}
+"##;
