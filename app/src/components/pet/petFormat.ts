@@ -70,3 +70,78 @@ export function errorText(err: unknown): string {
   if (typeof err === 'string') return err;
   return '';
 }
+
+/** What the indicator shows: the four core states, with "observing screen" split out. */
+export type CompanionDisplayState =
+  | 'off'
+  | 'observing'
+  | 'observingScreen'
+  | 'paused'
+  | 'suspended';
+
+export function companionDisplayState(
+  state: 'off' | 'observing' | 'paused' | 'suspended' | null | undefined,
+  screenCaptureActive: boolean | null | undefined
+): CompanionDisplayState {
+  switch (state) {
+    case 'observing':
+      return screenCaptureActive ? 'observingScreen' : 'observing';
+    case 'paused':
+    case 'suspended':
+      return state;
+    default:
+      return 'off';
+  }
+}
+
+/**
+ * Human form of a Tauri accelerator, for display only. `CmdOrCtrl+Alt+Shift+P`
+ * becomes `⌥⇧⌘P` on macOS and `Ctrl+Alt+Shift+P` elsewhere. An empty or missing
+ * accelerator returns `null` (the shortcut is disabled).
+ */
+export function formatHotkey(accel: string | null | undefined, isMac: boolean): string | null {
+  if (!accel || !accel.trim()) return null;
+  const parts = accel
+    .split('+')
+    .map(p => p.trim())
+    .filter(Boolean);
+  const key = parts.pop() ?? '';
+  const mods = new Set(parts.map(p => p.toLowerCase()));
+  const has = (...names: string[]) => names.some(n => mods.has(n));
+  if (isMac) {
+    const glyphs = [
+      has('ctrl', 'control') ? '⌃' : '',
+      has('alt', 'option') ? '⌥' : '',
+      has('shift') ? '⇧' : '',
+      has('cmd', 'command', 'super', 'meta', 'cmdorctrl', 'commandorcontrol') ? '⌘' : '',
+    ].join('');
+    return `${glyphs}${key.length === 1 ? key.toUpperCase() : key}`;
+  }
+  const names = [
+    has('ctrl', 'control', 'cmdorctrl', 'commandorcontrol') ? 'Ctrl' : '',
+    has('alt', 'option') ? 'Alt' : '',
+    has('shift') ? 'Shift' : '',
+    has('cmd', 'command', 'super', 'meta') ? 'Win' : '',
+  ].filter(Boolean);
+  return [...names, key.length === 1 ? key.toUpperCase() : key].join('+');
+}
+
+export const MAX_TITLE_RULES = 100;
+export const MAX_TITLE_RULE_LEN = 200;
+
+/** Client-side mirror of the core's title-rule validation. `null` means valid. */
+export function titleRuleProblem(
+  rule: string,
+  existing: readonly string[]
+): 'tooLong' | 'tooMany' | 'badRegex' | null {
+  if (rule.length > MAX_TITLE_RULE_LEN) return 'tooLong';
+  if (existing.length >= MAX_TITLE_RULES) return 'tooMany';
+  if (rule.startsWith('re:')) {
+    try {
+      new RegExp(rule.slice(3));
+    } catch {
+      return 'badRegex';
+    }
+  }
+  return null;
+}

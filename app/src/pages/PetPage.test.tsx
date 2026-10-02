@@ -2,6 +2,11 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  makeCompanionSettings,
+  makeCompanionStatus,
+  makeSuggestion,
+} from '../components/pet/companion/companionFixtures';
+import {
   makeDigest,
   makeFeed,
   makeInbox,
@@ -25,6 +30,23 @@ vi.mock('../services/api/petApi', () => ({
   fetchPetNotes: (...args: unknown[]) => mockNotes(...args),
   buildPetDigestNow: vi.fn(),
 }));
+const mockCompanionSettings = vi.fn();
+const mockCompanionStatus = vi.fn();
+const mockCompanionSuggestions = vi.fn();
+const mockCompanionPause = vi.fn();
+const mockCompanionResume = vi.fn();
+
+vi.mock('../services/api/petCompanionApi', async importOriginal => {
+  const actual = await importOriginal<typeof import('../services/api/petCompanionApi')>();
+  return {
+    ...actual,
+    getCompanionSettings: (...args: unknown[]) => mockCompanionSettings(...args),
+    getCompanionStatus: (...args: unknown[]) => mockCompanionStatus(...args),
+    fetchCompanionSuggestions: (...args: unknown[]) => mockCompanionSuggestions(...args),
+    pauseCompanion: (...args: unknown[]) => mockCompanionPause(...args),
+    resumeCompanion: (...args: unknown[]) => mockCompanionResume(...args),
+  };
+});
 vi.mock('../services/socketService', () => ({ socketService: { on: vi.fn(), off: vi.fn() } }));
 
 describe('PetPage', () => {
@@ -35,6 +57,9 @@ describe('PetPage', () => {
     mockInbox.mockResolvedValue(makeInbox());
     mockNotes.mockResolvedValue([]);
     mockRunNow.mockResolvedValue({ status: 'started' });
+    mockCompanionSettings.mockResolvedValue(makeCompanionSettings({ enabled: false }));
+    mockCompanionStatus.mockResolvedValue(makeCompanionStatus({ state: 'off' }));
+    mockCompanionSuggestions.mockResolvedValue([]);
   });
 
   it('renders the pet header and the feed tab by default', async () => {
@@ -99,5 +124,71 @@ describe('PetPage', () => {
     renderWithProviders(<PetPage />, { initialEntries: ['/pet'] });
     expect(await screen.findByTestId('pet-enabled-badge')).toHaveTextContent('Off');
     expect(screen.getByText(/Pet mode is off/)).toBeInTheDocument();
+  });
+
+  describe('desktop companion', () => {
+    beforeEach(() => {
+      mockCompanionSettings.mockResolvedValue(makeCompanionSettings({ enabled: true }));
+      mockCompanionStatus.mockResolvedValue(makeCompanionStatus());
+    });
+
+    it('opens on the Now tab by default when the companion is on', async () => {
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet'] });
+      expect(await screen.findByTestId('companion-now-tab')).toBeInTheDocument();
+      expect(screen.queryByTestId('pet-feed-tab')).toBeNull();
+    });
+
+    it('keeps the Feed as the default when the companion is off', async () => {
+      mockCompanionSettings.mockResolvedValue(makeCompanionSettings({ enabled: false }));
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet'] });
+      expect(await screen.findByTestId('pet-feed-tab')).toBeInTheDocument();
+      expect(screen.queryByTestId('companion-header-pause')).toBeNull();
+    });
+
+    it('opens the Now tab from the tray deep link', async () => {
+      mockCompanionSettings.mockResolvedValue(makeCompanionSettings({ enabled: false }));
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet?tab=now'] });
+      expect(await screen.findByTestId('companion-off')).toBeInTheDocument();
+    });
+
+    it('shows the observing indicator and a Pause button in the header', async () => {
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet?tab=feed'] });
+      expect(await screen.findByTestId('companion-header-badge')).toHaveTextContent('Observing');
+      mockCompanionPause.mockResolvedValue(makeCompanionStatus({ state: 'paused' }));
+      fireEvent.click(screen.getByTestId('companion-header-pause'));
+      await waitFor(() => expect(mockCompanionPause).toHaveBeenCalledWith(undefined, 'ui'));
+      await waitFor(() =>
+        expect(screen.getByTestId('companion-header-badge')).toHaveTextContent('Paused')
+      );
+      mockCompanionResume.mockResolvedValue(makeCompanionStatus());
+      fireEvent.click(screen.getByTestId('companion-header-resume'));
+      await waitFor(() => expect(mockCompanionResume).toHaveBeenCalledWith('ui'));
+    });
+
+    it('labels observing the screen distinctly in the header', async () => {
+      mockCompanionStatus.mockResolvedValue(makeCompanionStatus({ screen_capture_active: true }));
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet?tab=feed'] });
+      expect(await screen.findByTestId('companion-header-badge')).toHaveTextContent(
+        'Observing screen'
+      );
+    });
+
+    it('counts new suggestions on the Now tab', async () => {
+      mockCompanionSuggestions.mockResolvedValue([makeSuggestion({ state: 'new' })]);
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet?tab=feed'] });
+      await waitFor(() => expect(screen.getByTestId('pet-tab-now')).toHaveTextContent('1'));
+    });
+
+    it('still loads when the companion is unavailable (older core)', async () => {
+      mockCompanionSettings.mockRejectedValue(new Error('unknown method'));
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet'] });
+      expect(await screen.findByTestId('pet-feed-tab')).toBeInTheDocument();
+      expect(screen.queryByTestId('companion-header-badge')).toBeNull();
+    });
+
+    it('mounts the companion settings panel in the Settings tab', async () => {
+      renderWithProviders(<PetPage />, { initialEntries: ['/pet?tab=settings'] });
+      expect(await screen.findByTestId('companion-settings')).toBeInTheDocument();
+    });
   });
 });

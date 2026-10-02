@@ -74,7 +74,7 @@ export type PetNoteKind =
   | 'fyi'
   | 'idea'
   | 'proposal';
-export type PetNoteSource = 'memory' | 'tasks' | 'calendar' | 'email' | 'web' | 'other';
+export type PetNoteSource = 'memory' | 'tasks' | 'calendar' | 'email' | 'web' | 'desktop' | 'other';
 export type PetNoteState = 'new' | 'notified' | 'queued' | 'digested' | 'dropped' | 'dismissed';
 
 export interface PetNote {

@@ -3,9 +3,9 @@
  * memory and tasks while the Mac is awake, leaves a ranked digest, and raises
  * suggestions that only ever become a chat draft for the user to review.
  *
- * Tabs live in the URL (`?tab=feed|inbox|notes|settings`, default `feed`), and
- * `note` / `digest` query params pre-select an item so pet notifications can
- * deep link straight to it.
+ * Tabs live in the URL (`?tab=now|feed|inbox|notes|settings`). The default is `now`
+ * when the desktop companion is on, otherwise `feed`. The `note` / `digest` query
+ * params pre-select an item so pet notifications can deep link straight to it.
  */
 import debug from 'debug';
 import { useCallback, useState } from 'react';
@@ -13,6 +13,8 @@ import { useSearchParams } from 'react-router-dom';
 
 import PageSectionHeader from '../components/layout/PageSectionHeader';
 import PanelPage from '../components/layout/PanelPage';
+import CompanionNowTab from '../components/pet/companion/CompanionNowTab';
+import { useCompanion } from '../components/pet/companion/useCompanion';
 import PetFeedTab from '../components/pet/PetFeedTab';
 import { errorText } from '../components/pet/petFormat';
 import PetHeader from '../components/pet/PetHeader';
@@ -29,7 +31,7 @@ import { runPetNow } from '../services/api/petApi';
 
 const log = debug('pet:page');
 
-const TABS = ['feed', 'inbox', 'notes', 'settings'] as const;
+const TABS = ['now', 'feed', 'inbox', 'notes', 'settings'] as const;
 type PetTab = (typeof TABS)[number];
 
 const isTab = (value: string | null): value is PetTab =>
@@ -42,9 +44,12 @@ export default function PetPage() {
   const [running, setRunning] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  const companion = useCompanion();
+  const [companionBusy, setCompanionBusy] = useState(false);
 
   const rawTab = params.get('tab');
-  const tab: PetTab = isTab(rawTab) ? rawTab : 'feed';
+  const defaultTab: PetTab = companion.settings?.enabled ? 'now' : 'feed';
+  const tab: PetTab = isTab(rawTab) ? rawTab : defaultTab;
   const noteId = params.get('note');
   const digestId = params.get('digest');
 
@@ -88,6 +93,23 @@ export default function PetPage() {
     }
   };
 
+  const handleCompanionControl = async (fn: () => Promise<void>) => {
+    setCompanionBusy(true);
+    setRunError(null);
+    try {
+      await fn();
+    } catch (err) {
+      log('companion control failed: %o', err);
+      setRunError(t('pet.companion.errors.controlFailed'));
+    } finally {
+      setCompanionBusy(false);
+    }
+  };
+
+  const newSuggestionCount = companion.suggestions.filter(
+    s => s.state === 'new' || s.state === 'shown'
+  ).length;
+
   const pendingCount =
     (inbox?.proposals.filter(p => p.state === 'pending').length ?? 0) +
     (inbox?.approvals.length ?? 0);
@@ -95,7 +117,7 @@ export default function PetPage() {
   const refreshSilently = useCallback(() => void refresh(), [refresh]);
 
   let body;
-  if (loading && !pet) {
+  if ((loading && !pet) || (pet && companion.loading)) {
     body = <CenteredLoadingState label={t('pet.loading')} />;
   } else if (!pet || !feed || !inbox) {
     body = (
@@ -139,9 +161,21 @@ export default function PetPage() {
           notice={notice}
           error={runError}
           onRunNow={() => void handleRunNow()}
+          companion={{
+            displayState: companion.displayState,
+            busy: companionBusy,
+            onPause: () => void handleCompanionControl(() => companion.pause()),
+            onResume: () => void handleCompanionControl(() => companion.resume()),
+          }}
         />
         <TabsRoot value={tab} onValueChange={changeTab} className="space-y-4">
           <TabsList variant="line" aria-label={t('pet.tabs.aria')}>
+            <TabsTrigger value="now" data-testid="pet-tab-now">
+              {t('pet.tabs.now')}
+              {companion.displayState !== 'off' && newSuggestionCount > 0 && (
+                <Badge variant="primary">{newSuggestionCount}</Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="feed" data-testid="pet-tab-feed">
               {t('pet.tabs.feed')}
             </TabsTrigger>
@@ -156,6 +190,13 @@ export default function PetPage() {
               {t('pet.tabs.settings')}
             </TabsTrigger>
           </TabsList>
+          <TabsContent value="now">
+            <CompanionNowTab
+              companion={companion}
+              onOpenSettings={() => changeTab('settings')}
+              onChanged={refreshSilently}
+            />
+          </TabsContent>
           <TabsContent value="feed">
             <PetFeedTab
               pet={pet}
@@ -179,7 +220,12 @@ export default function PetPage() {
             />
           </TabsContent>
           <TabsContent value="settings">
-            <PetSettingsTab pet={pet} onSaved={applyPet} onChanged={refreshSilently} />
+            <PetSettingsTab
+              pet={pet}
+              onSaved={applyPet}
+              onChanged={refreshSilently}
+              companion={companion}
+            />
           </TabsContent>
         </TabsRoot>
       </>

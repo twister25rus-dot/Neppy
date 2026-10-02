@@ -18,6 +18,7 @@
  *   dictation:toggle          voice recording started / stopped
  *   dictation:transcription   final transcript text
  *   overlay:attention         core broadcast message
+ *   pet:companion             desktop companion state and suggestions
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
@@ -34,6 +35,18 @@ type NotchMode = 'ready' | 'listening' | 'transcribing' | 'thinking' | 'speaking
 interface NotchState {
   mode: NotchMode;
   text: string;
+  /** Secondary hint shown after the text (for example the open shortcut). */
+  hint?: string;
+}
+
+/** What the desktop companion is doing, as far as the pill is concerned. */
+type PetPillState = 'off' | 'observing' | 'observingScreen' | 'paused';
+
+interface PetCompanionPayload {
+  type?: string;
+  state?: string;
+  screen_capture_active?: boolean;
+  suggestion?: { headline?: string };
 }
 
 interface DictationTogglePayload {
@@ -51,6 +64,7 @@ interface AttentionPayload {
 
 const LINGER_MS = 1800;
 const DEFAULT_TTL_MS = 6000;
+const PET_SUGGESTION_TTL_MS = 8000;
 
 // ── Waveform bars (voice activity animation) ──────────────────────────────────
 
@@ -93,7 +107,53 @@ function SpinnerDots() {
 
 // ── Icon glyph ────────────────────────────────────────────────────────────────
 
-function ModeIcon({ mode }: { mode: NotchMode }) {
+function PetIcon({ pet }: { pet: Exclude<PetPillState, 'off'> }) {
+  if (pet === 'paused') {
+    return (
+      <span className="flex items-center gap-[3px]" aria-hidden="true" data-testid="notch-pet-icon">
+        <span className="h-[10px] w-[3px] rounded-full bg-white/70" />
+        <span className="h-[10px] w-[3px] rounded-full bg-white/70" />
+      </span>
+    );
+  }
+  if (pet === 'observingScreen') {
+    // A small screen glyph: distinct from the plain observing dot.
+    return (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        aria-hidden="true"
+        data-testid="notch-pet-icon">
+        <rect
+          x="1.5"
+          y="3"
+          width="13"
+          height="8.5"
+          rx="1.6"
+          stroke="rgb(52 211 153)"
+          strokeWidth="1.3"
+        />
+        <circle cx="8" cy="7.25" r="1.6" fill="rgb(52 211 153)" />
+        <line
+          x1="5"
+          y1="14"
+          x2="11"
+          y2="14"
+          stroke="rgb(52 211 153)"
+          strokeWidth="1.3"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  return <span className="h-2 w-2 rounded-full bg-emerald-400" data-testid="notch-pet-icon" />;
+}
+
+function ModeIcon({ mode, pet }: { mode: NotchMode; pet: PetPillState }) {
+  // The companion baseline replaces the idle dot while the pet is observing or paused.
+  if (mode === 'ready' && pet !== 'off') return <PetIcon pet={pet} />;
   // Steady green dot when idle/ready — calm "I'm listening for the wake word".
   if (mode === 'ready') return <span className="h-2 w-2 rounded-full bg-emerald-400/90" />;
   if (mode === 'listening') return <WaveformBars />;
@@ -132,6 +192,7 @@ function ModeIcon({ mode }: { mode: NotchMode }) {
 export default function NotchApp() {
   const { t } = useT();
   const [state, setState] = useState<NotchState>({ mode: 'ready', text: '' });
+  const [pet, setPet] = useState<PetPillState>('off');
   const dismissRef = useRef<number | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
@@ -216,6 +277,33 @@ export default function NotchApp() {
             scheduleDismiss(payload?.ttl_ms ?? DEFAULT_TTL_MS);
           });
 
+          socket.on('pet:companion', (payload: PetCompanionPayload) => {
+            if (payload?.type === 'state') {
+              const next: PetPillState =
+                payload.state === 'observing'
+                  ? payload.screen_capture_active
+                    ? 'observingScreen'
+                    : 'observing'
+                  : payload.state === 'paused'
+                    ? 'paused'
+                    : 'off';
+              console.debug(`[notch] pet:companion state=${next}`);
+              setPet(next);
+            } else if (payload?.type === 'suggestion') {
+              const headline = payload.suggestion?.headline?.trim();
+              if (!headline) return;
+              // Never log the headline: it is derived from what the user is working on.
+              console.debug('[notch] pet:companion suggestion');
+              clearDismiss();
+              setState({
+                mode: 'attention',
+                text: headline.length > 60 ? `${headline.slice(0, 57)}…` : headline,
+                hint: t('notch.petOpenHint', '⌥⇧⌘Space to open'),
+              });
+              scheduleDismiss(PET_SUGGESTION_TTL_MS);
+            }
+          });
+
           socket.connect();
           console.debug('[notch] socket connected', socket.id);
         } catch (err) {
@@ -265,11 +353,19 @@ export default function NotchApp() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
-  const { mode, text } = state;
+  const { mode, text, hint } = state;
 
   // The pill is ALWAYS visible so the user can always see the listener status:
   // Ready (idle) · Listening (capturing speech) · Processing (running a command).
-  const label = text || (mode === 'ready' ? t('notch.ready', 'Ready') : '');
+  const petLabel =
+    pet === 'observing'
+      ? t('notch.petWatching', 'Pet watching')
+      : pet === 'observingScreen'
+        ? t('notch.petWatchingScreen', 'Pet watching screen')
+        : pet === 'paused'
+          ? t('notch.petPaused', 'Pet paused')
+          : null;
+  const label = text || (mode === 'ready' ? (petLabel ?? t('notch.ready', 'Ready')) : '');
 
   const pillBg =
     mode === 'speaking'
@@ -287,10 +383,15 @@ export default function NotchApp() {
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
         }}>
-        <ModeIcon mode={mode} />
+        <ModeIcon mode={mode} pet={pet} />
         {label && (
           <span className="max-w-[260px] truncate text-[13px] font-medium leading-none tracking-[-0.01em] text-white/95">
             {label}
+          </span>
+        )}
+        {hint && (
+          <span className="text-[11px] leading-none text-white/60" data-testid="notch-hint">
+            {hint}
           </span>
         )}
       </div>

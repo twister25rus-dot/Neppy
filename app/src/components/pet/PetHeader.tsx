@@ -4,7 +4,7 @@ import { useT } from '../../lib/i18n/I18nContext';
 import type { PetProfile } from '../../services/api/petApi';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
-import { formatRelative } from './petFormat';
+import { type CompanionDisplayState, formatRelative } from './petFormat';
 
 interface PetHeaderProps {
   pet: PetProfile;
@@ -12,10 +12,24 @@ interface PetHeaderProps {
   notice: string | null;
   error: string | null;
   onRunNow: () => void;
+  /** Desktop companion indicator. Omit to hide it. */
+  companion?: {
+    displayState: CompanionDisplayState;
+    busy?: boolean;
+    onPause: () => void;
+    onResume: () => void;
+  };
 }
 
 /** The pet's name, whether it is on, when it last and next works, and Run now. */
-export default function PetHeader({ pet, running, notice, error, onRunNow }: PetHeaderProps) {
+export default function PetHeader({
+  pet,
+  running,
+  notice,
+  error,
+  onRunNow,
+  companion,
+}: PetHeaderProps) {
   const { t, locale } = useT();
   const never = t('pet.status.never');
   const notScheduled = t('pet.status.notScheduled');
@@ -52,6 +66,47 @@ export default function PetHeader({ pet, running, notice, error, onRunNow }: Pet
               <li>{t('pet.status.nextPass').replace('{when}', nextPass)}</li>
               <li>{t('pet.status.nextDigest').replace('{when}', nextDigest)}</li>
             </ul>
+            {companion && companion.displayState !== 'off' && (
+              <div
+                data-testid="companion-indicator"
+                data-state={companion.displayState}
+                className="mt-2 flex flex-wrap items-center gap-2">
+                <Badge
+                  variant={
+                    companion.displayState === 'paused'
+                      ? 'warning'
+                      : companion.displayState === 'suspended'
+                        ? 'danger'
+                        : 'success'
+                  }
+                  data-testid="companion-header-badge">
+                  {t(`pet.companion.state.${companion.displayState}`)}
+                </Badge>
+                {companion.displayState === 'paused' ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="xs"
+                    analyticsId="pet-companion-header-resume"
+                    data-testid="companion-header-resume"
+                    disabled={companion.busy}
+                    onClick={companion.onResume}>
+                    {t('pet.companion.resume')}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="xs"
+                    analyticsId="pet-companion-header-pause"
+                    data-testid="companion-header-pause"
+                    disabled={companion.busy}
+                    onClick={companion.onPause}>
+                    {t('pet.companion.pause')}
+                  </Button>
+                )}
+              </div>
+            )}
             {!pet.enabled && (
               <p className="mt-2 text-xs text-content-secondary">{t('pet.header.disabledHint')}</p>
             )}

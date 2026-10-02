@@ -105,4 +105,75 @@ describe('NotchApp', () => {
     );
     await waitFor(() => expect(connectCoreSocket).toHaveBeenCalledTimes(1));
   });
+
+  describe('desktop companion', () => {
+    it('shows a distinct baseline for observing, observing screen and paused', async () => {
+      const socket = await renderAndConnect();
+      expect(screen.queryByTestId('notch-pet-icon')).toBeNull();
+
+      socket.fire('pet:companion', { type: 'state', state: 'observing', paused: false });
+      expect(await screen.findByText('Pet watching')).toBeInTheDocument();
+      expect(screen.getByTestId('notch-pet-icon').tagName.toLowerCase()).toBe('span');
+
+      socket.fire('pet:companion', {
+        type: 'state',
+        state: 'observing',
+        screen_capture_active: true,
+      });
+      expect(await screen.findByText('Pet watching screen')).toBeInTheDocument();
+      expect(screen.getByTestId('notch-pet-icon').tagName.toLowerCase()).toBe('svg');
+
+      socket.fire('pet:companion', { type: 'state', state: 'paused', paused: true });
+      expect(await screen.findByText('Pet paused')).toBeInTheDocument();
+
+      socket.fire('pet:companion', { type: 'state', state: 'off' });
+      expect(await screen.findByText('Ready')).toBeInTheDocument();
+    });
+
+    it('treats a suspended companion as not observing', async () => {
+      const socket = await renderAndConnect();
+      socket.fire('pet:companion', { type: 'state', state: 'observing' });
+      await screen.findByText('Pet watching');
+      socket.fire('pet:companion', { type: 'state', state: 'suspended' });
+      expect(await screen.findByText('Ready')).toBeInTheDocument();
+    });
+
+    it('shows a suggestion headline with the open hint, then returns to the baseline', async () => {
+      const socket = await renderAndConnect();
+      socket.fire('pet:companion', { type: 'state', state: 'observing' });
+      await screen.findByText('Pet watching');
+
+      // Capture the dismiss timer instead of waiting 8 real seconds.
+      const timers: Array<{ cb: () => void; ms: number }> = [];
+      const spy = vi.spyOn(window, 'setTimeout').mockImplementation(((
+        cb: () => void,
+        ms: number
+      ) => {
+        timers.push({ cb, ms });
+        return timers.length;
+      }) as never);
+      try {
+        socket.fire('pet:companion', {
+          type: 'suggestion',
+          suggestion: { headline: 'Want help with this build error?' },
+        });
+        expect(screen.getByText('Want help with this build error?')).toBeInTheDocument();
+        expect(screen.getByTestId('notch-hint')).toHaveTextContent('⌥⇧⌘Space to open');
+
+        expect(timers.at(-1)?.ms).toBe(8000);
+        act(() => timers.at(-1)?.cb());
+        expect(screen.getByText('Pet watching')).toBeInTheDocument();
+        expect(screen.queryByTestId('notch-hint')).toBeNull();
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it('ignores a suggestion without a headline', async () => {
+      const socket = await renderAndConnect();
+      socket.fire('pet:companion', { type: 'suggestion', suggestion: {} });
+      expect(screen.getByText('Ready')).toBeInTheDocument();
+      expect(screen.queryByTestId('notch-hint')).toBeNull();
+    });
+  });
 });

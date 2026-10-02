@@ -32,6 +32,7 @@ import SecretPromptDialog from './components/mcp-setup/SecretPromptDialog';
 import NeppyLinkModal from './components/NeppyLinkModal';
 import NoticeCenter from './components/notices/NoticeCenter';
 import PersistRehydrationScreen from './components/PersistRehydrationScreen';
+import CompanionNavigateListener from './components/pet/companion/CompanionNavigateListener';
 import PttHotkeyManager from './components/PttHotkeyManager';
 import SecurityBanner from './components/SecurityBanner';
 import AppWalkthrough from './components/walkthrough/AppWalkthrough';
@@ -136,6 +137,7 @@ function App() {
                             <SecurityBanner />
                             {!onMobile && <DictationHotkeyManager />}
                             {!onMobile && <PttHotkeyManager />}
+                            {!onMobile && <CompanionNavigateListener />}
                             {!onMobile && <LocalAIDownloadSnackbar />}
                             {!onMobile && <AppUpdatePrompt />}
                             <KeyringConsentOverlay />

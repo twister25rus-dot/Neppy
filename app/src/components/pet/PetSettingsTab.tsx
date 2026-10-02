@@ -20,6 +20,8 @@ import NativeSelect from '../ui/NativeSelect';
 import NumberField from '../ui/NumberField';
 import Switch from '../ui/Switch';
 import TextArea from '../ui/TextArea';
+import CompanionSettingsPanel from './companion/CompanionSettingsPanel';
+import type { UseCompanion } from './companion/useCompanion';
 import { isValidHHMM } from './petFormat';
 
 const log = debug('pet:settings');
@@ -84,10 +86,17 @@ interface PetSettingsTabProps {
   onSaved: (pet: PetProfile) => void;
   /** Called after a goal change so the page refetches the profile. */
   onChanged: () => void;
+  /** Desktop companion state. When given, its settings panel renders below. */
+  companion?: UseCompanion;
 }
 
 /** Everything about the pet that the user can change. */
-export default function PetSettingsTab({ pet, onSaved, onChanged }: PetSettingsTabProps) {
+export default function PetSettingsTab({
+  pet,
+  onSaved,
+  onChanged,
+  companion,
+}: PetSettingsTabProps) {
   const { t } = useT();
   const [form, setForm] = useState<FormState>(() => toForm(pet));
   const [saving, setSaving] = useState(false);
@@ -419,6 +428,8 @@ export default function PetSettingsTab({ pet, onSaved, onChanged }: PetSettingsT
           </Button>
         </div>
       </section>
+
+      {companion && <CompanionSettingsPanel companion={companion} onChanged={onChanged} />}
     </div>
   );
 }
