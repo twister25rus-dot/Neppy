@@ -1678,17 +1678,18 @@ async fn run_typed_mode(
             options: options_vec,
         }
     } else if let Some(reason) = breaker_halt {
-        // The repeated-failure / repeat-progress circuit breaker halted the run
-        // (#4466). It is NOT a clean finish: `output` carries the breaker's
-        // root-cause summary, not a completed answer. Surface `Incomplete` with
-        // the halt reason so a delegating parent relays the blocker instead of
-        // treating the halted child as finished (the migrated path reported
-        // `hit_cap=false` → `Completed`, hiding the halt).
+        // The run halted before finishing: the repeated-failure / repeat-progress
+        // circuit breaker (#4466), or its wall-clock deadline (M2 — the graph
+        // turns a timeout into a checkpoint of the completed rounds with reason
+        // "timed out"). Either way it is NOT a clean finish: `output` carries the
+        // halt summary / checkpoint, not a completed answer. Surface `Incomplete`
+        // with the reason so a delegating parent relays the partial work instead
+        // of treating the halted child as finished.
         tracing::warn!(
             task_id = %task_id,
             agent_id = %definition.id,
             reason = %reason,
-            "[subagent_runner] child halted by circuit breaker; reporting Incomplete (#4466)"
+            "[subagent_runner] child halted before finishing (breaker or wall-clock); reporting Incomplete"
         );
         crate::neppy::agent::harness::subagent_runner::types::SubagentRunStatus::Incomplete {
             reason,

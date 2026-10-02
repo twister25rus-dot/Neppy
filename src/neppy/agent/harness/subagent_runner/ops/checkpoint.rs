@@ -78,3 +78,71 @@ impl SubagentCheckpoint {
         }
     }
 }
+
+/// The `Incomplete` reason a sub-agent reports when its wall-clock deadline
+/// stopped it (M2). The async-delivery framing reads "the sub-agent timed out
+/// and did not finish".
+pub(super) const SUBAGENT_TIMED_OUT_REASON: &str = "timed out";
+
+/// Deterministic `- role: content` digest of the rounds a sub-agent completed
+/// before it was stopped, from the transcript snapshot (system prompt and the
+/// opening prompt excluded by the caller's slice). Each entry is capped so a
+/// large tool result cannot swamp the parent's context.
+pub(super) fn transcript_digest(messages: &[crate::neppy::agent::messages::ChatMessage]) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::new();
+    for message in messages {
+        if message.role == "system" || message.content.trim().is_empty() {
+            continue;
+        }
+        let body = crate::neppy::util::truncate_with_ellipsis(message.content.trim(), 800);
+        let _ = writeln!(out, "- {}: {body}", message.role);
+    }
+    out.trim_end().to_string()
+}
+
+/// The checkpoint a timed-out sub-agent hands back (M2): what it did before the
+/// deadline, framed as incomplete so the delegating agent continues from it
+/// rather than treating it as an answer.
+///
+/// Deliberately deterministic — no summary model call. The run is already past
+/// its deadline (and, nested, close to its parent's), so a further provider call
+/// would most likely be cut off too and lose the progress this exists to keep.
+pub(super) fn timed_out_checkpoint(agent_id: &str, digest: &str) -> String {
+    let progress = if digest.trim().is_empty() {
+        "No steps completed before the deadline.".to_string()
+    } else {
+        format!("Progress so far:\n{digest}")
+    };
+    format!(
+        "Sub-agent `{agent_id}` ran out of time (wall-clock limit) before finishing this task. \
+         {progress}\n\nThe task is incomplete — the above is what was accomplished; continue \
+         from here."
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::neppy::agent::messages::ChatMessage;
+
+    #[test]
+    fn timed_out_checkpoint_keeps_the_completed_rounds() {
+        let digest = transcript_digest(&[
+            ChatMessage::system("you are a researcher"),
+            ChatMessage::assistant("looking it up"),
+            ChatMessage::user("[tool result] echoed:hi"),
+        ]);
+        assert!(!digest.contains("you are a researcher"));
+        let text = timed_out_checkpoint("researcher", &digest);
+        assert!(text.contains("ran out of time"));
+        assert!(text.contains("echoed:hi"));
+        assert!(text.contains("incomplete"));
+    }
+
+    #[test]
+    fn timed_out_checkpoint_says_so_when_nothing_completed() {
+        let text = timed_out_checkpoint("researcher", "");
+        assert!(text.contains("No steps completed"));
+    }
+}

@@ -246,6 +246,13 @@ impl Tool for McpCallTool {
         PermissionLevel::Execute
     }
 
+    /// A remote MCP tool is third-party code whose effect this host cannot
+    /// classify, so every call parks on the approval gate (S6) — the same
+    /// classification as the dynamic registry's `mcp_registry_tool_call`.
+    fn external_effect(&self) -> bool {
+        true
+    }
+
     fn supports_markdown(&self) -> bool {
         true
     }
@@ -329,6 +336,16 @@ mod tests {
         let result = tool.execute(json!({})).await.expect("execute");
         assert!(result.output().contains("docs"));
         assert!(result.markdown_formatted.is_some());
+    }
+
+    #[test]
+    fn call_tool_is_an_external_effect() {
+        let tool = McpCallTool::new(test_registry(), Arc::new(SecurityPolicy::default()));
+        assert!(tool.external_effect_with_args(&json!({
+            "server": "docs",
+            "tool": "anything",
+            "arguments": {}
+        })));
     }
 
     #[tokio::test]

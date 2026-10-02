@@ -28,6 +28,9 @@ mod types;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+mod origin_tests;
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 pub use dispatch::dispatch_card;

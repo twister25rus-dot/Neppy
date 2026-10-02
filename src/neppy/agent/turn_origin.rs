@@ -108,6 +108,46 @@ pub enum TrustedAutomationSource {
     /// shortcuts — with no exceptions. Set only by `cron::scheduler` for jobs
     /// whose `agent_id` is `pet_research`.
     PetResearch,
+    /// A system-initiated agent turn that runs with no user typing it: a
+    /// background-delivery follow-up (a finished detached sub-agent's result
+    /// streamed back into its parent chat) or an autonomous task-board card run
+    /// (`agent::task_dispatcher`). These used to run as [`AgentTurnOrigin::Cli`],
+    /// which the approval gate allows without a prompt — so an external action
+    /// steered by a task card (whose text may come from an external source) or by
+    /// a sub-agent's output ran unasked (M1).
+    ///
+    /// Ask-semantics: the gate treats this like an interactive chat turn **on
+    /// `thread_id`** — an `external_effect` call parks and surfaces an approval
+    /// card on that thread (addressed to [`BACKGROUND_TURN_CLIENT_ID`], so
+    /// whoever has the thread open sees it), honouring the user's `auto_approve`
+    /// allowlist and `auto_approve_all` exactly as a chat turn does. With no
+    /// thread there is no surface to ask on, so the call is **denied
+    /// immediately** rather than parked into a silent TTL.
+    BackgroundTurn {
+        /// The chat thread the turn streams into (the parent chat for a
+        /// delivery, the card's task-session thread for a board run).
+        thread_id: Option<String>,
+    },
+}
+
+/// The broadcast client id a [`TrustedAutomationSource::BackgroundTurn`]
+/// approval card is addressed to. The socket layer joins every connected client
+/// to the `"system"` room, so a card sent to it reaches whoever is viewing the
+/// thread — the same id the background progress bridge streams the turn under.
+pub const BACKGROUND_TURN_CLIENT_ID: &str = "system";
+
+/// The origin for a system-initiated background turn on `thread_id` (see
+/// [`TrustedAutomationSource::BackgroundTurn`]). `job_id` is a system-generated
+/// run id, never payload text.
+#[must_use]
+pub fn background_turn_origin(
+    job_id: impl Into<String>,
+    thread_id: Option<String>,
+) -> AgentTurnOrigin {
+    AgentTurnOrigin::TrustedAutomation {
+        job_id: job_id.into(),
+        source: TrustedAutomationSource::BackgroundTurn { thread_id },
+    }
 }
 
 impl AgentTurnOrigin {
@@ -124,6 +164,12 @@ impl AgentTurnOrigin {
             AgentTurnOrigin::ExternalChannel { channel, .. } => {
                 format!("ExternalChannel({channel})")
             }
+            // The background-turn source carries a thread id, which must not
+            // reach an info-level label — name the kind only.
+            AgentTurnOrigin::TrustedAutomation {
+                source: TrustedAutomationSource::BackgroundTurn { .. },
+                ..
+            } => "TrustedAutomation(BackgroundTurn)".to_string(),
             AgentTurnOrigin::TrustedAutomation { source, .. } => {
                 format!("TrustedAutomation({source:?})")
             }
@@ -654,6 +700,13 @@ mod tests {
             observed.is_none(),
             "spawn_unlabelled must not carry the caller's origin, got {observed:?}"
         );
+    }
+
+    #[test]
+    fn background_turn_class_names_the_kind_without_the_thread() {
+        let origin = background_turn_origin("run-1", Some("secret-thread".into()));
+        assert_eq!(origin.class(), "TrustedAutomation(BackgroundTurn)");
+        assert!(!origin.class().contains("secret-thread"));
     }
 
     #[tokio::test]

@@ -207,8 +207,13 @@ pub fn is_provider_config_rejection_message(body: &str) -> bool {
         "requires a subscription, upgrade for access",
         // TAURI-RUST-1V / OPENHUMAN-TAURI-4JS —
         // `reliable.rs::format_failure_aggregate` (no-configured-fallbacks
-        // branch) wraps every exhausted `reliable_chat_with_system` turn
-        // with:
+        // branch) wrapped every exhausted `reliable_chat_with_system` turn
+        // with the text below. That emit site left with `ReliableProvider`;
+        // the anchors stay so the message still classifies when it arrives
+        // from an older core, a persisted transcript, or a delegated
+        // sub-agent result. Its advice is accurate again: the chat turn path
+        // now honours `reliability.model_fallbacks` (N9 —
+        // `agent::tinyagents::routes::turn_fallback_policy`).
         //
         //   "The model `<name>` may not be available on your provider.
         //    Configure a fallback chain via `reliability.model_fallbacks`

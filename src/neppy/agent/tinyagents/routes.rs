@@ -166,6 +166,127 @@ pub(super) fn route_fallback_policy(model: &str) -> Option<FallbackPolicy> {
     policy
 }
 
+/// The user's `reliability.model_fallbacks` chain for a turn (N9): the entries
+/// configured for the turn's model string (`model`, often a tier alias) or for
+/// the model id the primary actually resolved to (`resolved`, e.g. a BYOK
+/// `deepseek-chat`), in configured order — the `model` key first — trimmed,
+/// de-duplicated, and never naming either primary spelling.
+///
+/// An entry is a bare model id (served by the primary's own provider) or a full
+/// `provider:model` string (served by that provider). Empty when nothing is
+/// configured — the turn keeps its tier chain, if any, unchanged.
+pub(super) fn configured_model_fallbacks(
+    config: &crate::neppy::config::Config,
+    model: &str,
+    resolved: &str,
+) -> Vec<String> {
+    let table = &config.reliability.model_fallbacks;
+    let mut out: Vec<String> = Vec::new();
+    for key in [model, resolved] {
+        let Some(entries) = table.get(key) else {
+            continue;
+        };
+        for entry in entries {
+            let entry = entry.trim();
+            if entry.is_empty() || entry == model || entry == resolved {
+                continue;
+            }
+            if !out.iter().any(|e| e == entry) {
+                out.push(entry.to_string());
+            }
+        }
+    }
+    if !out.is_empty() {
+        tracing::debug!(
+            route = model,
+            resolved,
+            fallbacks = ?out,
+            "[fallback] user-configured reliability.model_fallbacks apply to this turn"
+        );
+    }
+    out
+}
+
+/// The provider string that serves fallback `entry` for a primary on
+/// `primary_provider` (a slug such as `deepseek` / `ollama`). An entry whose
+/// prefix names a provider — the primary's own slug, a configured cloud
+/// provider slug, or a local runtime — is a full `provider:model` string and
+/// stands as written; anything else is a bare model id riding the primary's
+/// provider. The prefix check matters because model ids carry colons too
+/// (Ollama's `llama3:8b`), and splitting that on `:` would invent a provider
+/// named `llama3`. Returns `(provider_string, model_id)`.
+pub(super) fn fallback_provider_string(
+    config: &crate::neppy::config::Config,
+    primary_provider: &str,
+    entry: &str,
+) -> (String, String) {
+    if let Some((prefix, model)) = entry.split_once(':') {
+        let names_provider = prefix == primary_provider
+            || config
+                .cloud_providers
+                .iter()
+                .any(|p| p.slug.eq_ignore_ascii_case(prefix))
+            || crate::neppy::inference::local::profile::is_local_provider_string(entry);
+        if names_provider {
+            return (entry.to_string(), model.to_string());
+        }
+    }
+    (format!("{primary_provider}:{entry}"), entry.to_string())
+}
+
+/// `config` with `role`'s provider route pointed at `provider_string`, so the
+/// factory's role-based builder (which takes a BYOK/local model id from the
+/// route, not from its `model` argument) builds that fallback model. `None` for
+/// a role with no configurable route.
+pub(super) fn config_with_role_route(
+    config: &crate::neppy::config::Config,
+    role: &str,
+    provider_string: &str,
+) -> Option<crate::neppy::config::Config> {
+    let mut cfg = config.clone();
+    let slot = match role {
+        "chat" => &mut cfg.chat_provider,
+        "reasoning" => &mut cfg.reasoning_provider,
+        "coding" => &mut cfg.coding_provider,
+        // `burst` shares the agentic route (see the factory's role table).
+        "agentic" | "burst" => &mut cfg.agentic_provider,
+        "vision" => &mut cfg.vision_provider,
+        "memory" | "summarization" => &mut cfg.memory_provider,
+        "heartbeat" => &mut cfg.heartbeat_provider,
+        "learning" => &mut cfg.learning_provider,
+        "subconscious" => &mut cfg.subconscious_provider,
+        _ => return None,
+    };
+    *slot = Some(provider_string.to_string());
+    Some(cfg)
+}
+
+/// The turn's full fallback chain: `[model, configured…, tier alternates…]`.
+/// The user's explicit `reliability.model_fallbacks` entries come first, then
+/// the same-family tier alternates [`route_fallback_policy`] already supplied.
+/// `None` when neither exists (the turn stays primary-only, as before).
+pub(super) fn turn_fallback_policy(model: &str, configured: &[String]) -> Option<FallbackPolicy> {
+    let tier = route_fallback_policy(model);
+    if configured.is_empty() {
+        return tier;
+    }
+    let mut chain = vec![model.to_string()];
+    for name in configured
+        .iter()
+        .chain(tier.iter().flat_map(|p| p.models.iter().skip(1)))
+    {
+        if !chain.iter().any(|c| c == name) {
+            chain.push(name.clone());
+        }
+    }
+    tracing::debug!(
+        route = model,
+        chain = ?chain,
+        "[fallback] turn fallback chain includes user-configured models"
+    );
+    Some(FallbackPolicy::new(chain))
+}
+
 /// Around-model middleware that makes the crate's registry-backed
 /// [`RunPolicy::fallback`][tinyagents::harness::runtime::RunPolicy] traversal
 /// **event-visible** (issue #4249, Workstream 02.2).
@@ -311,6 +432,83 @@ mod tests {
                 expected.map(|chain| chain.iter().map(|s| s.to_string()).collect::<Vec<_>>());
             assert_eq!(got, want, "fallback chain mismatch for {model}");
         }
+    }
+
+    fn config_with_fallbacks(pairs: &[(&str, &[&str])]) -> crate::neppy::config::Config {
+        let mut config = crate::neppy::config::Config::default();
+        for (key, list) in pairs {
+            config.reliability.model_fallbacks.insert(
+                (*key).to_string(),
+                list.iter().map(|s| (*s).to_string()).collect(),
+            );
+        }
+        config
+    }
+
+    #[test]
+    fn configured_fallbacks_are_looked_up_by_alias_and_resolved_id() {
+        let config = config_with_fallbacks(&[
+            ("chat-v1", &["gpt-4o-mini", " ", "chat-v1"]),
+            ("deepseek-chat", &["deepseek-reasoner", "gpt-4o-mini"]),
+        ]);
+        assert_eq!(
+            configured_model_fallbacks(&config, "chat-v1", "deepseek-chat"),
+            vec!["gpt-4o-mini".to_string(), "deepseek-reasoner".to_string()]
+        );
+        assert!(configured_model_fallbacks(&config, "other", "other-id").is_empty());
+    }
+
+    #[test]
+    fn fallback_entries_map_onto_the_primary_provider_unless_qualified() {
+        let config = crate::neppy::config::Config::default();
+        assert_eq!(
+            fallback_provider_string(&config, "deepseek", "deepseek-reasoner"),
+            (
+                "deepseek:deepseek-reasoner".to_string(),
+                "deepseek-reasoner".to_string()
+            )
+        );
+        assert_eq!(
+            fallback_provider_string(&config, "deepseek", "ollama:llama3"),
+            ("ollama:llama3".to_string(), "llama3".to_string())
+        );
+        // A colon inside a bare model id is not a provider prefix.
+        assert_eq!(
+            fallback_provider_string(&config, "ollama", "llama3:8b"),
+            ("ollama:llama3:8b".to_string(), "llama3:8b".to_string())
+        );
+    }
+
+    #[test]
+    fn turn_fallback_policy_puts_configured_models_before_tier_alternates() {
+        assert_eq!(
+            turn_fallback_policy("gpt-4o", &["gpt-4o-mini".to_string()]).map(|p| p.models),
+            Some(vec!["gpt-4o".to_string(), "gpt-4o-mini".to_string()])
+        );
+        assert_eq!(
+            turn_fallback_policy(MODEL_CHAT_V1, &["byok-small".to_string()]).map(|p| p.models),
+            Some(vec![
+                MODEL_CHAT_V1.to_string(),
+                "byok-small".to_string(),
+                MODEL_BURST_V1.to_string()
+            ])
+        );
+        // Nothing configured: unchanged tier behaviour.
+        assert_eq!(turn_fallback_policy("gpt-4o", &[]).map(|p| p.models), None);
+    }
+
+    #[test]
+    fn role_route_override_targets_the_role_slot() {
+        let config = crate::neppy::config::Config::default();
+        let chat = config_with_role_route(&config, "chat", "deepseek:deepseek-reasoner")
+            .expect("chat has a route");
+        assert_eq!(
+            chat.chat_provider.as_deref(),
+            Some("deepseek:deepseek-reasoner")
+        );
+        let burst = config_with_role_route(&config, "burst", "x:y").expect("burst route");
+        assert_eq!(burst.agentic_provider.as_deref(), Some("x:y"));
+        assert!(config_with_role_route(&config, "no-such-role", "x:y").is_none());
     }
 
     /// Only the vision tier (and its hint form) imposes an `image_in` gate; the

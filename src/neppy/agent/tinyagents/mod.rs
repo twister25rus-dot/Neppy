@@ -137,11 +137,13 @@ pub(crate) struct ToolPolicyEnforcement {
 /// `RunLimits::max_retries_per_call + 1` (default 3 retries), so this stays
 /// within the loop's own bound.
 ///
-/// (Config parity note: the former `config.reliability.provider_retries` /
-/// `provider_backoff_ms` / `model_fallbacks` no longer drive the turn path —
-/// retry is the fixed schedule below and cross-route fallback is the crate
-/// registry `FallbackPolicy` from [`routes::route_fallback_policy`]. Those config
-/// knobs still apply to the non-seam `ReliableProvider` paths.)
+/// (Config parity note: `config.reliability.provider_retries` /
+/// `provider_backoff_ms` do not drive the turn path — retry is the fixed
+/// schedule below. `reliability.model_fallbacks` **does** (N9): its entries for
+/// the turn's model are built as extra registry routes and lead the
+/// `FallbackPolicy` from [`routes::turn_fallback_policy`], ahead of the
+/// same-family tier alternates. The legacy `reliability.fallback_providers`
+/// list is not read anywhere (the doctor reports it as ignored).)
 ///
 /// Cross-route **fallback** (`RunPolicy.fallback`) is orthogonal to retry and is
 /// populated per-turn by the caller ([`assemble_turn_harness`] via
@@ -180,6 +182,65 @@ fn parse_agent_turn_wall_clock_ms(env_value: Option<&str>) -> Option<u64> {
         .unwrap_or(DEFAULT_AGENT_TURN_TIMEOUT_SECS);
     (secs > 0).then(|| secs.saturating_mul(1_000))
 }
+
+tokio::task_local! {
+    /// Wall-clock deadline of the harness run currently driving this task (M2).
+    ///
+    /// A synchronous sub-agent runs nested inside its parent's tool call, and
+    /// the parent bounds that call by *its* remaining budget — so with equal
+    /// per-run ceilings the parent's timeout always fired first and dropped the
+    /// child mid-flight, losing every round it had completed. The child reads
+    /// this deadline and finishes slightly earlier ([`nested_run_budget_ms`]),
+    /// so its own `Timeout` fires first and the sub-agent runner can hand back
+    /// an `Incomplete` checkpoint instead. Absent across `tokio::spawn` on
+    /// purpose: a detached async sub-agent keeps its own full budget.
+    static TURN_DEADLINE: std::time::Instant;
+}
+
+/// The wall-clock budget for a run nested inside a parent with
+/// `parent_remaining` left: the remainder minus a grace window (10%, clamped to
+/// 2–60 s) the parent needs to turn the child's checkpoint into its own reply.
+/// When less than the grace window remains the child gets half of it. Never 0.
+pub(crate) fn nested_run_budget_ms(parent_remaining: std::time::Duration) -> u64 {
+    use std::time::Duration;
+    let grace = (parent_remaining / 10).clamp(Duration::from_secs(2), Duration::from_secs(60));
+    let budget = if parent_remaining > grace {
+        parent_remaining - grace
+    } else {
+        parent_remaining / 2
+    };
+    u64::try_from(budget.as_millis()).unwrap_or(u64::MAX).max(1)
+}
+
+/// Run `fut` with `deadline` installed as the enclosing run's wall-clock
+/// deadline (see [`TURN_DEADLINE`]). Test seam for nested-deadline behaviour.
+#[cfg(test)]
+pub(crate) async fn with_turn_deadline<F: std::future::Future>(
+    deadline: std::time::Instant,
+    fut: F,
+) -> F::Output {
+    TURN_DEADLINE.scope(deadline, fut).await
+}
+
+/// A harness run that stopped at its wall-clock deadline (M2).
+///
+/// Typed (rather than the plain string the other harness failures map to) so
+/// the sub-agent runner can recognise a timeout and return the rounds it
+/// completed as an `Incomplete` checkpoint instead of an error. `Display` is the
+/// exact text the untyped mapping produced, so user-facing messages are
+/// unchanged.
+#[derive(Debug)]
+pub(crate) struct TurnWallClockTimeout {
+    message: String,
+}
+
+impl std::fmt::Display for TurnWallClockTimeout {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for TurnWallClockTimeout {}
 
 fn run_policy_for(max_iterations: usize, response_cache_enabled: bool) -> RunPolicy {
     let mut policy = RunPolicy::default();
@@ -657,6 +718,30 @@ pub(crate) async fn run_turn_via_tinyagents_shared(
     if let Some(cap) = max_output_tokens {
         config = config.with_max_turn_output_tokens(cap);
     }
+    // M2: a nested (sub-agent) run finishes ahead of its parent's deadline so
+    // its own timeout — which the sub-agent runner turns into a checkpoint —
+    // fires before the parent's tool-call budget drops it.
+    let run_started = std::time::Instant::now();
+    let inherited_budget_ms = if subagent_scope.is_some() {
+        TURN_DEADLINE
+            .try_with(|deadline| deadline.saturating_duration_since(run_started))
+            .ok()
+            .map(nested_run_budget_ms)
+    } else {
+        None
+    };
+    if let Some(ms) = inherited_budget_ms {
+        tracing::debug!(
+            budget_ms = ms,
+            "[tinyagents] nested run inherits the parent's deadline (minus grace) as its wall-clock budget"
+        );
+        config = config.with_timeout_ms(ms);
+    }
+    let turn_deadline = match (agent_turn_wall_clock_ms(), inherited_budget_ms) {
+        (Some(own), Some(inherited)) => Some(own.min(inherited)),
+        (own, inherited) => own.or(inherited),
+    }
+    .map(|ms| run_started + std::time::Duration::from_millis(ms));
 
     tracing::info!(
         model,
@@ -900,7 +985,7 @@ pub(crate) async fn run_turn_via_tinyagents_shared(
     // nested inside its parent's drive future — leaving it inline on the stack
     // overflows when the parent + child drives compose. Boxing keeps only a
     // pointer on the stack at each level.
-    let run_result = with_run_cancellation(cancellation.clone(), async {
+    let drive = with_run_cancellation(cancellation.clone(), async {
         if streaming {
             let mut stream = Box::pin(harness.invoke_stream_in_context(&(), ctx, input));
             let mut terminal = None;
@@ -925,8 +1010,12 @@ pub(crate) async fn run_turn_via_tinyagents_shared(
         } else {
             Box::pin(harness.invoke_in_context(&(), ctx, input)).await
         }
-    })
-    .await;
+    });
+    // Publish this run's deadline to anything nested inside it (M2).
+    let run_result = match turn_deadline {
+        Some(deadline) => TURN_DEADLINE.scope(deadline, drive).await,
+        None => drive.await,
+    };
     // Drive future returned: run cleanup now (abort poll task + deregister +
     // requeue residual steers) rather than deferring to end-of-scope so the poll
     // loop cannot deliver into the no-longer-drained handle during post-run
@@ -973,6 +1062,18 @@ pub(crate) async fn run_turn_via_tinyagents_shared(
             }
             if let Some(depth_err) = tinyagents_depth_error(&e) {
                 return Err(anyhow::Error::new(depth_err));
+            }
+            // M2: the run's own wall-clock deadline is not a provider failure
+            // either. Typed so the sub-agent runner can checkpoint it; the text
+            // is identical to the untyped mapping below.
+            if let tinyagents::TinyAgentsError::Timeout(_) = &e {
+                tracing::debug!(
+                    model,
+                    "[tinyagents] run hit its wall-clock deadline; mapping to TurnWallClockTimeout"
+                );
+                return Err(anyhow::Error::new(TurnWallClockTimeout {
+                    message: format!("tinyagents harness run failed: {e}"),
+                }));
             }
             // Otherwise prefer the original typed provider error (preserves
             // `AgentError` downcasts the caller relies on) over the harness's
@@ -1219,7 +1320,14 @@ pub(crate) struct TurnModels {
     primary: TurnChatModel,
     /// Additive workload-tier routes (registry name → model), excluding the
     /// primary; the crate registry resolves fallback/selection across them.
+    /// Also carries the user-configured fallback models (N9), registered under
+    /// their configured names.
     routes: TierRoutes,
+    /// The user's `reliability.model_fallbacks` entries that built
+    /// successfully, in order (N9). Each names a model registered in
+    /// [`Self::routes`]; [`routes::turn_fallback_policy`] puts them ahead of the
+    /// tier alternates in the turn's fallback chain.
+    configured_fallbacks: Vec<String>,
     /// A model for the context-window summarizer (a distinct adapter instance so
     /// its provider errors don't touch the turn's `error_slot`).
     summarizer: TurnChatModel,
@@ -1297,8 +1405,8 @@ fn build_turn_models_crate(
 
     // The primary honours an explicit provider-string override when the producer's
     // effective provider differs from `provider_for_role(role)` (triage #1257).
-    let build_primary = |m: &str| -> anyhow::Result<TurnChatModel> {
-        let (model, provider, resolved_model) = match primary_override {
+    let build_primary_routed = |m: &str| -> anyhow::Result<(TurnChatModel, String, String)> {
+        match primary_override {
             Some(ps) => factory::create_turn_chat_model_from_string_with_native_tools_and_route(
                 role,
                 ps,
@@ -1314,7 +1422,10 @@ fn build_turn_models_crate(
                 temperature,
                 !force_text_mode,
             ),
-        }?;
+        }
+    };
+    let build_primary = |m: &str| -> anyhow::Result<TurnChatModel> {
+        let (model, provider, resolved_model) = build_primary_routed(m)?;
         Ok(Arc::new(RouteRecordingModel::new(
             model,
             provider,
@@ -1328,9 +1439,15 @@ fn build_turn_models_crate(
     // separate `ExternalTransferPending` for the same logical destination (codex
     // P2, PR #4812). `dedup_turn_scope` collapses same-destination repeats to one
     // disclosure per turn while still surfacing each distinct tier model.
+    let mut configured_fallbacks: Vec<String> = Vec::new();
     let (primary, routes, summarizer): BuiltTurnModels =
         crate::neppy::security::egress::dedup_turn_scope(|| {
-            let primary = build_primary(model)?;
+            let (primary_inner, primary_provider, primary_resolved) = build_primary_routed(model)?;
+            let primary: TurnChatModel = Arc::new(RouteRecordingModel::new(
+                primary_inner,
+                primary_provider.clone(),
+                primary_resolved.clone(),
+            ));
 
             // Additive workload-tier routes: one crate-native model per tier (skipping the
             // turn's own model, which is registered as the default primary), each pinned to
@@ -1369,6 +1486,47 @@ fn build_turn_models_crate(
                 }
             }
 
+            // User-configured fallback models (N9): `reliability.model_fallbacks`
+            // used to drive only the removed `ReliableProvider`, so on this path a
+            // BYOK / local / user-picked model had no fallback at all. Build each
+            // configured entry and register it as a route under its configured
+            // name; `assemble_turn_harness` chains them after the primary.
+            for entry in routes::configured_model_fallbacks(config, model, &primary_resolved) {
+                if routes.iter().any(|(name, _)| name == &entry) {
+                    continue;
+                }
+                match build_configured_fallback(
+                    role,
+                    config,
+                    &primary_provider,
+                    &entry,
+                    temperature,
+                    force_text_mode,
+                    &build_primary,
+                ) {
+                    Ok(fallback) => {
+                        tracing::debug!(
+                            route = model,
+                            fallback = %entry,
+                            "[fallback] registered user-configured fallback model"
+                        );
+                        routes.push((entry.clone(), fallback));
+                        configured_fallbacks.push(entry);
+                    }
+                    Err(e) => {
+                        // Same policy as a tier route: an entry that cannot be
+                        // built (unknown provider, missing key, LocalOnly egress
+                        // block) is skipped, never fatal to the turn.
+                        tracing::warn!(
+                            route = model,
+                            fallback = %entry,
+                            error = %e,
+                            "[fallback] skipping user-configured fallback model that failed to build"
+                        );
+                    }
+                }
+            }
+
             // The summarizer is a distinct adapter instance (own empty error slot).
             let summarizer = build_primary(model)?;
 
@@ -1378,6 +1536,7 @@ fn build_turn_models_crate(
     Ok(TurnModels {
         primary,
         routes,
+        configured_fallbacks,
         summarizer,
         error_slot: Arc::new(std::sync::Mutex::new(None)),
         provider_id,
@@ -1385,6 +1544,41 @@ fn build_turn_models_crate(
         native_tools,
         supports_vision,
     })
+}
+
+/// Build one user-configured fallback model (N9) for a primary served by
+/// `primary_provider`.
+///
+/// On the managed backend the model id rides the request, so the entry is built
+/// exactly like the primary with a different model name. A BYOK / local
+/// provider takes its model id from the role's *route*, not from the `model`
+/// argument, so the entry is built against a config copy whose route for `role`
+/// names the fallback (`provider:model`, see [`routes::fallback_provider_string`]).
+fn build_configured_fallback(
+    role: &str,
+    config: &crate::neppy::config::Config,
+    primary_provider: &str,
+    entry: &str,
+    temperature: f64,
+    force_text_mode: bool,
+    build_primary: &dyn Fn(&str) -> anyhow::Result<TurnChatModel>,
+) -> anyhow::Result<TurnChatModel> {
+    use crate::neppy::inference::provider::factory;
+    if primary_provider == factory::PROVIDER_OPENHUMAN {
+        return build_primary(entry);
+    }
+    let (provider_string, fallback_model) =
+        routes::fallback_provider_string(config, primary_provider, entry);
+    let routed = routes::config_with_role_route(config, role, &provider_string)
+        .ok_or_else(|| anyhow::anyhow!("role `{role}` has no configurable provider route"))?;
+    let (chat, provider, resolved) = factory::create_turn_chat_model_with_native_tools_and_route(
+        role,
+        &routed,
+        &fallback_model,
+        temperature,
+        !force_text_mode,
+    )?;
+    Ok(Arc::new(RouteRecordingModel::new(chat, provider, resolved)))
 }
 
 /// A model-agnostic source of per-turn [`TurnModels`] — the seam-owned handle the
@@ -1581,6 +1775,7 @@ impl TurnModelSource {
             return Ok(TurnModels {
                 primary,
                 routes: Vec::new(),
+                configured_fallbacks: Vec::new(),
                 summarizer: direct.clone(),
                 error_slot: Arc::new(std::sync::Mutex::new(None)),
                 provider_id,
@@ -1753,7 +1948,9 @@ fn assemble_turn_harness(
     // independent knobs, and only fallback is enabled here because `ReliableProvider`
     // (still wrapped) does not fail over across the registered tier routes.
     let mut policy = run_policy_for(max_iterations, deterministic_cacheable);
-    let route_fallback = routes::route_fallback_policy(model);
+    // N9: the user's `reliability.model_fallbacks` (built into `routes` by
+    // `build_turn_models_crate`) lead the chain, then the tier alternates.
+    let route_fallback = routes::turn_fallback_policy(model, &turn_models.configured_fallbacks);
     policy.fallback = route_fallback.clone();
     tracing::debug!(
         model,

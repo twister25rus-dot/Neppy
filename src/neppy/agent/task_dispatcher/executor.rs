@@ -129,30 +129,35 @@ pub(super) fn resolve_executor(workspace_dir: &Path, assigned: Option<&str>) -> 
 ///
 /// SECURITY / threat model (prompt injection): the card objective/content and
 /// `source_metadata` derive from external, attacker-influenceable text (e.g. a
-/// GitHub issue body anyone in a watched repo can file), and this background
-/// run is gate-free at the per-tool level (background turns auto-allow, like
-/// skill runs) while `build_task_prompt` may instruct it to write back to the
-/// upstream item. The interactive checkpoint is therefore the up-front
-/// **plan-approval gate** (`require_task_plan_approval`), which a human reviews
-/// before the run starts — not per-action egress/write approval. Egress is
-/// widened to `*` only when the operator set no explicit allow-list (matching
-/// skill runs, since real task work needs broad reach: git, package registries,
-/// provider APIs). Tightening egress to the source provider's domains for
-/// source-ingested runs is a considered follow-up (it would break general task
-/// work, so it needs to key off provenance) — tracked for a later PR.
+/// GitHub issue body anyone in a watched repo can file), and a background
+/// delivery turn is steered by a sub-agent's output. So the run is **not** a
+/// trust root (M1): it runs under
+/// [`TrustedAutomationSource::BackgroundTurn`](crate::neppy::agent::turn_origin::TrustedAutomationSource::BackgroundTurn),
+/// which the approval gate treats like an interactive turn on the run's chat
+/// thread — every `external_effect` call parks for approval on that thread's
+/// card (the user's `auto_approve` allowlist / `auto_approve_all` still apply
+/// as in chat), and with no thread it is denied outright. The up-front
+/// plan-approval gate (`require_task_plan_approval`) remains an additional
+/// checkpoint, not the only one.
+///
+/// Egress is **not** widened here: `http_request.allowed_domains` is whatever
+/// the operator configured. This run used to rewrite an empty allow-list to `*`
+/// (matching skill runs), which handed attacker-influenceable card text
+/// unrestricted network reach; an empty list now means what it means
+/// everywhere else.
 pub(super) async fn run_autonomous(
-    mut config: Config,
+    config: Config,
     executor: &ResolvedExecutor,
     prompt: &str,
     run_id: &str,
     session_thread_id: Option<String>,
 ) -> Result<String, String> {
-    // Match skill-run egress handling: only widen to the permissive default
-    // when the operator hasn't configured an explicit allow-list. See the
-    // threat-model note above on why `*` is the default here.
-    if config.http_request.allowed_domains.is_empty() {
-        config.http_request.allowed_domains = vec!["*".to_string()];
-    }
+    tracing::debug!(
+        run_id = %run_id,
+        allowed_domains = config.http_request.allowed_domains.len(),
+        has_thread = session_thread_id.is_some(),
+        "[task_dispatcher] autonomous run: egress allow-list left as configured (not widened)"
+    );
 
     let mut agent = Agent::from_config_for_agent_with_profile(
         &config,
@@ -212,10 +217,9 @@ pub(super) async fn run_autonomous(
         );
     }
 
-    // Sub-agent task runs are internal to the agent harness — the user
-    // already authorized the parent turn that dispatched this task. Label
-    // as CLI so the approval gate doesn't fail closed on internal
-    // sub-agent invocations.
+    // M1: label the run as a background turn on its chat thread (not `Cli`,
+    // which the approval gate allows without asking). External-effect calls park
+    // for approval on that thread's card; with no thread they are denied.
     // Gate memory-source recall for this background run to the profile's
     // allowlist (None = unrestricted), mirroring the web chat turn.
     let memory_scope = executor
@@ -225,7 +229,7 @@ pub(super) async fn run_autonomous(
     let run = crate::neppy::memory::source_scope::with_source_scope(
         memory_scope,
         crate::neppy::agent::turn_origin::with_origin(
-            crate::neppy::agent::turn_origin::AgentTurnOrigin::Cli,
+            background_run_origin(run_id, session_thread_id.as_deref()),
             with_autonomous_iter_cap(TASK_RUN_MAX_ITERATIONS, agent.run_single(prompt)),
         ),
     );
@@ -282,6 +286,18 @@ pub(super) async fn run_autonomous(
         task_session::append_final(workspace_dir, thread_id, &result);
     }
     result
+}
+
+/// The approval-gate origin an autonomous run (task-board card or background
+/// delivery follow-up) executes under — see [`run_autonomous`]'s threat model.
+pub(super) fn background_run_origin(
+    run_id: &str,
+    session_thread_id: Option<&str>,
+) -> crate::neppy::agent::turn_origin::AgentTurnOrigin {
+    crate::neppy::agent::turn_origin::background_turn_origin(
+        run_id,
+        session_thread_id.map(str::to_string),
+    )
 }
 
 /// Deterministic board write-back: the dispatcher owns the card lifecycle.

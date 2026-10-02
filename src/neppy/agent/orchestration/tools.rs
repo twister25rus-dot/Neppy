@@ -18,6 +18,8 @@ mod list_subagents;
 mod skill_delegation;
 #[path = "tools/spawn_async_subagent.rs"]
 mod spawn_async_subagent;
+#[path = "tools/spawn_async_watch.rs"]
+mod spawn_async_watch;
 #[path = "tools/spawn_parallel_agents.rs"]
 mod spawn_parallel_agents;
 #[path = "tools/spawn_subagent.rs"]

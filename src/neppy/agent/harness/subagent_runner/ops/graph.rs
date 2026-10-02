@@ -356,6 +356,27 @@ pub(super) async fn run_subagent_via_graph(
                 .lock()
                 .map(|g| g.clone())
                 .unwrap_or_default();
+            // M2: a wall-clock timeout is not a failure to discard — the rounds
+            // that completed are real work. Hand them back as an `Incomplete`
+            // checkpoint (the 6th slot carries the halt reason the runner maps
+            // to `SubagentRunStatus::Incomplete`) instead of an error.
+            if is_wall_clock_timeout(&mapped) {
+                return Ok(timed_out_outcome(
+                    history,
+                    &recovered,
+                    TimedOutRun {
+                        workspace_dir: &workspace_dir,
+                        transcript_stem,
+                        agent_id,
+                        task_id,
+                        provider_label,
+                        model,
+                        context_window: context_window.unwrap_or(0),
+                        dispatcher: if native_tools { "native" } else { "xml" },
+                        worker_thread_id: worker_thread_id.as_deref(),
+                    },
+                ));
+            }
             tracing::warn!(
                 agent_id,
                 task_id,
@@ -598,6 +619,102 @@ fn build_subagent_context_mw(
         }
     }
     mw
+}
+
+/// Whether a mapped sub-agent error is the run's own wall-clock deadline (M2).
+fn is_wall_clock_timeout(err: &SubagentRunError) -> bool {
+    matches!(
+        err,
+        SubagentRunError::Provider(inner)
+            if inner
+                .downcast_ref::<crate::neppy::agent::tinyagents::TurnWallClockTimeout>()
+                .is_some()
+    )
+}
+
+/// Where a timed-out run's partial transcript is persisted.
+struct TimedOutRun<'a> {
+    workspace_dir: &'a std::path::Path,
+    transcript_stem: &'a str,
+    agent_id: &'a str,
+    task_id: &'a str,
+    provider_label: &'a str,
+    model: &'a str,
+    context_window: u64,
+    dispatcher: &'a str,
+    worker_thread_id: Option<&'a str>,
+}
+
+/// The graph result for a run its wall-clock deadline stopped (M2): a
+/// deterministic checkpoint of the rounds in `recovered` past the opening
+/// `history`, persisted like any finished run, reported with the
+/// [`SUBAGENT_TIMED_OUT_REASON`](super::checkpoint::SUBAGENT_TIMED_OUT_REASON)
+/// halt reason. The checkpoint is also appended to `history` as the closing
+/// assistant message so a resumed/reused session sees what was done — the flat
+/// snapshot rounds themselves are not replayed into it (they carry no native
+/// tool-call envelopes and would not round-trip to a native-tools provider).
+#[allow(clippy::type_complexity)]
+fn timed_out_outcome(
+    history: &mut Vec<ChatMessage>,
+    recovered: &[ChatMessage],
+    run: TimedOutRun<'_>,
+) -> (
+    String,
+    usize,
+    AggregatedUsage,
+    Option<String>,
+    bool,
+    Option<String>,
+) {
+    let completed = &recovered[history.len().min(recovered.len())..];
+    let digest = super::checkpoint::transcript_digest(completed);
+    let text = super::checkpoint::timed_out_checkpoint(run.agent_id, &digest);
+    let iterations = completed.iter().filter(|m| m.role == "assistant").count();
+    tracing::warn!(
+        agent_id = run.agent_id,
+        task_id = run.task_id,
+        completed_rounds = completed.len(),
+        iterations,
+        "[subagent_runner:graph] sub-agent hit its wall-clock deadline; returning an Incomplete checkpoint with the work done so far (M2)"
+    );
+
+    let mut transcript = recovered.to_vec();
+    transcript.push(ChatMessage::assistant(text.clone()));
+    // Usage for the completed rounds was recorded by the harness bridge as they
+    // happened; the run's own totals died with it, so the transcript carries 0.
+    persist_subagent_transcript(
+        run.workspace_dir,
+        run.transcript_stem,
+        run.agent_id,
+        run.task_id,
+        run.provider_label,
+        run.model,
+        &transcript,
+        &AggregatedUsage::default(),
+        run.context_window,
+        run.dispatcher,
+        iterations as u32,
+    );
+    if let Some(thread_id) = run.worker_thread_id {
+        mirror_worker_thread_from_history(
+            run.workspace_dir,
+            thread_id,
+            run.agent_id,
+            run.task_id,
+            completed,
+            Some(text.as_str()),
+        );
+    }
+    history.push(ChatMessage::assistant(text.clone()));
+
+    (
+        text,
+        iterations,
+        AggregatedUsage::default(),
+        None,
+        false,
+        Some(super::checkpoint::SUBAGENT_TIMED_OUT_REASON.to_string()),
+    )
 }
 
 fn map_tinyagents_subagent_error(err: anyhow::Error) -> SubagentRunError {
@@ -998,6 +1115,10 @@ fn build_cap_digest(
     }
     out.trim_end().to_string()
 }
+
+#[cfg(test)]
+#[path = "graph_timeout_tests.rs"]
+mod timeout_tests;
 
 #[cfg(test)]
 mod tests {

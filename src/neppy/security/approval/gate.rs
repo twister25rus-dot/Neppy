@@ -192,11 +192,18 @@ pub struct ApprovalGate {
     session_id: String,
     ttl: Duration,
     waiters: Mutex<HashMap<String, oneshot::Sender<ApprovalDecision>>>,
-    /// thread_id → request_id for the approval currently parked on that chat
-    /// thread, so the web channel can route a yes/no reply to `approval_decide`.
+    /// thread_id → request_ids of every approval currently parked on that chat
+    /// thread, oldest first, so the web channel can route a yes/no reply to
+    /// `approval_decide`. A thread can hold several parks at once (parallel tool
+    /// calls in one turn, a sub-agent and its parent, a background delivery turn
+    /// next to a live one) — S7: this used to be a single slot, so a second park
+    /// overwrote the first's routing and the earlier request sat unreachable
+    /// until its TTL denied it, which looked like a stuck turn. A reply answers
+    /// the newest park first (the card nearest the composer — and what the
+    /// single-slot map routed to before), then the next one down.
     /// In-memory only (session-scoped — a parked approval doesn't survive a
     /// restart, and the oneshot waiter is in-memory anyway).
-    thread_to_request: Mutex<HashMap<String, String>>,
+    thread_to_request: Mutex<HashMap<String, Vec<String>>>,
 }
 
 /// RAII guard that tears the parked waiter down even when the surrounding turn
@@ -679,6 +686,21 @@ impl ApprovalGate {
                 client_id,
                 ..
             } => Some((thread_id.clone(), client_id.clone())),
+            // M1: a background turn (delivery follow-up / task-board run) asks on
+            // the thread it streams into, addressed to the broadcast client the
+            // turn itself streams under. Carried on the origin (not only the
+            // task-local) so a sub-agent it delegates to — which inherits the
+            // origin across `tokio::spawn` but not the task-local — routes too.
+            AgentTurnOrigin::TrustedAutomation {
+                source:
+                    TrustedAutomationSource::BackgroundTurn {
+                        thread_id: Some(thread_id),
+                    },
+                ..
+            } => Some((
+                thread_id.clone(),
+                turn_origin::BACKGROUND_TURN_CLIENT_ID.to_string(),
+            )),
             _ => None,
         };
         if chat_ctx.is_none() && origin_chat_route.is_some() {
@@ -702,7 +724,8 @@ impl ApprovalGate {
         // window to `COPILOT_APPROVAL_TTL`; see that task-local's doc.
         let copilot_stream = APPROVAL_COPILOT_STREAM_CONTEXT.try_with(|_| ()).is_ok();
 
-        // Branch by origin. Web chat parks for an in-app approval; external
+        // Branch by origin. Web chat (and a background turn on a chat thread,
+        // M1) parks for an in-app approval; external
         // channel persists an audit row and TTL-denies (no routable approval
         // surface yet); trusted automation (cron, internal-only subconscious)
         // is allowed through unchanged; tainted subconscious — a tick whose
@@ -838,6 +861,38 @@ impl ApprovalGate {
                 // TTL-denies, the conservative fail-closed default for a
                 // user-forced HITL gate.
             }
+            AgentTurnOrigin::TrustedAutomation {
+                source: TrustedAutomationSource::BackgroundTurn { .. },
+                job_id,
+            } => {
+                // M1: ask like an interactive turn on the thread the background
+                // turn streams into. No thread → no surface that could ever
+                // answer, so deny now instead of parking into a silent TTL.
+                if chat_thread_id.is_none() {
+                    tracing::info!(
+                        tool = tool_name,
+                        "[approval::gate] background turn with no chat thread — denying                          external_effect tool (no surface to ask on)"
+                    );
+                    tracing::debug!(
+                        tool = tool_name,
+                        job_id = %job_id,
+                        "[approval::gate] background turn deny (job)"
+                    );
+                    return (
+                        GateOutcome::Deny {
+                            reason: format!(
+                                "{POLICY_DENIED_MARKER} '{tool_name}' blocked: this background                                  run has no chat thread to ask the user for approval on, so it                                  cannot send, edit or act. Report what you would do instead."
+                            ),
+                        },
+                        None,
+                    );
+                }
+                tracing::info!(
+                    tool = tool_name,
+                    "[approval::gate] background turn — parking for approval on its chat thread"
+                );
+                // Fall through to the chat-routed parking flow.
+            }
             AgentTurnOrigin::Cli => {
                 tracing::debug!(
                     tool = tool_name,
@@ -932,9 +987,14 @@ impl ApprovalGate {
         // Record the thread → request mapping so an inbound chat reply on this
         // thread can be routed to `approval_decide` (see web channel ingress).
         if let Some(thread_id) = chat_thread_id.as_ref() {
-            self.thread_to_request
-                .lock()
-                .insert(thread_id.clone(), request_id.clone());
+            let mut routes = self.thread_to_request.lock();
+            let parked = routes.entry(thread_id.clone()).or_default();
+            parked.push(request_id.clone());
+            tracing::debug!(
+                request_id = %request_id,
+                parked_on_thread = parked.len(),
+                "[approval::gate] routed park onto chat thread (S7: concurrent parks are kept, not overwritten)"
+            );
         }
         if let Err(err) = store::insert_pending(&self.config, &pending, &self.session_id) {
             self.evict_waiter(&request_id);
@@ -1363,10 +1423,27 @@ impl ApprovalGate {
         waiters.remove(request_id);
     }
 
-    /// The request_id of the approval currently parked on `thread_id`, if any.
-    /// Used by the web channel to route an inbound yes/no reply to a decision.
+    /// The request_id an inbound yes/no reply on `thread_id` should answer: the
+    /// newest approval still parked there, if any. Used by the web channel (and
+    /// the channel runtime) to route a typed reply to a decision. When several
+    /// approvals are parked on one thread, deciding this one exposes the next
+    /// (older) one on the following call — see [`Self::pending_all_for_thread`].
     pub fn pending_for_thread(&self, thread_id: &str) -> Option<String> {
-        self.thread_to_request.lock().get(thread_id).cloned()
+        self.thread_to_request
+            .lock()
+            .get(thread_id)
+            .and_then(|ids| ids.last().cloned())
+    }
+
+    /// Every approval currently parked on `thread_id`, oldest first. Empty when
+    /// nothing is parked there. Lets a surface render (or a test assert) all
+    /// concurrent parks on one thread rather than only the newest (S7).
+    pub fn pending_all_for_thread(&self, thread_id: &str) -> Vec<String> {
+        self.thread_to_request
+            .lock()
+            .get(thread_id)
+            .cloned()
+            .unwrap_or_default()
     }
 
     /// Drop the thread → request mapping when it still belongs to this request.
@@ -1376,23 +1453,31 @@ impl ApprovalGate {
         }
     }
 
-    /// Drop the thread → request mapping **only if** it still points at
-    /// `request_id`. Used by [`WaiterGuard::drop`] on external teardown, where a
-    /// replacement turn may have already parked a new approval on the same
-    /// thread and overwritten the entry; clearing unconditionally would delete
-    /// the *new* request's routing (#4774).
+    /// Drop `request_id` from `thread_id`'s routing, leaving every other park on
+    /// that thread routable. Used on every park exit and by
+    /// [`WaiterGuard::drop`] on external teardown, where a replacement turn may
+    /// have already parked a new approval on the same thread; only this
+    /// request's own entry is ever removed, never the *new* request's routing
+    /// (#4774), and never a concurrent sibling's (S7).
     fn clear_thread_route_if_owned(&self, thread_id: &str, request_id: &str) {
         let mut map = self.thread_to_request.lock();
-        if map.get(thread_id).is_some_and(|rid| rid == request_id) {
-            map.remove(thread_id);
+        if let Some(ids) = map.get_mut(thread_id) {
+            ids.retain(|rid| rid != request_id);
+            if ids.is_empty() {
+                map.remove(thread_id);
+            }
         }
     }
 
-    /// Request ids of the approvals currently parked on a chat thread (the
-    /// values of the thread → request routing map). The Pet inbox uses this to
+    /// Request ids of the approvals currently parked on a chat thread (every
+    /// value of the thread → requests routing map). The Pet inbox uses this to
     /// hide approvals that already have an in-chat approval card.
     pub fn chat_routed_request_ids(&self) -> std::collections::HashSet<String> {
-        self.thread_to_request.lock().values().cloned().collect()
+        self.thread_to_request
+            .lock()
+            .values()
+            .flat_map(|ids| ids.iter().cloned())
+            .collect()
     }
 }
 
@@ -1552,7 +1637,7 @@ mod tests {
 
         gate.thread_to_request
             .lock()
-            .insert("thread-1".into(), "req-new".into());
+            .insert("thread-1".into(), vec!["req-new".into()]);
 
         // Stale guard for the superseded request is a no-op.
         gate.clear_thread_route_if_owned("thread-1", "req-old");
@@ -2845,7 +2930,7 @@ mod tests {
         assert!(gate.chat_routed_request_ids().is_empty());
         gate.thread_to_request
             .lock()
-            .insert("thread-1".into(), "req-1".into());
+            .insert("thread-1".into(), vec!["req-1".into()]);
         let ids = gate.chat_routed_request_ids();
         assert!(ids.contains("req-1"));
         assert_eq!(ids.len(), 1);
@@ -3493,3 +3578,11 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "gate_multi_park_tests.rs"]
+mod multi_park_tests;
+
+#[cfg(test)]
+#[path = "gate_background_turn_tests.rs"]
+mod background_turn_tests;

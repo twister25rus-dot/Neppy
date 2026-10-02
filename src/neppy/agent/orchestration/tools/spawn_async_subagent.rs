@@ -802,6 +802,24 @@ impl Tool for SpawnAsyncSubagentTool {
             }),
         ));
 
+        // M3: keep the JoinHandle. A panic inside the child unwinds past every
+        // in-task reporting branch above, so the watcher emits the terminal
+        // failure (delivery notice + SubagentFailed) that would otherwise be
+        // lost. The abort handle is taken first so cancellation still reaches
+        // the child through the registry.
+        let abort_handle = join.abort_handle();
+        super::spawn_async_watch::watch_detached_run(
+            join,
+            super::spawn_async_watch::DetachedRunReport {
+                parent_session: parent_session.clone(),
+                task_id: task_id.clone(),
+                agent_id: definition.id.clone(),
+                parent_thread_id: register_parent_thread_id.clone(),
+                session: Some((store.clone(), durable_session.subagent_session_id.clone())),
+                progress: progress_sink.clone(),
+            },
+        );
+
         // Register *after* spawn so the AbortHandle is available. The task owns
         // `status_tx`; this side holds `status_rx` for `wait_subagent`.
         running_subagents::register(
@@ -813,7 +831,7 @@ impl Tool for SpawnAsyncSubagentTool {
             parent.workspace_dir.clone(),
             register_parent_thread_id,
             steer_queue,
-            join.abort_handle(),
+            abort_handle,
             status_rx,
         );
 

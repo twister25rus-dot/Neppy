@@ -10,6 +10,19 @@
 //! state + secrets) ship default-OFF via `tools/user_filter.rs`
 //! (`mcp_manage` toggle).
 //!
+//! Permission model (S6): a connected server's tools are third-party code whose
+//! effect this host cannot see, so `mcp_registry_tool_call` is classified as an
+//! external effect for **every** call — it parks on the approval gate like any
+//! other outbound action — and it enforces the security policy's `Act` tier
+//! (refused outright on the read-only tier), matching the static-server
+//! `mcp_call_tool` bridge. MCP `readOnlyHint` annotations are deliberately not
+//! honoured: the registry does not surface them, and even if it did they are
+//! self-declared by the remote server, so trusting one would let a hostile
+//! server opt its own write tool out of approval. The other mutators
+//! (connect / disconnect / install / uninstall) enforce the `Act` tier too, and
+//! `install` — which puts new third-party code and its secrets on this machine —
+//! is also an external effect.
+//!
 //! NOTE: the `mcp_setup_*` setup-agent tools and the generic `mcp_list_servers`
 //! / `mcp_call_tool` bridge tools already exist elsewhere; these `mcp_registry_*`
 //! tools are the distinct installed-registry surface and do not duplicate them.
@@ -21,6 +34,7 @@ use async_trait::async_trait;
 use serde_json::{json, Value};
 
 use crate::neppy::config::Config;
+use crate::neppy::security::{SecurityPolicy, ToolOperation};
 use crate::neppy::tools::traits::{PermissionLevel, Tool, ToolResult};
 
 use super::ops;
@@ -30,6 +44,31 @@ macro_rules! emit {
         let outcome = $outcome.map_err(|e| anyhow::anyhow!(concat!($name, ": {}"), e))?;
         Ok(ToolResult::success(serde_json::to_string(&outcome.value)?))
     }};
+}
+
+/// Enforce the security policy's `Act` tier for an acting registry tool.
+///
+/// Reads the live process-global policy first (so an autonomy change made this
+/// session applies to the very next call) and falls back to a policy built from
+/// this tool's config snapshot — the same live-first discipline the approval gate
+/// uses. Refuses on the read-only tier and when the hourly action budget is spent.
+fn enforce_act(config: &Config, tool: &str) -> anyhow::Result<()> {
+    let policy = crate::neppy::security::live_policy::current().unwrap_or_else(|| {
+        Arc::new(SecurityPolicy::from_config(
+            &config.autonomy,
+            &config.workspace_dir,
+            &config.action_dir,
+        ))
+    });
+    policy
+        .enforce_tool_operation(ToolOperation::Act, tool)
+        .map_err(|reason| {
+            tracing::warn!(
+                tool,
+                "[mcp-registry] acting tool refused by the security policy"
+            );
+            anyhow::anyhow!(reason)
+        })
 }
 
 fn req_str(args: &serde_json::Value, key: &str) -> anyhow::Result<String> {
@@ -265,6 +304,7 @@ impl Tool for McpRegistryConnectTool {
     }
     async fn execute(&self, args: serde_json::Value) -> anyhow::Result<ToolResult> {
         let sid = req_str(&args, "server_id")?;
+        enforce_act(&self.config, "mcp_registry_connect")?;
         emit!(
             ops::mcp_clients_connect(&self.config, sid).await,
             "mcp_registry_connect"
@@ -303,6 +343,7 @@ impl Tool for McpRegistryDisconnectTool {
     }
     async fn execute(&self, args: serde_json::Value) -> anyhow::Result<ToolResult> {
         let sid = req_str(&args, "server_id")?;
+        enforce_act(&self.config, "mcp_registry_disconnect")?;
         emit!(
             ops::mcp_clients_disconnect(&self.config, sid).await,
             "mcp_registry_disconnect"
@@ -344,10 +385,22 @@ impl Tool for McpRegistryToolCallTool {
     fn permission_level(&self) -> PermissionLevel {
         PermissionLevel::Execute
     }
+    /// Every call is an external effect: the remote tool is third-party code
+    /// whose effect this host cannot classify (see the module docs on why
+    /// `readOnlyHint` is not trusted). The harness parks it on the approval gate.
+    fn external_effect(&self) -> bool {
+        true
+    }
     async fn execute(&self, args: serde_json::Value) -> anyhow::Result<ToolResult> {
         let sid = req_str(&args, "server_id")?;
         let tool_name = req_str(&args, "tool_name")?;
         let arguments = args.get("arguments").cloned().unwrap_or(json!({}));
+        enforce_act(&self.config, "mcp_registry_tool_call")?;
+        tracing::debug!(
+            server_id = %sid,
+            tool = %tool_name,
+            "[mcp-registry] tool_call passed the security policy"
+        );
         emit!(
             ops::mcp_clients_tool_call(&self.config, sid, tool_name, arguments).await,
             "mcp_registry_tool_call"
@@ -428,8 +481,14 @@ impl Tool for McpRegistryInstallTool {
     fn permission_level(&self) -> PermissionLevel {
         PermissionLevel::Write
     }
+    /// Installing puts new third-party code and its secrets on this machine, so
+    /// it asks for approval like any other outbound action.
+    fn external_effect(&self) -> bool {
+        true
+    }
     async fn execute(&self, args: serde_json::Value) -> anyhow::Result<ToolResult> {
         let qn = req_str(&args, "qualified_name")?;
+        enforce_act(&self.config, "mcp_registry_install")?;
         let env: HashMap<String, String> = args
             .get("env")
             .cloned()
@@ -474,6 +533,7 @@ impl Tool for McpRegistryUninstallTool {
     }
     async fn execute(&self, args: serde_json::Value) -> anyhow::Result<ToolResult> {
         let sid = req_str(&args, "server_id")?;
+        enforce_act(&self.config, "mcp_registry_uninstall")?;
         emit!(
             ops::mcp_clients_uninstall(&self.config, sid).await,
             "mcp_registry_uninstall"
@@ -522,6 +582,100 @@ mod tests {
             PermissionLevel::Write
         );
         assert_eq!(McpRegistrySearchTool::new(cfg()).scope(), ToolScope::All);
+    }
+
+    /// S6: a connected server's tool is third-party code, so every
+    /// `mcp_registry_tool_call` must reach the approval gate, whatever its
+    /// arguments — and installing a server must too.
+    #[test]
+    fn tool_call_and_install_are_external_effects() {
+        let call = McpRegistryToolCallTool::new(cfg());
+        assert!(call.external_effect());
+        assert!(call.external_effect_with_args(&json!({
+            "server_id": "s",
+            "tool_name": "delete_everything",
+            "arguments": {}
+        })));
+        assert!(call.external_effect_with_args(&json!({
+            "server_id": "s",
+            "tool_name": "get_weather"
+        })));
+        assert!(McpRegistryInstallTool::new(cfg()).external_effect());
+        // Discovery stays prompt-free.
+        assert!(!McpRegistryListToolsTool::new(cfg()).external_effect());
+        assert!(!McpRegistryStatusTool::new(cfg()).external_effect());
+    }
+
+    fn readonly_tier() -> crate::neppy::security::live_policy::TestPolicyGuard {
+        let dir = std::env::temp_dir();
+        crate::neppy::security::live_policy::install_scoped(
+            Arc::new(SecurityPolicy {
+                autonomy: crate::neppy::security::AutonomyLevel::ReadOnly,
+                ..SecurityPolicy::default()
+            }),
+            dir.clone(),
+            dir,
+        )
+    }
+
+    /// S6: on the read-only tier a registry tool call is refused by the security
+    /// policy before anything reaches the server (the server here is not even
+    /// connected — a refusal that came from the transport would say so).
+    #[tokio::test]
+    async fn tool_call_is_refused_on_the_readonly_tier() {
+        let _tier = readonly_tier();
+        let err = McpRegistryToolCallTool::new(cfg())
+            .execute(json!({
+                "server_id": "definitely-not-connected-uuid",
+                "tool_name": "delete_everything",
+                "arguments": {}
+            }))
+            .await
+            .expect_err("read-only tier must refuse an MCP tool call");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("read-only"),
+            "expected a tier refusal, got: {msg}"
+        );
+    }
+
+    /// S6 siblings: the other acting registry tools enforce the tier as well.
+    #[tokio::test]
+    async fn acting_registry_tools_are_refused_on_the_readonly_tier() {
+        let _tier = readonly_tier();
+        let sid = json!({ "server_id": "definitely-not-connected-uuid" });
+        for (name, result) in [
+            (
+                "connect",
+                McpRegistryConnectTool::new(cfg())
+                    .execute(sid.clone())
+                    .await,
+            ),
+            (
+                "disconnect",
+                McpRegistryDisconnectTool::new(cfg())
+                    .execute(sid.clone())
+                    .await,
+            ),
+            (
+                "uninstall",
+                McpRegistryUninstallTool::new(cfg())
+                    .execute(sid.clone())
+                    .await,
+            ),
+            (
+                "install",
+                McpRegistryInstallTool::new(cfg())
+                    .execute(json!({ "qualified_name": "@acme/server" }))
+                    .await,
+            ),
+        ] {
+            let err = result.expect_err(name);
+            assert!(
+                err.to_string().contains("read-only"),
+                "{name}: expected a tier refusal, got: {err}"
+            );
+        }
     }
 
     #[tokio::test]
