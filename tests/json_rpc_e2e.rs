@@ -14771,3 +14771,158 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     mock_join.abort();
     rpc_join.abort();
 }
+
+// ── Pet desktop companion: settings, lease, pause, status, delete ────────────
+
+fn pet_companion_error(v: &Value, context: &str) -> String {
+    assert_jsonrpc_error(v, context)
+        .get("message")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string()
+}
+
+/// The companion over JSON-RPC, without ever observing the machine running the
+/// test: no lease is granted while it is enabled (`visible: false`), so the
+/// sampler never reads a sensor. Linux CI reports `unsupported_platform`, a Mac
+/// `no_indicator`.
+#[test]
+fn json_rpc_pet_companion_settings_lease_pause_and_delete() {
+    run_json_rpc_e2e_on_agent_stack(
+        "json_rpc_pet_companion_settings_lease_pause_and_delete",
+        json_rpc_pet_companion_settings_lease_pause_and_delete_inner,
+    );
+}
+
+async fn json_rpc_pet_companion_settings_lease_pause_and_delete_inner() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let tmp = tempdir().expect("tempdir");
+    let home = tmp.path();
+    let neppy_home = home.join(".neppy");
+    let _home_guard = EnvVarGuard::set_to_path("HOME", home);
+    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
+    let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
+    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+
+    let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
+    let mock_origin = format!("http://{mock_addr}");
+    write_pet_config(&neppy_home, &mock_origin);
+    write_pet_config(&neppy_home.join("users").join("local"), &mock_origin);
+    write_pet_config(&neppy_home.join("users").join("e2e-user"), &mock_origin);
+    let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
+    let rpc_base = format!("http://{rpc_addr}");
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    let store = post_json_rpc(
+        &rpc_base,
+        92_000,
+        "openhuman.auth_store_session",
+        json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
+    )
+    .await;
+    assert_no_jsonrpc_error(&store, "store_session");
+
+    let call = |id: i64, m: &'static str, p: Value| {
+        let base = rpc_base.clone();
+        async move { post_json_rpc(&base, id, &format!("openhuman.pet_companion_{m}"), p).await }
+    };
+
+    // ── 1. Defaults: OFF until consent; every source on once enabled ──
+    let got = call(92_001, "get", json!({})).await;
+    let got = peel_logs_envelope(assert_no_jsonrpc_error(&got, "companion_get")).clone();
+    assert_eq!(got["enabled"], false, "{got}");
+    for k in ["app_window", "selection", "clipboard", "screen_capture"] {
+        assert_eq!(got["sources"][k], true, "{got}");
+    }
+    assert_eq!(got["allow_cloud_model"], true);
+    assert!(got["unavailable_sources"].is_array());
+
+    // ── 2. Validation errors name the field ──
+    for (i, (patch, needle)) in [
+        (json!({ "nope": 1 }), "nope"),
+        (
+            json!({ "category_levels": { "send_message": 2 } }),
+            "high-risk",
+        ),
+        (
+            json!({ "excluded_title_patterns": ["re:(unclosed"] }),
+            "excluded_title_patterns",
+        ),
+        (json!({ "hotkeys": { "pause": "P" } }), "hotkeys.pause"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let r = call(92_010 + i as i64, "update", patch).await;
+        let msg = pet_companion_error(&r, "companion_update");
+        assert!(msg.contains(needle), "expected '{needle}' in: {msg}");
+    }
+
+    // ── 3. The shell's lease returns the hotkeys ──
+    let lease = call(
+        92_020,
+        "lease",
+        json!({ "indicator": "tray", "visible": false }),
+    )
+    .await;
+    let lease = peel_logs_envelope(assert_no_jsonrpc_error(&lease, "companion_lease")).clone();
+    assert_eq!(lease["enabled"], false);
+    assert_eq!(
+        lease["hotkeys"]["pause"], "CmdOrCtrl+Alt+Shift+P",
+        "{lease}"
+    );
+    assert!(lease["hotkeys"]["ask"].is_string() && lease["hotkeys"]["capture"].is_string());
+
+    // ── 4. Enabled without a visible indicator: suspended, nothing sampled ──
+    let upd = call(92_021, "update", json!({ "enabled": true })).await;
+    assert_no_jsonrpc_error(&upd, "companion_update enable");
+    let st = call(92_022, "status", json!({})).await;
+    let st = peel_logs_envelope(assert_no_jsonrpc_error(&st, "companion_status")).clone();
+    assert_eq!(st["state"], "suspended", "{st}");
+    let reason = st["suspended_reason"].as_str().unwrap_or_default();
+    assert!(
+        reason == "no_indicator" || reason == "unsupported_platform",
+        "{st}"
+    );
+    assert_eq!(st["metrics"]["samples_total"], 0, "{st}");
+
+    // ── 5. Pause / resume round trip, persisted ──
+    let p = call(92_023, "pause", json!({ "source": "ui", "minutes": 30 })).await;
+    let p = peel_logs_envelope(assert_no_jsonrpc_error(&p, "companion_pause")).clone();
+    assert_eq!(p["state"], "paused", "{p}");
+    let st = call(92_024, "status", json!({})).await;
+    let st = peel_logs_envelope(assert_no_jsonrpc_error(&st, "companion_status")).clone();
+    assert_eq!(st["paused"], true, "{st}");
+    assert!(st["paused_until"].is_string());
+    let bad = call(92_025, "pause", json!({ "source": "ui", "minutes": 0 })).await;
+    assert!(pet_companion_error(&bad, "pause minutes").contains("'minutes'"));
+    let r = call(92_026, "resume", json!({ "source": "ui" })).await;
+    let r = peel_logs_envelope(assert_no_jsonrpc_error(&r, "companion_resume")).clone();
+    assert_eq!(r["paused"], false, "{r}");
+
+    // ── 6. Ask without an indicator observes nothing ──
+    let ask = call(92_027, "ask", json!({ "source": "hotkey" })).await;
+    let ask = peel_logs_envelope(assert_no_jsonrpc_error(&ask, "companion_ask")).clone();
+    let status = ask["status"].as_str().unwrap_or_default();
+    assert!(status == "no_indicator" || status == "unsupported", "{ask}");
+
+    // ── 7. Retained data: empty, and delete-all reports zeros ──
+    let del = call(92_028, "data_delete", json!({ "all": true })).await;
+    let del = peel_logs_envelope(assert_no_jsonrpc_error(&del, "companion_data_delete")).clone();
+    assert_eq!(del["deleted_suggestions"], 0, "{del}");
+    assert_eq!(del["deleted_actions"], 0, "{del}");
+    let data = call(92_029, "data", json!({})).await;
+    let data = peel_logs_envelope(assert_no_jsonrpc_error(&data, "companion_data")).clone();
+    assert_eq!(data["counts"]["suggestions"], 0, "{data}");
+    assert_eq!(data["counts"]["actions"], 0, "{data}");
+    let sugg = call(92_030, "suggestions", json!({ "limit": 10 })).await;
+    let sugg = peel_logs_envelope(assert_no_jsonrpc_error(&sugg, "companion_suggestions")).clone();
+    assert_eq!(sugg.as_array().map(Vec::len), Some(0), "{sugg}");
+
+    // Leave the process-wide companion off for the tests that follow.
+    let off = call(92_031, "update", json!({ "enabled": false })).await;
+    assert_no_jsonrpc_error(&off, "companion_update disable");
+
+    mock_join.abort();
+    rpc_join.abort();
+}

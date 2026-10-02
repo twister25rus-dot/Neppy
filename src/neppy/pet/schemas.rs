@@ -27,8 +27,14 @@ const FUNCTIONS: &[&str] = &[
     "digest_now",
 ];
 
+/// Research-pass controllers, then the desktop companion's
+/// (`openhuman.pet_companion_*`, see `companion::runtime::schemas`).
 pub fn all_controller_schemas() -> Vec<ControllerSchema> {
-    FUNCTIONS.iter().map(|f| schemas(f)).collect()
+    FUNCTIONS
+        .iter()
+        .map(|f| schemas(f))
+        .chain(super::companion::runtime::all_companion_controller_schemas())
+        .collect()
 }
 
 pub fn all_registered_controllers() -> Vec<RegisteredController> {
@@ -38,6 +44,7 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
             schema: schemas(f),
             handler: handler_for(f),
         })
+        .chain(super::companion::runtime::all_companion_registered_controllers())
         .collect()
 }
 
@@ -349,12 +356,16 @@ mod tests {
     #[test]
     fn every_function_has_a_pet_schema_and_handler() {
         let all = all_controller_schemas();
-        assert_eq!(all.len(), FUNCTIONS.len());
-        for (s, f) in all.iter().zip(FUNCTIONS) {
+        let companion = super::super::companion::runtime::schemas::FUNCTIONS;
+        assert_eq!(all.len(), FUNCTIONS.len() + companion.len());
+        for (s, f) in all.iter().zip(FUNCTIONS.iter().chain(companion)) {
             assert_eq!(s.namespace, "pet");
             assert_eq!(s.function, *f);
         }
-        assert_eq!(all_registered_controllers().len(), FUNCTIONS.len());
+        assert_eq!(
+            all_registered_controllers().len(),
+            FUNCTIONS.len() + companion.len()
+        );
         assert_eq!(schemas("bogus").function, "unknown");
     }
 

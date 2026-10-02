@@ -46,6 +46,9 @@ pub const DEFAULT_MIN_INTERVAL_MIN: u32 = 10;
 pub const DEFAULT_MAX_PER_HOUR: u32 = 3;
 pub const DEFAULT_APP_COOLDOWN_MIN: u32 = 30;
 pub const DEFAULT_SCREEN_MIN_INTERVAL_SECS: u32 = 30;
+/// On-device OCR languages (explicit: Vision auto-detect costs ~19 s a frame).
+pub const DEFAULT_OCR_LANGUAGES: &[&str] = &["en-US"];
+pub const MAX_OCR_LANGUAGES: usize = 4;
 /// Actions older than this are pruned regardless of `retention_days`.
 pub const ACTION_RETENTION_DAYS: i64 = 30;
 
@@ -129,6 +132,8 @@ pub struct CompanionSettings {
     /// Bundle ids the user muted for proactive suggestions.
     pub muted_apps: Vec<String>,
     pub hotkeys: Hotkeys,
+    /// BCP-47 language tags for on-device OCR, in priority order.
+    pub ocr_languages: Vec<String>,
 }
 
 pub fn default_category_levels() -> BTreeMap<ActionCategory, CompanionLevel> {
@@ -163,6 +168,10 @@ impl Default for CompanionSettings {
             muted_kinds: Vec::new(),
             muted_apps: Vec::new(),
             hotkeys: Hotkeys::default(),
+            ocr_languages: DEFAULT_OCR_LANGUAGES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
         }
     }
 }
@@ -232,6 +241,17 @@ pub struct CompanionSettingsPatch {
     pub muted_kinds: Option<Vec<String>>,
     pub muted_apps: Option<Vec<String>>,
     pub hotkeys: Option<HotkeysPatch>,
+    pub ocr_languages: Option<Vec<String>>,
+}
+
+/// A language tag such as `en-US`, `de`, `zh-Hans`.
+fn is_language_tag(tag: &str) -> bool {
+    let mut parts = tag.split('-');
+    let primary = parts.next().unwrap_or("");
+    tag.len() <= 16
+        && (2..=3).contains(&primary.len())
+        && primary.chars().all(|c| c.is_ascii_alphabetic())
+        && parts.all(|p| (2..=8).contains(&p.len()) && p.chars().all(|c| c.is_ascii_alphanumeric()))
 }
 
 fn ranged(field: &str, v: i64, lo: i64, hi: i64) -> Result<u32, String> {
@@ -429,6 +449,18 @@ pub fn apply_patch(
                 }
             }
         }
+    }
+    if let Some(langs) = &patch.ocr_languages {
+        let langs = dedup_strings(langs);
+        if langs.is_empty()
+            || langs.len() > MAX_OCR_LANGUAGES
+            || langs.iter().any(|l| !is_language_tag(l))
+        {
+            return Err(format!(
+                "invalid 'ocr_languages': 1..={MAX_OCR_LANGUAGES} language tags like en-US"
+            ));
+        }
+        s.ocr_languages = langs;
     }
     Ok(s)
 }

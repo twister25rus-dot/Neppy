@@ -147,7 +147,8 @@ str_enum!(
     /// Where a note's finding came from.
     PetNoteSource {
         Memory => "memory", Tasks => "tasks", Calendar => "calendar", Email => "email",
-        Web => "web", Other => "other",
+        // `desktop`: saved from a desktop companion suggestion.
+        Web => "web", Other => "other", Desktop => "desktop",
     }
 );
 

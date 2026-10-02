@@ -48,6 +48,15 @@ const MEDIA_GEN_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     destinations: &["Neppy backend", "GMI Cloud"],
 });
 
+// Pet desktop companion: raw observations stay in memory on the device; only
+// scrubbed, capped excerpts reach the user's chat model (cloud by default,
+// local-only when the user switches cloud off) when a suggestion is generated.
+const PET_DESKTOP_SCRUBBED_TO_MODEL: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
+    leaves_device: true,
+    data_kind: PrivacyDataKind::Derived,
+    destinations: &["Configured Neppy chat model (scrubbed excerpts only)"],
+});
+
 const LOCAL_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: false,
     data_kind: PrivacyDataKind::Credentials,
@@ -1550,6 +1559,16 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         how_to: "Pet",
         status: CapabilityStatus::Beta,
         privacy: None,
+    },
+    Capability {
+        id: "pet.desktop_companion",
+        name: "Pet desktop companion",
+        domain: "pet",
+        category: CapabilityCategory::Automation,
+        description: "Once you turn it on, the Pet watches the app and window you use, selected text, the clipboard and the screen (on-device OCR, images deleted at once) and offers short suggestions: explain an error, draft a reply, define a term, or hand a task off. Passwords, codes, keys, card numbers and excluded apps are never read or stored. It never sends, deletes or buys anything on its own.",
+        how_to: "Pet > Settings > Desktop companion. Pause any time with Option+Shift+Cmd+P or the tray menu.",
+        status: CapabilityStatus::Beta,
+        privacy: PET_DESKTOP_SCRUBBED_TO_MODEL,
     },
     Capability {
         id: "automation.crypto_agent",

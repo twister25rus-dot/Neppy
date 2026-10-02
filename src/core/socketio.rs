@@ -691,6 +691,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
     let io_channel_status = io.clone();
     let io_orchestration = io.clone();
     let io_companion = io.clone();
+    let io_pet_desktop = io.clone();
 
     // 2. Dictation hotkey events → broadcast to all connected clients.
     tokio::spawn(async move {
@@ -740,6 +741,30 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
             let _ = io_companion.emit("companion_state_changed", &payload);
         }
         log::debug!("[socketio] companion state bridge stopped");
+    });
+
+    // Pet desktop companion → broadcast `pet:companion` to all clients (Pet
+    // page, notch). Frames carry state and scrubbed suggestions only, never
+    // raw observations.
+    tokio::spawn(async move {
+        use crate::neppy::pet::companion::runtime as pet_desktop;
+        let mut rx = pet_desktop::subscribe_companion_events();
+        loop {
+            let event = match rx.recv().await {
+                Ok(event) => event,
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
+                    log::warn!("[socketio] dropped {skipped} pet:companion events due to lag");
+                    continue;
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+            };
+            if let Ok(payload) = serde_json::to_value(&event) {
+                log::debug!("[socketio] broadcast pet:companion");
+                let _ = io_pet_desktop.emit(pet_desktop::SOCKET_EVENT, &payload);
+                let _ = io_pet_desktop.emit(pet_desktop::SOCKET_EVENT_ALIAS, &payload);
+            }
+        }
+        log::debug!("[socketio] pet:companion bridge stopped");
     });
 
     // 3. Overlay attention events → broadcast to all clients.

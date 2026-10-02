@@ -381,6 +381,15 @@ pub fn start_bootstrap_jobs(services: ServiceSet, _config: &Config) {
 pub async fn start_boot_once_jobs(services: ServiceSet, config: &Config) {
     run_legacy_migrations(config).await;
 
+    // Pet desktop companion: bind to this workspace. Behind the companion's
+    // own `enabled` flag (no sampler thread otherwise), and it never samples
+    // without the shell's visible-indicator lease, which needs the RPC server.
+    if services.rpc_http {
+        crate::neppy::pet::companion::runtime::start_supervisor(config);
+    } else {
+        log::debug!("[runtime] pet companion supervisor disabled by ServiceSet (no rpc_http)");
+    }
+
     if services.harness_init {
         let cfg_for_init = config.clone();
         tokio::spawn(async move {

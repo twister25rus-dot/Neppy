@@ -255,12 +255,19 @@ pub(crate) fn default_fingerprint(source: PetNoteSource, title: &str) -> String 
 pub(crate) fn parse_note_args(args: &Value, pet_id: &str, job_id: &str) -> Result<NewNote, String> {
     let enum_err =
         |key: &str, all: Vec<&str>| format!("invalid '{key}': expected one of {}", all.join("|"));
+    // `desktop` belongs to the desktop companion's own notes; the research
+    // lane may not file under it.
     let source = opt_str(args, "source")?
         .and_then(|s| PetNoteSource::parse(&s))
+        .filter(|s| *s != PetNoteSource::Desktop)
         .ok_or_else(|| {
             enum_err(
                 "source",
-                PetNoteSource::ALL.iter().map(|s| s.as_str()).collect(),
+                PetNoteSource::ALL
+                    .iter()
+                    .filter(|s| **s != PetNoteSource::Desktop)
+                    .map(|s| s.as_str())
+                    .collect(),
             )
         })?;
     let kind = opt_str(args, "kind")?
