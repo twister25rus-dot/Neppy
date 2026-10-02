@@ -20,6 +20,9 @@ use crate::neppy::memory::{
 // the store's `parking_lot` mutex, which starved the runtime and made
 // `threads_create_new` blow the frontend's 30 s RPC budget (#5156).
 use crate::neppy::memory::conversations;
+use crate::neppy::threads::mode::{
+    labels_with_mode, strip_mode_labels, SetThreadModeRequest, ThreadMode, ThreadModeResult,
+};
 use crate::neppy::threads::title::{
     build_title_request, is_auto_generated_thread_title, sanitize_generated_title,
     title_from_user_message, title_log_fingerprint, THREAD_TITLE_LOG_PREFIX,
@@ -122,6 +125,9 @@ where
 }
 
 fn thread_to_summary(thread: ConversationThread) -> ConversationThreadSummary {
+    // The mode lives in a reserved label; report it as its own field and keep it
+    // out of the user-visible label list.
+    let mode = ThreadMode::from_labels(&thread.labels);
     ConversationThreadSummary {
         id: thread.id,
         title: thread.title,
@@ -131,8 +137,9 @@ fn thread_to_summary(thread: ConversationThread) -> ConversationThreadSummary {
         last_message_at: thread.last_message_at,
         created_at: thread.created_at,
         parent_thread_id: thread.parent_thread_id,
-        labels: thread.labels,
+        labels: strip_mode_labels(thread.labels),
         personality_id: thread.personality_id,
+        mode: mode.as_str().to_string(),
     }
 }
 
@@ -524,10 +531,17 @@ pub async fn thread_update_labels(
     request: UpdateConversationThreadLabelsRequest,
 ) -> Result<RpcOutcome<ApiEnvelope<ConversationThreadSummary>>, String> {
     let dir = workspace_dir().await?;
+    // A client rewrites the user-visible labels; the reserved mode label is not
+    // among them (it is stripped from every summary), so re-attach the thread's
+    // current mode or this call would silently flip an orchestration thread
+    // back to chat. A client-supplied mode label is dropped — mode changes only
+    // through `thread_set_mode`.
+    let current_mode = thread_mode_for(&dir, &request.thread_id).await;
+    let labels = labels_with_mode(request.labels.clone(), current_mode);
     let thread = conversations::blocking::update_thread_labels(
         dir,
         request.thread_id.clone(),
-        request.labels.clone(),
+        labels,
         chrono::Utc::now().to_rfc3339(),
     )
     .await?;
@@ -541,6 +555,128 @@ pub async fn thread_update_labels(
         Some(counts([("num_threads", 1)])),
         None,
     ))
+}
+
+/// The persisted operating mode of `thread_id`. A thread that does not exist
+/// (or a store that cannot be read) reads as the default, `chat`: the mode is a
+/// refinement of how a turn runs, and failing a turn over it would be worse than
+/// running it in the default mode.
+pub async fn thread_mode_for(dir: &std::path::Path, thread_id: &str) -> ThreadMode {
+    match conversations::blocking::list_threads(dir.to_path_buf()).await {
+        Ok(threads) => threads
+            .iter()
+            .find(|t| t.id == thread_id)
+            .map(|t| ThreadMode::from_labels(&t.labels))
+            .unwrap_or_default(),
+        Err(err) => {
+            tracing::warn!(
+                thread_id = %thread_id,
+                error = %err,
+                "[mode] could not read thread store; defaulting to chat"
+            );
+            ThreadMode::default()
+        }
+    }
+}
+
+/// Switches a thread between `chat` and `orchestration`.
+///
+/// Same thread, same history: only the reserved mode label changes. Publishes
+/// [`DomainEvent::ThreadModeChanged`] and a `thread_mode_changed` web-channel
+/// event when the mode actually changes, and evicts the thread's cached session
+/// agent so the very next turn is built for the new mode (the conversation is
+/// re-seeded from the thread's own history on rebuild).
+pub async fn thread_set_mode(
+    request: SetThreadModeRequest,
+) -> Result<RpcOutcome<ApiEnvelope<ThreadModeResult>>, ThreadsError> {
+    let mode = ThreadMode::parse(&request.mode).ok_or_else(|| {
+        ThreadsError::Message(format!(
+            "unknown thread mode '{}': expected 'chat' or 'orchestration'",
+            request.mode.trim()
+        ))
+    })?;
+    let dir = workspace_dir().await?;
+    let source = request
+        .source
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .unwrap_or("rpc")
+        .to_string();
+    let result = apply_thread_mode(&dir, &request.thread_id, mode, &source).await?;
+    Ok(envelope(result, Some(counts([("num_threads", 1)])), None))
+}
+
+/// Shared by [`thread_set_mode`] and the chat-send path (`mode` param).
+pub async fn apply_thread_mode(
+    dir: &std::path::Path,
+    thread_id: &str,
+    mode: ThreadMode,
+    source: &str,
+) -> Result<ThreadModeResult, ThreadsError> {
+    let threads = conversations::blocking::list_threads(dir.to_path_buf()).await?;
+    let Some(existing) = threads.into_iter().find(|t| t.id == thread_id) else {
+        return Err(ThreadsError::not_found(thread_id));
+    };
+    let previous = ThreadMode::from_labels(&existing.labels);
+    if previous == mode {
+        tracing::debug!(
+            thread_id = %thread_id,
+            mode = %mode,
+            "[mode] set_mode no-op: thread already in requested mode"
+        );
+        return Ok(ThreadModeResult {
+            thread: thread_to_summary(existing),
+            previous_mode: previous.as_str().to_string(),
+            changed: false,
+        });
+    }
+    let labels = labels_with_mode(existing.labels, mode);
+    let updated = conversations::blocking::update_thread_labels(
+        dir.to_path_buf(),
+        thread_id.to_string(),
+        labels,
+        chrono::Utc::now().to_rfc3339(),
+    )
+    .await
+    .map_err(|err| ThreadsError::from_thread_scoped_store_error(thread_id, err))?;
+
+    // Content-free by design: ids and the two mode names only.
+    log::info!(
+        "[mode] thread={} {}->{} source={}",
+        thread_id,
+        previous,
+        mode,
+        source
+    );
+    crate::core::bus::BUS.publish(crate::core::events::DomainEvent::ThreadModeChanged {
+        thread_id: thread_id.to_string(),
+        from: previous.as_str().to_string(),
+        to: mode.as_str().to_string(),
+        source: source.to_string(),
+    });
+    web_channel::publish_web_channel_event(crate::core::socketio::WebChannelEvent {
+        event: "thread_mode_changed".to_string(),
+        // "system" reaches every connected client; the UI filters on thread_id.
+        client_id: "system".to_string(),
+        thread_id: thread_id.to_string(),
+        args: Some(serde_json::json!({
+            "from": previous.as_str(),
+            "to": mode.as_str(),
+            "source": source,
+        })),
+        ..Default::default()
+    });
+    // The cached session agent was built for the old mode (tool surface and
+    // prompt addendum). Evict it; the next turn rebuilds for the new mode and
+    // re-seeds from this thread's history.
+    web_channel::invalidate_thread_sessions(thread_id).await;
+
+    Ok(ThreadModeResult {
+        thread: thread_to_summary(updated),
+        previous_mode: previous.as_str().to_string(),
+        changed: true,
+    })
 }
 
 /// Sets a user-specified title on a conversation thread, bypassing AI generation.

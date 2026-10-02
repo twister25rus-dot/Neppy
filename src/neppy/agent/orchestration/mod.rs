@@ -27,6 +27,7 @@ mod pairing_schemas;
 pub(crate) mod parent_context;
 pub(crate) mod run_ledger_finalize;
 pub(crate) mod running_subagents;
+pub mod runs_history;
 pub(crate) mod spawn_parallel_graph;
 pub mod subagent_control;
 pub(crate) mod subagent_events;

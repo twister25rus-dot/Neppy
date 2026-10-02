@@ -137,6 +137,16 @@ pub struct ConversationThreadSummary {
     pub labels: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub personality_id: Option<String>,
+    /// Operating mode of the thread: `chat` (default, also for every thread
+    /// that predates the field) or `orchestration`. Derived from a reserved
+    /// label by `threads::mode`; always serialised so clients never have to
+    /// guess a default.
+    #[serde(default = "default_thread_mode")]
+    pub mode: String,
+}
+
+fn default_thread_mode() -> String {
+    "chat".to_string()
 }
 
 /// A single persisted conversation message.

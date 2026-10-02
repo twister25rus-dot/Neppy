@@ -2,6 +2,7 @@ use crate::neppy::agent::profiles::{AgentProfile, DEFAULT_PROFILE_ID};
 use crate::neppy::agent::Agent;
 use crate::neppy::config::Config;
 use crate::neppy::inference::turn_controls::TurnModelControls;
+use crate::neppy::threads::mode::ThreadMode;
 use serde_json::json;
 
 use super::types::SessionCacheFingerprint;
@@ -111,6 +112,7 @@ pub(super) fn build_session_agent(
     temperature: Option<f64>,
     controls: TurnModelControls,
     locale: Option<&str>,
+    mode: Option<ThreadMode>,
 ) -> Result<Agent, String> {
     let mut effective = config_with_model_pick(config, model_override);
     let provider_role = provider_role_for_model_override(effective.default_model.as_deref());
@@ -152,10 +154,19 @@ pub(super) fn build_session_agent(
     );
 
     let locale_directive = locale.and_then(locale_reply_directive);
+    // The mode addendum rides the same suffix lane as the locale directive and
+    // the profile persona, ahead of the persona so a profile's own wording
+    // still has the last word.
+    let mode_addendum = mode.map(super::mode::prompt_addendum);
     let composed_suffix = compose_system_prompt_suffix(
         locale_directive.as_deref(),
         profile.system_prompt_suffix.as_deref(),
     );
+    let composed_suffix = match (mode_addendum, composed_suffix) {
+        (Some(addendum), Some(rest)) => Some(format!("{addendum}\n\n{rest}")),
+        (Some(addendum), None) => Some(addendum.to_string()),
+        (None, rest) => rest,
+    };
     if let Some(s) = locale_directive.as_deref() {
         log::info!(
             "[web-channel] injecting locale directive client={} thread={} locale={} directive={:?}",
@@ -185,6 +196,15 @@ pub(super) fn build_session_agent(
                 thread_id
             };
             agent.set_agent_definition_name(format!("{target_agent_id}_{short_thread}"));
+            if let Some(mode) = mode {
+                log::info!(
+                    "[mode] building session agent thread_id={} agent={} mode={}",
+                    thread_id,
+                    target_agent_id,
+                    mode
+                );
+                super::mode::apply_to_agent(&mut agent, mode);
+            }
             agent
         })
         .map_err(|e| e.to_string())
@@ -231,6 +251,7 @@ pub(super) fn build_session_fingerprint(
     target_agent_id: String,
     provider_role: &str,
     profile: &AgentProfile,
+    mode: Option<ThreadMode>,
 ) -> SessionCacheFingerprint {
     SessionCacheFingerprint {
         controls,
@@ -249,5 +270,6 @@ pub(super) fn build_session_fingerprint(
             &config.workspace_dir,
             profile,
         ),
+        mode,
     }
 }

@@ -1263,6 +1263,18 @@ pub enum DomainEvent {
     /// A thread's goal was cleared (deleted).
     ThreadGoalCleared { thread_id: String },
 
+    // ── Thread operating mode ─────────────────────────────────────────
+    /// A thread switched operating mode (`chat` <-> `orchestration`). Carries
+    /// ids and the wire spelling of the two modes only — never message
+    /// content. `source` names what asked for it (`rpc`, `chat_params`) so an
+    /// audit trail can tell a user toggle from a programmatic one.
+    ThreadModeChanged {
+        thread_id: String,
+        from: String,
+        to: String,
+        source: String,
+    },
+
     /// A JSON message arrived on a tinyplace WebSocket stream.
     /// Published by the stream manager's recv loop. Carries the raw
     /// server-sent JSON value (inbox item, conversation message, etc.)
@@ -1434,7 +1446,9 @@ impl DomainEvent {
 
             Self::TaskPlanAwaitingApproval { .. } | Self::TaskRunReclaimed { .. } => "agent",
 
-            Self::ThreadGoalUpdated { .. } | Self::ThreadGoalCleared { .. } => "agent",
+            Self::ThreadGoalUpdated { .. }
+            | Self::ThreadGoalCleared { .. }
+            | Self::ThreadModeChanged { .. } => "agent",
 
             Self::SubconsciousTriggerProcessed { .. } => "subconscious",
 
@@ -1600,6 +1614,7 @@ impl DomainEvent {
             Self::TaskRunReclaimed { .. } => "TaskRunReclaimed",
             Self::ThreadGoalUpdated { .. } => "ThreadGoalUpdated",
             Self::ThreadGoalCleared { .. } => "ThreadGoalCleared",
+            Self::ThreadModeChanged { .. } => "ThreadModeChanged",
             Self::TinyPlaceStreamMessage { .. } => "TinyPlaceStreamMessage",
             Self::TinyPlaceStreamStatusChanged { .. } => "TinyPlaceStreamStatusChanged",
             Self::Voice(_) => "Voice",

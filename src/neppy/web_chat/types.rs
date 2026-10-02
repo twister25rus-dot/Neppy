@@ -41,6 +41,14 @@ pub(crate) struct SessionCacheFingerprint {
     /// the resolved profile or a direct edit to either profile file forces a
     /// rebuild on the next turn.
     pub(super) profile_signature: String,
+    /// Operating mode the session agent was built for. The mode decides the
+    /// agent's tool surface and system-prompt addendum at build time, so a
+    /// switch (`threads_set_mode`, or the `mode` chat param) must rebuild the
+    /// agent — the rebuild re-seeds from the thread's own history, which is what
+    /// makes a mid-thread switch carry the conversation over. `None` for agents
+    /// that do not implement modes, so a profile-routed agent never rebuilds on
+    /// a mode toggle it ignores.
+    pub(super) mode: Option<crate::neppy::threads::mode::ThreadMode>,
 }
 
 pub(super) struct SessionEntry {
@@ -104,6 +112,11 @@ pub struct ChatRequestMetadata {
     /// from the session transcript — which still holds the answer being
     /// replaced — and the model writes a follow-up instead of another answer.
     pub regenerate_of: Option<String>,
+    /// Operating mode to apply to the thread before this turn runs
+    /// (`chat` | `orchestration`). `None` leaves the thread's persisted mode
+    /// alone. A convenience so a client can toggle and send atomically; the
+    /// persisted mode (see `threads_set_mode`) is what every later turn reads.
+    pub mode: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -153,6 +166,10 @@ pub(crate) struct WebChatParams {
     /// are keyed the same way.
     #[serde(default)]
     pub(super) regenerate_of: Option<String>,
+    /// Operating mode to apply to this thread before the turn (`chat` |
+    /// `orchestration`). Omitted = keep the thread's persisted mode.
+    #[serde(default)]
+    pub(super) mode: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -8,6 +8,9 @@
 //! completion so the existing idle-gated delivery path
 //! ([`super::background_delivery`]) surfaces it back in the parent chat.
 //!
+//! It also exposes `openhuman.subagent_runs_history` — the cross-thread "Agent
+//! runs" projection of the run ledger (see [`super::runs_history`]).
+//!
 //! This is the *manual* counterpart to the *automatic* thread-close
 //! cancellation in [`crate::neppy::threads`]: there the thread is being
 //! deleted (so nothing is delivered and the thread is tombstoned), whereas here
@@ -27,7 +30,11 @@ use crate::rpc::RpcOutcome;
 
 /// Controller schemas exposed for detached sub-agent control.
 pub fn all_controller_schemas() -> Vec<ControllerSchema> {
-    vec![schema_for("subagent_cancel"), schema_for("subagent_steer")]
+    vec![
+        schema_for("subagent_cancel"),
+        schema_for("subagent_steer"),
+        schema_for("subagent_runs_history"),
+    ]
 }
 
 /// Registered controllers (schema + handler) for detached sub-agent control.
@@ -40,6 +47,10 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schema_for("subagent_steer"),
             handler: handle_subagent_steer,
+        },
+        RegisteredController {
+            schema: schema_for("subagent_runs_history"),
+            handler: handle_subagent_runs_history,
         },
     ]
 }
@@ -88,6 +99,37 @@ fn schema_for(function: &str) -> ControllerSchema {
             outputs: vec![json_output(
                 "result",
                 "{ steered: bool, taskId: string, mode: string }.",
+            )],
+        },
+        "subagent_runs_history" => ControllerSchema {
+            namespace: "subagent",
+            function: "runs_history",
+            description: "Recent agent runs across ALL threads for the 'Agent runs' view: one \
+                          simplified phase per run (researching / planning / implementing / \
+                          testing / reviewing / awaiting_user / completed / failed / cancelled), \
+                          the owning thread's title and operating mode, and a per-thread rollup. \
+                          A read-only projection of the run ledger.",
+            inputs: vec![
+                optional_u64_field("limit", "Max runs to return (default 50, max 200)."),
+                optional_str("threadId", "Only runs of this thread."),
+                optional_str(
+                    "mode",
+                    "Only runs whose thread is in this mode: 'chat' or 'orchestration'.",
+                ),
+                optional_str(
+                    "status",
+                    "Raw ledger status filter (running, completed, failed, ...).",
+                ),
+                FieldSchema {
+                    name: "onlyThreaded",
+                    ty: TypeSchema::Option(Box::new(TypeSchema::Bool)),
+                    comment: "Drop runs that belong to no thread (cron/CLI). Default true.",
+                    required: false,
+                },
+            ],
+            outputs: vec![json_output(
+                "result",
+                "{ runs: RunRow[], threads: ThreadRollup[], count } — see runs_history.rs.",
             )],
         },
         _ => ControllerSchema {
@@ -207,6 +249,55 @@ fn handle_subagent_steer(params: Map<String, Value>) -> ControllerFuture {
     })
 }
 
+fn handle_subagent_runs_history(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        use super::runs_history::{runs_history, to_value, RunsHistoryRequest};
+        use crate::neppy::threads::mode::ThreadMode;
+
+        let cid = new_correlation_id();
+        let mode = match opt_str(&params, "mode") {
+            Some(raw) => Some(ThreadMode::parse(&raw).ok_or_else(|| {
+                format!(
+                    "unknown mode '{}': expected 'chat' or 'orchestration'",
+                    raw.trim()
+                )
+            })?),
+            None => None,
+        };
+        let request = RunsHistoryRequest {
+            limit: params
+                .get("limit")
+                .and_then(Value::as_u64)
+                .map(|n| n as usize),
+            thread_id: opt_str(&params, "threadId").map(|s| s.trim().to_string()),
+            mode,
+            status: opt_str(&params, "status").map(|s| s.trim().to_string()),
+            only_threaded: params.get("onlyThreaded").and_then(Value::as_bool),
+        };
+        log::debug!(
+            target: "subagent_control_rpc",
+            "[subagent_control_rpc][{cid}] runs_history.entry"
+        );
+        let config = crate::neppy::config::rpc::load_config_with_timeout().await?;
+        let history = runs_history(&config, request).await?;
+        log::debug!(
+            target: "subagent_control_rpc",
+            "[subagent_control_rpc][{cid}] runs_history.done runs={}",
+            history.count
+        );
+        to_json(to_value(&history)?)
+    })
+}
+
+fn optional_u64_field(name: &'static str, comment: &'static str) -> FieldSchema {
+    FieldSchema {
+        name,
+        ty: TypeSchema::Option(Box::new(TypeSchema::U64)),
+        comment,
+        required: false,
+    }
+}
+
 fn to_json<T: serde::Serialize>(value: T) -> Result<Value, String> {
     RpcOutcome::new(value, vec![]).into_cli_compatible_json()
 }
@@ -273,7 +364,8 @@ mod tests {
         let schemas = all_controller_schemas();
         let registered = all_registered_controllers();
         assert_eq!(schemas.len(), registered.len());
-        assert_eq!(schemas.len(), 2);
+        assert_eq!(schemas.len(), 3);
+        assert_eq!(schema_for("subagent_runs_history").function, "runs_history");
         assert_eq!(schema_for("subagent_cancel").namespace, "subagent");
         assert_eq!(schema_for("subagent_cancel").function, "cancel");
         assert_eq!(schema_for("subagent_steer").namespace, "subagent");

@@ -6,6 +6,7 @@
 
 pub mod error;
 pub mod goals;
+pub mod mode;
 pub mod ops;
 pub mod schemas;
 pub mod title;

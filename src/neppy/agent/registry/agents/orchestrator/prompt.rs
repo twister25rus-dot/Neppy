@@ -22,6 +22,18 @@ use std::fmt::Write;
 
 const ARCHETYPE: &str = include_str!("prompt.md");
 
+/// Per-turn caps on the three injected capability lists (N3).
+///
+/// Each list is rendered into the system prompt for the whole session, so an
+/// install-happy user would otherwise grow the prompt without bound. The cap
+/// keeps the most relevant entries and ends the list with a pointer to the tool
+/// that shows the rest, so nothing becomes unreachable: the *routing* tools
+/// (`run_skill`, `delegate_use_mcp_server`, `delegate_to_integrations_agent`)
+/// work for any installed or connected entry, listed or not.
+const MAX_PROMPT_SKILLS: usize = 20;
+const MAX_PROMPT_MCP_SERVERS: usize = 12;
+const MAX_PROMPT_INTEGRATIONS: usize = 15;
+
 pub fn build(ctx: &PromptContext<'_>) -> Result<String> {
     let mut out = String::with_capacity(8192);
 
@@ -126,7 +138,23 @@ fn render_installed_skills(skills: &[Workflow]) -> String {
          For Flows automations (build/inspect/run a tinyflows workflow), use \
          `build_workflow` / the workflow_builder delegate instead.\n\n",
     );
-    for skill in skills {
+    // Most recently installed/updated first (SKILL.md mtime), so the entries the
+    // user touched last survive the cap. Skills with no readable file keep
+    // their discovery order after the dated ones (stable sort).
+    let mut ordered: Vec<(&Workflow, Option<std::time::SystemTime>)> = skills
+        .iter()
+        .map(|skill| {
+            let modified = skill
+                .location
+                .as_ref()
+                .and_then(|path| std::fs::metadata(path).ok())
+                .and_then(|meta| meta.modified().ok());
+            (skill, modified)
+        })
+        .collect();
+    ordered.sort_by(|a, b| b.1.cmp(&a.1));
+    let hidden = ordered.len().saturating_sub(MAX_PROMPT_SKILLS);
+    for (skill, _) in ordered.into_iter().take(MAX_PROMPT_SKILLS) {
         let id = if skill.dir_name.is_empty() {
             &skill.name
         } else {
@@ -146,6 +174,19 @@ fn render_installed_skills(skills: &[Workflow]) -> String {
                 .to_string()
         };
         let _ = writeln!(out, "- **{id}**: {desc}");
+    }
+    if hidden > 0 {
+        tracing::debug!(
+            hidden,
+            cap = MAX_PROMPT_SKILLS,
+            "[orchestrator-prompt] installed skills capped"
+        );
+        let _ = writeln!(
+            out,
+            "- +{hidden} more installed skills not listed here: call `list_workflows` to see all \
+             of them (`run_skill` works for any installed skill), or `skill_registry_search` to \
+             find new ones."
+        );
     }
     out
 }
@@ -198,7 +239,8 @@ fn format_connected_mcp_block(
          routes to the MCP agent, which discovers the server's tools and calls the right one. \
          Pass a plain-language task; do not pass server ids or tool names yourself.\n\n",
     );
-    for s in servers {
+    let hidden = servers.len().saturating_sub(MAX_PROMPT_MCP_SERVERS);
+    for s in servers.iter().take(MAX_PROMPT_MCP_SERVERS) {
         let name = if s.display_name.trim().is_empty() {
             s.qualified_name.as_str()
         } else {
@@ -233,6 +275,18 @@ fn format_connected_mcp_block(
                 if s.tools.len() == 1 { "" } else { "s" }
             );
         }
+    }
+    if hidden > 0 {
+        tracing::debug!(
+            hidden,
+            cap = MAX_PROMPT_MCP_SERVERS,
+            "[orchestrator-prompt] connected MCP servers capped"
+        );
+        let _ = writeln!(
+            out,
+            "- +{hidden} more connected MCP servers not listed here: call `mcp_registry_status` \
+             to see all of them (`use_mcp_server` can reach any connected server)."
+        );
     }
     out
 }
@@ -290,7 +344,8 @@ fn render_delegation_guide(
          Delegate with `delegate_to_integrations_agent`, passing the toolkit slug as \
          `toolkit`:\n\n",
     );
-    for ci in connected {
+    let hidden = connected.len().saturating_sub(MAX_PROMPT_INTEGRATIONS);
+    for ci in connected.into_iter().take(MAX_PROMPT_INTEGRATIONS) {
         // Use the same slug canonicalisation as `collect_orchestrator_tools`
         // so the `toolkit` arg the orchestrator emits always matches the
         // enum the synthesised tool accepts.
@@ -320,6 +375,18 @@ fn render_delegation_guide(
                 ci.toolkit, slug, ci.description
             );
         }
+    }
+    if hidden > 0 {
+        tracing::debug!(
+            hidden,
+            cap = MAX_PROMPT_INTEGRATIONS,
+            "[delegation-guide] connected integrations capped"
+        );
+        let _ = writeln!(
+            out,
+            "- +{hidden} more connected services not listed here: call `composio_list_connections` \
+             to see all of them (`delegate_to_integrations_agent` works for any connected toolkit)."
+        );
     }
     // CRITICAL behavioural rule. Without this, the orchestrator answers
     // "can you do X with {toolkit}?" from its training-data priors about
@@ -918,5 +985,138 @@ mod tests {
         }];
         let body = build(&ctx_with(&integrations)).unwrap();
         assert!(!body.contains("## Connected Integrations"));
+    }
+
+    // ── N3: per-turn caps on the injected capability lists ────────────────
+
+    #[test]
+    fn installed_skills_list_is_capped_with_a_pointer_to_the_rest() {
+        let skills: Vec<Workflow> = (0..MAX_PROMPT_SKILLS + 7)
+            .map(|i| Workflow {
+                dir_name: format!("skill-{i:02}"),
+                description: format!("does thing {i}"),
+                ..Default::default()
+            })
+            .collect();
+        let out = render_installed_skills(&skills);
+        let listed = out.lines().filter(|l| l.starts_with("- **skill-")).count();
+        assert_eq!(listed, MAX_PROMPT_SKILLS, "list must stop at the cap");
+        assert!(
+            out.contains("+7 more installed skills"),
+            "footer must count the hidden entries: {out}"
+        );
+        assert!(out.contains("list_workflows") && out.contains("skill_registry_search"));
+    }
+
+    #[test]
+    fn installed_skills_under_the_cap_have_no_footer() {
+        let skills = vec![Workflow {
+            dir_name: "one".into(),
+            description: "d".into(),
+            ..Default::default()
+        }];
+        let out = render_installed_skills(&skills);
+        assert!(!out.contains("more installed skills"));
+    }
+
+    #[test]
+    fn installed_skills_cap_keeps_the_most_recently_modified() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let mut skills = Vec::new();
+        // Oldest first on disk; the newest file must survive the cap.
+        for i in 0..MAX_PROMPT_SKILLS + 1 {
+            let path = dir.path().join(format!("s{i}.md"));
+            std::fs::write(&path, "x").unwrap();
+            let when = std::time::SystemTime::UNIX_EPOCH
+                + std::time::Duration::from_secs(1_700_000_000 + (i as u64) * 1000);
+            let file = std::fs::File::options().write(true).open(&path).unwrap();
+            file.set_modified(when).unwrap();
+            skills.push(Workflow {
+                dir_name: format!("skill-{i:02}"),
+                description: "d".into(),
+                location: Some(path),
+                ..Default::default()
+            });
+        }
+        let out = render_installed_skills(&skills);
+        assert!(out.contains("**skill-20**"), "newest must be listed: {out}");
+        assert!(
+            !out.contains("**skill-00**"),
+            "oldest must be the one dropped: {out}"
+        );
+        assert!(out.contains("+1 more installed skills"));
+    }
+
+    #[test]
+    fn connected_mcp_block_is_capped_with_a_pointer_to_the_rest() {
+        use crate::neppy::mcp::registry::connections::ConnectedServerOverview;
+        let servers: Vec<ConnectedServerOverview> = (0..MAX_PROMPT_MCP_SERVERS + 3)
+            .map(|i| ConnectedServerOverview {
+                server_id: format!("id-{i}"),
+                qualified_name: format!("org/server-{i:02}"),
+                display_name: format!("Server {i:02}"),
+                description: Some("desc".into()),
+                tools: vec![],
+            })
+            .collect();
+        let block = format_connected_mcp_block(&servers);
+        let listed = block
+            .lines()
+            .filter(|l| l.starts_with("- **Server"))
+            .count();
+        assert_eq!(listed, MAX_PROMPT_MCP_SERVERS);
+        assert!(block.contains("+3 more connected MCP servers"));
+        assert!(block.contains("mcp_registry_status"));
+    }
+
+    #[test]
+    fn integrations_guide_is_capped_with_a_pointer_to_the_rest() {
+        let integrations: Vec<ConnectedIntegration> = (0..MAX_PROMPT_INTEGRATIONS + 4)
+            .map(|i| ConnectedIntegration {
+                toolkit: format!("toolkit{i:02}"),
+                description: "Does things.".into(),
+                tools: Vec::new(),
+                gated_tools: Vec::new(),
+                connected: true,
+                connections: Vec::new(),
+                non_active_status: None,
+            })
+            .collect();
+        let out = render_delegation_guide(&integrations, ToolCallFormat::Native);
+        let listed = out.lines().filter(|l| l.starts_with("- **toolkit")).count();
+        assert_eq!(listed, MAX_PROMPT_INTEGRATIONS);
+        assert!(out.contains("+4 more connected services"));
+        assert!(out.contains("composio_list_connections"));
+    }
+
+    // ── prompt/schema consistency (audit MINOR) ───────────────────────────
+
+    #[test]
+    fn prompt_does_not_claim_spawn_async_subagent_has_a_blocking_param() {
+        assert!(
+            !ARCHETYPE.contains("`spawn_async_subagent` with `blocking: true`"),
+            "spawn_async_subagent has no `blocking` parameter; only delegate_* tools do"
+        );
+        assert!(
+            !ARCHETYPE.contains("is the only way to start a worker"),
+            "delegate_* tools also start workers"
+        );
+    }
+
+    #[test]
+    fn prompt_carries_the_missing_capability_discovery_clause() {
+        assert!(ARCHETYPE.contains("Missing capability: discover before you say"));
+        for tool in [
+            "list_workflows",
+            "skill_registry_search",
+            "mcp_registry_status",
+            "composio_list_connections",
+            "composio_connect",
+        ] {
+            assert!(
+                ARCHETYPE.contains(tool),
+                "capability-miss clause must name `{tool}`"
+            );
+        }
     }
 }

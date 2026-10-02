@@ -18,16 +18,18 @@ hint = "agentic"
 
 [tools]
 # Connected-server execution surface only. Discovery (`status` /
-# `list_tools`) + ensure-live (`connect`) + execute (`tool_call`). No
-# install/uninstall (that is `mcp_setup`'s secret-handling job), no shell,
-# file, or network — this agent only relays through already-connected MCP
-# servers. `resolve_time` so any time-window arguments are exact, and
+# `list_tools`) + ensure-live (`connect`) + sign-in (`oauth_begin`, for an
+# installed server that reports it is not authorized) + execute (`tool_call`).
+# No install/uninstall (that is `mcp_setup`'s secret-handling job), no shell,
+# file, or network — this agent only relays through MCP servers the user has
+# already installed. `resolve_time` so any time-window arguments are exact, and
 # `ask_user_clarification` for natural-language checkpoints.
 named = [
     "mcp_registry_status",
     "mcp_registry_installed_list",
     "mcp_registry_list_tools",
     "mcp_registry_connect",
+    "mcp_registry_oauth_begin",
     "mcp_registry_tool_call",
     "resolve_time",
     "ask_user_clarification",

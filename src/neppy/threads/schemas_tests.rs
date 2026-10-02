@@ -11,6 +11,7 @@ const ALL_FUNCTIONS: &[&str] = &[
     "generate_title",
     "update_labels",
     "update_title",
+    "set_mode",
     "message_update",
     "message_set_active_variant",
     "message_begin_answer_variant",

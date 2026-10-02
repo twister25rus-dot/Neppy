@@ -545,6 +545,49 @@ pub async fn start_chat(
         return Err(prompt_guard_user_message(prompt_decision.action).to_string());
     }
 
+    // Optional per-send mode toggle (`mode` chat param). Applied before anything
+    // else touches the thread so the turn that follows — including a queued or
+    // interrupting one — is built for the requested mode. An unknown value is a
+    // client bug and is rejected rather than silently ignored; a thread the
+    // store does not know yet is left alone (it has no persisted mode to change
+    // and reads as `chat`).
+    if let Some(raw_mode) = metadata.mode.as_deref() {
+        let Some(mode) = crate::neppy::threads::mode::ThreadMode::parse(raw_mode) else {
+            return Err(format!(
+                "unknown thread mode '{}': expected 'chat' or 'orchestration'",
+                raw_mode.trim()
+            ));
+        };
+        match crate::neppy::config::rpc::load_config_with_timeout().await {
+            Ok(cfg) => {
+                match crate::neppy::threads::ops::apply_thread_mode(
+                    &cfg.workspace_dir,
+                    &thread_id,
+                    mode,
+                    "chat_params",
+                )
+                .await
+                {
+                    Ok(_) => {}
+                    Err(crate::neppy::threads::ThreadsError::NotFound { .. }) => {
+                        log::debug!(
+                            "[mode] chat mode param ignored: thread {} is not in the store yet",
+                            thread_id
+                        );
+                    }
+                    Err(err) => {
+                        log::warn!(
+                            "[mode] chat mode param could not be applied thread_id={}: {}",
+                            thread_id,
+                            err
+                        );
+                    }
+                }
+            }
+            Err(err) => log::warn!("[mode] chat mode param skipped: config load failed: {err}"),
+        }
+    }
+
     // Chat-native approval: if this thread has a parked approval and the message
     // is a yes/no reply, route it to the gate rather than starting a new turn.
     if let Some(gate) = crate::neppy::security::approval::ApprovalGate::try_global() {

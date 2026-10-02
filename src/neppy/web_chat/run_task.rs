@@ -96,6 +96,22 @@ pub(crate) async fn run_chat_task(
     let temperature = profile.temperature.or(temperature);
     let target_agent_id = pick_target_agent_id(&config, &profile);
     let provider_role = provider_role_for_model_override(model_override.as_deref());
+    // The thread's persisted operating mode, read per turn so a switch made
+    // between turns (or by the chat `mode` param just before this one) always
+    // wins over whatever the cached agent was built for.
+    let turn_mode = super::mode::effective_mode(
+        &target_agent_id,
+        crate::neppy::threads::ops::thread_mode_for(&config.workspace_dir, thread_id).await,
+    );
+    if let Some(mode) = turn_mode {
+        log::debug!(
+            "[mode] turn thread_id={} request_id={} agent={} mode={}",
+            thread_id,
+            request_id,
+            target_agent_id,
+            mode
+        );
+    }
     let current_fp = build_session_fingerprint(
         &config,
         model_override.clone(),
@@ -104,6 +120,7 @@ pub(crate) async fn run_chat_task(
         target_agent_id.clone(),
         provider_role,
         &profile,
+        turn_mode,
     );
 
     // Set when this turn answers a question already in the log. Read twice: here,
@@ -168,6 +185,7 @@ pub(crate) async fn run_chat_task(
                     temperature,
                     controls,
                     locale.as_deref(),
+                    turn_mode,
                 )?,
                 true,
             )
@@ -183,6 +201,7 @@ pub(crate) async fn run_chat_task(
                 temperature,
                 controls,
                 locale.as_deref(),
+                turn_mode,
             )?,
             true,
         ),
@@ -313,6 +332,15 @@ pub(crate) async fn run_chat_task(
     // this already-large `run_chat_task` frame (which otherwise overflows the
     // default test-thread stack — see the channels web-turn coverage tests).
     let turn = Box::pin(agent.run_single(message));
+    // Declare the thread's mode for the turn so mode-sensitive tools (the
+    // `delegate_*` family runs blocking in chat mode) can read it. Turns that
+    // do not implement modes declare nothing and keep legacy behaviour.
+    let turn = Box::pin(async move {
+        match turn_mode {
+            Some(mode) => crate::neppy::threads::mode::with_turn_mode(mode, turn).await,
+            None => turn.await,
+        }
+    });
     let result = match crate::neppy::agent::tinyagents::thread_context::with_thread_id(
         thread_id.to_string(),
         crate::neppy::memory::source_scope::with_source_scope(profile.memory_sources.clone(), turn),

@@ -802,34 +802,29 @@ mod tests {
                     !tools.iter().any(|t| t == "spawn_worker_thread"),
                     "spawn_worker_thread is disabled (#1624) and must not be named"
                 );
-                // Sub-agent surface taught by prompt.md, deliberately three
-                // tools (#5701): spawn, enumerate, resume. A sub-agent is
-                // always async and its result is delivered back on an idle
-                // system turn, so there is nothing to collect and nothing to
-                // block on.
+                // Sub-agent surface. Two operating modes share this definition
+                // (`threads::mode`, applied per turn by `web_chat::mode`): chat
+                // mode hides the fleet belt (`CHAT_HIDDEN_TOOLS`), orchestration
+                // mode exposes it. Naming a tool here is what lets
+                // orchestration mode have it; hiding it in chat is pinned in
+                // `web_chat/mode_tests.rs`.
                 for required in [
                     "spawn_async_subagent",
                     "list_subagents",
                     "continue_subagent",
+                    "spawn_parallel_agents",
+                    "steer_subagent",
+                    "wait_subagent",
+                    "close_subagent",
                 ] {
                     assert!(
                         tools.iter().any(|t| t == required),
                         "orchestrator must have sub-agent tool `{required}`"
                     );
                 }
-                // The collection/fan-out/fleet surface these replaced. Each was
-                // either a second way to say "spawn again" or a way to stall
-                // the turn waiting for a result that arrives on its own.
-                // Re-adding one means re-teaching it in prompt.md; don't do it
-                // without that.
-                for retired in [
-                    "wait",
-                    "wait_loop",
-                    "wait_subagent",
-                    "spawn_parallel_agents",
-                    "steer_subagent",
-                    "close_subagent",
-                ] {
+                // `wait` / `wait_loop` stay retired (#5701): `wait_subagent`
+                // covers collection and `wait*` polling invites stalled turns.
+                for retired in ["wait", "wait_loop"] {
                     assert!(
                         !tools.iter().any(|t| t == retired),
                         "retired sub-agent tool `{retired}` must not reappear (#5701)"

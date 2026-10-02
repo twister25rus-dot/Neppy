@@ -71,6 +71,10 @@ pub fn schemas(function: &str) -> ControllerSchema {
                     "Queue mode: 'interrupt' (default), 'steer', 'followup', 'collect', or 'parallel'.",
                 ),
                 optional_string(
+                    "mode",
+                    "Operating mode to apply to the thread before this turn: 'chat' or 'orchestration'. Omit to keep the thread's persisted mode (see openhuman.threads_set_mode).",
+                ),
+                optional_string(
                     "regenerate_of",
                     "The message id of a question this turn is answering again. Makes the turn resume without the answer it replaces, so the model writes another answer rather than a follow-up.",
                 ),
@@ -153,6 +157,7 @@ fn handle_chat(params: Map<String, Value>) -> ControllerFuture {
                     // target agent is resolved.
                     agent_id: None,
                     regenerate_of: p.regenerate_of,
+                    mode: p.mode,
                 },
             )
             .await?,

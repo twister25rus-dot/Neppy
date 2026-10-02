@@ -312,6 +312,79 @@ impl Tool for McpRegistryConnectTool {
     }
 }
 
+/// Start the browser sign-in for an installed MCP server that needs OAuth.
+///
+/// The capability-miss route for a server that is installed but cannot be used
+/// because it is not signed in (`connect` / `status` report it as
+/// unauthorized). Wraps [`ops::mcp_clients_oauth_begin`] — the same discovery +
+/// dynamic client registration + PKCE begin step the Connect dialog runs — and
+/// hands back the authorize URL for the user to open. The token exchange
+/// happens on the app's own `/oauth/mcp/callback` route, so the agent never sees
+/// a code or a token; it only has to confirm the result with
+/// `mcp_registry_status` / `mcp_registry_connect` afterwards.
+///
+/// It is an external effect: it contacts the remote server's authorization
+/// endpoint and registers this app as an OAuth client there, so it parks on the
+/// approval gate like any other outbound action.
+pub struct McpRegistryOauthBeginTool {
+    config: Arc<Config>,
+}
+impl McpRegistryOauthBeginTool {
+    pub fn new(config: Arc<Config>) -> Self {
+        Self { config }
+    }
+}
+#[async_trait]
+impl Tool for McpRegistryOauthBeginTool {
+    fn name(&self) -> &str {
+        "mcp_registry_oauth_begin"
+    }
+    fn description(&self) -> &str {
+        "Start browser sign-in (OAuth) for an installed MCP server in the `unauthorized` / \
+         needs-auth state, by `server_id`. Returns an `authorize_url` for the user to open; \
+         after they sign in, confirm with `mcp_registry_status`, then `mcp_registry_connect`."
+    }
+    fn parameters_schema(&self) -> serde_json::Value {
+        json!({
+            "type": "object",
+            "properties": { "server_id": { "type": "string" } },
+            "required": ["server_id"]
+        })
+    }
+    fn permission_level(&self) -> PermissionLevel {
+        PermissionLevel::Execute
+    }
+    /// Contacts a third party's authorization server and registers a client
+    /// there, so it asks for approval.
+    fn external_effect(&self) -> bool {
+        true
+    }
+    async fn execute(&self, args: serde_json::Value) -> anyhow::Result<ToolResult> {
+        let sid = req_str(&args, "server_id")?;
+        enforce_act(&self.config, "mcp_registry_oauth_begin")?;
+        tracing::debug!(server_id = %sid, "[mcp-registry] oauth_begin requested by agent");
+        let outcome = ops::mcp_clients_oauth_begin(&self.config, sid.clone())
+            .await
+            .map_err(|e| anyhow::anyhow!("mcp_registry_oauth_begin: {e}"))?;
+        let authorize_url = outcome
+            .value
+            .get("authorize_url")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string();
+        let payload = json!({
+            "server_id": sid,
+            "status": "awaiting_user_sign_in",
+            "authorize_url": authorize_url,
+            "next_steps": "Show the authorize_url to the user as a link and ask them to sign in \
+                           in their browser. When they say they are done (or after a short wait), \
+                           call mcp_registry_status; once the server shows connected, continue \
+                           the original task. Never ask the user to paste a code or token.",
+        });
+        Ok(ToolResult::success(serde_json::to_string(&payload)?))
+    }
+}
+
 /// Disconnect an MCP server.
 pub struct McpRegistryDisconnectTool {
     config: Arc<Config>,
@@ -582,6 +655,26 @@ mod tests {
             PermissionLevel::Write
         );
         assert_eq!(McpRegistrySearchTool::new(cfg()).scope(), ToolScope::All);
+    }
+
+    /// N4: the sign-in starter contacts a third party's authorization server, so
+    /// it must reach the approval gate, and it is an acting (Execute) tool.
+    #[test]
+    fn oauth_begin_is_an_external_effect_and_execute_level() {
+        let tool = McpRegistryOauthBeginTool::new(cfg());
+        assert_eq!(tool.name(), "mcp_registry_oauth_begin");
+        assert!(tool.external_effect());
+        assert!(tool.external_effect_with_args(&json!({ "server_id": "s" })));
+        assert_eq!(tool.permission_level(), PermissionLevel::Execute);
+        let required = tool.parameters_schema()["required"].clone();
+        assert_eq!(required, json!(["server_id"]));
+    }
+
+    #[tokio::test]
+    async fn oauth_begin_requires_a_server_id() {
+        let tool = McpRegistryOauthBeginTool::new(cfg());
+        let err = tool.execute(json!({})).await.unwrap_err().to_string();
+        assert!(err.contains("server_id"), "got: {err}");
     }
 
     /// S6: a connected server's tool is third-party code, so every

@@ -29,6 +29,7 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("generate_title"),
         schemas("update_labels"),
         schemas("update_title"),
+        schemas("set_mode"),
         schemas("message_update"),
         schemas("message_set_active_variant"),
         schemas("message_begin_answer_variant"),
@@ -79,6 +80,10 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("update_title"),
             handler: handle_update_title,
+        },
+        RegisteredController {
+            schema: schemas("set_mode"),
+            handler: handle_set_mode,
         },
         RegisteredController {
             schema: schemas("message_update"),
@@ -388,6 +393,41 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 required: true,
             }],
         },
+        "set_mode" => ControllerSchema {
+            namespace: "threads",
+            function: "set_mode",
+            description: "Switch a conversation thread between operating modes \
+                          ('chat' or 'orchestration'). The thread and its history are unchanged; \
+                          only the delegation surface and supervisor guidance of the next turn \
+                          differ. Threads default to 'chat'. The mode is also readable as `mode` \
+                          on every thread summary (threads_list / create_new / upsert).",
+            inputs: vec![
+                FieldSchema {
+                    name: "thread_id",
+                    ty: TypeSchema::String,
+                    comment: "Thread identifier.",
+                    required: true,
+                },
+                FieldSchema {
+                    name: "mode",
+                    ty: TypeSchema::String,
+                    comment: "'chat' or 'orchestration'.",
+                    required: true,
+                },
+                FieldSchema {
+                    name: "source",
+                    ty: TypeSchema::String,
+                    comment: "Optional audit tag for who asked (defaults to 'rpc'). Never message content.",
+                    required: false,
+                },
+            ],
+            outputs: vec![FieldSchema {
+                name: "result",
+                ty: TypeSchema::Json,
+                comment: "Envelope with { thread, previousMode, changed }.",
+                required: true,
+            }],
+        },
         "update_title" => ControllerSchema {
             namespace: "threads",
             function: "update_title",
@@ -691,6 +731,13 @@ fn handle_update_labels(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let p = parse::<UpdateConversationThreadLabelsRequest>(params)?;
         to_json(ops::thread_update_labels(p).await?)
+    })
+}
+
+fn handle_set_mode(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let p = parse::<crate::neppy::threads::mode::SetThreadModeRequest>(params)?;
+        to_json(ops::thread_set_mode(p).await?)
     })
 }
 

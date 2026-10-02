@@ -7,6 +7,7 @@ Conversation thread and message management. Owns the RPC surface and controller 
 - List, create (`upsert` with caller-supplied id or `create_new` with auto-generated id + placeholder title), delete, and purge conversation threads.
 - List, append, and metadata-patch messages within a thread.
 - Update thread labels and user-specified titles.
+- Per-thread operating mode (`chat` default | `orchestration`): `threads_set_mode`, a derived `mode` field on every summary, `thread_mode_changed` event. Persisted as a reserved `mode:orchestration` label that is hidden from `labels` and preserved by `update_labels` (see `mode.rs`). The mode's behaviour (tool surface, prompt addendum, blocking delegates) lives in `web_chat/mode.rs`.
 - Generate a durable thread title from the first user message + assistant reply via the inference provider, with deterministic fallbacks (derive title from the user message; skip non-placeholder titles).
 - Maintain restart-survivable snapshots of in-flight agent turns (`turn_state`): get / list / clear over RPC; written by the web-channel progress bridge via `TurnStateMirror`.
 - Expose a per-thread kanban task board get/put that proxies to `agent::task_board`.
@@ -21,6 +22,7 @@ Conversation thread and message management. Owns the RPC surface and controller 
 | `src/neppy/threads/ops.rs` | Business logic / RPC entry points returning `RpcOutcome<ApiEnvelope<T>>`. All thread + message + turn-state ops live here; wraps results in `ApiEnvelope` with request-id/count meta. |
 | `src/neppy/threads/schemas.rs` | `ControllerSchema` definitions, `all_controller_schemas`, `all_registered_controllers`, and `handle_*` functions delegating to `ops`. Also hosts the `task_board_get`/`task_board_put` handlers (proxy to `agent::task_board`). |
 | `src/neppy/threads/error.rs` | `ThreadsError` taxonomy (`NotFound` / `Message`); encodes `NotFound` as a `StructuredRpcError` (`kind: "ThreadNotFound"`, `expected_user_state: true`) at the controller boundary so the frontend handles stale thread refs without string-matching or Sentry noise. |
+| `src/neppy/threads/mode.rs` | `ThreadMode`, the reserved-label codec (`labels_with_mode` / `strip_mode_labels`), the `threads_set_mode` request/result types, and the ambient per-turn mode task-local (`with_turn_mode` / `current_turn_mode`). |
 | `src/neppy/threads/title.rs` | Pure, provider-free helpers: placeholder-title detection, raw-title sanitization, whitespace collapse, fallback title from user message, prompt builder, log fingerprint. Heavily unit-tested. |
 | `src/neppy/threads/welcome_migration.rs` | One-shot, marker-guarded migration of legacy welcome-agent threads/transcripts to orchestrator naming. |
 | `src/neppy/threads/turn_state/mod.rs` | Submodule export hub for in-flight turn snapshots. |

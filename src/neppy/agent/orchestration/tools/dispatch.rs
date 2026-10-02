@@ -26,6 +26,27 @@ pub(crate) enum DispatchMode {
     Blocking,
 }
 
+/// Chat mode turns an async-by-default delegation into a blocking one; every
+/// other mode, and a turn that declared none, keeps the caller's choice.
+pub(crate) fn effective_dispatch_mode(
+    requested: DispatchMode,
+    turn_mode: Option<crate::neppy::threads::mode::ThreadMode>,
+    tool_name: &str,
+    agent_id: &str,
+) -> DispatchMode {
+    use crate::neppy::threads::mode::ThreadMode;
+    if requested == DispatchMode::PreferAsync && turn_mode == Some(ThreadMode::Chat) {
+        log::debug!(
+            "[mode] chat: running delegation blocking tool={} agent={}",
+            tool_name,
+            agent_id
+        );
+        DispatchMode::Blocking
+    } else {
+        requested
+    }
+}
+
 pub(crate) async fn dispatch_subagent(
     agent_id: &str,
     tool_name: &str,
@@ -108,6 +129,19 @@ pub(crate) async fn dispatch_subagent(
             prompt
         }
     };
+
+    // ── Chat mode: capability helpers are internal blocking calls ─────────
+    // In Chat mode there is exactly one visible assistant, so a `delegate_*`
+    // helper must return its result inside the reply instead of surfacing as a
+    // background worker that answers on a later turn. The ambient mode is
+    // declared by the web chat turn (`threads::mode::with_turn_mode`); a turn
+    // that declared nothing (cron, CLI, sub-agents) keeps the caller's mode.
+    let mode = effective_dispatch_mode(
+        mode,
+        crate::neppy::threads::mode::current_turn_mode(),
+        tool_name,
+        agent_id,
+    );
 
     // ── Async-by-default delegation (#continuity) ─────────────────────────
     // Interactive delegations route through the durable async sub-agent
@@ -532,5 +566,57 @@ mod tests {
             msg.contains("davinci-002") && msg.contains("404"),
             "preserves the root error: {msg}"
         );
+    }
+}
+
+#[cfg(test)]
+mod mode_tests {
+    use super::*;
+    use crate::neppy::threads::mode::{with_turn_mode, ThreadMode};
+
+    #[test]
+    fn chat_mode_forces_async_delegations_to_block() {
+        assert_eq!(
+            effective_dispatch_mode(
+                DispatchMode::PreferAsync,
+                Some(ThreadMode::Chat),
+                "delegate_x",
+                "x"
+            ),
+            DispatchMode::Blocking
+        );
+    }
+
+    #[test]
+    fn orchestration_and_undeclared_turns_keep_the_callers_mode() {
+        for turn_mode in [Some(ThreadMode::Orchestration), None] {
+            assert_eq!(
+                effective_dispatch_mode(DispatchMode::PreferAsync, turn_mode, "delegate_x", "x"),
+                DispatchMode::PreferAsync
+            );
+        }
+        assert_eq!(
+            effective_dispatch_mode(
+                DispatchMode::Blocking,
+                Some(ThreadMode::Orchestration),
+                "delegate_x",
+                "x"
+            ),
+            DispatchMode::Blocking
+        );
+    }
+
+    #[tokio::test]
+    async fn the_ambient_turn_mode_reaches_the_dispatcher() {
+        let seen = with_turn_mode(ThreadMode::Chat, async {
+            effective_dispatch_mode(
+                DispatchMode::PreferAsync,
+                crate::neppy::threads::mode::current_turn_mode(),
+                "delegate_x",
+                "x",
+            )
+        })
+        .await;
+        assert_eq!(seen, DispatchMode::Blocking);
     }
 }

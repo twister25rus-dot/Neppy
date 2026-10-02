@@ -628,3 +628,23 @@ fn cron_job_completed_carries_agent_id() {
         _ => unreachable!(),
     }
 }
+
+#[test]
+fn thread_mode_changed_domain_name_and_wire_shape() {
+    let event = DomainEvent::ThreadModeChanged {
+        thread_id: "thread-1".into(),
+        from: "chat".into(),
+        to: "orchestration".into(),
+        source: "rpc".into(),
+    };
+    assert_eq!(event.domain(), "agent");
+    assert_eq!(event.variant_name(), "ThreadModeChanged");
+    // Round-trips over the bus codec, and carries no message content: only the
+    // thread id and the two mode names.
+    let json = serde_json::to_value(&event).expect("serialize");
+    let back: DomainEvent = serde_json::from_value(json.clone()).expect("deserialize");
+    assert_eq!(back.variant_name(), "ThreadModeChanged");
+    let body = json.get("ThreadModeChanged").expect("externally tagged");
+    assert_eq!(body["from"], "chat");
+    assert_eq!(body["to"], "orchestration");
+}

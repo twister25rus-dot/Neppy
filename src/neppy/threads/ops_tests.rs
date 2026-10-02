@@ -995,3 +995,267 @@ async fn beginning_a_variant_on_something_that_is_not_a_question_fails() {
     let messages = stored(thread_id).await;
     assert!(variants::variant_of(&messages[1]).is_none());
 }
+
+// ── thread operating mode (chat | orchestration) ──────────────────────────
+
+async fn mode_test_workspace_dir() -> std::path::PathBuf {
+    crate::neppy::config::Config::load_or_init()
+        .await
+        .expect("load config")
+        .workspace_dir
+}
+
+fn thread_from(
+    outcome: RpcOutcome<ApiEnvelope<ConversationThreadSummary>>,
+) -> ConversationThreadSummary {
+    outcome.value.data.expect("envelope data")
+}
+
+#[tokio::test]
+async fn new_and_legacy_threads_default_to_chat_mode() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+
+    let created = thread_from(
+        thread_create_new(CreateConversationThreadRequest {
+            labels: None,
+            personality_id: None,
+        })
+        .await
+        .expect("create"),
+    );
+    assert_eq!(created.mode, "chat");
+
+    // A thread stored before the field existed has no mode label at all.
+    create_thread_with_title(&workspace, "legacy-thread", "Old chat").await;
+    let listed = threads_list(EmptyRequest {}).await.expect("list");
+    let all = listed.value.data.expect("data").threads;
+    let legacy = all
+        .iter()
+        .find(|t| t.id == "legacy-thread")
+        .expect("legacy");
+    assert_eq!(legacy.mode, "chat");
+    assert!(all.iter().all(|t| t.mode == "chat"));
+
+    let dir = mode_test_workspace_dir().await;
+    assert_eq!(
+        thread_mode_for(&dir, "legacy-thread").await,
+        ThreadMode::Chat
+    );
+    // An unknown thread reads as the default rather than failing a turn.
+    assert_eq!(thread_mode_for(&dir, "nope").await, ThreadMode::Chat);
+}
+
+#[tokio::test]
+async fn set_mode_persists_is_readable_on_list_and_keeps_labels_clean() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    create_thread_with_title(&workspace, "t1", "Work").await;
+
+    let result = thread_set_mode(SetThreadModeRequest {
+        thread_id: "t1".into(),
+        mode: "orchestration".into(),
+        source: None,
+    })
+    .await
+    .expect("set mode")
+    .value
+    .data
+    .expect("data");
+    assert!(result.changed);
+    assert_eq!(result.previous_mode, "chat");
+    assert_eq!(result.thread.mode, "orchestration");
+    // The reserved label never reaches the client.
+    assert!(result.thread.labels.iter().all(|l| !l.starts_with("mode:")));
+
+    // Persisted: a fresh read sees it, and the on-disk label is the reserved one.
+    let listed = threads_list(EmptyRequest {}).await.expect("list");
+    let t1 = listed
+        .value
+        .data
+        .expect("data")
+        .threads
+        .into_iter()
+        .find(|t| t.id == "t1")
+        .expect("t1");
+    assert_eq!(t1.mode, "orchestration");
+    let dir = mode_test_workspace_dir().await;
+    assert_eq!(thread_mode_for(&dir, "t1").await, ThreadMode::Orchestration);
+    let raw = conversations_store::list_threads(dir.clone()).expect("raw list");
+    let raw_t1 = raw.iter().find(|t| t.id == "t1").expect("raw t1");
+    assert!(raw_t1.labels.iter().any(|l| l == "mode:orchestration"));
+
+    // Setting the same mode again is a no-op.
+    let again = thread_set_mode(SetThreadModeRequest {
+        thread_id: "t1".into(),
+        mode: " Orchestration ".into(),
+        source: Some("test".into()),
+    })
+    .await
+    .expect("set again")
+    .value
+    .data
+    .expect("data");
+    assert!(!again.changed);
+
+    // Switching back restores chat with no leftover label, same thread.
+    let back = thread_set_mode(SetThreadModeRequest {
+        thread_id: "t1".into(),
+        mode: "chat".into(),
+        source: None,
+    })
+    .await
+    .expect("back")
+    .value
+    .data
+    .expect("data");
+    assert!(back.changed);
+    assert_eq!(back.previous_mode, "orchestration");
+    assert_eq!(back.thread.mode, "chat");
+    assert_eq!(back.thread.id, "t1");
+    let raw = conversations_store::list_threads(dir).expect("raw list");
+    assert!(raw
+        .iter()
+        .find(|t| t.id == "t1")
+        .expect("t1")
+        .labels
+        .iter()
+        .all(|l| !l.starts_with("mode:")));
+}
+
+#[tokio::test]
+async fn set_mode_rejects_unknown_modes_and_unknown_threads() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    create_thread_with_title(&workspace, "t1", "Work").await;
+
+    let bad = thread_set_mode(SetThreadModeRequest {
+        thread_id: "t1".into(),
+        mode: "pet".into(),
+        source: None,
+    })
+    .await
+    .expect_err("unknown mode");
+    assert!(bad.to_string().contains("unknown thread mode"), "{bad}");
+
+    let missing = thread_set_mode(SetThreadModeRequest {
+        thread_id: "ghost".into(),
+        mode: "chat".into(),
+        source: None,
+    })
+    .await
+    .expect_err("unknown thread");
+    assert_eq!(missing, ThreadsError::not_found("ghost"));
+}
+
+#[tokio::test]
+async fn update_labels_cannot_flip_the_mode() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    create_thread_with_title(&workspace, "t1", "Work").await;
+    thread_set_mode(SetThreadModeRequest {
+        thread_id: "t1".into(),
+        mode: "orchestration".into(),
+        source: None,
+    })
+    .await
+    .expect("set mode");
+
+    // A client rewriting the visible labels (which no longer include the mode)
+    // keeps the orchestration mode...
+    let relabeled = thread_from(
+        thread_update_labels(UpdateConversationThreadLabelsRequest {
+            thread_id: "t1".into(),
+            labels: vec!["general".into(), "tasks".into()],
+        })
+        .await
+        .expect("relabel"),
+    );
+    assert_eq!(relabeled.mode, "orchestration");
+    assert_eq!(relabeled.labels, vec!["general", "tasks"]);
+
+    // ...and cannot smuggle a mode in through the label list either.
+    let back = thread_from(
+        thread_update_labels(UpdateConversationThreadLabelsRequest {
+            thread_id: "t1".into(),
+            labels: vec![
+                "general".into(),
+                "mode:orchestration".into(),
+                "mode:x".into(),
+            ],
+        })
+        .await
+        .expect("relabel"),
+    );
+    assert_eq!(back.mode, "orchestration");
+    assert_eq!(back.labels, vec!["general"]);
+}
+
+#[tokio::test]
+async fn mode_change_publishes_a_web_channel_event_without_content() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    create_thread_with_title(&workspace, "t-evt", "Work").await;
+
+    let mut rx = crate::neppy::web_chat::subscribe_web_channel_events();
+    thread_set_mode(SetThreadModeRequest {
+        thread_id: "t-evt".into(),
+        mode: "orchestration".into(),
+        source: Some("rpc".into()),
+    })
+    .await
+    .expect("set mode");
+
+    let event = loop {
+        let event = tokio::time::timeout(std::time::Duration::from_secs(5), rx.recv())
+            .await
+            .expect("event within timeout")
+            .expect("recv");
+        if event.event == "thread_mode_changed" && event.thread_id == "t-evt" {
+            break event;
+        }
+    };
+    assert_eq!(event.client_id, "system");
+    let args = event.args.expect("args");
+    assert_eq!(args["from"], "chat");
+    assert_eq!(args["to"], "orchestration");
+    assert_eq!(args["source"], "rpc");
+    assert!(event.message.is_none() && event.full_response.is_none());
+
+    // No event for a no-op switch.
+    thread_set_mode(SetThreadModeRequest {
+        thread_id: "t-evt".into(),
+        mode: "orchestration".into(),
+        source: None,
+    })
+    .await
+    .expect("no-op");
+    assert!(
+        tokio::time::timeout(std::time::Duration::from_millis(200), async {
+            loop {
+                let e = rx.recv().await.expect("recv");
+                if e.event == "thread_mode_changed" && e.thread_id == "t-evt" {
+                    return e;
+                }
+            }
+        })
+        .await
+        .is_err(),
+        "a no-op switch must not publish"
+    );
+}

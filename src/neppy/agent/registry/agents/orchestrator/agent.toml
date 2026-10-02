@@ -268,19 +268,26 @@ named = [
     # disabled pending a worker-thread UI (#1624) and is not registered, so
     # listing it here (and teaching it in prompt.md) only trained the model
     # to call a tool that does not exist.
-    # Sub-agent surface, deliberately three tools (#5701). A sub-agent is
-    # always async: `spawn_async_subagent` returns a task id immediately and
-    # the runner delivers the result back on an idle system turn via
-    # `orchestration::background_delivery`. Nothing has to block for it, so
-    # the collection surface that used to sit here — `wait`, `wait_loop`,
-    # `wait_subagent` — bought nothing but tokens and an invitation to stall
-    # the turn. `spawn_parallel_agents` went the same way: several spawns are
-    # already several workers in flight, so a dedicated fan-out tool was a
-    # second way to say the same thing. `steer_subagent` and `close_subagent`
-    # were fleet-management affordances for a fleet the model no longer
-    # enumerates; a worker that needs different instructions is cheaper to
-    # respawn, and idle sessions are reaped against the registry cap anyway.
+    # Sub-agent surface. Two operating modes share this one definition
+    # (`threads::mode`, applied per turn by `web_chat::mode`):
+    #
+    #   * Chat mode hides the whole fleet belt (`CHAT_HIDDEN_TOOLS`) and keeps
+    #     `continue_subagent` plus the blocking `delegate_*` helpers, so chat is
+    #     one visible assistant with full MCP / memory / skill access.
+    #   * Orchestration mode exposes all of it: the supervisor spawns, steers,
+    #     waits on and closes workers.
+    #
+    # Naming a tool here is therefore not the same as showing it in chat; the
+    # chat/orchestration split is enforced by `hide_tools`, which denies a hidden
+    # tool at the call boundary. `wait` / `wait_loop` stay retired (#5701):
+    # `wait_subagent` covers collection and its timeout is a graceful result.
+    #
+    # A sub-agent is always async: `spawn_async_subagent` returns a task id
+    # immediately and the runner delivers the result back on an idle system turn
+    # via `orchestration::background_delivery`.
     "spawn_async_subagent",
+    # Fan-out of several homogeneous workers in one call (orchestration mode).
+    "spawn_parallel_agents",
     # Fleet awareness. Re-enumerates the workers this parent has in flight
     # (running / awaiting_user / completed-uncollected / failed) plus reusable
     # durable sessions — the recovery move when the `[async_subagent_ref]`
@@ -289,6 +296,12 @@ named = [
     # `running_subagents` registry the ambient `[active_subagents]` turn block
     # is built from.
     "list_subagents",
+    # Supervisor controls (orchestration mode only): nudge a live worker with
+    # new instructions, collect a worker's result when the next step depends on
+    # it, and end a session that is superseded or abandoned.
+    "steer_subagent",
+    "wait_subagent",
+    "close_subagent",
     # Resume a sub-agent that paused on `ask_user_clarification` (#4291). When
     # a delegated sub-agent (e.g. mcp_setup via `delegate_setup_mcp_server`)
     # asks the user a question, the runner checkpoints it and the orchestrator
@@ -297,6 +310,7 @@ named = [
     # this tool — without it, the only continuation is to re-delegate a fresh,
     # stateless sub-agent that asks again, looping forever. Both the async
     # spawn and the synchronous delegate paths instruct the model to call it.
+    # Visible in BOTH modes, because chat-mode blocking helpers can pause too.
     "continue_subagent",
     "composio_list_connections",
     # Inline OAuth connect card (#3993). Free-form `toolkit` slug — the
