@@ -152,6 +152,33 @@ pub(super) async fn run_autonomous(
     run_id: &str,
     session_thread_id: Option<String>,
 ) -> Result<String, String> {
+    // M1: label the run as a background turn on its chat thread (not `Cli`,
+    // which the approval gate allows without asking). External-effect calls park
+    // for approval on that thread's card; with no thread they are denied.
+    let origin = background_run_origin(run_id, session_thread_id.as_deref());
+    run_autonomous_with_origin(config, executor, prompt, run_id, session_thread_id, origin).await
+}
+
+/// [`run_autonomous`] with the approval-gate origin chosen by the caller. The
+/// whole run (and every sub-agent it delegates to, which inherits the origin
+/// across `tokio::spawn`) executes under `origin`. Card runs and background
+/// deliveries pass [`background_run_origin`]; the Pet companion hand-off passes
+/// a `PetCompanion` origin (see `run_pet_companion_handoff` in the parent
+/// module). Never pass `Cli` here: the gate allows it unasked, and the run's
+/// prompt can carry attacker-influenceable text (see the threat model above).
+pub(super) async fn run_autonomous_with_origin(
+    config: Config,
+    executor: &ResolvedExecutor,
+    prompt: &str,
+    run_id: &str,
+    session_thread_id: Option<String>,
+    origin: crate::neppy::agent::turn_origin::AgentTurnOrigin,
+) -> Result<String, String> {
+    tracing::debug!(
+        run_id = %run_id,
+        origin_class = %origin.class(),
+        "[task_dispatcher] autonomous run origin"
+    );
     tracing::debug!(
         run_id = %run_id,
         allowed_domains = config.http_request.allowed_domains.len(),
@@ -217,32 +244,19 @@ pub(super) async fn run_autonomous(
         );
     }
 
-    // M1: label the run as a background turn on its chat thread (not `Cli`,
-    // which the approval gate allows without asking). External-effect calls park
-    // for approval on that thread's card; with no thread they are denied.
     // Gate memory-source recall for this background run to the profile's
     // allowlist (None = unrestricted), mirroring the web chat turn.
     let memory_scope = executor
         .profile
         .as_ref()
         .and_then(|p| p.memory_sources.clone());
-    let run = crate::neppy::memory::source_scope::with_source_scope(
+    let result = scope_autonomous_run(
+        origin,
         memory_scope,
-        crate::neppy::agent::turn_origin::with_origin(
-            background_run_origin(run_id, session_thread_id.as_deref()),
-            with_autonomous_iter_cap(TASK_RUN_MAX_ITERATIONS, agent.run_single(prompt)),
-        ),
-    );
-    let result = match session_thread_id.as_deref() {
-        Some(thread_id) => {
-            crate::neppy::agent::tinyagents::thread_context::with_thread_id(
-                thread_id.to_string(),
-                run,
-            )
-            .await
-        }
-        None => run.await,
-    }
+        session_thread_id.clone(),
+        with_autonomous_iter_cap(TASK_RUN_MAX_ITERATIONS, agent.run_single(prompt)),
+    )
+    .await
     .map_err(|e| format!("{e:#}"));
 
     // Emit the terminal chat event so a client viewing the session stops
@@ -286,6 +300,29 @@ pub(super) async fn run_autonomous(
         task_session::append_final(workspace_dir, thread_id, &result);
     }
     result
+}
+
+/// The task-locals every autonomous run executes inside, outermost first: the
+/// memory-source scope, the approval-gate `origin`, then the chat-thread
+/// context when the run has a session thread. Split out of
+/// [`run_autonomous_with_origin`] so the scoping is testable without building
+/// an agent (`origin_tests.rs`).
+pub(super) async fn scope_autonomous_run<F: std::future::Future>(
+    origin: crate::neppy::agent::turn_origin::AgentTurnOrigin,
+    memory_scope: Option<Vec<String>>,
+    session_thread_id: Option<String>,
+    fut: F,
+) -> F::Output {
+    let run = crate::neppy::memory::source_scope::with_source_scope(
+        memory_scope,
+        crate::neppy::agent::turn_origin::with_origin(origin, fut),
+    );
+    match session_thread_id {
+        Some(thread_id) => {
+            crate::neppy::agent::tinyagents::thread_context::with_thread_id(thread_id, run).await
+        }
+        None => run.await,
+    }
 }
 
 /// The approval-gate origin an autonomous run (task-board card or background

@@ -144,18 +144,27 @@ impl Agent {
     ) -> Result<Self> {
         if crate::neppy::pet::agent_forbids_memory_writes(agent_id) {
             // A workspace TOML can replace the built-in definition; refuse to
-            // build the lane unless it is still the closed read-only one.
+            // build the lane unless it is still the closed read-only one (the
+            // research lane or the tool-less pet companion lane, by id).
             let verdict = match target_def {
+                Some(def) if def.id != agent_id => {
+                    Err(format!("resolved definition id '{}' differs", def.id))
+                }
                 Some(def) => crate::neppy::pet::validate_research_definition(def),
                 None => Err("no definition resolved".to_string()),
             };
             if let Err(reason) = verdict {
+                let lane = if agent_id == crate::neppy::pet::PET_RESEARCH_AGENT_ID {
+                    "research lane"
+                } else {
+                    "pet companion lane"
+                };
                 log::error!(
                     "[session-builder] refusing to build {agent_id}: definition is not the \
-                     read-only research lane ({reason})"
+                     read-only {lane} ({reason})"
                 );
                 return Err(anyhow::anyhow!(
-                    "agent '{agent_id}' definition rejected: not the read-only research lane ({reason})"
+                    "agent '{agent_id}' definition rejected: not the read-only {lane} ({reason})"
                 ));
             }
         }

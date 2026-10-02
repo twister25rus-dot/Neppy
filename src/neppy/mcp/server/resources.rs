@@ -176,6 +176,12 @@ const RESOURCE_CATALOG: &[PromptResource] = &[
         content: include_str!("../../agent/registry/agents/pet_research/prompt.md"),
     },
     PromptResource {
+        uri: "neppy://prompts/agents/pet_companion",
+        name: "pet_companion",
+        description: "Tool-less, read-only lane that writes the Pet desktop companion's short suggestions.",
+        content: include_str!("../../agent/registry/agents/pet_companion/prompt.md"),
+    },
+    PromptResource {
         uri: "neppy://prompts/agents/help",
         name: "help",
         description: "Read-only worker that answers questions from documentation.",

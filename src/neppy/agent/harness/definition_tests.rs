@@ -404,6 +404,7 @@ fn all_builtin_agent_definitions_have_expected_effective_max_iterations() {
         ("image_agent", 8),
         ("morning_briefing", 8),
         ("pet_research", 16),
+        ("pet_companion", 1),
         ("profile_memory_agent", 8),
         ("scheduler_agent", 8),
         ("settings_agent", 8),

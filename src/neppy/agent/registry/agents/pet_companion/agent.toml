@@ -1,0 +1,29 @@
+id = "pet_companion"
+display_name = "Pet desktop companion"
+when_to_use = "Writes the Pet desktop companion's short suggestions (explain an error, draft a reply, define a term) from scrubbed screen excerpts. Tool-less and read-only; run only by the companion runtime, never as an orchestrator subagent. Never acts."
+temperature = 0.3
+max_iterations = 1
+sandbox_mode = "read_only"
+trigger_memory_agent = "never"
+
+# The companion sees only the scrubbed excerpt the runtime hands it. The
+# all-time memory blob, identity, profile, MEMORY.md and skills catalog are
+# dropped (no personal context is mixed into a screen suggestion). The safety
+# preamble STAYS: the excerpt is untrusted text copied from other apps.
+omit_identity = true
+omit_memory_context = true
+omit_skills_catalog = true
+omit_safety_preamble = false
+omit_profile = true
+omit_memory_md = true
+
+[model]
+# MUST equal the orchestrator's `[model] hint`: the companion uses the same
+# model as chat. Test-enforced (`pet_companion_is_tool_less_and_read_only`).
+hint = "coding"
+
+[tools]
+# Zero tools by design, validated by `pet::lane` (a workspace override that
+# adds any tool, a wildcard or extra_tools is refused). Anything that has to
+# act becomes a hand-off run under the `PetCompanion` approval origin.
+named = []

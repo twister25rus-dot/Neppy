@@ -348,7 +348,10 @@ fn research_allowlist_has_no_packed_tools_so_use_skill_is_never_added() {
         .map(|s| s.to_string())
         .collect();
     let before = visible.clone();
-    crate::neppy::tools::toolpacks::strip_packed_from_visible(&mut visible, PET_RESEARCH_AGENT_ID);
+    let _ = crate::neppy::tools::toolpacks::strip_packed_from_visible(
+        &mut visible,
+        PET_RESEARCH_AGENT_ID,
+    );
     assert_eq!(
         visible, before,
         "the lane's visible set must be exactly the allowlist"

@@ -20,6 +20,8 @@ pub mod mcp_agent;
 pub mod mcp_setup;
 pub mod morning_briefing;
 pub mod orchestrator;
+// Pet desktop companion's tool-less suggestion lane (runtime-driven).
+pub mod pet_companion;
 // Pet mode's background read-only research lane (cron-driven).
 pub mod pet_research;
 pub mod planner;

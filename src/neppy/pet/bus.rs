@@ -104,13 +104,20 @@ pub(crate) fn approval_needs_surface(
         request_id,
         tool_name,
         action_summary,
-        thread_id: None,
+        thread_id,
         ..
     } = event
     else {
         return None;
     };
     let row = pending.iter().find(|p| &p.request_id == request_id)?;
+    // Thread-routed approvals already show a chat card; only a Pet companion
+    // hand-off also gets the desktop notification, since its thread is one the
+    // user did not open themselves.
+    if thread_id.is_some() && row.origin_class.as_deref() != Some("TrustedAutomation(PetCompanion)")
+    {
+        return None;
+    }
     if !surface::is_pet_surfaceable(row) {
         log::debug!("[pet::bus] approval not surfaced (remote, flow or unknown origin) request_id={request_id}");
         return None;

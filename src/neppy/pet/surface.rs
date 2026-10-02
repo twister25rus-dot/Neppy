@@ -64,7 +64,21 @@ fn local_midnight_utc<Tz: TimeZone>(now: DateTime<Utc>, tz: &Tz) -> DateTime<Utc
 /// stored decision (the parked call is gone or the row is an orphan), so it is
 /// harmless, and it keeps a pending approval findable. `GoalContinuation`: the
 /// user's own autonomous goal run, which has no other surface.
-const SURFACEABLE_ORIGIN_CLASSES: &[&str] = &["WebChat", "TrustedAutomation(GoalContinuation)"];
+/// `PetCompanion`: work the Pet's desktop companion started (a hand-off run),
+/// whose approvals belong in the Pet by definition (see
+/// [`PET_COMPANION_ORIGIN_CLASS`]).
+const SURFACEABLE_ORIGIN_CLASSES: &[&str] = &[
+    "WebChat",
+    "TrustedAutomation(GoalContinuation)",
+    PET_COMPANION_ORIGIN_CLASS,
+];
+
+/// `AgentTurnOrigin::class()` of a Pet desktop-companion turn. Its parks are
+/// listed in the Pet inbox even when they are ALSO routed as a card on the
+/// hand-off thread: the user's attention is on the Pet, not on a background
+/// thread they may never open, and deciding in either place resolves the same
+/// request (the other card then reads as already decided).
+pub(crate) const PET_COMPANION_ORIGIN_CLASS: &str = "TrustedAutomation(PetCompanion)";
 
 /// Whether a parked approval may be offered to the user from the Pet (inbox,
 /// digest count, notification). Single source of truth for all three.
@@ -81,13 +95,19 @@ pub(crate) fn is_pet_surfaceable(row: &crate::neppy::security::approval::Pending
             .is_some_and(|class| SURFACEABLE_ORIGIN_CLASSES.contains(&class))
 }
 
-/// [`background_approvals`] over explicit rows (the seam tests drive).
+/// [`background_approvals`] over explicit rows (the seam tests drive). Drops
+/// rows already shown as a chat card, except Pet-companion rows (see
+/// [`PET_COMPANION_ORIGIN_CLASS`]).
 pub(crate) fn filter_background_approvals(
     rows: Vec<crate::neppy::security::approval::PendingApproval>,
     chat_routed: &HashSet<String>,
 ) -> Vec<crate::neppy::security::approval::PendingApproval> {
     rows.into_iter()
-        .filter(|r| !chat_routed.contains(&r.request_id) && is_pet_surfaceable(r))
+        .filter(|r| {
+            is_pet_surfaceable(r)
+                && (!chat_routed.contains(&r.request_id)
+                    || r.origin_class.as_deref() == Some(PET_COMPANION_ORIGIN_CLASS))
+        })
         .collect()
 }
 

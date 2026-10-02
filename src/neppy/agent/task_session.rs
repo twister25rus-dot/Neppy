@@ -54,6 +54,59 @@ pub(crate) fn create_session_thread(
     run_id: &str,
     prompt: &str,
 ) -> Option<String> {
+    let thread_id = create_thread_seeded(
+        workspace_dir,
+        session_title(card),
+        prompt,
+        json!({
+            "scope": "autonomous_task",
+            "card_id": card.id,
+            "run_id": run_id,
+        }),
+    )?;
+    tracing::info!(
+        card_id = %card.id,
+        run_id = %run_id,
+        thread_id = %thread_id,
+        "[task_session] created top-level task session thread for autonomous run"
+    );
+    Some(thread_id)
+}
+
+/// Card-less sibling of [`create_session_thread`]: a top-level `tasks` thread
+/// titled `title` (trimmed, clipped to 80 chars, `"Autonomous task"` when
+/// blank), seeded with `prompt` as the opening `user` message. Used by the Pet
+/// companion hand-off executor (`task_dispatcher::run_pet_companion_handoff`),
+/// whose run has no board card. `run_id` is stamped into the seed metadata.
+/// Returns `None` when the store rejects the create (the run proceeds headless).
+pub(crate) fn create_named_session_thread(
+    workspace_dir: PathBuf,
+    title: &str,
+    run_id: &str,
+    prompt: &str,
+) -> Option<String> {
+    let thread_id = create_thread_seeded(
+        workspace_dir,
+        clip_title(title),
+        prompt,
+        json!({ "scope": "autonomous_task", "run_id": run_id }),
+    )?;
+    tracing::info!(
+        run_id = %run_id,
+        thread_id = %thread_id,
+        "[task_session] created named top-level task session thread"
+    );
+    Some(thread_id)
+}
+
+/// Create the top-level `tasks` thread and seed the prompt. Best-effort: a
+/// failed create returns `None`; a failed seed is logged and the id returned.
+fn create_thread_seeded(
+    workspace_dir: PathBuf,
+    title: String,
+    prompt: &str,
+    seed_metadata: serde_json::Value,
+) -> Option<String> {
     let thread_id = format!("task-{}", uuid::Uuid::new_v4());
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -61,7 +114,7 @@ pub(crate) fn create_session_thread(
         workspace_dir.clone(),
         CreateConversationThread {
             id: thread_id.clone(),
-            title: session_title(card),
+            title,
             created_at: now.clone(),
             parent_thread_id: None,
             labels: Some(vec![TASKS_LABEL.to_string()]),
@@ -69,8 +122,6 @@ pub(crate) fn create_session_thread(
         },
     ) {
         tracing::warn!(
-            card_id = %card.id,
-            run_id = %run_id,
             error = %err,
             "[task_session] failed to create session thread (run proceeds headless)"
         );
@@ -84,36 +135,29 @@ pub(crate) fn create_session_thread(
             id: format!("user:{}", uuid::Uuid::new_v4()),
             content: prompt.to_string(),
             message_type: "text".to_string(),
-            extra_metadata: json!({
-                "scope": "autonomous_task",
-                "card_id": card.id,
-                "run_id": run_id,
-            }),
+            extra_metadata: seed_metadata,
             sender: "user".to_string(),
             created_at: now,
         },
     ) {
         tracing::warn!(
             thread_id = %thread_id,
-            run_id = %run_id,
             error = %err,
             "[task_session] failed to seed task prompt (continuing)"
         );
     }
-
-    tracing::info!(
-        card_id = %card.id,
-        run_id = %run_id,
-        thread_id = %thread_id,
-        "[task_session] created top-level task session thread for autonomous run"
-    );
     Some(thread_id)
 }
 
 /// Human-readable title for the session thread — the card title, trimmed and
 /// clipped, with a generic fallback for an unnamed card.
 fn session_title(card: &TaskBoardCard) -> String {
-    let trimmed = card.title.trim();
+    clip_title(&card.title)
+}
+
+/// Trim and clip a thread title, with a generic fallback when blank.
+fn clip_title(raw: &str) -> String {
+    let trimmed = raw.trim();
     if trimmed.is_empty() {
         return "Autonomous task".to_string();
     }
@@ -240,6 +284,35 @@ mod tests {
             msgs.len(),
             1,
             "empty final response must not append a message"
+        );
+    }
+
+    #[test]
+    fn named_session_thread_carries_the_title_and_seeds_the_prompt() {
+        let ws = temp_ws();
+        let id =
+            create_named_session_thread(ws.clone(), "  Pet: fix the build  ", "run-9", "Fix it")
+                .expect("thread created");
+        let threads = conversations::list_threads(ws.clone()).expect("list threads");
+        let t = threads.iter().find(|t| t.id == id).expect("thread listed");
+        assert_eq!(t.title, "Pet: fix the build");
+        assert!(t.parent_thread_id.is_none(), "top-level");
+        assert!(t.labels.iter().any(|l| l == "tasks"));
+        let msgs = conversations::get_messages(ws.clone(), &id).expect("messages");
+        assert_eq!(msgs.len(), 1);
+        assert_eq!(msgs[0].sender, "user");
+        assert_eq!(msgs[0].content, "Fix it");
+
+        let long = "x".repeat(200);
+        let id2 = create_named_session_thread(ws.clone(), &long, "run-10", "p").unwrap();
+        let threads = conversations::list_threads(ws.clone()).expect("list threads");
+        let t2 = threads.iter().find(|t| t.id == id2).unwrap();
+        assert_eq!(t2.title.chars().count(), TITLE_MAX_CHARS);
+        let id3 = create_named_session_thread(ws.clone(), "   ", "run-11", "p").unwrap();
+        let threads = conversations::list_threads(ws).expect("list threads");
+        assert_eq!(
+            threads.iter().find(|t| t.id == id3).unwrap().title,
+            "Autonomous task"
         );
     }
 

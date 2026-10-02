@@ -236,6 +236,14 @@ pub const BUILTINS: &[BuiltinAgent] = &[
         prompt_fn: super::pet_research::prompt::build,
         graph_fn: None,
     },
+    // Pet desktop companion's suggestion lane. Run only by the companion
+    // runtime (never an orchestrator subagent); tool-less, read-only.
+    BuiltinAgent {
+        id: "pet_companion",
+        toml: include_str!("pet_companion/agent.toml"),
+        prompt_fn: super::pet_companion::prompt::build,
+        graph_fn: None,
+    },
     BuiltinAgent {
         id: "summarizer",
         toml: include_str!("summarizer/agent.toml"),
@@ -1415,6 +1423,37 @@ mod tests {
             def.subagents.is_empty(),
             "the research lane must not delegate"
         );
+    }
+
+    #[test]
+    fn pet_companion_is_tool_less_and_read_only() {
+        let def = find("pet_companion");
+        assert_eq!(def.sandbox_mode, SandboxMode::ReadOnly);
+        match &def.tools {
+            ToolScope::Named(names) => assert!(names.is_empty(), "named must be []"),
+            ToolScope::Wildcard => panic!("pet_companion must have a Named (empty) tool scope"),
+        }
+        assert!(def.extra_tools.is_empty());
+        assert!(def.skill_filter.is_none());
+        assert_eq!(def.trigger_memory_agent, TriggerMemoryAgent::Never);
+        assert!(def.subagents.is_empty(), "the companion must not delegate");
+        assert!(def.omit_memory_context);
+        assert!(def.omit_skills_catalog);
+        assert!(
+            !def.omit_safety_preamble,
+            "reads untrusted screen text — keep the preamble"
+        );
+        assert!(matches!(def.system_prompt, PromptSource::Dynamic(_)));
+        // Same model as chat: the companion's hint must track the orchestrator's.
+        assert_eq!(
+            format!("{:?}", def.model),
+            format!("{:?}", find("orchestrator").model)
+        );
+        // Never reachable as an orchestrator subagent.
+        assert!(!find("orchestrator")
+            .subagents
+            .iter()
+            .any(|s| matches!(s, SubagentEntry::AgentId(id) if id == "pet_companion")));
     }
 
     #[test]

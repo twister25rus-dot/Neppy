@@ -128,6 +128,34 @@ pub enum TrustedAutomationSource {
         /// delivery, the card's task-session thread for a board run).
         thread_id: Option<String>,
     },
+    /// Work started by the Pet's **desktop companion**: a suggestion
+    /// generation turn (zero tools) or a task the user (or a level-3 trusted
+    /// category) handed off to a background run. Constructed only through
+    /// [`pet_companion_origin`], by `pet::companion::runtime::{generate,
+    /// handoff}` and the hand-off executor in `agent::task_dispatcher`
+    /// (pinned by a source-grep test in `pet/companion_trust_tests.rs`).
+    ///
+    /// Gate semantics (user decision D4): an `external_effect` call follows
+    /// the user's **normal approval settings**, like an interactive chat turn
+    /// — the `auto_approve` allowlist and `auto_approve_all` apply, otherwise
+    /// the call parks for approval (persisted row, `ApprovalRequested`,
+    /// surfaced in the Pet inbox and, when `thread_id` is set, as a card on
+    /// that thread; TTL-denies when nobody decides). **Exception:** a call the
+    /// gate classifies as a high-risk action class (send message/email,
+    /// delete, purchase, publish, system settings, install, privileged
+    /// command, share personal info, irreversible) ALWAYS parks for
+    /// confirmation, even with `auto_approve_all` on or the tool on the
+    /// allowlist. See `security::approval::gate::pet_companion_high_risk`.
+    ///
+    /// This is NOT a trust root (unlike `Cron` / `Cli`), and NOT the research
+    /// lane's deny-everything rule (`PetResearch` is unchanged).
+    PetCompanion {
+        /// The hand-off run's own chat thread, when there is one. Parks are
+        /// then also routed there as an approval card (addressed to
+        /// [`BACKGROUND_TURN_CLIENT_ID`]). `None` for a generation turn or a
+        /// headless run: the park surfaces in the Pet inbox only.
+        thread_id: Option<String>,
+    },
 }
 
 /// The broadcast client id a [`TrustedAutomationSource::BackgroundTurn`]
@@ -147,6 +175,20 @@ pub fn background_turn_origin(
     AgentTurnOrigin::TrustedAutomation {
         job_id: job_id.into(),
         source: TrustedAutomationSource::BackgroundTurn { thread_id },
+    }
+}
+
+/// The origin for work started by the Pet desktop companion (see
+/// [`TrustedAutomationSource::PetCompanion`]). `job_id` is system-generated
+/// (`pet-companion:<suggestion_id>` / a hand-off run id), never observed text.
+#[must_use]
+pub fn pet_companion_origin(
+    job_id: impl Into<String>,
+    thread_id: Option<String>,
+) -> AgentTurnOrigin {
+    AgentTurnOrigin::TrustedAutomation {
+        job_id: job_id.into(),
+        source: TrustedAutomationSource::PetCompanion { thread_id },
     }
 }
 
@@ -170,6 +212,12 @@ impl AgentTurnOrigin {
                 source: TrustedAutomationSource::BackgroundTurn { .. },
                 ..
             } => "TrustedAutomation(BackgroundTurn)".to_string(),
+            // Same for the companion: the hand-off thread id stays out of the
+            // label (the Pet inbox allowlist keys on this exact string).
+            AgentTurnOrigin::TrustedAutomation {
+                source: TrustedAutomationSource::PetCompanion { .. },
+                ..
+            } => "TrustedAutomation(PetCompanion)".to_string(),
             AgentTurnOrigin::TrustedAutomation { source, .. } => {
                 format!("TrustedAutomation({source:?})")
             }
@@ -707,6 +755,16 @@ mod tests {
         let origin = background_turn_origin("run-1", Some("secret-thread".into()));
         assert_eq!(origin.class(), "TrustedAutomation(BackgroundTurn)");
         assert!(!origin.class().contains("secret-thread"));
+    }
+
+    #[test]
+    fn pet_companion_class_names_the_kind_without_the_thread() {
+        for thread in [Some("secret-handoff-thread".to_string()), None] {
+            let origin = pet_companion_origin("pet-companion:s-1", thread);
+            assert_eq!(origin.class(), "TrustedAutomation(PetCompanion)");
+            assert!(!origin.class().contains("secret"));
+            assert!(!origin.class().contains("s-1"));
+        }
     }
 
     #[tokio::test]

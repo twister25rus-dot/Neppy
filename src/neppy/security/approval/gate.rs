@@ -41,6 +41,7 @@ use crate::core::bus::BUS;
 use crate::core::events::DomainEvent;
 use crate::neppy::agent::turn_origin::{self, AgentTurnOrigin, TrustedAutomationSource};
 use crate::neppy::config::Config;
+use crate::neppy::pet::companion::types::ActionCategory;
 use crate::neppy::security::POLICY_DENIED_MARKER;
 
 use super::store;
@@ -533,6 +534,27 @@ impl ApprovalGate {
             return pet_research_decision(tool_name, job_id);
         }
 
+        // Pet desktop companion (user decision D4): follows the user's normal
+        // approval settings like an interactive turn — EXCEPT a high-risk action
+        // class, which must always be confirmed by a human. Classified here, before
+        // the `auto_approve_all` bypass and the `auto_approve` allowlist, so
+        // neither can skip the confirmation for such a call.
+        let pet_companion_high_risk = match &origin {
+            AgentTurnOrigin::TrustedAutomation {
+                source: TrustedAutomationSource::PetCompanion { .. },
+                ..
+            } => pet_companion_high_risk(tool_name, &args_redacted),
+            _ => None,
+        };
+        if let Some(category) = pet_companion_high_risk {
+            tracing::info!(
+                tool = tool_name,
+                category = category.as_str(),
+                "[approval::gate] pet companion high-risk action — always parks for \
+                 confirmation (auto_approve_all / allowlist do not apply)"
+            );
+        }
+
         // Per-flow tool trust shortcut (flow-approval-surface, PR2): a prior
         // `ApproveAlwaysForFlow` decision on this exact `(flow_id, tool_name)`
         // pair short-circuits to `Allow` for every future Workflow-origin call
@@ -590,7 +612,7 @@ impl ApprovalGate {
                 },
                 ..
             }
-        );
+        ) || pet_companion_high_risk.is_some();
 
         // Blanket "auto-approve everything" bypass (opt-in, off by default).
         // Sits ABOVE the origin match below so it prevents parking entirely
@@ -620,7 +642,13 @@ impl ApprovalGate {
         // `auto_approve_all_allows_a_remote_triage_dispatch_without_an_audit_row`
         // below pins that outcome, so a change to this exclusion list has to
         // confront the decision rather than discover it.
+        //
+        // The one narrow, user-mandated carve-out (decision D4, Pet Mode's
+        // standard "high-risk actions always require confirmation"): a Pet
+        // companion call classified high-risk by [`pet_companion_high_risk`].
+        // Every OTHER companion call honours this flag like a chat turn.
         let auto_all = self.is_auto_approve_all_enabled()
+            && pet_companion_high_risk.is_none()
             && !matches!(
                 &origin,
                 AgentTurnOrigin::TrustedAutomation {
@@ -694,6 +722,18 @@ impl ApprovalGate {
             AgentTurnOrigin::TrustedAutomation {
                 source:
                     TrustedAutomationSource::BackgroundTurn {
+                        thread_id: Some(thread_id),
+                    },
+                ..
+            } => Some((
+                thread_id.clone(),
+                turn_origin::BACKGROUND_TURN_CLIENT_ID.to_string(),
+            )),
+            // A Pet companion hand-off run asks on its own hand-off thread the
+            // same way (the Pet inbox lists the park as well — `pet::surface`).
+            AgentTurnOrigin::TrustedAutomation {
+                source:
+                    TrustedAutomationSource::PetCompanion {
                         thread_id: Some(thread_id),
                     },
                 ..
@@ -775,6 +815,31 @@ impl ApprovalGate {
                 job_id,
             } => {
                 return pet_research_decision(tool_name, job_id);
+            }
+            AgentTurnOrigin::TrustedAutomation {
+                source: TrustedAutomationSource::PetCompanion { .. },
+                job_id,
+            } => {
+                // D4: reached only when neither `auto_approve_all` nor the
+                // allowlist applied (always the case for a high-risk call). Park
+                // like an interactive turn: persisted row + `ApprovalRequested`,
+                // surfaced in the Pet inbox (and on the hand-off thread when the
+                // origin carries one); TTL-denies when nobody decides. Never a
+                // trust root, never an immediate deny.
+                tracing::info!(
+                    tool = tool_name,
+                    high_risk = pet_companion_high_risk
+                        .map(|c| c.as_str())
+                        .unwrap_or("none"),
+                    routed_to_thread = chat_thread_id.is_some(),
+                    "[approval::gate] pet companion action — parking for approval"
+                );
+                tracing::debug!(
+                    tool = tool_name,
+                    job_id = %job_id,
+                    "[approval::gate] pet companion park (job)"
+                );
+                // Fall through to the parking flow.
             }
             AgentTurnOrigin::TrustedAutomation {
                 source: TrustedAutomationSource::Subconscious,
@@ -1507,6 +1572,377 @@ fn pet_research_decision(tool_name: &str, job_id: &str) -> (GateOutcome, Option<
         },
         None,
     )
+}
+
+// ── Pet companion: high-risk action classes (user decision D4) ──────────────
+
+/// The high-risk [`ActionCategory`] of an `external_effect` call made under
+/// [`TrustedAutomationSource::PetCompanion`], or `None` for an ordinary action
+/// that follows the user's normal approval settings. A `Some` result makes the
+/// gate park for confirmation **even with `auto_approve_all` on or the tool on
+/// the `auto_approve` allowlist** (Pet Mode's standard: high-risk actions always
+/// require confirmation).
+///
+/// The gate only sees the tool name and the *redacted* arguments, so the
+/// classification is by name and by the few structural argument fields that
+/// survive redaction (`command`, `operation`, `method`, `action`, `tool_slug`,
+/// `tool`). Whenever that is not enough to prove an action is ordinary, it is
+/// classified high-risk — the user gets asked, never surprised.
+///
+/// | Tool / pattern | Class |
+/// |---|---|
+/// | `shell`: `rm`/`rmdir`/`unlink`/`trash`/`shred`, `find … -delete` | `delete` |
+/// | `shell`: `git push` | `publish` |
+/// | `shell`: `git reset`/`clean`, a forced push | `irreversible` |
+/// | `shell`: `mail`/`sendmail`/`mailx`/`msmtp` | `send_message` |
+/// | `shell`: `defaults`/`launchctl`/`systemctl`/`crontab`/`scutil`/`networksetup`/`pmset`/`csrutil`/`spctl`/`tccutil`/`security` | `system_settings` |
+/// | `shell`: command class `Install` (system / global package installs) | `install` |
+/// | `shell`: command class `Network` (curl, ssh, scp, rsync, …) | `share_personal_info` |
+/// | `shell`: class `Destructive` (sudo, dd, mount, firewall, …), `osascript`, `kill*`, hidden execution (`$(…)`, backticks, `<(…)`), or no command | `privileged_command` |
+/// | `python_exec`, `node_exec` (arbitrary code the gate cannot inspect) | `privileged_command` |
+/// | `npm_exec` | `install` |
+/// | `http_request` / `curl` (data leaves the device; body is redacted) | `share_personal_info` (`delete` for method DELETE) |
+/// | `git_operations`: `push` | `publish` |
+/// | `git_operations`: `reset` / `checkout` / `clean` | `irreversible` |
+/// | `composio` `execute` / `mcp_call_tool`: by the action slug's keywords below; a read-only verb (get/list/fetch/search/…) is ordinary; anything else on a remote account | `irreversible` |
+/// | `use_skill` wrapper | the wrapped tool's class |
+/// | `schedule`: cancel/remove/delete | `delete`; other mutations: `system_settings` |
+/// | any name, by keyword token (first matching row wins): | |
+/// | `pay payment(s) purchase buy checkout order transfer swap bridge wallet x402 trade stake withdraw deposit invoice charge refund billing subscription sell tip donate mint` | `purchase` |
+/// | `delete remove rm trash purge erase destroy drop unlink uninstall wipe revoke` | `delete` |
+/// | `send reply forward dm sms notify tweet comment invite respond call` | `send_message` |
+/// | `publish deploy launch release post rollback visibility public unpublish` | `publish` |
+/// | `share upload export link` | `share_personal_info` |
+/// | `install installer upgrade` | `install` |
+/// | `config configure settings setting autonomy permission(s) keyring credential(s) oauth password policy service daemon preferences cron schedule autostart` | `system_settings` |
+/// | `sudo admin root chmod chown kill shutdown reboot` | `privileged_command` |
+/// | `reset overwrite force cancel archive merge` | `irreversible` |
+/// | ordinary (follows normal settings): `file_write`, `edit`, `apply_patch` (workspace edits), `git_operations` commit/add/stash/revert, `request_plan_review`, `learning_update_facet`, `learning_pin_facet`, the flow-draft tools (`propose_workflow`, `revise_workflow`, `edit_workflow`, `validate_workflow`, `suggest_workflows`), `storage_download_file`, and names led by a read-only verb | `None` |
+/// | **any other external-effect tool** (unclassified) | `irreversible` |
+pub(crate) fn pet_companion_high_risk(
+    tool_name: &str,
+    args: &serde_json::Value,
+) -> Option<ActionCategory> {
+    pet_companion_classify(tool_name, args, 0)
+}
+
+/// Tools that act only on the user's own workspace / drafts / profile, reversibly.
+const PET_COMPANION_ORDINARY_TOOLS: &[&str] = &[
+    "file_write",
+    "edit",
+    "apply_patch",
+    "request_plan_review",
+    "learning_update_facet",
+    "learning_pin_facet",
+    "propose_workflow",
+    "revise_workflow",
+    "edit_workflow",
+    "validate_workflow",
+    "suggest_workflows",
+    "storage_download_file",
+];
+
+/// Leading verbs that mark a remote action / tool name as read-only.
+const PET_COMPANION_READ_VERBS: &[&str] = &[
+    "get", "list", "read", "search", "fetch", "find", "describe", "status", "show", "view",
+    "query", "lookup", "browse", "preview", "count", "check", "validate", "inspect", "download",
+];
+
+/// Keyword → class, checked in this order (the first table with a hit wins).
+const PET_COMPANION_KEYWORDS: &[(ActionCategory, &[&str])] = &[
+    (
+        ActionCategory::Purchase,
+        &[
+            "pay",
+            "payment",
+            "payments",
+            "purchase",
+            "buy",
+            "checkout",
+            "order",
+            "transfer",
+            "swap",
+            "bridge",
+            "wallet",
+            "x402",
+            "trade",
+            "stake",
+            "withdraw",
+            "deposit",
+            "invoice",
+            "charge",
+            "refund",
+            "billing",
+            "subscription",
+            "sell",
+            "tip",
+            "donate",
+            "mint",
+        ],
+    ),
+    (
+        ActionCategory::Delete,
+        &[
+            "delete",
+            "remove",
+            "rm",
+            "trash",
+            "purge",
+            "erase",
+            "destroy",
+            "drop",
+            "unlink",
+            "uninstall",
+            "wipe",
+            "revoke",
+        ],
+    ),
+    (
+        ActionCategory::SendMessage,
+        &[
+            "send", "reply", "forward", "dm", "sms", "notify", "tweet", "comment", "invite",
+            "respond", "call",
+        ],
+    ),
+    (
+        ActionCategory::Publish,
+        &[
+            "publish",
+            "deploy",
+            "launch",
+            "release",
+            "post",
+            "rollback",
+            "visibility",
+            "public",
+            "unpublish",
+        ],
+    ),
+    (
+        ActionCategory::SharePersonalInfo,
+        &["share", "upload", "export", "link"],
+    ),
+    (
+        ActionCategory::Install,
+        &["install", "installer", "upgrade"],
+    ),
+    (
+        ActionCategory::SystemSettings,
+        &[
+            "config",
+            "configure",
+            "settings",
+            "setting",
+            "autonomy",
+            "permission",
+            "permissions",
+            "keyring",
+            "credential",
+            "credentials",
+            "oauth",
+            "password",
+            "policy",
+            "service",
+            "daemon",
+            "preferences",
+            "cron",
+            "schedule",
+            "autostart",
+        ],
+    ),
+    (
+        ActionCategory::PrivilegedCommand,
+        &[
+            "sudo", "admin", "root", "chmod", "chown", "kill", "shutdown", "reboot",
+        ],
+    ),
+    (
+        ActionCategory::Irreversible,
+        &["reset", "overwrite", "force", "cancel", "archive", "merge"],
+    ),
+];
+
+fn pet_companion_classify(
+    tool_name: &str,
+    args: &serde_json::Value,
+    depth: usize,
+) -> Option<ActionCategory> {
+    let name = tool_name.trim().to_ascii_lowercase();
+    let str_arg = |key: &str| {
+        args.get(key)
+            .and_then(serde_json::Value::as_str)
+            .map(|s| s.trim().to_ascii_lowercase())
+    };
+    match name.as_str() {
+        // Runs a packed tool: classify what it wraps (bounded, so a nested
+        // wrapper cannot recurse forever; an unreadable wrapper parks).
+        crate::neppy::tools::toolpacks::USE_SKILL => {
+            return match args.get("tool").and_then(serde_json::Value::as_str) {
+                Some(inner) if depth < 2 => pet_companion_classify(
+                    inner,
+                    args.get("args").unwrap_or(&serde_json::Value::Null),
+                    depth + 1,
+                ),
+                _ => Some(ActionCategory::Irreversible),
+            };
+        }
+        "shell" => return pet_companion_shell_class(args),
+        "python_exec" | "node_exec" => return Some(ActionCategory::PrivilegedCommand),
+        "npm_exec" => return Some(ActionCategory::Install),
+        "http_request" | "curl" => {
+            return Some(if str_arg("method").as_deref() == Some("delete") {
+                ActionCategory::Delete
+            } else {
+                ActionCategory::SharePersonalInfo
+            });
+        }
+        "git_operations" => {
+            return match str_arg("operation").as_deref() {
+                Some("push") => Some(ActionCategory::Publish),
+                Some("reset" | "checkout" | "clean") => Some(ActionCategory::Irreversible),
+                _ => None,
+            };
+        }
+        "schedule" => {
+            return match str_arg("action").as_deref() {
+                Some("cancel" | "remove" | "delete") => Some(ActionCategory::Delete),
+                _ => Some(ActionCategory::SystemSettings),
+            };
+        }
+        "composio" => {
+            let slug = str_arg("tool_slug").or_else(|| str_arg("action_name"));
+            return match slug {
+                Some(slug) if !slug.is_empty() => pet_companion_remote_action(&slug),
+                _ => Some(ActionCategory::Irreversible),
+            };
+        }
+        "mcp_call_tool" => {
+            return match str_arg("tool") {
+                Some(tool) if !tool.is_empty() => pet_companion_remote_action(&tool),
+                _ => Some(ActionCategory::Irreversible),
+            };
+        }
+        _ => {}
+    }
+    if let Some(category) = pet_companion_keyword_class(&name) {
+        return Some(category);
+    }
+    if PET_COMPANION_ORDINARY_TOOLS.contains(&name.as_str()) || led_by_read_verb(&name) {
+        return None;
+    }
+    // Unclassified external effect: cannot prove it is ordinary, so ask.
+    Some(ActionCategory::Irreversible)
+}
+
+/// A remote (Composio / MCP) action: keyword class, else ordinary when led by
+/// a read-only verb, else `irreversible` (it runs on a remote account).
+fn pet_companion_remote_action(slug: &str) -> Option<ActionCategory> {
+    if let Some(category) = pet_companion_keyword_class(slug) {
+        return Some(category);
+    }
+    if led_by_read_verb(slug) {
+        return None;
+    }
+    Some(ActionCategory::Irreversible)
+}
+
+fn name_tokens(name: &str) -> impl Iterator<Item = String> + '_ {
+    name.split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|t| !t.is_empty())
+        .map(str::to_ascii_lowercase)
+}
+
+fn pet_companion_keyword_class(name: &str) -> Option<ActionCategory> {
+    let tokens: Vec<String> = name_tokens(name).collect();
+    PET_COMPANION_KEYWORDS
+        .iter()
+        .find(|(_, words)| tokens.iter().any(|t| words.contains(&t.as_str())))
+        .map(|(category, _)| *category)
+}
+
+/// Whether a read-only verb appears among the first two tokens (`list_files`,
+/// `GMAIL_FETCH_EMAILS` — an app prefix may come first).
+fn led_by_read_verb(name: &str) -> bool {
+    name_tokens(name)
+        .take(2)
+        .any(|t| PET_COMPANION_READ_VERBS.contains(&t.as_str()))
+}
+
+/// The class of a `shell` call from its (path-scrubbed, otherwise intact)
+/// `command` argument. See the table on [`pet_companion_high_risk`].
+fn pet_companion_shell_class(args: &serde_json::Value) -> Option<ActionCategory> {
+    use crate::neppy::security::{CommandClass, SecurityPolicy};
+
+    let command = args
+        .get("command")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("")
+        .trim();
+    if command.is_empty() {
+        return Some(ActionCategory::PrivilegedCommand);
+    }
+    // Hidden execution runs an inner command no classification can see.
+    if ["`", "$(", "<(", ">("].iter().any(|p| command.contains(p)) {
+        return Some(ActionCategory::PrivilegedCommand);
+    }
+
+    let mut worst: Option<ActionCategory> = None;
+    let mut raise = |c: ActionCategory| {
+        // Keep the first high-risk class found; any hit already forces a park.
+        worst.get_or_insert(c);
+    };
+    for segment in command.split([';', '|', '&', '\n']) {
+        let mut words = segment
+            .split_whitespace()
+            .skip_while(|w| w.contains('=') && !w.starts_with('-'));
+        let Some(base) = words.next() else { continue };
+        let base = base
+            .rsplit('/')
+            .next()
+            .unwrap_or(base)
+            .trim_matches(|c| c == '\'' || c == '"')
+            .to_ascii_lowercase();
+        let rest: Vec<String> = words.map(str::to_ascii_lowercase).collect();
+        let has = |w: &str| rest.iter().any(|a| a == w);
+        match base.as_str() {
+            "rm" | "rmdir" | "unlink" | "trash" | "srm" | "shred" => raise(ActionCategory::Delete),
+            "find" if has("-delete") => raise(ActionCategory::Delete),
+            "git" => match rest.first().map(String::as_str) {
+                Some("push") if has("--force") || has("-f") => raise(ActionCategory::Irreversible),
+                Some("push") => raise(ActionCategory::Publish),
+                Some("reset" | "clean") => raise(ActionCategory::Irreversible),
+                _ => {}
+            },
+            "mail" | "sendmail" | "mailx" | "msmtp" => raise(ActionCategory::SendMessage),
+            "defaults" | "launchctl" | "systemctl" | "crontab" | "scutil" | "networksetup"
+            | "pmset" | "csrutil" | "spctl" | "tccutil" | "security" => {
+                raise(ActionCategory::SystemSettings)
+            }
+            "osascript" | "kill" | "killall" | "pkill" => raise(ActionCategory::PrivilegedCommand),
+            _ => {}
+        }
+    }
+    if worst.is_some() {
+        return worst;
+    }
+
+    static POLICY: OnceLock<SecurityPolicy> = OnceLock::new();
+    let mut class = POLICY
+        .get_or_init(SecurityPolicy::default)
+        .classify_command(command);
+    if let Some(declared) = args
+        .get("category")
+        .and_then(serde_json::Value::as_str)
+        .and_then(SecurityPolicy::parse_declared_class)
+    {
+        class = class.max(declared);
+    }
+    match class {
+        CommandClass::Destructive => Some(ActionCategory::PrivilegedCommand),
+        CommandClass::Install => Some(ActionCategory::Install),
+        CommandClass::Network => Some(ActionCategory::SharePersonalInfo),
+        CommandClass::Write | CommandClass::Read => None,
+    }
 }
 
 /// Wall-clock milliseconds since the Unix epoch, for `CoreNotificationEvent::timestamp_ms`.
@@ -3586,3 +4022,7 @@ mod multi_park_tests;
 #[cfg(test)]
 #[path = "gate_background_turn_tests.rs"]
 mod background_turn_tests;
+
+#[cfg(test)]
+#[path = "gate_pet_companion_tests.rs"]
+mod pet_companion_tests;
