@@ -12,6 +12,10 @@
 //! executes one of them, forwarding permission level and execution context to
 //! the real tool so nothing is laundered through the proxy.
 //!
+//! **Both stay inside the calling agent's tool scope.** They reach only the
+//! packed tools withheld from *that* agent's visible set, never every packed
+//! tool in the registry — see [`tools::PackRegistryHandle`].
+//!
 //! **Why a proxy and not dynamic registration.** Registering the real schemas
 //! mid-turn would be better — the model would get native tool calling with
 //! argument validation instead of a nested `args` object. It is not possible
@@ -28,7 +32,10 @@ pub mod tools;
 pub mod types;
 
 pub use groups::{GroupMode, ToolGroups, GROUP_COUNT};
-pub use ops::{append_pack_tools, bind_pack_registry, strip_packed_from_visible};
+pub use ops::{
+    append_pack_tools, bind_pack_registry, grant_pack_reach, revoke_pack_reach,
+    strip_packed_from_visible,
+};
 pub use registry::{all_packed_tool_names, pack, pack_for_tool, PACKS};
 pub use tools::{PackRegistryHandle, LOAD_SKILL, USE_SKILL};
 pub use types::ToolPack;

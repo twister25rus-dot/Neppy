@@ -464,7 +464,12 @@ impl AgentBuilder {
         if visible_names.is_empty() {
             visible_names = tools.iter().map(|tool| tool.name().to_string()).collect();
         }
-        crate::neppy::tools::toolpacks::strip_packed_from_visible(
+        //
+        // The withheld names are this agent's pack reach: `use_skill` may run
+        // them and nothing else. The registry below is the full global tool
+        // set, so without the reach a named agent handed `use_skill` for one
+        // packed tool could dispatch into every pack in the build.
+        let pack_reach = crate::neppy::tools::toolpacks::strip_packed_from_visible(
             &mut visible_names,
             &agent_definition_name,
         );
@@ -586,7 +591,7 @@ impl AgentBuilder {
         let tools = Arc::new(tools);
         // The pack tools live inside this registry, so they can only be pointed
         // at it once it exists. Re-bind after any later rebuild of this `Arc`.
-        crate::neppy::tools::toolpacks::bind_pack_registry(&tools);
+        crate::neppy::tools::toolpacks::bind_pack_registry(&tools, &pack_reach);
 
         Ok(Agent {
             turn_model_source,

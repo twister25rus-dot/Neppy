@@ -1,8 +1,10 @@
 //! The two always-on tools that stand in for every packed tool.
 
+use std::collections::HashSet;
 use std::sync::{Arc, OnceLock, Weak};
 
 use async_trait::async_trait;
+use parking_lot::RwLock;
 use serde_json::{json, Value};
 
 use super::registry;
@@ -17,7 +19,8 @@ type ToolVec = Arc<Vec<Box<dyn Tool>>>;
 /// A non-owning view of the tool registry, kept to break the binding cycle.
 type ToolRegistryRef = Weak<Vec<Box<dyn Tool>>>;
 
-/// A late-bound, non-owning view of the tool registry a pack tool lives in.
+/// A late-bound, non-owning view of the tool registry a pack tool lives in,
+/// plus the set of packed tools the owning agent may reach through it.
 ///
 /// Late-bound because the pack tools are *inside* the registry they read: the
 /// vector cannot be built until they exist, and they cannot see it until it is
@@ -26,6 +29,19 @@ type ToolRegistryRef = Weak<Vec<Box<dyn Tool>>>;
 #[derive(Clone, Default)]
 pub struct PackRegistryHandle {
     inner: Arc<OnceLock<ToolRegistryRef>>,
+    /// Packed tool names this agent may load or run: exactly the tools that
+    /// were withheld from *its* visible set by `strip_packed_from_visible`.
+    ///
+    /// **This is the scope boundary, and pack membership is not.** The
+    /// registry is the full global tool set — a `ToolScope::Named` allowlist
+    /// only narrows what is visible — so resolving by pack alone let any agent
+    /// that was handed `use_skill` dispatch into every pack in the build,
+    /// config, skill-install and wallet tools included. Many of those report
+    /// no external effect, so the approval gate never saw the call either.
+    ///
+    /// Empty until scoped, and an empty reach resolves nothing: a handle nobody
+    /// scoped fails closed, the same way an unbound one does.
+    reach: Arc<RwLock<HashSet<String>>>,
 }
 
 impl PackRegistryHandle {
@@ -38,17 +54,71 @@ impl PackRegistryHandle {
         }
     }
 
+    /// Replace the reach wholesale. Called once per registry binding.
+    pub fn set_reach(&self, names: impl IntoIterator<Item = String>) {
+        let mut reach = self.reach.write();
+        *reach = names.into_iter().collect();
+        tracing::debug!(reach = reach.len(), "[toolpacks] pack reach set");
+    }
+
+    /// Add names to the reach. Only for tools the caller has just withheld
+    /// from this same agent's visible set — never a widening on request.
+    pub fn grant_reach<S: AsRef<str>>(&self, names: &[S]) {
+        if names.is_empty() {
+            return;
+        }
+        let mut reach = self.reach.write();
+        reach.extend(names.iter().map(|n| n.as_ref().to_string()));
+        tracing::debug!(
+            granted = names.len(),
+            reach = reach.len(),
+            "[toolpacks] pack reach granted"
+        );
+    }
+
+    /// Remove names from the reach.
+    pub fn revoke_reach<S: AsRef<str>>(&self, names: &[S]) {
+        if names.is_empty() {
+            return;
+        }
+        let mut reach = self.reach.write();
+        let before = reach.len();
+        for name in names {
+            reach.remove(name.as_ref());
+        }
+        tracing::debug!(
+            revoked = before - reach.len(),
+            reach = reach.len(),
+            "[toolpacks] pack reach revoked"
+        );
+    }
+
+    /// Whether the owning agent may load or run `tool` through the pack tools.
+    pub fn reaches(&self, tool: &str) -> bool {
+        self.reach.read().contains(tool)
+    }
+
     fn tools(&self) -> Option<ToolVec> {
         self.inner.get()?.upgrade()
     }
 
-    /// Resolve a packed tool by name, enforcing that it belongs to `skill`.
+    /// Resolve a packed tool by name, enforcing that it belongs to `skill`
+    /// and that it is inside this agent's reach.
     ///
     /// The pack check is not decoration: without it `use_skill` would dispatch
     /// into any packed tool regardless of the skill named, and the model could
-    /// reach a crypto write through a workflow skill.
+    /// reach a crypto write through a workflow skill. The reach check is what
+    /// keeps a named agent inside its own allowlist.
     fn resolve(&self, skill: &str, tool: &str) -> Option<(ToolVec, usize)> {
         registry::pack(skill).filter(|p| p.owns(tool))?;
+        if !self.reaches(tool) {
+            tracing::debug!(
+                skill,
+                tool,
+                "[toolpacks] refused: tool is outside this agent's pack reach"
+            );
+            return None;
+        }
         let tools = self.tools()?;
         let idx = tools.iter().position(|t| t.name() == tool)?;
         Some((tools, idx))
@@ -79,6 +149,12 @@ fn render_pack(skill: &str, handle: &PackRegistryHandle) -> Result<String, Strin
 
     let mut found = 0usize;
     for name in pack.tools {
+        // Render only what this agent may run: disclosing a schema it cannot
+        // call invites a `use_skill` that will be refused, and leaks the shape
+        // of tools outside its allowlist.
+        if !handle.reaches(name) {
+            continue;
+        }
         // A pack may name a tool this build compiled out (feature gate) or that
         // this agent never had. Rendering the ones that exist beats failing the
         // whole load.
@@ -104,7 +180,7 @@ fn render_pack(skill: &str, handle: &PackRegistryHandle) -> Result<String, Strin
 
     if found == 0 {
         return Err(format!(
-            "Skill `{}` has no tools available in this session.",
+            "Skill `{}` has no tools available to this agent.",
             pack.id
         ));
     }

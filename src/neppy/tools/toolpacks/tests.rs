@@ -45,7 +45,8 @@ impl Tool for FakeTool {
     }
 }
 
-/// A registry holding one real packed tool plus the two pack tools, bound.
+/// A registry holding one real packed tool plus the two pack tools, bound and
+/// scoped so that tool is in reach.
 fn registry_with(name: &'static str, level: PermissionLevel) -> Arc<Vec<Box<dyn Tool>>> {
     let mut tools: Vec<Box<dyn Tool>> = vec![Box::new(FakeTool {
         name,
@@ -55,7 +56,7 @@ fn registry_with(name: &'static str, level: PermissionLevel) -> Arc<Vec<Box<dyn 
     })];
     append_pack_tools(&mut tools);
     let tools = Arc::new(tools);
-    bind_pack_registry(&tools);
+    bind_pack_registry(&tools, &[name]);
     tools
 }
 
@@ -69,7 +70,7 @@ fn external_unbounded_registry(name: &'static str) -> Arc<Vec<Box<dyn Tool>>> {
     })];
     append_pack_tools(&mut tools);
     let tools = Arc::new(tools);
-    bind_pack_registry(&tools);
+    bind_pack_registry(&tools, &[name]);
     tools
 }
 
@@ -97,7 +98,7 @@ fn packed_names_are_withheld_and_replaced() {
         .into_iter()
         .collect();
 
-    strip_packed_from_visible(&mut visible, "orchestrator");
+    let _ = strip_packed_from_visible(&mut visible, "orchestrator");
 
     assert!(!visible.contains(sample), "packed tool stayed advertised");
     assert!(visible.contains("file_read"), "unpacked tool was dropped");
@@ -109,7 +110,7 @@ fn an_agent_that_lost_nothing_gains_nothing() {
     // A narrow sub-agent must not grow two tools that can only report an empty
     // skill, so the pack tools are added only when something was withheld.
     let mut visible: HashSet<String> = ["file_read".to_string()].into_iter().collect();
-    strip_packed_from_visible(&mut visible, "orchestrator");
+    let _ = strip_packed_from_visible(&mut visible, "orchestrator");
     assert_eq!(visible.len(), 1);
     assert!(!visible.contains(LOAD_SKILL));
 }
@@ -118,7 +119,7 @@ fn an_agent_that_lost_nothing_gains_nothing() {
 fn an_empty_visible_set_is_left_alone() {
     // Empty is the harness's "everything is visible" sentinel, not "nothing".
     let mut visible: HashSet<String> = HashSet::new();
-    strip_packed_from_visible(&mut visible, "orchestrator");
+    let _ = strip_packed_from_visible(&mut visible, "orchestrator");
     assert!(visible.is_empty());
 }
 
@@ -245,6 +246,146 @@ fn an_unbound_handle_degrades_closed() {
     append_pack_tools(&mut tools);
     let use_skill = find(&tools, USE_SKILL);
     assert_eq!(use_skill.permission_level(), PermissionLevel::Dangerous);
+}
+
+// ── reach: the calling agent's scope ───────────────────────────────────────
+
+/// Two packed tools registered, only `in_reach` scoped. `out_of_reach` is
+/// externally effectful and unbounded, so a leak through any forwarding
+/// accessor shows up as a changed answer.
+fn scoped_registry(in_reach: &'static str, out_of_reach: &'static str) -> Arc<Vec<Box<dyn Tool>>> {
+    let mut tools: Vec<Box<dyn Tool>> = vec![
+        Box::new(FakeTool {
+            name: in_reach,
+            level: PermissionLevel::ReadOnly,
+            external: false,
+            timeout: ToolTimeout::Inherit,
+        }),
+        Box::new(FakeTool {
+            name: out_of_reach,
+            level: PermissionLevel::Dangerous,
+            external: true,
+            timeout: ToolTimeout::Unbounded,
+        }),
+    ];
+    append_pack_tools(&mut tools);
+    let tools = Arc::new(tools);
+    bind_pack_registry(&tools, &[in_reach]);
+    tools
+}
+
+#[test]
+fn strip_returns_exactly_what_it_withheld() {
+    // The return value becomes the agent's reach, so it must be the withheld
+    // names and nothing it merely knows about.
+    let mut visible: HashSet<String> = ["goal_get".to_string(), "file_read".to_string()]
+        .into_iter()
+        .collect();
+    let withheld = strip_packed_from_visible(&mut visible, "pet_agent");
+    assert_eq!(withheld, vec!["goal_get".to_string()]);
+
+    let mut nothing: HashSet<String> = ["file_read".to_string()].into_iter().collect();
+    assert!(strip_packed_from_visible(&mut nothing, "pet_agent").is_empty());
+    assert!(strip_packed_from_visible(&mut HashSet::new(), "pet_agent").is_empty());
+}
+
+#[tokio::test]
+async fn use_skill_refuses_a_packed_tool_outside_the_reach() {
+    let tools = scoped_registry("goal_get", "config_snapshot");
+    let use_skill = find(&tools, USE_SKILL);
+    assert!(
+        !use_skill
+            .execute(json!({"skill": "goals", "tool": "goal_get"}))
+            .await
+            .unwrap()
+            .is_error
+    );
+    let refused = use_skill
+        .execute(json!({"skill": "system", "tool": "config_snapshot"}))
+        .await
+        .unwrap();
+    assert!(refused.is_error, "out-of-reach tool was dispatched");
+    assert!(!format!("{:?}", refused.content).contains("config_snapshot:"));
+}
+
+#[tokio::test]
+async fn load_skill_renders_only_what_is_in_reach() {
+    let tools = scoped_registry("goal_get", "goal_set");
+    let text = format!(
+        "{:?}",
+        find(&tools, LOAD_SKILL)
+            .execute(json!({"skill": "goals"}))
+            .await
+            .unwrap()
+            .content
+    );
+    assert!(text.contains("goal_get"));
+    assert!(!text.contains("goal_set"), "out-of-reach schema disclosed");
+}
+
+#[test]
+fn an_out_of_reach_call_forwards_nothing_from_the_inner_tool() {
+    // The approval gate, the channel ceiling and the deadline all read the
+    // proxy. For a call the proxy will refuse, none of them may see the inner
+    // tool — the answers must be the unresolvable ones.
+    let tools = scoped_registry("goal_get", "config_snapshot");
+    let use_skill = find(&tools, USE_SKILL);
+    let args = json!({"skill": "system", "tool": "config_snapshot"});
+    assert!(!use_skill.external_effect_with_args(&args));
+    assert_eq!(use_skill.timeout_policy(&args), ToolTimeout::Inherit);
+    assert_eq!(
+        use_skill.permission_level_with_args(&args),
+        use_skill.permission_level()
+    );
+}
+
+#[tokio::test]
+async fn a_bound_but_unscoped_handle_reaches_nothing() {
+    // Fail closed: binding without granting any reach must not fall back to
+    // "every packed tool in the registry".
+    let name = pack("crypto").unwrap().tools[0];
+    let mut tools: Vec<Box<dyn Tool>> = vec![Box::new(FakeTool {
+        name,
+        level: PermissionLevel::ReadOnly,
+        external: false,
+        timeout: ToolTimeout::Inherit,
+    })];
+    append_pack_tools(&mut tools);
+    let tools = Arc::new(tools);
+    bind_pack_registry::<&str>(&tools, &[]);
+    assert!(
+        find(&tools, USE_SKILL)
+            .execute(json!({"skill": "crypto", "tool": name}))
+            .await
+            .unwrap()
+            .is_error
+    );
+    assert!(
+        find(&tools, LOAD_SKILL)
+            .execute(json!({"skill": "crypto"}))
+            .await
+            .unwrap()
+            .is_error
+    );
+}
+
+#[tokio::test]
+async fn revoke_and_grant_move_the_reach() {
+    let tools = scoped_registry("goal_get", "goal_set");
+    let call = |tool: &'static str| {
+        let tools = tools.clone();
+        async move {
+            find(&tools, USE_SKILL)
+                .execute(json!({"skill": "goals", "tool": tool}))
+                .await
+                .unwrap()
+                .is_error
+        }
+    };
+    revoke_pack_reach(&tools, &["goal_get"]);
+    assert!(call("goal_get").await, "revoked tool still reachable");
+    grant_pack_reach(&tools, &["goal_set"]);
+    assert!(!call("goal_set").await, "granted tool unreachable");
 }
 
 #[test]
@@ -424,7 +565,7 @@ fn a_packs_owner_keeps_its_belt_advertised() {
     let mut visible: HashSet<String> = ["doctor_health".to_string(), "file_read".to_string()]
         .into_iter()
         .collect();
-    strip_packed_from_visible(&mut visible, "settings_agent");
+    let _ = strip_packed_from_visible(&mut visible, "settings_agent");
     assert!(
         visible.contains("doctor_health"),
         "the system pack's owner lost its own tool"
@@ -439,7 +580,7 @@ fn a_packs_owner_still_loses_every_other_pack() {
     let mut visible: HashSet<String> = ["doctor_health".to_string(), "wallet_status".to_string()]
         .into_iter()
         .collect();
-    strip_packed_from_visible(&mut visible, "settings_agent");
+    let _ = strip_packed_from_visible(&mut visible, "settings_agent");
     assert!(visible.contains("doctor_health"));
     assert!(
         !visible.contains("wallet_status"),

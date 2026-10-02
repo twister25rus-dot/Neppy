@@ -610,10 +610,17 @@ impl Agent {
             // or a packed `delegate_*` tool would reappear on the wire on the
             // first Composio reconcile, silently undoing the compression.
             let agent_id = self.agent_definition_name.clone();
-            crate::neppy::tools::toolpacks::strip_packed_from_visible(
+            let withheld = crate::neppy::tools::toolpacks::strip_packed_from_visible(
                 &mut self.visible_tool_names,
                 &agent_id,
             );
+            // Keep the pack reach in step with the synthesis: the previous
+            // delegates go, and whichever fresh ones were just withheld come in.
+            // Only fresh synthesised names can be withheld here — every other
+            // packed name was stripped when the agent was built.
+            let old_synth: Vec<&String> = old_synth.iter().collect();
+            crate::neppy::tools::toolpacks::revoke_pack_reach(self.tools.as_slice(), &old_synth);
+            crate::neppy::tools::toolpacks::grant_pack_reach(self.tools.as_slice(), &withheld);
         }
 
         // Rebuild the visible-spec cache from the new tool_specs so the
