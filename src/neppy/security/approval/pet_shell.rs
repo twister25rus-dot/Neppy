@@ -41,6 +41,10 @@ pub(super) fn pet_companion_shell_class(args: &serde_json::Value) -> Option<Acti
     // The redactor replaces a home prefix with `<HOME>`; read it as a path word,
     // not as an input redirect.
     let command = raw.replace(HOME_PLACEHOLDER, "/home-redacted");
+    // Bash's network pseudo-devices open a socket from a plain redirect.
+    if command.contains("/dev/tcp") || command.contains("/dev/udp") {
+        return Some(ActionCategory::SharePersonalInfo);
+    }
     // Hidden execution runs an inner command no classification can see.
     if ["`", "$(", "<(", ">("].iter().any(|p| command.contains(p)) {
         return Some(ActionCategory::PrivilegedCommand);
@@ -92,6 +96,9 @@ struct Segment {
     words: Vec<String>,
     truncates: bool,
     appends: bool,
+    /// An input redirect from anything but a plain relative file, or a
+    /// here-document / here-string.
+    bad_input: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -128,7 +135,13 @@ impl Lexer {
                     self.seg.appends = true;
                 }
             }
-            Some(Redirect::Input) => {}
+            // Input only from a plain relative file: not an absolute path, a
+            // home path, a parent directory, a device or an expansion.
+            Some(Redirect::Input) => {
+                if !is_plain_relative_file(&word) {
+                    self.seg.bad_input = true;
+                }
+            }
             None => self.seg.words.push(word),
         }
     }
@@ -140,11 +153,22 @@ impl Lexer {
             return false;
         }
         let seg = std::mem::take(&mut self.seg);
-        if !seg.words.is_empty() || seg.truncates || seg.appends {
+        if !seg.words.is_empty() || seg.truncates || seg.appends || seg.bad_input {
             self.segments.push(seg);
         }
         true
     }
+}
+
+/// A relative path below the working directory, with no expansion.
+fn is_plain_relative_file(target: &str) -> bool {
+    !target.is_empty()
+        && !target.starts_with('/')
+        && !target.starts_with('~')
+        && !target.split('/').any(|part| part == "..")
+        && !target
+            .chars()
+            .any(|c| matches!(c, '$' | '{' | '}' | '*' | '?' | '[' | ']'))
 }
 
 /// Output sinks a truncating redirect cannot damage.
@@ -259,7 +283,10 @@ fn lex(command: &str) -> Option<Vec<Segment>> {
                 if lx.redirect.is_some() {
                     return None;
                 }
+                // A here-document / here-string feeds inline text whose body
+                // the lexer would read as commands: never ordinary.
                 while chars.get(i + 1) == Some(&'<') {
+                    lx.seg.bad_input = true;
                     i += 1;
                 }
                 lx.redirect = Some(Redirect::Input);
@@ -316,7 +343,7 @@ fn classify_segment(seg: &Segment) -> Verdict {
     let Some(raw_base) = words.next() else {
         return if seg.truncates {
             Verdict::Label(ActionCategory::Irreversible)
-        } else if seg.appends || assigns {
+        } else if seg.appends || seg.bad_input || assigns {
             Verdict::Park
         } else {
             Verdict::Ordinary
@@ -341,7 +368,7 @@ fn classify_segment(seg: &Segment) -> Verdict {
         && !raw_base
             .chars()
             .any(|c| matches!(c, '/' | '$' | '{' | '}' | '?' | '*' | '[' | ']' | '~' | '='));
-    if seg.appends || assigns || !plain {
+    if seg.appends || seg.bad_input || assigns || !plain {
         return Verdict::Park;
     }
     if super::pet_shell_readonly::is_read_only(&base, &rest, &rest_raw) {

@@ -1913,6 +1913,7 @@ fn the_routes_bearer_is_not_offered_to_any_other_slug() {
 
 #[test]
 fn the_route_resolves_to_a_provider_the_factory_can_build() {
+    let _guard = crate::neppy::inference::inference_test_guard();
     // `resolve_cloud_slug` is where a missing `cloud_providers` entry or an
     // empty model turns into an error. Building the model proves the entry
     // `apply` registered is complete enough to be used, not merely present.

@@ -30,7 +30,7 @@ pub use gate::{
     parse_approval_reply, ApprovalChatContext, ApprovalGate, FlowRunContext, APPROVAL_CHAT_CONTEXT,
     APPROVAL_COPILOT_STREAM_CONTEXT, APPROVAL_FLOW_RUN_CONTEXT,
 };
-pub(crate) use pet_classifier::pet_companion_internal_gate_category;
+pub(crate) use pet_classifier::pet_companion_gate_category;
 /// The release-audit B2 shell examples, shared by the harness-level tests.
 #[cfg(test)]
 pub(crate) use pet_classifier::tests::b2_shell_cases as pet_b2_shell_cases;

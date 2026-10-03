@@ -134,3 +134,43 @@ async fn a_blank_handoff_prompt_spawns_nothing() {
         "no thread created"
     );
 }
+
+/// Release re-review (round 3, item 4): the hand-off thread is created WITH the
+/// Pet origin marker in one write (no window in which a follow-up turn could
+/// see an unmarked hand-off thread), and the marker is hidden from clients.
+#[test]
+fn handoff_thread_is_created_with_the_pet_marker() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let id = super::create_pet_handoff_thread(tmp.path(), "Pet: x", "run-1", "do it").unwrap();
+    let threads =
+        tinycortex::memory::conversations::list_threads(tmp.path().to_path_buf()).unwrap();
+    let t = threads.into_iter().find(|t| t.id == id).expect("thread");
+    assert!(crate::neppy::threads::mode::is_pet_companion_thread(
+        &t.labels
+    ));
+    assert!(t.labels.iter().any(|l| l == "tasks"));
+    assert_eq!(
+        crate::neppy::threads::mode::strip_reserved_labels(t.labels),
+        vec!["tasks".to_string()]
+    );
+}
+
+/// Item 4, fail closed: when the marked thread cannot be created, the hand-off
+/// is aborted — nothing runs without the marker.
+#[tokio::test]
+async fn handoff_aborts_when_the_marked_thread_cannot_be_created() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    // A regular file where the workspace directory should be: every store
+    // write under it fails.
+    let blocker = tmp.path().join("not-a-dir");
+    std::fs::write(&blocker, b"x").unwrap();
+    let config = crate::neppy::config::Config {
+        workspace_dir: blocker.clone(),
+        ..crate::neppy::config::Config::default()
+    };
+    let err = super::run_pet_companion_handoff(config, "pet-companion:s-4", "Pet: x", "go")
+        .await
+        .err()
+        .expect("hand-off must abort without a marked thread");
+    assert!(err.contains("hand-off thread"), "{err}");
+}

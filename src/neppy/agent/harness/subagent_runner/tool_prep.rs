@@ -135,7 +135,7 @@ pub(super) fn is_subagent_spawn_tool(name: &str) -> bool {
         return true;
     }
     // The multi-agent fleet: a sub-agent must never start, steer, wait on or
-    // close detached workers. A worker it started would outlive its turn, run
+    // close detached workers (resuming a paused child stays allowed). A worker it started would outlive its turn, run
     // as a fresh top-level task and deliver its result into the parent thread
     // later — on a path that does not carry the turn's approval origin.
     if SUBAGENT_FORBIDDEN_FLEET_TOOLS.contains(&name) {
@@ -159,7 +159,9 @@ pub(super) fn is_subagent_spawn_tool(name: &str) -> bool {
     false
 }
 
-/// Fleet tools no sub-agent may hold (see [`is_subagent_spawn_tool`]). Also
+/// Fleet tools no sub-agent may hold (see [`is_subagent_spawn_tool`]).
+/// `continue_subagent` is deliberately absent: it resumes a paused child
+/// in-turn (the #4291 pause/resume path) and starts nothing detached. Also
 /// stripped at registration by the tinyagents seam
 /// (`is_subagent_spawn_or_delegate_tool`) as defense-in-depth.
 pub(crate) const SUBAGENT_FORBIDDEN_FLEET_TOOLS: &[&str] = &[
@@ -169,7 +171,6 @@ pub(crate) const SUBAGENT_FORBIDDEN_FLEET_TOOLS: &[&str] = &[
     "steer_subagent",
     "close_subagent",
     "wait_subagent",
-    "continue_subagent",
     "wait",
     "wait_loop",
 ];
@@ -268,6 +269,7 @@ mod tests {
         for fleet in SUBAGENT_FORBIDDEN_FLEET_TOOLS {
             assert!(is_subagent_spawn_tool(fleet), "{fleet}");
         }
+        assert!(!is_subagent_spawn_tool("continue_subagent"));
         for name in [
             "spawn_async_subagent",
             "spawn_parallel_agents",
@@ -279,6 +281,44 @@ mod tests {
             assert!(SUBAGENT_FORBIDDEN_FLEET_TOOLS.contains(&name));
         }
         assert!(!is_subagent_spawn_tool("memory_recall"));
+    }
+
+    /// Round 3 (item 6): `continue_subagent` survives the sub-agent strip — a
+    /// child whose own helper paused on `ask_user_clarification` must be able
+    /// to resume that exact checkpoint (#4291) — while every other fleet tool
+    /// is removed. Mirrors the runner's filter-then-strip sequence.
+    #[test]
+    fn continue_subagent_survives_the_strip_for_nested_pause_resume() {
+        struct Named(&'static str);
+        #[async_trait::async_trait]
+        impl Tool for Named {
+            fn name(&self) -> &str {
+                self.0
+            }
+            fn description(&self) -> &str {
+                "t"
+            }
+            fn parameters_schema(&self) -> serde_json::Value {
+                serde_json::json!({"type": "object"})
+            }
+            async fn execute(
+                &self,
+                _a: serde_json::Value,
+            ) -> anyhow::Result<crate::neppy::tools::ToolResult> {
+                Ok(crate::neppy::tools::ToolResult::success("ok"))
+            }
+        }
+        let parent: Vec<Box<dyn Tool>> = vec![
+            Box::new(Named("continue_subagent")),
+            Box::new(Named("wait_subagent")),
+            Box::new(Named("spawn_async_subagent")),
+            Box::new(Named("ask_user_clarification")),
+        ];
+        let scope = ToolScope::Named(parent.iter().map(|t| t.name().to_string()).collect());
+        let mut idx = filter_tool_indices(&parent, &scope, &[], None);
+        idx.retain(|&i| !is_subagent_spawn_tool(parent[i].name()));
+        let kept: Vec<&str> = idx.iter().map(|&i| parent[i].name()).collect();
+        assert_eq!(kept, vec!["continue_subagent", "ask_user_clarification"]);
     }
 
     #[test]

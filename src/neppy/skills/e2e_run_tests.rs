@@ -183,6 +183,7 @@ async fn inner_workflow_run_executes_via_mock_llm_and_reaches_done() {
     // OPENHUMAN_WORKSPACE → <root>/workspace), so get_workflow/load_workflow_metadata finds it.
     let workspace = crate::neppy::skills::schemas::resolve_workspace_dir().await;
     seed_runnable_workflow(&workspace, "triage-inbox");
+    let _inference = crate::neppy::inference::inference_test_guard();
     let _guard = test_provider_override::install_model(MockLlm::new(Some("triage-inbox")));
 
     let started = spawn_workflow_run_background("triage-inbox".to_string(), None)
@@ -223,6 +224,7 @@ async fn orchestrator_runs_workflow_tool_and_gets_inner_result() {
     // The inner run (spawned by the run_workflow tool) builds its provider from
     // config → needs the global override. The outer loop gets the mock directly.
     let mock = MockLlm::new(Some("triage-inbox"));
+    let _inference = crate::neppy::inference::inference_test_guard();
     let _guard = test_provider_override::install_model(mock.clone());
     let model: Arc<dyn ChatModel<()>> = mock;
     let mut profile = ModelProfile::default();
@@ -301,6 +303,7 @@ async fn task_card_picked_up_runs_workflow_and_resolves_done() {
     let _env = WorkspaceEnv::set(ws_root.path());
     let workspace = resolve_workspace_dir().await;
     seed_runnable_workflow(&workspace, "triage-inbox");
+    let _inference = crate::neppy::inference::inference_test_guard();
     let _guard = test_provider_override::install_model(MockLlm::new(Some("triage-inbox")));
 
     // Create a task card on the board.
@@ -376,6 +379,7 @@ async fn task_with_no_workflow_runs_directly_and_resolves_done() {
     let workspace = resolve_workspace_dir().await;
     // No workflow seeded, and the mock LLM is given no workflow to pick — the
     // orchestrator must complete the task itself (no run_workflow call).
+    let _inference = crate::neppy::inference::inference_test_guard();
     let _guard = test_provider_override::install_model(MockLlm::new(None));
 
     let loc = BoardLocation::Thread {
@@ -464,6 +468,7 @@ async fn task_run_failure_resolves_card_to_blocked() {
     let ws_root = tempfile::tempdir().unwrap();
     let _env = WorkspaceEnv::set(ws_root.path());
     let workspace = resolve_workspace_dir().await;
+    let _inference = crate::neppy::inference::inference_test_guard();
     let _guard = test_provider_override::install_model(Arc::new(FailingLlm));
 
     let loc = BoardLocation::Thread {
@@ -532,6 +537,7 @@ async fn redispatch_of_claimed_card_is_rejected() {
     let _env = WorkspaceEnv::set(ws_root.path());
     let workspace = resolve_workspace_dir().await;
     // Direct-answer mock so the claimed run resolves without needing a workflow.
+    let _inference = crate::neppy::inference::inference_test_guard();
     let _guard = test_provider_override::install_model(MockLlm::new(None));
 
     let loc = BoardLocation::Thread {

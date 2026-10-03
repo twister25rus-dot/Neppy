@@ -56,7 +56,7 @@ use crate::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
 use crate::neppy::security::approval::{
     redact_args, summarize_action, ApprovalGate, ExecutionOutcome, GateOutcome,
 };
-use crate::neppy::tools::{PermissionLevel, Tool};
+use crate::neppy::tools::Tool;
 
 use super::policy_denial::PolicyDenial;
 
@@ -930,29 +930,24 @@ impl ApprovalSecurityMiddleware {
         Self { tool_sets }
     }
 
-    /// Whether the named tool declares an external effect for these args, and
-    /// the permission level it needs for them. An unregistered name reports no
-    /// external effect and `Dangerous` (it is not provably read-only).
-    fn classify_call(&self, name: &str, args: &serde_json::Value) -> (bool, PermissionLevel) {
+    /// Whether the named tool declares an external effect for these args. An
+    /// unregistered name reports none.
+    fn has_external_effect(&self, name: &str, args: &serde_json::Value) -> bool {
         self.tool_sets
             .iter()
             .flat_map(|set| set.iter())
             .find(|t| t.name() == name)
-            .map(|t| {
-                (
-                    t.external_effect_with_args(args),
-                    t.permission_level_with_args(args),
-                )
-            })
-            .unwrap_or((false, PermissionLevel::Dangerous))
+            .is_some_and(|t| t.external_effect_with_args(args))
     }
 
     /// Whether this call goes through the approval gate: `(has_external_effect,
-    /// pet_high_risk)`. The gate is consulted when either is set. The second is
+    /// pet_category)`. The gate is consulted when either is set. The second is
     /// `Some` only under a Pet companion origin (incl. sub-agents it delegated
-    /// to) for a high-risk call whose tool declares no external effect — a
-    /// Full-tier `shell` write, `python_exec`, `memory_forget`, … (D4: high-risk
-    /// actions always need confirmation).
+    /// to and follow-up turns on its thread) for a call that is not on the
+    /// closed Pet allowlist — decided by tool NAME and arguments only, never by
+    /// the permission level or external effect the tool reports (D4: such calls
+    /// always need confirmation). The gate classifies with the same function
+    /// and the same (redacted) inputs.
     fn approval_requirement(
         &self,
         name: &str,
@@ -961,15 +956,9 @@ impl ApprovalSecurityMiddleware {
         bool,
         Option<crate::neppy::pet::companion::types::ActionCategory>,
     ) {
-        let (has_ext, permission) = self.classify_call(name, args);
-        if has_ext {
-            return (true, None);
-        }
         (
-            false,
-            crate::neppy::security::approval::pet_companion_internal_gate_category(
-                name, args, permission,
-            ),
+            self.has_external_effect(name, args),
+            crate::neppy::security::approval::pet_companion_gate_category(name, args),
         )
     }
 }
@@ -4661,14 +4650,10 @@ mod tests {
             }),
         ]);
         let mw = ApprovalSecurityMiddleware::new(vec![tools]);
-        assert!(mw.classify_call("send_email", &json!({})).0);
-        assert!(!mw.classify_call("read_file", &json!({})).0);
-        // Unknown tool defaults to no external effect (nothing to gate) and is
-        // not provably read-only.
-        assert_eq!(
-            mw.classify_call("missing", &json!({})),
-            (false, PermissionLevel::Dangerous)
-        );
+        assert!(mw.has_external_effect("send_email", &json!({})));
+        assert!(!mw.has_external_effect("read_file", &json!({})));
+        // Unknown tool defaults to no external effect (nothing to gate).
+        assert!(!mw.has_external_effect("missing", &json!({})));
         // Outside a Pet companion turn nothing without an external effect is
         // routed to the gate.
         assert_eq!(
@@ -4676,6 +4661,8 @@ mod tests {
             (false, None)
         );
     }
+
+    use crate::neppy::tools::PermissionLevel;
 
     /// A tool that declares no external effect, at a given permission level —
     /// the shape of `memory_forget` / `goals_delete` / `artifact_delete`.
@@ -4748,6 +4735,23 @@ mod tests {
                 name: "some_internal_writer",
                 level: PermissionLevel::Write,
             }),
+            // Report the trait default (ReadOnly) like the real tools do.
+            Box::new(InternalTool {
+                name: "browser",
+                level: PermissionLevel::ReadOnly,
+            }),
+            Box::new(InternalTool {
+                name: "pushover",
+                level: PermissionLevel::ReadOnly,
+            }),
+            Box::new(InternalTool {
+                name: "get_and_forward",
+                level: PermissionLevel::Write,
+            }),
+            Box::new(InternalTool {
+                name: "memory_recall",
+                level: PermissionLevel::ReadOnly,
+            }),
         ])
     }
 
@@ -4783,13 +4787,25 @@ mod tests {
                         "{tier:?}: {tool}"
                     );
                 }
-                for tool in ["GMAIL_SEND_EMAIL", "goal_set", "some_internal_writer"] {
+                // Round 3: the self-reported level does not matter. A tool
+                // that reports ReadOnly (the trait default) and no external
+                // effect — browser, pushover, a read-verb name — still reaches
+                // the gate unless its NAME is on the closed Pet allowlist.
+                for tool in [
+                    "GMAIL_SEND_EMAIL",
+                    "goal_set",
+                    "some_internal_writer",
+                    "memory_store",
+                    "browser",
+                    "pushover",
+                    "get_and_forward",
+                ] {
                     let (_, pet) = mw.approval_requirement(tool, &json!({}));
                     assert!(pet.is_some(), "{tier:?}: {tool} must reach the gate");
                 }
-                // Allowlisted internal work is not escalated.
+                // A name on the allowlist is not escalated.
                 assert_eq!(
-                    mw.approval_requirement("memory_store", &json!({})),
+                    mw.approval_requirement("memory_recall", &json!({})),
                     (false, None)
                 );
             })

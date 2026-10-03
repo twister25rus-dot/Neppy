@@ -63,6 +63,7 @@ pub(crate) fn create_session_thread(
             "card_id": card.id,
             "run_id": run_id,
         }),
+        &[],
     )?;
     tracing::info!(
         card_id = %card.id,
@@ -79,17 +80,23 @@ pub(crate) fn create_session_thread(
 /// companion hand-off executor (`task_dispatcher::run_pet_companion_handoff`),
 /// whose run has no board card. `run_id` is stamped into the seed metadata.
 /// Returns `None` when the store rejects the create (the run proceeds headless).
+///
+/// `extra_labels` are stamped in the same create as the `tasks` label (the Pet
+/// hand-off passes its reserved origin marker, so the marker can never be
+/// missing from a thread the hand-off runs in).
 pub(crate) fn create_named_session_thread(
     workspace_dir: PathBuf,
     title: &str,
     run_id: &str,
     prompt: &str,
+    extra_labels: &[&str],
 ) -> Option<String> {
     let thread_id = create_thread_seeded(
         workspace_dir,
         clip_title(title),
         prompt,
         json!({ "scope": "autonomous_task", "run_id": run_id }),
+        extra_labels,
     )?;
     tracing::info!(
         run_id = %run_id,
@@ -106,8 +113,11 @@ fn create_thread_seeded(
     title: String,
     prompt: &str,
     seed_metadata: serde_json::Value,
+    extra_labels: &[&str],
 ) -> Option<String> {
     let thread_id = format!("task-{}", uuid::Uuid::new_v4());
+    let mut labels = vec![TASKS_LABEL.to_string()];
+    labels.extend(extra_labels.iter().map(|l| (*l).to_string()));
     let now = chrono::Utc::now().to_rfc3339();
 
     if let Err(err) = conversations::ensure_thread(
@@ -117,7 +127,7 @@ fn create_thread_seeded(
             title,
             created_at: now.clone(),
             parent_thread_id: None,
-            labels: Some(vec![TASKS_LABEL.to_string()]),
+            labels: Some(labels),
             personality_id: None,
         },
     ) {
@@ -290,9 +300,14 @@ mod tests {
     #[test]
     fn named_session_thread_carries_the_title_and_seeds_the_prompt() {
         let ws = temp_ws();
-        let id =
-            create_named_session_thread(ws.clone(), "  Pet: fix the build  ", "run-9", "Fix it")
-                .expect("thread created");
+        let id = create_named_session_thread(
+            ws.clone(),
+            "  Pet: fix the build  ",
+            "run-9",
+            "Fix it",
+            &[],
+        )
+        .expect("thread created");
         let threads = conversations::list_threads(ws.clone()).expect("list threads");
         let t = threads.iter().find(|t| t.id == id).expect("thread listed");
         assert_eq!(t.title, "Pet: fix the build");
@@ -304,11 +319,11 @@ mod tests {
         assert_eq!(msgs[0].content, "Fix it");
 
         let long = "x".repeat(200);
-        let id2 = create_named_session_thread(ws.clone(), &long, "run-10", "p").unwrap();
+        let id2 = create_named_session_thread(ws.clone(), &long, "run-10", "p", &[]).unwrap();
         let threads = conversations::list_threads(ws.clone()).expect("list threads");
         let t2 = threads.iter().find(|t| t.id == id2).unwrap();
         assert_eq!(t2.title.chars().count(), TITLE_MAX_CHARS);
-        let id3 = create_named_session_thread(ws.clone(), "   ", "run-11", "p").unwrap();
+        let id3 = create_named_session_thread(ws.clone(), "   ", "run-11", "p", &[]).unwrap();
         let threads = conversations::list_threads(ws).expect("list threads");
         assert_eq!(
             threads.iter().find(|t| t.id == id3).unwrap().title,

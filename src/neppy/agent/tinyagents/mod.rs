@@ -581,7 +581,8 @@ fn is_subagent_spawn_or_delegate_tool(name: &str) -> bool {
         || name == "spawn_worker_thread"
         // The multi-agent fleet (mirrors the runner's
         // `SUBAGENT_FORBIDDEN_FLEET_TOOLS`): a child never starts, steers,
-        // waits on, closes or resumes detached workers.
+        // waits on or closes detached workers. `continue_subagent` stays — it
+        // resumes a paused child in-turn (#4291).
         || matches!(
             name,
             "spawn_async_subagent"
@@ -590,7 +591,6 @@ fn is_subagent_spawn_or_delegate_tool(name: &str) -> bool {
                 | "steer_subagent"
                 | "close_subagent"
                 | "wait_subagent"
-                | "continue_subagent"
                 | "wait"
                 | "wait_loop"
         )

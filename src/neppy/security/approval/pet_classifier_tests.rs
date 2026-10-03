@@ -142,101 +142,49 @@ fn ordinary_shell_commands_stay_ordinary() {
     for command in [
         "ls -la",
         "ls -la > /dev/null 2>&1",
-        "git status",
-        "git log --oneline | head -5",
-        "git -C repo diff --stat",
-        "git branch -a",
-        "git remote -v",
-        "git stash list",
         "grep -r 'rm -rf' src",
-        "rg -n 'TODO > done' src",
+        "grep -n 'TODO > done' src",
         "command -v cargo",
         "cat < input.txt",
         "cd src && ls",
         "find . -name '*.rs' -type f",
-        "wc -l src/main.rs | sort -n",
+        "wc -l src/main.rs | head -1",
         "echo hello",
     ] {
         assert_eq!(shell(command), None, "{command}");
     }
 }
 
-/// B1: a call with NO declared external effect — internal deletes are
-/// `delete`, executors stay privileged — while ordinary internal work and
-/// read-only tools that merely contain a keyword are not escalated.
+/// Round 3: classification depends on the tool NAME (and args), never on the
+/// permission level or external effect a tool reports — internal deletes are
+/// `delete`, executors privileged, and remote actions are labelled by the
+/// action they run (W3), under the dispatchers' real names and argument keys.
 #[test]
-fn internal_calls_are_classified_for_the_harness() {
-    use crate::neppy::tools::PermissionLevel as P;
-    let cases: Vec<(&str, serde_json::Value, P, Option<C>)> = vec![
-        ("memory_forget", json!({}), P::Write, Some(C::Delete)),
-        // A delete tool that under-reports its level is still a delete.
-        ("memory_forget", json!({}), P::ReadOnly, Some(C::Delete)),
-        ("goals_delete", json!({}), P::Write, Some(C::Delete)),
-        ("artifact_delete", json!({}), P::Write, Some(C::Delete)),
-        ("todo_remove", json!({}), P::Write, Some(C::Delete)),
+fn calls_are_classified_by_name_and_args() {
+    let cases: Vec<(&str, serde_json::Value, Option<C>)> = vec![
+        ("memory_forget", json!({}), Some(C::Delete)),
+        ("goals_delete", json!({}), Some(C::Delete)),
+        ("artifact_delete", json!({}), Some(C::Delete)),
+        ("todo_remove", json!({}), Some(C::Delete)),
+        ("shell", json!({"command": "rm -rf app"}), Some(C::Delete)),
+        ("python_exec", json!({}), Some(C::PrivilegedCommand)),
+        ("node_exec", json!({}), Some(C::PrivilegedCommand)),
+        ("cron_add", json!({}), Some(C::SystemSettings)),
         (
             "shell",
-            json!({"command": "rm -rf app"}),
-            P::Execute,
-            Some(C::Delete),
-        ),
-        (
-            "python_exec",
-            json!({}),
-            P::Execute,
+            json!({"command": "git status"}),
             Some(C::PrivilegedCommand),
         ),
-        (
-            "node_exec",
-            json!({}),
-            P::Execute,
-            Some(C::PrivilegedCommand),
-        ),
-        ("cron_add", json!({}), P::Write, Some(C::SystemSettings)),
-        // Ordinary internal operations run as in an interactive turn.
-        ("memory_store", json!({}), P::Write, None),
-        ("file_write", json!({}), P::Write, None),
-        ("todo_add", json!({}), P::Write, None),
-        ("spawn_subagent", json!({}), P::Write, None),
-        ("shell", json!({"command": "git status"}), P::Execute, None),
-        // Read-only tools led by a read verb are not escalated by a keyword.
-        ("config_get", json!({}), P::ReadOnly, None),
-        ("list_trash", json!({}), P::ReadOnly, None),
-        ("memory_search", json!({}), P::ReadOnly, None),
-    ];
-    for (tool, args, level, want) in cases {
-        assert_eq!(
-            pet_companion_internal_high_risk(tool, &args, level),
-            want,
-            "{tool} {args} {level}"
-        );
-    }
-    // The external-effect classifier keeps its stricter default.
-    assert_eq!(
-        pet_companion_high_risk("todo_write", &json!({})),
-        Some(C::Irreversible)
-    );
-}
-
-/// W3: Composio and MCP calls are classified by the remote action they run,
-/// under the dispatchers' real tool names and argument keys.
-#[test]
-fn remote_actions_use_the_real_tool_names() {
-    let cases: Vec<(&str, serde_json::Value, Option<C>)> = vec![
-        (
-            "composio_execute",
-            json!({"tool": "GMAIL_FETCH_EMAILS"}),
-            None,
-        ),
-        (
-            "composio_execute",
-            json!({"tool": "GITHUB_LIST_ISSUES"}),
-            None,
-        ),
+        ("memory_recall", json!({}), None),
         (
             "composio_execute",
             json!({"tool": "GMAIL_SEND_EMAIL"}),
             Some(C::SendMessage),
+        ),
+        (
+            "composio_execute",
+            json!({"tool": "GMAIL_FETCH_EMAILS"}),
+            Some(C::SharePersonalInfo),
         ),
         (
             "composio_execute",
@@ -246,23 +194,23 @@ fn remote_actions_use_the_real_tool_names() {
         ("composio_execute", json!({}), Some(C::Irreversible)),
         (
             "mcp_registry_tool_call",
-            json!({"server_id": "s", "tool_name": "list_issues"}),
-            None,
-        ),
-        (
-            "mcp_registry_tool_call",
             json!({"server_id": "s", "tool_name": "delete_issue"}),
             Some(C::Delete),
         ),
         (
             "mcp_registry_tool_call",
-            json!({"server_id": "s"}),
-            Some(C::Irreversible),
+            json!({"server_id": "s", "tool_name": "list_issues"}),
+            Some(C::SharePersonalInfo),
         ),
         (
             "mcp_call_tool",
             json!({"server": "s", "tool": "get_file"}),
-            None,
+            Some(C::SharePersonalInfo),
+        ),
+        (
+            "mcp_registry_tool_call",
+            json!({"server_id": "s"}),
+            Some(C::Irreversible),
         ),
     ];
     for (tool, args, want) in cases {

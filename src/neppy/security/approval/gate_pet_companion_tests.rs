@@ -99,15 +99,29 @@ fn the_representative_cases_cover_every_high_risk_class() {
 #[test]
 fn classifier_maps_tools_to_classes() {
     let cases: Vec<(&str, serde_json::Value, Option<C>)> = vec![
-        // Ordinary: workspace edits, local git history, drafts, reads.
-        ("file_write", json!({"path": "a.md"}), None),
-        ("edit", json!({}), None),
-        ("apply_patch", json!({}), None),
-        ("git_operations", json!({"operation": "commit"}), None),
+        // Ordinary: only names on the closed Pet allowlist (round 3).
         ("request_plan_review", json!({}), None),
-        ("propose_workflow", json!({}), None),
-        ("storage_download_file", json!({}), None),
-        ("shell", json!({"command": "git status"}), None),
+        (
+            "git_operations",
+            json!({"operation": "status"}),
+            Some(C::PrivilegedCommand),
+        ),
+        // Workspace edits, local git history and drafts now park.
+        ("file_write", json!({"path": "a.md"}), Some(C::Irreversible)),
+        ("edit", json!({}), Some(C::Irreversible)),
+        ("apply_patch", json!({}), Some(C::Irreversible)),
+        (
+            "git_operations",
+            json!({"operation": "commit"}),
+            Some(C::Irreversible),
+        ),
+        ("propose_workflow", json!({}), Some(C::Irreversible)),
+        ("storage_download_file", json!({}), Some(C::Irreversible)),
+        (
+            "shell",
+            json!({"command": "git status"}),
+            Some(C::PrivilegedCommand),
+        ),
         // Not on the read-only allowlist: parks.
         (
             "shell",
@@ -118,9 +132,13 @@ fn classifier_maps_tools_to_classes() {
         (
             "composio",
             json!({"action": "execute", "tool_slug": "GMAIL_FETCH_EMAILS"}),
-            None,
+            Some(C::SharePersonalInfo),
         ),
-        ("mcp_call_tool", json!({"tool": "list_issues"}), None),
+        (
+            "mcp_call_tool",
+            json!({"tool": "list_issues"}),
+            Some(C::SharePersonalInfo),
+        ),
         // High risk.
         (
             "composio",
@@ -238,8 +256,13 @@ fn classifier_maps_tools_to_classes() {
         // A packed tool is classified by what it wraps.
         (
             "use_skill",
-            json!({"skill": "s", "tool": "file_write", "args": {}}),
+            json!({"skill": "s", "tool": "file_read", "args": {}}),
             None,
+        ),
+        (
+            "use_skill",
+            json!({"skill": "s", "tool": "file_write", "args": {}}),
+            Some(C::Irreversible),
         ),
         (
             "use_skill",
@@ -263,7 +286,7 @@ async fn low_risk_companion_call_is_allowed_by_auto_approve_all() {
     let _settings = settings(&dir, true, &[]);
     let outcome = turn_origin::with_origin(
         companion(Some("handoff-thread")),
-        gate.intercept("file_write", "write a.md", json!({"path": "a.md"})),
+        gate.intercept("memory_recall", "recall", json!({})),
     )
     .await;
     assert!(matches!(outcome, GateOutcome::Allow), "{outcome:?}");
@@ -274,12 +297,10 @@ async fn low_risk_companion_call_is_allowed_by_auto_approve_all() {
 #[tokio::test]
 async fn low_risk_companion_call_is_allowed_by_the_allowlist() {
     let (gate, dir) = gate();
-    let _settings = settings(&dir, false, &["edit"]);
-    let outcome = turn_origin::with_origin(
-        companion(None),
-        gate.intercept("edit", "edit a.md", json!({})),
-    )
-    .await;
+    let _settings = settings(&dir, false, &["grep"]);
+    let outcome =
+        turn_origin::with_origin(companion(None), gate.intercept("grep", "search", json!({})))
+            .await;
     assert!(matches!(outcome, GateOutcome::Allow), "{outcome:?}");
     assert!(gate.list_pending().unwrap().is_empty());
 }
@@ -497,23 +518,91 @@ async fn b2_shell_examples_and_internal_deletes_park_despite_auto_approve() {
     }
 }
 
-/// W3: a read-verb Composio action follows the user's normal settings (here
-/// `auto_approve_all`) instead of always parking.
+/// Round 3: a read-verb Composio action is not on the Pet allowlist (account
+/// data flows to the model), so it parks even with `auto_approve_all` on.
 #[tokio::test]
-async fn read_verb_composio_action_follows_auto_approve_all() {
+async fn read_verb_composio_action_parks_under_auto_approve_all() {
     let (gate, dir) = gate();
-    let _settings = settings(&dir, true, &[]);
-    let outcome = turn_origin::with_origin(
-        companion(None),
-        gate.intercept(
+    let _settings = settings(&dir, true, &["composio_execute"]);
+    let g = gate.clone();
+    let handle = tokio::spawn(turn_origin::with_origin(companion(None), async move {
+        g.intercept(
             "composio_execute",
             "fetch mail",
             json!({"tool": "GMAIL_FETCH_EMAILS"}),
-        ),
+        )
+        .await
+    }));
+    let row = tokio::time::timeout(
+        Duration::from_secs(5),
+        wait_pending(&gate, "composio_execute"),
+    )
+    .await
+    .expect("must park");
+    gate.decide(&row.request_id, ApprovalDecision::Deny)
+        .unwrap();
+    assert!(matches!(handle.await.unwrap(), GateOutcome::Deny { .. }));
+}
+
+/// Round 3, item 3 (B5): the gate classifies with the same name-only function
+/// as the middleware — a tool whose name starts with a read verb, reaching the
+/// gate for any reason, parks under `auto_approve_all` + allowlist unless its
+/// NAME is on the closed Pet allowlist.
+#[tokio::test]
+async fn read_verb_named_tool_off_the_allowlist_parks_at_the_gate() {
+    let (gate, dir) = gate();
+    let _settings = settings(&dir, true, &["get_inbox_and_archive", "list_secrets"]);
+    for tool in ["get_inbox_and_archive", "list_secrets"] {
+        let g = gate.clone();
+        let handle = tokio::spawn(turn_origin::with_origin(companion(None), async move {
+            g.intercept(tool, "read", json!({})).await
+        }));
+        let row = tokio::time::timeout(Duration::from_secs(5), wait_pending(&gate, tool))
+            .await
+            .unwrap_or_else(|_| panic!("{tool} must park"));
+        gate.decide(&row.request_id, ApprovalDecision::Deny)
+            .unwrap();
+        assert!(matches!(handle.await.unwrap(), GateOutcome::Deny { .. }));
+    }
+}
+
+/// Round 3, item 5: a goal continuation on a Pet hand-off thread runs under the
+/// Pet companion origin AND keeps GoalContinuation's rule that the allowlist
+/// shortcut never applies (nobody is present) — strictest wins. A Pet call that
+/// is not a goal continuation still honours the allowlist.
+#[tokio::test]
+async fn pet_goal_continuation_never_uses_the_allowlist_shortcut() {
+    use crate::neppy::agent::task_dispatcher::{follow_up_turn_context, mark_pet_companion_thread};
+    let (gate, dir) = gate();
+    let _settings = settings(&dir, false, &["memory_recall"]);
+    make_thread(dir.path(), "task-g1", vec!["tasks".into()]);
+    assert!(mark_pet_companion_thread(dir.path(), "task-g1"));
+    let fallback = AgentTurnOrigin::TrustedAutomation {
+        job_id: "goal:task-g1".into(),
+        source: TrustedAutomationSource::GoalContinuation,
+    };
+    let (origin, _) = follow_up_turn_context(dir.path(), "task-g1", "goal:task-g1", fallback).await;
+    assert_eq!(origin.class(), "TrustedAutomation(PetCompanion)");
+
+    let g = gate.clone();
+    let goal_origin = origin.clone();
+    let handle = tokio::spawn(turn_origin::with_origin(goal_origin, async move {
+        g.intercept("memory_recall", "recall", json!({})).await
+    }));
+    let row = tokio::time::timeout(Duration::from_secs(5), wait_pending(&gate, "memory_recall"))
+        .await
+        .expect("an unattended Pet goal turn must not use the allowlist shortcut");
+    gate.decide(&row.request_id, ApprovalDecision::ApproveOnce)
+        .unwrap();
+    assert!(matches!(handle.await.unwrap(), GateOutcome::Allow));
+
+    // A hand-off turn (not a goal continuation) still honours the allowlist.
+    let outcome = turn_origin::with_origin(
+        companion(Some("task-g1")),
+        gate.intercept("memory_recall", "recall", json!({})),
     )
     .await;
     assert!(matches!(outcome, GateOutcome::Allow), "{outcome:?}");
-    assert!(gate.list_pending().unwrap().is_empty());
 }
 
 /// Creates a thread `id` in `dir` with `labels`.

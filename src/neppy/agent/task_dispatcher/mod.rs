@@ -101,7 +101,10 @@ pub(crate) async fn follow_up_turn_context(
     let mode = ThreadMode::from_labels(&labels);
     if is_pet_companion_thread(&labels) {
         let origin = crate::neppy::agent::turn_origin::pet_companion_origin(
-            &format!("pet-companion:follow-up:{job_id}"),
+            &format!(
+                "{}{job_id}",
+                crate::neppy::security::approval::gate::PET_FOLLOW_UP_JOB_PREFIX
+            ),
             Some(thread_id.to_string()),
         );
         tracing::info!(
@@ -121,9 +124,34 @@ pub(crate) async fn follow_up_turn_context(
     (fallback, mode)
 }
 
-/// Marks a thread as a Pet companion hand-off thread (reserved label, hidden
-/// from clients and kept across label edits) so follow-up turns on it keep the
-/// Pet companion origin. Best-effort: logs and returns `false` on failure.
+/// Creates the Pet hand-off's top-level `tasks` thread **with** the reserved
+/// [`PET_COMPANION_THREAD_LABEL`](crate::neppy::threads::mode::PET_COMPANION_THREAD_LABEL)
+/// in the same write (hidden from clients, kept across label edits), seeded
+/// with `prompt`. `Err` when the thread cannot be created — the caller then
+/// aborts the hand-off rather than run without the marker.
+fn create_pet_handoff_thread(
+    workspace_dir: &std::path::Path,
+    title: &str,
+    run_id: &str,
+    prompt: &str,
+) -> Result<String, String> {
+    crate::neppy::agent::task_session::create_named_session_thread(
+        workspace_dir.to_path_buf(),
+        title,
+        run_id,
+        prompt,
+        &[crate::neppy::threads::mode::PET_COMPANION_THREAD_LABEL],
+    )
+    .ok_or_else(|| {
+        tracing::warn!("[task_dispatcher] pet hand-off thread create failed — aborting hand-off");
+        "could not create the hand-off thread; the hand-off was not started".to_string()
+    })
+}
+
+/// Marks an existing thread as a Pet companion hand-off thread (test helper;
+/// production creates the thread with the marker, see
+/// [`create_pet_handoff_thread`]).
+#[cfg(test)]
 pub(crate) fn mark_pet_companion_thread(workspace_dir: &std::path::Path, thread_id: &str) -> bool {
     use crate::neppy::threads::mode::PET_COMPANION_THREAD_LABEL;
     use tinycortex::memory::conversations as store;
@@ -163,9 +191,9 @@ pub(crate) fn mark_pet_companion_thread(workspace_dir: &std::path::Path, thread_
 pub struct PetCompanionHandoff {
     /// System-generated run id (`pet-handoff-<uuid>`), also the event context.
     pub run_id: String,
-    /// The run's own top-level `tasks` thread, or `None` when the thread store
-    /// refused the create (the run then proceeds headless and approvals surface
-    /// in the Pet inbox only).
+    /// The run's own top-level `tasks` thread, created with the Pet hand-off
+    /// marker. Always `Some` now: a hand-off whose thread cannot be created is
+    /// aborted (fail closed). Kept an `Option` for the companion's runner seam.
     pub thread_id: Option<String>,
     /// Resolves once with the run's final response, or its error string.
     pub result: tokio::sync::oneshot::Receiver<Result<String, String>>,
@@ -205,17 +233,15 @@ pub async fn run_pet_companion_handoff(
     }
     let executor = executor::resolve_executor(&config.workspace_dir, None);
     let run_id = format!("pet-handoff-{}", uuid::Uuid::new_v4());
-    let thread_id = crate::neppy::agent::task_session::create_named_session_thread(
-        config.workspace_dir.clone(),
+    // Fail closed: the thread is created WITH the Pet hand-off marker in one
+    // write, and no thread means no run. A hand-off whose follow-up turns could
+    // lose the Pet companion origin must not start.
+    let thread_id = Some(create_pet_handoff_thread(
+        &config.workspace_dir,
         title,
         &run_id,
         prompt,
-    );
-    if let Some(id) = thread_id.as_deref() {
-        // Follow-up turns on this thread (background delivery, goal
-        // continuation) must stay Pet companion work: mark it.
-        mark_pet_companion_thread(&config.workspace_dir, id);
-    }
+    )?);
     let origin = crate::neppy::agent::turn_origin::pet_companion_origin(job_id, thread_id.clone());
     tracing::info!(
         run_id = %run_id,

@@ -305,20 +305,18 @@ impl NeppySecurityGate {
         self.park_for_approval(call).await
     }
 
-    /// Pet companion (user decision D4): a call whose tool declares no external
-    /// effect still parks when the turn is a companion turn and the call is
-    /// high-risk. `None` when that does not apply. With no approval gate
-    /// installed it denies — running it unconfirmed is what D4 forbids.
+    /// Pet companion (user decision D4): under a companion turn, any call not on
+    /// the closed Pet allowlist parks — whatever external effect or permission
+    /// level the tool reports. `None` when that does not apply. With no approval
+    /// gate installed it denies — running it unconfirmed is what D4 forbids.
     async fn pet_companion_park(
         &self,
         call: &ToolCallRequest,
-        required: PermissionLevel,
         channel_approved: bool,
     ) -> Option<GateDecision> {
-        crate::neppy::security::approval::pet_companion_internal_gate_category(
+        crate::neppy::security::approval::pet_companion_gate_category(
             &call.tool_name,
             &call.arguments,
-            required,
         )?;
         if !channel_approved && ApprovalGate::try_global().is_none() {
             tracing::warn!(
@@ -554,11 +552,7 @@ impl SecurityGate for NeppySecurityGate {
                     return Ok(self.park_once(call, channel_approved).await)
                 }
                 Ok(PolicyGateDecision::Allow) => {
-                    let required = tool.permission_level_with_args(&call.arguments);
-                    if let Some(decision) = self
-                        .pet_companion_park(call, required, channel_approved)
-                        .await
-                    {
+                    if let Some(decision) = self.pet_companion_park(call, channel_approved).await {
                         return Ok(decision);
                     }
                     return Ok(self.settled(channel_approved));
@@ -615,10 +609,7 @@ impl SecurityGate for NeppySecurityGate {
         }
         // 6. Pet companion (D4): a high-risk call parks even without a declared
         //    external effect.
-        if let Some(decision) = self
-            .pet_companion_park(call, required, channel_approved)
-            .await
-        {
+        if let Some(decision) = self.pet_companion_park(call, channel_approved).await {
             return Ok(decision);
         }
 

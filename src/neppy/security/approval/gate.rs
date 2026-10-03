@@ -611,7 +611,18 @@ impl ApprovalGate {
                 },
                 ..
             }
-        ) || pet_companion_high_risk.is_some();
+        ) || pet_companion_high_risk.is_some()
+            // A goal continuation on a Pet hand-off thread runs under the Pet
+            // companion origin, but keeps GoalContinuation's rule too: nobody
+            // is present, so the allowlist shortcut never applies (strictest
+            // wins).
+            || matches!(
+                &origin,
+                AgentTurnOrigin::TrustedAutomation {
+                    source: TrustedAutomationSource::PetCompanion { .. },
+                    job_id,
+                } if job_id.starts_with(PET_GOAL_CONTINUATION_JOB_PREFIX)
+            );
 
         // Blanket "auto-approve everything" bypass (opt-in, off by default).
         // Sits ABOVE the origin match below so it prevents parking entirely
@@ -1592,6 +1603,14 @@ pub(crate) fn is_pet_companion_turn() -> bool {
         })
     )
 }
+
+/// Job-id prefix of a Pet companion follow-up turn (built by
+/// `task_dispatcher::follow_up_turn_context`); system-generated, never observed
+/// text.
+pub(crate) const PET_FOLLOW_UP_JOB_PREFIX: &str = "pet-companion:follow-up:";
+/// Job-id prefix of a goal continuation on a Pet hand-off thread (the
+/// continuation's own job id is `goal:<thread>`).
+pub(crate) const PET_GOAL_CONTINUATION_JOB_PREFIX: &str = "pet-companion:follow-up:goal:";
 
 /// A Pet companion origin for harness-level tests outside this module.
 #[cfg(test)]

