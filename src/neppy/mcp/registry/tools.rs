@@ -792,8 +792,13 @@ mod tests {
     #[tokio::test]
     async fn list_tools_errors_for_unconnected_server() {
         // A server_id that is not in the live connection map surfaces a
-        // "connect first" hint rather than an empty success.
-        let err = McpRegistryListToolsTool::new(cfg())
+        // "connect first" hint rather than an empty success. Its own
+        // workspace keeps the MCP audit store private to this test (the
+        // shared default one hit SQLite I/O errors under parallel load).
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let mut config = Config::default();
+        config.workspace_dir = tmp.path().to_path_buf();
+        let err = McpRegistryListToolsTool::new(Arc::new(config))
             .execute(json!({ "server_id": "definitely-not-connected-uuid" }))
             .await
             .expect_err("unconnected server must error");
