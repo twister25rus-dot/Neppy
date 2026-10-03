@@ -10,7 +10,8 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use super::store;
 use super::types::{Confinement, Gateway, GatewaySpec, Reach, DESKTOP_ID};
 
-static ENV_LOCK: Mutex<()> = Mutex::new(());
+// Shared with the `file_logging` tests, which also rewrite `OPENHUMAN_WORKSPACE`.
+static ENV_LOCK: &Mutex<()> = &crate::file_logging::WORKSPACE_ENV_LOCK;
 
 /// A temporary workspace, restored when the guard drops.
 struct Workspace {

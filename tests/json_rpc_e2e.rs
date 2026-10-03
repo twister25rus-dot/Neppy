@@ -74,6 +74,17 @@ static CHAT_COMPLETION_REQUESTS: OnceLock<Mutex<Vec<Value>>> = OnceLock::new();
 fn json_rpc_e2e_env_lock() -> std::sync::MutexGuard<'static, ()> {
     JSON_RPC_E2E_KEYRING_INIT.get_or_init(|| unsafe {
         std::env::set_var("OPENHUMAN_KEYRING_BACKEND", "file");
+        // Neppy's local mode (default ON in a non-`cfg(test)` build, which is how
+        // this integration binary links the core) redirects every managed-backend
+        // inference call to the user's *active local provider* (Ollama/MLX), not
+        // to the mock backend these cases pin via `api_url`. That sent live
+        // team-member runs to whatever Ollama the developer happened to have
+        // running (`model 'gemma3:1b-it-qat' not found`) and made them
+        // machine-dependent. `neppy_local_mode()` caches its first read in a
+        // `OnceLock`, and every case takes this lock first, so setting it here
+        // (once, before any read) pins the whole binary to the hosted-backend
+        // path the mock serves.
+        std::env::set_var("NEPPY_LOCAL_MODE", "0");
     });
     let mutex = JSON_RPC_E2E_ENV_LOCK.get_or_init(|| Mutex::new(()));
     // Recover from poison so that a panic in one test does not cascade to all others.
@@ -5709,6 +5720,10 @@ async fn json_rpc_app_state_update_local_state_round_trips_into_snapshot() {
 }
 
 #[tokio::test]
+// The wallet/web3 surface is not compiled into the Neppy product (web3 is
+// dropped from scripts/ci/product-features.txt), so `wallet.*` is
+// unknown-method there; run with `--features web3`.
+#[cfg(feature = "web3")]
 async fn json_rpc_wallet_setup_round_trips_status() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
@@ -6049,6 +6064,10 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
 /// surface gates (routes/quote require auth; same-chain bridge + unsignable
 /// chain are rejected before any network call).
 #[tokio::test]
+// The wallet/web3 surface is not compiled into the Neppy product (web3 is
+// dropped from scripts/ci/product-features.txt), so `wallet.*` is
+// unknown-method there; run with `--features web3`.
+#[cfg(feature = "web3")]
 async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
@@ -6293,6 +6312,7 @@ async fn start_mock_btc() -> MockBtcHandle {
     }
 }
 
+#[cfg(feature = "web3")]
 async fn mock_solana_rpc(Json(payload): Json<Value>) -> Json<Value> {
     let method = payload
         .get("method")
@@ -6315,6 +6335,7 @@ async fn mock_solana_rpc(Json(payload): Json<Value>) -> Json<Value> {
     Json(json!({"jsonrpc":"2.0","id":1,"result":result}))
 }
 
+#[cfg(feature = "web3")]
 async fn start_mock_solana() -> SocketAddr {
     let app = Router::new().route("/", post(mock_solana_rpc));
     let (addr, _join) = serve_on_ephemeral(app).await;
@@ -6652,6 +6673,10 @@ async fn json_rpc_wallet_btc_prepare_execute_round_trips() {
 
 /// Solana: native SOL transfer end-to-end through controllers.
 #[tokio::test]
+// The wallet/web3 surface is not compiled into the Neppy product (web3 is
+// dropped from scripts/ci/product-features.txt), so `wallet.*` is
+// unknown-method there; run with `--features web3`.
+#[cfg(feature = "web3")]
 async fn json_rpc_wallet_solana_prepare_execute_round_trips() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
@@ -6901,6 +6926,10 @@ async fn json_rpc_wallet_tron_trc20_prepare_execute_round_trips() {
 /// Wallet network_defaults must surface every supported EVM L2 plus BTC,
 /// Solana, and Tron, with chain_id populated for EVM rows.
 #[tokio::test]
+// The wallet/web3 surface is not compiled into the Neppy product (web3 is
+// dropped from scripts/ci/product-features.txt), so `wallet.*` is
+// unknown-method there; run with `--features web3`.
+#[cfg(feature = "web3")]
 async fn json_rpc_wallet_network_defaults_lists_all_chains() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");

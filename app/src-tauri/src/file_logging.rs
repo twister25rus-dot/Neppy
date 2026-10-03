@@ -47,6 +47,17 @@ pub(crate) fn resolve_data_dir() -> PathBuf {
     })
 }
 
+/// Process-wide lock for every test that mutates `OPENHUMAN_WORKSPACE`.
+///
+/// `resolve_data_dir` reads that variable, so the `file_logging` tests and the
+/// gateway store tests both rewrite it. Each used to keep its own private lock,
+/// which serialised nothing across the two modules: a `file_logging` test could
+/// swap the variable out from under a gateway test mid-case (observed as an
+/// intermittent `a_corrupt_file_blocks_save_instead_of_being_overwritten`
+/// failure, ~1 full run in 4). One shared lock closes that.
+#[cfg(test)]
+pub(crate) static WORKSPACE_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -54,7 +65,7 @@ mod tests {
     /// Lock around env-var mutation. Cargo runs unit tests in parallel
     /// threads in the same process, so concurrent `set_var` / `remove_var`
     /// can race; the lock keeps the env stable for each test's duration.
-    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    static ENV_LOCK: &std::sync::Mutex<()> = &WORKSPACE_ENV_LOCK;
 
     #[test]
     fn resolve_data_dir_honors_workspace_override() {
