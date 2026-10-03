@@ -107,7 +107,13 @@ fn classifier_maps_tools_to_classes() {
         ("request_plan_review", json!({}), None),
         ("propose_workflow", json!({}), None),
         ("storage_download_file", json!({}), None),
-        ("shell", json!({"command": "cargo build"}), None),
+        ("shell", json!({"command": "git status"}), None),
+        // Not on the read-only allowlist: parks.
+        (
+            "shell",
+            json!({"command": "cargo build"}),
+            Some(C::PrivilegedCommand),
+        ),
         ("shell", json!({"command": "ls -la"}), None),
         (
             "composio",
@@ -508,4 +514,80 @@ async fn read_verb_composio_action_follows_auto_approve_all() {
     .await;
     assert!(matches!(outcome, GateOutcome::Allow), "{outcome:?}");
     assert!(gate.list_pending().unwrap().is_empty());
+}
+
+/// Creates a thread `id` in `dir` with `labels`.
+fn make_thread(dir: &std::path::Path, id: &str, labels: Vec<String>) {
+    tinycortex::memory::conversations::ensure_thread(
+        dir.to_path_buf(),
+        tinycortex::memory::conversations::CreateConversationThread {
+            id: id.into(),
+            title: "t".into(),
+            created_at: "2026-10-01T00:00:00Z".into(),
+            parent_thread_id: None,
+            labels: Some(labels),
+            personality_id: None,
+        },
+    )
+    .unwrap();
+}
+
+/// Release re-review C2: a background-delivery / goal-continuation turn on a
+/// Pet hand-off thread runs under the Pet companion origin (with the thread),
+/// not `BackgroundTurn` / `GoalContinuation` — so a high-risk call in it parks
+/// even with `auto_approve_all` on. Any other thread keeps the caller's origin.
+#[tokio::test]
+async fn follow_up_turn_on_a_handoff_thread_keeps_the_pet_companion_origin() {
+    use crate::neppy::agent::task_dispatcher::{follow_up_turn_context, mark_pet_companion_thread};
+    use crate::neppy::threads::mode::ThreadMode;
+    let (gate, dir) = gate();
+    let _settings = settings(&dir, true, &["shell"]);
+    make_thread(dir.path(), "task-h1", vec!["tasks".into()]);
+    assert!(mark_pet_companion_thread(dir.path(), "task-h1"));
+    make_thread(dir.path(), "plain", vec![]);
+
+    let fallback = turn_origin::background_turn_origin("bgdeliver-1", Some("task-h1".into()));
+    let (origin, mode) =
+        follow_up_turn_context(dir.path(), "task-h1", "bgdeliver-1", fallback).await;
+    assert_eq!(origin.class(), "TrustedAutomation(PetCompanion)");
+    assert_eq!(mode, ThreadMode::Chat);
+    // The approval card routes to the hand-off thread.
+    let g = gate.clone();
+    let handle = tokio::spawn(turn_origin::with_origin(origin, async move {
+        g.intercept("shell", "rm", json!({"command": "rm -rf app"}))
+            .await
+    }));
+    let row = tokio::time::timeout(Duration::from_secs(5), wait_pending(&gate, "shell"))
+        .await
+        .expect("a high-risk follow-up call must park despite auto_approve_all");
+    assert_eq!(
+        row.origin_class.as_deref(),
+        Some("TrustedAutomation(PetCompanion)")
+    );
+    gate.decide(&row.request_id, ApprovalDecision::Deny)
+        .unwrap();
+    let outcome = handle.await.unwrap();
+    assert!(matches!(outcome, GateOutcome::Deny { .. }), "{outcome:?}");
+
+    // An ordinary thread keeps the caller's origin.
+    let fallback = turn_origin::background_turn_origin("bgdeliver-2", Some("plain".into()));
+    let (origin, _) = follow_up_turn_context(dir.path(), "plain", "bgdeliver-2", fallback).await;
+    assert_eq!(origin.class(), "TrustedAutomation(BackgroundTurn)");
+}
+
+/// Release re-review R1: a follow-up turn reads the thread's saved mode — an
+/// Orchestration thread's delivery turn runs in Orchestration mode (so the
+/// orchestrator keeps its fleet tools, see `web_chat::mode` tests), not Chat.
+#[tokio::test]
+async fn follow_up_turn_uses_the_threads_saved_mode() {
+    use crate::neppy::agent::task_dispatcher::follow_up_turn_context;
+    use crate::neppy::threads::mode::{ThreadMode, ORCHESTRATION_LABEL};
+    let dir = TempDir::new().unwrap();
+    make_thread(dir.path(), "orch", vec![ORCHESTRATION_LABEL.into()]);
+    let fallback = turn_origin::background_turn_origin("bg", Some("orch".into()));
+    let (_, mode) = follow_up_turn_context(dir.path(), "orch", "bg", fallback.clone()).await;
+    assert_eq!(mode, ThreadMode::Orchestration);
+    let (origin, mode) = follow_up_turn_context(dir.path(), "missing", "bg", fallback).await;
+    assert_eq!(mode, ThreadMode::Chat);
+    assert_eq!(origin.class(), "TrustedAutomation(BackgroundTurn)");
 }

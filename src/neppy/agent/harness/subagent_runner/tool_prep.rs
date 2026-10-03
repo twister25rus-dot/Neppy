@@ -134,6 +134,13 @@ pub(super) fn is_subagent_spawn_tool(name: &str) -> bool {
     {
         return true;
     }
+    // The multi-agent fleet: a sub-agent must never start, steer, wait on or
+    // close detached workers. A worker it started would outlive its turn, run
+    // as a fresh top-level task and deliver its result into the parent thread
+    // later — on a path that does not carry the turn's approval origin.
+    if SUBAGENT_FORBIDDEN_FLEET_TOOLS.contains(&name) {
+        return true;
+    }
     // Synthesised delegation tools are named by the target agent's
     // `delegate_name` override, which mostly does NOT carry the `delegate_`
     // prefix (`plan`, `run_code`, `research`, `review_code`, `do_crypto`,
@@ -151,6 +158,21 @@ pub(super) fn is_subagent_spawn_tool(name: &str) -> bool {
     }
     false
 }
+
+/// Fleet tools no sub-agent may hold (see [`is_subagent_spawn_tool`]). Also
+/// stripped at registration by the tinyagents seam
+/// (`is_subagent_spawn_or_delegate_tool`) as defense-in-depth.
+pub(crate) const SUBAGENT_FORBIDDEN_FLEET_TOOLS: &[&str] = &[
+    "spawn_async_subagent",
+    "spawn_parallel_agents",
+    "list_subagents",
+    "steer_subagent",
+    "close_subagent",
+    "wait_subagent",
+    "continue_subagent",
+    "wait",
+    "wait_loop",
+];
 
 /// Returns indices into `parent_tools` for the tools the sub-agent may
 /// invoke. Index-based filtering avoids cloning `Box<dyn Tool>` (which
@@ -237,6 +259,26 @@ mod tests {
         // parent context. See #3949 review.
         assert!(is_subagent_spawn_tool("agent_prepare_context"));
         assert!(!is_subagent_spawn_tool("tinyplace_directory_resolve"));
+    }
+
+    /// Release review C1: no sub-agent may start, steer, wait on, close or
+    /// resume detached workers.
+    #[test]
+    fn fleet_tools_are_stripped_from_every_sub_agent() {
+        for fleet in SUBAGENT_FORBIDDEN_FLEET_TOOLS {
+            assert!(is_subagent_spawn_tool(fleet), "{fleet}");
+        }
+        for name in [
+            "spawn_async_subagent",
+            "spawn_parallel_agents",
+            "wait_subagent",
+            "steer_subagent",
+            "close_subagent",
+            "list_subagents",
+        ] {
+            assert!(SUBAGENT_FORBIDDEN_FLEET_TOOLS.contains(&name));
+        }
+        assert!(!is_subagent_spawn_tool("memory_recall"));
     }
 
     #[test]

@@ -16,6 +16,7 @@
 pub mod gate;
 mod pet_classifier;
 mod pet_shell;
+mod pet_shell_readonly;
 pub mod redact;
 pub mod rpc;
 pub mod schemas;

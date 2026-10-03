@@ -1203,6 +1203,49 @@ async fn update_labels_cannot_flip_the_mode() {
     assert_eq!(back.labels, vec!["general"]);
 }
 
+/// Release re-review C2: the Pet hand-off origin label is reserved — hidden
+/// from clients, kept across a client relabel, and impossible to forge.
+#[tokio::test]
+async fn origin_label_is_hidden_kept_and_unforgeable() {
+    let _env_lock = crate::neppy::config::TEST_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    let workspace = tempfile::tempdir().expect("workspace");
+    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    create_thread_with_title(&workspace, "h1", "Pet").await;
+    create_thread_with_title(&workspace, "u1", "User").await;
+    let dir = mode_test_workspace_dir().await;
+    assert!(crate::neppy::agent::task_dispatcher::mark_pet_companion_thread(&dir, "h1"));
+
+    let relabeled = thread_from(
+        thread_update_labels(UpdateConversationThreadLabelsRequest {
+            thread_id: "h1".into(),
+            labels: vec!["general".into()],
+        })
+        .await
+        .expect("relabel"),
+    );
+    assert_eq!(relabeled.labels, vec!["general"], "never shown to a client");
+    let stored = thread_labels_for(&dir, "h1").await.expect("labels");
+    assert!(crate::neppy::threads::mode::is_pet_companion_thread(
+        &stored
+    ));
+
+    let forged = thread_from(
+        thread_update_labels(UpdateConversationThreadLabelsRequest {
+            thread_id: "u1".into(),
+            labels: vec!["general".into(), "origin:pet_companion".into()],
+        })
+        .await
+        .expect("relabel"),
+    );
+    assert_eq!(forged.labels, vec!["general"]);
+    let stored = thread_labels_for(&dir, "u1").await.expect("labels");
+    assert!(!crate::neppy::threads::mode::is_pet_companion_thread(
+        &stored
+    ));
+}
+
 #[tokio::test]
 async fn mode_change_publishes_a_web_channel_event_without_content() {
     let _env_lock = crate::neppy::config::TEST_ENV_LOCK

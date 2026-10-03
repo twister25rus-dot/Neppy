@@ -44,6 +44,11 @@ pub use types::DispatchOutcome;
 /// cron / welcome agents use). Used by the background-completion delivery
 /// subsystem to surface a finished detached sub-agent's result back into the
 /// chat. Best-effort: returns the final response text or an error string.
+///
+/// The turn honours the thread: it runs in the thread's saved mode (so an
+/// Orchestration thread keeps its supervisor surface), and on a Pet companion
+/// hand-off thread it runs under the Pet companion approval origin instead of
+/// a `BackgroundTurn` (see [`follow_up_turn_context`]).
 pub async fn run_system_turn_on_thread(
     thread_id: String,
     prompt: String,
@@ -53,7 +58,104 @@ pub async fn run_system_turn_on_thread(
         .map_err(|e| format!("load config: {e:#}"))?;
     let executor = executor::resolve_executor(&config.workspace_dir, None);
     let run_id = format!("bgdeliver-{}", uuid::Uuid::new_v4());
-    executor::run_autonomous(config, &executor, &prompt, &run_id, Some(thread_id)).await
+    let fallback = executor::background_run_origin(&run_id, Some(&thread_id));
+    let (origin, mode) =
+        follow_up_turn_context(&config.workspace_dir, &thread_id, &run_id, fallback).await;
+    crate::neppy::threads::mode::with_turn_mode(
+        mode,
+        Box::pin(executor::run_autonomous_with_origin(
+            config,
+            &executor,
+            &prompt,
+            &run_id,
+            Some(thread_id),
+            origin,
+        )),
+    )
+    .await
+}
+
+/// The approval origin and thread mode for an unattended follow-up turn on an
+/// existing thread (background delivery, goal continuation).
+///
+/// * On a Pet companion hand-off thread (marked
+///   [`PET_COMPANION_THREAD_LABEL`](crate::neppy::threads::mode::PET_COMPANION_THREAD_LABEL)
+///   when the hand-off created it) the turn runs under the Pet companion
+///   origin with that thread, never `fallback`: a follow-up turn is still Pet
+///   work, so its high-risk actions must always be confirmed.
+/// * Otherwise it runs under `fallback`.
+/// * The mode is the thread's saved mode (chat when unset or unreadable).
+pub(crate) async fn follow_up_turn_context(
+    workspace_dir: &std::path::Path,
+    thread_id: &str,
+    job_id: &str,
+    fallback: crate::neppy::agent::turn_origin::AgentTurnOrigin,
+) -> (
+    crate::neppy::agent::turn_origin::AgentTurnOrigin,
+    crate::neppy::threads::mode::ThreadMode,
+) {
+    use crate::neppy::threads::mode::{is_pet_companion_thread, ThreadMode};
+    let labels = crate::neppy::threads::ops::thread_labels_for(workspace_dir, thread_id)
+        .await
+        .unwrap_or_default();
+    let mode = ThreadMode::from_labels(&labels);
+    if is_pet_companion_thread(&labels) {
+        let origin = crate::neppy::agent::turn_origin::pet_companion_origin(
+            &format!("pet-companion:follow-up:{job_id}"),
+            Some(thread_id.to_string()),
+        );
+        tracing::info!(
+            job_id = %job_id,
+            mode = %mode,
+            origin_class = %origin.class(),
+            "[task_dispatcher] follow-up turn on a Pet hand-off thread: Pet companion origin"
+        );
+        return (origin, mode);
+    }
+    tracing::debug!(
+        job_id = %job_id,
+        mode = %mode,
+        origin_class = %fallback.class(),
+        "[task_dispatcher] follow-up turn origin"
+    );
+    (fallback, mode)
+}
+
+/// Marks a thread as a Pet companion hand-off thread (reserved label, hidden
+/// from clients and kept across label edits) so follow-up turns on it keep the
+/// Pet companion origin. Best-effort: logs and returns `false` on failure.
+pub(crate) fn mark_pet_companion_thread(workspace_dir: &std::path::Path, thread_id: &str) -> bool {
+    use crate::neppy::threads::mode::PET_COMPANION_THREAD_LABEL;
+    use tinycortex::memory::conversations as store;
+    let mut labels = match store::list_threads(workspace_dir.to_path_buf()) {
+        Ok(threads) => match threads.into_iter().find(|t| t.id == thread_id) {
+            Some(t) => t.labels,
+            None => {
+                tracing::warn!("[task_dispatcher] hand-off thread missing; not marked");
+                return false;
+            }
+        },
+        Err(e) => {
+            tracing::warn!(error = %e, "[task_dispatcher] could not read threads; hand-off thread not marked");
+            return false;
+        }
+    };
+    if labels.iter().any(|l| l == PET_COMPANION_THREAD_LABEL) {
+        return true;
+    }
+    labels.push(PET_COMPANION_THREAD_LABEL.to_string());
+    match store::update_thread_labels(
+        workspace_dir.to_path_buf(),
+        thread_id,
+        labels,
+        &chrono::Utc::now().to_rfc3339(),
+    ) {
+        Ok(_) => true,
+        Err(e) => {
+            tracing::warn!(error = %e, "[task_dispatcher] could not mark the hand-off thread");
+            false
+        }
+    }
 }
 
 /// A detached Pet companion hand-off run, as returned by
@@ -109,6 +211,11 @@ pub async fn run_pet_companion_handoff(
         &run_id,
         prompt,
     );
+    if let Some(id) = thread_id.as_deref() {
+        // Follow-up turns on this thread (background delivery, goal
+        // continuation) must stay Pet companion work: mark it.
+        mark_pet_companion_thread(&config.workspace_dir, id);
+    }
     let origin = crate::neppy::agent::turn_origin::pet_companion_origin(job_id, thread_id.clone());
     tracing::info!(
         run_id = %run_id,

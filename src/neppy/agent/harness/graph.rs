@@ -44,6 +44,13 @@ use crate::neppy::tools::Tool;
 /// names them. `None` ("every registered tool") is materialised from the tool
 /// sets only when a fleet tool is actually among them, so an unaffected turn
 /// keeps its unfiltered shape.
+///
+/// This applies to whichever agent the channel routed to, not only the
+/// orchestrator, on purpose: this seam does not receive the agent id, and the
+/// fleet tools are the supervisor belt — no other top-level agent should hold
+/// them outside Orchestration mode, and every sub-agent has them stripped
+/// already (`subagent_runner::tool_prep::is_subagent_spawn_tool`). Hiding them
+/// from a non-orchestrator channel turn therefore removes nothing it may use.
 pub(crate) fn channel_turn_allowed_tools(
     allowed: Option<HashSet<String>>,
     tool_sets: &[&[Box<dyn Tool>]],
@@ -281,7 +288,8 @@ mod tests {
     /// W1: a channel/CLI turn declares no thread mode, so the orchestrator's
     /// fleet tools are not callable — whether the routed definition named them
     /// (explicit allowlist) or the turn is unfiltered. Orchestration mode keeps
-    /// them; blocking delegation stays either way.
+    /// them; the delegation tools (`spawn_subagent`, `delegate_*`) stay either
+    /// way.
     #[test]
     fn channel_turn_without_orchestration_mode_hides_the_fleet_tools() {
         use crate::neppy::threads::mode::ThreadMode;

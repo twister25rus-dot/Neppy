@@ -89,7 +89,29 @@ impl std::fmt::Display for ThreadMode {
     }
 }
 
-/// `labels` without any reserved mode label — what a client is shown.
+/// Prefix shared by every reserved origin label: who created a thread, for
+/// the policy of unattended follow-up turns on it. Never shown to a client and
+/// never settable by one (see [`strip_reserved_labels`] / `threads_update_labels`).
+pub const ORIGIN_LABEL_PREFIX: &str = "origin:";
+/// Marks a thread created by a Pet desktop companion hand-off. A follow-up turn
+/// on it (background delivery, goal continuation) runs under the Pet companion
+/// approval origin, so its high-risk actions always need confirmation.
+pub const PET_COMPANION_THREAD_LABEL: &str = "origin:pet_companion";
+
+/// Whether `labels` mark a Pet companion hand-off thread.
+pub fn is_pet_companion_thread(labels: &[String]) -> bool {
+    labels.iter().any(|l| l == PET_COMPANION_THREAD_LABEL)
+}
+
+/// `labels` without any reserved label (mode or origin) — what a client is shown.
+pub fn strip_reserved_labels(labels: Vec<String>) -> Vec<String> {
+    strip_mode_labels(labels)
+        .into_iter()
+        .filter(|l| !l.starts_with(ORIGIN_LABEL_PREFIX))
+        .collect()
+}
+
+/// `labels` without any reserved mode label.
 pub fn strip_mode_labels(labels: Vec<String>) -> Vec<String> {
     labels
         .into_iter()

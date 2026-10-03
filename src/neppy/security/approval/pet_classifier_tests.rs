@@ -134,30 +134,28 @@ fn ambiguous_commands_park() {
 }
 
 /// The lexer respects quoting, so data that merely *mentions* a dangerous
-/// token is not misread, and harmless redirects stay ordinary.
+/// token is not misread, and harmless redirects stay ordinary. Only commands on
+/// the read-only allowlist are ordinary (see `pet_classifier_allowlist_tests`
+/// for the parking side).
 #[test]
 fn ordinary_shell_commands_stay_ordinary() {
     for command in [
         "ls -la",
-        "cargo build",
-        "cargo test 2>&1",
-        "cargo build > /dev/null 2>&1",
-        "echo done >> build.log",
+        "ls -la > /dev/null 2>&1",
         "git status",
-        "git commit -m 'remove the > sign; rm nothing'",
-        "git add -A && git commit -m wip",
-        "git stash",
-        "git stash pop",
-        "git switch main",
-        "git branch feature",
         "git log --oneline | head -5",
-        "mv -n a.md b.md",
-        "cp --no-clobber a b",
+        "git -C repo diff --stat",
+        "git branch -a",
+        "git remote -v",
+        "git stash list",
         "grep -r 'rm -rf' src",
+        "rg -n 'TODO > done' src",
         "command -v cargo",
-        "env",
-        "time cargo build",
         "cat < input.txt",
+        "cd src && ls",
+        "find . -name '*.rs' -type f",
+        "wc -l src/main.rs | sort -n",
+        "echo hello",
     ] {
         assert_eq!(shell(command), None, "{command}");
     }
@@ -198,9 +196,9 @@ fn internal_calls_are_classified_for_the_harness() {
         // Ordinary internal operations run as in an interactive turn.
         ("memory_store", json!({}), P::Write, None),
         ("file_write", json!({}), P::Write, None),
-        ("todo_write", json!({}), P::Write, None),
+        ("todo_add", json!({}), P::Write, None),
         ("spawn_subagent", json!({}), P::Write, None),
-        ("shell", json!({"command": "cargo build"}), P::Execute, None),
+        ("shell", json!({"command": "git status"}), P::Execute, None),
         // Read-only tools led by a read verb are not escalated by a keyword.
         ("config_get", json!({}), P::ReadOnly, None),
         ("list_trash", json!({}), P::ReadOnly, None),

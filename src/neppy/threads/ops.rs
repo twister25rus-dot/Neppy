@@ -21,7 +21,8 @@ use crate::neppy::memory::{
 // `threads_create_new` blow the frontend's 30 s RPC budget (#5156).
 use crate::neppy::memory::conversations;
 use crate::neppy::threads::mode::{
-    labels_with_mode, strip_mode_labels, SetThreadModeRequest, ThreadMode, ThreadModeResult,
+    labels_with_mode, strip_reserved_labels, SetThreadModeRequest, ThreadMode, ThreadModeResult,
+    ORIGIN_LABEL_PREFIX,
 };
 use crate::neppy::threads::title::{
     build_title_request, is_auto_generated_thread_title, sanitize_generated_title,
@@ -137,7 +138,7 @@ fn thread_to_summary(thread: ConversationThread) -> ConversationThreadSummary {
         last_message_at: thread.last_message_at,
         created_at: thread.created_at,
         parent_thread_id: thread.parent_thread_id,
-        labels: strip_mode_labels(thread.labels),
+        labels: strip_reserved_labels(thread.labels),
         personality_id: thread.personality_id,
         mode: mode.as_str().to_string(),
     }
@@ -537,7 +538,17 @@ pub async fn thread_update_labels(
     // back to chat. A client-supplied mode label is dropped — mode changes only
     // through `thread_set_mode`.
     let current_mode = thread_mode_for(&dir, &request.thread_id).await;
-    let labels = labels_with_mode(request.labels.clone(), current_mode);
+    // Reserved origin labels (e.g. the Pet hand-off marker) are likewise kept
+    // from the stored thread and never taken from the client: a client can
+    // neither remove one (loosening follow-up turns) nor forge one.
+    let kept_origin: Vec<String> = thread_labels_for(&dir, &request.thread_id)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|l| l.starts_with(ORIGIN_LABEL_PREFIX))
+        .collect();
+    let mut labels = labels_with_mode(strip_reserved_labels(request.labels.clone()), current_mode);
+    labels.extend(kept_origin);
     let thread = conversations::blocking::update_thread_labels(
         dir,
         request.thread_id.clone(),
@@ -555,6 +566,25 @@ pub async fn thread_update_labels(
         Some(counts([("num_threads", 1)])),
         None,
     ))
+}
+
+/// The stored labels of `thread_id` (reserved labels included), or `None`
+/// when the thread does not exist or the store cannot be read.
+pub async fn thread_labels_for(dir: &std::path::Path, thread_id: &str) -> Option<Vec<String>> {
+    match conversations::blocking::list_threads(dir.to_path_buf()).await {
+        Ok(threads) => threads
+            .into_iter()
+            .find(|t| t.id == thread_id)
+            .map(|t| t.labels),
+        Err(err) => {
+            tracing::warn!(
+                thread_id = %thread_id,
+                error = %err,
+                "[threads] could not read thread store for labels"
+            );
+            None
+        }
+    }
 }
 
 /// The persisted operating mode of `thread_id`. A thread that does not exist

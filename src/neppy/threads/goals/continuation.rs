@@ -188,17 +188,31 @@ async fn dispatch_continuation(config: &Config, goal: &ThreadGoal) -> bool {
     agent.set_event_context(format!("goal:{thread_id}"), "goal_continuation");
 
     let prompt = continuation_prompt(&goal.objective);
-    let origin = AgentTurnOrigin::TrustedAutomation {
+    let fallback = AgentTurnOrigin::TrustedAutomation {
         job_id: format!("goal:{thread_id}"),
         source: TrustedAutomationSource::GoalContinuation,
     };
+    // The thread decides two things about this unattended turn: its saved mode
+    // (an Orchestration thread keeps its supervisor surface) and, on a Pet
+    // companion hand-off thread, the Pet companion origin instead of
+    // `GoalContinuation` — so high-risk actions there always need confirmation.
+    let (origin, mode) = crate::neppy::agent::task_dispatcher::follow_up_turn_context(
+        &config.workspace_dir,
+        &thread_id,
+        &format!("goal:{thread_id}"),
+        fallback,
+    )
+    .await;
 
     // Scope the ambient thread id (so the goal tools + per-turn injection target
-    // this thread) and the trusted-automation origin (so the approval gate parks
-    // unattended external actions). `run_single` resumes the thread transcript.
+    // this thread), the origin (so the approval gate parks unattended external
+    // actions) and the thread's mode. `run_single` resumes the thread transcript.
     let result = with_thread_id(
         thread_id.clone(),
-        with_origin(origin, agent.run_single(&prompt)),
+        with_origin(
+            origin,
+            crate::neppy::threads::mode::with_turn_mode(mode, Box::pin(agent.run_single(&prompt))),
+        ),
     )
     .await;
 

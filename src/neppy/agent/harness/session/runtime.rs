@@ -414,8 +414,14 @@ impl Agent {
     /// multi-agent fleet tools (`web_chat::mode::CHAT_HIDDEN_TOOLS`) are hidden
     /// — so a channel, CLI, medulla or task-board / Pet hand-off turn, which
     /// declares no mode, gets chat semantics rather than the supervisor belt
-    /// the orchestrator definition names. Blocking delegation (`spawn_subagent`,
-    /// `delegate_*`, `continue_subagent`) stays.
+    /// the orchestrator definition names. The delegation tools stay:
+    /// `delegate_*` helpers run blocking under Chat mode (`dispatch.rs`), and
+    /// `continue_subagent` resumes a paused helper. `spawn_subagent` also stays,
+    /// but it is NOT blocking by default: with a delivery thread in scope it
+    /// forwards to an async worker unless called with `blocking: true`. That
+    /// worker inherits the turn's origin, and its result comes back through
+    /// background delivery, which re-derives the origin and mode from the
+    /// thread (`task_dispatcher::follow_up_turn_context`).
     ///
     /// Returns `true` when the turn declared no mode and should run under
     /// [`ThreadMode::Chat`](crate::neppy::threads::mode::ThreadMode::Chat) so

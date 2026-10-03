@@ -216,10 +216,18 @@ impl Tool for SpawnSubagentTool {
             .get("dedicated_thread")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-        let blocking = args
-            .get("blocking")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
+        // Chat mode is one visible assistant: a delegation there always runs
+        // inline, never as a detached background worker.
+        let chat_mode = crate::neppy::threads::mode::current_turn_mode()
+            == Some(crate::neppy::threads::mode::ThreadMode::Chat);
+        let blocking = chat_mode
+            || args
+                .get("blocking")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+        if chat_mode {
+            tracing::debug!("[spawn_subagent] chat mode — forcing blocking dispatch");
+        }
 
         // ── Validation ─────────────────────────────────────────────────
         if agent_id.is_empty() {

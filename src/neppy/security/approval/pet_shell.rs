@@ -1,68 +1,97 @@
 //! Pet companion (user decision D4): the high-risk class of a `shell` call.
 //!
-//! The gate sees the *redacted* `command` (home paths scrubbed, otherwise
-//! intact). It is lexed with shell quoting rules into simple commands, each
-//! classified by its base command and the few flags that change what it does.
-//! Anything the lexer cannot read unambiguously parks: an unbalanced quote, a
-//! dangling redirect, hidden execution (`$(…)`, backticks, `<(…)`), a command
-//! named by a variable, or an interpreter / wrapper that runs code the gate
-//! cannot inspect (`bash -c`, `python3 -c`, `xargs`, `env rm`, `sudo`, …).
+//! **Allowlist, not denylist.** Under the Pet companion origin a shell command
+//! is ordinary ONLY when every simple command in it is a known read-only
+//! command (`super::pet_shell_readonly`) with a plain name in command position
+//! and no file redirect. Everything else parks as `privileged_command` — build
+//! tools and task runners (`make`, `npm run`, `cargo test`, `pytest`, `just`),
+//! interpreters and wrappers (`bash -c`, `python3`, `xargs`, `env`, `sudo`),
+//! shell state changes (`IFS=…`, `PATH=…`, `alias`, `trap`, `function`),
+//! obfuscation (`{rm,x}`, `$'\x72m'`, `$CMD`, globs) and paths in command
+//! position (`./ls`, a symlinked binary). Recognisable dangerous commands keep a
+//! more precise label (`rm` → `delete`, `git push` → `publish`, `> file` →
+//! `irreversible`, …), but the default is to park.
+//!
+//! The gate sees the *redacted* `command`: the `<HOME>` placeholder the
+//! redactor leaves for a home path is read as an ordinary path word. Anything
+//! the lexer cannot read unambiguously parks (unbalanced quote, dangling
+//! redirect, `$(…)`, backticks, `<(…)`).
 
 use std::sync::OnceLock;
 
 use crate::neppy::pet::companion::types::ActionCategory;
 use crate::neppy::security::{CommandClass, SecurityPolicy};
 
+/// What `approval::redact` writes in place of a home-directory prefix (pinned
+/// against the redactor by `pet_classifier_tests`).
+pub(super) const HOME_PLACEHOLDER: &str = "<HOME>";
+
 /// The class of a `shell` call from its (path-scrubbed, otherwise intact)
 /// `command` argument, or `None` when the call is ordinary. See the table on
 /// [`super::pet_classifier::pet_companion_high_risk`].
 pub(super) fn pet_companion_shell_class(args: &serde_json::Value) -> Option<ActionCategory> {
-    let command = args
+    let raw = args
         .get("command")
         .and_then(serde_json::Value::as_str)
         .unwrap_or("")
         .trim();
-    if command.is_empty() {
+    if raw.is_empty() {
         return Some(ActionCategory::PrivilegedCommand);
     }
+    // The redactor replaces a home prefix with `<HOME>`; read it as a path word,
+    // not as an input redirect.
+    let command = raw.replace(HOME_PLACEHOLDER, "/home-redacted");
     // Hidden execution runs an inner command no classification can see.
     if ["`", "$(", "<(", ">("].iter().any(|p| command.contains(p)) {
         return Some(ActionCategory::PrivilegedCommand);
     }
-    let Some(segments) = lex(command) else {
+    let Some(segments) = lex(&command) else {
         tracing::debug!("[approval::pet_shell] ambiguous shell command — parking");
         return Some(ActionCategory::PrivilegedCommand);
     };
-    // The first high-risk class found is reported; any hit already parks.
-    if let Some(category) = segments.iter().find_map(classify_segment) {
+    let verdicts: Vec<Verdict> = segments.iter().map(classify_segment).collect();
+    // A recognisable dangerous command reports its own class first.
+    if let Some(category) = verdicts.iter().find_map(|v| match v {
+        Verdict::Label(c) => Some(*c),
+        _ => None,
+    }) {
         return Some(category);
     }
-
+    if verdicts.iter().all(|v| matches!(v, Verdict::Ordinary)) {
+        return None;
+    }
+    // Not on the read-only allowlist: park. The command classifier only picks a
+    // more precise label for the card.
     static POLICY: OnceLock<SecurityPolicy> = OnceLock::new();
-    let mut class = POLICY
+    let class = POLICY
         .get_or_init(SecurityPolicy::default)
-        .classify_command(command);
-    if let Some(declared) = args
-        .get("category")
-        .and_then(serde_json::Value::as_str)
-        .and_then(SecurityPolicy::parse_declared_class)
-    {
-        class = class.max(declared);
-    }
-    match class {
-        CommandClass::Destructive => Some(ActionCategory::PrivilegedCommand),
-        CommandClass::Install => Some(ActionCategory::Install),
-        CommandClass::Network => Some(ActionCategory::SharePersonalInfo),
-        CommandClass::Write | CommandClass::Read => None,
-    }
+        .classify_command(&command);
+    Some(match class {
+        CommandClass::Install => ActionCategory::Install,
+        CommandClass::Network => ActionCategory::SharePersonalInfo,
+        _ => ActionCategory::PrivilegedCommand,
+    })
 }
 
-/// One simple command: its words (quotes removed) and whether it truncates or
-/// overwrites a file through an output redirect (`>`, `>|`, `&>`).
+/// How one simple command reads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Verdict {
+    /// On the read-only allowlist.
+    Ordinary,
+    /// A recognisable high-risk command.
+    Label(ActionCategory),
+    /// Anything else: parks as `privileged_command` (or a classifier label).
+    Park,
+}
+
+/// One simple command: its words (quotes removed), whether it truncates or
+/// overwrites a file through an output redirect (`>`, `>|`, `&>`), and whether
+/// it appends to one (`>>`).
 #[derive(Debug, Default)]
 struct Segment {
     words: Vec<String>,
     truncates: bool,
+    appends: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -94,7 +123,12 @@ impl Lexer {
                     self.seg.truncates = true;
                 }
             }
-            Some(Redirect::Append | Redirect::Input) => {}
+            Some(Redirect::Append) => {
+                if !is_harmless_sink(&word) {
+                    self.seg.appends = true;
+                }
+            }
+            Some(Redirect::Input) => {}
             None => self.seg.words.push(word),
         }
     }
@@ -106,7 +140,7 @@ impl Lexer {
             return false;
         }
         let seg = std::mem::take(&mut self.seg);
-        if !seg.words.is_empty() || seg.truncates {
+        if !seg.words.is_empty() || seg.truncates || seg.appends {
             self.segments.push(seg);
         }
         true
@@ -248,72 +282,6 @@ const CONTROL_WORDS: &[&str] = &[
     "{", "}", "!", "if", "then", "else", "elif", "fi", "do", "done", "while", "until", "time",
 ];
 
-/// Interpreters, command executors and wrappers: each runs a command or code
-/// the gate cannot see, so each parks as `privileged_command`.
-const EXECUTORS: &[&str] = &[
-    "sh",
-    "bash",
-    "zsh",
-    "dash",
-    "ksh",
-    "fish",
-    "csh",
-    "tcsh",
-    "ash",
-    "perl",
-    "ruby",
-    "node",
-    "nodejs",
-    "deno",
-    "bun",
-    "php",
-    "lua",
-    "tclsh",
-    "awk",
-    "gawk",
-    "mawk",
-    "nawk",
-    "osascript",
-    "open",
-    "xdg-open",
-    "eval",
-    "exec",
-    "source",
-    ".",
-    "sudo",
-    "doas",
-    "su",
-    "pkexec",
-    "nice",
-    "nohup",
-    "timeout",
-    "gtimeout",
-    "command",
-    "builtin",
-    "xargs",
-    "parallel",
-    "watch",
-    "script",
-    "stdbuf",
-    "unbuffer",
-    "caffeinate",
-    "chroot",
-    "ionice",
-    "taskset",
-    "flock",
-    "setsid",
-    "iex",
-    "pwsh",
-    "powershell",
-    "cmd",
-    "kill",
-    "killall",
-    "pkill",
-    "chmod",
-    "chown",
-    "chgrp",
-];
-
 const SYSTEM_SETTINGS_COMMANDS: &[&str] = &[
     "defaults",
     "launchctl",
@@ -328,30 +296,59 @@ const SYSTEM_SETTINGS_COMMANDS: &[&str] = &[
     "security",
 ];
 
-fn is_python(base: &str) -> bool {
-    base.starts_with("python") || base.starts_with("pypy")
-}
-
-fn classify_segment(seg: &Segment) -> Option<ActionCategory> {
+fn classify_segment(seg: &Segment) -> Verdict {
     let mut words = seg
         .words
         .iter()
         .map(String::as_str)
-        .skip_while(|w| CONTROL_WORDS.contains(w) || (w.contains('=') && !w.starts_with('-')));
-    let Some(raw_base) = words.next() else {
-        return seg.truncates.then_some(ActionCategory::Irreversible);
-    };
-    // A command named by a variable (`$CMD x`) is hidden from classification.
-    if raw_base.starts_with('$') {
-        return Some(ActionCategory::PrivilegedCommand);
+        .skip_while(|w| CONTROL_WORDS.contains(w))
+        .peekable();
+    // `VAR=value cmd` / `IFS=…` / `PATH=…` change how the command resolves or
+    // splits: never ordinary. The command after them still gets its label.
+    let mut assigns = false;
+    while words
+        .peek()
+        .is_some_and(|w| w.contains('=') && !w.starts_with('-'))
+    {
+        assigns = true;
+        words.next();
     }
+    let Some(raw_base) = words.next() else {
+        return if seg.truncates {
+            Verdict::Label(ActionCategory::Irreversible)
+        } else if seg.appends || assigns {
+            Verdict::Park
+        } else {
+            Verdict::Ordinary
+        };
+    };
+    let rest_raw: Vec<&str> = words.collect();
     let base = raw_base
         .rsplit('/')
         .next()
         .unwrap_or(raw_base)
         .to_ascii_lowercase();
-    let rest: Vec<String> = words.map(str::to_ascii_lowercase).collect();
-    command_class(&base, &rest).or(seg.truncates.then_some(ActionCategory::Irreversible))
+    let rest: Vec<String> = rest_raw.iter().map(|w| w.to_ascii_lowercase()).collect();
+    if let Some(category) = command_class(&base, &rest) {
+        return Verdict::Label(category);
+    }
+    if seg.truncates {
+        return Verdict::Label(ActionCategory::Irreversible);
+    }
+    // A plain command name only: a path (`./ls`, `/tmp/x/cat`), a variable, a
+    // glob, a brace list or `~` in command position is never ordinary.
+    let plain = !raw_base.is_empty()
+        && !raw_base
+            .chars()
+            .any(|c| matches!(c, '/' | '$' | '{' | '}' | '?' | '*' | '[' | ']' | '~' | '='));
+    if seg.appends || assigns || !plain {
+        return Verdict::Park;
+    }
+    if super::pet_shell_readonly::is_read_only(&base, &rest, &rest_raw) {
+        Verdict::Ordinary
+    } else {
+        Verdict::Park
+    }
 }
 
 fn command_class(base: &str, rest: &[String]) -> Option<ActionCategory> {
@@ -364,13 +361,6 @@ fn command_class(base: &str, rest: &[String]) -> Option<ActionCategory> {
             .any(|a| a.starts_with('-') && !a.starts_with("--") && a.contains(flag))
     };
     match base {
-        "command" if matches!(rest.first().map(String::as_str), Some("-v")) => None,
-        // `env` alone prints the environment; `env X=1 cmd` runs `cmd`.
-        "env" => rest
-            .iter()
-            .any(|a| !a.starts_with('-') && !a.contains('='))
-            .then_some(C::PrivilegedCommand),
-        b if EXECUTORS.contains(&b) || is_python(b) => Some(C::PrivilegedCommand),
         "rm" | "rmdir" | "unlink" | "trash" | "srm" | "shred" => Some(C::Delete),
         "find" if has("-delete") => Some(C::Delete),
         "find" if has("-exec") || has("-execdir") || has("-ok") || has("-okdir") => {

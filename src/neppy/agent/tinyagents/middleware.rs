@@ -4735,6 +4735,19 @@ mod tests {
                 name: "memory_store",
                 level: PermissionLevel::Write,
             }),
+            // Round 2 (B): anything above ReadOnly that is not allowlisted.
+            Box::new(InternalTool {
+                name: "GMAIL_SEND_EMAIL",
+                level: PermissionLevel::Write,
+            }),
+            Box::new(InternalTool {
+                name: "goal_set",
+                level: PermissionLevel::Write,
+            }),
+            Box::new(InternalTool {
+                name: "some_internal_writer",
+                level: PermissionLevel::Write,
+            }),
         ])
     }
 
@@ -4770,7 +4783,11 @@ mod tests {
                         "{tier:?}: {tool}"
                     );
                 }
-                // Ordinary internal work is not escalated.
+                for tool in ["GMAIL_SEND_EMAIL", "goal_set", "some_internal_writer"] {
+                    let (_, pet) = mw.approval_requirement(tool, &json!({}));
+                    assert!(pet.is_some(), "{tier:?}: {tool} must reach the gate");
+                }
+                // Allowlisted internal work is not escalated.
                 assert_eq!(
                     mw.approval_requirement("memory_store", &json!({})),
                     (false, None)

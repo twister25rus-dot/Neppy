@@ -33,6 +33,7 @@ use super::pet_shell::pet_companion_shell_class;
 ///
 /// | Tool / pattern | Class |
 /// |---|---|
+/// | `shell`: **allowlist** — ordinary only when every simple command is on the read-only list (`pet_shell_readonly`); anything else parks. The rows below are the precise labels kept for recognisable commands. | |
 /// | `shell`: `rm`/`rmdir`/`unlink`/`trash`/`shred`, `find … -delete`, `mv … /dev/null`, `git rm`, `git branch -d/-D`, `git tag -d`, `git stash drop/clear`, `git worktree remove`, `rsync --delete` | `delete` |
 /// | `shell`: `git push` | `publish` |
 /// | `shell`: `git reset`/`clean`/`checkout`/`restore`/`rebase`, a forced push, `mv`/`cp` without no-clobber, `dd`, `truncate`, `ln -f`, `tee` (not `-a`), a truncating `>` / `>|` / `&>` redirect to a real file | `irreversible` |
@@ -73,14 +74,17 @@ pub(crate) fn pet_companion_high_risk(
 /// settings (which, for such a call, means it runs without a prompt — exactly
 /// as in an interactive turn).
 ///
-/// Same table as [`pet_companion_high_risk`] with two differences, both because
-/// an internal tool is by default an ordinary workspace / memory operation:
-/// an unclassified name is ordinary rather than `irreversible`, and a tool that
-/// reports `permission` ≤ `ReadOnly` and whose name is led by a read-only verb
-/// (`config_get`, `list_trash`) is ordinary even when a keyword matches. Every
-/// specific branch (`shell`, `python_exec`, `node_exec`, `npm_exec`, `git_operations`,
-/// remote actions, …) and every keyword class (`memory_forget`, `goals_delete`,
-/// `artifact_delete` → `delete`; `cron_add` → `system_settings`) still applies.
+/// An **allowlist**: every specific branch (`shell` — itself an allowlist, see
+/// `pet_shell` —, `python_exec`, `node_exec`, `npm_exec`, `git_operations`,
+/// `goal_set`, `web3_*` execution, remote actions incl. Composio per-action
+/// tools named by their `UPPER_SNAKE` slug) and every keyword class
+/// (`memory_forget`, `goals_delete`, `artifact_delete` → `delete`; `cron_add` →
+/// `system_settings`) applies first. Otherwise the call is ordinary only when
+/// the tool reports `permission` ≤ `ReadOnly` (it cannot act), is on
+/// `PET_COMPANION_ORDINARY_TOOLS` / `PET_COMPANION_INTERNAL_LOW_RISK`, or is a
+/// delegation tool; every other internal tool above `ReadOnly` is
+/// `irreversible` and parks. A `ReadOnly` tool led by a read-only verb
+/// (`config_get`, `list_trash`) is not escalated by a keyword.
 pub(crate) fn pet_companion_internal_high_risk(
     tool_name: &str,
     args: &serde_json::Value,
@@ -104,6 +108,59 @@ const PET_COMPANION_ORDINARY_TOOLS: &[&str] = &[
     "suggest_workflows",
     "storage_download_file",
 ];
+
+/// Internal tools (no declared external effect, permission above `ReadOnly`)
+/// that are low-risk and reversible: the agent's own memory / notes / todo
+/// scratch, workspace edits (path-confined by the tools themselves), plan and
+/// clarification turns, and blocking delegation — a delegated sub-agent's own
+/// calls are classified under the same inherited origin. Every OTHER internal
+/// tool above `ReadOnly` parks under the Pet companion origin.
+const PET_COMPANION_INTERNAL_LOW_RISK: &[&str] = &[
+    "memory_store",
+    "remember_preference",
+    "save_preference",
+    "update_memory_md",
+    "write_notes",
+    "pet_note",
+    "tool_memory_capture",
+    "flow_memory_remember",
+    "learning_unpin_facet",
+    "todo",
+    "todo_add",
+    "todo_edit",
+    "todo_update_status",
+    "todo_replace",
+    "todo_decide_plan",
+    "goal_complete",
+    "plan_exit",
+    "ask_user_clarification",
+    "spawn_subagent",
+    "continue_subagent",
+    "load_skill",
+];
+
+/// A delegation tool: `spawn_subagent`'s synthesised siblings, named
+/// `delegate_*` or by an agent's `delegate_name` override.
+fn is_delegation_tool(name: &str) -> bool {
+    name.starts_with("delegate_")
+        || crate::neppy::agent::harness::definition::AgentDefinitionRegistry::global().is_some_and(
+            |reg| {
+                reg.list()
+                    .iter()
+                    .any(|def| def.delegate_name.as_deref() == Some(name))
+            },
+        )
+}
+
+/// A Composio per-action tool (`ComposioActionTool`) is named by its action
+/// slug, `UPPER_SNAKE` (`GMAIL_SEND_EMAIL`); native tools are `lower_snake`.
+fn is_composio_action_slug(name: &str) -> bool {
+    name.contains('_')
+        && name.chars().any(|c| c.is_ascii_uppercase())
+        && name
+            .chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+}
 
 /// Leading verbs that mark a remote action / tool name as read-only.
 const PET_COMPANION_READ_VERBS: &[&str] = &[
@@ -141,6 +198,7 @@ const PET_COMPANION_KEYWORDS: &[(ActionCategory, &[&str])] = &[
             "tip",
             "donate",
             "mint",
+            "dapp",
         ],
     ),
     (
@@ -236,6 +294,10 @@ fn pet_companion_classify(
     depth: usize,
     internal: Option<PermissionLevel>,
 ) -> Option<ActionCategory> {
+    // Composio per-action tools run a remote action: classify the slug.
+    if is_composio_action_slug(tool_name.trim()) {
+        return pet_companion_remote_action(&tool_name.trim().to_ascii_lowercase());
+    }
     let name = tool_name.trim().to_ascii_lowercase();
     let str_arg = |key: &str| {
         args.get(key)
@@ -271,8 +333,18 @@ fn pet_companion_classify(
             return match str_arg("operation").as_deref() {
                 Some("push") => Some(ActionCategory::Publish),
                 Some("reset" | "checkout" | "clean") => Some(ActionCategory::Irreversible),
+                Some("stash") if matches!(str_arg("action").as_deref(), Some("drop" | "clear")) => {
+                    Some(ActionCategory::Delete)
+                }
                 _ => None,
             };
+        }
+        // Sets a thread goal the heartbeat later pursues unattended.
+        "goal_set" => return Some(ActionCategory::Irreversible),
+        // Quotes / unsigned-call preparation only; nothing is signed.
+        "web3_dapp_call" => return None,
+        n if n.starts_with("web3_") && !led_by_read_verb(n) && !n.ends_with("_quote") => {
+            return Some(ActionCategory::Purchase);
         }
         "schedule" => {
             return match str_arg("action").as_deref() {
@@ -300,16 +372,22 @@ fn pet_companion_classify(
         }
         return Some(category);
     }
-    if PET_COMPANION_ORDINARY_TOOLS.contains(&name.as_str()) || led_by_read_verb(&name) {
-        return None;
+    let ordinary = PET_COMPANION_ORDINARY_TOOLS.contains(&name.as_str());
+    match internal {
+        // An external-effect call: ordinary only when listed or led by a
+        // read-only verb; anything else cannot be proven ordinary, so ask.
+        None => (!ordinary && !led_by_read_verb(&name)).then_some(ActionCategory::Irreversible),
+        // No external effect: ordinary only when it cannot act (`ReadOnly` or
+        // below) or is on the low-risk reversible allowlist. Every other
+        // internal tool above `ReadOnly` parks (allowlist, not denylist).
+        Some(level) => {
+            let allowed = level <= PermissionLevel::ReadOnly
+                || ordinary
+                || PET_COMPANION_INTERNAL_LOW_RISK.contains(&name.as_str())
+                || is_delegation_tool(&name);
+            (!allowed).then_some(ActionCategory::Irreversible)
+        }
     }
-    if internal.is_some() {
-        // No external effect and nothing high-risk in the name: an ordinary
-        // internal operation, which runs as it would in an interactive turn.
-        return None;
-    }
-    // Unclassified external effect: cannot prove it is ordinary, so ask.
-    Some(ActionCategory::Irreversible)
 }
 
 /// A remote (Composio / MCP) action: keyword class, else ordinary when led by
@@ -379,3 +457,7 @@ pub(crate) fn pet_companion_internal_gate_category(
 #[cfg(test)]
 #[path = "pet_classifier_tests.rs"]
 pub(crate) mod tests;
+
+#[cfg(test)]
+#[path = "pet_classifier_allowlist_tests.rs"]
+mod allowlist_tests;

@@ -263,7 +263,8 @@ async fn orchestration_mode_session_exposes_close_steer_wait_and_the_spawns() {
 /// W1: an orchestrator session built the way a non-web caller builds it (CLI,
 /// medulla, task-board / Pet hand-off — `Agent::from_config_for_agent`, no
 /// thread mode declared) gets chat semantics at turn time: the fleet tools are
-/// hidden and the turn runs under Chat mode so `delegate_*` stays blocking.
+/// hidden and the turn runs under Chat mode so the `delegate_*` helpers run
+/// blocking (`spawn_subagent` stays available; see the seam's docs).
 /// A turn that declares Orchestration keeps the full supervisor belt.
 #[tokio::test(flavor = "multi_thread")]
 async fn non_web_orchestrator_turn_without_a_mode_hides_the_fleet_tools() {

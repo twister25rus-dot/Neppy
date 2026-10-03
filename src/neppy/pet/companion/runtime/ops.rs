@@ -440,7 +440,11 @@ pub async fn data_delete(
         rt.lock().buffer.clear();
         // Read the hand-off threads before their rows go, then delete them:
         // "Delete all" covers the threads the companion created, not only its
-        // own tables.
+        // own tables. Threads first, rows second, on purpose: deleting a thread
+        // that is already gone is a no-op, so if the row delete below fails the
+        // whole call can simply be retried (the ids are still recorded). A
+        // thread that fails to delete is reported in `undeleted_thread_ids`
+        // rather than blocking the deletion of the observed data.
         let thread_ids = handoff_thread_ids(config)?;
         threads = delete_handoff_threads(config, thread_ids).await;
         let (s, a) = store::delete_all(config).map_err(err)?;
@@ -474,6 +478,11 @@ pub async fn data_delete(
         "deleted_notes": dn,
         "deleted_threads": dt,
         "undeleted_thread_ids": kept_threads,
+        // A hand-off thread is deleted whole, including anything the user
+        // typed into it afterwards; the UI can say so.
+        "threads_note": (dt > 0).then_some(
+            "Hand-off threads were deleted, including any messages you added to them."
+        ),
     }))
 }
 
