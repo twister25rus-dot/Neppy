@@ -37,6 +37,10 @@ pub struct FakeSensor {
     pub resets: AtomicU32,
     /// Runs inside `frontmost_app` (e.g. to pause mid-call).
     pub on_app: Mutex<Option<Hook>>,
+    /// Frontmost app / window title the user switches to while a screen sample
+    /// is being OCR'd (applied at the end of `screen_sample`).
+    pub app_after_screen: Mutex<Option<AppIdentity>>,
+    pub title_after_screen: Mutex<Option<String>>,
 }
 
 impl Default for FakeSensor {
@@ -59,6 +63,8 @@ impl Default for FakeSensor {
             screen_requests: AtomicU32::new(0),
             resets: AtomicU32::new(0),
             on_app: Mutex::new(None),
+            app_after_screen: Mutex::new(None),
+            title_after_screen: Mutex::new(None),
         }
     }
 }
@@ -172,10 +178,17 @@ impl Sensor for FakeSensor {
         _l: &[String],
     ) -> Result<ScreenSample, SensorError> {
         self.log(if force { "screen+force" } else { "screen" });
-        Ok(match self.screen_text.lock().unwrap().take() {
+        let out = match self.screen_text.lock().unwrap().take() {
             Some(text) => ScreenSample::Text { text, ocr_ms: 5 },
             None => ScreenSample::Unchanged,
-        })
+        };
+        if let Some(a) = self.app_after_screen.lock().unwrap().take() {
+            *self.app.lock().unwrap() = a;
+        }
+        if let Some(t) = self.title_after_screen.lock().unwrap().take() {
+            *self.title.lock().unwrap() = Some(t);
+        }
+        Ok(out)
     }
     fn screen_reset(&self) {
         self.resets.fetch_add(1, Ordering::SeqCst);

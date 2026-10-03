@@ -444,3 +444,68 @@ async fn cron_and_threadless_background_turn_are_unchanged() {
     assert!(matches!(bg, GateOutcome::Deny { .. }), "{bg:?}");
     assert!(gate.list_pending().unwrap().is_empty());
 }
+
+/// Release audit B1/B2: every shell wrapper / executor / irreversible example,
+/// and the internal delete tools the harness now routes through the gate, park
+/// although `auto_approve_all` is on AND the tool is on the allowlist.
+#[tokio::test]
+async fn b2_shell_examples_and_internal_deletes_park_despite_auto_approve() {
+    let (gate, dir) = gate();
+    let _settings = settings(
+        &dir,
+        true,
+        &["shell", "memory_forget", "goals_delete", "artifact_delete"],
+    );
+    let mut calls: Vec<(&str, serde_json::Value)> = super::super::pet_b2_shell_cases()
+        .into_iter()
+        .map(|(command, _)| ("shell", json!({ "command": command })))
+        .collect();
+    calls.push(("memory_forget", json!({})));
+    calls.push(("goals_delete", json!({})));
+    calls.push(("artifact_delete", json!({})));
+
+    for (tool, args) in calls {
+        let g = gate.clone();
+        let call_args = super::super::redact::redact_args(&args);
+        let handle = tokio::spawn(turn_origin::with_origin(companion(None), async move {
+            g.intercept(tool, "pet action", call_args).await
+        }));
+        let row = tokio::time::timeout(Duration::from_secs(5), wait_pending(&gate, tool))
+            .await
+            .unwrap_or_else(|_| panic!("{tool} {args} must park"));
+        assert!(
+            !handle.is_finished(),
+            "{tool} {args} must wait for a decision"
+        );
+        gate.decide(&row.request_id, ApprovalDecision::Deny)
+            .unwrap();
+        let outcome = tokio::time::timeout(Duration::from_secs(5), handle)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(
+            matches!(outcome, GateOutcome::Deny { .. }),
+            "{tool}: {outcome:?}"
+        );
+        assert!(gate.list_pending().unwrap().is_empty());
+    }
+}
+
+/// W3: a read-verb Composio action follows the user's normal settings (here
+/// `auto_approve_all`) instead of always parking.
+#[tokio::test]
+async fn read_verb_composio_action_follows_auto_approve_all() {
+    let (gate, dir) = gate();
+    let _settings = settings(&dir, true, &[]);
+    let outcome = turn_origin::with_origin(
+        companion(None),
+        gate.intercept(
+            "composio_execute",
+            "fetch mail",
+            json!({"tool": "GMAIL_FETCH_EMAILS"}),
+        ),
+    )
+    .await;
+    assert!(matches!(outcome, GateOutcome::Allow), "{outcome:?}");
+    assert!(gate.list_pending().unwrap().is_empty());
+}

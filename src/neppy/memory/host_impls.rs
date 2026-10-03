@@ -198,10 +198,18 @@ pub(crate) fn memory_ollama_base_url(config: &Config) -> String {
         entry.slug.eq_ignore_ascii_case("ollama") && !entry.endpoint.trim().is_empty()
     }) {
         match crate::neppy::inference::local::validate_ollama_url(&entry.endpoint) {
-            Ok(root) => {
+            // Memory embeds every chunk it stores: only a loopback Ollama may
+            // receive them. A remote `ollama` entry (another machine, a hosted
+            // endpoint) is a chat provider choice, not consent to ship the
+            // whole memory corpus there.
+            Ok(root) if url_host_is_loopback(&root) => {
                 log::debug!("[memory:host] ollama base url: from the `ollama` provider entry");
                 return root;
             }
+            Ok(_) => log::warn!(
+                "[memory:host] ollama base url: `ollama` provider entry is not a loopback host; \
+                 memory embeddings stay local (env/default fallback)"
+            ),
             Err(error) => log::debug!(
                 "[memory:host] ollama base url: `ollama` provider entry unusable ({error}); falling back"
             ),
@@ -211,6 +219,23 @@ pub(crate) fn memory_ollama_base_url(config: &Config) -> String {
     let fallback = crate::neppy::inference::local::ollama_base_url();
     log::debug!("[memory:host] ollama base url: env/default fallback");
     fallback
+}
+
+/// Whether `url`'s host is the local machine (`localhost`, `*.localhost`,
+/// `127.0.0.0/8`, `::1`). Unparseable → `false`.
+fn url_host_is_loopback(url: &str) -> bool {
+    match url::Url::parse(url)
+        .ok()
+        .and_then(|u| u.host().map(|h| h.to_owned()))
+    {
+        Some(url::Host::Domain(d)) => {
+            let d = d.trim_end_matches('.').to_ascii_lowercase();
+            d == "localhost" || d.ends_with(".localhost")
+        }
+        Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
+        Some(url::Host::Ipv6(ip)) => ip.is_loopback(),
+        None => false,
+    }
 }
 
 // ── Chat models ─────────────────────────────────────────────────────────────
@@ -734,6 +759,43 @@ mod ollama_base_url_tests {
         config.cloud_providers = vec![ollama_entry("http://localhost:11434/v1")];
 
         assert_eq!(memory_ollama_base_url(&config), "http://127.0.0.1:22434");
+    }
+
+    /// W11: with a non-Ollama runtime, a remote `ollama` provider entry is not
+    /// used for memory embeddings — only a loopback one is.
+    #[test]
+    fn a_remote_provider_entry_is_never_the_memory_embedding_host() {
+        for remote in [
+            "https://gpu-box.example",
+            "http://192.168.1.20:11434",
+            "http://ollama.lan:11434",
+        ] {
+            let mut config = Config::default();
+            config.local_ai.provider = "mlx".to_string();
+            config.local_ai.base_url = None;
+            config.cloud_providers = vec![ollama_entry(remote)];
+            let url = memory_ollama_base_url(&config);
+            assert_eq!(
+                url,
+                crate::neppy::inference::local::ollama_base_url(),
+                "{remote}"
+            );
+        }
+        for local in [
+            "http://127.0.0.1:22434",
+            "http://[::1]:22434",
+            "http://localhost:22434",
+        ] {
+            let mut config = Config::default();
+            config.local_ai.provider = "mlx".to_string();
+            config.cloud_providers = vec![ollama_entry(local)];
+            assert!(
+                memory_ollama_base_url(&config).ends_with(":22434"),
+                "{local}"
+            );
+        }
+        assert!(!url_host_is_loopback("not a url"));
+        assert!(url_host_is_loopback("http://app.localhost:1"));
     }
 
     #[test]

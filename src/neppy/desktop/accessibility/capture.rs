@@ -349,6 +349,15 @@ impl ScreenWatcher {
         let ocr = backend.ocr(png.path(), &opts.ocr);
         drop(png); // delete immediately after reading, before anything else
         let text = ocr?;
+        // OCR takes long enough for the user to switch apps or focus a secure
+        // field mid-capture. Re-check the same guard after it and drop the text
+        // when the frame may no longer belong to the target (the baseline is not
+        // committed, so the next sample starts fresh).
+        if let Err(e) = backend.guard(opts) {
+            drop(text);
+            log::debug!("[accessibility][sensors] target changed during OCR, text dropped: {e}");
+            return Err(e);
+        }
         self.detector.commit(sig);
         Ok(ScreenObservation::Text { text, change })
     }

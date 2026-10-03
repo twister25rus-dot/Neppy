@@ -409,6 +409,47 @@ impl Agent {
         self.rebuild_tool_policy_session();
     }
 
+    /// Applies the thread-mode tool surface for a turn of the mode-aware
+    /// (`orchestrator`) agent: unless the turn declared Orchestration mode, the
+    /// multi-agent fleet tools (`web_chat::mode::CHAT_HIDDEN_TOOLS`) are hidden
+    /// — so a channel, CLI, medulla or task-board / Pet hand-off turn, which
+    /// declares no mode, gets chat semantics rather than the supervisor belt
+    /// the orchestrator definition names. Blocking delegation (`spawn_subagent`,
+    /// `delegate_*`, `continue_subagent`) stays.
+    ///
+    /// Returns `true` when the turn declared no mode and should run under
+    /// [`ThreadMode::Chat`](crate::neppy::threads::mode::ThreadMode::Chat) so
+    /// the `delegate_*` helpers run blocking. Idempotent: hiding only happens
+    /// while a fleet tool is still visible, so repeat turns leave the set (and
+    /// the prompt's tool block) untouched. Non-orchestrator agents are never
+    /// touched.
+    pub(crate) fn apply_turn_mode_tool_surface(
+        &mut self,
+        declared: Option<crate::neppy::threads::mode::ThreadMode>,
+    ) -> bool {
+        use crate::neppy::threads::mode::ThreadMode;
+        use crate::neppy::web_chat::mode::{CHAT_HIDDEN_TOOLS, MODE_AWARE_AGENT_ID};
+        if self.agent_definition_id != MODE_AWARE_AGENT_ID
+            || declared == Some(ThreadMode::Orchestration)
+        {
+            return false;
+        }
+        let fleet_visible = self.tool_specs.iter().any(|spec| {
+            CHAT_HIDDEN_TOOLS.contains(&spec.name.as_str())
+                && (self.visible_tool_names.is_empty()
+                    || self.visible_tool_names.contains(&spec.name))
+        });
+        if fleet_visible {
+            self.hide_tools(CHAT_HIDDEN_TOOLS);
+            log::debug!(
+                "[mode] turn declared {:?}: hid the fleet tools for orchestrator session {}",
+                declared,
+                self.agent_definition_name
+            );
+        }
+        declared.is_none()
+    }
+
     pub(super) fn rebuild_tool_policy_session(&mut self) {
         self.tool_policy_session = ToolPolicyEngine::build_session(
             &self.agent_definition_name,
@@ -871,7 +912,20 @@ impl Agent {
             channel: self.event_channel().to_string(),
         });
 
-        match self.turn(message).await {
+        // Thread mode: an orchestrator turn that declared no mode (channel,
+        // CLI, medulla, task-board / Pet hand-off) runs with chat semantics.
+        let declared_mode = crate::neppy::threads::mode::current_turn_mode();
+        let default_to_chat = self.apply_turn_mode_tool_surface(declared_mode);
+        let turn_result = if default_to_chat {
+            crate::neppy::threads::mode::with_turn_mode(
+                crate::neppy::threads::mode::ThreadMode::Chat,
+                Box::pin(self.turn(message)),
+            )
+            .await
+        } else {
+            self.turn(message).await
+        };
+        match turn_result {
             Ok(response) => {
                 let new_entries = Self::new_entries_for_turn(&history_snapshot, &self.history);
                 BUS.publish(DomainEvent::AgentTurnCompleted {

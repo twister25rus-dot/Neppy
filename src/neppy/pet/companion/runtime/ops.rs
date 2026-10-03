@@ -388,7 +388,45 @@ pub fn data(rt: &Arc<Runtime>, config: &Config) -> Result<Value, String> {
     }))
 }
 
-pub fn data_delete(
+/// Hand-off thread ids recorded on suggestions (deduplicated). A hand-off that
+/// got no thread recorded its run id instead; deleting that id is a no-op.
+fn handoff_thread_ids(config: &Config) -> Result<Vec<String>, String> {
+    store::with_connection(config, |c| {
+        let mut stmt = c.prepare(
+            "SELECT DISTINCT handoff_thread_id FROM companion_suggestions
+             WHERE handoff_thread_id IS NOT NULL AND handoff_thread_id != ''",
+        )?;
+        let ids = stmt
+            .query_map([], |r| r.get::<_, String>(0))?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        Ok(ids)
+    })
+    .map_err(err)
+}
+
+/// Delete the hand-off threads "Delete all" covers, through the threads domain
+/// (same cleanup as the UI's thread delete). Returns how many were deleted and
+/// the ids that could not be, so the user can be shown what is left.
+async fn delete_handoff_threads(config: &Config, ids: Vec<String>) -> (u64, Vec<String>) {
+    let mut deleted = 0;
+    let mut kept = Vec::new();
+    for id in ids {
+        match crate::neppy::threads::ops::thread_delete_in(config.workspace_dir.clone(), id.clone())
+            .await
+        {
+            Ok(true) => deleted += 1,
+            // Already gone (or a run id recorded for a thread-less run).
+            Ok(false) => {}
+            Err(e) => {
+                log::warn!("[pet::companion] hand-off thread delete failed: {e}");
+                kept.push(id);
+            }
+        }
+    }
+    (deleted, kept)
+}
+
+pub async fn data_delete(
     rt: &Arc<Runtime>,
     config: &Config,
     suggestion_id: Option<&str>,
@@ -396,9 +434,15 @@ pub fn data_delete(
     include_saved_notes: bool,
 ) -> Result<Value, String> {
     rt.bind(config).map_err(err)?;
+    let mut threads = (0, Vec::new());
     let (ds, da, dn) = if all {
         rt.cancel_all_work();
         rt.lock().buffer.clear();
+        // Read the hand-off threads before their rows go, then delete them:
+        // "Delete all" covers the threads the companion created, not only its
+        // own tables.
+        let thread_ids = handoff_thread_ids(config)?;
+        threads = delete_handoff_threads(config, thread_ids).await;
         let (s, a) = store::delete_all(config).map_err(err)?;
         let n = if include_saved_notes {
             actions::delete_desktop_notes(config)?
@@ -418,8 +462,19 @@ pub fn data_delete(
     } else {
         return Err("invalid 'data_delete': pass 'suggestion_id' or 'all': true".into());
     };
-    log::info!("[pet::companion] data deleted suggestions={ds} actions={da} notes={dn}");
-    Ok(json!({ "deleted_suggestions": ds, "deleted_actions": da, "deleted_notes": dn }))
+    let (dt, kept_threads) = threads;
+    log::info!(
+        "[pet::companion] data deleted suggestions={ds} actions={da} notes={dn} threads={dt} \
+         threads_left={}",
+        kept_threads.len()
+    );
+    Ok(json!({
+        "deleted_suggestions": ds,
+        "deleted_actions": da,
+        "deleted_notes": dn,
+        "deleted_threads": dt,
+        "undeleted_thread_ids": kept_threads,
+    }))
 }
 
 pub fn request_permission(rt: &Arc<Runtime>, kind: &str) -> Result<Value, String> {

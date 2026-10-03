@@ -165,6 +165,8 @@ mod region {
 struct Fake {
     permission: PermissionState,
     guard: Result<(), SensorError>,
+    /// Per-call guard results consumed first (then `guard` applies).
+    guard_seq: RefCell<Vec<Result<(), SensorError>>>,
     frames: RefCell<Vec<FrameSignature>>,
     ocr_result: Result<OcrText, SensorError>,
     ocr_panics: bool,
@@ -180,6 +182,7 @@ impl Fake {
         Self {
             permission: PermissionState::Granted,
             guard: Ok(()),
+            guard_seq: RefCell::new(vec![]),
             frames: RefCell::new(frames),
             ocr_result: Ok(ocr_text("hello")),
             ocr_panics: false,
@@ -200,7 +203,12 @@ impl CaptureBackend for Fake {
         self.permission.clone()
     }
     fn guard(&self, _o: &AutonomousCaptureOpts) -> Result<(), SensorError> {
-        self.guard.clone()
+        let mut seq = self.guard_seq.borrow_mut();
+        if seq.is_empty() {
+            self.guard.clone()
+        } else {
+            seq.remove(0)
+        }
     }
     fn capture(&self, _t: CaptureTarget) -> Result<CaptureOutcome, SensorError> {
         self.capture_calls.set(self.capture_calls.get() + 1);
@@ -232,6 +240,25 @@ impl CaptureBackend for Fake {
 
 fn opts() -> AutonomousCaptureOpts {
     AutonomousCaptureOpts::default()
+}
+
+/// W6: the frontmost app (or secure input) is re-checked AFTER OCR; a frame
+/// that may no longer belong to the target is dropped, the image is gone, and
+/// the baseline stays unset so the next sample starts fresh.
+#[test]
+fn target_change_during_ocr_drops_the_text() {
+    for late in [SensorError::TargetChanged, SensorError::SecureFieldFocused] {
+        let fake = Fake::new(vec![flat(50)]);
+        *fake.guard_seq.borrow_mut() = vec![Ok(()), Err(late.clone())];
+        let mut w = ScreenWatcher::default();
+        assert_eq!(w.observe_with(&fake, &opts()).unwrap_err(), late);
+        assert_eq!(fake.ocr_calls.get(), 1);
+        assert!(fake.all_deleted());
+        // Not committed: the same frame is OCR'd again next time.
+        let again = w.observe_with(&fake, &opts()).unwrap();
+        assert!(matches!(again, ScreenObservation::Text { .. }));
+        assert_eq!(fake.ocr_calls.get(), 2);
+    }
 }
 
 #[test]

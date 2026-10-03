@@ -968,6 +968,20 @@ async fn thread_delete_inner(
     ))
 }
 
+/// [`thread_delete`] against an explicit workspace, for a domain that holds its
+/// own `Config` rather than the process-global one — the Pet companion's
+/// "Delete all" removes the hand-off threads it created this way. Same store
+/// mutation and cleanup (session invalidation, sub-agent cancel, turn snapshot)
+/// as the RPC. `Ok(false)` when no such thread exists.
+pub(crate) async fn thread_delete_in(dir: PathBuf, thread_id: String) -> Result<bool, String> {
+    let request = DeleteConversationThreadRequest {
+        thread_id,
+        deleted_at: chrono::Utc::now().to_rfc3339(),
+    };
+    let outcome = run_to_completion("thread_delete", thread_delete_inner(dir, request)).await?;
+    Ok(outcome.value.data.is_some_and(|d| d.deleted))
+}
+
 /// Purges all conversation threads and messages.
 ///
 /// Same cancellation contract as [`thread_delete`]: the purge and its sub-agent

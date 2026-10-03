@@ -306,6 +306,7 @@ handler!(handle_data_delete, "companion_data_delete", |config, p| {
         opt_bool(&p, "all")?.unwrap_or(false),
         opt_bool(&p, "include_saved_notes")?.unwrap_or(false),
     )
+    .await
 });
 handler!(
     handle_request_permission,

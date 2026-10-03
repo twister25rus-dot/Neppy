@@ -89,7 +89,7 @@ pub(super) fn hash_of<T: Hash>(v: T) -> u64 {
     h.finish()
 }
 
-fn app_key(app: &AppIdentity) -> String {
+pub(super) fn app_key(app: &AppIdentity) -> String {
     app.bundle_id
         .as_deref()
         .map(str::to_lowercase)
@@ -332,7 +332,7 @@ pub fn sample_once(rt: &Arc<Runtime>) {
             &settings.ocr_languages,
         );
     } else {
-        rt.lock().sample.screen_active = false;
+        super::sources::set_screen_active(rt, false);
     }
 }
 

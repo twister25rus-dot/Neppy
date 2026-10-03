@@ -305,6 +305,41 @@ impl NeppySecurityGate {
         self.park_for_approval(call).await
     }
 
+    /// Pet companion (user decision D4): a call whose tool declares no external
+    /// effect still parks when the turn is a companion turn and the call is
+    /// high-risk. `None` when that does not apply. With no approval gate
+    /// installed it denies — running it unconfirmed is what D4 forbids.
+    async fn pet_companion_park(
+        &self,
+        call: &ToolCallRequest,
+        required: PermissionLevel,
+        channel_approved: bool,
+    ) -> Option<GateDecision> {
+        crate::neppy::security::approval::pet_companion_internal_gate_category(
+            &call.tool_name,
+            &call.arguments,
+            required,
+        )?;
+        if !channel_approved && ApprovalGate::try_global().is_none() {
+            tracing::warn!(
+                target: "tinyagents",
+                tool = %call.tool_name,
+                "[tinyagents::host::security] Pet companion high-risk call with no approval \
+                 gate installed; denying"
+            );
+            return Some(GateDecision::deny(
+                PolicyDenial::ApprovalRequired {
+                    tool: &call.tool_name,
+                    policy: "Pet companion high-risk actions",
+                    reason: "This Pet companion action needs your confirmation, and no approval \
+                             flow is available in this session.",
+                }
+                .render(),
+            ));
+        }
+        Some(self.park_once(call, channel_approved).await)
+    }
+
     /// Parks the turn on the human approval flow and reports how it settled.
     ///
     /// Returns [`GateDecision::Prompted`] whichever way it resolves — including
@@ -519,6 +554,13 @@ impl SecurityGate for NeppySecurityGate {
                     return Ok(self.park_once(call, channel_approved).await)
                 }
                 Ok(PolicyGateDecision::Allow) => {
+                    let required = tool.permission_level_with_args(&call.arguments);
+                    if let Some(decision) = self
+                        .pet_companion_park(call, required, channel_approved)
+                        .await
+                    {
+                        return Ok(decision);
+                    }
                     return Ok(self.settled(channel_approved));
                 }
             }
@@ -570,6 +612,14 @@ impl SecurityGate for NeppySecurityGate {
         //    decides whether a human is asked.
         if tool.external_effect_with_args(&call.arguments) {
             return Ok(self.park_once(call, channel_approved).await);
+        }
+        // 6. Pet companion (D4): a high-risk call parks even without a declared
+        //    external effect.
+        if let Some(decision) = self
+            .pet_companion_park(call, required, channel_approved)
+            .await
+        {
+            return Ok(decision);
         }
 
         tracing::debug!(

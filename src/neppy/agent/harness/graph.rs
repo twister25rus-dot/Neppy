@@ -37,6 +37,59 @@ use crate::neppy::agent::tinyagents::TurnModelSource;
 use crate::neppy::config::{MultimodalConfig, MultimodalFileConfig};
 use crate::neppy::tools::Tool;
 
+/// Thread mode on the channel/CLI path: a channel turn declares no thread mode,
+/// so unless the caller scoped Orchestration mode it gets chat semantics — the
+/// multi-agent fleet tools (`web_chat::mode::CHAT_HIDDEN_TOOLS`) are removed
+/// from the callable set even when the routed definition (the orchestrator)
+/// names them. `None` ("every registered tool") is materialised from the tool
+/// sets only when a fleet tool is actually among them, so an unaffected turn
+/// keeps its unfiltered shape.
+pub(crate) fn channel_turn_allowed_tools(
+    allowed: Option<HashSet<String>>,
+    tool_sets: &[&[Box<dyn Tool>]],
+    declared: Option<crate::neppy::threads::mode::ThreadMode>,
+) -> Option<HashSet<String>> {
+    use crate::neppy::web_chat::mode::CHAT_HIDDEN_TOOLS;
+    if declared == Some(crate::neppy::threads::mode::ThreadMode::Orchestration) {
+        return allowed;
+    }
+    let is_fleet = |name: &str| CHAT_HIDDEN_TOOLS.contains(&name);
+    match allowed {
+        Some(mut set) => {
+            let before = set.len();
+            set.retain(|name| !is_fleet(name));
+            if set.len() != before {
+                tracing::debug!(
+                    hidden = before - set.len(),
+                    "[channel:graph] no Orchestration mode declared: hid fleet tools"
+                );
+            }
+            Some(set)
+        }
+        None => {
+            let names: Vec<&str> = tool_sets
+                .iter()
+                .flat_map(|set| set.iter())
+                .map(|t| t.name())
+                .collect();
+            if !names.iter().any(|n| is_fleet(n)) {
+                return None;
+            }
+            tracing::debug!(
+                "[channel:graph] no Orchestration mode declared: hid fleet tools from the \
+                 unfiltered set"
+            );
+            Some(
+                names
+                    .into_iter()
+                    .filter(|n| !is_fleet(n))
+                    .map(str::to_string)
+                    .collect(),
+            )
+        }
+    }
+}
+
 /// Drive a channel/CLI turn on the graph engine. Returns the final assistant
 /// text. When `on_progress` is `Some`, the run streams and mirrors progress
 /// onto `AgentProgress`; pass `None` for a fire-and-forget final-text turn.
@@ -68,6 +121,11 @@ pub(crate) async fn run_channel_turn_via_graph(
         Some(set) if !set.is_empty() => Some(set.clone()),
         _ => None,
     };
+    let allowed = channel_turn_allowed_tools(
+        allowed,
+        &[extra_arc.as_slice(), tools_registry.as_slice()],
+        crate::neppy::threads::mode::current_turn_mode(),
+    );
 
     // Resolve the model's effective context window (async provider probe) so the
     // harness can run the context-window summarization step (issue #4249) on
@@ -201,6 +259,75 @@ mod tests {
         async fn execute(&self, _a: serde_json::Value) -> anyhow::Result<ToolResult> {
             Ok(ToolResult::success("pong"))
         }
+    }
+
+    struct NamedTool(&'static str);
+    #[async_trait]
+    impl Tool for NamedTool {
+        fn name(&self) -> &str {
+            self.0
+        }
+        fn description(&self) -> &str {
+            "named"
+        }
+        fn parameters_schema(&self) -> serde_json::Value {
+            serde_json::json!({"type": "object"})
+        }
+        async fn execute(&self, _a: serde_json::Value) -> anyhow::Result<ToolResult> {
+            Ok(ToolResult::success("ok"))
+        }
+    }
+
+    /// W1: a channel/CLI turn declares no thread mode, so the orchestrator's
+    /// fleet tools are not callable — whether the routed definition named them
+    /// (explicit allowlist) or the turn is unfiltered. Orchestration mode keeps
+    /// them; blocking delegation stays either way.
+    #[test]
+    fn channel_turn_without_orchestration_mode_hides_the_fleet_tools() {
+        use crate::neppy::threads::mode::ThreadMode;
+        let registry: Vec<Box<dyn Tool>> = vec![
+            Box::new(NamedTool("spawn_subagent")),
+            Box::new(NamedTool("spawn_parallel_agents")),
+            Box::new(NamedTool("wait_subagent")),
+            Box::new(NamedTool("steer_subagent")),
+            Box::new(NamedTool("close_subagent")),
+            Box::new(NamedTool("delegate_researcher")),
+        ];
+        let sets: [&[Box<dyn Tool>]; 1] = [registry.as_slice()];
+        let named: HashSet<String> = registry.iter().map(|t| t.name().to_string()).collect();
+        let fleet = [
+            "spawn_parallel_agents",
+            "wait_subagent",
+            "steer_subagent",
+            "close_subagent",
+        ];
+
+        for declared in [None, Some(ThreadMode::Chat)] {
+            for allowed in [Some(named.clone()), None] {
+                let got = channel_turn_allowed_tools(allowed, &sets, declared)
+                    .expect("fleet present, so the set is materialised");
+                for f in fleet {
+                    assert!(!got.contains(f), "{declared:?}: {f} must be hidden");
+                }
+                assert!(got.contains("spawn_subagent"));
+                assert!(got.contains("delegate_researcher"));
+            }
+        }
+        // Orchestration mode keeps the supervisor belt untouched.
+        assert_eq!(
+            channel_turn_allowed_tools(Some(named.clone()), &sets, Some(ThreadMode::Orchestration)),
+            Some(named)
+        );
+        assert_eq!(
+            channel_turn_allowed_tools(None, &sets, Some(ThreadMode::Orchestration)),
+            None
+        );
+        // An unfiltered turn with no fleet tool keeps its unfiltered shape.
+        let plain: Vec<Box<dyn Tool>> = vec![Box::new(PingTool)];
+        assert_eq!(
+            channel_turn_allowed_tools(None, &[plain.as_slice()], None),
+            None
+        );
     }
 
     #[tokio::test]

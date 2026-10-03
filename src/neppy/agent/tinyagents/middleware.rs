@@ -56,7 +56,7 @@ use crate::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
 use crate::neppy::security::approval::{
     redact_args, summarize_action, ApprovalGate, ExecutionOutcome, GateOutcome,
 };
-use crate::neppy::tools::Tool;
+use crate::neppy::tools::{PermissionLevel, Tool};
 
 use super::policy_denial::PolicyDenial;
 
@@ -930,14 +930,47 @@ impl ApprovalSecurityMiddleware {
         Self { tool_sets }
     }
 
-    /// Whether the named tool declares an external effect for these args.
-    fn has_external_effect(&self, name: &str, args: &serde_json::Value) -> bool {
+    /// Whether the named tool declares an external effect for these args, and
+    /// the permission level it needs for them. An unregistered name reports no
+    /// external effect and `Dangerous` (it is not provably read-only).
+    fn classify_call(&self, name: &str, args: &serde_json::Value) -> (bool, PermissionLevel) {
         self.tool_sets
             .iter()
             .flat_map(|set| set.iter())
             .find(|t| t.name() == name)
-            .map(|t| t.external_effect_with_args(args))
-            .unwrap_or(false)
+            .map(|t| {
+                (
+                    t.external_effect_with_args(args),
+                    t.permission_level_with_args(args),
+                )
+            })
+            .unwrap_or((false, PermissionLevel::Dangerous))
+    }
+
+    /// Whether this call goes through the approval gate: `(has_external_effect,
+    /// pet_high_risk)`. The gate is consulted when either is set. The second is
+    /// `Some` only under a Pet companion origin (incl. sub-agents it delegated
+    /// to) for a high-risk call whose tool declares no external effect — a
+    /// Full-tier `shell` write, `python_exec`, `memory_forget`, … (D4: high-risk
+    /// actions always need confirmation).
+    fn approval_requirement(
+        &self,
+        name: &str,
+        args: &serde_json::Value,
+    ) -> (
+        bool,
+        Option<crate::neppy::pet::companion::types::ActionCategory>,
+    ) {
+        let (has_ext, permission) = self.classify_call(name, args);
+        if has_ext {
+            return (true, None);
+        }
+        (
+            false,
+            crate::neppy::security::approval::pet_companion_internal_gate_category(
+                name, args, permission,
+            ),
+        )
     }
 }
 
@@ -957,13 +990,18 @@ impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
         // Resolve external-effect up front so no tool borrow is held across the
         // approval await.
         let mut audit_id: Option<String> = None;
-        let has_ext = self.has_external_effect(&call.name, &call.arguments);
+        // Pet companion (D4): a high-risk call must be confirmed even when its
+        // tool declares no external effect for these args. Such a call goes
+        // through the gate too, which parks it whatever the auto-approve
+        // settings say.
+        let (has_ext, pet_high_risk) = self.approval_requirement(&call.name, &call.arguments);
         tracing::debug!(
             tool = %call.name,
             has_external_effect = has_ext,
+            pet_high_risk = pet_high_risk.map(|c| c.as_str()).unwrap_or("none"),
             "[tinyagents::mw] checking tool for approval"
         );
-        if has_ext {
+        if has_ext || pet_high_risk.is_some() {
             if let Some(gate) = ApprovalGate::try_global() {
                 tracing::debug!(
                     tool = %call.name,
@@ -991,6 +1029,30 @@ impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
                     }
                     GateOutcome::Allow => audit_id = request_id,
                 }
+            } else if pet_high_risk.is_some()
+                || crate::neppy::security::approval::is_pet_companion_turn()
+            {
+                // A Pet companion call that needs confirmation and has nobody to
+                // ask fails closed: running it unconfirmed is exactly what D4
+                // forbids.
+                let reason = format!(
+                    "{} '{}' blocked: this Pet companion action needs your confirmation and no \
+                     approval flow is available.",
+                    crate::neppy::security::POLICY_DENIED_MARKER,
+                    call.name
+                );
+                tracing::warn!(
+                    tool = %call.name,
+                    "[tinyagents::mw] approval gate unavailable for a Pet companion call; denying"
+                );
+                return Ok(MiddlewareToolOutcome::Result(TaToolResult {
+                    call_id: call.id,
+                    name: call.name,
+                    content: reason.clone(),
+                    raw: None,
+                    error: Some(reason),
+                    elapsed_ms: 0,
+                }));
             } else {
                 tracing::warn!(
                     tool = %call.name,
@@ -4599,10 +4661,131 @@ mod tests {
             }),
         ]);
         let mw = ApprovalSecurityMiddleware::new(vec![tools]);
-        assert!(mw.has_external_effect("send_email", &json!({})));
-        assert!(!mw.has_external_effect("read_file", &json!({})));
-        // Unknown tool defaults to no external effect (nothing to gate).
-        assert!(!mw.has_external_effect("missing", &json!({})));
+        assert!(mw.classify_call("send_email", &json!({})).0);
+        assert!(!mw.classify_call("read_file", &json!({})).0);
+        // Unknown tool defaults to no external effect (nothing to gate) and is
+        // not provably read-only.
+        assert_eq!(
+            mw.classify_call("missing", &json!({})),
+            (false, PermissionLevel::Dangerous)
+        );
+        // Outside a Pet companion turn nothing without an external effect is
+        // routed to the gate.
+        assert_eq!(
+            mw.approval_requirement("read_file", &json!({})),
+            (false, None)
+        );
+    }
+
+    /// A tool that declares no external effect, at a given permission level —
+    /// the shape of `memory_forget` / `goals_delete` / `artifact_delete`.
+    struct InternalTool {
+        name: &'static str,
+        level: PermissionLevel,
+    }
+
+    #[async_trait]
+    impl Tool for InternalTool {
+        fn name(&self) -> &str {
+            self.name
+        }
+        fn description(&self) -> &str {
+            "internal"
+        }
+        fn parameters_schema(&self) -> serde_json::Value {
+            json!({ "type": "object" })
+        }
+        async fn execute(
+            &self,
+            _args: serde_json::Value,
+        ) -> anyhow::Result<crate::neppy::tools::ToolResult> {
+            Ok(crate::neppy::tools::ToolResult::success("ok"))
+        }
+        fn permission_level(&self) -> PermissionLevel {
+            self.level
+        }
+    }
+
+    fn pet_tool_set(autonomy: crate::neppy::security::AutonomyLevel) -> Arc<Vec<Box<dyn Tool>>> {
+        let policy = Arc::new(crate::neppy::security::SecurityPolicy {
+            autonomy,
+            workspace_dir: std::env::temp_dir(),
+            action_dir: std::env::temp_dir(),
+            ..crate::neppy::security::SecurityPolicy::default()
+        });
+        Arc::new(vec![
+            Box::new(crate::neppy::tools::ShellTool::new(
+                policy,
+                Arc::new(crate::neppy::agent::host_runtime::NativeRuntime::new()),
+                crate::neppy::security::AuditLogger::disabled(),
+            )),
+            Box::new(InternalTool {
+                name: "memory_forget",
+                level: PermissionLevel::Write,
+            }),
+            Box::new(InternalTool {
+                name: "goals_delete",
+                level: PermissionLevel::Write,
+            }),
+            Box::new(InternalTool {
+                name: "artifact_delete",
+                level: PermissionLevel::Write,
+            }),
+            Box::new(InternalTool {
+                name: "memory_store",
+                level: PermissionLevel::Write,
+            }),
+        ])
+    }
+
+    /// Release audit B1: under a Pet companion origin every B2 shell example
+    /// and every internal delete reaches the approval gate on BOTH the
+    /// Supervised and the Full tier — on Full, `shell` reports no external
+    /// effect for a Write-class command, which used to skip the gate entirely.
+    /// (That the gate then parks them despite `auto_approve_all` and the
+    /// allowlist is pinned in `gate_pet_companion_tests`.)
+    #[tokio::test]
+    async fn pet_companion_high_risk_calls_reach_the_gate_on_every_tier() {
+        use crate::neppy::agent::turn_origin;
+        use crate::neppy::security::AutonomyLevel;
+        for tier in [AutonomyLevel::Supervised, AutonomyLevel::Full] {
+            let mw = ApprovalSecurityMiddleware::new(vec![pet_tool_set(tier)]);
+            let origin = crate::neppy::security::approval::pet_companion_test_origin();
+            turn_origin::with_origin(origin, async {
+                for (command, _) in crate::neppy::security::approval::pet_b2_shell_cases() {
+                    let args = json!({ "command": command });
+                    let (has_ext, pet) = mw.approval_requirement("shell", &args);
+                    assert!(
+                        has_ext || pet.is_some(),
+                        "{tier:?}: `{command}` must reach the gate"
+                    );
+                }
+                for tool in ["memory_forget", "goals_delete", "artifact_delete"] {
+                    assert_eq!(
+                        mw.approval_requirement(tool, &json!({})),
+                        (
+                            false,
+                            Some(crate::neppy::pet::companion::types::ActionCategory::Delete)
+                        ),
+                        "{tier:?}: {tool}"
+                    );
+                }
+                // Ordinary internal work is not escalated.
+                assert_eq!(
+                    mw.approval_requirement("memory_store", &json!({})),
+                    (false, None)
+                );
+            })
+            .await;
+            // Outside a companion turn the Full tier keeps running Write-class
+            // shell work silently (unchanged behaviour).
+            if tier == AutonomyLevel::Full {
+                assert_eq!(
+                    mw.approval_requirement("shell", &json!({"command": "rm -rf build"})),
+                    (false, None)
+                );
+            }
+        }
     }
 
     // ── MemoryProtocolMiddleware (issue #4116) ──────────────────────────────

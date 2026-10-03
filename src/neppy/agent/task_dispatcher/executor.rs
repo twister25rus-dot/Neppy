@@ -140,11 +140,15 @@ pub(super) fn resolve_executor(workspace_dir: &Path, assigned: Option<&str>) -> 
 /// plan-approval gate (`require_task_plan_approval`) remains an additional
 /// checkpoint, not the only one.
 ///
-/// Egress is **not** widened here: `http_request.allowed_domains` is whatever
-/// the operator configured. This run used to rewrite an empty allow-list to `*`
-/// (matching skill runs), which handed attacker-influenceable card text
-/// unrestricted network reach; an empty list now means what it means
-/// everywhere else.
+/// Egress is left exactly as configured: this run does not rewrite
+/// `http_request.allowed_domains`. Note what that means in practice: an
+/// **empty** list is the default "open" mode — `url_guard::validate_url` lets
+/// any public, non-private host through (the same as `["*"]`); only a
+/// non-empty list restricts egress to the listed domains. So with the default
+/// configuration this run has the same public-web reach as a chat turn, bounded
+/// by the private/local-host block and by the approval gate on external-effect
+/// calls — not by a domain allow-list. (It used to rewrite an empty list to
+/// `*` explicitly, which changed nothing about reach; the rewrite was removed.)
 pub(super) async fn run_autonomous(
     config: Config,
     executor: &ResolvedExecutor,

@@ -6,7 +6,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use super::metrics::Metrics;
-use super::observer::{event, note_drop, on_sensor_error, scrub_or_drop};
+use super::observer::{
+    app_key, event, note_drop, on_sensor_error, scrub_or_drop, ALWAYS_EXCLUDED_BUNDLES,
+};
 use super::pipeline;
 use super::sensor::{AppIdentity, ScreenSample};
 use super::state::Runtime;
@@ -93,21 +95,24 @@ pub(super) fn screen_step(
     languages: &[String],
 ) {
     if rt.sensor.screen_recording() != PermissionState::Granted {
-        let ask = {
-            let mut g = rt.lock();
-            g.sample.screen_active = false;
-            !std::mem::replace(&mut g.sample.screen_requested, true)
-        };
+        set_screen_active(rt, false);
+        let ask = !std::mem::replace(&mut rt.lock().sample.screen_requested, true);
         if ask {
             log::info!("[pet::companion] screen capture needs Screen Recording: requesting once");
             rt.sensor.request_screen_recording();
         }
         return;
     }
+    // Report capture as armed BEFORE the first frame is taken, and give the
+    // indicator one sample interval to show "observing screen" before any
+    // capture happens: arming publishes the state and returns.
+    if set_screen_active(rt, true) {
+        log::info!("[pet::companion] screen capture armed: first capture on the next sample");
+        return;
+    }
     let now = rt.clock.instant();
     let due = {
         let mut g = rt.lock();
-        g.sample.screen_active = true;
         let since = g
             .sample
             .last_screen
@@ -144,6 +149,24 @@ pub(super) fn screen_step(
             if text.trim().is_empty() {
                 return;
             }
+            // OCR takes long enough for the frontmost window to change (another
+            // app, an excluded tab, a secure field). Re-check before the text
+            // becomes an event; drop it when the frame may not be this app's.
+            if let Err(reason) = still_on_target(rt, app) {
+                drop(text);
+                rt.sensor.screen_reset();
+                match reason {
+                    Some(reason) => {
+                        note_drop(rt, ObservationKind::Capture, app, reason, "screen-late")
+                    }
+                    None => {
+                        log::debug!(
+                            "[pet::companion] frontmost window changed during OCR: capture dropped"
+                        );
+                    }
+                }
+                return;
+            }
             if let Some(r) =
                 scrub_or_drop(rt, &text, &ScrubCtx::ocr(), ObservationKind::Capture, app)
             {
@@ -162,7 +185,57 @@ pub(super) fn screen_step(
                 "screen",
             );
         }
-        Err(SensorError::PermissionRequired) => rt.lock().sample.screen_active = false,
+        Err(SensorError::PermissionRequired) => {
+            set_screen_active(rt, false);
+        }
         Err(e) => on_sensor_error(rt, &e),
+    }
+}
+
+/// Set whether autonomous screen capture is armed; publishes the companion
+/// state on a change so the indicator shows "observing screen" as soon as
+/// capture is armed (and stops showing it as soon as it is not). Returns `true`
+/// when the flag changed.
+pub(super) fn set_screen_active(rt: &Arc<Runtime>, active: bool) -> bool {
+    let changed = {
+        let mut g = rt.lock();
+        std::mem::replace(&mut g.sample.screen_active, active) != active
+    };
+    if changed {
+        rt.publish_state();
+    }
+    changed
+}
+
+/// Whether the frontmost window is still the one a screen sample was taken
+/// for, re-read after OCR. `Err(Some(reason))` when it is now excluded or a
+/// secure field; `Err(None)` when the app changed or the check itself failed
+/// (fail closed: the text is dropped either way).
+fn still_on_target(rt: &Arc<Runtime>, app: &AppIdentity) -> Result<(), Option<DropReason>> {
+    let now = rt.sensor.frontmost_app().map_err(|_| None)?;
+    let key = app_key(&now);
+    if now.pid != app.pid || key != app_key(app) {
+        return Err(None);
+    }
+    let (_, excl) = rt.settings_and_exclusions();
+    if ALWAYS_EXCLUDED_BUNDLES.contains(&key.as_str()) {
+        return Err(Some(DropReason::ExcludedApp));
+    }
+    if let Some(reason) = excl.check_app(now.bundle_id.as_deref(), &now.app_name) {
+        return Err(Some(reason));
+    }
+    if now.is_secure_field {
+        return Err(Some(DropReason::SecureField));
+    }
+    let ctx = rt.sensor.frontmost_context(false, 0).map_err(|_| None)?;
+    if ctx.pid != app.pid {
+        return Err(None);
+    }
+    if ctx.is_secure_field {
+        return Err(Some(DropReason::SecureField));
+    }
+    match excl.check_title(ctx.window_title.as_deref().unwrap_or_default()) {
+        Some(reason) => Err(Some(reason)),
+        None => Ok(()),
     }
 }

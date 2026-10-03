@@ -288,11 +288,30 @@ fn screen_permission_is_requested_once_then_capture_runs_on_change() {
 
     *h.sensor.screen_perm.lock().unwrap() = PermissionState::Granted;
     h.sensor.set_app("Terminal", "com.apple.Terminal", 101);
+    let mut ui = super::bus::subscribe_companion_events();
+    h.sample();
+    // W7: arming is reported at once (the indicator shows "observing screen")
+    // and the first frame waits for the next sample.
+    assert!(h.rt.screen_capture_active());
+    assert_eq!(h.sensor.count("screen"), 0, "armed, not yet captured");
+    let mut saw_armed = false;
+    while let Ok(ev) = ui.try_recv() {
+        if matches!(
+            ev,
+            super::bus::CompanionUiEvent::State {
+                screen_capture_active: true,
+                ..
+            }
+        ) {
+            saw_armed = true;
+        }
+    }
+    assert!(saw_armed, "arming publishes the state");
     h.sample();
     assert_eq!(
         h.sensor.count("screen"),
         1,
-        "window change forces a capture"
+        "the first capture runs on the sample after arming"
     );
     assert!(h.rt.screen_capture_active());
     h.sample();
@@ -325,6 +344,7 @@ fn sensitive_ocr_text_never_becomes_an_event() {
     h.lease();
     *h.sensor.screen_text.lock().unwrap() =
         Some("-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n-----END OPENSSH PRIVATE KEY-----".into());
+    h.sample(); // arms screen capture
     h.sample();
     assert_eq!(Metrics::get(&h.rt.metrics.ocr_calls), 1);
     assert!(h
@@ -334,6 +354,49 @@ fn sensitive_ocr_text_never_becomes_an_event() {
         .events()
         .all(|e| e.kind != ObservationKind::Capture));
     assert_eq!(h.rt.metrics.drops(DropReason::SensitiveContent), 1);
+}
+
+/// W6: the frontmost app and the exclusions are re-checked after OCR — text
+/// OCR'd while the user switched to another app, or to an excluded window of
+/// the same app, never becomes an event.
+#[test]
+fn ocr_text_is_dropped_when_the_window_changes_during_ocr() {
+    let h = harness();
+    h.enable();
+    h.lease();
+    h.sample(); // arms screen capture
+
+    // Another app came to the front while the frame was OCR'd.
+    *h.sensor.screen_text.lock().unwrap() = Some("error[E0308]: mismatched types".into());
+    *h.sensor.app_after_screen.lock().unwrap() = Some(app("Messages", "com.apple.MobileSMS", 4242));
+    h.sample();
+    assert_eq!(Metrics::get(&h.rt.metrics.ocr_calls), 1);
+    assert!(h
+        .rt
+        .lock()
+        .buffer
+        .events()
+        .all(|e| e.kind != ObservationKind::Capture));
+
+    // Same app, but the window now matches an exclusion rule.
+    h.sensor.set_app("Terminal", "com.apple.Terminal", 100);
+    *h.sensor.title.lock().unwrap() = Some("zsh: ~/project".into());
+    h.clock.advance(Duration::from_secs(31));
+    h.lease();
+    h.sample(); // window change: the Terminal frame is due again
+    *h.sensor.screen_text.lock().unwrap() = Some("error[E0308]: mismatched types".into());
+    *h.sensor.title_after_screen.lock().unwrap() = Some("Bank - Private Browsing".into());
+    h.clock.advance(Duration::from_secs(31));
+    h.lease();
+    h.sample();
+    assert!(Metrics::get(&h.rt.metrics.ocr_calls) >= 2);
+    assert!(h
+        .rt
+        .lock()
+        .buffer
+        .events()
+        .all(|e| e.kind != ObservationKind::Capture));
+    assert!(h.rt.metrics.drops(DropReason::TitleRule) >= 1);
 }
 
 #[test]

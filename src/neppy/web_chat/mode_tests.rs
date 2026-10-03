@@ -259,3 +259,54 @@ async fn orchestration_mode_session_exposes_close_steer_wait_and_the_spawns() {
     }
     assert!(!visible.contains("wait"), "`wait` stays retired");
 }
+
+/// W1: an orchestrator session built the way a non-web caller builds it (CLI,
+/// medulla, task-board / Pet hand-off — `Agent::from_config_for_agent`, no
+/// thread mode declared) gets chat semantics at turn time: the fleet tools are
+/// hidden and the turn runs under Chat mode so `delegate_*` stays blocking.
+/// A turn that declares Orchestration keeps the full supervisor belt.
+#[tokio::test(flavor = "multi_thread")]
+async fn non_web_orchestrator_turn_without_a_mode_hides_the_fleet_tools() {
+    AgentDefinitionRegistry::init_global_builtins().expect("builtins");
+    let workspace = tempfile::TempDir::new().expect("tempdir");
+    let config = crate::neppy::config::Config {
+        workspace_dir: workspace.path().to_path_buf(),
+        action_dir: workspace.path().to_path_buf(),
+        ..crate::neppy::config::Config::default()
+    };
+    let visible = |agent: &crate::neppy::agent::Agent| -> HashSet<String> {
+        let v = agent.visible_tool_names_for_test();
+        if v.is_empty() {
+            agent.tool_specs().iter().map(|s| s.name.clone()).collect()
+        } else {
+            v.clone()
+        }
+    };
+
+    let mut cli = crate::neppy::agent::Agent::from_config_for_agent(&config, MODE_AWARE_AGENT_ID)
+        .expect("build orchestrator");
+    assert!(
+        ORCHESTRATION_ONLY_TOOLS
+            .iter()
+            .any(|t| visible(&cli).contains(*t)),
+        "precondition: the definition names the fleet tools"
+    );
+    assert!(cli.apply_turn_mode_tool_surface(None), "no mode → chat");
+    let after = visible(&cli);
+    for hidden in CHAT_HIDDEN_TOOLS {
+        assert!(!after.contains(*hidden), "`{hidden}` must be hidden");
+    }
+    assert!(after.contains("continue_subagent"));
+    // Idempotent on the next turn.
+    assert!(cli.apply_turn_mode_tool_surface(None));
+    assert_eq!(visible(&cli), after);
+
+    let mut orch = crate::neppy::agent::Agent::from_config_for_agent(&config, MODE_AWARE_AGENT_ID)
+        .expect("build orchestrator");
+    let before = visible(&orch);
+    assert!(!orch.apply_turn_mode_tool_surface(Some(ThreadMode::Orchestration)));
+    assert_eq!(visible(&orch), before, "orchestration keeps the belt");
+    for tool in ORCHESTRATION_ONLY_TOOLS {
+        assert!(visible(&orch).contains(*tool), "{tool} kept");
+    }
+}
