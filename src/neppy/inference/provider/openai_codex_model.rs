@@ -132,7 +132,7 @@ impl CodexResponsesModel {
         // whitespace, and `input: []` only buys a round trip to an opaque 400.
         // Fail here, by name, and not retryably: resending the same empty
         // transcript cannot succeed.
-        if body["input"].as_array().map_or(true, Vec::is_empty) {
+        if body["input"].as_array().is_none_or(Vec::is_empty) {
             log::warn!(
                 "{LOG} refusing to send an empty transcript model={model} messages={}",
                 request.messages.len()

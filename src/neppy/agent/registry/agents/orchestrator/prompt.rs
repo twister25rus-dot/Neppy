@@ -152,7 +152,7 @@ fn render_installed_skills(skills: &[Workflow]) -> String {
             (skill, modified)
         })
         .collect();
-    ordered.sort_by(|a, b| b.1.cmp(&a.1));
+    ordered.sort_by_key(|entry| std::cmp::Reverse(entry.1));
     let hidden = ordered.len().saturating_sub(MAX_PROMPT_SKILLS);
     for (skill, _) in ordered.into_iter().take(MAX_PROMPT_SKILLS) {
         let id = if skill.dir_name.is_empty() {

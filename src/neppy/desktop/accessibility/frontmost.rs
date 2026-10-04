@@ -382,7 +382,7 @@ mod native {
             if id.is_null() {
                 return None;
             }
-            let len = CFStringGetLength(id).max(0).min(256);
+            let len = CFStringGetLength(id).clamp(0, 256);
             let cap = CFStringGetMaximumSizeForEncoding(len, UTF8).max(0) + 1;
             let mut buf = vec![0u8; cap as usize];
             let mut used: isize = 0;

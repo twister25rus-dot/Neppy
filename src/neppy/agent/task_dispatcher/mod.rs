@@ -101,7 +101,7 @@ pub(crate) async fn follow_up_turn_context(
     let mode = ThreadMode::from_labels(&labels);
     if is_pet_companion_thread(&labels) {
         let origin = crate::neppy::agent::turn_origin::pet_companion_origin(
-            &format!(
+            format!(
                 "{}{job_id}",
                 crate::neppy::security::approval::gate::PET_FOLLOW_UP_JOB_PREFIX
             ),

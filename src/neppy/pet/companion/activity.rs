@@ -188,12 +188,10 @@ pub fn fingerprint(kind: TriggerKind, bundle_id: Option<&str>, text: &str) -> St
     let mut norm = String::new();
     let mut prev_space = true;
     let mut prev_digit = false;
-    let mut count = 0usize;
-    for c in text.chars() {
+    for (count, c) in text.chars().enumerate() {
         if count >= FINGERPRINT_CHARS {
             break;
         }
-        count += 1;
         if c.is_whitespace() {
             if !prev_space {
                 norm.push(' ');
