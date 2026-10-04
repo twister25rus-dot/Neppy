@@ -13,15 +13,14 @@
 use crate::neppy::config::schema::MlxServerConfig;
 use crate::neppy::config::Config;
 
-/// The block as it is launched for the assistant's worker: with a server-side
-/// context limit and a single sequence slot when the stored block leaves them
-/// unset.
+/// The block as it is launched for the assistant's worker: with a single
+/// sequence slot when the stored block leaves it unset.
 ///
-/// `local_assistant.context_limit_tokens` is documented as "must not exceed the
-/// server's `max_kv_size`", but nothing enforced that, so a long prompt could
-/// grow the KV cache without bound. Passing the limit to the server makes the
-/// cap real. `max_num_seqs = 1` matches the single-flight gate: a second
-/// sequence is a second KV slice the memory policy never admitted.
+/// `max_num_seqs = 1` matches the single-flight gate: a second sequence is a
+/// second KV slice the memory policy never admitted. No KV cap is imposed:
+/// the worker is shared with normal chat, whose prompt can exceed the
+/// assistant's `context_limit_tokens`, and mlx_vlm rejects any request above
+/// `MAX_KV_SIZE`. The assistant enforces its own limit client-side.
 ///
 /// Applies only to the worker block (`worker_server_id`) and only while the
 /// assistant is enabled, so a user's other blocks and a user running plain
@@ -33,12 +32,15 @@ pub(crate) fn apply_spawn_limits(config: &Config, server: &MlxServerConfig) -> M
     if !is_worker || !config.local_assistant.enabled {
         return effective;
     }
+    // The KV cap is NOT imposed here: the worker is shared with normal chat,
+    // whose orchestrator prompt alone can exceed the assistant's 16k budget,
+    // and mlx_vlm rejects any request above MAX_KV_SIZE. The local assistant
+    // enforces its own context limit client-side (prompt budget + per-step
+    // max_tokens); a user who wants a server-side cap sets max_kv_size.
     if effective.max_kv_size == 0 {
-        effective.max_kv_size = config.local_assistant.context_limit_tokens;
-        log::info!(
-            "[mlx] `{}` has no max_kv_size; launching with local_assistant.context_limit_tokens={}",
-            server.id,
-            effective.max_kv_size
+        log::debug!(
+            "[mlx] `{}` has no max_kv_size; leaving it unbounded (assistant budget is enforced client-side)",
+            server.id
         );
     }
     if effective.max_num_seqs == 0 {
@@ -245,7 +247,7 @@ mod limits_tests {
     }
 
     #[test]
-    fn an_unset_context_limit_is_passed_to_the_worker_at_spawn() {
+    fn an_unset_context_limit_stays_unbounded_so_chat_still_fits() {
         let config = Config::default();
         let stored = config.mlx.servers[0].clone();
         assert_eq!(stored.max_kv_size, 0);
@@ -254,8 +256,9 @@ mod limits_tests {
 
         let launched = apply_spawn_limits(&config, &stored);
         let args = build_argv(&launched, 8123);
-        let limit = config.local_assistant.context_limit_tokens.to_string();
-        assert_eq!(flag(&args, "--max-kv-size"), Some(limit.as_str()));
+        // The shared worker also serves normal chat (a ~30k-token prompt), so
+        // no KV cap is imposed; only single-flight is.
+        assert!(flag(&args, "--max-kv-size").is_none());
         assert_eq!(flag(&args, "--max-num-seqs"), Some("1"));
         // The stored block is a copy's source, never rewritten.
         assert_eq!(config.mlx.servers[0].max_kv_size, 0);
