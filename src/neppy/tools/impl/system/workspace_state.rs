@@ -190,12 +190,13 @@ const ALLOWED_REPO_CONFIG: &[&str] = &[
     "branch.vscodemerge",
     "gc.auto",
     "fetch.prune",
-    // SHA-256 repositories and worktree-scoped config. Only these two
-    // `extensions.*` keys — the namespace as a whole is where git puts
-    // repository-format switches, and a blanket allow would admit whatever it
-    // adds next.
+    // SHA-256 repositories. Only this `extensions.*` key — the namespace as a
+    // whole is where git puts repository-format switches, and a blanket allow
+    // would admit whatever it adds next. `extensions.worktreeconfig` is NOT
+    // allowed: it enables `.git/config.worktree`, which `config --list
+    // --local` does not show, so a filter driver set there would escape the
+    // inertness check.
     "extensions.objectformat",
-    "extensions.worktreeconfig",
     // `filter.<driver>.required` is a boolean. The driver's actual programs —
     // `clean`, `smudge`, `process` — are NOT here and must not be; see the LFS
     // note on `NEUTRALISED_CONFIG`.

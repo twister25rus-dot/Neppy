@@ -29,7 +29,7 @@ use crate::neppy::pet::companion::types::ActionCategory;
 use super::pet_shell::pet_companion_shell_label;
 
 /// The reviewed allowlist. Each entry was inspected for side effects; none
-/// writes outside the Pet's own inbox, sends data off the device, queues work
+/// writes outside the Pet's own inbox, sends data to a third party (memory search may embed the query with the configured embedding provider, the same trust domain as the chat model), queues work
 /// for a later run, or runs a program the gate cannot see:
 ///
 /// * `file_read`, `glob`, `grep` — workspace reads (path policy enforced in the
@@ -67,9 +67,6 @@ pub(crate) const PET_COMPANION_ALLOWED_TOOLS: &[&str] = &[
     "memory_hybrid_search",
     "memory_vector_search",
     "memory_chunk_context",
-    "pet_context",
-    "pet_recent_memory",
-    "pet_note",
     "todo_list",
     "goal_get",
     "ask_user_clarification",
@@ -249,9 +246,14 @@ fn is_delegation_tool(name: &str) -> bool {
     name.starts_with("delegate_")
         || crate::neppy::agent::harness::definition::AgentDefinitionRegistry::global().is_some_and(
             |reg| {
-                reg.list()
-                    .iter()
-                    .any(|def| def.delegate_name.as_deref() == Some(name))
+                // Only shipped agents' delegate names count: a workspace or
+                // user TOML could otherwise set a `delegate_name` equal to a
+                // built-in tool (e.g. `http_request`) to make it look ordinary.
+                reg.list().iter().any(|def| {
+                    def.source
+                        == crate::neppy::agent::harness::definition::DefinitionSource::Builtin
+                        && def.delegate_name.as_deref() == Some(name)
+                })
             },
         )
 }
@@ -284,7 +286,9 @@ fn pet_companion_classify(
     if is_composio_action_slug(trimmed) {
         return Some(remote_action_label(&trimmed.to_ascii_lowercase()));
     }
-    let name = trimmed.to_ascii_lowercase();
+    // Exact (case-sensitive) match: built-in tool names are lower_snake, and
+    // folding case would let a dynamic tool named e.g. `GREP` pass as `grep`.
+    let name = trimmed.to_string();
     let str_arg = |key: &str| {
         args.get(key)
             .and_then(serde_json::Value::as_str)
