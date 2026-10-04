@@ -4,6 +4,33 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.67.0] - 2026-10-04
+
+### Neppy 0.67.0
+
+#### New
+- **Chat and Orchestration modes.** Every conversation has a Chat / Orchestration switch. Chat is one assistant with full tools, skills, MCP and memory. Orchestration is a supervisor that splits work across specialist agents, runs them in parallel, recovers from failures and shows progress (Researching → Completed). A new **Agent runs** view in Brain → Orchestration lists runs across conversations.
+- **Pet mode.**
+  - A background research pass (off until you enable it) that reads your memory and tasks, writes private notes, and gives you a ranked daily digest and an inbox of suggestions.
+  - **Desktop companion (macOS):** with your consent it watches the active app, window title, selected text, clipboard and, after you grant Screen Recording, screen text read on-device. Images are deleted right after reading. It offers occasional suggestions. Private information (passwords, codes, keys, card numbers) is never kept.
+  - Tray indicator shows when it is observing; pause instantly with ⌥⇧⌘P; app and window exclusions; view or delete everything it kept.
+- **Local assistant (MLX, preview).** Memory-bounded project tasks on an on-device model: one request at a time, idle unload and stop, a memory-pressure watchdog, an incremental project index and resumable checkpoints. RPC and CLI only for now.
+
+#### Fixed
+- Brain graph now shows connections, and clicking a node opens its content.
+- Memory summaries and embeddings work again when the local runtime is MLX.
+- GPT models signed in with ChatGPT no longer fail with "Stream must be set to true".
+- MLX hover hint no longer renders off the window edge.
+- MLX workers are stopped when the app quits, and orphans are cleaned up on start.
+- A crashed or timed-out helper agent now reports its failure and partial work instead of hanging.
+
+#### Behaviour changes to know about
+- **MCP tools now ask for approval on every call** (and are refused on the read-only access tier).
+- **Background task-board runs and background follow-ups ask before external actions** on their conversation, instead of running unattended.
+- **Anything the Pet starts asks first** unless it is a reviewed read-only action. That covers every shell command, file edit, web search or fetch, message, and purchase, even with "approve everything" on.
+- New conversations start in **Chat** mode; switch to Orchestration for multi-agent work.
+- Configured fallback models (`reliability.model_fallbacks`) now apply to your own picked models too.
+
 ## [0.66.12] - 2026-09-16
 
 ### What's Changed
