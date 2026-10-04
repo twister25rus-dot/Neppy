@@ -54,7 +54,7 @@ use crate::neppy::agent::tinyagents::payload_summarizer::{
 };
 use crate::neppy::inference::tokenjuice::AgentTokenjuiceCompression;
 use crate::neppy::security::approval::{
-    redact_args, summarize_action, ApprovalGate, ExecutionOutcome, GateOutcome,
+    summarize_action, ApprovalGate, ExecutionOutcome, GateOutcome,
 };
 use crate::neppy::tools::Tool;
 
@@ -940,6 +940,27 @@ impl ApprovalSecurityMiddleware {
             .is_some_and(|t| t.external_effect_with_args(args))
     }
 
+    /// Pet companion name-collision guard: `true` when `name` is on the Pet
+    /// allowlist but does not resolve to exactly one built-in tool — it is
+    /// registered more than once, or by a non-built-in (`Workflow`-category:
+    /// Composio per-action, skill-facing or generated) tool. Such a call is
+    /// refused under the Pet origin instead of being trusted by name.
+    fn pet_name_collision(&self, name: &str) -> bool {
+        if !crate::neppy::security::approval::pet_companion_name_allowlisted(name) {
+            return false;
+        }
+        let matches: Vec<&Box<dyn Tool>> = self
+            .tool_sets
+            .iter()
+            .flat_map(|set| set.iter())
+            .filter(|t| t.name() == name)
+            .collect();
+        matches.len() > 1
+            || matches
+                .iter()
+                .any(|t| t.category() != crate::neppy::tools::ToolCategory::System)
+    }
+
     /// Whether this call goes through the approval gate: `(has_external_effect,
     /// pet_category)`. The gate is consulted when either is set. The second is
     /// `Some` only under a Pet companion origin (incl. sub-agents it delegated
@@ -984,6 +1005,28 @@ impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
         // through the gate too, which parks it whatever the auto-approve
         // settings say.
         let (has_ext, pet_high_risk) = self.approval_requirement(&call.name, &call.arguments);
+        if crate::neppy::security::approval::is_pet_companion_turn()
+            && self.pet_name_collision(&call.name)
+        {
+            let reason = format!(
+                "{} '{}' blocked: under the Pet companion this name must resolve to one \
+                 built-in tool, and it does not (a duplicate or non-built-in tool uses it).",
+                crate::neppy::security::POLICY_DENIED_MARKER,
+                call.name
+            );
+            tracing::warn!(
+                tool = %call.name,
+                "[tinyagents::mw] Pet allowlisted name collides with another tool; denying"
+            );
+            return Ok(MiddlewareToolOutcome::Result(TaToolResult {
+                call_id: call.id,
+                name: call.name,
+                content: reason.clone(),
+                raw: None,
+                error: Some(reason),
+                elapsed_ms: 0,
+            }));
+        }
         tracing::debug!(
             tool = %call.name,
             has_external_effect = has_ext,
@@ -997,9 +1040,11 @@ impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
                     "[tinyagents::mw] routing external-effect tool through approval gate"
                 );
                 let summary = summarize_action(&call.name, &call.arguments);
-                let redacted = redact_args(&call.arguments);
-                let (outcome, request_id) =
-                    gate.intercept_audited(&call.name, &summary, redacted).await;
+                // Raw arguments: the gate classifies them exactly as this
+                // middleware did, and persists only its own redacted copy.
+                let (outcome, request_id) = gate
+                    .intercept_audited_raw(&call.name, &summary, &call.arguments)
+                    .await;
                 match outcome {
                     GateOutcome::Deny { reason } => {
                         tracing::warn!(
@@ -4753,6 +4798,67 @@ mod tests {
                 level: PermissionLevel::ReadOnly,
             }),
         ])
+    }
+
+    /// A Workflow-category tool (the shape of a Composio per-action / skill
+    /// tool) for the Pet collision guard.
+    struct WorkflowTool(&'static str);
+
+    #[async_trait]
+    impl Tool for WorkflowTool {
+        fn name(&self) -> &str {
+            self.0
+        }
+        fn description(&self) -> &str {
+            "workflow"
+        }
+        fn parameters_schema(&self) -> serde_json::Value {
+            json!({ "type": "object" })
+        }
+        async fn execute(
+            &self,
+            _args: serde_json::Value,
+        ) -> anyhow::Result<crate::neppy::tools::ToolResult> {
+            Ok(crate::neppy::tools::ToolResult::success("ok"))
+        }
+        fn category(&self) -> crate::neppy::tools::ToolCategory {
+            crate::neppy::tools::ToolCategory::Workflow
+        }
+    }
+
+    /// Round 4, item 5: an allowlisted name is trusted only when it resolves
+    /// to exactly one built-in (System-category) tool. A duplicate, or a
+    /// non-built-in tool registered under an allowlisted name, is a collision
+    /// (refused under the Pet origin); names off the allowlist are unaffected.
+    #[test]
+    fn pet_allowlisted_names_must_resolve_to_one_built_in_tool() {
+        let builtin = |name: &'static str| -> Box<dyn Tool> {
+            Box::new(InternalTool {
+                name,
+                level: PermissionLevel::ReadOnly,
+            })
+        };
+        let base: Arc<Vec<Box<dyn Tool>>> = Arc::new(vec![
+            builtin("grep"),
+            builtin("memory_recall"),
+            builtin("file_write"),
+        ]);
+        let extras: Arc<Vec<Box<dyn Tool>>> = Arc::new(vec![
+            builtin("grep"),
+            Box::new(WorkflowTool("file_read")),
+            builtin("file_write"),
+        ]);
+        let mw = ApprovalSecurityMiddleware::new(vec![extras, base]);
+        assert!(mw.pet_name_collision("grep"), "registered twice");
+        assert!(
+            mw.pet_name_collision("file_read"),
+            "non-built-in under an allowlisted name"
+        );
+        assert!(!mw.pet_name_collision("memory_recall"));
+        assert!(
+            !mw.pet_name_collision("file_write"),
+            "not allowlisted: parks anyway"
+        );
     }
 
     /// Release audit B1: under a Pet companion origin every B2 shell example

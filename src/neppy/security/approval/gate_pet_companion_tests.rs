@@ -99,8 +99,12 @@ fn the_representative_cases_cover_every_high_risk_class() {
 #[test]
 fn classifier_maps_tools_to_classes() {
     let cases: Vec<(&str, serde_json::Value, Option<C>)> = vec![
-        // Ordinary: only names on the closed Pet allowlist (round 3).
-        ("request_plan_review", json!({}), None),
+        // Ordinary: only names on the closed Pet allowlist.
+        ("memory_recall", json!({}), None),
+        // Round 4: plan review / todo writers / continue_subagent park.
+        ("request_plan_review", json!({}), Some(C::Irreversible)),
+        ("todo_add", json!({}), Some(C::Irreversible)),
+        ("continue_subagent", json!({}), Some(C::Irreversible)),
         (
             "git_operations",
             json!({"operation": "status"}),
@@ -122,13 +126,17 @@ fn classifier_maps_tools_to_classes() {
             json!({"command": "git status"}),
             Some(C::PrivilegedCommand),
         ),
-        // Not on the read-only allowlist: parks.
+        // Round 4: every shell call parks.
         (
             "shell",
             json!({"command": "cargo build"}),
             Some(C::PrivilegedCommand),
         ),
-        ("shell", json!({"command": "ls -la"}), None),
+        (
+            "shell",
+            json!({"command": "ls -la"}),
+            Some(C::PrivilegedCommand),
+        ),
         (
             "composio",
             json!({"action": "execute", "tool_slug": "GMAIL_FETCH_EMAILS"}),
@@ -679,4 +687,32 @@ async fn follow_up_turn_uses_the_threads_saved_mode() {
     let (origin, mode) = follow_up_turn_context(dir.path(), "missing", "bg", fallback).await;
     assert_eq!(mode, ThreadMode::Chat);
     assert_eq!(origin.class(), "TrustedAutomation(BackgroundTurn)");
+}
+
+/// Round 4, item 2: the gate classifies the RAW arguments it is handed by the
+/// middleware (`intercept_audited_raw`) and persists only the redacted copy.
+/// A command whose `rm` the redactor would swallow into a home-path segment
+/// still parks — as `delete` — with `auto_approve_all` on and `shell` allowed.
+#[tokio::test]
+async fn gate_classifies_raw_arguments_and_persists_redacted_ones() {
+    let (gate, dir) = gate();
+    let _settings = settings(&dir, true, &["shell"]);
+    let raw = json!({ "command": "ls /Users/alice;rm -rf ~/y" });
+    let g = gate.clone();
+    let call = raw.clone();
+    let handle = tokio::spawn(turn_origin::with_origin(companion(None), async move {
+        g.intercept_audited_raw("shell", "ls", &call).await.0
+    }));
+    let row = tokio::time::timeout(Duration::from_secs(5), wait_pending(&gate, "shell"))
+        .await
+        .expect("must park");
+    let stored = row.args_redacted.to_string();
+    assert!(
+        !stored.contains("alice"),
+        "persisted args are redacted: {stored}"
+    );
+    gate.decide(&row.request_id, ApprovalDecision::Deny)
+        .unwrap();
+    assert!(matches!(handle.await.unwrap(), GateOutcome::Deny { .. }));
+    assert_eq!(pet_companion_high_risk("shell", &raw), Some(C::Delete));
 }

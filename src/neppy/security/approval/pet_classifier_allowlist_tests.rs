@@ -103,25 +103,50 @@ fn recognisable_commands_keep_their_precise_label() {
     }
 }
 
-/// R4: the gate classifies *redacted* args; a home path redacted to `<HOME>…`
-/// must stay an ordinary path word, not turn into an input redirect.
+/// Round 4, item 2: classification reads the RAW arguments. A home path
+/// classifies the same raw or redacted, and content hidden inside what the
+/// redactor would swallow as a home-path "username" segment is still seen.
 #[test]
-fn redacted_home_paths_do_not_change_the_class() {
-    let raw = json!({ "command": "ls -la /Users/alice/projects/app" });
-    let redacted = super::super::redact::redact_args(&raw);
-    let command = redacted["command"].as_str().unwrap();
-    assert!(
-        command.contains(super::super::pet_shell::HOME_PLACEHOLDER),
-        "redactor placeholder drifted: {command}"
-    );
+fn classification_reads_raw_arguments() {
+    let redact = super::super::redact::redact_args;
+    // Shell: the raw command gets its real label. (The redacted copy reads
+    // `<HOME>` as redirects and would mislabel it — one reason the gate no
+    // longer classifies the audit copy.) Both park either way.
+    let ls = json!({ "command": "ls -la /Users/alice/projects/app" });
     assert_eq!(
-        pet_companion_high_risk("shell", &redacted),
-        None,
-        "{command}"
+        pet_companion_high_risk("shell", &ls),
+        Some(C::PrivilegedCommand)
     );
-    assert_eq!(pet_companion_high_risk("shell", &raw), None);
-    let rm = super::super::redact::redact_args(&json!({ "command": "rm -rf /Users/alice/x" }));
-    assert_eq!(pet_companion_high_risk("shell", &rm), Some(C::Delete));
+    assert!(pet_companion_high_risk("shell", &redact(&ls)).is_some());
+    for (tool, raw) in [
+        (
+            "composio_execute",
+            json!({ "tool": "GMAIL_SEND_EMAIL", "arguments": {"path": "/Users/alice/x"} }),
+        ),
+        (
+            "http_request",
+            json!({ "method": "GET", "url": "file:///Users/alice/notes" }),
+        ),
+    ] {
+        assert_eq!(
+            pet_companion_high_risk(tool, &raw),
+            pet_companion_high_risk(tool, &redact(&raw)),
+            "{tool} {raw}"
+        );
+        assert!(
+            pet_companion_high_risk(tool, &raw).is_some(),
+            "{tool} parks"
+        );
+    }
+    // `scrub_paths` swallows everything up to the next `/` after `/Users/` —
+    // here the `rm`. The raw command still reads as a delete.
+    let raw = json!({ "command": "ls /Users/x;rm -rf ~/y" });
+    let redacted = redact(&raw);
+    assert!(
+        !redacted["command"].as_str().unwrap().contains("rm"),
+        "precondition: the redactor hides the rm: {redacted}"
+    );
+    assert_eq!(pet_companion_high_risk("shell", &raw), Some(C::Delete));
 }
 
 /// Round 3, item 1: a CLOSED tool-name allowlist. Every name on it is
@@ -188,6 +213,15 @@ fn only_names_on_the_closed_allowlist_are_ordinary() {
         ("GMAIL_SEND_EMAIL", json!({}), C::SendMessage),
         ("GMAIL_FETCH_EMAILS", json!({}), C::SharePersonalInfo),
         ("GITHUB_CREATE_ISSUE", json!({}), C::Irreversible),
+        // Round 4 removals.
+        ("todo_add", json!({}), C::Irreversible),
+        ("todo_edit", json!({}), C::Irreversible),
+        ("todo_update_status", json!({}), C::Irreversible),
+        ("todo_replace", json!({}), C::Irreversible),
+        ("todo_decide_plan", json!({}), C::Irreversible),
+        ("continue_subagent", json!({}), C::Irreversible),
+        ("request_plan_review", json!({}), C::Irreversible),
+        ("plan_exit", json!({}), C::Irreversible),
         // A read-verb name is not enough: it must be on the list.
         ("get_and_forward", json!({}), C::SendMessage),
         ("list_secrets", json!({}), C::Irreversible),
@@ -275,8 +309,8 @@ fn round_three_shell_rule() {
     );
     assert_eq!(
         shell("cat < notes/input.txt"),
-        None,
-        "plain relative input redirect"
+        Some(C::PrivilegedCommand),
+        "round 4: even a plain relative input redirect parks"
     );
     // git always parks under the Pet: repository config (core.fsmonitor, diff
     // drivers) can launch programs even for read-only verbs.

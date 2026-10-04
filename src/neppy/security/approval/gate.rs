@@ -434,6 +434,30 @@ impl ApprovalGate {
             action_summary,
             args_redacted,
             None,
+            None,
+            &mut _park_bound_elapsed,
+        )
+        .await
+    }
+
+    /// [`Self::intercept_audited`] for a caller holding the tool's RAW
+    /// arguments (the approval middleware). The raw arguments drive the Pet
+    /// companion classification — exactly what the middleware classified —
+    /// while only the redacted copy is persisted and shown (`redact_args` is
+    /// for the audit trail, never for policy).
+    pub async fn intercept_audited_raw(
+        &self,
+        tool_name: &str,
+        action_summary: &str,
+        raw_args: &serde_json::Value,
+    ) -> (GateOutcome, Option<String>) {
+        let mut _park_bound_elapsed = false;
+        self.intercept_audited_inner(
+            tool_name,
+            action_summary,
+            super::redact::redact_args(raw_args),
+            Some(raw_args),
+            None,
             &mut _park_bound_elapsed,
         )
         .await
@@ -469,6 +493,7 @@ impl ApprovalGate {
                 tool_name,
                 action_summary,
                 args_redacted,
+                None,
                 park_bound,
                 &mut park_bound_elapsed,
             )
@@ -492,6 +517,7 @@ impl ApprovalGate {
         tool_name: &str,
         action_summary: &str,
         args_redacted: serde_json::Value,
+        raw_args: Option<&serde_json::Value>,
         park_bound: Option<Duration>,
         park_bound_elapsed: &mut bool,
     ) -> (GateOutcome, Option<String>) {
@@ -542,7 +568,7 @@ impl ApprovalGate {
             AgentTurnOrigin::TrustedAutomation {
                 source: TrustedAutomationSource::PetCompanion { .. },
                 ..
-            } => pet_companion_high_risk(tool_name, &args_redacted),
+            } => pet_companion_high_risk(tool_name, raw_args.unwrap_or(&args_redacted)),
             _ => None,
         };
         if let Some(category) = pet_companion_high_risk {

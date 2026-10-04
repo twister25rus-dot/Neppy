@@ -16,7 +16,6 @@
 pub mod gate;
 mod pet_classifier;
 mod pet_shell;
-mod pet_shell_readonly;
 pub mod redact;
 pub mod rpc;
 pub mod schemas;
@@ -30,10 +29,10 @@ pub use gate::{
     parse_approval_reply, ApprovalChatContext, ApprovalGate, FlowRunContext, APPROVAL_CHAT_CONTEXT,
     APPROVAL_COPILOT_STREAM_CONTEXT, APPROVAL_FLOW_RUN_CONTEXT,
 };
-pub(crate) use pet_classifier::pet_companion_gate_category;
 /// The release-audit B2 shell examples, shared by the harness-level tests.
 #[cfg(test)]
 pub(crate) use pet_classifier::tests::b2_shell_cases as pet_b2_shell_cases;
+pub(crate) use pet_classifier::{pet_companion_gate_category, pet_companion_name_allowlisted};
 pub use redact::{redact_args, summarize_action};
 pub use schemas::all_controller_schemas as all_approval_controller_schemas;
 pub use schemas::all_registered_controllers as all_approval_registered_controllers;

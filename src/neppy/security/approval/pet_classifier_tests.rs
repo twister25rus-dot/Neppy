@@ -133,25 +133,26 @@ fn ambiguous_commands_park() {
     }
 }
 
-/// The lexer respects quoting, so data that merely *mentions* a dangerous
-/// token is not misread, and harmless redirects stay ordinary. Only commands on
-/// the read-only allowlist are ordinary (see `pet_classifier_allowlist_tests`
-/// for the parking side).
+/// Round 4: EVERY shell call parks under the Pet companion origin — even a
+/// command that only reads (bash parsing is too subtle to prove that). Plain
+/// reads park as `privileged_command`.
 #[test]
-fn ordinary_shell_commands_stay_ordinary() {
+fn every_shell_command_parks() {
     for command in [
         "ls -la",
         "ls -la > /dev/null 2>&1",
         "grep -r 'rm -rf' src",
-        "grep -n 'TODO > done' src",
         "command -v cargo",
         "cat < input.txt",
         "cd src && ls",
         "find . -name '*.rs' -type f",
-        "wc -l src/main.rs | head -1",
         "echo hello",
+        "git status",
+        "printf -v x %s y",
+        "ls # rm -rf x",
+        "cmd /C dir",
     ] {
-        assert_eq!(shell(command), None, "{command}");
+        assert_eq!(shell(command), Some(C::PrivilegedCommand), "{command}");
     }
 }
 

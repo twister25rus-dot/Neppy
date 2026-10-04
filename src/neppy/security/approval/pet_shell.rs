@@ -1,104 +1,64 @@
-//! Pet companion (user decision D4): the high-risk class of a `shell` call.
+//! Pet companion (user decision D4): the label of a parked `shell` call.
 //!
-//! **Allowlist, not denylist.** Under the Pet companion origin a shell command
-//! is ordinary ONLY when every simple command in it is a known read-only
-//! command (`super::pet_shell_readonly`) with a plain name in command position
-//! and no file redirect. Everything else parks as `privileged_command` — build
-//! tools and task runners (`make`, `npm run`, `cargo test`, `pytest`, `just`),
-//! interpreters and wrappers (`bash -c`, `python3`, `xargs`, `env`, `sudo`),
-//! shell state changes (`IFS=…`, `PATH=…`, `alias`, `trap`, `function`),
-//! obfuscation (`{rm,x}`, `$'\x72m'`, `$CMD`, globs) and paths in command
-//! position (`./ls`, a symlinked binary). Recognisable dangerous commands keep a
-//! more precise label (`rm` → `delete`, `git push` → `publish`, `> file` →
-//! `irreversible`, …), but the default is to park.
+//! Under the Pet companion origin **every** `shell` call parks for
+//! confirmation, on every platform: shell syntax (comments, `$'..'` / `${..}`
+//! expansion of flags, clustered flags, fd sinks, `printf -v`, Windows
+//! `cmd /C` quoting, …) is too subtle to prove any command read-only. This
+//! module only picks the most useful category name for the approval card:
+//! a recognisable command keeps a precise label (`rm` → `delete`, `git push`
+//! → `publish`, `> file` → `irreversible`, `curl` → `share_personal_info`,
+//! a package install → `install`), and everything else is
+//! `privileged_command`.
 //!
-//! The gate sees the *redacted* `command`: the `<HOME>` placeholder the
-//! redactor leaves for a home path is read as an ordinary path word. Anything
-//! the lexer cannot read unambiguously parks (unbalanced quote, dangling
-//! redirect, `$(…)`, backticks, `<(…)`).
+//! It reads the RAW command (never the redacted audit copy).
 
 use std::sync::OnceLock;
 
 use crate::neppy::pet::companion::types::ActionCategory;
 use crate::neppy::security::{CommandClass, SecurityPolicy};
 
-/// What `approval::redact` writes in place of a home-directory prefix (pinned
-/// against the redactor by `pet_classifier_tests`).
-pub(super) const HOME_PLACEHOLDER: &str = "<HOME>";
-
-/// The class of a `shell` call from its (path-scrubbed, otherwise intact)
-/// `command` argument, or `None` when the call is ordinary. See the table on
-/// [`super::pet_classifier::pet_companion_high_risk`].
-pub(super) fn pet_companion_shell_class(args: &serde_json::Value) -> Option<ActionCategory> {
-    let raw = args
+/// The category a Pet companion `shell` call parks under. Always a category —
+/// no shell command is ordinary under the Pet companion origin.
+pub(super) fn pet_companion_shell_label(args: &serde_json::Value) -> ActionCategory {
+    let command = args
         .get("command")
         .and_then(serde_json::Value::as_str)
         .unwrap_or("")
         .trim();
-    if raw.is_empty() {
-        return Some(ActionCategory::PrivilegedCommand);
+    if command.is_empty() {
+        return ActionCategory::PrivilegedCommand;
     }
-    // The redactor replaces a home prefix with `<HOME>`; read it as a path word,
-    // not as an input redirect.
-    let command = raw.replace(HOME_PLACEHOLDER, "/home-redacted");
     // Bash's network pseudo-devices open a socket from a plain redirect.
     if command.contains("/dev/tcp") || command.contains("/dev/udp") {
-        return Some(ActionCategory::SharePersonalInfo);
+        return ActionCategory::SharePersonalInfo;
     }
-    // Hidden execution runs an inner command no classification can see.
+    // Hidden execution runs an inner command the label cannot describe.
     if ["`", "$(", "<(", ">("].iter().any(|p| command.contains(p)) {
-        return Some(ActionCategory::PrivilegedCommand);
+        return ActionCategory::PrivilegedCommand;
     }
-    let Some(segments) = lex(&command) else {
-        tracing::debug!("[approval::pet_shell] ambiguous shell command — parking");
-        return Some(ActionCategory::PrivilegedCommand);
+    let Some(segments) = lex(command) else {
+        return ActionCategory::PrivilegedCommand;
     };
-    let verdicts: Vec<Verdict> = segments.iter().map(classify_segment).collect();
-    // A recognisable dangerous command reports its own class first.
-    if let Some(category) = verdicts.iter().find_map(|v| match v {
-        Verdict::Label(c) => Some(*c),
-        _ => None,
-    }) {
-        return Some(category);
+    if let Some(category) = segments.iter().find_map(segment_label) {
+        return category;
     }
-    if verdicts.iter().all(|v| matches!(v, Verdict::Ordinary)) {
-        return None;
-    }
-    // Not on the read-only allowlist: park. The command classifier only picks a
-    // more precise label for the card.
     static POLICY: OnceLock<SecurityPolicy> = OnceLock::new();
-    let class = POLICY
+    match POLICY
         .get_or_init(SecurityPolicy::default)
-        .classify_command(&command);
-    Some(match class {
+        .classify_command(command)
+    {
         CommandClass::Install => ActionCategory::Install,
         CommandClass::Network => ActionCategory::SharePersonalInfo,
         _ => ActionCategory::PrivilegedCommand,
-    })
+    }
 }
 
-/// How one simple command reads.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Verdict {
-    /// On the read-only allowlist.
-    Ordinary,
-    /// A recognisable high-risk command.
-    Label(ActionCategory),
-    /// Anything else: parks as `privileged_command` (or a classifier label).
-    Park,
-}
-
-/// One simple command: its words (quotes removed), whether it truncates or
-/// overwrites a file through an output redirect (`>`, `>|`, `&>`), and whether
-/// it appends to one (`>>`).
+/// One simple command: its words (quotes removed) and whether it truncates or
+/// overwrites a file through an output redirect (`>`, `>|`, `&>`).
 #[derive(Debug, Default)]
 struct Segment {
     words: Vec<String>,
     truncates: bool,
-    appends: bool,
-    /// An input redirect from anything but a plain relative file, or a
-    /// here-document / here-string.
-    bad_input: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -130,18 +90,7 @@ impl Lexer {
                     self.seg.truncates = true;
                 }
             }
-            Some(Redirect::Append) => {
-                if !is_harmless_sink(&word) {
-                    self.seg.appends = true;
-                }
-            }
-            // Input only from a plain relative file: not an absolute path, a
-            // home path, a parent directory, a device or an expansion.
-            Some(Redirect::Input) => {
-                if !is_plain_relative_file(&word) {
-                    self.seg.bad_input = true;
-                }
-            }
+            Some(Redirect::Append | Redirect::Input) => {}
             None => self.seg.words.push(word),
         }
     }
@@ -153,22 +102,11 @@ impl Lexer {
             return false;
         }
         let seg = std::mem::take(&mut self.seg);
-        if !seg.words.is_empty() || seg.truncates || seg.appends || seg.bad_input {
+        if !seg.words.is_empty() || seg.truncates {
             self.segments.push(seg);
         }
         true
     }
-}
-
-/// A relative path below the working directory, with no expansion.
-fn is_plain_relative_file(target: &str) -> bool {
-    !target.is_empty()
-        && !target.starts_with('/')
-        && !target.starts_with('~')
-        && !target.split('/').any(|part| part == "..")
-        && !target
-            .chars()
-            .any(|c| matches!(c, '$' | '{' | '}' | '*' | '?' | '[' | ']'))
 }
 
 /// Output sinks a truncating redirect cannot damage.
@@ -283,10 +221,7 @@ fn lex(command: &str) -> Option<Vec<Segment>> {
                 if lx.redirect.is_some() {
                     return None;
                 }
-                // A here-document / here-string feeds inline text whose body
-                // the lexer would read as commands: never ordinary.
                 while chars.get(i + 1) == Some(&'<') {
-                    lx.seg.bad_input = true;
                     i += 1;
                 }
                 lx.redirect = Some(Redirect::Input);
@@ -323,59 +258,23 @@ const SYSTEM_SETTINGS_COMMANDS: &[&str] = &[
     "security",
 ];
 
-fn classify_segment(seg: &Segment) -> Verdict {
+/// The precise label of one simple command, when it is recognisable.
+fn segment_label(seg: &Segment) -> Option<ActionCategory> {
     let mut words = seg
         .words
         .iter()
         .map(String::as_str)
-        .skip_while(|w| CONTROL_WORDS.contains(w))
-        .peekable();
-    // `VAR=value cmd` / `IFS=…` / `PATH=…` change how the command resolves or
-    // splits: never ordinary. The command after them still gets its label.
-    let mut assigns = false;
-    while words
-        .peek()
-        .is_some_and(|w| w.contains('=') && !w.starts_with('-'))
-    {
-        assigns = true;
-        words.next();
-    }
-    let Some(raw_base) = words.next() else {
-        return if seg.truncates {
-            Verdict::Label(ActionCategory::Irreversible)
-        } else if seg.appends || seg.bad_input || assigns {
-            Verdict::Park
-        } else {
-            Verdict::Ordinary
-        };
-    };
-    let rest_raw: Vec<&str> = words.collect();
-    let base = raw_base
-        .rsplit('/')
-        .next()
-        .unwrap_or(raw_base)
-        .to_ascii_lowercase();
-    let rest: Vec<String> = rest_raw.iter().map(|w| w.to_ascii_lowercase()).collect();
-    if let Some(category) = command_class(&base, &rest) {
-        return Verdict::Label(category);
-    }
-    if seg.truncates {
-        return Verdict::Label(ActionCategory::Irreversible);
-    }
-    // A plain command name only: a path (`./ls`, `/tmp/x/cat`), a variable, a
-    // glob, a brace list or `~` in command position is never ordinary.
-    let plain = !raw_base.is_empty()
-        && !raw_base
-            .chars()
-            .any(|c| matches!(c, '/' | '$' | '{' | '}' | '?' | '*' | '[' | ']' | '~' | '='));
-    if seg.appends || seg.bad_input || assigns || !plain {
-        return Verdict::Park;
-    }
-    if super::pet_shell_readonly::is_read_only(&base, &rest, &rest_raw) {
-        Verdict::Ordinary
-    } else {
-        Verdict::Park
-    }
+        .skip_while(|w| CONTROL_WORDS.contains(w) || (w.contains('=') && !w.starts_with('-')));
+    let label = words.next().and_then(|raw_base| {
+        let base = raw_base
+            .rsplit('/')
+            .next()
+            .unwrap_or(raw_base)
+            .to_ascii_lowercase();
+        let rest: Vec<String> = words.map(str::to_ascii_lowercase).collect();
+        command_class(&base, &rest)
+    });
+    label.or(seg.truncates.then_some(ActionCategory::Irreversible))
 }
 
 fn command_class(base: &str, rest: &[String]) -> Option<ActionCategory> {
@@ -394,8 +293,7 @@ fn command_class(base: &str, rest: &[String]) -> Option<ActionCategory> {
             Some(C::PrivilegedCommand)
         }
         "mv" if has("/dev/null") => Some(C::Delete),
-        // A move or copy may overwrite its target; the gate cannot see whether
-        // it exists, so only a no-clobber form is ordinary.
+        // A move or copy may overwrite its target.
         "mv" | "cp" if !(has("--no-clobber") || short_flag('n')) => Some(C::Irreversible),
         "dd" | "truncate" => Some(C::Irreversible),
         "ln" if short_flag('f') || has("--force") => Some(C::Irreversible),

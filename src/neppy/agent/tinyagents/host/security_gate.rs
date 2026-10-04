@@ -85,7 +85,7 @@ use tinyagents::harness::host::security_gate::{
 };
 
 use crate::neppy::agent::tinyagents::policy_denial::PolicyDenial;
-use crate::neppy::security::approval::{redact_args, summarize_action, ApprovalGate, GateOutcome};
+use crate::neppy::security::approval::{summarize_action, ApprovalGate, GateOutcome};
 use crate::neppy::security::policy::{
     CommandClass, GateDecision as PolicyGateDecision, SecurityPolicy,
 };
@@ -361,7 +361,6 @@ impl NeppySecurityGate {
         };
 
         let summary = summarize_action(&call.tool_name, &call.arguments);
-        let redacted = redact_args(&call.arguments);
         tracing::debug!(
             target: "tinyagents",
             tool = %call.tool_name,
@@ -372,8 +371,10 @@ impl NeppySecurityGate {
         // `intercept_audited`, not `intercept`: the returned id is what lets the
         // executor close the audit row later *without* raising a second
         // approval card. See mismatch (2).
+        // `_raw`: the gate classifies the raw arguments (Pet companion policy)
+        // and persists only its own redacted copy.
         let (outcome, request_id) = gate
-            .intercept_audited(&call.tool_name, &summary, redacted)
+            .intercept_audited_raw(&call.tool_name, &summary, &call.arguments)
             .await;
         match outcome {
             GateOutcome::Allow => {
