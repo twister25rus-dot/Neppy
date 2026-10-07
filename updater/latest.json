@@ -1,11 +1,11 @@
 {
-  "version": "0.68.3",
-  "notes": "## What's Changed\n\n- fix: reasoning UI and doubling, pinned composer, caret, tool loops ([`e8853440`](https://github.com/twister25rus-dot/Neppy/commit/e88534404597ef680736e96e842a381ddc3908af))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/9ec9fff03a8b393f6f8c2dd652bdcfc3a9162214...e88534404597ef680736e96e842a381ddc3908af",
-  "pub_date": "2026-10-07T12:44:25Z",
+  "version": "0.68.4",
+  "notes": "## What's Changed\n\n- commit into v.0.68.4 ([`75c74e03`](https://github.com/twister25rus-dot/Neppy/commit/75c74e030a1d5e56737bd3bf9f8034163ed1e514))\n- feat: reliable local MLX model; Debug Mode local install ([`c54536c7`](https://github.com/twister25rus-dot/Neppy/commit/c54536c7d2391379b68549e30f12b14363221e4c))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/87d9cb3b4b346c3c51d922bff164c91ef17de5f7...c54536c7d2391379b68549e30f12b14363221e4c",
+  "pub_date": "2026-10-07T16:33:00Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrak1RMUVJWXRsU3ZhNFhQNTdLVFk0QUV6OXptNkl1ZkFicnB2WjZMWlFYTnBnblVLYzdsOXhnSmZCOWp2NnA0Z3A1NnZEb2FiS2RLWmxReURjUDdyQmcwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzc2NzIyCWZpbGU6TmVwcHkuYXBwLnRhci5negpWeUdJSGVnS2JUOVAzMmVBaHdYcFRGTTJLbW1SejJvam1LN3VuT0FRd3J6WitJWmpTOXQzRlQxdG5ibVBkbU5DQzlhN3g1OFVMemE2Um1oZHNoS2NCUT09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/618666173"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakh6dFlCclZxeXNVN2hnWmxtV1dPcUw4WW9SYnNCOFZSekdpcjM1SVZQaXpKMHF1VVFiOEJoUTBZQXkxQmpDZzhPZWsrQWY4TFlsVFgxSVdQVWQxZWdvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzkwMzgyCWZpbGU6TmVwcHkuYXBwLnRhci5negpEcFozbS9DOEtwT214Z0s5dk9SdWdnSWlyQ1c1Rm5KTjNMZTVWaW1rOC9yb2tUMnVQRmVHUzlVQzRmakxycE1MV1NnaVJqSEpSL2YwMFhFQXpMZUJDUT09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/619213684"
     }
   }
 }
