@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.68.0] - 2026-10-07
+
+### What's Changed
+
+- feat: in-app Debug Mode and Neppy rebrand ([`9dec504c`](https://github.com/twister25rus-dot/Neppy/commit/9dec504c745e0172de68f8ea83f53bbe29dbeb33))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/5758da08ec8de7794b7ad4de51853b2974011241...9dec504c745e0172de68f8ea83f53bbe29dbeb33
+
 ## [0.67.0] - 2026-10-04
 
 ### Neppy 0.67.0
