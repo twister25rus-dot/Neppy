@@ -20,6 +20,7 @@ use parking_lot::Mutex;
 use serde::Deserialize;
 
 use crate::neppy::config::Config;
+use crate::neppy::inference::local::mlx::is_user_stopped;
 
 use super::super::LocalAiService;
 use super::health::{probe_liveness, probe_models};
@@ -194,6 +195,17 @@ pub(crate) async fn ensure_started(
         }
     }
 
+    // The user turned this server off: it stays off until they turn it on, so
+    // a request must fail loudly instead of quietly bringing it back. Read
+    // fresh, because `config` was captured when the provider was built and may
+    // predate the stop.
+    if let Some(message) = refuse_if_user_stopped(config, &id).await {
+        log::info!("[mlx:worker] lazy start of `{id}` refused: {message}");
+        svc.metrics
+            .event(event::ADMISSION_REFUSED, Some(&id), "user turned it off");
+        return Err(message);
+    }
+
     if svc.worker.crash_pending.load(Ordering::SeqCst) {
         let max = config.mlx.worker.max_restarts_per_10min;
         if !svc.worker.try_restart(Instant::now(), max) {
@@ -220,6 +232,27 @@ pub(crate) async fn ensure_started(
         .set_swap_baseline(Some(sample_system().swap_used_bytes));
     svc.gate.touch();
     wait_ready(svc, config, &id, timeout).await
+}
+
+/// The error an automatic start gets when the user turned `id` off, or `None`
+/// when starting is allowed.
+pub(crate) async fn refuse_if_user_stopped(config: &Config, id: &str) -> Option<String> {
+    // Unit tests must not read whatever config the host machine has.
+    #[cfg(not(test))]
+    let fresh = crate::neppy::config::rpc::load_config_with_timeout()
+        .await
+        .ok();
+    #[cfg(test)]
+    let fresh: Option<Config> = None;
+    let stopped = fresh
+        .as_ref()
+        .map_or_else(|| is_user_stopped(config, id), |c| is_user_stopped(c, id));
+    stopped.then(|| {
+        format!(
+            "MLX server `{id}` is turned off. Turn it on from the MLX menu or Settings \
+             before using an `mlx:` model."
+        )
+    })
 }
 
 /// Poll the pool's status until `id` answers, crashes, or `timeout` passes.

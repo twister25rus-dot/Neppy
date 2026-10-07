@@ -7586,7 +7586,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Afficher les exécutions',
   'orchestrationRuns.hideRuns': 'Masquer les exécutions',
   'orchestrationRuns.allRuns': "Toutes les exécutions d'agents",
-  'nav.debug': 'Débogage',
   'debug.banner.title': 'MODE DÉBOGAGE',
   'debug.banner.access': 'Accès développement activé',
   'debug.banner.repo': 'Dépôt',
@@ -7595,15 +7594,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'Fichiers modifiés',
   'debug.banner.detached': 'détaché',
   'debug.banner.noCommits': 'aucun commit',
-  'debug.newTask': 'Nouvelle tâche de débogage',
-  'debug.loading': 'Ouverture du mode débogage…',
   'debug.unavailable.title': 'Le mode débogage nécessite le dépôt source de Neppy',
-  'debug.unavailable.body':
-    "Le mode débogage travaille sur le code source de l'application elle-même, mais aucun dépôt n'a été trouvé. Définissez NEPPY_DEBUG_PROJECT_ROOT avec le chemin de votre copie de Neppy (le dossier qui contient .git), puis redémarrez l'application.",
-  'debug.unavailable.detail': 'Détails : {error}',
-  'debug.unavailable.retry': 'Réessayer',
-  'debug.createFailed': 'Impossible de démarrer la session de débogage.',
   'debug.unknownError': 'Une erreur est survenue.',
+  'debug.switch.label': 'Débogage',
+  'debug.switch.tooltip':
+    "Mode débogage : laisse l'agent de cette conversation travailler sur le code source de l'application elle-même.",
+  'debug.switch.repo.body':
+    "Aucun dépôt de code source n'a été trouvé, cette conversation reste donc dans son mode actuel. Indiquez dans les réglages où se trouve votre copie de Neppy pour le mode débogage.",
   'debug.lastTask.title': 'Dernière tâche',
   'debug.lastTask.files': 'Fichiers modifiés : {count}',
   'debug.lastTask.committed': 'Commité sous {sha}',

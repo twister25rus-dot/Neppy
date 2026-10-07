@@ -7557,7 +7557,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Mostrar ejecuciones',
   'orchestrationRuns.hideRuns': 'Ocultar ejecuciones',
   'orchestrationRuns.allRuns': 'Todas las ejecuciones de agentes',
-  'nav.debug': 'Depurar',
   'debug.banner.title': 'MODO DEPURACIÓN',
   'debug.banner.access': 'Acceso de desarrollo activado',
   'debug.banner.repo': 'Repositorio',
@@ -7566,15 +7565,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'Archivos modificados',
   'debug.banner.detached': 'desacoplado',
   'debug.banner.noCommits': 'sin commits',
-  'debug.newTask': 'Nueva tarea de depuración',
-  'debug.loading': 'Abriendo el modo depuración…',
   'debug.unavailable.title': 'El modo depuración necesita el repositorio de código de Neppy',
-  'debug.unavailable.body':
-    'El modo depuración trabaja sobre el código fuente de la propia app, pero no se encontró ningún repositorio. Define NEPPY_DEBUG_PROJECT_ROOT con la ruta de tu copia de Neppy (la carpeta que contiene .git) y reinicia la app.',
-  'debug.unavailable.detail': 'Detalles: {error}',
-  'debug.unavailable.retry': 'Reintentar',
-  'debug.createFailed': 'No se pudo iniciar la sesión de depuración.',
   'debug.unknownError': 'Algo salió mal.',
+  'debug.switch.label': 'Depurar',
+  'debug.switch.tooltip':
+    'Modo de depuración: permite que el agente de este chat trabaje en el código fuente de la propia aplicación.',
+  'debug.switch.repo.body':
+    'No se encontró ningún repositorio de código fuente, así que este chat sigue en su modo actual. Indica en los ajustes dónde está tu copia de Neppy para el modo de depuración.',
   'debug.lastTask.title': 'Última tarea',
   'debug.lastTask.files': 'Archivos modificados: {count}',
   'debug.lastTask.committed': 'Confirmado como {sha}',

@@ -263,6 +263,16 @@ pub struct MlxServerConfig {
     /// Start this block automatically when the runtime boots.
     #[serde(default = "default_autostart")]
     pub autostart: bool,
+    /// The user turned this block off (`mlx.stop`) and has not turned it on
+    /// since. Persisted, so it survives a core restart.
+    ///
+    /// `autostart` says what the supervisor does at boot; this says what the
+    /// *user* wants right now, and every automatic start path (boot
+    /// reconcile, the lazy start an `mlx:` inference request triggers) must
+    /// honour it. Only an explicit `mlx.start` / `mlx.restart` clears it.
+    /// Absent in older configs, which read as "not turned off".
+    #[serde(default)]
+    pub user_stopped: bool,
 }
 
 fn default_embeddings_backend() -> String {
@@ -376,6 +386,7 @@ impl Default for MlxServerConfig {
             trust_remote_code: false,
             log_level: default_log_level(),
             autostart: default_autostart(),
+            user_stopped: false,
         }
     }
 }

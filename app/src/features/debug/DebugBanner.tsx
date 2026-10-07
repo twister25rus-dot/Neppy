@@ -6,12 +6,19 @@ import type { DebugStatus } from '../../services/api/debugModeApi';
 import { dirtyCount, repoBasename, shortSha } from './debugFormat';
 
 /**
- * Persistent top banner of the Debug page: it must be impossible to forget the
- * agent in this chat can edit the app's own source. Amber (warning) semantics
- * from the shared tokens; `role="status"` because it is always present, not an
- * interruption.
+ * Persistent banner above a Debug-mode conversation: it must be impossible to
+ * forget the agent in this chat can edit the app's own source. Amber (warning)
+ * semantics from the shared tokens; `role="status"` because it is always
+ * present, not an interruption. `compact` drops the repository and HEAD facts
+ * (kept in the Debug Mode settings) so it costs one line above the chat.
  */
-export function DebugBanner({ status }: { status: DebugStatus }) {
+export function DebugBanner({
+  status,
+  compact = false,
+}: {
+  status: DebugStatus;
+  compact?: boolean;
+}) {
   const { t } = useT();
   const branch = status.branch ?? t('debug.banner.detached');
   const head = status.head ? shortSha(status.head) : t('debug.banner.noCommits');
@@ -22,14 +29,20 @@ export function DebugBanner({ status }: { status: DebugStatus }) {
       variant="warning"
       role="status"
       data-testid="debug-banner"
-      className="flex-wrap items-center gap-x-4 gap-y-1 rounded-none border-x-0 border-t-0 py-2">
+      className={
+        compact
+          ? 'flex-wrap items-center gap-x-4 gap-y-1 rounded-none border-x-0 border-t-0 py-1.5 text-xs'
+          : 'flex-wrap items-center gap-x-4 gap-y-1 rounded-none border-x-0 border-t-0 py-2'
+      }>
       <span className="font-semibold tracking-wide">
         {t('debug.banner.title')} • {t('debug.banner.access')}
       </span>
       <dl className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs">
-        <BannerFact label={t('debug.banner.repo')} value={repoBasename(status.project_root)} />
+        {compact ? null : (
+          <BannerFact label={t('debug.banner.repo')} value={repoBasename(status.project_root)} />
+        )}
         <BannerFact label={t('debug.banner.branch')} value={branch} />
-        <BannerFact label={t('debug.banner.head')} value={head} />
+        {compact ? null : <BannerFact label={t('debug.banner.head')} value={head} />}
         <BannerFact label={t('debug.banner.dirty')} value={String(dirty)} testId="debug-dirty" />
       </dl>
       <Link

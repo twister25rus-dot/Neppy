@@ -142,32 +142,6 @@ export const createNewThread = createAsyncThunk(
   }
 );
 
-/**
- * Create a thread and put it in Debug mode (the Debug page's only way to make
- * one). The thread is created through the normal path, then switched with
- * `threads_set_mode`; the list is reloaded so the label and mode are present.
- * If the mode switch fails the fresh, empty thread is deleted so no stray
- * normal-chat thread is left behind.
- */
-export const createDebugThread = createAsyncThunk(
-  'thread/createDebugThread',
-  async (_: void, { dispatch, rejectWithValue }) => {
-    try {
-      const created = await dispatch(createNewThread()).unwrap();
-      try {
-        await threadApi.setMode(created.id, 'debug', 'debug_page');
-      } catch (error) {
-        await threadApi.deleteThread(created.id).catch(() => undefined);
-        throw error;
-      }
-      await dispatch(loadThreads()).unwrap();
-      return { ...created, mode: 'debug' as ThreadMode };
-    } catch (error) {
-      return rejectWithValue(formatThreadCreateError(error));
-    }
-  }
-);
-
 export const deleteThread = createAsyncThunk(
   'thread/deleteThread',
   async (threadId: string, { dispatch, getState, rejectWithValue }) => {

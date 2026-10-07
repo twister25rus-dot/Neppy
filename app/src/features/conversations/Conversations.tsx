@@ -38,7 +38,6 @@ import {
 } from '../../features/conversations/composerSendDecision';
 import { useMemorySyncActive } from '../../features/conversations/hooks/useBackgroundActivity';
 import {
-  DEBUG_TAB_VALUE,
   GENERAL_TAB_VALUE,
   isDebugThread,
   isThreadVisibleInTab,
@@ -105,7 +104,6 @@ import {
   addMessageLocal,
   clearCreateThreadError,
   clearThreadInferenceActive,
-  createDebugThread,
   createNewThread,
   deleteThread,
   loadThreadMessages,
@@ -125,6 +123,7 @@ import {
   neppyVoiceTts,
   notifyOverlaySttState,
 } from '../../utils/tauriCommands';
+import { DebugThreadChrome } from '../debug/DebugThreadChrome';
 import ThreadModeBar from './components/ThreadModeBar';
 import { useChatSurfaceRegistration } from './hooks/useChatSurfaceRegistration';
 import { ThreadList } from './threadList/ThreadList';
@@ -172,13 +171,6 @@ interface ConversationsProps {
    * the embedded conversation.
    */
   projectThreadList?: boolean;
-  /**
-   * Which family of threads this surface owns. `chat` (default) is the normal
-   * `/chat` page and never lists or restores Debug-mode threads; `debug` is the
-   * `/debug` page: it lists only Debug-mode threads, keeps navigation under
-   * `/debug/:threadId`, and creates new threads in Debug mode.
-   */
-  scope?: 'chat' | 'debug';
 }
 
 // Stable empty reference so the `activeThreadIds` selector returns the same
@@ -271,7 +263,6 @@ const Conversations = ({
   voiceChatControl = null,
   showMicComposer = true,
   projectThreadList = false,
-  scope = 'chat',
 }: ConversationsProps = {}) => {
   const [composerOverride, setComposerOverride] = useState<'mic-cloud' | 'text' | null>(null);
   const composer = composerOverride ?? composerProp;
@@ -280,7 +271,7 @@ const Conversations = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { threadId: routeThreadId } = useParams<{ threadId?: string }>();
-  const routeBase = scope === 'debug' ? '/debug' : '/chat';
+  const routeBase = '/chat';
   const threadPath = (id: string) => `${routeBase}/${encodeURIComponent(id)}`;
   const shouldSyncChatRoute = variant === 'page' && location.pathname.startsWith(routeBase);
   const { threads, selectedThreadId, messages, isLoadingMessages, messagesError } = useAppSelector(
@@ -326,7 +317,7 @@ const Conversations = ({
   // Thread-list filtering is fixed to the General bucket — the in-sidebar
   // General/Subconscious/Tasks chips were removed. Subconscious reflections and
   // task/worker threads have dedicated surfaces (Intelligence, Tasks board).
-  const selectedLabel = scope === 'debug' ? DEBUG_TAB_VALUE : GENERAL_TAB_VALUE;
+  const selectedLabel = GENERAL_TAB_VALUE;
   const [sendError, setSendError] = useState<ChatSendError | null>(null);
   // Recorded by the slice for *every* create path (#5156) — including the shell's
   // "New chat" button and the home-nav shortcut, which have no UI of their own —
@@ -612,10 +603,7 @@ const Conversations = ({
 
   const handleCreateNewThread = async () => {
     try {
-      const thread =
-        scope === 'debug'
-          ? await dispatch(createDebugThread()).unwrap()
-          : await dispatch(createNewThread()).unwrap();
+      const thread = await dispatch(createNewThread()).unwrap();
       dispatch(setSelectedThread(thread.id));
       void dispatch(loadThreadMessages(thread.id));
       if (shouldSyncChatRoute) {
@@ -742,14 +730,8 @@ const Conversations = ({
         // Chat tab and back would drop the active thread and either resume an
         // unrelated General thread or spawn a fresh chat — losing the
         // conversation the user was in (#chat-tab-active-thread).
-        // Scope-guarded: a Debug thread left selected by the Debug page must
-        // not be restored into normal chat (and vice versa).
         const persistedThread = selectedThreadId
-          ? data.threads.find(
-              t =>
-                t.id === selectedThreadId &&
-                (isDebugThread(t) === (scope === 'debug') || routeThreadId === t.id)
-            )
+          ? data.threads.find(t => t.id === selectedThreadId)
           : undefined;
         if (persistedThread) {
           dispatch(setSelectedThread(persistedThread.id));
@@ -1965,6 +1947,13 @@ const Conversations = ({
     // before the durable message history loads (restore-fidelity fix 2).
     Boolean(selectedInterruptedAssistant);
 
+  // Debug Mode is a per-thread mode (the top-bar switch), so the repo banner and
+  // task panels follow the open thread's persisted mode and nothing else.
+  const selectedThreadIsDebug = useMemo(() => {
+    const open = threads.find(t => t.id === selectedThreadId);
+    return open ? isDebugThread(open) : false;
+  }, [threads, selectedThreadId]);
+
   const filteredThreads = useMemo(() => {
     return threads.filter(t => isThreadVisibleInTab(t, selectedLabel));
   }, [threads, selectedLabel]);
@@ -2603,6 +2592,9 @@ const Conversations = ({
           ? 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-l border-line bg-surface'
           : 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'
       }>
+      {selectedThreadId && selectedThreadIsDebug ? (
+        <DebugThreadChrome key={selectedThreadId} threadId={selectedThreadId} />
+      ) : null}
       <AssistantUiChat
         threadGoal={threadGoal}
         model={composerModelOverride ?? resolvedModel ?? CHAT_MODEL_HINT}
@@ -2687,6 +2679,4 @@ export default Conversations;
  * Embeddable variant — same component, page layout (floating centered
  * card). Mounted inside /accounts when the Agent entry is selected.
  */
-export const ConversationsPage = ({ scope }: Pick<ConversationsProps, 'scope'> = {}) => (
-  <Conversations variant="page" scope={scope} />
-);
+export const ConversationsPage = () => <Conversations variant="page" />;

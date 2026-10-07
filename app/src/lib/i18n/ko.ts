@@ -7315,7 +7315,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': '실행 보기',
   'orchestrationRuns.hideRuns': '실행 숨기기',
   'orchestrationRuns.allRuns': '모든 에이전트 실행',
-  'nav.debug': '디버그',
   'debug.banner.title': '디버그 모드',
   'debug.banner.access': '개발 접근 활성화됨',
   'debug.banner.repo': '저장소',
@@ -7324,15 +7323,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': '변경된 파일',
   'debug.banner.detached': '분리됨',
   'debug.banner.noCommits': '커밋 없음',
-  'debug.newTask': '새 디버그 작업',
-  'debug.loading': '디버그 모드를 여는 중…',
   'debug.unavailable.title': '디버그 모드에는 Neppy 소스 저장소가 필요합니다',
-  'debug.unavailable.body':
-    '디버그 모드는 앱 자체의 소스 코드를 다루지만 저장소를 찾지 못했습니다. NEPPY_DEBUG_PROJECT_ROOT를 Neppy 체크아웃 경로(.git이 들어 있는 폴더)로 설정한 뒤 앱을 다시 시작하세요.',
-  'debug.unavailable.detail': '세부 정보: {error}',
-  'debug.unavailable.retry': '다시 시도',
-  'debug.createFailed': '디버그 세션을 시작할 수 없습니다.',
   'debug.unknownError': '문제가 발생했습니다.',
+  'debug.switch.label': '디버그',
+  'debug.switch.tooltip':
+    '디버그 모드: 이 채팅의 에이전트가 앱 자체의 소스 코드를 작업하도록 허용합니다.',
+  'debug.switch.repo.body':
+    '소스 저장소를 찾을 수 없어 이 채팅은 현재 모드를 유지합니다. 설정에서 디버그 모드가 사용할 Neppy 체크아웃 경로를 지정하세요.',
   'debug.lastTask.title': '마지막 작업',
   'debug.lastTask.files': '변경된 파일: {count}개',
   'debug.lastTask.committed': '{sha}(으)로 커밋됨',

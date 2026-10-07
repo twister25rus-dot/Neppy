@@ -7476,7 +7476,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Показать запуски',
   'orchestrationRuns.hideRuns': 'Скрыть запуски',
   'orchestrationRuns.allRuns': 'Все запуски агентов',
-  'nav.debug': 'Отладка',
   'debug.banner.title': 'РЕЖИМ ОТЛАДКИ',
   'debug.banner.access': 'Доступ разработчика включён',
   'debug.banner.repo': 'Репозиторий',
@@ -7485,15 +7484,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'Изменённые файлы',
   'debug.banner.detached': 'отсоединён',
   'debug.banner.noCommits': 'нет коммитов',
-  'debug.newTask': 'Новая задача отладки',
-  'debug.loading': 'Открываем режим отладки…',
   'debug.unavailable.title': 'Режиму отладки нужен репозиторий с исходным кодом Neppy',
-  'debug.unavailable.body':
-    'Режим отладки работает с исходным кодом самого приложения, но репозиторий не найден. Укажите в NEPPY_DEBUG_PROJECT_ROOT путь к вашей копии Neppy (папке с .git) и перезапустите приложение.',
-  'debug.unavailable.detail': 'Подробности: {error}',
-  'debug.unavailable.retry': 'Повторить',
-  'debug.createFailed': 'Не удалось запустить сессию отладки.',
   'debug.unknownError': 'Что-то пошло не так.',
+  'debug.switch.label': 'Отладка',
+  'debug.switch.tooltip':
+    'Режим отладки: позволяет агенту в этом чате работать с исходным кодом самого приложения.',
+  'debug.switch.repo.body':
+    'Репозиторий с исходным кодом не найден, поэтому этот чат остаётся в текущем режиме. Укажите в настройках, где находится ваша копия Neppy для режима отладки.',
   'debug.lastTask.title': 'Последняя задача',
   'debug.lastTask.files': 'Изменено файлов: {count}',
   'debug.lastTask.committed': 'Закоммичено как {sha}',

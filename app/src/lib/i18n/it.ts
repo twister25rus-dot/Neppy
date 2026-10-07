@@ -7533,7 +7533,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Mostra esecuzioni',
   'orchestrationRuns.hideRuns': 'Nascondi esecuzioni',
   'orchestrationRuns.allRuns': 'Tutte le esecuzioni degli agenti',
-  'nav.debug': 'Debug',
   'debug.banner.title': 'MODALITÀ DEBUG',
   'debug.banner.access': 'Accesso di sviluppo attivo',
   'debug.banner.repo': 'Repository',
@@ -7542,15 +7541,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'File modificati',
   'debug.banner.detached': 'scollegato',
   'debug.banner.noCommits': 'nessun commit',
-  'debug.newTask': 'Nuova attività di debug',
-  'debug.loading': 'Apertura della modalità debug…',
   'debug.unavailable.title': 'La modalità debug richiede il repository sorgente di Neppy',
-  'debug.unavailable.body':
-    "La modalità debug lavora sul codice sorgente dell'app stessa, ma non è stato trovato alcun repository. Imposta NEPPY_DEBUG_PROJECT_ROOT sul percorso della tua copia di Neppy (la cartella che contiene .git) e riavvia l'app.",
-  'debug.unavailable.detail': 'Dettagli: {error}',
-  'debug.unavailable.retry': 'Riprova',
-  'debug.createFailed': 'Impossibile avviare la sessione di debug.',
   'debug.unknownError': 'Qualcosa è andato storto.',
+  'debug.switch.label': 'Debug',
+  'debug.switch.tooltip':
+    "Modalità debug: permette all'agente di questa chat di lavorare sul codice sorgente dell'app stessa.",
+  'debug.switch.repo.body':
+    'Non è stato trovato alcun repository del codice sorgente, quindi questa chat resta nella modalità attuale. Indica nelle impostazioni la tua copia di Neppy per la modalità debug.',
   'debug.lastTask.title': 'Ultima attività',
   'debug.lastTask.files': 'File modificati: {count}',
   'debug.lastTask.committed': 'Commit eseguito come {sha}',

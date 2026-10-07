@@ -7435,7 +7435,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Tampilkan eksekusi',
   'orchestrationRuns.hideRuns': 'Sembunyikan eksekusi',
   'orchestrationRuns.allRuns': 'Semua eksekusi agen',
-  'nav.debug': 'Debug',
   'debug.banner.title': 'MODE DEBUG',
   'debug.banner.access': 'Akses pengembangan aktif',
   'debug.banner.repo': 'Repositori',
@@ -7444,15 +7443,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'File berubah',
   'debug.banner.detached': 'terlepas',
   'debug.banner.noCommits': 'belum ada commit',
-  'debug.newTask': 'Tugas debug baru',
-  'debug.loading': 'Membuka Mode Debug…',
   'debug.unavailable.title': 'Mode Debug membutuhkan repositori sumber Neppy',
-  'debug.unavailable.body':
-    'Mode Debug bekerja pada kode sumber aplikasi itu sendiri, tetapi repositori tidak ditemukan. Atur NEPPY_DEBUG_PROJECT_ROOT ke jalur salinan Neppy Anda (folder yang berisi .git), lalu mulai ulang aplikasi.',
-  'debug.unavailable.detail': 'Detail: {error}',
-  'debug.unavailable.retry': 'Coba lagi',
-  'debug.createFailed': 'Tidak dapat memulai sesi debug.',
   'debug.unknownError': 'Terjadi kesalahan.',
+  'debug.switch.label': 'Debug',
+  'debug.switch.tooltip':
+    'Mode Debug: biarkan agen di obrolan ini mengerjakan kode sumber aplikasi itu sendiri.',
+  'debug.switch.repo.body':
+    'Repositori kode sumber tidak ditemukan, jadi obrolan ini tetap dalam mode saat ini. Arahkan Mode Debug ke salinan Neppy Anda di pengaturan.',
   'debug.lastTask.title': 'Tugas terakhir',
   'debug.lastTask.files': 'File berubah: {count}',
   'debug.lastTask.committed': 'Di-commit sebagai {sha}',

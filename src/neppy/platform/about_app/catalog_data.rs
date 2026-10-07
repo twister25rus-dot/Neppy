@@ -1590,16 +1590,20 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         name: "Debug Mode",
         domain: "debug_mode",
         category: CapabilityCategory::Conversation,
-        description: "A development chat that can read and edit Neppy's own source repository, \
-                      run its lint, type and test checks, and report what changed. Every turn \
+        description: "A mode of any chat thread, switched on with the Debug switch in the top-right \
+                      corner next to MLX, in which the agent can read and edit Neppy's own source \
+                      repository, run its lint, type and test checks, and report what changed. \
+                      Every turn \
                       saves a checkpoint first, so any task can be rolled back (a pre-rollback \
                       checkpoint keeps the rollback itself reversible). Commits stage only the \
                       files the task changed, run the repository's own hooks, and never push; \
                       each commit and rollback needs your explicit confirmation. File contents \
                       the agent reads are sent to the configured inference provider.",
-        how_to: "Open Debug in the sidebar (requires the app's source repository, set via \
-                 NEPPY_DEBUG_PROJECT_ROOT). Or call neppy.debug_mode_status / task_list / diff / \
-                 rollback / commit over RPC.",
+        how_to: "Open a chat and turn on the Debug switch in the top-right corner next to MLX \
+                 (requires the app's source repository, set via NEPPY_DEBUG_PROJECT_ROOT or \
+                 Settings > Debug Mode); turning it off returns the thread to its previous \
+                 mode. Or call neppy.debug_mode_status / task_list / diff / rollback / commit \
+                 over RPC.",
         status: CapabilityStatus::Beta,
         privacy: CODING_SESSION_TO_BACKEND,
     },

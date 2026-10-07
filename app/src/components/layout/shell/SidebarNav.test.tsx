@@ -29,23 +29,10 @@ function tabButton(label: string): HTMLButtonElement {
 }
 
 describe('SidebarNav Debug entry', () => {
-  it('lists Debug with a content-free analytics id, linking to /debug', () => {
+  it('no longer lists Debug (it is a switch in the top bar)', () => {
     renderWithProviders(<SidebarNav />, { initialEntries: ['/chat'] });
 
-    const debugTab = tabButton('Debug');
-    expect(debugTab).toHaveAttribute('data-analytics-id', 'nav-debug');
-    expect(debugTab).not.toHaveAttribute('aria-current');
-  });
-
-  it('keeps Debug active on /debug and on a nested /debug/:threadId route', () => {
-    renderWithProviders(<SidebarNav />, { initialEntries: ['/debug'] });
-    expect(tabButton('Debug')).toHaveAttribute('aria-current', 'page');
-    expect(tabButton('Chat')).not.toHaveAttribute('aria-current');
-  });
-
-  it('keeps Debug active on a thread route', () => {
-    renderWithProviders(<SidebarNav />, { initialEntries: ['/debug/thread-1'] });
-    expect(tabButton('Debug')).toHaveAttribute('aria-current', 'page');
+    expect(screen.queryByRole('button', { name: /Debug/ })).toBeNull();
   });
 });
 

@@ -310,3 +310,125 @@ async fn a_held_worker_still_switches_models_by_unloading() {
     assert_eq!(prepare_model(&svc, &config, "wanted/model").await, Ok(true));
     assert_eq!(unloads.load(Ordering::SeqCst), 1);
 }
+
+// ── "off" is a persisted user intent ─────────────────────────────────────
+//
+// Hermetic: every test here is refused before anything spawns, so no real
+// MLX process or marker is ever touched.
+
+fn stopped_by_user_config(id: &str) -> Config {
+    let mut config = Config::default();
+    config.mlx.enabled = true;
+    config.mlx.servers[0].id = id.to_string();
+    config.mlx.servers[0].user_stopped = true;
+    // Belt and braces: even a regression cannot find a real binary here.
+    config.mlx.bin_dir = "/nonexistent-neppy-test-bin-dir".to_string();
+    config
+}
+
+#[tokio::test]
+async fn a_user_stopped_server_is_not_lazily_started_by_a_request() {
+    let id = unique_id("user-stopped-lazy");
+    let config = stopped_by_user_config(&id);
+    let svc = Arc::new(LocalAiService::new(&config));
+
+    let err = ensure_started(&svc, &config)
+        .await
+        .expect_err("an inference request must not start a server the user turned off");
+    assert!(err.contains("turned off"), "{err}");
+    assert!(err.contains(&id), "{err}");
+    assert!(svc.mlx.process_of(&id).await.is_none(), "nothing spawned");
+    assert!(
+        svc.mlx.base_url_for(&id).await.is_none(),
+        "nothing registered in the pool"
+    );
+    let events = svc.metrics.recent(0, 10, true).events;
+    assert!(
+        events.iter().any(|e| e.event == "admission_refused"),
+        "the refusal is recorded: {events:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_user_stopped_server_that_is_reachable_elsewhere_is_still_used_as_is() {
+    // Not ours and answering: the existing "use what is there" rule is
+    // untouched, because nothing is being started.
+    let (port, _unloads) = mock_worker("someone/elses-model").await;
+    let id = "primary".to_string();
+    let mut config = config_for_port(port);
+    config.mlx.enabled = true;
+    config.mlx.servers[0].user_stopped = true;
+    let svc = Arc::new(LocalAiService::new(&config));
+    ensure_started(&svc, &config)
+        .await
+        .expect("reachable server is used, nothing started");
+    assert!(svc.mlx.process_of(&id).await.is_none());
+}
+
+#[tokio::test]
+async fn the_refusal_helper_only_fires_for_a_stopped_block() {
+    let id = unique_id("refusal-helper");
+    let stopped = stopped_by_user_config(&id);
+    assert!(refuse_if_user_stopped(&stopped, &id).await.is_some());
+
+    let mut running = stopped.clone();
+    running.mlx.servers[0].user_stopped = false;
+    assert!(refuse_if_user_stopped(&running, &id).await.is_none());
+    assert!(
+        refuse_if_user_stopped(&stopped, "no-such-block")
+            .await
+            .is_none(),
+        "an unknown block is not 'turned off'"
+    );
+}
+
+#[tokio::test]
+async fn boot_autostart_skips_a_user_stopped_block() {
+    let id = unique_id("reconcile-stopped");
+    let config = stopped_by_user_config(&id);
+    assert!(
+        config.mlx.servers[0].autostart,
+        "autostart alone would start it"
+    );
+    let pool = MlxPool::new();
+    pool.reconcile(&config, &reqwest::Client::new()).await;
+    assert!(pool.process_of(&id).await.is_none());
+    assert!(pool.base_url_for(&id).await.is_none());
+}
+
+#[test]
+fn an_explicit_start_clears_the_flag_and_stop_sets_it() {
+    use crate::neppy::inference::local::mlx::{apply_user_stopped, is_user_stopped};
+    let mut config = Config::default();
+    assert!(!is_user_stopped(&config, "primary"), "default is not off");
+
+    assert!(
+        apply_user_stopped(&mut config, "primary", true),
+        "stop sets it"
+    );
+    assert!(is_user_stopped(&config, "primary"));
+    assert!(
+        !apply_user_stopped(&mut config, "primary", true),
+        "idempotent"
+    );
+
+    assert!(
+        apply_user_stopped(&mut config, "primary", false),
+        "start clears it"
+    );
+    assert!(!is_user_stopped(&config, "primary"));
+    assert!(
+        !apply_user_stopped(&mut config, "missing", true),
+        "unknown id"
+    );
+}
+
+#[test]
+fn a_config_without_the_new_field_loads_as_not_turned_off() {
+    let server: crate::neppy::config::schema::MlxServerConfig =
+        toml::from_str("id = \"primary\"\nautostart = true\n").expect("old block parses");
+    assert!(!server.user_stopped);
+    let round: crate::neppy::config::schema::MlxServerConfig =
+        toml::from_str(&toml::to_string(&server).unwrap()).unwrap();
+    assert_eq!(round.user_stopped, server.user_stopped);
+}

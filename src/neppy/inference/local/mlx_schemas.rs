@@ -355,6 +355,12 @@ fn handle_start(params: Map<String, Value>) -> ControllerFuture {
                 }
             }
 
+            // An explicit start is the user turning it back on.
+            if crate::neppy::inference::local::mlx::apply_user_stopped(&mut persisted, &id, false) {
+                log::info!("[mlx] explicit start of `{id}` clears user_stopped");
+                dirty = true;
+            }
+
             if dirty {
                 if let Err(err) = persisted.save().await {
                     // The server is up and serving; only its registration is
@@ -380,6 +386,14 @@ fn handle_stop(params: Map<String, Value>) -> ControllerFuture {
         // Report what actually happened. Claiming a stop that did not occur
         // leaves the caller believing memory was freed when the model is
         // still resident.
+        //
+        // "Off" is the user's intent, so it is persisted before the process is
+        // stopped: otherwise the next `mlx:` request (or a restart of the app)
+        // lazily starts it again. Written first so an in-flight request that
+        // races the stop sees the flag. A failed save is not fatal to the stop.
+        let _ =
+            crate::neppy::inference::local::mlx::persist_user_stopped(&config, p.id.trim(), true)
+                .await;
         let stopped = service.mlx.stop(&config, p.id.trim()).await;
         to_json(RpcOutcome::single_log(
             serde_json::json!({ "id": p.id.trim(), "stopped": stopped }),
@@ -400,6 +414,10 @@ fn handle_restart(params: Map<String, Value>) -> ControllerFuture {
             .mlx
             .restart(&config, &service.http, p.id.trim())
             .await?;
+        // A restart is an explicit start: it turns the server back on.
+        let _ =
+            crate::neppy::inference::local::mlx::persist_user_stopped(&config, p.id.trim(), false)
+                .await;
         to_json(RpcOutcome::single_log(
             status,
             format!("restarted MLX server `{}`", p.id.trim()),

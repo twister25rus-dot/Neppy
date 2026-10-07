@@ -20,6 +20,48 @@
 use crate::neppy::config::Config;
 use crate::neppy::inference::local::profile::MLX_PROFILE;
 
+/// Whether the user turned block `id` off and has not turned it on since.
+///
+/// Every automatic start path asks this before spawning anything.
+pub(crate) fn is_user_stopped(config: &Config, id: &str) -> bool {
+    config
+        .mlx
+        .server(id)
+        .is_some_and(|server| server.user_stopped)
+}
+
+/// Set or clear the persisted "user turned this off" intent on block `id`.
+/// Returns `true` when the value changed (so a save is worth doing).
+pub(crate) fn apply_user_stopped(config: &mut Config, id: &str, stopped: bool) -> bool {
+    match config.mlx.servers.iter_mut().find(|server| server.id == id) {
+        Some(server) if server.user_stopped != stopped => {
+            server.user_stopped = stopped;
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Persist the user's on/off intent for block `id`. A failed save is logged
+/// and returned: the caller decides whether it is fatal.
+pub(crate) async fn persist_user_stopped(
+    config: &Config,
+    id: &str,
+    stopped: bool,
+) -> Result<(), String> {
+    let mut persisted = config.clone();
+    if !apply_user_stopped(&mut persisted, id, stopped) {
+        log::debug!("[mlx] user_stopped for `{id}` already {stopped}; nothing to persist");
+        return Ok(());
+    }
+    persisted.save().await.map_err(|err| {
+        log::warn!("[mlx] could not persist user_stopped={stopped} for `{id}`: {err}");
+        err.to_string()
+    })?;
+    log::info!("[mlx] `{id}` marked user_stopped={stopped}");
+    Ok(())
+}
+
 /// Base URL for MLX inference, ending in `/v1`.
 pub(crate) fn mlx_base_url(config: &Config) -> String {
     if let Some(explicit) = config

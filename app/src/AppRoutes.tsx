@@ -8,7 +8,7 @@ import { getIsMobile } from './lib/platform';
 import Accounts from './pages/Accounts';
 import Activity from './pages/Activity';
 import Brain from './pages/Brain';
-import DebugPage from './pages/DebugPage';
+import DebugRedirect from './pages/DebugRedirect';
 import AgentInsightsPreview from './pages/dev/AgentInsightsPreview';
 import AssistantUiDemoPage from './pages/dev/assistant-ui-demo';
 import UiGallery from './pages/dev/UiGallery';
@@ -249,17 +249,9 @@ const AppRoutes = ({ location }: AppRoutesProps = {}) => {
         }
       />
 
-      {/* Debug Mode: the same conversation view, scoped to Debug threads and
-          wrapped in the repo banner + last-task decisions. Debug threads are
-          created only here. */}
-      <Route
-        path="/debug/:threadId?"
-        element={
-          <ProtectedRoute requireAuth={true}>
-            <DebugPage />
-          </ProtectedRoute>
-        }
-      />
+      {/* Back-compat: 0.68.0 shipped Debug Mode as a standalone page. It is now a
+          switch on the open chat thread, so old links land in the chat. */}
+      <Route path="/debug/:threadId?" element={<DebugRedirect />} />
 
       {/* Preserve links to the retired standalone accounts view. */}
       <Route path="/accounts" element={<Navigate to="/chat" replace />} />

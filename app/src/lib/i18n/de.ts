@@ -7602,7 +7602,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Läufe anzeigen',
   'orchestrationRuns.hideRuns': 'Läufe ausblenden',
   'orchestrationRuns.allRuns': 'Alle Agentenläufe',
-  'nav.debug': 'Debug',
   'debug.banner.title': 'DEBUG-MODUS',
   'debug.banner.access': 'Entwicklerzugriff aktiviert',
   'debug.banner.repo': 'Repository',
@@ -7611,15 +7610,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'Geänderte Dateien',
   'debug.banner.detached': 'losgelöst',
   'debug.banner.noCommits': 'keine Commits',
-  'debug.newTask': 'Neue Debug-Aufgabe',
-  'debug.loading': 'Debug-Modus wird geöffnet…',
   'debug.unavailable.title': 'Der Debug-Modus benötigt das Neppy-Quellrepository',
-  'debug.unavailable.body':
-    'Der Debug-Modus arbeitet am Quellcode der App selbst, es wurde aber kein Repository gefunden. Setze NEPPY_DEBUG_PROJECT_ROOT auf den Pfad deines Neppy-Checkouts (den Ordner mit .git) und starte die App neu.',
-  'debug.unavailable.detail': 'Einzelheiten: {error}',
-  'debug.unavailable.retry': 'Erneut versuchen',
-  'debug.createFailed': 'Debug-Sitzung konnte nicht gestartet werden.',
   'debug.unknownError': 'Etwas ist schiefgelaufen.',
+  'debug.switch.label': 'Debug',
+  'debug.switch.tooltip':
+    'Debug-Modus: Der Agent in diesem Chat darf am eigenen Quellcode der App arbeiten.',
+  'debug.switch.repo.body':
+    'Es wurde kein Quellrepository gefunden, deshalb bleibt dieser Chat in seinem aktuellen Modus. Richte den Debug-Modus in den Einstellungen auf deinen Neppy-Checkout aus.',
   'debug.lastTask.title': 'Letzte Aufgabe',
   'debug.lastTask.files': 'Geänderte Dateien: {count}',
   'debug.lastTask.committed': 'Committet als {sha}',

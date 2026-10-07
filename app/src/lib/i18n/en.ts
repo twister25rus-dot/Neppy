@@ -7712,7 +7712,6 @@ const en: TranslationMap = {
   'orchestrationRuns.showRuns': 'Show runs',
   'orchestrationRuns.hideRuns': 'Hide runs',
   'orchestrationRuns.allRuns': 'All agent runs',
-  'nav.debug': 'Debug',
   'debug.banner.title': 'DEBUG MODE',
   'debug.banner.access': 'Development access enabled',
   'debug.banner.repo': 'Repository',
@@ -7721,15 +7720,13 @@ const en: TranslationMap = {
   'debug.banner.dirty': 'Changed files',
   'debug.banner.detached': 'detached',
   'debug.banner.noCommits': 'no commits',
-  'debug.newTask': 'New debug task',
-  'debug.loading': 'Opening Debug Mode…',
   'debug.unavailable.title': 'Debug Mode needs the Neppy source repository',
-  'debug.unavailable.body':
-    "Debug Mode works on the app's own source code, but no repository was found. Set NEPPY_DEBUG_PROJECT_ROOT to the path of your Neppy checkout (the folder that contains .git), then restart the app.",
-  'debug.unavailable.detail': 'Details: {error}',
-  'debug.unavailable.retry': 'Try again',
-  'debug.createFailed': 'Could not start a debug session.',
   'debug.unknownError': 'Something went wrong.',
+  'debug.switch.label': 'Debug',
+  'debug.switch.tooltip':
+    "Debug Mode: let the agent in this chat work on the app's own source code.",
+  'debug.switch.repo.body':
+    'No source repository was found, so this chat stays in its current mode. Point Debug Mode at your Neppy checkout in the settings.',
   'debug.lastTask.title': 'Last task',
   'debug.lastTask.files': 'Files changed: {count}',
   'debug.lastTask.committed': 'Committed {sha}',

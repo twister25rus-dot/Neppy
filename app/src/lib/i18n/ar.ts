@@ -7237,7 +7237,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'عرض عمليات التشغيل',
   'orchestrationRuns.hideRuns': 'إخفاء عمليات التشغيل',
   'orchestrationRuns.allRuns': 'كل عمليات تشغيل الوكلاء',
-  'nav.debug': 'التصحيح',
   'debug.banner.title': 'وضع التصحيح',
   'debug.banner.access': 'تم تفعيل الوصول التطويري',
   'debug.banner.repo': 'المستودع',
@@ -7246,15 +7245,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'الملفات المتغيرة',
   'debug.banner.detached': 'منفصل',
   'debug.banner.noCommits': 'لا توجد عمليات إيداع',
-  'debug.newTask': 'مهمة تصحيح جديدة',
-  'debug.loading': 'جارٍ فتح وضع التصحيح…',
   'debug.unavailable.title': 'يحتاج وضع التصحيح إلى مستودع المصدر الخاص بـ Neppy',
-  'debug.unavailable.body':
-    'يعمل وضع التصحيح على الشيفرة المصدرية للتطبيق نفسه، لكن لم يُعثر على مستودع. عيّن NEPPY_DEBUG_PROJECT_ROOT إلى مسار نسختك من Neppy (المجلد الذي يحتوي على .git) ثم أعد تشغيل التطبيق.',
-  'debug.unavailable.detail': 'التفاصيل: {error}',
-  'debug.unavailable.retry': 'حاول مرة أخرى',
-  'debug.createFailed': 'تعذّر بدء جلسة التصحيح.',
   'debug.unknownError': 'حدث خطأ ما.',
+  'debug.switch.label': 'التصحيح',
+  'debug.switch.tooltip':
+    'وضع التصحيح: اسمح للوكيل في هذه المحادثة بالعمل على الشيفرة المصدرية للتطبيق نفسه.',
+  'debug.switch.repo.body':
+    'لم يتم العثور على مستودع المصدر، لذا تبقى هذه المحادثة في وضعها الحالي. حدّد مجلد Neppy الخاص بك لوضع التصحيح من الإعدادات.',
   'debug.lastTask.title': 'آخر مهمة',
   'debug.lastTask.files': 'الملفات المتغيرة: {count}',
   'debug.lastTask.committed': 'تم الإيداع باسم {sha}',

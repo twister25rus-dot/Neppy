@@ -363,6 +363,13 @@ impl MlxPool {
             if !server.autostart {
                 continue;
             }
+            if server.user_stopped {
+                log::info!(
+                    "[mlx] autostart of `{}` skipped: the user turned it off",
+                    server.id
+                );
+                continue;
+            }
             if self.running.lock().await.contains_key(&server.id) {
                 continue;
             }

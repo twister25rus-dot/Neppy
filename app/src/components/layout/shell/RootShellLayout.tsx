@@ -19,6 +19,7 @@ import {
   SidebarRail,
 } from '../../ui';
 import ContentSurface from './ContentSurface';
+import DebugModeSwitch from './DebugModeSwitch';
 import MlxQuickButton from './MlxQuickButton';
 import WindowDragBar from './WindowDragBar';
 
@@ -271,7 +272,8 @@ export default function RootShellLayout({ sidebar, children, unframed }: RootShe
             leaves above it: (32 - 28) / 2 = 2px. The previous `top-1.5` centred
             it in the 40px DRAG BAR instead, which put its bottom edge at 34px —
             2px over the card's top edge, and visibly low. */}
-        <div className="absolute end-3 top-0.5 z-20">
+        <div className="absolute end-3 top-0.5 z-20 flex items-center gap-1">
+          <DebugModeSwitch />
           <MlxQuickButton />
         </div>
         <ContentSurface unframed={unframed}>{children}</ContentSurface>

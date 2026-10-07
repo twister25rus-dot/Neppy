@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { Thread } from '../../../types/thread';
 import {
-  DEBUG_TAB_VALUE,
   GENERAL_TAB_VALUE,
   isDebugThread,
   isThreadVisibleInTab,
@@ -35,18 +34,21 @@ describe('Debug threads', () => {
     expect(isDebugThread(normal)).toBe(false);
   });
 
-  it('is hidden from every normal tab', () => {
-    for (const tab of [GENERAL_TAB_VALUE, TASKS_TAB_VALUE, SUBCONSCIOUS_TAB_VALUE, 'mode:debug']) {
-      expect(isThreadVisibleInTab(byMode, tab)).toBe(false);
-      expect(isThreadVisibleInTab(byLabel, tab)).toBe(false);
-    }
+  it('is an ordinary thread in the General list', () => {
+    expect(isThreadVisibleInTab(byMode, GENERAL_TAB_VALUE)).toBe(true);
+    expect(isThreadVisibleInTab(byLabel, GENERAL_TAB_VALUE)).toBe(true);
     expect(isThreadVisibleInTab(normal, GENERAL_TAB_VALUE)).toBe(true);
   });
 
-  it('is the only thing the Debug pseudo-tab shows', () => {
-    expect(isThreadVisibleInTab(byMode, DEBUG_TAB_VALUE)).toBe(true);
-    expect(isThreadVisibleInTab(byLabel, DEBUG_TAB_VALUE)).toBe(true);
-    expect(isThreadVisibleInTab(normal, DEBUG_TAB_VALUE)).toBe(false);
+  it('does not leak into the Tasks or Subconscious tabs', () => {
+    for (const tab of [TASKS_TAB_VALUE, SUBCONSCIOUS_TAB_VALUE]) {
+      expect(isThreadVisibleInTab(byMode, tab)).toBe(false);
+    }
+  });
+
+  it('trusts the persisted mode over a stale label', () => {
+    const switchedBack = { ...thread({ id: 'c2', labels: ['mode:debug'] }), mode: 'chat' as const };
+    expect(isDebugThread(switchedBack)).toBe(false);
   });
 });
 

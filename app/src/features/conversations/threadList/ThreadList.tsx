@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 import { useT } from '../../../lib/i18n/I18nContext';
 import type { Thread } from '../../../types/thread';
 import { isImeCompositionKeyEvent } from '../Conversations';
+import { isDebugThread } from '../utils/threadFilter';
 
 interface ThreadListProps {
   /** Threads visible after the sidebar's search/tab filtering. */
@@ -146,6 +147,13 @@ export function ThreadList({
                       }`}>
                       {resolveTitle(thread.id)}
                     </p>
+                    {isDebugThread(thread) && (
+                      <span
+                        data-testid={`thread-debug-badge-${thread.id}`}
+                        className="flex-none rounded bg-amber-50 px-1 text-[10px] font-medium leading-4 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
+                        {t('debug.switch.label')}
+                      </span>
+                    )}
                     {/* Message count occupies the trailing slot at rest and
                         yields to the row actions on hover, so the row never
                         grows or reflows between the two states. */}

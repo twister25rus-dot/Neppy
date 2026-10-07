@@ -7502,7 +7502,6 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Pokaż uruchomienia',
   'orchestrationRuns.hideRuns': 'Ukryj uruchomienia',
   'orchestrationRuns.allRuns': 'Wszystkie uruchomienia agentów',
-  'nav.debug': 'Debugowanie',
   'debug.banner.title': 'TRYB DEBUGOWANIA',
   'debug.banner.access': 'Dostęp deweloperski włączony',
   'debug.banner.repo': 'Repozytorium',
@@ -7511,15 +7510,13 @@ const messages: TranslationMap = {
   'debug.banner.dirty': 'Zmienione pliki',
   'debug.banner.detached': 'odłączony',
   'debug.banner.noCommits': 'brak commitów',
-  'debug.newTask': 'Nowe zadanie debugowania',
-  'debug.loading': 'Otwieranie trybu debugowania…',
   'debug.unavailable.title': 'Tryb debugowania wymaga repozytorium źródłowego Neppy',
-  'debug.unavailable.body':
-    'Tryb debugowania pracuje na kodzie źródłowym samej aplikacji, ale nie znaleziono repozytorium. Ustaw NEPPY_DEBUG_PROJECT_ROOT na ścieżkę swojej kopii Neppy (folderu z .git) i uruchom aplikację ponownie.',
-  'debug.unavailable.detail': 'Szczegóły: {error}',
-  'debug.unavailable.retry': 'Spróbuj ponownie',
-  'debug.createFailed': 'Nie udało się rozpocząć sesji debugowania.',
   'debug.unknownError': 'Coś poszło nie tak.',
+  'debug.switch.label': 'Debugowanie',
+  'debug.switch.tooltip':
+    'Tryb debugowania: pozwala agentowi w tym czacie pracować nad kodem źródłowym samej aplikacji.',
+  'debug.switch.repo.body':
+    'Nie znaleziono repozytorium z kodem źródłowym, więc ten czat pozostaje w obecnym trybie. W ustawieniach wskaż trybowi debugowania swoją kopię Neppy.',
   'debug.lastTask.title': 'Ostatnie zadanie',
   'debug.lastTask.files': 'Zmienione pliki: {count}',
   'debug.lastTask.committed': 'Zatwierdzono jako {sha}',

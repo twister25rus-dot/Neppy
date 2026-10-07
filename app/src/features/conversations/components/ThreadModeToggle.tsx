@@ -10,9 +10,10 @@ import { resolveThreadMode, type ThreadMode } from '../../../types/thread';
 const log = debug('neppy:conversations:thread-mode');
 
 /**
- * The modes the toggle offers. `debug` is deliberately absent: Debug threads
- * are created only from the Debug page (it scopes the agent to the app's
- * source repository), so a normal chat can neither enter nor leave it here.
+ * The modes the toggle offers. `debug` is deliberately absent: Debug Mode is
+ * the switch in the top bar (it checks the app's source repository first and
+ * restores the previous mode when turned off), so this control never enters or
+ * leaves it.
  */
 const MODES: readonly ThreadMode[] = ['chat', 'orchestration'];
 
@@ -50,8 +51,8 @@ export function ThreadModeToggle({ threadId }: { threadId: string | null }) {
     [dispatch, mode, threadId]
   );
 
-  // A Debug thread is not switchable from here; show nothing rather than a
-  // control that would silently drop the thread out of Debug mode.
+  // A Debug thread is switched from the top-bar Debug switch; show nothing
+  // rather than a control that would silently drop the thread out of Debug mode.
   if (!threadId || mode === 'debug') return null;
 
   return (
