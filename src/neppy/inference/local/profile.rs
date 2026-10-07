@@ -148,6 +148,12 @@ pub const LM_STUDIO_PROFILE: LocalProviderProfile = LocalProviderProfile {
     base_url_env: "LM_STUDIO_URL",
 };
 
+/// Context window (tokens) assumed for an MLX model when neither the user's
+/// `[[mlx.server]].context_window` nor the model's own `config.json` says. The
+/// old 4096 guess starved the agent harness: a ~35k-token system prompt left no
+/// room for history, so every call trimmed to the newest message.
+pub const MLX_DEFAULT_CONTEXT_WINDOW: u64 = 32_768;
+
 /// MLX server profile, covering both `mlx_vlm.server` and `mlx_lm.server`.
 ///
 /// `tool_support` is `Native`, corrected from `PromptGuided`: both binaries
@@ -166,7 +172,7 @@ pub const LM_STUDIO_PROFILE: LocalProviderProfile = LocalProviderProfile {
 pub const MLX_PROFILE: LocalProviderProfile = LocalProviderProfile {
     kind: LocalProviderKind::Mlx,
     tool_support: ToolSupport::Native,
-    default_context_window: Some(4_096),
+    default_context_window: Some(MLX_DEFAULT_CONTEXT_WINDOW),
     supports_responses_api: false,
     supports_streaming: true,
     default_quirks: RequestQuirks {
@@ -187,7 +193,7 @@ pub const MLX_PROFILE: LocalProviderProfile = LocalProviderProfile {
 pub const OMLX_PROFILE: LocalProviderProfile = LocalProviderProfile {
     kind: LocalProviderKind::Omlx,
     tool_support: ToolSupport::Native,
-    default_context_window: Some(4_096),
+    default_context_window: Some(MLX_DEFAULT_CONTEXT_WINDOW),
     supports_responses_api: false,
     supports_streaming: true,
     default_quirks: RequestQuirks {
@@ -331,7 +337,7 @@ mod tests {
         assert!(!ollama.supports_responses_api);
 
         let mlx = profile_for_kind(LocalProviderKind::Mlx);
-        assert_eq!(mlx.default_context_window, Some(4_096));
+        assert_eq!(mlx.default_context_window, Some(MLX_DEFAULT_CONTEXT_WINDOW));
     }
 
     #[test]

@@ -344,15 +344,8 @@ pub(super) fn parse_chat_response(
     let mut content = Vec::new();
 
     // Side-channel reasoning first, normalized the same way as the stream path.
-    let mut reasoning = String::new();
-    for value in [choice.message.reasoning_content, choice.message.reasoning]
-        .into_iter()
-        .flatten()
-    {
-        if let Some(fragment) = reasoning_value_text(value) {
-            reasoning.push_str(&fragment);
-        }
-    }
+    let mut reasoning =
+        first_reasoning_alias(choice.message.reasoning_content, choice.message.reasoning);
 
     // Inline `<think>` extraction on the visible content, when enabled.
     let visible = match (
@@ -693,17 +686,25 @@ pub(super) fn reasoning_value_text(value: Value) -> Option<String> {
     }
 }
 
-/// Extracts the reasoning/thinking text from a streamed delta, accepting the
-/// common OpenAI-compatible aliases.
-pub(super) fn delta_reasoning_text(delta: &mut ChunkDeltaWire) -> String {
-    let mut text = String::new();
-    for value in [delta.reasoning_content.take(), delta.reasoning.take()]
+/// Picks the reasoning text from the `reasoning_content` / `reasoning` aliases.
+///
+/// Some servers (mlx-vlm, newer vLLM) mirror the **same** reasoning into both
+/// keys. Concatenating every alias then doubles every token ("LetLet me me"),
+/// both live and in the final message that is persisted and replayed to the
+/// model. The aliases are one channel, so take the first non-empty one.
+pub(super) fn first_reasoning_alias(
+    reasoning_content: Option<Value>,
+    reasoning: Option<Value>,
+) -> String {
+    [reasoning_content, reasoning]
         .into_iter()
         .flatten()
-    {
-        if let Some(fragment) = reasoning_value_text(value) {
-            text.push_str(&fragment);
-        }
-    }
-    text
+        .find_map(reasoning_value_text)
+        .unwrap_or_default()
+}
+
+/// Extracts the reasoning/thinking text from a streamed delta, accepting the
+/// common OpenAI-compatible aliases (see [`first_reasoning_alias`]).
+pub(super) fn delta_reasoning_text(delta: &mut ChunkDeltaWire) -> String {
+    first_reasoning_alias(delta.reasoning_content.take(), delta.reasoning.take())
 }

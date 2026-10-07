@@ -5,6 +5,31 @@ use async_trait::async_trait;
 use serde_json::json;
 use std::path::PathBuf;
 
+/// Appended when git could not report for the workspace directory. The cause is
+/// a property of the directory (not a git repo, or a repository config this tool
+/// refuses to run under), so calling the tool again returns the same text.
+const GIT_UNAVAILABLE_NOTE: &str = "\n## Note\nGit information is unavailable for this \
+directory and will not change if you call this tool again, so do not repeat the call. Continue \
+with `list`, `glob`, `grep` or `file_read` (or `shell` with an explicit path) to inspect the \
+files you need.\n";
+
+/// The directory this call inspects: the turn's scoped workspace root when one is
+/// bound (a Debug turn is scoped to the app repo, and shell/git tools already
+/// default their cwd there), else the agent's configured `action_dir`.
+fn effective_dir(default_dir: &std::path::Path) -> PathBuf {
+    match crate::neppy::agent::turn_workspace::current() {
+        Some(root) => {
+            tracing::debug!(
+                "[workspace_state] using turn workspace root={} (action_dir={})",
+                root.display(),
+                default_dir.display()
+            );
+            root
+        }
+        None => default_dir.to_path_buf(),
+    }
+}
+
 /// Returns a summary of the workspace: git status, file tree, recent commits.
 pub struct WorkspaceStateTool {
     workspace_dir: PathBuf,
@@ -25,7 +50,8 @@ impl Tool for WorkspaceStateTool {
     fn description(&self) -> &str {
         "Get a read-only overview of the workspace: git status (modified/untracked files), \
          recent commits, and top-level directory structure. Useful for understanding the \
-         current project state before planning tasks."
+         current project state before planning tasks. The result only changes when files change, \
+         so call it at most once per task."
     }
 
     fn parameters_schema(&self) -> serde_json::Value {
@@ -60,13 +86,18 @@ impl Tool for WorkspaceStateTool {
             .and_then(|v| v.as_u64())
             .unwrap_or(5) as usize;
 
+        let dir = effective_dir(&self.workspace_dir);
         tracing::debug!(
             "[workspace_state] dir={}, include_tree={include_tree}, recent_commits={recent_commits}",
-            self.workspace_dir.display()
+            dir.display()
         );
 
         let mut output = String::new();
-        let dir = &self.workspace_dir;
+        let dir = &dir;
+        // Set when `git status` failed, so the result can tell the model the
+        // failure is permanent for this directory (a model that cannot act on the
+        // text re-calls the tool until the loop guard stops it).
+        let mut git_unavailable = false;
 
         // Git status
         output.push_str("## Git Status\n");
@@ -78,6 +109,7 @@ impl Tool for WorkspaceStateTool {
                 output.push_str(&status);
             }
             Err(e) => {
+                git_unavailable = true;
                 output.push_str(&format!("(not a git repo or error: {e})\n"));
             }
         }
@@ -119,6 +151,14 @@ impl Tool for WorkspaceStateTool {
                 }
                 Err(e) => output.push_str(&format!("(error reading dir: {e})\n")),
             }
+        }
+
+        if git_unavailable {
+            tracing::debug!(
+                "[workspace_state] git unavailable for dir={}; appending the do-not-retry note",
+                dir.display()
+            );
+            output.push_str(GIT_UNAVAILABLE_NOTE);
         }
 
         tracing::debug!("[workspace_state] output length={}", output.len());
@@ -394,6 +434,54 @@ mod tests {
         let result = make_tool(&tmp).execute(json!({})).await.unwrap();
         assert!(!result.is_error);
         assert!(result.output().contains("Git Status"));
+    }
+
+    /// A directory git refuses (here: a repo config key outside the allowlist)
+    /// yields the same text on every call, so the result must say not to retry.
+    #[tokio::test]
+    async fn refused_git_result_tells_the_model_not_to_repeat_the_call() {
+        let tmp = TempDir::new().unwrap();
+        git_init(&tmp);
+        set_config(&tmp, "core.hooksPath", "/nonexistent");
+        let result = make_tool(&tmp).execute(json!({})).await.unwrap();
+        assert!(!result.is_error);
+        let out = result.output();
+        assert!(out.contains("refusing to run git"), "{out}");
+        assert!(out.contains("do not repeat the call"), "{out}");
+    }
+
+    #[tokio::test]
+    async fn scoped_turn_workspace_overrides_the_configured_directory() {
+        let action = TempDir::new().unwrap();
+        let repo = TempDir::new().unwrap();
+        std::fs::write(repo.path().join("only_in_repo.txt"), "x").unwrap();
+        let tool = make_tool(&action);
+        let out =
+            crate::neppy::agent::turn_workspace::with_workspace(repo.path().to_path_buf(), async {
+                tool.execute(json!({})).await.unwrap().output()
+            })
+            .await;
+        assert!(out.contains("only_in_repo.txt"), "{out}");
+    }
+
+    #[tokio::test]
+    async fn without_a_turn_workspace_the_configured_directory_is_used() {
+        let action = TempDir::new().unwrap();
+        std::fs::write(action.path().join("only_in_action.txt"), "x").unwrap();
+        let out = make_tool(&action)
+            .execute(json!({}))
+            .await
+            .unwrap()
+            .output();
+        assert!(out.contains("only_in_action.txt"), "{out}");
+    }
+
+    #[tokio::test]
+    async fn healthy_repo_result_has_no_do_not_retry_note() {
+        let tmp = TempDir::new().unwrap();
+        git_init(&tmp);
+        let result = make_tool(&tmp).execute(json!({})).await.unwrap();
+        assert!(!result.output().contains("do not repeat the call"));
     }
 
     #[tokio::test]

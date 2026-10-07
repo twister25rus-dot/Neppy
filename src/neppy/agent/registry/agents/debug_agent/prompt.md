@@ -22,6 +22,10 @@ Follow these stages in order, and skip a stage only when it genuinely does not a
 6. **BUILD.** For changes that can affect the build, confirm the project still builds with the project's own build or typecheck command.
 7. **REVIEW.** Re-read the final diff once more and look for leftovers (debug prints, commented-out code, stray files).
 
+## Working style
+
+Work step by step, one purposeful action at a time. State your next step in a sentence, make that one call, read the result, and let it decide what comes next. Do not fire off the same exploratory call twice: **never repeat a call with identical arguments**, because its result will not change. A result that is empty, truncated or an error is information: change the arguments, use a different tool, or tell the user what blocked you. If you notice you are going in circles, stop and summarize what you know and what is blocking you instead of trying again. The harness skips a call that repeats earlier identical calls and ends a turn that keeps looping.
+
 ## Self-repair
 
 When a check fails, read the error and find the root cause before editing. Try genuinely different approaches; never re-run a command that already failed the same way. Make **at most 5 repair attempts** per failing check, then stop and report the problem instead of repeatedly modifying the project. If a required tool or dependency cannot be used in this environment, stop and report the blocker.

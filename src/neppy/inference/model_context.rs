@@ -27,7 +27,8 @@ const TIER_LOCAL_CONTEXT: u64 = 8_192;
 /// pre-dispatch trimming and let the overflow through. So instead of skipping,
 /// we trim against this conservative floor: a slightly-too-aggressive trim is
 /// strictly better than a guaranteed 400. The value is the smallest real local
-/// profile default (MLX = 4096), chosen because any local runtime can hold at
+/// profile default (Ollama / LM Studio = 8192; MLX has its own, larger guess in
+/// `MLX_DEFAULT_CONTEXT_WINDOW`), chosen because any local runtime can hold at
 /// least this much, while keeping the floor low enough to actually bound the
 /// prompt. Only applied to local providers — cloud providers with an unknown
 /// model keep `None` (their windows are large; a tiny floor would needlessly
@@ -225,6 +226,168 @@ pub fn context_window_for_model_with_local_fallback(
     None
 }
 
+/// Where an MLX context window came from (for the debug log and tests).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MlxWindowSource {
+    /// `[[mlx.server]].context_window`.
+    Config,
+    /// The model's own `config.json` (HF cache or a local model directory).
+    ModelConfig,
+    /// The static table / profile default.
+    Default,
+}
+
+impl MlxWindowSource {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Config => "config",
+            Self::ModelConfig => "model_config",
+            Self::Default => "default",
+        }
+    }
+}
+
+/// Positive `config.json` lookups, keyed by the resolved file path. Only hits are
+/// cached: a miss is a couple of `stat`s and the model may be downloaded later.
+fn model_config_cache() -> &'static std::sync::Mutex<std::collections::HashMap<String, u64>> {
+    static CACHE: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, u64>>> =
+        std::sync::OnceLock::new();
+    CACHE.get_or_init(Default::default)
+}
+
+/// Context window declared by a Hugging Face `config.json` body: the larger of
+/// `max_position_embeddings` and the rope-scaled window
+/// (`rope_scaling.original_max_position_embeddings * factor`), looked up at the
+/// top level and under `text_config` (multimodal checkpoints nest it there).
+pub(crate) fn window_from_model_config(json: &serde_json::Value) -> Option<u64> {
+    fn from_section(section: &serde_json::Value) -> Option<u64> {
+        let base = section
+            .get("max_position_embeddings")
+            .and_then(|v| v.as_u64())
+            .filter(|n| *n > 0);
+        let scaled = ["rope_scaling", "rope_parameters"]
+            .iter()
+            .filter_map(|key| section.get(*key))
+            .find_map(|rope| {
+                let factor = rope.get("factor").and_then(|v| v.as_f64())?;
+                let original = rope
+                    .get("original_max_position_embeddings")
+                    .and_then(|v| v.as_u64())?;
+                (factor > 1.0 && original > 0).then_some((original as f64 * factor) as u64)
+            });
+        match (base, scaled) {
+            (Some(a), Some(b)) => Some(a.max(b)),
+            (a, b) => a.or(b),
+        }
+    }
+    json.get("text_config")
+        .and_then(from_section)
+        .or_else(|| from_section(json))
+}
+
+/// Locate the model's `config.json`: a local model directory, else the newest
+/// snapshot of its repo in the HF cache under `hub_dir`.
+fn find_model_config_path(model: &str, hub_dir: &std::path::Path) -> Option<std::path::PathBuf> {
+    let id = model.trim();
+    let id = id.strip_prefix("mlx:").unwrap_or(id).trim();
+    if id.is_empty() {
+        return None;
+    }
+    let local = std::path::Path::new(id).join("config.json");
+    if local.is_file() {
+        return Some(local);
+    }
+    let snapshots = hub_dir
+        .join(format!("models--{}", id.replace('/', "--")))
+        .join("snapshots");
+    std::fs::read_dir(snapshots)
+        .ok()?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path().join("config.json"))
+        .filter(|path| path.is_file())
+        .max_by_key(|path| {
+            std::fs::metadata(path)
+                .and_then(|m| m.modified())
+                .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+        })
+}
+
+fn model_config_window(model: &str, hub_dir: &std::path::Path) -> Option<u64> {
+    let path = find_model_config_path(model, hub_dir)?;
+    let key = path.to_string_lossy().into_owned();
+    if let Some(hit) = model_config_cache()
+        .lock()
+        .ok()
+        .and_then(|cache| cache.get(&key).copied())
+    {
+        return Some(hit);
+    }
+    let body = std::fs::read_to_string(&path).ok()?;
+    let window = window_from_model_config(&serde_json::from_str(&body).ok()?)?;
+    if let Ok(mut cache) = model_config_cache().lock() {
+        cache.insert(key, window);
+    }
+    Some(window)
+}
+
+/// Context window for an MLX-served model: the explicit
+/// `[[mlx.server]].context_window`, else the model's own `config.json`, else the
+/// static table / MLX default — capped by the server's `max_kv_size` when set.
+///
+/// Pure over its inputs (`hub_dir` is injected) so it is testable without
+/// touching the real HF cache.
+/// Ceiling for an MLX window read from the model's own `config.json`.
+pub const MLX_AUTO_CONTEXT_CAP: u64 = 65_536;
+
+pub fn mlx_context_window(
+    model: &str,
+    configured_window: u32,
+    max_kv_size: u32,
+    hub_dir: &std::path::Path,
+) -> (u64, MlxWindowSource) {
+    let (mut window, source) = if configured_window > 0 {
+        (u64::from(configured_window), MlxWindowSource::Config)
+    } else if let Some(w) = model_config_window(model, hub_dir) {
+        // A model's advertised maximum (often 128k-256k) is not what a local
+        // Mac can prefill quickly or hold in KV memory; an explicit
+        // `context_window` is the way to go above this.
+        (w.min(MLX_AUTO_CONTEXT_CAP), MlxWindowSource::ModelConfig)
+    } else {
+        let fallback = context_window_for_model(model)
+            .unwrap_or(crate::neppy::inference::local::profile::MLX_DEFAULT_CONTEXT_WINDOW);
+        (fallback, MlxWindowSource::Default)
+    };
+    if max_kv_size > 0 {
+        window = window.min(u64::from(max_kv_size));
+    }
+    tracing::debug!(
+        model,
+        window,
+        max_kv_size,
+        "[model_context] mlx window={window} source={}",
+        source.as_str()
+    );
+    (window, source)
+}
+
+/// [`mlx_context_window`] against the live config and the real HF cache. The
+/// server block serving `model` is used, falling back to the first block.
+pub fn mlx_context_window_for_config(model: &str, config: &crate::neppy::config::Config) -> u64 {
+    let id = model.trim();
+    let id = id.strip_prefix("mlx:").unwrap_or(id).trim();
+    let server = config
+        .mlx
+        .servers
+        .iter()
+        .find(|s| s.model.trim() == id)
+        .or_else(|| config.mlx.servers.first());
+    let (configured, max_kv) = server
+        .map(|s| (s.context_window, s.max_kv_size))
+        .unwrap_or((0, 0));
+    let hub = crate::neppy::inference::local::service::mlx_admin::models::hf_hub_dir();
+    mlx_context_window(model, configured, max_kv, &hub).0
+}
+
 /// Whether the model resolved for a chat hint/agent/profile accepts image input
 /// according to the **user-configured** vision flag in `config.model_registry`.
 ///
@@ -324,13 +487,13 @@ mod tests {
             ),
             Some(8_192)
         );
-        // Unknown model with MLX profile → 4096 default
+        // Unknown model with MLX profile → 32768 default (4096 starved the harness)
         assert_eq!(
             context_window_for_model_with_local_fallback(
                 "my-custom-model",
                 Some(LocalProviderKind::Mlx)
             ),
-            Some(4_096)
+            Some(32_768)
         );
         // Unknown model with no local provider → None
         assert_eq!(
@@ -473,5 +636,82 @@ mod tests {
             "`-o1-` segment should still match"
         );
         assert_eq!(context_window_for_model("octo3thing"), None);
+    }
+
+    #[test]
+    fn mlx_window_config_wins_then_model_config_then_default_and_kv_caps() {
+        let hub = tempfile::tempdir().unwrap();
+        let snap = hub
+            .path()
+            .join("models--acme--Foo-9B-MLX-8bit/snapshots/abc123");
+        std::fs::create_dir_all(&snap).unwrap();
+        std::fs::write(
+            snap.join("config.json"),
+            r#"{"model_type":"x","text_config":{"max_position_embeddings":262144}}"#,
+        )
+        .unwrap();
+        let model = "acme/Foo-9B-MLX-8bit";
+
+        // Model config.json (nested text_config) is read, capped for a local Mac.
+        assert_eq!(
+            mlx_context_window(model, 0, 0, hub.path()),
+            (MLX_AUTO_CONTEXT_CAP, MlxWindowSource::ModelConfig)
+        );
+        // An explicit config value may go above the automatic cap.
+        assert_eq!(
+            mlx_context_window(model, 131_072, 0, hub.path()),
+            (131_072, MlxWindowSource::Config)
+        );
+        // An explicit config value wins over the model's own.
+        assert_eq!(
+            mlx_context_window(model, 16_384, 0, hub.path()),
+            (16_384, MlxWindowSource::Config)
+        );
+        // max_kv_size caps whichever source produced the value.
+        assert_eq!(mlx_context_window(model, 0, 40_000, hub.path()).0, 40_000);
+        assert_eq!(
+            mlx_context_window(model, 100_000, 40_000, hub.path()).0,
+            40_000
+        );
+        // Unknown model, empty cache → 32768 default; a larger kv cap does not raise it.
+        assert_eq!(
+            mlx_context_window("nobody/unknown", 0, 0, hub.path()),
+            (32_768, MlxWindowSource::Default)
+        );
+        assert_eq!(
+            mlx_context_window("nobody/unknown", 0, 8_192, hub.path()).0,
+            8_192
+        );
+        assert_eq!(
+            mlx_context_window("nobody/unknown", 0, 99_999, hub.path()).0,
+            32_768
+        );
+    }
+
+    #[test]
+    fn model_config_window_parses_top_level_nested_and_rope_scaled() {
+        let parse = |s: &str| window_from_model_config(&serde_json::from_str(s).unwrap());
+        assert_eq!(parse(r#"{"max_position_embeddings": 40960}"#), Some(40_960));
+        assert_eq!(
+            parse(r#"{"text_config":{"max_position_embeddings": 262144}}"#),
+            Some(262_144)
+        );
+        // yarn: max_position_embeddings is the pre-scaling length.
+        assert_eq!(
+            parse(
+                r#"{"max_position_embeddings": 32768,
+                    "rope_scaling":{"type":"yarn","factor":4.0,"original_max_position_embeddings":32768}}"#
+            ),
+            Some(131_072)
+        );
+        // llama3-style: the declared length already exceeds orig*factor.
+        assert_eq!(
+            parse(
+                r#"{"max_position_embeddings": 131072,
+                    "rope_scaling":{"factor":8.0,"original_max_position_embeddings":8192}}"#
+            ),
+            Some(131_072)
+        );
+        assert_eq!(parse(r#"{"hidden_size": 4096}"#), None);
     }
 }

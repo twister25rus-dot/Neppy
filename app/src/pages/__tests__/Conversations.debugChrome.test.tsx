@@ -236,6 +236,55 @@ describe('Conversations: Debug Mode chrome', () => {
     expect(chrome).toHaveAttribute('data-thread', 'dbg-1');
   });
 
+  it('keeps the composer pinned under the chrome: thread shrinks, only its viewport scrolls', async () => {
+    const dbg = makeThread({ id: 'dbg-1', title: 'Debug thread', mode: 'debug' });
+    mockGetThreads.mockResolvedValue({ threads: [dbg], count: 1 });
+
+    await renderChat({ thread: selectedThreadState(dbg), socket: socketState('connected') });
+
+    const chrome = await screen.findByTestId('debug-thread-chrome-stub');
+    const root = document.querySelector('.aui-thread-root') as HTMLElement;
+    expect(root).toBeTruthy();
+    // The chrome and the thread share a column; a bare `h-full` thread would be
+    // chrome + 100% tall and the clipped parent would cut the composer off.
+    expect(root.parentElement).toBe(chrome.parentElement);
+    for (const cls of ['min-h-0', 'flex-1', 'overflow-hidden']) {
+      expect(root.className.split(/\s+/)).toContain(cls);
+    }
+    const viewport = root.querySelector('[data-slot="aui_thread-viewport"]') as HTMLElement;
+    expect(viewport.className).toEqual(expect.stringContaining('min-h-0'));
+    expect(viewport.className).toEqual(expect.stringContaining('overflow-y-scroll'));
+    // The composer lives in the sticky footer inside the scroller, never in the
+    // scrolling flow.
+    const footer = root.querySelector('.aui-thread-viewport-footer') as HTMLElement;
+    expect(viewport.contains(footer)).toBe(true);
+  });
+
+  it('caps the approval/queue header so it cannot push the composer out', async () => {
+    const dbg = makeThread({ id: 'dbg-1', title: 'Debug thread', mode: 'debug' });
+    mockGetThreads.mockResolvedValue({ threads: [dbg], count: 1 });
+    const chatRuntime = {
+      ...chatRuntimeReducer(undefined, { type: '@@init' }),
+      pendingApprovalByThread: {
+        'dbg-1': [
+          { requestId: 'r1', toolName: 'shell', message: 'Run `shell`: ls', command: 'ls' },
+          { requestId: 'r2', toolName: 'shell', message: 'Run `shell`: pwd', command: 'pwd' },
+        ],
+      },
+    };
+
+    await renderChat({
+      thread: selectedThreadState(dbg),
+      socket: socketState('connected'),
+      chatRuntime,
+    });
+
+    const slot = await screen.findByTestId('composer-header-slot');
+    expect(slot.className).toEqual(expect.stringContaining('max-h-[40vh]'));
+    expect(slot.className).toEqual(expect.stringContaining('overflow-y-auto'));
+    expect(slot).toContainElement(screen.getByTestId('pending-approval-queue'));
+  });
+
   it('renders nothing extra for a normal thread', async () => {
     const normal = makeThread({ id: 'c-1', title: 'Normal thread' });
     mockGetThreads.mockResolvedValue({ threads: [normal], count: 1 });

@@ -162,7 +162,12 @@ export function AssistantUiChat({
   const ComposerHeader = useCallback(
     () => (
       <>
-        {composerHeader}
+        {/* Approval / plan / queue cards sit in the pinned footer. Cap them so
+            a pile of parked requests scrolls inside this box instead of
+            growing the footer until the composer leaves the screen. */}
+        <div data-testid="composer-header-slot" className="max-h-[40vh] overflow-y-auto">
+          {composerHeader}
+        </div>
         <div className="pb-2">
           <ThreadGoalEditorPanel ctl={threadGoal} />
         </div>

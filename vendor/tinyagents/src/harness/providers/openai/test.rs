@@ -1183,6 +1183,55 @@ async fn sse_stream_parses_text_tool_calls_and_usage() {
     assert_eq!(response.usage.unwrap().total_tokens, 8);
 }
 
+/// mlx-vlm / newer vLLM mirror one reasoning delta into BOTH `reasoning_content`
+/// and `reasoning`. Concatenating every alias doubled each token ("LetLet me me")
+/// in the live stream and in the persisted final message.
+#[tokio::test]
+async fn sse_stream_does_not_double_reasoning_mirrored_in_both_aliases() {
+    let raw: Vec<Vec<u8>> = vec![
+        b"data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"Let\",\"reasoning\":\"Let\"}}]}\n\n".to_vec(),
+        b"data: {\"choices\":[{\"delta\":{\"reasoning_content\":\" me\",\"reasoning\":\" me\"}}]}\n\n".to_vec(),
+        b"data: {\"choices\":[{\"delta\":{\"content\":\"ok\"},\"finish_reason\":\"stop\"}]}\n\n".to_vec(),
+        b"data: [DONE]\n\n".to_vec(),
+    ];
+
+    let items = collect_sse(raw).await;
+
+    let reasoning: String = items
+        .iter()
+        .filter_map(|item| match item {
+            ModelStreamItem::MessageDelta(delta) => Some(delta.reasoning.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(reasoning, "Let me");
+
+    let mut merged = StreamAccumulator::new();
+    for item in &items {
+        merged.push(item);
+    }
+    let response = merged.finish().unwrap();
+    assert_eq!(response_reasoning(&response), "Let me");
+}
+
+#[test]
+fn parse_chat_response_does_not_double_reasoning_mirrored_in_both_aliases() {
+    let body = json!({
+        "id": "chatcmpl-mirror",
+        "choices": [{
+            "message": {
+                "role": "assistant",
+                "reasoning_content": "Let me think",
+                "reasoning": "Let me think",
+                "content": "ok"
+            },
+            "finish_reason": "stop"
+        }]
+    });
+    let response = parse_chat_response(body, None, CacheTokenAccounting::default()).unwrap();
+    assert_eq!(response_reasoning(&response), "Let me think");
+}
+
 #[tokio::test]
 async fn sse_stream_preserves_reasoning_content_as_side_channel() {
     let raw: Vec<Vec<u8>> = vec![

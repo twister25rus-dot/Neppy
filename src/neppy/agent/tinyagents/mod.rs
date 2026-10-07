@@ -26,6 +26,7 @@ pub(crate) mod delegation;
 mod embeddings;
 pub mod host;
 pub(crate) mod journal;
+pub(crate) mod loop_guard;
 pub(crate) mod middleware;
 pub(crate) mod model;
 pub(crate) mod observability;
@@ -1738,6 +1739,22 @@ impl TurnModelSource {
             .crate_native
             .as_ref()
             .and_then(|source| source.config.local_ai.num_ctx);
+        if matches!(
+            local_kind,
+            Some(
+                crate::neppy::inference::local::profile::LocalProviderKind::Mlx
+                    | crate::neppy::inference::local::profile::LocalProviderKind::Omlx
+            )
+        ) {
+            if let Some(source) = self.crate_native.as_ref() {
+                return Some(
+                    crate::neppy::inference::model_context::mlx_context_window_for_config(
+                        model,
+                        &source.config,
+                    ),
+                );
+            }
+        }
         crate::neppy::inference::model_context::context_window_for_local_with_configured_num_ctx(
             model,
             local_kind,
@@ -2495,6 +2512,15 @@ fn assemble_turn_harness(
     harness.push_middleware(Arc::new(
         TaToolPolicyMiddleware::new(harness.tools().policies()).require_sandbox(true),
     ));
+
+    // Loop guard (outermost tool wrap, so a skipped repeat also skips the approval
+    // prompt): refuses the third identical call / repeated A,B cycle that returned
+    // identical results with a "change approach" tool result, and ends the turn
+    // gracefully if the model keeps repeating after that. See `loop_guard.rs`.
+    harness.push_tool_middleware(Arc::new(loop_guard::LoopGuardMiddleware::new(
+        handle.clone(),
+        halt_summary.clone(),
+    )));
 
     // Human-in-the-loop approval as a named tool middleware (issue #4249,
     // Phase 1): an external-effect tool intercepts through the global

@@ -216,7 +216,12 @@ const ThreadRoot: FC<{
 
   return (
     <ThreadPrimitive.Root
-      className="aui-root aui-thread-root bg-background @container flex h-full flex-col"
+      // `min-h-0 flex-1 overflow-hidden`, not just `h-full`: hosts stack
+      // chrome above the thread (the Debug banner, panels), and a bare
+      // `h-full` thread is then 100% of the parent PLUS that chrome, so the
+      // overflow-hidden parent clips the composer off the bottom. The thread
+      // must shrink to what is left and let only its viewport scroll.
+      className="aui-root aui-thread-root bg-background @container flex h-full min-h-0 flex-1 flex-col overflow-hidden"
       style={{
         ['--thread-max-width' as string]: '44rem',
         ['--composer-bg' as string]: 'var(--color-card)',
@@ -224,9 +229,13 @@ const ThreadRoot: FC<{
         ['--composer-padding' as string]: '8px',
       }}>
       <ThreadPrimitive.Viewport
-        turnAnchor="top"
+        // Follow the newest tokens while a turn streams, unless the reader has
+        // scrolled up. `turnAnchor="top"` turned auto-scroll OFF (the library
+        // default is `!== "top"`), so a long answer streamed below the fold.
+        turnAnchor="bottom"
+        autoScroll
         data-slot="aui_thread-viewport"
-        className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth">
+        className="relative flex min-h-0 flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth">
         <div
           className={cn(
             'mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4',
@@ -398,10 +407,25 @@ const Composer: FC<{
               placeholder="Send a message..."
               onInputCapture={event => {
                 const target = event.target;
-                if (target instanceof HTMLElement) {
-                  const text = target.textContent ?? '';
-                  globalThis.queueMicrotask(() => aui.composer.setText(text));
-                }
+                if (!(target instanceof HTMLElement)) return;
+                // Lexical owns the text: it hears about native edits through a
+                // MutationObserver and pushes them to the runtime itself. This
+                // is only a repair for an edit it never saw (automation that
+                // sets `textContent`), so it must run AFTER Lexical had its
+                // turn and do nothing when Lexical already synced. Pushing the
+                // DOM text on the first microtask beat Lexical's update
+                // listener (its commit is queued from inside the observer
+                // callback), looked like a foreign runtime write to
+                // `SyncPlugin`, and rebuilt the editor with the caret at the
+                // end on every keystroke made mid-text.
+                if ((event.nativeEvent as InputEvent).isComposing) return;
+                const before = aui.composer.getState().text;
+                // Read now: Lexical may rewrite the DOM before we get to apply.
+                const text = target.textContent ?? '';
+                afterLexicalCommit(() => {
+                  if (aui.composer.getState().text !== before) return;
+                  if (text !== before) aui.composer.setText(text);
+                });
               }}
               onKeyDownCapture={event => {
                 if (event.key === 'Escape' && onEscape) {
@@ -434,6 +458,21 @@ const Composer: FC<{
     </ComposerPrimitive.Unstable_TriggerPopoverRoot>
   );
 };
+
+/**
+ * Runs `fn` once Lexical's pending commit has flushed. The commit is a
+ * microtask queued from within the MutationObserver callback, so it lands a
+ * couple of hops behind a microtask queued from an `input` handler; a few hops
+ * of our own are enough to land after it, without timers (which fake-timer
+ * suites and background throttling both distort).
+ */
+function afterLexicalCommit(fn: () => void, hops = 3): void {
+  if (hops <= 0) {
+    fn();
+    return;
+  }
+  globalThis.queueMicrotask(() => afterLexicalCommit(fn, hops - 1));
+}
 
 const ComposerExtrasSlot: FC = () => {
   const { ComposerExtras } = useContext(ThreadComponentsContext);

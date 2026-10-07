@@ -197,9 +197,11 @@ function ReasoningTrigger({
         className={cn(
           'aui-reasoning-trigger-chevron mt-0.5 size-4 shrink-0',
           'transition-transform duration-(--animation-duration) ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
+          // Radix Collapsible reports `data-state="open|closed"`; Base UI's
+          // `data-open` / `data-panel-open` are never set on it, which left the
+          // chevron stuck pointing right (same fix as tool-fallback).
           '-rotate-90',
-          'group-data-open/trigger:rotate-0',
-          'group-data-panel-open/trigger:rotate-0'
+          'group-data-[state=open]/trigger:rotate-0'
         )}
       />
     </CollapsibleTrigger>
@@ -219,10 +221,10 @@ function ReasoningContent({
       className={cn(
         'aui-reasoning-content text-muted-foreground relative overflow-hidden text-sm outline-hidden',
         'group/collapsible-content ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:animate-none',
-        'data-closed:animate-collapsible-up',
-        'data-open:animate-collapsible-down',
-        'data-closed:fill-mode-forwards',
-        'data-closed:pointer-events-none',
+        'data-[state=closed]:animate-collapsible-up',
+        'data-[state=open]:animate-collapsible-down',
+        'data-[state=closed]:fill-mode-forwards',
+        'data-[state=closed]:pointer-events-none',
         '[--tw-duration:var(--animation-duration)]',
         className
       )}
@@ -287,16 +289,16 @@ function ReasoningText({ className, children, ...props }: React.ComponentProps<'
         'aui-reasoning-text relative z-0 max-h-64 overflow-y-auto ps-6 pt-2 pb-2 leading-relaxed text-pretty',
         'transform-gpu transition-[transform,opacity] ease-[cubic-bezier(0.32,0.72,0,1)]',
         'motion-reduce:animate-none',
-        'group-data-open/collapsible-content:animate-in',
-        'group-data-closed/collapsible-content:animate-out',
-        'group-data-open/collapsible-content:fade-in-0',
-        'group-data-closed/collapsible-content:fade-out-0',
-        'group-data-open/collapsible-content:slide-in-from-top-4',
-        'group-data-closed/collapsible-content:slide-out-to-top-4',
-        'group-data-open/collapsible-content:blur-in-[2px]',
-        'group-data-closed/collapsible-content:blur-out-[2px]',
-        'group-data-open/collapsible-content:animation-duration-(--animation-duration)',
-        'group-data-closed/collapsible-content:animation-duration-(--animation-duration)',
+        'group-data-[state=open]/collapsible-content:animate-in',
+        'group-data-[state=closed]/collapsible-content:animate-out',
+        'group-data-[state=open]/collapsible-content:fade-in-0',
+        'group-data-[state=closed]/collapsible-content:fade-out-0',
+        'group-data-[state=open]/collapsible-content:slide-in-from-top-4',
+        'group-data-[state=closed]/collapsible-content:slide-out-to-top-4',
+        'group-data-[state=open]/collapsible-content:blur-in-[2px]',
+        'group-data-[state=closed]/collapsible-content:blur-out-[2px]',
+        'group-data-[state=open]/collapsible-content:animation-duration-(--animation-duration)',
+        'group-data-[state=closed]/collapsible-content:animation-duration-(--animation-duration)',
         className
       )}
       {...props}>

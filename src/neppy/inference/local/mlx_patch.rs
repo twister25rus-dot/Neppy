@@ -70,6 +70,7 @@ pub(crate) struct ServerPatch {
     pub kv_quant_scheme: Option<String>,
     pub kv_group_size: Option<u32>,
     pub max_kv_size: Option<u32>,
+    pub context_window: Option<u32>,
     pub quantized_kv_start: Option<u32>,
     pub max_num_seqs: Option<u32>,
     pub prefill_step_size: Option<u32>,
@@ -148,6 +149,7 @@ pub(crate) fn apply(server: &mut MlxServerConfig, patch: ServerPatch) -> PatchOu
     set!(kv_quant_scheme);
     set!(kv_group_size);
     set!(max_kv_size);
+    set!(context_window);
     set!(quantized_kv_start);
     set!(max_num_seqs);
     set!(prefill_step_size);

@@ -3030,6 +3030,12 @@ const IMAGE_MARKER_PREFIX: &str = "[IMAGE:";
 /// Minimum reply/output reserve — mirrors the legacy `MIN_OUTPUT_RESERVE_TOKENS`.
 const MIN_OUTPUT_RESERVE_TOKENS: u64 = 512;
 
+/// History kept on top of the system messages when the system messages ALONE
+/// already exceed the trim budget (see [`ImageAwareMessageTrimMiddleware`]).
+/// Evicting history cannot make such a prompt fit, so the budget is meaningless
+/// there; the floor keeps the recent exchange instead of the single newest message.
+const IRREDUCIBLE_PROMPT_HISTORY_FLOOR_TOKENS: u64 = 16_384;
+
 /// Upper anchor for the reply/output reserve — mirrors the legacy
 /// `DEFAULT_OUTPUT_RESERVE_TOKENS`.
 const DEFAULT_OUTPUT_RESERVE_TOKENS: u64 = 8_192;
@@ -3167,6 +3173,38 @@ impl Middleware<()> for ImageAwareMessageTrimMiddleware {
         }
         let original_len = messages.len();
 
+        // When the system messages alone already exceed the budget (a large
+        // system prompt against a small or mis-detected context window: seen as
+        // `budget=3584` against a ~35k-token prompt on a local MLX model), no
+        // amount of history eviction can make the request fit, so trimming to
+        // that budget only destroys history: every iteration the model saw the
+        // system prompt plus the single newest message, lost the user's request
+        // and its own previous calls, and re-issued the same tool call forever.
+        // In that regime keep the first user message (the task) pinned and keep
+        // a floor of recent history above the irreducible prompt.
+        let system_tokens: u64 = messages
+            .iter()
+            .filter(|m| matches!(m, TaMessage::System(_)))
+            .map(estimate_message_tokens)
+            .sum();
+        let irreducible = system_tokens >= self.budget;
+        let (budget, pinned_idx) = if irreducible {
+            let first_user = messages
+                .iter()
+                .position(|m| matches!(m, TaMessage::User(_)));
+            tracing::warn!(
+                system_tokens,
+                budget = self.budget,
+                "[tinyagents::mw] system prompt alone exceeds the trim budget; keeping a floor of recent history instead of evicting all of it"
+            );
+            (
+                system_tokens.saturating_add(IRREDUCIBLE_PROMPT_HISTORY_FLOOR_TOKENS),
+                first_user,
+            )
+        } else {
+            (self.budget, None)
+        };
+
         // Evict oldest non-system messages first, preserving the relative order
         // of every retained message (rebuilding as `system ++ other` would
         // reorder history when a system message appears after non-system ones —
@@ -3174,13 +3212,15 @@ impl Middleware<()> for ImageAwareMessageTrimMiddleware {
         let mut removable_positions: Vec<usize> = messages
             .iter()
             .enumerate()
-            .filter_map(|(idx, m)| (!matches!(m, TaMessage::System(_))).then_some(idx))
+            .filter_map(|(idx, m)| {
+                (!matches!(m, TaMessage::System(_)) && Some(idx) != pinned_idx).then_some(idx)
+            })
             .collect();
 
         let mut removed = 0usize;
         while !removable_positions.is_empty() {
             let total: u64 = messages.iter().map(estimate_message_tokens).sum();
-            if total <= self.budget {
+            if total <= budget {
                 break;
             }
             let absolute_idx = removable_positions.remove(0);
@@ -3194,13 +3234,21 @@ impl Middleware<()> for ImageAwareMessageTrimMiddleware {
         // an `assistant(tool_calls)` while keeping its `tool` answer leaves the
         // transcript opening on a tool message with no preceding tool-call, which
         // native providers reject with a 400. Drop leading tool results until the
-        // first non-system message is a clean turn boundary.
-        while let Some(first_non_system) = messages
-            .iter()
-            .position(|m| !matches!(m, TaMessage::System(_)))
-        {
-            if matches!(messages[first_non_system], TaMessage::Tool(_)) {
-                messages.remove(first_non_system);
+        // first non-system message is a clean turn boundary. With a pinned task
+        // message the boundary is the message right after it.
+        loop {
+            let first_non_system = messages
+                .iter()
+                .position(|m| !matches!(m, TaMessage::System(_)));
+            let boundary = match (pinned_idx, first_non_system) {
+                (Some(_), Some(first)) if matches!(messages[first], TaMessage::User(_)) => {
+                    first + 1
+                }
+                (_, Some(first)) => first,
+                (_, None) => break,
+            };
+            if boundary < messages.len() && matches!(messages[boundary], TaMessage::Tool(_)) {
+                messages.remove(boundary);
                 removed += 1;
             } else {
                 break;
@@ -5240,3 +5288,7 @@ mod tests {
 #[cfg(test)]
 #[path = "middleware_use_skill_tests.rs"]
 mod use_skill_tests;
+
+#[cfg(test)]
+#[path = "middleware_trim_tests.rs"]
+mod trim_tests;

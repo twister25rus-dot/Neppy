@@ -188,6 +188,13 @@ pub struct MlxServerConfig {
     /// Maximum KV cache size in tokens. `0` is unbounded.
     #[serde(default)]
     pub max_kv_size: u32,
+    /// Context window, in tokens, Neppy budgets prompts against for this
+    /// block. `0` means "auto": read the model's own `config.json` from the
+    /// Hugging Face cache, else assume 32768. Distinct from `max_kv_size`,
+    /// which is a server-side cap passed to the process; when both are set the
+    /// smaller wins.
+    #[serde(default)]
+    pub context_window: u32,
     /// Token index at which KV quantization begins. `0` uses the default.
     #[serde(default)]
     pub quantized_kv_start: u32,
@@ -365,6 +372,7 @@ impl Default for MlxServerConfig {
             kv_quant_scheme: String::new(),
             kv_group_size: 0,
             max_kv_size: 0,
+            context_window: 0,
             quantized_kv_start: 0,
             max_num_seqs: 0,
             prefill_step_size: 0,
