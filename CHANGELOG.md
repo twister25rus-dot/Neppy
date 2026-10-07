@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.68.3] - 2026-10-07
+
+### What's Changed
+
+- fix: reasoning UI and doubling, pinned composer, caret, tool loops ([`e8853440`](https://github.com/twister25rus-dot/Neppy/commit/e88534404597ef680736e96e842a381ddc3908af))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/9ec9fff03a8b393f6f8c2dd652bdcfc3a9162214...e88534404597ef680736e96e842a381ddc3908af
+
 ## [0.68.2] - 2026-10-07
 
 ### What's Changed
