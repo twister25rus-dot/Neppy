@@ -1,11 +1,11 @@
 {
-  "version": "0.68.0",
-  "notes": "## What's Changed\n\n- feat: in-app Debug Mode and Neppy rebrand ([`9dec504c`](https://github.com/twister25rus-dot/Neppy/commit/9dec504c745e0172de68f8ea83f53bbe29dbeb33))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/5758da08ec8de7794b7ad4de51853b2974011241...9dec504c745e0172de68f8ea83f53bbe29dbeb33",
-  "pub_date": "2026-10-07T05:14:48Z",
+  "version": "0.68.1",
+  "notes": "## What's Changed\n\n- feat: Debug Mode switch in chat; keep a stopped MLX server stopped ([`8cf15e8d`](https://github.com/twister25rus-dot/Neppy/commit/8cf15e8d1388b78113bb655f93ac53b67237a6d3))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/f0d928faee54bace73a448389a9909934873b2d8...8cf15e8d1388b78113bb655f93ac53b67237a6d3",
+  "pub_date": "2026-10-07T06:31:15Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakJsb3ZSUW9Ba0tUQVRaTmZ4elRyc3RkYWJkRVZxakF5dXJuRW1OU2xlUEZhR2lhSWFyQXl1UmFjbk9Tb09tekFKZWRtbzV0MzlCWXdmK0JDeFdiZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzQ5NzE5CWZpbGU6TmVwcHkuYXBwLnRhci5negpPVXJCZkc2S3QwSTVzM2pFTGI2Sk9DWklSSWVDbDNlMWlBMWVNQURBbUNyMlEvQjdEa0pOM013VTZ5ZEI3b0ZVclROVzBqUWdVVGc4ekt4MkJKUGpEdz09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/617653734"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakFLQWRMTFBQQ1FEME82eGQ4Q1pDOXJpTmpZdFZEeURPMUhZL3ZybVN1WVliOUI1WWRjTUVRZjZJZjI3ZVZuR0ZMdVAwWEkvZUEvbExiYXFjY1BXM2cwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzU0MzAyCWZpbGU6TmVwcHkuYXBwLnRhci5negpoVTdCZklpcnhjTytKb1Q2aEpVSWE5bWdWSWk5eDdaTDE5U3BscDB2ZmliWUY3ZmF2UVF3RHFEOGE5bldpa3J5VDVaczNKYmJ2UmVNYmM0WWIyQmxDdz09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/617811205"
     }
   }
 }
