@@ -4,6 +4,15 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.68.4] - 2026-10-07
+
+### What's Changed
+
+- commit into v.0.68.4 ([`75c74e03`](https://github.com/twister25rus-dot/Neppy/commit/75c74e030a1d5e56737bd3bf9f8034163ed1e514))
+- feat: reliable local MLX model; Debug Mode local install ([`c54536c7`](https://github.com/twister25rus-dot/Neppy/commit/c54536c7d2391379b68549e30f12b14363221e4c))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/87d9cb3b4b346c3c51d922bff164c91ef17de5f7...c54536c7d2391379b68549e30f12b14363221e4c
+
 ## [0.68.3] - 2026-10-07
 
 ### What's Changed
