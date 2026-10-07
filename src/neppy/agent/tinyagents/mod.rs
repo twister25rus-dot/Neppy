@@ -163,12 +163,17 @@ const DEFAULT_AGENT_TURN_TIMEOUT_SECS: u64 = 600;
 /// [`DEFAULT_AGENT_TURN_TIMEOUT_SECS`]); `0` means "no ceiling" → `None`, which
 /// restores the previous unbounded behavior for callers that deliberately opt
 /// out (e.g. very long autonomous runs).
+///
+/// A Debug-mode turn (repository work: builds, test suites) takes its own larger
+/// budget from `[debug_mode].turn_timeout_secs`; see `debug_mode::budget`. Every
+/// other turn is unchanged.
 pub(crate) fn agent_turn_wall_clock_ms() -> Option<u64> {
-    parse_agent_turn_wall_clock_ms(
+    let base = parse_agent_turn_wall_clock_ms(
         crate::neppy::util::env::var("NEPPY_AGENT_TURN_TIMEOUT_SECS")
             .ok()
             .as_deref(),
-    )
+    );
+    crate::neppy::agent::debug_mode::budget::current_turn_wall_clock_ms(base)
 }
 
 /// Pure core of [`agent_turn_wall_clock_ms`]: map an optional

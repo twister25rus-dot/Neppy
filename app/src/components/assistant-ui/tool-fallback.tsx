@@ -7,6 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/assistant-ui/ui/collapsible';
+import { useT } from '@/lib/i18n/I18nContext';
 import {
   type ToolApprovalOption,
   type ToolCallMessagePart,
@@ -16,8 +17,17 @@ import {
   useScrollLock,
   useToolCallElapsed,
 } from '@assistant-ui/react';
-import { AlertCircleIcon, CheckIcon, ChevronDownIcon, LoaderIcon, XCircleIcon } from 'lucide-react';
+import {
+  AlertCircleIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ClockIcon,
+  LoaderIcon,
+  XCircleIcon,
+} from 'lucide-react';
 import { memo, useCallback, useRef, useState } from 'react';
+
+import { type ToolApprovalRowState, useToolApprovalRowState } from './toolApprovalState';
 
 const ANIMATION_DURATION = 200;
 
@@ -105,18 +115,31 @@ function ToolFallbackDuration({ className, ...props }: React.ComponentProps<'spa
 function ToolFallbackTrigger({
   toolName,
   status,
+  approvalState,
   className,
   ...props
 }: React.ComponentProps<typeof CollapsibleTrigger> & {
   toolName: string;
   status?: ToolCallMessagePartStatus;
+  /** Parked on the ApprovalGate (`waiting`) or behind a parked call (`queued`). */
+  approvalState?: ToolApprovalRowState;
 }) {
   const statusType = status?.type ?? 'complete';
-  const isRunning = statusType === 'running';
+  const isWaiting = approvalState === 'waiting';
+  const isQueued = approvalState === 'queued';
+  // A parked or queued call is not executing, so it must not spin or shimmer.
+  const isRunning = statusType === 'running' && !isWaiting && !isQueued;
   const isCancelled = status?.type === 'incomplete' && status.reason === 'cancelled';
 
-  const Icon = statusIconMap[statusType];
-  const label = isCancelled ? 'Cancelled tool' : 'Used tool';
+  const { t } = useT();
+  const Icon = isWaiting ? AlertCircleIcon : isQueued ? ClockIcon : statusIconMap[statusType];
+  const label = isCancelled
+    ? t('chat.tool.cancelled')
+    : isWaiting
+      ? t('chat.tool.waitingApproval')
+      : isQueued
+        ? t('chat.tool.queued')
+        : t('chat.tool.used');
 
   return (
     <CollapsibleTrigger
@@ -131,12 +154,15 @@ function ToolFallbackTrigger({
         className={cn(
           'aui-tool-fallback-trigger-icon size-4 shrink-0',
           isCancelled && 'text-muted-foreground',
+          isWaiting && 'text-amber-500',
           isRunning && 'animate-spin [animation-duration:0.6s]'
         )}
       />
       <span
         data-slot="tool-fallback-trigger-label"
+        data-approval-state={approvalState && approvalState !== 'none' ? approvalState : undefined}
         className={cn(
+          isWaiting && 'text-amber-600 dark:text-amber-400',
           'aui-tool-fallback-trigger-label-wrapper relative inline-block text-start leading-none',
           isCancelled && 'text-muted-foreground line-through'
         )}>
@@ -158,9 +184,11 @@ function ToolFallbackTrigger({
         className={cn(
           'aui-tool-fallback-trigger-chevron size-4 shrink-0',
           'transition-transform duration-(--animation-duration) ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
+          // Radix Collapsible reports `data-state="open|closed"` on the trigger.
+          // The `data-open` / `data-panel-open` attributes this used to key off
+          // belong to Base UI and are never set here, so the chevron never moved.
           '-rotate-90',
-          'group-data-open/trigger:rotate-0',
-          'group-data-panel-open/trigger:rotate-0'
+          'group-data-[state=open]/trigger:rotate-0'
         )}
       />
     </CollapsibleTrigger>
@@ -178,10 +206,10 @@ function ToolFallbackContent({
       className={cn(
         'aui-tool-fallback-content relative overflow-hidden text-sm outline-hidden',
         'group/collapsible-content ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:animate-none',
-        'data-closed:animate-collapsible-up',
-        'data-open:animate-collapsible-down',
-        'data-closed:fill-mode-forwards',
-        'data-closed:pointer-events-none',
+        'data-[state=closed]:animate-collapsible-up',
+        'data-[state=open]:animate-collapsible-down',
+        'data-[state=closed]:fill-mode-forwards',
+        'data-[state=closed]:pointer-events-none',
         '[--tw-duration:var(--animation-duration)]',
         className
       )}
@@ -189,13 +217,61 @@ function ToolFallbackContent({
       <div
         className={cn(
           'flex flex-col gap-2 ps-6 pt-1 pb-2 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:animate-none',
-          'group-data-open/collapsible-content:animate-in group-data-open/collapsible-content:fade-in-0 group-data-open/collapsible-content:blur-in-[2px] group-data-open/collapsible-content:slide-in-from-top-1',
-          'group-data-closed/collapsible-content:animate-out group-data-closed/collapsible-content:fade-out-0 group-data-closed/collapsible-content:blur-out-[2px] group-data-closed/collapsible-content:slide-out-to-top-1',
-          'group-data-closed/collapsible-content:animation-duration-(--animation-duration) group-data-open/collapsible-content:animation-duration-(--animation-duration)'
+          'group-data-[state=open]/collapsible-content:animate-in group-data-[state=open]/collapsible-content:fade-in-0 group-data-[state=open]/collapsible-content:blur-in-[2px] group-data-[state=open]/collapsible-content:slide-in-from-top-1',
+          'group-data-[state=closed]/collapsible-content:animate-out group-data-[state=closed]/collapsible-content:fade-out-0 group-data-[state=closed]/collapsible-content:blur-out-[2px] group-data-[state=closed]/collapsible-content:slide-out-to-top-1',
+          'group-data-[state=closed]/collapsible-content:animation-duration-(--animation-duration) group-data-[state=open]/collapsible-content:animation-duration-(--animation-duration)'
         )}>
         {children}
       </div>
     </CollapsibleContent>
+  );
+}
+
+/** Output longer than this is cut with a "show more" control. */
+const OUTPUT_LIMIT = 4000;
+/** Arguments are usually short; a long blob starts collapsed. */
+const ARGS_LIMIT = 600;
+
+/**
+ * Monospace, scrollable block that truncates past `limit` characters behind a
+ * "show more" button, so one huge tool result cannot swamp the transcript.
+ */
+function ToolFallbackText({
+  text,
+  limit,
+  className,
+}: {
+  text: string;
+  limit: number;
+  className?: string;
+}) {
+  const { t } = useT();
+  const [expanded, setExpanded] = useState(false);
+  const overLimit = text.length > limit;
+  const shown = overLimit && !expanded ? `${text.slice(0, limit)}…` : text;
+
+  return (
+    <>
+      <pre
+        // Scrollable regions must be reachable by keyboard.
+        tabIndex={0}
+        className={cn(
+          'aui-tool-fallback-text bg-muted/50 text-foreground/90 mt-1 max-h-64 overflow-auto rounded-md p-2.5 font-mono text-xs wrap-break-word whitespace-pre-wrap',
+          className
+        )}>
+        {shown}
+      </pre>
+      {overLimit && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          data-slot="tool-fallback-show-more"
+          onClick={() => setExpanded(value => !value)}
+          className="text-muted-foreground hover:text-foreground mt-1 self-start text-xs underline-offset-2 hover:underline">
+          {expanded ? t('chat.tool.showLess') : t('chat.tool.showMore')}
+        </button>
+      )}
+    </>
   );
 }
 
@@ -204,39 +280,79 @@ function ToolFallbackArgs({
   className,
   ...props
 }: React.ComponentProps<'div'> & { argsText?: string }) {
-  if (!argsText) return null;
+  const { t } = useT();
+  const trimmed = argsText?.trim();
+  // `{}` carries no information; an empty panel labelled "Arguments" does not
+  // read as "this tool takes none", it reads as broken.
+  if (!trimmed || trimmed === '{}') return null;
 
   return (
     <div
       data-slot="tool-fallback-args"
-      className={cn('aui-tool-fallback-args', className)}
+      className={cn('aui-tool-fallback-args flex flex-col', className)}
       {...props}>
-      <pre className="aui-tool-fallback-args-value bg-muted/50 text-foreground/90 rounded-md p-2.5 text-xs whitespace-pre-wrap">
-        {argsText}
-      </pre>
+      <p className="aui-tool-fallback-args-header text-muted-foreground text-xs font-medium">
+        {t('chat.tool.arguments')}
+      </p>
+      <ToolFallbackText text={trimmed} limit={ARGS_LIMIT} />
     </div>
   );
 }
 
+function resultText(result: unknown): string {
+  if (typeof result === 'string') return result;
+  try {
+    return JSON.stringify(result, null, 2) ?? String(result);
+  } catch {
+    return String(result);
+  }
+}
+
 function ToolFallbackResult({
   result,
+  isError,
   className,
   ...props
-}: React.ComponentProps<'div'> & { result?: unknown }) {
+}: React.ComponentProps<'div'> & { result?: unknown; isError?: boolean }) {
+  const { t } = useT();
   if (result === undefined) return null;
+  const text = resultText(result);
 
   return (
     <div
       data-slot="tool-fallback-result"
-      className={cn('aui-tool-fallback-result', className)}
+      className={cn('aui-tool-fallback-result flex flex-col', className)}
       {...props}>
-      <p className="aui-tool-fallback-result-header text-muted-foreground text-xs font-medium">
-        Result:
+      <p
+        className={cn(
+          'aui-tool-fallback-result-header text-xs font-medium',
+          isError ? 'text-destructive' : 'text-muted-foreground'
+        )}>
+        {isError ? t('chat.tool.error') : t('chat.tool.output')}
       </p>
-      <pre className="aui-tool-fallback-result-content bg-muted/50 text-foreground/90 mt-1 rounded-md p-2.5 text-xs whitespace-pre-wrap">
-        {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-      </pre>
+      {text.length === 0 ? (
+        <p className="text-muted-foreground mt-1 text-xs italic">{t('chat.tool.noOutput')}</p>
+      ) : (
+        <ToolFallbackText
+          text={text}
+          limit={OUTPUT_LIMIT}
+          className={isError ? 'border-destructive/30 border' : undefined}
+        />
+      )}
     </div>
+  );
+}
+
+function ToolFallbackRunning({ className, ...props }: React.ComponentProps<'p'>) {
+  const { t } = useT();
+  return (
+    <p
+      role="status"
+      data-slot="tool-fallback-running"
+      className={cn('aui-tool-fallback-running text-muted-foreground text-xs italic', className)}
+      {...props}>
+      {t('chat.tool.running')}
+    </p>
   );
 }
 
@@ -475,9 +591,11 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({
   interrupt,
   approval,
   respondToApproval,
+  isError,
 }) => {
   const isCancelled = status?.type === 'incomplete' && status.reason === 'cancelled';
   const isRequiresAction = status?.type === 'requires-action';
+  const approvalState = useToolApprovalRowState(toolName, status?.type === 'running');
   const shouldRenderApproval =
     isRequiresAction && offersInterruptAction(status, approval, interrupt);
 
@@ -490,7 +608,7 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({
 
   return (
     <ToolFallbackRoot open={open} onOpenChange={setOpen}>
-      <ToolFallbackTrigger toolName={toolName} status={status} />
+      <ToolFallbackTrigger toolName={toolName} status={status} approvalState={approvalState} />
       <ToolFallbackContent>
         <ToolFallbackError status={status} />
         <ToolFallbackArgs argsText={argsText} className={cn(isCancelled && 'opacity-60')} />
@@ -504,7 +622,10 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({
             status={status}
           />
         )}
-        {!isCancelled && <ToolFallbackResult result={result} />}
+        {status?.type === 'running' && result === undefined && approvalState === 'none' && (
+          <ToolFallbackRunning />
+        )}
+        {!isCancelled && <ToolFallbackResult result={result} isError={isError} />}
       </ToolFallbackContent>
     </ToolFallbackRoot>
   );
@@ -516,6 +637,7 @@ const ToolFallback = memo(ToolFallbackImpl) as unknown as ToolCallMessagePartCom
   Content: typeof ToolFallbackContent;
   Args: typeof ToolFallbackArgs;
   Result: typeof ToolFallbackResult;
+  Running: typeof ToolFallbackRunning;
   Error: typeof ToolFallbackError;
   Approval: typeof ToolFallbackApproval;
 };
@@ -526,6 +648,7 @@ ToolFallback.Trigger = ToolFallbackTrigger;
 ToolFallback.Content = ToolFallbackContent;
 ToolFallback.Args = ToolFallbackArgs;
 ToolFallback.Result = ToolFallbackResult;
+ToolFallback.Running = ToolFallbackRunning;
 ToolFallback.Error = ToolFallbackError;
 ToolFallback.Approval = ToolFallbackApproval;
 
@@ -536,6 +659,7 @@ export {
   ToolFallbackContent,
   ToolFallbackArgs,
   ToolFallbackResult,
+  ToolFallbackRunning,
   ToolFallbackError,
   ToolFallbackApproval,
 };

@@ -176,7 +176,9 @@ impl ShellTool {
     /// [`crate::neppy::tools::timeout::explicit_call_timeout_duration`].
     fn explicit_timeout(&self, requested: Option<u64>) -> Option<Duration> {
         crate::neppy::tools::timeout::explicit_call_timeout_duration(
-            requested,
+            // A Debug-mode turn gets a default per-call deadline (see
+            // `debug_mode::budget`); every other caller is unchanged.
+            crate::neppy::agent::debug_mode::budget::effective_tool_timeout(requested),
             crate::neppy::tools::timeout::MAX_TIMEOUT_SECS,
         )
     }
@@ -230,8 +232,9 @@ impl Tool for ShellTool {
     /// keeps the harness from hard-killing a long command at the global tool
     /// timeout (issue #4023).
     fn timeout_policy(&self, args: &serde_json::Value) -> ToolTimeout {
-        match args.get("timeout_secs").and_then(|v| v.as_u64()) {
-            // `0` (or absent) means "no deadline".
+        let requested = args.get("timeout_secs").and_then(|v| v.as_u64());
+        match crate::neppy::agent::debug_mode::budget::effective_tool_timeout(requested) {
+            // `0` (or absent) means "no deadline" (outside a Debug turn).
             None | Some(0) => ToolTimeout::Unbounded,
             Some(secs) => ToolTimeout::Secs(secs),
         }

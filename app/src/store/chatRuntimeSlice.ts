@@ -245,6 +245,21 @@ export function parseToolFailure(raw: unknown): ToolFailureExplanation | undefin
 }
 
 /**
+ * JSON text for a `tool_call` event's `args`, or `undefined` when there is
+ * nothing worth keeping (absent, not an object, or `{}`) so an empty bag never
+ * masquerades as a recorded argument buffer.
+ */
+function serializeToolArgs(args: unknown): string | undefined {
+  if (!args || typeof args !== 'object' || Array.isArray(args)) return undefined;
+  if (Object.keys(args).length === 0) return undefined;
+  try {
+    return JSON.stringify(args);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Attach a human label/detail to a tool-timeline row. The server supplies a
  * label/detail for dynamic Composio/MCP/integration tools the client can't know
  * — trust it for those; for the fixed set of built-ins the client formatter
@@ -1291,9 +1306,17 @@ const chatRuntimeSlice = createSlice({
         toolCallId?: string;
         displayLabel?: string;
         displayDetail?: string;
+        /**
+         * The call's parsed arguments, as carried on the `tool_call` socket
+         * event. Folded into `argsBuffer` when no `tool_args_delta` stream
+         * supplied one — non-streamed providers never send deltas, so without
+         * this a row's arguments panel is permanently empty.
+         */
+        args?: Record<string, unknown>;
       }>
     ) => {
-      const { threadId, round, toolName, displayLabel, displayDetail } = action.payload;
+      const { threadId, round, toolName, displayLabel, displayDetail, args } = action.payload;
+      const argsFromEvent = serializeToolArgs(args);
       // Normalise an absent id to `undefined` *before* anything reads it. A
       // provider that sends `tool_call_id: ""` is saying "no id", but `??` only
       // falls back on null/undefined — so the empty string used to survive as
@@ -1317,6 +1340,7 @@ const chatRuntimeSlice = createSlice({
           name: toolName,
           round,
           status: 'running',
+          argsBuffer: prev.argsBuffer || argsFromEvent,
           displayName: displayLabel ?? prev.displayName,
           detail: displayDetail ?? prev.detail,
         });
@@ -1330,6 +1354,7 @@ const chatRuntimeSlice = createSlice({
             round,
             seq,
             status: 'running',
+            argsBuffer: argsFromEvent,
             displayName: displayLabel,
             detail: displayDetail,
           })

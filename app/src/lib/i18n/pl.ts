@@ -7668,6 +7668,19 @@ const messages: TranslationMap = {
     'Prosi o Twoją zgodę, zanim agent uruchomi ryzykowne polecenie.',
   'settings.debugMode.confirmDangerous.warning':
     'Potwierdzanie jest wyłączone. Agent może uruchamiać ryzykowne polecenia bez pytania.',
+  'chat.tool.used': 'Użyte narzędzie',
+  'chat.tool.cancelled': 'Anulowane narzędzie',
+  'chat.tool.groupOne': '1 wywołanie narzędzia',
+  'chat.tool.groupMany': 'Wywołania narzędzi: {count}',
+  'chat.tool.arguments': 'Argumenty',
+  'chat.tool.output': 'Wynik',
+  'chat.tool.error': 'Błąd',
+  'chat.tool.running': 'Trwa wykonywanie…',
+  'chat.tool.noOutput': 'Brak wyniku',
+  'chat.tool.waitingApproval': 'Czeka na Twoją zgodę',
+  'chat.tool.queued': 'W kolejce',
+  'chat.tool.showMore': 'Pokaż więcej',
+  'chat.tool.showLess': 'Pokaż mniej',
 };
 
 export default messages;

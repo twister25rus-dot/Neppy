@@ -7724,6 +7724,19 @@ const messages: TranslationMap = {
     'Pide tu aprobación antes de que el agente ejecute un comando de riesgo.',
   'settings.debugMode.confirmDangerous.warning':
     'La confirmación está desactivada. El agente puede ejecutar comandos de riesgo sin preguntarte antes.',
+  'chat.tool.used': 'Herramienta usada',
+  'chat.tool.cancelled': 'Herramienta cancelada',
+  'chat.tool.groupOne': '1 llamada a herramienta',
+  'chat.tool.groupMany': '{count} llamadas a herramientas',
+  'chat.tool.arguments': 'Argumentos',
+  'chat.tool.output': 'Salida',
+  'chat.tool.error': 'Error',
+  'chat.tool.running': 'En ejecución…',
+  'chat.tool.noOutput': 'Sin salida',
+  'chat.tool.waitingApproval': 'Esperando tu aprobación',
+  'chat.tool.queued': 'En cola',
+  'chat.tool.showMore': 'Mostrar más',
+  'chat.tool.showLess': 'Mostrar menos',
 };
 
 export default messages;

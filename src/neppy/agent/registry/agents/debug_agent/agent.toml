@@ -13,40 +13,45 @@ temperature = 0.3
 max_iterations = 40
 iteration_policy = "extended"
 max_result_chars = 16000
+# Everything a general-purpose agent gets, minus the sub-agent fleet (see the
+# `[tools]` note). The match is a trailing-`*` prefix or an exact name.
+disallowed_tools = [
+    "delegate_*",
+    "spawn_*",
+    "continue_subagent",
+    "steer_subagent",
+    "wait_subagent",
+    "close_subagent",
+    "list_subagents",
+    "wait",
+    "wait_loop",
+    "agent_prepare_context",
+]
 sandbox_mode = "sandboxed"
 omit_identity = true
 omit_memory_context = true
 omit_safety_preamble = false
-omit_skills_catalog = true
+omit_skills_catalog = false
 
 [model]
 hint = "coding"
 
 [tools]
-# Coding harness only. No storage_*, curl, web_fetch or memory-writing tools:
-# a debug turn works on the repository and nothing else. `debug_checkpoint`,
-# `debug_validate_candidate` and `debug_report` act on the current
-# turn's debug task and refuse elsewhere.
-# `lsp` is capability-gated (the LSP enable flag); listing it is harmless
-# when the gate is off.
-named = [
-    "shell",
-    "file_read",
-    "file_write",
-    "git_operations",
-    "node_exec",
-    "npm_exec",
-    "grep",
-    "glob",
-    "list",
-    "edit",
-    "apply_patch",
-    "read_diff",
-    "run_tests",
-    "run_linter",
-    "todowrite",
-    "lsp",
-    "debug_checkpoint",
-    "debug_validate_candidate",
-    "debug_report",
-]
+# Wildcard: the agent inherits the full built-in tool surface — the coding
+# harness (shell, file/edit/patch, grep/glob/list, git, node/npm, lsp, tests),
+# the web and network tools (web_fetch, web_search_tool, http_request, curl),
+# the memory, skill and workflow tools, MCP tools, the on-demand tool packs
+# (`load_skill` / `use_skill`) and the `debug_*` tools. Listing hundreds of
+# names here would only drift from the registry.
+#
+# What it must NOT have is the sub-agent fleet (`disallowed_tools` above): a
+# detached sub-agent runs on its own task and loses the Debug turn's scope — the
+# repo root and the Debug command gate — and `debug_agent` must never spawn
+# itself. `run_subagent` also refuses `debug_agent` as a target outright.
+#
+# Everything else still goes through the same enforcement as before: the
+# approval gate (supervised tier), the Debug command policy (installs, push,
+# system commands, destructive commands), secret masking, and the protected-path
+# guard. `debug_checkpoint`, `debug_validate_candidate` and `debug_report` act on
+# the current turn's debug task and refuse elsewhere.
+wildcard = {}

@@ -7768,6 +7768,19 @@ const messages: TranslationMap = {
   'settings.debugMode.confirmDangerous.desc': 'Vor riskanten Befehlen deine Zustimmung einholen.',
   'settings.debugMode.confirmDangerous.warning':
     'Die Bestätigung ist aus. Der Agent kann riskante Befehle ausführen, ohne dich vorher zu fragen.',
+  'chat.tool.used': 'Verwendetes Tool',
+  'chat.tool.cancelled': 'Abgebrochenes Tool',
+  'chat.tool.groupOne': '1 Tool-Aufruf',
+  'chat.tool.groupMany': '{count} Tool-Aufrufe',
+  'chat.tool.arguments': 'Argumente',
+  'chat.tool.output': 'Ausgabe',
+  'chat.tool.error': 'Fehler',
+  'chat.tool.running': 'Läuft …',
+  'chat.tool.noOutput': 'Keine Ausgabe',
+  'chat.tool.waitingApproval': 'Wartet auf deine Freigabe',
+  'chat.tool.queued': 'In der Warteschlange',
+  'chat.tool.showMore': 'Mehr anzeigen',
+  'chat.tool.showLess': 'Weniger anzeigen',
 };
 
 export default messages;

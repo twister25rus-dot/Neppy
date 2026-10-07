@@ -7559,6 +7559,19 @@ const messages: TranslationMap = {
     'एजेंट के जोखिम भरा कमांड चलाने से पहले आपकी मंज़ूरी मांगता है।',
   'settings.debugMode.confirmDangerous.warning':
     'पुष्टि बंद है। एजेंट बिना पूछे जोखिम भरे कमांड चला सकता है।',
+  'chat.tool.used': 'उपयोग किया गया टूल',
+  'chat.tool.cancelled': 'रद्द किया गया टूल',
+  'chat.tool.groupOne': '1 टूल कॉल',
+  'chat.tool.groupMany': '{count} टूल कॉल',
+  'chat.tool.arguments': 'आर्गुमेंट',
+  'chat.tool.output': 'आउटपुट',
+  'chat.tool.error': 'त्रुटि',
+  'chat.tool.running': 'चल रहा है…',
+  'chat.tool.noOutput': 'कोई आउटपुट नहीं',
+  'chat.tool.waitingApproval': 'आपकी मंज़ूरी का इंतज़ार है',
+  'chat.tool.queued': 'कतार में',
+  'chat.tool.showMore': 'और दिखाएं',
+  'chat.tool.showLess': 'कम दिखाएं',
 };
 
 export default messages;

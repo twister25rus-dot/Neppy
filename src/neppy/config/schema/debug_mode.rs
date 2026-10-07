@@ -22,6 +22,14 @@ fn d_false() -> bool {
 fn d_iterations() -> u32 {
     5
 }
+fn d_turn_timeout() -> u64 {
+    DEFAULT_TURN_TIMEOUT_SECS
+}
+
+/// Default wall-clock budget of one Debug-mode turn, in seconds (60 minutes).
+/// Other agents get ~10 minutes; repository work (a cold `cargo build`, a full
+/// test run, a candidate validation) routinely takes longer than that.
+pub const DEFAULT_TURN_TIMEOUT_SECS: u64 = 3600;
 
 /// Configuration for Debug Mode.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -66,6 +74,11 @@ pub struct DebugModeConfig {
     /// Ask before `rm -rf`, `git reset --hard` and similar.
     #[serde(default = "d_true")]
     pub dangerous_commands_require_confirmation: bool,
+    /// Wall-clock budget of one Debug-mode turn, in seconds. `0` removes the
+    /// ceiling. Applies to Debug turns only; every other agent keeps the
+    /// default 10-minute turn budget.
+    #[serde(default = "d_turn_timeout")]
+    pub turn_timeout_secs: u64,
 }
 
 impl Default for DebugModeConfig {
@@ -85,6 +98,7 @@ impl Default for DebugModeConfig {
             allow_git_commit: true,
             allow_git_push: false,
             dangerous_commands_require_confirmation: true,
+            turn_timeout_secs: DEFAULT_TURN_TIMEOUT_SECS,
         }
     }
 }
@@ -111,6 +125,15 @@ mod tests {
         assert!(!c.allow_dependency_install && !c.allow_external_filesystem);
         assert!(!c.allow_system_commands && !c.allow_git_push);
         assert!(c.allow_git_commit && c.dangerous_commands_require_confirmation);
+        assert_eq!(c.turn_timeout_secs, 3600, "a Debug turn gets an hour");
+    }
+
+    #[test]
+    fn turn_timeout_is_configurable_and_defaults_when_absent() {
+        let c: DebugModeConfig = toml::from_str("turn_timeout_secs = 7200").unwrap();
+        assert_eq!(c.turn_timeout_secs, 7200);
+        let c: DebugModeConfig = toml::from_str("enabled = true").unwrap();
+        assert_eq!(c.turn_timeout_secs, DEFAULT_TURN_TIMEOUT_SECS);
     }
 
     #[test]

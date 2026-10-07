@@ -383,7 +383,11 @@ pub async fn run_subagent(
         // `debug_agent` runs only inside a Debug-mode turn. This is the single
         // choke point every sub-agent spawn path (spawn_subagent, async/parallel
         // spawns, delegate_*, continue_subagent, ...) funnels through.
-        if crate::neppy::agent::debug_mode::turn::ensure_agent_allowed(&definition.id).is_err() {
+        // It is also never a *sub*-agent, even inside a Debug turn (no self-spawn).
+        if crate::neppy::agent::debug_mode::turn::ensure_agent_allowed(&definition.id).is_err()
+            || crate::neppy::agent::debug_mode::turn::ensure_subagent_allowed(&definition.id)
+                .is_err()
+        {
             return Err(SubagentRunError::DebugOnly(definition.id.clone()));
         }
 

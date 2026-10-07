@@ -260,4 +260,64 @@ describe('Conversations: Debug Mode chrome', () => {
     expect(screen.getAllByText('Debug thread').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Normal thread').length).toBeGreaterThan(0);
   });
+
+  describe('parked approval cards (assistant-ui default composer)', () => {
+    const approval = {
+      requestId: 'req-1',
+      toolName: 'shell',
+      message: 'Run `shell`: ls',
+      command: 'ls -la',
+    };
+
+    it('renders the approval card for a debug thread', async () => {
+      const dbg = makeThread({ id: 'dbg-1', title: 'Debug thread', mode: 'debug' });
+      mockGetThreads.mockResolvedValue({ threads: [dbg], count: 1 });
+      const chatRuntime = {
+        ...chatRuntimeReducer(undefined, { type: '@@init' }),
+        pendingApprovalByThread: { 'dbg-1': [approval] },
+      };
+
+      await renderChat({
+        thread: selectedThreadState(dbg),
+        socket: socketState('connected'),
+        chatRuntime,
+      });
+
+      expect(await screen.findByTestId('pending-approval-queue')).toBeInTheDocument();
+    });
+
+    it('renders the approval card for a normal thread', async () => {
+      const normal = makeThread({ id: 'c-1', title: 'Normal thread' });
+      mockGetThreads.mockResolvedValue({ threads: [normal], count: 1 });
+      const chatRuntime = {
+        ...chatRuntimeReducer(undefined, { type: '@@init' }),
+        pendingApprovalByThread: { 'c-1': [approval] },
+      };
+
+      await renderChat({
+        thread: selectedThreadState(normal),
+        socket: socketState('connected'),
+        chatRuntime,
+      });
+
+      expect(await screen.findByTestId('pending-approval-queue')).toBeInTheDocument();
+    });
+
+    it("does not show another thread's approval", async () => {
+      const dbg = makeThread({ id: 'dbg-1', title: 'Debug thread', mode: 'debug' });
+      mockGetThreads.mockResolvedValue({ threads: [dbg], count: 1 });
+      const chatRuntime = {
+        ...chatRuntimeReducer(undefined, { type: '@@init' }),
+        pendingApprovalByThread: { other: [approval] },
+      };
+
+      await renderChat({
+        thread: selectedThreadState(dbg),
+        socket: socketState('connected'),
+        chatRuntime,
+      });
+
+      expect(screen.queryByTestId('pending-approval-queue')).toBeNull();
+    });
+  });
 });

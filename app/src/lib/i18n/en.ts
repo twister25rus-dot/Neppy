@@ -7871,6 +7871,19 @@ const en: TranslationMap = {
     'Ask for your approval before the agent runs a risky command.',
   'settings.debugMode.confirmDangerous.warning':
     'Confirmation is off. The agent can run risky commands without asking you first.',
+  'chat.tool.used': 'Used tool',
+  'chat.tool.cancelled': 'Cancelled tool',
+  'chat.tool.groupOne': '1 tool call',
+  'chat.tool.groupMany': '{count} tool calls',
+  'chat.tool.arguments': 'Arguments',
+  'chat.tool.output': 'Output',
+  'chat.tool.error': 'Error',
+  'chat.tool.running': 'Running…',
+  'chat.tool.noOutput': 'No output',
+  'chat.tool.waitingApproval': 'Waiting for your approval',
+  'chat.tool.queued': 'Queued',
+  'chat.tool.showMore': 'Show more',
+  'chat.tool.showLess': 'Show less',
 };
 
 export default en;

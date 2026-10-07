@@ -67,6 +67,20 @@ pub fn ensure_agent_allowed(agent_id: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// [`ensure_agent_allowed`] for a *sub-agent* spawn. `debug_agent` is only ever
+/// the top-level agent of a Debug-mode turn, so it is refused as a sub-agent
+/// even inside one: a Debug turn must not be able to spawn itself (unbounded
+/// recursion, and a child that would no longer be the turn's own agent).
+pub fn ensure_subagent_allowed(agent_id: &str) -> Result<(), String> {
+    if agent_id == DEBUG_AGENT_ID {
+        log::warn!("[debug_mode] refused to spawn `{DEBUG_AGENT_ID}` as a sub-agent");
+        return Err(format!(
+            "agent '{DEBUG_AGENT_ID}' cannot be spawned as a sub-agent"
+        ));
+    }
+    Ok(())
+}
+
 /// Runs `fut` with `turn` as the ambient debug turn.
 pub async fn with_turn<F: Future>(turn: DebugTurn, fut: F) -> F::Output {
     DEBUG_TURN.scope(turn, Box::pin(fut)).await

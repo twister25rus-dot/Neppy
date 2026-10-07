@@ -7475,6 +7475,19 @@ const messages: TranslationMap = {
     '에이전트가 위험한 명령을 실행하기 전에 승인을 요청합니다.',
   'settings.debugMode.confirmDangerous.warning':
     '확인이 꺼져 있습니다. 에이전트가 묻지 않고 위험한 명령을 실행할 수 있습니다.',
+  'chat.tool.used': '사용한 도구',
+  'chat.tool.cancelled': '취소된 도구',
+  'chat.tool.groupOne': '도구 호출 1개',
+  'chat.tool.groupMany': '도구 호출 {count}개',
+  'chat.tool.arguments': '인수',
+  'chat.tool.output': '출력',
+  'chat.tool.error': '오류',
+  'chat.tool.running': '실행 중…',
+  'chat.tool.noOutput': '출력 없음',
+  'chat.tool.waitingApproval': '승인을 기다리는 중',
+  'chat.tool.queued': '대기 중',
+  'chat.tool.showMore': '더 보기',
+  'chat.tool.showLess': '간단히 보기',
 };
 
 export default messages;

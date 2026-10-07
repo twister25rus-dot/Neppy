@@ -2086,6 +2086,60 @@ const Conversations = ({
   );
 
   // Main chat area (right pane): header, message list, composer.
+  // Every card that parks a live turn until the user answers (tool approvals,
+  // flow approvals, plan review). Shared by BOTH main panels: the assistant-ui
+  // panel is the default composer, and before this was hoisted only the legacy
+  // panel mounted it, so a parked `shell` call never surfaced and the turn
+  // timed out waiting on a card nobody could see.
+  const gatedRequestCards = (
+    <>
+      {/* Every parked ApprovalGate request for the shown thread, just above
+            the composer so they stay visible regardless of scroll. */}
+      {(() => {
+        const approvalThreadId = selectedThreadId ?? firstActiveThreadId;
+        if (!approvalThreadId) return null;
+        return (
+          <PendingApprovalQueue
+            threadId={approvalThreadId}
+            approvals={pendingApprovalByThread[approvalThreadId] ?? []}
+          />
+        );
+      })()}
+
+      {/* Flow-approval surface (chat): actionable banner(s) for paused
+            tinyflows runs, pushed via the `flow_approval_request` socket
+            event (issue: flow-approval surfacing). Not gated on the selected
+            thread — see the hook call above for why — so every pending
+            request renders regardless of which thread is open. */}
+      {flowApprovalRequests.length > 0 && (
+        <div className="mb-2 flex flex-col gap-2">
+          {flowApprovalRequests.map(request => (
+            <FlowApprovalRequestCard
+              key={request.request_id}
+              request={request}
+              onResolved={dismissFlowApprovalRequest}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Plan-mode review: the orchestrator parked the live turn on a
+            thread-scoped plan (request_plan_review gate). Surface it for the
+            user to Approve / Reject / send feedback on before anything executes;
+            the card resolves the parked turn via plan_review_decide. */}
+      {selectedThreadId && pendingPlanReview && (
+        // Key by request id so a re-parked (revised) plan — or a thread switch —
+        // remounts the card and resets its local decision/feedback state,
+        // matching the ApprovalRequestCard pattern above.
+        <PlanReviewCard
+          key={pendingPlanReview.requestId}
+          threadId={selectedThreadId}
+          review={pendingPlanReview}
+        />
+      )}
+    </>
+  );
+
   const legacyMainPanel = (
     <div
       className={
@@ -2229,35 +2283,7 @@ const Conversations = ({
           </div>
         )}
 
-        {/* Every parked ApprovalGate request for the shown thread, just above
-            the composer so they stay visible regardless of scroll. */}
-        {(() => {
-          const approvalThreadId = selectedThreadId ?? firstActiveThreadId;
-          if (!approvalThreadId) return null;
-          return (
-            <PendingApprovalQueue
-              threadId={approvalThreadId}
-              approvals={pendingApprovalByThread[approvalThreadId] ?? []}
-            />
-          );
-        })()}
-
-        {/* Flow-approval surface (chat): actionable banner(s) for paused
-            tinyflows runs, pushed via the `flow_approval_request` socket
-            event (issue: flow-approval surfacing). Not gated on the selected
-            thread — see the hook call above for why — so every pending
-            request renders regardless of which thread is open. */}
-        {flowApprovalRequests.length > 0 && (
-          <div className="mb-2 flex flex-col gap-2">
-            {flowApprovalRequests.map(request => (
-              <FlowApprovalRequestCard
-                key={request.request_id}
-                request={request}
-                onResolved={dismissFlowApprovalRequest}
-              />
-            ))}
-          </div>
-        )}
+        {gatedRequestCards}
 
         {(() => {
           // Surface in-flight + failed artifact cards above the composer
@@ -2301,21 +2327,6 @@ const Conversations = ({
             pinned above the composer. Distinct from the Intelligence-tab kanban
             (global `user-tasks`). Renders nothing when the thread has no active
             cards. */}
-        {/* Plan-mode review: the orchestrator parked the live turn on a
-            thread-scoped plan (request_plan_review gate). Surface it for the
-            user to Approve / Reject / send feedback on before anything executes;
-            the card resolves the parked turn via plan_review_decide. */}
-        {selectedThreadId && pendingPlanReview && (
-          // Key by request id so a re-parked (revised) plan — or a thread switch —
-          // remounts the card and resets its local decision/feedback state,
-          // matching the ApprovalRequestCard pattern above.
-          <PlanReviewCard
-            key={pendingPlanReview.requestId}
-            threadId={selectedThreadId}
-            review={pendingPlanReview}
-          />
-        )}
-
         {/* Agent-first Workflow authoring (issue B4): the agent drafted a
             candidate automation via `propose_workflow`. The tool only
             validates — it never creates the flow — so this card is the ONLY
@@ -2578,6 +2589,7 @@ const Conversations = ({
           onClear={() => void handleClearQueuedFollowups()}
         />
       ) : null}
+      {gatedRequestCards}
       <ThreadModeBar
         threadId={selectedThreadId}
         onOpenAllRuns={() => navigate('/brain?tab=orchestration&ov=runs')}

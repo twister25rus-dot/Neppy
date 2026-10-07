@@ -7599,6 +7599,19 @@ const messages: TranslationMap = {
     'Meminta persetujuan Anda sebelum agen menjalankan perintah berisiko.',
   'settings.debugMode.confirmDangerous.warning':
     'Konfirmasi dimatikan. Agen dapat menjalankan perintah berisiko tanpa bertanya terlebih dahulu.',
+  'chat.tool.used': 'Alat digunakan',
+  'chat.tool.cancelled': 'Alat dibatalkan',
+  'chat.tool.groupOne': '1 panggilan alat',
+  'chat.tool.groupMany': '{count} panggilan alat',
+  'chat.tool.arguments': 'Argumen',
+  'chat.tool.output': 'Keluaran',
+  'chat.tool.error': 'Kesalahan',
+  'chat.tool.running': 'Sedang berjalan…',
+  'chat.tool.noOutput': 'Tidak ada keluaran',
+  'chat.tool.waitingApproval': 'Menunggu persetujuan Anda',
+  'chat.tool.queued': 'Dalam antrean',
+  'chat.tool.showMore': 'Tampilkan lebih banyak',
+  'chat.tool.showLess': 'Tampilkan lebih sedikit',
 };
 
 export default messages;

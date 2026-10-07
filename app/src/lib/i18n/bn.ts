@@ -7558,6 +7558,19 @@ const messages: TranslationMap = {
     'এজেন্ট ঝুঁকিপূর্ণ কমান্ড চালানোর আগে আপনার অনুমতি চায়।',
   'settings.debugMode.confirmDangerous.warning':
     'নিশ্চিতকরণ বন্ধ আছে। এজেন্ট আগে না জিজ্ঞেস করেই ঝুঁকিপূর্ণ কমান্ড চালাতে পারে।',
+  'chat.tool.used': 'ব্যবহৃত টুল',
+  'chat.tool.cancelled': 'বাতিল করা টুল',
+  'chat.tool.groupOne': '১টি টুল কল',
+  'chat.tool.groupMany': '{count}টি টুল কল',
+  'chat.tool.arguments': 'আর্গুমেন্ট',
+  'chat.tool.output': 'আউটপুট',
+  'chat.tool.error': 'ত্রুটি',
+  'chat.tool.running': 'চলছে…',
+  'chat.tool.noOutput': 'কোনো আউটপুট নেই',
+  'chat.tool.waitingApproval': 'আপনার অনুমোদনের অপেক্ষায়',
+  'chat.tool.queued': 'সারিতে আছে',
+  'chat.tool.showMore': 'আরও দেখুন',
+  'chat.tool.showLess': 'কম দেখুন',
 };
 
 export default messages;

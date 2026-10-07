@@ -121,6 +121,45 @@ describe('streamingTailMessage', () => {
   });
 });
 
+describe('tool part result mapping', () => {
+  it('maps the tool_result output onto the part result', () => {
+    const part = streamingTailMessage(null, [
+      tool({ status: 'success', result: 'file1\nfile2', argsBuffer: '{"path":"/tmp"}' }),
+    ])?.content[0];
+    expect(part).toMatchObject({
+      type: 'tool-call',
+      args: { path: '/tmp' },
+      result: 'file1\nfile2',
+    });
+    expect(part).not.toHaveProperty('isError');
+  });
+
+  it('uses an empty result, not a status stub, when a tool returned nothing', () => {
+    const part = streamingTailMessage(null, [tool({ status: 'success' })])?.content[0];
+    expect(part).toMatchObject({ type: 'tool-call', result: '' });
+  });
+
+  it('flags failures and falls back to the failure explanation when there is no output', () => {
+    const part = streamingTailMessage(null, [
+      tool({
+        status: 'error',
+        failure: {
+          class: 'Timeout',
+          category: 'Recoverable',
+          recoverable: true,
+          causePlain: 'The tool timed out.',
+          nextAction: 'Try again.',
+        },
+      }),
+    ])?.content[0];
+    expect(part).toMatchObject({
+      type: 'tool-call',
+      isError: true,
+      result: 'The tool timed out.\nTry again.',
+    });
+  });
+});
+
 describe('buildRuntimeMessages', () => {
   it('omits hidden messages', () => {
     const visible = msg({ id: 'v' });

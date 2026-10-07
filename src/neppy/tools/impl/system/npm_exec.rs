@@ -218,7 +218,10 @@ impl NpmExecTool {
         // No default deadline — only a caller-supplied `timeout_secs` (capped)
         // bounds the run. `None` ⇒ run to completion.
         let explicit_timeout = crate::neppy::tools::timeout::explicit_call_timeout_duration(
-            args.get("timeout_secs").and_then(|v| v.as_u64()),
+            // A Debug-mode turn gets a default per-call deadline.
+            crate::neppy::agent::debug_mode::budget::effective_tool_timeout(
+                args.get("timeout_secs").and_then(|v| v.as_u64()),
+            ),
             NPM_TIMEOUT_MAX_SECS,
         );
 
@@ -490,7 +493,8 @@ impl NpmExecTool {
 /// clamped to [`NPM_TIMEOUT_MAX_SECS`]. Extracted from
 /// [`NpmExecTool::timeout_policy`] so it is unit-testable without a bootstrap.
 fn npm_timeout_policy(args: &serde_json::Value) -> ToolTimeout {
-    match args.get("timeout_secs").and_then(|v| v.as_u64()) {
+    let requested = args.get("timeout_secs").and_then(|v| v.as_u64());
+    match crate::neppy::agent::debug_mode::budget::effective_tool_timeout(requested) {
         None | Some(0) => ToolTimeout::Unbounded,
         Some(secs) => ToolTimeout::Secs(secs.min(NPM_TIMEOUT_MAX_SECS)),
     }

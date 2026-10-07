@@ -7395,6 +7395,19 @@ const messages: TranslationMap = {
     'اطلب موافقتك قبل أن ينفّذ الوكيل أمرًا محفوفًا بالمخاطر.',
   'settings.debugMode.confirmDangerous.warning':
     'التأكيد معطّل. يمكن للوكيل تنفيذ أوامر محفوفة بالمخاطر دون أن يسألك أولًا.',
+  'chat.tool.used': 'أداة مستخدمة',
+  'chat.tool.cancelled': 'أداة ملغاة',
+  'chat.tool.groupOne': 'استدعاء أداة واحد',
+  'chat.tool.groupMany': '{count} استدعاءات أدوات',
+  'chat.tool.arguments': 'المعاملات',
+  'chat.tool.output': 'المخرجات',
+  'chat.tool.error': 'خطأ',
+  'chat.tool.running': 'قيد التشغيل…',
+  'chat.tool.noOutput': 'لا توجد مخرجات',
+  'chat.tool.waitingApproval': 'بانتظار موافقتك',
+  'chat.tool.queued': 'في قائمة الانتظار',
+  'chat.tool.showMore': 'عرض المزيد',
+  'chat.tool.showLess': 'عرض أقل',
 };
 
 export default messages;

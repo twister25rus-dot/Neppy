@@ -14,6 +14,7 @@
 //! (agent tools cannot write the workspace dir, so history is tamper-resistant
 //! from the debug agent itself).
 
+pub mod budget;
 pub mod candidate;
 mod candidate_schemas;
 mod candidate_steps;

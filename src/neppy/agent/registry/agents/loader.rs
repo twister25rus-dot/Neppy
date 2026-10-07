@@ -963,6 +963,15 @@ mod tests {
         );
     }
 
+    /// The session builder's denylist rule (`definition_disallows_tool`): an exact
+    /// name, or a prefix when the entry ends in `*`.
+    fn disallows(list: &[String], name: &str) -> bool {
+        list.iter().any(|e| match e.strip_suffix('*') {
+            Some(prefix) => name.starts_with(prefix),
+            None => e == name,
+        })
+    }
+
     #[test]
     fn debug_agent_is_registered_repo_scoped_and_not_a_delegate() {
         let def = find("debug_agent");
@@ -978,47 +987,68 @@ mod tests {
         );
         assert!(def.delegate_name.is_none(), "no delegate tool of its own");
         assert!(matches!(def.system_prompt, PromptSource::Dynamic(_)));
-        match &def.tools {
-            ToolScope::Named(names) => {
-                for required in [
-                    "shell",
-                    "file_read",
-                    "file_write",
-                    "git_operations",
-                    "grep",
-                    "glob",
-                    "list",
-                    "edit",
-                    "apply_patch",
-                    "todowrite",
-                    "debug_checkpoint",
-                    "debug_report",
-                ] {
-                    assert!(
-                        names.iter().any(|t| t == required),
-                        "debug_agent must name `{required}`"
-                    );
-                }
-                for forbidden in [
-                    "curl",
-                    "web_fetch",
-                    "storage_upload_file",
-                    "storage_download_file",
-                    "storage_list_files",
-                    "storage_get_link",
-                    "update_memory_md",
-                    "memory_store",
-                    "debug_rollback",
-                ] {
-                    assert!(
-                        !names.iter().any(|t| t == forbidden),
-                        "debug_agent must not name `{forbidden}`"
-                    );
-                }
-                let unique: std::collections::HashSet<&String> = names.iter().collect();
-                assert_eq!(unique.len(), names.len(), "no duplicate tool names");
-            }
-            ToolScope::Wildcard => panic!("debug_agent must have a Named tool scope"),
+        // Full tool surface (web, memory, skills, MCP, packs, ...) via the
+        // wildcard scope, minus the sub-agent fleet.
+        assert!(
+            matches!(def.tools, ToolScope::Wildcard),
+            "debug_agent must have a Wildcard tool scope"
+        );
+        assert!(
+            !def.omit_skills_catalog,
+            "installed skills are advertised to the debug agent"
+        );
+        for fleet in [
+            "delegate_research",
+            "spawn_subagent",
+            "spawn_async_subagent",
+            "spawn_parallel_agents",
+            "spawn_worker_thread",
+            "continue_subagent",
+            "steer_subagent",
+            "wait_subagent",
+            "close_subagent",
+            "list_subagents",
+            "wait",
+            "wait_loop",
+            "agent_prepare_context",
+        ] {
+            assert!(
+                disallows(&def.disallowed_tools, fleet),
+                "debug_agent must not have `{fleet}`"
+            );
+        }
+        for kept in [
+            "shell",
+            "file_read",
+            "file_write",
+            "git_operations",
+            "grep",
+            "glob",
+            "list",
+            "edit",
+            "apply_patch",
+            "todowrite",
+            "node_exec",
+            "npm_exec",
+            "web_fetch",
+            "web_search_tool",
+            "http_request",
+            "curl",
+            "load_skill",
+            "use_skill",
+            "run_workflow",
+            "memory_recall",
+            "memory_search",
+            "mcp_list_tools",
+            "mcp_call_tool",
+            "debug_checkpoint",
+            "debug_validate_candidate",
+            "debug_report",
+        ] {
+            assert!(
+                !disallows(&def.disallowed_tools, kept),
+                "debug_agent must keep `{kept}`"
+            );
         }
         // Reachable only through Debug mode: never an orchestrator delegate.
         let orchestrator = find("orchestrator");
@@ -1047,6 +1077,9 @@ mod tests {
             "preserve unrelated user changes",
             "package.json",
             "Prefer targeted checks",
+            "full tool surface",
+            "timeout_secs",
+            "`vendor/`",
         ] {
             assert!(
                 prompt.contains(needle),

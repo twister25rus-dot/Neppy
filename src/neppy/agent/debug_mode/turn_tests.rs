@@ -324,3 +324,20 @@ async fn without_an_auto_checkpoint_files_changed_is_diffed_against_head() {
     assert!(t.files_changed.is_empty());
     assert_eq!(t.status, TaskStatus::Pass);
 }
+
+#[tokio::test]
+async fn debug_agent_is_never_a_subagent_even_inside_its_own_turn() {
+    assert!(ensure_subagent_allowed(DEBUG_AGENT_ID).is_err());
+    assert!(ensure_subagent_allowed("code_executor").is_ok());
+    let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+    let inside = run_in_root(ws.path(), root_of(&repo).await, "x", async {
+        Ok::<_, String>((
+            ensure_agent_allowed(DEBUG_AGENT_ID),
+            ensure_subagent_allowed(DEBUG_AGENT_ID),
+        ))
+    })
+    .await
+    .unwrap();
+    assert!(inside.0.is_ok(), "it is the turn's own agent");
+    assert!(inside.1.is_err(), "but never a sub-agent");
+}

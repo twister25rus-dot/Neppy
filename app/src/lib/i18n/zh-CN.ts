@@ -7139,6 +7139,19 @@ const messages: TranslationMap = {
   'settings.debugMode.confirmDangerous.desc': '在代理运行有风险的命令之前征求你的同意。',
   'settings.debugMode.confirmDangerous.warning':
     '确认已关闭。代理可以不经询问直接运行有风险的命令。',
+  'chat.tool.used': '已使用工具',
+  'chat.tool.cancelled': '已取消的工具',
+  'chat.tool.groupOne': '1 次工具调用',
+  'chat.tool.groupMany': '{count} 次工具调用',
+  'chat.tool.arguments': '参数',
+  'chat.tool.output': '输出',
+  'chat.tool.error': '错误',
+  'chat.tool.running': '运行中…',
+  'chat.tool.noOutput': '无输出',
+  'chat.tool.waitingApproval': '等待你的批准',
+  'chat.tool.queued': '排队中',
+  'chat.tool.showMore': '显示更多',
+  'chat.tool.showLess': '收起',
 };
 
 export default messages;

@@ -914,3 +914,81 @@ async fn session_builder_refuses_debug_agent_outside_a_debug_turn() {
         "{err}"
     );
 }
+
+/// Inside a Debug turn the debug agent is built with the full tool surface (web,
+/// memory, skills, packs, the `debug_*` tools) minus the sub-agent fleet.
+#[tokio::test]
+async fn debug_agent_session_sees_the_full_tool_surface_without_the_fleet() {
+    use crate::neppy::agent::debug_mode::turn;
+    use crate::neppy::agent::harness::session::types::Agent;
+
+    let tmp = tempfile::TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let def = builtin_def("debug_agent");
+
+    let repo = tempfile::tempdir().unwrap();
+    for args in [
+        &["init", "-q"][..],
+        &["commit", "--allow-empty", "-qm", "i"][..],
+    ] {
+        assert!(std::process::Command::new("git")
+            .arg("-C")
+            .arg(repo.path())
+            .args(["-c", "user.name=t", "-c", "user.email=t@t"])
+            .args(args)
+            .status()
+            .unwrap()
+            .success());
+    }
+    let ws = tempfile::tempdir().unwrap();
+    let root = repo.path().canonicalize().unwrap();
+    let visible: std::collections::HashSet<String> =
+        turn::run_in_root(ws.path(), root, "x", async {
+            let agent = Agent::build_session_agent_inner(
+                &config,
+                "debug_agent",
+                Some(&def),
+                None,
+                false,
+                None,
+            )
+            .map_err(|e| e.to_string())?;
+            Ok::<_, String>(agent.visible_tool_names_for_test().clone())
+        })
+        .await
+        .expect("debug_agent builds inside a Debug turn");
+
+    for kept in [
+        "shell",
+        "file_read",
+        "edit",
+        "apply_patch",
+        "git_operations",
+        "web_fetch",
+        "http_request",
+        "memory_recall",
+        "load_skill",
+        "use_skill",
+        "debug_checkpoint",
+        "debug_report",
+    ] {
+        assert!(visible.contains(kept), "debug_agent must see `{kept}`");
+    }
+    for fleet in [
+        "spawn_subagent",
+        "spawn_async_subagent",
+        "spawn_parallel_agents",
+        "wait_subagent",
+        "continue_subagent",
+    ] {
+        assert!(
+            !visible.contains(fleet),
+            "debug_agent must not see `{fleet}`"
+        );
+    }
+    assert!(
+        visible.len() > 60,
+        "the surface is no longer a short named list (got {})",
+        visible.len()
+    );
+}

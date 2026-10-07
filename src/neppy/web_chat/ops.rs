@@ -84,6 +84,28 @@ fn web_turn_deadline() -> Option<Duration> {
     (secs > 0).then(|| Duration::from_secs(secs))
 }
 
+/// The backstop for the turn on `thread_id`: [`web_turn_deadline`], widened for a
+/// Debug-mode thread so it sits above that turn's larger harness budget
+/// (`debug_mode::budget`). Without this the 900 s backstop would still cut a
+/// Debug turn short while the harness is willing to wait an hour.
+async fn web_turn_deadline_for(thread_id: &str) -> Option<Duration> {
+    let base = web_turn_deadline();
+    let Ok(config) = crate::neppy::config::rpc::load_config_with_timeout().await else {
+        return base;
+    };
+    let mode = crate::neppy::threads::ops::thread_mode_for(&config.workspace_dir, thread_id).await;
+    if mode != crate::neppy::threads::mode::ThreadMode::Debug {
+        return base;
+    }
+    let widened = crate::neppy::agent::debug_mode::budget::web_backstop(base, &config.debug_mode);
+    log::debug!(
+        "[web-channel] debug thread={thread_id} backstop {:?} -> {:?}",
+        base,
+        widened
+    );
+    widened
+}
+
 /// Drive a chat-turn future under the wall-clock backstop.
 ///
 /// On elapse the inner future is dropped (cooperative teardown at its next
@@ -127,6 +149,7 @@ where
 /// differences are the `fork` flag and run-queue handle passed to
 /// `run_chat_task` when building `fut`.
 async fn run_turn_under_cancel_and_deadline<F>(
+    deadline: Option<Duration>,
     cancel_token: CancellationToken,
     origin: crate::neppy::agent::turn_origin::AgentTurnOrigin,
     approval_ctx: crate::neppy::security::approval::ApprovalChatContext,
@@ -139,7 +162,7 @@ where
         biased;
         _ = cancel_token.cancelled() => None,
         res = drive_turn_with_deadline(
-            web_turn_deadline(),
+            deadline,
             crate::neppy::agent::turn_origin::with_origin(
                 origin,
                 crate::neppy::security::approval::APPROVAL_CHAT_CONTEXT.scope(approval_ctx, fut),
@@ -807,7 +830,9 @@ pub async fn start_chat(
         // `None` => the turn was cancelled cooperatively before producing a
         // result; the interrupting/cancelling side already emitted the
         // user-facing `chat_error`, so we just unwind quietly here.
+        let deadline = web_turn_deadline_for(&thread_id_task).await;
         let result = run_turn_under_cancel_and_deadline(
+            deadline,
             task_cancel_token,
             origin,
             approval_ctx,
@@ -1039,7 +1064,9 @@ async fn spawn_parallel_turn(
             client_id: client_id_task.clone(),
             request_id: Some(request_id_task.clone()),
         };
+        let deadline = web_turn_deadline_for(&thread_id_task).await;
         let result = run_turn_under_cancel_and_deadline(
+            deadline,
             task_cancel_token,
             origin,
             approval_ctx,

@@ -98,10 +98,23 @@ function toolPart(entry: ToolTimelineEntry): ThreadAssistantMessagePart {
       ? {
           result: isSubagent
             ? (entry.subagent ?? { status: entry.status })
-            : (entry.result ?? { status: entry.status, failure: entry.failure }),
+            : (entry.result ?? failureText(entry)),
+          // The tool renderer shows the result as an error rather than output.
+          ...(!isSubagent && entry.status === 'error' ? { isError: true } : {}),
         }
       : {}),
   };
+}
+
+/**
+ * Text for a settled row whose tool returned no output: the failure's plain
+ * cause (+ next step) for an error, else the empty string. Empty — not a
+ * `{status}` stub — so the renderer can say "No output" instead of printing
+ * bookkeeping JSON as if the tool had returned it.
+ */
+function failureText(entry: ToolTimelineEntry): string {
+  if (entry.status !== 'error' || !entry.failure) return '';
+  return [entry.failure.causePlain, entry.failure.nextAction].filter(Boolean).join('\n');
 }
 
 /**

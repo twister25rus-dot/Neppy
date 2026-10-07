@@ -6,6 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/assistant-ui/ui/collapsible';
+import { useT } from '@/lib/i18n/I18nContext';
 import { useScrollLock } from '@assistant-ui/react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { ChevronDownIcon, LoaderIcon } from 'lucide-react';
@@ -82,7 +83,11 @@ function ToolGroupTrigger({
   className,
   ...props
 }: React.ComponentProps<typeof CollapsibleTrigger> & { count: number; active?: boolean }) {
-  const label = `${count} tool ${count === 1 ? 'call' : 'calls'}`;
+  const { t } = useT();
+  const label =
+    count === 1
+      ? t('chat.tool.groupOne')
+      : t('chat.tool.groupMany').replace('{count}', String(count));
 
   return (
     <CollapsibleTrigger
@@ -124,9 +129,9 @@ function ToolGroupTrigger({
         className={cn(
           'aui-tool-group-trigger-chevron size-3 shrink-0',
           'transition-transform duration-(--animation-duration) ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
+          // Radix reports `data-state`, not Base UI's `data-open` (see tool-fallback).
           '-rotate-90',
-          'group-data-open/trigger:rotate-0',
-          'group-data-panel-open/trigger:rotate-0'
+          'group-data-[state=open]/trigger:rotate-0'
         )}
       />
     </CollapsibleTrigger>
@@ -144,10 +149,10 @@ function ToolGroupContent({
       className={cn(
         'aui-tool-group-content relative overflow-hidden text-sm outline-hidden',
         'group/collapsible-content ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:animate-none',
-        'data-closed:animate-collapsible-up',
-        'data-open:animate-collapsible-down',
-        'data-closed:fill-mode-forwards',
-        'data-closed:pointer-events-none',
+        'data-[state=closed]:animate-collapsible-up',
+        'data-[state=open]:animate-collapsible-down',
+        'data-[state=closed]:fill-mode-forwards',
+        'data-[state=closed]:pointer-events-none',
         '[--tw-duration:var(--animation-duration)]',
         className
       )}

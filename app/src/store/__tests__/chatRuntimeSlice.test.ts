@@ -996,6 +996,52 @@ describe('toolCallReceived (Phase 3 reducer-side merge)', () => {
     ]);
   });
 
+  it('keeps the event args as the row argsBuffer when no args stream preceded it', () => {
+    const state = reducer(
+      undefined,
+      toolCallReceived({
+        threadId: 't1',
+        round: 0,
+        toolName: 'shell',
+        toolCallId: 'c1',
+        args: { command: 'ls -la' },
+      })
+    );
+    expect(JSON.parse(state.toolTimelineByThread['t1'][0].argsBuffer ?? 'null')).toEqual({
+      command: 'ls -la',
+    });
+  });
+
+  it('does not overwrite a streamed argsBuffer, and ignores an empty args bag', () => {
+    let state = reducer(
+      undefined,
+      toolArgsDeltaReceived({
+        threadId: 't1',
+        round: 0,
+        delta: '{"a":1}',
+        toolName: 'shell',
+        toolCallId: 'c1',
+      })
+    );
+    state = reducer(
+      state,
+      toolCallReceived({
+        threadId: 't1',
+        round: 0,
+        toolName: 'shell',
+        toolCallId: 'c1',
+        args: { a: 2 },
+      })
+    );
+    expect(state.toolTimelineByThread['t1'][0].argsBuffer).toBe('{"a":1}');
+
+    const empty = reducer(
+      undefined,
+      toolCallReceived({ threadId: 't2', round: 0, toolName: 'list', toolCallId: 'c2', args: {} })
+    );
+    expect(empty.toolTimelineByThread['t2'][0].argsBuffer).toBeUndefined();
+  });
+
   /**
    * A provider that sends `tool_call_id: ""` means "no id". `??` only falls
    * back on null/undefined, so the empty string used to survive as the row id

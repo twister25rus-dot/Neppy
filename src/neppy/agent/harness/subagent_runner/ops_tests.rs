@@ -1812,3 +1812,42 @@ async fn runner_refuses_debug_agent_outside_a_debug_turn() {
         "got {result:?}"
     );
 }
+
+/// A Debug turn must not be able to spawn `debug_agent` again: it would
+/// recurse, and the child would not be the turn's own agent.
+#[tokio::test]
+async fn runner_refuses_debug_agent_as_a_subagent_even_inside_a_debug_turn() {
+    use crate::neppy::agent::debug_mode::turn;
+    let def = crate::neppy::agent::registry::agents::load_builtins()
+        .unwrap()
+        .into_iter()
+        .find(|d| d.id == "debug_agent")
+        .expect("debug_agent is a builtin");
+    let repo = tempfile::tempdir().unwrap();
+    for args in [
+        &["init", "-q"][..],
+        &["commit", "--allow-empty", "-qm", "i"][..],
+    ] {
+        let ok = std::process::Command::new("git")
+            .arg("-C")
+            .arg(repo.path())
+            .args(["-c", "user.name=t", "-c", "user.email=t@t"])
+            .args(args)
+            .status()
+            .unwrap()
+            .success();
+        assert!(ok, "git {args:?}");
+    }
+    let ws = tempfile::tempdir().unwrap();
+    let root = repo.path().canonicalize().unwrap();
+    let result = turn::run_in_root(ws.path(), root, "x", async {
+        assert!(turn::current().is_some(), "inside a Debug turn");
+        Ok::<_, String>(run_subagent(&def, "x", SubagentRunOptions::default()).await)
+    })
+    .await
+    .unwrap();
+    assert!(
+        matches!(&result, Err(SubagentRunError::DebugOnly(id)) if id == "debug_agent"),
+        "got {result:?}"
+    );
+}

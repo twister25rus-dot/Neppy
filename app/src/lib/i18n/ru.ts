@@ -7638,6 +7638,19 @@ const messages: TranslationMap = {
     'Запрашивает ваше согласие, прежде чем агент выполнит рискованную команду.',
   'settings.debugMode.confirmDangerous.warning':
     'Подтверждение отключено. Агент может выполнять рискованные команды, не спрашивая вас.',
+  'chat.tool.used': 'Использован инструмент',
+  'chat.tool.cancelled': 'Инструмент отменён',
+  'chat.tool.groupOne': '1 вызов инструмента',
+  'chat.tool.groupMany': 'Вызовов инструментов: {count}',
+  'chat.tool.arguments': 'Аргументы',
+  'chat.tool.output': 'Вывод',
+  'chat.tool.error': 'Ошибка',
+  'chat.tool.running': 'Выполняется…',
+  'chat.tool.noOutput': 'Нет вывода',
+  'chat.tool.waitingApproval': 'Ожидает вашего подтверждения',
+  'chat.tool.queued': 'В очереди',
+  'chat.tool.showMore': 'Показать больше',
+  'chat.tool.showLess': 'Показать меньше',
 };
 
 export default messages;

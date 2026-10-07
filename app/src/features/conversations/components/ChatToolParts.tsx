@@ -10,6 +10,7 @@ import {
   ToolGroupRoot,
   ToolGroupTrigger,
 } from '../../../components/assistant-ui/tool-group';
+import { useThreadHasPendingApproval } from '../../../components/assistant-ui/toolApprovalState';
 import {
   Collapsible,
   CollapsibleContent,
@@ -100,9 +101,12 @@ export const ChatToolGroup: FC<PropsWithChildren<{ group: ThreadGroupPart }>> = 
   children,
 }) => {
   const running = group.status.type === 'running';
+  // A call parked on the approval gate is waiting on the user, not working:
+  // keep the group open (the card needs to be seen) but stop its spinner.
+  const parked = useThreadHasPendingApproval();
   return (
     <ToolGroupRoot variant="ghost" defaultOpen={running}>
-      <ToolGroupTrigger count={group.indices.length} active={running} />
+      <ToolGroupTrigger count={group.indices.length} active={running && !parked} />
       <ToolGroupContent>{children}</ToolGroupContent>
     </ToolGroupRoot>
   );

@@ -7698,6 +7698,19 @@ const messages: TranslationMap = {
     "Chiede la tua approvazione prima che l'agente esegua un comando rischioso.",
   'settings.debugMode.confirmDangerous.warning':
     "La conferma è disattivata. L'agente può eseguire comandi rischiosi senza chiederti prima.",
+  'chat.tool.used': 'Strumento usato',
+  'chat.tool.cancelled': 'Strumento annullato',
+  'chat.tool.groupOne': '1 chiamata a strumento',
+  'chat.tool.groupMany': '{count} chiamate a strumenti',
+  'chat.tool.arguments': 'Argomenti',
+  'chat.tool.output': 'Output',
+  'chat.tool.error': 'Errore',
+  'chat.tool.running': 'In esecuzione…',
+  'chat.tool.noOutput': 'Nessun output',
+  'chat.tool.waitingApproval': 'In attesa della tua approvazione',
+  'chat.tool.queued': 'In coda',
+  'chat.tool.showMore': 'Mostra altro',
+  'chat.tool.showLess': 'Mostra meno',
 };
 
 export default messages;

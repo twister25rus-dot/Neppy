@@ -505,7 +505,8 @@ pub(super) fn contains_unquoted_char(command: &str, target: char) -> bool {
 /// this set — and not a recognized network/destructive/executor command, nor a
 /// read-only verb of git/npm/cargo — falls through to [`CommandClass::Write`]
 /// (the classifier is fail-closed). Conservative on purpose: anything that can
-/// write a file under a common flag is intentionally omitted (`sort -o`, `tee`).
+/// write a file under a common flag is intentionally omitted (`tee`; `sort` is
+/// handled in [`classify_segment`] because only its `-o` / `--output` form writes).
 const READ_ONLY_BASES: &[&str] = &[
     // POSIX inspection / read-only coreutils
     "ls",
@@ -550,6 +551,11 @@ const READ_ONLY_BASES: &[&str] = &[
     "lsblk",
     "lscpu",
     "cut",
+    // Pure stdin/argv filters: `printf` only formats to stdout (a redirect is
+    // lifted to Write by `classify_command`), `tr` only reads stdin. Without
+    // these, a harmless `printf '--- x ---\n' && ls` was parked for approval.
+    "printf",
+    "tr",
     // NOTE: OS-native launchers (`open`, `xdg-open`, `start`) are deliberately
     // NOT in the read-only set. `classify_command` only sees the base command,
     // not its args, and these launchers can open arbitrary `https://` URLs and
@@ -812,6 +818,21 @@ pub(super) fn classify_segment(base: &str, args: &[String], joined: &str) -> Com
     }
     if base == "cargo" {
         return verb_class(args, CARGO_READ_VERBS);
+    }
+    // `sort` is a read-only filter unless it writes (`-o`/`--output`) or runs a
+    // helper program (`--compress-program`). `args` is already lowercased.
+    if base == "sort" {
+        let writes_or_execs = args.iter().any(|a| {
+            let a = a.trim_matches(|c| c == '\'' || c == '"');
+            a.starts_with("--output")
+                || a.starts_with("--compress-program")
+                || (a.starts_with('-') && !a.starts_with("--") && a.contains('o'))
+        });
+        return if writes_or_execs {
+            CommandClass::Write
+        } else {
+            CommandClass::Read
+        };
     }
     if READ_ONLY_BASES.contains(&base) {
         return CommandClass::Read;

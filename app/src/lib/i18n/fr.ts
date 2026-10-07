@@ -7754,6 +7754,19 @@ const messages: TranslationMap = {
     "Demande votre accord avant que l'agent n'exécute une commande risquée.",
   'settings.debugMode.confirmDangerous.warning':
     "La confirmation est désactivée. L'agent peut exécuter des commandes risquées sans vous demander.",
+  'chat.tool.used': 'Outil utilisé',
+  'chat.tool.cancelled': 'Outil annulé',
+  'chat.tool.groupOne': "1 appel d'outil",
+  'chat.tool.groupMany': "{count} appels d'outils",
+  'chat.tool.arguments': 'Arguments',
+  'chat.tool.output': 'Sortie',
+  'chat.tool.error': 'Erreur',
+  'chat.tool.running': 'En cours…',
+  'chat.tool.noOutput': 'Aucune sortie',
+  'chat.tool.waitingApproval': 'En attente de votre approbation',
+  'chat.tool.queued': "En file d'attente",
+  'chat.tool.showMore': 'Afficher plus',
+  'chat.tool.showLess': 'Afficher moins',
 };
 
 export default messages;

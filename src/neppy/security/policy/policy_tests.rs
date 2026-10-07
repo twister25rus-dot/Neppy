@@ -440,6 +440,32 @@ fn classify_reads_are_read() {
 }
 
 #[test]
+fn classify_printf_and_filters_are_read_but_sort_output_is_write() {
+    let p = default_policy();
+    // The exact shape of the Debug-mode repo scan that parked for approval.
+    for c in [
+        "pwd && printf '\\n--- top-level ---\\n' && find . -maxdepth 2 -type d -not -path './.git*' | sort",
+        "printf '%s\\n' a b",
+        "tr a-z A-Z",
+        "ls | sort -r",
+        "sort -u -k2 file.txt",
+    ] {
+        assert_eq!(p.classify_command(c), CommandClass::Read, "{c}");
+    }
+    // A redirect still lifts printf to Write, and sort's writing forms are Write.
+    for c in [
+        "printf x > out.txt",
+        "sort -o out.txt in.txt",
+        "sort -ro out.txt in.txt",
+        "sort --output=out.txt in.txt",
+        "sort '-o' out.txt in.txt",
+        "sort --compress-program=sh big.txt",
+    ] {
+        assert_eq!(p.classify_command(c), CommandClass::Write, "{c}");
+    }
+}
+
+#[test]
 fn classify_unknown_is_write_fail_closed() {
     let p = default_policy();
     // The whole point: a command we don't recognize is NOT treated as read.
