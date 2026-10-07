@@ -487,12 +487,6 @@ const Conversations = ({
   }, []);
   const composerSampling = useAppSelector(state => state.chatRuntime.composerSampling);
   const composerModelOverride = useAppSelector(state => state.chatRuntime.composerModel);
-  // `undefined` means no explicit picker selection, so usage-reported context
-  // remains authoritative. `null` means the selected model did not report a
-  // window, and the meter deliberately shows an unknown limit.
-  const composerModelContextWindow = useAppSelector(
-    state => state.chatRuntime.composerModelContextWindow
-  );
   // Whether the resolved model for the active profile accepts image input.
   // Managed tiers do; custom/BYOK models only when the user flagged them. Gates
   // the composer's image-attachment affordance (docs flow regardless). Resolved
@@ -2610,7 +2604,6 @@ const Conversations = ({
       <AssistantUiChat
         threadGoal={threadGoal}
         model={composerModelOverride ?? resolvedModel ?? CHAT_MODEL_HINT}
-        modelContextWindow={composerModelContextWindow}
         composerHeader={assistantComposerHeader}
         inputValue={inputValue}
         onInputValueChange={setInputValue}

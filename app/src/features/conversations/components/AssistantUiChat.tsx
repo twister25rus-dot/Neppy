@@ -7,26 +7,23 @@ import AttachmentPreview from '../../../components/chat/AttachmentPreview';
 import ComposerEffortPill, {
   type ComposerEffort,
 } from '../../../components/chat/ComposerEffortPill';
-import { Button } from '../../../components/ui';
+import { Button, Switch } from '../../../components/ui';
 import type { Attachment } from '../../../lib/attachments';
 import { useRegisterAction } from '../../../lib/commands/useRegisterAction';
 import { useSlashCommands } from '../../../lib/commands/useSlashCommands';
 import { useT } from '../../../lib/i18n/I18nContext';
 import { AssistantUiRuntimeProvider } from '../../../providers/AssistantUiRuntimeProvider';
-import { emptySessionTokenUsage } from '../../../store/chatRuntimeSlice';
 import { useAppSelector } from '../../../store/hooks';
 import { DEFAULT_MASCOT_COLOR } from '../../../store/mascotSlice';
 import { MascotChipAvatar } from '../../human/Mascot/MascotChipAvatar';
 import { SelectedThreadModeProvider } from '../threadModeContext';
 import { ChatToolFallback, ChatToolGroup } from './ChatToolParts';
-import { contextUsageFromTokenUsage, ContextWindowPill } from './composer/ContextWindowPill';
 import {
   type ThreadGoalController,
   ThreadGoalEditorPanel,
   ThreadGoalFooterTrigger,
 } from './ThreadGoalChip';
 
-const EMPTY_TOKEN_USAGE = emptySessionTokenUsage();
 const selectComposerText = (state: AssistantState) => state.composer.text;
 
 function ComposerTextBridge({
@@ -65,7 +62,6 @@ function ComposerTextBridge({
 export function AssistantUiChat({
   threadGoal,
   model,
-  modelContextWindow,
   onModelChange,
   sampling,
   onSamplingChange,
@@ -85,7 +81,6 @@ export function AssistantUiChat({
 }: {
   threadGoal: ThreadGoalController;
   model: string | null;
-  modelContextWindow?: number | null;
   onModelChange: (value: string | null, contextWindow?: number | null) => void;
   /** Per-turn generation settings, and the setter that persists them. */
   sampling: ComposerEffort;
@@ -120,15 +115,6 @@ export function AssistantUiChat({
   const mascotCustomPrimary = useAppSelector(state => state.mascot?.customPrimaryColor ?? null);
   const selectedThreadId = useAppSelector(state => state.thread.selectedThreadId);
   const loadError = useAppSelector(state => state.thread.messagesError);
-  const tokenUsage = useAppSelector(state =>
-    selectedThreadId
-      ? (state.chatRuntime.usageByThread[selectedThreadId] ?? EMPTY_TOKEN_USAGE)
-      : EMPTY_TOKEN_USAGE
-  );
-  const contextUsage = useMemo(
-    () => contextUsageFromTokenUsage(tokenUsage, modelContextWindow),
-    [modelContextWindow, tokenUsage]
-  );
   const openThreadGoal = threadGoal.open;
 
   useRegisterAction({
@@ -147,11 +133,20 @@ export function AssistantUiChat({
     () => (
       <>
         <ComposerEffortPill value={sampling} onChange={onSamplingChange} />
-        <ContextWindowPill usage={contextUsage} />
+        <label className="flex h-8 items-center gap-2 rounded-full bg-surface-strong px-3 text-xs text-content-secondary">
+          <span>Reasoning</span>
+          <Switch
+            id="chat-reasoning"
+            checked={sampling.effort !== null}
+            onCheckedChange={enabled => onSamplingChange({ effort: enabled ? 'high' : null })}
+            aria-label="Enable reasoning"
+            className="h-[18px] w-[32px] [&_[data-slot=switch-thumb]]:h-[14px] [&_[data-slot=switch-thumb]]:w-[14px] [&_[data-slot=switch-thumb][data-state=checked]]:translate-x-[14px]"
+          />
+        </label>
         <ThreadGoalFooterTrigger ctl={threadGoal} />
       </>
     ),
-    [contextUsage, threadGoal, sampling, onSamplingChange]
+    [threadGoal, sampling, onSamplingChange]
   );
   // The goal editor belongs in the header slot, which `thread.tsx` renders
   // OUTSIDE the bordered composer shell. It used to live in `ComposerExtras`
