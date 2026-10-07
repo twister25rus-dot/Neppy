@@ -287,7 +287,7 @@ impl LocalAiService {
             // Defense-in-depth (TAURI-RUST-A3T): the diagnostics caller already
             // tolerates this failure (degrades to empty models + surfaces the
             // error to the UI as `tags_error`). A non-2xx from the configured
-            // endpoint is an external/server condition, not an openhuman code
+            // endpoint is an external/server condition, not a neppy code
             // defect, so log at `warn!` (breadcrumb) instead of `error!` to
             // avoid flooding Sentry on every diagnostics poll. The root-cause
             // fix for the common case lives in `validate_ollama_url` /
@@ -325,7 +325,7 @@ impl LocalAiService {
             // parse only fails when the body isn't a JSON object) means the
             // configured Ollama port is answering with something else entirely
             // — a different local server/proxy, a captive portal, an HTML page.
-            // That is an external/user-environment condition, not an openhuman
+            // That is an external/user-environment condition, not a neppy
             // code defect. The diagnostics caller already degrades gracefully
             // (empty models + surfaces the failure to the UI as `tags_error`),
             // so log at `warn!` (breadcrumb) instead of `error!` to avoid

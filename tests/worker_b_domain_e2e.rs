@@ -30,20 +30,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -52,7 +52,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -128,17 +128,17 @@ async fn setup() -> TestHarness {
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        EnvVarGuard::unset("OPENHUMAN_LOCAL_AI_TIER"),
-        EnvVarGuard::unset("OPENHUMAN_LM_STUDIO_BASE_URL"),
+        EnvVarGuard::unset("NEPPY_API_URL"),
+        EnvVarGuard::unset("NEPPY_LOCAL_AI_TIER"),
+        EnvVarGuard::unset("NEPPY_LM_STUDIO_BASE_URL"),
         EnvVarGuard::unset("LM_STUDIO_BASE_URL"),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
 
     let _ = neppy_core::neppy::agent::harness::AgentDefinitionRegistry::init_global_builtins();
@@ -230,48 +230,48 @@ async fn worker_b_schema_catalog_exposes_all_controller_methods() {
         .expect("schema methods array");
 
     for expected in [
-        "openhuman.inference_status",
-        "openhuman.inference_get_client_config",
-        "openhuman.inference_update_model_settings",
-        "openhuman.inference_update_local_settings",
-        "openhuman.inference_list_models",
-        "openhuman.inference_device_profile",
-        "openhuman.inference_presets",
-        "openhuman.inference_apply_preset",
-        "openhuman.inference_diagnostics",
-        "openhuman.inference_openai_oauth_start",
-        "openhuman.inference_openai_oauth_complete",
-        "openhuman.inference_openai_oauth_status",
-        "openhuman.inference_openai_oauth_disconnect",
-        "openhuman.inference_summarize",
-        "openhuman.inference_prompt",
-        "openhuman.inference_vision_prompt",
-        "openhuman.inference_test_provider_model",
-        "openhuman.inference_should_react",
-        "openhuman.inference_analyze_sentiment",
-        "openhuman.agent_chat",
-        "openhuman.agent_chat_simple",
-        "openhuman.agent_server_status",
-        "openhuman.agent_list_definitions",
-        "openhuman.agent_get_definition",
-        "openhuman.agent_reload_definitions",
-        "openhuman.agent_triage_evaluate",
-        "openhuman.profiles_list",
-        "openhuman.profiles_select",
-        "openhuman.profiles_upsert",
-        "openhuman.profiles_delete",
-        "openhuman.tools_composio_execute",
-        "openhuman.tools_web_search",
-        "openhuman.tools_seltz_search",
-        "openhuman.tools_querit_search",
-        "openhuman.tools_searxng_search",
-        "openhuman.tools_apify_linkedin_scrape",
-        "openhuman.tool_registry_list",
-        "openhuman.tool_registry_get",
-        "openhuman.tool_registry_diagnostics",
-        "openhuman.approval_list_pending",
-        "openhuman.approval_list_recent_decisions",
-        "openhuman.approval_decide",
+        "neppy.inference_status",
+        "neppy.inference_get_client_config",
+        "neppy.inference_update_model_settings",
+        "neppy.inference_update_local_settings",
+        "neppy.inference_list_models",
+        "neppy.inference_device_profile",
+        "neppy.inference_presets",
+        "neppy.inference_apply_preset",
+        "neppy.inference_diagnostics",
+        "neppy.inference_openai_oauth_start",
+        "neppy.inference_openai_oauth_complete",
+        "neppy.inference_openai_oauth_status",
+        "neppy.inference_openai_oauth_disconnect",
+        "neppy.inference_summarize",
+        "neppy.inference_prompt",
+        "neppy.inference_vision_prompt",
+        "neppy.inference_test_provider_model",
+        "neppy.inference_should_react",
+        "neppy.inference_analyze_sentiment",
+        "neppy.agent_chat",
+        "neppy.agent_chat_simple",
+        "neppy.agent_server_status",
+        "neppy.agent_list_definitions",
+        "neppy.agent_get_definition",
+        "neppy.agent_reload_definitions",
+        "neppy.agent_triage_evaluate",
+        "neppy.profiles_list",
+        "neppy.profiles_select",
+        "neppy.profiles_upsert",
+        "neppy.profiles_delete",
+        "neppy.tools_composio_execute",
+        "neppy.tools_web_search",
+        "neppy.tools_seltz_search",
+        "neppy.tools_querit_search",
+        "neppy.tools_searxng_search",
+        "neppy.tools_apify_linkedin_scrape",
+        "neppy.tool_registry_list",
+        "neppy.tool_registry_get",
+        "neppy.tool_registry_diagnostics",
+        "neppy.approval_list_pending",
+        "neppy.approval_list_recent_decisions",
+        "neppy.approval_decide",
     ] {
         assert!(
             methods
@@ -292,7 +292,7 @@ async fn inference_settings_oauth_and_validation_paths_are_reachable() {
     let update_model = rpc(
         &harness.rpc_base,
         10_001,
-        "openhuman.inference_update_model_settings",
+        "neppy.inference_update_model_settings",
         json!({
             "default_model": "worker-b-model",
             "default_temperature": 0.4,
@@ -317,7 +317,7 @@ async fn inference_settings_oauth_and_validation_paths_are_reachable() {
     let client_config = rpc(
         &harness.rpc_base,
         10_002,
-        "openhuman.inference_get_client_config",
+        "neppy.inference_get_client_config",
         json!({}),
     )
     .await;
@@ -331,7 +331,7 @@ async fn inference_settings_oauth_and_validation_paths_are_reachable() {
     let bad_provider = rpc(
         &harness.rpc_base,
         10_003,
-        "openhuman.inference_update_model_settings",
+        "neppy.inference_update_model_settings",
         json!({
             "cloud_providers": [
                 {
@@ -351,7 +351,7 @@ async fn inference_settings_oauth_and_validation_paths_are_reachable() {
     let update_local = rpc(
         &harness.rpc_base,
         10_004,
-        "openhuman.inference_update_local_settings",
+        "neppy.inference_update_local_settings",
         json!({
             "runtime_enabled": true,
             "opt_in_confirmed": true,
@@ -371,27 +371,27 @@ async fn inference_settings_oauth_and_validation_paths_are_reachable() {
 
     for (idx, (method, params, expected)) in [
         (
-            "openhuman.inference_list_models",
+            "neppy.inference_list_models",
             json!({ "provider_id": "missing-provider" }),
             "provider",
         ),
         (
-            "openhuman.inference_apply_preset",
+            "neppy.inference_apply_preset",
             json!({ "tier": "not-a-tier" }),
             "invalid tier",
         ),
         (
-            "openhuman.inference_openai_oauth_complete",
+            "neppy.inference_openai_oauth_complete",
             json!({ "callback_url": "http://localhost/callback?state=missing&code=nope" }),
             "no pending oauth session",
         ),
         (
-            "openhuman.inference_prompt",
+            "neppy.inference_prompt",
             json!({}),
             "missing required param 'prompt'",
         ),
         (
-            "openhuman.inference_vision_prompt",
+            "neppy.inference_vision_prompt",
             json!({ "prompt": "describe", "image_refs": [] }),
             "image",
         ),
@@ -408,12 +408,12 @@ async fn inference_settings_oauth_and_validation_paths_are_reachable() {
     }
 
     for (idx, method) in [
-        "openhuman.inference_status",
-        "openhuman.inference_device_profile",
-        "openhuman.inference_presets",
-        "openhuman.inference_diagnostics",
-        "openhuman.inference_openai_oauth_status",
-        "openhuman.inference_openai_oauth_disconnect",
+        "neppy.inference_status",
+        "neppy.inference_device_profile",
+        "neppy.inference_presets",
+        "neppy.inference_diagnostics",
+        "neppy.inference_openai_oauth_status",
+        "neppy.inference_openai_oauth_disconnect",
     ]
     .into_iter()
     .enumerate()
@@ -436,7 +436,7 @@ async fn agent_definitions_profiles_and_validation_paths_are_reachable() {
     let definitions = rpc(
         &harness.rpc_base,
         20_001,
-        "openhuman.agent_list_definitions",
+        "neppy.agent_list_definitions",
         json!({}),
     )
     .await;
@@ -453,7 +453,7 @@ async fn agent_definitions_profiles_and_validation_paths_are_reachable() {
     let orchestrator = rpc(
         &harness.rpc_base,
         20_002,
-        "openhuman.agent_get_definition",
+        "neppy.agent_get_definition",
         json!({ "id": "orchestrator" }),
     )
     .await;
@@ -467,7 +467,7 @@ async fn agent_definitions_profiles_and_validation_paths_are_reachable() {
     let reload = rpc(
         &harness.rpc_base,
         20_003,
-        "openhuman.agent_reload_definitions",
+        "neppy.agent_reload_definitions",
         json!({}),
     )
     .await;
@@ -480,12 +480,12 @@ async fn agent_definitions_profiles_and_validation_paths_are_reachable() {
 
     for (idx, (method, params, expected)) in [
         (
-            "openhuman.agent_get_definition",
+            "neppy.agent_get_definition",
             json!({ "id": "missing-worker-b-agent" }),
             "not found",
         ),
         (
-            "openhuman.profiles_upsert",
+            "neppy.profiles_upsert",
             json!({
                 "profile": {
                     "id": "bad-worker-b-profile",
@@ -499,22 +499,22 @@ async fn agent_definitions_profiles_and_validation_paths_are_reachable() {
             "not found",
         ),
         (
-            "openhuman.profiles_select",
+            "neppy.profiles_select",
             json!({ "profile_id": "missing-worker-b-profile" }),
             "not found",
         ),
         (
-            "openhuman.agent_chat",
+            "neppy.agent_chat",
             json!({}),
             "missing required param 'message'",
         ),
         (
-            "openhuman.agent_chat_simple",
+            "neppy.agent_chat_simple",
             json!({}),
             "missing required param 'message'",
         ),
         (
-            "openhuman.agent_triage_evaluate",
+            "neppy.agent_triage_evaluate",
             json!({
                 "source": "unsupported",
                 "display_label": "Unsupported trigger",
@@ -534,13 +534,7 @@ async fn agent_definitions_profiles_and_validation_paths_are_reachable() {
         );
     }
 
-    let profiles = rpc(
-        &harness.rpc_base,
-        20_200,
-        "openhuman.profiles_list",
-        json!({}),
-    )
-    .await;
+    let profiles = rpc(&harness.rpc_base, 20_200, "neppy.profiles_list", json!({})).await;
     assert_eq!(
         ok(&profiles, "profiles_list")
             .get("activeProfileId")
@@ -551,7 +545,7 @@ async fn agent_definitions_profiles_and_validation_paths_are_reachable() {
     let status = rpc(
         &harness.rpc_base,
         20_201,
-        "openhuman.agent_server_status",
+        "neppy.agent_server_status",
         json!({}),
     )
     .await;
@@ -571,7 +565,7 @@ async fn tools_and_tool_registry_paths_are_reachable_without_live_services() {
     let registry = rpc(
         &harness.rpc_base,
         30_001,
-        "openhuman.tool_registry_list",
+        "neppy.tool_registry_list",
         json!({}),
     )
     .await;
@@ -589,7 +583,7 @@ async fn tools_and_tool_registry_paths_are_reachable_without_live_services() {
     let web_search_entry = rpc(
         &harness.rpc_base,
         30_002,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": "tools.web_search" }),
     )
     .await;
@@ -603,7 +597,7 @@ async fn tools_and_tool_registry_paths_are_reachable_without_live_services() {
     let diagnostics = rpc(
         &harness.rpc_base,
         30_003,
-        "openhuman.tool_registry_diagnostics",
+        "neppy.tool_registry_diagnostics",
         json!({}),
     )
     .await;
@@ -617,38 +611,38 @@ async fn tools_and_tool_registry_paths_are_reachable_without_live_services() {
 
     for (idx, (method, params, expected)) in [
         (
-            "openhuman.tool_registry_get",
+            "neppy.tool_registry_get",
             json!({ "tool_id": "" }),
             "non-empty string",
         ),
         (
-            "openhuman.tool_registry_get",
+            "neppy.tool_registry_get",
             json!({ "tool_id": "missing.worker_b" }),
             "tool not found",
         ),
-        ("openhuman.tools_composio_execute", json!({}), "action"),
+        ("neppy.tools_composio_execute", json!({}), "action"),
         (
-            "openhuman.tools_web_search",
+            "neppy.tools_web_search",
             json!({ "query": "worker b", "max_results": 1 }),
             "Sign in first",
         ),
         (
-            "openhuman.tools_seltz_search",
+            "neppy.tools_seltz_search",
             json!({ "query": "worker b", "max_results": 1 }),
             "Seltz search is not enabled",
         ),
         (
-            "openhuman.tools_querit_search",
+            "neppy.tools_querit_search",
             json!({ "query": "worker b", "max_results": 1 }),
             "Querit search is not enabled",
         ),
         (
-            "openhuman.tools_searxng_search",
+            "neppy.tools_searxng_search",
             json!({ "query": "worker b", "categories": ["general"] }),
             "SearXNG search is not enabled",
         ),
         (
-            "openhuman.tools_apify_linkedin_scrape",
+            "neppy.tools_apify_linkedin_scrape",
             json!({ "profile_url": "https://www.linkedin.com/in/example" }),
             "Sign in first",
         ),
@@ -675,7 +669,7 @@ async fn approval_read_and_decision_validation_paths_are_reachable() {
     let pending = rpc(
         &harness.rpc_base,
         40_001,
-        "openhuman.approval_list_pending",
+        "neppy.approval_list_pending",
         json!({}),
     )
     .await;
@@ -687,7 +681,7 @@ async fn approval_read_and_decision_validation_paths_are_reachable() {
     let recent = rpc(
         &harness.rpc_base,
         40_002,
-        "openhuman.approval_list_recent_decisions",
+        "neppy.approval_list_recent_decisions",
         json!({ "limit": 3 }),
     )
     .await;
@@ -715,9 +709,9 @@ async fn approval_read_and_decision_validation_paths_are_reachable() {
     .enumerate()
     {
         let method = if idx == 0 {
-            "openhuman.approval_list_recent_decisions"
+            "neppy.approval_list_recent_decisions"
         } else {
-            "openhuman.approval_decide"
+            "neppy.approval_decide"
         };
         let response = rpc(&harness.rpc_base, 40_100 + idx as i64, method, params).await;
         let message = error_message(&response, method);

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { Thread } from '../../../types/thread';
 import {
+  DEBUG_TAB_VALUE,
   GENERAL_TAB_VALUE,
+  isDebugThread,
   isThreadVisibleInTab,
   SUBCONSCIOUS_TAB_VALUE,
   TASKS_TAB_VALUE,
@@ -21,6 +23,32 @@ function thread(overrides: Partial<Thread>): Thread {
     labels: overrides.labels ?? [],
   };
 }
+
+describe('Debug threads', () => {
+  const byMode = { ...thread({ id: 'd1' }), mode: 'debug' as const };
+  const byLabel = thread({ id: 'd2', labels: ['mode:debug'] });
+  const normal = thread({ id: 'c1' });
+
+  it('is recognised by mode or by the core mode label', () => {
+    expect(isDebugThread(byMode)).toBe(true);
+    expect(isDebugThread(byLabel)).toBe(true);
+    expect(isDebugThread(normal)).toBe(false);
+  });
+
+  it('is hidden from every normal tab', () => {
+    for (const tab of [GENERAL_TAB_VALUE, TASKS_TAB_VALUE, SUBCONSCIOUS_TAB_VALUE, 'mode:debug']) {
+      expect(isThreadVisibleInTab(byMode, tab)).toBe(false);
+      expect(isThreadVisibleInTab(byLabel, tab)).toBe(false);
+    }
+    expect(isThreadVisibleInTab(normal, GENERAL_TAB_VALUE)).toBe(true);
+  });
+
+  it('is the only thing the Debug pseudo-tab shows', () => {
+    expect(isThreadVisibleInTab(byMode, DEBUG_TAB_VALUE)).toBe(true);
+    expect(isThreadVisibleInTab(byLabel, DEBUG_TAB_VALUE)).toBe(true);
+    expect(isThreadVisibleInTab(normal, DEBUG_TAB_VALUE)).toBe(false);
+  });
+});
 
 describe('isThreadVisibleInTab', () => {
   describe('General bucket', () => {

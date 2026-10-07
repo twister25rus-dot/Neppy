@@ -30,7 +30,7 @@ const FAST_POLL_MS = 1500;
 const EMPTY_STATUS: MemoryIngestionStatus = { running: false, queueDepth: 0 };
 
 /**
- * Polls `openhuman.memory_ingestion_status`. Polls faster while a job is
+ * Polls `neppy.memory_ingestion_status`. Polls faster while a job is
  * running or queued so the UI reacts quickly when ingestion finishes;
  * relaxes to a slower cadence at idle.
  */
@@ -48,7 +48,7 @@ export function useMemoryIngestionStatus(): {
   const fetchOnce = useCallback(async () => {
     try {
       const env = await callCoreRpc<IngestionStatusEnvelope>({
-        method: 'openhuman.memory_ingestion_status',
+        method: 'neppy.memory_ingestion_status',
       });
       if (cancelledRef.current) return;
       setStatus({

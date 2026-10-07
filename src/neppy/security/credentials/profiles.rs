@@ -1275,7 +1275,7 @@ impl AuthProfilesStore {
                         if self.reclaim_self_owned_lock() {
                             continue;
                         }
-                        // Issue #1612 — a previous openhuman crash can leave a
+                        // Issue #1612 — a previous neppy crash can leave a
                         // stale auth-profiles.lock behind (a *different*, now-dead
                         // pid, or an aged leak), after which every RPC path that
                         // touches the auth profile store fails for the

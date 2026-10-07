@@ -56,7 +56,7 @@ export async function getBackendUrl(): Promise<string> {
   const generation = backendUrlGeneration;
   resolvingBackendUrl = (async () => {
     const response = await callCoreRpc<{ api_url?: string; apiUrl?: string }>({
-      method: 'openhuman.config_resolve_api_url',
+      method: 'neppy.config_resolve_api_url',
     });
     const resolved = String(response.api_url ?? response.apiUrl ?? '').trim();
     if (!resolved) {

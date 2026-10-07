@@ -12,7 +12,7 @@ import type { ThreadMessage } from '../../types/thread';
  *     `workflow_proposal` — the durable backstop written by the Rust core
  *     when an async `workflow_builder` run completes, which lets the card
  *     rehydrate after a reload or a dropped socket event.
- *  4. direct `openhuman.flows_build` API responses used by the workflow
+ *  4. direct `neppy.flows_build` API responses used by the workflow
  *     builder UI.
  *
  * IMPORTANT: match on the payload's `type` field, NOT on tool names. This

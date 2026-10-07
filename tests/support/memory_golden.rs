@@ -171,7 +171,7 @@ fn fixture_config(workspace: &Path) -> Config {
 /// Seed a complete golden workspace at `workspace`.
 ///
 /// The caller must have bound the process-global memory client to `workspace`
-/// (`memory::global::init`) and pointed `OPENHUMAN_WORKSPACE` at it first, so
+/// (`memory::global::init`) and pointed `NEPPY_WORKSPACE` at it first, so
 /// the `memory::ops` write paths land in the same place as the direct store
 /// writes below.
 ///

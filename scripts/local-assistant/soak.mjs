@@ -163,15 +163,15 @@ let lastSample = null;
 let lowAvail = 0;
 let aborting = false;
 
-process.env.OPENHUMAN_CORE_TOKEN = TOKEN; // the sampler reads it for its status RPC
+process.env.NEPPY_CORE_TOKEN = TOKEN; // the sampler reads it for its status RPC
 
 async function startCore() {
   const env = {
     PATH: `${opts.binDir}:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin`, HOME,
     HF_HOME: opts.hfHome, HF_HUB_OFFLINE: '1', TRANSFORMERS_OFFLINE: '1',
-    OPENHUMAN_WORKSPACE: WS, OPENHUMAN_ACTION_DIR: path.join(WS, 'projects'),
-    OPENHUMAN_CORE_HOST: '127.0.0.1', OPENHUMAN_CORE_PORT: String(opts.corePort), OPENHUMAN_CORE_TOKEN: TOKEN,
-    OPENHUMAN_KEYRING_BACKEND: 'file', OPENHUMAN_APPROVAL_GATE: '0', RUST_LOG: 'info,neppy=debug',
+    NEPPY_WORKSPACE: WS, NEPPY_ACTION_DIR: path.join(WS, 'projects'),
+    NEPPY_CORE_HOST: '127.0.0.1', NEPPY_CORE_PORT: String(opts.corePort), NEPPY_CORE_TOKEN: TOKEN,
+    NEPPY_KEYRING_BACKEND: 'file', NEPPY_APPROVAL_GATE: '0', RUST_LOG: 'info,neppy=debug',
   };
   const out = fs.openSync(path.join(RUN, 'core.log'), 'a');
   core = spawn(opts.coreBin, ['serve'], { env, stdio: ['ignore', out, out], detached: false });
@@ -181,8 +181,8 @@ async function startCore() {
     if (core.exitCode !== null) throw new Error('core exited during startup');
   }
   samplerOpts.corePid = core.pid;
-  await rpc('openhuman.auth_store_session', { token: 'soak.session.local', user: { name: 'soak', email: 'soak@localhost' } });
-  await rpc('openhuman.mlx_worker_status'); // brings the watchdog up
+  await rpc('neppy.auth_store_session', { token: 'soak.session.local', user: { name: 'soak', email: 'soak@localhost' } });
+  await rpc('neppy.mlx_worker_status'); // brings the watchdog up
   log(`core pid ${core.pid} on :${opts.corePort}`);
   mark('core_start', { pid: core.pid });
 }
@@ -195,7 +195,7 @@ function workerPids() {
 }
 
 async function stopWorker() {
-  try { await rpc('openhuman.mlx_stop', { id: 'primary' }, 60000); } catch (e) { log(`mlx_stop: ${e.message}`); }
+  try { await rpc('neppy.mlx_stop', { id: 'primary' }, 60000); } catch (e) { log(`mlx_stop: ${e.message}`); }
   for (let i = 0; i < 20 && workerPids().length; i += 1) await sleep(500);
 }
 
@@ -240,7 +240,7 @@ function resetClone() {
 async function runTask(phase, cycle, candidate, { killWhenGenerating = false } = {}) {
   resetClone();
   mark('work_start', { phase, cycle, candidate });
-  const task = await rpc('openhuman.local_assistant_start_task', {
+  const task = await rpc('neppy.local_assistant_start_task', {
     project_root: CLONE, goal: GOAL, allow_edits: true, test_command: TEST_CMD, max_steps: opts.maxSteps,
   });
   let killMs = null;
@@ -250,7 +250,7 @@ async function runTask(phase, cycle, candidate, { killWhenGenerating = false } =
   const began = Date.now();
   while (Date.now() - began < 20 * 60000) {
     await sleep(2000);
-    const st = await rpc('openhuman.local_assistant_status', { task_id: task.id }).catch(() => null);
+    const st = await rpc('neppy.local_assistant_status', { task_id: task.id }).catch(() => null);
     if (st) rec = st.task;
     if (killWhenGenerating && killMs === null && lastSample?.worker?.phase === 'busy' && lastSample.worker.pid) {
       killedPid = lastSample.worker.pid;
@@ -265,7 +265,7 @@ async function runTask(phase, cycle, candidate, { killWhenGenerating = false } =
       resumes += 1;
       driver.notes.push(`${phase}${cycle}: resumed after "${rec.error.slice(0, 80)}"`);
       mark('task_resume', { phase, cycle, n: resumes });
-      await rpc('openhuman.local_assistant_resume', { task_id: task.id }).catch((e) => log(`resume: ${e.message}`));
+      await rpc('neppy.local_assistant_resume', { task_id: task.id }).catch((e) => log(`resume: ${e.message}`));
       continue;
     }
     if (TERMINAL.has(rec.status)) break;
@@ -325,7 +325,7 @@ async function evaluateKill(rec, killMs, killedPid) {
     for (let i = 0; i + 1 < lines.length; i += 1) if (lines[i].includes('NOTE(soak)') && lines[i + 1].includes('NOTE(soak)')) stacked += 1;
   }
   const editsApplied = Number(sqlite(db, `select count(*) from effects where task_id='${rec.id}' and kind='edit' and status in ('applied','done')`) || 0);
-  const win = await rpc('openhuman.mlx_worker_metrics', { since_ms: killMs - 5000, limit: 500, events_only: true });
+  const win = await rpc('neppy.mlx_worker_metrics', { since_ms: killMs - 5000, limit: 500, events_only: true });
   const orphans = workerPids().filter((p) => p === killedPid);
   const effects = sqlite(db, `select kind||'/'||status||'='||count(*) from effects where task_id='${rec.id}' group by kind,status`);
   const result = evaluateKillTest({ killMs, events: win.events, taskStatus: rec.status, testRuns: { invocations, ledgerRows }, stackedNoteLines: stacked, editsApplied, orphanWorkerPids: orphans });
@@ -352,7 +352,7 @@ function fillerText(chars) {
 async function phaseB() {
   mark('phase_start', { phase: 'B' });
   writeConfig({ idlePolicy: 'pressure_only', model: opts.model });
-  await rpc('openhuman.mlx_start', { id: 'primary' }, 240000);
+  await rpc('neppy.mlx_start', { id: 'primary' }, 240000);
   if (!(await waitLoaded())) { driver.notes.push('B: model never reported loaded'); return; }
   await sleep(12000);
   for (const target of [2000, 8000, 14000]) {
@@ -388,11 +388,11 @@ async function phaseD() {
     log(`D probe ${name}: worker fp ${w?.fp_mib?.toFixed(0)} MiB`);
   };
   await fp('end_loaded');
-  await rpc('openhuman.mlx_unload', { id: 'primary' });
+  await rpc('neppy.mlx_unload', { id: 'primary' });
   await fp('end_after_unload');
   await stopWorker();
   await sleep(3000);
-  await rpc('openhuman.mlx_start', { id: 'primary' }, 240000);
+  await rpc('neppy.mlx_start', { id: 'primary' }, 240000);
   await waitLoaded();
   await fp('end_after_respawn_loaded');
   await stopWorker();

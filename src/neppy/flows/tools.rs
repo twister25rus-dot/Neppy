@@ -11,7 +11,7 @@
 //! **Human-in-the-loop invariant:** this tool must NEVER call
 //! [`crate::neppy::flows::ops::flows_create`] (or any other persistence
 //! path). Only the user's "Save & enable" click in `WorkflowProposalCard`
-//! creates the flow, via the `openhuman.flows_create` RPC directly from the
+//! creates the flow, via the `neppy.flows_create` RPC directly from the
 //! client. `permission_level() == PermissionLevel::None` and
 //! `external_effect() == false` reflect that this call has no side effect —
 //! it is pure validation.

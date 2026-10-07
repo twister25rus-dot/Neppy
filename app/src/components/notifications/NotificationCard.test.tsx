@@ -17,7 +17,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IntegrationNotification } from '../../types/notifications';
-import { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
+import { NEPPY_LINK_EVENT } from '../NeppyLinkModal';
 import NotificationCard from './NotificationCard';
 
 function makeNotification(body: string): IntegrationNotification {
@@ -76,13 +76,13 @@ describe('NotificationCard <openhuman-link> rendering', () => {
       const detail = (e as CustomEvent<{ path: string }>).detail;
       seen.push(detail?.path ?? '');
     };
-    window.addEventListener(OPENHUMAN_LINK_EVENT, listener);
+    window.addEventListener(NEPPY_LINK_EVENT, listener);
     try {
       const bodyEl = screen.getByTestId('notification-card-body');
       const pill = within(bodyEl).getByRole('button', { name: /click me/i });
       pill.click();
     } finally {
-      window.removeEventListener(OPENHUMAN_LINK_EVENT, listener);
+      window.removeEventListener(NEPPY_LINK_EVENT, listener);
     }
 
     // The dispatched event payload is exactly what was parsed — but `NeppyLinkModal`

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useAppSelector } from '../store/hooks';
 import { useNeppyExternalStore } from './useNeppyExternalStore';
 
-const debug = debugFactory('openhuman:assistant-ui');
+const debug = debugFactory('neppy:assistant-ui');
 
 /**
  * Mounts assistant-ui's runtime over the existing Redux state, scoped to ONE

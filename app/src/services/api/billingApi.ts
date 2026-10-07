@@ -17,7 +17,7 @@ export const billingApi = {
    * GET /payments/stripe/currentPlan
    */
   getCurrentPlan: async (): Promise<CurrentPlanData> => {
-    return await callCoreCommand<CurrentPlanData>('openhuman.billing_get_current_plan');
+    return await callCoreCommand<CurrentPlanData>('neppy.billing_get_current_plan');
   },
 
   /**
@@ -25,7 +25,7 @@ export const billingApi = {
    * POST /payments/stripe/purchasePlan
    */
   purchasePlan: async (plan: PlanIdentifier): Promise<PurchasePlanData> => {
-    return await callCoreCommand<PurchasePlanData>('openhuman.billing_purchase_plan', { plan });
+    return await callCoreCommand<PurchasePlanData>('neppy.billing_purchase_plan', { plan });
   },
 
   /**
@@ -33,7 +33,7 @@ export const billingApi = {
    * POST /payments/stripe/portal
    */
   createPortalSession: async (): Promise<PortalSessionData> => {
-    return await callCoreCommand<PortalSessionData>('openhuman.billing_create_portal_session');
+    return await callCoreCommand<PortalSessionData>('neppy.billing_create_portal_session');
   },
 
   /**
@@ -44,7 +44,7 @@ export const billingApi = {
     plan: PlanTier,
     interval: 'annual' = 'annual'
   ): Promise<CoinbaseChargeData> => {
-    return await callCoreCommand<CoinbaseChargeData>('openhuman.billing_create_coinbase_charge', {
+    return await callCoreCommand<CoinbaseChargeData>('neppy.billing_create_coinbase_charge', {
       plan,
       interval,
     });

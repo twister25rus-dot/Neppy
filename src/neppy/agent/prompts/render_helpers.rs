@@ -112,7 +112,7 @@ pub fn render_datetime(ctx: &PromptContext<'_>) -> Result<String> {
 /// line lives in [`DateTimeSection`] / [`render_datetime`].
 pub fn current_datetime_line() -> String {
     #[cfg(feature = "rss-bench")]
-    if std::env::var_os("OPENHUMAN_PROFILE_FORCE_UTC").is_some() {
+    if crate::neppy::util::env::var_os("NEPPY_PROFILE_FORCE_UTC").is_some() {
         let now = chrono::Utc::now();
         return format!(
             "Current Date & Time: {} UTC (UTC, UTC+00:00), {}",

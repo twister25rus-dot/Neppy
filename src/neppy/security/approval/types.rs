@@ -139,7 +139,7 @@ pub struct FlowPreauthorizationResult {
     /// Tool names that already held flow trust before this call.
     pub already_trusted: Vec<String>,
     /// False when the approval gate is not installed (e.g.
-    /// `OPENHUMAN_APPROVAL_GATE=0`): nothing was persisted because nothing
+    /// `NEPPY_APPROVAL_GATE=0`): nothing was persisted because nothing
     /// will ever prompt — callers may treat this as success.
     pub gate_installed: bool,
 }

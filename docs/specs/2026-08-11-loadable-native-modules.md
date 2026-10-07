@@ -114,7 +114,7 @@ mkdir -p /tmp/oh-modules && chmod 700 /tmp/oh-modules
 cp vendor/tinydocs/target/release/libtinydocs_module.so /tmp/oh-modules/
 
 OPENHUMAN_MODULE_PATH=/tmp/oh-modules \
-  cargo test -p openhuman --lib --features documents -- --ignored \
+  cargo test -p neppy --lib --features documents -- --ignored \
   implementations::document::tests::execute_happy_path
 ```
 

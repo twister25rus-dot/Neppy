@@ -6,8 +6,8 @@
  *
  * The panel has no Tauri IPC bridge (WKWebView outside the CEF runtime). The
  * Rust host injects the core base URL via `evaluateJavaScript` once
- * `OPENHUMAN_CORE_RPC_URL` is set by `CoreProcessHandle`, dispatching:
- *   `window.__OPENHUMAN_NOTCH_CORE_URL__`  (global)
+ * `NEPPY_CORE_RPC_URL` is set by `CoreProcessHandle`, dispatching:
+ *   `window.__NEPPY_NOTCH_CORE_URL__`  (global)
  *   `notch:core-url` CustomEvent            (for late mounts)
  *
  * This component connects to the core over Socket.IO — identical to
@@ -327,8 +327,7 @@ export default function NotchApp() {
     let disposePendingConnect: (() => void) | undefined;
 
     // Check if Rust already injected the URL before this component mounted.
-    const preloaded = (window as { __OPENHUMAN_NOTCH_CORE_URL__?: string })
-      .__OPENHUMAN_NOTCH_CORE_URL__;
+    const preloaded = (window as { __NEPPY_NOTCH_CORE_URL__?: string }).__NEPPY_NOTCH_CORE_URL__;
     if (preloaded) {
       disposePendingConnect = connectSocket(preloaded);
     }

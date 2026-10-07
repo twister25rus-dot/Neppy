@@ -32,7 +32,7 @@ Engine-side gaps (see Phase 7): `agent` node sub-ports (chat_model/memory/tool/o
 ### 1.2 Rust core seam (`src/neppy/flows/` + `src/neppy/flows/tinyflows/` — implemented, with holes)
 
 - **Domain** `flows::` (~3,700 lines + tests): `types.rs` (`Flow` wraps `WorkflowGraph` + `enabled`/`require_approval`/`last_status`; `FlowRun`, `FlowRunStep`, `FlowRunTrigger::{Rpc,Schedule,AppEvent,Resume}`), `store.rs` (SQLite incl. `flow_state` kv), `ops.rs` (validate/migrate + full run/resume under `TrustedAutomation → Workflow` origin, 600 s timeout), `schemas.rs`, `tools.rs` (`ProposeWorkflowTool` — validate-only, never persists), `bus.rs` (`FlowTriggerSubscriber`).
-- **RPC surface** (10 methods, wired in `src/core/all.rs`): `openhuman.flows_{create,get,list,update,delete,set_enabled,run,resume,list_runs,get_run}`.
+- **RPC surface** (10 methods, wired in `src/core/all.rs`): `neppy.flows_{create,get,list,update,delete,set_enabled,run,resume,list_runs,get_run}`.
 - **Capability seam** `src/neppy/flows/tinyflows/`: `caps.rs` (LLM/Composio-tools/HTTP/code/state adapters), `observability.rs` (currently `NoopObserver`), `langfuse_export.rs` (post-run trace export).
 - **Schedule triggers work end-to-end**: `flows::ops::bind_schedule_trigger` registers a cron `JobType::Flow` → scheduler publishes `DomainEvent::FlowScheduleTick` → `FlowTriggerSubscriber` runs the flow.
 - **Composio `app_event` triggers also work end-to-end**: `flows/bus.rs::handle_app_event` matches `DomainEvent::ComposioTriggerReceived { toolkit, trigger }` against enabled `app_event` flows (case-insensitive toolkit/slug match, per-flow concurrency guard) and runs them under `FlowRunTrigger::AppEvent`. Since Composio triggers are delivered by the platform, this **is** our webhook story for third-party apps — no tunnel needed.
@@ -45,7 +45,7 @@ Engine-side gaps (see Phase 7): `agent` node sub-ports (chat_model/memory/tool/o
 | G2  | **No live run observer** — `NoopObserver`; `FlowRunStep`s reconstructed post-hoc from final state, no per-step timing/attempts, nothing streamed while running                                                                                                | `flows/types.rs:76`, `flows/ops.rs:781-783` (`TODO(0.3)`)                   |
 | G3  | **Credential / connected-account resolution stubbed** — Composio nodes fall back to the ambient signed-in account; toolkit allow-listing hard-rejects real toolkits; HTTP credential resolution unimplemented (`connection_ref` is accepted but unresolvable) | `tinyflows/caps.rs:193,235-261,330,376,408`                                 |
 | G4  | **No cancel/deny** — a dismissed approval leaves the run parked `pending_approval` forever; no `flows_cancel`/`flows_deny` RPC                                                                                                                                | UI comment in `FlowApprovalCard.tsx`                                        |
-| G5  | **No JSON-RPC E2E coverage** — zero `openhuman.flows_*` calls in `tests/json_rpc_e2e.rs` (unit tests only)                                                                                                                                                    | grep of `tests/*.rs`                                                        |
+| G5  | **No JSON-RPC E2E coverage** — zero `neppy.flows_*` calls in `tests/json_rpc_e2e.rs` (unit tests only)                                                                                                                                                    | grep of `tests/*.rs`                                                        |
 | G6  | Unfired trigger kinds: `chat_message`, `form`, `execute_by_workflow` (as a _trigger_), `evaluation`, `system` have no host dispatcher                                                                                                                         | `flows/bus.rs`                                                              |
 
 ### 1.3 Frontend (`app/src/` — reachable, read-only)
@@ -67,7 +67,7 @@ Shipped: `/flows` nav tab (FlowsPage list: enable toggle, Run, last status), `/f
 
 The repo has **three** "workflow" systems. This plan touches only the first:
 
-1. `flows::` / `openhuman.flows_*` — **tinyflows typed graphs** (this plan).
+1. `flows::` / `neppy.flows_*` — **tinyflows typed graphs** (this plan).
 2. `workflows::` / `openhuman.workflows_*` — WORKFLOW.md/SKILL.md bundle discovery/install (separate product surface under `/skills`). **Slated for decommission** — it is essentially the skills feature wearing the "workflows" name; see Phase 8. Retiring it frees the "Workflows" branding for tinyflows (the `/flows` nav tab already reads "Workflows").
 3. `rhai::` — Rhai `.ragsh` language workflows (`docs/plans/rlm-workflows/`), positioned in `gitbooks/features/orchestration.md` as the _next_ layer on the same substrate. tinyflows remains the shipping visual/typed product; Rhai workflows do not replace it.
 
@@ -137,7 +137,7 @@ Product decision: **Composio triggers are the webhook story.** `app_event` dispa
 
 **1b. Run lifecycle: cancel + deny (G4).**
 
-- New RPCs `openhuman.flows_cancel_run(run_id)` (terminal `cancelled` status; abort the tokio task / drop the checkpointed thread) and deny semantics on resume: `flows_resume(id, thread_id, approvals, rejections)` → rejected node routes to its `error` port or fails the run.
+- New RPCs `neppy.flows_cancel_run(run_id)` (terminal `cancelled` status; abort the tokio task / drop the checkpointed thread) and deny semantics on resume: `flows_resume(id, thread_id, approvals, rejections)` → rejected node routes to its `error` port or fails the run.
 - Sweep: TTL for parked `pending_approval` runs (align with the 10-min approval-gate TTL, configurable per flow).
 
 **1c. Live run observation (G2).**
@@ -179,7 +179,7 @@ Largest UI phase; runs in parallel with Phase 2 once Phase 1c's RPCs exist.
 
 - **3a. Edit mode in `FlowCanvas`**: flip the readonly defaults behind an `editable` prop; enable drag (persist `position`), connect (port-aware: derive valid source/target handles from node kind — reuse `graphAdapter` port logic), delete nodes/edges, and a node palette (12 kinds with the existing emoji/accent metadata). Wire the already-written `xyflowToWorkflowGraph` as the save path → `flows_update`.
 - **3b. Node config panel**: right-hand drawer on node select. v1 pragmatic approach: per-kind form components for the high-traffic kinds (`trigger` schedule/webhook config, `http_request` method/url/headers/body, `agent` prompt/model, `tool_call` slug/args, `condition`/`switch` expression, `transform` set-map, `code` editor with language toggle) + a raw-JSON escape hatch for the rest. `=`-expression fields get a monospace input with an "expression" affordance (full expression-editor with live preview is a stretch goal — needs a `flows_eval_expr` RPC against sample run data).
-- **3c. Validation UX**: new RPC `openhuman.flows_validate(graph)` (thin wrapper over `ops::validate_and_migrate_graph`, same path `propose_workflow` uses) → inline canvas errors (missing trigger, cycle, invalid config on node X) before save.
+- **3c. Validation UX**: new RPC `neppy.flows_validate(graph)` (thin wrapper over `ops::validate_and_migrate_graph`, same path `propose_workflow` uses) → inline canvas errors (missing trigger, cycle, invalid config on node X) before save.
 - **3d. Draft/dirty state**: local draft in component state; explicit Save; unsaved-changes guard. No autosave in v1 (a saved+enabled flow is live — accidental saves fire schedules).
 - **3e. Live run overlay**: subscribe to `FlowRunProgress` socket events; animate node status on the canvas during a run (n8n's signature interaction) and in the inspector.
 
@@ -258,7 +258,7 @@ The `workflows::` domain (WORKFLOW.md/SKILL.md bundle discovery/install, RPC `op
 - **Audit consumers first**: `agent/tools/run_workflow.rs` (agent tool that runs WORKFLOW.md bundles — decide: retire, or repoint to `flows_run`/skills), the `/skills` UI surfaces (`WorkflowsTab`, `CreateWorkflowForm`, `WorkflowRunnerBody`, `WorkflowNew.tsx`, `WorkflowsRun.tsx`, `DevWorkflowPanel`, `workflowsApi.ts`), `about_app`, gitbooks, and the Rhai workflow plan's references to `run_workflow` as a composition surface.
 - **Migrate**: bundle discovery/install semantics that skills doesn't already cover move into the `skills` domain (it is metadata-only post-QuickJS-removal, so this is mostly file-format and registry work).
 - **Deprecate then delete**: mark `openhuman.workflows_*` deprecated for one release (RPC responses carry a deprecation notice), then remove `src/neppy/workflows/`, its controllers from `src/core/all.rs`, the frontend clients/pages, and the `/workflows/new`//`workflows/run` routes (bare `/workflows` already redirects to `/settings/automations`).
-- **Not in scope**: `openhuman.workflow_run_*` (`agent_orchestration`'s declarative run ledger) is a different system and untouched here — though its name should also be revisited once "Workflows" ≡ tinyflows.
+- **Not in scope**: `neppy.workflow_run_*` (`agent_orchestration`'s declarative run ledger) is a different system and untouched here — though its name should also be revisited once "Workflows" ≡ tinyflows.
 - **Naming end-state**: one user-facing concept — **Workflows = tinyflows graphs** at `/flows`; skills are skills.
 
 ---

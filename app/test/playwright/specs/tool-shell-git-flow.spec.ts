@@ -30,9 +30,9 @@ interface ListDefinitionsResult {
 }
 
 function workspaceDir(): string {
-  const ws = process.env.OPENHUMAN_WORKSPACE;
+  const ws = process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE;
   if (!ws) {
-    throw new Error('OPENHUMAN_WORKSPACE not set for tool-shell-git-flow Playwright run');
+    throw new Error('NEPPY_WORKSPACE not set for tool-shell-git-flow Playwright run');
   }
   return ws;
 }
@@ -106,10 +106,10 @@ test.describe('System tools - Shell + Git', () => {
     const ping = await callCoreRpc<{ ok?: boolean }>('core.ping', {});
     expect(ping.ok).toBe(true);
 
-    const status = unwrapStatus(await callCoreRpc<unknown>('openhuman.agent_server_status', {}));
+    const status = unwrapStatus(await callCoreRpc<unknown>('neppy.agent_server_status', {}));
     expect(status.running).toBe(true);
 
-    const list = await callCoreRpc<ListDefinitionsResult>('openhuman.agent_list_definitions', {});
+    const list = await callCoreRpc<ListDefinitionsResult>('neppy.agent_list_definitions', {});
     const defs = list.definitions ?? [];
     const toolsAgent = defs.find(def => def?.id === 'tools_agent');
     expect(toolsAgent).toBeDefined();
@@ -118,18 +118,18 @@ test.describe('System tools - Shell + Git', () => {
 
   test('denial envelope is structurally consistent for invalid write args', async () => {
     await expect(
-      callCoreRpc('openhuman.memory_write_file', { content: 'no path provided' })
+      callCoreRpc('neppy.memory_write_file', { content: 'no path provided' })
     ).rejects.toThrow();
 
     await expect(
-      callCoreRpc('openhuman.memory_write_file', {
+      callCoreRpc('neppy.memory_write_file', {
         relative_path: '../shell-restriction-967.txt',
         content: 'should not be written',
       })
     ).rejects.toThrow();
   });
 
-  test('fixture git repo inside OPENHUMAN_WORKSPACE supports read ops', async () => {
+  test('fixture git repo inside NEPPY_WORKSPACE supports read ops', async () => {
     const repoDir = path.join(workspaceDir(), FIXTURE_REPO_REL);
     const status = await runLocal('git', ['status', '--porcelain=2', '--branch'], repoDir);
     expect(status.code).toBe(0);

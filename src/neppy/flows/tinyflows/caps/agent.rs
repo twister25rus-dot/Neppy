@@ -81,13 +81,13 @@ pub struct NeppyAgentRunner {
 /// sessions — each with its own model context and tool loop — and exhaust
 /// memory or the inference provider's rate limit.
 ///
-/// Default 8; override with `OPENHUMAN_FLOWS_MAX_PARALLEL_AGENTS`. Waiting on a
+/// Default 8; override with `NEPPY_FLOWS_MAX_PARALLEL_AGENTS`. Waiting on a
 /// permit is *not* an error — an over-wide fan-out is throttled to this width
 /// rather than rejected, so the workflow still completes, just more slowly.
 static HARNESS_AGENT_SLOTS: std::sync::LazyLock<tokio::sync::Semaphore> =
     std::sync::LazyLock::new(|| {
         let permits = max_parallel_harness_agents(
-            std::env::var("OPENHUMAN_FLOWS_MAX_PARALLEL_AGENTS")
+            crate::neppy::util::env::var("NEPPY_FLOWS_MAX_PARALLEL_AGENTS")
                 .ok()
                 .as_deref(),
         );

@@ -17,7 +17,7 @@ use super::types::{
 const LOG_PREFIX: &str = "[audio_toolkit]";
 const DEFAULT_OUTPUT_DIR: &str = "artifacts/audio";
 const DEFAULT_CAPTURE_DIR: &str = "artifacts/email-capture";
-const EMAIL_CAPTURE_ENV: &str = "OPENHUMAN_EMAIL_CAPTURE_DIR";
+const EMAIL_CAPTURE_ENV: &str = "NEPPY_EMAIL_CAPTURE_DIR";
 
 pub async fn generate_podcast(
     config: &Config,
@@ -203,7 +203,7 @@ pub async fn generate_and_email_podcast(
 }
 
 pub fn resolve_email_capture_dir(config: &Config) -> Option<PathBuf> {
-    if let Ok(raw) = std::env::var(EMAIL_CAPTURE_ENV) {
+    if let Ok(raw) = crate::neppy::util::env::var(EMAIL_CAPTURE_ENV) {
         let trimmed = raw.trim();
         if !trimmed.is_empty() {
             return Some(PathBuf::from(trimmed));

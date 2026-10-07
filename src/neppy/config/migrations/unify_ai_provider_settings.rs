@@ -115,7 +115,7 @@ fn seed_cloud_providers(config: &mut Config, stats: &mut MigrationStats) {
     // doesn't apply here; users will re-enter via the new UI).
     if let Some(raw) = config.inference_url.as_deref() {
         let trimmed = raw.trim();
-        if !trimmed.is_empty() && !looks_like_openhuman(trimmed) {
+        if !trimmed.is_empty() && !looks_like_neppy(trimmed) {
             // Derive a sensible default model from the legacy model_routes
             // (prefer "reasoning" hint, fall back to whatever is set).
             let default_model = config
@@ -155,7 +155,7 @@ fn set_primary_cloud(config: &mut Config, stats: &mut MigrationStats) {
         .inference_url
         .as_deref()
         .map(str::trim)
-        .filter(|url| !url.is_empty() && !looks_like_openhuman(url))
+        .filter(|url| !url.is_empty() && !looks_like_neppy(url))
         .and_then(|url| {
             let normalized = url.trim_end_matches('/').to_ascii_lowercase();
             config.cloud_providers.iter().find(|entry| {
@@ -186,7 +186,7 @@ fn set_primary_cloud(config: &mut Config, stats: &mut MigrationStats) {
         config.primary_cloud = Some(entry.id.clone());
         stats.primary_cloud_set = true;
         log::debug!(
-            "[migrations][unify-ai] primary_cloud set to openhuman entry id={}",
+            "[migrations][unify-ai] primary_cloud set to neppy entry id={}",
             entry.id
         );
     }
@@ -265,7 +265,7 @@ fn derive_workload_providers(config: &mut Config, stats: &mut MigrationStats) {
 ///
 /// Matches only on the host component to avoid false positives from custom
 /// endpoints that happen to contain "openhuman" in a path or query string.
-fn looks_like_openhuman(url: &str) -> bool {
+fn looks_like_neppy(url: &str) -> bool {
     let lower = url.trim().to_ascii_lowercase();
     // Strip scheme if present.
     let without_scheme = lower.split("://").nth(1).unwrap_or(&lower);

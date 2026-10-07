@@ -133,7 +133,7 @@ describe('referralApi', () => {
       referrals: [],
     });
     const out = await referralApi.getStats();
-    expect(callCoreCommand).toHaveBeenCalledWith('openhuman.referral_get_stats');
+    expect(callCoreCommand).toHaveBeenCalledWith('neppy.referral_get_stats');
     expect(out.referralCode).toBe('Z9');
   });
 
@@ -142,7 +142,7 @@ describe('referralApi', () => {
     vi.mocked(callCoreCommand).mockResolvedValueOnce({});
     await referralApi.claimReferral('  abcd  ');
     expect(callCoreCommand).toHaveBeenCalledWith(
-      'openhuman.referral_claim',
+      'neppy.referral_claim',
       expect.objectContaining({ code: 'abcd', deviceFingerprint: expect.any(String) })
     );
   });

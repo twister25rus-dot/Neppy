@@ -10,7 +10,7 @@
 //!
 //! Read at turn time by [`super::driver`]; written by the
 //! `inference.claude_code_set_full_access` RPC. The
-//! `OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE` env var overrides this at the driver
+//! `NEPPY_CLAUDE_CODE_PERMISSION_MODE` env var overrides this at the driver
 //! layer (debugging / power users).
 
 use std::path::{Path, PathBuf};

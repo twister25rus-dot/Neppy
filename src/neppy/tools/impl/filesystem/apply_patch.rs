@@ -241,6 +241,9 @@ impl ApplyPatchTool {
                         return Ok(ToolResult::error(format!("edit[{}]: {msg}", edit.index)));
                     }
                 };
+                if let Err(msg) = path_policy.check_debug_protected_write(&resolved) {
+                    return Ok(ToolResult::error(format!("edit[{}]: {msg}", edit.index)));
+                }
                 if let Ok(meta) = tokio::fs::metadata(&resolved).await {
                     if meta.len() > MAX_FILE_BYTES {
                         return Ok(ToolResult::error(format!(

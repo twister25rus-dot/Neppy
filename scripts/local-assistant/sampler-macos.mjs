@@ -29,7 +29,7 @@
  * Usage:
  *   node sampler-macos.mjs --core-pid N --worker-port P [--interval-ms 1000]
  *        [--rpc-url http://127.0.0.1:17790/rpc] [--out samples.jsonl]
- *   (bearer for the status RPC comes from OPENHUMAN_CORE_TOKEN)
+ *   (bearer for the status RPC comes from NEPPY_CORE_TOKEN)
  */
 
 import { execFile } from 'node:child_process';
@@ -148,7 +148,7 @@ async function fetchJson(url, headers = {}, body = null, ms = 2500) {
 
 export function createSampler(opts) {
   const interval = opts.intervalMs ?? 1000;
-  const token = process.env.OPENHUMAN_CORE_TOKEN ?? '';
+  const token = (process.env.NEPPY_CORE_TOKEN ?? process.env.OPENHUMAN_CORE_TOKEN) ?? '';
   const slow = { threads: null, fds: null, ollama: null, neppy: null, gpu: null, health: null };
   let tick = 0;
   let stopped = false;
@@ -212,7 +212,7 @@ export function createSampler(opts) {
       const r = await fetchJson(
         opts.rpcUrl,
         { authorization: `Bearer ${token}` },
-        { jsonrpc: '2.0', id: 1, method: 'openhuman.mlx_worker_status', params: {} },
+        { jsonrpc: '2.0', id: 1, method: 'neppy.mlx_worker_status', params: {} },
       );
       let v = r?.result;
       if (v && typeof v === 'object' && 'result' in v && 'logs' in v) v = v.result;

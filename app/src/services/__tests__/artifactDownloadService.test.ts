@@ -82,7 +82,7 @@ describe('listArtifactsForThread', () => {
     const outcome = await listArtifactsForThread(' thread-1 ');
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.ai_list_artifacts',
+      method: 'neppy.ai_list_artifacts',
       params: { thread_id: 'thread-1', offset: 0, limit: 200 },
     });
     expect(outcome).toEqual({
@@ -134,11 +134,11 @@ describe('listArtifactsForThread', () => {
     const outcome = await listArtifactsForThread('thread-1');
 
     expect(callCoreRpc).toHaveBeenNthCalledWith(1, {
-      method: 'openhuman.ai_list_artifacts',
+      method: 'neppy.ai_list_artifacts',
       params: { thread_id: 'thread-1', offset: 0, limit: 200 },
     });
     expect(callCoreRpc).toHaveBeenNthCalledWith(2, {
-      method: 'openhuman.ai_list_artifacts',
+      method: 'neppy.ai_list_artifacts',
       params: { thread_id: 'thread-1', offset: 200, limit: 200 },
     });
     expect(outcome).toEqual({
@@ -383,7 +383,7 @@ describe('deleteArtifact', () => {
     const outcome = await deleteArtifact('art-1');
     expect(outcome).toEqual({ ok: true });
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.ai_delete_artifact',
+      method: 'neppy.ai_delete_artifact',
       params: { artifact_id: 'art-1' },
     });
   });

@@ -3,7 +3,7 @@
  * E2E spec: core port conflict recovery
  *
  * Covers:
- *   - When port 7788 (default OPENHUMAN_CORE_PORT) is already bound by an
+ *   - When port 7788 (default NEPPY_CORE_PORT) is already bound by an
  *     unrelated process before the desktop app starts, the embedded in-process
  *     core either binds a fallback port and continues normally, OR surfaces a
  *     clear conflict message so the user can diagnose the issue.
@@ -35,7 +35,9 @@ import { waitForApp } from '../helpers/app-helpers';
 import { textExists, waitForText } from '../helpers/element-helpers';
 import { startMockServer, stopMockServer } from '../mock-server';
 
-const DEFAULT_CORE_PORT = Number(process.env.OPENHUMAN_CORE_PORT ?? 7788);
+const DEFAULT_CORE_PORT = Number(
+  process.env.NEPPY_CORE_PORT ?? process.env.OPENHUMAN_CORE_PORT ?? 7788
+);
 
 function stepLog(message: string, context?: unknown): void {
   const stamp = new Date().toISOString();

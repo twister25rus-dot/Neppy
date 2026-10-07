@@ -1,11 +1,11 @@
 # connectivity
 
-Diagnostics for the local core's reachability and the live backend Socket.IO state, plus the listen-port selection logic the core uses when it boots its embedded HTTP listener. The frontend has three independent connectivity channels — browser internet, backend Socket.IO websocket, and the local core HTTP — and issue #1527 split them in the UI so users see *which* channel is broken instead of one conflated "Disconnected" pill. This module exposes a cheap `openhuman.connectivity_diag` RPC that snapshots in-memory backend-socket state plus the local core's PID and listening port (no I/O beyond a single TCP probe), suitable for poll-based health checks.
+Diagnostics for the local core's reachability and the live backend Socket.IO state, plus the listen-port selection logic the core uses when it boots its embedded HTTP listener. The frontend has three independent connectivity channels — browser internet, backend Socket.IO websocket, and the local core HTTP — and issue #1527 split them in the UI so users see *which* channel is broken instead of one conflated "Disconnected" pill. This module exposes a cheap `neppy.connectivity_diag` RPC that snapshots in-memory backend-socket state plus the local core's PID and listening port (no I/O beyond a single TCP probe), suitable for poll-based health checks.
 
 ## Responsibilities
 
-- Answer `openhuman.connectivity_diag` with a flat snapshot: backend socket state, last websocket error, sidecar PID, configured listen port, and whether that port currently has a listener bound.
-- Resolve the configured core RPC port from the environment (`OPENHUMAN_CORE_RPC_URL` then `OPENHUMAN_CORE_PORT`, defaulting to `7788`).
+- Answer `neppy.connectivity_diag` with a flat snapshot: backend socket state, last websocket error, sidecar PID, configured listen port, and whether that port currently has a listener bound.
+- Resolve the configured core RPC port from the environment (`NEPPY_CORE_RPC_URL` then `NEPPY_CORE_PORT`, defaulting to `7788`).
 - Snapshot the backend Socket.IO connection state from the global `SocketManager` (reports `"uninitialized"` when the manager singleton isn't registered yet).
 - Probe whether a TCP port on loopback is already bound (`is_port_in_use`).
 - Pick a listen port for the embedded core HTTP listener (`pick_listen_port` / `pick_listen_port_for_host`): try preferred, retry transient `AddrInUse` races, request stale-listener takeover when another Neppy core owns the port (#1130), otherwise fall back to a port pool.
@@ -31,7 +31,7 @@ Diagnostics for the local core's reachability and the live backend Socket.IO sta
 
 ## RPC / controllers
 
-- **`openhuman.connectivity_diag`** (namespace `connectivity`, function `diag`) — read-only, no inputs. Returns a single output field `diag` (JSON) containing the `ConnectivityDiagResponse` snapshot. Described as cheap and safe to poll. Registered via `all_registered_controllers` → `handle_diag` → `rpc::diag()`.
+- **`neppy.connectivity_diag`** (namespace `connectivity`, function `diag`) — read-only, no inputs. Returns a single output field `diag` (JSON) containing the `ConnectivityDiagResponse` snapshot. Described as cheap and safe to poll. Registered via `all_registered_controllers` → `handle_diag` → `rpc::diag()`.
 
 Restart/mutate operations are intentionally **not** here — they live in the Tauri shell (`restart_core_process` in `app/src-tauri/src/lib.rs`) because they touch the host process tree and can't be answered from inside the core itself.
 
@@ -50,15 +50,15 @@ None — the module holds no state. The diag snapshot reads only the environment
 ## Used by
 
 - `src/core/all.rs` — registers the controller (`all_connectivity_registered_controllers`) and schema (`all_connectivity_controller_schemas`), and routes the `"connectivity"` namespace.
-- `src/core/jsonrpc.rs` — calls `connectivity::rpc::pick_listen_port_for_host(...)` during core bind to select the embedded HTTP listener port; afterward syncs `OPENHUMAN_CORE_RPC_URL` to the actual bound port so `resolve_listen_port()` (and thus `connectivity_diag`) reports the live listener after a fallback.
+- `src/core/jsonrpc.rs` — calls `connectivity::rpc::pick_listen_port_for_host(...)` during core bind to select the embedded HTTP listener port; afterward syncs `NEPPY_CORE_RPC_URL` to the actual bound port so `resolve_listen_port()` (and thus `connectivity_diag`) reports the live listener after a fallback.
 - `src/neppy/mod.rs` — declares the module.
 
 ## Notes / gotchas
 
 - The `pick_listen_port` flow is the real workhorse despite the module's "diag" framing; it owns the core's startup port selection and the stale-listener takeover decision (#1130).
-- Port resolution priority is `OPENHUMAN_CORE_RPC_URL` (port component) > `OPENHUMAN_CORE_PORT` > default `7788`. Invalid `OPENHUMAN_CORE_PORT` logs a warning and falls back to the default rather than failing.
+- Port resolution priority is `NEPPY_CORE_RPC_URL` (port component) > `NEPPY_CORE_PORT` > default `7788`. Invalid `NEPPY_CORE_PORT` logs a warning and falls back to the default rather than failing.
 - Fallback pool: when preferred is the default `7788`, fallbacks are `7789..=7798`; otherwise `preferred+1..=preferred+10` (saturating-checked).
-- `WouldTakeOver` is only returned when something is actually listening (`AddrInUse`) **and** the listener fingerprints as an Neppy core (its `GET /` returns JSON with `"name":"openhuman"`). OS-excluded ports (Windows `WSAEACCES` / os error 10013) skip the takeover probe and route directly to fallbacks; `is_port_excluded_bind_error` matches on the raw OS code (10013) because Rust's `ErrorKind` mapping for it isn't stable across releases.
+- `WouldTakeOver` is only returned when something is actually listening (`AddrInUse`) **and** the listener fingerprints as a Neppy core (its `GET /` returns JSON with `"name":"openhuman"`). OS-excluded ports (Windows `WSAEACCES` / os error 10013) skip the takeover probe and route directly to fallbacks; `is_port_excluded_bind_error` matches on the raw OS code (10013) because Rust's `ErrorKind` mapping for it isn't stable across releases.
 - IPv6 probe hosts are bracketed per RFC 3986 before building the fingerprint URL so live cores on IPv6 aren't misclassified as `Other`.
 - `socket_state` is funneled through `serde_json` (not `Debug`) so the lowercased wire shape stays stable; `"uninitialized"` is reported when the `SocketManager` singleton isn't installed (early startup / tests).
 - `is_port_in_use` returns `false` on non-`AddrInUse` bind errors (e.g. permission denied) so a port isn't misreported as occupied.

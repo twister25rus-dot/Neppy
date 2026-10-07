@@ -7,13 +7,13 @@ compile_error!("src-tauri host supports desktop (Windows/macOS/Linux) only. Mobi
 // features are per-crate, so `#[cfg(feature = "voice")]` here would test THIS
 // crate's features, not the core's — a voice-less core is only observable via
 // the core's own always-compiled facade. Without this assert the failure is
-// silent and runtime-only: every `openhuman.voice_*` RPC answers "unknown
+// silent and runtime-only: every `neppy.voice_*` RPC answers "unknown
 // method" and the UI blames a stale sidecar (#4901). Keep `voice` in the
 // `neppy_core` feature list in Cargo.toml to satisfy this.
 const _: () = assert!(
     neppy_core::neppy::voice::VOICE_COMPILED_IN,
     "neppy_core must be built with the `voice` feature: the desktop app ships voice, \
-     and without it every openhuman.voice_* controller is unregistered (#4901). \
+     and without it every neppy.voice_* controller is unregistered (#4901). \
      Add \"voice\" to the neppy_core `features` list in app/src-tauri/Cargo.toml."
 );
 
@@ -49,6 +49,7 @@ mod deep_link_ipc_windows;
 mod deep_link_registration_check;
 mod dictation_hotkeys;
 mod file_logging;
+mod launch_marker;
 // Routing the frontend to a core that is not the one in this process. Leaf
 // gated: with `gateways` off the commands are simply absent, which is what the
 // renderer's feature detection expects — a stub that registered them and then
@@ -188,7 +189,7 @@ async fn active_rpc_endpoint(desktop: &core_process::CoreProcessHandle) -> (Stri
 
 #[tauri::command]
 fn overlay_parent_rpc_url() -> Option<String> {
-    let url = std::env::var("OPENHUMAN_CORE_RPC_URL").ok()?;
+    let url = neppy_core::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok()?;
     let trimmed = url.trim();
     if trimmed.is_empty() {
         return None;
@@ -474,7 +475,7 @@ async fn restart_app(app: tauri::AppHandle<AppRuntime>) -> Result<(), String> {
 /// of `auth_store_session`, so it's the only profile-independent source of
 /// truth available to the UI at boot. Reuses
 /// `config::default_root_neppy_dir()` so the lookup honors
-/// `OPENHUMAN_WORKSPACE` overrides used in test harnesses. (#900)
+/// `NEPPY_WORKSPACE` overrides used in test harnesses. (#900)
 #[tauri::command]
 fn get_active_user_id() -> Result<Option<String>, String> {
     let root = neppy_core::neppy::config::default_root_neppy_dir()
@@ -1198,7 +1199,7 @@ fn is_daemon_mode() -> bool {
 /// single discoverability gate.
 #[cfg(target_os = "linux")]
 fn path_has_executable(name: &str) -> bool {
-    let Some(path_var) = std::env::var_os("PATH") else {
+    let Some(path_var) = neppy_core::neppy::util::env::var_os("PATH") else {
         return false;
     };
     std::env::split_paths(&path_var).any(|dir| dir.join(name).is_file())
@@ -1823,7 +1824,7 @@ fn should_warn_for_wsl_x11_desktop(
 
 #[cfg(target_os = "linux")]
 fn is_wsl_environment() -> bool {
-    if std::env::var("WSL_DISTRO_NAME")
+    if neppy_core::neppy::util::env::var("WSL_DISTRO_NAME")
         .ok()
         .filter(|v| !v.trim().is_empty())
         .is_some()
@@ -1839,7 +1840,7 @@ fn is_wsl_environment() -> bool {
 
 #[cfg(target_os = "linux")]
 fn has_non_empty_env(key: &str) -> bool {
-    std::env::var(key)
+    neppy_core::neppy::util::env::var(key)
         .ok()
         .filter(|v| !v.trim().is_empty())
         .is_some()
@@ -1888,12 +1889,12 @@ fn check_linux_display_server() {
     ) {
         log::debug!(
             "[cef-preflight] Linux display server present: DISPLAY={:?} WAYLAND_DISPLAY={:?}",
-            std::env::var("DISPLAY").ok(),
-            std::env::var("WAYLAND_DISPLAY").ok()
+            neppy_core::neppy::util::env::var("DISPLAY").ok(),
+            neppy_core::neppy::util::env::var("WAYLAND_DISPLAY").ok()
         );
         return;
     }
-    let msg = "[openhuman] no display server found (DISPLAY and WAYLAND_DISPLAY are both unset).\n\
+    let msg = "[neppy] no display server found (DISPLAY and WAYLAND_DISPLAY are both unset).\n\
                Neppy requires an X11 or Wayland display to run.\n\
                On WSL2: install WSLg or configure X11 forwarding from Windows.\n\
                Set DISPLAY (e.g. export DISPLAY=:0) or WAYLAND_DISPLAY before launching.";
@@ -1962,8 +1963,8 @@ fn linux_dbus_session_reachable(
 /// Always `true` on non-Linux platforms.
 #[cfg(target_os = "linux")]
 fn can_register_single_instance_plugin() -> bool {
-    let env_addr = std::env::var("DBUS_SESSION_BUS_ADDRESS").ok();
-    let runtime_bus_present = std::env::var("XDG_RUNTIME_DIR")
+    let env_addr = neppy_core::neppy::util::env::var("DBUS_SESSION_BUS_ADDRESS").ok();
+    let runtime_bus_present = neppy_core::neppy::util::env::var("XDG_RUNTIME_DIR")
         .ok()
         .map(|dir| std::path::Path::new(&dir).join("bus").exists())
         .unwrap_or(false);
@@ -1996,7 +1997,7 @@ fn linux_is_root_uid(uid: u32) -> bool {
 /// Rive mascot on the Human tab; any other GPU-accelerated canvas) cannot
 /// initialise. Users on working GPU stacks (most Ubuntu, WSL2 with proper
 /// driver passthrough, Fedora, etc.) can opt back into hardware
-/// acceleration by setting `OPENHUMAN_FORCE_GPU=1`.
+/// acceleration by setting `NEPPY_FORCE_GPU=1`.
 ///
 /// This control is explicit opt-in: `1` / `true` / `yes` / `on`
 /// (case-insensitive) enables the override, and anything else (including
@@ -2070,13 +2071,13 @@ fn append_platform_cef_gpu_workarounds(
             // bundled Chromium doesn't yet support.
             push_swiftshader_software_gl(args);
             log::info!(
-                "[cef-startup] OPENHUMAN_DISABLE_GPU set on Windows: forcing ANGLE/SwiftShader software GL for CEF startup compatibility (issues #4294/#4385)"
+                "[cef-startup] NEPPY_DISABLE_GPU set on Windows: forcing ANGLE/SwiftShader software GL for CEF startup compatibility (issues #4294/#4385)"
             );
         } else {
             args.push(("--disable-gpu", None));
             args.push(("--disable-gpu-compositing", None));
             log::info!(
-                "[cef-startup] OPENHUMAN_DISABLE_GPU set: adding --disable-gpu and --disable-gpu-compositing for CEF startup compatibility (issue #4294)"
+                "[cef-startup] NEPPY_DISABLE_GPU set: adding --disable-gpu and --disable-gpu-compositing for CEF startup compatibility (issue #4294)"
             );
         }
     }
@@ -2101,16 +2102,16 @@ fn append_platform_cef_gpu_workarounds(
     // `--enable-unsafe-swiftshader` is required because Chromium gates
     // SwiftShader-backed WebGL behind it (the "unsafe" label is about software
     // perf, not security). Users with working GPU stacks can still opt into
-    // hardware acceleration via `OPENHUMAN_FORCE_GPU=1`.
+    // hardware acceleration via `NEPPY_FORCE_GPU=1`.
     if os == "linux" && !disable_gpu {
         if cef_force_gpu_enabled(force_gpu_override) {
             log::info!(
-                "[cef-startup] OPENHUMAN_FORCE_GPU set — skipping SwiftShader software-GL fallback (issue #1697). If the app fails to launch with a GPU process abort, unset the env var."
+                "[cef-startup] NEPPY_FORCE_GPU set — skipping SwiftShader software-GL fallback (issue #1697). If the app fails to launch with a GPU process abort, unset the env var."
             );
         } else {
             push_swiftshader_software_gl(args);
             log::info!(
-                "[cef-startup] Linux detected: forcing ANGLE/SwiftShader software GL so WebGL surfaces (Tiny Place world renderer, Rive mascot) render without the crash-prone hardware GPU process (issues #1697/#4193); set OPENHUMAN_FORCE_GPU=1 for hardware acceleration"
+                "[cef-startup] Linux detected: forcing ANGLE/SwiftShader software GL so WebGL surfaces (Tiny Place world renderer, Rive mascot) render without the crash-prone hardware GPU process (issues #1697/#4193); set NEPPY_FORCE_GPU=1 for hardware acceleration"
             );
         }
     }
@@ -2140,7 +2141,7 @@ fn append_platform_cef_gpu_workarounds(
     #[cfg(target_os = "linux")]
     {
         let uid = nix::unistd::getuid().as_raw();
-        // Dev-only: also honor OPENHUMAN_CEF_NO_SANDBOX=1 so a non-root headless
+        // Dev-only: also honor NEPPY_CEF_NO_SANDBOX=1 so a non-root headless
         // box (no sudo to chown chrome-sandbox root:4755) can launch over RDP.
         //
         // SECURITY: gated to debug builds only. Disabling Chromium's process
@@ -2150,7 +2151,7 @@ fn append_platform_cef_gpu_workarounds(
         // false so only the `linux_is_root_uid` path can opt in (uid=0
         // already implies root-equivalent trust).
         #[cfg(debug_assertions)]
-        let forced = std::env::var("OPENHUMAN_CEF_NO_SANDBOX")
+        let forced = neppy_core::neppy::util::env::var("NEPPY_CEF_NO_SANDBOX")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
         #[cfg(not(debug_assertions))]
@@ -2158,7 +2159,7 @@ fn append_platform_cef_gpu_workarounds(
         if os == "linux" && (linux_is_root_uid(uid) || forced) {
             args.push(("--no-sandbox", None));
             log::info!(
-                "[cef-startup] Linux: adding --no-sandbox (root uid or OPENHUMAN_CEF_NO_SANDBOX) \
+                "[cef-startup] Linux: adding --no-sandbox (root uid or NEPPY_CEF_NO_SANDBOX) \
                  (OPENHUMAN-TAURI-K1)"
             );
         }
@@ -2342,7 +2343,7 @@ pub fn run() {
     }
 
     // Initialize Sentry for the Tauri shell (desktop host) process before any
-    // other startup work. Reads `OPENHUMAN_TAURI_SENTRY_DSN` at runtime first,
+    // other startup work. Reads `NEPPY_TAURI_SENTRY_DSN` at runtime first,
     // then falls back to the value baked in at compile time via the release
     // workflow. Missing/empty DSN ⇒ `sentry::init` returns a no-op guard.
     //
@@ -2353,10 +2354,14 @@ pub fn run() {
     // path do NOT spin up a second client — those have their own reporting
     // surfaces.
     let _sentry_guard = sentry::init(sentry::ClientOptions {
-        dsn: std::env::var("OPENHUMAN_TAURI_SENTRY_DSN")
+        dsn: neppy_core::neppy::util::env::var("NEPPY_TAURI_SENTRY_DSN")
             .ok()
             .filter(|s| !s.is_empty())
-            .or_else(|| option_env!("OPENHUMAN_TAURI_SENTRY_DSN").map(|s| s.to_string()))
+            .or_else(|| {
+                option_env!("NEPPY_TAURI_SENTRY_DSN")
+                    .or(option_env!("NEPPY_TAURI_SENTRY_DSN"))
+                    .map(|s| s.to_string())
+            })
             .filter(|s| !s.is_empty())
             .and_then(|s| s.parse().ok()),
         release: Some(std::borrow::Cow::Owned(build_sentry_release_tag())),
@@ -2562,20 +2567,20 @@ pub fn run() {
     stderr_panic_hook::install();
 
     // Optional smoke trigger for verifying the Sentry pipeline end-to-end.
-    // Run with `OPENHUMAN_TAURI_SENTRY_TEST=panic` to fire a panic, or
+    // Run with `NEPPY_TAURI_SENTRY_TEST=panic` to fire a panic, or
     // `=message` to send a captured-message event. No-op when unset.
-    if let Ok(mode) = std::env::var("OPENHUMAN_TAURI_SENTRY_TEST") {
+    if let Ok(mode) = neppy_core::neppy::util::env::var("NEPPY_TAURI_SENTRY_TEST") {
         match mode.as_str() {
-            "panic" => panic!("OPENHUMAN_TAURI_SENTRY_TEST=panic — local Sentry smoke test"),
+            "panic" => panic!("NEPPY_TAURI_SENTRY_TEST=panic — local Sentry smoke test"),
             "message" => {
                 sentry::capture_message(
-                    "OPENHUMAN_TAURI_SENTRY_TEST=message — local Sentry smoke test",
+                    "NEPPY_TAURI_SENTRY_TEST=message — local Sentry smoke test",
                     sentry::Level::Error,
                 );
                 let _ = sentry::Hub::current().client().map(|c| c.flush(None));
             }
             other => log::warn!(
-                "OPENHUMAN_TAURI_SENTRY_TEST={other:?} — unknown mode (use 'panic' or 'message')"
+                "NEPPY_TAURI_SENTRY_TEST={other:?} — unknown mode (use 'panic' or 'message')"
             ),
         }
     }
@@ -2589,6 +2594,7 @@ pub fn run() {
     // are bridged into the same subscriber via `tracing_log::LogTracer`,
     // replacing the previous stderr-only `env_logger`.
     file_logging::init();
+    launch_marker::begin();
 
     // Log platform identity early so every log session is tagged with arch
     // and OS version — essential for reproducing and triaging Intel-only
@@ -2859,8 +2865,8 @@ pub fn run() {
                 ("--disable-renderer-backgrounding", None),
                 ("--disable-backgrounding-occluded-windows", None),
             ];
-            let force_gpu_env = std::env::var("OPENHUMAN_FORCE_GPU").ok();
-            let disable_gpu_env = std::env::var("OPENHUMAN_DISABLE_GPU").ok();
+            let force_gpu_env = neppy_core::neppy::util::env::var("NEPPY_FORCE_GPU").ok();
+            let disable_gpu_env = neppy_core::neppy::util::env::var("NEPPY_DISABLE_GPU").ok();
             append_platform_cef_gpu_workarounds(
                 &mut args,
                 std::env::consts::OS,
@@ -2935,8 +2941,8 @@ pub fn run() {
             "[single-instance] D-Bus session bus unreachable (DBUS_SESSION_BUS_ADDRESS={:?}, \
              XDG_RUNTIME_DIR={:?}); skipping tauri-plugin-single-instance to avoid \
              OPENHUMAN-TAURI-TM panic. Multiple Neppy instances will not be deduplicated.",
-            std::env::var("DBUS_SESSION_BUS_ADDRESS").ok(),
-            std::env::var("XDG_RUNTIME_DIR").ok()
+            neppy_core::neppy::util::env::var("DBUS_SESSION_BUS_ADDRESS").ok(),
+            neppy_core::neppy::util::env::var("XDG_RUNTIME_DIR").ok()
         );
         builder
     };
@@ -3061,7 +3067,7 @@ pub fn run() {
             }
 
             // Start the webview_apis WebSocket bridge BEFORE spawning core —
-            // core reads OPENHUMAN_WEBVIEW_APIS_PORT on first connect, and
+            // core reads NEPPY_WEBVIEW_APIS_PORT on first connect, and
             // connects lazily, so the env var must be set before the spawn.
             //
             // If the bridge fails to bind we clear any inherited port env so
@@ -3077,7 +3083,7 @@ pub fn run() {
                     }
                     Err(err) => {
                         log::error!("[webview_apis] failed to start bridge: {err}");
-                        std::env::remove_var(webview_apis::server::PORT_ENV);
+                        neppy_core::neppy::util::env::remove_var(webview_apis::server::PORT_ENV);
                         false
                     }
                 }
@@ -3104,7 +3110,7 @@ pub fn run() {
             if cfg!(debug_assertions) && !daemon_mode {
                 const STALE_LABEL: &str = "com.neppy.core";
 
-                if let Ok(home) = std::env::var("HOME") {
+                if let Ok(home) = neppy_core::neppy::util::env::var("HOME") {
                     let plist = std::path::PathBuf::from(&home)
                         .join("Library")
                         .join("LaunchAgents")
@@ -3162,11 +3168,11 @@ pub fn run() {
 
             let core_handle =
                 core_process::CoreProcessHandle::new(core_process::default_core_port());
-            std::env::set_var("OPENHUMAN_CORE_RPC_URL", core_handle.rpc_url());
+            std::env::set_var("NEPPY_CORE_RPC_URL", core_handle.rpc_url());
 
             // Cookie databases are implementation-private in the native
             // WebView runtime and are deliberately not exposed to the core.
-            std::env::remove_var("OPENHUMAN_CEF_COOKIES_DB");
+            neppy_core::neppy::util::env::remove_var("NEPPY_CEF_COOKIES_DB");
 
             app.manage(core_handle.clone());
             // NOTE: the core is NOT auto-spawned here. The BootCheckGate UI
@@ -3673,7 +3679,10 @@ fn message_is_localhost_dev_fetch_noise(message: &str) -> bool {
 
 fn build_sentry_release_tag() -> String {
     let version = env!("CARGO_PKG_VERSION");
-    let sha = option_env!("OPENHUMAN_BUILD_SHA").unwrap_or("").trim();
+    let sha = option_env!("NEPPY_BUILD_SHA")
+        .or(option_env!("NEPPY_BUILD_SHA"))
+        .unwrap_or("")
+        .trim();
     let sha_short: String = sha.chars().take(12).collect();
     if sha_short.is_empty() {
         format!("openhuman@{version}")
@@ -3682,18 +3691,19 @@ fn build_sentry_release_tag() -> String {
     }
 }
 
-/// Resolve the Sentry environment tag from `OPENHUMAN_APP_ENV` (runtime) or
-/// `VITE_OPENHUMAN_APP_ENV` (compile-time fallback). Defaults to
+/// Resolve the Sentry environment tag from `NEPPY_APP_ENV` (runtime) or
+/// `VITE_NEPPY_APP_ENV` (compile-time fallback). Defaults to
 /// `production` so unmarked release builds don't pollute the dev/staging
 /// streams.
 fn resolve_sentry_environment() -> String {
-    if let Ok(value) = std::env::var("OPENHUMAN_APP_ENV") {
+    if let Ok(value) = neppy_core::neppy::util::env::var("NEPPY_APP_ENV") {
         let trimmed = value.trim();
         if !trimmed.is_empty() {
             return trimmed.to_string();
         }
     }
-    if let Some(value) = option_env!("VITE_OPENHUMAN_APP_ENV") {
+    if let Some(value) = option_env!("VITE_NEPPY_APP_ENV").or(option_env!("VITE_OPENHUMAN_APP_ENV"))
+    {
         let trimmed = value.trim();
         if !trimmed.is_empty() {
             return trimmed.to_string();

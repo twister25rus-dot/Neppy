@@ -326,14 +326,14 @@ pub struct TurnState {
     pub updated_at: String,
 }
 
-/// Request payload for `openhuman.threads_turn_state_get`.
+/// Request payload for `neppy.threads_turn_state_get`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GetTurnStateRequest {
     pub thread_id: String,
 }
 
-/// Response payload for `openhuman.threads_turn_state_get`.
+/// Response payload for `neppy.threads_turn_state_get`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GetTurnStateResponse {
@@ -342,8 +342,8 @@ pub struct GetTurnStateResponse {
     pub turn_state: Option<TurnState>,
 }
 
-/// Response payload for `openhuman.threads_turn_state_list` and
-/// `openhuman.threads_turn_state_history`.
+/// Response payload for `neppy.threads_turn_state_list` and
+/// `neppy.threads_turn_state_history`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ListTurnStatesResponse {
@@ -351,7 +351,7 @@ pub struct ListTurnStatesResponse {
     pub count: usize,
 }
 
-/// Request payload for `openhuman.threads_turn_state_get_turn` — a specific
+/// Request payload for `neppy.threads_turn_state_get_turn` — a specific
 /// turn of a thread, identified by its producing request id.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -360,14 +360,14 @@ pub struct GetTurnStateForRequestRequest {
     pub request_id: String,
 }
 
-/// Request payload for `openhuman.threads_turn_state_clear`.
+/// Request payload for `neppy.threads_turn_state_clear`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ClearTurnStateRequest {
     pub thread_id: String,
 }
 
-/// Response payload for `openhuman.threads_turn_state_clear`.
+/// Response payload for `neppy.threads_turn_state_clear`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ClearTurnStateResponse {

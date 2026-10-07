@@ -40,7 +40,7 @@ import {
   type MockSubagentResult,
 } from './mockScript';
 
-const debug = debugFactory('openhuman:assistant-ui-demo');
+const debug = debugFactory('neppy:assistant-ui-demo');
 
 /** Delay between streamed text chunks. Slow enough to see, fast enough not to annoy. */
 const CHUNK_MS = 16;

@@ -13,7 +13,7 @@
 //!    out of `sysctl KERN_PROCARGS2` / `ps eww -p <pid>` (macOS) where any
 //!    same-UID process could read it without entitlement.
 //! 2. **Env-as-config fallback** — when no in-memory token is supplied,
-//!    [`init_rpc_token`] reads `OPENHUMAN_CORE_TOKEN` from the environment.
+//!    [`init_rpc_token`] reads `NEPPY_CORE_TOKEN` from the environment.
 //!    This is the legitimate operator-supplied transport for Docker / cloud /
 //!    VPS deployments where the bearer must come from `fly secrets set …`,
 //!    `docker run -e …`, or a systemd unit file — there is no live shell
@@ -161,7 +161,7 @@ const QUERY_TOKEN_PATHS: &[&str] = &["/events/webhooks", "/ws/dictation"];
 /// (see [`init_rpc_token_with_value`]). The desktop boot flow never crosses
 /// a process-global env surface.
 ///
-/// `OPENHUMAN_CORE_TOKEN` remains the canonical configuration surface for
+/// `NEPPY_CORE_TOKEN` remains the canonical configuration surface for
 /// **standalone CLI / Docker / cloud** deployments only — where the bearer
 /// must come from `fly secrets set …`, `docker run -e …`, a systemd unit
 /// file, or a developer running `neppy-core serve` from a shell with the
@@ -172,18 +172,18 @@ const QUERY_TOKEN_PATHS: &[&str] = &["/events/webhooks", "/ws/dictation"];
 /// I/O). When absent and no in-memory token was seeded, `init_rpc_token`
 /// generates a fresh token and writes it to `{workspace_dir}/core.token` so
 /// CLI clients can authenticate.
-pub const CORE_TOKEN_ENV_VAR: &str = "OPENHUMAN_CORE_TOKEN";
+pub const CORE_TOKEN_ENV_VAR: &str = "NEPPY_CORE_TOKEN";
 
 /// Initialize the per-process RPC token from env-or-file (non-desktop path).
 ///
 /// **Not the desktop path.** The Tauri shell passes the per-launch bearer
 /// to the embedded server via the internal in-memory handle (see
 /// [`init_rpc_token_with_value`]); it does **not** set
-/// `OPENHUMAN_CORE_TOKEN`. This function is the bootstrap path for
+/// `NEPPY_CORE_TOKEN`. This function is the bootstrap path for
 /// standalone CLI / Docker / cloud deployments.
 ///
 /// **Env-as-config (preferred for non-desktop)**: when
-/// `OPENHUMAN_CORE_TOKEN` is set in the process environment (typically by
+/// `NEPPY_CORE_TOKEN` is set in the process environment (typically by
 /// the container runtime, secrets manager, or systemd unit file), the core
 /// uses its value as the RPC token. No file is written; the token is
 /// available the instant the process starts.
@@ -208,11 +208,11 @@ pub fn init_rpc_token(workspace_dir: &Path) -> anyhow::Result<()> {
     }
 
     // Env-as-config path: bearer supplied by the operator via
-    // OPENHUMAN_CORE_TOKEN. Used by Docker / cloud / systemd / a developer
+    // NEPPY_CORE_TOKEN. Used by Docker / cloud / systemd / a developer
     // running `neppy-core serve` from a pre-configured shell. Desktop
     // (Tauri) does NOT set this variable — it uses `init_rpc_token_with_value`
     // for an in-memory handoff instead.
-    if let Ok(env_token) = std::env::var(CORE_TOKEN_ENV_VAR) {
+    if let Ok(env_token) = crate::neppy::util::env::var(CORE_TOKEN_ENV_VAR) {
         let env_token = env_token.trim().to_string();
         if !env_token.is_empty() {
             let _ = RPC_TOKEN.set(env_token);
@@ -237,7 +237,7 @@ pub fn init_rpc_token(workspace_dir: &Path) -> anyhow::Result<()> {
 ///
 /// **In-memory handoff path** — used by the Tauri shell to inject the bearer
 /// the host generated in `CoreProcessHandle::new()` into the in-process core
-/// without round-tripping through `OPENHUMAN_CORE_TOKEN` in the process
+/// without round-tripping through `NEPPY_CORE_TOKEN` in the process
 /// environment. The token never lands on a process-global env surface, which
 /// keeps it off `/proc/<pid>/environ` (Linux) and out of `sysctl
 /// KERN_PROCARGS2` / `ps eww -p <pid>` (macOS) where any same-UID process

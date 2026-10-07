@@ -65,41 +65,41 @@ CREATED_TEMP_CEF_CACHE=""
 # ------------------------------------------------------------------------------
 # Workspace + config
 # ------------------------------------------------------------------------------
-if [ -z "${OPENHUMAN_WORKSPACE:-}" ]; then
-  OPENHUMAN_WORKSPACE="$(mktemp -d)"
-  CREATED_TEMP_WORKSPACE="$OPENHUMAN_WORKSPACE"
-  export OPENHUMAN_WORKSPACE
-  echo "[runner] Using temporary OPENHUMAN_WORKSPACE: $OPENHUMAN_WORKSPACE"
+if [ -z "${NEPPY_WORKSPACE:-}" ]; then
+  NEPPY_WORKSPACE="$(mktemp -d)"
+  CREATED_TEMP_WORKSPACE="$NEPPY_WORKSPACE"
+  export NEPPY_WORKSPACE
+  echo "[runner] Using temporary NEPPY_WORKSPACE: $NEPPY_WORKSPACE"
 else
-  echo "[runner] Using OPENHUMAN_WORKSPACE from environment: $OPENHUMAN_WORKSPACE"
+  echo "[runner] Using NEPPY_WORKSPACE from environment: $NEPPY_WORKSPACE"
 fi
 
 # Headless Linux CI does not always have a usable Secret Service/keychain.
-# Keep E2E credentials under OPENHUMAN_WORKSPACE so auth state is deterministic
+# Keep E2E credentials under NEPPY_WORKSPACE so auth state is deterministic
 # and gets cleaned up with the rest of the test workspace.
-: "${OPENHUMAN_KEYRING_BACKEND:=file}"
-export OPENHUMAN_KEYRING_BACKEND
-echo "[runner] Using OPENHUMAN_KEYRING_BACKEND: $OPENHUMAN_KEYRING_BACKEND"
+: "${NEPPY_KEYRING_BACKEND:=file}"
+export NEPPY_KEYRING_BACKEND
+echo "[runner] Using NEPPY_KEYRING_BACKEND: $NEPPY_KEYRING_BACKEND"
 
 # Place the CEF cache directory OUTSIDE the workspace. By default the Tauri
-# shell roots it under `$OPENHUMAN_WORKSPACE/users/<id>/cef`, but our
-# `mega-flow` spec calls `openhuman.config_reset_local_data` between
-# sub-scenarios — that RPC does `remove_dir_all($OPENHUMAN_WORKSPACE)`,
+# shell roots it under `$NEPPY_WORKSPACE/users/<id>/cef`, but our
+# `mega-flow` spec calls `neppy.config_reset_local_data` between
+# sub-scenarios — that RPC does `remove_dir_all($NEPPY_WORKSPACE)`,
 # which yanks CEF's cache out from under the running process and kills
 # the WebDriver session (every later sub-test then fails with
 # "invalid session id"). Pointing CEF at a sibling tmpdir via the
-# `OPENHUMAN_CEF_CACHE_PATH` escape hatch (`cef_profile.rs:7`) keeps it
+# `NEPPY_CEF_CACHE_PATH` escape hatch (`cef_profile.rs:7`) keeps it
 # unaffected by the reset.
-if [ -z "${OPENHUMAN_CEF_CACHE_PATH:-}" ]; then
-  OPENHUMAN_CEF_CACHE_PATH="$(mktemp -d)"
-  CREATED_TEMP_CEF_CACHE="$OPENHUMAN_CEF_CACHE_PATH"
-  export OPENHUMAN_CEF_CACHE_PATH
-  echo "[runner] Using temporary OPENHUMAN_CEF_CACHE_PATH: $OPENHUMAN_CEF_CACHE_PATH"
+if [ -z "${NEPPY_CEF_CACHE_PATH:-}" ]; then
+  NEPPY_CEF_CACHE_PATH="$(mktemp -d)"
+  CREATED_TEMP_CEF_CACHE="$NEPPY_CEF_CACHE_PATH"
+  export NEPPY_CEF_CACHE_PATH
+  echo "[runner] Using temporary NEPPY_CEF_CACHE_PATH: $NEPPY_CEF_CACHE_PATH"
 fi
 
-if [ "${OPENHUMAN_SERVICE_MOCK:-0}" = "1" ] && [ -z "${OPENHUMAN_SERVICE_MOCK_STATE_FILE:-}" ]; then
-  OPENHUMAN_SERVICE_MOCK_STATE_FILE="$OPENHUMAN_WORKSPACE/service-mock-state.json"
-  export OPENHUMAN_SERVICE_MOCK_STATE_FILE
+if [ "${NEPPY_SERVICE_MOCK:-0}" = "1" ] && [ -z "${NEPPY_SERVICE_MOCK_STATE_FILE:-}" ]; then
+  NEPPY_SERVICE_MOCK_STATE_FILE="$NEPPY_WORKSPACE/service-mock-state.json"
+  export NEPPY_SERVICE_MOCK_STATE_FILE
 fi
 
 cleanup() {
@@ -178,15 +178,15 @@ trap cleanup EXIT
 
 export VITE_BACKEND_URL="http://127.0.0.1:${E2E_MOCK_PORT}"
 export BACKEND_URL="http://127.0.0.1:${E2E_MOCK_PORT}"
-export OPENHUMAN_E2E_MODE="1"
+export NEPPY_E2E_MODE="1"
 export APPIUM_PORT
 # Redirect Telegram Bot API calls to the mock server during E2E runs.
 # The mock server (WS-A) serves /bot<token>/* routes on the same port as the
 # rest of the mock backend.  The core reads this at TelegramChannel::new() time,
 # which runs after the config is fully loaded.
 export OPENHUMAN_TELEGRAM_BOT_API_BASE="http://127.0.0.1:${E2E_MOCK_PORT}"
-export OPENHUMAN_COMPOSIO_DIRECT_BASE_V2="http://127.0.0.1:${E2E_MOCK_PORT}"
-export OPENHUMAN_COMPOSIO_DIRECT_BASE_V3="http://127.0.0.1:${E2E_MOCK_PORT}"
+export NEPPY_COMPOSIO_DIRECT_BASE_V2="http://127.0.0.1:${E2E_MOCK_PORT}"
+export NEPPY_COMPOSIO_DIRECT_BASE_V3="http://127.0.0.1:${E2E_MOCK_PORT}"
 
 echo "[runner] Killing any running Neppy instances..."
 case "$OS" in
@@ -219,9 +219,9 @@ esac
 
 # Mock URL must reach the core sidecar — XCUITest doesn't inherit env,
 # and CEF child processes won't either. Pinning via config.toml works
-# on every platform. The runner always sets OPENHUMAN_WORKSPACE above;
+# on every platform. The runner always sets NEPPY_WORKSPACE above;
 # Config::load_or_init gives that path precedence over $HOME/.neppy.
-E2E_CONFIG_DIR="${OPENHUMAN_WORKSPACE:-$HOME/.neppy}"
+E2E_CONFIG_DIR="${NEPPY_WORKSPACE:-$HOME/.neppy}"
 E2E_CONFIG_FILE="$E2E_CONFIG_DIR/config.toml"
 mkdir -p "$E2E_CONFIG_DIR"
 if [ -f "$E2E_CONFIG_FILE" ]; then

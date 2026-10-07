@@ -43,7 +43,7 @@ impl Medulla<'_> {
     /// "not set up" has to be a value it can render, not an error it must
     /// special-case.
     pub async fn status(&self) -> Result<MedullaStatus, CoreError> {
-        call(self.0, "openhuman.medulla_status", serde_json::json!({})).await
+        call(self.0, "neppy.medulla_status", serde_json::json!({})).await
     }
 
     /// List the operator's durable sessions.
@@ -56,12 +56,7 @@ impl Medulla<'_> {
     /// failure. Backend rejections carry the backend's own `errorCode` as
     /// `kind`, and HTTP 401/403 are likewise `expected_user_state`.
     pub async fn list_sessions(&self) -> Result<Vec<SessionSummary>, CoreError> {
-        call(
-            self.0,
-            "openhuman.medulla_list_sessions",
-            serde_json::json!({}),
-        )
-        .await
+        call(self.0, "neppy.medulla_list_sessions", serde_json::json!({})).await
     }
 
     /// Create a durable session.
@@ -71,7 +66,7 @@ impl Medulla<'_> {
     pub async fn create_session(&self, title: Option<&str>) -> Result<SessionCreated, CoreError> {
         call(
             self.0,
-            "openhuman.medulla_create_session",
+            "neppy.medulla_create_session",
             serde_json::json!({ "title": title }),
         )
         .await
@@ -81,7 +76,7 @@ impl Medulla<'_> {
     pub async fn get_session(&self, session_id: &str) -> Result<SessionDetail, CoreError> {
         call(
             self.0,
-            "openhuman.medulla_get_session",
+            "neppy.medulla_get_session",
             serde_json::json!({ "sessionId": session_id }),
         )
         .await
@@ -101,7 +96,7 @@ impl Medulla<'_> {
     ) -> Result<SendResult, CoreError> {
         call(
             self.0,
-            "openhuman.medulla_send_message",
+            "neppy.medulla_send_message",
             serde_json::json!({ "sessionId": session_id, "body": body, "sync": sync }),
         )
         .await
@@ -111,7 +106,7 @@ impl Medulla<'_> {
     pub async fn abort(&self, session_id: &str) -> Result<AbortResult, CoreError> {
         call(
             self.0,
-            "openhuman.medulla_abort",
+            "neppy.medulla_abort",
             serde_json::json!({ "sessionId": session_id }),
         )
         .await
@@ -128,7 +123,7 @@ impl Medulla<'_> {
     ) -> Result<Vec<Message>, CoreError> {
         call(
             self.0,
-            "openhuman.medulla_list_messages",
+            "neppy.medulla_list_messages",
             serde_json::json!({ "sessionId": session_id, "after": after }),
         )
         .await
@@ -144,7 +139,7 @@ impl Medulla<'_> {
     ) -> Result<Vec<EventEnvelope>, CoreError> {
         call(
             self.0,
-            "openhuman.medulla_list_events",
+            "neppy.medulla_list_events",
             serde_json::json!({ "sessionId": session_id, "after": after }),
         )
         .await
@@ -156,7 +151,7 @@ impl Medulla<'_> {
     ///
     /// Same shape as [`list_sessions`](Self::list_sessions).
     pub async fn roster(&self) -> Result<Vec<RosterWorker>, CoreError> {
-        call(self.0, "openhuman.medulla_roster", serde_json::json!({})).await
+        call(self.0, "neppy.medulla_roster", serde_json::json!({})).await
     }
 }
 
@@ -178,15 +173,15 @@ mod tests {
             .collect();
 
         for method in [
-            "openhuman.medulla_status",
-            "openhuman.medulla_list_sessions",
-            "openhuman.medulla_create_session",
-            "openhuman.medulla_get_session",
-            "openhuman.medulla_send_message",
-            "openhuman.medulla_abort",
-            "openhuman.medulla_list_messages",
-            "openhuman.medulla_list_events",
-            "openhuman.medulla_roster",
+            "neppy.medulla_status",
+            "neppy.medulla_list_sessions",
+            "neppy.medulla_create_session",
+            "neppy.medulla_get_session",
+            "neppy.medulla_send_message",
+            "neppy.medulla_abort",
+            "neppy.medulla_list_messages",
+            "neppy.medulla_list_events",
+            "neppy.medulla_roster",
         ] {
             assert!(
                 registered.iter().any(|m| m == method),

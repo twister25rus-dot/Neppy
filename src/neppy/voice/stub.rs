@@ -94,7 +94,7 @@ pub fn publish_ptt_transcript_committed(
 
 pub mod cli {
     /// Disabled: the standalone dictation server needs the voice stack. Returns
-    /// an error so `openhuman voice` reports the feature is off instead of the
+    /// an error so `neppy-core voice` reports the feature is off instead of the
     /// subcommand silently disappearing from the CLI registry.
     pub fn run_standalone_subcommand(_args: &[String]) -> anyhow::Result<()> {
         Err(anyhow::anyhow!(super::DISABLED_MSG))

@@ -31,7 +31,7 @@ import {
 import { useComposerTextBridge } from './composer/useComposerTextBridge';
 import ModelQualityPill from './ModelQualityPill';
 
-const debug = debugFactory('openhuman:chat-composer');
+const debug = debugFactory('neppy:chat-composer');
 
 /**
  * Render-loop guard threshold: if the component re-renders this many times

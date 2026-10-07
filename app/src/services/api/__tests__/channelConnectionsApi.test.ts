@@ -52,7 +52,7 @@ describe('channelConnectionsApi', () => {
     await channelConnectionsApi.disconnectChannel('discord', 'bot_token', { clearMemory: true });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.channels_disconnect',
+      method: 'neppy.channels_disconnect',
       params: { channel: 'discord', authMode: 'bot_token', clearMemory: true },
     });
   });

@@ -41,7 +41,7 @@ async function addFolderSource(label: string): Promise<string> {
   const root = mkdtempSync(join(tmpdir(), 'openhuman-pw-memory-'));
   mkdirSync(join(root, 'notes'), { recursive: true });
   writeFileSync(join(root, 'notes', 'project.md'), '# Project\n\nPlaywright memory source canary.');
-  await callCoreRpc('openhuman.memory_sources_add', {
+  await callCoreRpc('neppy.memory_sources_add', {
     kind: 'folder',
     label,
     enabled: true,

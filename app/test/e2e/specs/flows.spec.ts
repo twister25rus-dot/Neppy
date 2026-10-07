@@ -8,10 +8,10 @@
  *   1. Open the Workflows list (`/flows`, `FlowsPage`).
  *   2. Create a workflow from the "New workflow" chooser — the
  *      "Start from scratch" path (`NewWorkflowModal` → `useCreateFlow` →
- *      `openhuman.flows_create`), which persists a minimal single-`manual`-
+ *      `neppy.flows_create`), which persists a minimal single-`manual`-
  *      trigger graph and opens it on the editable canvas (`/flows/:id`).
  *   3. Run it from the canvas (`FlowCanvasPage` Run button →
- *      `openhuman.flows_run`). A trigger-only graph runs to completion in the
+ *      `neppy.flows_run`). A trigger-only graph runs to completion in the
  *      local engine with no external calls, so it's deterministic under the
  *      mock backend.
  *   4. Return to the list, open the flow's run history (`FlowRunsDrawer`), pick

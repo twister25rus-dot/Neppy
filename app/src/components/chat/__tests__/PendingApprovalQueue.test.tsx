@@ -91,7 +91,7 @@ describe('PendingApprovalQueue', () => {
     fireEvent.click(topDeny);
     await waitFor(() => {
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: 'req-2', decision: 'deny' },
       });
     });
@@ -105,7 +105,7 @@ describe('PendingApprovalQueue', () => {
     fireEvent.click(screen.getByText('Approve'));
     await waitFor(() => {
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: 'req-1', decision: 'approve_once' },
       });
     });

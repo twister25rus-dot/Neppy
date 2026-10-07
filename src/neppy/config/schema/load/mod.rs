@@ -33,7 +33,7 @@ pub(crate) use dirs::default_root_dir_name_pub as default_root_dir_name;
 #[cfg(test)]
 pub(crate) use dirs::read_active_user_id_checked;
 // Non-test: the keyless cloud embedder (`inference::embeddings::cloud_adapter`)
-// resolves its `OPENHUMAN_WORKSPACE` credential scope through the same
+// resolves its `NEPPY_WORKSPACE` credential scope through the same
 // workspace→config-dir mapping `config::load` uses, so a legacy `.../workspace`
 // override lands on the sibling `.neppy` root that holds `auth-profiles.json`.
 pub(crate) use dirs::resolve_config_dir_for_workspace;

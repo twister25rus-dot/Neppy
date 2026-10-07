@@ -1,6 +1,6 @@
 //! Neppy JSON-RPC adapters for tinyagents' `graph::goals` domain.
 //!
-//! Methods are exposed as `openhuman.thread_goals_<function>`:
+//! Methods are exposed as `neppy.thread_goals_<function>`:
 //! `get`, `set`, `complete`, `pause`, `resume`, `clear`. Handlers load the
 //! active config (for `workspace_dir`), delegate to [`super::ops`], and
 //! serialise the [`RpcOutcome`] into the CLI-compatible JSON shape.

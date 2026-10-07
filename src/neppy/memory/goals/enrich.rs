@@ -76,7 +76,7 @@ pub async fn enrich_goals(
     let prompt = build_prompt(context_input, first_run);
 
     // Ensure the agent definition registry is initialised. The full server
-    // startup does this, but one-shot contexts (the `openhuman call` CLI,
+    // startup does this, but one-shot contexts (the `neppy-core call` CLI,
     // cron, tests) may not — without it `from_config_for_agent` fails with
     // "registry not initialised". `init_global` is idempotent (OnceLock).
     if AgentDefinitionRegistry::global().is_none() {

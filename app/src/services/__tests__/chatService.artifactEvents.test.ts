@@ -353,7 +353,7 @@ describe('aiRegenerate (#3162)', () => {
 
     expect(ok).toBe(true);
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.ai_regenerate',
+      method: 'neppy.ai_regenerate',
       params: { artifact_id: 'a-1', thread_id: 'thread-1', client_id: 'socket-9' },
     });
   });

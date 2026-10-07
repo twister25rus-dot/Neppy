@@ -104,7 +104,7 @@ impl EncryptionKey {
 /// If an active user is set, returns the user-scoped directory under the
 /// env-aware root returned by `default_root_neppy_dir()`
 /// (for example `~/.neppy/users/{user_id}` in production or
-/// `~/.neppy-staging/users/{user_id}` when `OPENHUMAN_APP_ENV=staging`);
+/// `~/.neppy-staging/users/{user_id}` when `NEPPY_APP_ENV=staging`);
 /// otherwise it falls back to that root directory itself.
 pub fn get_data_dir() -> Result<PathBuf, String> {
     let root_dir = crate::neppy::config::default_root_neppy_dir()

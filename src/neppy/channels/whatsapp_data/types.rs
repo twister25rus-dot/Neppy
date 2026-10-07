@@ -73,7 +73,7 @@ pub struct IngestMessage {
     pub source: Option<String>,
 }
 
-/// Request payload for `openhuman.whatsapp_data_ingest`.
+/// Request payload for `neppy.whatsapp_data_ingest`.
 #[derive(Debug, Deserialize)]
 pub struct IngestRequest {
     /// The WhatsApp account identifier (usually the phone JID).
@@ -92,7 +92,7 @@ pub struct IngestResult {
     pub messages_pruned: u64,
 }
 
-/// Request payload for `openhuman.whatsapp_data_list_chats`.
+/// Request payload for `neppy.whatsapp_data_list_chats`.
 #[derive(Debug, Deserialize)]
 pub struct ListChatsRequest {
     /// Optional filter by account. When absent, all accounts are returned.
@@ -103,7 +103,7 @@ pub struct ListChatsRequest {
     pub offset: Option<u32>,
 }
 
-/// Request payload for `openhuman.whatsapp_data_list_messages`.
+/// Request payload for `neppy.whatsapp_data_list_messages`.
 #[derive(Debug, Deserialize)]
 pub struct ListMessagesRequest {
     /// JID of the chat to retrieve messages for.
@@ -120,7 +120,7 @@ pub struct ListMessagesRequest {
     pub offset: Option<u32>,
 }
 
-/// Request payload for `openhuman.whatsapp_data_search_messages`.
+/// Request payload for `neppy.whatsapp_data_search_messages`.
 #[derive(Debug, Deserialize)]
 pub struct SearchMessagesRequest {
     /// Full-text search query matched against message bodies (case-insensitive LIKE).

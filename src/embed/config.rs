@@ -28,9 +28,9 @@ use crate::core::runtime::CoreRuntime;
 /// instead of silently altering the host-facing API.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RuntimeFlags {
-    /// `OPENHUMAN_BROWSER_ALLOW_ALL` — browser tools bypass the allowlist.
+    /// `NEPPY_BROWSER_ALLOW_ALL` — browser tools bypass the allowlist.
     pub browser_allow_all: bool,
-    /// `OPENHUMAN_LOG_PROMPTS` — full prompts are written to the log.
+    /// `NEPPY_LOG_PROMPTS` — full prompts are written to the log.
     pub log_prompts: bool,
 }
 
@@ -50,7 +50,7 @@ impl Config<'_> {
     pub async fn runtime_flags(&self) -> Result<RuntimeFlags, CoreError> {
         call(
             self.0,
-            "openhuman.config_get_runtime_flags",
+            "neppy.config_get_runtime_flags",
             serde_json::json!({}),
         )
         .await

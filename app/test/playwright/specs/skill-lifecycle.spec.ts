@@ -22,7 +22,7 @@ test.describe('Skill lifecycle smoke', () => {
       )
     ).toBe(true);
 
-    const rpcResult = await callCoreRpc<unknown>('openhuman.flows_list', {});
+    const rpcResult = await callCoreRpc<unknown>('neppy.flows_list', {});
     const root = (rpcResult ?? {}) as Record<string, unknown>;
     const payload =
       root && typeof root === 'object' && 'result' in root

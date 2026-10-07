@@ -57,7 +57,7 @@ describe('fetchSubagentRunsHistory', () => {
       onlyThreaded: true,
     });
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.subagent_runs_history',
+      method: 'neppy.subagent_runs_history',
       params: { limit: 100, mode: 'orchestration', onlyThreaded: true },
     });
   });

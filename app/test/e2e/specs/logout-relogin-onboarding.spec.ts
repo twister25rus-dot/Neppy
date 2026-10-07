@@ -74,7 +74,7 @@ describe('Logout -> re-login onboarding overlay', function () {
     // the Rust core retains onboarding_completed=true from the first session
     // and the overlay would not reappear for the same mock user.
     const resetResult = await Promise.race([
-      callNeppyRpc('openhuman.test_reset', {}),
+      callNeppyRpc('neppy.test_reset', {}),
       new Promise(resolve => setTimeout(() => resolve({ ok: false, error: 'timeout' }), 8_000)),
     ]);
     if (!resetResult.ok) {

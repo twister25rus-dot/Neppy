@@ -5,7 +5,7 @@ use crate::reset_reboot_schedule;
 /// Reset the user's local Neppy data and bounce the embedded core.
 ///
 /// Replaces the prior two-step UI flow that called the core JSON-RPC
-/// `openhuman.config_reset_local_data` (in-process removal) followed by
+/// `neppy.config_reset_local_data` (in-process removal) followed by
 /// `restart_core_process`. The in-process removal failed on Windows with
 /// `ERROR_SHARING_VIOLATION` (os error 32) because the running core held
 /// open handles to SQLite databases, log files, the Sentry session store,
@@ -119,7 +119,7 @@ pub async fn reset_local_data(
         )
         .await?;
         remove_path_if_exists(&paths.active_user_marker_path, "active user marker").await?;
-        remove_dir_if_exists(&paths.current_neppy_dir, "current openhuman dir").await?;
+        remove_dir_if_exists(&paths.current_neppy_dir, "current neppy dir").await?;
         Ok(())
     }
     .await;
@@ -307,7 +307,7 @@ async fn fetch_data_paths(user_id: Option<String>) -> Result<ResolvedDataPaths, 
     let body = serde_json::json!({
         "jsonrpc": "2.0",
         "id": 1,
-        "method": "openhuman.config_get_data_paths",
+        "method": "neppy.config_get_data_paths",
         "params": serde_json::Value::Object(params),
     });
     let client = reqwest::Client::builder()

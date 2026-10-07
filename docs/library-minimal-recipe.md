@@ -59,7 +59,7 @@ is actually for.
 | `meet` | OFF | ON | **DROP** | Google-Meet join/live-STT/TTS bot — no headless use | none |
 | `mcp` | ON | ON | **DROP** | MCP stdio/HTTP server + Smithery registry (~20k LOC, ~19 tools) — a library host is not an MCP host | none (hand-rolled over tokio/reqwest/axum) |
 | `desktop-automation` | — | — | **DROP** | AX / `computer` tool family drives a **local desktop UI** — meaningless headless | `uiautomation` |
-| `tui` | OFF | — | **DROP** | `openhuman tui`/`chat` terminal UI — no terminal in a library host | `ratatui`, `crossterm`, `unicode-width` |
+| `tui` | OFF | — | **DROP** | `neppy-core tui`/`chat` terminal UI — no terminal in a library host | `ratatui`, `crossterm`, `unicode-width` |
 
 **Non-default optional features** (`sandbox-landlock`, `sandbox-bubblewrap`,
 `peripheral-rpi`, `browser-native`/`fantoccini`, `landlock`, `whatsapp-web`,
@@ -97,7 +97,7 @@ matches the `rss-bench` figure — the bench feature adds negligible code.
   tool-surface/prompt/startup, not size). `flows` is by far the most expensive
   domain we *keep* — see follow-up #2.
 
-### Per-scenario RSS (5 fresh-process repeats, median, `OPENHUMAN_PROFILE_FORCE_UTC=1`)
+### Per-scenario RSS (5 fresh-process repeats, median, `NEPPY_PROFILE_FORCE_UTC=1`)
 
 | Scenario | minimal settled | minimal retained Δ | default settled² | default retained² | Δ settled |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -108,7 +108,7 @@ matches the `rss-bench` figure — the bench feature adds negligible code.
 | `long-agent` (10 turns) | 46.4 MiB | 2.9 MiB | — (25-turn: 65.8 MiB) | — | n/a³ |
 
 ² default column from `docs/library-benchmarking.md` (2026-07-21). Those medians
-may not have used `OPENHUMAN_PROFILE_FORCE_UTC=1`, so treat the Δ as approximate
+may not have used `NEPPY_PROFILE_FORCE_UTC=1`, so treat the Δ as approximate
 (±~1 MiB). The direction and magnitude match the prior session's "slim saves
 ~3.2 MiB settled RSS" finding.
 
@@ -130,7 +130,7 @@ from the tool list (not degraded to runtime errors), CLI subcommands report a
 build-fact error:
 
 - **voice/audio:** voice + audio controllers unregistered (unknown-method over
-  RPC, absent from `/schema`); `audio_generate_podcast` tools absent; `openhuman
+  RPC, absent from `/schema`); `audio_generate_podcast` tools absent; `neppy
   voice` returns "voice disabled".
 - **web3:** wallet / web3 / x402 controllers unregistered; swap/bridge/dapp agent
   tools absent; the x402 402-retry path returns unpaid; tinyplace on-chain
@@ -139,14 +139,14 @@ build-fact error:
 - **media:** `media_generate_*` agent tools absent.
 - **meet:** meet controllers unregistered; live Meet bot / STT-LLM-TTS loop absent.
 - **mcp:** `mcp_server` / `mcp_registry` (`mcp_clients` namespace) / `mcp_audit`
-  controllers unknown-method; ~19 MCP agent tools absent; `openhuman mcp` CLI
+  controllers unknown-method; ~19 MCP agent tools absent; `neppy-core mcp` CLI
   returns a "rebuild with --features mcp" build-fact error. (`McpHttpClient` +
   `sanitize` stay compiled — the gitbooks docs tool and the orchestrator prompt
   sanitizer still work.)
 - **desktop-automation:** `accessibility` / `autocomplete`
   / `desktop_companion` domains + the `computer` tool family (`ax_interact`,
   `automate`, mouse/keyboard) absent.
-- **tui:** `openhuman tui` / `chat` returns "tui feature disabled at compile time".
+- **tui:** `neppy-core tui` / `chat` returns "tui feature disabled at compile time".
 
 Everything the opencompany use cases need remains: the agent harness + turn
 runner, subagent delegation (`spawn_parallel_agents`), the full memory stack

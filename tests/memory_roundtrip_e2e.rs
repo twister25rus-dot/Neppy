@@ -2,7 +2,7 @@
 //!
 //! Validates the full doc_put → recall_memories → clear_namespace lifecycle
 //! against a real local memory client backed by the workspace store under a
-//! per-test temp `OPENHUMAN_WORKSPACE`.
+//! per-test temp `NEPPY_WORKSPACE`.
 //!
 //! Counterpart to `app/test/e2e/specs/memory-roundtrip.spec.ts` which exercises
 //! the same flow over JSON-RPC. This Rust test verifies the Rust contract in
@@ -30,7 +30,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: EnvVarGuard is only used in tests that first acquire
         // env_lock(), which serializes process-global env mutations.
         unsafe { std::env::set_var(key, path.as_os_str()) };
@@ -45,12 +45,12 @@ impl Drop for EnvVarGuard {
             // env_lock() critical section as setup.
             Some(v) => unsafe { std::env::set_var(self.key, v) },
             // SAFETY: Guarded by env_lock(), preventing concurrent env access.
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
 
-/// Serialises tests: `HOME` + `OPENHUMAN_WORKSPACE` are process-global.
+/// Serialises tests: `HOME` + `NEPPY_WORKSPACE` are process-global.
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 static MEMORY_SEAMS_INIT: OnceLock<()> = OnceLock::new();
 static TEST_ROOT: OnceLock<tempfile::TempDir> = OnceLock::new();
@@ -142,7 +142,7 @@ async fn doc_put_then_recall_memories_returns_canary() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace_path = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace_path).expect("create workspace dir");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_path);
     ensure_memory_seams(&workspace_path);
 
     // Store the canary document.
@@ -173,7 +173,7 @@ async fn doc_put_then_recall_context_renders_llm_context_message() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace_path = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace_path).expect("create workspace dir");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_path);
     ensure_memory_seams(&workspace_path);
 
     doc_put(put_params()).await.expect("doc_put rpc");
@@ -209,7 +209,7 @@ async fn doc_put_with_multibyte_at_body_preview_boundary_does_not_panic() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace_path = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace_path).expect("create workspace dir");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_path);
     ensure_memory_seams(&workspace_path);
 
     const BODY_PREVIEW_MAX_BYTES: usize = 2048;
@@ -268,7 +268,7 @@ async fn clear_namespace_removes_canary_from_recall() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace_path = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace_path).expect("create workspace dir");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_path);
     ensure_memory_seams(&workspace_path);
 
     // Seed the namespace.

@@ -17,9 +17,7 @@ use super::web_errors::{
     classify_inference_error, inference_budget_exceeded_user_message,
     is_empty_provider_response_text, is_inference_budget_exceeded_error,
 };
-
-#[cfg(any(test, debug_assertions))]
-use super::ops::TEST_FORCED_RUN_CHAT_TASK_ERROR;
+use crate::neppy::threads::mode::ThreadMode;
 
 pub(crate) async fn run_chat_task(
     client_id: &str,
@@ -39,70 +37,53 @@ pub(crate) async fn run_chat_task(
     // clobbered by — the primary turn's cached agent. See `QueueMode::Parallel`.
     fork: bool,
 ) -> Result<WebChatTaskResult, String> {
+    // Test hooks (forced error / parked turn) live in `run_task_hooks`.
     #[cfg(any(test, debug_assertions))]
+    if let Some(err) = super::run_task_hooks::forced_outcome(client_id, thread_id, request_id).await
     {
-        let mut slot = TEST_FORCED_RUN_CHAT_TASK_ERROR.lock().await;
-        if let Some(forced) = slot.take() {
-            log::debug!(
-                "[web-channel][test] forced run_chat_task failure client_id={} thread_id={} request_id={}",
-                client_id,
-                thread_id,
-                request_id
-            );
-            return Err(forced);
-        }
-    }
-
-    // Test hook: park the turn in-flight so concurrency / cooperative
-    // cancellation can be observed. A `Drop` guard flips the supplied flag if
-    // this future is dropped (i.e. cancelled) before the sleep elapses, proving
-    // the turn was torn down cooperatively rather than left running.
-    #[cfg(any(test, debug_assertions))]
-    {
-        let block = {
-            let slot = super::ops::TEST_RUN_CHAT_TASK_BLOCK.lock().await;
-            slot.clone()
-        };
-        if let Some(block) = block {
-            struct DropGuard(std::sync::Arc<std::sync::atomic::AtomicBool>);
-            impl Drop for DropGuard {
-                fn drop(&mut self) {
-                    self.0.store(true, std::sync::atomic::Ordering::SeqCst);
-                }
-            }
-            let _guard = DropGuard(block.dropped.clone());
-            log::debug!(
-                "[web-channel][test] parking run_chat_task thread_id={} request_id={}",
-                thread_id,
-                request_id
-            );
-            // Signal that the turn future is live and parked, so a test can
-            // cancel only after the guard exists (otherwise a `biased` cancel
-            // could short-circuit before this future is ever polled).
-            block
-                .started
-                .store(true, std::sync::atomic::Ordering::SeqCst);
-            tokio::time::sleep(std::time::Duration::from_secs(30)).await;
-            return Err("test block elapsed".to_string());
-        }
+        return Err(err);
     }
 
     let config = config_rpc::load_config_with_timeout().await?;
-    let (_profiles_state, profile) =
+    // The thread's persisted operating mode, read per turn so a switch made
+    // between turns (or by the chat `mode` param just before this one) always
+    // wins over whatever the cached agent was built for.
+    let persisted_mode =
+        crate::neppy::threads::ops::thread_mode_for(&config.workspace_dir, thread_id).await;
+    // Debug mode: re-enter this function for the WHOLE turn (agent/session
+    // construction included, since the session builder reads the per-turn
+    // workspace scope) inside the repo scope and the task + checkpoint
+    // bookkeeping. An unresolvable project root fails the turn; it never falls
+    // back to an unscoped one. Other modes never take this branch.
+    if persisted_mode == ThreadMode::Debug && !super::mode::in_debug_turn() {
+        let ws = config.workspace_dir.clone();
+        let turn = Box::pin(run_chat_task(
+            client_id,
+            thread_id,
+            request_id,
+            message,
+            model_override,
+            temperature,
+            controls,
+            profile_id,
+            locale,
+            run_queue,
+            metadata,
+            fork,
+        ));
+        return crate::neppy::agent::debug_mode::turn::run(&ws, message, turn).await;
+    }
+    let (_profiles_state, mut profile) =
         AgentProfileStore::new(config.workspace_dir.clone()).resolve(profile_id.as_deref())?;
+    super::mode::prepare_profile(&mut profile, persisted_mode);
     let map_key = key_for(thread_id);
     let model_override = normalize_model_override(profile.model_override.clone())
         .or_else(|| normalize_model_override(model_override));
     let temperature = profile.temperature.or(temperature);
-    let target_agent_id = pick_target_agent_id(&config, &profile);
+    let target_agent_id =
+        super::mode::resolve_target_agent(pick_target_agent_id(&config, &profile), persisted_mode)?;
     let provider_role = provider_role_for_model_override(model_override.as_deref());
-    // The thread's persisted operating mode, read per turn so a switch made
-    // between turns (or by the chat `mode` param just before this one) always
-    // wins over whatever the cached agent was built for.
-    let turn_mode = super::mode::effective_mode(
-        &target_agent_id,
-        crate::neppy::threads::ops::thread_mode_for(&config.workspace_dir, thread_id).await,
-    );
+    let turn_mode = super::mode::effective_mode(&target_agent_id, persisted_mode);
     if let Some(mode) = turn_mode {
         log::debug!(
             "[mode] turn thread_id={} request_id={} agent={} mode={}",

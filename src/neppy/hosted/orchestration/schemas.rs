@@ -4,7 +4,7 @@
 //! the `TinyPlaceOrchestrationTab` reads sessions + messages from the local
 //! render cache (kept in sync with the hosted brain by `sync`), sends Master
 //! steering DMs, and marks chats read. Namespace: `orchestration`; methods
-//! `openhuman.orchestration_*`.
+//! `neppy.orchestration_*`.
 
 use serde::Serialize;
 use serde_json::{Map, Value};

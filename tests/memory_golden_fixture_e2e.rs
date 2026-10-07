@@ -57,7 +57,7 @@ mod golden;
 // ── Fixture layout ───────────────────────────────────────────────────────────
 
 /// Env var the second-process reopen check reads its workspace from.
-const SECOND_PROCESS_WS_ENV: &str = "OPENHUMAN_GOLDEN_FIXTURE_SECOND_PROCESS_WS";
+const SECOND_PROCESS_WS_ENV: &str = "NEPPY_GOLDEN_FIXTURE_SECOND_PROCESS_WS";
 
 fn fixture_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/memory_golden")
@@ -109,7 +109,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: only used under env_lock(), which serialises env mutation.
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
@@ -121,7 +121,7 @@ impl Drop for EnvVarGuard {
         match &self.old {
             // SAFETY: see set_to_path; teardown runs under the same env_lock().
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -280,7 +280,7 @@ async fn golden_fixture_rows_read_back_and_schema_is_stable_after_reopen() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace = tmp.path().join("workspace");
     copy_fixture_to(&workspace);
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
     ensure_memory_seams(&workspace);
 
     let before = golden::schema_manifest(&workspace).expect("dump schema before open");
@@ -396,7 +396,7 @@ fn run_second_process_readback(workspace: &Path) {
             "--test-threads=1",
         ])
         .env(SECOND_PROCESS_WS_ENV, workspace)
-        .env("OPENHUMAN_WORKSPACE", workspace)
+        .env("NEPPY_WORKSPACE", workspace)
         .output()
         .expect("spawn second-process reopen check");
     assert!(
@@ -415,7 +415,7 @@ fn run_second_process_readback(workspace: &Path) {
 #[tokio::test]
 #[ignore = "spawned as a child process by golden_fixture_rows_read_back_and_schema_is_stable_after_reopen"]
 async fn second_process_readback() {
-    let Ok(workspace) = std::env::var(SECOND_PROCESS_WS_ENV) else {
+    let Ok(workspace) = neppy_core::neppy::util::env::var(SECOND_PROCESS_WS_ENV) else {
         panic!("{SECOND_PROCESS_WS_ENV} not set — this test is spawned, not run directly");
     };
     let workspace = PathBuf::from(workspace);
@@ -476,7 +476,7 @@ async fn regenerate_golden_fixture() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let staging = tmp.path().join("workspace");
     std::fs::create_dir_all(&staging).expect("create staging workspace");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &staging);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &staging);
     ensure_memory_seams(&staging);
 
     tinymemory_core::global::init(staging.clone())

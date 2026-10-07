@@ -122,7 +122,7 @@ test.describe('Voice mode - hosted STT contract (voice_status RPC)', () => {
   });
 
   test('voice_status RPC returns a well-formed response', async () => {
-    const status = await callCoreRpc<unknown>('openhuman.voice_status', {});
+    const status = await callCoreRpc<unknown>('neppy.voice_status', {});
     const root = (status ?? {}) as Record<string, unknown>;
     const payload =
       root && typeof root === 'object' && 'result' in root
@@ -136,7 +136,7 @@ test.describe('Voice mode - hosted STT contract (voice_status RPC)', () => {
   });
 
   test('voice_status reports the resolved STT engine', async () => {
-    const status = await callCoreRpc<unknown>('openhuman.voice_status', {});
+    const status = await callCoreRpc<unknown>('neppy.voice_status', {});
     const root = (status ?? {}) as Record<string, unknown>;
     const payload =
       root && typeof root === 'object' && 'result' in root

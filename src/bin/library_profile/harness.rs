@@ -136,7 +136,7 @@ pub struct EnvGuard {
 
 impl EnvGuard {
     pub fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
@@ -146,7 +146,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -191,7 +191,7 @@ enabled = false
 spacy_enabled = false
 "#
     .to_string();
-    if std::env::var_os("OPENHUMAN_PROFILE_DISABLE_MEMORY_WRITES").is_some() {
+    if neppy_core::neppy::util::env::var_os("NEPPY_PROFILE_DISABLE_MEMORY_WRITES").is_some() {
         config_toml.push_str(
             r#"
 [memory]
@@ -206,7 +206,7 @@ episodic_capture_enabled = false
     // autonomy tier so the write-class gate does not park the turn on approval.
     // Config::load_or_init inside the detached workflow run re-reads this file,
     // so the tier must live in config.toml (not just the in-memory Config).
-    if std::env::var_os("OPENHUMAN_PROFILE_FULL_AUTONOMY").is_some() {
+    if neppy_core::neppy::util::env::var_os("NEPPY_PROFILE_FULL_AUTONOMY").is_some() {
         config_toml.push_str(
             r#"
 [autonomy]
@@ -216,9 +216,9 @@ level = "full"
     }
     std::fs::write(root.join("config.toml"), &config_toml)?;
 
-    let workspace_env = EnvGuard::set("OPENHUMAN_WORKSPACE", &root.to_string_lossy());
-    let keyring_env = EnvGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
-    let action_env = EnvGuard::set("OPENHUMAN_ACTION_DIR", &action_dir.to_string_lossy());
+    let workspace_env = EnvGuard::set("NEPPY_WORKSPACE", &root.to_string_lossy());
+    let keyring_env = EnvGuard::set("NEPPY_KEYRING_BACKEND", "file");
+    let action_env = EnvGuard::set("NEPPY_ACTION_DIR", &action_dir.to_string_lossy());
     let mut config: Config = toml::from_str(&config_toml)?;
     config.workspace_dir = workspace;
     config.action_dir = action_dir;
@@ -410,7 +410,7 @@ where
 {
     tokio::time::sleep(Duration::from_millis(250)).await;
     let baseline = proc_metrics::sample_self()?;
-    if let Some(seconds) = std::env::var("OPENHUMAN_PROFILE_HOLD_BEFORE_SECS")
+    if let Some(seconds) = neppy_core::neppy::util::env::var("NEPPY_PROFILE_HOLD_BEFORE_SECS")
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .filter(|seconds| *seconds > 0)

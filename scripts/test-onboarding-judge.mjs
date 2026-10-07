@@ -23,22 +23,22 @@ const ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
 const DEBUG = args.includes('--debug');
 
-const CORE_PORT = process.env.OPENHUMAN_CORE_PORT || '7788';
-const CORE_HOST = process.env.OPENHUMAN_CORE_HOST || '127.0.0.1';
+const CORE_PORT = (process.env.NEPPY_CORE_PORT ?? process.env.OPENHUMAN_CORE_PORT) || '7788';
+const CORE_HOST = (process.env.NEPPY_CORE_HOST ?? process.env.OPENHUMAN_CORE_HOST) || '127.0.0.1';
 const CORE_URL = `http://${CORE_HOST}:${CORE_PORT}`;
 
 import { readdirSync } from 'fs';
 
-const OPENHUMAN_HOME = process.env.OPENHUMAN_WORKSPACE
-  ? path.join(process.env.OPENHUMAN_WORKSPACE)
+const NEPPY_HOME = (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)
+  ? path.join((process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE))
   : path.join(homedir(), '.neppy');
 
 // Config lives in a per-user subdirectory (e.g. ~/.neppy/users/<id>/config.toml)
 // when authenticated, or at the root for fresh installs. Find the right one.
-// Set OPENHUMAN_USER_ID to pin to a specific user directory deterministically.
+// Set NEPPY_USER_ID to pin to a specific user directory deterministically.
 function findConfigPath() {
-  const usersDir = path.join(OPENHUMAN_HOME, 'users');
-  const pinnedId = process.env.OPENHUMAN_USER_ID;
+  const usersDir = path.join(NEPPY_HOME, 'users');
+  const pinnedId = (process.env.NEPPY_USER_ID ?? process.env.OPENHUMAN_USER_ID);
   if (pinnedId) {
     const candidate = path.join(usersDir, pinnedId, 'config.toml');
     if (existsSync(candidate)) return candidate;
@@ -52,7 +52,7 @@ function findConfigPath() {
       }
     } catch { /* fall through */ }
   }
-  return path.join(OPENHUMAN_HOME, 'config.toml');
+  return path.join(NEPPY_HOME, 'config.toml');
 }
 const CONFIG_PATH = findConfigPath();
 
@@ -350,7 +350,7 @@ function printJudgment(conversation) {
   );
 
   // 6. Tone: no "as an AI", no "I'm Neppy"
-  const badPhrases = ['as an ai', "i'm openhuman", 'i am openhuman', 'as an artificial'];
+  const badPhrases = ['as an ai', "i'm neppy", 'i am neppy', 'as an artificial'];
   const foundBad = badPhrases.find((p) => lowerText.includes(p));
   check(
     'No robotic self-identification',

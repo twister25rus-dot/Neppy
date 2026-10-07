@@ -75,7 +75,7 @@ function collectInvokedMethods() {
 
   for (const file of files) {
     const text = read(file);
-    for (const match of text.matchAll(/"((?:openhuman)\.[A-Za-z0-9_]+)"/g)) {
+    for (const match of text.matchAll(/"((?:neppy)\.[A-Za-z0-9_]+)"/g)) {
       methods.add(match[1]);
     }
   }
@@ -85,7 +85,7 @@ function collectInvokedMethods() {
 
 function collectSchemaMethods() {
   const methodsByNamespace = new Map([...TARGET_NAMESPACES].map((namespace) => [namespace, new Set()]));
-  const files = walk(path.join(ROOT, 'src', 'openhuman'), (file) => {
+  const files = walk(path.join(ROOT, 'src', 'neppy'), (file) => {
     const normalized = file.split(path.sep).join('/');
     return file.endsWith('.rs') && /(^|\/)schemas?(\.rs|\/)/.test(normalized);
   });
@@ -100,7 +100,7 @@ function collectSchemaMethods() {
       const namespace = namespaceToken?.[1] ?? (namespaceToken ? constNamespace : undefined);
       if (!namespace || !functionName || functionName === 'unknown') continue;
       if (!TARGET_NAMESPACES.has(namespace)) continue;
-      methodsByNamespace.get(namespace).add(`openhuman.${namespace}_${functionName}`);
+      methodsByNamespace.get(namespace).add(`neppy.${namespace}_${functionName}`);
     }
   }
 

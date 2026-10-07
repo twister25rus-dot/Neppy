@@ -39,7 +39,7 @@ impl LocalAiService {
         self.ensure_ollama_server(config).await
     }
 
-    /// Check if a healthy daemon on `:11434` is actually openhuman's own
+    /// Check if a healthy daemon on `:11434` is actually neppy's own
     /// orphan from a prior session (i.e. we crashed before the graceful
     /// shutdown hook fired). If so, kill it so the upcoming spawn can
     /// resume owned-child tracking. External daemons are never touched.
@@ -93,7 +93,7 @@ impl LocalAiService {
         if self.ollama_healthy_at(&base_url).await {
             // A daemon is already up — adopt it. We did NOT spawn it (or any
             // prior spawn was already reclaimed in `reclaim_orphan_if_ours`),
-            // so `owned_ollama` stays `None` and the daemon survives openhuman
+            // so `owned_ollama` stays `None` and the daemon survives neppy
             // exit. This is the contract: external/adopted daemons are never
             // killed; only our own children die with us.
             return Ok(());
@@ -182,7 +182,7 @@ impl LocalAiService {
         for _ in 0..20 {
             if self.ollama_healthy_at(&base_url).await {
                 // Daemon is up. Take ownership so we can kill it on exit and
-                // write the spawn marker so a crashed openhuman can reclaim
+                // write the spawn marker so a crashed neppy can reclaim
                 // this PID on next launch instead of orphaning it forever.
                 let pid = serve_child.id().unwrap_or(0);
                 if pid == 0 {

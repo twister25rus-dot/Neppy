@@ -2,7 +2,7 @@ import { type AssistantState, useAui, useAuiState } from '@assistant-ui/react';
 import debugFactory from 'debug';
 import { useEffect } from 'react';
 
-const debug = debugFactory('openhuman:chat-composer');
+const debug = debugFactory('neppy:chat-composer');
 
 /**
  * Module-level so `useAuiState` can key its internal cache on selector

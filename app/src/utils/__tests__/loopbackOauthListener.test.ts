@@ -206,7 +206,7 @@ describe('startLoopbackOauthListener', () => {
 
 describe('E2E build hook', () => {
   // Top-level side effect in loopbackOauthListener.ts: when the
-  // VITE_OPENHUMAN_E2E_RESTART_APP_AS_RELOAD flag is set to 'true' at
+  // VITE_NEPPY_E2E_RESTART_APP_AS_RELOAD flag is set to 'true' at
   // build time (surfaced via the `E2E_RESTART_APP_AS_RELOAD` constant in
   // utils/config.ts per the CLAUDE.md "no direct import.meta.env" rule),
   // the module exposes startLoopbackOauthListener on

@@ -2,7 +2,7 @@
 
 Per the feature brief, tests are back-filled **after** the behavior lands
 (phases 3–5). Target: ≥80% changed-line coverage (the `pr-ci.yml` diff
-gate) for the openhuman side. TinyAgents-side tests ship inside Phase 2
+gate) for the neppy side. TinyAgents-side tests ship inside Phase 2
 (that crate's convention does not defer tests).
 
 ## 6.1 Unit tests — `src/neppy/rlm/`
@@ -16,7 +16,7 @@ no network and no real provider is needed.
 
 `bridge.rs`:
 - excluded tools (`rlm`, `spawn_*`, `run_workflow`) absent from registry;
-- an openhuman fake tool is callable via the registry and returns its
+- a neppy fake tool is callable via the registry and returns its
   `ToolResult` content;
 - subagent capability maps `agent_query` prompt → `run_subagent` input
   (with a stubbed runner seam) and threads depth.

@@ -46,7 +46,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 stdout | src/components/intelligence/__tests__/IntelligenceSubconsciousTab.test.tsx
 [MockServer] Listening on http://127.0.0.1:5005
@@ -80,7 +80,7 @@ Output excerpt:
 ```text
 exit 101
 4 failed suites, 8 failures
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  ❯ src/components/intelligence/__tests__/IntelligenceSubconsciousTab.test.tsx (9 tests | 1 failed) 80ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
  FAIL  src/components/intelligence/__tests__/IntelligenceSubconsciousTab.test.tsx > IntelligenceSubconsciousTab > per-kind spinner: only the triggering kind spins
@@ -91,7 +91,7 @@ Error: expect(element).not.toBeInTheDocument()
       Tests  1 failed | 8 passed (9)
    Start at  23:49:42
    Duration  2.19s (transform 1.29s, setup 307ms, import 1.32s, tests 80ms, environment 403ms)
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 ... omitted ...
 Error: expect(element).not.toBeInTheDocument()
  ❯ src/components/intelligence/__tests__/IntelligenceSubconsciousTab.test.tsx:144:54
@@ -124,7 +124,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -142,7 +142,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -157,12 +157,12 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  3 passed (3)
    Start at  23:51:26
    Duration  713ms (transform 116ms, setup 273ms, import 11ms, tests 10ms, environment 348ms)
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  3 passed (3)
    Start at  23:51:26
@@ -191,7 +191,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -209,7 +209,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -224,12 +224,12 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  6 passed (6)
    Start at  23:50:52
    Duration  1.28s (transform 363ms, setup 598ms, import 28ms, tests 57ms, environment 491ms)
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  6 passed (6)
    Start at  23:50:52
@@ -258,7 +258,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -276,7 +276,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -291,12 +291,12 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  9 passed (9)
    Start at  23:49:59
    Duration  2.33s (transform 1.41s, setup 263ms, import 1.43s, tests 116ms, environment 302ms)
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  9 passed (9)
    Start at  23:49:59
@@ -325,7 +325,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 stdout | src/components/intelligence/__tests__/IntelligenceSubconsciousTab.test.tsx
 [MockServer] Listening on http://127.0.0.1:5005
@@ -359,7 +359,7 @@ Output excerpt:
 ```text
 exit 101
 2 failed suites, 4 failures
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  ❯ src/components/intelligence/__tests__/IntelligenceSubconsciousTab.test.tsx (9 tests | 1 failed) 80ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
  FAIL  src/components/intelligence/__tests__/IntelligenceSubconsciousTab.test.tsx > IntelligenceSubconsciousTab > per-kind spinner: only the triggering kind spins
@@ -394,7 +394,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -409,7 +409,7 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  3 passed (3)
    Start at  23:51:26
@@ -438,7 +438,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -453,7 +453,7 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  6 passed (6)
    Start at  23:50:52
@@ -482,7 +482,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  8 passed (8)
@@ -497,7 +497,7 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  8 passed (8)
       Tests  69 passed (69)
    Start at  23:52:41
@@ -526,7 +526,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -541,7 +541,7 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  13 passed (13)
    Start at  23:52:32
@@ -570,7 +570,7 @@ Both esbuild and oxc options were set. oxc options will be used and esbuild opti
     'globalThis.process = globalThis.process || __process_polyfill\n'
 }`
 
- RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+ RUN  v4.1.5 <NEPPY_ROOT>/app
 
 
  Test Files  1 passed (1)
@@ -585,7 +585,7 @@ Output excerpt:
 
 ```text
 exit 101
-RUN  v4.1.5 <OPENHUMAN_ROOT>/app
+RUN  v4.1.5 <NEPPY_ROOT>/app
  Test Files  1 passed (1)
       Tests  9 passed (9)
    Start at  23:49:59

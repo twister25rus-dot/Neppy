@@ -1,10 +1,10 @@
 /**
  * Security banner — surfaces the host-aware approval-gate boot state to the
- * user. Reads `openhuman.approval_get_gate_state` on mount and renders one of
+ * user. Reads `neppy.approval_get_gate_state` on mount and renders one of
  * two banners:
  *
  * - Persistent red banner when `disabledByEnv === true` — operator set
- *   `OPENHUMAN_APPROVAL_GATE=0` on a standalone host (CLI / Docker) and the
+ *   `NEPPY_APPROVAL_GATE=0` on a standalone host (CLI / Docker) and the
  *   gate is actually OFF. External-effect tool calls will run unprompted.
  *
  * - One-shot yellow info banner when `overrideIgnored === true` — the same

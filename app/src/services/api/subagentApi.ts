@@ -1,6 +1,6 @@
 /**
  * Frontend client for user-driven control of detached background sub-agents
- * (`openhuman.subagent_cancel`). Backs the "Cancel task" affordance in the
+ * (`neppy.subagent_cancel`). Backs the "Cancel task" affordance in the
  * background-tasks drawer: aborting a still-running detached sub-agent and
  * surfacing a "cancelled" notice back in the parent chat.
  *
@@ -34,7 +34,7 @@ export const subagentApi = {
     if (trimmedReason) params.reason = trimmedReason;
     log('cancel taskId=%s', id);
     const result = await callCoreRpc<SubagentCancelResult>({
-      method: 'openhuman.subagent_cancel',
+      method: 'neppy.subagent_cancel',
       params,
     });
     log('cancel received cancelled=%s', result.cancelled);

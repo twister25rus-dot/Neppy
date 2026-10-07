@@ -98,7 +98,7 @@ describe('DevicesPanel', () => {
 
     await waitFor(() => {
       expect(mockCall).toHaveBeenCalledWith(
-        expect.objectContaining({ method: 'openhuman.devices_revoke' })
+        expect.objectContaining({ method: 'neppy.devices_revoke' })
       );
     });
 

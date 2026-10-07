@@ -18,7 +18,7 @@ phase status, and present-tense file inventory are not current.
 | `src/neppy/inference/` | ~53,000 (121 files) | Provider trait + OpenAI-compatible wire client, factory/routing, local runtime (Ollama/LM Studio/Whisper/Piper), voice, OAuth, RPC surface |
 | `src/neppy/tools/` | ~38,500 | `Tool` trait + metadata model, schema cleaning, generated-tool admission, ~200-tool registry assembly, `impl/` families (filesystem, system, browser, computer, network, presentation), RPC surface |
 | `src/neppy/agent/orchestration/` | ~25,800 | Product control plane over sub-agents: in-memory session, detached-run registry, workflow runs, agent teams, command center, worktree isolation, RPC/tools surface |
-| `src/neppy/agent/tinyagents/` (the seam) | ~15,200 (25 files) | Adapters implementing tinyagents traits over openhuman services — where all ported code plugs back in |
+| `src/neppy/agent/tinyagents/` (the seam) | ~15,200 (25 files) | Adapters implementing tinyagents traits over neppy services — where all ported code plugs back in |
 
 **TinyAgents** (sibling repo, v1.7.1, edition 2024, GPL-3.0-only, published to crates.io) already provides: `harness/` (`ChatModel`, `Tool<State>`, agent loop, middleware, retry/fallback, usage/cost, cache, embeddings + vector store, summarization, steering, `SubAgent`/`SubAgentSession`/`SubAgentTool`, observability journals, `WorkspaceIsolation`, testkit), `graph/` (durable typed graphs, checkpointers incl. SQLite, recursion policy, `map_reduce`, `orchestration::TaskStore`/`SteeringRegistry`, topology export), `registry/`, and the `.rag`/`.ragsh` languages. ~30 public traits are the extension points.
 
@@ -28,7 +28,7 @@ phase status, and present-tense file inventory are not current.
 
 **Most of the "bulky" code is not portable — it is a parallel implementation of things tinyagents already ships.** The heavy clusters duplicate crate primitives rather than extend them:
 
-| openhuman (in-tree) | tinyagents (already shipped) |
+| neppy (in-tree) | tinyagents (already shipped) |
 | --- | --- |
 | `inference/provider/traits.rs` (`Provider`, `ChatMessage`, `ChatResponse`, `UsageInfo`) | `harness/model/` (`ChatModel`, `ModelRequest/Response`), `harness/usage/` (field-for-field) |
 | `inference/provider/compatible*.rs` (~6.6k + 4.9k tests) | `harness/providers/openai/` (same 9-provider OpenAI-compat fan-out) |
@@ -41,7 +41,7 @@ So the correct plan has **three motions**, not one:
 
 1. **Consolidate (delete in favor of the crate)** — the duplication above. This is where nearly all of the LOC reduction comes from.
 2. **True ports (net-new upstream)** — a short list of clean, generic pieces tinyagents lacks (§2).
-3. **Stays in openhuman** — RPC/controllers, config/credentials/policy glue, local runtime + voice, product tools, UI surfaces (§3).
+3. **Stays in neppy** — RPC/controllers, config/credentials/policy glue, local runtime + voice, product tools, UI surfaces (§3).
 
 ### 0.3 Version status
 
@@ -90,11 +90,11 @@ Engine changes are made **inside `vendor/tinyagents`**, committed on a branch th
 ### 1.2 Stays in Neppy (product policy, I/O, surfaces)
 
 - **All RPC surfaces**: `inference/{ops,schemas}.rs`, `provider/ops*`, `tools/schemas.rs`, `agent_orchestration/*_schemas.rs`, `subagent_control.rs`, `command_center/`, `worktree_schemas.rs`. JSON-RPC method names and payload shapes must not change.
-- **Provider resolution & auth**: `provider/factory.rs` (provider-string grammar), `openhuman_backend.rs`, `openai_codex.rs`, `claude_code/`, `claude_agent_sdk/`, `openai_oauth/`, `thread_context.rs`, backend billing-envelope parsing (`openhuman.usage.*` / `openhuman.billing.*`).
-- **Local runtime & voice** (~17k L): all of `inference/local/` (Ollama/LM Studio admin, Whisper/Piper install + engines), `voice/`, `device.rs`+`presets.rs`+`model_ids.rs`+`paths.rs` (device→tier product policy), `sentiment.rs`, `http/` (OpenAI-compat serving surface). tinyagents has no local-runtime provisioning and should not grow one now. (`device.rs` is technically portable — zero openhuman deps — but only valuable if tinyagents ever grows local provisioning; skip.)
+- **Provider resolution & auth**: `provider/factory.rs` (provider-string grammar), `neppy_backend.rs`, `openai_codex.rs`, `claude_code/`, `claude_agent_sdk/`, `openai_oauth/`, `thread_context.rs`, backend billing-envelope parsing (`openhuman.usage.*` / `openhuman.billing.*`).
+- **Local runtime & voice** (~17k L): all of `inference/local/` (Ollama/LM Studio admin, Whisper/Piper install + engines), `voice/`, `device.rs`+`presets.rs`+`model_ids.rs`+`paths.rs` (device→tier product policy), `sentiment.rs`, `http/` (OpenAI-compat serving surface). tinyagents has no local-runtime provisioning and should not grow one now. (`device.rs` is technically portable — zero neppy deps — but only valuable if tinyagents ever grows local provisioning; skip.)
 - **Tool product surface**: `tools/ops.rs` registry assembly (~200 registrations over ~50 domains), `user_filter.rs` (UI-toggle families), `orchestrator_tools.rs`, `local_cli.rs`, `impl/computer/` (macOS CGEvent/AX), `impl/presentation/`, network app integrations (gitbooks, gmail_unsubscribe, mcp_setup).
-- **Orchestration product plane**: all `agent_orchestration/tools/*` (openhuman `Tool` impls re-pointed at crate primitives), `subagent_events.rs` + `run_ledger_finalize.rs` (event-bus bridges), `background_{completions,delivery}.rs` (chat idle-delivery UX), `pairing*` (tiny.place consent), `parent_context/` (DI bootstrap), `session_db::run_ledger` durability.
-- **The seam itself** (`src/neppy/agent/tinyagents/`) — it shrinks as duplication is deleted, but the `ChatModel`/`Tool`/middleware/journal adapters remain openhuman's integration layer.
+- **Orchestration product plane**: all `agent_orchestration/tools/*` (neppy `Tool` impls re-pointed at crate primitives), `subagent_events.rs` + `run_ledger_finalize.rs` (event-bus bridges), `background_{completions,delivery}.rs` (chat idle-delivery UX), `pairing*` (tiny.place consent), `parent_context/` (DI bootstrap), `session_db::run_ledger` durability.
+- **The seam itself** (`src/neppy/agent/tinyagents/`) — it shrinks as duplication is deleted, but the `ChatModel`/`Tool`/middleware/journal adapters remain neppy's integration layer.
 
 ---
 
@@ -102,9 +102,9 @@ Engine changes are made **inside `vendor/tinyagents`**, committed on a branch th
 
 These are API mismatches the current seam bridges **lossily**; porting tools natively forces a decision on each:
 
-1. **`ToolResult` shape** — openhuman uses MCP-style content blocks + `markdown_formatted`; tinyagents uses flat string `content` (the seam always sets `raw: None`, discarding structure). Proposal: add an optional structured-content field (or `raw` population convention) to tinyagents' `ToolResult` so ported tools stop losing block structure.
+1. **`ToolResult` shape** — neppy uses MCP-style content blocks + `markdown_formatted`; tinyagents uses flat string `content` (the seam always sets `raw: None`, discarding structure). Proposal: add an optional structured-content field (or `raw` population convention) to tinyagents' `ToolResult` so ported tools stop losing block structure.
 2. **`PermissionLevel` (5 ordered levels, with per-call `*_with_args` overrides) vs `ToolSideEffects` booleans** — today `Write`/`Execute`/`Dangerous` all collapse to `writes_files` + `WorkspaceAccess::Any`, and per-call gating is dropped. Proposal: extend `ToolPolicy` with an ordered permission level and an optional per-call classifier hook, or accept the boolean model and encode levels host-side only (document the loss).
-3. **`SecurityPolicy` is the universal seam** across all of `impl/` (path/command/host gating). tinyagents models the same concept as `ToolAccess`/`SandboxMode`/`WorkspaceDescriptor`; the `security_for_tool_context` shims in `impl/{filesystem,system}/mod.rs` already bridge workspace roots. Ported tools must depend **only** on the crate-side abstractions; openhuman injects its `SecurityPolicy` behind them. This likely means growing `ToolAccess` (e.g. trusted roots, command classification hook) — design this once, before the first filesystem tool moves.
+3. **`SecurityPolicy` is the universal seam** across all of `impl/` (path/command/host gating). tinyagents models the same concept as `ToolAccess`/`SandboxMode`/`WorkspaceDescriptor`; the `security_for_tool_context` shims in `impl/{filesystem,system}/mod.rs` already bridge workspace roots. Ported tools must depend **only** on the crate-side abstractions; neppy injects its `SecurityPolicy` behind them. This likely means growing `ToolAccess` (e.g. trusted roots, command classification hook) — design this once, before the first filesystem tool moves.
 4. **`file_state` edit-tracking** (filesystem family) — either port a minimal read-before-write tracker into the crate tools or leave tracking host-side via middleware.
 5. **Status vocabulary** — `AgentStatus` (Pending/Running/Waiting/Completed/Failed/Cancelled/Closed) vs `OrchestrationTaskStatus` (…/Awaiting/Timeout). Pick the crate vocabulary, map host wire compat in the RPC layer.
 
@@ -139,10 +139,10 @@ Land these as separate small PRs against tinyagents (each with its ported tests 
 1. Resolve §2 blockers 1–4 as a tinyagents design PR (ToolResult structure, permission model, `ToolAccess` extension, edit tracking).
 2. Port `impl/filesystem/` (8 generic tools) natively onto `Tool<State>` behind a `tools` cargo feature, depending only on `ToolAccess`/`WorkspaceDescriptor`. Port inline tests + `git_operations`/`run_tests` siblings where generic.
 3. Port `impl/network/{http_request,web_fetch,curl,url_guard}` (SSRF guard first — it is mostly pure).
-4. Host cutover: `tools/ops.rs` registers the crate builtins (wrapped with openhuman `SecurityPolicy` injected behind `ToolAccess`); delete the in-tree implementations; `user_filter.rs` table re-points at crate tool names (watch the `web_search`→`"web_search_tool"` name-drift risk).
+4. Host cutover: `tools/ops.rs` registers the crate builtins (wrapped with neppy `SecurityPolicy` injected behind `ToolAccess`); delete the in-tree implementations; `user_filter.rs` table re-points at crate tool names (watch the `web_search`→`"web_search_tool"` name-drift risk).
 5. Defer `shell`/`node_exec`/`npm_exec` to a follow-up within this phase — they need the command-classification hook (`classify_command`/`gate_decision` stays host-side; the crate exposes the hook).
 6. `generated.rs`: re-target `GeneratedTool` onto the crate `Tool<State>` + align admission/provenance with `registry/capability` instead of a parallel mechanism.
-7. **Exit:** filesystem + network + time tools live in tinyagents with their tests; host `impl/` shrinks by ~10k L; `tool_policy_from_openhuman_tool` lossy mapping replaced by the reconciled model.
+7. **Exit:** filesystem + network + time tools live in tinyagents with their tests; host `impl/` shrinks by ~10k L; `tool_policy_from_neppy_tool` lossy mapping replaced by the reconciled model.
 
 ### Phase 3 — Provider consolidation (deletion, not porting)
 
@@ -206,7 +206,7 @@ Fix-in-place candidates (independent of the port; several become moot as phases 
 - `orchestrator_tools.rs:38-41,87-89` — dead `SpawnWorkerThreadTool` registration (pending #1624); mis-attached doc-comment at lines 592-603 describes a different test than the one it precedes.
 - `user_filter.rs:168-188` — `skill_manage` and `workflow_manage` families carry identical `rust_names` (deliberate alias, duplication footgun); `web_search` → `"web_search_tool"` name mapping is drift-prone against the `search` domain.
 - ~~`impl/network/polymarket*` — a large app integration under the "cross-cutting families only" `impl/` rule.~~ Resolved by deletion: the Polymarket surface and its `prediction-markets` feature were removed outright.
-- Seam `tools.rs` — `tool_policy_from_openhuman_tool` silently drops `category`, `scope`, and all `*_with_args` per-call gating (§2.2).
+- Seam `tools.rs` — `tool_policy_from_neppy_tool` silently drops `category`, `scope`, and all `*_with_args` per-call gating (§2.2).
 
 **agent_orchestration/**
 - `ops.rs:138-168` — `message_agent` records metadata only and never injects into the running loop; a real functional hole that `agent_teams/runtime.rs` and `command_center` inherit.

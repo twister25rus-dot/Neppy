@@ -106,12 +106,12 @@ export async function transcribeCloud(
   let result: CloudTranscribeResult;
   try {
     result = await callCoreRpc<CloudTranscribeResult>({
-      method: 'openhuman.voice_cloud_transcribe',
+      method: 'neppy.voice_cloud_transcribe',
       params,
     });
   } catch (err) {
     // An "unknown method" error means the core serving this app was built
-    // without the `voice` Cargo feature, so the `openhuman.voice_*`
+    // without the `voice` Cargo feature, so the `neppy.voice_*`
     // controllers were never registered (#4901). This is a compile-time
     // property of the binary — restarting cannot change it, which is why the
     // old #1289-era "restart to pick up the latest core sidecar" copy was
@@ -150,7 +150,7 @@ interface FactoryTranscribeResult {
 }
 
 /**
- * Factory-dispatched transcription. Hits `openhuman.voice_stt_dispatch`
+ * Factory-dispatched transcription. Hits `neppy.voice_stt_dispatch`
  * — the core resolves the provider from config (or `opts.provider` when
  * the caller forces one). Returns the transcript only; the renderer
  * surfaces the provider id via debug logs.
@@ -189,7 +189,7 @@ export async function transcribeWithFactory(
   let result: FactoryTranscribeResult;
   try {
     result = await callCoreRpc<FactoryTranscribeResult>({
-      method: 'openhuman.voice_stt_dispatch',
+      method: 'neppy.voice_stt_dispatch',
       params,
     });
   } catch (err) {

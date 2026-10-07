@@ -28,7 +28,7 @@ const DISABLED_MSG: &str = "mcp feature disabled at compile time";
 // ---------------------------------------------------------------------------
 
 /// No controllers: the `mcp_clients` RPC namespace does not exist in this
-/// build, so every `openhuman.mcp_clients_*` method is an unknown method over
+/// build, so every `neppy.mcp_clients_*` method is an unknown method over
 /// `/rpc` and absent from `/schema`.
 ///
 /// `src/core/all.rs` pushes this straight into its controller vec with no

@@ -3,6 +3,7 @@
 //! Kernel family — always compiled, never gated. These are dependency-free
 //! helpers reused across domains; nothing here may reach into a domain.
 //!
+//! - [`env`]     — `NEPPY_*` env reads with a legacy `OPENHUMAN_*` fallback
 //! - [`text`]     — UTF-8-safe truncation, char-boundary rounding, provenance tags
 //! - [`retry`]    — retry-with-backoff + transient-filesystem-error classification
 //! - [`sanitize`] — LLM-facing text sanitization (control-char stripping,
@@ -14,6 +15,7 @@
 //! `neppy::util::<fn>` paths (including the `truncate_with_ellipsis`
 //! doctest) still resolve.
 
+pub mod env;
 /// PII redaction for log output. See the module docs for why this is here and
 /// not taken from the memory engine.
 pub mod redact;

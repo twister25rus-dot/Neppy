@@ -50,7 +50,7 @@ fn find_debug_binary_walking_up(start: &std::path::Path) -> Option<PathBuf> {
 /// Resolve the absolute path to the `neppy-core` binary.
 ///
 /// In dev builds (`cfg!(debug_assertions)`) we:
-/// 1. Check `OPENHUMAN_CORE_BINARY_PATH` env var first.
+/// 1. Check `NEPPY_CORE_BINARY_PATH` env var first.
 /// 2. Walk up from `current_exe()` looking for `target/debug/neppy-core`.
 ///
 /// In release builds the binary is a sibling of the shell executable:
@@ -66,18 +66,18 @@ fn resolve_binary_path() -> Result<PathBuf, String> {
 
     if cfg!(debug_assertions) {
         // Dev mode: env override takes priority.
-        if let Ok(env_path) = std::env::var("OPENHUMAN_CORE_BINARY_PATH") {
+        if let Ok(env_path) = neppy_core::neppy::util::env::var("NEPPY_CORE_BINARY_PATH") {
             if !env_path.is_empty() {
                 let p = PathBuf::from(&env_path);
                 if p.exists() {
                     log::debug!(
-                        "[mcp_commands] mcp_resolve_binary_path: using OPENHUMAN_CORE_BINARY_PATH={}",
+                        "[mcp_commands] mcp_resolve_binary_path: using NEPPY_CORE_BINARY_PATH={}",
                         env_path
                     );
                     return Ok(p);
                 }
                 log::warn!(
-                    "[mcp_commands] OPENHUMAN_CORE_BINARY_PATH set to {env_path} but file not found; falling back to walk"
+                    "[mcp_commands] NEPPY_CORE_BINARY_PATH set to {env_path} but file not found; falling back to walk"
                 );
             }
         }
@@ -169,7 +169,7 @@ pub fn config_path_for_client(client: &str, os: &str) -> Result<PathBuf, String>
         }
         ("claude-desktop", "windows") => {
             // %APPDATA%\Claude\claude_desktop_config.json
-            let appdata = std::env::var("APPDATA")
+            let appdata = neppy_core::neppy::util::env::var("APPDATA")
                 .unwrap_or_else(|_| home.join("AppData/Roaming").display().to_string());
             PathBuf::from(appdata)
                 .join("Claude")
@@ -182,8 +182,8 @@ pub fn config_path_for_client(client: &str, os: &str) -> Result<PathBuf, String>
 
         // Cursor
         ("cursor", "windows") => {
-            let userprofile =
-                std::env::var("USERPROFILE").unwrap_or_else(|_| home.display().to_string());
+            let userprofile = neppy_core::neppy::util::env::var("USERPROFILE")
+                .unwrap_or_else(|_| home.display().to_string());
             PathBuf::from(userprofile).join(".cursor").join("mcp.json")
         }
         ("cursor", _) => home.join(".cursor/mcp.json"),
@@ -194,7 +194,7 @@ pub fn config_path_for_client(client: &str, os: &str) -> Result<PathBuf, String>
         // Zed
         ("zed", "macos") => home.join("Library/Application Support/Zed/settings.json"),
         ("zed", "windows") => {
-            let appdata = std::env::var("APPDATA")
+            let appdata = neppy_core::neppy::util::env::var("APPDATA")
                 .unwrap_or_else(|_| home.join("AppData/Roaming").display().to_string());
             PathBuf::from(appdata).join("Zed").join("settings.json")
         }
@@ -361,7 +361,7 @@ mod tests {
     // -------------------------------------------------------------------------
 
     /// In debug builds (the only mode in which `cargo test` runs), the binary
-    /// path resolver should either find `OPENHUMAN_CORE_BINARY_PATH` or locate
+    /// path resolver should either find `NEPPY_CORE_BINARY_PATH` or locate
     /// `target/debug/neppy-core` by walking up from the test executable.
     ///
     /// We only assert the path *contains* `neppy-core` — the binary may or

@@ -4,7 +4,7 @@
 //!
 //! The transport half is host-agnostic on purpose — it moves adverts, opaque
 //! JSON and one authoring turn, and parses no graph. This module is the
-//! openhuman half: it projects saved [`Flow`]s onto the wire's
+//! neppy half: it projects saved [`Flow`]s onto the wire's
 //! [`WorkflowDescriptor`], answers the three reads out of [`super::ops`], and
 //! runs the `workflow_builder` agent for a `copilot` turn.
 //!

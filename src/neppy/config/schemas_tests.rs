@@ -334,7 +334,7 @@ async fn handle_get_autonomy_settings_returns_current_value() {
     let _g = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     // Seed a known value before reading.
     let _ = crate::neppy::config::ops::load_and_apply_autonomy_settings(
@@ -354,9 +354,7 @@ async fn handle_get_autonomy_settings_returns_current_value() {
     let value = inner.get("max_actions_per_hour").and_then(|v| v.as_u64());
     assert_eq!(value, Some(123));
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -364,7 +362,7 @@ async fn handle_update_autonomy_settings_rejects_invalid_value() {
     let _g = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let mut params = serde_json::Map::new();
     params.insert("max_actions_per_hour".into(), serde_json::json!(0));
@@ -374,9 +372,7 @@ async fn handle_update_autonomy_settings_rejects_invalid_value() {
         .unwrap_err();
     assert!(err.contains("at least 1"), "got: {err}");
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 // ── agent paths handler (#3237) ──────────────────────────────
@@ -398,11 +394,11 @@ async fn handle_get_agent_paths_returns_action_workspace_and_projects() {
     // Regression guard for #3237. AgentAccessPanel calls this RPC to render
     // the action sandbox / internal workspace paths instead of the hard-coded
     // `~/Neppy/projects` / `~/.neppy/workspace` strings that drift
-    // when an operator sets OPENHUMAN_ACTION_DIR.
+    // when an operator sets NEPPY_ACTION_DIR.
     let _g = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
 
     let out = super::handle_get_agent_paths(serde_json::Map::new())
@@ -437,14 +433,12 @@ async fn handle_get_agent_paths_returns_action_workspace_and_projects() {
         "projects_dir must resolve to a non-empty path"
     );
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
 async fn handle_get_agent_paths_reflects_neppy_action_dir_env_override() {
-    // #3237 acceptance criterion: setting OPENHUMAN_ACTION_DIR and restarting
+    // #3237 acceptance criterion: setting NEPPY_ACTION_DIR and restarting
     // must show that override in the panel. The override is honoured by
     // default_action_dir() at Config load time; this test verifies the RPC
     // surface forwards the loaded value unchanged.
@@ -454,8 +448,8 @@ async fn handle_get_agent_paths_reflects_neppy_action_dir_env_override() {
     std::fs::create_dir_all(&custom_actions).expect("create custom action dir");
 
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
-        std::env::set_var("OPENHUMAN_ACTION_DIR", &custom_actions);
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_ACTION_DIR", &custom_actions);
     }
 
     let out = super::handle_get_agent_paths(serde_json::Map::new())
@@ -471,11 +465,9 @@ async fn handle_get_agent_paths_reflects_neppy_action_dir_env_override() {
     assert_eq!(
         action_dir,
         custom_actions.display().to_string(),
-        "OPENHUMAN_ACTION_DIR override must propagate through get_agent_paths so the UI displays the actual sandbox path"
+        "NEPPY_ACTION_DIR override must propagate through get_agent_paths so the UI displays the actual sandbox path"
     );
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }

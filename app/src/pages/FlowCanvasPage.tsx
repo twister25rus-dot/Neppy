@@ -968,9 +968,9 @@ function FlowEditor({
   // (possibly dirty) draft — matching the "Save is explicit, running is live"
   // model. The durable run row + poller remain the source of truth.
   //
-  // F-M1 fix: uses `runFlowDetached` (`openhuman.flows_run_detached`), which
+  // F-M1 fix: uses `runFlowDetached` (`neppy.flows_run_detached`), which
   // registers the run and returns its id immediately, INSTEAD of the old
-  // `runFlow` (`openhuman.flows_run`), which blocked until the run reached a
+  // `runFlow` (`neppy.flows_run`), which blocked until the run reached a
   // terminal status — by the time that resolved, every `flow:run_progress`
   // event for the run had already fired and been dropped, because
   // `useFlowRunProgress` only subscribes once `activeRunId` is set (see its

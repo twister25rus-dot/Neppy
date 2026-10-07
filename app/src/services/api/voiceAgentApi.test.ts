@@ -13,7 +13,7 @@ describe('voiceAgentApi', () => {
   it('calls the core RPC and maps the snake_case wire shape to camelCase', async () => {
     mockCall.mockResolvedValueOnce({ signed_url: 'wss://x', agent_id: 'a1', user_token: 'tok' });
     const res = await fetchVoiceAgentSignedUrl();
-    expect(mockCall).toHaveBeenCalledWith({ method: 'openhuman.voice_agent_signed_url' });
+    expect(mockCall).toHaveBeenCalledWith({ method: 'neppy.voice_agent_signed_url' });
     expect(res).toEqual({ signedUrl: 'wss://x', agentId: 'a1', userToken: 'tok' });
   });
 

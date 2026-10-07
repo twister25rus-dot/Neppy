@@ -286,7 +286,7 @@ pub fn remove_job(config: &Config, id: &str) -> Result<()> {
 
 /// Deletes every cron job in the workspace. Returns the number of rows removed.
 ///
-/// Intended for the `openhuman.test_reset` RPC used by E2E specs to wipe state
+/// Intended for the `neppy.test_reset` RPC used by E2E specs to wipe state
 /// between tests without restarting the sidecar. The cron scheduler picks up
 /// the empty table on its next tick — no in-memory cache to invalidate.
 pub fn clear_all_jobs(config: &Config) -> Result<usize> {

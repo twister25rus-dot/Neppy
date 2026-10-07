@@ -305,7 +305,7 @@ fn resolve_model(model: &str) -> String {
     let trimmed = model.trim();
     if trimmed.is_empty() {
         log::debug!(
-            "[providers][openhuman-backend] empty model passed to Neppy backend; \
+            "[providers][neppy-backend] empty model passed to Neppy backend; \
              substituting default `{}` (TAURI-RUST-RS)",
             crate::neppy::config::MODEL_REASONING_V1
         );
@@ -415,7 +415,7 @@ fn maybe_publish_local_session_expiry() {
         return;
     }
     log::warn!(
-        "[providers][openhuman-backend] managed session token expired locally — \
+        "[providers][neppy-backend] managed session token expired locally — \
          publishing SessionExpired before any inference request"
     );
     crate::core::bus::BUS.publish(crate::core::events::DomainEvent::SessionExpired {
@@ -457,7 +457,7 @@ fn log_managed_dispatch_error(err: &TinyAgentsError, operation: &str) {
     match err {
         TinyAgentsError::Provider(pe) => {
             log::warn!(
-                "[providers][openhuman-backend] managed {operation} failed: status={:?} code={:?} provider={} retryable={} detail={}",
+                "[providers][neppy-backend] managed {operation} failed: status={:?} code={:?} provider={} retryable={} detail={}",
                 pe.status,
                 pe.code,
                 pe.provider,
@@ -467,7 +467,7 @@ fn log_managed_dispatch_error(err: &TinyAgentsError, operation: &str) {
         }
         other => {
             log::warn!(
-                "[providers][openhuman-backend] managed {operation} failed (non-provider error): {}",
+                "[providers][neppy-backend] managed {operation} failed (non-provider error): {}",
                 crate::neppy::inference::provider::ops::sanitize_api_error(&other.to_string()),
             );
         }

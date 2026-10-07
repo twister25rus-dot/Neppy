@@ -6,13 +6,13 @@
 //! `ProcSample`), and (4) turn latency percentiles under overlapping load.
 //!
 //! Env knobs:
-//! - `OPENHUMAN_PROFILE_AGENTS` (default 100) — live agents to construct.
-//! - `OPENHUMAN_PROFILE_TURNS` (default 3) — turns per agent under load.
-//! - `OPENHUMAN_PROFILE_MOCK_LATENCY_MS` / `_JITTER_MS` — mock reply latency.
-//! - `OPENHUMAN_PROFILE_TARGET_AGENTS` (default 1000) — budget projection target.
-//! - `OPENHUMAN_PROFILE_RAM_BUDGET_MIB` (default 2048) — budget ceiling.
+//! - `NEPPY_PROFILE_AGENTS` (default 100) — live agents to construct.
+//! - `NEPPY_PROFILE_TURNS` (default 3) — turns per agent under load.
+//! - `NEPPY_PROFILE_MOCK_LATENCY_MS` / `_JITTER_MS` — mock reply latency.
+//! - `NEPPY_PROFILE_TARGET_AGENTS` (default 1000) — budget projection target.
+//! - `NEPPY_PROFILE_RAM_BUDGET_MIB` (default 2048) — budget ceiling.
 //!
-//! `OPENHUMAN_PROFILE_WORKER_THREADS` is honoured in `main` (runtime built
+//! `NEPPY_PROFILE_WORKER_THREADS` is honoured in `main` (runtime built
 //! manually) rather than here.
 
 use std::sync::{Arc, Mutex};
@@ -34,7 +34,7 @@ const DEFAULT_RAM_BUDGET_MIB: u64 = 2048;
 const IDLE_WINDOW: Duration = Duration::from_secs(10);
 
 fn env_usize(key: &str, default: usize) -> usize {
-    std::env::var(key)
+    neppy_core::neppy::util::env::var(key)
         .ok()
         .and_then(|v| v.parse::<usize>().ok())
         .filter(|n| *n > 0)
@@ -42,7 +42,7 @@ fn env_usize(key: &str, default: usize) -> usize {
 }
 
 fn env_u64(key: &str, default: u64) -> u64 {
-    std::env::var(key)
+    neppy_core::neppy::util::env::var(key)
         .ok()
         .and_then(|v| v.parse::<u64>().ok())
         .filter(|n| *n > 0)
@@ -135,10 +135,10 @@ fn build_agents(
 }
 
 pub async fn run() -> Result<ProfileResult> {
-    let agents_requested = env_usize("OPENHUMAN_PROFILE_AGENTS", DEFAULT_AGENTS);
-    let turns = env_usize("OPENHUMAN_PROFILE_TURNS", DEFAULT_TURNS);
-    let target_agents = env_u64("OPENHUMAN_PROFILE_TARGET_AGENTS", DEFAULT_TARGET_AGENTS);
-    let ram_budget_mib = env_u64("OPENHUMAN_PROFILE_RAM_BUDGET_MIB", DEFAULT_RAM_BUDGET_MIB);
+    let agents_requested = env_usize("NEPPY_PROFILE_AGENTS", DEFAULT_AGENTS);
+    let turns = env_usize("NEPPY_PROFILE_TURNS", DEFAULT_TURNS);
+    let target_agents = env_u64("NEPPY_PROFILE_TARGET_AGENTS", DEFAULT_TARGET_AGENTS);
+    let ram_budget_mib = env_u64("NEPPY_PROFILE_RAM_BUDGET_MIB", DEFAULT_RAM_BUDGET_MIB);
 
     raise_fd_limit();
 

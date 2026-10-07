@@ -11,13 +11,13 @@ fn reset_local_data_windows_file_lock_error_codes_are_recognized() {
 fn reset_local_data_delete_error_keeps_generic_message_for_other_errors() {
     let err = std::io::Error::from(std::io::ErrorKind::PermissionDenied);
     let result = reset_local_data_delete_error(
-        "current openhuman dir",
+        "current neppy dir",
         std::path::Path::new("/tmp/openhuman"),
         &err,
     );
 
     let msg = result.expect_err("non-lock errors must still surface to the UI");
-    assert!(msg.starts_with("Failed to remove current openhuman dir at /tmp/openhuman:"));
+    assert!(msg.starts_with("Failed to remove current neppy dir at /tmp/openhuman:"));
     assert!(!msg.contains("Close all Neppy windows and try again"));
 }
 
@@ -33,7 +33,7 @@ fn reset_local_data_delete_error_swallows_lock_failure_when_path_disappeared() {
     let missing = dir.path().join("definitely-not-there");
 
     let err = std::io::Error::from_raw_os_error(32);
-    let result = reset_local_data_delete_error("current openhuman dir", &missing, &err);
+    let result = reset_local_data_delete_error("current neppy dir", &missing, &err);
 
     assert!(
         result.is_ok(),
@@ -59,7 +59,7 @@ fn reset_local_data_delete_error_reports_reboot_schedule_counts() {
     std::fs::write(target.join("nested").join("b.txt"), b"y").expect("write b.txt");
 
     let err = std::io::Error::from_raw_os_error(32);
-    let result = reset_local_data_delete_error("current openhuman dir", &target, &err);
+    let result = reset_local_data_delete_error("current neppy dir", &target, &err);
 
     // Path exists on disk, so the fallback must surface the outcome —
     // either an "all-queued" success-but-needs-reboot message (admin)

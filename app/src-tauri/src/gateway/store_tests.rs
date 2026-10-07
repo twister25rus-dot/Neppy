@@ -1,6 +1,6 @@
 //! Tests for gateway persistence.
 //!
-//! Every case points `OPENHUMAN_WORKSPACE` at a temporary directory, so no test
+//! Every case points `NEPPY_WORKSPACE` at a temporary directory, so no test
 //! touches a real user's records. Cargo runs unit tests as threads in one
 //! process and the variable is process-wide, so they take a lock rather than
 //! racing each other's workspace.
@@ -10,7 +10,7 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use super::store;
 use super::types::{Confinement, Gateway, GatewaySpec, Reach, DESKTOP_ID};
 
-// Shared with the `file_logging` tests, which also rewrite `OPENHUMAN_WORKSPACE`.
+// Shared with the `file_logging` tests, which also rewrite `NEPPY_WORKSPACE`.
 static ENV_LOCK: &Mutex<()> = &crate::file_logging::WORKSPACE_ENV_LOCK;
 
 /// A temporary workspace, restored when the guard drops.
@@ -23,8 +23,8 @@ struct Workspace {
 impl Drop for Workspace {
     fn drop(&mut self) {
         match self.prior.take() {
-            Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+            None => neppy_core::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }
@@ -32,8 +32,8 @@ impl Drop for Workspace {
 fn workspace() -> Workspace {
     let lock = ENV_LOCK.lock().unwrap_or_else(PoisonError::into_inner);
     let dir = tempfile::TempDir::new().expect("a temporary directory");
-    let prior = std::env::var("OPENHUMAN_WORKSPACE").ok();
-    std::env::set_var("OPENHUMAN_WORKSPACE", dir.path());
+    let prior = neppy_core::neppy::util::env::var("NEPPY_WORKSPACE").ok();
+    std::env::set_var("NEPPY_WORKSPACE", dir.path());
     Workspace {
         _lock: lock,
         _dir: dir,

@@ -51,7 +51,7 @@ const generateTitleLog = debug('threadApi.generateTitleIfNeeded');
 export const threadApi = {
   createNewThread: async (labels?: string[]): Promise<Thread> => {
     const response = await callCoreRpc<Envelope<Thread>>({
-      method: 'openhuman.threads_create_new',
+      method: 'neppy.threads_create_new',
       params: { labels },
     });
     return unwrapEnvelope(response);
@@ -68,22 +68,20 @@ export const threadApi = {
     source = 'composer_toggle'
   ): Promise<ThreadSetModeData> => {
     const response = await callCoreRpc<Envelope<ThreadSetModeData>>({
-      method: 'openhuman.threads_set_mode',
+      method: 'neppy.threads_set_mode',
       params: { thread_id: threadId, mode, source },
     });
     return unwrapEnvelope(response);
   },
 
   getThreads: async (): Promise<ThreadsListData> => {
-    const response = await callCoreRpc<Envelope<ThreadsListData>>({
-      method: 'openhuman.threads_list',
-    });
+    const response = await callCoreRpc<Envelope<ThreadsListData>>({ method: 'neppy.threads_list' });
     return unwrapEnvelope(response);
   },
 
   getThreadMessages: async (threadId: string): Promise<ThreadMessagesData> => {
     const response = await callCoreRpc<Envelope<ThreadMessagesData>>({
-      method: 'openhuman.threads_messages_list',
+      method: 'neppy.threads_messages_list',
       params: { thread_id: threadId },
     });
     return unwrapEnvelope(response);
@@ -91,7 +89,7 @@ export const threadApi = {
 
   appendMessage: async (threadId: string, message: ThreadMessage): Promise<ThreadMessage> => {
     const response = await callCoreRpc<Envelope<ThreadMessage>>({
-      method: 'openhuman.threads_message_append',
+      method: 'neppy.threads_message_append',
       params: { thread_id: threadId, message },
     });
     return unwrapEnvelope(response);
@@ -111,7 +109,7 @@ export const threadApi = {
     variantTurnId: string
   ): Promise<void> => {
     await callCoreRpc({
-      method: 'openhuman.threads_message_set_active_variant',
+      method: 'neppy.threads_message_set_active_variant',
       params: { thread_id: threadId, message_id: questionMessageId, variant_id: variantTurnId },
     });
   },
@@ -136,7 +134,7 @@ export const threadApi = {
     const response = await callCoreRpc<
       Envelope<{ variantTurnId: string | null; tagged: number; variantCount: number }>
     >({
-      method: 'openhuman.threads_message_begin_answer_variant',
+      method: 'neppy.threads_message_begin_answer_variant',
       params: { thread_id: threadId, message_id: questionMessageId },
     });
     return unwrapEnvelope(response);
@@ -146,7 +144,7 @@ export const threadApi = {
     generateTitleLog('enter threadId=%s assistantMessage=%o', threadId, assistantMessage);
     try {
       const response = await callCoreRpc<Envelope<Thread>>({
-        method: 'openhuman.threads_generate_title',
+        method: 'neppy.threads_generate_title',
         params: { thread_id: threadId, assistant_message: assistantMessage },
       });
       const thread = unwrapEnvelope(response);
@@ -169,7 +167,7 @@ export const threadApi = {
     extraMetadata: Record<string, unknown>
   ): Promise<ThreadMessage> => {
     const response = await callCoreRpc<Envelope<ThreadMessage>>({
-      method: 'openhuman.threads_message_update',
+      method: 'neppy.threads_message_update',
       params: { thread_id: threadId, message_id: messageId, extra_metadata: extraMetadata },
     });
     return unwrapEnvelope(response);
@@ -177,7 +175,7 @@ export const threadApi = {
 
   deleteThread: async (threadId: string): Promise<ThreadDeleteData> => {
     const response = await callCoreRpc<Envelope<ThreadDeleteData>>({
-      method: 'openhuman.threads_delete',
+      method: 'neppy.threads_delete',
       params: { thread_id: threadId, deleted_at: new Date().toISOString() },
     });
     return unwrapEnvelope(response);
@@ -185,14 +183,14 @@ export const threadApi = {
 
   purge: async (): Promise<PurgeResultData> => {
     const response = await callCoreRpc<Envelope<PurgeResultData>>({
-      method: 'openhuman.threads_purge',
+      method: 'neppy.threads_purge',
     });
     return unwrapEnvelope(response);
   },
 
   getTurnState: async (threadId: string): Promise<PersistedTurnState | null> => {
     const response = await callCoreRpc<{ data?: GetTurnStateResponse }>({
-      method: 'openhuman.threads_turn_state_get',
+      method: 'neppy.threads_turn_state_get',
       params: { thread_id: threadId },
     });
     const data = unwrapEnvelope(response);
@@ -201,7 +199,7 @@ export const threadApi = {
 
   listTurnStates: async (): Promise<PersistedTurnState[]> => {
     const response = await callCoreRpc<{ data?: ListTurnStatesResponse }>({
-      method: 'openhuman.threads_turn_state_list',
+      method: 'neppy.threads_turn_state_list',
     });
     const data = unwrapEnvelope(response);
     return data?.turnStates ?? [];
@@ -214,7 +212,7 @@ export const threadApi = {
    */
   getTurnStateHistory: async (threadId: string): Promise<PersistedTurnState[]> => {
     const response = await callCoreRpc<{ data?: ListTurnStatesResponse }>({
-      method: 'openhuman.threads_turn_state_history',
+      method: 'neppy.threads_turn_state_history',
       params: { thread_id: threadId },
     });
     const data = unwrapEnvelope(response);
@@ -227,7 +225,7 @@ export const threadApi = {
     requestId: string
   ): Promise<PersistedTurnState | null> => {
     const response = await callCoreRpc<{ data?: GetTurnStateResponse }>({
-      method: 'openhuman.threads_turn_state_get_turn',
+      method: 'neppy.threads_turn_state_get_turn',
       params: { thread_id: threadId, request_id: requestId },
     });
     const data = unwrapEnvelope(response);
@@ -236,7 +234,7 @@ export const threadApi = {
 
   clearTurnState: async (threadId: string): Promise<boolean> => {
     const response = await callCoreRpc<{ data?: ClearTurnStateResponse }>({
-      method: 'openhuman.threads_turn_state_clear',
+      method: 'neppy.threads_turn_state_clear',
       params: { thread_id: threadId },
     });
     const data = unwrapEnvelope(response);
@@ -252,7 +250,7 @@ export const threadApi = {
     offset?: number;
   }): Promise<AgentRun[]> => {
     const response = await callCoreRpc<{ data?: AgentRunListResponse }>({
-      method: 'openhuman.run_ledger_list',
+      method: 'neppy.run_ledger_list',
       params: filters ?? {},
     });
     const data = unwrapEnvelope(response);
@@ -261,7 +259,7 @@ export const threadApi = {
 
   getRun: async (id: string): Promise<AgentRun | null> => {
     const response = await callCoreRpc<{ data?: AgentRunGetResponse }>({
-      method: 'openhuman.run_ledger_get',
+      method: 'neppy.run_ledger_get',
       params: { id },
     });
     const data = unwrapEnvelope(response);
@@ -273,7 +271,7 @@ export const threadApi = {
     options?: { afterSequence?: number; limit?: number }
   ): Promise<RunEvent[]> => {
     const response = await callCoreRpc<{ data?: RunEventListResponse }>({
-      method: 'openhuman.run_ledger_events',
+      method: 'neppy.run_ledger_events',
       params: { runId, ...options },
     });
     const data = unwrapEnvelope(response);
@@ -282,7 +280,7 @@ export const threadApi = {
 
   getTaskBoard: async (threadId: string): Promise<TaskBoard | null> => {
     const response = await callCoreRpc<{ data?: GetTaskBoardResponse }>({
-      method: 'openhuman.threads_task_board_get',
+      method: 'neppy.threads_task_board_get',
       params: { thread_id: threadId },
     });
     const data = unwrapEnvelope(response);
@@ -291,7 +289,7 @@ export const threadApi = {
 
   putTaskBoard: async (threadId: string, cards: TaskBoardCard[]): Promise<TaskBoard | null> => {
     const response = await callCoreRpc<{ data?: PutTaskBoardResponse }>({
-      method: 'openhuman.threads_task_board_put',
+      method: 'neppy.threads_task_board_put',
       params: { thread_id: threadId, cards },
     });
     const data = unwrapEnvelope(response);
@@ -300,7 +298,7 @@ export const threadApi = {
 
   /**
    * Approve or reject a task-board card that is awaiting plan approval
-   * (`openhuman.todos_decide_plan`). Approve → the card becomes runnable
+   * (`neppy.todos_decide_plan`). Approve → the card becomes runnable
    * (`ready`); reject → `rejected`. Returns the updated board (rebuilt from
    * the returned todos snapshot) or null.
    */
@@ -311,10 +309,7 @@ export const threadApi = {
   ): Promise<TaskBoard | null> => {
     const response = await callCoreRpc<{
       data?: { threadId?: string | null; cards?: TaskBoardCard[] };
-    }>({
-      method: 'openhuman.todos_decide_plan',
-      params: { thread_id: threadId, id: cardId, approve },
-    });
+    }>({ method: 'neppy.todos_decide_plan', params: { thread_id: threadId, id: cardId, approve } });
     const data = unwrapEnvelope(response);
     if (!data?.cards) return null;
     return {
@@ -326,7 +321,7 @@ export const threadApi = {
 
   updateLabels: async (threadId: string, labels: string[]): Promise<Thread> => {
     const response = await callCoreRpc<Envelope<Thread>>({
-      method: 'openhuman.threads_update_labels',
+      method: 'neppy.threads_update_labels',
       params: { thread_id: threadId, labels },
     });
     return unwrapEnvelope(response);
@@ -334,7 +329,7 @@ export const threadApi = {
 
   updateTitle: async (threadId: string, title: string): Promise<Thread> => {
     const response = await callCoreRpc<Envelope<Thread>>({
-      method: 'openhuman.threads_update_title',
+      method: 'neppy.threads_update_title',
       params: { thread_id: threadId, title },
     });
     return unwrapEnvelope(response);
@@ -355,7 +350,7 @@ export const threadApi = {
     options?: DerivedTranscriptGetOptions
   ): Promise<DerivedTranscriptPage> => {
     const response = await callCoreRpc<Envelope<DerivedTranscriptPage>>({
-      method: 'openhuman.threads_transcript_get',
+      method: 'neppy.threads_transcript_get',
       params: { thread_id: threadId, cursor: options?.cursor, limit: options?.limit },
     });
     return unwrapEnvelope(response);

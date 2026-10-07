@@ -373,7 +373,7 @@ mod tests {
     }
     impl EnvGuard {
         fn set(key: &'static str, value: &str) -> Self {
-            let prev = std::env::var_os(key);
+            let prev = crate::neppy::util::env::var_os(key);
             std::env::set_var(key, value);
             Self { key, prev }
         }
@@ -382,7 +382,7 @@ mod tests {
         fn drop(&mut self) {
             match &self.prev {
                 Some(v) => std::env::set_var(self.key, v),
-                None => std::env::remove_var(self.key),
+                None => crate::neppy::util::env::remove_var(self.key),
             }
         }
     }

@@ -23,7 +23,7 @@ describe('skillRegistryApi', () => {
     const result = await skillRegistryApi.install('demo');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_install',
+      method: 'neppy.skill_registry_install',
       params: { entry_id: 'demo' },
     });
     expect(result.newSkills).toEqual(['demo']);
@@ -39,7 +39,7 @@ describe('skillRegistryApi', () => {
     const result = await skillRegistryApi.uninstall('demo');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_uninstall',
+      method: 'neppy.skill_registry_uninstall',
       params: { name: 'demo' },
     });
     expect(result.removedPath).toBe('/Users/test/.neppy/skills/demo');
@@ -52,7 +52,7 @@ describe('skillRegistryApi', () => {
 
     const result = await skillRegistryApi.schemas();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.skill_registry_schemas' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.skill_registry_schemas' });
     expect(result[0].function).toBe('install');
   });
 
@@ -62,7 +62,7 @@ describe('skillRegistryApi', () => {
     const result = await skillRegistryApi.search('demo');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_search',
+      method: 'neppy.skill_registry_search',
       params: { query: 'demo' },
       timeoutMs: 120_000,
     });
@@ -75,7 +75,7 @@ describe('skillRegistryApi', () => {
     await skillRegistryApi.search('q', 'ClawHub', 'devops');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_search',
+      method: 'neppy.skill_registry_search',
       params: { query: 'q', source: 'ClawHub', category: 'devops' },
       timeoutMs: 120_000,
     });
@@ -95,7 +95,7 @@ describe('skillRegistryApi', () => {
     const result = await skillRegistryApi.sources();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_sources',
+      method: 'neppy.skill_registry_sources',
       timeoutMs: 120_000,
     });
     expect(result).toEqual(['built-in', 'ClawHub']);
@@ -115,7 +115,7 @@ describe('skillRegistryApi', () => {
     const result = await skillRegistryApi.categories();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_categories',
+      method: 'neppy.skill_registry_categories',
       timeoutMs: 120_000,
     });
     expect(result).toEqual(['productivity', 'devops']);
@@ -148,7 +148,7 @@ describe('skillRegistryApi', () => {
     await skillRegistryApi.browse(true);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_browse',
+      method: 'neppy.skill_registry_browse',
       params: { force_refresh: true },
       timeoutMs: 120_000,
     });
@@ -160,7 +160,7 @@ describe('skillRegistryApi', () => {
     await skillRegistryApi.browse();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_browse',
+      method: 'neppy.skill_registry_browse',
       params: { force_refresh: false },
       timeoutMs: 120_000,
     });

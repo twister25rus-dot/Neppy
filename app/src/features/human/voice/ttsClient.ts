@@ -22,7 +22,7 @@ interface AlignmentFrame {
 }
 
 /**
- * Normalized response from the core RPC `openhuman.voice_reply_synthesize`.
+ * Normalized response from the core RPC `neppy.voice_reply_synthesize`.
  * The core does the messy "tolerate multiple backend response shapes" work
  * (see `src/neppy/voice/reply_speech.rs`) so the UI can stay strict.
  */
@@ -63,10 +63,7 @@ export async function synthesizeSpeech(text: string, opts: TtsOptions = {}): Pro
   if (opts.outputFormat) params.output_format = opts.outputFormat;
   ttsLog('synthesize chars=%d (raw=%d) voice=%s', spoken.length, text.length, voiceId ?? 'default');
 
-  const result = await callCoreRpc<TtsResponse>({
-    method: 'openhuman.voice_reply_synthesize',
-    params,
-  });
+  const result = await callCoreRpc<TtsResponse>({ method: 'neppy.voice_reply_synthesize', params });
 
   ttsLog(
     'synthesize done audio_bytes=%d visemes=%d alignment=%d',

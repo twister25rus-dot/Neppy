@@ -1,6 +1,6 @@
 //! Mid-turn stop hooks as a `tinyagents` middleware (issue #4249).
 //!
-//! openhuman's policy-driven [`StopHook`]s (budget cap, thread-goal budget,
+//! neppy's policy-driven [`StopHook`]s (budget cap, thread-goal budget,
 //! ad-hoc iteration ceiling) used to fire between iterations of the legacy
 //! tool-call loop. That loop is gone — every turn now runs on the `tinyagents`
 //! harness — so the firing point moves into a [`Middleware`]:
@@ -34,7 +34,7 @@ use crate::neppy::agent::cost::TurnCost;
 use crate::neppy::agent::stop_hooks::{StopDecision, StopHook, TurnState};
 use crate::neppy::inference::provider::UsageInfo;
 
-/// Fires openhuman [`StopHook`]s after each model call and pauses the run when
+/// Fires neppy [`StopHook`]s after each model call and pauses the run when
 /// any hook votes to stop.
 pub(super) struct StopHookMiddleware {
     /// Steering handle the run was built with; `Pause` is sent here on stop.

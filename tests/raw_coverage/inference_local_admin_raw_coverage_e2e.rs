@@ -42,16 +42,16 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: tests that mutate environment variables hold env_lock().
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
 
     fn unset(key: &'static str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: tests that mutate environment variables hold env_lock().
-        unsafe { std::env::remove_var(key) };
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, previous }
     }
 }
@@ -65,7 +65,7 @@ impl Drop for EnvVarGuard {
             }
             None => {
                 // SAFETY: tests that mutate environment variables hold env_lock().
-                unsafe { std::env::remove_var(self.key) }
+                unsafe { neppy_core::neppy::util::env::remove_var(self.key) }
             }
         }
     }
@@ -75,7 +75,7 @@ impl Drop for EnvVarGuard {
 /// variables through [`EnvVarGuard`]. `cargo llvm-cov` runs integration tests
 /// multi-threaded (it does not pass `--test-threads=1`), so without this guard
 /// concurrent tests clobber each other's env — e.g. one test points
-/// `OPENHUMAN_OLLAMA_BASE_URL` at an unreachable port and asserts Ollama is
+/// `NEPPY_OLLAMA_BASE_URL` at an unreachable port and asserts Ollama is
 /// unavailable while another points it at a mock and asserts it is available.
 /// Each env-mutating test holds this guard for its whole body; declaring it
 /// before any `EnvVarGuard` makes it drop last, after the env is restored.
@@ -116,8 +116,8 @@ async fn local_admin_covers_assets_diagnostics_downloads_and_ops_errors() {
     write_stub_script(scripts.path(), "mlx_lm.generate", "#!/bin/sh\nexit 42\n");
     write_stub_script(scripts.path(), "piper", "#!/bin/sh\nexit 42\n");
     let _path = EnvVarGuard::set("PATH", scripts.path());
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", config.config_path.parent().unwrap());
-    let _ollama_base = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &base);
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", config.config_path.parent().unwrap());
+    let _ollama_base = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &base);
     let _ollama_bin = EnvVarGuard::unset("OLLAMA_BIN");
     let _piper_bin = EnvVarGuard::unset("PIPER_BIN");
     let _whisper_bin = EnvVarGuard::unset("WHISPER_BIN");
@@ -269,8 +269,8 @@ async fn provider_model_listing_covers_local_synthesis_and_openrouter_failures()
         )
         .expect("store token");
 
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", config.config_path.parent().unwrap());
-    let _ollama_base = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &base);
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", config.config_path.parent().unwrap());
+    let _ollama_base = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &base);
 
     let local = list_configured_models("ollama")
         .await
@@ -303,7 +303,7 @@ async fn local_admin_reports_unhealthy_runtime_and_lm_studio_issue_shapes() {
     let mut config = temp_config(&tmp);
     config.local_ai.runtime_enabled = true;
     config.local_ai.base_url = Some("http://127.0.0.1:9".to_string());
-    let _ollama_base = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:9");
+    let _ollama_base = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:9");
     let service = LocalAiService::new(&config);
 
     let unhealthy = service.diagnostics(&config).await.expect("unhealthy diag");

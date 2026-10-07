@@ -35,9 +35,7 @@ export async function neppyServiceInstall(): Promise<CommandResponse<ServiceStat
     throw new Error('Not running in Tauri');
   }
   try {
-    return await callCoreRpc<CommandResponse<ServiceStatus>>({
-      method: 'openhuman.service_install',
-    });
+    return await callCoreRpc<CommandResponse<ServiceStatus>>({ method: 'neppy.service_install' });
   } catch {
     const raw = await invoke<string>('service_install_direct');
     return parseServiceCliOutput<ServiceStatus>(raw);
@@ -49,7 +47,7 @@ export async function neppyServiceStart(): Promise<CommandResponse<ServiceStatus
     throw new Error('Not running in Tauri');
   }
   try {
-    return await callCoreRpc<CommandResponse<ServiceStatus>>({ method: 'openhuman.service_start' });
+    return await callCoreRpc<CommandResponse<ServiceStatus>>({ method: 'neppy.service_start' });
   } catch {
     const raw = await invoke<string>('service_start_direct');
     return parseServiceCliOutput<ServiceStatus>(raw);
@@ -61,7 +59,7 @@ export async function neppyServiceStop(): Promise<CommandResponse<ServiceStatus>
     throw new Error('Not running in Tauri');
   }
   try {
-    return await callCoreRpc<CommandResponse<ServiceStatus>>({ method: 'openhuman.service_stop' });
+    return await callCoreRpc<CommandResponse<ServiceStatus>>({ method: 'neppy.service_stop' });
   } catch {
     const raw = await invoke<string>('service_stop_direct');
     return parseServiceCliOutput<ServiceStatus>(raw);
@@ -73,9 +71,7 @@ export async function neppyServiceStatus(): Promise<CommandResponse<ServiceStatu
     throw new Error('Not running in Tauri');
   }
   try {
-    return await callCoreRpc<CommandResponse<ServiceStatus>>({
-      method: 'openhuman.service_status',
-    });
+    return await callCoreRpc<CommandResponse<ServiceStatus>>({ method: 'neppy.service_status' });
   } catch {
     const raw = await invoke<string>('service_status_direct');
     return parseServiceCliOutput<ServiceStatus>(raw);
@@ -87,9 +83,7 @@ export async function neppyServiceUninstall(): Promise<CommandResponse<ServiceSt
     throw new Error('Not running in Tauri');
   }
   try {
-    return await callCoreRpc<CommandResponse<ServiceStatus>>({
-      method: 'openhuman.service_uninstall',
-    });
+    return await callCoreRpc<CommandResponse<ServiceStatus>>({ method: 'neppy.service_uninstall' });
   } catch {
     const raw = await invoke<string>('service_uninstall_direct');
     return parseServiceCliOutput<ServiceStatus>(raw);
@@ -104,7 +98,7 @@ export async function neppyServiceRestart(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<RestartStatus>>({
-    method: 'openhuman.service_restart',
+    method: 'neppy.service_restart',
     params: { source, reason },
   });
 }
@@ -114,7 +108,7 @@ export async function neppyAgentServerStatus(): Promise<CommandResponse<AgentSer
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<AgentServerStatus>>({
-    method: 'openhuman.agent_server_status',
+    method: 'neppy.agent_server_status',
   });
 }
 
@@ -123,7 +117,7 @@ export async function neppyGetDaemonHostConfig(): Promise<CommandResponse<Daemon
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<DaemonHostConfig>>({
-    method: 'openhuman.service_daemon_host_get',
+    method: 'neppy.service_daemon_host_get',
   });
 }
 
@@ -134,7 +128,7 @@ export async function neppySetDaemonHostConfig(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<DaemonHostConfig>>({
-    method: 'openhuman.service_daemon_host_set',
+    method: 'neppy.service_daemon_host_set',
     params: { show_tray: showTray },
   });
 }

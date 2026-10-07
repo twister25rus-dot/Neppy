@@ -1,9 +1,9 @@
-//! Spawn marker for openhuman-owned `ollama serve` processes.
+//! Spawn marker for neppy-owned `ollama serve` processes.
 //!
 //! Every time `start_and_wait_for_server` actually spawns an Ollama daemon
 //! (i.e. didn't adopt a healthy external one), we write a small JSON file
-//! recording the PID, the binary we launched, and the openhuman process
-//! that owned it. On graceful shutdown the marker is cleared. If openhuman
+//! recording the PID, the binary we launched, and the neppy process
+//! that owned it. On graceful shutdown the marker is cleared. If neppy
 //! crashes before its shutdown hook fires, the marker survives — and on
 //! next launch we can reclaim the orphaned daemon (kill + respawn fresh)
 //! instead of either leaking it forever or running blanket `taskkill /IM
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use crate::neppy::config::Config;
 use crate::neppy::inference::paths::ollama_spawn_marker_path;
 
-/// On-disk record of an openhuman-spawned `ollama serve` process.
+/// On-disk record of a neppy-spawned `ollama serve` process.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct OllamaSpawnMarker {
     pub pid: u32,

@@ -5,9 +5,9 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 ## Fixes & Gotchas
 
 - **macOS close button does not dismiss window (issue #2049)** — `WebviewWindow::hide()` routes through CEF's `WindowMessage::Hide` → `cef::Window::hide()` which does NOT propagate to the visible NSWindow frame. Fix: use `AppHandle::hide()` which calls `[NSApp hide:]` via `set_application_visibility(false)`. This is macOS-only (`#[cfg(target_os = "macos")]`); the `CloseRequested` handlers are in `app/src-tauri/src/lib.rs` (grep `WindowEvent::CloseRequested` — line numbers drift). PR #2118.
-- **ServiceBlockingGate CORS errors** — The gate calls `openhumanServiceStatus()` and `openhumanAgentServerStatus()` at startup. These used `callCoreRpc()` which falls back to raw `fetch()` when socket isn't connected yet, causing CORS errors. Fix: route through `invoke('core_rpc_relay')` instead (Tauri IPC, no CORS).
+- **ServiceBlockingGate CORS errors** — The gate calls `neppyServiceStatus()` and `neppyAgentServerStatus()` at startup. These used `callCoreRpc()` which falls back to raw `fetch()` when socket isn't connected yet, causing CORS errors. Fix: route through `invoke('core_rpc_relay')` instead (Tauri IPC, no CORS).
 - **Socket not connected at startup** — `SocketProvider` only connects when a Redux `auth.token` is set. At fresh launch (no token), socket is null, so any `callCoreRpc()` call falls back to `fetch()`. Always use `invoke('core_rpc_relay')` for local sidecar RPC calls.
-- **`openhuman.agent_server_status` doesn't exist** — This RPC method is not registered in the core. The gate checks it but it always errors. The gate passes if either service is Running OR agent server is running OR core is reachable.
+- **`neppy.agent_server_status` doesn't exist** — This RPC method is not registered in the core. The gate checks it but it always errors. The gate passes if either service is Running OR agent server is running OR core is reachable.
 - **Cargo incremental builds can serve stale UI** — If the app shows old frontend after a Rust rebuild, run `cargo clean --manifest-path app/src-tauri/Cargo.toml` before rebuilding.
 - **`build.rs` missing `rerun-if-changed` causes stale ACL / "Command not found" at runtime** — `app/src-tauri/build.rs` had no `cargo:rerun-if-changed` directives for `permissions/` or `capabilities/`. Adding/changing TOML or JSON files there did not re-trigger `tauri-build`, so ACL tables were stale and registered commands silently failed. Fixed by adding `println!("cargo:rerun-if-changed=permissions")` and `println!("cargo:rerun-if-changed=capabilities")` in `build.rs` (issue #270). Also: any new Tauri command must have a matching entry in a `permissions/` TOML file or it will hit the same error even if it is in `generate_handler!`.
 - **macOS deep links require .app bundle** — `pnpm tauri dev` does NOT support deep links. Must use `pnpm tauri build --debug --bundles app`.
@@ -17,7 +17,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 - **No dynamic imports in `app/src/`** — Use static `import` at file top. Guard call sites with `try/catch` for Tauri/non-Tauri safety. See CLAUDE.md.
 - **Service RPC calls must use Tauri IPC** — Never use `callCoreRpc()` for service operations. Use `invoke('core_rpc_relay', { request: { method, params } })`.
 - **All frontend env vars go through `app/src/utils/config.ts`** — Never read `import.meta.env.VITE_*` directly in other files. Import from config.ts instead. See `.env.example` files for the full list.
-- **Always run checks before commit** — `pnpm workspace openhuman-app compile`, `pnpm lint`, `pnpm format:check`, `pnpm build`, `pnpm tauri dev`. Husky hooks enforce some but run all manually first.
+- **Always run checks before commit** — `pnpm workspace neppy-app compile`, `pnpm lint`, `pnpm format:check`, `pnpm build`, `pnpm tauri dev`. Husky hooks enforce some but run all manually first.
 - **Stage specific files** — Never `git add -A`. Always `git add <specific-files>`.
 
 ## Workflow
@@ -30,27 +30,27 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 - **jq regex: use POSIX classes, not `\s`** — jq's `test()` uses ONIG regex; `\s` is not supported. Use `[[:space:]]` for whitespace matching in `gh pr list --json ... --jq` pipelines.
 - **PR conflict check: `Closes #N` syntax not always used** — `gh pr list --jq "select(.body | test('Closes #N'))"` misses PRs that mention an issue thematically without a closing keyword. Also search PR title + body for the raw issue number (`#N`) with broader matching to catch related open PRs before claiming an issue is unassigned.
 - **`pnpm debug unit` path is relative to `app/src/`** — Pass `providers/__tests__/Foo.test.tsx`, not `app/src/providers/__tests__/Foo.test.tsx`.
-- **Prettier must run after codecrusher adds test cases** — New test blocks often fail `format:check`. Run `pnpm --filter openhuman-app format` before committing when test files are touched.
+- **Prettier must run after codecrusher adds test cases** — New test blocks often fail `format:check`. Run `pnpm --filter neppy-app format` before committing when test files are touched.
 - **Check for existing PRs before implementing** — When the workflow picks an issue, search open PRs for the issue number and related keywords before starting work. A contributor may have already shipped the fix (e.g. PR #2101 for issue #2075).
 - **Project board `gh project item-list` paginates closed items first** — The first 100 items returned are often CLOSED. Must `--limit 500` or paginate to find open/unassigned work. Fall back to `gh issue list --repo tinyhumansai/openhuman --state open` for reliability.
 
 ## Local AI Presets
 
-- **Tier system lives in `src/openhuman/local_ai/presets.rs`** — single source of truth for tier→model ID mapping. To change default models for a release, edit `all_presets()` there.
-- **Device detection** uses `sysinfo` crate (`src/openhuman/local_ai/device.rs`). Apple Silicon = GPU always; others = best-effort.
-- **`OPENHUMAN_LOCAL_AI_TIER` env var** overrides the selected tier at config load time (in `load.rs`).
+- **Tier system lives in `src/neppy/local_ai/presets.rs`** — single source of truth for tier→model ID mapping. To change default models for a release, edit `all_presets()` there.
+- **Device detection** uses `sysinfo` crate (`src/neppy/local_ai/device.rs`). Apple Silicon = GPU always; others = best-effort.
+- **`NEPPY_LOCAL_AI_TIER` env var** overrides the selected tier at config load time (in `load.rs`).
 - **Frontend tier selector** is in `LocalModelPanel.tsx` under Settings > Local AI Model. Uses `coreRpcClient` to call 3 RPC methods: `local_ai_device_profile`, `local_ai_presets`, `local_ai_apply_preset`.
 - **Default config maps to Medium tier** (`gemma3:4b-it-qat`). If someone changes `model_ids.rs` defaults, they should keep `presets.rs` in sync.
 - **`ollama_base_url()` previously ignored `config.local_ai.base_url`** — It only read env vars. Fixed in feat/ollama-external-server-url by adding `ollama_base_url_from_config(config)`. Any new Ollama URL resolution must go through the config-aware helper, not the env-only one.
-- **`LocalModelDebugPanel.tsx` must seed URL from config on mount** — Previously initialized `ollamaBaseUrlInput` to the hardcoded default and only loaded the persisted URL when diagnostics ran. Fix: `useEffect` on mount calls `openhumanGetConfig()` and sets state from `config.local_ai.base_url`. Pattern to follow for any settings field backed by Rust config.
+- **`LocalModelDebugPanel.tsx` must seed URL from config on mount** — Previously initialized `ollamaBaseUrlInput` to the hardcoded default and only loaded the persisted URL when diagnostics ran. Fix: `useEffect` on mount calls `neppyGetConfig()` and sets state from `config.local_ai.base_url`. Pattern to follow for any settings field backed by Rust config.
 
 ## Core process (in-process, no sidecar)
 
 - **Core runs in-process** as a tokio task inside the Tauri host (sidecar removed in PR #1061). Lifecycle owned by `core_process::CoreProcessHandle` in `app/src-tauri/src/core_process.rs`.
-- **`pnpm core:stage` is a no-op echo** — there is no `target/debug/openhuman-core` binary to copy into `app/src-tauri/binaries/`. Rebuilding via `pnpm dev:app` is enough to pick up new RPC methods in the in-process server.
-- **Token auth**: per-launch hex bearer in `OPENHUMAN_CORE_TOKEN`, exposed to the renderer via `core_rpc_token` Tauri command. Always call RPC through `invoke('core_rpc_relay', { request: { method, params } })` — avoids the CORS preflight `fetch()` would trigger.
-- **Stale-listener policy** (#1130): if the port is already in use, the handle probes `GET /` to decide if it's an OpenHuman core, then term/force-kill with PID revalidation guarding against PID reuse. Set `OPENHUMAN_CORE_REUSE_EXISTING=1` to attach to a manually-started `openhuman-core serve` for debugging.
-- **Default port** `7788`. Stage token (when running standalone): `~/.openhuman-staging/core.token` under `OPENHUMAN_APP_ENV=staging`.
+- **`pnpm core:stage` is a no-op echo** — there is no `target/debug/neppy-core` binary to copy into `app/src-tauri/binaries/`. Rebuilding via `pnpm dev:app` is enough to pick up new RPC methods in the in-process server.
+- **Token auth**: per-launch hex bearer in `NEPPY_CORE_TOKEN`, exposed to the renderer via `core_rpc_token` Tauri command. Always call RPC through `invoke('core_rpc_relay', { request: { method, params } })` — avoids the CORS preflight `fetch()` would trigger.
+- **Stale-listener policy** (#1130): if the port is already in use, the handle probes `GET /` to decide if it's a Neppy core, then term/force-kill with PID revalidation guarding against PID reuse. Set `NEPPY_CORE_REUSE_EXISTING=1` to attach to a manually-started `neppy-core serve` for debugging.
+- **Default port** `7788`. Stage token (when running standalone): `~/.openhuman-staging/core.token` under `NEPPY_APP_ENV=staging`.
 
 ## Onboarding System
 
@@ -80,7 +80,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 - **`CoreStateProvider` is consumed by ~25 components** — Changes to its state shape or bootstrap behavior affect routes, socket, onboarding, nav, settings, and hooks. Treat it as a high-blast-radius file.
 - **`bootstrapFailCountRef` retry counter bug (issue #2158)** — The ref is a cumulative lifetime counter; logging it against `MAX_BOOTSTRAP_RETRIES` (5) as denominator produced impossible `attempt 11/5`. Fix: distinguish bootstrap phase ("attempt X/5") from continuous-poll phase (separate message, 10s backoff). Reset the counter to 0 on any successful snapshot fetch.
 - **Settings is a full route, not a modal** — `/settings/*` uses nested `<Routes>` in `Settings.tsx`. The `.claude/rules/15-settings-modal-system.md` doc describing a portal/modal approach is outdated. A catch-all `<Route path="*">` redirects unmatched sub-paths to `/settings`.
-- **`PersistGate loading={null}` causes flash** — Changed to `loading={<RouteLoadingScreen />}` (issue #413). `RouteLoadingScreen` accepts an optional `label` prop (defaults to "Initializing OpenHuman...") and can be rendered with no props.
+- **`PersistGate loading={null}` causes flash** — Changed to `loading={<RouteLoadingScreen />}` (issue #413). `RouteLoadingScreen` accepts an optional `label` prop (defaults to "Initializing Neppy...") and can be rendered with no props.
 
 ## Build Blockers: macOS Tahoe + whisper-rs
 
@@ -107,7 +107,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 - **Banner dismiss state uses localStorage** (prefix `openhuman:upsell:`), not Redux — consistent with CLAUDE.md exception for ephemeral UI state.
 - **Phased rollout** — Phase 1 = banners + limit modal + hook. Phase 2 = onboarding upsell + analytics. Phase 3 = remote config + A/B testing.
 - **"5-hour" label stragglers in Conversations.tsx** — `LimitPill` label and its hover tooltip still say "5h" / "5-hour". Commit 8c52236's "10-hour" terminology refactor missed those two spots.
-- **`getTeamUsage()` now normalizes via `normalizeTeamUsage()`** — Added in issue #482. The Rust sidecar passes backend JSON through opaquely (`src/openhuman/team/ops.rs`), so the TS client must normalize field names and types. Pattern matches existing `normalizeCreditBalance()` in the same file. Any new billing API that returns raw backend data should follow the same normalize-at-the-client pattern.
+- **`getTeamUsage()` now normalizes via `normalizeTeamUsage()`** — Added in issue #482. The Rust sidecar passes backend JSON through opaquely (`src/neppy/team/ops.rs`), so the TS client must normalize field names and types. Pattern matches existing `normalizeCreditBalance()` in the same file. Any new billing API that returns raw backend data should follow the same normalize-at-the-client pattern.
 - **Two separate `TeamUsage` types exist** — `creditsApi.ts:24` (billing: cycle budget, limits) and `types/team.ts:11` (team model: daily token limit). Different import paths, no collision, but confusing.
 
 ## Settings & Skills Reorganization (Issue #396)
@@ -123,26 +123,26 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 
 ## Composio Backend URL Bug (Issue #2075, PR #2101)
 
-- **`effective_backend_api_url` env-fallback branch skipped normalization** — In `src/api/config.rs`, the override branch normalized via `normalize_backend_api_base_url` but the env-fallback branch (`OPENHUMAN_BACKEND_API_URL`) did not, so scheme-less URLs like `api.example.com` were used raw. Fix: normalize the env-fallback branch too (3-layer defense: config → env-fallback → `IntegrationClient::new`).
+- **`effective_backend_api_url` env-fallback branch skipped normalization** — In `src/api/config.rs`, the override branch normalized via `normalize_backend_api_base_url` but the env-fallback branch (`NEPPY_BACKEND_API_URL`) did not, so scheme-less URLs like `api.example.com` were used raw. Fix: normalize the env-fallback branch too (3-layer defense: config → env-fallback → `IntegrationClient::new`).
 - **`normalize_backend_api_base_url` and `redact_url_for_log` are `pub(crate)`** — Available for reuse across `src/api/` after PR #2101 merge.
 
 ## Composio Identity (Issue #691)
 
-- **`ProviderUserProfile.profile_url`** — New optional field on the struct in `src/openhuman/composio/providers/types.rs`. Providers should populate it when available from upstream profile payloads.
-- **`identity_set` callback in default flow** — `ComposioProvider::on_connection_created()` in `src/openhuman/composio/providers/traits.rs` now calls `identity_set(&profile)` after profile fetch. `composio_get_user_profile` in `src/openhuman/composio/ops.rs` also routes persistence through `identity_set`.
+- **`ProviderUserProfile.profile_url`** — New optional field on the struct in `src/neppy/composio/providers/types.rs`. Providers should populate it when available from upstream profile payloads.
+- **`identity_set` callback in default flow** — `ComposioProvider::on_connection_created()` in `src/neppy/composio/providers/traits.rs` now calls `identity_set(&profile)` after profile fetch. `composio_get_user_profile` in `src/neppy/composio/ops.rs` also routes persistence through `identity_set`.
 - **Facet key format for connected identities** — `skill:{toolkit}:{identifier}:{field}` (e.g. `skill:gmail:user@example.com:profile_url`). Use `FacetType::Skill` when storing. Toolkit and identifier together form the unique identity; field is the attribute name.
-- **Connected identities loader/renderer** — `src/openhuman/composio/providers/profile.rs` contains `load_connected_identities()` (reads `skill:*` facets) and `render_connected_identities_section()` (formats markdown for prompt injection). Keep rendering logic there, not in prompt modules.
+- **Connected identities loader/renderer** — `src/neppy/composio/providers/profile.rs` contains `load_connected_identities()` (reads `skill:*` facets) and `render_connected_identities_section()` (formats markdown for prompt injection). Keep rendering logic there, not in prompt modules.
 - **Prompt injection helper** — `render_connected_identities` is imported and called in `welcome/prompt.rs`, `orchestrator/prompt.rs`, and `integrations_agent/prompt.rs` to inject a "Connected accounts:" block. Add it to any new agent prompt that needs Composio context.
 
 ## Agent Timeout & Cancellation (Issue #715)
 
 - **Frontend silence timer, not a wall-clock limit** — `armSilenceTimer` in `app/src/pages/Conversations.tsx` fires if 120s (fixed to 600s) pass with zero inference progress events. It re-arms on every `tool_call`, `tool_result`, `iteration_start`, etc., so long-running tool chains that keep emitting events are not cut off.
-- **Rust-side HTTP timeout is separate** — `src/openhuman/providers/compatible.rs` sets a 120s `reqwest` client timeout on LLM calls. Not changed in #715; relevant if a single LLM round-trip itself stalls for >2 min.
-- **Manual cancel path** — `chatCancel()` in `app/src/services/chatService.ts` → `openhuman.channel_web_cancel` RPC → `cancel_chat()` in `src/openhuman/channels/providers/web.rs`. Fully implemented; the silence timer is an automatic fallback.
+- **Rust-side HTTP timeout is separate** — `src/neppy/providers/compatible.rs` sets a 120s `reqwest` client timeout on LLM calls. Not changed in #715; relevant if a single LLM round-trip itself stalls for >2 min.
+- **Manual cancel path** — `chatCancel()` in `app/src/services/chatService.ts` → `neppy.channel_web_cancel` RPC → `cancel_chat()` in `src/neppy/channels/providers/web.rs`. Fully implemented; the silence timer is an automatic fallback.
 
 ## Webhook & Cron Triggers (Issue #726)
 
-- **Webhook bus was hardcoded 410** — `src/openhuman/webhooks/bus.rs` `WebhookRequestSubscriber::handle()` returned 410 "skill runtime removed" for ALL incoming webhooks. Now routes to echo/agent/skill/404 based on `TunnelRegistration.target_kind`.
+- **Webhook bus was hardcoded 410** — `src/neppy/webhooks/bus.rs` `WebhookRequestSubscriber::handle()` returned 410 "skill runtime removed" for ALL incoming webhooks. Now routes to echo/agent/skill/404 based on `TunnelRegistration.target_kind`.
 - **WebhookRouter access from bus.rs** — Router lives in `SocketManager::shared.webhook_router` (was `pub(super)`). Added `pub fn webhook_router(&self)` accessor on `SocketManager`; bus.rs reaches it via `global_socket_manager().webhook_router()`.
 - **`TriggerSource` enum: three update points** — Adding new variants requires updating: (a) `slug()` match in `envelope.rs`, (b) exhaustive test match, (c) `handle_triage_evaluate` string match in `agent/schemas.rs` (uses `p.source.as_str()`, not the enum directly).
 - **`CronJobTriggered/CronJobCompleted` were never published** — Defined in `events.rs` and used in tests but never emitted. Now published by `execute_and_persist_job()` in `scheduler.rs`. Adding fields to these variants requires updating ~5 construction sites: `cron/bus.rs`, `composio/bus.rs`, `tree_summarizer/bus.rs`, `channels/proactive.rs`, and `events.rs` tests.
@@ -162,7 +162,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 
 ## Build & Tooling Gotchas
 
-- **`pnpm typecheck` script was renamed** — Check `app/package.json` for the current name; as of issue #830 work, use `pnpm workspace openhuman-app compile` for tsc checks.
+- **`pnpm typecheck` script was renamed** — Check `app/package.json` for the current name; as of issue #830 work, use `pnpm workspace neppy-app compile` for tsc checks.
 - **PR #745 (command palette) merged without its deps** — `@radix-ui/react-dialog`, `cmdk`, and `@testing-library/user-event` are missing from `package.json`. Install them if tsc fails after syncing main.
 - **Pre-push hooks fail on upstream lint warnings** — ESLint warns on `setState` in effects and unused `eslint-disable` directives inherited from upstream. Use `--no-verify` only when the lint errors are pre-existing upstream issues, not new code.
 - **`pnpm tauri icon <source.png>` generates all platform icons at once** — Produces `.icns`, `.ico`, all PNG sizes, Windows Store tiles, and iOS/Android sets. Use this instead of manual `sips`/ImageMagick resizing.
@@ -189,7 +189,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 - **Analytics module pattern** — `app/src/services/analytics.ts` is the single owner of `initGA`, `trackPageView`, `trackEvent`, plus an `ALLOWED_EVENTS` allowlist. Never call `ReactGA` directly from components; go through this module.
 - **Triple gate before any GA call** — `isAnalyticsEnabled()` (user consent) AND `GA_MEASUREMENT_ID` env var present AND `!IS_DEV`. All three must pass or tracking is silently skipped.
 - **Route tracking location** — `useLocation()` effect wired in AppShell (not individual pages). All page views emit from one place.
-- **Capability catalog must stay in sync** — `src/openhuman/about_app/catalog.rs` needs an entry when a new user-visible feature ships. GA was added there as part of issue #1479.
+- **Capability catalog must stay in sync** — `src/neppy/about_app/catalog.rs` needs an entry when a new user-visible feature ships. GA was added there as part of issue #1479.
 
 ## PR Checklist CI
 
@@ -197,48 +197,48 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 
 ## Config System (Rust)
 
-- **Config corruption recovery** — `parse_config_with_recovery` in `src/openhuman/config/schema/load.rs`: try primary → try `.bak` → archive corrupt file → `Config::default()`. Guarantees the app always starts even with a corrupt config.
+- **Config corruption recovery** — `parse_config_with_recovery` in `src/neppy/config/schema/load.rs`: try primary → try `.bak` → archive corrupt file → `Config::default()`. Guarantees the app always starts even with a corrupt config.
 - **New config fields must use `#[serde(default = "fn_name")]`** — Bare `#[serde(default)]` gives `0`/`false`, not the meaningful domain default. Define a named fn returning the correct value and reference it by name.
 - **`.bak` is now permanent** — `Config::save()` no longer deletes `.bak` on success. It always reflects the last-known-good config before the most recent write.
 - **`load_from_default_paths` has zero callers** — Debug utility only; not user-facing.
-- **Config test module path** — `openhuman::config::schema::load::tests`. Run with `cargo test -- config::schema::load::tests`.
+- **Config test module path** — `neppy::config::schema::load::tests`. Run with `cargo test -- config::schema::load::tests`.
 
 ## Environment
 
 - **Core port** — `7788` (default; in-process inside Tauri host). Check with `lsof -i :7788`.
 - **`pnpm core:stage`** — no-op (sidecar removed in PR #1061). Use `pnpm dev:app` for full Tauri+core dev.
 - **Kill stuck processes** — `lsof -i :7788` then `kill <PID>`. Useful when `dev:app` reports a stale listener and you want to force a fresh boot rather than relying on the handle's auto-recovery.
-- **Skills runtime rebuilt (PR #2707)** — QuickJS is gone, but skills now run as orchestrator-focused agents via `skills_run` RPC. Default skills live in `src/openhuman/skills/defaults/<id>/` with `skill.toml` + `SKILL.md`, registered in `registry.rs` `DEFAULT_SKILLS` const. Seeded into `<workspace>/skills/` on boot (idempotent, non-destructive). Bundled defaults: `github-issue-crusher`, `dev-workflow`. Skills run with 200 iteration cap and full web access.
-- **Codegraph tools (PR #2707)** — `codegraph_index` and `codegraph_search` registered in `src/openhuman/tools/ops.rs`. Implementation in `src/openhuman/codegraph/` — tree-sitter extraction, SQLite FTS5, dense embeddings, RRF fusion. Auto-indexes on first search.
-- **Tool names are exact** — Always check `src/openhuman/tools/ops.rs` for authoritative names. Key ones: `edit` (not `edit_file`), `composio` (not `composio_execute`), `codegraph_index`, `codegraph_search`.
-- **`cron_add` RPC** — Was missing from `schemas.rs` (only existed as agent tool). Now exposed as `openhuman.cron_add`. Frontend wrapper: `openhumanCronAdd()` in `app/src/utils/tauriCommands/cron.ts`.
+- **Skills runtime rebuilt (PR #2707)** — QuickJS is gone, but skills now run as orchestrator-focused agents via `skills_run` RPC. Default skills live in `src/neppy/skills/defaults/<id>/` with `skill.toml` + `SKILL.md`, registered in `registry.rs` `DEFAULT_SKILLS` const. Seeded into `<workspace>/skills/` on boot (idempotent, non-destructive). Bundled defaults: `github-issue-crusher`, `dev-workflow`. Skills run with 200 iteration cap and full web access.
+- **Codegraph tools (PR #2707)** — `codegraph_index` and `codegraph_search` registered in `src/neppy/tools/ops.rs`. Implementation in `src/neppy/codegraph/` — tree-sitter extraction, SQLite FTS5, dense embeddings, RRF fusion. Auto-indexes on first search.
+- **Tool names are exact** — Always check `src/neppy/tools/ops.rs` for authoritative names. Key ones: `edit` (not `edit_file`), `composio` (not `composio_execute`), `codegraph_index`, `codegraph_search`.
+- **`cron_add` RPC** — Was missing from `schemas.rs` (only existed as agent tool). Now exposed as `neppy.cron_add`. Frontend wrapper: `neppyCronAdd()` in `app/src/utils/tauriCommands/cron.ts`.
 - **Worktree `pnpm build` rolldown fix** — Worktrees can miss `@rolldown/binding-darwin-arm64`. Fix: `pnpm install --force`.
 
 ## Artifacts Domain (Issue #2776)
 
-- **Filesystem-backed persistence, no SQLite** — `src/openhuman/agent/artifacts/` stores JSON metadata (`meta.json`) + binary blobs under `<workspace_dir>/artifacts/<uuid>/`. Pattern mirrors `memory/ops/files.rs` but simpler.
-- **`"ai"` namespace in controller registry** — RPC methods are `openhuman.ai_list_artifacts`, `openhuman.ai_get_artifact`, `openhuman.ai_delete_artifact`. Future `ai_*` methods should use this same namespace.
+- **Filesystem-backed persistence, no SQLite** — `src/neppy/agent/artifacts/` stores JSON metadata (`meta.json`) + binary blobs under `<workspace_dir>/artifacts/<uuid>/`. Pattern mirrors `memory/ops/files.rs` but simpler.
+- **`"ai"` namespace in controller registry** — RPC methods are `neppy.ai_list_artifacts`, `neppy.ai_get_artifact`, `neppy.ai_delete_artifact`. Future `ai_*` methods should use this same namespace.
 - **Two-layer path validation required** — (1) `validate_artifact_id` rejects empty strings, `/`, `\`, `..`, absolute Unix paths, Windows `C:` and UNC `\\` paths; (2) `assert_within_root` canonicalizes and checks containment. Replicate this pattern for any new filesystem-backed domain.
-- **`cargo test --lib` required for lib crate tests** — `cargo test -p openhuman -- "artifacts"` lists tests but filters to 0. Must use `cargo test -p openhuman --lib -- "artifacts"` because tests are in the lib crate, not integration test binaries.
+- **`cargo test --lib` required for lib crate tests** — `cargo test -p neppy -- "artifacts"` lists tests but filters to 0. Must use `cargo test -p neppy --lib -- "artifacts"` because tests are in the lib crate, not integration test binaries.
 
 ## Rust Testing Patterns
 
-- **Memory tree tests filter** — `cargo test -p openhuman -- "memory::tree"` runs the memory tree unit tests (602 tests); full module paths are `openhuman::memory::tree::ingest::tests::*` and `openhuman::memory::tree::canonicalize::email_clean::tests::*`.
+- **Memory tree tests filter** — `cargo test -p neppy -- "memory::tree"` runs the memory tree unit tests (602 tests); full module paths are `neppy::memory::tree::ingest::tests::*` and `neppy::memory::tree::canonicalize::email_clean::tests::*`.
 - **`cargo fmt --all`** — Required after codecrusher generates Rust; it doesn't always produce perfectly formatted output and CI will reject unformatted code.
 - **PR quality scripts are soft checks** — `scripts/check-pr-checklist.mjs` and `scripts/check-coverage-matrix.mjs` exit cleanly with summary lines; CI treats them as advisory, not blocking.
-- **`ceil_char_boundary`** — Safe string slicing utility at `src/openhuman/util.rs`; use this throughout the codebase instead of raw byte-index slicing to avoid UTF-8 panics.
+- **`ceil_char_boundary`** — Safe string slicing utility at `src/neppy/util.rs`; use this throughout the codebase instead of raw byte-index slicing to avoid UTF-8 panics.
 - **Global static cache tests need a reset guard** — When testing code that reads/writes a `Lazy<Mutex<Option<...>>>` global cache, use a `struct CacheResetGuard; impl Drop for CacheResetGuard { fn drop(&mut self) { *CACHE.lock() = None; } }` pattern so each test starts clean. See `SnapshotCacheResetGuard` / `CacheResetGuard` in `ops_tests.rs`.
 - **Test assertions must match the actual dummy value** — When a builder (e.g. `build_dummy_runtime_snapshot()`) wraps `degraded_runtime_snapshot()`, assert against `dummy.field` rather than a hardcoded string (e.g. `"idle"` vs the actual `"degraded"`) to verify round-trip correctness without false mismatches.
 - **`composio::action_tool::tests::mode_toggle_between_calls_is_observed` is flaky in full suite** — Fails intermittently due to shared global composio session state; passes in isolation. Pre-existing; not caused by snapshot perf work.
 - **`GLOBAL_MEMORY_TEST_LOCK` only serializes test bodies, not background workers** — Background ingestion spawned by a prior test can still be running when the next test acquires the lock. Call `state.reset_for_test()` at test start (after acquiring the lock) to clear accumulated `queue_depth`/`running` state; do not rely on delta assertions alone.
-- **`IngestionState::reset_for_test()` is `#[cfg(test)]`-gated** — Lives in `src/openhuman/memory/ingestion/state.rs`. Zeroes `queue_depth` (AtomicUsize) and clears running/current fields in the snapshot while preserving completion history. This is the canonical reset for any test asserting exact queue or running state.
+- **`IngestionState::reset_for_test()` is `#[cfg(test)]`-gated** — Lives in `src/neppy/memory/ingestion/state.rs`. Zeroes `queue_depth` (AtomicUsize) and clears running/current fields in the snapshot while preserving completion history. This is the canonical reset for any test asserting exact queue or running state.
 - **cargo-llvm-cov widens SQLITE_BUSY window** — Flakes that only appear under coverage (`cargo-llvm-cov`) but not plain `cargo test` are usually (a) a SQLite connection missing `busy_timeout`, or (b) shared global state not reset between tests. Always set `busy_timeout` on new SQLite connections (see pattern below).
 - **All new SQLite connections must set `busy_timeout = 15s`** — Call `conn.busy_timeout(Duration::from_secs(15))` immediately after `Connection::open()`, before any `execute_batch()`. Pattern set by `chunks/store.rs` (`SQLITE_BUSY_TIMEOUT`) and now also used by `memory_store/unified/init.rs` (fixed in issue #2722). Without it, concurrent ingestion + test writes produce `SQLITE_BUSY` under cargo-llvm-cov.
 
 ## App State Snapshot (Issue #2155 — first-launch perf)
 
-- **`build_runtime_snapshot` was serial, now parallel** — The four subsystems (screen intelligence, local AI, autocomplete, service status) in `src/openhuman/app_state/ops.rs` ran sequentially. Fixed with `tokio::join!`. Also added a 2s TTL cache (`RUNTIME_SNAPSHOT_CACHE`) so repeated polls within the TTL skip recomputation.
-- **`service::status` is sync — must use `spawn_blocking`** — `crate::openhuman::service::status(config)` may shell out to `launchctl`. Wrap it in `tokio::task::spawn_blocking` when called from an async context.
+- **`build_runtime_snapshot` was serial, now parallel** — The four subsystems (screen intelligence, local AI, autocomplete, service status) in `src/neppy/app_state/ops.rs` ran sequentially. Fixed with `tokio::join!`. Also added a 2s TTL cache (`RUNTIME_SNAPSHOT_CACHE`) so repeated polls within the TTL skip recomputation.
+- **`service::status` is sync — must use `spawn_blocking`** — `crate::neppy::service::status(config)` may shell out to `launchctl`. Wrap it in `tokio::task::spawn_blocking` when called from an async context.
 - **`autocomplete::global_engine().status()` calls `Config::load_or_init()` internally** — Avoid this inside snapshot code. Use the new `status_with_config(config)` method which accepts an already-loaded config.
 - **Per-stage snapshot timeouts** — `AUTH_FETCH_TIMEOUT = 5s` and `RUNTIME_SNAPSHOT_TIMEOUT = 10s` are constants in `ops.rs`; they sum to 15s, well under the 30s frontend RPC timeout.
 ## Project Board & Issue Queries
@@ -273,7 +273,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 
 ## Pre-existing Test Failures
 
-- **`composio::action_tool::tests::factory_routes_through_direct_when_mode_is_direct` fails in `cargo test -p openhuman`** — Pre-existing failure unrelated to WhatsApp or any recent branch work. Do not attempt to fix unless explicitly tasked. Also intermittently flaky when run as part of the full suite — see "Pre-existing Flaky Tests" section.
+- **`composio::action_tool::tests::factory_routes_through_direct_when_mode_is_direct` fails in `cargo test -p neppy`** — Pre-existing failure unrelated to WhatsApp or any recent branch work. Do not attempt to fix unless explicitly tasked. Also intermittently flaky when run as part of the full suite — see "Pre-existing Flaky Tests" section.
 
 ## Workflow Gate (must not skip)
 
@@ -282,10 +282,10 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 
 ## Security Policy
 
-- **Path validation entry point** — `src/openhuman/security/policy.rs` exposes `validate_path` / `validate_parent_path`. All file I/O path validation must go through this API. `is_path_string_allowed()` is a string-only first pass, not sufficient on its own.
+- **Path validation entry point** — `src/neppy/security/policy.rs` exposes `validate_path` / `validate_parent_path`. All file I/O path validation must go through this API. `is_path_string_allowed()` is a string-only first pass, not sufficient on its own.
 - **validate_parent_path before create_dir_all** — For write operations, `validate_parent_path` MUST be called before any `create_dir_all` call. Calling it after allows symlink attacks to create directories outside the workspace before the security check fires (Issue #1927).
 - **Tool callers must use `validate_path` / `validate_parent_path`** — All tool implementations under `src/openhuman/tools/impl/filesystem/` must use these functions, not the legacy `is_path_allowed` / `is_resolved_path_allowed`.
-- **Security policy test filter** — Run only security policy tests with: `cargo test -p openhuman -- "security::policy"`. Runs the 100 tests in `src/openhuman/security/policy_tests.rs` cleanly.
+- **Security policy test filter** — Run only security policy tests with: `cargo test -p neppy -- "security::policy"`. Runs the 100 tests in `src/neppy/security/policy_tests.rs` cleanly.
 
 ## Pre-existing Flaky Tests
 
@@ -301,8 +301,8 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 
 ## Port Conflict Recovery (Issue #2617)
 
-- **Port fallback already in `pick_listen_port`** — `src/openhuman/connectivity/rpc.rs` tries ports 7789–7798 when 7788 is busy. Gap was: frontend `getCoreRpcUrl()` cached the URL on first resolution so it never picked up the fallback port, and stale-process reaping was macOS-only.
-- **`process_recovery.rs` is platform-gated** — `reap_stale_openhuman_processes` had only a macOS impl. Linux uses `/proc/<pid>/cmdline`; Windows uses `wmic process get`. Tests for each platform's parsing logic live in the same file, following the existing macOS test pattern.
+- **Port fallback already in `pick_listen_port`** — `src/neppy/connectivity/rpc.rs` tries ports 7789–7798 when 7788 is busy. Gap was: frontend `getCoreRpcUrl()` cached the URL on first resolution so it never picked up the fallback port, and stale-process reaping was macOS-only.
+- **`process_recovery.rs` is platform-gated** — `reap_stale_neppy_processes` had only a macOS impl. Linux uses `/proc/<pid>/cmdline`; Windows uses `wmic process get`. Tests for each platform's parsing logic live in the same file, following the existing macOS test pattern.
 - **`recover_port_conflict` is a Tauri IPC command, not JSON-RPC** — Rust E2E test for port fallback lives in `tests/json_rpc_e2e.rs` and calls `pick_listen_port` directly: bind port 7788 with a `std::net::TcpListener` (std, not tokio) to simulate conflict, confirm fallback, then serve via `tokio::net::TcpListener::from_std(pick_result.listener.into_std())`.
 - **`BootCheckTransport` is the right hook for frontend recovery** — `app/src/lib/bootCheck/index.ts` is the injection point for new recovery capabilities; don't add them directly to the BootCheck component.
 - **i18n locales are single flat files** — Each locale is one file at `app/src/lib/i18n/<locale>.ts` (`en.ts` is the source of truth; the old `chunks/<locale>-N.ts` layout was retired). New keys must be added to all 13 locale files simultaneously; `pnpm i18n:check` enforces key parity.
@@ -328,7 +328,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 
 ## Memory Sync Sources — Defaults ON + Per-Source UI (Issue #3293)
 
-- **Conservative caps registry** — `composio_defaults_for_toolkit(toolkit) -> (max_items, sync_depth_days)` in `src/openhuman/memory/sources/registry.rs` is the single source of truth. Values: gmail 100/30, slack 50/14, notion 30/30, linear 50/30, clickup 50/30, github 50/30, generic 30/14. Non-Composio defaults (GithubRepo 10PR/10issue/50commit, RSS 20, Twitter 7d) live in `apply_kind_defaults` in `rpc.rs`.
+- **Conservative caps registry** — `composio_defaults_for_toolkit(toolkit) -> (max_items, sync_depth_days)` in `src/neppy/memory/sources/registry.rs` is the single source of truth. Values: gmail 100/30, slack 50/14, notion 30/30, linear 50/30, clickup 50/30, github 50/30, generic 30/14. Non-Composio defaults (GithubRepo 10PR/10issue/50commit, RSS 20, Twitter 7d) live in `apply_kind_defaults` in `rpc.rs`.
 - **`upsert_composio_source` now defaults ON** — Registers `enabled: true` with caps applied from the registry. Previously registered `enabled: false` with no caps.
 - **Cap enforcement: 3 construction sites, not 1** — `ProviderContext` (`memory_sync/composio/providers/types.rs`) carries `max_items`/`sync_depth_days`. All three sites must populate caps from the registry entry: `composio/mod.rs run_connection_sync`, `composio/periodic.rs`, `composio/bus.rs`. Each provider reads `ctx.max_items`/`ctx.sync_depth_days` for pagination + date clamping. Shared helpers: `pages_for_max_items` / `epoch_floor_from_depth` in `providers/helpers.rs`.
 - **First-sync gotcha on new connections** — `bus.rs on_connection_created` fires BEFORE `upsert_composio_source`, so caps are (None, None) on the brand-new connection's first sync — bounded only by internal `MAX_PAGES`, not registry caps. Documented in code; intentional.
@@ -344,7 +344,7 @@ Quick reference for anyone starting with Claude on this project. Updated by the 
 - **Raw-file coverage gate** — `mem_tree_ingested_sources` with `source_kind = "raw_file"`, `source_id = <rel path with .md>` (`memory_store/chunks/store.rs: mark_raw_paths_ingested / filter_raw_paths_not_ingested`). Written by github sync + rebuild after each summary batch lands. `raw_coverage()` in `memory_sync/sources/rebuild.rs` backfills the gate once per scope from L1 summary child labels (`commit:<sha>` / `issue:<n>` / `pr:<n>` / file stems) before diffing disk vs gate.
 - **Workspace periodic scheduler** — `memory_sync/workspace/periodic.rs` (started in `core/jsonrpc.rs` next to the Composio one) is the ONLY thing auto-syncing `github_repo`/`folder`/`rss_feed`/`web_page` sources; the Composio loop walks Composio connections exclusively. Cadence: `config.memory_sync_interval_secs` (`Some(0)` = manual only, default 24h), due-check via in-memory fired-at map + persisted sync-audit fallback.
 - **Queue self-heal retries transient failures only** — `memory_queue/scheduler.rs` calls `store::requeue_transient_failed` every 3h (excludes `failure_class = 'unrecoverable'` so bad keys/budget don't retry-loop). Full reset stays manual via `memory_tree_retry_failed` RPC.
-- **`openhuman.memory_sources_reconcile` RPC** — Reports per-scope raw coverage `{total_raw_files, covered, pending}`; `execute: true` spawns background incremental rebuild. Same reconcile auto-runs after every sync via `check_and_rebuild_tree`.
+- **`neppy.memory_sources_reconcile` RPC** — Reports per-scope raw coverage `{total_raw_files, covered, pending}`; `execute: true` spawns background incremental rebuild. Same reconcile auto-runs after every sync via `check_and_rebuild_tree`.
 - **L0 seal gate is token-only by design** — `should_seal` has NO sibling-count fallback at L0 (docs used to lie about this); small buffers seal via the 3-hourly `flush_stale` path. L≥1 gates on `SUMMARY_FANOUT` (10) — an L1 buffer holding <10 summaries is healthy, not stuck.
 
 ## Intelligence page scroll ownership (#4267)

@@ -156,7 +156,7 @@ describe('BubbleMarkdown math rendering', () => {
 });
 
 describe('AgentMessageText', () => {
-  test('renders openhuman link pills without assistant bubble chrome', () => {
+  test('renders neppy link pills without assistant bubble chrome', () => {
     render(
       <AgentMessageText
         content={'<openhuman-link path="settings/appearance">Appearance</openhuman-link>'}

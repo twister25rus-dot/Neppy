@@ -65,7 +65,7 @@ A spec that asserts only the happy path is incomplete.
 ## Determinism rules
 
 - No wall-clock waits, use `waitForApp`, `waitForAppReady`, `waitForWebView` helpers, or explicit element-readiness predicates.
-- No shared filesystem state, every E2E spec runs inside an isolated `OPENHUMAN_WORKSPACE` (created/cleaned by `app/scripts/e2e-run-spec.sh`).
+- No shared filesystem state, every E2E spec runs inside an isolated `NEPPY_WORKSPACE` (created/cleaned by `app/scripts/e2e-run-spec.sh`).
 - No order-dependent specs, each spec must pass when run alone.
 - No reliance on absolute coordinates or animation timing.
 - Prefer synthesizing keyboard input via `browser.execute(...)` over `browser.keys()` (see `command-palette.spec.ts` for the pattern).

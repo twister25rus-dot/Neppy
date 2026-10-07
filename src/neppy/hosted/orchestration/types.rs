@@ -4,7 +4,7 @@
 //! SDK schema `sdk/typescript/src/types/harness.ts`. The Rust SDK does not ship
 //! this type on the `1.0.x` line we depend on (it was added on the unreleased
 //! `2.x` line — see the SDK port in tinyhumansai/tiny.place#210). Once a crate
-//! version that includes it is published *and* openhuman migrates off
+//! version that includes it is published *and* neppy migrates off
 //! `tinyplace 1.0.1`, replace this block with
 //! `use tinyplace::types::SessionEnvelopeV1;` — field names already match.
 //!

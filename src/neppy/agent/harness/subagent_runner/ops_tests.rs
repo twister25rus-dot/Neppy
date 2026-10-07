@@ -1798,3 +1798,17 @@ async fn dispatch_is_not_refused_while_the_guard_has_no_evidence() {
          dispatch must proceed: {outcome:?}"
     );
 }
+
+#[tokio::test]
+async fn runner_refuses_debug_agent_outside_a_debug_turn() {
+    let def = crate::neppy::agent::registry::agents::load_builtins()
+        .unwrap()
+        .into_iter()
+        .find(|d| d.id == "debug_agent")
+        .expect("debug_agent is a builtin");
+    let result = run_subagent(&def, "x", SubagentRunOptions::default()).await;
+    assert!(
+        matches!(&result, Err(SubagentRunError::DebugOnly(id)) if id == "debug_agent"),
+        "got {result:?}"
+    );
+}

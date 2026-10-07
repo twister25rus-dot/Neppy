@@ -41,11 +41,11 @@ const LOG_PREFIX: &str = "[voice_reply]";
 /// visible from there. The observer module itself is always compiled,
 /// but its only producer is this env-gated branch and its only consumer
 /// is the test harness, so production callers never touch it.
-pub const TEST_SEAM_ENV: &str = "OPENHUMAN_TEST_REPLY_SPEECH_SEAM";
+pub const TEST_SEAM_ENV: &str = "NEPPY_TEST_REPLY_SPEECH_SEAM";
 
 fn test_seam_enabled() -> bool {
     matches!(
-        std::env::var(TEST_SEAM_ENV).ok().as_deref(),
+        crate::neppy::util::env::var(TEST_SEAM_ENV).ok().as_deref(),
         Some("1") | Some("true") | Some("TRUE")
     )
 }
@@ -132,7 +132,7 @@ pub async fn synthesize_reply(
         return Err("text is required".to_string());
     }
 
-    // Test seam: when OPENHUMAN_TEST_REPLY_SPEECH_SEAM is set (and only in
+    // Test seam: when NEPPY_TEST_REPLY_SPEECH_SEAM is set (and only in
     // debug builds — the seam is structurally dead in release), record the
     // call and short-circuit before hitting the backend.
     // See `test_seam` module docs and `TEST_SEAM_ENV` for the activation gate.

@@ -1,7 +1,7 @@
 /**
  * Task-sources commands.
  *
- * Thin wrappers around the core `openhuman.task_sources_*` JSON-RPC
+ * Thin wrappers around the core `neppy.task_sources_*` JSON-RPC
  * surface. These operations return bare values (the core ops attach no
  * log envelope), so `callCoreRpc<T>` resolves directly to the typed
  * payload.
@@ -134,18 +134,18 @@ function ensureTauri(): void {
 
 export async function neppyTaskSourcesList(): Promise<TaskSource[]> {
   ensureTauri();
-  return await callCoreRpc<TaskSource[]>({ method: 'openhuman.task_sources_list' });
+  return await callCoreRpc<TaskSource[]>({ method: 'neppy.task_sources_list' });
 }
 
 export async function neppyTaskSourcesGet(id: string): Promise<TaskSource> {
   ensureTauri();
-  return await callCoreRpc<TaskSource>({ method: 'openhuman.task_sources_get', params: { id } });
+  return await callCoreRpc<TaskSource>({ method: 'neppy.task_sources_get', params: { id } });
 }
 
 export async function neppyTaskSourcesAdd(params: TaskSourceAddParams): Promise<TaskSource> {
   ensureTauri();
   return await callCoreRpc<TaskSource>({
-    method: 'openhuman.task_sources_add',
+    method: 'neppy.task_sources_add',
     params: params as unknown as Record<string, unknown>,
   });
 }
@@ -156,7 +156,7 @@ export async function neppyTaskSourcesUpdate(
 ): Promise<TaskSource> {
   ensureTauri();
   return await callCoreRpc<TaskSource>({
-    method: 'openhuman.task_sources_update',
+    method: 'neppy.task_sources_update',
     params: { id, patch },
   });
 }
@@ -166,28 +166,25 @@ export async function neppyTaskSourcesRemove(
 ): Promise<{ id: string; removed: boolean; pruned?: number }> {
   ensureTauri();
   return await callCoreRpc<{ id: string; removed: boolean; pruned?: number }>({
-    method: 'openhuman.task_sources_remove',
+    method: 'neppy.task_sources_remove',
     params: { id },
   });
 }
 
 export async function neppyTaskSourcesFetch(id: string): Promise<FetchOutcome> {
   ensureTauri();
-  return await callCoreRpc<FetchOutcome>({
-    method: 'openhuman.task_sources_fetch',
-    params: { id },
-  });
+  return await callCoreRpc<FetchOutcome>({ method: 'neppy.task_sources_fetch', params: { id } });
 }
 
 export async function neppyTaskSourcesSync(): Promise<FetchOutcome[]> {
   ensureTauri();
-  return await callCoreRpc<FetchOutcome[]>({ method: 'openhuman.task_sources_sync' });
+  return await callCoreRpc<FetchOutcome[]>({ method: 'neppy.task_sources_sync' });
 }
 
 export async function neppyTaskSourcesListTasks(id: string, limit = 50): Promise<NormalizedTask[]> {
   ensureTauri();
   return await callCoreRpc<NormalizedTask[]>({
-    method: 'openhuman.task_sources_list_tasks',
+    method: 'neppy.task_sources_list_tasks',
     params: { id, limit },
   });
 }
@@ -200,7 +197,7 @@ export async function neppyTaskSourcesPreviewFilter(
 ): Promise<NormalizedTask[]> {
   ensureTauri();
   return await callCoreRpc<NormalizedTask[]>({
-    method: 'openhuman.task_sources_preview_filter',
+    method: 'neppy.task_sources_preview_filter',
     params: { provider, filter, connection_id: connectionId, max },
   });
 }
@@ -214,12 +211,12 @@ export async function neppyTaskSourcesListDatabases(
 ): Promise<TaskContainer[]> {
   ensureTauri();
   return await callCoreRpc<TaskContainer[]>({
-    method: 'openhuman.task_sources_list_databases',
+    method: 'neppy.task_sources_list_databases',
     params: { provider, connection_id: connectionId },
   });
 }
 
 export async function neppyTaskSourcesStatus(): Promise<TaskSourcesStatus> {
   ensureTauri();
-  return await callCoreRpc<TaskSourcesStatus>({ method: 'openhuman.task_sources_status' });
+  return await callCoreRpc<TaskSourcesStatus>({ method: 'neppy.task_sources_status' });
 }

@@ -27,7 +27,7 @@ pub enum Workspace {
     /// A caller-owned directory. Created if absent; persists across runs.
     Dir(PathBuf),
     /// The machine's configured Neppy workspace — the one the desktop app
-    /// and CLI use, resolved the usual way (`OPENHUMAN_WORKSPACE`,
+    /// and CLI use, resolved the usual way (`NEPPY_WORKSPACE`,
     /// `active_user.toml`, `~/.neppy/...`).
     ///
     /// Reuses an existing signed-in install, and equally can disturb it. The
@@ -146,7 +146,7 @@ impl ResolvedWorkspace {
             }
             Workspace::Inherit => {
                 // Resolved by `Config::load_or_init` rather than here: the
-                // chain it walks (OPENHUMAN_WORKSPACE, active_user.toml, the
+                // chain it walks (NEPPY_WORKSPACE, active_user.toml, the
                 // per-user `users/` scoping) is the operator's, and
                 // re-deriving it would be a second implementation that drifts.
                 // The builder signals this by not overriding the loaded fields.

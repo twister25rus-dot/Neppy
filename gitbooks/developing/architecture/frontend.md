@@ -122,9 +122,9 @@ App.tsx
 ```
 services/
   ├─ apiClient        → REST to a URL resolved at runtime via `services/backendUrl#getBackendUrl`
-  ├─ backendUrl       → Calls `openhuman.config_resolve_api_url`; falls back to VITE_BACKEND_URL only outside Tauri
+  ├─ backendUrl       → Calls `neppy.config_resolve_api_url`; falls back to VITE_BACKEND_URL only outside Tauri
   ├─ socketService    → Socket.io to the local core (base URL derived from the RPC URL); MCP-style envelopes
-  ├─ coreRpcClient    → JSON-RPC over HTTP to the local openhuman core; `relay_http_rpc` fallback for non-loopback http
+  ├─ coreRpcClient    → JSON-RPC over HTTP to the local neppy core; `relay_http_rpc` fallback for non-loopback http
   └─ transport/       → ConnectionProfile transports for iOS/remote (LanHttp, Tunnel, CloudHttp)
 ```
 
@@ -134,10 +134,10 @@ The desktop app does not bake the core RPC URL or the API host into the bundle a
 
 1. **Welcome-screen RPC URL field**, saved via `utils/configPersistence` and restored on next launch. End users configure a self-hosted core address here, not by hand-editing `config.toml` or `.env` files.
 2. **Tauri `core_rpc_url` command**, the port the embedded core is listening on for this process.
-3. **`VITE_OPENHUMAN_CORE_RPC_URL`**, build-time fallback for development.
+3. **`VITE_NEPPY_CORE_RPC_URL`**, build-time fallback for development.
 4. The hardcoded `http://127.0.0.1:7788/rpc` default.
 
-Once the RPC handshake succeeds, `services/backendUrl` calls `openhuman.config_resolve_api_url` to pull `api_url` (and other safe client fields) from the loaded core `Config`. `VITE_BACKEND_URL` is only used as a web fallback when the app runs outside Tauri.
+Once the RPC handshake succeeds, `services/backendUrl` calls `neppy.config_resolve_api_url` to pull `api_url` (and other safe client fields) from the loaded core `Config`. `VITE_BACKEND_URL` is only used as a web fallback when the app runs outside Tauri.
 
 Components that need the backend URL should call `useBackendUrl()` (or `getBackendUrl()` from non-React code), they must not import the static `BACKEND_URL` constant from `utils/config`, which represents the build-time value only.
 
@@ -200,7 +200,7 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 2. **Use selectors for derived state** — see `store/socketSelectors.ts`, `store/connectivitySelectors.ts`, `store/userErrorsSelectors.ts`.
 3. **Whitelist persistence per slice** — never persist transient/loading state; add a per-slice `persistReducer` in `store/index.ts`.
 4. **Prefer Redux over ad-hoc `localStorage`** — plain localStorage is reserved for the pre-login slices noted above.
-5. In dev / E2E builds the store is exposed as `window.__OPENHUMAN_STORE__` so WDIO specs can assert backing state; production bundles do not expose it.
+5. In dev / E2E builds the store is exposed as `window.__NEPPY_STORE__` so WDIO specs can assert backing state; production bundles do not expose it.
 
 ---
 
@@ -217,7 +217,7 @@ app/src/services/
   ├─ socketService (Socket.io)
   │   └─ connects to the local core's socket endpoint (base derived from the RPC URL)
   ├─ coreRpcClient.ts
-  │   ├─ direct webview fetch → local openhuman core (JSON-RPC over HTTP)
+  │   ├─ direct webview fetch → local neppy core (JSON-RPC over HTTP)
   │   └─ invoke('relay_http_rpc', …) fallback for non-loopback plain-http runtimes
   ├─ coreCommandClient.ts - typed wrappers over core RPC methods
   ├─ transport/ - ConnectionProfile transports (LanHttp, Tunnel, CloudHttp) for iOS/remote
@@ -553,12 +553,12 @@ Centralized build-time environment variable access — **never read `import.meta
 // Build-time fallback only (used outside Tauri).
 export const BACKEND_URL = /* VITE_BACKEND_URL || default */;
 // Core RPC build-time fallback.
-export const CORE_RPC_URL = /* VITE_OPENHUMAN_CORE_RPC_URL || 'http://127.0.0.1:7788/rpc' */;
+export const CORE_RPC_URL = /* VITE_NEPPY_CORE_RPC_URL || 'http://127.0.0.1:7788/rpc' */;
 // Dev flags, e.g.
 export const DEV_FORCE_ONBOARDING = /* dev-only VITE_DEV_FORCE_ONBOARDING */;
 ```
 
-> **Do not** import `BACKEND_URL` directly to make API calls. Resolve the URL at runtime so the core's `api_url` (via `openhuman.config_resolve_api_url`) takes effect:
+> **Do not** import `BACKEND_URL` directly to make API calls. Resolve the URL at runtime so the core's `api_url` (via `neppy.config_resolve_api_url`) takes effect:
 >
 > ```typescript
 > // React components
@@ -623,7 +623,7 @@ Use TypeScript generics for API and RPC calls:
 ```typescript
 const user = await apiClient.get<User>("/users/me");
 const result = await callCoreRpc<Snapshot>({
-  method: "openhuman.app_state_snapshot",
+  method: "neppy.app_state_snapshot",
 });
 ```
 

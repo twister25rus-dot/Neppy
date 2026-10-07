@@ -28,15 +28,15 @@ struct ActiveWorkspaceState {
 }
 
 /// Environment override for the agent's default projects directory.
-pub const PROJECTS_DIR_ENV_VAR: &str = "OPENHUMAN_PROJECTS_DIR";
+pub const PROJECTS_DIR_ENV_VAR: &str = "NEPPY_PROJECTS_DIR";
 
 /// Environment override for the agent action sandbox directory.
-pub const ACTION_DIR_ENV_VAR: &str = "OPENHUMAN_ACTION_DIR";
+pub const ACTION_DIR_ENV_VAR: &str = "NEPPY_ACTION_DIR";
 
 /// Environment override for the global memory-sync cadence (seconds).
 /// `0` means "Manual only". See issue #3302 and
 /// [`Config::memory_sync_interval_secs`].
-pub const MEMORY_SYNC_INTERVAL_SECS_ENV_VAR: &str = "OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS";
+pub const MEMORY_SYNC_INTERVAL_SECS_ENV_VAR: &str = "NEPPY_MEMORY_SYNC_INTERVAL_SECS";
 
 fn default_root_dir_name() -> &'static str {
     if crate::api::config::is_staging_app_env(crate::api::config::app_env_from_env().as_deref()) {
@@ -51,7 +51,7 @@ pub(crate) fn default_root_dir_name_pub() -> &'static str {
     default_root_dir_name()
 }
 
-/// Returns the root openhuman directory (`~/.neppy`), independent of any
+/// Returns the root neppy directory (`~/.neppy`), independent of any
 /// per-user scoping.  Used to locate `active_user.toml` and the shared
 /// `users/` tree.
 pub fn default_root_neppy_dir() -> Result<PathBuf> {
@@ -73,10 +73,10 @@ pub(super) fn default_config_and_workspace_dirs() -> Result<(PathBuf, PathBuf)> 
 /// The agent's default **projects home** — a visible, read-write directory
 /// (`~/Neppy/projects`) where the coding agent creates and saves projects,
 /// kept distinct from the hidden internal state dir (`~/.neppy/workspace`,
-/// which also holds `memory_tree` etc.). Overridable via `OPENHUMAN_PROJECTS_DIR`;
+/// which also holds `memory_tree` etc.). Overridable via `NEPPY_PROJECTS_DIR`;
 /// falls back to `./Neppy/projects` only when the home dir can't be resolved.
 pub fn default_projects_dir() -> PathBuf {
-    if let Ok(p) = std::env::var(PROJECTS_DIR_ENV_VAR) {
+    if let Ok(p) = crate::neppy::util::env::var(PROJECTS_DIR_ENV_VAR) {
         let trimmed = p.trim();
         if !trimmed.is_empty() {
             return PathBuf::from(trimmed);
@@ -89,13 +89,13 @@ pub fn default_projects_dir() -> PathBuf {
         .join("projects")
 }
 
-/// The `OPENHUMAN_ACTION_DIR` env override, when set to a non-empty value.
+/// The `NEPPY_ACTION_DIR` env override, when set to a non-empty value.
 ///
 /// Returns `None` when the variable is unset or blank (a common shape from
 /// shells that pass through a declared-but-unset variable). The trim mirrors
 /// [`default_action_dir`] so an empty env var never pins `action_dir`.
 pub fn action_dir_env_override() -> Option<PathBuf> {
-    let raw = std::env::var(ACTION_DIR_ENV_VAR).ok()?;
+    let raw = crate::neppy::util::env::var(ACTION_DIR_ENV_VAR).ok()?;
     let trimmed = raw.trim();
     if trimmed.is_empty() {
         None
@@ -105,7 +105,7 @@ pub fn action_dir_env_override() -> Option<PathBuf> {
 }
 
 /// Resolve the effective `action_dir` from the precedence chain:
-/// env `OPENHUMAN_ACTION_DIR` > persisted `action_dir_override` > default
+/// env `NEPPY_ACTION_DIR` > persisted `action_dir_override` > default
 /// projects dir. Keeping the env var first means existing env-driven
 /// deployments are unaffected by a UI-set override.
 pub fn resolve_action_dir(action_dir_override: &Option<PathBuf>) -> PathBuf {
@@ -125,7 +125,7 @@ pub fn resolve_action_dir(action_dir_override: &Option<PathBuf>) -> PathBuf {
 }
 
 pub fn default_action_dir() -> PathBuf {
-    if let Ok(p) = std::env::var(ACTION_DIR_ENV_VAR) {
+    if let Ok(p) = crate::neppy::util::env::var(ACTION_DIR_ENV_VAR) {
         let trimmed = p.trim();
         if !trimmed.is_empty() {
             return PathBuf::from(trimmed);
@@ -280,7 +280,7 @@ pub(crate) enum ConfigResolutionSource {
 impl ConfigResolutionSource {
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
-            Self::EnvWorkspace => "OPENHUMAN_WORKSPACE",
+            Self::EnvWorkspace => "NEPPY_WORKSPACE",
             Self::ActiveWorkspaceMarker => "active_workspace.toml",
             Self::ActiveUser => "active_user.toml",
             Self::DefaultConfigDir => "default",
@@ -296,14 +296,14 @@ pub(crate) async fn resolve_runtime_config_dirs(
 }
 
 /// Env-injectable variant of [`resolve_runtime_config_dirs`]. Accepts any
-/// [`EnvLookup`] so unit tests can exercise the `OPENHUMAN_WORKSPACE`
+/// [`EnvLookup`] so unit tests can exercise the `NEPPY_WORKSPACE`
 /// override path without mutating the process environment.
 pub(crate) async fn resolve_runtime_config_dirs_with(
     default_neppy_dir: &Path,
     default_workspace_dir: &Path,
     env: &(dyn EnvLookup + Send + Sync),
 ) -> Result<(PathBuf, PathBuf, ConfigResolutionSource)> {
-    if let Some(custom_workspace) = env.get("OPENHUMAN_WORKSPACE") {
+    if let Some(custom_workspace) = env.get("NEPPY_WORKSPACE") {
         if !custom_workspace.is_empty() {
             let (neppy_dir, workspace_dir) =
                 resolve_config_dir_for_workspace(&PathBuf::from(custom_workspace));
@@ -319,7 +319,7 @@ pub(crate) async fn resolve_runtime_config_dirs_with(
 }
 
 /// Same as [`resolve_runtime_config_dirs`] but skips the
-/// `OPENHUMAN_WORKSPACE` env var override. Used by
+/// `NEPPY_WORKSPACE` env var override. Used by
 /// [`Config::load_from_default_paths`] so callers can reliably load
 /// the real user config without mutating the process environment.
 pub(super) async fn resolve_config_dirs_ignoring_env(

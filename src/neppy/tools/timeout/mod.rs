@@ -1,7 +1,7 @@
 //! Wall-clock timeout for tool execution (node/tool runtime + agent loop).
 //!
 //! Resolution order, highest precedence first:
-//! 1. `OPENHUMAN_TOOL_TIMEOUT_SECS` environment variable (operator override).
+//! 1. `NEPPY_TOOL_TIMEOUT_SECS` environment variable (operator override).
 //! 2. The value pushed in from the persisted config via [`set_tool_timeout_secs`]
 //!    (driven by the UI / `config.update_agent_settings` RPC).
 //! 3. The built-in [`DEFAULT_TIMEOUT_SECS`] (120) default.
@@ -23,7 +23,7 @@ pub const MIN_TIMEOUT_SECS: u64 = 1;
 /// hung tool wedge a session indefinitely.
 pub const MAX_TIMEOUT_SECS: u64 = 3600;
 /// Operator override env var. Takes precedence over the persisted config value.
-pub const ENV_VAR: &str = "OPENHUMAN_TOOL_TIMEOUT_SECS";
+pub const ENV_VAR: &str = "NEPPY_TOOL_TIMEOUT_SECS";
 /// Effective-unbounded cap (24h) for sandbox backends, which require a finite
 /// deadline. Scripting tools run truly unbounded on the native path, but the
 /// sandbox path substitutes this generous cap when no explicit `timeout_secs`
@@ -70,7 +70,7 @@ fn resolve_effective(config_secs: u64, env_raw: Option<&str>) -> u64 {
 }
 
 fn read_env() -> Option<String> {
-    std::env::var(ENV_VAR).ok()
+    crate::neppy::util::env::var(ENV_VAR).ok()
 }
 
 /// `true` when the operator env var is set to a valid override, meaning UI /

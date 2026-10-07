@@ -67,7 +67,7 @@ pub async fn run(
             &mut ui,
             OverlayKind::Threads,
             "Saved threads",
-            "openhuman.threads_list",
+            "neppy.threads_list",
             json!({}),
             &["threads", "items"],
             &["id", "thread_id"],
@@ -341,8 +341,8 @@ fn send_message(
             "model_override": model_override,
             "profile_id": profile_id,
         });
-        if let Err(e) = rt.invoke("openhuman.channel_web_chat", params).await {
-            log::error!("[tui] openhuman.channel_web_chat failed: {e}");
+        if let Err(e) = rt.invoke("neppy.channel_web_chat", params).await {
+            log::error!("[tui] neppy.channel_web_chat failed: {e}");
             // Surface the failure in-transcript via a synthetic chat_error so
             // the reducer clears the streaming state and shows the reason.
             web_chat::publish_web_channel_event(WebChannelEvent {
@@ -375,8 +375,8 @@ fn cancel_turn(
     tokio::spawn(async move {
         // Omit `request_id` → stop whatever is running on the thread.
         let params = json!({ "client_id": cid, "thread_id": tid });
-        if let Err(e) = rt.invoke("openhuman.channel_web_cancel", params).await {
-            log::error!("[tui] openhuman.channel_web_cancel failed: {e}");
+        if let Err(e) = rt.invoke("neppy.channel_web_cancel", params).await {
+            log::error!("[tui] neppy.channel_web_cancel failed: {e}");
         }
     });
 }
@@ -386,7 +386,7 @@ fn cancel_turn(
 async fn new_thread(runtime: &Arc<CoreRuntime>, state: &mut TranscriptState, ui: &mut UiState) {
     log::info!("[tui] creating new thread");
     match runtime
-        .invoke("openhuman.threads_create_new", json!({}))
+        .invoke("neppy.threads_create_new", json!({}))
         .await
         .ok()
         .and_then(|v| super::runner::extract_thread_id(&v))
@@ -463,7 +463,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Threads,
                 "Saved threads",
-                "openhuman.threads_list",
+                "neppy.threads_list",
                 json!({}),
                 &["threads", "items"],
                 &["id", "thread_id"],
@@ -519,7 +519,7 @@ async fn execute_command(
             refresh_agent_paths(runtime, ui).await;
             if let Ok(value) = runtime
                 .invoke(
-                    "openhuman.channel_web_queue_status",
+                    "neppy.channel_web_queue_status",
                     json!({"thread_id": ui.thread_id}),
                 )
                 .await
@@ -566,7 +566,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Usage,
                 "Token and cost usage",
-                "openhuman.threads_token_usage",
+                "neppy.threads_token_usage",
                 json!({"thread_id": ui.thread_id}),
                 &[],
                 &[],
@@ -577,7 +577,7 @@ async fn execute_command(
         "goal" if !argument.trim().is_empty() => {
             match runtime
                 .invoke(
-                    "openhuman.thread_goals_set",
+                    "neppy.thread_goals_set",
                     json!({"thread_id": ui.thread_id, "objective": argument.trim()}),
                 )
                 .await
@@ -592,7 +592,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Goal,
                 "Thread goal",
-                "openhuman.thread_goals_get",
+                "neppy.thread_goals_get",
                 json!({"thread_id": ui.thread_id}),
                 &[],
                 &[],
@@ -610,7 +610,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Tasks,
                 "Task board",
-                "openhuman.threads_task_board_get",
+                "neppy.threads_task_board_get",
                 json!({"thread_id": ui.thread_id}),
                 &["cards", "items"],
                 &["id"],
@@ -624,7 +624,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Agents,
                 "Agents",
-                "openhuman.profiles_list",
+                "neppy.profiles_list",
                 json!({}),
                 &["profiles", "items"],
                 &["id", "profile_id"],
@@ -638,7 +638,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Skills,
                 "Skills",
-                "openhuman.skills_list",
+                "neppy.skills_list",
                 json!({"include_skills": true}),
                 &["skills", "items"],
                 &["id"],
@@ -652,7 +652,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Mcp,
                 "MCP servers",
-                "openhuman.mcp_clients_installed_list",
+                "neppy.mcp_clients_installed_list",
                 json!({}),
                 &["installed", "servers"],
                 &["id", "server_id"],
@@ -666,7 +666,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Artifacts,
                 "Artifacts",
-                "openhuman.ai_list_artifacts",
+                "neppy.ai_list_artifacts",
                 json!({"thread_id": ui.thread_id, "limit": 100}),
                 &["artifacts", "items"],
                 &["id", "artifact_id"],
@@ -680,7 +680,7 @@ async fn execute_command(
                 ui,
                 OverlayKind::Approvals,
                 "Pending approvals",
-                "openhuman.approval_list_pending",
+                "neppy.approval_list_pending",
                 json!({}),
                 &["pending", "approvals"],
                 &["request_id", "id"],
@@ -811,7 +811,7 @@ async fn handle_overlay_key(
     if kind == OverlayKind::ConfirmDelete && matches!(key.code, KeyCode::Char('y' | 'Y')) {
         let result = runtime
             .invoke(
-                "openhuman.threads_delete",
+                "neppy.threads_delete",
                 json!({
                     "thread_id": ui.thread_id,
                     "deleted_at": chrono::Utc::now().to_rfc3339(),
@@ -852,7 +852,7 @@ async fn handle_overlay_key(
             if let Some(review) = ui.pending_plan_review.take() {
                 match runtime
                     .invoke(
-                        "openhuman.plan_review_decide",
+                        "neppy.plan_review_decide",
                         json!({"request_id": review.request_id, "decision": decision}),
                     )
                     .await
@@ -914,7 +914,7 @@ async fn handle_overlay_key(
                     if !input.trim().is_empty() {
                         match runtime
                             .invoke(
-                                "openhuman.threads_update_title",
+                                "neppy.threads_update_title",
                                 json!({"thread_id": ui.thread_id, "title": input.trim()}),
                             )
                             .await
@@ -942,7 +942,7 @@ async fn handle_overlay_key(
                     if let Some(row) = selected {
                         match runtime
                             .invoke(
-                                "openhuman.config_update_autonomy_settings",
+                                "neppy.config_update_autonomy_settings",
                                 json!({"level": row.id}),
                             )
                             .await
@@ -960,7 +960,7 @@ async fn handle_overlay_key(
                 OverlayKind::Agents => {
                     if let Some(row) = selected {
                         match runtime
-                            .invoke("openhuman.profiles_select", json!({"profile_id": row.id}))
+                            .invoke("neppy.profiles_select", json!({"profile_id": row.id}))
                             .await
                         {
                             Ok(_) => {
@@ -983,7 +983,7 @@ async fn handle_overlay_key(
                     if let Some(review) = ui.pending_plan_review.take() {
                         match runtime
                             .invoke(
-                                "openhuman.plan_review_decide",
+                                "neppy.plan_review_decide",
                                 json!({
                                     "request_id": review.request_id,
                                     "decision": "revise",
@@ -1044,7 +1044,7 @@ async fn decide_approval(
     }
     match runtime
         .invoke(
-            "openhuman.approval_decide",
+            "neppy.approval_decide",
             json!({"request_id": request_id, "decision": decision}),
         )
         .await
@@ -1077,7 +1077,7 @@ async fn switch_thread(
 async fn load_transcript(runtime: &Arc<CoreRuntime>, state: &mut TranscriptState, thread_id: &str) {
     match runtime
         .invoke(
-            "openhuman.threads_transcript_get",
+            "neppy.threads_transcript_get",
             json!({"thread_id": thread_id, "limit": 500}),
         )
         .await
@@ -1089,7 +1089,7 @@ async fn load_transcript(runtime: &Arc<CoreRuntime>, state: &mut TranscriptState
 
 async fn refresh_agent_paths(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
     if let Ok(value) = runtime
-        .invoke("openhuman.config_get_agent_paths", json!({}))
+        .invoke("neppy.config_get_agent_paths", json!({}))
         .await
     {
         let paths = super::cockpit::unwrap_rpc(&value);

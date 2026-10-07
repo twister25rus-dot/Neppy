@@ -23,7 +23,7 @@ async function waitForNotificationsSections(page: Page): Promise<void> {
 test.describe('Notifications', () => {
   test('notification_ingest creates a new notification via core RPC', async () => {
     const payload = await callCoreRpc<{ id?: string; skipped?: boolean }>(
-      'openhuman.notification_ingest',
+      'neppy.notification_ingest',
       {
         provider: 'e2e',
         title: 'E2E Test Notification',
@@ -38,7 +38,7 @@ test.describe('Notifications', () => {
 
   test('notification_list returns the ingested notification', async () => {
     const title = `PW Notification List ${Date.now()}`;
-    await callCoreRpc<{ id?: string; skipped?: boolean }>('openhuman.notification_ingest', {
+    await callCoreRpc<{ id?: string; skipped?: boolean }>('neppy.notification_ingest', {
       provider: 'e2e',
       title,
       body: 'List coverage notification',
@@ -46,7 +46,7 @@ test.describe('Notifications', () => {
     });
 
     const result = await callCoreRpc<{ items?: Array<{ title?: string }> }>(
-      'openhuman.notification_list',
+      'neppy.notification_list',
       { limit: 20 }
     );
 
@@ -54,31 +54,28 @@ test.describe('Notifications', () => {
   });
 
   test('notification_mark_read transitions notification status', async () => {
-    const before = await callCoreRpc<Record<string, unknown>>('openhuman.notification_stats', {});
+    const before = await callCoreRpc<Record<string, unknown>>('neppy.notification_stats', {});
     const initialUnread = getUnreadCount(before);
 
-    const created = await callCoreRpc<{ id: string }>('openhuman.notification_ingest', {
+    const created = await callCoreRpc<{ id: string }>('neppy.notification_ingest', {
       provider: 'e2e',
       title: `PW Notification Mark Read ${Date.now()}`,
       body: 'Mark read coverage notification',
       raw_payload: {},
     });
 
-    await callCoreRpc('openhuman.notification_mark_read', { id: created.id });
+    await callCoreRpc('neppy.notification_mark_read', { id: created.id });
 
     await expect
       .poll(async () => {
-        const after = await callCoreRpc<Record<string, unknown>>(
-          'openhuman.notification_stats',
-          {}
-        );
+        const after = await callCoreRpc<Record<string, unknown>>('neppy.notification_stats', {});
         return getUnreadCount(after);
       })
       .toBeLessThanOrEqual(initialUnread);
   });
 
   test('notification_stats returns aggregate statistics', async () => {
-    const stats = await callCoreRpc<Record<string, unknown>>('openhuman.notification_stats', {});
+    const stats = await callCoreRpc<Record<string, unknown>>('neppy.notification_stats', {});
     expect(Object.values(stats).some(value => typeof value === 'number')).toBe(true);
   });
 
@@ -86,7 +83,7 @@ test.describe('Notifications', () => {
     const title = `PW Notification UI ${Date.now()}`;
     const body = `Created by the notifications Playwright spec ${Date.now()}`;
 
-    await callCoreRpc<{ id?: string; skipped?: boolean }>('openhuman.notification_ingest', {
+    await callCoreRpc<{ id?: string; skipped?: boolean }>('neppy.notification_ingest', {
       provider: 'e2e',
       title,
       body,

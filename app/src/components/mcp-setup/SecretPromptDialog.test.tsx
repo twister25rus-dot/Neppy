@@ -9,7 +9,7 @@ vi.mock('../../services/coreRpcClient', () => ({
 }));
 
 function dispatchRequest(detail: { refId: string; keyName: string; prompt: string }) {
-  window.dispatchEvent(new CustomEvent('openhuman:mcp-setup-secret-requested', { detail }));
+  window.dispatchEvent(new CustomEvent('neppy:mcp-setup-secret-requested', { detail }));
 }
 
 describe('SecretPromptDialog', () => {
@@ -53,7 +53,7 @@ describe('SecretPromptDialog', () => {
 
     await waitFor(() => {
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_setup_submit_secret',
+        method: 'neppy.mcp_setup_submit_secret',
         params: { ref_id: 'secret://abc123', value: 'super-secret-value' },
       });
     });

@@ -545,6 +545,18 @@ impl GitOperationsTool {
             return Ok(ToolResult::error("Not in a git repository"));
         }
 
+        // Debug Mode: push / commit follow `debug_mode.allow_git_*` inside a
+        // Debug turn (the tool has no push operation today; the guard keeps it
+        // closed if one is added). `None` everywhere else.
+        if let Some(reason) =
+            crate::neppy::agent::debug_mode::policy::git_operation_denied(operation)
+        {
+            return Ok(ToolResult::error(format!(
+                "{} {reason}",
+                crate::neppy::security::POLICY_BLOCKED_MARKER
+            )));
+        }
+
         // Check autonomy level for write operations
         if self.requires_write_access(operation) {
             if !self.security.can_act() {

@@ -2,11 +2,11 @@
  * Voice settings facade for the Settings > Voice panel.
  *
  * Mirrors aiSettingsApi.ts for the voice provider registry:
- *  1. Voice providers + STT/TTS routing -> `openhuman.voice_update_provider_settings`
- *  2. API keys for voice providers      -> `openhuman.auth_*_provider_credentials`
+ *  1. Voice providers + STT/TTS routing -> `neppy.voice_update_provider_settings`
+ *  2. API keys for voice providers      -> `neppy.auth_*_provider_credentials`
  *                                          (shared namespace with LLM providers)
- *  3. Model/voice listings              -> `openhuman.voice_list_models`
- *  4. Provider testing                  -> `openhuman.voice_test_provider`
+ *  3. Model/voice listings              -> `neppy.voice_list_models`
+ *  4. Provider testing                  -> `neppy.voice_test_provider`
  */
 import {
   authListProviderCredentials,
@@ -121,7 +121,7 @@ export async function loadVoiceSettings(): Promise<VoiceSettings> {
   // fields. Cast via `unknown` to avoid TS structural overlap complaints.
   const [configResult, profilesRes] = await Promise.all([
     callCoreRpc<Record<string, unknown>>({
-      method: 'openhuman.config_get_client_config',
+      method: 'neppy.config_get_client_config',
       params: {},
     }).then(raw => {
       // The config_get_client_config RPC wraps its payload in { result: ... }.
@@ -205,7 +205,7 @@ export async function saveVoiceSettings(prev: VoiceSettings, next: VoiceSettings
     console.debug('[voiceSettingsApi] saving patch', patch);
   }
 
-  await callCoreRpc({ method: 'openhuman.voice_update_provider_settings', params: patch });
+  await callCoreRpc({ method: 'neppy.voice_update_provider_settings', params: patch });
 }
 
 function stripHasKey(p: VoiceProviderView): VoiceProviderCreds {
@@ -227,7 +227,7 @@ export async function testVoiceProvider(
   validateOnly = false
 ): Promise<VoiceTestResult> {
   const result = await callCoreRpc<VoiceTestResult>({
-    method: 'openhuman.voice_test_provider',
+    method: 'neppy.voice_test_provider',
     params: { workload, provider, validate_only: validateOnly },
     timeoutMs: VOICE_TEST_TIMEOUT_MS,
   });

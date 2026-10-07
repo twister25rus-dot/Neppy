@@ -150,7 +150,7 @@ describe('Composio GitHub tools — tags query param flow', () => {
     resetMockBehavior();
     seedGitHubState();
 
-    const result = await callNeppyRpc('openhuman.composio_list_tools', {
+    const result = await callNeppyRpc('neppy.composio_list_tools', {
       toolkits: ['github'],
       tags: ['stars'],
     });
@@ -192,7 +192,7 @@ describe('Composio GitHub tools — tags query param flow', () => {
     resetMockBehavior();
     seedGitHubState();
 
-    const result = await callNeppyRpc('openhuman.composio_list_tools', {
+    const result = await callNeppyRpc('neppy.composio_list_tools', {
       toolkits: ['github'],
       tags: ['stars', 'repos'],
     });
@@ -245,7 +245,7 @@ describe('Composio GitHub tools — tags query param flow', () => {
     // tags knob for "stars" — must NOT appear in gmail response.
     setMockBehavior('composioToolsByTag_stars', JSON.stringify(STARS_TOOLS));
 
-    const result = await callNeppyRpc('openhuman.composio_list_tools', {
+    const result = await callNeppyRpc('neppy.composio_list_tools', {
       toolkits: ['gmail'],
       tags: ['stars'],
     });

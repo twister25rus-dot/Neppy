@@ -38,10 +38,10 @@ const AUTH_ME_STORE_TRANSIENT_STATUSES: &[u16] = &[408, 429, 500, 502, 503, 504,
 /// Capping store-time validation well under the frontend budget makes a slow
 /// backend fail *fast* into the caller-authorized pending-session path (for a
 /// live-`exp` JWT), so the user lands in the app with deferred revalidation
-/// instead of being bounced. Overridable via `OPENHUMAN_AUTH_ME_STORE_TIMEOUT_MS`
+/// instead of being bounced. Overridable via `NEPPY_AUTH_ME_STORE_TIMEOUT_MS`
 /// for ops tuning and tests.
 const AUTH_ME_STORE_VALIDATION_BUDGET: Duration = Duration::from_secs(12);
-const AUTH_ME_STORE_VALIDATION_BUDGET_ENV: &str = "OPENHUMAN_AUTH_ME_STORE_TIMEOUT_MS";
+const AUTH_ME_STORE_VALIDATION_BUDGET_ENV: &str = "NEPPY_AUTH_ME_STORE_TIMEOUT_MS";
 
 /// Whether this dispatch is running under an embedder-hosted core (the library
 /// `Harness`) rather than the desktop shell or CLI.
@@ -85,8 +85,10 @@ pub async fn start_login_gated_services(config: &Config) {
     // the session-isolation tests order-dependent. `cfg!(test)` is compiled out
     // of every production/release build, so this gate never affects shipped
     // behavior; the one test that verifies this function's concurrency opts back
-    // in via `OPENHUMAN_RUN_LOGIN_GATED_SERVICES_IN_TEST`.
-    if cfg!(test) && std::env::var_os("OPENHUMAN_RUN_LOGIN_GATED_SERVICES_IN_TEST").is_none() {
+    // in via `NEPPY_RUN_LOGIN_GATED_SERVICES_IN_TEST`.
+    if cfg!(test)
+        && crate::neppy::util::env::var_os("NEPPY_RUN_LOGIN_GATED_SERVICES_IN_TEST").is_none()
+    {
         log::debug!("[services] login-gated services skipped under unit test");
         return;
     }
@@ -453,7 +455,7 @@ async fn store_session_inner(
         }
     }
 
-    // Determine user_id so we can scope the openhuman directory to this user.
+    // Determine user_id so we can scope the neppy directory to this user.
     let resolved_user_id = metadata.get("user_id").cloned();
     if pending_backend_validation && resolved_user_id.is_none() && !is_embedder_host() {
         if let Ok(root_dir) = default_root_neppy_dir() {
@@ -670,10 +672,10 @@ async fn store_session_inner(
 }
 
 /// Store-time `GET /auth/me` budget resolver. Reads the
-/// `OPENHUMAN_AUTH_ME_STORE_TIMEOUT_MS` override (positive integer milliseconds),
+/// `NEPPY_AUTH_ME_STORE_TIMEOUT_MS` override (positive integer milliseconds),
 /// otherwise the `AUTH_ME_STORE_VALIDATION_BUDGET` default.
 fn auth_me_store_validation_budget() -> Duration {
-    std::env::var(AUTH_ME_STORE_VALIDATION_BUDGET_ENV)
+    crate::neppy::util::env::var(AUTH_ME_STORE_VALIDATION_BUDGET_ENV)
         .ok()
         .and_then(|raw| raw.trim().parse::<u64>().ok())
         .filter(|ms| *ms > 0)
@@ -823,7 +825,7 @@ pub async fn clear_session(config: &Config) -> Result<RpcOutcome<serde_json::Val
     crate::neppy::platform::socket::medulla::workflows::clear_workflow_bridge();
 
     // Clear the active user marker so subsequent config loads fall back to the
-    // default (unauthenticated) openhuman directory.
+    // default (unauthenticated) neppy directory.
     if let Ok(root_dir) = default_root_neppy_dir() {
         if let Err(e) = crate::neppy::config::clear_active_user(&root_dir) {
             tracing::warn!(error = %e, "failed to clear active_user.toml on logout");

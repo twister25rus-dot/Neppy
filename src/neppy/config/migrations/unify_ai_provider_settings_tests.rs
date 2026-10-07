@@ -74,7 +74,7 @@ fn neppy_inference_url_does_not_seed_custom() {
     let mut c = Config::default();
     c.inference_url = Some("https://api.openhuman.ai/v1".into());
     let _ = run(&mut c).expect("migration must succeed");
-    // Only the openhuman entry should be seeded — no Custom entry.
+    // Only the neppy entry should be seeded — no Custom entry.
     assert_eq!(c.cloud_providers.len(), 1);
     assert_eq!(c.cloud_providers[0].slug, "openhuman");
 }

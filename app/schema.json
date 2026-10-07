@@ -106,7 +106,7 @@
           "ty": { "Option": "F64" }
         }
       ],
-      "method": "openhuman.agent_chat",
+      "method": "neppy.agent_chat",
       "namespace": "agent",
       "outputs": [
         { "comment": "Agent response payload.", "name": "response", "required": true, "ty": "Json" }
@@ -130,7 +130,7 @@
           "ty": { "Option": "F64" }
         }
       ],
-      "method": "openhuman.agent_chat_simple",
+      "method": "neppy.agent_chat_simple",
       "namespace": "agent",
       "outputs": [
         { "comment": "Agent response payload.", "name": "response", "required": true, "ty": "Json" }
@@ -142,7 +142,7 @@
       "inputs": [
         { "comment": "REPL session id.", "name": "session_id", "required": true, "ty": "String" }
       ],
-      "method": "openhuman.agent_repl_session_end",
+      "method": "neppy.agent_repl_session_end",
       "namespace": "agent",
       "outputs": [
         { "comment": "Session end result.", "name": "result", "required": true, "ty": "Json" }
@@ -154,7 +154,7 @@
       "inputs": [
         { "comment": "REPL session id.", "name": "session_id", "required": true, "ty": "String" }
       ],
-      "method": "openhuman.agent_repl_session_reset",
+      "method": "neppy.agent_repl_session_reset",
       "namespace": "agent",
       "outputs": [
         { "comment": "Session reset result.", "name": "result", "required": true, "ty": "Json" }
@@ -183,7 +183,7 @@
           "ty": { "Option": "F64" }
         }
       ],
-      "method": "openhuman.agent_repl_session_start",
+      "method": "neppy.agent_repl_session_start",
       "namespace": "agent",
       "outputs": [
         { "comment": "Session creation result.", "name": "result", "required": true, "ty": "Json" }
@@ -193,7 +193,7 @@
       "description": "Return core runtime URL and status for agent calls.",
       "function": "server_status",
       "inputs": [],
-      "method": "openhuman.agent_server_status",
+      "method": "neppy.agent_server_status",
       "namespace": "agent",
       "outputs": [
         {
@@ -208,7 +208,7 @@
       "description": "Remove stored app session credentials.",
       "function": "clear_session",
       "inputs": [],
-      "method": "openhuman.auth_clear_session",
+      "method": "neppy.auth_clear_session",
       "namespace": "auth",
       "outputs": [
         {
@@ -230,7 +230,7 @@
           "ty": "String"
         }
       ],
-      "method": "openhuman.auth_consume_login_token",
+      "method": "neppy.auth_consume_login_token",
       "namespace": "auth",
       "outputs": [
         {
@@ -245,7 +245,7 @@
       "description": "Read stored app session token.",
       "function": "get_session_token",
       "inputs": [],
-      "method": "openhuman.auth_get_session_token",
+      "method": "neppy.auth_get_session_token",
       "namespace": "auth",
       "outputs": [
         { "comment": "Session token payload.", "name": "token", "required": true, "ty": "Json" }
@@ -255,7 +255,7 @@
       "description": "Get current auth/session state.",
       "function": "get_state",
       "inputs": [],
-      "method": "openhuman.auth_get_state",
+      "method": "neppy.auth_get_state",
       "namespace": "auth",
       "outputs": [
         {
@@ -277,7 +277,7 @@
           "ty": { "Option": "String" }
         }
       ],
-      "method": "openhuman.auth_list_provider_credentials",
+      "method": "neppy.auth_list_provider_credentials",
       "namespace": "auth",
       "outputs": [
         {
@@ -306,7 +306,7 @@
           "ty": { "Option": "String" }
         }
       ],
-      "method": "openhuman.auth_oauth_connect",
+      "method": "neppy.auth_oauth_connect",
       "namespace": "auth",
       "outputs": [
         { "comment": "OAuth connect payload.", "name": "result", "required": true, "ty": "Json" }
@@ -319,7 +319,7 @@
         { "comment": "Integration id.", "name": "integrationId", "required": true, "ty": "String" },
         { "comment": "Encryption key.", "name": "key", "required": true, "ty": "String" }
       ],
-      "method": "openhuman.auth_oauth_fetch_integration_tokens",
+      "method": "neppy.auth_oauth_fetch_integration_tokens",
       "namespace": "auth",
       "outputs": [
         {
@@ -334,7 +334,7 @@
       "description": "List OAuth integrations for current session.",
       "function": "oauth_list_integrations",
       "inputs": [],
-      "method": "openhuman.auth_oauth_list_integrations",
+      "method": "neppy.auth_oauth_list_integrations",
       "namespace": "auth",
       "outputs": [
         {
@@ -351,7 +351,7 @@
       "inputs": [
         { "comment": "Integration id.", "name": "integrationId", "required": true, "ty": "String" }
       ],
-      "method": "openhuman.auth_oauth_revoke_integration",
+      "method": "neppy.auth_oauth_revoke_integration",
       "namespace": "auth",
       "outputs": [
         {
@@ -374,7 +374,7 @@
           "ty": { "Option": "String" }
         }
       ],
-      "method": "openhuman.auth_remove_provider_credentials",
+      "method": "neppy.auth_remove_provider_credentials",
       "namespace": "auth",
       "outputs": [
         {
@@ -415,7 +415,7 @@
           "ty": { "Option": "Bool" }
         }
       ],
-      "method": "openhuman.auth_store_provider_credentials",
+      "method": "neppy.auth_store_provider_credentials",
       "namespace": "auth",
       "outputs": [
         {
@@ -444,7 +444,7 @@
           "ty": { "Option": "Json" }
         }
       ],
-      "method": "openhuman.auth_store_session",
+      "method": "neppy.auth_store_session",
       "namespace": "auth",
       "outputs": [
         {
@@ -466,7 +466,7 @@
           "ty": { "Option": "String" }
         }
       ],
-      "method": "openhuman.autocomplete_accept",
+      "method": "neppy.autocomplete_accept",
       "namespace": "autocomplete",
       "outputs": [
         {
@@ -488,7 +488,7 @@
           "ty": { "Option": "String" }
         }
       ],
-      "method": "openhuman.autocomplete_current",
+      "method": "neppy.autocomplete_current",
       "namespace": "autocomplete",
       "outputs": [
         {
@@ -503,7 +503,7 @@
       "description": "Inspect focused element and text context used by autocomplete.",
       "function": "debug_focus",
       "inputs": [],
-      "method": "openhuman.autocomplete_debug_focus",
+      "method": "neppy.autocomplete_debug_focus",
       "namespace": "autocomplete",
       "outputs": [
         {
@@ -567,7 +567,7 @@
           "ty": { "Option": "Bool" }
         }
       ],
-      "method": "openhuman.autocomplete_set_style",
+      "method": "neppy.autocomplete_set_style",
       "namespace": "autocomplete",
       "outputs": [
         {
@@ -589,7 +589,7 @@
           "ty": { "Option": "U64" }
         }
       ],
-      "method": "openhuman.autocomplete_start",
+      "method": "neppy.autocomplete_start",
       "namespace": "autocomplete",
       "outputs": [
         {
@@ -604,7 +604,7 @@
       "description": "Read autocomplete engine status and latest suggestion metadata.",
       "function": "status",
       "inputs": [],
-      "method": "openhuman.autocomplete_status",
+      "method": "neppy.autocomplete_status",
       "namespace": "autocomplete",
       "outputs": [
         {
@@ -626,7 +626,7 @@
           "ty": { "Option": "String" }
         }
       ],
-      "method": "openhuman.autocomplete_stop",
+      "method": "neppy.autocomplete_stop",
       "namespace": "autocomplete",
       "outputs": [
         {
@@ -641,7 +641,7 @@
       "description": "Return agent server runtime URL and status.",
       "function": "agent_server_status",
       "inputs": [],
-      "method": "openhuman.config_agent_server_status",
+      "method": "neppy.config_agent_server_status",
       "namespace": "config",
       "outputs": [
         {
@@ -656,7 +656,7 @@
       "description": "Read persisted config snapshot and resolved paths.",
       "function": "get",
       "inputs": [],
-      "method": "openhuman.config_get",
+      "method": "neppy.config_get",
       "namespace": "config",
       "outputs": [
         {
@@ -671,7 +671,7 @@
       "description": "Read environment-driven runtime flags.",
       "function": "get_runtime_flags",
       "inputs": [],
-      "method": "openhuman.config_get_runtime_flags",
+      "method": "neppy.config_get_runtime_flags",
       "namespace": "config",
       "outputs": [
         {
@@ -683,7 +683,7 @@
       ]
     },
     {
-      "description": "Set OPENHUMAN_BROWSER_ALLOW_ALL runtime flag.",
+      "description": "Set NEPPY_BROWSER_ALLOW_ALL runtime flag.",
       "function": "set_browser_allow_all",
       "inputs": [
         {
@@ -693,7 +693,7 @@
           "ty": "Bool"
         }
       ],
-      "method": "openhuman.config_set_browser_allow_all",
+      "method": "neppy.config_set_browser_allow_all",
       "namespace": "config",
       "outputs": [
         {
@@ -715,7 +715,7 @@
           "ty": { "Option": "Bool" }
         }
       ],
-      "method": "openhuman.config_update_browser_settings",
+      "method": "neppy.config_update_browser_settings",
       "namespace": "config",
       "outputs": [
         {
@@ -761,7 +761,7 @@
           "ty": { "Option": "U64" }
         }
       ],
-      "method": "openhuman.config_update_memory_settings",
+      "method": "neppy.config_update_memory_settings",
       "namespace": "config",
       "outputs": [
         {
@@ -795,7 +795,7 @@
           "ty": { "Option": "F64" }
         }
       ],
-      "method": "openhuman.config_update_model_settings",
+      "method": "neppy.config_update_model_settings",
       "namespace": "config",
       "outputs": [
         {
@@ -823,7 +823,7 @@
           "ty": { "Option": "Bool" }
         }
       ],
-      "method": "openhuman.config_update_runtime_settings",
+      "method": "neppy.config_update_runtime_settings",
       "namespace": "config",
       "outputs": [
         {
@@ -864,7 +864,7 @@
           "ty": { "Option": { "Ref": "CustomTunnelConfig" } }
         }
       ],
-      "method": "openhuman.config_update_tunnel_settings",
+      "method": "neppy.config_update_tunnel_settings",
       "namespace": "config",
       "outputs": [
         {
@@ -886,7 +886,7 @@
           "ty": { "Option": "String" }
         }
       ],
-      "method": "openhuman.config_workspace_onboarding_flag_exists",
+      "method": "neppy.config_workspace_onboarding_flag_exists",
       "namespace": "config",
       "outputs": [
         {
@@ -901,7 +901,7 @@
       "description": "List all configured cron jobs ordered by next run.",
       "function": "list",
       "inputs": [],
-      "method": "openhuman.cron_list",
+      "method": "neppy.cron_list",
       "namespace": "cron",
       "outputs": [
         {
@@ -923,7 +923,7 @@
           "ty": "String"
         }
       ],
-      "method": "openhuman.cron_remove",
+      "method": "neppy.cron_remove",
       "namespace": "cron",
       "outputs": [
         {
@@ -962,7 +962,7 @@
           "ty": "String"
         }
       ],
-      "method": "openhuman.cron_run",
+      "method": "neppy.cron_run",
       "namespace": "cron",
       "outputs": [
         {
@@ -1019,7 +1019,7 @@
           "ty": { "Option": "U64" }
         }
       ],
-      "method": "openhuman.cron_runs",
+      "method": "neppy.cron_runs",
       "namespace": "cron",
       "outputs": [
         {
@@ -1047,7 +1047,7 @@
           "ty": { "Ref": "CronJobPatch" }
         }
       ],
-      "method": "openhuman.cron_update",
+      "method": "neppy.cron_update",
       "namespace": "cron",
       "outputs": [
         {
@@ -1069,7 +1069,7 @@
           "ty": "String"
         }
       ],
-      "method": "openhuman.decrypt_secret",
+      "method": "neppy.decrypt_secret",
       "namespace": "decrypt",
       "outputs": [
         {
@@ -1091,7 +1091,7 @@
           "ty": { "Option": "Bool" }
         }
       ],
-      "method": "openhuman.doctor_models",
+      "method": "neppy.doctor_models",
       "namespace": "doctor",
       "outputs": [
         {
@@ -1106,7 +1106,7 @@
       "description": "Run diagnostics for workspace and runtime configuration.",
       "function": "report",
       "inputs": [],
-      "method": "openhuman.doctor_report",
+      "method": "neppy.doctor_report",
       "namespace": "doctor",
       "outputs": [
         {
@@ -1128,7 +1128,7 @@
           "ty": "String"
         }
       ],
-      "method": "openhuman.encrypt_secret",
+      "method": "neppy.encrypt_secret",
       "namespace": "encrypt",
       "outputs": [
         {
@@ -1143,7 +1143,7 @@
       "description": "Return process and component health snapshot.",
       "function": "snapshot",
       "inputs": [],
-      "method": "openhuman.health_snapshot",
+      "method": "neppy.health_snapshot",
       "namespace": "health",
       "outputs": [
         {
@@ -1171,7 +1171,7 @@
           "ty": { "Option": "Bool" }
         }
       ],
-      "method": "openhuman.migrate_openclaw",
+      "method": "neppy.migrate_openclaw",
       "namespace": "migrate",
       "outputs": [
         {
@@ -1186,7 +1186,7 @@
       "description": "Manage desktop service lifecycle.",
       "function": "install",
       "inputs": [],
-      "method": "openhuman.service_install",
+      "method": "neppy.service_install",
       "namespace": "service",
       "outputs": [
         {
@@ -1201,7 +1201,7 @@
       "description": "Manage desktop service lifecycle.",
       "function": "start",
       "inputs": [],
-      "method": "openhuman.service_start",
+      "method": "neppy.service_start",
       "namespace": "service",
       "outputs": [
         {
@@ -1216,7 +1216,7 @@
       "description": "Manage desktop service lifecycle.",
       "function": "status",
       "inputs": [],
-      "method": "openhuman.service_status",
+      "method": "neppy.service_status",
       "namespace": "service",
       "outputs": [
         {
@@ -1231,7 +1231,7 @@
       "description": "Manage desktop service lifecycle.",
       "function": "stop",
       "inputs": [],
-      "method": "openhuman.service_stop",
+      "method": "neppy.service_stop",
       "namespace": "service",
       "outputs": [
         {
@@ -1246,7 +1246,7 @@
       "description": "Manage desktop service lifecycle.",
       "function": "uninstall",
       "inputs": [],
-      "method": "openhuman.service_uninstall",
+      "method": "neppy.service_uninstall",
       "namespace": "service",
       "outputs": [
         {
@@ -1268,7 +1268,7 @@
           "ty": { "Option": "Json" }
         }
       ],
-      "method": "openhuman.socket_connect",
+      "method": "neppy.socket_connect",
       "namespace": "socket",
       "outputs": [
         { "comment": "Socket response payload.", "name": "result", "required": true, "ty": "Json" }
@@ -1285,7 +1285,7 @@
           "ty": { "Option": "Json" }
         }
       ],
-      "method": "openhuman.socket_disconnect",
+      "method": "neppy.socket_disconnect",
       "namespace": "socket",
       "outputs": [
         { "comment": "Socket response payload.", "name": "result", "required": true, "ty": "Json" }
@@ -1302,7 +1302,7 @@
           "ty": { "Option": "Json" }
         }
       ],
-      "method": "openhuman.socket_emit",
+      "method": "neppy.socket_emit",
       "namespace": "socket",
       "outputs": [
         { "comment": "Socket response payload.", "name": "result", "required": true, "ty": "Json" }
@@ -1319,7 +1319,7 @@
           "ty": { "Option": "Json" }
         }
       ],
-      "method": "openhuman.socket_state",
+      "method": "neppy.socket_state",
       "namespace": "socket",
       "outputs": [
         { "comment": "Socket response payload.", "name": "result", "required": true, "ty": "Json" }

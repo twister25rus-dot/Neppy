@@ -226,7 +226,7 @@ jobs:
         if: steps.playwright-artifact-cache.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
-          bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:web:build
+          bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:web:build
 
           RUST_HOST_TRIPLE="$(rustc -vV | awk '/^host: / { print $2 }')"
           WEB_CORE_TARGET_DIR="target/e2e-web-${RUST_HOST_TRIPLE}"
@@ -315,13 +315,13 @@ jobs:
           chmod +x target/e2e-web-*/debug/openhuman-core
 
       - name: Install Playwright Chromium headless shell
-        run: pnpm --filter openhuman-app exec playwright install chromium-headless-shell
+        run: pnpm --filter neppy-app exec playwright install chromium-headless-shell
 
       - name: Run Playwright web E2E suite
         env:
-          OPENHUMAN_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
+          NEPPY_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
         run: |
-          mkdir -p "$OPENHUMAN_WORKSPACE"
+          mkdir -p "$NEPPY_WORKSPACE"
           bash scripts/ci-cancel-aware.sh bash app/scripts/e2e-web-session.sh
 
       - name: Pack Playwright E2E failure artifacts
@@ -329,9 +329,9 @@ jobs:
         run: |
           mkdir -p .ci/artifacts
           tar -czf .ci/artifacts/openhuman-playwright-failure-logs.tar.gz \
-            -C "$OPENHUMAN_WORKSPACE" .
+            -C "$NEPPY_WORKSPACE" .
         env:
-          OPENHUMAN_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
+          NEPPY_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
 
       - name: Upload Playwright E2E failure artifacts
         if: failure()

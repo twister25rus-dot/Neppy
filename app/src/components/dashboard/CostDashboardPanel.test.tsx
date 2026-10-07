@@ -133,7 +133,7 @@ describe('<CostDashboardPanel />', () => {
       'AI chat and reasoning'
     );
     expect(mockedCall).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.cost_get_usage_log' })
+      expect.objectContaining({ method: 'neppy.cost_get_usage_log' })
     );
   });
 

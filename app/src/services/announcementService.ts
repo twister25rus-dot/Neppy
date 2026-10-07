@@ -78,7 +78,7 @@ export function parseAnnouncement(raw: unknown): Announcement | null {
  */
 export async function fetchLatestAnnouncement(): Promise<Announcement | null> {
   const payload = await callCoreRpc<unknown>({
-    method: 'openhuman.announcements_get_latest',
+    method: 'neppy.announcements_get_latest',
     timeoutMs: 8000,
   });
   return parseAnnouncement(payload);

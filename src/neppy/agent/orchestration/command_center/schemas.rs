@@ -1,5 +1,5 @@
 //! Controller schema + JSON-RPC dispatcher for the background agent command
-//! center. Exposes `openhuman.agent_work_list` (read-only) over the durable
+//! center. Exposes `neppy.agent_work_list` (read-only) over the durable
 //! run ledger. Handlers delegate to [`super::ops`]; no business logic here.
 
 use serde_json::{Map, Value};

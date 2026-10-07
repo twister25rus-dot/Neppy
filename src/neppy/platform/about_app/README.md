@@ -61,7 +61,7 @@ None. No `store.rs`. The catalog is a compile-time `&'static [Capability]` const
 - `crate::core::all::{ControllerFuture, RegisteredController}` — controller registration types (schemas.rs).
 - `crate::core::{ControllerSchema, FieldSchema, TypeSchema}` — controller schema definitions (schemas.rs).
 
-No dependencies on other `openhuman` domains — capability metadata for other domains is hand-authored text in `catalog.rs`, not imports.
+No dependencies on other `neppy` domains — capability metadata for other domains is hand-authored text in `catalog.rs`, not imports.
 
 ## Used by
 

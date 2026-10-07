@@ -99,8 +99,7 @@ const ComposioTriagePanel = ({ embedded = false }: ComposioTriagePanelProps = {}
   return wrap(
     <>
       <p className="text-sm text-content-muted">
-        {t('composio.triageDesc')}{' '}
-        <span className="font-mono">OPENHUMAN_TRIGGER_TRIAGE_DISABLED</span>{' '}
+        {t('composio.triageDesc')} <span className="font-mono">NEPPY_TRIGGER_TRIAGE_DISABLED</span>{' '}
         {t('composio.envVarOverrides')}
       </p>
 

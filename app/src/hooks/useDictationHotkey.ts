@@ -73,7 +73,7 @@ export function useDictationHotkey(): DictationHotkeyState {
     const init = async () => {
       try {
         const settings = await callCoreRpc<DictationSettings>({
-          method: 'openhuman.config_get_dictation_settings',
+          method: 'neppy.config_get_dictation_settings',
         });
 
         if (disposed) return;

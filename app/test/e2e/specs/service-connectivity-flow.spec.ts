@@ -36,8 +36,11 @@ const DEFAULT_MOCK_STATE: ServiceMockState = {
 };
 
 const mockStateFile =
-  process.env.OPENHUMAN_SERVICE_MOCK_STATE_FILE ||
-  path.join(process.env.OPENHUMAN_WORKSPACE || os.tmpdir(), 'service-mock-state.json');
+  (process.env.NEPPY_SERVICE_MOCK_STATE_FILE ?? process.env.OPENHUMAN_SERVICE_MOCK_STATE_FILE) ||
+  path.join(
+    (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE) || os.tmpdir(),
+    'service-mock-state.json'
+  );
 
 function stepLog(message: string, context?: unknown): void {
   const stamp = new Date().toISOString();
@@ -71,12 +74,15 @@ async function waitForServiceStateText(stateText: string, timeoutMs = 15_000): P
 describe('Service connectivity flow (UI ↔ Rust service)', () => {
   before(async function beforeSuite() {
     this.timeout(90_000);
-    if (process.env.OPENHUMAN_SERVICE_MOCK !== '1' || process.platform === 'linux') {
+    if (
+      (process.env.NEPPY_SERVICE_MOCK ?? process.env.OPENHUMAN_SERVICE_MOCK) !== '1' ||
+      process.platform === 'linux'
+    ) {
       this.skip();
     }
 
     stepLog('Starting suite with service mock mode enabled', {
-      openhumanServiceMock: process.env.OPENHUMAN_SERVICE_MOCK,
+      openhumanServiceMock: process.env.NEPPY_SERVICE_MOCK ?? process.env.OPENHUMAN_SERVICE_MOCK,
       mockStateFile,
     });
     await writeMockState(DEFAULT_MOCK_STATE);

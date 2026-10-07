@@ -15,7 +15,7 @@ import Button from '../ui/Button';
  * access). A typed `yes`/`no` chat reply is the equivalent server-side path for
  * the once/deny decisions.
  */
-const log = debug('openhuman:chat:approval-card');
+const log = debug('neppy:chat:approval-card');
 
 type Decision = 'approve_once' | 'approve_always_for_tool' | 'deny';
 
@@ -27,7 +27,7 @@ interface Props {
 /**
  * Surfaces a `Prompt`-class tool call parked on the ApprovalGate
  * (`approval_request` socket event) and routes the user's Approve / Deny to the
- * `openhuman.approval_decide` RPC. Rendered above the composer for the active
+ * `neppy.approval_decide` RPC. Rendered above the composer for the active
  * thread; clears itself on a recorded decision (the turn-end handlers in
  * {@link ChatRuntimeProvider} also clear it if the turn is cancelled).
  */
@@ -43,7 +43,7 @@ const ApprovalRequestCard: React.FC<Props> = ({ threadId, approval }) => {
     setErrorMsg(null);
     try {
       await callCoreRpc({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: approval.requestId, decision },
       });
       // Resolve optimistically; ChatRuntimeProvider also clears on turn end.

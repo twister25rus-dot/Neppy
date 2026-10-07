@@ -101,7 +101,7 @@ pub fn register_native_handlers() {
 // ── Tauri commands (frontend read surface) ───────────────────────────────────
 
 /// List locally-stored WhatsApp chats. Frontend replacement for the former
-/// `openhuman.whatsapp_data_list_chats` core RPC.
+/// `neppy.whatsapp_data_list_chats` core RPC.
 #[tauri::command]
 pub async fn whatsapp_data_list_chats(req: ListChatsRequest) -> Result<Vec<WhatsAppChat>, String> {
     log::debug!(
@@ -115,7 +115,7 @@ pub async fn whatsapp_data_list_chats(req: ListChatsRequest) -> Result<Vec<Whats
 }
 
 /// List messages for a chat. Frontend replacement for the former
-/// `openhuman.whatsapp_data_list_messages` core RPC.
+/// `neppy.whatsapp_data_list_messages` core RPC.
 #[tauri::command]
 pub async fn whatsapp_data_list_messages(
     req: ListMessagesRequest,

@@ -6,7 +6,7 @@
 //! them in the UI so users see *which* channel is broken instead of a single
 //! "Disconnected" pill that conflated all three.
 //!
-//! This Rust-side module exposes a cheap `openhuman.connectivity_diag` RPC that
+//! This Rust-side module exposes a cheap `neppy.connectivity_diag` RPC that
 //! lets the frontend (and future tooling) read the live backend-socket state
 //! plus the local sidecar's process id and listening port. The endpoint is
 //! intentionally lightweight — no I/O, just snapshots from in-memory state and

@@ -31,7 +31,7 @@ const DISABLED_MSG: &str = "mcp feature disabled at compile time";
 /// than like a deliberate property of this build. Keeping the arm and failing
 /// here means:
 ///
-/// * an MCP host (Claude Desktop, Cursor, …) that spawns `openhuman mcp` gets
+/// * an MCP host (Claude Desktop, Cursor, …) that spawns `neppy-core mcp` gets
 ///   a non-zero exit and a one-line stderr diagnostic naming the fix, instead
 ///   of hanging forever on an stdout stream that never speaks JSON-RPC;
 /// * `cli.rs` needs no `#[cfg]` at all, so the gate stays invisible to the
@@ -41,7 +41,7 @@ const DISABLED_MSG: &str = "mcp feature disabled at compile time";
 /// keeps working here without touching a gated symbol.
 pub fn run_stdio_from_cli(_args: &[String]) -> anyhow::Result<()> {
     log::warn!(
-        "[mcp_server] {DISABLED_MSG} — `openhuman mcp` rejected; rebuild with `--features mcp`"
+        "[mcp_server] {DISABLED_MSG} — `neppy-core mcp` rejected; rebuild with `--features mcp`"
     );
     anyhow::bail!(
         "{DISABLED_MSG}: this build was compiled without the `mcp` feature, so the MCP stdio \

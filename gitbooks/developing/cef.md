@@ -62,7 +62,7 @@ Each provider has a **scanner module** in [`app/src-tauri/src/`](https://github.
 | `gmessages_scanner` | Periodic                        | Google Messages Web read-only IndexedDB walk                         |
 | `imessage_scanner`  | Periodic                        | **No webview.** Reads `~/Library/Messages/chat.db` directly on macOS |
 
-Each scan emits `webview:event` payloads and POSTs `openhuman.memory_doc_ingest` straight to the core RPC, so memory grows whether the UI window is open or backgrounded.
+Each scan emits `webview:event` payloads and POSTs `neppy.memory_doc_ingest` straight to the core RPC, so memory grows whether the UI window is open or backgrounded.
 
 ### Google Meet mascot camera
 
@@ -123,7 +123,7 @@ the current stable Windows release. That separates a profile/cache problem from
 an OS/runtime compatibility regression in CEF startup.
 
 If the logs point to a GPU-process startup failure rather than a stale CEF
-profile lock, set `OPENHUMAN_DISABLE_GPU=1` before launching Neppy. On
+profile lock, set `NEPPY_DISABLE_GPU=1` before launching Neppy. On
 Windows this pins CEF to the pure-software ANGLE/SwiftShader GL backend
 (`--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader
 --disable-gpu-compositing`) rather than bare `--disable-gpu`: on NVIDIA Blackwell

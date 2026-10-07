@@ -1,13 +1,13 @@
 //! Medulla "harness plane" — binds the backend's `medulla:task_*` Socket.IO
 //! protocol to an Neppy agent session so a medulla operator (running in the
-//! backend) can drive an openhuman agent as a delegated sub-agent.
+//! backend) can drive a neppy-core agent as a delegated sub-agent.
 //!
 //! This rides the *existing* authenticated backend socket owned by
 //! [`crate::neppy::platform::socket::SocketManager`] — the transport, handshake auth
 //! (`socket.handshake.auth.token`), and reconnection are already handled there,
 //! so this module only adds the task/envelope binding on top:
 //!
-//! Down (backend → openhuman), handled in [`crate::neppy::platform::socket::event_handlers`]:
+//! Down (backend → neppy), handled in [`crate::neppy::platform::socket::event_handlers`]:
 //! - `medulla:task_run`   → [`MedullaTaskManager::start_task`]
 //! - `medulla:task_send`  → [`MedullaTaskManager::steer_task`]
 //! - `medulla:task_abort` → [`MedullaTaskManager::abort_task`]
@@ -15,7 +15,7 @@
 //! - `medulla:capabilities_request` → [`handle_capabilities_request`]
 //! - `medulla:workflow_request` → [`workflows::handle_workflow_request`]
 //!
-//! Up (openhuman → backend):
+//! Up (neppy → backend):
 //! - `medulla:task_envelope` — the live session stream, as
 //!   `tinyplace.harness.session.v2` envelopes (see [`envelope`]).
 //! - `medulla:task_result`   — explicit completion.
@@ -85,7 +85,7 @@ struct RunningTask {
     steer_tx: mpsc::UnboundedSender<String>,
 }
 
-/// Tracks the openhuman side of every medulla-driven task.
+/// Tracks the neppy side of every medulla-driven task.
 pub struct MedullaTaskManager {
     tasks: Mutex<HashMap<String, RunningTask>>,
 }

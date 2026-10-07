@@ -36,7 +36,7 @@ describe('draftShareHeadline', () => {
     expect(out).toBe('My agent cleared my inbox');
     expect(mocks.callCoreRpc).toHaveBeenCalledTimes(1);
     const arg = mocks.callCoreRpc.mock.calls[0][0];
-    expect(arg.method).toBe('openhuman.inference_agent_chat_simple');
+    expect(arg.method).toBe('neppy.inference_agent_chat_simple');
     expect(arg.params.thread_id).toBe('t1');
   });
 

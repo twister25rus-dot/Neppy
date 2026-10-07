@@ -83,7 +83,7 @@ pub struct RpcRequest {
     /// Unique identifier for the request. MUST be a String, Number, or Null.
     /// The server will return this same ID in the response.
     pub id: serde_json::Value,
-    /// The name of the method to be invoked (e.g., `openhuman.memory_doc_put`).
+    /// The name of the method to be invoked (e.g., `neppy.memory_doc_put`).
     pub method: String,
     /// Parameters for the method call. MUST be a structured value (Object or Array).
     /// Defaults to null if not provided.
@@ -160,7 +160,7 @@ pub struct AppState {
 ///
 /// [`HostKind::detect_standalone`] picks `Docker` vs `Cli` for standalone
 /// invocations using the standard Docker signals (`/.dockerenv` or
-/// `OPENHUMAN_DOCKER=1`). Tauri-shell callers MUST pass `TauriShell`
+/// `NEPPY_DOCKER=1`). Tauri-shell callers MUST pass `TauriShell`
 /// explicitly — there is no env detection because the embedding shell is the
 /// only authority on this fact.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -176,7 +176,7 @@ impl HostKind {
     /// they pass [`HostKind::TauriShell`] directly because the shell is the
     /// only authority on whether the core is embedded.
     pub fn detect_standalone() -> Self {
-        if std::env::var("OPENHUMAN_DOCKER")
+        if crate::neppy::util::env::var("NEPPY_DOCKER")
             .map(|v| {
                 let t = v.trim();
                 t == "1" || t.eq_ignore_ascii_case("true") || t.eq_ignore_ascii_case("yes")
@@ -191,7 +191,7 @@ impl HostKind {
     }
 
     /// True when the host is the desktop Tauri shell. Used by the approval
-    /// gate to decide whether the `OPENHUMAN_APPROVAL_GATE=0` env override
+    /// gate to decide whether the `NEPPY_APPROVAL_GATE=0` env override
     /// is honoured (CLI / Docker) or ignored with a UI-routable warning
     /// event (Tauri shell).
     pub fn is_desktop_shell(self) -> bool {
@@ -210,7 +210,7 @@ impl HostKind {
 }
 
 /// Pure decision helper for the approval-gate host-aware bootstrap branch.
-/// Takes the host kind and whether an `OPENHUMAN_APPROVAL_GATE=0` env
+/// Takes the host kind and whether an `NEPPY_APPROVAL_GATE=0` env
 /// override was observed; returns:
 /// - `install_gate`: true when the gate should be installed at boot
 /// - `override_ignored`: true when an env override was seen but suppressed
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn desktop_shell_ignores_env_override() {
-        // Operator sets OPENHUMAN_APPROVAL_GATE=0 inside a Tauri-shell
+        // Operator sets NEPPY_APPROVAL_GATE=0 inside a Tauri-shell
         // boot — the gate MUST still install, and the override-ignored
         // signal MUST fire so the UI can banner.
         let d = approval_gate_boot_decision(HostKind::TauriShell, true);

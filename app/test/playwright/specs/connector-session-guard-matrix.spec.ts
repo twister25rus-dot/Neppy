@@ -84,14 +84,14 @@ async function assertSessionAlive(page: Page): Promise<void> {
       page.evaluate(() => {
         const snapshot = (
           window as unknown as {
-            __OPENHUMAN_CORE_STATE__?: () => {
+            __NEPPY_CORE_STATE__?: () => {
               snapshot?: {
                 currentUser?: { _id?: string | null } | null;
                 sessionToken?: string | null;
               };
             };
           }
-        ).__OPENHUMAN_CORE_STATE__?.()?.snapshot;
+        ).__NEPPY_CORE_STATE__?.()?.snapshot;
         return {
           // The connections page now appends an active-tab query (e.g.
           // `#/connections?tab=composio`); strip it so we assert we're still on
@@ -121,7 +121,7 @@ test.describe('Connector session guard matrix', () => {
       await expect(page.getByRole('dialog', { name: new RegExp(toolkit.name, 'i') })).toBeVisible();
       await page.keyboard.press('Escape');
 
-      await callCoreRpc('openhuman.composio_authorize', { toolkit: toolkit.slug });
+      await callCoreRpc('neppy.composio_authorize', { toolkit: toolkit.slug });
       const requests = await getRequestLog();
       const auth = requests.find(
         request =>
@@ -179,7 +179,7 @@ test.describe('Connector session guard matrix', () => {
   test('Composio execute and disconnect errors do not clear auth session', async ({ page }) => {
     await setMockBehavior({ composioExecuteFails: '500' });
     await expect(
-      callCoreRpc('openhuman.composio_execute', {
+      callCoreRpc('neppy.composio_execute', {
         connection_id: 'c-github-pw',
         tool: 'GITHUB_LIST_REPOS',
         arguments: {},
@@ -189,7 +189,7 @@ test.describe('Connector session guard matrix', () => {
 
     await setMockBehavior({ composioDeleteFails: '500' });
     await expect(
-      callCoreRpc('openhuman.composio_delete_connection', { connection_id: 'c-discord-pw' })
+      callCoreRpc('neppy.composio_delete_connection', { connection_id: 'c-discord-pw' })
     ).rejects.toThrow(/failed/i);
     await assertSessionAlive(page);
   });

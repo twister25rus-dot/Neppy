@@ -706,7 +706,7 @@ fn handle_searxng_search(params: Map<String, Value>) -> ControllerFuture {
         if !config.searxng.enabled {
             tracing::debug!("[rpc][tools.searxng_search] searxng disabled — rejecting");
             return Err(
-                "SearXNG search is not enabled. Set searxng.enabled=true or OPENHUMAN_SEARXNG_ENABLED=true."
+                "SearXNG search is not enabled. Set searxng.enabled=true or NEPPY_SEARXNG_ENABLED=true."
                     .to_string(),
             );
         }

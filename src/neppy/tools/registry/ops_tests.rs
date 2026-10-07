@@ -38,10 +38,7 @@ fn registry_entries_include_mcp_and_controller_tools() {
         .find(|entry| entry.tool_id == "tools.web_search")
         .expect("tools.web_search controller tool");
     assert_eq!(web_search.transport, ToolRegistryTransport::JsonRpc);
-    assert_eq!(
-        web_search.route["method"],
-        json!("openhuman.tools_web_search")
-    );
+    assert_eq!(web_search.route["method"], json!("neppy.tools_web_search"));
     assert_eq!(web_search.input_schema["type"], json!("object"));
 }
 
@@ -93,7 +90,7 @@ async fn diagnostics_loads_active_capability_provider_config() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().expect("tempdir");
-    let _env = EnvRestore::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _env = EnvRestore::set_path("NEPPY_WORKSPACE", tmp.path());
     std::fs::write(
         tmp.path().join("config.toml"),
         r#"
@@ -375,7 +372,7 @@ struct EnvRestore {
 
 impl EnvRestore {
     fn set_path(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = crate::neppy::util::env::var_os(key);
         std::env::set_var(key, value);
         Self { key, previous }
     }
@@ -385,7 +382,7 @@ impl Drop for EnvRestore {
     fn drop(&mut self) {
         match &self.previous {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => crate::neppy::util::env::remove_var(self.key),
         }
     }
 }

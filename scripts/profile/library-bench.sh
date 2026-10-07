@@ -14,7 +14,7 @@
 #   --slim                Build with --no-default-features (slim library recipe)
 #   --repeat N             Fresh-process repeats per scenario (default: 5)
 #   --scenarios "a,b,c"    Comma-separated scenario list (default: all seven)
-#   --turns N               OPENHUMAN_PROFILE_TURNS for long-agent (default binary default: 25)
+#   --turns N               NEPPY_PROFILE_TURNS for long-agent (default binary default: 25)
 #   --skip-build           Reuse the existing target/release binaries
 #   --warm                 Also run PREWARM_SUBAGENTS=1 variants for subagents + subconscious
 #   --out DIR              Output directory (default: target/profile/rust-library/bench-<timestamp>)
@@ -116,10 +116,10 @@ run_scenario() {
         local run_file="$scenario_dir/run-$i.json"
         local env_args=()
         if [[ "$scenario" == "long-agent" && -n "$TURNS" ]]; then
-            env_args+=(env "OPENHUMAN_PROFILE_TURNS=$TURNS")
+            env_args+=(env "NEPPY_PROFILE_TURNS=$TURNS")
         fi
         if [[ "$variant" == "warm" ]]; then
-            env_args+=(env "OPENHUMAN_PROFILE_PREWARM_SUBAGENTS=1")
+            env_args+=(env "NEPPY_PROFILE_PREWARM_SUBAGENTS=1")
         fi
 
         if [[ ${#env_args[@]} -gt 0 ]]; then

@@ -1,4 +1,4 @@
-//! Thin HTTP wrapper over the openhuman backend's
+//! Thin HTTP wrapper over the neppy backend's
 //! `/agent-integrations/composio/*` routes.
 //!
 //! All calls go through the shared
@@ -739,8 +739,8 @@ pub(crate) fn create_direct_composio_tool_for_api_key(
     let security = Arc::new(crate::neppy::security::SecurityPolicy::default());
     #[cfg(debug_assertions)]
     let tool = match (
-        std::env::var("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2").ok(),
-        std::env::var("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3").ok(),
+        crate::neppy::util::env::var("NEPPY_COMPOSIO_DIRECT_BASE_V2").ok(),
+        crate::neppy::util::env::var("NEPPY_COMPOSIO_DIRECT_BASE_V3").ok(),
     ) {
         (Some(base_v2), Some(base_v3)) => {
             crate::neppy::tools::ComposioTool::new_with_base_urls_for_loopback(

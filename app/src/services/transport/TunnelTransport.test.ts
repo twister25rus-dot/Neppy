@@ -155,7 +155,7 @@ describe('TunnelTransport', () => {
     await connectTransport(transport);
 
     // Queue a call.
-    const callP = transport.call('openhuman.ping', {});
+    const callP = transport.call('neppy.ping', {});
 
     // Close immediately — pending call should reject.
     await transport.close();
@@ -333,7 +333,7 @@ describe('TunnelTransport', () => {
 
     const serverCipher = await connectTransport(transport);
 
-    const callP = transport.call<{ pong: number }>('openhuman.ping', { who: 'me' });
+    const callP = transport.call<{ pong: number }>('neppy.ping', { who: 'me' });
 
     // Wait for the call to register and send its frame.
     await Promise.resolve();
@@ -373,7 +373,7 @@ describe('TunnelTransport', () => {
     const transport = new TunnelTransport('http://backend', 'CHAN_005', coreB64(coreKp), 'tok');
     const serverCipher = await connectTransport(transport);
 
-    const callP = transport.call('openhuman.fail', {});
+    const callP = transport.call('neppy.fail', {});
     await Promise.resolve();
     await Promise.resolve();
 
@@ -457,8 +457,8 @@ describe('TunnelTransport', () => {
     const transport = new TunnelTransport('http://backend', 'CHAN_005', coreB64(coreKp), 'tok');
     await connectTransport(transport);
 
-    const callP = transport.call('openhuman.ping', {}, { timeoutMs: 20 });
-    await expect(callP).rejects.toThrow(/\[tunnel\] openhuman.ping timed out after 20ms/);
+    const callP = transport.call('neppy.ping', {}, { timeoutMs: 20 });
+    await expect(callP).rejects.toThrow(/\[tunnel\] neppy.ping timed out after 20ms/);
 
     await transport.close();
   }, 10000);

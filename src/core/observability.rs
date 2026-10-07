@@ -155,7 +155,7 @@ pub enum ExpectedErrorKind {
     /// rendering.
     DiskFull,
     /// A user-supplied filesystem path failed an RPC-level validation
-    /// check — e.g. `openhuman.vault_create` was called with a
+    /// check — e.g. `neppy.vault_create` was called with a
     /// `root_path` that doesn't exist or points at a file rather than a
     /// directory. The UI already shows the typed error to the user, and
     /// Sentry has no remediation path (we can't `mkdir -p` a folder the
@@ -731,7 +731,7 @@ pub fn expected_error_kind(message: &str) -> Option<ExpectedErrorKind> {
 /// before the next syscall surfaces an errno, rusqlite renders the `SQLITE_FULL`
 /// result code as `"database or disk is full"` (Sentry TAURI-RUST-B6N, hit at
 /// `memory_store::namespace_store::documents::tx.commit()` during
-/// `openhuman.memory_doc_ingest`). `SQLITE_FULL` has only two causes:
+/// `neppy.memory_doc_ingest`). `SQLITE_FULL` has only two causes:
 /// genuine ENOSPC/ERROR_DISK_FULL (always the case in practice — the same
 /// burst always produces an os-error-28/112 sibling event) or a
 /// `max_page_count` PRAGMA cap (we set none).
@@ -2342,7 +2342,7 @@ fn report_expected_message(kind: ExpectedErrorKind, message: &str, domain: &str,
         }
         ExpectedErrorKind::FilesystemUserPathInvalid => {
             // User-input validation failure surfaced at the RPC
-            // boundary — e.g. `openhuman.vault_create` called with a
+            // boundary — e.g. `neppy.vault_create` called with a
             // `root_path` that doesn't exist. The typed error is
             // already shown to the user; Sentry has no remediation
             // path. Demote to `info!` — same tier as
@@ -2931,7 +2931,7 @@ pub fn is_session_expired_event(event: &sentry::protocol::Event<'_>) -> bool {
     false
 }
 
-/// Defense-in-depth `before_send` filter for opaque `openhuman.auth_get_me`
+/// Defense-in-depth `before_send` filter for opaque `neppy.auth_get_me`
 /// RPC failures whose message body has been collapsed to just the bare
 /// HTTP method + path (`"GET /auth/me"`) with no underlying transport error.
 ///
@@ -2954,7 +2954,7 @@ pub fn is_session_expired_event(event: &sentry::protocol::Event<'_>) -> bool {
 /// Match criteria (all required):
 /// - tag `domain == "rpc"`
 /// - tag `operation == "invoke_method"`
-/// - tag `method == "openhuman.auth_get_me"`
+/// - tag `method == "neppy.auth_get_me"`
 /// - `event.message` (or last exception `value`) trims to **exactly**
 ///   `"GET /auth/me"` — strict equality, not `contains`, so a body with
 ///   the chain appended still surfaces.
@@ -2967,7 +2967,7 @@ pub fn is_auth_get_me_opaque_transport_event(event: &sentry::protocol::Event<'_>
     if tags.get("operation").map(String::as_str) != Some("invoke_method") {
         return false;
     }
-    if tags.get("method").map(String::as_str) != Some("openhuman.auth_get_me") {
+    if tags.get("method").map(String::as_str) != Some("neppy.auth_get_me") {
         return false;
     }
 
@@ -3876,7 +3876,7 @@ mod tests {
             with_meta.to_string(),
             // The stringified RPC re-report shape that propagates from
             // `mcp_clients_connect` to `report_error_or_expected`.
-            format!("openhuman.mcp_clients_connect failed: {with_meta}"),
+            format!("neppy.mcp_clients_connect failed: {with_meta}"),
         ] {
             assert_eq!(
                 expected_error_kind(&msg),
@@ -3885,12 +3885,7 @@ mod tests {
             );
         }
         // Full demotion path (classifier -> report arm) must not panic.
-        report_error_or_expected(
-            &bare.to_string(),
-            "rpc",
-            "openhuman.mcp_clients_connect",
-            &[],
-        );
+        report_error_or_expected(&bare.to_string(), "rpc", "neppy.mcp_clients_connect", &[]);
     }
 
     /// #5805 — an unconfigured wallet is the default state of an optional
@@ -3985,7 +3980,7 @@ mod tests {
             "kv namespace/key cannot contain secrets",
             "episodic session_id/role cannot contain secrets",
             // The stringified RPC re-report shape that reaches the dispatcher.
-            "openhuman.memory_store failed: document namespace/key cannot contain secrets",
+            "neppy.memory_store failed: document namespace/key cannot contain secrets",
         ] {
             assert_eq!(
                 expected_error_kind(msg),
@@ -3997,7 +3992,7 @@ mod tests {
         report_error_or_expected(
             "document namespace/key cannot contain secrets",
             "rpc",
-            "openhuman.memory_store",
+            "neppy.memory_store",
             &[],
         );
     }
@@ -4031,7 +4026,7 @@ mod tests {
     fn does_not_classify_other_mcp_or_401_errors_as_needs_auth() {
         for msg in [
             "MCP server `https://youtube.run.tools` returned HTTP 500: internal error",
-            "openhuman.mcp_clients_connect failed: connection refused",
+            "neppy.mcp_clients_connect failed: connection refused",
             "Unauthorized (HTTP 401) from some unrelated provider",
         ] {
             assert_ne!(
@@ -4485,7 +4480,7 @@ mod tests {
 
     #[test]
     fn classifies_prompt_injection_blocked_errors() {
-        // OPENHUMAN-TAURI-140: ~1 480 events from `openhuman.agent_chat` where
+        // OPENHUMAN-TAURI-140: ~1 480 events from `neppy.agent_chat` where
         // users' messages scored ≥ 0.45 on the injection heuristic. Both
         // enforcement wire shapes must be classified as expected so they stop
         // reaching Sentry.
@@ -4832,7 +4827,7 @@ mod tests {
             // detection during page-bookkeeping (journal/WAL extension) that
             // beats the next syscall to the errno. Production hit at
             // `memory_store::namespace_store::documents::tx.commit()` during
-            // `openhuman.memory_doc_ingest`, in the same burst that emits
+            // `neppy.memory_doc_ingest`, in the same burst that emits
             // os-error-112 siblings (Sentry TAURI-RUST-B6N).
             "commit tx: database or disk is full",
             // SQLITE_FULL **extended** rendering — the full error-code envelope
@@ -7546,7 +7541,7 @@ mod tests {
             "local ai is disabled",
             "rpc",
             "invoke_method",
-            &[("method", "openhuman.inference_prompt")],
+            &[("method", "neppy.inference_prompt")],
         );
         report_error_or_expected(
             "ollama API key not set",
@@ -8139,7 +8134,7 @@ mod tests {
             R6_BODY,
             "rpc",
             "invoke_method",
-            &[("method", "openhuman.composio_list_connections")],
+            &[("method", "neppy.composio_list_connections")],
         );
     }
 
@@ -8505,7 +8500,7 @@ mod tests {
 
     // ── is_auth_get_me_opaque_transport_event ────────────────────────────
     // Covers the TAURI-RUST-10 fingerprint shape: `domain=rpc`,
-    // `operation=invoke_method`, `method=openhuman.auth_get_me`, message
+    // `operation=invoke_method`, `method=neppy.auth_get_me`, message
     // body = exactly "GET /auth/me" (no underlying chain). See the
     // function docstring + the `auth_get_me` fix in
     // `neppy::security::credentials::ops::auth_get_me` for the broader
@@ -8516,7 +8511,7 @@ mod tests {
         vec![
             ("domain", "rpc"),
             ("operation", "invoke_method"),
-            ("method", "openhuman.auth_get_me"),
+            ("method", "neppy.auth_get_me"),
             ("elapsed_ms", "5003"),
         ]
     }
@@ -8565,9 +8560,9 @@ mod tests {
         // and a path-only body might be a legitimate distinct error for a
         // future endpoint.
         for method in [
-            "openhuman.consume_login_token",
-            "openhuman.auth_create_channel_link_token",
-            "openhuman.thread_list",
+            "neppy.consume_login_token",
+            "neppy.auth_create_channel_link_token",
+            "neppy.thread_list",
         ] {
             let mut tags = auth_get_me_tags();
             // Replace the method tag.
@@ -8577,7 +8572,7 @@ mod tests {
             let event = event_with_tags_and_message(&tags, "GET /auth/me");
             assert!(
                 !is_auth_get_me_opaque_transport_event(&event),
-                "filter must be scoped strictly to method=openhuman.auth_get_me \
+                "filter must be scoped strictly to method=neppy.auth_get_me \
                  — saw method={method}"
             );
         }

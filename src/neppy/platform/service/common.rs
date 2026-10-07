@@ -13,7 +13,7 @@ pub(crate) const LEGACY_SERVICE_LABEL: &str = "com.neppy.daemon";
 pub(crate) const LEGACY_APP_LABEL: &str = "com.neppy.app";
 
 pub(crate) fn resolve_daemon_executable() -> Result<PathBuf> {
-    if let Ok(path) = std::env::var("OPENHUMAN_CORE_BIN") {
+    if let Ok(path) = crate::neppy::util::env::var("NEPPY_CORE_BIN") {
         let candidate = PathBuf::from(path);
         if candidate.exists() {
             return Ok(candidate);

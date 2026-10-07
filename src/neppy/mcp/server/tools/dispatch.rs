@@ -330,7 +330,7 @@ async fn run_subagent_tool(params: &Map<String, Value>) -> Result<Value, ToolCal
     agent.fetch_connected_integrations().await;
     let _ = agent.refresh_delegation_tools();
 
-    // The MCP server surface exposes openhuman agents to remote MCP
+    // The MCP server surface exposes neppy agents to remote MCP
     // clients. Treat callers as ExternalChannel — their prompt text is
     // remote-controlled and any external_effect tool the agent tries to
     // run must route through the gate's audit + TTL-deny path.

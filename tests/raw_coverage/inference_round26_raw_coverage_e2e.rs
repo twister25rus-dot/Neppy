@@ -41,16 +41,16 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: validation runs this integration test with --test-threads=1.
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
 
     fn unset(key: &'static str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: validation runs this integration test with --test-threads=1.
-        unsafe { std::env::remove_var(key) };
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, previous }
     }
 }
@@ -64,7 +64,7 @@ impl Drop for EnvVarGuard {
             }
             None => {
                 // SAFETY: validation runs this integration test with --test-threads=1.
-                unsafe { std::env::remove_var(self.key) }
+                unsafe { neppy_core::neppy::util::env::remove_var(self.key) }
             }
         }
     }
@@ -96,7 +96,7 @@ async fn local_service_covers_mocked_bootstrap_assets_diagnostics_and_embed() {
     let _piper = EnvVarGuard::unset("PIPER_BIN");
 
     let (base, state) = serve_mock().await;
-    let _ollama_url = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &base);
+    let _ollama_url = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &base);
     let mut config = temp_config(&tmp);
     config.local_ai.runtime_enabled = true;
     config.local_ai.opt_in_confirmed = true;

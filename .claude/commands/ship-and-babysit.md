@@ -35,7 +35,7 @@ The flow is **fork-only**: `origin` must be the user's fork. If `origin` resolve
 - Mock backend calls all the way through with `scripts/mock-api-server.mjs`, `scripts/mock-api/*`, or `app/test/e2e/mock-server.ts`; do not hit real backend services or third-party APIs in E2E.
 - Use focused commands when possible:
   - `pnpm test:rust:e2e -- --suite <suite>`
-  - `pnpm --filter openhuman-app test:e2e:web:build`
+  - `pnpm --filter neppy-app test:e2e:web:build`
   - `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts`
 - Unit tests still matter for narrow logic, but they do not replace E2E coverage for newly built features.
 
@@ -79,7 +79,7 @@ Each tick:
    - For local repro of common failures before pushing fixes:
      - Frontend: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`.
      - Rust: `cargo check --manifest-path Cargo.toml`, `cargo check --manifest-path app/src-tauri/Cargo.toml`, `pnpm test:rust`.
-     - Feature E2E: `pnpm test:rust:e2e -- --suite <suite>` for core/RPC behavior, or `pnpm --filter openhuman-app test:e2e:web:build` plus `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts` for frontend flows.
+     - Feature E2E: `pnpm test:rust:e2e -- --suite <suite>` for core/RPC behavior, or `pnpm --filter neppy-app test:e2e:web:build` plus `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts` for frontend flows.
      - Coverage gate is **≥ 80% on changed lines** (`.github/workflows/coverage.yml`) — if coverage fails, add tests for changed lines, not just happy path.
 2. **Fetch CodeRabbit review comments**:
    `gh api repos/tinyhumansai/openhuman/pulls/<PR#>/comments --paginate`

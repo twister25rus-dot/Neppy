@@ -129,8 +129,8 @@ directly — no CLI subcommand except `run`/`serve` builds a `CoreContext`, so t
 `capability_allowed` gate would always default open — and `core::all::capability_for_parts` /
 `sole_capability_for_namespace` supply the **unfiltered** lookup that tells "no such command"
 apart from "gated", which every filtered lookup has already collapsed into one absence. Both CLI
-paths are covered: the generic `openhuman <namespace> <function>` dispatcher and the hand-written
-`openhuman memory <sub>` adapter. `core::dispatch` is deliberately untouched — it is the shared
+paths are covered: the generic `neppy-core <namespace> <function>` dispatcher and the hand-written
+`neppy-core memory <sub>` adapter. `core::dispatch` is deliberately untouched — it is the shared
 `/rpc` path, where the absence rule above still holds. A genuinely unknown command still reports
 unknown namespace / function / subcommand; collapsing the two would make real typos harder to
 diagnose.
@@ -255,7 +255,7 @@ external demand (pluggable backends such as Supermemory/mem0).
 4. Agent-tool assembly is filtered by the same set.
 5. `Guard` is the only path from product code to a driver; a test asserts no direct driver call
    site exists outside the registry module.
-6. `openhuman subsystems` CLI + `subsystems_status` RPC list slot, bound driver, class, health,
+6. `neppy-core subsystems` CLI + `subsystems_status` RPC list slot, bound driver, class, health,
    contract version, and capabilities.
 7. Docs: `gitbooks/developing/architecture/kernel.md` describes the model; `AGENTS.md` gains a
    "adding a subsystem driver" checklist.

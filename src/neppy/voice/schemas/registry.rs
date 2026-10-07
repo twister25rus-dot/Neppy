@@ -277,7 +277,7 @@ pub fn voice_schemas(function: &str) -> ControllerSchema {
             function: "update_provider_settings",
             description:
                 "Persist the voice provider registry and STT/TTS routing strings. \
-                 Mirrors openhuman.inference_update_model_settings for the voice domain.",
+                 Mirrors neppy.inference_update_model_settings for the voice domain.",
             inputs: vec![
                 FieldSchema {
                     name: "voice_providers",

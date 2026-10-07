@@ -94,7 +94,7 @@ describe('useBackgroundActivity', () => {
 describe('useMemorySyncActive', () => {
   function dispatch(detail: Record<string, unknown>) {
     act(() => {
-      window.dispatchEvent(new CustomEvent('openhuman:memory-sync-stage', { detail }));
+      window.dispatchEvent(new CustomEvent('neppy:memory-sync-stage', { detail }));
     });
   }
 

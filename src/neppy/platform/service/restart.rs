@@ -17,7 +17,7 @@ use crate::core::bus::BUS;
 use crate::core::events::DomainEvent;
 use crate::rpc::RpcOutcome;
 
-const RESTART_DELAY_ENV: &str = "OPENHUMAN_RESTART_DELAY_MS";
+const RESTART_DELAY_ENV: &str = "NEPPY_RESTART_DELAY_MS";
 const DEFAULT_RESTART_DELAY_MS: u64 = 350;
 
 static RESTART_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
@@ -37,7 +37,7 @@ pub struct RestartStatus {
 /// be initiated from inside the running server. A small delay reduces bind-race
 /// failures on the HTTP port while the old process is still releasing sockets.
 pub fn apply_startup_restart_delay_from_env() {
-    let Some(raw) = std::env::var(RESTART_DELAY_ENV)
+    let Some(raw) = crate::neppy::util::env::var(RESTART_DELAY_ENV)
         .ok()
         .filter(|value| !value.trim().is_empty())
     else {
@@ -129,7 +129,7 @@ pub fn trigger_self_restart_now(source: &str, reason: &str) -> Result<u32, Strin
 /// Respawns the current executable with the original argument list.
 ///
 /// This preserves the launch mode the user already chose, for example
-/// `openhuman run --jsonrpc-only` or another long-lived server mode.
+/// `neppy run --jsonrpc-only` or another long-lived server mode.
 fn spawn_restart_child() -> Result<u32, String> {
     let current_exe = std::env::current_exe().map_err(|e| format!("current_exe failed: {e}"))?;
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -266,8 +266,8 @@ mod tests {
     #[test]
     fn apply_startup_restart_delay_from_env_noop_when_unset() {
         // Ensure the env var is not set, then call — should not block
-        let _prev = std::env::var(RESTART_DELAY_ENV).ok();
-        std::env::remove_var(RESTART_DELAY_ENV);
+        let _prev = crate::neppy::util::env::var(RESTART_DELAY_ENV).ok();
+        crate::neppy::util::env::remove_var(RESTART_DELAY_ENV);
         apply_startup_restart_delay_from_env(); // should return immediately
     }
 }

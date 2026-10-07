@@ -343,25 +343,25 @@ target/release/library-profile subagents
 Measure a warmed subagent turn:
 
 ```bash
-OPENHUMAN_PROFILE_PREWARM_SUBAGENTS=1 \
+NEPPY_PROFILE_PREWARM_SUBAGENTS=1 \
   target/release/library-profile subagents
 ```
 
 Isolate orchestration from persistence and local timezone initialization:
 
 ```bash
-OPENHUMAN_PROFILE_DISABLE_MEMORY_WRITES=1 \
-OPENHUMAN_PROFILE_FORCE_UTC=1 \
+NEPPY_PROFILE_DISABLE_MEMORY_WRITES=1 \
+NEPPY_PROFILE_FORCE_UTC=1 \
   target/release/library-profile subagents
 ```
 
 Hold a process at its baseline or settled state for `vmmap`, `heap`, or `malloc_history`:
 
 ```bash
-OPENHUMAN_PROFILE_HOLD_BEFORE_SECS=120 \
+NEPPY_PROFILE_HOLD_BEFORE_SECS=120 \
   target/release/library-profile subagents
 
-OPENHUMAN_PROFILE_HOLD_SECS=120 \
+NEPPY_PROFILE_HOLD_SECS=120 \
   target/release/library-profile subagents
 ```
 
@@ -371,7 +371,7 @@ Example live inspection:
 vmmap -summary <pid>
 heap -sH <pid>
 
-MallocStackLogging=1 OPENHUMAN_PROFILE_HOLD_SECS=120 \
+MallocStackLogging=1 NEPPY_PROFILE_HOLD_SECS=120 \
   target/release/library-profile subagents
 malloc_history <pid> -allBySize
 ```
@@ -379,8 +379,8 @@ malloc_history <pid> -allBySize
 Record a symbolized CPU profile:
 
 ```bash
-OPENHUMAN_PROFILE_DISABLE_MEMORY_WRITES=1 \
-OPENHUMAN_PROFILE_FORCE_UTC=1 \
+NEPPY_PROFILE_DISABLE_MEMORY_WRITES=1 \
+NEPPY_PROFILE_FORCE_UTC=1 \
 samply record --save-only --unstable-presymbolicate \
   --rate 1000 --iteration-count 5 \
   --output target/profile/rust-library/subagents-cpu.json.gz \

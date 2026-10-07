@@ -30,7 +30,7 @@ describe('personaFilesApi', () => {
     const result = await readPersonaFile('SOUL.md');
     expect(result).toEqual(file);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workspace_file_read',
+      method: 'neppy.workspace_file_read',
       params: { filename: 'SOUL.md' },
     });
   });
@@ -40,7 +40,7 @@ describe('personaFilesApi', () => {
     const result = await writePersonaFile('SOUL.md', 'new');
     expect(result.contents).toBe('new');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workspace_file_write',
+      method: 'neppy.workspace_file_write',
       params: { filename: 'SOUL.md', contents: 'new' },
     });
   });
@@ -50,7 +50,7 @@ describe('personaFilesApi', () => {
     const result = await resetPersonaFile('SOUL.md');
     expect(result.is_default).toBe(true);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workspace_file_reset',
+      method: 'neppy.workspace_file_reset',
       params: { filename: 'SOUL.md' },
     });
   });

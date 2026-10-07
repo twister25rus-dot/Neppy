@@ -1,5 +1,5 @@
 /**
- * coreHealthMonitor — polls the local Rust sidecar's `openhuman.connectivity_diag`
+ * coreHealthMonitor — polls the local Rust sidecar's `neppy.connectivity_diag`
  * endpoint and dispatches `setCore` to the connectivitySlice (#1527).
  *
  * Polling cadence is adaptive:
@@ -24,7 +24,7 @@ let stopped = true;
 
 async function probe(): Promise<void> {
   try {
-    await callCoreRpc({ method: 'openhuman.connectivity_diag', params: {} });
+    await callCoreRpc({ method: 'neppy.connectivity_diag', params: {} });
     consecutiveFails = 0;
     store.dispatch(setCore({ value: 'reachable' }));
   } catch (err) {

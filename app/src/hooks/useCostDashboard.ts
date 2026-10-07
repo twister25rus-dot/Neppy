@@ -138,7 +138,7 @@ export function useCostDashboard(options: UseCostDashboardOptions = {}): UseCost
     setIsFetching(true);
     try {
       const response = await callCoreRpc<RpcEnvelope<CostDashboardPayload> | CostDashboardPayload>({
-        method: 'openhuman.cost_get_dashboard',
+        method: 'neppy.cost_get_dashboard',
         params: {},
       });
       if (cancelledRef.current) return;
@@ -205,7 +205,7 @@ export function useCostUsageLog(options: UseCostUsageLogOptions = {}): UseCostUs
     setIsFetching(true);
     try {
       const response = await callCoreRpc<RpcEnvelope<CostUsageLogPayload> | CostUsageLogPayload>({
-        method: 'openhuman.cost_get_usage_log',
+        method: 'neppy.cost_get_usage_log',
         params: { days, limit },
       });
       if (cancelledRef.current) return;

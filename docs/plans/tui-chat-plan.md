@@ -1,8 +1,8 @@
-# Plan: `openhuman tui` — feature-gated terminal chat UI
+# Plan: `neppy-core tui` — feature-gated terminal chat UI
 
 > Historical v1 plan. The shipped CLI now extends this foundation into a Logs-first four-tab UI
-> (Logs, Chat, Config, Settings). Bare `openhuman` auto-launches only with terminal stdin/stdout on
-> a non-container host; `--no-tui` suppresses that default and explicit `openhuman tui` still forces
+> (Logs, Chat, Config, Settings). Bare `neppy` auto-launches only with terminal stdin/stdout on
+> a non-container host; `--no-tui` suppresses that default and explicit `neppy-core tui` still forces
 > the UI. Config uses curated safe getters/updaters, and Settings uses registered auth controllers.
 
 ## Goal

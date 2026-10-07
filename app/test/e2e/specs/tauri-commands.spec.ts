@@ -10,7 +10,7 @@
  *      core. If either of these breaks every RPC the app makes is dead in
  *      the water.
  *
- *   2. **Core RPC over the relay**. We hit `openhuman.about_app_list` — a
+ *   2. **Core RPC over the relay**. We hit `neppy.about_app_list` — a
  *      cheap read-only method that returns the capability catalogue —
  *      through the same `callNeppyRpc` helper every product spec uses.
  *      That round-trips renderer → Tauri IPC → relay → core → response.
@@ -102,8 +102,8 @@ describe('Tauri commands', function () {
     expect(token).toMatch(/^[A-Za-z0-9]+$/);
   });
 
-  it('round-trips an RPC through the relay (openhuman.about_app_list)', async () => {
-    const res = await callNeppyRpc('openhuman.about_app_list', {});
+  it('round-trips an RPC through the relay (neppy.about_app_list)', async () => {
+    const res = await callNeppyRpc('neppy.about_app_list', {});
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     // about_app_list uses single_log → result is {result: [...capabilities], logs: [...]}

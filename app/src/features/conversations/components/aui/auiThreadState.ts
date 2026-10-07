@@ -1,7 +1,7 @@
 import { type AssistantState, useAuiState } from '@assistant-ui/react';
 import debugFactory from 'debug';
 
-const debug = debugFactory('openhuman:assistant-ui:transcript');
+const debug = debugFactory('neppy:assistant-ui:transcript');
 
 /**
  * Optional-safe reads of the assistant-ui runtime for the CURRENT subtree.

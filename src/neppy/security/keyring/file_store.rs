@@ -5,7 +5,7 @@
 //! cycle. That shape is fine within a process — a mutex covers it — and unsafe
 //! across processes, which is the configuration this codebase actually runs in:
 //! a desktop core, a `medulla` TUI embedding the same core, and any `cargo test`
-//! run that inherits `OPENHUMAN_WORKSPACE` all address the same file.
+//! run that inherits `NEPPY_WORKSPACE` all address the same file.
 //!
 //! Two failures follow from doing that unguarded, and both destroy secrets
 //! rather than merely failing:

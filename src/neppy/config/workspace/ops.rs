@@ -144,7 +144,7 @@ mod tests {
     use crate::neppy::config::TEST_ENV_LOCK as ENV_LOCK;
     use tempfile::tempdir;
 
-    /// RAII guard for `OPENHUMAN_WORKSPACE`. Sets the env var on
+    /// RAII guard for `NEPPY_WORKSPACE`. Sets the env var on
     /// construction and clears it on drop so a panicking test doesn't
     /// leak the override into sibling tests. Must be constructed while
     /// holding `ENV_LOCK` — mutating process env vars concurrently is
@@ -156,7 +156,7 @@ mod tests {
             // SAFETY: Caller holds `ENV_LOCK`, so no other thread in
             // this process is reading or mutating this env var.
             unsafe {
-                std::env::set_var("OPENHUMAN_WORKSPACE", path);
+                std::env::set_var("NEPPY_WORKSPACE", path);
             }
             Self
         }
@@ -166,9 +166,7 @@ mod tests {
         fn drop(&mut self) {
             // SAFETY: Same contract as `set()` — `ENV_LOCK` is held for
             // the whole test, so no concurrent env access is possible.
-            unsafe {
-                std::env::remove_var("OPENHUMAN_WORKSPACE");
-            }
+            crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
         }
     }
 

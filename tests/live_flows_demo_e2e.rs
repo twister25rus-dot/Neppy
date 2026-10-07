@@ -14,9 +14,9 @@
 //!   flows_run       → run it on a live topic and print each step's output
 //!
 //! Run manually (or via `scripts/live-flows-demo.sh`):
-//!   OPENHUMAN_LIVE_API_URL="https://<your-backend>" \
-//!   OPENHUMAN_LIVE_TOKEN="<jwt>" \
-//!   OPENHUMAN_LIVE_USER_ID="<user-id>" \
+//!   NEPPY_LIVE_API_URL="https://<your-backend>" \
+//!   NEPPY_LIVE_TOKEN="<jwt>" \
+//!   NEPPY_LIVE_USER_ID="<user-id>" \
 //!   cargo test --test live_flows_demo_e2e -- --ignored --nocapture
 
 use std::path::Path;
@@ -40,7 +40,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: EnvVarGuard is only used after acquiring live_e2e_env_lock(),
         // which serializes process-global env mutations.
         unsafe { std::env::set_var(key, path.as_os_str()) };
@@ -53,7 +53,7 @@ impl Drop for EnvVarGuard {
         match &self.old {
             // SAFETY: See set_to_path; teardown runs under the same lock.
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -67,7 +67,8 @@ fn live_e2e_env_lock() -> std::sync::MutexGuard<'static, ()> {
 }
 
 fn required_env(name: &str) -> String {
-    std::env::var(name).unwrap_or_else(|_| panic!("missing required env var: {name}"))
+    neppy_core::neppy::util::env::var(name)
+        .unwrap_or_else(|_| panic!("missing required env var: {name}"))
 }
 
 /// Seed a config that routes agent-node/chat workloads to the live managed
@@ -86,7 +87,7 @@ encrypt = false
     );
 
     fn write_config_file(config_dir: &Path, cfg: &str) {
-        std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
+        std::fs::create_dir_all(config_dir).expect("mkdir neppy");
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
 
@@ -229,10 +230,10 @@ fn opus_sonnet_demo_graph() -> Value {
 async fn live_flows_demo_discover_build_save_run() {
     let _env_lock = live_e2e_env_lock();
 
-    let api_url = required_env("OPENHUMAN_LIVE_API_URL");
-    let token = required_env("OPENHUMAN_LIVE_TOKEN");
-    let user_id = required_env("OPENHUMAN_LIVE_USER_ID");
-    let topic = std::env::var("OPENHUMAN_LIVE_FLOWS_TOPIC")
+    let api_url = required_env("NEPPY_LIVE_API_URL");
+    let token = required_env("NEPPY_LIVE_TOKEN");
+    let user_id = required_env("NEPPY_LIVE_USER_ID");
+    let topic = neppy_core::neppy::util::env::var("NEPPY_LIVE_FLOWS_TOPIC")
         .unwrap_or_else(|_| "the state of grid-scale battery storage in 2026".to_string());
 
     let tmp = tempdir().expect("tempdir");
@@ -250,7 +251,7 @@ async fn live_flows_demo_discover_build_save_run() {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": token, "user_id": user_id }),
     )
     .await;
@@ -259,7 +260,7 @@ async fn live_flows_demo_discover_build_save_run() {
 
     // 1. flows_discover — the Flow Scout records suggestions.
     println!("\n--- flows_discover (Flow Scout) ---");
-    let discover = post_json_rpc(&rpc_base, 2, "openhuman.flows_discover", json!({})).await;
+    let discover = post_json_rpc(&rpc_base, 2, "neppy.flows_discover", json!({})).await;
     let suggestions = peel_logs_envelope(assert_no_jsonrpc_error(&discover, "flows_discover"))
         .as_array()
         .cloned()
@@ -280,7 +281,7 @@ async fn live_flows_demo_discover_build_save_run() {
     let build = post_json_rpc(
         &rpc_base,
         3,
-        "openhuman.flows_build",
+        "neppy.flows_build",
         json!({
             "mode": "create",
             "instruction": "Build a research-brief workflow: a reasoning model plans the brief \
@@ -324,7 +325,7 @@ async fn live_flows_demo_discover_build_save_run() {
     let create = post_json_rpc(
         &rpc_base,
         4,
-        "openhuman.flows_create",
+        "neppy.flows_create",
         json!({
             "name": "Research brief (Opus plans, Sonnet drafts) — live demo",
             "graph": opus_sonnet_demo_graph()
@@ -344,7 +345,7 @@ async fn live_flows_demo_discover_build_save_run() {
     let run = post_json_rpc(
         &rpc_base,
         5,
-        "openhuman.flows_run",
+        "neppy.flows_run",
         json!({ "id": flow_id, "input": { "topic": topic } }),
     )
     .await;
@@ -383,7 +384,7 @@ async fn live_flows_demo_discover_build_save_run() {
     let run_row = post_json_rpc(
         &rpc_base,
         6,
-        "openhuman.flows_get_run",
+        "neppy.flows_get_run",
         json!({ "run_id": thread_id }),
     )
     .await;

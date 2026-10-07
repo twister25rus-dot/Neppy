@@ -14,7 +14,7 @@ Once you've connected a service via OAuth, its actions become callable tools. Th
 A few examples of what becomes available:
 
 - "Send a message to #engineering on Slack."
-- "Create an issue in the openhuman repo."
+- "Create an issue in the neppy repo."
 - "What's on my calendar tomorrow?"
 - "Pull the last 20 Stripe charges over $1000."
 

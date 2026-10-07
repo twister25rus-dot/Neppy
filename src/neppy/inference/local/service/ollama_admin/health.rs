@@ -105,9 +105,9 @@ impl LocalAiService {
     }
 
     /// Kill any running Ollama server process so we can restart with the correct binary.
-    /// Kill the `ollama serve` daemon openhuman itself spawned, if any.
+    /// Kill the `ollama serve` daemon neppy itself spawned, if any.
     ///
-    /// **No-op when openhuman never spawned a daemon** (i.e. it adopted an
+    /// **No-op when neppy never spawned a daemon** (i.e. it adopted an
     /// externally-managed one via the `ollama_healthy()` fast-path, or no
     /// daemon was started at all). This avoids the friendly-fire bug from
     /// the previous blanket `taskkill /IM ollama.exe` / `pkill -f` which
@@ -129,7 +129,7 @@ impl LocalAiService {
         let pid = child.id().unwrap_or(0);
         match child.kill().await {
             Ok(()) => {
-                log::info!("[local_ai] killed openhuman-owned ollama serve (pid={pid})");
+                log::info!("[local_ai] killed neppy-owned ollama serve (pid={pid})");
                 // Reap so the OS doesn't keep the zombie around on Unix.
                 let _ = child.wait().await;
             }
@@ -144,7 +144,7 @@ impl LocalAiService {
 
     /// Public shutdown hook for the Tauri exit lifecycle.
     ///
-    /// Kills the openhuman-owned `ollama serve` (if any) and clears the
+    /// Kills the neppy-owned `ollama serve` (if any) and clears the
     /// spawn marker so the next launch doesn't try to reclaim a daemon
     /// that's already dead. Idempotent — safe to call from both
     /// `RunEvent::ExitRequested` and window-close paths.

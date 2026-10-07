@@ -14,9 +14,9 @@ use super::store::CachedCatalog;
 use super::types::CatalogEntry;
 
 const CATALOG_URL: &str = "https://hermes-agent.nousresearch.com/docs/api/skills.json";
-const CATALOG_URL_ENV: &str = "OPENHUMAN_SKILL_REGISTRY_CATALOG_URL";
-const DOWNLOAD_BASE_URL_ENV: &str = "OPENHUMAN_SKILL_REGISTRY_DOWNLOAD_BASE_URL";
-const REFRESH_ON_BOOT_ENV: &str = "OPENHUMAN_SKILL_REGISTRY_REFRESH_ON_BOOT";
+const CATALOG_URL_ENV: &str = "NEPPY_SKILL_REGISTRY_CATALOG_URL";
+const DOWNLOAD_BASE_URL_ENV: &str = "NEPPY_SKILL_REGISTRY_DOWNLOAD_BASE_URL";
+const REFRESH_ON_BOOT_ENV: &str = "NEPPY_SKILL_REGISTRY_REFRESH_ON_BOOT";
 const FETCH_TIMEOUT_SECS: u64 = 180;
 
 /// Single-flight gate for catalog fetches. On mount the skills explorer issues
@@ -45,13 +45,17 @@ impl Drop for RefreshGuard {
 ///
 /// This is intended for core startup: it warms the explorer/search cache without
 /// making core readiness depend on registry availability. Set
-/// `OPENHUMAN_SKILL_REGISTRY_REFRESH_ON_BOOT=0` to disable it in constrained
+/// `NEPPY_SKILL_REGISTRY_REFRESH_ON_BOOT=0` to disable it in constrained
 /// environments.
 pub fn start_boot_catalog_refresh() {
     static STARTED: std::sync::Once = std::sync::Once::new();
 
     STARTED.call_once(|| {
-        if !refresh_on_boot_enabled(std::env::var(REFRESH_ON_BOOT_ENV).ok().as_deref()) {
+        if !refresh_on_boot_enabled(
+            crate::neppy::util::env::var(REFRESH_ON_BOOT_ENV)
+                .ok()
+                .as_deref(),
+        ) {
             tracing::info!(
                 env = REFRESH_ON_BOOT_ENV,
                 "[skill_registry] boot catalog refresh disabled"
@@ -91,8 +95,8 @@ fn refresh_on_boot_enabled(raw: Option<&str>) -> bool {
     // before failing, so the default costs a slow boot for traffic a
     // local-first fork did not ask for.
     //
-    // Not removed, just opt-in: set OPENHUMAN_SKILL_REGISTRY_REFRESH_ON_BOOT=1
-    // to restore it, and OPENHUMAN_SKILL_REGISTRY_CATALOG_URL to point it at
+    // Not removed, just opt-in: set NEPPY_SKILL_REGISTRY_REFRESH_ON_BOOT=1
+    // to restore it, and NEPPY_SKILL_REGISTRY_CATALOG_URL to point it at
     // your own catalog. Browsing the catalog on demand is unaffected — this
     // gates only the unattended fetch at startup.
     let Some(raw) = raw else { return false };
@@ -265,7 +269,7 @@ async fn fetch_catalog_uncached() -> Result<Vec<CatalogEntry>, String> {
 }
 
 fn catalog_url() -> String {
-    std::env::var(CATALOG_URL_ENV)
+    crate::neppy::util::env::var(CATALOG_URL_ENV)
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
@@ -520,7 +524,7 @@ pub(crate) fn parse_hermes_entry(item: &serde_json::Value) -> Option<CatalogEntr
 /// Resolve a fetchable `SKILL.md` URL for a catalog entry.
 ///
 /// Precedence:
-/// 1. `OPENHUMAN_SKILL_REGISTRY_DOWNLOAD_BASE_URL` test override.
+/// 1. `NEPPY_SKILL_REGISTRY_DOWNLOAD_BASE_URL` test override.
 /// 2. `docsPath` — Hermes' own bundled / optional skills, which live in the
 ///    `NousResearch/hermes-agent` repo under `skills/` / `optional-skills/`.
 /// 3. `sourceUrl` — community skills (ClawHub / LobeHub / skills.sh / browse.sh
@@ -540,7 +544,7 @@ fn derive_download_url(
     docs_path: Option<&str>,
     source_url: Option<&str>,
 ) -> String {
-    if let Ok(base) = std::env::var(DOWNLOAD_BASE_URL_ENV) {
+    if let Ok(base) = crate::neppy::util::env::var(DOWNLOAD_BASE_URL_ENV) {
         let base = base.trim().trim_end_matches('/');
         if !base.is_empty() {
             return format!("{base}/{name}/SKILL.md");
@@ -788,7 +792,7 @@ mod tests {
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering as AtomicOrdering};
     use std::sync::Arc;
 
-    const CACHE_DIR_ENV: &str = "OPENHUMAN_SKILL_REGISTRY_CACHE_DIR";
+    const CACHE_DIR_ENV: &str = "NEPPY_SKILL_REGISTRY_CACHE_DIR";
 
     fn env_lock() -> std::sync::MutexGuard<'static, ()> {
         crate::neppy::skills::catalog::TEST_ENV_LOCK
@@ -830,7 +834,7 @@ mod tests {
         );
 
         store::clear_cache();
-        std::env::remove_var(CACHE_DIR_ENV);
+        crate::neppy::util::env::remove_var(CACHE_DIR_ENV);
     }
 
     #[tokio::test]
@@ -869,7 +873,7 @@ mod tests {
         );
 
         store::clear_cache();
-        std::env::remove_var(CACHE_DIR_ENV);
+        crate::neppy::util::env::remove_var(CACHE_DIR_ENV);
     }
 
     /// Write a cache file with an explicit `fetched_at_epoch` (epoch 1 => stale).
@@ -911,7 +915,7 @@ mod tests {
         );
 
         store::clear_cache();
-        std::env::remove_var(CACHE_DIR_ENV);
+        crate::neppy::util::env::remove_var(CACHE_DIR_ENV);
     }
 
     #[tokio::test]
@@ -943,6 +947,6 @@ mod tests {
         );
 
         store::clear_cache();
-        std::env::remove_var(CACHE_DIR_ENV);
+        crate::neppy::util::env::remove_var(CACHE_DIR_ENV);
     }
 }

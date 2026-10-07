@@ -26,7 +26,7 @@ describe('petApi', () => {
   it('getPet calls pet_get and returns the bare value', async () => {
     mockCallCoreRpc.mockResolvedValue({ id: 'p1', name: 'Pet', enabled: false });
     const pet = await getPet();
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.pet_get', params: {} });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.pet_get', params: {} });
     expect(pet.id).toBe('p1');
   });
 
@@ -40,7 +40,7 @@ describe('petApi', () => {
     mockCallCoreRpc.mockResolvedValue({ id: 'p1' });
     await updatePet({ enabled: true, name: 'Pip' });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_update',
+      method: 'neppy.pet_update',
       params: { patch: { enabled: true, name: 'Pip' } },
     });
   });
@@ -49,13 +49,13 @@ describe('petApi', () => {
     mockCallCoreRpc.mockResolvedValue({ id: 'g1' });
     await addPetGoal('Finish the portfolio');
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_goal_add',
+      method: 'neppy.pet_goal_add',
       params: { text: 'Finish the portfolio' },
     });
     mockCallCoreRpc.mockResolvedValue({ removed: true });
     await removePetGoal('g1');
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_goal_remove',
+      method: 'neppy.pet_goal_remove',
       params: { goal_id: 'g1' },
     });
   });
@@ -64,7 +64,7 @@ describe('petApi', () => {
     mockCallCoreRpc.mockResolvedValue({ status: 'started' });
     await runPetNow();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_run_now',
+      method: 'neppy.pet_run_now',
       params: { wait: false },
     });
   });
@@ -73,7 +73,7 @@ describe('petApi', () => {
     mockCallCoreRpc.mockResolvedValue({});
     const feed = await fetchPetFeed({ limit: 10 });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_feed',
+      method: 'neppy.pet_feed',
       params: { limit: 10 },
     });
     expect(feed).toEqual({ digests: [], notes: [], last_run: null });
@@ -83,7 +83,7 @@ describe('petApi', () => {
     mockCallCoreRpc.mockResolvedValue(null);
     expect(await fetchPetNotes({ state: 'queued' })).toEqual([]);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_notes_list',
+      method: 'neppy.pet_notes_list',
       params: { state: 'queued' },
     });
   });
@@ -92,7 +92,7 @@ describe('petApi', () => {
     mockCallCoreRpc.mockResolvedValue({ id: 'n1', state: 'dismissed' });
     await dismissPetNote('n1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_note_dismiss',
+      method: 'neppy.pet_note_dismiss',
       params: { note_id: 'n1' },
     });
   });
@@ -108,7 +108,7 @@ describe('petApi', () => {
     mockCallCoreRpc.mockResolvedValue({ proposal: { id: 'p1' }, chat_prompt: 'hello' });
     const out = await decidePetProposal('p1', 'accept');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_proposal_decide',
+      method: 'neppy.pet_proposal_decide',
       params: { proposal_id: 'p1', decision: 'accept' },
     });
     expect(out.chat_prompt).toBe('hello');

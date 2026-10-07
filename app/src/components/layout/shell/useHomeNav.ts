@@ -53,7 +53,7 @@ export function useHomeNav(): () => void {
       })
       .catch(err => {
         // The rejection MUST stay consumed here — unconsumed it becomes
-        // `UnhandledRejection: Core RPC openhuman.threads_create_new timed out
+        // `UnhandledRejection: Core RPC neppy.threads_create_new timed out
         // after 30000ms` (#5156). Swallowing it silently was the other half of
         // that bug: Home did nothing and said nothing. The user-visible surface
         // is `thread.createThreadError`, which the chat page renders; this log

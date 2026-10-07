@@ -36,9 +36,9 @@ Namespace `workspace`; three controllers (defined in `schemas.rs`, all return th
 
 | RPC method | Inputs | Description |
 | --- | --- | --- |
-| `openhuman.workspace_file_read` | `filename` | Read an editable persona file; falls back to bundled default when the workspace copy is missing. |
-| `openhuman.workspace_file_write` | `filename`, `contents` | Overwrite an editable persona file (size-capped server-side). |
-| `openhuman.workspace_file_reset` | `filename` | Restore an editable persona file to its bundled default. |
+| `neppy.workspace_file_read` | `filename` | Read an editable persona file; falls back to bundled default when the workspace copy is missing. |
+| `neppy.workspace_file_write` | `filename`, `contents` | Overwrite an editable persona file (size-capped server-side). |
+| `neppy.workspace_file_reset` | `filename` | Restore an editable persona file to its bundled default. |
 
 Handlers resolve `workspace_dir` from config (`config_rpc::load_config_with_timeout`), trim the filename, delegate to `rpc.rs`, and serialize via `RpcOutcome::into_cli_compatible_json`. Unknown function names yield an `unknown` schema. Wired into the global registry in `src/core/all.rs`.
 

@@ -397,7 +397,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
             namespace: "threads",
             function: "set_mode",
             description: "Switch a conversation thread between operating modes \
-                          ('chat' or 'orchestration'). The thread and its history are unchanged; \
+                          ('chat', 'orchestration' or 'debug'). The thread and its history are unchanged; \
                           only the delegation surface and supervisor guidance of the next turn \
                           differ. Threads default to 'chat'. The mode is also readable as `mode` \
                           on every thread summary (threads_list / create_new / upsert).",
@@ -411,7 +411,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 FieldSchema {
                     name: "mode",
                     ty: TypeSchema::String,
-                    comment: "'chat' or 'orchestration'.",
+                    comment: "'chat', 'orchestration' or 'debug'.",
                     required: true,
                 },
                 FieldSchema {

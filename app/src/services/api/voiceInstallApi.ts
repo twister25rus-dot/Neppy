@@ -61,7 +61,7 @@ interface InstallPiperParams {
 export async function installPiper(params: InstallPiperParams = {}): Promise<VoiceInstallStatus> {
   log('[voice-install:piper] kick-off %o', params);
   const result = await callCoreRpc<VoiceInstallStatus>({
-    method: 'openhuman.inference_install_piper',
+    method: 'neppy.inference_install_piper',
     params: { voice_id: params.voiceId, force: params.force },
   });
   log('[voice-install:piper] result state=%s stage=%s', result.state, result.stage ?? '<none>');
@@ -76,7 +76,7 @@ export async function installPiper(params: InstallPiperParams = {}): Promise<Voi
  */
 export async function piperInstallStatus(): Promise<VoiceInstallStatus> {
   return await callCoreRpc<VoiceInstallStatus>({
-    method: 'openhuman.inference_piper_install_status',
+    method: 'neppy.inference_piper_install_status',
     params: {},
   });
 }

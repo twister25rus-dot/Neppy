@@ -258,6 +258,15 @@ impl Tool for ShellTool {
         {
             class = class.max(declared);
         }
+        // Debug Mode: a Debug turn's command gate can ask for a human yes on
+        // top of the tier's own decision (dangerous commands). Routed through
+        // the same harness `ApprovalGate`; outside a Debug turn this is `Allow`.
+        if matches!(
+            crate::neppy::agent::debug_mode::policy::gate_current_command(command),
+            crate::neppy::agent::debug_mode::policy::DebugCommandDecision::Ask(_)
+        ) {
+            return true;
+        }
         self.security.gate_decision(class) == GateDecision::Prompt
     }
 
@@ -335,6 +344,22 @@ impl ShellTool {
         requested_timeout: Option<u64>,
         context: Option<&ToolExecutionContext>,
     ) -> (bool, ToolResult) {
+        // Debug Mode command gate (dependency installs, git push, system and
+        // destructive commands). Only acts inside a Debug turn. `Ask` was
+        // already routed to the approval gate by `external_effect_with_args`.
+        if let crate::neppy::agent::debug_mode::policy::DebugCommandDecision::Deny(reason) =
+            crate::neppy::agent::debug_mode::policy::gate_current_command(command)
+        {
+            tracing::warn!("[shell] debug-mode gate denied a command");
+            return (
+                false,
+                ToolResult::error(format!(
+                    "{} {reason}",
+                    crate::neppy::security::POLICY_BLOCKED_MARKER
+                )),
+            );
+        }
+
         // Read-only `Block` + the Option-2 structural guard. Approval for
         // Write / Network / Destructive already happened at the harness
         // `ApprovalGate` (see `external_effect_with_args`) before `execute()`
@@ -400,7 +425,7 @@ impl ShellTool {
         cmd.env_clear();
 
         for var in SAFE_ENV_VARS {
-            if let Ok(val) = std::env::var(var) {
+            if let Ok(val) = crate::neppy::util::env::var(var) {
                 cmd.env(var, val);
             }
         }
@@ -419,7 +444,7 @@ impl ShellTool {
         if scratch_dir.is_dir() {
             tracing::debug!(
                 scratch_dir = %scratch_dir.display(),
-                "[shell] overriding TMPDIR/TMP/TEMP to the openhuman scratch dir"
+                "[shell] overriding TMPDIR/TMP/TEMP to the neppy scratch dir"
             );
             cmd.env("TMPDIR", scratch_dir.as_os_str());
             cmd.env("TMP", scratch_dir.as_os_str());
@@ -631,7 +656,7 @@ impl ShellTool {
         } else {
             Ok(Some(prepend_path_dirs(
                 prepend_dirs.iter().map(|p| p.as_path()),
-                &std::env::var("PATH").unwrap_or_default(),
+                &crate::neppy::util::env::var("PATH").unwrap_or_default(),
             )))
         }
     }
@@ -1186,7 +1211,7 @@ mod tests {
 
     impl EnvGuard {
         fn set(key: &'static str, value: &str) -> Self {
-            let original = std::env::var(key).ok();
+            let original = crate::neppy::util::env::var(key).ok();
             std::env::set_var(key, value);
             Self { key, original }
         }
@@ -1196,7 +1221,7 @@ mod tests {
         fn drop(&mut self) {
             match &self.original {
                 Some(val) => std::env::set_var(self.key, val),
-                None => std::env::remove_var(self.key),
+                None => crate::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -1586,3 +1611,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "shell_debug_tests.rs"]
+mod debug_gate_tests;

@@ -23,7 +23,7 @@ hint = "coding"
 # precise editing (edit / apply_patch vs. whole-file `file_write`); the
 # old tools stay so the agent can still drop down to a shell when the
 # task genuinely needs it. `lsp` is capability-gated by
-# OPENHUMAN_LSP_ENABLED — listing it here is harmless when the gate is
+# NEPPY_LSP_ENABLED — listing it here is harmless when the gate is
 # off (the tool is simply not registered).
 named = [
     "shell",

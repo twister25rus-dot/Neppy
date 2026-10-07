@@ -1,7 +1,7 @@
 /**
  * Frontend client for the durable agent-team coordination surface (#3374).
  *
- * Wraps the `openhuman.agent_team_*` controller family from the durable team
+ * Wraps the `neppy.agent_team_*` controller family from the durable team
  * ledger (PR1, #3546): the read paths `agent_team_list`, `agent_team_get`, and
  * `agent_team_list_messages`, plus two lifecycle writes added with quality-gated
  * completion — `agent_team_complete_task` and `agent_team_shutdown_member`.
@@ -183,7 +183,7 @@ export const agentTeamApi = {
     assertPositiveInt(params.limit, 'limit');
     log('list params=%o', params);
     const response = await callCoreRpc<{ teams?: AgentTeam[]; count?: number }>({
-      method: 'openhuman.agent_team_list',
+      method: 'neppy.agent_team_list',
       params,
     });
     const teams = response.teams ?? [];
@@ -199,7 +199,7 @@ export const agentTeamApi = {
     if (!teamId) throw new Error('agentTeamApi.get: teamId is required');
     log('get teamId=%s', teamId);
     const response = await callCoreRpc<{ team: TeamView | null }>({
-      method: 'openhuman.agent_team_get',
+      method: 'neppy.agent_team_get',
       params: { teamId },
     });
     log('get found=%o', response.team != null);
@@ -216,7 +216,7 @@ export const agentTeamApi = {
     assertPositiveInt(limit, 'limit');
     log('listMessages teamId=%s limit=%o', teamId, limit);
     const response = await callCoreRpc<{ messages?: RawRunEvent[] }>({
-      method: 'openhuman.agent_team_list_messages',
+      method: 'neppy.agent_team_list_messages',
       params: limit === undefined ? { teamId } : { teamId, limit },
     });
     const messages = (response.messages ?? []).map(event => ({
@@ -250,7 +250,7 @@ export const agentTeamApi = {
     }
     log('completeTask teamId=%s taskId=%s requireEvidence=%o', teamId, taskId, requireEvidence);
     const response = await callCoreRpc<{ result: CompletionOutcome }>({
-      method: 'openhuman.agent_team_complete_task',
+      method: 'neppy.agent_team_complete_task',
       params: { teamId, taskId, memberId, evidence, requireEvidence },
     });
     log('completeTask kind=%s', response.result.kind);
@@ -267,7 +267,7 @@ export const agentTeamApi = {
     }
     log('shutdownMember teamId=%s memberId=%s', teamId, memberId);
     const response = await callCoreRpc<{ result: MemberShutdown }>({
-      method: 'openhuman.agent_team_shutdown_member',
+      method: 'neppy.agent_team_shutdown_member',
       params: { teamId, memberId },
     });
     log('shutdownMember released=%d', response.result.releasedTaskIds.length);
@@ -291,7 +291,7 @@ export const agentTeamApi = {
     if (!content.trim()) throw new Error('agentTeamApi.messageMember: content is required');
     log('messageMember teamId=%s to=%o from=%o', teamId, toMemberId, fromMemberId);
     const response = await callCoreRpc<{ message: RawRunEvent }>({
-      method: 'openhuman.agent_team_message_member',
+      method: 'neppy.agent_team_message_member',
       params: {
         teamId,
         content,
@@ -327,7 +327,7 @@ export const agentTeamApi = {
     }
     log('startMember teamId=%s memberId=%s taskId=%o', teamId, memberId, taskId);
     const response = await callCoreRpc<{ result: StartMemberOutcome }>({
-      method: 'openhuman.agent_team_start_member',
+      method: 'neppy.agent_team_start_member',
       params: { teamId, memberId, ...(taskId ? { taskId } : {}) },
     });
     log('startMember kind=%s', response.result.kind);

@@ -11,12 +11,12 @@ the UI. Posts are text-only end-to-end:
   (`PostCreate` = `{ body, content_type, post_id }`) or the **read** side
   (`Post` / `GqlPost` = `body`, counts, author, timestamps — no media).
 - The tiny.place **backend** serves no post-media field. Verified against
-  tiny.place `main` (`d2545054`, the commit openhuman already pins): the SDK
+  tiny.place `main` (`d2545054`, the commit neppy already pins): the SDK
   structs there still have no `image` / `media` / `gif` field.
 - The desktop composer sends `{ body }` only (`FeedSection.tsx` →
   `feeds.createPost` → `manifest.rs` → SDK `feeds::create_post`).
 
-Because `vendor/tinyplace` is a **pinned git submodule** (openhuman can only bump
+Because `vendor/tinyplace` is a **pinned git submodule** (neppy can only bump
 the pointer to a commit that exists on the tiny.place remote), the media contract
 cannot be added from this repo. A prior WIP branch pinned the submodule to a
 **local-only** SDK commit to make it build — that is unmergeable (a fresh clone/CI
@@ -59,5 +59,5 @@ the web app via the existing `openUrl()` helper.
 
 1. tiny.place backend: persist + serve a post-media field.
 2. tiny.place SDK: add media to `PostCreate` + read-side `Post` / `GqlPost`; release.
-3. openhuman: bump the submodule pointer, then wire handler + composer upload +
+3. neppy: bump the submodule pointer, then wire handler + composer upload +
    renderer. Tracked under the Tiny Place epic (#4190 / #4776).

@@ -13,7 +13,7 @@ import {
 vi.mock('../../../services/coreRpcClient', () => ({ callCoreRpc: vi.fn() }));
 
 describe('synthesizeSpeech (core RPC)', () => {
-  it('routes through openhuman.voice_reply_synthesize and forwards options', async () => {
+  it('routes through neppy.voice_reply_synthesize and forwards options', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
     mock.mockResolvedValueOnce({
       audio_base64: 'AAA=',
@@ -22,7 +22,7 @@ describe('synthesizeSpeech (core RPC)', () => {
     });
     const r = await synthesizeSpeech('hello', { voiceId: 'v1', modelId: 'm1' });
     expect(mock).toHaveBeenCalledWith({
-      method: 'openhuman.voice_reply_synthesize',
+      method: 'neppy.voice_reply_synthesize',
       params: { text: 'hello.', voice_id: 'v1', model_id: 'm1' },
     });
     expect(r.audio_base64).toBe('AAA=');
@@ -34,7 +34,7 @@ describe('synthesizeSpeech (core RPC)', () => {
     mock.mockResolvedValueOnce({ audio_base64: 'BBB=', audio_mime: 'audio/mpeg', visemes: [] });
     await synthesizeSpeech('hi');
     expect(mock).toHaveBeenCalledWith({
-      method: 'openhuman.voice_reply_synthesize',
+      method: 'neppy.voice_reply_synthesize',
       params: { text: 'hi.', voice_id: 'JBFqnCBsd6RMkjVDRZzb', model_id: 'eleven_multilingual_v2' },
     });
   });

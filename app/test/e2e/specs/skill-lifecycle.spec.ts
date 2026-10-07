@@ -7,7 +7,7 @@
  *   2. The Skills shell renders one of the well-known affordances
  *      (Skills/Install/Available header).
  *
- * Note: the Skills page now fetches data via the `openhuman.flows_list`
+ * Note: the Skills page now fetches data via the `neppy.flows_list`
  * JSON-RPC method (not via a REST GET /skills to the mock backend). The
  * mock-HTTP oracle was removed so the spec does not produce false-negative
  * failures when the UI wires correctly through core RPC.
@@ -56,10 +56,10 @@ describe('Skill lifecycle smoke', () => {
     expect(visible).toBe(true);
 
     // Verify the core RPC route for skills is reachable. The Skills page
-    // uses openhuman.flows_list (not a mock-backend HTTP call) since the
+    // uses neppy.flows_list (not a mock-backend HTTP call) since the
     // QuickJS skills runtime was removed. We probe it here as the
     // authoritative oracle that the data-fetch path is wired.
-    const rpcResult = await callNeppyRpc('openhuman.flows_list', {});
+    const rpcResult = await callNeppyRpc('neppy.flows_list', {});
     expect(rpcResult.ok).toBe(true);
   });
 });

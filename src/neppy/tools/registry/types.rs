@@ -52,7 +52,7 @@ pub enum ToolRegistryHealth {
     Unknown,
 }
 
-/// Response payload for `openhuman.tool_registry_list`.
+/// Response payload for `neppy.tool_registry_list`.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ToolRegistryList {
     /// Sorted registry entries.

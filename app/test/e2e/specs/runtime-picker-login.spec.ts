@@ -20,7 +20,7 @@
  *            (no auth backend at 127.0.0.1:1 / picks a closed port).
  *     4. Switch back to Local, click Continue. BootCheckGate runs `runBootCheck`
  *        against the embedded local core (which is already up — the e2e build
- *        seeds `VITE_OPENHUMAN_E2E_DEFAULT_CORE_MODE=local`) and we land back
+ *        seeds `VITE_NEPPY_E2E_DEFAULT_CORE_MODE=local`) and we land back
  *        on Welcome with the OAuth provider row visible.
  *
  *   Phase 2 — Provider login (deep-link bypass simulates the OAuth round-trip):

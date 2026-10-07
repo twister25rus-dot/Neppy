@@ -91,10 +91,10 @@ test.describe('tiny.place direct messaging (core RPC)', () => {
   test.beforeAll(async () => {
     // 1) Give the app's core a fresh tiny.place identity + published Signal keys.
     const mnemonic = await freshMnemonic();
-    const encryptedMnemonic = await aliceRpc<string>('openhuman.encrypt_secret', {
+    const encryptedMnemonic = await aliceRpc<string>('neppy.encrypt_secret', {
       plaintext: mnemonic,
     });
-    await aliceRpc('openhuman.wallet_setup', {
+    await aliceRpc('neppy.wallet_setup', {
       consentGranted: true,
       source: 'imported',
       mnemonicWordCount: TEST_MNEMONIC_WORDS,
@@ -102,17 +102,17 @@ test.describe('tiny.place direct messaging (core RPC)', () => {
       accounts: PLACEHOLDER_ACCOUNTS,
       force: true,
     });
-    await aliceRpc('openhuman.tinyplace_signal_provision', { preKeyCount: 10 });
-    await aliceRpc('openhuman.tinyplace_signal_register_encryption_key', {});
-    const status = await aliceRpc<{ agentId: string }>('openhuman.tinyplace_signal_key_status', {});
+    await aliceRpc('neppy.tinyplace_signal_provision', { preKeyCount: 10 });
+    await aliceRpc('neppy.tinyplace_signal_register_encryption_key', {});
+    const status = await aliceRpc<{ agentId: string }>('neppy.tinyplace_signal_key_status', {});
     aliceCryptoId = status.agentId;
     expect(aliceCryptoId, 'app core produced a cryptoId').toBeTruthy();
 
     // 2) Launch the peer core (Bob) and make Alice + Bob accepted contacts so
     //    the relay will carry their DMs.
     bob = await launchAgent('pw-bob', { port: 17851, backend: BACKEND });
-    await aliceRpc('openhuman.tinyplace_contacts_request', { agentId: bob.cryptoId });
-    await bob.rpc('openhuman.tinyplace_contacts_accept', { agentId: aliceCryptoId });
+    await aliceRpc('neppy.tinyplace_contacts_request', { agentId: bob.cryptoId });
+    await bob.rpc('neppy.tinyplace_contacts_accept', { agentId: aliceCryptoId });
   });
 
   test.afterAll(() => {
@@ -123,7 +123,7 @@ test.describe('tiny.place direct messaging (core RPC)', () => {
     // Send an end-to-end encrypted message from the app's own core.
     const outgoing = `alice → bob @ ${Date.now()}`;
     const sent = await aliceRpc<{ encrypted: boolean; messageId: string }>(
-      'openhuman.tinyplace_signal_send_message',
+      'neppy.tinyplace_signal_send_message',
       { recipient: bob.cryptoId, plaintext: outgoing }
     );
     expect(sent.encrypted, 'send reports the message was encrypted').toBe(true);
@@ -134,7 +134,7 @@ test.describe('tiny.place direct messaging (core RPC)', () => {
 
     // Now the peer replies; the app's own core must receive + decrypt it.
     const reply = `bob → alice @ ${Date.now()}`;
-    await bob.rpc('openhuman.tinyplace_signal_send_message', {
+    await bob.rpc('neppy.tinyplace_signal_send_message', {
       recipient: aliceCryptoId,
       plaintext: reply,
     });

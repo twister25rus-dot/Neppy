@@ -14,9 +14,9 @@ status, and present-tense inventory are not current.
 
 ## 1. Why
 
-The agent loop already runs on tinyagents; `run_turn_via_tinyagents_shared` drives every turn. But the **model layer underneath it is still entirely in-house**: the harness reaches a crate `ChatModel` only through the `ProviderModel` adapter (`src/neppy/agent/tinyagents/model.rs`), which wraps openhuman's own `Box<dyn Provider>` stack from `src/neppy/inference/provider/` — ~29.6k lines that re-implement what tinyagents 1.7 now ships natively:
+The agent loop already runs on tinyagents; `run_turn_via_tinyagents_shared` drives every turn. But the **model layer underneath it is still entirely in-house**: the harness reaches a crate `ChatModel` only through the `ProviderModel` adapter (`src/neppy/agent/tinyagents/model.rs`), which wraps neppy's own `Box<dyn Provider>` stack from `src/neppy/inference/provider/` — ~29.6k lines that re-implement what tinyagents 1.7 now ships natively:
 
-| openhuman (`inference/provider/`, etc.)                                  | tinyagents 1.7 equivalent                                                                              |
+| neppy (`inference/provider/`, etc.)                                  | tinyagents 1.7 equivalent                                                                              |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | `Provider` trait, `ChatMessage`/`ChatRequest`/`ChatResponse`/`ProviderDelta` (`traits.rs`) | `harness::model::{ChatModel, ModelRequest, ModelResponse, ModelStream, ModelStreamItem}` + `harness::message::*` |
 | `compatible*.rs` (~15 files: OpenAI-compat client, SSE streaming, parse, dump, repeat, timeout) | `harness::providers::openai` (convert / sse / transport / types) — serves every OpenAI-compatible endpoint |
@@ -26,11 +26,11 @@ The agent loop already runs on tinyagents; `run_turn_via_tinyagents_shared` driv
 | `error_classify.rs` / `error_code.rs` (retryability, HTTP status parsing)  | `harness::retry::is_retryable` + `harness::model::ProviderError`                                        |
 | provider-string → provider construction (`factory.rs`, partially)          | `harness::providers::{ProviderKind, ProviderSpec}` factory (`ProviderKind::infer`, `Compatible`)        |
 | embeddings dispatch (`ops.rs` → local/cloud)                               | `harness::embeddings` traits (+ openai impl)                                                            |
-| `provider/openai_codex.rs`, `openhuman_backend.rs`, `claude_agent_sdk/`    | no equivalent — stay as host `ChatModel` impls                                                          |
+| `provider/openai_codex.rs`, `neppy_backend.rs`, `claude_agent_sdk/`    | no equivalent — stay as host `ChatModel` impls                                                          |
 
-Maintaining both stacks means every fix (streaming edge case, retry policy, context-window entry, provider quirk) lands twice, and the adapter seam (`ProviderModel` + `ThinkingForwarder` + usage-carry plumbing) exists only to translate between two isomorphic type systems. Since `vendor/tinyagents` is our own crate (same GPL-3.0 license, same org), host-agnostic gaps get **upstreamed into the crate**; only genuinely openhuman-specific glue stays.
+Maintaining both stacks means every fix (streaming edge case, retry policy, context-window entry, provider quirk) lands twice, and the adapter seam (`ProviderModel` + `ThinkingForwarder` + usage-carry plumbing) exists only to translate between two isomorphic type systems. Since `vendor/tinyagents` is our own crate (same GPL-3.0 license, same org), host-agnostic gaps get **upstreamed into the crate**; only genuinely neppy-specific glue stays.
 
-**End state:** the crate's `ChatModel`/`ModelRequest` is the native model interface everywhere in openhuman; `inference/` keeps only host concerns (RPC surface, config, local runtime management, voice, OAuth, `/v1` endpoint); `ProviderModel` and the entire `Provider` trait stack are deleted.
+**End state:** the crate's `ChatModel`/`ModelRequest` is the native model interface everywhere in neppy; `inference/` keeps only host concerns (RPC surface, config, local runtime management, voice, OAuth, `/v1` endpoint); `ProviderModel` and the entire `Provider` trait stack are deleted.
 
 ### Blast radius
 
@@ -52,8 +52,8 @@ Maintaining both stacks means every fix (streaming edge case, retry policy, cont
 | `model_context.rs` (`context_window_for_model`) | **upstream** entries into crate `ModelCatalog` snapshot / `MODEL_CONTEXT_PATTERNS`; host keeps a thin lookup that prefers config overrides | Crate catalog also carries pricing + capability flags — feeds the cost tracker. |
 | `provider/error_classify.rs`, `error_code.rs` | **delete**, use crate `is_retryable` / `ProviderError` | Upstream any status-classification the crate misses. |
 | `provider/temperature.rs` (`@<temp>` suffix) | host parses the suffix in the factory; value rides `ModelRequest` params | Grammar stays host-side; the plumbing type goes away. |
-| `provider/config_rejection.rs`, `billing_error.rs` | **split**: generic classification upstreamed as crate error kinds; openhuman semantics (Sentry demotion, budget messaging) stay as a host classifier over `TinyAgentsError` | |
-| `provider/factory.rs` | **shrinks, stays**: resolves openhuman provider strings (`openhuman`, `cloud`, `ollama:<model>`, `<slug>:<model>[@temp]`) + config + credentials → crate `ProviderSpec`/`Arc<dyn ChatModel>` | This is the host↔crate boundary after migration. `BYOK_INCOMPLETE_SENTINEL` stays. |
+| `provider/config_rejection.rs`, `billing_error.rs` | **split**: generic classification upstreamed as crate error kinds; neppy semantics (Sentry demotion, budget messaging) stay as a host classifier over `TinyAgentsError` | |
+| `provider/factory.rs` | **shrinks, stays**: resolves neppy provider strings (`openhuman`, `cloud`, `ollama:<model>`, `<slug>:<model>[@temp]`) + config + credentials → crate `ProviderSpec`/`Arc<dyn ChatModel>` | This is the host↔crate boundary after migration. `BYOK_INCOMPLETE_SENTINEL` stays. |
 | `provider/ops.rs` (`list_configured_models`, SessionExpired publishing) | **stays**, retargeted to crate types | SessionExpired needs an auth-failure signal from the crate client (gap G3). |
 | embeddings dispatch | crate `harness::embeddings` traits (seam `tinyagents/embeddings.rs` already exists — finish it) | Local (Ollama) embedding stays a host impl of the crate trait. |
 | `provider/thread_context.rs`, `resolved_route.rs`, `auth_error_registry.rs` | **re-home** into `src/neppy/agent/tinyagents/` (they're seam concerns, not provider concerns) | `thread_context` task-locals already consumed by `model.rs`. |
@@ -67,7 +67,7 @@ Maintaining both stacks means every fix (streaming edge case, retry policy, cont
 - **`http/`**: the `/v1/chat/completions` OpenAI-compat *server* endpoint. (Later option: crate 1.3+ has OpenAI-compat runtime model listing; revisit after Phase 5.)
 - **`device.rs`, `presets.rs`, `model_ids.rs`, `paths.rs`, `parse.rs`**: hardware profiles, preset tiers, config-derived model-id resolution, artifact paths.
 - **`sentiment.rs`**: stays as a host op, but its model call is rewritten onto `ChatModel` (+ crate structured output) in Phase 6.
-- **Bespoke providers** (`openhuman_backend.rs` session-JWT managed backend, `claude_agent_sdk/` subprocess, `openai_codex.rs` OAuth-token compat variant): stay in-repo, reimplemented as crate `ChatModel` impls (Phase 4).
+- **Bespoke providers** (`neppy_backend.rs` session-JWT managed backend, `claude_agent_sdk/` subprocess, `openai_codex.rs` OAuth-token compat variant): stay in-repo, reimplemented as crate `ChatModel` impls (Phase 4).
 
 ---
 
@@ -77,7 +77,7 @@ Verified against 1.7.1 source; re-audit at Phase 0 since the crate moves fast.
 
 - **G1 — Usage fidelity**: crate `Usage` has no `charged_amount_usd` and needs verifying for cache-read/cache-write token fields. The $0-cost-turn bug (fixed host-side via `cost::catalog::estimate_cost_usd`) shows exactly what breaks when this is lossy. Either upstream optional cost/cached fields on `Usage`, or keep host-side estimation keyed off the crate `ModelCatalog` pricing.
 - **G2 — Tool-call start metadata**: crate `ToolDelta` carries `call_id`/`content` but no `tool_name`; the UI timeline's tool-start event is still forwarded out-of-band (`model.rs` forwarder). Upstream `tool_name` on the first `ToolDelta` (or a dedicated start item) so the forwarder can die with `ProviderModel`.
-- **G3 — Auth-failure signal**: openhuman publishes `DomainEvent::SessionExpired` when a chat attempt fails auth. The crate client must classify 401/expired distinctly (as a `ProviderError` kind) so the host factory can hook it without string-sniffing.
+- **G3 — Auth-failure signal**: neppy publishes `DomainEvent::SessionExpired` when a chat attempt fails auth. The crate client must classify 401/expired distinctly (as a `ProviderError` kind) so the host factory can hook it without string-sniffing.
 - **G4 — Request dump / wire observability**: `compatible_dump.rs` writes raw request/response dumps for debugging. Upstream a transport-level hook (or confirm the crate's observability exporters cover it) before deleting.
 - **G5 — Per-request timeout policy**: `compatible_timeout.rs` semantics vs. what the crate transport exposes. Upstream a per-call timeout on `ModelRequest`/`ProviderSpec` if missing.
 - **G6 — BYOK auth styles**: the authoritative provider catalog
@@ -86,7 +86,7 @@ Verified against 1.7.1 source; re-audit at Phase 0 since the crate moves fast.
   style in the catalog; upstream what's missing.
 - **G7 — Repeat-output guard**: `compatible_repeat.rs` (degenerate-repetition detection). Decide: upstream as an optional stream guard, or accept the loss (note #4463 already tracks deleted repeat guards).
 
-Upstream flow: change in `vendor/tinyagents` (submodule working tree) → PR to `tinyhumansai/tinyagents` → publish → bump the crates.io pin in **both** Cargo worlds (root + `app/src-tauri`) and the submodule ref in lockstep. Nothing in openhuman may depend on unpublished vendored-only API at a merge point.
+Upstream flow: change in `vendor/tinyagents` (submodule working tree) → PR to `tinyhumansai/tinyagents` → publish → bump the crates.io pin in **both** Cargo worlds (root + `app/src-tauri`) and the submodule ref in lockstep. Nothing in neppy may depend on unpublished vendored-only API at a merge point.
 
 ---
 
@@ -98,7 +98,7 @@ Each phase compiles green in both Cargo worlds, keeps ≥80% diff coverage, and 
 - Enumerate every consumer of `Provider` / `ChatRequest` / `ChatResponse` / `ChatMessage` outside `inference/` (151 files) and bucket them: (a) goes through the seam already, (b) direct one-shot `provider.chat(...)` callers (learning, memory, subconscious, sentiment, triage…), (c) type-only imports.
 - Re-verify §3 gaps against current crate HEAD; file crate issues; update
   `vendor/tinyagents/docs/sdk-gaps.md`.
-- Golden-transcript capture: record request/response wire dumps for the BYOK catalog matrix + Ollama + openhuman backend on the current stack, as fixtures for Phase 2 parity.
+- Golden-transcript capture: record request/response wire dumps for the BYOK catalog matrix + Ollama + neppy backend on the current stack, as fixtures for Phase 2 parity.
 
 **Exit:** disposition table confirmed per-file; crate gap PRs filed.
 
@@ -119,12 +119,12 @@ Each phase compiles green in both Cargo worlds, keeps ≥80% diff coverage, and 
 ### Phase 3 — Reliability, routing, model metadata
 - Replace `ReliableProvider` layering (`session/builder/factory.rs` re-layered it in the P1 parity fix) with crate `RetryPolicy` at the client level; audit and remove the double-retry.
 - Replace `RouterProvider` with `ModelRegistry`: abstract tier names (`reasoning-v1`, `coding-v1`, …) become registry entries resolved per call; `provider_for_role`/workload resolution feeds the registry instead of building a router provider.
-- Upstream openhuman's context-window table entries into the crate `ModelCatalog` snapshot; `context_window_for_model` becomes a host shim: config override → catalog → crate pattern fallback. Wire catalog pricing into `cost::catalog` (replacing the hand-rolled rate table, or seeding it).
+- Upstream neppy's context-window table entries into the crate `ModelCatalog` snapshot; `context_window_for_model` becomes a host shim: config override → catalog → crate pattern fallback. Wire catalog pricing into `cost::catalog` (replacing the hand-rolled rate table, or seeding it).
 
 **Exit:** `reliable.rs`, `router.rs`, `model_context.rs` deleted; retry fires exactly once per layer by design.
 
 ### Phase 4 — Bespoke providers as `ChatModel` impls
-- Rewrite `openhuman_backend.rs` (managed backend, session JWT + SessionExpired publishing via G3), `openai_codex.rs` (Codex OAuth token source over the crate openai client), and `claude_agent_sdk/` (subprocess protocol) as direct `ChatModel` implementations in their current homes.
+- Rewrite `neppy_backend.rs` (managed backend, session JWT + SessionExpired publishing via G3), `openai_codex.rs` (Codex OAuth token source over the crate openai client), and `claude_agent_sdk/` (subprocess protocol) as direct `ChatModel` implementations in their current homes.
 - Local runtime: `local/` keeps process lifecycle; its chat/vision/embed entrypoints call crate clients pointed at the local base URL.
 
 **Exit:** `Provider` trait has zero implementations → delete `traits.rs` and the trait itself.
@@ -159,7 +159,7 @@ Each phase compiles green in both Cargo worlds, keeps ≥80% diff coverage, and 
 - **Cost accounting**: the event bridge + `record_unobserved_turn_usage` fallback were hard-won ($0-turn bug). Any `Usage` shape change must keep cached-token and USD flow intact end-to-end (dashboard + footer).
 - **Streaming UI parity**: tool-start events (G2) and post-hoc reasoning still ride the out-of-band forwarder; deleting it before the crate gap closes breaks the tool timeline.
 - **Two Cargo worlds**: root and `app/src-tauri` pin tinyagents independently — every crate bump lands in both lockfiles plus the submodule ref, same commit.
-- **Vendored-crate discipline**: the path patch means local vendor edits silently take effect; CI and other clones need the submodule at the matching ref. Never merge openhuman code that requires unpublished crate API.
+- **Vendored-crate discipline**: the path patch means local vendor edits silently take effect; CI and other clones need the submodule at the matching ref. Never merge neppy code that requires unpublished crate API.
 - **Sentry noise contract**: `ops.rs` deliberately demotes provider/user-config failures to `warn!`. The new host classifier over `TinyAgentsError` must preserve `expected_error_kind` behavior or Sentry floods.
 - **Test serialization**: everything runs under `inference_test_guard()` (process-global mutex over the runtime singleton + config); new tests must too.
 - **Open regressions in the same area** (#4451–#4469, esp. #4460 streamed calls losing thread_id task-locals, #4463 repeat guards): coordinate so this migration doesn't re-break or mask those fixes; thread-context task-locals move in Phase 5 — verify #4460's fix survives the re-home.

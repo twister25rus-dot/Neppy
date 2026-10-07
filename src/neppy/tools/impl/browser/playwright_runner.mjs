@@ -13,9 +13,11 @@ try {
 }
 
 const userDataDir =
-  process.env.OPENHUMAN_PLAYWRIGHT_USER_DATA_DIR ||
+  process.env.NEPPY_PLAYWRIGHT_USER_DATA_DIR ||
+  process.env.NEPPY_PLAYWRIGHT_USER_DATA_DIR ||
   path.join(os.tmpdir(), 'openhuman-playwright-browser');
-const headless = process.env.OPENHUMAN_PLAYWRIGHT_HEADLESS !== '0';
+const headless =
+  (process.env.NEPPY_PLAYWRIGHT_HEADLESS ?? process.env.OPENHUMAN_PLAYWRIGHT_HEADLESS) !== '0';
 
 let context = null;
 let page = null;

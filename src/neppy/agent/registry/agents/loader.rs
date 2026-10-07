@@ -30,7 +30,7 @@
 //! added by [`crate::neppy::agent::harness::builtin_definitions::all`] on top of the
 //! loader output.
 //!
-//! Workspace-level overrides (`$OPENHUMAN_WORKSPACE/agents/*.toml`) are
+//! Workspace-level overrides (`$NEPPY_WORKSPACE/agents/*.toml`) are
 //! handled separately by [`crate::neppy::agent::harness::definition_loader`] and merged
 //! into the global registry, where they replace built-ins on `id`
 //! collision.
@@ -81,6 +81,15 @@ pub const BUILTINS: &[BuiltinAgent] = &[
         id: "code_executor",
         toml: include_str!("code_executor/agent.toml"),
         prompt_fn: super::code_executor::prompt::build,
+        graph_fn: None,
+    },
+    // Debug mode's development agent. Run only by a Debug-mode thread
+    // (`web_chat::mode::target_agent_id`), never an orchestrator subagent: it
+    // has no `delegate_name` and is not in the orchestrator's allowlist.
+    BuiltinAgent {
+        id: "debug_agent",
+        toml: include_str!("debug_agent/agent.toml"),
+        prompt_fn: super::debug_agent::prompt::build,
         graph_fn: None,
     },
     BuiltinAgent {
@@ -952,6 +961,99 @@ mod tests {
             def.effective_tokenjuice_compression(),
             AgentTokenjuiceCompression::Light
         );
+    }
+
+    #[test]
+    fn debug_agent_is_registered_repo_scoped_and_not_a_delegate() {
+        let def = find("debug_agent");
+        assert_eq!(def.sandbox_mode, SandboxMode::Sandboxed);
+        assert!(!def.omit_safety_preamble, "keeps the safety preamble");
+        assert!(def.omit_identity);
+        assert!(def.omit_memory_context);
+        assert_eq!(def.max_iterations, 40);
+        assert_eq!(def.effective_max_iterations(), 50, "bounded by `extended`");
+        assert!(
+            def.subagents.is_empty(),
+            "the debug agent must not delegate"
+        );
+        assert!(def.delegate_name.is_none(), "no delegate tool of its own");
+        assert!(matches!(def.system_prompt, PromptSource::Dynamic(_)));
+        match &def.tools {
+            ToolScope::Named(names) => {
+                for required in [
+                    "shell",
+                    "file_read",
+                    "file_write",
+                    "git_operations",
+                    "grep",
+                    "glob",
+                    "list",
+                    "edit",
+                    "apply_patch",
+                    "todowrite",
+                    "debug_checkpoint",
+                    "debug_report",
+                ] {
+                    assert!(
+                        names.iter().any(|t| t == required),
+                        "debug_agent must name `{required}`"
+                    );
+                }
+                for forbidden in [
+                    "curl",
+                    "web_fetch",
+                    "storage_upload_file",
+                    "storage_download_file",
+                    "storage_list_files",
+                    "storage_get_link",
+                    "update_memory_md",
+                    "memory_store",
+                    "debug_rollback",
+                ] {
+                    assert!(
+                        !names.iter().any(|t| t == forbidden),
+                        "debug_agent must not name `{forbidden}`"
+                    );
+                }
+                let unique: std::collections::HashSet<&String> = names.iter().collect();
+                assert_eq!(unique.len(), names.len(), "no duplicate tool names");
+            }
+            ToolScope::Wildcard => panic!("debug_agent must have a Named tool scope"),
+        }
+        // Reachable only through Debug mode: never an orchestrator delegate.
+        let orchestrator = find("orchestrator");
+        assert!(!orchestrator
+            .subagents
+            .iter()
+            .any(|s| matches!(s, SubagentEntry::AgentId(id) if id == "debug_agent")));
+    }
+
+    #[test]
+    fn debug_agent_prompt_carries_the_debug_rules() {
+        let prompt = include_str!("debug_agent/prompt.md");
+        for needle in [
+            "ANALYZE",
+            "PLAN",
+            "IMPLEMENT",
+            "CHECK",
+            "TEST",
+            "BUILD",
+            "REVIEW",
+            "checkpoint of the working tree was taken automatically",
+            "debug_report",
+            "git reset --hard",
+            "git clean -fd",
+            "git push",
+            "preserve unrelated user changes",
+            "package.json",
+            "Prefer targeted checks",
+        ] {
+            assert!(
+                prompt.contains(needle),
+                "debug_agent prompt missing `{needle}`"
+            );
+        }
+        assert!(!prompt.to_lowercase().contains("openhuman"));
     }
 
     #[test]

@@ -76,7 +76,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
     // Fire execute against every guard toolkit
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callNeppyRpc('openhuman.composio_execute', {
+      await callNeppyRpc('neppy.composio_execute', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
         action: `${slug.toUpperCase()}_TEST_ACTION`,
         params: {},
@@ -94,7 +94,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
 
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callNeppyRpc('openhuman.composio_execute', {
+      await callNeppyRpc('neppy.composio_execute', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
         action: `${slug.toUpperCase()}_TEST_ACTION`,
         params: {},
@@ -111,7 +111,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
 
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callNeppyRpc('openhuman.composio_delete_connection', {
+      await callNeppyRpc('neppy.composio_delete_connection', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
       });
     }
@@ -126,7 +126,7 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
 
     for (const slug of GUARD_TOOLKITS) {
       clearRequestLog();
-      await callNeppyRpc('openhuman.composio_sync', { toolkit: slug });
+      await callNeppyRpc('neppy.composio_sync', { toolkit: slug });
     }
 
     await assertSessionNotNuked();
@@ -174,8 +174,8 @@ describe('Composio connector session guard (cross-cutting, #2286)', () => {
     setMockBehavior('composioDeleteFails', '1');
 
     for (const slug of GUARD_TOOLKITS) {
-      await callNeppyRpc('openhuman.composio_authorize', { toolkit: slug });
-      await callNeppyRpc('openhuman.composio_execute', {
+      await callNeppyRpc('neppy.composio_authorize', { toolkit: slug });
+      await callNeppyRpc('neppy.composio_execute', {
         connection_id: `c-guard-${GUARD_TOOLKITS.indexOf(slug)}`,
         action: `${slug.toUpperCase()}_TEST_ACTION`,
         params: {},

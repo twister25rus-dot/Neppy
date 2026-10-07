@@ -6,6 +6,8 @@ mod ops;
 pub mod presentation;
 mod progress_bridge;
 mod run_task;
+#[cfg(any(test, debug_assertions))]
+mod run_task_hooks;
 mod schemas;
 mod session;
 mod types;

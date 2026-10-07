@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publish the openhuman npm package for a given version.
+# Publish the neppy npm package for a given version.
 #
 # Usage:
 #   publish-npm.sh <tag>

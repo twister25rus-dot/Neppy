@@ -30,7 +30,7 @@ vi.mock('../providers/CoreStateProvider', () => ({
 
 // All chat workloads routed to Neppy — the default for every existing
 // test case (matches the legacy "you have a hosted-backend budget" world).
-const ALL_OPENHUMAN_AI_SETTINGS = {
+const ALL_NEPPY_AI_SETTINGS = {
   cloudProviders: [],
   routing: {
     chat: { kind: 'openhuman' as const },
@@ -136,7 +136,7 @@ describe('useUsageState', () => {
     // Default: keep the Neppy-routed world so every legacy assertion
     // about budget gating stays identical until a test opts into the
     // routed-away scenarios below.
-    mockLoadAISettings.mockResolvedValue(ALL_OPENHUMAN_AI_SETTINGS);
+    mockLoadAISettings.mockResolvedValue(ALL_NEPPY_AI_SETTINGS);
   });
 
   it('does not show the completed-budget message for free users with zero recurring budget', async () => {
@@ -267,7 +267,7 @@ describe('useUsageState', () => {
 
     // Plan + usage say "budget exhausted" — but the user has saved an
     // OpenRouter key and routed reasoning/agentic/coding away from
-    // openhuman. The banner that previously said "Your included budget is
+    // neppy. The banner that previously said "Your included budget is
     // complete" should NOT show, because the user is paying OpenRouter,
     // not Neppy, for chat inference.
     mockGetCurrentPlan.mockResolvedValue({
@@ -310,7 +310,7 @@ describe('useUsageState', () => {
           model: 'anthropic/claude-sonnet-4.6',
         },
         coding: { kind: 'cloud', providerSlug: 'openrouter', model: 'anthropic/claude-sonnet-4.6' },
-        // Background workloads may still route to openhuman — the suppression
+        // Background workloads may still route to neppy — the suppression
         // logic only consults CHAT_WORKLOADS (chat/reasoning/agentic/coding).
         memory: { kind: 'openhuman' },
         embeddings: { kind: 'openhuman' },
@@ -338,12 +338,12 @@ describe('useUsageState', () => {
     const { useUsageState } = await import('./useUsageState');
 
     // Budget exhausted, and the raw routing strings still read as managed
-    // (kind=openhuman). The core reports the chat tier runs on a usable BYO
+    // (kind=neppy). The core reports the chat tier runs on a usable BYO
     // provider (creditsBypass.chat=true), which must win for the default mode.
     mockGetCurrentPlan.mockResolvedValue(basicPlan());
     mockGetTeamUsage.mockResolvedValue(buildUsage({ remainingUsd: 0, cycleBudgetUsd: 10 }));
     mockLoadAISettings.mockResolvedValue({
-      ...ALL_OPENHUMAN_AI_SETTINGS,
+      ...ALL_NEPPY_AI_SETTINGS,
       creditsBypass: { chat: true, reasoning: true },
     });
 
@@ -366,7 +366,7 @@ describe('useUsageState', () => {
     mockGetCurrentPlan.mockResolvedValue(basicPlan());
     mockGetTeamUsage.mockResolvedValue(buildUsage({ remainingUsd: 0, cycleBudgetUsd: 10 }));
     mockLoadAISettings.mockResolvedValue({
-      ...ALL_OPENHUMAN_AI_SETTINGS,
+      ...ALL_NEPPY_AI_SETTINGS,
       creditsBypass: { chat: false, reasoning: false },
     });
 
@@ -390,7 +390,7 @@ describe('useUsageState', () => {
     mockGetCurrentPlan.mockResolvedValue(basicPlan());
     mockGetTeamUsage.mockResolvedValue(buildUsage({ remainingUsd: 0, cycleBudgetUsd: 10 }));
     mockLoadAISettings.mockResolvedValue({
-      ...ALL_OPENHUMAN_AI_SETTINGS,
+      ...ALL_NEPPY_AI_SETTINGS,
       creditsBypass: { chat: true, reasoning: false },
     });
 
@@ -409,7 +409,7 @@ describe('useUsageState', () => {
     const { useUsageState } = await import('./useUsageState');
 
     // User has saved an OpenRouter key for agentic+coding but left reasoning
-    // on openhuman — they're still partially dependent on the included
+    // on neppy — they're still partially dependent on the included
     // budget, so the banner must keep showing.
     mockGetCurrentPlan.mockResolvedValue({
       plan: 'BASIC',
@@ -551,7 +551,7 @@ describe('useUsageState', () => {
         reasoning: { kind: 'local', model: 'qwen3:8b' },
         agentic: { kind: 'local', model: 'qwen3:8b' },
         coding: { kind: 'local', model: 'qwen3:8b' },
-        // Background workloads are intentionally left on openhuman to
+        // Background workloads are intentionally left on neppy to
         // prove the gate is keyed on chat workloads only.
         memory: { kind: 'openhuman' },
         embeddings: { kind: 'openhuman' },
@@ -599,7 +599,7 @@ describe('useUsageState', () => {
     mockGetCurrentPlan.mockResolvedValue(basicPlan());
     mockGetTeamUsage.mockResolvedValue(buildUsage({ remainingUsd: 0, cycleBudgetUsd: 10 }));
     mockLoadAISettings
-      .mockResolvedValueOnce(ALL_OPENHUMAN_AI_SETTINGS)
+      .mockResolvedValueOnce(ALL_NEPPY_AI_SETTINGS)
       .mockResolvedValueOnce(ALL_LOCAL_AI_SETTINGS);
 
     const first = renderHook(() => useUsageState());

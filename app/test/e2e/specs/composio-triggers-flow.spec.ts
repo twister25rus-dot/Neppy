@@ -1,7 +1,7 @@
 /**
  * End-to-end: client-side Composio trigger toggles (PR for backend #671).
  *
- * Drives the new `openhuman.composio_*` trigger RPC methods through the
+ * Drives the new `neppy.composio_*` trigger RPC methods through the
  * running core sidecar against the shared mock backend, then opens the
  * Composio connection modal and asserts the Triggers section renders
  * the expected toggle for an ACTIVE Gmail connection.
@@ -49,7 +49,7 @@ describe('Composio trigger toggles (UI + core RPC)', () => {
   });
 
   it('list_available_triggers returns the seeded Gmail catalog', async () => {
-    const out = await callNeppyRpc('openhuman.composio_list_available_triggers', {
+    const out = await callNeppyRpc('neppy.composio_list_available_triggers', {
       toolkit: 'gmail',
       connection_id: 'c1',
     });
@@ -62,14 +62,14 @@ describe('Composio trigger toggles (UI + core RPC)', () => {
   });
 
   it('list_triggers starts empty for the seeded user', async () => {
-    const out = await callNeppyRpc('openhuman.composio_list_triggers', {});
+    const out = await callNeppyRpc('neppy.composio_list_triggers', {});
     expect(out.ok).toBe(true);
     const result = (out.result as any)?.result ?? out.result;
     expect(result.triggers ?? []).toHaveLength(0);
   });
 
   it('enable_trigger creates a trigger that subsequent list calls observe', async () => {
-    const enable = await callNeppyRpc('openhuman.composio_enable_trigger', {
+    const enable = await callNeppyRpc('neppy.composio_enable_trigger', {
       connection_id: 'c1',
       slug: 'GMAIL_NEW_GMAIL_MESSAGE',
     });
@@ -80,26 +80,24 @@ describe('Composio trigger toggles (UI + core RPC)', () => {
     expect(typeof created.triggerId).toBe('string');
     expect(created.triggerId.length).toBeGreaterThan(0);
 
-    const list = await callNeppyRpc('openhuman.composio_list_triggers', { toolkit: 'gmail' });
+    const list = await callNeppyRpc('neppy.composio_list_triggers', { toolkit: 'gmail' });
     const result = (list.result as any)?.result ?? list.result;
     expect(result.triggers).toHaveLength(1);
     expect(result.triggers[0].slug).toBe('GMAIL_NEW_GMAIL_MESSAGE');
   });
 
   it('disable_trigger removes the active trigger', async () => {
-    const list = await callNeppyRpc('openhuman.composio_list_triggers', {});
+    const list = await callNeppyRpc('neppy.composio_list_triggers', {});
     const beforeResult = (list.result as any)?.result ?? list.result;
     const triggerId = beforeResult.triggers[0]?.id;
     expect(typeof triggerId).toBe('string');
 
-    const disable = await callNeppyRpc('openhuman.composio_disable_trigger', {
-      trigger_id: triggerId,
-    });
+    const disable = await callNeppyRpc('neppy.composio_disable_trigger', { trigger_id: triggerId });
     expect(disable.ok).toBe(true);
     const out = (disable.result as any)?.result ?? disable.result;
     expect(out.deleted).toBe(true);
 
-    const after = await callNeppyRpc('openhuman.composio_list_triggers', {});
+    const after = await callNeppyRpc('neppy.composio_list_triggers', {});
     const afterResult = (after.result as any)?.result ?? after.result;
     expect(afterResult.triggers ?? []).toHaveLength(0);
   });

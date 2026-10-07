@@ -1,6 +1,6 @@
 /**
  * flowsApi.importFlow (Phase 4d) — the host-validated import client. Asserts it
- * forwards the graph + format to `openhuman.flows_import`, unwraps the
+ * forwards the graph + format to `neppy.flows_import`, unwraps the
  * CLI-compatible `{ result, logs }` envelope, and surfaces the normalized graph
  * plus warnings. Also covers the auto-detect default and error propagation.
  */
@@ -28,7 +28,7 @@ describe('flowsApi.importFlow', () => {
     const result = await importFlow({ some: 'n8n json' });
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.flows_import',
+      method: 'neppy.flows_import',
       params: { graph: { some: 'n8n json' }, format: 'auto' },
     });
     expect(result.graph).toEqual(graph);
@@ -45,7 +45,7 @@ describe('flowsApi.importFlow', () => {
     await importFlow({ nodes: [] }, 'n8n');
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.flows_import',
+      method: 'neppy.flows_import',
       params: { graph: { nodes: [] }, format: 'n8n' },
     });
   });

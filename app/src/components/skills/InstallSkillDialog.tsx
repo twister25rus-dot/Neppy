@@ -3,7 +3,7 @@
  * ------------------
  *
  * Centered white modal that installs a skill via
- * `openhuman.skills_install_from_url`. The Rust side fetches a single
+ * `neppy.skills_install_from_url`. The Rust side fetches a single
  * `SKILL.md` file over HTTPS and writes it into
  * `<workspace>/.neppy/skills/<slug>/SKILL.md`. URLs are allow-listed
  * (https only, no private/loopback/link-local/multicast/cloud-metadata

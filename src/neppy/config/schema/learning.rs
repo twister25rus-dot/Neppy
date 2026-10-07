@@ -87,7 +87,7 @@ pub struct LearningConfig {
     ///
     /// Default: `true`. Set to `false` to fully disable the Archivist.
     ///
-    /// Override via `OPENHUMAN_LEARNING_EPISODIC_CAPTURE_ENABLED=0|1`.
+    /// Override via `NEPPY_LEARNING_EPISODIC_CAPTURE_ENABLED=0|1`.
     #[serde(default = "default_true")]
     pub episodic_capture_enabled: bool,
 
@@ -102,7 +102,7 @@ pub struct LearningConfig {
     ///
     /// Default: `true`. Set to `false` to fully disable STM recall.
     ///
-    /// Override via `OPENHUMAN_LEARNING_STM_RECALL_ENABLED=0|1`.
+    /// Override via `NEPPY_LEARNING_STM_RECALL_ENABLED=0|1`.
     #[serde(default = "default_true")]
     pub stm_recall_enabled: bool,
 
@@ -118,7 +118,7 @@ pub struct LearningConfig {
     /// narrow, always-on path for user-authoritative pinned preferences —
     /// no reflection, no heuristics, no stability engine.
     ///
-    /// Explicitly set to `false` (or `OPENHUMAN_LEARNING_EXPLICIT_PREFERENCES_ENABLED=0`)
+    /// Explicitly set to `false` (or `NEPPY_LEARNING_EXPLICIT_PREFERENCES_ENABLED=0`)
     /// to suppress all preference injection even for explicitly pinned entries.
     #[serde(default = "default_true")]
     pub explicit_preferences_enabled: bool,
@@ -129,7 +129,7 @@ pub struct LearningConfig {
     /// When `true` (the default), a best-effort background `goals_agent`
     /// run is fired after a segment recap so the user's durable goals stay
     /// fresh. Set to `false` (or
-    /// `OPENHUMAN_LEARNING_GOALS_ENRICHMENT_ENABLED=0`) to only update the
+    /// `NEPPY_LEARNING_GOALS_ENRICHMENT_ENABLED=0`) to only update the
     /// goals list via explicit RPC/tools.
     #[serde(default = "default_true")]
     pub goals_enrichment_enabled: bool,

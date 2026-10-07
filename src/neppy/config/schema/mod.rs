@@ -22,6 +22,8 @@ mod cli_overrides;
 pub use cli_overrides::AppliedInferenceOverride;
 mod context;
 mod dashboard;
+pub mod debug_mode;
+pub use debug_mode::DebugModeConfig;
 mod defaults;
 mod dictation;
 mod hooks;

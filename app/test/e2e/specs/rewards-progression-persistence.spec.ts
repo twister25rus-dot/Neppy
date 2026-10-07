@@ -22,7 +22,7 @@ import {
  *    in the snapshot — message-driven progress is proxied by
  *    `metrics.featuresUsedCount` (a counter the backend bumps when a
  *    message exercises a tracked feature). We assert via
- *    `__OPENHUMAN_STORE__`-style window probe (snapshot lives in component
+ *    `__NEPPY_STORE__`-style window probe (snapshot lives in component
  *    state, not Redux, so we read the rendered text instead). High-usage
  *    scenario sets featuresUsedCount=6; we confirm cumulativeTokens render
  *    reflects the high number.

@@ -71,14 +71,14 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -87,7 +87,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -176,7 +176,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
-    let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _ws = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -214,7 +214,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
 
     // ── Step 1: list sources (empty initially) ──
 
-    let list0 = rpc(&rpc_base, 1, "openhuman.memory_sources_list", json!({})).await;
+    let list0 = rpc(&rpc_base, 1, "neppy.memory_sources_list", json!({})).await;
     let list0_result = ok(&list0, "initial list");
     let sources = list0_result
         .get("sources")
@@ -227,7 +227,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let add = rpc(
         &rpc_base,
         2,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "folder",
             "label": "Test Research Notes",
@@ -248,7 +248,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
 
     // ── Step 3: list sources (now has 1) ──
 
-    let list1 = rpc(&rpc_base, 3, "openhuman.memory_sources_list", json!({})).await;
+    let list1 = rpc(&rpc_base, 3, "neppy.memory_sources_list", json!({})).await;
     let list1_result = ok(&list1, "list after add");
     let sources = list1_result
         .get("sources")
@@ -261,7 +261,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let get = rpc(
         &rpc_base,
         4,
-        "openhuman.memory_sources_get",
+        "neppy.memory_sources_get",
         json!({ "id": source_id }),
     )
     .await;
@@ -274,7 +274,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let items_resp = rpc(
         &rpc_base,
         5,
-        "openhuman.memory_sources_list_items",
+        "neppy.memory_sources_list_items",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -297,7 +297,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let read = rpc(
         &rpc_base,
         6,
-        "openhuman.memory_sources_read_item",
+        "neppy.memory_sources_read_item",
         json!({
             "source_id": source_id,
             "item_id": "architecture.md",
@@ -319,7 +319,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let ingest = rpc(
         &rpc_base,
         7,
-        "openhuman.memory_tree_ingest",
+        "neppy.memory_tree_ingest",
         json!({
             "source_kind": "document",
             "source_id": format!("memory_sources:{source_id}:architecture.md"),
@@ -345,13 +345,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
 
     // ── Step 8: verify chunks exist via list_sources ──
 
-    let ls = rpc(
-        &rpc_base,
-        8,
-        "openhuman.memory_tree_list_sources",
-        json!({}),
-    )
-    .await;
+    let ls = rpc(&rpc_base, 8, "neppy.memory_tree_list_sources", json!({})).await;
     let ls_result = ok(&ls, "memory_tree list_sources");
     // list_sources returns {sources: [...]} — but some RPCs wrap it differently.
     let mem_sources = if let Some(arr) = ls_result.as_array() {
@@ -371,7 +365,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let update = rpc(
         &rpc_base,
         9,
-        "openhuman.memory_sources_update",
+        "neppy.memory_sources_update",
         json!({
             "id": source_id,
             "label": "Renamed Notes",
@@ -392,7 +386,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let disable = rpc(
         &rpc_base,
         10,
-        "openhuman.memory_sources_update",
+        "neppy.memory_sources_update",
         json!({
             "id": source_id,
             "enabled": false,
@@ -410,7 +404,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let remove = rpc(
         &rpc_base,
         11,
-        "openhuman.memory_sources_remove",
+        "neppy.memory_sources_remove",
         json!({ "id": source_id }),
     )
     .await;
@@ -418,7 +412,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     assert_eq!(remove_result.get("removed"), Some(&json!(true)));
 
     // Verify it's gone.
-    let list_final = rpc(&rpc_base, 12, "openhuman.memory_sources_list", json!({})).await;
+    let list_final = rpc(&rpc_base, 12, "neppy.memory_sources_list", json!({})).await;
     let final_sources = ok(&list_final, "final list")
         .get("sources")
         .and_then(Value::as_array)
@@ -431,7 +425,7 @@ async fn memory_sources_crud_and_folder_read_flow() {
     let remove_again = rpc(
         &rpc_base,
         13,
-        "openhuman.memory_sources_remove",
+        "neppy.memory_sources_remove",
         json!({ "id": source_id }),
     )
     .await;
@@ -448,7 +442,7 @@ async fn memory_sources_validation_rejects_bad_input() {
     let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
-    let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _ws = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -461,7 +455,7 @@ async fn memory_sources_validation_rejects_bad_input() {
     let bad_add = rpc(
         &rpc_base,
         20,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "folder",
             "label": "Missing path",
@@ -477,7 +471,7 @@ async fn memory_sources_validation_rejects_bad_input() {
     let bad_gh = rpc(
         &rpc_base,
         21,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "github_repo",
             "label": "No URL",
@@ -493,7 +487,7 @@ async fn memory_sources_validation_rejects_bad_input() {
     let bad_items = rpc(
         &rpc_base,
         22,
-        "openhuman.memory_sources_list_items",
+        "neppy.memory_sources_list_items",
         json!({ "source_id": "nonexistent" }),
     )
     .await;
@@ -510,16 +504,20 @@ async fn memory_sources_validation_rejects_bad_input() {
 ///
 /// Requires network + `gh` CLI (or unauthenticated GitHub API access).
 /// The test targets a small, stable public repo so API responses are
-/// predictable. Gated behind `OPENHUMAN_E2E_NETWORK=1` so CI without
+/// predictable. Gated behind `NEPPY_E2E_NETWORK=1` so CI without
 /// outbound GitHub access doesn't fail on rate limits or transient
 /// network blips. Run locally with:
-///   OPENHUMAN_E2E_NETWORK=1 cargo test --test memory_sources_e2e \
+///   NEPPY_E2E_NETWORK=1 cargo test --test memory_sources_e2e \
 ///     memory_sources_github_repo_activity_flow
 #[tokio::test]
 async fn memory_sources_github_repo_activity_flow() {
-    if std::env::var("OPENHUMAN_E2E_NETWORK").ok().as_deref() != Some("1") {
+    if neppy_core::neppy::util::env::var("NEPPY_E2E_NETWORK")
+        .ok()
+        .as_deref()
+        != Some("1")
+    {
         eprintln!(
-            "skipping memory_sources_github_repo_activity_flow — set OPENHUMAN_E2E_NETWORK=1 to enable"
+            "skipping memory_sources_github_repo_activity_flow — set NEPPY_E2E_NETWORK=1 to enable"
         );
         return;
     }
@@ -528,7 +526,7 @@ async fn memory_sources_github_repo_activity_flow() {
     let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
-    let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _ws = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -542,7 +540,7 @@ async fn memory_sources_github_repo_activity_flow() {
     let add = rpc(
         &rpc_base,
         100,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "github_repo",
             "label": "kelseyhightower/nocode",
@@ -563,7 +561,7 @@ async fn memory_sources_github_repo_activity_flow() {
     let items_resp = rpc(
         &rpc_base,
         101,
-        "openhuman.memory_sources_list_items",
+        "neppy.memory_sources_list_items",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -605,7 +603,7 @@ async fn memory_sources_github_repo_activity_flow() {
     let read_commit = rpc(
         &rpc_base,
         102,
-        "openhuman.memory_sources_read_item",
+        "neppy.memory_sources_read_item",
         json!({
             "source_id": source_id,
             "item_id": commit_id,
@@ -627,7 +625,7 @@ async fn memory_sources_github_repo_activity_flow() {
     let ingest = rpc(
         &rpc_base,
         103,
-        "openhuman.memory_tree_ingest",
+        "neppy.memory_tree_ingest",
         json!({
             "source_kind": "document",
             "source_id": format!("github:{source_id}:{commit_id}"),
@@ -667,7 +665,7 @@ async fn memory_sources_github_repo_activity_flow() {
         let read_issue = rpc(
             &rpc_base,
             104,
-            "openhuman.memory_sources_read_item",
+            "neppy.memory_sources_read_item",
             json!({
                 "source_id": source_id,
                 "item_id": issue_id,
@@ -686,7 +684,7 @@ async fn memory_sources_github_repo_activity_flow() {
     let remove = rpc(
         &rpc_base,
         105,
-        "openhuman.memory_sources_remove",
+        "neppy.memory_sources_remove",
         json!({ "id": source_id }),
     )
     .await;
@@ -708,7 +706,7 @@ async fn memory_sources_composio_registry_flow() {
     let neppy_home = home.join(".neppy");
 
     let _home = EnvVarGuard::set_to_path("HOME", home);
-    let _ws = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _ws = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend = EnvVarGuard::unset("BACKEND_URL");
     let _vite = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -722,7 +720,7 @@ async fn memory_sources_composio_registry_flow() {
     let add = rpc(
         &rpc_base,
         200,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "composio",
             "label": "Gmail · test@example.com",
@@ -743,7 +741,7 @@ async fn memory_sources_composio_registry_flow() {
 
     // ── Step 2: verify it shows up in list ──
 
-    let list = rpc(&rpc_base, 201, "openhuman.memory_sources_list", json!({})).await;
+    let list = rpc(&rpc_base, 201, "neppy.memory_sources_list", json!({})).await;
     let list_result = ok(&list, "list with composio");
     let sources = list_result
         .get("sources")
@@ -760,7 +758,7 @@ async fn memory_sources_composio_registry_flow() {
     let items = rpc(
         &rpc_base,
         202,
-        "openhuman.memory_sources_list_items",
+        "neppy.memory_sources_list_items",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -780,7 +778,7 @@ async fn memory_sources_composio_registry_flow() {
     let read = rpc(
         &rpc_base,
         203,
-        "openhuman.memory_sources_read_item",
+        "neppy.memory_sources_read_item",
         json!({
             "source_id": source_id,
             "item_id": "cmp_test_123",
@@ -800,7 +798,7 @@ async fn memory_sources_composio_registry_flow() {
     let add2 = rpc(
         &rpc_base,
         204,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "composio",
             "label": "Slack · workspace",
@@ -818,7 +816,7 @@ async fn memory_sources_composio_registry_flow() {
 
     // ── Step 6: list should have both ──
 
-    let list2 = rpc(&rpc_base, 205, "openhuman.memory_sources_list", json!({})).await;
+    let list2 = rpc(&rpc_base, 205, "neppy.memory_sources_list", json!({})).await;
     let sources2 = ok(&list2, "list with both")
         .get("sources")
         .and_then(Value::as_array)
@@ -831,7 +829,7 @@ async fn memory_sources_composio_registry_flow() {
     let disable = rpc(
         &rpc_base,
         206,
-        "openhuman.memory_sources_update",
+        "neppy.memory_sources_update",
         json!({
             "id": source_id,
             "enabled": false,
@@ -850,7 +848,7 @@ async fn memory_sources_composio_registry_flow() {
         let r = rpc(
             &rpc_base,
             210 + idx as i64,
-            "openhuman.memory_sources_remove",
+            "neppy.memory_sources_remove",
             json!({ "id": sid }),
         )
         .await;

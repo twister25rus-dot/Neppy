@@ -137,7 +137,7 @@ export { STT_MAX_RETRIES };
 /**
  * Tap-to-toggle mic composer for the mascot page. Captures audio via the
  * browser's `MediaRecorder`, hands the resulting Blob to the factory-
- * dispatched STT RPC (`openhuman.voice_stt_dispatch`), then forwards the
+ * dispatched STT RPC (`neppy.voice_stt_dispatch`), then forwards the
  * transcript through `onSubmit` so it joins the agent's normal send pipeline.
  *
  * Which hosted engine runs is resolved server-side from

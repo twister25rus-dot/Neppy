@@ -179,7 +179,7 @@ jobs:
           IPHONEOS_DEPLOYMENT_TARGET: "16.0"
         run: |
           set -euo pipefail
-          bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app run build:app
+          bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app run build:app
           TEAM_ID="$TEAM_ID" bash scripts/ios-init.sh
           mkdir -p app/src-tauri-mobile/gen/apple/assets
           rsync -a --delete app/dist/ app/src-tauri-mobile/gen/apple/assets/

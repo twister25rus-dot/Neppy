@@ -113,11 +113,11 @@ fn the_core_is_started_bound_to_every_interface_inside_the_box() {
     let request = core_command(&docker(), "deadbeef");
 
     assert_eq!(
-        request.env.get("OPENHUMAN_CORE_HOST").map(String::as_str),
+        request.env.get("NEPPY_CORE_HOST").map(String::as_str),
         Some("0.0.0.0")
     );
     assert_eq!(
-        request.env.get("OPENHUMAN_CORE_PORT").map(String::as_str),
+        request.env.get("NEPPY_CORE_PORT").map(String::as_str),
         Some(CORE_PORT_IN_BOX.to_string().as_str())
     );
 }
@@ -129,7 +129,7 @@ fn the_bearer_is_handed_over_as_environment_rather_than_written_down() {
     let request = core_command(&docker(), "deadbeef");
 
     assert_eq!(
-        request.env.get("OPENHUMAN_CORE_TOKEN").map(String::as_str),
+        request.env.get("NEPPY_CORE_TOKEN").map(String::as_str),
         Some("deadbeef")
     );
 }
@@ -226,7 +226,7 @@ mod provisioning {
              # core does, so the gateway's own contract is what is under test.\n\
              while true; do\n\
              printf 'HTTP/1.1 200 OK\\r\\nContent-Length: 2\\r\\n\\r\\nok' \\\n\
-             | nc -l -p \"${OPENHUMAN_CORE_PORT}\" >/dev/null 2>&1 || sleep 1\n\
+             | nc -l -p \"${NEPPY_CORE_PORT}\" >/dev/null 2>&1 || sleep 1\n\
              done\n",
         )
         .expect("write the stand-in core");

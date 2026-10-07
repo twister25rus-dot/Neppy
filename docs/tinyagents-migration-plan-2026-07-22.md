@@ -132,7 +132,7 @@ construction path** in places:
 | `provider/reliable.rs` (+`reliable_tests.rs`) | 952 + 1,228 | Retry/backoff `Provider` wrapper. Crate `RetryPolicy` covers it; the interactive turn path already stopped wrapping in `ReliableProvider` (`tinyagents/mod.rs:122`). |
 | `provider/router.rs` (+`router_tests.rs`) | 310 + 524 | `RouterProvider` hint-table routing. Crate `ModelRouter` adopted by #4783; this is the residual legacy path. |
 | `provider/legacy_provider.rs` | 343 | The collapsed remnant of the 15 `compatible*.rs` files (`provider/mod.rs:14` aliases `pub use legacy_provider as compatible;`). Superseded by crate `OpenAiModel` once WP-1 flips the default. |
-| `provider/error_classify.rs` + `error_code.rs` | 1,001 + 349 | Split (WP-1): generic retryability/status classification → crate `classify_provider_failure`; openhuman semantics (Sentry demotion, budget messaging, `config_rejection.rs`, `billing_error.rs`) stay as a host classifier layered on crate errors. |
+| `provider/error_classify.rs` + `error_code.rs` | 1,001 + 349 | Split (WP-1): generic retryability/status classification → crate `classify_provider_failure`; neppy semantics (Sentry demotion, budget messaging, `config_rejection.rs`, `billing_error.rs`) stay as a host classifier layered on crate errors. |
 | `provider/crate_provider.rs` | 327 | `CrateBackedProvider` — the **temporary reverse adapter** (crate `ChatModel` → legacy `Provider`). Deleted last, when no consumer needs `Provider`. |
 
 **Crate-native scaffolding already in place (finish in WP-1):**
@@ -141,7 +141,7 @@ construction path** in places:
   builder; self-described "**Status: scaffolding**" — complete and unit-tested
   but **not yet the factory default**. Flipping it (with per-provider wire
   parity validation) is the gating step.
-- `provider/openhuman_backend_model.rs` (325) — managed backend as crate
+- `provider/neppy_backend_model.rs` (325) — managed backend as crate
   `ChatModel` (cut over; coexists with the legacy `openhuman_backend.rs` twin,
   which can go once nothing constructs it).
 - `provider/factory.rs` (2,850) — the host↔crate boundary; already returns
@@ -161,7 +161,7 @@ construction path** in places:
 Whisper/Piper runtime + installers + service admin), `voice/` (~2.4k),
 `openai_oauth/` (~1.5k), `http/` (0.7k `/v1` server), `provider/ops/` (RPC),
 bespoke `Provider`/`ChatModel` impls (`claude_code/` ~2.7k,
-`claude_agent_sdk/`, `openai_codex.rs`, `openhuman_backend*.rs`), and the root
+`claude_agent_sdk/`, `openai_codex.rs`, `neppy_backend*.rs`), and the root
 host files (`schemas.rs`, `presets.rs`, `model_ids.rs`, `paths.rs`, `parse.rs`,
 `sentiment.rs`, `device.rs`).
 
@@ -247,7 +247,7 @@ carry explicit superseded banners.
   `ollama_lifecycle_e2e`, `openai_oauth/flow_tests.rs`, all `local/*_tests`,
   and the `raw_coverage` family except the compatible trio.
 - **Runner impact:** `scripts/test-rust-with-mock.sh:52` had a stale comment
-  advertising removed `OPENHUMAN_AGENT_GRAPH_*` escape hatches. WP-3 removes
+  advertising removed `NEPPY_AGENT_GRAPH_*` escape hatches. WP-3 removes
   that documentation; the runner behavior itself was already crate-only.
 
 ---
@@ -295,13 +295,13 @@ The continuation of #4727 Motion B / drift-ledger P1-8/P1-9. Slices:
    wire-parity suite (§4.5) green against the crate path, per provider family
    (managed, BYOK, ollama/lm-studio local, codex/responses).
 2. **Route bespoke providers as `ChatModel`s** — `claude_code`,
-   `claude_agent_sdk`, `openai_codex`, `openhuman_backend` get direct
-   `ChatModel` impls (the pattern `openhuman_backend_model.rs` already
+   `claude_agent_sdk`, `openai_codex`, `neppy_backend` get direct
+   `ChatModel` impls (the pattern `neppy_backend_model.rs` already
    proves), removing the last `factory.rs:1458-1511` `ProviderModel` wraps.
    Delete the legacy `openhuman_backend.rs` twin when nothing constructs it.
 3. **Error-taxonomy split:** generic classification call sites move to crate
    `classify_provider_failure`/`ProviderError`; `error_classify.rs` shrinks to
-   the openhuman-semantic layer (`config_rejection`, `billing_error`, Sentry
+   the neppy-semantic layer (`config_rejection`, `billing_error`, Sentry
    demotion). Upstream any status codes the crate misclassifies (drift-ledger
    rows, then crate PR + version bump).
 4. **Delete, in dependency order:** `router.rs` → `reliable.rs` →
@@ -362,17 +362,17 @@ the initial audit survived, but their legacy engines did not:
    TinyAgents session path; it contains no `run_turn_engine` definition.
 2. `subagent_runner/ops/graph.rs` documents the removed `run_inner_loop` /
    `run_turn_engine` and unconditionally calls `run_turn_via_tinyagents_shared`.
-3. No runtime or test code reads `OPENHUMAN_AGENT_GRAPH_*`; only this plan and a
+3. No runtime or test code reads `NEPPY_AGENT_GRAPH_*`; only this plan and a
    stale test-runner comment mentioned those names. The stale comment is now
    removed.
 
 **Exit satisfied:** one TinyAgents turn engine; source and scripts contain no
-`OPENHUMAN_AGENT_GRAPH_*` reference. Historical/parity comments mentioning the
+`NEPPY_AGENT_GRAPH_*` reference. Historical/parity comments mentioning the
 former engine remain intentionally as provenance, not executable branches.
 
 ### WP-4 — Tool-model reconciliation (design-gated; do not start on autopilot)
 
-The openhuman `Tool` trait (`tools/traits.rs:255`) vs crate `Tool<State>`
+The neppy `Tool` trait (`tools/traits.rs:255`) vs crate `Tool<State>`
 unification. The port-plan §2 design blockers still stand, plus two audited
 constraints:
 
@@ -473,7 +473,7 @@ changes remain gated on explicit approval of that proposal.
 | --- | --- |
 | `inference/provider/{traits,reliable,router,legacy_provider,crate_provider}.rs` | DELETE (WP-1) |
 | `inference/provider/{error_classify,error_code}.rs` | SPLIT: generic → crate; host semantics stay (WP-1) |
-| `inference/provider/{crate_openai,openhuman_backend_model,factory}.rs` | KEEP — becomes the host↔crate boundary (WP-1 finishes) |
+| `inference/provider/{crate_openai,neppy_backend_model,factory}.rs` | KEEP — becomes the host↔crate boundary (WP-1 finishes) |
 | `inference/provider/{temperature,thread_context,resolved_route,auth_error_registry}.rs` | RE-HOME to seam (WP-1) |
 | `inference/{local,voice,http,openai_oauth}/`, `provider/ops/`, bespoke providers, root host files | STAYS |
 | `tinyagents/model.rs` (`ProviderModel`) | DELETED (WP-1) |

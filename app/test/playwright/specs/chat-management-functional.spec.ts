@@ -48,11 +48,9 @@ async function selectedThreadId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const store = (
       window as unknown as {
-        __OPENHUMAN_STORE__?: {
-          getState?: () => { thread?: { selectedThreadId?: string | null } };
-        };
+        __NEPPY_STORE__?: { getState?: () => { thread?: { selectedThreadId?: string | null } } };
       }
-    ).__OPENHUMAN_STORE__;
+    ).__NEPPY_STORE__;
     return store?.getState?.().thread?.selectedThreadId ?? null;
   });
 }

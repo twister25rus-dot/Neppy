@@ -51,7 +51,7 @@ pub use ops as rpc;
 
 pub mod bus;
 
-/// The `openhuman memory tree` CLI subcommands, which drive the RPC handlers.
+/// The `neppy-core memory tree` CLI subcommands, which drive the RPC handlers.
 pub mod cli;
 
 // The controller aggregators this domain's RPC surface defines. Aliased

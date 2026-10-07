@@ -1,6 +1,6 @@
 //! Controller schemas + JSON-RPC handlers for the `memory_goals` namespace.
 //!
-//! Methods are exposed as `openhuman.memory_goals_<function>`:
+//! Methods are exposed as `neppy.memory_goals_<function>`:
 //! `list`, `add`, `edit`, `delete`, `reflect`. Handlers load the active
 //! config (for `workspace_dir`), delegate to [`super::ops`], and serialise
 //! the [`RpcOutcome`] into the CLI-compatible JSON shape.

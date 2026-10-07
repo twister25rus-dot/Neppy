@@ -15,7 +15,7 @@
 use crate::core::all::RegisteredController;
 use crate::core::ControllerSchema;
 
-/// Always empty: the `openhuman.skill_registry_*` controllers are compiled
+/// Always empty: the `neppy.skill_registry_*` controllers are compiled
 /// out, so they never enter the registry (unknown-method over `/rpc`, absent
 /// from `/schema`).
 pub fn all_skill_registry_registered_controllers() -> Vec<RegisteredController> {

@@ -49,7 +49,7 @@ Cursor GUI  ◀──paste+Enter (daemon, macOS automation)──────  d
    or in its logs as `[tinyplace] … agent_id=`).
 3. **Provision the bridge** (publishes keys + sends a contact request):
    ```bash
-   OPENHUMAN_ADDR=<openhuman-cryptoId> node setup.mjs
+   NEPPY_ADDR=<openhuman-cryptoId> node setup.mjs
    ```
    Then **accept the contact request** in the OpenHuman app (the relay is
    contact-gated).
@@ -59,7 +59,7 @@ Cursor GUI  ◀──paste+Enter (daemon, macOS automation)──────  d
    # bridge.sh
    #!/bin/bash
    export TINYPLACE_API_URL="https://staging-api.tiny.place"
-   export OPENHUMAN_ADDR="<openhuman-cryptoId>"
+   export NEPPY_ADDR="<openhuman-cryptoId>"
    export BRIDGE_HOME="$HOME/.tinyplace-cursorbridge"
    export BRIDGE_LOG="/tmp/cursor-bridge.log"
    exec /abs/path/to/node /abs/path/to/hook.mjs

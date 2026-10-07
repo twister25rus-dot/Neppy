@@ -49,7 +49,7 @@ fi
 [ "$hook_name" = "prepare-commit-msg" ] || exit 0
 case "$2" in merge|squash) exit 0 ;; esac
 git interpret-trailers --in-place --if-exists addIfDifferent \
-    --trailer "$OPENHUMAN_GIT_ATTRIBUTION" "$1" 2>/dev/null || true
+    --trailer "$NEPPY_GIT_ATTRIBUTION" "$1" 2>/dev/null || true
 "#;
 
 #[cfg(unix)]
@@ -64,7 +64,10 @@ pub fn hook_env() -> HashMap<OsString, OsString> {
     let Some(dir) = HOOK_DIR.get_or_init(|| build_hook_dir().ok()).as_ref() else {
         return HashMap::new();
     };
-    build_hook_env(dir, std::env::var_os("GIT_CONFIG_PARAMETERS").as_deref())
+    build_hook_env(
+        dir,
+        crate::neppy::util::env::var_os("GIT_CONFIG_PARAMETERS").as_deref(),
+    )
 }
 
 #[cfg(unix)]
@@ -91,7 +94,7 @@ fn build_hook_env(
     parameters.push(b'\'');
 
     HashMap::from([
-        (OsString::from("OPENHUMAN_GIT_ATTRIBUTION"), TRAILER.into()),
+        (OsString::from("NEPPY_GIT_ATTRIBUTION"), TRAILER.into()),
         // Parameters outrank GIT_CONFIG_COUNT. Preserve settings inherited
         // from the parent harness, then append our hook so it wins if that
         // harness also selected a hook path.

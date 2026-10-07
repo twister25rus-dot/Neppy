@@ -1,4 +1,4 @@
-//! Controller schema + handler for `openhuman.session_import_run`.
+//! Controller schema + handler for `neppy.session_import_run`.
 
 use serde::Deserialize;
 use serde_json::{Map, Value};

@@ -112,7 +112,7 @@ Everything learned is inspectable and reversible:
 
 - **Edit `PROFILE.md` directly.** It's your file. Correct, add, or delete anything; the next rebuild respects your edits.
 - **The Brain page** (raised center button in the bottom bar, `/brain`) is the home for memory and intelligence. The knowledge graph, goals, sources, and sync status all live here.
-- **Pin** a fact to lock it Active and shield it from decay, or **forget** a fact to drop it and block it from coming back. Under the hood these are the `learning_pin_facet`, `learning_unpin_facet`, and `learning_forget_facet` operations over the `openhuman.learning_*` RPC surface, alongside `learning_list_facets` and `learning_rebuild_cache`.
+- **Pin** a fact to lock it Active and shield it from decay, or **forget** a fact to drop it and block it from coming back. Under the hood these are the `learning_pin_facet`, `learning_unpin_facet`, and `learning_forget_facet` operations over the `neppy.learning_*` RPC surface, alongside `learning_list_facets` and `learning_rebuild_cache`.
 
 ---
 

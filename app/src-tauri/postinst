@@ -12,8 +12,8 @@ set -e
 # Paths are overridable only so the maintainer-script test can exercise this
 # logic in a sandbox (scripts/test-deb-maintainer-scripts.sh). dpkg invokes the
 # script with neither variable set, so production always uses the defaults.
-TARGET="${OPENHUMAN_DEB_BINARY:-/usr/bin/Neppy}"
-LINK="${OPENHUMAN_DEB_SYMLINK:-/usr/local/bin/neppy}"
+TARGET="${NEPPY_DEB_BINARY:-${OPENHUMAN_DEB_BINARY:-/usr/bin/Neppy}}"
+LINK="${NEPPY_DEB_SYMLINK:-${OPENHUMAN_DEB_SYMLINK:-/usr/local/bin/neppy}}"
 
 case "$1" in
   configure)

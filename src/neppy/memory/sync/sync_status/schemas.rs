@@ -1,4 +1,4 @@
-//! Controller-registry schemas for `openhuman.memory_sync_status_list`.
+//! Controller-registry schemas for `neppy.memory_sync_status_list`.
 //!
 //! Wired into `src/core/all.rs` via the `all_memory_sync_status_*`
 //! re-exports in `super::mod`. Single method now — see `rpc.rs` for the

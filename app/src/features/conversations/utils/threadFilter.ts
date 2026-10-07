@@ -3,6 +3,10 @@ import type { Thread } from '../../../types/thread';
 export const GENERAL_TAB_VALUE = 'general';
 export const SUBCONSCIOUS_TAB_VALUE = 'subconscious';
 export const TASKS_TAB_VALUE = 'tasks';
+/** Pseudo-tab used by the `/debug` page: only Debug-mode threads. */
+export const DEBUG_TAB_VALUE = 'debug';
+/** Core label stamped on a thread when its mode is `debug`. */
+const DEBUG_MODE_LABEL = 'mode:debug';
 const LEGACY_SUBCONSCIOUS_LABELS = ['from_reflection', 'subconscious_tick'];
 const LEGACY_TASK_LABELS = ['agent-task', 'worker'];
 /** Labels that identify meeting transcript threads (now folded into Tasks). */
@@ -10,6 +14,11 @@ const MEETINGS_LABELS = ['meetings', 'Meetings'];
 
 function hasAnyLabel(thread: Thread, labels: readonly string[]): boolean {
   return Boolean(thread.labels?.some(label => labels.includes(label)));
+}
+
+/** True for a thread whose mode is `debug` (created from the Debug page). */
+export function isDebugThread(thread: Thread): boolean {
+  return thread.mode === 'debug' || hasAnyLabel(thread, [DEBUG_MODE_LABEL]);
 }
 
 function isSubconsciousThread(thread: Thread): boolean {
@@ -32,9 +41,13 @@ function isTaskThread(thread: Thread): boolean {
  *   - Tasks includes task-board threads, legacy worker/sub-agent threads,
  *     and meeting transcript threads.
  *   - Subconscious includes new and legacy reflection/tick-generated threads.
+ *   - Debug-mode threads appear only under the Debug pseudo-tab.
  *   - General is the fallback bucket for everything else.
  */
 export function isThreadVisibleInTab(thread: Thread, selectedLabel: string): boolean {
+  // Debug threads live on the Debug page only; every other tab hides them.
+  if (selectedLabel === DEBUG_TAB_VALUE) return isDebugThread(thread);
+  if (isDebugThread(thread)) return false;
   const isSubconscious = isSubconsciousThread(thread);
   const isTask = isTaskThread(thread);
   if (selectedLabel === SUBCONSCIOUS_TAB_VALUE) return isSubconscious;

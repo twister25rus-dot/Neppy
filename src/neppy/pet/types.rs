@@ -1,6 +1,6 @@
 //! Serde types, constants and limits for Pet mode.
 //!
-//! The wire contract (RPC `openhuman.pet_*`) is documented on each type; every
+//! The wire contract (RPC `neppy.pet_*`) is documented on each type; every
 //! timestamp is an RFC3339 UTC string on the wire.
 
 use chrono::{DateTime, Utc};

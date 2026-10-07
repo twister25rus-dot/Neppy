@@ -134,7 +134,7 @@ pub(crate) fn migrate_cloud_provider_slugs(config: &mut Config) {
                     }
                 } else {
                     tracing::debug!(
-                        "[config][migrate] routing 'cloud' with no non-openhuman provider → 'openhuman'"
+                        "[config][migrate] routing 'cloud' with no non-neppy provider → 'openhuman'"
                     );
                     *field = Some("openhuman".to_string());
                 }

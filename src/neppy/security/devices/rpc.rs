@@ -58,7 +58,7 @@ pub(crate) static ACTIVE_CIPHERS: once_cell::sync::Lazy<
 // create_pairing
 // ---------------------------------------------------------------------------
 
-/// `openhuman.devices_create_pairing`
+/// `neppy.devices_create_pairing`
 ///
 /// 1. Calls `tunnel:register` on the shared socket — backend returns
 ///    `{channelId, pairingToken, pairingExpiresAt}` via Socket.IO ACK.
@@ -176,7 +176,7 @@ pub async fn devices_create_pairing(
 // list
 // ---------------------------------------------------------------------------
 
-/// `openhuman.devices_list`
+/// `neppy.devices_list`
 pub async fn devices_list(config: &Config) -> Result<RpcOutcome<ListDevicesResponse>, String> {
     log::debug!("[devices/rpc] devices_list entry");
     let mut devices = store::list_devices(config)
@@ -202,7 +202,7 @@ pub async fn devices_list(config: &Config) -> Result<RpcOutcome<ListDevicesRespo
 // revoke
 // ---------------------------------------------------------------------------
 
-/// `openhuman.devices_revoke`
+/// `neppy.devices_revoke`
 pub async fn devices_revoke(
     config: &Config,
     channel_id: String,
@@ -245,7 +245,7 @@ pub async fn devices_revoke(
 fn detect_lan_rpc_url() -> Option<String> {
     let ip = find_local_ipv4()?;
     // Use the configured RPC port if available via env, else fall back to 7788.
-    let port = std::env::var("OPENHUMAN_CORE_RPC_PORT")
+    let port = crate::neppy::util::env::var("NEPPY_CORE_RPC_PORT")
         .ok()
         .and_then(|s| s.parse::<u16>().ok())
         .unwrap_or(7788);

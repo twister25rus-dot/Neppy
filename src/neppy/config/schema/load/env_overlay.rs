@@ -7,7 +7,7 @@ use super::dirs::MEMORY_SYNC_INTERVAL_SECS_ENV_VAR;
 use super::env::parse_env_bool;
 use std::path::PathBuf;
 
-/// Classification of an `OPENHUMAN_SHELL_HIDE_WINDOW` env value. Split out from
+/// Classification of an `NEPPY_SHELL_HIDE_WINDOW` env value. Split out from
 /// the apply site (where the three cases differ only by log level) so the
 /// empty-vs-unrecognized distinction is unit-testable without capturing tracing
 /// output — a bare `VAR=` must classify as `Unset` (silent no-op), not
@@ -56,7 +56,7 @@ impl Config {
 
         // Launch flags are process-local and intentionally win over both the
         // persisted file and ordinary environment overlays. They are applied
-        // after loading so `openhuman -p <provider> -m <model>` never mutates
+        // after loading so `neppy -p <provider> -m <model>` never mutates
         // config.toml and desktop launches remain unaffected.
         super::super::cli_overrides::apply_cli_inference_overrides(self);
     }
@@ -71,19 +71,19 @@ impl Config {
     /// with a [`HashMapEnv`] (see tests) without requiring the
     /// `TEST_ENV_LOCK` or tainting sibling tests.
     pub(crate) fn apply_env_overlay_with<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        // Only the namespaced `OPENHUMAN_MODEL` is honoured. The bare `MODEL`
+        // Only the namespaced `NEPPY_MODEL` is honoured. The bare `MODEL`
         // env var used to be accepted as an alias but collides with vendor
         // asset-tag env vars (e.g. Dell OptiPlex sets `MODEL=7080`), which
         // silently clobbered the LLM model and 400'd every backend call
         // (Sentry OPENHUMAN-TAURI-J8).
-        if let Some(model) = env.get("OPENHUMAN_MODEL") {
+        if let Some(model) = env.get("NEPPY_MODEL") {
             let trimmed = model.trim();
             if !trimmed.is_empty() {
                 self.default_model = Some(trimmed.to_string());
             }
         }
 
-        if let Some(workspace) = env.get("OPENHUMAN_WORKSPACE") {
+        if let Some(workspace) = env.get("NEPPY_WORKSPACE") {
             if !workspace.is_empty() {
                 let (_, workspace_dir) =
                     super::dirs::resolve_config_dir_for_workspace(&PathBuf::from(workspace));
@@ -91,14 +91,14 @@ impl Config {
             }
         }
 
-        if let Some(v) = env.get("OPENHUMAN_ACTION_DIR") {
+        if let Some(v) = env.get("NEPPY_ACTION_DIR") {
             let trimmed = v.trim();
             if !trimmed.is_empty() {
                 self.action_dir = PathBuf::from(trimmed);
             }
         }
 
-        if let Some(temp_str) = env.get("OPENHUMAN_TEMPERATURE") {
+        if let Some(temp_str) = env.get("NEPPY_TEMPERATURE") {
             if let Ok(temp) = temp_str.parse::<f64>() {
                 if (0.0..=2.0).contains(&temp) {
                     self.default_temperature = temp;
@@ -106,14 +106,14 @@ impl Config {
             }
         }
 
-        if let Some(raw) = env.get("OPENHUMAN_MAX_ACTIONS_PER_HOUR") {
+        if let Some(raw) = env.get("NEPPY_MAX_ACTIONS_PER_HOUR") {
             let trimmed = raw.trim();
             if !trimmed.is_empty() {
                 match trimmed.parse::<u32>() {
                     Ok(limit) => self.autonomy.max_actions_per_hour = limit,
                     Err(_) => tracing::warn!(
                         value = %raw,
-                        "invalid OPENHUMAN_MAX_ACTIONS_PER_HOUR ignored; expected an unsigned integer"
+                        "invalid NEPPY_MAX_ACTIONS_PER_HOUR ignored; expected an unsigned integer"
                     ),
                 }
             }
@@ -133,14 +133,14 @@ impl Config {
             }
         }
 
-        if let Some(language) = env.get("OPENHUMAN_OUTPUT_LANGUAGE") {
+        if let Some(language) = env.get("NEPPY_OUTPUT_LANGUAGE") {
             let language = language.trim();
             if !language.is_empty() {
                 self.output_language = Some(language.to_string());
             }
         }
 
-        if let Some(flag) = env.get_any(&["OPENHUMAN_REASONING_ENABLED", "REASONING_ENABLED"]) {
+        if let Some(flag) = env.get_any(&["NEPPY_REASONING_ENABLED", "REASONING_ENABLED"]) {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.runtime.reasoning_enabled = Some(true),
@@ -149,7 +149,7 @@ impl Config {
             }
         }
 
-        if let Some(flag) = env.get_any(&["OPENHUMAN_SHELL_HIDE_WINDOW", "SHELL_HIDE_WINDOW"]) {
+        if let Some(flag) = env.get_any(&["NEPPY_SHELL_HIDE_WINDOW", "SHELL_HIDE_WINDOW"]) {
             match classify_shell_hide_window(&flag) {
                 // An empty / whitespace-only value means the var is present but
                 // unset (common when a `.env` or launcher exports `VAR=`). Treat
@@ -157,7 +157,7 @@ impl Config {
                 // every boot. Trace-level so the no-op stays diagnosable without
                 // the INFO/WARN noise this change exists to remove.
                 ShellHideWindowParse::Unset => tracing::trace!(
-                    "[config][shell] OPENHUMAN_SHELL_HIDE_WINDOW empty value treated as unset; \
+                    "[config][shell] NEPPY_SHELL_HIDE_WINDOW empty value treated as unset; \
                      keeping hide_window={}",
                     self.shell.hide_window
                 ),
@@ -165,12 +165,12 @@ impl Config {
                     self.shell.hide_window = value;
                     tracing::debug!(
                         value = %flag,
-                        "[config][shell] OPENHUMAN_SHELL_HIDE_WINDOW applied: hide_window={value}"
+                        "[config][shell] NEPPY_SHELL_HIDE_WINDOW applied: hide_window={value}"
                     );
                 }
                 ShellHideWindowParse::Unrecognized => tracing::warn!(
                     value = %flag,
-                    "[config][shell] OPENHUMAN_SHELL_HIDE_WINDOW unrecognized value ignored; \
+                    "[config][shell] NEPPY_SHELL_HIDE_WINDOW unrecognized value ignored; \
                      keeping current hide_window={}",
                     self.shell.hide_window
                 ),
@@ -190,18 +190,18 @@ impl Config {
     }
 
     fn apply_search_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Some(key) = env.get_any(&["OPENHUMAN_SELTZ_API_KEY", "SELTZ_API_KEY"]) {
+        if let Some(key) = env.get_any(&["NEPPY_SELTZ_API_KEY", "SELTZ_API_KEY"]) {
             if !key.is_empty() {
                 self.seltz.api_key = Some(key);
                 self.seltz.enabled = true;
             }
         }
-        if let Some(url) = env.get_any(&["OPENHUMAN_SELTZ_API_URL", "SELTZ_API_URL"]) {
+        if let Some(url) = env.get_any(&["NEPPY_SELTZ_API_URL", "SELTZ_API_URL"]) {
             if !url.is_empty() {
                 self.seltz.api_url = Some(url);
             }
         }
-        if let Some(max) = env.get_any(&["OPENHUMAN_SELTZ_MAX_RESULTS", "SELTZ_MAX_RESULTS"]) {
+        if let Some(max) = env.get_any(&["NEPPY_SELTZ_MAX_RESULTS", "SELTZ_MAX_RESULTS"]) {
             if let Ok(n) = max.parse::<usize>() {
                 if (1..=20).contains(&n) {
                     self.seltz.max_results = n;
@@ -209,36 +209,35 @@ impl Config {
             }
         }
 
-        if let Some(flag) = env.get_any(&["OPENHUMAN_SEARXNG_ENABLED", "SEARXNG_ENABLED"]) {
-            if let Some(enabled) = parse_env_bool("OPENHUMAN_SEARXNG_ENABLED", &flag) {
+        if let Some(flag) = env.get_any(&["NEPPY_SEARXNG_ENABLED", "SEARXNG_ENABLED"]) {
+            if let Some(enabled) = parse_env_bool("NEPPY_SEARXNG_ENABLED", &flag) {
                 self.searxng.enabled = enabled;
             }
         }
-        if let Some(url) = env.get_any(&["OPENHUMAN_SEARXNG_BASE_URL", "SEARXNG_BASE_URL"]) {
+        if let Some(url) = env.get_any(&["NEPPY_SEARXNG_BASE_URL", "SEARXNG_BASE_URL"]) {
             let url = url.trim();
             if !url.is_empty() {
                 self.searxng.base_url = url.to_string();
             }
         }
-        if let Some(max) = env.get_any(&["OPENHUMAN_SEARXNG_MAX_RESULTS", "SEARXNG_MAX_RESULTS"]) {
+        if let Some(max) = env.get_any(&["NEPPY_SEARXNG_MAX_RESULTS", "SEARXNG_MAX_RESULTS"]) {
             if let Ok(n) = max.parse::<usize>() {
                 if (1..=50).contains(&n) {
                     self.searxng.max_results = n;
                 }
             }
         }
-        if let Some(language) = env.get_any(&[
-            "OPENHUMAN_SEARXNG_DEFAULT_LANGUAGE",
-            "SEARXNG_DEFAULT_LANGUAGE",
-        ]) {
+        if let Some(language) =
+            env.get_any(&["NEPPY_SEARXNG_DEFAULT_LANGUAGE", "SEARXNG_DEFAULT_LANGUAGE"])
+        {
             let language = language.trim();
             if !language.is_empty() {
                 self.searxng.default_language = language.to_string();
             }
         }
         if let Some(timeout_secs) = env.get_any(&[
-            "OPENHUMAN_SEARXNG_TIMEOUT_SECS",
-            "OPENHUMAN_SEARXNG_TIMEOUT_SECONDS",
+            "NEPPY_SEARXNG_TIMEOUT_SECS",
+            "NEPPY_SEARXNG_TIMEOUT_SECONDS",
             "SEARXNG_TIMEOUT_SECS",
             "SEARXNG_TIMEOUT_SECONDS",
         ]) {
@@ -249,40 +248,40 @@ impl Config {
             }
         }
 
-        if let Some(engine) = env.get_any(&["OPENHUMAN_SEARCH_ENGINE", "SEARCH_ENGINE"]) {
+        if let Some(engine) = env.get_any(&["NEPPY_SEARCH_ENGINE", "SEARCH_ENGINE"]) {
             let engine = engine.trim().to_ascii_lowercase();
             if !engine.is_empty() {
                 self.search.engine = engine;
             }
         }
-        if let Some(key) = env.get_any(&["OPENHUMAN_PARALLEL_API_KEY", "PARALLEL_API_KEY"]) {
+        if let Some(key) = env.get_any(&["NEPPY_PARALLEL_API_KEY", "PARALLEL_API_KEY"]) {
             if !key.trim().is_empty() {
                 self.search.parallel.api_key = Some(key);
             }
         }
-        if let Some(key) = env.get_any(&["OPENHUMAN_BRAVE_API_KEY", "BRAVE_API_KEY"]) {
+        if let Some(key) = env.get_any(&["NEPPY_BRAVE_API_KEY", "BRAVE_API_KEY"]) {
             if !key.trim().is_empty() {
                 self.search.brave.api_key = Some(key);
             }
         }
-        if let Some(key) = env.get_any(&["OPENHUMAN_QUERIT_API_KEY", "QUERIT_API_KEY"]) {
+        if let Some(key) = env.get_any(&["NEPPY_QUERIT_API_KEY", "QUERIT_API_KEY"]) {
             if !key.trim().is_empty() {
                 self.search.querit.api_key = Some(key);
             }
         }
-        if let Some(key) = env.get_any(&["OPENHUMAN_EXA_API_KEY", "EXA_API_KEY"]) {
+        if let Some(key) = env.get_any(&["NEPPY_EXA_API_KEY", "EXA_API_KEY"]) {
             if !key.trim().is_empty() {
                 self.search.exa.api_key = Some(key);
             }
         }
-        if let Some(max) = env.get_any(&["OPENHUMAN_SEARCH_MAX_RESULTS", "SEARCH_MAX_RESULTS"]) {
+        if let Some(max) = env.get_any(&["NEPPY_SEARCH_MAX_RESULTS", "SEARCH_MAX_RESULTS"]) {
             if let Ok(n) = max.parse::<usize>() {
                 if (1..=20).contains(&n) {
                     self.search.max_results = n;
                 }
             }
         }
-        if let Some(t) = env.get_any(&["OPENHUMAN_SEARCH_TIMEOUT_SECS", "SEARCH_TIMEOUT_SECS"]) {
+        if let Some(t) = env.get_any(&["NEPPY_SEARCH_TIMEOUT_SECS", "SEARCH_TIMEOUT_SECS"]) {
             if let Ok(n) = t.parse::<u64>() {
                 if n > 0 {
                     self.search.timeout_secs = n;
@@ -290,15 +289,15 @@ impl Config {
             }
         }
 
-        if env.contains("OPENHUMAN_WEB_SEARCH_ENABLED") {
+        if env.contains("NEPPY_WEB_SEARCH_ENABLED") {
             log::warn!(
-                "[config] OPENHUMAN_WEB_SEARCH_ENABLED is deprecated and ignored — \
+                "[config] NEPPY_WEB_SEARCH_ENABLED is deprecated and ignored — \
                  web search is always registered; provider/API-key overrides were removed."
             );
         }
 
         if let Some(max_results) =
-            env.get_any(&["OPENHUMAN_WEB_SEARCH_MAX_RESULTS", "WEB_SEARCH_MAX_RESULTS"])
+            env.get_any(&["NEPPY_WEB_SEARCH_MAX_RESULTS", "WEB_SEARCH_MAX_RESULTS"])
         {
             if let Ok(max_results) = max_results.parse::<usize>() {
                 if (1..=10).contains(&max_results) {
@@ -307,10 +306,9 @@ impl Config {
             }
         }
 
-        if let Some(timeout_secs) = env.get_any(&[
-            "OPENHUMAN_WEB_SEARCH_TIMEOUT_SECS",
-            "WEB_SEARCH_TIMEOUT_SECS",
-        ]) {
+        if let Some(timeout_secs) =
+            env.get_any(&["NEPPY_WEB_SEARCH_TIMEOUT_SECS", "WEB_SEARCH_TIMEOUT_SECS"])
+        {
             if let Ok(timeout_secs) = timeout_secs.parse::<u64>() {
                 if timeout_secs > 0 {
                     self.web_search.timeout_secs = timeout_secs;
@@ -321,7 +319,7 @@ impl Config {
 
     fn apply_proxy_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
         let explicit_proxy_enabled = env
-            .get("OPENHUMAN_PROXY_ENABLED")
+            .get("NEPPY_PROXY_ENABLED")
             .as_deref()
             .and_then(parse_proxy_enabled);
         if let Some(enabled) = explicit_proxy_enabled {
@@ -329,19 +327,19 @@ impl Config {
         }
 
         let mut proxy_url_overridden = false;
-        if let Some(proxy_url) = env.get_any(&["OPENHUMAN_HTTP_PROXY", "HTTP_PROXY"]) {
+        if let Some(proxy_url) = env.get_any(&["NEPPY_HTTP_PROXY", "HTTP_PROXY"]) {
             self.proxy.http_proxy = normalize_proxy_url_option(Some(&proxy_url));
             proxy_url_overridden = true;
         }
-        if let Some(proxy_url) = env.get_any(&["OPENHUMAN_HTTPS_PROXY", "HTTPS_PROXY"]) {
+        if let Some(proxy_url) = env.get_any(&["NEPPY_HTTPS_PROXY", "HTTPS_PROXY"]) {
             self.proxy.https_proxy = normalize_proxy_url_option(Some(&proxy_url));
             proxy_url_overridden = true;
         }
-        if let Some(proxy_url) = env.get_any(&["OPENHUMAN_ALL_PROXY", "ALL_PROXY"]) {
+        if let Some(proxy_url) = env.get_any(&["NEPPY_ALL_PROXY", "ALL_PROXY"]) {
             self.proxy.all_proxy = normalize_proxy_url_option(Some(&proxy_url));
             proxy_url_overridden = true;
         }
-        if let Some(no_proxy) = env.get_any(&["OPENHUMAN_NO_PROXY", "NO_PROXY"]) {
+        if let Some(no_proxy) = env.get_any(&["NEPPY_NO_PROXY", "NO_PROXY"]) {
             self.proxy.no_proxy = normalize_no_proxy_list(vec![no_proxy]);
         }
 
@@ -352,19 +350,19 @@ impl Config {
             self.proxy.enabled = true;
         }
 
-        if let Some(scope_raw) = env.get("OPENHUMAN_PROXY_SCOPE") {
+        if let Some(scope_raw) = env.get("NEPPY_PROXY_SCOPE") {
             let trimmed = scope_raw.trim();
             if !trimmed.is_empty() {
                 match parse_proxy_scope(trimmed) {
                     Some(scope) => self.proxy.scope = scope,
                     None => {
-                        tracing::warn!("Invalid OPENHUMAN_PROXY_SCOPE value {:?} ignored", trimmed);
+                        tracing::warn!("Invalid NEPPY_PROXY_SCOPE value {:?} ignored", trimmed);
                     }
                 }
             }
         }
 
-        if let Some(services_raw) = env.get("OPENHUMAN_PROXY_SERVICES") {
+        if let Some(services_raw) = env.get("NEPPY_PROXY_SERVICES") {
             self.proxy.services = normalize_service_list(vec![services_raw]);
         }
 
@@ -375,7 +373,7 @@ impl Config {
     }
 
     fn apply_runtime_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Some(tier_str) = env.get("OPENHUMAN_LOCAL_AI_TIER") {
+        if let Some(tier_str) = env.get("NEPPY_LOCAL_AI_TIER") {
             let tier_str = tier_str.trim().to_ascii_lowercase();
             if !tier_str.is_empty() {
                 if let Some(tier) =
@@ -384,12 +382,12 @@ impl Config {
                     if tier == crate::neppy::inference::presets::ModelTier::Custom {
                         tracing::warn!(
                             tier = %tier_str,
-                            "ignoring custom OPENHUMAN_LOCAL_AI_TIER; only built-in presets are supported"
+                            "ignoring custom NEPPY_LOCAL_AI_TIER; only built-in presets are supported"
                         );
                     } else if !tier.is_mvp_allowed() {
                         tracing::warn!(
                             tier = %tier_str,
-                            "ignoring OPENHUMAN_LOCAL_AI_TIER outside the 1B local-model allowlist"
+                            "ignoring NEPPY_LOCAL_AI_TIER outside the 1B local-model allowlist"
                         );
                     } else {
                         crate::neppy::inference::presets::apply_preset_to_config(
@@ -398,178 +396,177 @@ impl Config {
                         );
                         tracing::debug!(
                             tier = %tier_str,
-                            "applied local AI tier from OPENHUMAN_LOCAL_AI_TIER"
+                            "applied local AI tier from NEPPY_LOCAL_AI_TIER"
                         );
                     }
                 } else {
                     tracing::warn!(
                         tier = %tier_str,
-                        "ignoring invalid OPENHUMAN_LOCAL_AI_TIER (valid: ram_2_4gb)"
+                        "ignoring invalid NEPPY_LOCAL_AI_TIER (valid: ram_2_4gb)"
                     );
                 }
             }
         }
 
-        if let Some(flag) = env.get("OPENHUMAN_NODE_ENABLED") {
-            if let Some(enabled) = parse_env_bool("OPENHUMAN_NODE_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_NODE_ENABLED") {
+            if let Some(enabled) = parse_env_bool("NEPPY_NODE_ENABLED", &flag) {
                 self.node.enabled = enabled;
             }
         }
-        if let Some(version) = env.get("OPENHUMAN_NODE_VERSION") {
+        if let Some(version) = env.get("NEPPY_NODE_VERSION") {
             let trimmed = version.trim();
             if !trimmed.is_empty() {
                 self.node.version = trimmed.to_string();
             }
         }
-        if let Some(dir) = env.get("OPENHUMAN_NODE_CACHE_DIR") {
+        if let Some(dir) = env.get("NEPPY_NODE_CACHE_DIR") {
             let trimmed = dir.trim();
             if !trimmed.is_empty() {
                 self.node.cache_dir = trimmed.to_string();
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_NODE_PREFER_SYSTEM") {
-            if let Some(prefer_system) = parse_env_bool("OPENHUMAN_NODE_PREFER_SYSTEM", &flag) {
+        if let Some(flag) = env.get("NEPPY_NODE_PREFER_SYSTEM") {
+            if let Some(prefer_system) = parse_env_bool("NEPPY_NODE_PREFER_SYSTEM", &flag) {
                 self.node.prefer_system = prefer_system;
             }
         }
 
-        if let Some(flag) = env.get("OPENHUMAN_RUNTIME_PYTHON_ENABLED") {
-            if let Some(enabled) = parse_env_bool("OPENHUMAN_RUNTIME_PYTHON_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_RUNTIME_PYTHON_ENABLED") {
+            if let Some(enabled) = parse_env_bool("NEPPY_RUNTIME_PYTHON_ENABLED", &flag) {
                 self.runtime_python.enabled = enabled;
             }
         }
-        if let Some(version) = env.get("OPENHUMAN_RUNTIME_PYTHON_MINIMUM_VERSION") {
+        if let Some(version) = env.get("NEPPY_RUNTIME_PYTHON_MINIMUM_VERSION") {
             let trimmed = version.trim();
             if !trimmed.is_empty() {
                 self.runtime_python.minimum_version = trimmed.to_string();
             }
         }
-        if let Some(dir) = env.get("OPENHUMAN_RUNTIME_PYTHON_CACHE_DIR") {
+        if let Some(dir) = env.get("NEPPY_RUNTIME_PYTHON_CACHE_DIR") {
             self.runtime_python.cache_dir = dir.trim().to_string();
         }
-        if let Some(tag) = env.get("OPENHUMAN_RUNTIME_PYTHON_MANAGED_RELEASE_TAG") {
+        if let Some(tag) = env.get("NEPPY_RUNTIME_PYTHON_MANAGED_RELEASE_TAG") {
             self.runtime_python.managed_release_tag = tag.trim().to_string();
         }
-        if let Some(flag) = env.get("OPENHUMAN_RUNTIME_PYTHON_PREFER_SYSTEM") {
-            if let Some(prefer_system) =
-                parse_env_bool("OPENHUMAN_RUNTIME_PYTHON_PREFER_SYSTEM", &flag)
+        if let Some(flag) = env.get("NEPPY_RUNTIME_PYTHON_PREFER_SYSTEM") {
+            if let Some(prefer_system) = parse_env_bool("NEPPY_RUNTIME_PYTHON_PREFER_SYSTEM", &flag)
             {
                 self.runtime_python.prefer_system = prefer_system;
             }
         }
-        if let Some(command) = env.get("OPENHUMAN_RUNTIME_PYTHON_PREFERRED_COMMAND") {
+        if let Some(command) = env.get("NEPPY_RUNTIME_PYTHON_PREFERRED_COMMAND") {
             self.runtime_python.preferred_command = command.trim().to_string();
         }
 
         // --- Shared language-runtime pool (#5106) --------------------------
-        if let Some(flag) = env.get("OPENHUMAN_RUNTIME_POOL_ENABLED") {
-            if let Some(enabled) = parse_env_bool("OPENHUMAN_RUNTIME_POOL_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_RUNTIME_POOL_ENABLED") {
+            if let Some(enabled) = parse_env_bool("NEPPY_RUNTIME_POOL_ENABLED", &flag) {
                 self.runtime_pool.enabled = enabled;
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_RUNTIME_POOL_NODE_MAX_WORKERS") {
+        if let Some(raw) = env.get("NEPPY_RUNTIME_POOL_NODE_MAX_WORKERS") {
             match raw.trim().parse::<usize>() {
                 Ok(n) => self.runtime_pool.node.max_workers = n,
                 Err(e) => tracing::warn!(
                     value = %raw,
                     error = %e,
-                    "[config] ignoring invalid OPENHUMAN_RUNTIME_POOL_NODE_MAX_WORKERS"
+                    "[config] ignoring invalid NEPPY_RUNTIME_POOL_NODE_MAX_WORKERS"
                 ),
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_RUNTIME_POOL_PYTHON_MAX_WORKERS") {
+        if let Some(raw) = env.get("NEPPY_RUNTIME_POOL_PYTHON_MAX_WORKERS") {
             match raw.trim().parse::<usize>() {
                 Ok(n) => self.runtime_pool.python.max_workers = n,
                 Err(e) => tracing::warn!(
                     value = %raw,
                     error = %e,
-                    "[config] ignoring invalid OPENHUMAN_RUNTIME_POOL_PYTHON_MAX_WORKERS"
+                    "[config] ignoring invalid NEPPY_RUNTIME_POOL_PYTHON_MAX_WORKERS"
                 ),
             }
         }
 
         // --- TokenJuice content router -------------------------------------
-        if let Some(flag) = env.get("OPENHUMAN_TOKENJUICE_ENABLED") {
-            if let Some(v) = parse_env_bool("OPENHUMAN_TOKENJUICE_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_TOKENJUICE_ENABLED") {
+            if let Some(v) = parse_env_bool("NEPPY_TOKENJUICE_ENABLED", &flag) {
                 self.tokenjuice.router_enabled = v;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_TOKENJUICE_CCR_ENABLED") {
-            if let Some(v) = parse_env_bool("OPENHUMAN_TOKENJUICE_CCR_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_TOKENJUICE_CCR_ENABLED") {
+            if let Some(v) = parse_env_bool("NEPPY_TOKENJUICE_CCR_ENABLED", &flag) {
                 self.tokenjuice.ccr_enabled = v;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_TOKENJUICE_CCR_DISK_ENABLED") {
-            if let Some(v) = parse_env_bool("OPENHUMAN_TOKENJUICE_CCR_DISK_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_TOKENJUICE_CCR_DISK_ENABLED") {
+            if let Some(v) = parse_env_bool("NEPPY_TOKENJUICE_CCR_DISK_ENABLED", &flag) {
                 self.tokenjuice.ccr_disk_enabled = v;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_TOKENJUICE_SEARCH_ENABLED") {
-            if let Some(v) = parse_env_bool("OPENHUMAN_TOKENJUICE_SEARCH_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_TOKENJUICE_SEARCH_ENABLED") {
+            if let Some(v) = parse_env_bool("NEPPY_TOKENJUICE_SEARCH_ENABLED", &flag) {
                 self.tokenjuice.search_enabled = v;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_TOKENJUICE_CODE_ENABLED") {
-            if let Some(v) = parse_env_bool("OPENHUMAN_TOKENJUICE_CODE_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_TOKENJUICE_CODE_ENABLED") {
+            if let Some(v) = parse_env_bool("NEPPY_TOKENJUICE_CODE_ENABLED", &flag) {
                 self.tokenjuice.code_enabled = v;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_TOKENJUICE_HTML_ENABLED") {
-            if let Some(v) = parse_env_bool("OPENHUMAN_TOKENJUICE_HTML_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_TOKENJUICE_HTML_ENABLED") {
+            if let Some(v) = parse_env_bool("NEPPY_TOKENJUICE_HTML_ENABLED", &flag) {
                 self.tokenjuice.html_enabled = v;
             }
         }
-        if let Some(s) = env.get("OPENHUMAN_TOKENJUICE_MAX_CACHE_ENTRIES") {
+        if let Some(s) = env.get("NEPPY_TOKENJUICE_MAX_CACHE_ENTRIES") {
             if let Ok(v) = s.trim().parse::<usize>() {
                 self.tokenjuice.max_cache_entries = v;
             }
         }
-        if let Some(s) = env.get("OPENHUMAN_TOKENJUICE_MAX_CACHE_BYTES") {
+        if let Some(s) = env.get("NEPPY_TOKENJUICE_MAX_CACHE_BYTES") {
             if let Ok(v) = s.trim().parse::<usize>() {
                 self.tokenjuice.max_cache_bytes = v;
             }
         }
-        if let Some(s) = env.get("OPENHUMAN_TOKENJUICE_CCR_TTL_SECS") {
+        if let Some(s) = env.get("NEPPY_TOKENJUICE_CCR_TTL_SECS") {
             if let Ok(v) = s.trim().parse::<u64>() {
                 self.tokenjuice.ccr_ttl_secs = Some(v);
             }
         }
-        if let Some(s) = env.get("OPENHUMAN_TOKENJUICE_CCR_MIN_TOKENS") {
+        if let Some(s) = env.get("NEPPY_TOKENJUICE_CCR_MIN_TOKENS") {
             if let Ok(v) = s.trim().parse::<usize>() {
                 self.tokenjuice.ccr_min_tokens = v;
             }
         }
         // ML plain-text compressor (Kompress).
-        if let Some(flag) = env.get("OPENHUMAN_TOKENJUICE_ML_COMPRESSION_ENABLED") {
-            if let Some(v) = parse_env_bool("OPENHUMAN_TOKENJUICE_ML_COMPRESSION_ENABLED", &flag) {
+        if let Some(flag) = env.get("NEPPY_TOKENJUICE_ML_COMPRESSION_ENABLED") {
+            if let Some(v) = parse_env_bool("NEPPY_TOKENJUICE_ML_COMPRESSION_ENABLED", &flag) {
                 self.tokenjuice.ml_compression_enabled = v;
             }
         }
-        if let Some(m) = env.get("OPENHUMAN_TOKENJUICE_ML_MODEL_ID") {
+        if let Some(m) = env.get("NEPPY_TOKENJUICE_ML_MODEL_ID") {
             let t = m.trim();
             if !t.is_empty() {
                 self.tokenjuice.ml_model_id = t.to_string();
             }
         }
-        if let Some(d) = env.get("OPENHUMAN_TOKENJUICE_ML_DEVICE") {
+        if let Some(d) = env.get("NEPPY_TOKENJUICE_ML_DEVICE") {
             let t = d.trim();
             if !t.is_empty() {
                 self.tokenjuice.ml_device = t.to_string();
             }
         }
-        if let Some(r) = env.get("OPENHUMAN_TOKENJUICE_ML_TARGET_RATIO") {
+        if let Some(r) = env.get("NEPPY_TOKENJUICE_ML_TARGET_RATIO") {
             if let Ok(v) = r.trim().parse::<f64>() {
                 if (0.0..=1.0).contains(&v) {
                     self.tokenjuice.ml_target_ratio = v;
                 }
             }
         }
-        if let Some(s) = env.get("OPENHUMAN_TOKENJUICE_ML_SIDECAR_IDLE_TIMEOUT_SECS") {
+        if let Some(s) = env.get("NEPPY_TOKENJUICE_ML_SIDECAR_IDLE_TIMEOUT_SECS") {
             if let Ok(v) = s.trim().parse::<u64>() {
                 self.tokenjuice.ml_sidecar_idle_timeout_secs = v;
             }
         }
-        if let Some(s) = env.get("OPENHUMAN_TOKENJUICE_ML_MAX_INPUT_CHARS") {
+        if let Some(s) = env.get("NEPPY_TOKENJUICE_ML_MAX_INPUT_CHARS") {
             if let Ok(v) = s.trim().parse::<usize>() {
                 self.tokenjuice.ml_max_input_chars = v;
             }
@@ -578,10 +575,18 @@ impl Config {
 
     fn apply_observability_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
         let dsn_value = env
-            .get("OPENHUMAN_CORE_SENTRY_DSN")
-            .or_else(|| env.get("OPENHUMAN_SENTRY_DSN"))
-            .or_else(|| option_env!("OPENHUMAN_CORE_SENTRY_DSN").map(|s| s.to_string()))
-            .or_else(|| option_env!("OPENHUMAN_SENTRY_DSN").map(|s| s.to_string()));
+            .get("NEPPY_CORE_SENTRY_DSN")
+            .or_else(|| env.get("NEPPY_SENTRY_DSN"))
+            .or_else(|| {
+                option_env!("NEPPY_CORE_SENTRY_DSN")
+                    .or(option_env!("NEPPY_CORE_SENTRY_DSN"))
+                    .map(|s| s.to_string())
+            })
+            .or_else(|| {
+                option_env!("NEPPY_SENTRY_DSN")
+                    .or(option_env!("NEPPY_SENTRY_DSN"))
+                    .map(|s| s.to_string())
+            });
         if let Some(dsn) = dsn_value {
             let dsn = dsn.trim();
             if !dsn.is_empty() {
@@ -589,7 +594,7 @@ impl Config {
             }
         }
 
-        if let Some(flag) = env.get("OPENHUMAN_ANALYTICS_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_ANALYTICS_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.observability.analytics_enabled = true,
@@ -600,7 +605,7 @@ impl Config {
 
         // Opt-in: export prompt/reply content on trace spans (default off — a
         // deliberate PII reversal). Token/cost export is unaffected by this flag.
-        if let Some(flag) = env.get("OPENHUMAN_AGENT_TRACING_CAPTURE_CONTENT") {
+        if let Some(flag) = env.get("NEPPY_AGENT_TRACING_CAPTURE_CONTENT") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => {
@@ -615,7 +620,7 @@ impl Config {
     }
 
     fn apply_learning_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.learning.enabled = true,
@@ -623,7 +628,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_REFLECTION_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_REFLECTION_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.learning.reflection_enabled = true,
@@ -631,7 +636,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_USER_PROFILE_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_USER_PROFILE_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.learning.user_profile_enabled = true,
@@ -639,7 +644,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_TOOL_TRACKING_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_TOOL_TRACKING_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.learning.tool_tracking_enabled = true,
@@ -647,15 +652,14 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED") {
-            if let Some(enabled) = parse_env_bool(
-                "OPENHUMAN_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED",
-                flag.as_str(),
-            ) {
+        if let Some(flag) = env.get("NEPPY_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED") {
+            if let Some(enabled) =
+                parse_env_bool("NEPPY_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED", flag.as_str())
+            {
                 self.learning.tool_memory_capture_enabled = enabled;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_EXPLICIT_PREFERENCES_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_EXPLICIT_PREFERENCES_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.learning.explicit_preferences_enabled = true,
@@ -663,7 +667,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_GOALS_ENRICHMENT_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_GOALS_ENRICHMENT_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.learning.goals_enrichment_enabled = true,
@@ -671,7 +675,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(source) = env.get("OPENHUMAN_LEARNING_REFLECTION_SOURCE") {
+        if let Some(source) = env.get("NEPPY_LEARNING_REFLECTION_SOURCE") {
             let normalized = source.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "local" => {
@@ -683,31 +687,31 @@ impl Config {
                 _ => {
                     tracing::warn!(
                         source = %source,
-                        "ignoring invalid OPENHUMAN_LEARNING_REFLECTION_SOURCE (valid: local, cloud)"
+                        "ignoring invalid NEPPY_LEARNING_REFLECTION_SOURCE (valid: local, cloud)"
                     );
                 }
             }
         }
-        if let Some(val) = env.get("OPENHUMAN_LEARNING_MAX_REFLECTIONS_PER_SESSION") {
+        if let Some(val) = env.get("NEPPY_LEARNING_MAX_REFLECTIONS_PER_SESSION") {
             if let Ok(max) = val.trim().parse::<usize>() {
                 self.learning.max_reflections_per_session = max;
             }
         }
-        if let Some(val) = env.get("OPENHUMAN_LEARNING_MIN_TURN_COMPLEXITY") {
+        if let Some(val) = env.get("NEPPY_LEARNING_MIN_TURN_COMPLEXITY") {
             if let Ok(min) = val.trim().parse::<usize>() {
                 self.learning.min_turn_complexity = min;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_EPISODIC_CAPTURE_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_EPISODIC_CAPTURE_ENABLED") {
             if let Some(enabled) =
-                parse_env_bool("OPENHUMAN_LEARNING_EPISODIC_CAPTURE_ENABLED", flag.as_str())
+                parse_env_bool("NEPPY_LEARNING_EPISODIC_CAPTURE_ENABLED", flag.as_str())
             {
                 self.learning.episodic_capture_enabled = enabled;
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_LEARNING_STM_RECALL_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_LEARNING_STM_RECALL_ENABLED") {
             if let Some(enabled) =
-                parse_env_bool("OPENHUMAN_LEARNING_STM_RECALL_ENABLED", flag.as_str())
+                parse_env_bool("NEPPY_LEARNING_STM_RECALL_ENABLED", flag.as_str())
             {
                 self.learning.stm_recall_enabled = enabled;
             }
@@ -715,7 +719,7 @@ impl Config {
     }
 
     fn apply_memory_tree_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Ok(endpoint) = std::env::var("OPENHUMAN_MEMORY_EMBED_ENDPOINT") {
+        if let Ok(endpoint) = crate::neppy::util::env::var("NEPPY_MEMORY_EMBED_ENDPOINT") {
             let trimmed = endpoint.trim();
             self.memory_tree.embedding_endpoint = if trimmed.is_empty() {
                 None
@@ -723,7 +727,7 @@ impl Config {
                 Some(trimmed.to_string())
             };
         }
-        if let Ok(model) = std::env::var("OPENHUMAN_MEMORY_EMBED_MODEL") {
+        if let Ok(model) = crate::neppy::util::env::var("NEPPY_MEMORY_EMBED_MODEL") {
             let trimmed = model.trim();
             self.memory_tree.embedding_model = if trimmed.is_empty() {
                 None
@@ -731,25 +735,25 @@ impl Config {
                 Some(trimmed.to_string())
             };
         }
-        if let Ok(val) = std::env::var("OPENHUMAN_MEMORY_EMBED_TIMEOUT_MS") {
+        if let Ok(val) = crate::neppy::util::env::var("NEPPY_MEMORY_EMBED_TIMEOUT_MS") {
             if let Ok(timeout_ms) = val.trim().parse::<u64>() {
                 if timeout_ms > 0 {
                     self.memory_tree.embedding_timeout_ms = Some(timeout_ms);
                 }
             }
         }
-        if let Ok(flag) = std::env::var("OPENHUMAN_MEMORY_EMBED_STRICT") {
-            if let Some(strict) = parse_env_bool("OPENHUMAN_MEMORY_EMBED_STRICT", &flag) {
+        if let Ok(flag) = crate::neppy::util::env::var("NEPPY_MEMORY_EMBED_STRICT") {
+            if let Some(strict) = parse_env_bool("NEPPY_MEMORY_EMBED_STRICT", &flag) {
                 self.memory_tree.embedding_strict = strict;
             }
         }
-        if let Some(val) = env.get("OPENHUMAN_MEMORY_EMBED_RATE_LIMIT") {
+        if let Some(val) = env.get("NEPPY_MEMORY_EMBED_RATE_LIMIT") {
             if let Ok(per_min) = val.trim().parse::<u32>() {
                 self.memory.embedding_rate_limit_per_min = per_min;
             }
         }
 
-        if let Ok(endpoint) = std::env::var("OPENHUMAN_MEMORY_EXTRACT_ENDPOINT") {
+        if let Ok(endpoint) = crate::neppy::util::env::var("NEPPY_MEMORY_EXTRACT_ENDPOINT") {
             let trimmed = endpoint.trim();
             self.memory_tree.llm_extractor_endpoint = if trimmed.is_empty() {
                 None
@@ -757,7 +761,7 @@ impl Config {
                 Some(trimmed.to_string())
             };
         }
-        if let Ok(model) = std::env::var("OPENHUMAN_MEMORY_EXTRACT_MODEL") {
+        if let Ok(model) = crate::neppy::util::env::var("NEPPY_MEMORY_EXTRACT_MODEL") {
             let trimmed = model.trim();
             self.memory_tree.llm_extractor_model = if trimmed.is_empty() {
                 None
@@ -765,7 +769,7 @@ impl Config {
                 Some(trimmed.to_string())
             };
         }
-        if let Ok(val) = std::env::var("OPENHUMAN_MEMORY_EXTRACT_TIMEOUT_MS") {
+        if let Ok(val) = crate::neppy::util::env::var("NEPPY_MEMORY_EXTRACT_TIMEOUT_MS") {
             if let Ok(ms) = val.trim().parse::<u64>() {
                 if ms > 0 {
                     self.memory_tree.llm_extractor_timeout_ms = Some(ms);
@@ -773,7 +777,7 @@ impl Config {
             }
         }
 
-        if let Ok(endpoint) = std::env::var("OPENHUMAN_MEMORY_SUMMARISE_ENDPOINT") {
+        if let Ok(endpoint) = crate::neppy::util::env::var("NEPPY_MEMORY_SUMMARISE_ENDPOINT") {
             let trimmed = endpoint.trim();
             self.memory_tree.llm_summariser_endpoint = if trimmed.is_empty() {
                 None
@@ -781,7 +785,7 @@ impl Config {
                 Some(trimmed.to_string())
             };
         }
-        if let Ok(model) = std::env::var("OPENHUMAN_MEMORY_SUMMARISE_MODEL") {
+        if let Ok(model) = crate::neppy::util::env::var("NEPPY_MEMORY_SUMMARISE_MODEL") {
             let trimmed = model.trim();
             self.memory_tree.llm_summariser_model = if trimmed.is_empty() {
                 None
@@ -789,7 +793,7 @@ impl Config {
                 Some(trimmed.to_string())
             };
         }
-        if let Ok(val) = std::env::var("OPENHUMAN_MEMORY_SUMMARISE_TIMEOUT_MS") {
+        if let Ok(val) = crate::neppy::util::env::var("NEPPY_MEMORY_SUMMARISE_TIMEOUT_MS") {
             if let Ok(ms) = val.trim().parse::<u64>() {
                 if ms > 0 {
                     self.memory_tree.llm_summariser_timeout_ms = Some(ms);
@@ -797,7 +801,7 @@ impl Config {
             }
         }
 
-        if let Some(dir) = env.get("OPENHUMAN_MEMORY_TREE_CONTENT_DIR") {
+        if let Some(dir) = env.get("NEPPY_MEMORY_TREE_CONTENT_DIR") {
             let trimmed = dir.trim();
             self.memory_tree.content_dir = if trimmed.is_empty() {
                 None
@@ -806,13 +810,13 @@ impl Config {
             };
         }
 
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_TREE_LLM_BACKEND") {
+        if let Some(raw) = env.get("NEPPY_MEMORY_TREE_LLM_BACKEND") {
             let trimmed = raw.trim();
             if !trimmed.is_empty() {
                 match crate::neppy::config::LlmBackend::parse(trimmed) {
                     Ok(b) => {
                         log::debug!(
-                            "[memory_tree] OPENHUMAN_MEMORY_TREE_LLM_BACKEND override applied: {}",
+                            "[memory_tree] NEPPY_MEMORY_TREE_LLM_BACKEND override applied: {}",
                             b.as_str()
                         );
                         self.memory_tree.llm_backend = b;
@@ -821,13 +825,13 @@ impl Config {
                         tracing::warn!(
                             value = trimmed,
                             error = %e,
-                            "ignoring invalid OPENHUMAN_MEMORY_TREE_LLM_BACKEND (valid: cloud, local)"
+                            "ignoring invalid NEPPY_MEMORY_TREE_LLM_BACKEND (valid: cloud, local)"
                         );
                     }
                 }
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_TREE_CLOUD_LLM_MODEL") {
+        if let Some(raw) = env.get("NEPPY_MEMORY_TREE_CLOUD_LLM_MODEL") {
             let trimmed = raw.trim();
             self.memory_tree.cloud_llm_model = if trimmed.is_empty() {
                 None
@@ -836,7 +840,7 @@ impl Config {
             };
         }
 
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_TREE_SMART_WALK_MODEL") {
+        if let Some(raw) = env.get("NEPPY_MEMORY_TREE_SMART_WALK_MODEL") {
             let trimmed = raw.trim();
             self.memory_tree.smart_walk_model = if trimmed.is_empty() {
                 None
@@ -845,13 +849,13 @@ impl Config {
             };
         }
 
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_TREE_CLOUD_SUMMARIZATION") {
-            if let Some(val) = parse_env_bool("OPENHUMAN_MEMORY_TREE_CLOUD_SUMMARIZATION", &raw) {
+        if let Some(raw) = env.get("NEPPY_MEMORY_TREE_CLOUD_SUMMARIZATION") {
+            if let Some(val) = parse_env_bool("NEPPY_MEMORY_TREE_CLOUD_SUMMARIZATION", &raw) {
                 self.memory_tree.cloud_summarization_opt_in = val;
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_TREE_SPACY_ENABLED") {
-            if let Some(val) = parse_env_bool("OPENHUMAN_MEMORY_TREE_SPACY_ENABLED", &raw) {
+        if let Some(raw) = env.get("NEPPY_MEMORY_TREE_SPACY_ENABLED") {
+            if let Some(val) = parse_env_bool("NEPPY_MEMORY_TREE_SPACY_ENABLED", &raw) {
                 self.memory_tree.spacy_enabled = val;
             }
         }
@@ -862,55 +866,55 @@ impl Config {
     /// reads `self.subsystems` yet, so these overrides have no runtime effect
     /// beyond making the field settable via env for forward compatibility.
     fn apply_subsystems_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_DRIVER") {
+        if let Some(raw) = env.get("NEPPY_MEMORY_DRIVER") {
             let trimmed = raw.trim();
             if !trimmed.is_empty() {
                 self.subsystems.memory.driver = trimmed.to_string();
             }
         }
 
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_HOOKS_AUTO_RECALL") {
-            if let Some(val) = parse_env_bool("OPENHUMAN_MEMORY_HOOKS_AUTO_RECALL", &raw) {
+        if let Some(raw) = env.get("NEPPY_MEMORY_HOOKS_AUTO_RECALL") {
+            if let Some(val) = parse_env_bool("NEPPY_MEMORY_HOOKS_AUTO_RECALL", &raw) {
                 self.subsystems.memory.hooks.auto_recall = val;
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_HOOKS_AUTO_CAPTURE") {
-            if let Some(val) = parse_env_bool("OPENHUMAN_MEMORY_HOOKS_AUTO_CAPTURE", &raw) {
+        if let Some(raw) = env.get("NEPPY_MEMORY_HOOKS_AUTO_CAPTURE") {
+            if let Some(val) = parse_env_bool("NEPPY_MEMORY_HOOKS_AUTO_CAPTURE", &raw) {
                 self.subsystems.memory.hooks.auto_capture = val;
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_HOOKS_MAX_CONTEXT_TOKENS") {
+        if let Some(raw) = env.get("NEPPY_MEMORY_HOOKS_MAX_CONTEXT_TOKENS") {
             let trimmed = raw.trim();
             if !trimmed.is_empty() {
                 match trimmed.parse::<usize>() {
                     Ok(v) => self.subsystems.memory.hooks.max_context_tokens = v,
                     Err(_) => tracing::warn!(
                         value = %raw,
-                        "invalid OPENHUMAN_MEMORY_HOOKS_MAX_CONTEXT_TOKENS ignored; expected an unsigned integer"
+                        "invalid NEPPY_MEMORY_HOOKS_MAX_CONTEXT_TOKENS ignored; expected an unsigned integer"
                     ),
                 }
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_HOOKS_RECALL_MAX_CHARS") {
+        if let Some(raw) = env.get("NEPPY_MEMORY_HOOKS_RECALL_MAX_CHARS") {
             let trimmed = raw.trim();
             if !trimmed.is_empty() {
                 match trimmed.parse::<usize>() {
                     Ok(v) => self.subsystems.memory.hooks.recall_max_chars = v,
                     Err(_) => tracing::warn!(
                         value = %raw,
-                        "invalid OPENHUMAN_MEMORY_HOOKS_RECALL_MAX_CHARS ignored; expected an unsigned integer"
+                        "invalid NEPPY_MEMORY_HOOKS_RECALL_MAX_CHARS ignored; expected an unsigned integer"
                     ),
                 }
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_MEMORY_HOOKS_CAPTURE_MAX_CHARS") {
+        if let Some(raw) = env.get("NEPPY_MEMORY_HOOKS_CAPTURE_MAX_CHARS") {
             let trimmed = raw.trim();
             if !trimmed.is_empty() {
                 match trimmed.parse::<usize>() {
                     Ok(v) => self.subsystems.memory.hooks.capture_max_chars = v,
                     Err(_) => tracing::warn!(
                         value = %raw,
-                        "invalid OPENHUMAN_MEMORY_HOOKS_CAPTURE_MAX_CHARS ignored; expected an unsigned integer"
+                        "invalid NEPPY_MEMORY_HOOKS_CAPTURE_MAX_CHARS ignored; expected an unsigned integer"
                     ),
                 }
             }
@@ -918,7 +922,7 @@ impl Config {
     }
 
     fn apply_update_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Some(flag) = env.get("OPENHUMAN_AUTO_UPDATE_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_AUTO_UPDATE_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.update.enabled = true,
@@ -926,12 +930,12 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(val) = env.get("OPENHUMAN_AUTO_UPDATE_INTERVAL_MINUTES") {
+        if let Some(val) = env.get("NEPPY_AUTO_UPDATE_INTERVAL_MINUTES") {
             if let Ok(minutes) = val.trim().parse::<u32>() {
                 self.update.interval_minutes = minutes;
             }
         }
-        if let Some(raw) = env.get("OPENHUMAN_AUTO_UPDATE_RESTART_STRATEGY") {
+        if let Some(raw) = env.get("NEPPY_AUTO_UPDATE_RESTART_STRATEGY") {
             match raw.trim().to_ascii_lowercase().as_str() {
                 "self_replace" | "self-replace" | "self" => {
                     self.update.restart_strategy = UpdateRestartStrategy::SelfReplace;
@@ -942,15 +946,14 @@ impl Config {
                 other => {
                     tracing::warn!(
                         value = other,
-                        "ignoring invalid OPENHUMAN_AUTO_UPDATE_RESTART_STRATEGY \
+                        "ignoring invalid NEPPY_AUTO_UPDATE_RESTART_STRATEGY \
                          (valid: self_replace, supervisor)"
                     );
                 }
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_AUTO_UPDATE_RPC_MUTATIONS_ENABLED") {
-            if let Some(enabled) =
-                parse_env_bool("OPENHUMAN_AUTO_UPDATE_RPC_MUTATIONS_ENABLED", &flag)
+        if let Some(flag) = env.get("NEPPY_AUTO_UPDATE_RPC_MUTATIONS_ENABLED") {
+            if let Some(enabled) = parse_env_bool("NEPPY_AUTO_UPDATE_RPC_MUTATIONS_ENABLED", &flag)
             {
                 self.update.rpc_mutations_enabled = enabled;
             }
@@ -958,7 +961,7 @@ impl Config {
     }
 
     fn apply_dictation_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Some(flag) = env.get("OPENHUMAN_DICTATION_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_DICTATION_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.dictation.enabled = true,
@@ -966,13 +969,13 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(hotkey) = env.get("OPENHUMAN_DICTATION_HOTKEY") {
+        if let Some(hotkey) = env.get("NEPPY_DICTATION_HOTKEY") {
             let hotkey = hotkey.trim();
             if !hotkey.is_empty() {
                 self.dictation.hotkey = hotkey.to_string();
             }
         }
-        if let Some(mode) = env.get("OPENHUMAN_DICTATION_ACTIVATION_MODE") {
+        if let Some(mode) = env.get("NEPPY_DICTATION_ACTIVATION_MODE") {
             let normalized = mode.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "toggle" => {
@@ -986,12 +989,12 @@ impl Config {
                 _ => {
                     tracing::warn!(
                         mode = %mode,
-                        "ignoring invalid OPENHUMAN_DICTATION_ACTIVATION_MODE (valid: toggle, push)"
+                        "ignoring invalid NEPPY_DICTATION_ACTIVATION_MODE (valid: toggle, push)"
                     );
                 }
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_DICTATION_LLM_REFINEMENT") {
+        if let Some(flag) = env.get("NEPPY_DICTATION_LLM_REFINEMENT") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.dictation.llm_refinement = true,
@@ -999,7 +1002,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_DICTATION_STREAMING") {
+        if let Some(flag) = env.get("NEPPY_DICTATION_STREAMING") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.dictation.streaming = true,
@@ -1007,7 +1010,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(val) = env.get("OPENHUMAN_DICTATION_STREAMING_INTERVAL_MS") {
+        if let Some(val) = env.get("NEPPY_DICTATION_STREAMING_INTERVAL_MS") {
             if let Ok(ms) = val.trim().parse::<u64>() {
                 self.dictation.streaming_interval_ms = ms;
             }
@@ -1015,7 +1018,7 @@ impl Config {
     }
 
     fn apply_context_env<E: super::env::EnvLookup + ?Sized>(&mut self, env: &E) {
-        if let Some(flag) = env.get("OPENHUMAN_CONTEXT_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_CONTEXT_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.context.enabled = true,
@@ -1023,7 +1026,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_CONTEXT_MICROCOMPACT_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_CONTEXT_MICROCOMPACT_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.context.microcompact_enabled = true,
@@ -1031,7 +1034,7 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(flag) = env.get("OPENHUMAN_CONTEXT_AUTOCOMPACT_ENABLED") {
+        if let Some(flag) = env.get("NEPPY_CONTEXT_AUTOCOMPACT_ENABLED") {
             let normalized = flag.trim().to_ascii_lowercase();
             match normalized.as_str() {
                 "1" | "true" | "yes" | "on" => self.context.autocompact_enabled = true,
@@ -1039,17 +1042,17 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(val) = env.get("OPENHUMAN_CONTEXT_TOOL_RESULT_BUDGET_BYTES") {
+        if let Some(val) = env.get("NEPPY_CONTEXT_TOOL_RESULT_BUDGET_BYTES") {
             if let Ok(n) = val.trim().parse::<usize>() {
                 self.context.tool_result_budget_bytes = n;
             }
         }
         // Kill-switch for native tool-output compaction (Stage 1a). On by
-        // default; `OPENHUMAN_COMPACTION=0` disables it for a support/A-B
+        // default; `NEPPY_COMPACTION=0` disables it for a support/A-B
         // bisect. Accepts the canonical short name and the namespaced form.
         if let Some(flag) = env
-            .get("OPENHUMAN_COMPACTION")
-            .or_else(|| env.get("OPENHUMAN_CONTEXT_COMPACTION_ENABLED"))
+            .get("NEPPY_COMPACTION")
+            .or_else(|| env.get("NEPPY_CONTEXT_COMPACTION_ENABLED"))
         {
             match flag.trim().to_ascii_lowercase().as_str() {
                 "1" | "true" | "yes" | "on" => self.context.compaction_enabled = true,
@@ -1057,14 +1060,14 @@ impl Config {
                 _ => {}
             }
         }
-        if let Some(model) = env.get("OPENHUMAN_CONTEXT_SUMMARIZER_MODEL") {
+        if let Some(model) = env.get("NEPPY_CONTEXT_SUMMARIZER_MODEL") {
             let model = model.trim();
             if !model.is_empty() {
                 self.context.summarizer_model = Some(model.to_string());
             }
         }
         let context_default = crate::neppy::agent::context::DEFAULT_TOOL_RESULT_BUDGET_BYTES;
-        let context_env_set = env.contains("OPENHUMAN_CONTEXT_TOOL_RESULT_BUDGET_BYTES");
+        let context_env_set = env.contains("NEPPY_CONTEXT_TOOL_RESULT_BUDGET_BYTES");
         if !context_env_set
             && self.context.tool_result_budget_bytes == context_default
             && self.agent.tool_result_budget_bytes != context_default

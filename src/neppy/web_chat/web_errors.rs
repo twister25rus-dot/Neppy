@@ -51,7 +51,7 @@ pub(crate) fn generic_inference_error_user_message() -> &'static str {
 }
 
 /// Stable marker embedded in the synthetic error a web turn raises when it
-/// exceeds its wall-clock backstop (`OPENHUMAN_WEB_TURN_TIMEOUT_SECS`). Kept as
+/// exceeds its wall-clock backstop (`NEPPY_WEB_TURN_TIMEOUT_SECS`). Kept as
 /// a grep-friendly anchor so [`classify_inference_error`] routes it to the
 /// dedicated `turn_timeout` branch instead of the generic catch-all.
 pub(crate) const TURN_TIMEOUT_MARKER: &str = "neppy_turn_wall_clock_timeout";

@@ -3,7 +3,7 @@
 #
 # Loads signing credentials from scripts/ci-secrets.json, imports the
 # Developer ID certificate into a temporary keychain (like CI), and sets
-# OPENHUMAN_APP_ENV=staging so the encrypted-file keyring backend is used.
+# NEPPY_APP_ENV=staging so the encrypted-file keyring backend is used.
 #
 # Usage:
 #   bash scripts/dev-staging.sh
@@ -23,8 +23,8 @@ fi
 source "$SCRIPT_DIR/load-env-json.sh" "$SECRETS_FILE" '.secrets + .vars'
 
 # Ensure staging env
-export OPENHUMAN_APP_ENV=staging
-export VITE_OPENHUMAN_APP_ENV=staging
+export NEPPY_APP_ENV=staging
+export VITE_NEPPY_APP_ENV=staging
 
 # Point to staging API (ci-secrets.json has localhost for CI)
 export BACKEND_URL=https://staging-api.tinyhumans.ai
@@ -78,7 +78,7 @@ cd "$ROOT_DIR/app"
 pnpm tauri:ensure
 
 echo "[dev-staging] APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY"
-echo "[dev-staging] OPENHUMAN_APP_ENV=$OPENHUMAN_APP_ENV"
+echo "[dev-staging] NEPPY_APP_ENV=$NEPPY_APP_ENV"
 echo "[dev-staging] building and running (no file watcher)..."
 
 # Build the frontend first

@@ -1,6 +1,6 @@
 /**
  * useFlowValidation (Phase 3c) — debounced + on-demand validation of the live
- * editable-canvas draft against `openhuman.flows_validate`.
+ * editable-canvas draft against `neppy.flows_validate`.
  *
  * The canvas serializes its controlled node/edge state to a `WorkflowGraph` on
  * every edit; this hook watches that graph (keyed by its serialized form so a

@@ -14,7 +14,7 @@ import { useAppDispatch } from '../../../store/hooks';
  * Plan-mode review surface (Codex/Claude-style). The orchestrator parked the
  * live turn on a thread-scoped plan via the `request_plan_review` gate; this
  * card surfaces the plan above the composer and resolves the parked turn via
- * the `openhuman.plan_review_decide` RPC:
+ * the `neppy.plan_review_decide` RPC:
  *
  *  - **Approve & run** → the turn resumes and executes the plan.
  *  - **Reject** → the turn resumes and stops without executing.
@@ -25,7 +25,7 @@ import { useAppDispatch } from '../../../store/hooks';
  * itself optimistically; {@link ChatRuntimeProvider}'s turn-end handlers also
  * clear the pending review if the turn ends.
  */
-const log = debug('openhuman:chat:plan-review-card');
+const log = debug('neppy:chat:plan-review-card');
 
 type Decision = 'approve' | 'reject' | 'revise';
 
@@ -47,7 +47,7 @@ export const PlanReviewCard: React.FC<Props> = ({ threadId, review }) => {
     setErrorMsg(null);
     try {
       await callCoreRpc({
-        method: 'openhuman.plan_review_decide',
+        method: 'neppy.plan_review_decide',
         params: { request_id: review.requestId, decision, feedback: feedbackText },
       });
       // Resolve optimistically; ChatRuntimeProvider also clears on turn end.

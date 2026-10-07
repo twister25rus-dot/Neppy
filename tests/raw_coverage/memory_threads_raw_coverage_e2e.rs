@@ -194,7 +194,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, value: &Path) -> Self {
-        let old = std::env::var_os(key);
+        let old = neppy_core::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value.as_os_str());
         }
@@ -207,7 +207,7 @@ impl Drop for EnvVarGuard {
         unsafe {
             match &self.old {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -254,7 +254,7 @@ fn config_in(tmp: &TempDir) -> Config {
 /// name one object. This reproduces that arrangement the way
 /// `tests/json_rpc_e2e.rs` does: one leaked directory, the policy published from
 /// it exactly once, and every driver-routed case pointing its config (and
-/// `OPENHUMAN_WORKSPACE`) here. Cases keep their own `TempDir` for the files they
+/// `NEPPY_WORKSPACE`) here. Cases keep their own `TempDir` for the files they
 /// write; only the memory workspace is shared. The path ends in `workspace` so
 /// `resolve_config_dir_for_workspace` treats it as the workspace itself rather
 /// than appending another segment, and the env var and the config agree exactly.
@@ -281,7 +281,7 @@ fn module_workspace() -> &'static Path {
 /// source registry from the file the host names there, and `Config::default()`
 /// names the developer's real `~/.neppy/config.toml`. Pointing it beside
 /// the shared workspace is also where `Config::load_or_init` resolves it from
-/// `OPENHUMAN_WORKSPACE`, so env-driven cases and config-driven cases write and
+/// `NEPPY_WORKSPACE`, so env-driven cases and config-driven cases write and
 /// read one registry. Embeddings are off so no case asks the host to embed.
 fn shared_config_at(workspace: &Path) -> Config {
     let mut config = Config::default();
@@ -856,7 +856,7 @@ async fn memory_source_status_counts_reader_and_composio_prefixes() {
 async fn memory_thread_tree_and_sync_controller_schemas_execute_public_handlers() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", module_workspace());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", module_workspace());
     let config = Config::load_or_init().await.expect("init isolated config");
     wipe_shared_store(&config);
 
@@ -2731,7 +2731,7 @@ async fn memory_queue_and_tool_memory_public_stores_cover_persistence_edges() {
 async fn memory_source_sync_entrypoint_rejects_disabled_and_ingests_folder_items() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _env_workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", module_workspace());
+    let _env_workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", module_workspace());
     let mut config = config_in(&tmp);
     use_module_workspace(&mut config);
     wipe_shared_store(&config);
@@ -3642,7 +3642,7 @@ fn turn_state_store_persists_lists_marks_and_clears_snapshots() {
 async fn threads_rpc_ops_cover_crud_title_fallback_and_turn_state_cleanup() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path());
     let config = Config::load_or_init().await.expect("init isolated config");
     let workspace_dir = config.workspace_dir.clone();
 
@@ -3849,7 +3849,7 @@ async fn threads_rpc_ops_cover_crud_title_fallback_and_turn_state_cleanup() {
 async fn threads_title_generation_branches_cover_noop_and_not_found_paths() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path());
     Config::load_or_init().await.expect("init isolated config");
 
     let manual = thread_ops::thread_upsert(UpsertConversationThreadRequest {
@@ -3920,7 +3920,7 @@ async fn threads_title_generation_branches_cover_noop_and_not_found_paths() {
 async fn memory_sources_registry_rpc_and_schema_handlers_cover_crud_edges() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", module_workspace());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", module_workspace());
     let config = Config::load_or_init().await.expect("init isolated config");
     wipe_shared_store(&config);
     std::fs::write(tmp.path().join("reader-note.md"), "# Reader note").expect("write note");
@@ -4145,7 +4145,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
     let _lock = env_lock();
     ensure_memory_seams();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", module_workspace());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", module_workspace());
 
     let init = neppy_core::neppy::memory::ops::memory_init(MemoryInitRequest {
         jwt_token: Some("ignored-token".into()),
@@ -4519,7 +4519,7 @@ async fn memory_ops_public_handlers_cover_document_file_kv_graph_and_envelopes_b
 async fn memory_tree_retrieval_rpc_and_schema_wrappers_cover_empty_and_invalid_paths() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path());
     let config = config_in(&tmp);
 
     let schemas =
@@ -4642,7 +4642,7 @@ async fn memory_query_backend_and_tree_flush_wrappers_cover_public_edges() {
     // The query tools resolve a bound memory driver; `module_workspace` is
     // where that driver lives for this whole process.
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", module_workspace());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", module_workspace());
     let mut config = Config::load_or_init().await.expect("init isolated config");
     config.memory_tree.embedding_endpoint = None;
     config.memory_tree.embedding_model = None;
@@ -4787,7 +4787,7 @@ async fn tree_summarizer_ops_cover_validation_query_and_local_provider_guards() 
 async fn memory_sources_types_registry_and_sync_state_cover_public_persistence_edges() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path());
     let _config = Config::load_or_init().await.expect("init isolated config");
     neppy_core::neppy::memory::sources::reconcile::ensure_composio_sources().await;
 

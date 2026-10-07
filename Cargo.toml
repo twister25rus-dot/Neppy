@@ -154,12 +154,12 @@ tinyplace = "2.0"
 tinyflows = { version = "0.8", features = ["mock"], optional = true }
 # TinyAgents — Rust LLM orchestration framework (LangGraph/LangChain-style):
 # durable state graphs, agent-loop harness, model/tool registries, REPL +
-# `.rag` workflow language. openhuman's agent engine + orchestration run on this
+# `.rag` workflow language. neppy's agent engine + orchestration run on this
 # crate's primitives via the adapter seam in `src/neppy/agent/tinyagents/` (issue
 # #4249): every turn drives through the harness; the workflow phase DAG, team
 # member runtime, parallel fan-out, and multi-stage delegation run on graphs.
-# We wire openhuman's own Provider/Tool, not the removed bundled openai client.
-# The `sqlite` feature is enabled now that openhuman's direct rusqlite pin is
+# We wire neppy's own Provider/Tool, not the removed bundled openai client.
+# The `sqlite` feature is enabled now that neppy's direct rusqlite pin is
 # aligned to 0.40, avoiding duplicate `links = "sqlite3"` native bindings.
 # Durable graph checkpoints still use `SqlRunLedgerCheckpointer` until the
 # migration re-points those rows to the crate checkpointer.
@@ -481,7 +481,7 @@ fantoccini = { version = "0.22.0", optional = true, default-features = false, fe
 # The WhatsApp Web provider (and its `whatsapp-rust` / `wacore` / `serde-big-array`
 # stack) now lives in the tinychannels crate; the `whatsapp-web` feature forwards
 # to `tinychannels/whatsapp-web`.
-# Terminal chat UI (`openhuman tui` / `chat`). Exclusive to the default-ON
+# Terminal chat UI (`neppy-core tui` / `chat`). Exclusive to the default-ON
 # `tui` feature (see `[features]` below): a slim / headless build without `tui`
 # drops both `ratatui` and `crossterm`. Kept in lockstep — ratatui 0.30
 # re-exports crossterm 0.29, so declaring crossterm directly at the same major
@@ -747,7 +747,7 @@ default = ["media", "skills", "flows", "mcp", "channels", "medulla", "http-serve
 # OpenAI-compatible router (`inference::http`), the ad-hoc static-dir file
 # server (`neppy::http_host`), the AgentBox `/run` HTTP surface
 # (`agentbox::http`), the WebSocket dictation stream
-# (`inference::voice::streaming`), the `openhuman text-input run` dev server,
+# (`inference::voice::streaming`), the `neppy-core text-input run` dev server,
 # the MCP Streamable-HTTP transport (`mcp::server::http`, additionally gated by
 # `mcp`), and the Socket.IO live-event bridge (`core::socketio`). Default-ON —
 # the desktop shell REQUIRES it (see the `HTTP_SERVER_COMPILED_IN` compile
@@ -1022,7 +1022,7 @@ flows = ["dep:tinyflows"]
 # types are a type carve-out, not part of the gated behaviour. See
 # `src/neppy/skills/stub.rs`.
 skills = []
-# MCP domains, all under the `mcp/` family: `mcp::server` (the `openhuman mcp`
+# MCP domains, all under the `mcp/` family: `mcp::server` (the `neppy-core mcp`
 # stdio/HTTP server exposing our tool surface), `mcp::registry` (dynamic
 # Smithery installs — SQLite, lifecycle, `mcp_clients` RPC namespace),
 # `mcp::audit` (write-audit log), and the static/config-declared server set in
@@ -1050,7 +1050,7 @@ mcp = []
 # `before_send` hook (src/main.rs), the sentry-tracing bridge layer
 # (core::logging), the ~24 `before_send` Event classifiers + the two
 # `report_*_message` capture paths (core::observability), the session-boundary
-# scope binding (credentials::sentry_scope), and the `openhuman sentry-test`
+# scope binding (credentials::sentry_scope), and the `neppy-core sentry-test`
 # CLI probe. Default-ON — the desktop app always ships with crash reporting.
 # Slim / headless builds opt out via `--no-default-features --features
 # "<explicit list without crash-reporting>"`, which drops the exclusive
@@ -1065,11 +1065,11 @@ mcp = []
 # NO stub file is needed and always-on callers need no per-call `#[cfg]`. When
 # off, `report_error_message`/`report_warning_message` still emit their
 # `tracing::{error,warn}!` diagnostic, `sentry_tracing_layer()` degrades to a
-# no-op `Identity` layer, and `openhuman sentry-test` returns a "built without
+# no-op `Identity` layer, and `neppy-core sentry-test` returns a "built without
 # the crash-reporting feature" error.
 crash-reporting = ["dep:sentry"]
 
-# Tabbed terminal UI: the `openhuman tui` (alias `chat`) CLI subcommand, a
+# Tabbed terminal UI: the `neppy-core tui` (alias `chat`) CLI subcommand, a
 # ratatui/crossterm front-end for logs, orchestrator chat, curated configuration,
 # and account settings. Default-ON for the standalone `neppy-core` binary, but
 # INTENTIONALLY NOT forwarded to the desktop shell (the desktop app ships its own
@@ -1153,7 +1153,7 @@ landlock = ["sandbox-landlock"]
 # It is a refinement INSIDE the `channels` gate — enabling it pulls in the whole
 # channels domain (the provider re-exports live under `channels/providers/`).
 whatsapp-web = ["channels", "tinychannels/whatsapp-web"]
-# Exposes the destructive `openhuman.test_reset` RPC. Off by default; the E2E
+# Exposes the destructive `neppy.test_reset` RPC. Off by default; the E2E
 # build (app/scripts/e2e-build.sh) flips it on. Shipped binaries never have
 # this feature so the wipe RPC isn't even registered, let alone reachable.
 e2e-test-support = []

@@ -215,7 +215,7 @@ const DiscordConfig = ({ definition }: DiscordConfigProps) => {
             );
             try {
               const oauthResponse = await callCoreRpc<{ result: { oauthUrl?: string } }>({
-                method: 'openhuman.auth.oauth_connect',
+                method: 'neppy.auth.oauth_connect',
                 params: { provider: 'discord', skillId: 'discord' },
               });
               if (oauthResponse.result?.oauthUrl) {

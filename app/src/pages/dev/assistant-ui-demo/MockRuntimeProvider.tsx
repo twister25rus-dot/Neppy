@@ -22,7 +22,7 @@ import { createContext, type ReactNode, useContext, useId, useMemo, useRef, useS
 
 import { buildSeedMessages, mockChatModelAdapter } from './assistantUiMock';
 
-const debug = debugFactory('openhuman:assistant-ui-demo');
+const debug = debugFactory('neppy:assistant-ui-demo');
 
 /**
  * Which thread gets the seeded transcript.

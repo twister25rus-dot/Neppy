@@ -101,7 +101,7 @@ and is tested:
 3. Sending: the composer must reach the same path the legacy composer used.
    `useNeppyExternalStore.onNew` is the seam; verify it is wired before
    removing the legacy pane, not after. The adapter deliberately exposes no
-   `onEdit`: `openhuman.threads_message_update` updates metadata only, not
+   `onEdit`: `neppy.threads_message_update` updates metadata only, not
    message content, so advertising assistant-ui's edit capability would create
    a button the core cannot honour.
 
@@ -170,7 +170,7 @@ Two candidate sources, both real:
 | Source                | File                                                                                                   | Shape                                                                |
 | --------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
 | Live, per-session     | `chatRuntimeSlice` — `emptySessionTokenUsage`, `SubAgentUsage`                                         | already consumed by `app/src/components/chat/ComposerTokenStats.tsx` |
-| Persisted, per-thread | `openhuman.threads_token_usage` via `app/src/services/api/threadUsageApi.ts` (`fetchThreadTokenUsage`) | `ThreadTokenUsage`                                                   |
+| Persisted, per-thread | `neppy.threads_token_usage` via `app/src/services/api/threadUsageApi.ts` (`fetchThreadTokenUsage`) | `ThreadTokenUsage`                                                   |
 
 ### Steps
 
@@ -187,7 +187,7 @@ Two candidate sources, both real:
    follow the model picker; `context_window` on `TurnUsageWire` is `0` in some
    cases (see the comment there) — decide what the meter shows then, rather than
    dividing by zero.
-4. Cost for a _thread_ may want `openhuman.cost_get_summary` from
+4. Cost for a _thread_ may want `neppy.cost_get_summary` from
    `src/neppy/platform/cost/` instead of a per-turn sum. Check `README.md` in
    that directory before choosing.
 
@@ -206,7 +206,7 @@ goal, end to end:
 - UI: [`app/src/features/conversations/components/ThreadGoalChip.tsx`](../../app/src/features/conversations/components/ThreadGoalChip.tsx)
   — "Set goal" when empty, status + objective when set, click to edit.
 - Client: [`app/src/services/api/threadGoalApi.ts`](../../app/src/services/api/threadGoalApi.ts)
-  — `openhuman.thread_goals_get` / `_set` / `_complete`.
+  — `neppy.thread_goals_get` / `_set` / `_complete`.
 - Core: `src/neppy/threads/goals/` — set, get, complete, pause, resume,
   clear, with `objective`, `token_budget`, `result`. Persisted per thread under
   `<workspace>/thread_goals/<hex(thread_id)>.json`.

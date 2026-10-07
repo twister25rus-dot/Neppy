@@ -68,6 +68,12 @@ const RESOURCE_CATALOG: &[PromptResource] = &[
         content: include_str!("../../agent/registry/agents/code_executor/prompt.md"),
     },
     PromptResource {
+        uri: "neppy://prompts/agents/debug_agent",
+        name: "debug_agent",
+        description: "Debug Mode coding agent scoped to the application's own repository.",
+        content: include_str!("../../agent/registry/agents/debug_agent/prompt.md"),
+    },
+    PromptResource {
         uri: "neppy://prompts/agents/integrations_agent",
         name: "integrations_agent",
         description: "Worker that executes Composio integration actions.",

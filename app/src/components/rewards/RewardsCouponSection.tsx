@@ -7,7 +7,7 @@ import { useCoreState } from '../../providers/CoreStateProvider';
 import { type CreditBalance, creditsApi, type RedeemedCoupon } from '../../services/api/creditsApi';
 import { Button, TextField } from '../ui';
 
-const log = createDebug('openhuman:rewards-coupons');
+const log = createDebug('neppy:rewards-coupons');
 
 function formatUsd(amount: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);

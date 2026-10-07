@@ -1,7 +1,7 @@
 //! iMessage local-database scanner.
 //!
 //! Reads `~/Library/Messages/chat.db` on macOS (read-only) and emits one
-//! `openhuman.memory_doc_ingest` JSON-RPC call per `(chat_identifier, day)`
+//! `neppy.memory_doc_ingest` JSON-RPC call per `(chat_identifier, day)`
 //! group — matching the convention codified in
 //! `gitbooks/developing/webview-integration.md` and used by the WhatsApp scanner.
 //!
@@ -199,7 +199,7 @@ async fn fetch_imessage_gate() -> anyhow::Result<Option<Vec<String>>> {
     let body = json!({
         "jsonrpc": "2.0",
         "id": 1,
-        "method": "openhuman.config_get",
+        "method": "neppy.config_get",
         "params": {}
     });
     let req = crate::core_rpc::apply_auth(http_client().post(&url)).map_err(anyhow::Error::msg)?;
@@ -428,7 +428,7 @@ async fn ingest_group(account_id: &str, key: &str, transcript: String) -> anyhow
     let body = json!({
         "jsonrpc": "2.0",
         "id": 1,
-        "method": "openhuman.memory_doc_ingest",
+        "method": "neppy.memory_doc_ingest",
         "params": {
             "namespace": format!("imessage:{}", account_id),
             "key": key,

@@ -9,7 +9,7 @@
 //!
 //! ## Surface
 //!
-//! - **RPC controllers** (`schemas.rs` / `ops.rs`) — `openhuman.composio_*`
+//! - **RPC controllers** (`schemas.rs` / `ops.rs`) — `neppy.composio_*`
 //!   methods for listing toolkits, managing connections, listing tools,
 //!   and executing actions. These are registered in
 //!   [`crate::core::all`] alongside other domains.

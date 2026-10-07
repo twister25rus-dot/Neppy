@@ -768,7 +768,7 @@ export default function CoreStateProvider({ children }: { children: ReactNode })
   //    threads poll, …). Multiple parallel chains can fire it in the
   //    same frame after a token expires; the 10s debounce coalesces
   //    them so `clearSession` only runs once.
-  // 2. `openhuman:session-expired` — emitted by `socketService` when
+  // 2. `neppy:session-expired` — emitted by `socketService` when
   //    the core pushes `auth:session_expired` over Socket.IO (the
   //    Neppy backend provider's `api_error` published
   //    `DomainEvent::SessionExpired`, or `jsonrpc::invoke_method`
@@ -883,10 +883,10 @@ export default function CoreStateProvider({ children }: { children: ReactNode })
     };
 
     window.addEventListener('core-rpc-auth-expired', onRpcExpired as EventListener);
-    window.addEventListener('openhuman:session-expired', onSocketExpired as EventListener);
+    window.addEventListener('neppy:session-expired', onSocketExpired as EventListener);
     return () => {
       window.removeEventListener('core-rpc-auth-expired', onRpcExpired as EventListener);
-      window.removeEventListener('openhuman:session-expired', onSocketExpired as EventListener);
+      window.removeEventListener('neppy:session-expired', onSocketExpired as EventListener);
     };
   }, [clearSession]);
 

@@ -152,7 +152,7 @@ impl CoreContext {
 
         // 4. Seed the per-process RPC bearer. `Fixed` seeds the in-memory value
         //    directly (never touches the env); `EnvOrFile` reads
-        //    OPENHUMAN_CORE_TOKEN or generates + writes {root}/core.token.
+        //    NEPPY_CORE_TOKEN or generates + writes {root}/core.token.
         //
         //    `has_operator_token` records whether an OPERATOR-supplied bearer
         //    exists (in-memory handoff or env var). The self-generated core.token
@@ -186,7 +186,7 @@ impl CoreContext {
                         })
                     });
                 crate::core::auth::init_rpc_token(&token_dir)?;
-                std::env::var(crate::core::auth::CORE_TOKEN_ENV_VAR)
+                crate::neppy::util::env::var(crate::core::auth::CORE_TOKEN_ENV_VAR)
                     .ok()
                     .filter(|s| !s.trim().is_empty())
                     .is_some()
@@ -218,7 +218,7 @@ impl CoreContext {
                      Config::load_or_init failed ({e:#}). Memory persistence is \
                      DISABLED for this run; no silent fallback to the default \
                      workspace (which would cause chunk loss / cross-workspace \
-                     bleed-over). Fix config.toml or set OPENHUMAN_WORKSPACE to a \
+                     bleed-over). Fix config.toml or set NEPPY_WORKSPACE to a \
                      writable path, then restart."
                 );
                 None
@@ -282,7 +282,7 @@ impl CoreContext {
             .clone()
             .ok_or_else(|| {
                 "workspace unavailable: Config::load_or_init failed during core boot; \
-                 fix config.toml or OPENHUMAN_WORKSPACE and restart"
+                 fix config.toml or NEPPY_WORKSPACE and restart"
                     .to_string()
             })
     }
@@ -318,7 +318,7 @@ impl CoreContext {
         drop(binding);
         let workspace_dir = workspace_dir.ok_or_else(|| {
             "workspace unavailable: Config::load_or_init failed during core boot; \
-             fix config.toml or OPENHUMAN_WORKSPACE and restart"
+             fix config.toml or NEPPY_WORKSPACE and restart"
                 .to_string()
         })?;
         crate::neppy::memory::binding::for_workspace(&workspace_dir, &memory_subsystem)
@@ -524,7 +524,7 @@ impl CoreContext {
 /// the remaining holders construct it on first use.
 ///
 /// A `Config::load_or_init` failure here is operator-visible and serious
-/// (corrupt toml, bad permissions, missing/unwritable `OPENHUMAN_WORKSPACE` —
+/// (corrupt toml, bad permissions, missing/unwritable `NEPPY_WORKSPACE` —
 /// common on headless/containerised deploys with no writable `$HOME`).
 /// Previously the fallback to `Config::default()` initialised the memory
 /// store against the *wrong* workspace dir, silently causing
@@ -533,7 +533,7 @@ impl CoreContext {
 /// memory stays explicitly *uninitialised* — callers then get a clear "memory
 /// client not ready" error rather than reading/writing the wrong workspace. The
 /// server still comes up; the operator sees the loud error and fixes their
-/// config or sets `OPENHUMAN_WORKSPACE` to a writable path, then restarts.
+/// config or sets `NEPPY_WORKSPACE` to a writable path, then restarts.
 /// Per-`DomainGroup` gating decision for each workspace-bound store that
 /// [`init_stores`] initializes. Extracted as a pure value so the store-gating
 /// mapping (which store is owned by which `DomainGroup`) has a single source of
@@ -627,7 +627,7 @@ pub async fn init_stores(
         // `memory::global` is a lazy singleton, so the callers that still hold
         // an in-process handle (`memory::ops::helpers::active_memory_client`,
         // `agent::experience::ops`, the session builder's shared-experience
-        // handle, `openhuman memory ingest`/`query`) construct it on first use
+        // handle, `neppy-core memory ingest`/`query`) construct it on first use
         // exactly as before. What changes is that a boot which never reaches
         // one no longer pays for it — and that the engine's own lifetime is now
         // owned by the code that still needs it rather than by kernel boot.

@@ -68,7 +68,7 @@ impl HookRun {
 /// Run one hook against one event.
 ///
 /// `env` carries session-scoped variables contributed by an earlier
-/// `sessionStart` hook, plus the ambient `OPENHUMAN_*` variables the engine
+/// `sessionStart` hook, plus the ambient `NEPPY_*` variables the engine
 /// adds. Never returns `Err`: a hook that cannot run is a [`HookRun`] with an
 /// `error` and either an empty output (fail-open) or a denial (fail-closed).
 pub async fn run(
@@ -283,20 +283,27 @@ fn truncate(text: &str, max_chars: usize) -> String {
 /// Neppy names so a script written for either host finds its project root
 /// without an Neppy-specific branch.
 pub fn ambient_env(input: &HookInput) -> BTreeMap<String, String> {
-    let mut env = BTreeMap::new();
+    let mut env: BTreeMap<String, String> = BTreeMap::new();
     if let Some(root) = input.workspace_roots.first() {
-        env.insert("OPENHUMAN_PROJECT_DIR".into(), root.clone());
+        env.insert("NEPPY_PROJECT_DIR".into(), root.clone());
         env.insert("CLAUDE_PROJECT_DIR".into(), root.clone());
         env.insert("CURSOR_PROJECT_DIR".into(), root.clone());
     }
-    env.insert("OPENHUMAN_VERSION".into(), input.neppy_version.clone());
-    env.insert("OPENHUMAN_HOOK_EVENT".into(), input.hook_event_name.clone());
+    env.insert("NEPPY_VERSION".into(), input.neppy_version.clone());
+    env.insert("NEPPY_HOOK_EVENT".into(), input.hook_event_name.clone());
     if let Some(session) = &input.session_id {
-        env.insert("OPENHUMAN_SESSION_ID".into(), session.clone());
+        env.insert("NEPPY_SESSION_ID".into(), session.clone());
     }
     if let Some(agent) = &input.agent_id {
-        env.insert("OPENHUMAN_AGENT_ID".into(), agent.clone());
+        env.insert("NEPPY_AGENT_ID".into(), agent.clone());
     }
+    // Hook scripts written before the rebrand read the `NEPPY_*` spellings;
+    // keep exporting them next to the canonical names.
+    let legacy: Vec<(String, String)> = env
+        .iter()
+        .filter_map(|(k, v)| crate::neppy::util::env::legacy_name(k).map(|l| (l, v.clone())))
+        .collect();
+    env.extend(legacy);
     env
 }
 

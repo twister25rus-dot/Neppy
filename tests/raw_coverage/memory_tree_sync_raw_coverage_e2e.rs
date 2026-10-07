@@ -53,7 +53,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<Path>) -> Self {
-        let old = std::env::var_os(key);
+        let old = neppy_core::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value.as_ref());
         }
@@ -61,7 +61,7 @@ impl EnvVarGuard {
     }
 
     fn set_str(key: &'static str, value: &str) -> Self {
-        let old = std::env::var_os(key);
+        let old = neppy_core::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value);
         }
@@ -74,7 +74,7 @@ impl Drop for EnvVarGuard {
         unsafe {
             match &self.old {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -321,8 +321,8 @@ async fn bucket_seal_deferred_and_fallback_paths_preserve_buffers_and_labels() {
 async fn composio_providers_sync_state_and_bus_surfaces_cover_read_write_edges() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", tmp.path());
-    let _triage = EnvVarGuard::set_str("OPENHUMAN_TRIGGER_TRIAGE_DISABLED", "yes");
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", tmp.path());
+    let _triage = EnvVarGuard::set_str("NEPPY_TRIGGER_TRIAGE_DISABLED", "yes");
 
     let matrix = capability_matrix();
     assert!(matrix

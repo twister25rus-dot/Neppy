@@ -36,10 +36,7 @@ describe('agentLibraryApi', () => {
     await expect(agentLibraryApi.listDefinitions()).resolves.toMatchObject([
       { id: 'researcher', write_capable: false },
     ]);
-    expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_list_definitions',
-      params: {},
-    });
+    expect(mockCall).toHaveBeenCalledWith({ method: 'neppy.agent_list_definitions', params: {} });
   });
 
   it('tolerates a missing definitions field', async () => {

@@ -5,9 +5,9 @@
 # Talks to a running core (`neppy-core serve`, or the desktop app's embedded
 # core) over http://127.0.0.1:<port>/rpc with the core's bearer token.
 #
-#   OPENHUMAN_CORE_PORT   core port (default 7788)
-#   OPENHUMAN_CORE_TOKEN  bearer; when unset, scripts/print-core-token.sh is
-#                         used (reads $OPENHUMAN_WORKSPACE/core.token)
+#   NEPPY_CORE_PORT   core port (default 7788)
+#   NEPPY_CORE_TOKEN  bearer; when unset, scripts/print-core-token.sh is
+#                         used (reads $NEPPY_WORKSPACE/core.token)
 #
 # Usage:
 #   la.sh start-task <project_root> "<goal>" [--edits] [--test "<cmd>"] [--max-steps N]
@@ -26,12 +26,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PORT="${OPENHUMAN_CORE_PORT:-7788}"
+PORT="${NEPPY_CORE_PORT:-7788}"
 URL="http://127.0.0.1:${PORT}/rpc"
 
 token() {
-  if [[ -n "${OPENHUMAN_CORE_TOKEN:-}" ]]; then
-    printf '%s' "$OPENHUMAN_CORE_TOKEN"
+  if [[ -n "${NEPPY_CORE_TOKEN:-}" ]]; then
+    printf '%s' "$NEPPY_CORE_TOKEN"
   else
     bash "$SCRIPT_DIR/../print-core-token.sh"
   fi
@@ -82,20 +82,20 @@ case "$cmd" in
       if (steps) p.max_steps = Number(steps);
       process.stdout.write(JSON.stringify(p));
     ' "$root" "$goal" "$edits" "$test_cmd" "$max_steps")
-    rpc openhuman.local_assistant_start_task "$params" ;;
-  status)      rpc openhuman.local_assistant_status "{\"task_id\":\"${1:?task_id required}\"}" ;;
-  list)        rpc openhuman.local_assistant_list "{\"limit\":${1:-20}}" ;;
-  pause)       rpc openhuman.local_assistant_set_enabled '{"enabled":false}' ;;
+    rpc neppy.local_assistant_start_task "$params" ;;
+  status)      rpc neppy.local_assistant_status "{\"task_id\":\"${1:?task_id required}\"}" ;;
+  list)        rpc neppy.local_assistant_list "{\"limit\":${1:-20}}" ;;
+  pause)       rpc neppy.local_assistant_set_enabled '{"enabled":false}' ;;
   resume)
-    if [[ -n "${1:-}" ]]; then rpc openhuman.local_assistant_resume "{\"task_id\":\"$1\"}"
-    else rpc openhuman.local_assistant_set_enabled '{"enabled":true}'; fi ;;
-  cancel)      rpc openhuman.local_assistant_cancel "{\"task_id\":\"${1:?task_id required}\"}" ;;
-  worker-status) rpc openhuman.mlx_worker_status '{}' ;;
+    if [[ -n "${1:-}" ]]; then rpc neppy.local_assistant_resume "{\"task_id\":\"$1\"}"
+    else rpc neppy.local_assistant_set_enabled '{"enabled":true}'; fi ;;
+  cancel)      rpc neppy.local_assistant_cancel "{\"task_id\":\"${1:?task_id required}\"}" ;;
+  worker-status) rpc neppy.mlx_worker_status '{}' ;;
   metrics)
     since="${1:-0}"; limit="${2:-200}"; events=false
     [[ "${3:-}" == "--events" ]] && events=true
-    rpc openhuman.mlx_worker_metrics "{\"since_ms\":$since,\"limit\":$limit,\"events_only\":$events}" ;;
-  stop-worker) rpc openhuman.mlx_stop "{\"id\":\"${1:-primary}\"}" ;;
+    rpc neppy.mlx_worker_metrics "{\"since_ms\":$since,\"limit\":$limit,\"events_only\":$events}" ;;
+  stop-worker) rpc neppy.mlx_stop "{\"id\":\"${1:-primary}\"}" ;;
   raw)         method="${1:?method required}"; params="${2:-}"; [[ -z "$params" ]] && params='{}'; rpc "$method" "$params" ;;
   ""|-h|--help|help) usage ;;
   *) echo "la.sh: unknown command '$cmd'" >&2; usage >&2; exit 2 ;;

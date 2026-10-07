@@ -1,4 +1,4 @@
-//! JSON-RPC surface for the plan-review gate: `openhuman.plan_review_decide`
+//! JSON-RPC surface for the plan-review gate: `neppy.plan_review_decide`
 //! resolves a parked interactive turn (approve / reject / revise-with-feedback).
 
 use serde::de::DeserializeOwned;

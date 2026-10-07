@@ -8,9 +8,9 @@ import {
 } from '../helpers/core-rpc';
 
 async function resetOnboarding(userId: string): Promise<void> {
-  await callCoreRpc('openhuman.auth_clear_session', {});
-  await callCoreRpc('openhuman.config_set_onboarding_completed', { value: false });
-  await callCoreRpc('openhuman.auth_store_session', {
+  await callCoreRpc('neppy.auth_clear_session', {});
+  await callCoreRpc('neppy.config_set_onboarding_completed', { value: false });
+  await callCoreRpc('neppy.auth_store_session', {
     token: `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.${Buffer.from(
       JSON.stringify({ sub: userId, userId, exp: Math.floor(Date.now() / 1000) + 3600 })
     ).toString('base64url')}.sig`,

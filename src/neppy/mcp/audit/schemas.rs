@@ -148,7 +148,7 @@ mod tests {
         assert_eq!(controllers.len(), 1);
         assert_eq!(controllers[0].schema.namespace, "mcp_audit");
         assert_eq!(controllers[0].schema.function, "list");
-        assert_eq!(controllers[0].rpc_method_name(), "openhuman.mcp_audit_list");
+        assert_eq!(controllers[0].rpc_method_name(), "neppy.mcp_audit_list");
     }
 
     #[test]
@@ -169,7 +169,7 @@ mod tests {
             .unwrap_or_else(|err| err.into_inner());
         let tmp = tempfile::tempdir().expect("tempdir");
         unsafe {
-            std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+            std::env::set_var("NEPPY_WORKSPACE", tmp.path());
         }
 
         let config = config_rpc::load_config_with_timeout()
@@ -195,8 +195,6 @@ mod tests {
         assert_eq!(records[0]["tool_name"], "memory.store");
         assert_eq!(records[0]["client_info"], "mcp:test");
 
-        unsafe {
-            std::env::remove_var("OPENHUMAN_WORKSPACE");
-        }
+        crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
     }
 }

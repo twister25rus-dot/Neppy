@@ -7,7 +7,7 @@
 #   - `.github/workflows/release-production.yml` — pretest gate, all 3 OS, full suite.
 #
 # Recipe (see e2e-run-session.sh):
-#   1. Build the app via `pnpm --filter openhuman-app test:e2e:build`.
+#   1. Build the app via `pnpm --filter neppy-app test:e2e:build`.
 #   2. Run `app/scripts/e2e-run-session.sh` which:
 #        - starts tauri-driver and waits for its /status endpoint,
 #        - runs WDIO against `wdio.conf.ts`.
@@ -77,7 +77,7 @@ env:
   # Desktop E2E exercises the shipped app and does not execute skills. Avoid
   # asynchronously provisioning the optional managed Node runtime during core
   # startup, which can delay the ready signal past the harness timeout.
-  OPENHUMAN_NODE_ENABLED: "0"
+  NEPPY_NODE_ENABLED: "0"
 
 jobs:
   # Selected-spec gate for PR/push (full=false). The full-suite path lives in
@@ -185,7 +185,7 @@ jobs:
             >> "$GITHUB_ENV"
 
       - name: Build E2E app
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:build
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:build
 
       - name: Run E2E (${{ inputs.spec_label }})
         if: ${{ !inputs.full }}
@@ -267,7 +267,7 @@ jobs:
           touch app/.env
 
       - name: Build E2E app
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:build
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:build
 
       - name: Package build artifact
         run: |
@@ -575,7 +575,7 @@ jobs:
           bash scripts/ci-cancel-aware.sh appium driver install --source=npm appium-chromium-driver >/dev/null 2>&1 || true
 
       - name: Build E2E app
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:build
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:build
 
       # macOS rejects dynamic-framework loads from unsigned bundles — adhoc
       # signing satisfies the loader without a real developer-ID cert.
@@ -673,7 +673,7 @@ jobs:
           bash scripts/ci-cancel-aware.sh appium driver install --source=npm appium-chromium-driver >/dev/null 2>&1 || true
 
       - name: Build E2E app
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:build
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:build
 
       - name: Run E2E (${{ inputs.spec_label }})
         shell: bash
@@ -770,7 +770,7 @@ jobs:
           touch app/.env
 
       - name: Build E2E app
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:build
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:build
 
       - name: Clippy (macOS-gated Rust)
         run: bash scripts/ci-cancel-aware.sh pnpm rust:clippy
@@ -970,7 +970,7 @@ jobs:
           touch app/.env
 
       - name: Build E2E app
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:build
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:build
 
       - name: Package build artifact
         shell: bash

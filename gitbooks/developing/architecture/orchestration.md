@@ -75,14 +75,14 @@ a decoupled writer: never an edge in the wake graph, never a channel/effect.
 ## RPC + UI (stage 7)
 
 Renderer-only controllers (internal registry) in `orchestration/schemas.rs`:
-`openhuman.orchestration_{sessions_list, messages_list, send_master_message,
+`neppy.orchestration_{sessions_list, messages_list, send_master_message,
 mark_read, status}`. Live updates ride an `orchestration:message` socket event
 (`bus.rs` broadcast → `core/socketio.rs` bridge) fanned out for every persisted
 chat message. The Brain → Orchestration tab (`TinyPlaceOrchestrationTab.tsx` +
 `useOrchestrationChats.ts`) reads real store classification, live-updates, and lets
 the owner steer the front-end agent from the Master composer.
 
-The `openhuman.orchestration_run` renderer RPC is the direct request/response
+The `neppy.orchestration_run` renderer RPC is the direct request/response
 entry point for the backend's paid Medulla engine. It performs a paid-plan
 preflight, advertises Neppy's local contact, session-history, and
 send-to-agent tools, and executes requested calls on the device. Tool results

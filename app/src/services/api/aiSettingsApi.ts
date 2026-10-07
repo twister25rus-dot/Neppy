@@ -4,8 +4,8 @@
  * Sits between the panel's React state and the Rust JSON-RPC core. Three
  * orthogonal surfaces in one place:
  *
- *  1. Cloud providers + per-workload routing → `openhuman.inference_update_model_settings`
- *  2. API keys for cloud providers           → `openhuman.auth_*_provider_credentials`
+ *  1. Cloud providers + per-workload routing → `neppy.inference_update_model_settings`
+ *  2. API keys for cloud providers           → `neppy.auth_*_provider_credentials`
  *                                              (encrypted at rest in
  *                                              `auth-profiles.json`)
  *  3. Local provider (Ollama) status + models → existing `localAi.ts` exports
@@ -206,7 +206,7 @@ export function upsertModelRegistryVision(
 
 /**
  * Parse a stored provider string (e.g. `"openai:gpt-4o"`) into a structured
- * ProviderRef. Empty/null/`"cloud"` → openhuman. Mirrors the Rust factory grammar.
+ * ProviderRef. Empty/null/`"cloud"` → neppy. Mirrors the Rust factory grammar.
  *
  * New grammar: `"<slug>:<model>"`. Legacy bare sentinels:
  *   - `"openhuman"` → { kind: 'openhuman' }
@@ -243,7 +243,7 @@ export function parseProviderString(s: string | null | undefined): ProviderRef {
       ? { kind: 'cloud', providerSlug: slug, model }
       : { kind: 'cloud', providerSlug: slug, model, temperature };
   }
-  // Unrecognised bare string → fall back to openhuman.
+  // Unrecognised bare string → fall back to neppy.
   return { kind: 'openhuman' };
 }
 
@@ -659,7 +659,7 @@ export function describeProviderVerificationFailure(
  * Prove a freshly configured provider can actually run inference (#5146 §2.4).
  *
  * Runs one real, minimal completion through the existing
- * `openhuman.inference_test_provider_model` RPC. Never throws: a provider that
+ * `neppy.inference_test_provider_model` RPC. Never throws: a provider that
  * cannot serve a request is a *result*, not an exception, because the caller
  * always wants to show it rather than lose the save.
  */
@@ -718,7 +718,7 @@ export async function clearCloudProviderKey(slug: string): Promise<void> {
 
 export async function startOpenAiCodexOAuth(): Promise<OpenAiCodexOAuthStartResult> {
   const res = await callCoreRpc<{ result: OpenAiCodexOAuthStartResult }>({
-    method: 'openhuman.inference_openai_oauth_start',
+    method: 'neppy.inference_openai_oauth_start',
     params: {},
   });
   const authUrl = res?.result?.authUrl?.trim();
@@ -734,13 +734,13 @@ export async function completeOpenAiCodexOAuth(callbackUrl: string): Promise<voi
     throw new Error(OPENAI_CODEX_OAUTH_MISSING_CALLBACK_URL);
   }
   await callCoreRpc({
-    method: 'openhuman.inference_openai_oauth_complete',
+    method: 'neppy.inference_openai_oauth_complete',
     params: { callback_url: callback },
   });
 }
 
 export async function importOpenAiCodexCliAuth(): Promise<void> {
-  await callCoreRpc({ method: 'openhuman.inference_openai_oauth_import_codex_cli', params: {} });
+  await callCoreRpc({ method: 'neppy.inference_openai_oauth_import_codex_cli', params: {} });
 }
 
 /**
@@ -769,7 +769,7 @@ export async function listProviderModels(providerId: string): Promise<ModelInfo[
     return [];
   }
   const res = await callCoreRpc<{ result: { models: ModelInfo[] } }>({
-    method: 'openhuman.inference_list_models',
+    method: 'neppy.inference_list_models',
     params: { provider_id: providerId },
   });
   return res?.result?.models ?? [];
@@ -795,7 +795,7 @@ export async function loadProviderAuthErrors(): Promise<ProviderAuthError[]> {
     return [];
   }
   const res = await callCoreRpc<{ result: { errors: ProviderAuthError[] } }>({
-    method: 'openhuman.inference_provider_auth_errors',
+    method: 'neppy.inference_provider_auth_errors',
     params: {},
   });
   return res?.result?.errors ?? [];
@@ -810,13 +810,13 @@ export async function testProviderModel(
     throw new Error('Model testing is only available in the desktop app.');
   }
   const res = await callCoreRpc<{ result: ProviderModelTestResult }>({
-    method: 'openhuman.inference_test_provider_model',
+    method: 'neppy.inference_test_provider_model',
     params: { workload, provider, prompt },
     timeoutMs: PROVIDER_MODEL_TEST_TIMEOUT_MS,
   });
   if (!res?.result) {
     throw new Error(
-      `Model test RPC returned no result for ${workload} via ${provider} (openhuman.inference_test_provider_model).`
+      `Model test RPC returned no result for ${workload} via ${provider} (neppy.inference_test_provider_model).`
     );
   }
   return res.result;

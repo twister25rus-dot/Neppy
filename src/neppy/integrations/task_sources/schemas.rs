@@ -1,5 +1,5 @@
 //! JSON-RPC controller surface for the `task_sources` domain
-//! (`openhuman.task_sources_*`).
+//! (`neppy.task_sources_*`).
 //!
 //! Mirrors the `cron` domain: a `schemas(fn)` metadata switch, an
 //! `all_*` registry pair, and thin handlers that parse params and

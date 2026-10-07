@@ -142,6 +142,14 @@ impl Agent {
         read_only_tools_only: bool,
         profile: Option<&crate::neppy::agent::profiles::AgentProfile>,
     ) -> Result<Self> {
+        // Top-level choke point: `debug_agent` is built only inside a
+        // Debug-mode turn (the sub-agent twin lives in `run_subagent`). The
+        // resolved definition's id is checked too, since a workspace override
+        // can resolve a different id than the one asked for.
+        for id in std::iter::once(agent_id).chain(target_def.map(|d| d.id.as_str())) {
+            crate::neppy::agent::debug_mode::turn::ensure_agent_allowed(id)
+                .map_err(|e| anyhow::anyhow!(e))?;
+        }
         if crate::neppy::pet::agent_forbids_memory_writes(agent_id) {
             // A workspace TOML can replace the built-in definition; refuse to
             // build the lane unless it is still the closed read-only one (the

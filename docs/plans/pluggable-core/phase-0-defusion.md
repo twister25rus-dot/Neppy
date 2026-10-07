@@ -31,7 +31,7 @@ Rules:
 - Every extracted fn takes the `CancellationToken` explicitly (today some
   blocks capture it, some don't — normalize).
 - Existing gates stay _inside_ the fns for now (`config.cron.enabled`,
-  `config.heartbeat.enabled`, `OPENHUMAN_DISABLE_CHANNEL_LISTENERS`,
+  `config.heartbeat.enabled`, `NEPPY_DISABLE_CHANNEL_LISTENERS`,
   `has_listening_integrations()`), so call sites don't change semantics.
   Phase 1 lifts the _selection_ (should this service exist) to `ServiceSet`
   while the fns keep their _config_ gates (is it enabled for this user).

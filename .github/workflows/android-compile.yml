@@ -158,7 +158,7 @@ jobs:
           CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang
         run: |
           bash scripts/ci-cancel-aware.sh \
-            pnpm --filter openhuman-app tauri:android:build --aab --target aarch64 --target armv7
+            pnpm --filter neppy-app tauri:android:build --aab --target aarch64 --target armv7
 
       - name: Resolve AAB
         id: aab

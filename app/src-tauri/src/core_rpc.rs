@@ -5,9 +5,9 @@ use std::time::Duration;
 use reqwest::RequestBuilder;
 use serde::Serialize;
 
-const CORE_RPC_URL_ENV: &str = "OPENHUMAN_CORE_RPC_URL";
+const CORE_RPC_URL_ENV: &str = "NEPPY_CORE_RPC_URL";
 pub(crate) fn core_rpc_url_value() -> String {
-    std::env::var(CORE_RPC_URL_ENV).unwrap_or_else(|_| {
+    neppy_core::neppy::util::env::var(CORE_RPC_URL_ENV).unwrap_or_else(|_| {
         format!(
             "http://127.0.0.1:{}/rpc",
             crate::core_process::default_core_port()

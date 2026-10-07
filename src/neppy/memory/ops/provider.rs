@@ -26,8 +26,8 @@ use crate::rpc::RpcOutcome;
 /// pre-login core) is *reported*, not raised. A status surface that errors
 /// exactly when something is wrong is the opposite of useful.
 ///
-/// A standalone CLI subcommand (`openhuman subsystems status`,
-/// `openhuman memory status`) never builds a [`CoreContext`] — the generic
+/// A standalone CLI subcommand (`neppy-core subsystems status`,
+/// `neppy-core memory status`) never builds a [`CoreContext`] — the generic
 /// namespace dispatcher runs without one — so this resolves the configured
 /// workspace's binding directly via [`standalone_status`] instead of reporting
 /// an unresolved row. In an RPC host a context is always ambient, so that path
@@ -42,7 +42,7 @@ pub async fn memory_subsystem_status() -> SubsystemStatus {
 
 /// Resolve status from the on-disk config when no [`CoreContext`] is ambient
 /// (a bare CLI invocation). Reads the configured workspace's binding the same
-/// way `cli_capability::bound_memory_driver_for` does, so `openhuman subsystems
+/// way `cli_capability::bound_memory_driver_for` does, so `neppy-core subsystems
 /// status` shows the same resolved row as the table and as an RPC with a live
 /// context.
 ///

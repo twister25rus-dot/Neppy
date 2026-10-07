@@ -159,7 +159,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: impl AsRef<str>) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe {
             std::env::set_var(key, value.as_ref());
         }
@@ -172,7 +172,7 @@ impl Drop for EnvGuard {
         unsafe {
             match self.old.as_deref() {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -237,7 +237,7 @@ async fn web_start_chat_validation_forced_error_and_cancel_paths_are_structured(
     );
 
     web_test_support::set_forced_run_chat_task_error_for_test(Some(
-        "All providers/models failed. Attempts: openhuman API error (503 Service Unavailable)",
+        "All providers/models failed. Attempts: neppy API error (503 Service Unavailable)",
     ))
     .await;
     let mut rx = subscribe_web_channel_events();

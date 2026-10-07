@@ -50,11 +50,11 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       // Also connect the Rust sidecar to backend-alphahuman so inbound
       // Discord/Telegram managed-DM messages reach the agent loop.
       if (!localSession) {
-        void callCoreRpc({ method: 'openhuman.socket_connect_with_session', params: {} }).catch(
+        void callCoreRpc({ method: 'neppy.socket_connect_with_session', params: {} }).catch(
           (err: unknown) => {
             // Non-fatal: sidecar may not be running yet or backend unreachable.
             console.error(
-              '[SocketProvider] openhuman.socket_connect_with_session: RPC connection failed (non-fatal) — sidecar may not be running yet or backend unreachable',
+              '[SocketProvider] neppy.socket_connect_with_session: RPC connection failed (non-fatal) — sidecar may not be running yet or backend unreachable',
               err
             );
             // (#1527) Surface the failure into the core connectivity channel so

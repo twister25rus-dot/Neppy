@@ -53,20 +53,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -75,7 +75,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -172,14 +172,14 @@ async fn setup(capability_providers: &str) -> TestHarness {
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
-        EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace),
+        EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::unset("NEPPY_API_URL"),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
 
     let (addr, rpc_join) = serve_rpc().await;
@@ -323,7 +323,7 @@ enabled = true
     let diagnostics = rpc(
         &harness.rpc_base,
         10,
-        "openhuman.tool_registry_diagnostics",
+        "neppy.tool_registry_diagnostics",
         json!({}),
     )
     .await;
@@ -386,7 +386,7 @@ enabled = true
     let list = rpc(
         &harness.rpc_base,
         11,
-        "openhuman.tool_registry_list",
+        "neppy.tool_registry_list",
         json!({}),
     )
     .await;
@@ -404,7 +404,7 @@ enabled = true
     let found = rpc(
         &harness.rpc_base,
         12,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": format!("  {first_tool_id}  ") }),
     )
     .await;
@@ -418,7 +418,7 @@ enabled = true
     let empty = rpc(
         &harness.rpc_base,
         13,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": "   " }),
     )
     .await;
@@ -427,7 +427,7 @@ enabled = true
     let missing = rpc(
         &harness.rpc_base,
         14,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": "missing.tool" }),
     )
     .await;
@@ -711,7 +711,7 @@ async fn tool_registry_entries_include_connected_mcp_client_tools() {
 #[tokio::test]
 async fn tool_registry_schema_handlers_validate_and_return_payloads() {
     // Acquire the env lock — this test loads Config via the diagnostics
-    // handler, and a sibling test temporarily points OPENHUMAN_WORKSPACE at
+    // handler, and a sibling test temporarily points NEPPY_WORKSPACE at
     // a file to exercise the load-failure branch. Without the lock those
     // two can race and this test sees the corrupted env.
     let _lock = env_lock();
@@ -789,7 +789,7 @@ async fn tool_registry_diagnostics_reports_config_and_audit_store_failures() {
     let tmp = tempdir().expect("tempdir");
     let workspace_file = tmp.path().join("workspace-file");
     std::fs::write(&workspace_file, "not a directory").expect("workspace sentinel");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_file);
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_file);
 
     let err = neppy_core::neppy::tools::registry::ops::diagnostics()
         .await
@@ -1291,7 +1291,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
         let pending = rpc(
             &harness.rpc_base,
             20,
-            "openhuman.approval_list_pending",
+            "neppy.approval_list_pending",
             json!({}),
         )
         .await;
@@ -1319,7 +1319,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let invalid = rpc(
         &harness.rpc_base,
         21,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({ "request_id": request_id, "decision": "maybe" }),
     )
     .await;
@@ -1328,7 +1328,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let decide = rpc(
         &harness.rpc_base,
         22,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({
             "request_id": request_id,
             "decision": "approve_always_for_tool"
@@ -1363,7 +1363,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let duplicate_decide = rpc(
         &harness.rpc_base,
         23,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({ "request_id": request_id, "decision": "deny" }),
     )
     .await;
@@ -1372,7 +1372,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let recent = rpc(
         &harness.rpc_base,
         24,
-        "openhuman.approval_list_recent_decisions",
+        "neppy.approval_list_recent_decisions",
         json!({ "limit": 1 }),
     )
     .await;
@@ -1527,7 +1527,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
         let pending = rpc(
             &harness.rpc_base,
             25,
-            "openhuman.approval_list_pending",
+            "neppy.approval_list_pending",
             json!({}),
         )
         .await;
@@ -1554,7 +1554,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let deny = rpc(
         &harness.rpc_base,
         26,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({ "request_id": deny_request_id, "decision": "deny" }),
     )
     .await;
@@ -1593,7 +1593,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let list_failure = rpc(
         &harness.rpc_base,
         27,
-        "openhuman.approval_list_pending",
+        "neppy.approval_list_pending",
         json!({}),
     )
     .await;
@@ -1602,7 +1602,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let recent_failure = rpc(
         &harness.rpc_base,
         28,
-        "openhuman.approval_list_recent_decisions",
+        "neppy.approval_list_recent_decisions",
         json!({}),
     )
     .await;
@@ -1611,7 +1611,7 @@ async fn approval_rpc_decision_paths_persist_always_allow_and_recent_audit() {
     let decide_failure = rpc(
         &harness.rpc_base,
         29,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({ "request_id": "blocked-store", "decision": "deny" }),
     )
     .await;

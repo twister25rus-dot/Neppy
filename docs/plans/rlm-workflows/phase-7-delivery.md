@@ -6,7 +6,7 @@
   (created off `357bcc8`, the commit the submodule currently pins).
 - Content: Phase 2 (cancel flag, live EventSink call events, embedding
   docs, tests). Small focused commits per tinyagents conventions.
-- Until it merges, openhuman development proceeds against the local
+- Until it merges, neppy development proceeds against the local
   submodule checkout (the `[patch]` already points at
   `vendor/tinyagents`), so nothing blocks.
 
@@ -27,7 +27,7 @@
   9. `test(rlm)`: the Phase 6 suite.
   10. `chore(vendor)`: bump tinyagents submodule pointer to the merged
       Phase 2 commit (after the tinyagents PR lands; if it hasn't merged
-      yet, the openhuman PR pins the branch head and notes the dependency
+      yet, the neppy PR pins the branch head and notes the dependency
       in the PR body).
 - PR body: architecture summary (from README), the two-repo dependency,
   commands run, coverage numbers, and explicit callout that tests were
@@ -36,9 +36,9 @@
 ## 7.3 Merge order & risk
 
 1. tinyagents PR merges → retag/pin.
-2. openhuman PR updates submodule pointer commit, CI full lane re-runs.
+2. neppy PR updates submodule pointer commit, CI full lane re-runs.
 3. Rollback story: the feature is dark unless the tool registers
-   (`OPENHUMAN_RLM=0` kill switch + not registered on readonly tier);
+   (`NEPPY_RLM=0` kill switch + not registered on readonly tier);
    reverting the tool-registration commit disables the surface without
    touching the domain.
 

@@ -89,19 +89,19 @@ async worker deadlocks a current-thread runtime.
   `Box::new(...)` line in `all_tools_with_runtime`
   (`src/neppy/tools/ops.rs`).
 - **Tool→tinyagents bridge already exists**: `ToolAdapter`
-  (`src/neppy/agent/tinyagents/tools.rs:78`) wraps `Arc<dyn openhuman Tool>`
-  and implements `tinyagents::Tool<()>` — we reuse it to project openhuman
+  (`src/neppy/agent/tinyagents/tools.rs:78`) wraps `Arc<dyn neppy Tool>`
+  and implements `tinyagents::Tool<()>` — we reuse it to project neppy
   tools into the REPL's `CapabilityRegistry`.
 - **Model bridge already exists**: `ProviderModel`
   (`src/neppy/agent/tinyagents/model.rs`) implements the tinyagents model
-  trait over openhuman's `Provider`; `assemble_turn_harness`
+  trait over neppy's `Provider`; `assemble_turn_harness`
   (`src/neppy/agent/tinyagents/mod.rs:1122`) already builds a
   `CapabilityRegistry<()>` per turn with models registered.
 - **Subagents**: `run_subagent(definition, prompt, options)`
   (`src/neppy/agent/harness/subagent_runner/`) + parent allowlist
   (`allowed_subagent_ids`) + `MAX_SPAWN_DEPTH`. We wrap this in a
   `HarnessAgent` impl so `agent_query("researcher", ...)` spawns real
-  openhuman subagents.
+  neppy subagents.
 - **Timeout/cancel**: `tool_timeout` domain clamps 1–3600 s;
   `workflows::run_log::register_run_cancel(run_id) -> CancellationToken`.
 - **Approval/security**: `external_effect_with_args == true` routes through

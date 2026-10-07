@@ -22,7 +22,7 @@ interface CoreRpcRelayRequest {
   /**
    * Per-call timeout override in milliseconds. When omitted, defaults to the
    * global `CORE_RPC_TIMEOUT_MS` (30s). Use for slow-but-alive RPCs such as
-   * first-launch `openhuman.app_state_snapshot` (#2156). Clamped to the same
+   * first-launch `neppy.app_state_snapshot` (#2156). Clamped to the same
    * [MIN, MAX] window as the global default.
    */
   timeoutMs?: number;
@@ -307,7 +307,7 @@ export function clearCoreRpcUrlCache(): void {
  * and re-resolve". Long-lived consumers (e.g. SSE subscriptions that embed
  * the bearer in the URL) need this so they can tear down the old connection
  * and open a new one when the in-process core is restarted with a fresh
- * `OPENHUMAN_CORE_TOKEN`.
+ * `NEPPY_CORE_TOKEN`.
  *
  * Implemented over `EventTarget` (no third-party dep, no React coupling) so
  * services + hooks can both attach without a provider boundary.
@@ -422,7 +422,7 @@ export async function getCoreRpcUrl(): Promise<string> {
     try {
       // Tauri: any user-stored URL (cloud picker output) wins. Without this
       // a cloud-mode user whose picker URL coincides with the build-time
-      // `VITE_OPENHUMAN_CORE_RPC_URL` would be silently routed to whatever
+      // `VITE_NEPPY_CORE_RPC_URL` would be silently routed to whatever
       // `core_rpc_url` returns (typically the local sidecar's
       // `http://127.0.0.1:<port>/rpc`), producing ERR_CONNECTION_REFUSED in
       // cloud mode where no local sidecar is running.
@@ -481,8 +481,8 @@ export async function getCoreRpcToken(): Promise<string | null> {
   // no Tauri IPC) receive the per-process bearer injected as a global by the
   // Rust host. Honour it first — and not behind the resolution cache, so a late
   // injection (the host injects on a timer once the core URL is ready) still wins.
-  const injected = (globalThis as { __OPENHUMAN_NOTCH_CORE_TOKEN__?: string })
-    .__OPENHUMAN_NOTCH_CORE_TOKEN__;
+  const injected = (globalThis as { __NEPPY_NOTCH_CORE_TOKEN__?: string })
+    .__NEPPY_NOTCH_CORE_TOKEN__;
   if (typeof injected === 'string' && injected) {
     resolvedCoreRpcToken = injected;
     didResolveCoreRpcToken = true;
@@ -713,7 +713,7 @@ export async function callCoreRpc<T>({
   try {
     const [rpcUrl, token] = await Promise.all([getCoreRpcUrl(), getCoreRpcToken()]);
     coreRpcLog('HTTP request', { id: payload.id, method: payload.method });
-    if (normalizedMethod === 'openhuman.auth_store_session') {
+    if (normalizedMethod === 'neppy.auth_store_session') {
       coreRpcLog('[rpc] auth_store_session routing', {
         rpcUrl,
         tokenSource: getStoredCoreToken() ? 'cloud-stored' : 'local-resolved',

@@ -69,7 +69,7 @@ interface UseFlowRunPollerResult {
 }
 
 /**
- * Poll `openhuman.flows_get_run` for `runId` every {@link POLL_INTERVAL_MS}ms
+ * Poll `neppy.flows_get_run` for `runId` every {@link POLL_INTERVAL_MS}ms
  * while the run is `running` or `pending_approval`. Stops polling once the
  * run reaches a terminal status, when `runId` becomes `null`, when `runId`
  * changes, or on unmount. A failed fetch surfaces `error` and does NOT

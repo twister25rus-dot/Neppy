@@ -83,7 +83,7 @@ import { DERIVED_TRANSCRIPT_ENABLED, IS_PROD } from '../utils/config';
 import { AssistantUiRuntimeProvider } from './AssistantUiRuntimeProvider';
 import { isProactiveConversationSurface, proactiveThreadPins } from './proactiveThreadPins';
 
-const logChatRuntime = debug('openhuman:chat-runtime');
+const logChatRuntime = debug('neppy:chat-runtime');
 const USER_FACING_AGENT_ERROR_MESSAGE =
   'Something went wrong. Please try again.\nThis error has been reported. You can also report it on Discord.\n<openhuman-link path="community/discord-report">Report on Discord</openhuman-link>';
 

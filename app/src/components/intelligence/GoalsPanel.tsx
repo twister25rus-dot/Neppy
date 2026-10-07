@@ -1,7 +1,7 @@
 /**
  * GoalsPanel — Brain > Goals.
  *
- * Views and edits the agent's long-term goals list (`openhuman.memory_goals_*`)
+ * Views and edits the agent's long-term goals list (`neppy.memory_goals_*`)
  * and triggers the turn-based enrichment agent ("Reflect"). The same list is
  * curated automatically by the background goals agent when context is
  * summarized; this panel is the manual surface.

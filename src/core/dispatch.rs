@@ -44,6 +44,7 @@ pub async fn dispatch(
     // core rewrites incoming names for clients that haven't yet. See
     // `crate::core::legacy_aliases` for the shared table.
     let resolved = resolve_legacy(method);
+    let resolved = resolved.as_ref();
     if resolved != method {
         // Per-rewrite log at debug to keep the dispatcher hot path quiet
         // at scale (per graycyrus review on PR #1544). Aggregate
@@ -107,9 +108,9 @@ pub const UNKNOWN_METHOD_PREFIX: &str = "unknown method: ";
 /// and never will be (issue #3567): `rpc.discover` (JSON-RPC service
 /// discovery), `list_methods`, liveness `status`, `auth.status`, `config/get`.
 /// This also covers retired feature calls from older clients when no safe
-/// canonical handler exists (#3565: `openhuman.memory_tree_create_namespace`).
+/// canonical handler exists (#3565: `neppy.memory_tree_create_namespace`).
 ///
-/// `openhuman.harness_init_status` (#5157) is in the list for a *different*
+/// `neppy.harness_init_status` (#5157) is in the list for a *different*
 /// reason and must not be read as retired — it is a **live, registered**
 /// method (`harness_init::all_harness_init_registered_controllers`, tagged
 /// `DomainGroup::Platform`). It only misses when the caller and the running
@@ -131,8 +132,8 @@ const KNOWN_PROBE_METHODS: &[&str] = &[
     "status",
     "auth.status",
     "config/get",
-    "openhuman.memory_tree_create_namespace",
-    "openhuman.harness_init_status",
+    "neppy.memory_tree_create_namespace",
+    "neppy.harness_init_status",
 ];
 
 /// Returns `true` when `method` is a known non-actionable unknown method name
@@ -140,7 +141,10 @@ const KNOWN_PROBE_METHODS: &[&str] = &[
 /// (after legacy-alias rewrite), i.e. the name embedded in the
 /// [`UNKNOWN_METHOD_PREFIX`] error string.
 pub fn is_known_probe_method(method: &str) -> bool {
-    KNOWN_PROBE_METHODS.contains(&method)
+    // Matches both spellings of the product prefix: the list is written in the
+    // canonical `neppy.` form and `openhuman.` input is normalised first.
+    let method = crate::core::legacy_aliases::normalize_rpc_method(method);
+    KNOWN_PROBE_METHODS.contains(&method.as_ref())
 }
 
 /// Extracts the offending method name from an unknown-method error string, or
@@ -285,8 +289,8 @@ mod tests {
             let lock = crate::neppy::config::TEST_ENV_LOCK
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+            std::env::set_var("NEPPY_WORKSPACE", path);
             Self {
                 _lock: lock,
                 previous,
@@ -297,8 +301,8 @@ mod tests {
     impl Drop for WorkspaceEnvGuard {
         fn drop(&mut self) {
             match self.previous.take() {
-                Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-                None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+                Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+                None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
             }
         }
     }
@@ -336,14 +340,74 @@ mod tests {
 
     #[tokio::test]
     async fn dispatch_rewrites_legacy_alias_before_lookup() {
-        // `openhuman.ping` is a legacy alias for `core.ping` in the shared
+        // `neppy.ping` is a legacy alias for `core.ping` in the shared
         // alias table. Going through the dispatcher must rewrite it and
         // route successfully to Tier 1 instead of falling through to the
         // unknown-method error path.
-        let out = dispatch(test_state(), "openhuman.ping", json!({}))
+        let out = dispatch(test_state(), "neppy.ping", json!({}))
             .await
-            .expect("legacy alias openhuman.ping must resolve to core.ping");
+            .expect("legacy alias neppy.ping must resolve to core.ping");
         assert_eq!(out, json!({ "ok": true }));
+    }
+
+    #[tokio::test]
+    async fn dispatch_accepts_both_prefixes_for_ping() {
+        // `openhuman.ping` (pre-rebrand spelling) and `neppy.ping` are both
+        // legacy aliases for `core.ping` and must be indistinguishable.
+        let old = dispatch(test_state(), "openhuman.ping", json!({}))
+            .await
+            .expect("openhuman.ping must keep working");
+        let new = dispatch(test_state(), "neppy.ping", json!({}))
+            .await
+            .expect("neppy.ping must work");
+        assert_eq!(old, new);
+        assert_eq!(new, json!({ "ok": true }));
+    }
+
+    #[tokio::test]
+    async fn dispatch_old_prefix_routes_identically_for_a_real_controller() {
+        // A real registered controller reached through the old spelling must
+        // produce exactly what the canonical spelling produces.
+        let workspace = tempfile::tempdir().expect("temporary workspace");
+        let _workspace_env = WorkspaceEnvGuard::set(workspace.path());
+        let new = dispatch(test_state(), "neppy.security_policy_info", json!({}))
+            .await
+            .expect("canonical spelling routes");
+        let old = dispatch(test_state(), "openhuman.security_policy_info", json!({}))
+            .await
+            .expect("legacy spelling routes");
+        assert_eq!(old, new);
+    }
+
+    #[tokio::test]
+    async fn dispatch_unknown_method_reports_the_resolved_neppy_name() {
+        // The error must name the canonical spelling, whichever one the caller used.
+        for sent in ["openhuman.totally_made_up_xyz", "neppy.totally_made_up_xyz"] {
+            let err = dispatch(test_state(), sent, json!({}))
+                .await
+                .expect_err("unknown methods must error");
+            assert_eq!(
+                unknown_method_name(&err),
+                Some("neppy.totally_made_up_xyz"),
+                "sent {sent}"
+            );
+        }
+    }
+
+    #[test]
+    fn is_known_probe_method_matches_both_prefix_spellings() {
+        for m in [
+            "neppy.harness_init_status",
+            "openhuman.harness_init_status",
+            "neppy.memory_tree_create_namespace",
+            "openhuman.memory_tree_create_namespace",
+        ] {
+            assert!(
+                is_known_probe_method(m),
+                "{m} must be an allow-listed probe"
+            );
+        }
+        assert!(!is_known_probe_method("openhuman.memory_tree_list"));
     }
 
     #[tokio::test]
@@ -365,11 +429,11 @@ mod tests {
 
     #[tokio::test]
     async fn dispatch_delegates_to_tier2_for_domain_method() {
-        // Tier 2 dispatcher handles `openhuman.security_policy_info`, so
+        // Tier 2 dispatcher handles `neppy.security_policy_info`, so
         // it must succeed and return a policy object.
         let workspace = tempfile::tempdir().expect("temporary workspace");
         let _workspace_env = WorkspaceEnvGuard::set(workspace.path());
-        let out = dispatch(test_state(), "openhuman.security_policy_info", json!({}))
+        let out = dispatch(test_state(), "neppy.security_policy_info", json!({}))
             .await
             .expect("security_policy_info should route via tier 2");
         // With logs present, payload is wrapped as { result, logs }.
@@ -379,7 +443,7 @@ mod tests {
     #[test]
     fn try_core_dispatch_returns_none_for_non_core_namespace() {
         let state = test_state();
-        assert!(try_core_dispatch(&state, "openhuman.memory_list_namespaces", json!({})).is_none());
+        assert!(try_core_dispatch(&state, "neppy.memory_list_namespaces", json!({})).is_none());
         assert!(try_core_dispatch(&state, "corez.ping", json!({})).is_none());
     }
 
@@ -407,9 +471,9 @@ mod tests {
 
     #[tokio::test]
     async fn dispatch_legacy_ping_rewrites_and_succeeds() {
-        let out = dispatch(test_state(), "openhuman.ping", json!({}))
+        let out = dispatch(test_state(), "neppy.ping", json!({}))
             .await
-            .expect("openhuman.ping should be rewritten to core.ping and succeed");
+            .expect("neppy.ping should be rewritten to core.ping and succeed");
         assert_eq!(out, json!({ "ok": true }));
     }
 
@@ -422,8 +486,8 @@ mod tests {
             "status",
             "auth.status",
             "config/get",
-            "openhuman.memory_tree_create_namespace",
-            "openhuman.harness_init_status",
+            "neppy.memory_tree_create_namespace",
+            "neppy.harness_init_status",
         ] {
             assert!(
                 is_known_probe_method(m),
@@ -440,7 +504,7 @@ mod tests {
         assert!(!is_known_probe_method(""));
     }
 
-    /// `openhuman.harness_init_status` is allow-listed as a debug-only miss so
+    /// `neppy.harness_init_status` is allow-listed as a debug-only miss so
     /// client/core surface skew stops paging Sentry (#5157) — but it is a
     /// **live** method, not a retired one. That allow-list entry means a
     /// genuine regression (controller dropped from the registry) would go
@@ -454,7 +518,7 @@ mod tests {
             .map(crate::core::all::rpc_method_name)
             .collect();
         assert!(
-            served.iter().any(|m| m == "openhuman.harness_init_status"),
+            served.iter().any(|m| m == "neppy.harness_init_status"),
             "harness_init_status must remain a registered controller — it is \
              allow-listed in KNOWN_PROBE_METHODS for client/core skew only, so \
              losing the real handler would be silently swallowed"
@@ -464,7 +528,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "channels")]
     async fn dispatch_dotted_channel_list_aliases_route_to_registry() {
-        for method in ["channels.list", "openhuman.channels.list"] {
+        for method in ["channels.list", "neppy.channels.list"] {
             let out = dispatch(test_state(), method, json!({}))
                 .await
                 .unwrap_or_else(|err| panic!("{method} should route via channels_list: {err}"));
@@ -504,10 +568,9 @@ mod tests {
         // This alias targets a controller registered in the domain registry.
         // Do not invoke it here: its implementation can persist default config,
         // which makes this routing test depend on a filesystem workspace.
-        let method =
-            crate::core::legacy_aliases::resolve_legacy("openhuman.get_analytics_settings");
+        let method = crate::core::legacy_aliases::resolve_legacy("neppy.get_analytics_settings");
         assert!(
-            crate::core::all::schema_for_rpc_method(method).is_some(),
+            crate::core::all::schema_for_rpc_method(&method).is_some(),
             "legacy alias must resolve to a registered controller: {method}"
         );
     }

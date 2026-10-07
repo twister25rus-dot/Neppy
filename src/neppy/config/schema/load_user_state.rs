@@ -195,7 +195,7 @@ pub fn write_active_user_id(default_neppy_dir: &Path, user_id: &str) -> Result<(
 }
 
 /// Removes the active user marker.  After this, the next config load will
-/// use the default (unauthenticated) openhuman directory.
+/// use the default (unauthenticated) neppy directory.
 pub fn clear_active_user(default_neppy_dir: &Path) -> Result<()> {
     let path = active_user_marker_path(default_neppy_dir);
     if path.exists() {
@@ -206,13 +206,13 @@ pub fn clear_active_user(default_neppy_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Returns the user-scoped openhuman directory for the given user id:
+/// Returns the user-scoped neppy directory for the given user id:
 /// `{default_neppy_dir}/users/{user_id}`.
 pub fn user_neppy_dir(default_neppy_dir: &Path, user_id: &str) -> PathBuf {
     default_neppy_dir.join("users").join(user_id)
 }
 
-/// Stable id used to scope the openhuman directory before any user has
+/// Stable id used to scope the neppy directory before any user has
 /// logged in.  All memory, state, config, sessions and workspace files
 /// created on first init land under `{root}/users/{PRE_LOGIN_USER_ID}`
 /// so nothing is ever written directly at the root `.neppy` path.

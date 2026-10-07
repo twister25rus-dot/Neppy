@@ -79,17 +79,17 @@ unpooled_json="$OUT_DIR/unpooled-k$CONCURRENCY.json"
 # The scenario hard-asserts child_count <= POOL_WORKERS; a nonzero exit here
 # (via set -e) fails the gate.
 log "pooled run: K=$CONCURRENCY, max_workers=$POOL_WORKERS (asserts child_count <= $POOL_WORKERS)"
-# Force the pool ON explicitly: an inherited OPENHUMAN_PROFILE_SKILL_RUN_POOL=off
+# Force the pool ON explicitly: an inherited NEPPY_PROFILE_SKILL_RUN_POOL=off
 # would run the legacy path and make the scenario skip its pool assertion.
-OPENHUMAN_PROFILE_SKILL_RUN_POOL=on \
-OPENHUMAN_PROFILE_SKILL_RUN_CONCURRENCY="$CONCURRENCY" \
-OPENHUMAN_PROFILE_SKILL_RUN_POOL_WORKERS="$POOL_WORKERS" \
+NEPPY_PROFILE_SKILL_RUN_POOL=on \
+NEPPY_PROFILE_SKILL_RUN_CONCURRENCY="$CONCURRENCY" \
+NEPPY_PROFILE_SKILL_RUN_POOL_WORKERS="$POOL_WORKERS" \
     "$BIN" skill-run >"$pooled_json"
 
 # --- Unpooled baseline (report only) --------------------------------------
 log "unpooled baseline: K=$CONCURRENCY, pool OFF (expect ~$CONCURRENCY interpreters)"
-OPENHUMAN_PROFILE_SKILL_RUN_CONCURRENCY="$CONCURRENCY" \
-OPENHUMAN_PROFILE_SKILL_RUN_POOL=off \
+NEPPY_PROFILE_SKILL_RUN_CONCURRENCY="$CONCURRENCY" \
+NEPPY_PROFILE_SKILL_RUN_POOL=off \
     "$BIN" skill-run >"$unpooled_json"
 
 # Pooled run: a missing/null tree means nothing was measured — that must FAIL,

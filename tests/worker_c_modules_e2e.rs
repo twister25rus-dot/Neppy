@@ -31,20 +31,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value) };
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -53,7 +53,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -137,16 +137,16 @@ async fn setup() -> Harness {
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        EnvVarGuard::unset("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2"),
-        EnvVarGuard::unset("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3"),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::unset("NEPPY_API_URL"),
+        EnvVarGuard::unset("NEPPY_COMPOSIO_DIRECT_BASE_V2"),
+        EnvVarGuard::unset("NEPPY_COMPOSIO_DIRECT_BASE_V3"),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -243,7 +243,7 @@ async fn channels_imessage_config_only_connection_reports_status_and_disconnects
     let described = rpc(
         &harness.rpc_base,
         1,
-        "openhuman.channels_describe",
+        "neppy.channels_describe",
         json!({ "channel": "imessage" }),
     )
     .await;
@@ -257,7 +257,7 @@ async fn channels_imessage_config_only_connection_reports_status_and_disconnects
     let baseline = rpc(
         &harness.rpc_base,
         2,
-        "openhuman.channels_status",
+        "neppy.channels_status",
         json!({ "channel": "imessage" }),
     )
     .await;
@@ -274,7 +274,7 @@ async fn channels_imessage_config_only_connection_reports_status_and_disconnects
     let connected = rpc(
         &harness.rpc_base,
         3,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({
             "channel": "imessage",
             "authMode": "managed_dm",
@@ -292,7 +292,7 @@ async fn channels_imessage_config_only_connection_reports_status_and_disconnects
     let after_connect = rpc(
         &harness.rpc_base,
         4,
-        "openhuman.channels_status",
+        "neppy.channels_status",
         json!({ "channel": "imessage" }),
     )
     .await;
@@ -310,7 +310,7 @@ async fn channels_imessage_config_only_connection_reports_status_and_disconnects
     let disconnected = rpc(
         &harness.rpc_base,
         5,
-        "openhuman.channels_disconnect",
+        "neppy.channels_disconnect",
         json!({
             "channel": "imessage",
             "authMode": "managed_dm",
@@ -328,7 +328,7 @@ async fn channels_imessage_config_only_connection_reports_status_and_disconnects
     let after_disconnect = rpc(
         &harness.rpc_base,
         6,
-        "openhuman.channels_status",
+        "neppy.channels_status",
         json!({ "channel": "imessage" }),
     )
     .await;
@@ -349,16 +349,16 @@ async fn channels_remaining_controller_paths_validate_without_live_services() {
     let harness = setup().await;
 
     for (id, method) in [
-        (40, "openhuman.channels_test"),
-        (41, "openhuman.channels_telegram_login_check"),
-        (42, "openhuman.channels_discord_link_check"),
-        (43, "openhuman.channels_discord_list_channels"),
-        (44, "openhuman.channels_discord_check_permissions"),
-        (45, "openhuman.channels_send_message"),
-        (46, "openhuman.channels_send_reaction"),
-        (47, "openhuman.channels_create_thread"),
-        (48, "openhuman.channels_update_thread"),
-        (49, "openhuman.channels_list_threads"),
+        (40, "neppy.channels_test"),
+        (41, "neppy.channels_telegram_login_check"),
+        (42, "neppy.channels_discord_link_check"),
+        (43, "neppy.channels_discord_list_channels"),
+        (44, "neppy.channels_discord_check_permissions"),
+        (45, "neppy.channels_send_message"),
+        (46, "neppy.channels_send_reaction"),
+        (47, "neppy.channels_create_thread"),
+        (48, "neppy.channels_update_thread"),
+        (49, "neppy.channels_list_threads"),
     ] {
         let response = rpc(&harness.rpc_base, id, method, json!({})).await;
         assert!(
@@ -368,9 +368,9 @@ async fn channels_remaining_controller_paths_validate_without_live_services() {
     }
 
     for (id, method) in [
-        (50, "openhuman.channels_telegram_login_start"),
-        (51, "openhuman.channels_discord_link_start"),
-        (52, "openhuman.channels_discord_list_guilds"),
+        (50, "neppy.channels_telegram_login_start"),
+        (51, "neppy.channels_discord_link_start"),
+        (52, "neppy.channels_discord_list_guilds"),
     ] {
         let response = rpc(&harness.rpc_base, id, method, json!({})).await;
         assert_rpc_completed(&response, method);
@@ -382,13 +382,13 @@ async fn composio_direct_mode_api_key_and_static_catalogs_round_trip() {
     let _lock = env_lock();
     let harness = setup().await;
     let (composio_base, composio_hits, composio_join) = serve_composio_direct_fixtures().await;
-    let _composio_v2_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &composio_base);
-    let _composio_v3_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &composio_base);
+    let _composio_v2_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V2", &composio_base);
+    let _composio_v3_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V3", &composio_base);
 
     let capabilities = rpc(
         &harness.rpc_base,
         10,
-        "openhuman.composio_list_capabilities",
+        "neppy.composio_list_capabilities",
         json!({}),
     )
     .await;
@@ -407,7 +407,7 @@ async fn composio_direct_mode_api_key_and_static_catalogs_round_trip() {
     let agent_ready = rpc(
         &harness.rpc_base,
         11,
-        "openhuman.composio_list_agent_ready_toolkits",
+        "neppy.composio_list_agent_ready_toolkits",
         json!({}),
     )
     .await;
@@ -422,13 +422,7 @@ async fn composio_direct_mode_api_key_and_static_catalogs_round_trip() {
         "gmail should remain in the agent-ready catalog: {ready_toolkits:?}"
     );
 
-    let mode0 = rpc(
-        &harness.rpc_base,
-        12,
-        "openhuman.composio_get_mode",
-        json!({}),
-    )
-    .await;
+    let mode0 = rpc(&harness.rpc_base, 12, "neppy.composio_get_mode", json!({})).await;
     assert_eq!(
         payload(&mode0, "composio_get_mode initial")
             .get("api_key_set")
@@ -439,7 +433,7 @@ async fn composio_direct_mode_api_key_and_static_catalogs_round_trip() {
     let set = rpc(
         &harness.rpc_base,
         13,
-        "openhuman.composio_set_api_key",
+        "neppy.composio_set_api_key",
         json!({
             "api_key": "cmp_worker_c_test_key",
             "activate_direct": true
@@ -458,13 +452,7 @@ async fn composio_direct_mode_api_key_and_static_catalogs_round_trip() {
         "saving a direct-mode API key should validate the candidate key against the v3 mock"
     );
 
-    let mode1 = rpc(
-        &harness.rpc_base,
-        14,
-        "openhuman.composio_get_mode",
-        json!({}),
-    )
-    .await;
+    let mode1 = rpc(&harness.rpc_base, 14, "neppy.composio_get_mode", json!({})).await;
     assert_eq!(
         payload(&mode1, "composio_get_mode direct")
             .get("api_key_set")
@@ -481,7 +469,7 @@ async fn composio_direct_mode_api_key_and_static_catalogs_round_trip() {
     let toolkits = rpc(
         &harness.rpc_base,
         15,
-        "openhuman.composio_list_toolkits",
+        "neppy.composio_list_toolkits",
         json!({}),
     )
     .await;
@@ -497,7 +485,7 @@ async fn composio_direct_mode_api_key_and_static_catalogs_round_trip() {
     let cleared = rpc(
         &harness.rpc_base,
         16,
-        "openhuman.composio_clear_api_key",
+        "neppy.composio_clear_api_key",
         json!({}),
     )
     .await;
@@ -516,18 +504,18 @@ async fn composio_remaining_controller_paths_validate_without_live_services() {
     let harness = setup().await;
 
     for (id, method) in [
-        (60, "openhuman.composio_authorize"),
-        (61, "openhuman.composio_delete_connection"),
-        (62, "openhuman.composio_execute"),
-        (63, "openhuman.composio_list_github_repos"),
-        (64, "openhuman.composio_create_trigger"),
-        (65, "openhuman.composio_get_user_profile"),
-        (66, "openhuman.composio_sync"),
-        (67, "openhuman.composio_get_user_scopes"),
-        (68, "openhuman.composio_set_user_scopes"),
-        (69, "openhuman.composio_list_available_triggers"),
-        (70, "openhuman.composio_enable_trigger"),
-        (71, "openhuman.composio_disable_trigger"),
+        (60, "neppy.composio_authorize"),
+        (61, "neppy.composio_delete_connection"),
+        (62, "neppy.composio_execute"),
+        (63, "neppy.composio_list_github_repos"),
+        (64, "neppy.composio_create_trigger"),
+        (65, "neppy.composio_get_user_profile"),
+        (66, "neppy.composio_sync"),
+        (67, "neppy.composio_get_user_scopes"),
+        (68, "neppy.composio_set_user_scopes"),
+        (69, "neppy.composio_list_available_triggers"),
+        (70, "neppy.composio_enable_trigger"),
+        (71, "neppy.composio_disable_trigger"),
     ] {
         let response = rpc(&harness.rpc_base, id, method, json!({})).await;
         assert!(
@@ -537,11 +525,11 @@ async fn composio_remaining_controller_paths_validate_without_live_services() {
     }
 
     for (id, method) in [
-        (72, "openhuman.composio_list_connections"),
-        (73, "openhuman.composio_list_tools"),
-        (74, "openhuman.composio_list_trigger_history"),
-        (75, "openhuman.composio_refresh_all_identities"),
-        (76, "openhuman.composio_list_triggers"),
+        (72, "neppy.composio_list_connections"),
+        (73, "neppy.composio_list_tools"),
+        (74, "neppy.composio_list_trigger_history"),
+        (75, "neppy.composio_refresh_all_identities"),
+        (76, "neppy.composio_list_triggers"),
     ] {
         let response = rpc(&harness.rpc_base, id, method, json!({})).await;
         assert_rpc_completed(&response, method);
@@ -556,7 +544,7 @@ async fn threads_message_lifecycle_is_persisted_and_validated() {
     let upsert = rpc(
         &harness.rpc_base,
         20,
-        "openhuman.threads_upsert",
+        "neppy.threads_upsert",
         json!({
             "id": "worker-c-thread",
             "title": "Worker C thread",
@@ -575,7 +563,7 @@ async fn threads_message_lifecycle_is_persisted_and_validated() {
     let append = rpc(
         &harness.rpc_base,
         21,
-        "openhuman.threads_message_append",
+        "neppy.threads_message_append",
         json!({
             "thread_id": "worker-c-thread",
             "message": {
@@ -599,7 +587,7 @@ async fn threads_message_lifecycle_is_persisted_and_validated() {
     let listed = rpc(
         &harness.rpc_base,
         22,
-        "openhuman.threads_messages_list",
+        "neppy.threads_messages_list",
         json!({ "thread_id": "worker-c-thread" }),
     )
     .await;
@@ -616,7 +604,7 @@ async fn threads_message_lifecycle_is_persisted_and_validated() {
     let updated = rpc(
         &harness.rpc_base,
         23,
-        "openhuman.threads_message_update",
+        "neppy.threads_message_update",
         json!({
             "thread_id": "worker-c-thread",
             "message_id": "worker-c-message",
@@ -632,7 +620,7 @@ async fn threads_message_lifecycle_is_persisted_and_validated() {
     let missing_list = rpc(
         &harness.rpc_base,
         24,
-        "openhuman.threads_messages_list",
+        "neppy.threads_messages_list",
         json!({ "thread_id": "missing-thread" }),
     )
     .await;
@@ -647,7 +635,7 @@ async fn threads_message_lifecycle_is_persisted_and_validated() {
     let missing_append = rpc(
         &harness.rpc_base,
         25,
-        "openhuman.threads_message_append",
+        "neppy.threads_message_append",
         json!({
             "thread_id": "missing-thread",
             "message": {
@@ -675,7 +663,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let created = rpc(
         &harness.rpc_base,
         80,
-        "openhuman.threads_create_new",
+        "neppy.threads_create_new",
         json!({ "labels": ["worker-c"] }),
     )
     .await;
@@ -688,7 +676,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let titled = rpc(
         &harness.rpc_base,
         81,
-        "openhuman.threads_update_title",
+        "neppy.threads_update_title",
         json!({ "thread_id": created_thread_id, "title": "Worker C titled thread" }),
     )
     .await;
@@ -702,7 +690,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let labeled = rpc(
         &harness.rpc_base,
         82,
-        "openhuman.threads_update_labels",
+        "neppy.threads_update_labels",
         json!({ "thread_id": created_thread_id, "labels": ["worker-c", "remaining"] }),
     )
     .await;
@@ -717,7 +705,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let generated = rpc(
         &harness.rpc_base,
         83,
-        "openhuman.threads_generate_title",
+        "neppy.threads_generate_title",
         json!({ "thread_id": created_thread_id }),
     )
     .await;
@@ -726,7 +714,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let turn_state = rpc(
         &harness.rpc_base,
         84,
-        "openhuman.threads_turn_state_get",
+        "neppy.threads_turn_state_get",
         json!({ "thread_id": created_thread_id }),
     )
     .await;
@@ -739,7 +727,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let turn_states = rpc(
         &harness.rpc_base,
         85,
-        "openhuman.threads_turn_state_list",
+        "neppy.threads_turn_state_list",
         json!({}),
     )
     .await;
@@ -751,7 +739,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let clear = rpc(
         &harness.rpc_base,
         86,
-        "openhuman.threads_turn_state_clear",
+        "neppy.threads_turn_state_clear",
         json!({ "thread_id": created_thread_id }),
     )
     .await;
@@ -765,7 +753,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let board_put = rpc(
         &harness.rpc_base,
         87,
-        "openhuman.threads_task_board_put",
+        "neppy.threads_task_board_put",
         json!({
             "thread_id": created_thread_id,
             "cards": [{
@@ -787,7 +775,7 @@ async fn threads_remaining_controller_paths_round_trip() {
     let board_get = rpc(
         &harness.rpc_base,
         88,
-        "openhuman.threads_task_board_get",
+        "neppy.threads_task_board_get",
         json!({ "thread_id": created_thread_id }),
     )
     .await;
@@ -807,7 +795,7 @@ async fn embeddings_controller_paths_validate_without_live_services() {
     let updated = rpc(
         &harness.rpc_base,
         90,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({
             "provider": "none",
             "model": "none",
@@ -819,9 +807,9 @@ async fn embeddings_controller_paths_validate_without_live_services() {
     assert_rpc_completed(&updated, "embeddings_update_settings");
 
     for (id, method) in [
-        (91, "openhuman.embeddings_set_api_key"),
-        (92, "openhuman.embeddings_clear_api_key"),
-        (93, "openhuman.embeddings_embed"),
+        (91, "neppy.embeddings_set_api_key"),
+        (92, "neppy.embeddings_clear_api_key"),
+        (93, "neppy.embeddings_embed"),
     ] {
         let response = rpc(&harness.rpc_base, id, method, json!({})).await;
         assert!(
@@ -833,7 +821,7 @@ async fn embeddings_controller_paths_validate_without_live_services() {
     let tested = rpc(
         &harness.rpc_base,
         94,
-        "openhuman.embeddings_test_connection",
+        "neppy.embeddings_test_connection",
         json!({ "provider": "none", "model": "none", "dimensions": 0 }),
     )
     .await;
@@ -862,7 +850,7 @@ async fn memory_tree_ingest_feeds_memory_sync_status() {
     let ingest = rpc(
         &harness.rpc_base,
         30,
-        "openhuman.memory_tree_ingest",
+        "neppy.memory_tree_ingest",
         json!({
             "source_kind": "chat",
             "source_id": "slack:worker-c",
@@ -896,7 +884,7 @@ async fn memory_tree_ingest_feeds_memory_sync_status() {
     let statuses = rpc(
         &harness.rpc_base,
         31,
-        "openhuman.memory_sync_status_list",
+        "neppy.memory_sync_status_list",
         json!({}),
     )
     .await;
@@ -922,72 +910,72 @@ async fn memory_memory_tree_and_sources_controller_surfaces_are_reachable() {
     let harness = setup().await;
 
     let methods = [
-        "openhuman.memory_init",
-        "openhuman.memory_sync_all",
-        "openhuman.memory_sync_channel",
-        "openhuman.memory_ingestion_status",
-        "openhuman.memory_list_files",
-        "openhuman.memory_read_file",
-        "openhuman.memory_write_file",
-        "openhuman.memory_list_namespaces",
-        "openhuman.memory_query_namespace",
-        "openhuman.memory_clear_namespace",
-        "openhuman.memory_recall_memories",
-        "openhuman.memory_recall_context",
-        "openhuman.memory_context_query",
-        "openhuman.memory_context_recall",
-        "openhuman.memory_doc_put",
-        "openhuman.memory_doc_ingest",
-        "openhuman.memory_doc_list",
-        "openhuman.memory_doc_delete",
-        "openhuman.memory_list_documents",
-        "openhuman.memory_delete_document",
-        "openhuman.memory_namespace_list",
-        "openhuman.memory_kv_set",
-        "openhuman.memory_kv_get",
-        "openhuman.memory_kv_delete",
-        "openhuman.memory_kv_list_namespace",
-        "openhuman.memory_graph_upsert",
-        "openhuman.memory_graph_query",
-        "openhuman.memory_tool_rule_put",
-        "openhuman.memory_tool_rule_get",
-        "openhuman.memory_tool_rule_delete",
-        "openhuman.memory_tool_rule_list",
-        "openhuman.memory_tool_rules_for_prompt",
-        "openhuman.memory_tool_rules_json",
-        "openhuman.memory_learn_all",
-        "openhuman.memory_tree_pipeline_status",
-        "openhuman.memory_tree_ingest",
-        "openhuman.memory_tree_search",
-        "openhuman.memory_tree_recall",
-        "openhuman.memory_tree_list_sources",
-        "openhuman.memory_tree_list_chunks",
-        "openhuman.memory_tree_get_chunk",
-        "openhuman.memory_tree_delete_chunk",
-        "openhuman.memory_tree_top_entities",
-        "openhuman.memory_tree_chunks_for_entity",
-        "openhuman.memory_tree_graph_export",
-        "openhuman.memory_tree_entity_index_for",
-        "openhuman.memory_tree_memory_backfill_status",
-        "openhuman.memory_tree_obsidian_vault_status",
-        "openhuman.memory_tree_flush_now",
-        "openhuman.memory_tree_reset_tree",
-        "openhuman.memory_tree_wipe_all",
-        "openhuman.memory_tree_set_enabled",
-        "openhuman.memory_tree_query_source",
-        "openhuman.memory_tree_search_entities",
-        "openhuman.memory_tree_drill_down",
-        "openhuman.memory_tree_fetch_leaves",
-        "openhuman.memory_tree_chunk_score",
-        "openhuman.memory_sources_list",
-        "openhuman.memory_sources_add",
-        "openhuman.memory_sources_get",
-        "openhuman.memory_sources_update",
-        "openhuman.memory_sources_remove",
-        "openhuman.memory_sources_sync",
-        "openhuman.memory_sources_status_list",
-        "openhuman.memory_sources_list_items",
-        "openhuman.memory_sources_read_item",
+        "neppy.memory_init",
+        "neppy.memory_sync_all",
+        "neppy.memory_sync_channel",
+        "neppy.memory_ingestion_status",
+        "neppy.memory_list_files",
+        "neppy.memory_read_file",
+        "neppy.memory_write_file",
+        "neppy.memory_list_namespaces",
+        "neppy.memory_query_namespace",
+        "neppy.memory_clear_namespace",
+        "neppy.memory_recall_memories",
+        "neppy.memory_recall_context",
+        "neppy.memory_context_query",
+        "neppy.memory_context_recall",
+        "neppy.memory_doc_put",
+        "neppy.memory_doc_ingest",
+        "neppy.memory_doc_list",
+        "neppy.memory_doc_delete",
+        "neppy.memory_list_documents",
+        "neppy.memory_delete_document",
+        "neppy.memory_namespace_list",
+        "neppy.memory_kv_set",
+        "neppy.memory_kv_get",
+        "neppy.memory_kv_delete",
+        "neppy.memory_kv_list_namespace",
+        "neppy.memory_graph_upsert",
+        "neppy.memory_graph_query",
+        "neppy.memory_tool_rule_put",
+        "neppy.memory_tool_rule_get",
+        "neppy.memory_tool_rule_delete",
+        "neppy.memory_tool_rule_list",
+        "neppy.memory_tool_rules_for_prompt",
+        "neppy.memory_tool_rules_json",
+        "neppy.memory_learn_all",
+        "neppy.memory_tree_pipeline_status",
+        "neppy.memory_tree_ingest",
+        "neppy.memory_tree_search",
+        "neppy.memory_tree_recall",
+        "neppy.memory_tree_list_sources",
+        "neppy.memory_tree_list_chunks",
+        "neppy.memory_tree_get_chunk",
+        "neppy.memory_tree_delete_chunk",
+        "neppy.memory_tree_top_entities",
+        "neppy.memory_tree_chunks_for_entity",
+        "neppy.memory_tree_graph_export",
+        "neppy.memory_tree_entity_index_for",
+        "neppy.memory_tree_memory_backfill_status",
+        "neppy.memory_tree_obsidian_vault_status",
+        "neppy.memory_tree_flush_now",
+        "neppy.memory_tree_reset_tree",
+        "neppy.memory_tree_wipe_all",
+        "neppy.memory_tree_set_enabled",
+        "neppy.memory_tree_query_source",
+        "neppy.memory_tree_search_entities",
+        "neppy.memory_tree_drill_down",
+        "neppy.memory_tree_fetch_leaves",
+        "neppy.memory_tree_chunk_score",
+        "neppy.memory_sources_list",
+        "neppy.memory_sources_add",
+        "neppy.memory_sources_get",
+        "neppy.memory_sources_update",
+        "neppy.memory_sources_remove",
+        "neppy.memory_sources_sync",
+        "neppy.memory_sources_status_list",
+        "neppy.memory_sources_list_items",
+        "neppy.memory_sources_read_item",
     ];
 
     for (offset, method) in methods.into_iter().enumerate() {
@@ -1100,7 +1088,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let folder = rpc(
         &harness.rpc_base,
         300,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "folder",
             "label": "Worker C folder",
@@ -1118,7 +1106,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let folder_items = rpc(
         &harness.rpc_base,
         301,
-        "openhuman.memory_sources_list_items",
+        "neppy.memory_sources_list_items",
         json!({ "source_id": folder_id }),
     )
     .await;
@@ -1135,7 +1123,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let html_read = rpc(
         &harness.rpc_base,
         302,
-        "openhuman.memory_sources_read_item",
+        "neppy.memory_sources_read_item",
         json!({ "source_id": folder_id, "item_id": "nested/brief.html" }),
     )
     .await;
@@ -1155,7 +1143,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let traversal = rpc(
         &harness.rpc_base,
         303,
-        "openhuman.memory_sources_read_item",
+        "neppy.memory_sources_read_item",
         json!({ "source_id": folder_id, "item_id": "../outside-secret.md" }),
     )
     .await;
@@ -1167,7 +1155,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let web = rpc(
         &harness.rpc_base,
         304,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "web_page",
             "label": "Worker C page",
@@ -1185,7 +1173,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let web_items = rpc(
         &harness.rpc_base,
         305,
-        "openhuman.memory_sources_list_items",
+        "neppy.memory_sources_list_items",
         json!({ "source_id": web_id }),
     )
     .await;
@@ -1199,7 +1187,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let web_read = rpc(
         &harness.rpc_base,
         306,
-        "openhuman.memory_sources_read_item",
+        "neppy.memory_sources_read_item",
         json!({ "source_id": web_id, "item_id": web_item_id }),
     )
     .await;
@@ -1211,7 +1199,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let rss = rpc(
         &harness.rpc_base,
         307,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "rss_feed",
             "label": "Worker C feed",
@@ -1229,7 +1217,7 @@ async fn memory_sources_folder_web_and_rss_readers_sync_through_rpc() {
     let rss_items = rpc(
         &harness.rpc_base,
         308,
-        "openhuman.memory_sources_list_items",
+        "neppy.memory_sources_list_items",
         json!({ "source_id": rss_id }),
     )
     .await;

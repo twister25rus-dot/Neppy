@@ -24,20 +24,20 @@ struct Round13EnvVarGuard {
 
 impl Round13EnvVarGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -46,7 +46,7 @@ impl Drop for Round13EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -73,14 +73,14 @@ impl Round13Harness {
 fn round13_env_lock() -> std::sync::MutexGuard<'static, ()> {
     // Delegate to the lock owned by the included `base_coverage` (config_auth)
     // module so round13 env mutations serialize against every other
-    // OPENHUMAN_WORKSPACE/BACKEND_URL-mutating test in this combined binary.
+    // NEPPY_WORKSPACE/BACKEND_URL-mutating test in this combined binary.
     // Two separate mutexes let the two groups race and quarantine the wrong
     // workspace (flaky `!state_file.exists()` / spurious JSON-RPC errors).
     base_coverage::env_lock()
 }
 
 fn write_round13_min_config(neppy_dir: &Path) {
-    std::fs::create_dir_all(neppy_dir).expect("create openhuman config dir");
+    std::fs::create_dir_all(neppy_dir).expect("create neppy config dir");
     let cfg = r#"api_url = "http://127.0.0.1:9"
 default_model = "round13-raw-coverage-model"
 default_temperature = 0.2
@@ -116,18 +116,18 @@ fn round13_setup() -> Round13Harness {
     write_round13_min_config(&workspace_override);
 
     let guards = vec![
-        Round13EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_override),
+        Round13EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_override),
         Round13EnvVarGuard::set_to_path("HOME", tmp.path()),
         Round13EnvVarGuard::unset("BACKEND_URL"),
         Round13EnvVarGuard::unset("VITE_BACKEND_URL"),
-        Round13EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        Round13EnvVarGuard::unset("OPENHUMAN_CORE_RPC_URL"),
-        Round13EnvVarGuard::unset("OPENHUMAN_CORE_PORT"),
-        Round13EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        Round13EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        Round13EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        Round13EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
-        Round13EnvVarGuard::set("OPENHUMAN_BROWSER_ALLOW_ALL_RPC_ENABLE", ""),
+        Round13EnvVarGuard::unset("NEPPY_API_URL"),
+        Round13EnvVarGuard::unset("NEPPY_CORE_RPC_URL"),
+        Round13EnvVarGuard::unset("NEPPY_CORE_PORT"),
+        Round13EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        Round13EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        Round13EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        Round13EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
+        Round13EnvVarGuard::set("NEPPY_BROWSER_ALLOW_ALL_RPC_ENABLE", ""),
     ];
 
     Round13Harness {
@@ -426,7 +426,7 @@ async fn raw_round13_connectivity_picker_identifies_neppy_probe_listener() {
         preferred,
     )
     .await;
-    let err = result.expect_err("openhuman probe listener should request takeover");
+    let err = result.expect_err("neppy probe listener should request takeover");
     assert!(
         matches!(
             err,
@@ -459,7 +459,7 @@ async fn raw_round13_connectivity_picker_falls_back_for_non_success_probe_status
         preferred,
     )
     .await
-    .expect("non-openhuman status should fall back");
+    .expect("non-neppy status should fall back");
     assert_ne!(picked.port, preferred);
     assert_eq!(picked.fallback_from, Some(preferred));
     drop(picked.listener);

@@ -55,14 +55,14 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -71,7 +71,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -162,14 +162,14 @@ async fn setup_config() -> Harness {
     std::fs::create_dir_all(&workspace).expect("workspace dir");
 
     let guards = vec![
-        EnvGuard::set_path("OPENHUMAN_WORKSPACE", &root),
+        EnvGuard::set_path("NEPPY_WORKSPACE", &root),
         EnvGuard::set_path("HOME", tmp.path()),
         EnvGuard::unset("BACKEND_URL"),
         EnvGuard::unset("VITE_BACKEND_URL"),
-        EnvGuard::unset("OPENHUMAN_API_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_RPC_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_PORT"),
-        EnvGuard::unset("OPENHUMAN_LSP_ENABLED"),
+        EnvGuard::unset("NEPPY_API_URL"),
+        EnvGuard::unset("NEPPY_CORE_RPC_URL"),
+        EnvGuard::unset("NEPPY_CORE_PORT"),
+        EnvGuard::unset("NEPPY_LSP_ENABLED"),
     ];
 
     let mut config = Config {

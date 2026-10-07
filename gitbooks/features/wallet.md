@@ -61,7 +61,7 @@ Read-only surfaces require no confirmation:
 - **Network defaults / supported assets**: per-chain RPC and explorer URLs, capability flags, and the built-in asset catalog.
 - **Chain status**: per-chain readiness and the active RPC URL.
 
-RPC endpoints are overridable per chain/network via `OPENHUMAN_WALLET_RPC_*` environment variables. URLs are redacted to scheme + host in logs.
+RPC endpoints are overridable per chain/network via `NEPPY_WALLET_RPC_*` environment variables. URLs are redacted to scheme + host in logs.
 
 ---
 

@@ -53,7 +53,7 @@ For Ollama, Neppy talks to its OpenAI-compatible `/v1` endpoint where possible. 
 - The provider router creates a _health-gated_ local provider on startup. If Ollama is not reachable, requests transparently fall back to the remote provider, no broken state.
 - Models are pulled on demand by Ollama and cached in its own store. Neppy doesn't ship the weights itself.
 
-For LM Studio, set `local_ai.provider = "lm_studio"` and ensure LM Studio's local server is running. Neppy defaults to `http://localhost:1234/v1`, probes `GET /v1/models`, and sends chat requests to `POST /v1/chat/completions`. You can override the endpoint with `local_ai.base_url`, `OPENHUMAN_LM_STUDIO_BASE_URL`, or `LM_STUDIO_BASE_URL`.
+For LM Studio, set `local_ai.provider = "lm_studio"` and ensure LM Studio's local server is running. Neppy defaults to `http://localhost:1234/v1`, probes `GET /v1/models`, and sends chat requests to `POST /v1/chat/completions`. You can override the endpoint with `local_ai.base_url`, `NEPPY_LM_STUDIO_BASE_URL`, or `LM_STUDIO_BASE_URL`.
 
 ## Opting in
 
@@ -90,7 +90,7 @@ The `local_ai.usage.*` booleans are consulted only during preset application and
 
 Prefer setting the `*_provider` fields directly when editing configuration by hand.
 
-In the desktop app, **Settings → AI & Skills → Local AI** exposes presets, pick one ("embeddings only", "memory + reflection", "everything local") and the right combination of flags is set for you. Status (Ollama reachability, model availability, per-subsystem enablement) is surfaced live via `openhuman.inference_status`.
+In the desktop app, **Settings → AI & Skills → Local AI** exposes presets, pick one ("embeddings only", "memory + reflection", "everything local") and the right combination of flags is set for you. Status (Ollama reachability, model availability, per-subsystem enablement) is surfaced live via `neppy.inference_status`.
 
 ## When to turn it on
 
@@ -127,7 +127,7 @@ Neppy handles the rest: lifecycle (`src/neppy/inference/local/service/`), API cl
 
 - Confirm the LM Studio local server is enabled and reachable at `http://localhost:1234/v1`.
 - Load the selected model in LM Studio before calling Neppy. Diagnostics report `load_lm_studio_model` when the configured `local_ai.chat_model_id` is not present in `/v1/models`.
-- If LM Studio uses a different port, set `local_ai.base_url` or `OPENHUMAN_LM_STUDIO_BASE_URL`.
+- If LM Studio uses a different port, set `local_ai.base_url` or `NEPPY_LM_STUDIO_BASE_URL`.
 - LM Studio model downloads are managed inside LM Studio. Neppy will not pull LM Studio models from the local asset-download controls.
 
 ## See also

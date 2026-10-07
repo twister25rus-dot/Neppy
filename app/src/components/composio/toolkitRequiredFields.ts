@@ -1,7 +1,7 @@
 /**
  * Per-toolkit declarative registry for provider-specific required fields the
  * Composio connect flow must collect *before* calling
- * `openhuman.composio_authorize`. Without these fields the backend returns
+ * `neppy.composio_authorize`. Without these fields the backend returns
  * `ConnectedAccount_MissingRequiredFields` (code 612) and the user is left
  * with an unhelpful raw error (#2127, #1702).
  *
@@ -24,7 +24,7 @@ type TranslationKey = string;
 export interface ToolkitRequiredField {
   /**
    * Field id. Also used verbatim as the `extra_params` key forwarded to
-   * `openhuman.composio_authorize`, so it must match exactly what the
+   * `neppy.composio_authorize`, so it must match exactly what the
    * Composio backend expects for the toolkit.
    */
   key: string;

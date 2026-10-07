@@ -72,8 +72,8 @@ interface ToolTimelineSnapshot {
 
 async function getToolTimeline(threadId: string): Promise<ToolTimelineSnapshot> {
   return (await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | {
           chatRuntime?: {
             toolTimelineByThread?: Record<string, Array<{ id?: string; name?: string }>>;
@@ -218,7 +218,7 @@ describe('Chat multi-tool round', () => {
     await browser.waitUntil(
       async () => {
         const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-          'openhuman.test_support_in_flight_chats',
+          'neppy.test_support_in_flight_chats',
           {}
         );
         return snap.ok && (snap.result?.result?.entries?.length ?? 0) === 0;

@@ -7,14 +7,14 @@
 #   ./scripts/profile/library-cpu.sh --no-isolate <scenario>
 #
 # Options:
-#   --no-isolate    Do not force OPENHUMAN_PROFILE_DISABLE_MEMORY_WRITES=1 /
-#                   OPENHUMAN_PROFILE_FORCE_UTC=1 (default: isolated, matching
+#   --no-isolate    Do not force NEPPY_PROFILE_DISABLE_MEMORY_WRITES=1 /
+#                   NEPPY_PROFILE_FORCE_UTC=1 (default: isolated, matching
 #                   the documented cold-path CPU recipe)
 #   --skip-build    Reuse the existing target/release/library-profile binary
 #   -h, --help      Show this help
 #
 # Extra environment variables can be passed after `--`, e.g.:
-#   ./scripts/profile/library-cpu.sh long-agent -- OPENHUMAN_PROFILE_TURNS=50
+#   ./scripts/profile/library-cpu.sh long-agent -- NEPPY_PROFILE_TURNS=50
 #
 # Output: target/profile/rust-library/<scenario>-cpu.json.gz
 # View it with: samply load target/profile/rust-library/<scenario>-cpu.json.gz
@@ -87,7 +87,7 @@ OUT_FILE="$OUT_DIR/${SCENARIO}-cpu.json.gz"
 
 ENV_ARGS=()
 if [[ "$ISOLATE" -eq 1 ]]; then
-    ENV_ARGS+=(OPENHUMAN_PROFILE_DISABLE_MEMORY_WRITES=1 OPENHUMAN_PROFILE_FORCE_UTC=1)
+    ENV_ARGS+=(NEPPY_PROFILE_DISABLE_MEMORY_WRITES=1 NEPPY_PROFILE_FORCE_UTC=1)
 fi
 ENV_ARGS+=("${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"}")
 

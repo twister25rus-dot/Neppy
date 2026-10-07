@@ -3,7 +3,7 @@
  * phases, and the tool timeline, driven through the real web-chat stack.
  *
  * Pattern source of truth: `chat-harness-subagent.spec.ts` (orchestrator →
- * subagent delegation, Redux polling via `__OPENHUMAN_STORE__`) and
+ * subagent delegation, Redux polling via `__NEPPY_STORE__`) and
  * `chat-harness-subagent-continue.spec.ts` (clarification continuation). This
  * spec reuses their proven flow: start a fresh thread, send a prompt, drive the
  * mock LLM with `llmForcedResponses`, and assert against the live Redux runtime
@@ -77,8 +77,8 @@ interface PendingApprovalSnapshot {
 /** Read `chatRuntime.pendingApprovalByThread[threadId]` from the live store. */
 async function readPendingApproval(threadId: string): Promise<PendingApprovalSnapshot | null> {
   return (await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | {
           chatRuntime?: {
             pendingApprovalByThread?: Record<
@@ -107,8 +107,8 @@ async function clickApprovalButton(analyticsId: string): Promise<boolean> {
  *  has been removed (idle = entry deleted — `chatRuntimeSlice.ts:440-442`). */
 async function readPhase(threadId: string): Promise<string> {
   return (await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | { chatRuntime?: { inferenceStatusByThread?: Record<string, { phase?: string }> } }
       | undefined;
     return state?.chatRuntime?.inferenceStatusByThread?.[tid]?.phase ?? 'idle';
@@ -118,8 +118,8 @@ async function readPhase(threadId: string): Promise<string> {
 /** Whether the thread has any live inference-status entry. */
 async function hasInferenceStatus(threadId: string): Promise<boolean> {
   return (await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | { chatRuntime?: { inferenceStatusByThread?: Record<string, unknown> } }
       | undefined;
     return state?.chatRuntime?.inferenceStatusByThread?.[tid] != null;
@@ -136,8 +136,8 @@ interface TimelineEntry {
 /** Read `chatRuntime.toolTimelineByThread[threadId]`. */
 async function readTimeline(threadId: string): Promise<TimelineEntry[]> {
   return (await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | {
           chatRuntime?: {
             toolTimelineByThread?: Record<

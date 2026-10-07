@@ -63,25 +63,25 @@ jobs:
           # Prefer the namespaced GH var; fall back to the legacy unprefixed
           # one so the workflow keeps working until the org-level variable
           # is renamed.
-          OPENHUMAN_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
+          NEPPY_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
         run: |
           # Sentry DSN is baked into the binary at compile time via
           # `option_env!`. Missing DSN here means the arm64 CLI silently
           # ships without error reporting — fail the job instead.
-          if [ -z "${OPENHUMAN_CORE_SENTRY_DSN}" ]; then
+          if [ -z "${NEPPY_CORE_SENTRY_DSN}" ]; then
             echo "::error::vars.OPENHUMAN_CORE_SENTRY_DSN (or legacy vars.OPENHUMAN_SENTRY_DSN) is empty — the Linux arm64 CLI would ship without error reporting."
             echo "Configure the repository / environment variable before re-running the release."
             exit 1
           fi
-          echo "OPENHUMAN_CORE_SENTRY_DSN is set (length=${#OPENHUMAN_CORE_SENTRY_DSN})"
+          echo "NEPPY_CORE_SENTRY_DSN is set (length=${#NEPPY_CORE_SENTRY_DSN})"
       - name: Build CLI binary and package tarball
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENHUMAN_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
+          NEPPY_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
           # Sentry release tracking (#405): keep the arm64 CLI tag in sync
           # with the desktop build (`openhuman@<version>+<short_sha>`).
-          OPENHUMAN_BUILD_SHA: ${{ github.sha }}
-          OPENHUMAN_APP_ENV: production
+          NEPPY_BUILD_SHA: ${{ github.sha }}
+          NEPPY_APP_ENV: production
         run: |
           bash scripts/ci-cancel-aware.sh cargo build --release --bin openhuman-core
           VERSION="${{ github.event.release.tag_name }}"

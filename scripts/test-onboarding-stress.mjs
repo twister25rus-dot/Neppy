@@ -15,18 +15,18 @@ import { randomUUID } from 'crypto';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-const CORE_PORT = process.env.OPENHUMAN_CORE_PORT || '7788';
-const CORE_HOST = process.env.OPENHUMAN_CORE_HOST || '127.0.0.1';
+const CORE_PORT = (process.env.NEPPY_CORE_PORT ?? process.env.OPENHUMAN_CORE_PORT) || '7788';
+const CORE_HOST = (process.env.NEPPY_CORE_HOST ?? process.env.OPENHUMAN_CORE_HOST) || '127.0.0.1';
 const CORE_URL = `http://${CORE_HOST}:${CORE_PORT}`;
 
-const OPENHUMAN_HOME = process.env.OPENHUMAN_WORKSPACE
-  ? path.join(process.env.OPENHUMAN_WORKSPACE)
+const NEPPY_HOME = (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)
+  ? path.join((process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE))
   : path.join(homedir(), '.neppy');
 
-// Set OPENHUMAN_USER_ID to pin to a specific user directory deterministically.
+// Set NEPPY_USER_ID to pin to a specific user directory deterministically.
 function findConfigPath() {
-  const usersDir = path.join(OPENHUMAN_HOME, 'users');
-  const pinnedId = process.env.OPENHUMAN_USER_ID;
+  const usersDir = path.join(NEPPY_HOME, 'users');
+  const pinnedId = (process.env.NEPPY_USER_ID ?? process.env.OPENHUMAN_USER_ID);
   if (pinnedId) {
     const candidate = path.join(usersDir, pinnedId, 'config.toml');
     if (existsSync(candidate)) return candidate;
@@ -40,7 +40,7 @@ function findConfigPath() {
       }
     } catch {}
   }
-  return path.join(OPENHUMAN_HOME, 'config.toml');
+  return path.join(NEPPY_HOME, 'config.toml');
 }
 
 const CONFIG_PATH = findConfigPath();
@@ -421,7 +421,7 @@ function judge(conversation) {
   checks['mentions_connecting_apps'] = lower.includes('connect') && (lower.includes('app') || lower.includes('gmail') || lower.includes('slack') || lower.includes('whatsapp'));
   // Only check pill usage when the agent actually guided a connection
   checks['uses_openhuman_link'] = !agentGuidedConnection || (allText.includes('openhuman-link') && allText.includes('accounts/setup'));
-  checks['no_robotic_self_id'] = !['as an ai', "i'm openhuman", 'i am openhuman'].some((p) => lower.includes(p));
+  checks['no_robotic_self_id'] = !['as an ai', "i'm neppy", 'i am neppy'].some((p) => lower.includes(p));
   // Allow billing mentions when the user explicitly asked about pricing
   checks['no_billing_pitch'] = userAskedPricing || !(lower.includes('billing') || lower.includes('subscription') || (lower.includes('credit') && lower.includes('trial')));
   checks['no_em_dashes'] = !allText.includes('\u2014');

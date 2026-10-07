@@ -115,9 +115,9 @@ Companion docs in the tinychannels repo:
   `ChannelManager<NeppyChannelBackend>` where they cross this crate seam,
   while preserving the legacy public JSON/log envelopes.
 - The event bus, health bus, and dispatch engine stay app-side and *drive*
-  tinychannels. Never add a tinychannels → openhuman dependency; the
+  tinychannels. Never add a tinychannels → neppy dependency; the
   `runtime/` dispatch engine and the `web` provider are consumers of the
-  crate, not porting candidates (they import ~45 openhuman modules).
+  crate, not porting candidates (they import ~45 neppy modules).
 
 ## Step 3 — Bug fixes coordinated with the crate
 

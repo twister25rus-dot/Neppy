@@ -10,14 +10,14 @@ use crate::rpc::RpcOutcome;
 
 pub(crate) fn env_flag_enabled(key: &str) -> bool {
     matches!(
-        std::env::var(key).ok().as_deref(),
+        crate::neppy::util::env::var(key).ok().as_deref(),
         Some("1") | Some("true") | Some("TRUE") | Some("yes") | Some("YES")
     )
 }
 
 /// Returns the core RPC URL from environment variables or a default value.
 pub fn core_rpc_url_from_env() -> String {
-    std::env::var("OPENHUMAN_CORE_RPC_URL")
+    crate::neppy::util::env::var("NEPPY_CORE_RPC_URL")
         .unwrap_or_else(|_| "http://127.0.0.1:7788/rpc".to_string())
 }
 
@@ -66,7 +66,7 @@ pub async fn load_config_with_timeout() -> Result<Config, String> {
 }
 
 /// Loads the config that belongs to `workspace_dir`, rather than whichever one
-/// the process-global active-user / `OPENHUMAN_WORKSPACE` resolution currently
+/// the process-global active-user / `NEPPY_WORKSPACE` resolution currently
 /// selects.
 ///
 /// Use this from anything scoped to a workspace it was *handed* — the memory
@@ -131,7 +131,7 @@ pub async fn load_config_for_workspace_with_timeout(
 /// Use this for long-lived objects that need fresh config values while
 /// staying anchored to their original user/workspace. Unlike
 /// [`load_config_with_timeout`], this does not re-resolve the process-global
-/// `OPENHUMAN_WORKSPACE` env var on every call.
+/// `NEPPY_WORKSPACE` env var on every call.
 pub async fn reload_config_snapshot_with_timeout(snapshot: &Config) -> Result<Config, String> {
     reload_config_from_paths(&snapshot.config_path, &snapshot.workspace_dir).await
 }
@@ -388,7 +388,7 @@ pub fn snapshot_config_json(config: &Config) -> Result<serde_json::Value, String
 /// Serializes the client-facing AI config slice consumed by the settings UI.
 pub fn client_config_json(config: &Config) -> serde_json::Value {
     let app_version =
-        std::env::var("OPENHUMAN_APP_VERSION").unwrap_or_else(|_| "unknown".to_string());
+        crate::neppy::util::env::var("NEPPY_APP_VERSION").unwrap_or_else(|_| "unknown".to_string());
     let api_key_set = config
         .api_key
         .as_deref()
@@ -523,8 +523,8 @@ pub struct RuntimeFlagsOut {
     pub log_prompts: bool,
 }
 
-pub(crate) const BROWSER_ALLOW_ALL_ENV: &str = "OPENHUMAN_BROWSER_ALLOW_ALL";
-pub(crate) const BROWSER_ALLOW_ALL_RPC_ENABLE_ENV: &str = "OPENHUMAN_BROWSER_ALLOW_ALL_RPC_ENABLE";
+pub(crate) const BROWSER_ALLOW_ALL_ENV: &str = "NEPPY_BROWSER_ALLOW_ALL";
+pub(crate) const BROWSER_ALLOW_ALL_RPC_ENABLE_ENV: &str = "NEPPY_BROWSER_ALLOW_ALL_RPC_ENABLE";
 
 /// Returns the current state of runtime-only flags.
 pub fn get_runtime_flags() -> RpcOutcome<RuntimeFlagsOut> {
@@ -534,11 +534,11 @@ pub fn get_runtime_flags() -> RpcOutcome<RuntimeFlagsOut> {
 pub(crate) fn runtime_flags() -> RuntimeFlagsOut {
     RuntimeFlagsOut {
         browser_allow_all: env_flag_enabled(BROWSER_ALLOW_ALL_ENV),
-        log_prompts: env_flag_enabled("OPENHUMAN_LOG_PROMPTS"),
+        log_prompts: env_flag_enabled("NEPPY_LOG_PROMPTS"),
     }
 }
 
-/// Updates the `OPENHUMAN_BROWSER_ALLOW_ALL` environment flag.
+/// Updates the `NEPPY_BROWSER_ALLOW_ALL` environment flag.
 ///
 /// **Security note:** when enabled, this disables the browser tool's
 /// per-domain allowlist for the entire process. Both transitions are
@@ -568,9 +568,7 @@ pub fn set_browser_allow_all(enabled: bool) -> Result<RpcOutcome<RuntimeFlagsOut
             std::env::set_var(BROWSER_ALLOW_ALL_ENV, "1");
         }
     } else {
-        unsafe {
-            std::env::remove_var(BROWSER_ALLOW_ALL_ENV);
-        }
+        crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_ENV);
     }
     let flags = runtime_flags();
     let now_enabled = flags.browser_allow_all;
@@ -615,23 +613,23 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
     tracing::debug!(
         target: "neppy_core::config",
         request_id = %request_id,
-        method = "openhuman.config_get_dashboard_settings",
-        "OPENHUMAN: get_dashboard_settings entry"
+        method = "neppy.config_get_dashboard_settings",
+        "NEPPY: get_dashboard_settings entry"
     );
     tracing::debug!(
         target: "neppy_core::config",
         request_id = %request_id,
-        method = "openhuman.config_get_dashboard_settings",
-        "OPENHUMAN: get_dashboard_settings loading config"
+        method = "neppy.config_get_dashboard_settings",
+        "NEPPY: get_dashboard_settings loading config"
     );
 
     let config = load_config_with_timeout().await.map_err(|error| {
         tracing::warn!(
             target: "neppy_core::config",
             request_id = %request_id,
-            method = "openhuman.config_get_dashboard_settings",
+            method = "neppy.config_get_dashboard_settings",
             error = %error,
-            "OPENHUMAN: get_dashboard_settings config load failed"
+            "NEPPY: get_dashboard_settings config load failed"
         );
         error
     })?;
@@ -639,17 +637,17 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
     tracing::debug!(
         target: "neppy_core::config",
         request_id = %request_id,
-        method = "openhuman.config_get_dashboard_settings",
-        "OPENHUMAN: get_dashboard_settings serializing dashboard settings"
+        method = "neppy.config_get_dashboard_settings",
+        "NEPPY: get_dashboard_settings serializing dashboard settings"
     );
     let result = serde_json::to_value(&config.dashboard).map_err(|error| {
         let message = error.to_string();
         tracing::warn!(
             target: "neppy_core::config",
             request_id = %request_id,
-            method = "openhuman.config_get_dashboard_settings",
+            method = "neppy.config_get_dashboard_settings",
             error = %message,
-            "OPENHUMAN: get_dashboard_settings serialization failed"
+            "NEPPY: get_dashboard_settings serialization failed"
         );
         message
     })?;
@@ -657,8 +655,8 @@ pub async fn get_dashboard_settings() -> Result<RpcOutcome<serde_json::Value>, S
     tracing::debug!(
         target: "neppy_core::config",
         request_id = %request_id,
-        method = "openhuman.config_get_dashboard_settings",
-        "OPENHUMAN: get_dashboard_settings exit"
+        method = "neppy.config_get_dashboard_settings",
+        "NEPPY: get_dashboard_settings exit"
     );
     Ok(RpcOutcome::new(
         result,
@@ -692,7 +690,7 @@ pub async fn reset_local_data() -> Result<RpcOutcome<serde_json::Value>, String>
 ///
 /// Lets the Tauri-side `reset_local_data` command discover the active
 /// workspace dir, the default `~/.neppy` dir (which can differ when
-/// `OPENHUMAN_WORKSPACE` is set or a staging build is in use), and the
+/// `NEPPY_WORKSPACE` is set or a staging build is in use), and the
 /// active workspace marker file **before** the core sidecar is shut down —
 /// after which the Tauri shell removes them while no process holds open
 /// handles. See OPENHUMAN-TAURI-AF for the Windows file-locking failure
@@ -945,7 +943,7 @@ mod loader_io_chain_tests {
         );
     }
 
-    // load_config_with_timeout resolves the process-global OPENHUMAN_WORKSPACE,
+    // load_config_with_timeout resolves the process-global NEPPY_WORKSPACE,
     // so serialize against the other env-mutating config tests. Exercises the
     // load_or_init directory guard + the `Ok(Err) => format!("{e:#}")` arm.
     #[tokio::test]
@@ -957,14 +955,14 @@ mod loader_io_chain_tests {
         let _g = crate::neppy::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        let prev = std::env::var("OPENHUMAN_WORKSPACE").ok();
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path().to_str().unwrap());
+        let prev = crate::neppy::util::env::var("NEPPY_WORKSPACE").ok();
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path().to_str().unwrap());
 
         let result = load_config_with_timeout().await;
 
         match prev {
-            Some(v) => std::env::set_var("OPENHUMAN_WORKSPACE", v),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(v) => std::env::set_var("NEPPY_WORKSPACE", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
 
         let err = result.expect_err("a directory at the config path must fail");

@@ -30,20 +30,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -52,7 +52,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -130,14 +130,14 @@ async fn setup() -> TestHarness {
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::unset("NEPPY_API_URL"),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
 
     // The HTTP router is intentionally transport-only and does not construct a
@@ -295,23 +295,23 @@ async fn target_domain_schemas_are_exposed_over_http_schema_catalog() {
     }
 
     for method in [
-        "openhuman.config_get",
-        "openhuman.auth_get_state",
-        "openhuman.app_state_snapshot",
-        "openhuman.connectivity_diag",
-        "openhuman.inference_presets",
-        "openhuman.agent_server_status",
-        "openhuman.tools_web_search",
-        "openhuman.tool_registry_list",
-        "openhuman.approval_list_pending",
-        "openhuman.memory_ingestion_status",
-        "openhuman.memory_tree_pipeline_status",
-        "openhuman.memory_sync_status_list",
-        "openhuman.memory_sources_list",
-        "openhuman.embeddings_get_settings",
-        "openhuman.channels_list",
-        "openhuman.composio_get_mode",
-        "openhuman.threads_list",
+        "neppy.config_get",
+        "neppy.auth_get_state",
+        "neppy.app_state_snapshot",
+        "neppy.connectivity_diag",
+        "neppy.inference_presets",
+        "neppy.agent_server_status",
+        "neppy.tools_web_search",
+        "neppy.tool_registry_list",
+        "neppy.approval_list_pending",
+        "neppy.memory_ingestion_status",
+        "neppy.memory_tree_pipeline_status",
+        "neppy.memory_sync_status_list",
+        "neppy.memory_sources_list",
+        "neppy.embeddings_get_settings",
+        "neppy.channels_list",
+        "neppy.composio_get_mode",
+        "neppy.threads_list",
     ] {
         assert!(
             methods
@@ -332,7 +332,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let set_onboarding = rpc(
         &harness.rpc_base,
         30_001,
-        "openhuman.config_set_onboarding_completed",
+        "neppy.config_set_onboarding_completed",
         json!({ "value": true }),
     )
     .await;
@@ -343,7 +343,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let get_onboarding = rpc(
         &harness.rpc_base,
         30_002,
-        "openhuman.config_get_onboarding_completed",
+        "neppy.config_get_onboarding_completed",
         json!({}),
     )
     .await;
@@ -355,7 +355,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let analytics = rpc(
         &harness.rpc_base,
         30_003,
-        "openhuman.config_update_analytics_settings",
+        "neppy.config_update_analytics_settings",
         json!({ "enabled": false }),
     )
     .await;
@@ -363,7 +363,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let analytics_get = rpc(
         &harness.rpc_base,
         30_004,
-        "openhuman.config_get_analytics_settings",
+        "neppy.config_get_analytics_settings",
         json!({}),
     )
     .await;
@@ -377,7 +377,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let dictation = rpc(
         &harness.rpc_base,
         30_007,
-        "openhuman.config_update_dictation_settings",
+        "neppy.config_update_dictation_settings",
         json!({
             "enabled": true,
             "hotkey": "Fn",
@@ -392,7 +392,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let dictation_get = rpc(
         &harness.rpc_base,
         30_008,
-        "openhuman.config_get_dictation_settings",
+        "neppy.config_get_dictation_settings",
         json!({}),
     )
     .await;
@@ -407,7 +407,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let search = rpc(
         &harness.rpc_base,
         30_009,
-        "openhuman.config_update_search_settings",
+        "neppy.config_update_search_settings",
         json!({
             "engine": "managed",
             "max_results": 7,
@@ -421,7 +421,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let search_get = rpc(
         &harness.rpc_base,
         30_010,
-        "openhuman.config_get_search_settings",
+        "neppy.config_get_search_settings",
         json!({}),
     )
     .await;
@@ -436,7 +436,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let data_paths = rpc(
         &harness.rpc_base,
         30_011,
-        "openhuman.config_get_data_paths",
+        "neppy.config_get_data_paths",
         json!({}),
     )
     .await;
@@ -445,13 +445,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
         "data paths should return an object: {data_paths}"
     );
 
-    let profiles_initial = rpc(
-        &harness.rpc_base,
-        31_001,
-        "openhuman.profiles_list",
-        json!({}),
-    )
-    .await;
+    let profiles_initial = rpc(&harness.rpc_base, 31_001, "neppy.profiles_list", json!({})).await;
     let initial = ok(&profiles_initial, "profiles_list initial");
     assert_eq!(
         initial.get("activeProfileId").and_then(Value::as_str),
@@ -461,7 +455,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let upsert_profile = rpc(
         &harness.rpc_base,
         31_002,
-        "openhuman.profiles_upsert",
+        "neppy.profiles_upsert",
         json!({
             "profile": {
                 "id": "E2E Planner",
@@ -491,7 +485,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let select_profile = rpc(
         &harness.rpc_base,
         31_003,
-        "openhuman.profiles_select",
+        "neppy.profiles_select",
         json!({ "profile_id": "e2e-planner" }),
     )
     .await;
@@ -505,7 +499,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let delete_profile = rpc(
         &harness.rpc_base,
         31_004,
-        "openhuman.profiles_delete",
+        "neppy.profiles_delete",
         json!({ "profile_id": "e2e-planner" }),
     )
     .await;
@@ -528,7 +522,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let diagnostics = rpc(
         &harness.rpc_base,
         32_001,
-        "openhuman.tool_registry_diagnostics",
+        "neppy.tool_registry_diagnostics",
         json!({}),
     )
     .await;
@@ -543,11 +537,11 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     );
 
     for (idx, (method, params)) in [
-        ("openhuman.tools_composio_execute", json!({})),
-        ("openhuman.tools_seltz_search", json!({})),
-        ("openhuman.tools_querit_search", json!({})),
-        ("openhuman.tools_searxng_search", json!({})),
-        ("openhuman.tools_apify_linkedin_scrape", json!({})),
+        ("neppy.tools_composio_execute", json!({})),
+        ("neppy.tools_seltz_search", json!({})),
+        ("neppy.tools_querit_search", json!({})),
+        ("neppy.tools_searxng_search", json!({})),
+        ("neppy.tools_apify_linkedin_scrape", json!({})),
     ]
     .into_iter()
     .enumerate()
@@ -567,7 +561,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let upsert_thread = rpc(
         &harness.rpc_base,
         34_001,
-        "openhuman.threads_upsert",
+        "neppy.threads_upsert",
         json!({
             "id": "domain-e2e-thread",
             "title": "Domain E2E Thread",
@@ -586,7 +580,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let append_message = rpc(
         &harness.rpc_base,
         34_002,
-        "openhuman.threads_message_append",
+        "neppy.threads_message_append",
         json!({
             "thread_id": "domain-e2e-thread",
             "message": {
@@ -610,7 +604,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let update_message = rpc(
         &harness.rpc_base,
         34_003,
-        "openhuman.threads_message_update",
+        "neppy.threads_message_update",
         json!({
             "thread_id": "domain-e2e-thread",
             "message_id": "domain-e2e-message",
@@ -626,7 +620,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
     let delete_thread = rpc(
         &harness.rpc_base,
         34_004,
-        "openhuman.threads_delete",
+        "neppy.threads_delete",
         json!({
             "thread_id": "domain-e2e-thread",
             "deleted_at": "2026-05-29T12:00:02Z"
@@ -640,13 +634,7 @@ async fn config_agent_tools_and_threads_mutation_paths_round_trip() {
         Some(true)
     );
 
-    let purge = rpc(
-        &harness.rpc_base,
-        34_005,
-        "openhuman.threads_purge",
-        json!({}),
-    )
-    .await;
+    let purge = rpc(&harness.rpc_base, 34_005, "neppy.threads_purge", json!({})).await;
     assert!(
         data(&purge, "threads_purge")
             .get("agentThreadsDeleted")
@@ -664,26 +652,26 @@ async fn target_domain_read_paths_round_trip_through_json_rpc_transport() {
     let harness = setup().await;
 
     let calls = [
-        ("openhuman.config_get_client_config", json!({})),
-        ("openhuman.auth_get_state", json!({})),
-        ("openhuman.app_state_snapshot", json!({})),
-        ("openhuman.connectivity_diag", json!({})),
-        ("openhuman.inference_presets", json!({})),
-        ("openhuman.agent_server_status", json!({})),
-        ("openhuman.tool_registry_list", json!({})),
-        ("openhuman.approval_list_pending", json!({})),
+        ("neppy.config_get_client_config", json!({})),
+        ("neppy.auth_get_state", json!({})),
+        ("neppy.app_state_snapshot", json!({})),
+        ("neppy.connectivity_diag", json!({})),
+        ("neppy.inference_presets", json!({})),
+        ("neppy.agent_server_status", json!({})),
+        ("neppy.tool_registry_list", json!({})),
+        ("neppy.approval_list_pending", json!({})),
         (
-            "openhuman.approval_list_recent_decisions",
+            "neppy.approval_list_recent_decisions",
             json!({ "limit": 5 }),
         ),
-        ("openhuman.memory_ingestion_status", json!({})),
-        ("openhuman.memory_tree_pipeline_status", json!({})),
-        ("openhuman.memory_sync_status_list", json!({})),
-        ("openhuman.memory_sources_list", json!({})),
-        ("openhuman.embeddings_get_settings", json!({})),
-        ("openhuman.channels_list", json!({})),
-        ("openhuman.composio_get_mode", json!({})),
-        ("openhuman.threads_list", json!({})),
+        ("neppy.memory_ingestion_status", json!({})),
+        ("neppy.memory_tree_pipeline_status", json!({})),
+        ("neppy.memory_sync_status_list", json!({})),
+        ("neppy.memory_sources_list", json!({})),
+        ("neppy.embeddings_get_settings", json!({})),
+        ("neppy.channels_list", json!({})),
+        ("neppy.composio_get_mode", json!({})),
+        ("neppy.threads_list", json!({})),
     ];
 
     for (idx, (method, params)) in calls.into_iter().enumerate() {
@@ -698,7 +686,7 @@ async fn target_domain_read_paths_round_trip_through_json_rpc_transport() {
     let tools_validation = rpc(
         &harness.rpc_base,
         20_001,
-        "openhuman.tools_web_search",
+        "neppy.tools_web_search",
         json!({}),
     )
     .await;

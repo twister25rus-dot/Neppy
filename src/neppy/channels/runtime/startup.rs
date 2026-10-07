@@ -293,7 +293,7 @@ pub async fn start_channels(mut config: Config) -> Result<()> {
     // NOTE: the live tool-execution timeout seed is done in
     // `core::jsonrpc::register_domain_subscribers` (unconditional core boot), NOT
     // here — `start_channels` is skipped when no channel is configured or
-    // `OPENHUMAN_DISABLE_CHANNEL_LISTENERS` is set, which would otherwise leave
+    // `NEPPY_DISABLE_CHANNEL_LISTENERS` is set, which would otherwise leave
     // channel-less / web-chat-only cores running the default timeout instead of the
     // user-configured `[agent].agent_timeout_secs` (#5027).
     // Phase 1 of #1401: audit logger is wired with defaults so emission paths
@@ -748,7 +748,7 @@ pub async fn start_channels(mut config: Config) -> Result<()> {
     // NOTE: the flows `FlowTriggerSubscriber` is registered in
     // `jsonrpc.rs::register_domain_subscribers` (unconditional core boot), NOT
     // here — `start_channels` is skipped when no channel is configured or
-    // `OPENHUMAN_DISABLE_CHANNEL_LISTENERS` is set, which would otherwise leave
+    // `NEPPY_DISABLE_CHANNEL_LISTENERS` is set, which would otherwise leave
     // schedule/app-event workflows undispatched (issue B2 review).
     // Register the proactive message subscriber so morning briefings,
     // welcome messages, and other proactive agent output gets routed to

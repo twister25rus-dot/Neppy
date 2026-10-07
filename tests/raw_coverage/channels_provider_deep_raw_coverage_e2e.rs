@@ -116,7 +116,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: impl AsRef<str>) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value.as_ref());
         Self { key, old }
     }
@@ -126,7 +126,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match self.old.as_deref() {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }

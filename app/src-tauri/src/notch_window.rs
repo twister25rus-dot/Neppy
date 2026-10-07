@@ -11,7 +11,7 @@
 //! point at `?window=notch` so the React tree can branch in `main.tsx`.
 //!
 //! IPC strategy: no Tauri IPC bridge. The panel polls
-//! `OPENHUMAN_CORE_RPC_URL` (set by `CoreProcessHandle` once the embedded
+//! `NEPPY_CORE_RPC_URL` (set by `CoreProcessHandle` once the embedded
 //! server is ready) and injects it via `evaluateJavaScript` so the React app
 //! can open a Socket.IO connection to receive live voice and agent events.
 
@@ -324,7 +324,7 @@ unsafe fn build_webview(
 // ── Core-URL injection timer ──────────────────────────────────────────────────
 
 /// Spawn a 1 Hz repeating timer that waits for the embedded core to become
-/// ready (indicated by `CoreProcessHandle` setting `OPENHUMAN_CORE_RPC_URL`
+/// ready (indicated by `CoreProcessHandle` setting `NEPPY_CORE_RPC_URL`
 /// in the process env), then injects the base URL into the WKWebView.
 ///
 /// After the first successful inject the timer becomes a no-op until it is
@@ -340,7 +340,7 @@ unsafe fn spawn_inject_timer(webview: Retained<WKWebView>) -> Retained<NSTimer> 
             return;
         }
 
-        let Ok(rpc_url) = std::env::var("OPENHUMAN_CORE_RPC_URL") else {
+        let Ok(rpc_url) = neppy_core::neppy::util::env::var("NEPPY_CORE_RPC_URL") else {
             return; // Core not ready yet — try again next tick.
         };
 
@@ -365,8 +365,8 @@ unsafe fn spawn_inject_timer(webview: Retained<WKWebView>) -> Retained<NSTimer> 
         // Set a global AND dispatch a custom event so React can pick up the URL
         // regardless of whether the component mounted before or after this fires.
         let js = format!(
-            "window.__OPENHUMAN_NOTCH_CORE_TOKEN__='{token}';\
-             window.__OPENHUMAN_NOTCH_CORE_URL__='{base_url}';\
+            "window.__NEPPY_NOTCH_CORE_TOKEN__='{token}';\
+             window.__NEPPY_NOTCH_CORE_URL__='{base_url}';\
              window.dispatchEvent(new CustomEvent('notch:core-url',{{detail:{{url:'{base_url}'}}}}));"
         );
         let js_str = NSString::from_str(&js);

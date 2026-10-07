@@ -21,7 +21,7 @@ brew install --cask openhuman
 sudo apt-get install -y --no-install-recommends ./Neppy_*_amd64.deb
 ```
 
-**Linux (Arch, AUR):** the [`openhuman-bin` AUR recipe](./packages/arch/openhuman-bin/) is in the repo. Once published, Arch users can install it with `yay -S openhuman-bin`.
+**Linux (Arch, AUR):** the [`openhuman-bin` AUR recipe](./packages/arch/neppy-bin/) is in the repo. Once published, Arch users can install it with `yay -S openhuman-bin`.
 
 **Windows:** download the signed `.msi` from the [latest release](https://github.com/tinyhumansai/openhuman/releases/latest) and run it.
 
@@ -41,7 +41,7 @@ curl -fsSL https://raw.githubusercontent.com/tinyhumansai/openhuman/main/scripts
 irm https://raw.githubusercontent.com/tinyhumansai/openhuman/main/scripts/install.ps1 | iex
 ```
 
-On Debian/Ubuntu, `install.sh` resolves the latest release `.deb` first and installs it with `apt-get` so runtime dependencies are handled by apt. Set `OPENHUMAN_INSTALLER_LINUX_PACKAGE=appimage` to force the AppImage path.
+On Debian/Ubuntu, `install.sh` resolves the latest release `.deb` first and installs it with `apt-get` so runtime dependencies are handled by apt. Set `NEPPY_INSTALLER_LINUX_PACKAGE=appimage` to force the AppImage path.
 
 ## Verified script install status
 

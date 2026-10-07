@@ -10,7 +10,7 @@
  *
  * The older "Text / Voice" segmented toggle no longer exists. This spec
  * covers the current desktop-only voice entry surface and keeps the
- * `openhuman.voice_status` RPC contract assertions below.
+ * `neppy.voice_status` RPC contract assertions below.
  */
 import { waitForApp, waitForAppReady } from '../helpers/app-helpers';
 import { callNeppyRpc } from '../helpers/core-rpc';
@@ -134,7 +134,7 @@ describe.skip('Voice mode integration', () => {
 /**
  * Hosted STT engine — core RPC contract tests.
  *
- * These tests exercise the `openhuman.voice_status` RPC to assert the
+ * These tests exercise the `neppy.voice_status` RPC to assert the
  * availability contract without touching the UI voice toggle (which was
  * removed in #717). The RPC contract is:
  *
@@ -153,7 +153,7 @@ describe('Voice mode — hosted STT contract (voice_status RPC)', () => {
   });
 
   it('5.1 — voice_status RPC returns a well-formed response', async () => {
-    const result = await callNeppyRpc('openhuman.voice_status', {});
+    const result = await callNeppyRpc('neppy.voice_status', {});
     expect(result).toBeDefined();
     expect(typeof result).toBe('object');
     const status = (result as any).result ?? result;
@@ -164,7 +164,7 @@ describe('Voice mode — hosted STT contract (voice_status RPC)', () => {
   });
 
   it('5.2 — voice_status reports the resolved STT engine', async () => {
-    const result = await callNeppyRpc('openhuman.voice_status', {});
+    const result = await callNeppyRpc('neppy.voice_status', {});
     const status = (result as any).result ?? result;
 
     expect(status.stt_engine.length).toBeGreaterThan(0);
@@ -397,7 +397,7 @@ describe.skip('Voice mode — Human tab capture & error mapping (#1610)', () => 
       return btoa(binary);
     });
 
-    const result = await callNeppyRpc('openhuman.voice_stt_dispatch', {
+    const result = await callNeppyRpc('neppy.voice_stt_dispatch', {
       audio_base64: silentWavBase64,
       mime_type: 'audio/wav',
       file_name: 'test.wav',

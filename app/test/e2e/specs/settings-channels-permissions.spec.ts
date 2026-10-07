@@ -21,13 +21,11 @@ import { startMockServer, stopMockServer } from '../mock-server';
 async function defaultMessagingChannel(): Promise<string | null> {
   return browser.execute(() => {
     const win = window as unknown as {
-      __OPENHUMAN_STORE__?: {
+      __NEPPY_STORE__?: {
         getState?: () => { channelConnections?: { defaultMessagingChannel?: string | null } };
       };
     };
-    return (
-      win.__OPENHUMAN_STORE__?.getState?.().channelConnections?.defaultMessagingChannel ?? null
-    );
+    return win.__NEPPY_STORE__?.getState?.().channelConnections?.defaultMessagingChannel ?? null;
   });
 }
 
@@ -53,7 +51,7 @@ describe('Settings - Channels & Permissions', () => {
     // (the built-in chat), so we make Telegram the default first — that turns
     // Web into a connected, non-default tile that exposes the control — then
     // switch the default to Web through the UI.
-    await callNeppyRpc('openhuman.channels_set_default', { channel: 'telegram' });
+    await callNeppyRpc('neppy.channels_set_default', { channel: 'telegram' });
 
     // Navigate away and back so the messaging panel re-seeds the default from
     // the core (it reads the persisted default when the page mounts).

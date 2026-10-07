@@ -1,4 +1,4 @@
-//! `tinyagents` [`Tool`] adapter over an openhuman [`Tool`] (issue #4249).
+//! `tinyagents` [`Tool`] adapter over a neppy [`Tool`] (issue #4249).
 //!
 //! Wraps `Arc<dyn neppy::tools::Tool>` so the harness agent-loop can invoke
 //! the exact same tools the legacy loop runs. The harness calls `call` with a
@@ -74,7 +74,7 @@ impl EarlyExitHook {
     }
 }
 
-/// A harness tool backed by an openhuman [`Tool`].
+/// A harness tool backed by a neppy [`Tool`].
 #[cfg(test)]
 pub(crate) struct ToolAdapter {
     inner: Arc<dyn crate::neppy::tools::Tool>,
@@ -82,7 +82,7 @@ pub(crate) struct ToolAdapter {
 
 #[cfg(test)]
 impl ToolAdapter {
-    /// Wrap a resolved openhuman tool.
+    /// Wrap a resolved neppy tool.
     pub(crate) fn new(inner: Arc<dyn crate::neppy::tools::Tool>) -> Self {
         Self { inner }
     }
@@ -183,7 +183,7 @@ pub(crate) fn tool_policy_from_neppy_tool(tool: &dyn crate::neppy::tools::Tool) 
 /// `"javascript"` label the node runtime uses for the same events).
 const TINYAGENTS_TOOL_SESSION: &str = "tinyagents";
 
-/// Execute an openhuman [`Tool`](crate::neppy::tools::Tool) for a harness
+/// Execute a neppy [`Tool`](crate::neppy::tools::Tool) for a harness
 /// [`TaToolCall`] and render the [`TaToolResult`] the way the LLM should see it
 /// (mirrors the live-path `HarnessToolExecutor`).
 pub(crate) async fn execute_neppy_tool(
@@ -198,7 +198,7 @@ pub(crate) async fn execute_neppy_tool(
         tool = %call.name,
         call_id = %call.id,
         workspace_root = workspace_root.as_deref().unwrap_or("none"),
-        "[tinyagents] executing openhuman tool via harness adapter"
+        "[tinyagents] executing neppy tool via harness adapter"
     );
 
     // Measure the real execution duration (#4467, item 4) and re-publish the

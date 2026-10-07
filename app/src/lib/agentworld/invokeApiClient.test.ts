@@ -2,7 +2,7 @@
  * Unit tests for the Agent World invoke API client bridge.
  *
  * Mocks `callCoreRpc` and asserts:
- * 1. Each client method calls the correct `openhuman.tinyplace_*` RPC method.
+ * 1. Each client method calls the correct `neppy.tinyplace_*` RPC method.
  * 2. Parameters are marshalled correctly.
  * 3. A `PAYMENT_REQUIRED:` rejection becomes a `PaymentRequiredError`.
  * 4. Other errors propagate unchanged.
@@ -23,14 +23,14 @@ beforeEach(() => {
 // ── directory.listAgents ──────────────────────────────────────────────────────
 
 describe('directory.listAgents', () => {
-  test('calls openhuman.tinyplace_directory_list_agents with params', async () => {
+  test('calls neppy.tinyplace_directory_list_agents with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ agents: [] });
     const client = createInvokeApiClient();
     const params = { q: 'ai assistant', limit: 10 };
     await client.directory.listAgents(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_list_agents',
+      method: 'neppy.tinyplace_directory_list_agents',
       params: { params },
     });
   });
@@ -41,7 +41,7 @@ describe('directory.listAgents', () => {
     await client.directory.listAgents();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_list_agents',
+      method: 'neppy.tinyplace_directory_list_agents',
       params: { params: null },
     });
   });
@@ -58,13 +58,13 @@ describe('directory.listAgents', () => {
 // ── directory.getAgent ────────────────────────────────────────────────────────
 
 describe('directory.getAgent', () => {
-  test('calls openhuman.tinyplace_directory_get_agent with agentId', async () => {
+  test('calls neppy.tinyplace_directory_get_agent with agentId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ agentId: 'abc123' });
     const client = createInvokeApiClient();
     await client.directory.getAgent('abc123');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_get_agent',
+      method: 'neppy.tinyplace_directory_get_agent',
       params: { agentId: 'abc123' },
     });
   });
@@ -73,13 +73,13 @@ describe('directory.getAgent', () => {
 // ── explorer.overview ─────────────────────────────────────────────────────────
 
 describe('explorer.overview', () => {
-  test('calls openhuman.tinyplace_explorer_overview with no params', async () => {
+  test('calls neppy.tinyplace_explorer_overview with no params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ totalAgents: 42 });
     const client = createInvokeApiClient();
     await client.explorer.overview();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_explorer_overview',
+      method: 'neppy.tinyplace_explorer_overview',
       params: undefined,
     });
   });
@@ -88,13 +88,13 @@ describe('explorer.overview', () => {
 // ── search.unified ────────────────────────────────────────────────────────────
 
 describe('search.unified', () => {
-  test('calls openhuman.tinyplace_search_unified with query', async () => {
+  test('calls neppy.tinyplace_search_unified with query', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ results: [] });
     const client = createInvokeApiClient();
     await client.search.unified('coding assistant');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_search_unified',
+      method: 'neppy.tinyplace_search_unified',
       params: { query: 'coding assistant' },
     });
   });
@@ -103,13 +103,13 @@ describe('search.unified', () => {
 // ── directory.resolve ─────────────────────────────────────────────────────────
 
 describe('directory.resolve', () => {
-  test('calls openhuman.tinyplace_directory_resolve with name', async () => {
+  test('calls neppy.tinyplace_directory_resolve with name', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ identity: null, agent: null });
     const client = createInvokeApiClient();
     await client.directory.resolve('alice.agent');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_resolve',
+      method: 'neppy.tinyplace_directory_resolve',
       params: { name: 'alice.agent' },
     });
   });
@@ -126,13 +126,13 @@ describe('directory.resolve', () => {
 // ── directory.reverse ─────────────────────────────────────────────────────────
 
 describe('directory.reverse', () => {
-  test('calls openhuman.tinyplace_directory_reverse with cryptoId', async () => {
+  test('calls neppy.tinyplace_directory_reverse with cryptoId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ cryptoId: 'abc123', identities: [] });
     const client = createInvokeApiClient();
     await client.directory.reverse('HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_reverse',
+      method: 'neppy.tinyplace_directory_reverse',
       params: { cryptoId: 'HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk' },
     });
   });
@@ -141,14 +141,14 @@ describe('directory.reverse', () => {
 // ── directory.listIdentities ──────────────────────────────────────────────────
 
 describe('directory.listIdentities', () => {
-  test('calls openhuman.tinyplace_directory_list_identities with params', async () => {
+  test('calls neppy.tinyplace_directory_list_identities with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ identities: [] });
     const client = createInvokeApiClient();
     const params = { q: 'alice', limit: 5 };
     await client.directory.listIdentities(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_list_identities',
+      method: 'neppy.tinyplace_directory_list_identities',
       params: { params },
     });
   });
@@ -159,7 +159,7 @@ describe('directory.listIdentities', () => {
     await client.directory.listIdentities();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_list_identities',
+      method: 'neppy.tinyplace_directory_list_identities',
       params: { params: null },
     });
   });
@@ -168,14 +168,14 @@ describe('directory.listIdentities', () => {
 // ── directory.skills ──────────────────────────────────────────────────────────
 
 describe('directory.skills', () => {
-  test('calls openhuman.tinyplace_directory_skills with params', async () => {
+  test('calls neppy.tinyplace_directory_skills with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ agents: [] });
     const client = createInvokeApiClient();
     const params = { q: 'coding', limit: 10 };
     await client.directory.skills(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_skills',
+      method: 'neppy.tinyplace_directory_skills',
       params: { params },
     });
   });
@@ -186,7 +186,7 @@ describe('directory.skills', () => {
     await client.directory.skills();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_directory_skills',
+      method: 'neppy.tinyplace_directory_skills',
       params: { params: null },
     });
   });
@@ -196,12 +196,12 @@ describe('directory.skills', () => {
 
 describe('contacts', () => {
   test.each([
-    ['request', 'openhuman.tinyplace_contacts_request', { agentId: '@worker' }],
-    ['accept', 'openhuman.tinyplace_contacts_accept', { agentId: '@worker' }],
-    ['remove', 'openhuman.tinyplace_contacts_remove', { agentId: '@worker' }],
-    ['block', 'openhuman.tinyplace_contacts_block', { agentId: '@worker' }],
-    ['unblock', 'openhuman.tinyplace_contacts_unblock', { agentId: '@worker' }],
-    ['status', 'openhuman.tinyplace_contacts_status', { agentId: '@worker' }],
+    ['request', 'neppy.tinyplace_contacts_request', { agentId: '@worker' }],
+    ['accept', 'neppy.tinyplace_contacts_accept', { agentId: '@worker' }],
+    ['remove', 'neppy.tinyplace_contacts_remove', { agentId: '@worker' }],
+    ['block', 'neppy.tinyplace_contacts_block', { agentId: '@worker' }],
+    ['unblock', 'neppy.tinyplace_contacts_unblock', { agentId: '@worker' }],
+    ['status', 'neppy.tinyplace_contacts_status', { agentId: '@worker' }],
   ] as const)('calls %s with agentId', async (methodName, rpcMethod, params) => {
     mockCallCoreRpc.mockResolvedValueOnce({ ok: true });
     const client = createInvokeApiClient();
@@ -212,8 +212,8 @@ describe('contacts', () => {
   });
 
   test.each([
-    ['list', 'openhuman.tinyplace_contacts_list'],
-    ['requests', 'openhuman.tinyplace_contacts_requests'],
+    ['list', 'neppy.tinyplace_contacts_list'],
+    ['requests', 'neppy.tinyplace_contacts_requests'],
   ] as const)('calls %s with default null params', async (methodName, rpcMethod) => {
     mockCallCoreRpc.mockResolvedValueOnce({});
     const client = createInvokeApiClient();
@@ -224,8 +224,8 @@ describe('contacts', () => {
   });
 
   test.each([
-    ['list', 'openhuman.tinyplace_contacts_list'],
-    ['requests', 'openhuman.tinyplace_contacts_requests'],
+    ['list', 'neppy.tinyplace_contacts_list'],
+    ['requests', 'neppy.tinyplace_contacts_requests'],
   ] as const)('calls %s with provided params', async (methodName, rpcMethod) => {
     mockCallCoreRpc.mockResolvedValueOnce({});
     const client = createInvokeApiClient();
@@ -243,7 +243,7 @@ describe('contacts', () => {
     await client.contacts.stats();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_contacts_stats',
+      method: 'neppy.tinyplace_contacts_stats',
       params: {},
     });
   });
@@ -259,15 +259,15 @@ describe('orchestrationPairing', () => {
     await client.orchestrationPairing.list();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.orchestration_pairing_list',
+      method: 'neppy.orchestration_pairing_list',
       params: {},
     });
   });
 
   test.each([
-    ['acceptRequest', 'openhuman.orchestration_pairing_accept_request', { agentId: '@worker' }],
-    ['declineRequest', 'openhuman.orchestration_pairing_decline_request', { agentId: '@worker' }],
-    ['blockRequest', 'openhuman.orchestration_pairing_block_request', { agentId: '@worker' }],
+    ['acceptRequest', 'neppy.orchestration_pairing_accept_request', { agentId: '@worker' }],
+    ['declineRequest', 'neppy.orchestration_pairing_decline_request', { agentId: '@worker' }],
+    ['blockRequest', 'neppy.orchestration_pairing_block_request', { agentId: '@worker' }],
   ] as const)('calls %s with agentId', async (methodName, rpcMethod, params) => {
     mockCallCoreRpc.mockResolvedValueOnce({ record: null, remote: {} });
     const client = createInvokeApiClient();
@@ -284,7 +284,7 @@ describe('orchestrationPairing', () => {
     await client.orchestrationPairing.linkSession('@worker');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.orchestration_pairing_link_session',
+      method: 'neppy.orchestration_pairing_link_session',
       params: { agentId: '@worker', label: null },
     });
   });
@@ -296,7 +296,7 @@ describe('orchestrationPairing', () => {
     await client.orchestrationPairing.linkSession('@worker', 'Worker session');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.orchestration_pairing_link_session',
+      method: 'neppy.orchestration_pairing_link_session',
       params: { agentId: '@worker', label: 'Worker session' },
     });
   });
@@ -341,13 +341,13 @@ describe('PaymentRequiredError propagation', () => {
 // ── profiles.get ─────────────────────────────────────────────────────────────
 
 describe('profiles.get', () => {
-  test('calls openhuman.tinyplace_profiles_get with username', async () => {
+  test('calls neppy.tinyplace_profiles_get with username', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ username: 'alice', name: 'Alice' });
     const client = createInvokeApiClient();
     await client.profiles.get('alice');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_profiles_get',
+      method: 'neppy.tinyplace_profiles_get',
       params: { username: 'alice' },
     });
   });
@@ -364,13 +364,13 @@ describe('profiles.get', () => {
 // ── profiles.activity ─────────────────────────────────────────────────────────
 
 describe('profiles.activity', () => {
-  test('calls openhuman.tinyplace_profiles_activity with username', async () => {
+  test('calls neppy.tinyplace_profiles_activity with username', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ events: [] });
     const client = createInvokeApiClient();
     await client.profiles.activity('alice');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_profiles_activity',
+      method: 'neppy.tinyplace_profiles_activity',
       params: { username: 'alice' },
     });
   });
@@ -379,13 +379,13 @@ describe('profiles.activity', () => {
 // ── profiles.groups ───────────────────────────────────────────────────────────
 
 describe('profiles.groups', () => {
-  test('calls openhuman.tinyplace_profiles_groups with username', async () => {
+  test('calls neppy.tinyplace_profiles_groups with username', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ groups: [] });
     const client = createInvokeApiClient();
     await client.profiles.groups('alice');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_profiles_groups',
+      method: 'neppy.tinyplace_profiles_groups',
       params: { username: 'alice' },
     });
   });
@@ -402,13 +402,13 @@ describe('profiles.groups', () => {
 // ── profiles.broadcasts ───────────────────────────────────────────────────────
 
 describe('profiles.broadcasts', () => {
-  test('calls openhuman.tinyplace_profiles_broadcasts with username', async () => {
+  test('calls neppy.tinyplace_profiles_broadcasts with username', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ broadcasts: [] });
     const client = createInvokeApiClient();
     await client.profiles.broadcasts('alice');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_profiles_broadcasts',
+      method: 'neppy.tinyplace_profiles_broadcasts',
       params: { username: 'alice' },
     });
   });
@@ -417,13 +417,13 @@ describe('profiles.broadcasts', () => {
 // ── profiles.attestations ─────────────────────────────────────────────────────
 
 describe('profiles.attestations', () => {
-  test('calls openhuman.tinyplace_profiles_attestations with username', async () => {
+  test('calls neppy.tinyplace_profiles_attestations with username', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ attestations: [] });
     const client = createInvokeApiClient();
     await client.profiles.attestations('alice');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_profiles_attestations',
+      method: 'neppy.tinyplace_profiles_attestations',
       params: { username: 'alice' },
     });
   });
@@ -432,13 +432,13 @@ describe('profiles.attestations', () => {
 // ── profiles.agentCard ────────────────────────────────────────────────────────
 
 describe('profiles.agentCard', () => {
-  test('calls openhuman.tinyplace_profiles_agent_card with username', async () => {
+  test('calls neppy.tinyplace_profiles_agent_card with username', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ agentId: 'abc123', name: 'Alice Agent' });
     const client = createInvokeApiClient();
     await client.profiles.agentCard('alice');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_profiles_agent_card',
+      method: 'neppy.tinyplace_profiles_agent_card',
       params: { username: 'alice' },
     });
   });
@@ -447,13 +447,13 @@ describe('profiles.agentCard', () => {
 // ── users.get ─────────────────────────────────────────────────────────────────
 
 describe('users.get', () => {
-  test('calls openhuman.tinyplace_users_get with cryptoId', async () => {
+  test('calls neppy.tinyplace_users_get with cryptoId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ cryptoId: 'xyz789', displayName: 'Alice' });
     const client = createInvokeApiClient();
     await client.users.get('xyz789');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_users_get',
+      method: 'neppy.tinyplace_users_get',
       params: { cryptoId: 'xyz789' },
     });
   });
@@ -470,7 +470,7 @@ describe('users.get', () => {
 // ── users.updateProfile ───────────────────────────────────────────────────────
 
 describe('users.updateProfile', () => {
-  test('calls openhuman.tinyplace_users_update_profile with cryptoId and update', async () => {
+  test('calls neppy.tinyplace_users_update_profile with cryptoId and update', async () => {
     const updated = { cryptoId: 'xyz789', displayName: 'Alice Updated' };
     mockCallCoreRpc.mockResolvedValueOnce(updated);
     const client = createInvokeApiClient();
@@ -478,7 +478,7 @@ describe('users.updateProfile', () => {
     await client.users.updateProfile('xyz789', update);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_users_update_profile',
+      method: 'neppy.tinyplace_users_update_profile',
       params: { cryptoId: 'xyz789', update },
     });
   });
@@ -542,7 +542,7 @@ describe('bounties.create', () => {
     await client.bounties.create(bountyParams, { confirmed: true });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_bounties_create',
+      method: 'neppy.tinyplace_bounties_create',
       params: {
         title: 'Build a widget',
         description: 'Need a widget',
@@ -571,7 +571,7 @@ describe('bounties.create', () => {
 });
 
 describe('registry.export', () => {
-  test('calls openhuman.tinyplace_registry_export with name', async () => {
+  test('calls neppy.tinyplace_registry_export with name', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({
       identity: { username: '@testhandle' },
       ledgerTransactions: [],
@@ -583,20 +583,20 @@ describe('registry.export', () => {
     await client.registry.export('@testhandle');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_registry_export',
+      method: 'neppy.tinyplace_registry_export',
       params: { name: '@testhandle' },
     });
   });
 });
 
 describe('registry.assignPrimary', () => {
-  test('calls openhuman.tinyplace_registry_assign_primary with name (#4198)', async () => {
+  test('calls neppy.tinyplace_registry_assign_primary with name (#4198)', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ identity: { username: '@second', primary: true } });
     const client = createInvokeApiClient();
     const result = await client.registry.assignPrimary('@second');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_registry_assign_primary',
+      method: 'neppy.tinyplace_registry_assign_primary',
       params: { name: '@second' },
     });
     expect(result.identity?.primary).toBe(true);
@@ -604,13 +604,13 @@ describe('registry.assignPrimary', () => {
 });
 
 describe('registry.get', () => {
-  test('calls openhuman.tinyplace_registry_get with name', async () => {
+  test('calls neppy.tinyplace_registry_get with name', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ available: true, name: '@atlas' });
     const client = createInvokeApiClient();
     await client.registry.get('@atlas');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_registry_get',
+      method: 'neppy.tinyplace_registry_get',
       params: { name: '@atlas' },
     });
   });
@@ -624,13 +624,13 @@ describe('registry.get', () => {
   });
 });
 describe('marketplace.listIdentities', () => {
-  test('calls openhuman.tinyplace_marketplace_list_identities with status', async () => {
+  test('calls neppy.tinyplace_marketplace_list_identities with status', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ identities: [] });
     const client = createInvokeApiClient();
     await client.marketplace.listIdentities({ status: 'active' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_identities',
+      method: 'neppy.tinyplace_marketplace_list_identities',
       params: { limit: null, status: 'active' },
     });
   });
@@ -641,19 +641,19 @@ describe('marketplace.listIdentities', () => {
     await client.marketplace.listIdentities();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_identities',
+      method: 'neppy.tinyplace_marketplace_list_identities',
       params: { limit: null, status: null },
     });
   });
 });
 describe('marketplace.identityFloor', () => {
-  test('calls openhuman.tinyplace_marketplace_identity_floor with length', async () => {
+  test('calls neppy.tinyplace_marketplace_identity_floor with length', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ length: 3, price: { amount: '250', asset: 'USDC' } });
     const client = createInvokeApiClient();
     await client.marketplace.identityFloor(3);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_identity_floor',
+      method: 'neppy.tinyplace_marketplace_identity_floor',
       params: { length: 3 },
     });
   });
@@ -664,55 +664,55 @@ describe('marketplace.identityFloor', () => {
     await client.marketplace.identityFloor();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_identity_floor',
+      method: 'neppy.tinyplace_marketplace_identity_floor',
       params: { length: null },
     });
   });
 });
 describe('marketplace.recent', () => {
-  test('calls openhuman.tinyplace_marketplace_recent with no params', async () => {
+  test('calls neppy.tinyplace_marketplace_recent with no params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ sales: [] });
     const client = createInvokeApiClient();
     await client.marketplace.recent();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_recent',
+      method: 'neppy.tinyplace_marketplace_recent',
       params: undefined,
     });
   });
 });
 describe('marketplace.identitySaleHistory', () => {
-  test('calls openhuman.tinyplace_marketplace_identity_sale_history with name', async () => {
+  test('calls neppy.tinyplace_marketplace_identity_sale_history with name', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ history: [] });
     const client = createInvokeApiClient();
     await client.marketplace.identitySaleHistory('@atlas');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_identity_sale_history',
+      method: 'neppy.tinyplace_marketplace_identity_sale_history',
       params: { name: '@atlas' },
     });
   });
 });
 describe('marketplace.listBids', () => {
-  test('calls openhuman.tinyplace_marketplace_list_bids with listingId', async () => {
+  test('calls neppy.tinyplace_marketplace_list_bids with listingId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ bids: [] });
     const client = createInvokeApiClient();
     await client.marketplace.listBids('listing-123');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_bids',
+      method: 'neppy.tinyplace_marketplace_list_bids',
       params: { listingId: 'listing-123' },
     });
   });
 });
 describe('marketplace.listOffers', () => {
-  test('calls openhuman.tinyplace_marketplace_list_offers with name filter', async () => {
+  test('calls neppy.tinyplace_marketplace_list_offers with name filter', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ offers: [] });
     const client = createInvokeApiClient();
     await client.marketplace.listOffers({ name: '@atlas' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_offers',
+      method: 'neppy.tinyplace_marketplace_list_offers',
       params: { name: '@atlas', buyer: null },
     });
   });
@@ -723,7 +723,7 @@ describe('marketplace.listOffers', () => {
     await client.marketplace.listOffers({ buyer: '@buyer' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_offers',
+      method: 'neppy.tinyplace_marketplace_list_offers',
       params: { name: null, buyer: '@buyer' },
     });
   });
@@ -734,21 +734,21 @@ describe('marketplace.listOffers', () => {
     await client.marketplace.listOffers();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_offers',
+      method: 'neppy.tinyplace_marketplace_list_offers',
       params: { name: null, buyer: null },
     });
   });
 });
 
 describe('marketplace.browseMarketplace', () => {
-  test('calls openhuman.tinyplace_marketplace_browse with params', async () => {
+  test('calls neppy.tinyplace_marketplace_browse with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ products: [] });
     const client = createInvokeApiClient();
     const params = { q: 'model', category: 'ai' };
     await client.marketplace.browseMarketplace(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_browse',
+      method: 'neppy.tinyplace_marketplace_browse',
       params: { params },
     });
   });
@@ -759,19 +759,19 @@ describe('marketplace.browseMarketplace', () => {
     await client.marketplace.browseMarketplace();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_browse',
+      method: 'neppy.tinyplace_marketplace_browse',
       params: { params: null },
     });
   });
 });
 describe('marketplace.listProducts', () => {
-  test('calls openhuman.tinyplace_marketplace_list_products', async () => {
+  test('calls neppy.tinyplace_marketplace_list_products', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ products: [] });
     const client = createInvokeApiClient();
     await client.marketplace.listProducts({ limit: 10 });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_products',
+      method: 'neppy.tinyplace_marketplace_list_products',
       params: { params: { limit: 10 } },
     });
   });
@@ -782,67 +782,67 @@ describe('marketplace.listProducts', () => {
     await client.marketplace.listProducts();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_products',
+      method: 'neppy.tinyplace_marketplace_list_products',
       params: { params: null },
     });
   });
 });
 describe('marketplace.getProduct', () => {
-  test('calls openhuman.tinyplace_marketplace_get_product with productId', async () => {
+  test('calls neppy.tinyplace_marketplace_get_product with productId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ productId: 'prod_abc' });
     const client = createInvokeApiClient();
     await client.marketplace.getProduct('prod_abc');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_get_product',
+      method: 'neppy.tinyplace_marketplace_get_product',
       params: { productId: 'prod_abc' },
     });
   });
 });
 describe('marketplace.categories', () => {
-  test('calls openhuman.tinyplace_marketplace_categories with no params', async () => {
+  test('calls neppy.tinyplace_marketplace_categories with no params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ categories: [] });
     const client = createInvokeApiClient();
     await client.marketplace.categories();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_categories',
+      method: 'neppy.tinyplace_marketplace_categories',
       params: undefined,
     });
   });
 });
 describe('marketplace.featured', () => {
-  test('calls openhuman.tinyplace_marketplace_featured with no params', async () => {
+  test('calls neppy.tinyplace_marketplace_featured with no params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ items: [] });
     const client = createInvokeApiClient();
     await client.marketplace.featured();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_featured',
+      method: 'neppy.tinyplace_marketplace_featured',
       params: undefined,
     });
   });
 });
 describe('marketplace.listProductReviews', () => {
-  test('calls openhuman.tinyplace_marketplace_list_product_reviews with productId', async () => {
+  test('calls neppy.tinyplace_marketplace_list_product_reviews with productId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ reviews: [] });
     const client = createInvokeApiClient();
     await client.marketplace.listProductReviews('prod_xyz');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_marketplace_list_product_reviews',
+      method: 'neppy.tinyplace_marketplace_list_product_reviews',
       params: { productId: 'prod_xyz' },
     });
   });
 });
 describe('artifacts.list', () => {
-  test('calls openhuman.tinyplace_artifacts_list with params and actorId', async () => {
+  test('calls neppy.tinyplace_artifacts_list with params and actorId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ artifacts: [] });
     const client = createInvokeApiClient();
     await client.artifacts.list({ role: 'owner' }, 'agent123');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_artifacts_list',
+      method: 'neppy.tinyplace_artifacts_list',
       params: { params: { role: 'owner' }, actorId: 'agent123' },
     });
   });
@@ -853,19 +853,19 @@ describe('artifacts.list', () => {
     await client.artifacts.list();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_artifacts_list',
+      method: 'neppy.tinyplace_artifacts_list',
       params: { params: null },
     });
   });
 });
 describe('artifacts.get', () => {
-  test('calls openhuman.tinyplace_artifacts_get with artifactId', async () => {
+  test('calls neppy.tinyplace_artifacts_get with artifactId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ artifactId: 'art_abc', owner: 'agent123' });
     const client = createInvokeApiClient();
     await client.artifacts.get('art_abc');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_artifacts_get',
+      method: 'neppy.tinyplace_artifacts_get',
       params: { artifactId: 'art_abc' },
     });
   });
@@ -876,19 +876,19 @@ describe('artifacts.get', () => {
     await client.artifacts.get('art_abc', 'agent456');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_artifacts_get',
+      method: 'neppy.tinyplace_artifacts_get',
       params: { artifactId: 'art_abc', actorId: 'agent456' },
     });
   });
 });
 describe('escrow.list', () => {
-  test('calls openhuman.tinyplace_escrow_list with params', async () => {
+  test('calls neppy.tinyplace_escrow_list with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ escrows: [] });
     const client = createInvokeApiClient();
     await client.escrow.list({ status: 'funded' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_escrow_list',
+      method: 'neppy.tinyplace_escrow_list',
       params: { params: { status: 'funded' } },
     });
   });
@@ -899,31 +899,31 @@ describe('escrow.list', () => {
     await client.escrow.list();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_escrow_list',
+      method: 'neppy.tinyplace_escrow_list',
       params: { params: null },
     });
   });
 });
 describe('escrow.get', () => {
-  test('calls openhuman.tinyplace_escrow_get with escrowId', async () => {
+  test('calls neppy.tinyplace_escrow_get with escrowId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ escrowId: 'esc_abc', status: 'funded' });
     const client = createInvokeApiClient();
     await client.escrow.get('esc_abc');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_escrow_get',
+      method: 'neppy.tinyplace_escrow_get',
       params: { escrowId: 'esc_abc' },
     });
   });
 });
 describe('jobs.list', () => {
-  test('calls openhuman.tinyplace_jobs_list with params', async () => {
+  test('calls neppy.tinyplace_jobs_list with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ jobs: [] });
     const client = createInvokeApiClient();
     await client.jobs.list({ q: 'rust developer' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_jobs_list',
+      method: 'neppy.tinyplace_jobs_list',
       params: { params: { q: 'rust developer' } },
     });
   });
@@ -934,33 +934,33 @@ describe('jobs.list', () => {
     await client.jobs.list();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_jobs_list',
+      method: 'neppy.tinyplace_jobs_list',
       params: { params: null },
     });
   });
 });
 describe('jobs.get', () => {
-  test('calls openhuman.tinyplace_jobs_get with jobId', async () => {
+  test('calls neppy.tinyplace_jobs_get with jobId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ jobId: 'job_abc', status: 'open' });
     const client = createInvokeApiClient();
     await client.jobs.get('job_abc');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_jobs_get',
+      method: 'neppy.tinyplace_jobs_get',
       params: { jobId: 'job_abc' },
     });
   });
 });
 
 describe('channels.list', () => {
-  test('calls openhuman.tinyplace_channels_list with params', async () => {
+  test('calls neppy.tinyplace_channels_list with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ channels: [] });
     const client = createInvokeApiClient();
     const params = { q: 'defi', limit: 10 };
     await client.channels.list(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_channels_list',
+      method: 'neppy.tinyplace_channels_list',
       params: { params },
     });
   });
@@ -971,7 +971,7 @@ describe('channels.list', () => {
     await client.channels.list();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_channels_list',
+      method: 'neppy.tinyplace_channels_list',
       params: { params: null },
     });
   });
@@ -987,14 +987,14 @@ describe('channels.list', () => {
   });
 });
 describe('groups.list', () => {
-  test('calls openhuman.tinyplace_groups_list with params', async () => {
+  test('calls neppy.tinyplace_groups_list with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce([]);
     const client = createInvokeApiClient();
     const params = { q: 'research', limit: 5 };
     await client.groups.list(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_list',
+      method: 'neppy.tinyplace_groups_list',
       params: { params },
     });
   });
@@ -1005,20 +1005,20 @@ describe('groups.list', () => {
     await client.groups.list();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_list',
+      method: 'neppy.tinyplace_groups_list',
       params: { params: null },
     });
   });
 });
 describe('broadcasts.list', () => {
-  test('calls openhuman.tinyplace_broadcasts_list with params', async () => {
+  test('calls neppy.tinyplace_broadcasts_list with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce([]);
     const client = createInvokeApiClient();
     const params = { visibility: 'public', limit: 20 };
     await client.broadcasts.list(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_broadcasts_list',
+      method: 'neppy.tinyplace_broadcasts_list',
       params: { params },
     });
   });
@@ -1029,13 +1029,13 @@ describe('broadcasts.list', () => {
     await client.broadcasts.list();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_broadcasts_list',
+      method: 'neppy.tinyplace_broadcasts_list',
       params: { params: null },
     });
   });
 });
 describe('inbox.list', () => {
-  test('calls openhuman.tinyplace_inbox_list with params and no owner', async () => {
+  test('calls neppy.tinyplace_inbox_list with params and no owner', async () => {
     const mockResult = { items: [], unreadCount: 0, totalCount: 0, cursor: null };
     mockCallCoreRpc.mockResolvedValueOnce(mockResult);
     const client = createInvokeApiClient();
@@ -1043,7 +1043,7 @@ describe('inbox.list', () => {
     await client.inbox.list(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_list',
+      method: 'neppy.tinyplace_inbox_list',
       params: { params, owner: null },
     });
   });
@@ -1054,7 +1054,7 @@ describe('inbox.list', () => {
     await client.inbox.list(undefined, 'agent-xyz');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_list',
+      method: 'neppy.tinyplace_inbox_list',
       params: { params: null, owner: 'agent-xyz' },
     });
   });
@@ -1081,14 +1081,14 @@ describe('inbox.list', () => {
   });
 });
 describe('inbox.counts', () => {
-  test('calls openhuman.tinyplace_inbox_counts with no owner', async () => {
+  test('calls neppy.tinyplace_inbox_counts with no owner', async () => {
     const mockCounts = { unread: 3, read: 10, archived: 2, byType: {}, urgent: 0 };
     mockCallCoreRpc.mockResolvedValueOnce(mockCounts);
     const client = createInvokeApiClient();
     await client.inbox.counts();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_counts',
+      method: 'neppy.tinyplace_inbox_counts',
       params: { owner: null },
     });
   });
@@ -1105,7 +1105,7 @@ describe('inbox.counts', () => {
     await client.inbox.counts('agent-abc');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_counts',
+      method: 'neppy.tinyplace_inbox_counts',
       params: { owner: 'agent-abc' },
     });
   });
@@ -1127,12 +1127,12 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue(undefined);
     await client.channels.join('ch-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_channels_join',
+      method: 'neppy.tinyplace_channels_join',
       params: { channelId: 'ch-1' },
     });
     await client.channels.leave('ch-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_channels_leave',
+      method: 'neppy.tinyplace_channels_leave',
       params: { channelId: 'ch-1' },
     });
   });
@@ -1142,12 +1142,12 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue(undefined);
     await client.groups.join('g-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_join',
+      method: 'neppy.tinyplace_groups_join',
       params: { groupId: 'g-1' },
     });
     await client.groups.leave('g-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_leave',
+      method: 'neppy.tinyplace_groups_leave',
       params: { groupId: 'g-1' },
     });
   });
@@ -1157,7 +1157,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue({ groupId: 'g-1', agentId: 'a-1', role: 'admin' });
     await client.groups.setMemberRole('g-1', 'a-1', 'admin');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_set_member_role',
+      method: 'neppy.tinyplace_groups_set_member_role',
       params: { groupId: 'g-1', agentId: 'a-1', role: 'admin' },
     });
   });
@@ -1167,7 +1167,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue({ token: 'tok-1' });
     await client.groups.createInvite('g-1', { ttlSeconds: 3600, maxUses: 5 });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_create_invite',
+      method: 'neppy.tinyplace_groups_create_invite',
       params: { groupId: 'g-1', request: { ttlSeconds: 3600, maxUses: 5 } },
     });
   });
@@ -1177,7 +1177,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue({ token: 'tok-2' });
     await client.groups.createInvite('g-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_create_invite',
+      method: 'neppy.tinyplace_groups_create_invite',
       params: { groupId: 'g-1', request: null },
     });
   });
@@ -1187,7 +1187,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue([]);
     await client.groups.listInvites('g-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_list_invites',
+      method: 'neppy.tinyplace_groups_list_invites',
       params: { groupId: 'g-1' },
     });
   });
@@ -1197,7 +1197,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue({ groupId: 'g-1', name: 'Group', valid: true });
     await client.groups.previewInvite('g-1', 'tok-abc');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_preview_invite',
+      method: 'neppy.tinyplace_groups_preview_invite',
       params: { groupId: 'g-1', token: 'tok-abc' },
     });
   });
@@ -1207,7 +1207,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue(undefined);
     await client.groups.revokeInvite('g-1', 'tok-abc');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_revoke_invite',
+      method: 'neppy.tinyplace_groups_revoke_invite',
       params: { groupId: 'g-1', token: 'tok-abc' },
     });
   });
@@ -1217,7 +1217,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue({ groupId: 'g-1', agentId: 'me', role: 'member' });
     await client.groups.redeemInvite('g-1', 'tok-join');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_groups_redeem_invite',
+      method: 'neppy.tinyplace_groups_redeem_invite',
       params: { groupId: 'g-1', token: 'tok-join' },
     });
   });
@@ -1227,12 +1227,12 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue(undefined);
     await client.broadcasts.subscribe('bc-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_broadcasts_subscribe',
+      method: 'neppy.tinyplace_broadcasts_subscribe',
       params: { broadcastId: 'bc-1' },
     });
     await client.broadcasts.unsubscribe('bc-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_broadcasts_unsubscribe',
+      method: 'neppy.tinyplace_broadcasts_unsubscribe',
       params: { broadcastId: 'bc-1' },
     });
   });
@@ -1242,22 +1242,22 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue(undefined);
     await client.inbox.markRead('item-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_mark_read',
+      method: 'neppy.tinyplace_inbox_mark_read',
       params: { itemId: 'item-1', owner: null },
     });
     await client.inbox.archive('item-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_archive',
+      method: 'neppy.tinyplace_inbox_archive',
       params: { itemId: 'item-1', owner: null },
     });
     await client.inbox.unarchive('item-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_unarchive',
+      method: 'neppy.tinyplace_inbox_unarchive',
       params: { itemId: 'item-1', owner: null },
     });
     await client.inbox.remove('item-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_remove',
+      method: 'neppy.tinyplace_inbox_remove',
       params: { itemId: 'item-1', owner: null },
     });
   });
@@ -1267,7 +1267,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue(undefined);
     await client.inbox.markRead('item-2', 'agent-owner');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_mark_read',
+      method: 'neppy.tinyplace_inbox_mark_read',
       params: { itemId: 'item-2', owner: 'agent-owner' },
     });
   });
@@ -1277,7 +1277,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValue(undefined);
     await client.inbox.markAllRead();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_inbox_mark_all_read',
+      method: 'neppy.tinyplace_inbox_mark_all_read',
       params: { params: null, owner: null },
     });
   });
@@ -1289,7 +1289,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ feedback: [] });
     await client.feedback.list({ status: 'open', limit: 10 });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_feedback_list',
+      method: 'neppy.tinyplace_feedback_list',
       params: { params: { status: 'open', limit: 10 } },
     });
   });
@@ -1299,7 +1299,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ feedback: [] });
     await client.feedback.list();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_feedback_list',
+      method: 'neppy.tinyplace_feedback_list',
       params: { params: null },
     });
   });
@@ -1309,7 +1309,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ feedbackId: 'fb-1' });
     await client.feedback.get('fb-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_feedback_get',
+      method: 'neppy.tinyplace_feedback_get',
       params: { feedbackId: 'fb-1' },
     });
   });
@@ -1319,7 +1319,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ feedbackId: 'fb-new' });
     await client.feedback.create('My idea', 'Great description');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_feedback_create',
+      method: 'neppy.tinyplace_feedback_create',
       params: { title: 'My idea', description: 'Great description' },
     });
   });
@@ -1329,7 +1329,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ feedbackId: 'fb-cat' });
     await client.feedback.create('Idea', 'Desc', 'feature');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_feedback_create',
+      method: 'neppy.tinyplace_feedback_create',
       params: { title: 'Idea', description: 'Desc', category: 'feature' },
     });
   });
@@ -1339,7 +1339,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ feedbackId: 'fb-1', score: 1 });
     await client.feedback.vote('fb-1', 'up');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_feedback_vote',
+      method: 'neppy.tinyplace_feedback_vote',
       params: { feedbackId: 'fb-1', vote: 'up' },
     });
   });
@@ -1349,14 +1349,14 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ feedbackId: 'fb-1', score: -1 });
     await client.feedback.vote('fb-1', 'down');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_feedback_vote',
+      method: 'neppy.tinyplace_feedback_vote',
       params: { feedbackId: 'fb-1', vote: 'down' },
     });
   });
 
   // ── Solana namespace ──────────────────────────────────────────────────────
 
-  test('solana.info calls openhuman.tinyplace_solana_info with no params', async () => {
+  test('solana.info calls neppy.tinyplace_solana_info with no params', async () => {
     const client = createInvokeApiClient();
     mockCallCoreRpc.mockResolvedValueOnce({
       network: 'solana-devnet',
@@ -1373,17 +1373,17 @@ describe('messaging write methods', () => {
     });
     await client.solana.info();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_solana_info',
+      method: 'neppy.tinyplace_solana_info',
       params: undefined,
     });
   });
 
-  test('solana.rpcCall calls openhuman.tinyplace_solana_call with method and params', async () => {
+  test('solana.rpcCall calls neppy.tinyplace_solana_call with method and params', async () => {
     const client = createInvokeApiClient();
     mockCallCoreRpc.mockResolvedValueOnce({ value: 1000000000 });
     await client.solana.rpcCall('getBalance', ['4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU']);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_solana_call',
+      method: 'neppy.tinyplace_solana_call',
       params: {
         method: 'getBalance',
         params: ['4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'],
@@ -1397,7 +1397,7 @@ describe('messaging write methods', () => {
     mockCallCoreRpc.mockResolvedValueOnce(42);
     await client.solana.rpcCall('getSlot');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_solana_call',
+      method: 'neppy.tinyplace_solana_call',
       params: { method: 'getSlot', params: null, id: null },
     });
   });
@@ -1416,12 +1416,12 @@ test('signal namespace has expected methods', () => {
 });
 
 describe('signal.provision', () => {
-  test('calls openhuman.tinyplace_signal_provision with preKeyCount', async () => {
+  test('calls neppy.tinyplace_signal_provision with preKeyCount', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ agentId: 'abc', oneTimePreKeyCount: 100 });
     const client = createInvokeApiClient();
     await client.signal.provision(50);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_provision',
+      method: 'neppy.tinyplace_signal_provision',
       params: { preKeyCount: 50 },
     });
   });
@@ -1431,19 +1431,19 @@ describe('signal.provision', () => {
     const client = createInvokeApiClient();
     await client.signal.provision();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_provision',
+      method: 'neppy.tinyplace_signal_provision',
       params: { preKeyCount: null },
     });
   });
 });
 
 describe('signal.uploadPreKeys', () => {
-  test('calls openhuman.tinyplace_signal_upload_pre_keys with count', async () => {
+  test('calls neppy.tinyplace_signal_upload_pre_keys with count', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ agentId: 'abc', oneTimePreKeyCount: 200 });
     const client = createInvokeApiClient();
     await client.signal.uploadPreKeys(50);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_upload_pre_keys',
+      method: 'neppy.tinyplace_signal_upload_pre_keys',
       params: { count: 50 },
     });
   });
@@ -1453,38 +1453,38 @@ describe('signal.uploadPreKeys', () => {
     const client = createInvokeApiClient();
     await client.signal.uploadPreKeys();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_upload_pre_keys',
+      method: 'neppy.tinyplace_signal_upload_pre_keys',
       params: { count: null },
     });
   });
 });
 
 describe('signal.rotateSignedPreKey', () => {
-  test('calls openhuman.tinyplace_signal_rotate_signed_pre_key with empty params', async () => {
+  test('calls neppy.tinyplace_signal_rotate_signed_pre_key with empty params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ ok: true, keyId: 'spk_123' });
     const client = createInvokeApiClient();
     await client.signal.rotateSignedPreKey();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_rotate_signed_pre_key',
+      method: 'neppy.tinyplace_signal_rotate_signed_pre_key',
       params: {},
     });
   });
 });
 
 describe('signal.getBundle', () => {
-  test('calls openhuman.tinyplace_signal_get_bundle with agentId', async () => {
+  test('calls neppy.tinyplace_signal_get_bundle with agentId', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ agentId: 'peer123', identityKey: 'abc' });
     const client = createInvokeApiClient();
     await client.signal.getBundle('peer123');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_get_bundle',
+      method: 'neppy.tinyplace_signal_get_bundle',
       params: { agentId: 'peer123' },
     });
   });
 });
 
 describe('signal.keyStatus', () => {
-  test('calls openhuman.tinyplace_signal_key_status with empty params', async () => {
+  test('calls neppy.tinyplace_signal_key_status with empty params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({
       agentId: 'abc',
       localPreKeyCount: 42,
@@ -1494,7 +1494,7 @@ describe('signal.keyStatus', () => {
     const client = createInvokeApiClient();
     await client.signal.keyStatus();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_key_status',
+      method: 'neppy.tinyplace_signal_key_status',
       params: {},
     });
   });
@@ -1520,7 +1520,7 @@ describe('signal.sendMessage and messages namespace', () => {
     expect(typeof client.messages.acknowledge).toBe('function');
   });
 
-  test('signal.sendMessage calls openhuman.tinyplace_signal_send_message with params object', async () => {
+  test('signal.sendMessage calls neppy.tinyplace_signal_send_message with params object', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({
       messageId: 'msg-1',
       timestamp: '2026-06-17T00:00:00Z',
@@ -1529,12 +1529,12 @@ describe('signal.sendMessage and messages namespace', () => {
     const client = createInvokeApiClient();
     await client.signal.sendMessage({ recipient: 'peer-123', plaintext: 'Hello!' });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_send_message',
+      method: 'neppy.tinyplace_signal_send_message',
       params: { recipient: 'peer-123', plaintext: 'Hello!' },
     });
   });
 
-  test('signal.decryptMessage calls openhuman.tinyplace_signal_decrypt_message with envelope', async () => {
+  test('signal.decryptMessage calls neppy.tinyplace_signal_decrypt_message with envelope', async () => {
     const envelope = {
       id: 'env-1',
       from: 'alice',
@@ -1552,17 +1552,17 @@ describe('signal.sendMessage and messages namespace', () => {
     const client = createInvokeApiClient();
     await client.signal.decryptMessage({ envelope });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_signal_decrypt_message',
+      method: 'neppy.tinyplace_signal_decrypt_message',
       params: { envelope },
     });
   });
 
-  test('messages.list calls openhuman.tinyplace_messages_list with params', async () => {
+  test('messages.list calls neppy.tinyplace_messages_list with params', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ messages: [] });
     const client = createInvokeApiClient();
     await client.messages.list({ limit: 25 });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_messages_list',
+      method: 'neppy.tinyplace_messages_list',
       params: { limit: 25 },
     });
   });
@@ -1572,17 +1572,17 @@ describe('signal.sendMessage and messages namespace', () => {
     const client = createInvokeApiClient();
     await client.messages.list();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_messages_list',
+      method: 'neppy.tinyplace_messages_list',
       params: {},
     });
   });
 
-  test('messages.acknowledge calls openhuman.tinyplace_messages_acknowledge', async () => {
+  test('messages.acknowledge calls neppy.tinyplace_messages_acknowledge', async () => {
     mockCallCoreRpc.mockResolvedValueOnce(undefined);
     const client = createInvokeApiClient();
     await client.messages.acknowledge('msg-99');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_messages_acknowledge',
+      method: 'neppy.tinyplace_messages_acknowledge',
       params: { messageId: 'msg-99' },
     });
   });
@@ -1597,7 +1597,7 @@ describe('graphql.profile', () => {
     const client = createInvokeApiClient();
     const result = await client.graphql.profile('alice');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_graphql_profile',
+      method: 'neppy.tinyplace_graphql_profile',
       params: { username: 'alice' },
     });
     expect(result).toEqual(mockProfile);
@@ -1618,7 +1618,7 @@ describe('graphql.user', () => {
     const client = createInvokeApiClient();
     const result = await client.graphql.user('solana123');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_graphql_user',
+      method: 'neppy.tinyplace_graphql_user',
       params: { cryptoId: 'solana123' },
     });
     expect(result).toEqual(mockProfile);
@@ -1639,7 +1639,7 @@ describe('graphql.identity', () => {
     const client = createInvokeApiClient();
     const result = await client.graphql.identity('alice');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_graphql_identity',
+      method: 'neppy.tinyplace_graphql_identity',
       params: { username: 'alice' },
     });
     expect(result).toEqual(mockIdentity);
@@ -1660,7 +1660,7 @@ describe('graphql.identities', () => {
     const client = createInvokeApiClient();
     const result = await client.graphql.identities('addr123');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_graphql_identities',
+      method: 'neppy.tinyplace_graphql_identities',
       params: { cryptoId: 'addr123' },
     });
     expect(result).toEqual(mockResult);
@@ -1681,7 +1681,7 @@ describe('graphql.agentCard', () => {
     const client = createInvokeApiClient();
     const result = await client.graphql.agentCard('agent-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_graphql_agent_card',
+      method: 'neppy.tinyplace_graphql_agent_card',
       params: { id: 'agent-1' },
     });
     expect(result).toEqual(mockCard);
@@ -1702,7 +1702,7 @@ describe('graphql marketplace reads', () => {
     await client.graphql.agents({ q: 'bot', limit: 5 });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_graphql_agents',
+      method: 'neppy.tinyplace_graphql_agents',
       params: { params: { q: 'bot', limit: 5 } },
     });
   });
@@ -1723,7 +1723,7 @@ describe('graphql marketplace reads', () => {
     const result = await client.graphql.products({ limit: 2 });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.tinyplace_graphql_products',
+      method: 'neppy.tinyplace_graphql_products',
       params: { params: { limit: 2 } },
     });
     expect(result.products[0]).toMatchObject({
@@ -1767,7 +1767,7 @@ describe('graphql marketplace reads', () => {
 
     const list = await client.graphql.identityListings({ status: 'active' });
     expect(mockCallCoreRpc).toHaveBeenNthCalledWith(1, {
-      method: 'openhuman.tinyplace_graphql_identity_listings',
+      method: 'neppy.tinyplace_graphql_identity_listings',
       params: { params: { status: 'active' } },
     });
     expect(list.identities[0]).toMatchObject({ seller: '@owner', sellerCryptoId: 'owner-crypto' });
@@ -1792,7 +1792,7 @@ describe('graphql marketplace reads', () => {
 
     await client.graphql.identityBids('listing-1', { limit: 3 });
     expect(mockCallCoreRpc).toHaveBeenNthCalledWith(1, {
-      method: 'openhuman.tinyplace_graphql_identity_bids',
+      method: 'neppy.tinyplace_graphql_identity_bids',
       params: { listingId: 'listing-1', params: { limit: 3 } },
     });
 

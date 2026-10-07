@@ -62,7 +62,7 @@ fn ensure_memory_seams() {
 
 /// Build a Config rooted at `tmp/workspace`. The nested `workspace` dir
 /// matches what `resolve_config_dir_for_workspace` would derive when
-/// `OPENHUMAN_WORKSPACE` points at `tmp` — so the same workspace_dir is
+/// `NEPPY_WORKSPACE` points at `tmp` — so the same workspace_dir is
 /// used both by the explicit ingest path and by `load_config_with_timeout`
 /// inside the tool wrappers.
 fn test_config() -> (TempDir, Config) {
@@ -84,7 +84,7 @@ fn test_config() -> (TempDir, Config) {
 // ── RAII env guard shared by all tests in this file ──────────────────────────
 
 /// Process-wide mutex that serialises every test in this binary that
-/// mutates `OPENHUMAN_WORKSPACE`. Cargo runs integration-test binaries
+/// mutates `NEPPY_WORKSPACE`. Cargo runs integration-test binaries
 /// multi-threaded by default (`test-threads = num_cpus`), so without
 /// this serialisation two tests would race on the env var: test A sets
 /// it to `/tmp/aaa`, test B overwrites it with `/tmp/bbb`, then when
@@ -104,7 +104,7 @@ struct EnvGuard {
     prev: Option<std::ffi::OsString>,
     /// Last field — dropped after `Drop::drop` has already restored
     /// the env var, so the next test acquires the lock against a
-    /// clean `OPENHUMAN_WORKSPACE` value.
+    /// clean `NEPPY_WORKSPACE` value.
     _lock: std::sync::MutexGuard<'static, ()>,
 }
 
@@ -117,27 +117,27 @@ impl Drop for EnvGuard {
         unsafe {
             match self.prev.take() {
                 Some(v) => std::env::set_var(self.key, v),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }
 }
 
-/// Sets `OPENHUMAN_WORKSPACE` to `tmp.path()` and returns an RAII guard that
+/// Sets `NEPPY_WORKSPACE` to `tmp.path()` and returns an RAII guard that
 /// restores the previous value on drop. This makes the tool wrappers (which
 /// call `load_config_with_timeout` internally) resolve to the same workspace
 /// that was used for ingest.
 ///
 /// The returned guard also holds [`ENV_LOCK`] for its lifetime, so concurrent
 /// tests in the same binary cannot stomp on each other's
-/// `OPENHUMAN_WORKSPACE` setting.
+/// `NEPPY_WORKSPACE` setting.
 fn set_workspace_env(tmp: &TempDir) -> EnvGuard {
     let lock = ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
-    let prev = std::env::var_os("OPENHUMAN_WORKSPACE");
+    let prev = neppy_core::neppy::util::env::var_os("NEPPY_WORKSPACE");
     // SAFETY: see EnvGuard::Drop above.
-    unsafe { std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path()) };
+    unsafe { std::env::set_var("NEPPY_WORKSPACE", tmp.path()) };
     EnvGuard {
-        key: "OPENHUMAN_WORKSPACE",
+        key: "NEPPY_WORKSPACE",
         prev,
         _lock: lock,
     }

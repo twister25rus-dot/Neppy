@@ -28,7 +28,7 @@ describe('walletApi', () => {
     const { fetchWalletStatus } = await import('./walletApi');
     const result = await fetchWalletStatus();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.wallet_status' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.wallet_status' });
     expect(result.configured).toBe(true);
   });
 
@@ -45,14 +45,11 @@ describe('walletApi', () => {
     const { setupLocalWallet } = await import('./walletApi');
     await setupLocalWallet(payload);
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.wallet_setup',
-      params: payload,
-    });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.wallet_setup', params: payload });
   });
 
   // fetchWalletBalances tests
-  it('fetchWalletBalances calls wallet.balances via openhuman.wallet_balances and returns the array', async () => {
+  it('fetchWalletBalances calls wallet.balances via neppy.wallet_balances and returns the array', async () => {
     const rows = [
       {
         chain: 'evm',
@@ -70,7 +67,7 @@ describe('walletApi', () => {
     const { fetchWalletBalances } = await import('./walletApi');
     const result = await fetchWalletBalances();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.wallet_balances' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.wallet_balances' });
     expect(result).toHaveLength(1);
     expect(result[0].assetSymbol).toBe('ETH');
     expect(result[0].providerStatus).toBe('ready');

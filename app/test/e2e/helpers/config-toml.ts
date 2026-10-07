@@ -1,7 +1,7 @@
 /**
  * Read-only helpers for the core's on-disk `config.toml`.
  *
- * `app/scripts/e2e-run-session.sh` always exports `OPENHUMAN_WORKSPACE` and
+ * `app/scripts/e2e-run-session.sh` always exports `NEPPY_WORKSPACE` and
  * the core writes its config under that root (see `Config::load_or_init`).
  * We assert against the resulting file in onboarding/settings specs that
  * need to confirm UI mutations land in the persisted config.
@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 function workspaceRoot(): string {
-  const ws = process.env.OPENHUMAN_WORKSPACE?.trim();
+  const ws = (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)?.trim();
   if (ws && ws.length > 0) return ws;
   const home = process.env.HOME || '';
   return path.join(home, '.neppy');

@@ -115,10 +115,14 @@ const AGENT_MEMORY_ID: &str = "agent_memory";
 const MEMORY_FAST_PATH_LIMIT: usize = 8;
 
 /// Whether the deterministic memory fast path (#4677) is enabled. Default on;
-/// `OPENHUMAN_MEMORY_FAST_PATH=0` (or `false`/`no`/`off`) forces the full
+/// `NEPPY_MEMORY_FAST_PATH=0` (or `false`/`no`/`off`) forces the full
 /// model-driven walk, e.g. to A/B the two paths without a rebuild.
 fn memory_fast_path_enabled() -> bool {
-    parse_memory_fast_path_enabled(std::env::var("OPENHUMAN_MEMORY_FAST_PATH").ok().as_deref())
+    parse_memory_fast_path_enabled(
+        crate::neppy::util::env::var("NEPPY_MEMORY_FAST_PATH")
+            .ok()
+            .as_deref(),
+    )
 }
 
 /// Pure core of [`memory_fast_path_enabled`], kept env-free for deterministic
@@ -375,6 +379,13 @@ pub async fn run_subagent(
             .task_id
             .clone()
             .unwrap_or_else(|| format!("sub-{}", uuid::Uuid::new_v4()));
+
+        // `debug_agent` runs only inside a Debug-mode turn. This is the single
+        // choke point every sub-agent spawn path (spawn_subagent, async/parallel
+        // spawns, delegate_*, continue_subagent, ...) funnels through.
+        if crate::neppy::agent::debug_mode::turn::ensure_agent_allowed(&definition.id).is_err() {
+            return Err(SubagentRunError::DebugOnly(definition.id.clone()));
+        }
 
         // Turn-scoped dispatch gate (#5804) — deliberately the FIRST gate, for
         // the same reason the depth gate is synchronous and pre-dispatch: a

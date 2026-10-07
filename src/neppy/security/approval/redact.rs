@@ -3,7 +3,7 @@
 //! Anything written to `pending_approvals` or broadcast on the event
 //! bus must be scrubbed first — per
 //! `feedback_redact_paths_and_ids_in_public.md` (no `/Users/<name>/`
-//! paths, no openhuman user_ids) and `feedback_pr_no_chat_content.md`
+//! paths, no neppy user_ids) and `feedback_pr_no_chat_content.md`
 //! (no raw message bodies, contact names, subjects, addresses — only
 //! counts/shape).
 //!

@@ -30,7 +30,7 @@ Self-update domain for the `neppy-core` binary. Checks GitHub Releases (`twister
 - `all_update_controller_schemas()` / `all_update_registered_controllers()`.
 
 ## RPC / controllers
-All under namespace `update` (i.e. `openhuman.update_*`):
+All under namespace `update` (i.e. `neppy.update_*`):
 | Method | Inputs | Output |
 | --- | --- | --- |
 | `update.version` | none | `version_info` (`VersionInfo`) — cheap, no network. |
@@ -76,5 +76,5 @@ None. No `store.rs` — staged binaries are written to the filesystem (current-e
 - **Scheduler interval floor**: requested `interval_minutes` is clamped up to `MIN_INTERVAL_MINUTES = 10` to avoid GitHub unauthenticated rate-limits; the first check runs immediately.
 - **Version compare** (`is_newer`) is dot-split numeric with `v`-prefix stripping — not full semver (no pre-release/build metadata handling).
 - **Sentry hygiene**: transport-level reqwest failures (`is_connect`/`is_timeout`/`is_request`) and transient HTTP statuses are logged at `warn` and skipped from `report_error`; a regression guard test hits an unroutable TEST-NET-1 host to lock the classifier.
-- **Test env locking**: tests touching `update_apply` take `config::TEST_ENV_LOCK` because the mutation policy is resolved through the process-global `OPENHUMAN_WORKSPACE` env var and would otherwise race.
+- **Test env locking**: tests touching `update_apply` take `config::TEST_ENV_LOCK` because the mutation policy is resolved through the process-global `NEPPY_WORKSPACE` env var and would otherwise race.
 - Network-hitting paths (`update_check` success, `update_apply` success, scheduler `tick`) are deferred to integration tests, not unit-tested.

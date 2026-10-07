@@ -112,7 +112,7 @@ test.describe('Composio triggers flow', () => {
   });
 
   test('list_available_triggers returns the seeded Gmail catalog', async () => {
-    const payload = await callCoreRpc<unknown>('openhuman.composio_list_available_triggers', {
+    const payload = await callCoreRpc<unknown>('neppy.composio_list_available_triggers', {
       toolkit: TOOLKIT_SLUG,
       connection_id: CONNECTION_ID,
     });
@@ -123,13 +123,13 @@ test.describe('Composio triggers flow', () => {
   });
 
   test('list_triggers starts empty for the seeded user', async () => {
-    const payload = await callCoreRpc<unknown>('openhuman.composio_list_triggers', {});
+    const payload = await callCoreRpc<unknown>('neppy.composio_list_triggers', {});
     expect(unwrapTriggers(payload)).toHaveLength(0);
   });
 
   test('enable_trigger creates a trigger that list_triggers observes', async () => {
     const created = unwrapEnableTrigger(
-      await callCoreRpc<unknown>('openhuman.composio_enable_trigger', {
+      await callCoreRpc<unknown>('neppy.composio_enable_trigger', {
         connection_id: CONNECTION_ID,
         slug: 'GMAIL_NEW_GMAIL_MESSAGE',
       })
@@ -138,7 +138,7 @@ test.describe('Composio triggers flow', () => {
     expect(created.connectionId ?? created.connection_id).toBe(CONNECTION_ID);
     expect((created.triggerId ?? created.trigger_id)?.length).toBeGreaterThan(0);
 
-    const listed = await callCoreRpc<unknown>('openhuman.composio_list_triggers', {
+    const listed = await callCoreRpc<unknown>('neppy.composio_list_triggers', {
       toolkit: TOOLKIT_SLUG,
     });
     const triggers = unwrapTriggers(listed);
@@ -148,7 +148,7 @@ test.describe('Composio triggers flow', () => {
 
   test('disable_trigger removes the active trigger', async () => {
     const created = unwrapEnableTrigger(
-      await callCoreRpc<unknown>('openhuman.composio_enable_trigger', {
+      await callCoreRpc<unknown>('neppy.composio_enable_trigger', {
         connection_id: CONNECTION_ID,
         slug: 'GMAIL_NEW_GMAIL_MESSAGE',
       })
@@ -157,11 +157,11 @@ test.describe('Composio triggers flow', () => {
     expect(triggerId).toBeTruthy();
 
     const disabled = unwrapDisableTrigger(
-      await callCoreRpc<unknown>('openhuman.composio_disable_trigger', { trigger_id: triggerId })
+      await callCoreRpc<unknown>('neppy.composio_disable_trigger', { trigger_id: triggerId })
     );
     expect(disabled.deleted).toBe(true);
 
-    const listed = await callCoreRpc<unknown>('openhuman.composio_list_triggers', {});
+    const listed = await callCoreRpc<unknown>('neppy.composio_list_triggers', {});
     expect(unwrapTriggers(listed)).toHaveLength(0);
   });
 

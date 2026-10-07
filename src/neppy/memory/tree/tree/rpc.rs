@@ -1,13 +1,13 @@
 //! RPC handler functions for the memory tree layer.
 //!
 //! Public JSON-RPC surface:
-//! - `openhuman.memory_tree_ingest` — one unified ingest. Caller supplies
+//! - `neppy.memory_tree_ingest` — one unified ingest. Caller supplies
 //!   `source_kind` + generic JSON `payload` (adapter-specific). Chat and
 //!   document are canonicalised into contract items and handed to the bound
 //!   driver's `Ingest` family; mail still canonicalises in process, for the
 //!   reasons on [`ingest_rpc`].
-//! - `openhuman.memory_tree_list_chunks` — listing with filters.
-//! - `openhuman.memory_tree_get_chunk` — single chunk fetch.
+//! - `neppy.memory_tree_list_chunks` — listing with filters.
+//! - `neppy.memory_tree_get_chunk` — single chunk fetch.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

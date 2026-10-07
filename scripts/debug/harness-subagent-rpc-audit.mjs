@@ -23,17 +23,17 @@ function usage() {
   return `Usage: node scripts/debug/harness-subagent-rpc-audit.mjs [options]
 
 Runs a live JSON-RPC harness turn, waits for the async subagent to register,
-then steers it through openhuman.subagent_steer while the parent/core process is live.
+then steers it through neppy.subagent_steer while the parent/core process is live.
 No prompt, response, credential, or transcript bodies are printed.
 
 Options:
   --scenario <name>        async-steer, parallel-research-code, reuse-parent-comm, or all (default: async-steer)
-  --core-url <url>          JSON-RPC endpoint (default: OPENHUMAN_CORE_RPC_URL or ${DEFAULT_RPC_URL})
-  --token <token>           RPC bearer (default: OPENHUMAN_CORE_TOKEN or <workspace>/core.token)
+  --core-url <url>          JSON-RPC endpoint (default: NEPPY_CORE_RPC_URL or ${DEFAULT_RPC_URL})
+  --token <token>           RPC bearer (default: NEPPY_CORE_TOKEN or <workspace>/core.token)
   --workspace <path>        Workspace containing .neppy/subagent_sessions.json
   --task-key <key>          Durable task key (default: audit-subagent-rpc-<timestamp>)
   --agent-id <id>           Subagent id to request (default: researcher)
-  --model <model>           Optional model_override for openhuman.agent_chat
+  --model <model>           Optional model_override for neppy.agent_chat
   --provider-mode <mode>    Isolated provider config: openhuman-backend or direct-openai (default: openhuman-backend)
   --rpc-timeout-ms <n>      Parent agent_chat timeout (default: 600000)
   --spawn-wait-ms <n>       Time to wait for a running durable session (default: 120000)
@@ -56,9 +56,9 @@ Examples:
 function parseArgs(argv) {
   const opts = {
     scenario: "async-steer",
-    coreUrl: process.env.OPENHUMAN_CORE_RPC_URL || DEFAULT_RPC_URL,
-    token: process.env.OPENHUMAN_CORE_TOKEN || "",
-    workspace: process.env.OPENHUMAN_WORKSPACE || "",
+    coreUrl: (process.env.NEPPY_CORE_RPC_URL ?? process.env.OPENHUMAN_CORE_RPC_URL) || DEFAULT_RPC_URL,
+    token: (process.env.NEPPY_CORE_TOKEN ?? process.env.OPENHUMAN_CORE_TOKEN) || "",
+    workspace: (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE) || "",
     taskKey: `audit-subagent-rpc-${Date.now().toString(36)}`,
     agentId: "researcher",
     model: "",
@@ -70,7 +70,7 @@ function parseArgs(argv) {
     isolatedWorkspace: false,
     keepWorkspace: false,
     verbose: false,
-    coreUrlExplicit: Boolean(process.env.OPENHUMAN_CORE_RPC_URL),
+    coreUrlExplicit: Boolean((process.env.NEPPY_CORE_RPC_URL ?? process.env.OPENHUMAN_CORE_RPC_URL)),
     agentIdExplicit: false,
   };
 
@@ -166,27 +166,27 @@ function parsePositiveInt(raw, label) {
 }
 
 function defaultNeppyDir() {
-  return process.env.OPENHUMAN_APP_ENV === "staging"
+  return (process.env.NEPPY_APP_ENV ?? process.env.OPENHUMAN_APP_ENV) === "staging"
     ? path.join(homedir(), ".neppy-staging")
     : path.join(homedir(), ".neppy");
 }
 
 async function defaultWorkspace() {
-  if (process.env.OPENHUMAN_WORKSPACE) return process.env.OPENHUMAN_WORKSPACE;
-  const openhumanDir = defaultNeppyDir();
+  if ((process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)) return (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE);
+  const neppyDir = defaultNeppyDir();
   try {
     const active = await readFile(
-      path.join(openhumanDir, "active_user.toml"),
+      path.join(neppyDir, "active_user.toml"),
       "utf8",
     );
     const match = active.match(/^\s*user_id\s*=\s*"([^"]+)"\s*$/m);
     if (match?.[1]) {
-      return path.join(openhumanDir, "users", match[1], "workspace");
+      return path.join(neppyDir, "users", match[1], "workspace");
     }
   } catch {
     // Fall through to legacy root workspace.
   }
-  return openhumanDir;
+  return neppyDir;
 }
 
 async function readToken(opts) {
@@ -196,7 +196,7 @@ async function readToken(opts) {
     return (await readFile(tokenPath, "utf8")).trim();
   } catch {
     throw new Error(
-      `RPC token not provided and ${tokenPath} could not be read. Pass --token or set OPENHUMAN_CORE_TOKEN.`,
+      `RPC token not provided and ${tokenPath} could not be read. Pass --token or set NEPPY_CORE_TOKEN.`,
     );
   }
 }
@@ -640,7 +640,7 @@ function backendApiUrl() {
     process.env.VITE_BACKEND_URL?.trim() ||
     "";
   if (explicit) return explicit.replace(/\/+$/, "");
-  return process.env.OPENHUMAN_APP_ENV === "staging"
+  return (process.env.NEPPY_APP_ENV ?? process.env.OPENHUMAN_APP_ENV) === "staging"
     ? "https://staging-api.tinyhumans.ai"
     : "https://api.tinyhumans.ai";
 }
@@ -703,12 +703,12 @@ async function writeIsolatedAppSessionAuth(workspace) {
 
 async function startCore(opts) {
   const token = opts.token || `audit-${randomBytes(24).toString("hex")}`;
-  const env = { ...process.env, OPENHUMAN_CORE_TOKEN: token };
-  if (opts.workspace) env.OPENHUMAN_WORKSPACE = opts.workspace;
-  if (opts.isolatedWorkspace) env.OPENHUMAN_AGENTBOX_MODE = "1";
+  const env = { ...process.env, NEPPY_CORE_TOKEN: token };
+  if (opts.workspace) env.NEPPY_WORKSPACE = opts.workspace;
+  if (opts.isolatedWorkspace) env.NEPPY_AGENTBOX_MODE = "1";
   const port = new URL(opts.coreUrl).port || "7788";
-  env.OPENHUMAN_CORE_PORT = port;
-  env.OPENHUMAN_CORE_RPC_URL = opts.coreUrl;
+  env.NEPPY_CORE_PORT = port;
+  env.NEPPY_CORE_RPC_URL = opts.coreUrl;
   const child = spawn(
     "cargo",
     [
@@ -785,7 +785,7 @@ async function runAsyncSteerScenario(opts) {
   const parentPromise = rpc(
     opts.coreUrl,
     opts.token,
-    "openhuman.agent_chat",
+    "neppy.agent_chat",
     params,
     opts.rpcTimeoutMs,
   );
@@ -804,7 +804,7 @@ async function runAsyncSteerScenario(opts) {
     await rpc(
       opts.coreUrl,
       opts.token,
-      "openhuman.subagent_steer",
+      "neppy.subagent_steer",
       {
         taskId: runningSession.currentTaskId,
         message: steerMessage(opts),
@@ -873,7 +873,7 @@ async function runParallelResearchCodeScenario(opts) {
   const result = await rpc(
     opts.coreUrl,
     opts.token,
-    "openhuman.agent_chat",
+    "neppy.agent_chat",
     params,
     opts.rpcTimeoutMs,
   );
@@ -918,7 +918,7 @@ async function runReuseParentCommScenario(opts) {
     const result = await rpc(
       opts.coreUrl,
       opts.token,
-      "openhuman.agent_chat",
+      "neppy.agent_chat",
       params,
       opts.rpcTimeoutMs,
     );

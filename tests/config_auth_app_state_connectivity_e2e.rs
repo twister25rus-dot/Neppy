@@ -22,7 +22,7 @@ use neppy_core::api::config::{
     api_base_from_env, api_url, app_env_from_env, default_api_base_url_for_env, effective_api_url,
     effective_backend_api_url, effective_inference_url, looks_like_local_ai_endpoint,
     normalize_api_base_url, APP_ENV_VAR, DEFAULT_API_BASE_URL, DEFAULT_STAGING_API_BASE_URL,
-    OPENHUMAN_INFERENCE_PATH, VITE_APP_ENV_VAR,
+    NEPPY_INFERENCE_PATH, VITE_APP_ENV_VAR,
 };
 use neppy_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use neppy_core::core::events::DomainEvent;
@@ -89,20 +89,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -111,7 +111,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -119,7 +119,7 @@ impl Drop for EnvVarGuard {
 // `pub` so binaries that `#[path]`-include this file as a module (e.g.
 // `config_credentials_raw_coverage_e2e.rs` as `base_coverage`) can route their
 // own env-mutating tests through the SAME lock, serializing all
-// OPENHUMAN_WORKSPACE/BACKEND_URL mutations in the combined binary.
+// NEPPY_WORKSPACE/BACKEND_URL mutations in the combined binary.
 pub fn env_lock() -> std::sync::MutexGuard<'static, ()> {
     let mutex = ENV_LOCK.get_or_init(|| Mutex::new(()));
     match mutex.lock() {
@@ -522,17 +522,17 @@ async fn setup() -> TestHarness {
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", &home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        EnvVarGuard::unset("OPENHUMAN_CORE_RPC_URL"),
-        EnvVarGuard::unset("OPENHUMAN_CORE_PORT"),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
-        EnvVarGuard::set("OPENHUMAN_BROWSER_ALLOW_ALL_RPC_ENABLE", ""),
+        EnvVarGuard::unset("NEPPY_API_URL"),
+        EnvVarGuard::unset("NEPPY_CORE_RPC_URL"),
+        EnvVarGuard::unset("NEPPY_CORE_PORT"),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::set("NEPPY_BROWSER_ALLOW_ALL_RPC_ENABLE", ""),
     ];
 
     let (addr, join) = serve_rpc().await;
@@ -1338,18 +1338,18 @@ fn config_proxy_public_paths_normalize_validate_and_apply_scope() {
     assert!(!env_scope.should_apply_to_service("tool.browser"));
     env_scope.apply_to_process_env();
     assert_eq!(
-        std::env::var("ALL_PROXY").as_deref(),
+        neppy_core::neppy::util::env::var("ALL_PROXY").as_deref(),
         Ok("socks5h://proxy.example:1080")
     );
     assert_eq!(
-        std::env::var("all_proxy").as_deref(),
+        neppy_core::neppy::util::env::var("all_proxy").as_deref(),
         Ok("socks5h://proxy.example:1080")
     );
-    assert!(std::env::var("NO_PROXY").is_err());
+    assert!(neppy_core::neppy::util::env::var("NO_PROXY").is_err());
 
     ProxyConfig::clear_process_env();
-    assert!(std::env::var("ALL_PROXY").is_err());
-    assert!(std::env::var("all_proxy").is_err());
+    assert!(neppy_core::neppy::util::env::var("ALL_PROXY").is_err());
+    assert!(neppy_core::neppy::util::env::var("all_proxy").is_err());
 
     let neppy_scope = ProxyConfig {
         enabled: true,
@@ -1363,10 +1363,13 @@ fn config_proxy_public_paths_normalize_validate_and_apply_scope() {
     assert_eq!(neppy_scope.normalized_no_proxy(), vec!["local.test"]);
     neppy_scope.apply_to_process_env();
     assert_eq!(
-        std::env::var("HTTP_PROXY").as_deref(),
+        neppy_core::neppy::util::env::var("HTTP_PROXY").as_deref(),
         Ok("https://proxy.example")
     );
-    assert_eq!(std::env::var("NO_PROXY").as_deref(), Ok("local.test"));
+    assert_eq!(
+        neppy_core::neppy::util::env::var("NO_PROXY").as_deref(),
+        Ok("local.test")
+    );
     ProxyConfig::clear_process_env();
 
     for mut invalid in [
@@ -1479,7 +1482,7 @@ fn api_config_url_resolution_classifies_backend_and_inference_paths() {
     );
     assert_eq!(
         effective_inference_url(&Some("https://api.tinyhumans.ai".into()), &None),
-        format!("https://api.tinyhumans.ai{OPENHUMAN_INFERENCE_PATH}")
+        format!("https://api.tinyhumans.ai{NEPPY_INFERENCE_PATH}")
     );
     assert_eq!(
         effective_inference_url(
@@ -1529,7 +1532,7 @@ fn api_config_url_resolution_classifies_backend_and_inference_paths() {
         DEFAULT_STAGING_API_BASE_URL
     );
 
-    std::env::remove_var(APP_ENV_VAR);
+    neppy_core::neppy::util::env::remove_var(APP_ENV_VAR);
     std::env::set_var(VITE_APP_ENV_VAR, " Production ");
     assert_eq!(app_env_from_env().as_deref(), Some("production"));
 }
@@ -1563,7 +1566,7 @@ async fn credentials_session_expired_subscriber_clears_remote_session_but_keeps_
     let remote_session = rpc(
         &harness.rpc_base,
         18_101,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "session-expired-remote-jwt",
             "user_id": "session-expired-user",
@@ -1590,13 +1593,7 @@ async fn credentials_session_expired_subscriber_clears_remote_session_but_keeps_
         })
         .await;
 
-    let cleared_state = rpc(
-        &harness.rpc_base,
-        18_102,
-        "openhuman.auth_get_state",
-        json!({}),
-    )
-    .await;
+    let cleared_state = rpc(&harness.rpc_base, 18_102, "neppy.auth_get_state", json!({})).await;
     assert_eq!(
         payload(&cleared_state, "auth_get_state after remote SessionExpired")
             .get("isAuthenticated")
@@ -1608,7 +1605,7 @@ async fn credentials_session_expired_subscriber_clears_remote_session_but_keeps_
     let local_session = rpc(
         &harness.rpc_base,
         18_103,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "header.payload.local",
             "user": {
@@ -1636,13 +1633,7 @@ async fn credentials_session_expired_subscriber_clears_remote_session_but_keeps_
         })
         .await;
 
-    let local_state = rpc(
-        &harness.rpc_base,
-        18_104,
-        "openhuman.auth_get_state",
-        json!({}),
-    )
-    .await;
+    let local_state = rpc(&harness.rpc_base, 18_104, "neppy.auth_get_state", json!({})).await;
     assert_eq!(
         payload(&local_state, "auth_get_state after local SessionExpired")
             .get("isAuthenticated")
@@ -1671,14 +1662,14 @@ async fn config_loaders_resolve_user_workspace_markers_and_ignore_workspace_when
 
     let _guards = vec![
         EnvVarGuard::set_to_path("HOME", &home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
-        EnvVarGuard::unset("OPENHUMAN_MODEL"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_MODEL"),
         EnvVarGuard::unset(APP_ENV_VAR),
         EnvVarGuard::unset(VITE_APP_ENV_VAR),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
 
     std::fs::create_dir_all(&root).expect("create root config dir");
@@ -1693,7 +1684,7 @@ async fn config_loaders_resolve_user_workspace_markers_and_ignore_workspace_when
 
     {
         write_min_config(&env_workspace);
-        let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &env_workspace);
+        let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &env_workspace);
         let env_config = Config::load_or_init()
             .await
             .expect("load env workspace config");
@@ -1704,7 +1695,7 @@ async fn config_loaders_resolve_user_workspace_markers_and_ignore_workspace_when
     {
         write_min_config(&legacy_config_dir);
         std::fs::create_dir_all(&legacy_workspace).expect("create legacy workspace");
-        let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &legacy_workspace);
+        let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &legacy_workspace);
         let legacy_config = Config::load_or_init()
             .await
             .expect("load legacy workspace config");
@@ -1760,8 +1751,8 @@ async fn config_loaders_resolve_user_workspace_markers_and_ignore_workspace_when
     );
 
     write_min_config(&explicit_config_dir);
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &env_workspace);
-    let _model_guard = EnvVarGuard::set("OPENHUMAN_MODEL", " scoped-env-model ");
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &env_workspace);
+    let _model_guard = EnvVarGuard::set("NEPPY_MODEL", " scoped-env-model ");
     let explicit = Config::load_from_config_path(
         &explicit_config_dir.join("config.toml"),
         &explicit_workspace,
@@ -1837,8 +1828,8 @@ async fn config_default_path_loader_ignores_workspace_override_and_projects_dir_
         EnvVarGuard::set_to_path("HOME", &home),
         EnvVarGuard::unset(APP_ENV_VAR),
         EnvVarGuard::unset(VITE_APP_ENV_VAR),
-        EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_override),
-        EnvVarGuard::set("OPENHUMAN_MODEL", " default-loader-model "),
+        EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_override),
+        EnvVarGuard::set("NEPPY_MODEL", " default-loader-model "),
     ];
 
     let missing = Config::load_from_default_paths()
@@ -1869,10 +1860,10 @@ async fn config_default_path_loader_ignores_workspace_override_and_projects_dir_
 
     let custom_projects = tmp.path().join("Neppy Projects");
     {
-        let _projects_guard = EnvVarGuard::set_to_path("OPENHUMAN_PROJECTS_DIR", &custom_projects);
+        let _projects_guard = EnvVarGuard::set_to_path("NEPPY_PROJECTS_DIR", &custom_projects);
         assert_eq!(default_projects_dir(), custom_projects);
     }
-    let _blank_projects_guard = EnvVarGuard::set("OPENHUMAN_PROJECTS_DIR", "   ");
+    let _blank_projects_guard = EnvVarGuard::set("NEPPY_PROJECTS_DIR", "   ");
     assert_eq!(default_projects_dir(), home.join("Neppy").join("projects"));
 }
 
@@ -1886,97 +1877,94 @@ async fn config_env_overlay_public_loader_applies_runtime_and_tool_overrides() {
 
     let _guards = vec![
         EnvVarGuard::set_to_path("HOME", tmp.path()),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
-        EnvVarGuard::set("OPENHUMAN_MODEL", " env-model "),
-        EnvVarGuard::set("OPENHUMAN_TEMPERATURE", "1.25"),
-        EnvVarGuard::set("OPENHUMAN_MAX_ACTIONS_PER_HOUR", "17"),
-        EnvVarGuard::set("OPENHUMAN_OUTPUT_LANGUAGE", " ja "),
-        EnvVarGuard::set("OPENHUMAN_REASONING_ENABLED", "yes"),
-        EnvVarGuard::set("OPENHUMAN_SELTZ_API_KEY", "seltz-key"),
-        EnvVarGuard::set("OPENHUMAN_SELTZ_API_URL", "https://seltz.example/v1"),
-        EnvVarGuard::set("OPENHUMAN_SELTZ_MAX_RESULTS", "13"),
-        EnvVarGuard::set("OPENHUMAN_SEARXNG_ENABLED", "on"),
-        EnvVarGuard::set("OPENHUMAN_SEARXNG_BASE_URL", "https://searx.example"),
-        EnvVarGuard::set("OPENHUMAN_SEARXNG_MAX_RESULTS", "31"),
-        EnvVarGuard::set("OPENHUMAN_SEARXNG_DEFAULT_LANGUAGE", "de"),
-        EnvVarGuard::set("OPENHUMAN_SEARXNG_TIMEOUT_SECS", "9"),
-        EnvVarGuard::set("OPENHUMAN_SEARCH_ENGINE", "brave"),
-        EnvVarGuard::set("OPENHUMAN_PARALLEL_API_KEY", "parallel-key"),
-        EnvVarGuard::set("OPENHUMAN_BRAVE_API_KEY", "brave-key"),
-        EnvVarGuard::set("OPENHUMAN_QUERIT_API_KEY", "querit-key"),
-        EnvVarGuard::set("OPENHUMAN_EXA_API_KEY", "exa-key"),
-        EnvVarGuard::set("OPENHUMAN_SEARCH_MAX_RESULTS", "11"),
-        EnvVarGuard::set("OPENHUMAN_SEARCH_TIMEOUT_SECS", "8"),
-        EnvVarGuard::set("OPENHUMAN_WEB_SEARCH_ENABLED", "0"),
-        EnvVarGuard::set("OPENHUMAN_WEB_SEARCH_MAX_RESULTS", "7"),
-        EnvVarGuard::set("OPENHUMAN_WEB_SEARCH_TIMEOUT_SECS", "6"),
-        EnvVarGuard::set("OPENHUMAN_PROXY_ENABLED", "true"),
-        EnvVarGuard::set("OPENHUMAN_HTTP_PROXY", " http://proxy.example:8080 "),
-        EnvVarGuard::set("OPENHUMAN_NO_PROXY", " localhost,example.test "),
-        EnvVarGuard::set("OPENHUMAN_PROXY_SCOPE", "services"),
-        EnvVarGuard::set("OPENHUMAN_PROXY_SERVICES", "tool.browser,memory.embeddings"),
-        EnvVarGuard::set("OPENHUMAN_NODE_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_NODE_VERSION", "v24.0.0"),
-        EnvVarGuard::set("OPENHUMAN_NODE_CACHE_DIR", "/tmp/openhuman-node-cache"),
-        EnvVarGuard::set("OPENHUMAN_NODE_PREFER_SYSTEM", "false"),
-        EnvVarGuard::set("OPENHUMAN_RUNTIME_PYTHON_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_RUNTIME_PYTHON_MINIMUM_VERSION", "3.13.0"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
+        EnvVarGuard::set("NEPPY_MODEL", " env-model "),
+        EnvVarGuard::set("NEPPY_TEMPERATURE", "1.25"),
+        EnvVarGuard::set("NEPPY_MAX_ACTIONS_PER_HOUR", "17"),
+        EnvVarGuard::set("NEPPY_OUTPUT_LANGUAGE", " ja "),
+        EnvVarGuard::set("NEPPY_REASONING_ENABLED", "yes"),
+        EnvVarGuard::set("NEPPY_SELTZ_API_KEY", "seltz-key"),
+        EnvVarGuard::set("NEPPY_SELTZ_API_URL", "https://seltz.example/v1"),
+        EnvVarGuard::set("NEPPY_SELTZ_MAX_RESULTS", "13"),
+        EnvVarGuard::set("NEPPY_SEARXNG_ENABLED", "on"),
+        EnvVarGuard::set("NEPPY_SEARXNG_BASE_URL", "https://searx.example"),
+        EnvVarGuard::set("NEPPY_SEARXNG_MAX_RESULTS", "31"),
+        EnvVarGuard::set("NEPPY_SEARXNG_DEFAULT_LANGUAGE", "de"),
+        EnvVarGuard::set("NEPPY_SEARXNG_TIMEOUT_SECS", "9"),
+        EnvVarGuard::set("NEPPY_SEARCH_ENGINE", "brave"),
+        EnvVarGuard::set("NEPPY_PARALLEL_API_KEY", "parallel-key"),
+        EnvVarGuard::set("NEPPY_BRAVE_API_KEY", "brave-key"),
+        EnvVarGuard::set("NEPPY_QUERIT_API_KEY", "querit-key"),
+        EnvVarGuard::set("NEPPY_EXA_API_KEY", "exa-key"),
+        EnvVarGuard::set("NEPPY_SEARCH_MAX_RESULTS", "11"),
+        EnvVarGuard::set("NEPPY_SEARCH_TIMEOUT_SECS", "8"),
+        EnvVarGuard::set("NEPPY_WEB_SEARCH_ENABLED", "0"),
+        EnvVarGuard::set("NEPPY_WEB_SEARCH_MAX_RESULTS", "7"),
+        EnvVarGuard::set("NEPPY_WEB_SEARCH_TIMEOUT_SECS", "6"),
+        EnvVarGuard::set("NEPPY_PROXY_ENABLED", "true"),
+        EnvVarGuard::set("NEPPY_HTTP_PROXY", " http://proxy.example:8080 "),
+        EnvVarGuard::set("NEPPY_NO_PROXY", " localhost,example.test "),
+        EnvVarGuard::set("NEPPY_PROXY_SCOPE", "services"),
+        EnvVarGuard::set("NEPPY_PROXY_SERVICES", "tool.browser,memory.embeddings"),
+        EnvVarGuard::set("NEPPY_NODE_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_NODE_VERSION", "v24.0.0"),
+        EnvVarGuard::set("NEPPY_NODE_CACHE_DIR", "/tmp/openhuman-node-cache"),
+        EnvVarGuard::set("NEPPY_NODE_PREFER_SYSTEM", "false"),
+        EnvVarGuard::set("NEPPY_RUNTIME_PYTHON_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_RUNTIME_PYTHON_MINIMUM_VERSION", "3.13.0"),
         EnvVarGuard::set(
-            "OPENHUMAN_RUNTIME_PYTHON_CACHE_DIR",
+            "NEPPY_RUNTIME_PYTHON_CACHE_DIR",
             "/tmp/openhuman-python-cache",
         ),
-        EnvVarGuard::set("OPENHUMAN_RUNTIME_PYTHON_MANAGED_RELEASE_TAG", "20260401"),
-        EnvVarGuard::set("OPENHUMAN_RUNTIME_PYTHON_PREFER_SYSTEM", "true"),
-        EnvVarGuard::set("OPENHUMAN_RUNTIME_PYTHON_PREFERRED_COMMAND", "python3.13"),
-        EnvVarGuard::set("OPENHUMAN_CORE_SENTRY_DSN", "https://dsn.example/1"),
-        EnvVarGuard::set("OPENHUMAN_ANALYTICS_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_ENABLED", "true"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_REFLECTION_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_USER_PROFILE_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_TOOL_TRACKING_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_EXPLICIT_PREFERENCES_ENABLED", "true"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_REFLECTION_SOURCE", "cloud"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_MAX_REFLECTIONS_PER_SESSION", "3"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_MIN_TURN_COMPLEXITY", "2"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_EPISODIC_CAPTURE_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_STM_RECALL_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_LEARNING_UNIFIED_COMPACTION_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", "https://embed.example"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", "embed-env"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_TIMEOUT_MS", "1234"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "true"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_RATE_LIMIT", "42"),
+        EnvVarGuard::set("NEPPY_RUNTIME_PYTHON_MANAGED_RELEASE_TAG", "20260401"),
+        EnvVarGuard::set("NEPPY_RUNTIME_PYTHON_PREFER_SYSTEM", "true"),
+        EnvVarGuard::set("NEPPY_RUNTIME_PYTHON_PREFERRED_COMMAND", "python3.13"),
+        EnvVarGuard::set("NEPPY_CORE_SENTRY_DSN", "https://dsn.example/1"),
+        EnvVarGuard::set("NEPPY_ANALYTICS_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_LEARNING_ENABLED", "true"),
+        EnvVarGuard::set("NEPPY_LEARNING_REFLECTION_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_LEARNING_USER_PROFILE_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_LEARNING_TOOL_TRACKING_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_LEARNING_EXPLICIT_PREFERENCES_ENABLED", "true"),
+        EnvVarGuard::set("NEPPY_LEARNING_REFLECTION_SOURCE", "cloud"),
+        EnvVarGuard::set("NEPPY_LEARNING_MAX_REFLECTIONS_PER_SESSION", "3"),
+        EnvVarGuard::set("NEPPY_LEARNING_MIN_TURN_COMPLEXITY", "2"),
+        EnvVarGuard::set("NEPPY_LEARNING_EPISODIC_CAPTURE_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_LEARNING_STM_RECALL_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_LEARNING_UNIFIED_COMPACTION_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", "https://embed.example"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", "embed-env"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_TIMEOUT_MS", "1234"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "true"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_RATE_LIMIT", "42"),
+        EnvVarGuard::set("NEPPY_MEMORY_EXTRACT_ENDPOINT", "https://extract.example"),
+        EnvVarGuard::set("NEPPY_MEMORY_EXTRACT_MODEL", "extract-env"),
+        EnvVarGuard::set("NEPPY_MEMORY_EXTRACT_TIMEOUT_MS", "2345"),
         EnvVarGuard::set(
-            "OPENHUMAN_MEMORY_EXTRACT_ENDPOINT",
-            "https://extract.example",
-        ),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EXTRACT_MODEL", "extract-env"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EXTRACT_TIMEOUT_MS", "2345"),
-        EnvVarGuard::set(
-            "OPENHUMAN_MEMORY_SUMMARISE_ENDPOINT",
+            "NEPPY_MEMORY_SUMMARISE_ENDPOINT",
             "https://summarise.example",
         ),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_SUMMARISE_MODEL", "summarise-env"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_SUMMARISE_TIMEOUT_MS", "3456"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_TREE_CONTENT_DIR", "/tmp/openhuman-tree"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_TREE_LLM_BACKEND", "local"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_TREE_CLOUD_LLM_MODEL", "cloud-tree-model"),
-        EnvVarGuard::set("OPENHUMAN_AUTO_UPDATE_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_AUTO_UPDATE_INTERVAL_MINUTES", "1440"),
-        EnvVarGuard::set("OPENHUMAN_AUTO_UPDATE_RESTART_STRATEGY", "supervisor"),
-        EnvVarGuard::set("OPENHUMAN_AUTO_UPDATE_RPC_MUTATIONS_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_DICTATION_ENABLED", "true"),
-        EnvVarGuard::set("OPENHUMAN_DICTATION_HOTKEY", "CmdOrCtrl+Shift+D"),
-        EnvVarGuard::set("OPENHUMAN_DICTATION_ACTIVATION_MODE", "toggle"),
-        EnvVarGuard::set("OPENHUMAN_DICTATION_LLM_REFINEMENT", "false"),
-        EnvVarGuard::set("OPENHUMAN_DICTATION_STREAMING", "false"),
-        EnvVarGuard::set("OPENHUMAN_DICTATION_STREAMING_INTERVAL_MS", "333"),
-        EnvVarGuard::set("OPENHUMAN_CONTEXT_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_CONTEXT_MICROCOMPACT_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_CONTEXT_AUTOCOMPACT_ENABLED", "false"),
-        EnvVarGuard::set("OPENHUMAN_CONTEXT_TOOL_RESULT_BUDGET_BYTES", "12345"),
-        EnvVarGuard::set("OPENHUMAN_CONTEXT_SUMMARIZER_MODEL", "summary-env"),
+        EnvVarGuard::set("NEPPY_MEMORY_SUMMARISE_MODEL", "summarise-env"),
+        EnvVarGuard::set("NEPPY_MEMORY_SUMMARISE_TIMEOUT_MS", "3456"),
+        EnvVarGuard::set("NEPPY_MEMORY_TREE_CONTENT_DIR", "/tmp/openhuman-tree"),
+        EnvVarGuard::set("NEPPY_MEMORY_TREE_LLM_BACKEND", "local"),
+        EnvVarGuard::set("NEPPY_MEMORY_TREE_CLOUD_LLM_MODEL", "cloud-tree-model"),
+        EnvVarGuard::set("NEPPY_AUTO_UPDATE_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_AUTO_UPDATE_INTERVAL_MINUTES", "1440"),
+        EnvVarGuard::set("NEPPY_AUTO_UPDATE_RESTART_STRATEGY", "supervisor"),
+        EnvVarGuard::set("NEPPY_AUTO_UPDATE_RPC_MUTATIONS_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_DICTATION_ENABLED", "true"),
+        EnvVarGuard::set("NEPPY_DICTATION_HOTKEY", "CmdOrCtrl+Shift+D"),
+        EnvVarGuard::set("NEPPY_DICTATION_ACTIVATION_MODE", "toggle"),
+        EnvVarGuard::set("NEPPY_DICTATION_LLM_REFINEMENT", "false"),
+        EnvVarGuard::set("NEPPY_DICTATION_STREAMING", "false"),
+        EnvVarGuard::set("NEPPY_DICTATION_STREAMING_INTERVAL_MS", "333"),
+        EnvVarGuard::set("NEPPY_CONTEXT_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_CONTEXT_MICROCOMPACT_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_CONTEXT_AUTOCOMPACT_ENABLED", "false"),
+        EnvVarGuard::set("NEPPY_CONTEXT_TOOL_RESULT_BUDGET_BYTES", "12345"),
+        EnvVarGuard::set("NEPPY_CONTEXT_SUMMARIZER_MODEL", "summary-env"),
     ];
 
     let config = Config::load_from_config_path(&config_dir.join("config.toml"), &workspace_dir)
@@ -2066,17 +2054,17 @@ async fn config_env_overlay_public_loader_applies_runtime_and_tool_overrides() {
 #[tokio::test]
 async fn config_save_and_load_encrypts_channel_secret_fields() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path().join("home");
     let _guards = vec![
         EnvVarGuard::set_to_path("HOME", &home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset(APP_ENV_VAR),
         EnvVarGuard::unset(VITE_APP_ENV_VAR),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
     let config_path = home
         .join(".neppy")
@@ -2651,7 +2639,7 @@ async fn credentials_public_ops_cover_service_and_missing_session_error_paths() 
 #[tokio::test]
 async fn credentials_secret_helpers_round_trip_with_file_keyring_backend() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
     let tmp = tempdir().expect("tempdir");
     let mut config = Config::default();
     config.config_path = tmp.path().join("config.toml");
@@ -2781,98 +2769,98 @@ async fn worker_a_controller_schemas_are_fully_exposed() {
         (
             "config",
             vec![
-                "openhuman.config_agent_server_status",
-                "openhuman.config_get",
-                "openhuman.config_get_activity_level_settings",
-                "openhuman.config_get_agent_paths",
-                "openhuman.config_get_agent_settings",
-                "openhuman.config_get_analytics_settings",
-                "openhuman.config_get_autonomy_settings",
-                "openhuman.config_get_client_config",
-                "openhuman.config_get_composio_trigger_settings",
-                "openhuman.config_get_dashboard_settings",
-                "openhuman.config_get_data_paths",
-                "openhuman.config_get_dictation_settings",
-                "openhuman.config_get_memory_sync_settings",
-                "openhuman.config_get_onboarding_completed",
-                "openhuman.config_get_privacy_mode",
-                "openhuman.config_get_runtime_flags",
-                "openhuman.config_get_sandbox_settings",
-                "openhuman.config_get_search_settings",
-                "openhuman.config_get_voice_server_settings",
-                "openhuman.config_reset_local_data",
-                "openhuman.config_resolve_api_url",
-                "openhuman.config_set_browser_allow_all",
-                "openhuman.config_set_onboarding_completed",
-                "openhuman.config_set_privacy_mode",
-                "openhuman.config_update_activity_level_settings",
-                "openhuman.config_update_agent_paths",
-                "openhuman.config_update_agent_settings",
-                "openhuman.config_update_analytics_settings",
-                "openhuman.config_update_autonomy_settings",
-                "openhuman.config_update_browser_settings",
-                "openhuman.config_update_composio_trigger_settings",
-                "openhuman.config_update_dictation_settings",
-                "openhuman.config_update_local_ai_settings",
-                "openhuman.config_update_memory_settings",
-                "openhuman.config_update_memory_sync_settings",
-                "openhuman.config_update_model_settings",
-                "openhuman.config_update_runtime_settings",
-                "openhuman.config_update_sandbox_settings",
-                "openhuman.config_update_search_settings",
-                "openhuman.config_update_voice_server_settings",
-                "openhuman.config_workspace_onboarding_flag_exists",
-                "openhuman.config_workspace_onboarding_flag_set",
+                "neppy.config_agent_server_status",
+                "neppy.config_get",
+                "neppy.config_get_activity_level_settings",
+                "neppy.config_get_agent_paths",
+                "neppy.config_get_agent_settings",
+                "neppy.config_get_analytics_settings",
+                "neppy.config_get_autonomy_settings",
+                "neppy.config_get_client_config",
+                "neppy.config_get_composio_trigger_settings",
+                "neppy.config_get_dashboard_settings",
+                "neppy.config_get_data_paths",
+                "neppy.config_get_dictation_settings",
+                "neppy.config_get_memory_sync_settings",
+                "neppy.config_get_onboarding_completed",
+                "neppy.config_get_privacy_mode",
+                "neppy.config_get_runtime_flags",
+                "neppy.config_get_sandbox_settings",
+                "neppy.config_get_search_settings",
+                "neppy.config_get_voice_server_settings",
+                "neppy.config_reset_local_data",
+                "neppy.config_resolve_api_url",
+                "neppy.config_set_browser_allow_all",
+                "neppy.config_set_onboarding_completed",
+                "neppy.config_set_privacy_mode",
+                "neppy.config_update_activity_level_settings",
+                "neppy.config_update_agent_paths",
+                "neppy.config_update_agent_settings",
+                "neppy.config_update_analytics_settings",
+                "neppy.config_update_autonomy_settings",
+                "neppy.config_update_browser_settings",
+                "neppy.config_update_composio_trigger_settings",
+                "neppy.config_update_dictation_settings",
+                "neppy.config_update_local_ai_settings",
+                "neppy.config_update_memory_settings",
+                "neppy.config_update_memory_sync_settings",
+                "neppy.config_update_model_settings",
+                "neppy.config_update_runtime_settings",
+                "neppy.config_update_sandbox_settings",
+                "neppy.config_update_search_settings",
+                "neppy.config_update_voice_server_settings",
+                "neppy.config_workspace_onboarding_flag_exists",
+                "neppy.config_workspace_onboarding_flag_set",
             ],
         ),
         (
             "auth",
             vec![
-                "openhuman.auth_clear_session",
-                "openhuman.auth_consume_login_token",
-                "openhuman.auth_create_channel_link_token",
-                "openhuman.auth_get_me",
-                "openhuman.auth_get_session_token",
-                "openhuman.auth_get_state",
-                "openhuman.auth_list_provider_credentials",
-                "openhuman.auth_oauth_connect",
-                "openhuman.auth_oauth_fetch_client_key",
-                "openhuman.auth_oauth_fetch_integration_tokens",
-                "openhuman.auth_oauth_list_integrations",
-                "openhuman.auth_oauth_revoke_integration",
-                "openhuman.auth_remove_provider_credentials",
-                "openhuman.auth_store_provider_credentials",
-                "openhuman.auth_store_session",
+                "neppy.auth_clear_session",
+                "neppy.auth_consume_login_token",
+                "neppy.auth_create_channel_link_token",
+                "neppy.auth_get_me",
+                "neppy.auth_get_session_token",
+                "neppy.auth_get_state",
+                "neppy.auth_list_provider_credentials",
+                "neppy.auth_oauth_connect",
+                "neppy.auth_oauth_fetch_client_key",
+                "neppy.auth_oauth_fetch_integration_tokens",
+                "neppy.auth_oauth_list_integrations",
+                "neppy.auth_oauth_revoke_integration",
+                "neppy.auth_remove_provider_credentials",
+                "neppy.auth_store_provider_credentials",
+                "neppy.auth_store_session",
             ],
         ),
         (
             "app_state",
             vec![
-                "openhuman.app_state_snapshot",
-                "openhuman.app_state_update_local_state",
+                "neppy.app_state_snapshot",
+                "neppy.app_state_update_local_state",
             ],
         ),
-        ("connectivity", vec!["openhuman.connectivity_diag"]),
+        ("connectivity", vec!["neppy.connectivity_diag"]),
         (
             "memory_sources",
             vec![
-                "openhuman.memory_sources_add",
-                "openhuman.memory_sources_apply_all_in",
-                "openhuman.memory_sources_coding_session_status",
-                "openhuman.memory_sources_estimate_sync_cost",
-                "openhuman.memory_sources_get",
-                "openhuman.memory_sources_ingest_coding_sessions",
-                "openhuman.memory_sources_list",
-                "openhuman.memory_sources_list_items",
-                "openhuman.memory_sources_monthly_cost_summary",
-                "openhuman.memory_sources_read_item",
-                "openhuman.memory_sources_reconcile",
-                "openhuman.memory_sources_remove",
-                "openhuman.memory_sources_status_list",
-                "openhuman.memory_sources_supported_toolkits",
-                "openhuman.memory_sources_sync",
-                "openhuman.memory_sources_sync_audit_log",
-                "openhuman.memory_sources_update",
+                "neppy.memory_sources_add",
+                "neppy.memory_sources_apply_all_in",
+                "neppy.memory_sources_coding_session_status",
+                "neppy.memory_sources_estimate_sync_cost",
+                "neppy.memory_sources_get",
+                "neppy.memory_sources_ingest_coding_sessions",
+                "neppy.memory_sources_list",
+                "neppy.memory_sources_list_items",
+                "neppy.memory_sources_monthly_cost_summary",
+                "neppy.memory_sources_read_item",
+                "neppy.memory_sources_reconcile",
+                "neppy.memory_sources_remove",
+                "neppy.memory_sources_status_list",
+                "neppy.memory_sources_supported_toolkits",
+                "neppy.memory_sources_sync",
+                "neppy.memory_sources_sync_audit_log",
+                "neppy.memory_sources_update",
             ],
         ),
     ] {
@@ -2897,7 +2885,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let _lock = env_lock();
     let harness = setup().await;
 
-    let initial = rpc(&harness.rpc_base, 10_001, "openhuman.config_get", json!({})).await;
+    let initial = rpc(&harness.rpc_base, 10_001, "neppy.config_get", json!({})).await;
     assert!(
         payload(&initial, "config_get")
             .get("workspace_dir")
@@ -2909,7 +2897,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let model = rpc(
         &harness.rpc_base,
         10_002,
-        "openhuman.config_update_model_settings",
+        "neppy.config_update_model_settings",
         json!({
             "api_url": "http://127.0.0.1:9",
             "inference_url": "http://127.0.0.1:19999/v1",
@@ -2942,7 +2930,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let client = rpc(
         &harness.rpc_base,
         10_003,
-        "openhuman.config_get_client_config",
+        "neppy.config_get_client_config",
         json!({}),
     )
     .await;
@@ -3022,7 +3010,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let memory = rpc(
         &harness.rpc_base,
         10_004,
-        "openhuman.config_update_memory_settings",
+        "neppy.config_update_memory_settings",
         json!({
             "backend": "sqlite",
             "auto_save": true,
@@ -3038,17 +3026,17 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     for (id, method, params) in [
         (
             10_005,
-            "openhuman.config_update_runtime_settings",
+            "neppy.config_update_runtime_settings",
             json!({ "kind": "local", "reasoning_enabled": true }),
         ),
         (
             10_006,
-            "openhuman.config_update_browser_settings",
+            "neppy.config_update_browser_settings",
             json!({ "enabled": true }),
         ),
         (
             10_008,
-            "openhuman.config_update_local_ai_settings",
+            "neppy.config_update_local_ai_settings",
             json!({
                 "runtime_enabled": false,
                 "opt_in_confirmed": false,
@@ -3064,7 +3052,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
         ),
         (
             10_009,
-            "openhuman.config_update_voice_server_settings",
+            "neppy.config_update_voice_server_settings",
             json!({
                 "auto_start": false,
                 "hotkey": "Fn",
@@ -3077,7 +3065,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
         ),
         (
             10_010,
-            "openhuman.config_update_composio_trigger_settings",
+            "neppy.config_update_composio_trigger_settings",
             json!({
                 "triage_disabled": true,
                 "triage_disabled_toolkits": ["gmail", "slack"]
@@ -3085,7 +3073,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
         ),
         (
             10_011,
-            "openhuman.config_update_autonomy_settings",
+            "neppy.config_update_autonomy_settings",
             json!({
                 "level": "supervised",
                 "workspace_only": true,
@@ -3103,7 +3091,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
         ),
         (
             10_012,
-            "openhuman.config_update_search_settings",
+            "neppy.config_update_search_settings",
             json!({
                 "engine": "managed",
                 "max_results": 5,
@@ -3121,15 +3109,15 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     }
 
     for (id, method) in [
-        (10_101, "openhuman.config_resolve_api_url"),
-        (10_102, "openhuman.config_get_runtime_flags"),
-        (10_103, "openhuman.config_get_dashboard_settings"),
-        (10_104, "openhuman.config_agent_server_status"),
-        (10_105, "openhuman.config_get_data_paths"),
-        (10_106, "openhuman.config_get_voice_server_settings"),
-        (10_107, "openhuman.config_get_composio_trigger_settings"),
-        (10_108, "openhuman.config_get_autonomy_settings"),
-        (10_109, "openhuman.config_get_search_settings"),
+        (10_101, "neppy.config_resolve_api_url"),
+        (10_102, "neppy.config_get_runtime_flags"),
+        (10_103, "neppy.config_get_dashboard_settings"),
+        (10_104, "neppy.config_agent_server_status"),
+        (10_105, "neppy.config_get_data_paths"),
+        (10_106, "neppy.config_get_voice_server_settings"),
+        (10_107, "neppy.config_get_composio_trigger_settings"),
+        (10_108, "neppy.config_get_autonomy_settings"),
+        (10_109, "neppy.config_get_search_settings"),
     ] {
         let response = rpc(&harness.rpc_base, id, method, json!({})).await;
         ok(&response, method);
@@ -3138,7 +3126,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let allow_all = rpc(
         &harness.rpc_base,
         10_201,
-        "openhuman.config_set_browser_allow_all",
+        "neppy.config_set_browser_allow_all",
         json!({ "enabled": false }),
     )
     .await;
@@ -3147,7 +3135,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let exists_before = rpc(
         &harness.rpc_base,
         10_202,
-        "openhuman.config_workspace_onboarding_flag_exists",
+        "neppy.config_workspace_onboarding_flag_exists",
         json!({ "flag_name": ".worker-a-onboarding" }),
     )
     .await;
@@ -3159,7 +3147,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let set_flag = rpc(
         &harness.rpc_base,
         10_203,
-        "openhuman.config_workspace_onboarding_flag_set",
+        "neppy.config_workspace_onboarding_flag_set",
         json!({ "flag_name": ".worker-a-onboarding", "value": true }),
     )
     .await;
@@ -3171,7 +3159,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let clear_flag = rpc(
         &harness.rpc_base,
         10_204,
-        "openhuman.config_workspace_onboarding_flag_set",
+        "neppy.config_workspace_onboarding_flag_set",
         json!({ "flag_name": ".worker-a-onboarding", "value": false }),
     )
     .await;
@@ -3183,7 +3171,7 @@ async fn config_controller_mutations_round_trip_over_json_rpc() {
     let reset = rpc(
         &harness.rpc_base,
         10_301,
-        "openhuman.config_reset_local_data",
+        "neppy.config_reset_local_data",
         json!({}),
     )
     .await;
@@ -3203,21 +3191,21 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let refused = rpc(
         &harness.rpc_base,
         11_001,
-        "openhuman.config_set_browser_allow_all",
+        "neppy.config_set_browser_allow_all",
         json!({ "enabled": true }),
     )
     .await;
     assert_error_contains(
         &refused,
         "set_browser_allow_all true without operator opt-in",
-        "Refusing to enable OPENHUMAN_BROWSER_ALLOW_ALL",
+        "Refusing to enable NEPPY_BROWSER_ALLOW_ALL",
     );
 
-    std::env::set_var("OPENHUMAN_BROWSER_ALLOW_ALL_RPC_ENABLE", "1");
+    std::env::set_var("NEPPY_BROWSER_ALLOW_ALL_RPC_ENABLE", "1");
     let enabled = rpc(
         &harness.rpc_base,
         11_002,
-        "openhuman.config_set_browser_allow_all",
+        "neppy.config_set_browser_allow_all",
         json!({ "enabled": true }),
     )
     .await;
@@ -3231,7 +3219,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let disabled = rpc(
         &harness.rpc_base,
         11_003,
-        "openhuman.config_set_browser_allow_all",
+        "neppy.config_set_browser_allow_all",
         json!({ "enabled": false }),
     )
     .await;
@@ -3246,7 +3234,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_004,
-            "openhuman.config_update_analytics_settings",
+            "neppy.config_update_analytics_settings",
             json!({ "enabled": false }),
         )
         .await,
@@ -3255,7 +3243,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let analytics = rpc(
         &harness.rpc_base,
         11_005,
-        "openhuman.config_get_analytics_settings",
+        "neppy.config_get_analytics_settings",
         json!({}),
     )
     .await;
@@ -3269,7 +3257,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let onboarding_before = rpc(
         &harness.rpc_base,
         11_008,
-        "openhuman.config_get_onboarding_completed",
+        "neppy.config_get_onboarding_completed",
         json!({}),
     )
     .await;
@@ -3281,7 +3269,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         let updated = rpc(
             &harness.rpc_base,
             id,
-            "openhuman.config_set_onboarding_completed",
+            "neppy.config_set_onboarding_completed",
             json!({ "value": value }),
         )
         .await;
@@ -3295,7 +3283,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_011,
-            "openhuman.config_update_dictation_settings",
+            "neppy.config_update_dictation_settings",
             json!({
                 "enabled": true,
                 "hotkey": "Ctrl+Space",
@@ -3311,7 +3299,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let dictation = rpc(
         &harness.rpc_base,
         11_012,
-        "openhuman.config_get_dictation_settings",
+        "neppy.config_get_dictation_settings",
         json!({}),
     )
     .await;
@@ -3333,7 +3321,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_013,
-            "openhuman.config_update_dictation_settings",
+            "neppy.config_update_dictation_settings",
             json!({ "activation_mode": "hold" }),
         )
         .await,
@@ -3344,7 +3332,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_014,
-            "openhuman.config_update_voice_server_settings",
+            "neppy.config_update_voice_server_settings",
             json!({ "activation_mode": "hold" }),
         )
         .await,
@@ -3355,7 +3343,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_015,
-            "openhuman.config_update_search_settings",
+            "neppy.config_update_search_settings",
             json!({ "engine": "bing" }),
         )
         .await,
@@ -3366,7 +3354,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_016,
-            "openhuman.config_update_search_settings",
+            "neppy.config_update_search_settings",
             json!({ "max_results": 0 }),
         )
         .await,
@@ -3377,7 +3365,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_024,
-            "openhuman.config_update_search_settings",
+            "neppy.config_update_search_settings",
             json!({ "timeout_secs": 0 }),
         )
         .await,
@@ -3387,7 +3375,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let valid_search = rpc(
         &harness.rpc_base,
         11_025,
-        "openhuman.config_update_search_settings",
+        "neppy.config_update_search_settings",
         json!({
             "engine": " brave ",
             "max_results": 12,
@@ -3417,7 +3405,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let search_readback = rpc(
         &harness.rpc_base,
         11_026,
-        "openhuman.config_get_search_settings",
+        "neppy.config_get_search_settings",
         json!({}),
     )
     .await;
@@ -3467,7 +3455,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let allow_all_search = rpc(
         &harness.rpc_base,
         11_027,
-        "openhuman.config_update_search_settings",
+        "neppy.config_update_search_settings",
         json!({
             "parallel_api_key": " ",
             "brave_api_key": " ",
@@ -3486,7 +3474,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_017,
-            "openhuman.config_update_autonomy_settings",
+            "neppy.config_update_autonomy_settings",
             json!({ "level": "reckless" }),
         )
         .await,
@@ -3497,7 +3485,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_018,
-            "openhuman.config_update_model_settings",
+            "neppy.config_update_model_settings",
             json!({
                 "cloud_providers": [{
                     "slug": "",
@@ -3514,7 +3502,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_022,
-            "openhuman.config_update_model_settings",
+            "neppy.config_update_model_settings",
             json!({
                 "cloud_providers": [{
                     "slug": "worker-a-invalid-auth-style",
@@ -3531,7 +3519,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
     let filtered_reserved = rpc(
         &harness.rpc_base,
         11_023,
-        "openhuman.config_update_model_settings",
+        "neppy.config_update_model_settings",
         json!({
             "cloud_providers": [
                 {
@@ -3578,7 +3566,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         &rpc(
             &harness.rpc_base,
             11_019,
-            "openhuman.config_update_voice_server_settings",
+            "neppy.config_update_voice_server_settings",
             json!({
                 "min_duration_secs": -1.0,
                 "silence_threshold": -0.5
@@ -3587,7 +3575,7 @@ async fn config_runtime_flags_settings_readbacks_and_validation_paths_are_exerci
         .await,
         "update_voice_server_settings clamps non-negative floats",
     );
-    let config = rpc(&harness.rpc_base, 11_020, "openhuman.config_get", json!({})).await;
+    let config = rpc(&harness.rpc_base, 11_020, "neppy.config_get", json!({})).await;
     let config_payload = payload(&config, "config_get after clamps");
     assert_eq!(
         config_payload.pointer("/config/voice_server/min_duration_secs"),
@@ -3608,7 +3596,7 @@ async fn config_auto_approve_public_helper_persists_once_and_is_idempotent() {
     let home = tmp.path().join("home");
     let _guards = vec![
         EnvVarGuard::set_to_path("HOME", &home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset(APP_ENV_VAR),
         EnvVarGuard::unset(VITE_APP_ENV_VAR),
     ];
@@ -3639,13 +3627,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let _lock = env_lock();
     let harness = setup().await;
 
-    let state = rpc(
-        &harness.rpc_base,
-        20_001,
-        "openhuman.auth_get_state",
-        json!({}),
-    )
-    .await;
+    let state = rpc(&harness.rpc_base, 20_001, "neppy.auth_get_state", json!({})).await;
     assert_eq!(
         payload(&state, "auth_get_state")
             .get("isAuthenticated")
@@ -3656,7 +3638,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let token = rpc(
         &harness.rpc_base,
         20_002,
-        "openhuman.auth_get_session_token",
+        "neppy.auth_get_session_token",
         json!({}),
     )
     .await;
@@ -3668,13 +3650,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     );
 
     assert_error_contains(
-        &rpc(
-            &harness.rpc_base,
-            20_003,
-            "openhuman.auth_get_me",
-            json!({}),
-        )
-        .await,
+        &rpc(&harness.rpc_base, 20_003, "neppy.auth_get_me", json!({})).await,
         "auth_get_me without session",
         "session JWT required",
     );
@@ -3682,7 +3658,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
         &rpc(
             &harness.rpc_base,
             20_004,
-            "openhuman.auth_consume_login_token",
+            "neppy.auth_consume_login_token",
             json!({ "loginToken": "" }),
         )
         .await,
@@ -3693,7 +3669,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
         &rpc(
             &harness.rpc_base,
             20_005,
-            "openhuman.auth_create_channel_link_token",
+            "neppy.auth_create_channel_link_token",
             json!({ "channel": "mastodon" }),
         )
         .await,
@@ -3704,31 +3680,31 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     for (id, method, params, needle) in [
         (
             20_006,
-            "openhuman.auth_oauth_connect",
+            "neppy.auth_oauth_connect",
             json!({ "provider": "github" }),
             "session JWT required",
         ),
         (
             20_007,
-            "openhuman.auth_oauth_list_integrations",
+            "neppy.auth_oauth_list_integrations",
             json!({}),
             "session JWT required",
         ),
         (
             20_008,
-            "openhuman.auth_oauth_fetch_integration_tokens",
+            "neppy.auth_oauth_fetch_integration_tokens",
             json!({ "integrationId": "abc", "key": "secret" }),
             "session JWT required",
         ),
         (
             20_009,
-            "openhuman.auth_oauth_fetch_client_key",
+            "neppy.auth_oauth_fetch_client_key",
             json!({ "integrationId": "abc" }),
             "session JWT required",
         ),
         (
             20_010,
-            "openhuman.auth_oauth_revoke_integration",
+            "neppy.auth_oauth_revoke_integration",
             json!({ "integrationId": "abc" }),
             "session JWT required",
         ),
@@ -3741,7 +3717,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
         &rpc(
             &harness.rpc_base,
             20_011,
-            "openhuman.auth_store_provider_credentials",
+            "neppy.auth_store_provider_credentials",
             json!({ "provider": "   " }),
         )
         .await,
@@ -3752,7 +3728,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
         &rpc(
             &harness.rpc_base,
             20_012,
-            "openhuman.auth_store_provider_credentials",
+            "neppy.auth_store_provider_credentials",
             json!({ "provider": "worker-a", "fields": "not-an-object" }),
         )
         .await,
@@ -3763,7 +3739,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
         &rpc(
             &harness.rpc_base,
             20_019,
-            "openhuman.auth_store_provider_credentials",
+            "neppy.auth_store_provider_credentials",
             json!({ "provider": "worker-a-empty" }),
         )
         .await,
@@ -3774,7 +3750,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
         &rpc(
             &harness.rpc_base,
             20_020,
-            "openhuman.auth_store_session",
+            "neppy.auth_store_session",
             json!({ "token": "header.payload.local" }),
         )
         .await,
@@ -3785,7 +3761,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let stored_provider = rpc(
         &harness.rpc_base,
         20_013,
-        "openhuman.auth_store_provider_credentials",
+        "neppy.auth_store_provider_credentials",
         json!({
             "provider": "worker-a",
             "profile": "secondary",
@@ -3805,7 +3781,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let listed = rpc(
         &harness.rpc_base,
         20_014,
-        "openhuman.auth_list_provider_credentials",
+        "neppy.auth_list_provider_credentials",
         json!({ "provider": "worker-a" }),
     )
     .await;
@@ -3822,7 +3798,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let listed_without_filter = rpc(
         &harness.rpc_base,
         20_021,
-        "openhuman.auth_list_provider_credentials",
+        "neppy.auth_list_provider_credentials",
         json!({}),
     )
     .await;
@@ -3841,7 +3817,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let removed = rpc(
         &harness.rpc_base,
         20_015,
-        "openhuman.auth_remove_provider_credentials",
+        "neppy.auth_remove_provider_credentials",
         json!({ "provider": "worker-a", "profile": "secondary" }),
     )
     .await;
@@ -3855,7 +3831,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let session = rpc(
         &harness.rpc_base,
         20_016,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "header.payload.local",
             "user": {
@@ -3873,13 +3849,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
         Some("app-session")
     );
 
-    let authed = rpc(
-        &harness.rpc_base,
-        20_017,
-        "openhuman.auth_get_state",
-        json!({}),
-    )
-    .await;
+    let authed = rpc(&harness.rpc_base, 20_017, "neppy.auth_get_state", json!({})).await;
     assert_eq!(
         payload(&authed, "auth_get_state")
             .get("isAuthenticated")
@@ -3890,7 +3860,7 @@ async fn auth_credentials_controller_paths_round_trip_and_validate_errors() {
     let cleared = rpc(
         &harness.rpc_base,
         20_018,
-        "openhuman.auth_clear_session",
+        "neppy.auth_clear_session",
         json!({}),
     )
     .await;
@@ -3913,7 +3883,7 @@ async fn auth_local_session_normalizes_user_and_app_state_snapshot_uses_stored_i
     let session = rpc(
         &harness.rpc_base,
         21_001,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "header.payload.local",
             "user": {
@@ -3931,13 +3901,7 @@ async fn auth_local_session_normalizes_user_and_app_state_snapshot_uses_stored_i
         Some("app-session")
     );
 
-    let state = rpc(
-        &harness.rpc_base,
-        21_002,
-        "openhuman.auth_get_state",
-        json!({}),
-    )
-    .await;
+    let state = rpc(&harness.rpc_base, 21_002, "neppy.auth_get_state", json!({})).await;
     let state_payload = payload(&state, "auth_get_state after local session");
     assert_eq!(
         state_payload
@@ -3965,7 +3929,7 @@ async fn auth_local_session_normalizes_user_and_app_state_snapshot_uses_stored_i
     let token = rpc(
         &harness.rpc_base,
         21_003,
-        "openhuman.auth_get_session_token",
+        "neppy.auth_get_session_token",
         json!({}),
     )
     .await;
@@ -3979,7 +3943,7 @@ async fn auth_local_session_normalizes_user_and_app_state_snapshot_uses_stored_i
     let snapshot = rpc(
         &harness.rpc_base,
         21_004,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -3998,7 +3962,7 @@ async fn auth_local_session_normalizes_user_and_app_state_snapshot_uses_stored_i
     let cleared = rpc(
         &harness.rpc_base,
         21_005,
-        "openhuman.auth_clear_session",
+        "neppy.auth_clear_session",
         json!({}),
     )
     .await;
@@ -4022,7 +3986,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let session = rpc(
         &harness.rpc_base,
         22_001,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "remote-jwt",
             "user_id": "remote-user-1",
@@ -4046,13 +4010,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
         "store_session should validate the JWT once"
     );
 
-    let me = rpc(
-        &harness.rpc_base,
-        22_002,
-        "openhuman.auth_get_me",
-        json!({}),
-    )
-    .await;
+    let me = rpc(&harness.rpc_base, 22_002, "neppy.auth_get_me", json!({})).await;
     assert_eq!(
         payload(&me, "auth_get_me remote")
             .get("email")
@@ -4063,7 +4021,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let consumed = rpc(
         &harness.rpc_base,
         22_003,
-        "openhuman.auth_consume_login_token",
+        "neppy.auth_consume_login_token",
         json!({ "loginToken": "telegram-login-token" }),
     )
     .await;
@@ -4077,7 +4035,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let link = rpc(
         &harness.rpc_base,
         22_004,
-        "openhuman.auth_create_channel_link_token",
+        "neppy.auth_create_channel_link_token",
         json!({ "channel": " Telegram " }),
     )
     .await;
@@ -4091,7 +4049,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let integrations = rpc(
         &harness.rpc_base,
         22_005,
-        "openhuman.auth_oauth_list_integrations",
+        "neppy.auth_oauth_list_integrations",
         json!({}),
     )
     .await;
@@ -4105,7 +4063,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let oauth_connect = rpc(
         &harness.rpc_base,
         22_011,
-        "openhuman.auth_oauth_connect",
+        "neppy.auth_oauth_connect",
         json!({
             "provider": "github",
             "skillId": "worker-a-skill",
@@ -4130,7 +4088,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let integration_tokens = rpc(
         &harness.rpc_base,
         22_012,
-        "openhuman.auth_oauth_fetch_integration_tokens",
+        "neppy.auth_oauth_fetch_integration_tokens",
         json!({
             "integrationId": "0123456789abcdef01234567",
             "key": "0123456789abcdef0123456789abcdef"
@@ -4159,7 +4117,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let client_key = rpc(
         &harness.rpc_base,
         22_006,
-        "openhuman.auth_oauth_fetch_client_key",
+        "neppy.auth_oauth_fetch_client_key",
         json!({ "integrationId": "0123456789abcdef01234567" }),
     )
     .await;
@@ -4173,7 +4131,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let revoked = rpc(
         &harness.rpc_base,
         22_007,
-        "openhuman.auth_oauth_revoke_integration",
+        "neppy.auth_oauth_revoke_integration",
         json!({ "integrationId": "0123456789abcdef01234567" }),
     )
     .await;
@@ -4188,7 +4146,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
         &rpc(
             &harness.rpc_base,
             22_008,
-            "openhuman.auth_oauth_fetch_integration_tokens",
+            "neppy.auth_oauth_fetch_integration_tokens",
             json!({ "integrationId": "short", "key": "secret" }),
         )
         .await,
@@ -4199,7 +4157,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let snapshot = rpc(
         &harness.rpc_base,
         22_009,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4218,7 +4176,7 @@ async fn auth_remote_backend_paths_and_app_state_current_user_cache_round_trip()
     let cached_snapshot = rpc(
         &harness.rpc_base,
         22_010,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4257,7 +4215,7 @@ async fn auth_remote_backend_path_prefix_is_preserved_for_app_state_refresh() {
     let session = rpc(
         &harness.rpc_base,
         22_051,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "remote-path-prefix-jwt",
             "user_id": "remote-user-1",
@@ -4279,7 +4237,7 @@ async fn auth_remote_backend_path_prefix_is_preserved_for_app_state_refresh() {
     let snapshot = rpc(
         &harness.rpc_base,
         22_052,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4309,7 +4267,7 @@ async fn app_state_snapshot_clears_empty_current_user_cache_and_falls_back_to_st
     let session = rpc(
         &harness.rpc_base,
         22_101,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "sequence-remote-jwt",
             "user_id": "stored-sequence-user",
@@ -4336,7 +4294,7 @@ async fn app_state_snapshot_clears_empty_current_user_cache_and_falls_back_to_st
     let empty_user_snapshot = rpc(
         &harness.rpc_base,
         22_102,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4360,7 +4318,7 @@ async fn app_state_snapshot_clears_empty_current_user_cache_and_falls_back_to_st
     let failed_user_snapshot = rpc(
         &harness.rpc_base,
         22_103,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4396,7 +4354,7 @@ async fn app_state_snapshot_falls_back_to_stored_user_when_current_user_refresh_
     let session = rpc(
         &harness.rpc_base,
         22_121,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "refresh-error-remote-jwt",
             "user_id": "stored-refresh-error-user",
@@ -4425,7 +4383,7 @@ async fn app_state_snapshot_falls_back_to_stored_user_when_current_user_refresh_
     let snapshot = rpc(
         &harness.rpc_base,
         22_122,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4456,7 +4414,7 @@ async fn app_state_snapshot_clears_null_current_user_cache_and_falls_back_to_sto
     let session = rpc(
         &harness.rpc_base,
         22_151,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "null-sequence-remote-jwt",
             "user_id": "stored-null-sequence-user",
@@ -4483,7 +4441,7 @@ async fn app_state_snapshot_clears_null_current_user_cache_and_falls_back_to_sto
     let snapshot = rpc(
         &harness.rpc_base,
         22_152,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4523,7 +4481,7 @@ async fn app_state_cached_identity_peek_accepts_legacy_current_user_fields() {
     let session = rpc(
         &harness.rpc_base,
         22_201,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "legacy-field-remote-jwt",
             "user_id": "stored-legacy-user",
@@ -4545,7 +4503,7 @@ async fn app_state_cached_identity_peek_accepts_legacy_current_user_fields() {
     let snapshot = rpc(
         &harness.rpc_base,
         22_202,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4587,7 +4545,7 @@ async fn app_state_cached_identity_peek_accepts_camel_case_fallback_fields() {
     let session = rpc(
         &harness.rpc_base,
         22_301,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "camel-field-remote-jwt",
             "user_id": "stored-camel-user",
@@ -4609,7 +4567,7 @@ async fn app_state_cached_identity_peek_accepts_camel_case_fallback_fields() {
     let snapshot = rpc(
         &harness.rpc_base,
         22_302,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4642,7 +4600,7 @@ async fn app_state_cached_identity_peek_ignores_current_user_without_identity_fi
     let session = rpc(
         &harness.rpc_base,
         22_351,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "identity-empty-remote-jwt",
             "user_id": "stored-empty-identity-user",
@@ -4664,7 +4622,7 @@ async fn app_state_cached_identity_peek_ignores_current_user_without_identity_fi
     let snapshot = rpc(
         &harness.rpc_base,
         22_352,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4696,7 +4654,7 @@ async fn app_state_update_persists_and_snapshot_reads_local_state() {
     let updated = rpc(
         &harness.rpc_base,
         30_001,
-        "openhuman.app_state_update_local_state",
+        "neppy.app_state_update_local_state",
         json!({
             "encryptionKey": "worker-a-key",
             "onboardingTasks": {
@@ -4720,7 +4678,7 @@ async fn app_state_update_persists_and_snapshot_reads_local_state() {
     let snapshot = rpc(
         &harness.rpc_base,
         30_002,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4739,7 +4697,7 @@ async fn app_state_update_persists_and_snapshot_reads_local_state() {
     let cleared = rpc(
         &harness.rpc_base,
         30_003,
-        "openhuman.app_state_update_local_state",
+        "neppy.app_state_update_local_state",
         json!({
             "encryptionKey": null,
             "onboardingTasks": null
@@ -4756,7 +4714,7 @@ async fn app_state_update_persists_and_snapshot_reads_local_state() {
     let blank_cleared = rpc(
         &harness.rpc_base,
         30_004,
-        "openhuman.app_state_update_local_state",
+        "neppy.app_state_update_local_state",
         json!({ "encryptionKey": "   " }),
     )
     .await;
@@ -4770,7 +4728,7 @@ async fn app_state_update_persists_and_snapshot_reads_local_state() {
     let invalid_patch = rpc(
         &harness.rpc_base,
         30_005,
-        "openhuman.app_state_update_local_state",
+        "neppy.app_state_update_local_state",
         json!({ "onboardingTasks": "not-an-object" }),
     )
     .await;
@@ -4783,7 +4741,7 @@ async fn app_state_update_persists_and_snapshot_reads_local_state() {
     let unchanged = rpc(
         &harness.rpc_base,
         30_006,
-        "openhuman.app_state_update_local_state",
+        "neppy.app_state_update_local_state",
         json!({}),
     )
     .await;
@@ -4815,9 +4773,9 @@ async fn app_state_snapshot_degrades_runtime_service_status_failures() {
         .expect("serialize service mock state"),
     )
     .expect("write service mock state");
-    let _service_mock = EnvVarGuard::set("OPENHUMAN_SERVICE_MOCK", "1");
+    let _service_mock = EnvVarGuard::set("NEPPY_SERVICE_MOCK", "1");
     let _service_state =
-        EnvVarGuard::set_to_path("OPENHUMAN_SERVICE_MOCK_STATE_FILE", &service_state_path);
+        EnvVarGuard::set_to_path("NEPPY_SERVICE_MOCK_STATE_FILE", &service_state_path);
 
     // The runtime snapshot cache is keyed by config identity (workspace_dir), so
     // this harness's unique workspace guarantees a cache miss regardless of prior
@@ -4826,7 +4784,7 @@ async fn app_state_snapshot_degrades_runtime_service_status_failures() {
     let snapshot = rpc(
         &harness.rpc_base,
         30_051,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4850,7 +4808,7 @@ async fn app_state_snapshot_and_update_surface_state_dir_creation_errors() {
     let _lock = env_lock();
     let harness = setup().await;
 
-    let config = rpc(&harness.rpc_base, 30_101, "openhuman.config_get", json!({})).await;
+    let config = rpc(&harness.rpc_base, 30_101, "neppy.config_get", json!({})).await;
     let workspace_dir = payload(&config, "config_get for app_state state-dir error")
         .get("workspace_dir")
         .and_then(Value::as_str)
@@ -4864,7 +4822,7 @@ async fn app_state_snapshot_and_update_surface_state_dir_creation_errors() {
         &rpc(
             &harness.rpc_base,
             30_102,
-            "openhuman.app_state_snapshot",
+            "neppy.app_state_snapshot",
             json!({}),
         )
         .await,
@@ -4875,7 +4833,7 @@ async fn app_state_snapshot_and_update_surface_state_dir_creation_errors() {
         &rpc(
             &harness.rpc_base,
             30_103,
-            "openhuman.app_state_update_local_state",
+            "neppy.app_state_update_local_state",
             json!({ "encryptionKey": "cannot-save" }),
         )
         .await,
@@ -4894,7 +4852,7 @@ async fn app_state_snapshot_keeps_unquarantinable_local_state_path_but_uses_defa
     let _lock = env_lock();
     let harness = setup().await;
 
-    let config = rpc(&harness.rpc_base, 31_151, "openhuman.config_get", json!({})).await;
+    let config = rpc(&harness.rpc_base, 31_151, "neppy.config_get", json!({})).await;
     let workspace_dir = payload(&config, "config_get for unquarantinable app_state path")
         .get("workspace_dir")
         .and_then(Value::as_str)
@@ -4934,7 +4892,7 @@ async fn app_state_snapshot_keeps_unquarantinable_local_state_path_but_uses_defa
     let snapshot = rpc(
         &harness.rpc_base,
         31_152,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -4965,7 +4923,7 @@ async fn app_state_snapshot_quarantines_corrupted_local_state_file() {
     let _lock = env_lock();
     let harness = setup().await;
 
-    let config = rpc(&harness.rpc_base, 31_001, "openhuman.config_get", json!({})).await;
+    let config = rpc(&harness.rpc_base, 31_001, "neppy.config_get", json!({})).await;
     let workspace_dir = payload(&config, "config_get for app_state corruption")
         .get("workspace_dir")
         .and_then(Value::as_str)
@@ -4979,7 +4937,7 @@ async fn app_state_snapshot_quarantines_corrupted_local_state_file() {
     let snapshot = rpc(
         &harness.rpc_base,
         31_002,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -5016,7 +4974,7 @@ async fn app_state_snapshot_quarantines_unreadable_local_state_path() {
     let _lock = env_lock();
     let harness = setup().await;
 
-    let config = rpc(&harness.rpc_base, 31_101, "openhuman.config_get", json!({})).await;
+    let config = rpc(&harness.rpc_base, 31_101, "neppy.config_get", json!({})).await;
     let workspace_dir = payload(&config, "config_get for unreadable app_state path")
         .get("workspace_dir")
         .and_then(Value::as_str)
@@ -5030,7 +4988,7 @@ async fn app_state_snapshot_quarantines_unreadable_local_state_path() {
     let snapshot = rpc(
         &harness.rpc_base,
         31_102,
-        "openhuman.app_state_snapshot",
+        "neppy.app_state_snapshot",
         json!({}),
     )
     .await;
@@ -5066,7 +5024,7 @@ async fn app_state_snapshot_quarantines_unreadable_local_state_path() {
 #[test]
 fn credentials_profile_store_public_api_persists_updates_and_recovers_bad_files() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
     let tmp = tempdir().expect("tempdir");
     let state_dir = tmp.path().join("profiles");
     let store = AuthProfilesStore::new(&state_dir, true);
@@ -5251,7 +5209,7 @@ fn credentials_profile_store_public_api_persists_updates_and_recovers_bad_files(
 #[test]
 fn credentials_auth_service_selects_active_default_and_requested_profiles() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "disabled");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "disabled");
     let tmp = tempdir().expect("tempdir");
     let service = AuthService::new(&tmp.path().join("auth-service"), false);
 
@@ -5341,7 +5299,7 @@ fn credentials_auth_service_selects_active_default_and_requested_profiles() {
 #[test]
 fn credentials_profile_store_recovers_dropped_entries_empty_files_and_datetime_errors() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
     let tmp = tempdir().expect("tempdir");
 
     let default_profiles =
@@ -5522,7 +5480,7 @@ fn credentials_profile_store_recovers_dropped_entries_empty_files_and_datetime_e
 #[test]
 fn credentials_profile_store_round_trips_oauth_secret_fields_after_backend_selection() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "disabled");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "disabled");
     let tmp = tempdir().expect("tempdir");
     let state_dir = tmp.path().join("json-fallback");
     let store = AuthProfilesStore::new(&state_dir, false);
@@ -5579,7 +5537,7 @@ fn credentials_profile_store_round_trips_oauth_secret_fields_after_backend_selec
 #[test]
 fn credentials_profile_store_keychain_migration_and_fallback_paths_are_deterministic() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
     let tmp = tempdir().expect("tempdir");
 
     let hit_dir = tmp.path().join("keychain-hit");
@@ -5757,7 +5715,7 @@ fn credentials_profile_store_keychain_migration_and_fallback_paths_are_determini
 #[test]
 fn credentials_profile_store_reclaims_stale_dead_pid_lock() {
     let _lock = env_lock();
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
     let tmp = tempdir().expect("tempdir");
     let state_dir = tmp.path().join("stale-lock");
     std::fs::create_dir_all(&state_dir).expect("create stale lock profile dir");
@@ -5918,7 +5876,7 @@ async fn connectivity_diag_reports_runtime_port_sources() {
     let diag = rpc(
         &harness.rpc_base,
         40_001,
-        "openhuman.connectivity_diag",
+        "neppy.connectivity_diag",
         json!({}),
     )
     .await;
@@ -5948,20 +5906,20 @@ async fn connectivity_diag_reports_runtime_port_sources() {
     );
 
     {
-        let _rpc_url = EnvVarGuard::set("OPENHUMAN_CORE_RPC_URL", "http://127.0.0.1:4567/rpc");
-        let _core_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", "7788");
+        let _rpc_url = EnvVarGuard::set("NEPPY_CORE_RPC_URL", "http://127.0.0.1:4567/rpc");
+        let _core_port = EnvVarGuard::set("NEPPY_CORE_PORT", "7788");
         let snapshot = neppy_core::neppy::platform::connectivity::rpc::snapshot();
         assert_eq!(snapshot.listen_port, 4567);
     }
     {
-        let _rpc_url = EnvVarGuard::set("OPENHUMAN_CORE_RPC_URL", "not a url");
-        let _core_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", "4568");
+        let _rpc_url = EnvVarGuard::set("NEPPY_CORE_RPC_URL", "not a url");
+        let _core_port = EnvVarGuard::set("NEPPY_CORE_PORT", "4568");
         let snapshot = neppy_core::neppy::platform::connectivity::rpc::snapshot();
         assert_eq!(snapshot.listen_port, 4568);
     }
     {
-        let _rpc_url = EnvVarGuard::unset("OPENHUMAN_CORE_RPC_URL");
-        let _core_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", "not-a-port");
+        let _rpc_url = EnvVarGuard::unset("NEPPY_CORE_RPC_URL");
+        let _core_port = EnvVarGuard::set("NEPPY_CORE_PORT", "not-a-port");
         let snapshot = neppy_core::neppy::platform::connectivity::rpc::snapshot();
         assert_eq!(snapshot.listen_port, 7788);
     }

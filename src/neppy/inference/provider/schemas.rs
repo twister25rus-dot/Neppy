@@ -1,6 +1,6 @@
 //! RPC controller schemas for the providers domain.
 //!
-//! Exposes `openhuman.providers_list_models` — fetches the `/models` endpoint
+//! Exposes `neppy.providers_list_models` — fetches the `/models` endpoint
 //! of a configured cloud provider and returns the list.
 
 use crate::core::all::{ControllerFuture, RegisteredController};

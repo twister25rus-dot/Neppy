@@ -170,7 +170,7 @@ async fn execute_unsandboxed(
     cmd.current_dir(working_dir);
     cmd.env_clear();
     for var in SANDBOX_ENV_PASSTHROUGH {
-        if let Ok(val) = std::env::var(var) {
+        if let Ok(val) = crate::neppy::util::env::var(var) {
             cmd.env(var, val);
         }
     }
@@ -227,7 +227,7 @@ async fn execute_local_jail(
     cmd.current_dir(working_dir);
     cmd.env_clear();
     for var in SANDBOX_ENV_PASSTHROUGH {
-        if let Ok(val) = std::env::var(var) {
+        if let Ok(val) = crate::neppy::util::env::var(var) {
             cmd.env(var, val);
         }
     }
@@ -524,12 +524,12 @@ mod tests {
             false,
         );
         let env = HashMap::from([(
-            OsString::from("OPENHUMAN_RAW_ENV_TEST"),
+            OsString::from("NEPPY_RAW_ENV_TEST"),
             OsString::from_vec(b"before-\xff-after".to_vec()),
         )]);
         let result = execute_in_sandbox(
             &policy,
-            r#"[ "$OPENHUMAN_RAW_ENV_TEST" = "$(printf 'before-\377-after')" ]"#,
+            r#"[ "$NEPPY_RAW_ENV_TEST" = "$(printf 'before-\377-after')" ]"#,
             tempdir.path(),
             env,
             Duration::from_secs(10),

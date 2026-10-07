@@ -67,7 +67,7 @@ test.describe('Settings - Advanced Config', () => {
     await expect
       .poll(async () => {
         const after = await callCoreRpc<{ result?: { triage_disabled_toolkits?: string[] } }>(
-          'openhuman.config_get_composio_trigger_settings',
+          'neppy.config_get_composio_trigger_settings',
           {}
         );
         const disabled = after.result?.triage_disabled_toolkits ?? [];
@@ -78,7 +78,7 @@ test.describe('Settings - Advanced Config', () => {
 
   test('persists autonomy max_actions_per_hour through core RPC', async ({ page }) => {
     const before = await callCoreRpc<{ result?: { max_actions_per_hour?: number } }>(
-      'openhuman.config_get_autonomy_settings',
+      'neppy.config_get_autonomy_settings',
       {}
     );
     const current = before.result?.max_actions_per_hour ?? 20;
@@ -96,7 +96,7 @@ test.describe('Settings - Advanced Config', () => {
     await expect
       .poll(async () => {
         const after = await callCoreRpc<{ result?: { max_actions_per_hour?: number } }>(
-          'openhuman.config_get_autonomy_settings',
+          'neppy.config_get_autonomy_settings',
           {}
         );
         return after.result?.max_actions_per_hour;
@@ -127,16 +127,16 @@ test.describe('Settings - Advanced Config', () => {
     await expect
       .poll(async () => {
         const mode = await callCoreRpc<{ result?: { mode?: string; api_key_set?: boolean } }>(
-          'openhuman.composio_get_mode',
+          'neppy.composio_get_mode',
           {}
         );
         return { mode: mode.result?.mode ?? null, apiKeySet: Boolean(mode.result?.api_key_set) };
       })
       .toEqual({ mode: 'direct', apiKeySet: true });
 
-    await callCoreRpc('openhuman.composio_clear_api_key', {});
+    await callCoreRpc('neppy.composio_clear_api_key', {});
     const backend = await callCoreRpc<{ result?: { mode?: string; api_key_set?: boolean } }>(
-      'openhuman.composio_get_mode',
+      'neppy.composio_get_mode',
       {}
     );
     expect(backend.result?.mode).toBe('backend');

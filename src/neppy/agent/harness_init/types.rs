@@ -1,7 +1,7 @@
 //! Serde types for the harness-init status snapshot.
 //!
-//! These are the wire shapes returned by `openhuman.harness_init_status` /
-//! `openhuman.harness_init_run` and consumed by the frontend initialization
+//! These are the wire shapes returned by `neppy.harness_init_status` /
+//! `neppy.harness_init_run` and consumed by the frontend initialization
 //! screen. All enums serialize `snake_case` so the TypeScript side can match
 //! on plain string literals.
 

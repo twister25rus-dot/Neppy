@@ -211,7 +211,7 @@ linux_package_preference() {
     return 0
   fi
 
-  case "${OPENHUMAN_INSTALLER_LINUX_PACKAGE:-auto}" in
+  case "${NEPPY_INSTALLER_LINUX_PACKAGE:-auto}" in
     deb)
       printf 'deb\n'
       return 0
@@ -500,7 +500,7 @@ install_linux_deb() {
 
   if ! command -v apt-get >/dev/null 2>&1; then
     log_err "apt-get is required to install ${ASSET_NAME} and resolve dependencies."
-    log_err "Set OPENHUMAN_INSTALLER_LINUX_PACKAGE=appimage to force the AppImage path."
+    log_err "Set NEPPY_INSTALLER_LINUX_PACKAGE=appimage to force the AppImage path."
     exit 1
   fi
 
@@ -634,7 +634,7 @@ if [[ "${SOURCE_ONLY}" == "1" ]]; then
 fi
 
 resolve_rc=0
-linux_package_request="${OPENHUMAN_INSTALLER_LINUX_PACKAGE:-auto}"
+linux_package_request="${NEPPY_INSTALLER_LINUX_PACKAGE:-auto}"
 
 if [ "${OS}" = "linux" ] && [ "$(linux_package_preference)" = "deb" ]; then
   LINUX_PACKAGE_KIND="deb"
@@ -650,7 +650,7 @@ if [ "${OS}" = "linux" ] && [ "$(linux_package_preference)" = "deb" ]; then
         exit 0
       fi
       log_err "Could not resolve requested .deb release asset for ${OS}/${ARCH}."
-      log_err "Set OPENHUMAN_INSTALLER_LINUX_PACKAGE=appimage to use the AppImage fallback."
+      log_err "Set NEPPY_INSTALLER_LINUX_PACKAGE=appimage to use the AppImage fallback."
       exit 1
     fi
     case "${resolve_rc}" in

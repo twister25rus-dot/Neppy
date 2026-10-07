@@ -10,7 +10,7 @@
  * that card, this one isn't keyed to the active thread — the payload has no
  * `thread_id` — so it renders independent of which thread is selected.
  *
- * All three decisions route through the shared `openhuman.approval_decide`
+ * All three decisions route through the shared `neppy.approval_decide`
  * RPC via {@link decideApproval}. On success (or once the request no longer
  * needs surfacing) the parent removes it from its list via `onResolved`.
  */
@@ -24,7 +24,7 @@ import ApprovalDecisionCard, {
   type ApprovalDecisionAction,
 } from '../approvals/ApprovalDecisionCard';
 
-const log = debug('openhuman:chat:flow-approval-card');
+const log = debug('neppy:chat:flow-approval-card');
 
 interface Props {
   request: FlowApprovalRequest;

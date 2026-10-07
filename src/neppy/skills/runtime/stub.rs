@@ -4,7 +4,7 @@
 //! [`super`]). Deliberately tiny: every caller of the run machinery
 //! (`spawn_workflow_run_background`, `await_run_outcome`, `WorkflowRunStarted`)
 //! lives inside code gated by the *same* feature — the `run_workflow` agent
-//! tool, the `openhuman.skills_*` handlers, and this domain's own tests — so
+//! tool, the `neppy.skills_*` handlers, and this domain's own tests — so
 //! those vanish together and the stub owes only what always-on code reaches:
 //! the controller aggregators (`src/core/all.rs`) and the `tools` module glob
 //! (`src/neppy/tools/mod.rs`).
@@ -16,7 +16,7 @@
 use crate::core::all::RegisteredController;
 use crate::core::ControllerSchema;
 
-/// Always empty: the `openhuman.skill_runtime_*` controllers are compiled out,
+/// Always empty: the `neppy.skill_runtime_*` controllers are compiled out,
 /// so they never enter the registry (unknown-method over `/rpc`, absent from
 /// `/schema`).
 pub fn all_skill_runtime_registered_controllers() -> Vec<RegisteredController> {

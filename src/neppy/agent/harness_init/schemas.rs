@@ -2,8 +2,8 @@
 //!
 //! Two functions, both returning a `HarnessInitSnapshot` under the `snapshot`
 //! output key:
-//!   - `openhuman.harness_init_status` — read the current init progress.
-//!   - `openhuman.harness_init_run`    — re-run init (retry), optionally forced.
+//!   - `neppy.harness_init_status` — read the current init progress.
+//!   - `neppy.harness_init_run`    — re-run init (retry), optionally forced.
 
 use crate::core::all::RegisteredController;
 use crate::core::{ControllerSchema, FieldSchema, TypeSchema};

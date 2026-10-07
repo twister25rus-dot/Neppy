@@ -125,7 +125,7 @@ fn allows_the_first_dispatch_however_little_budget_remains() {
 
 #[test]
 fn allows_when_the_wall_clock_ceiling_is_disabled() {
-    // `OPENHUMAN_AGENT_TURN_TIMEOUT_SECS=0` → no ceiling → nothing can run out.
+    // `NEPPY_AGENT_TURN_TIMEOUT_SECS=0` → no ceiling → nothing can run out.
     let decision = decide(DispatchInputs {
         remaining: None,
         observed_max: Some(Duration::from_secs(600)),

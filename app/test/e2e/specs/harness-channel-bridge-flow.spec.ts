@@ -37,7 +37,7 @@
  * Observation strategy:
  *   - LLM forced-response queue drives multi-turn sequences.
  *   - Outbound Telegram messages are asserted via getTelegramSentMessages().
- *   - Cron creation is confirmed via oracle RPC (openhuman.cron_list).
+ *   - Cron creation is confirmed via oracle RPC (neppy.cron_list).
  *   - Composio execute is confirmed via mock request log.
  *
  * Concurrency note (CB5):
@@ -95,7 +95,7 @@ const TEST_BOT_USERNAME = 'e2e_test_bot';
 
 /** List cron jobs via oracle RPC. */
 async function listCronJobs(): Promise<Array<{ id?: string; name?: string; schedule?: string }>> {
-  const out = await callNeppyRpc('openhuman.cron_list', {});
+  const out = await callNeppyRpc('neppy.cron_list', {});
   if (!out.ok) {
     console.warn(`${LOG_PREFIX} cron_list RPC failed: ${JSON.stringify(out)}`);
     return [];

@@ -473,7 +473,7 @@ function applyTurnUsage(usage: SessionTokenUsage, payload: ChatTurnUsagePayload)
 /**
  * A `Prompt`-class tool call parked on the ApprovalGate, awaiting the user's
  * decision. Surfaced from the `approval_request` socket event; cleared when the
- * user answers (`openhuman.approval_decide`) or the turn ends / is cancelled.
+ * user answers (`neppy.approval_decide`) or the turn ends / is cancelled.
  */
 export interface PendingApproval {
   requestId: string;
@@ -496,7 +496,7 @@ export interface PendingApproval {
 /**
  * A thread-scoped plan the orchestrator parked for interactive review (Codex/
  * Claude plan mode). Surfaced from the `plan_review_request` socket event and
- * resolved via the `openhuman.plan_review_decide` RPC. The parked agent turn
+ * resolved via the `neppy.plan_review_decide` RPC. The parked agent turn
  * blocks until the user approves / rejects / sends feedback.
  */
 export interface PendingPlanReview {
@@ -522,7 +522,7 @@ export interface WorkflowProposalStep {
  * tool (issue B4 — agent-first Workflow authoring). VALIDATED but never
  * created — the agent's tool can only validate and summarize a graph; the
  * user must click "Save & enable" on `WorkflowProposalCard` to actually
- * persist it via `openhuman.flows_create`. Parsed from the `propose_workflow`
+ * persist it via `neppy.flows_create`. Parsed from the `propose_workflow`
  * tool call's completed-result JSON (`tool_result` socket event) in
  * `ChatRuntimeProvider`.
  */
@@ -1697,7 +1697,7 @@ const chatRuntimeSlice = createSlice({
     },
     /**
      * Optimistically mark a detached background sub-agent as cancelled after the
-     * user confirms a cancel via `openhuman.subagent_cancel`. The aborted run
+     * user confirms a cancel via `neppy.subagent_cancel`. The aborted run
      * emits no terminal socket event, so without this the row would keep showing
      * "running" forever. Located by the subagent's stable `taskId`.
      */
@@ -2010,7 +2010,7 @@ const chatRuntimeSlice = createSlice({
     /**
      * Remove a single artifact entry from a thread's ledger (#3024). Used
      * by the Files panel's per-row Delete affordance: caller dispatches
-     * this optimistically, then fires `openhuman.ai_delete_artifact` and
+     * this optimistically, then fires `neppy.ai_delete_artifact` and
      * re-upserts the snapshot on RPC failure. No-op if either the thread
      * or the artifactId is unknown.
      */
@@ -2142,7 +2142,7 @@ const chatRuntimeSlice = createSlice({
     },
     /**
      * Seed a thread's usage bucket from persisted transcript totals (the
-     * `openhuman.threads_token_usage` RPC). Replaces the bucket so re-opening a
+     * `neppy.threads_token_usage` RPC). Replaces the bucket so re-opening a
      * thread reflects its on-disk history rather than starting at zero. Live
      * turns then accumulate on top via `recordChatTurnUsage`.
      */
@@ -2627,7 +2627,7 @@ function liveRequestIdsToSkip(
 
 /**
  * Phase C settled-turn restore: hydrate past-turn process trails from the
- * transcript-derived projection (`openhuman.threads_transcript_get`) instead of
+ * transcript-derived projection (`neppy.threads_transcript_get`) instead of
  * the legacy `turn_state_history` snapshot ring. Populates the SAME
  * {@link ChatRuntimeState.turnTimelinesByThread} /
  * {@link ChatRuntimeState.turnTranscriptsByThread} the legacy path did, so the

@@ -3,7 +3,7 @@
 //! the orchestrator round-trips back to whoever owns them.
 //!
 //! **Why a trait and not a direct call into `flows`.** Two different hosts embed
-//! this transport — openhuman over its SQLite `flows` store, and medulla-public
+//! this transport — neppy over its SQLite `flows` store, and medulla-public
 //! over its own layered JSON workflow store — and they share nothing but the
 //! wire shape. So the store side is a host-supplied [`WorkflowBridge`] the host
 //! installs once at startup ([`set_workflow_bridge`]), and the engine types stay

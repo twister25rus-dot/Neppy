@@ -30,8 +30,8 @@ test.describe('Tauri commands', () => {
     expect(ping.ok).toBe(true);
   });
 
-  test('openhuman.about_app_list round-trips over core RPC', async () => {
-    const res = await callCoreRpc<unknown>('openhuman.about_app_list', {});
+  test('neppy.about_app_list round-trips over core RPC', async () => {
+    const res = await callCoreRpc<unknown>('neppy.about_app_list', {});
     const root = (res ?? {}) as Record<string, unknown>;
     const payload = root && typeof root === 'object' && 'result' in root ? root.result : root;
     expect(Array.isArray(payload)).toBe(true);

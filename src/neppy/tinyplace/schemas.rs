@@ -5,8 +5,8 @@
 //! listings or schema discovery).
 //!
 //! RPC method names follow the standard pattern:
-//!   `openhuman.tinyplace_<function>`
-//! e.g. `openhuman.tinyplace_directory_list_agents`.
+//!   `neppy.tinyplace_<function>`
+//! e.g. `neppy.tinyplace_directory_list_agents`.
 
 use crate::core::all::RegisteredController;
 use crate::core::{ControllerSchema, FieldSchema, TypeSchema};
@@ -3567,8 +3567,8 @@ mod tests {
         for controller in all_tinyplace_registered_controllers() {
             let method = rpc_method_name(&controller.schema);
             assert!(
-                method.starts_with("openhuman.tinyplace_"),
-                "method {method} does not start with openhuman.tinyplace_"
+                method.starts_with("neppy.tinyplace_"),
+                "method {method} does not start with neppy.tinyplace_"
             );
         }
     }
@@ -3578,12 +3578,12 @@ mod tests {
     fn feeds_write_handlers_are_registered() {
         use crate::core::all::rpc_method_name;
         let expected = [
-            "openhuman.tinyplace_feeds_create_post",
-            "openhuman.tinyplace_feeds_delete_post",
-            "openhuman.tinyplace_feeds_add_comment",
-            "openhuman.tinyplace_feeds_delete_comment",
-            "openhuman.tinyplace_feeds_like_post",
-            "openhuman.tinyplace_feeds_unlike_post",
+            "neppy.tinyplace_feeds_create_post",
+            "neppy.tinyplace_feeds_delete_post",
+            "neppy.tinyplace_feeds_add_comment",
+            "neppy.tinyplace_feeds_delete_comment",
+            "neppy.tinyplace_feeds_like_post",
+            "neppy.tinyplace_feeds_unlike_post",
         ];
         let registered: Vec<String> = all_tinyplace_registered_controllers()
             .into_iter()
@@ -3602,11 +3602,11 @@ mod tests {
     fn graphql_feed_handlers_are_registered() {
         use crate::core::all::rpc_method_name;
         let expected = [
-            "openhuman.tinyplace_graphql_home_feed",
-            "openhuman.tinyplace_graphql_posts",
-            "openhuman.tinyplace_graphql_post",
-            "openhuman.tinyplace_graphql_post_comments",
-            "openhuman.tinyplace_graphql_post_likers",
+            "neppy.tinyplace_graphql_home_feed",
+            "neppy.tinyplace_graphql_posts",
+            "neppy.tinyplace_graphql_post",
+            "neppy.tinyplace_graphql_post_comments",
+            "neppy.tinyplace_graphql_post_likers",
         ];
         let registered: Vec<String> = all_tinyplace_registered_controllers()
             .into_iter()
@@ -3625,8 +3625,8 @@ mod tests {
     fn graphql_ledger_handlers_are_registered() {
         use crate::core::all::rpc_method_name;
         let expected = [
-            "openhuman.tinyplace_graphql_ledger_transactions",
-            "openhuman.tinyplace_graphql_ledger_transaction",
+            "neppy.tinyplace_graphql_ledger_transactions",
+            "neppy.tinyplace_graphql_ledger_transaction",
         ];
         let registered: Vec<String> = all_tinyplace_registered_controllers()
             .into_iter()
@@ -3645,8 +3645,8 @@ mod tests {
     fn graphql_jobs_handlers_are_registered() {
         use crate::core::all::rpc_method_name;
         let expected = [
-            "openhuman.tinyplace_graphql_jobs",
-            "openhuman.tinyplace_graphql_job",
+            "neppy.tinyplace_graphql_jobs",
+            "neppy.tinyplace_graphql_job",
         ];
         let registered: Vec<String> = all_tinyplace_registered_controllers()
             .into_iter()
@@ -3665,11 +3665,11 @@ mod tests {
     fn graphql_profile_identity_handlers_are_registered() {
         use crate::core::all::rpc_method_name;
         let expected = [
-            "openhuman.tinyplace_graphql_profile",
-            "openhuman.tinyplace_graphql_user",
-            "openhuman.tinyplace_graphql_identity",
-            "openhuman.tinyplace_graphql_identities",
-            "openhuman.tinyplace_graphql_agent_card",
+            "neppy.tinyplace_graphql_profile",
+            "neppy.tinyplace_graphql_user",
+            "neppy.tinyplace_graphql_identity",
+            "neppy.tinyplace_graphql_identities",
+            "neppy.tinyplace_graphql_agent_card",
         ];
         let registered: Vec<String> = all_tinyplace_registered_controllers()
             .into_iter()
@@ -3689,10 +3689,10 @@ mod tests {
     fn directory_section_handlers_are_registered() {
         use crate::core::all::rpc_method_name;
         let expected = [
-            "openhuman.tinyplace_directory_resolve",
-            "openhuman.tinyplace_directory_reverse",
-            "openhuman.tinyplace_directory_list_identities",
-            "openhuman.tinyplace_directory_skills",
+            "neppy.tinyplace_directory_resolve",
+            "neppy.tinyplace_directory_reverse",
+            "neppy.tinyplace_directory_list_identities",
+            "neppy.tinyplace_directory_skills",
         ];
         let registered: Vec<String> = all_tinyplace_registered_controllers()
             .into_iter()
@@ -3711,16 +3711,16 @@ mod tests {
     fn bounties_handlers_are_registered() {
         use crate::core::all::rpc_method_name;
         let expected = [
-            "openhuman.tinyplace_bounties_list",
-            "openhuman.tinyplace_bounties_get",
-            "openhuman.tinyplace_bounties_create",
-            "openhuman.tinyplace_bounties_cancel",
-            "openhuman.tinyplace_bounties_submit",
-            "openhuman.tinyplace_bounties_list_submissions",
-            "openhuman.tinyplace_bounties_comment",
-            "openhuman.tinyplace_bounties_list_comments",
-            "openhuman.tinyplace_bounties_run_council",
-            "openhuman.tinyplace_bounties_approve",
+            "neppy.tinyplace_bounties_list",
+            "neppy.tinyplace_bounties_get",
+            "neppy.tinyplace_bounties_create",
+            "neppy.tinyplace_bounties_cancel",
+            "neppy.tinyplace_bounties_submit",
+            "neppy.tinyplace_bounties_list_submissions",
+            "neppy.tinyplace_bounties_comment",
+            "neppy.tinyplace_bounties_list_comments",
+            "neppy.tinyplace_bounties_run_council",
+            "neppy.tinyplace_bounties_approve",
         ];
         let registered: Vec<String> = all_tinyplace_registered_controllers()
             .into_iter()

@@ -48,7 +48,7 @@ impl BraveConfig {
             .ok_or_else(|| {
                 anyhow::anyhow!(
                     "Brave Search unavailable: no API key configured. \
-                     Set OPENHUMAN_BRAVE_API_KEY or `search.brave.api_key` \
+                     Set NEPPY_BRAVE_API_KEY or `search.brave.api_key` \
                      in config.toml and select `search.engine = \"brave\"`."
                 )
             })

@@ -1,6 +1,6 @@
 /**
  * Typed RPC wrapper for the MCP Clients domain.
- * All methods call `openhuman.mcp_clients_<function>` and unwrap the
+ * All methods call `neppy.mcp_clients_<function>` and unwrap the
  * `{ result: T }` envelope returned by the core RPC framework.
  *
  * Centralises method-name strings so components never spell them out directly.
@@ -116,7 +116,7 @@ export const mcpClientsApi = {
     log('registry_search params=%o', params);
     try {
       const result = await callCoreRpc<RegistrySearchResult>({
-        method: 'openhuman.mcp_clients_registry_search',
+        method: 'neppy.mcp_clients_registry_search',
         params,
       });
       log('registry_search result: %d servers', result.servers?.length ?? 0);
@@ -133,7 +133,7 @@ export const mcpClientsApi = {
     log('registry_get qualified_name=%s', qualified_name);
     try {
       const result = await callCoreRpc<RegistryGetResult>({
-        method: 'openhuman.mcp_clients_registry_get',
+        method: 'neppy.mcp_clients_registry_get',
         params: { qualified_name },
       });
       log('registry_get returned server=%s', result.server?.qualified_name);
@@ -163,7 +163,7 @@ export const mcpClientsApi = {
       kind: 'none' | 'token' | 'oauth';
       authorization_endpoint?: string;
       grant_types: string[];
-    }>({ method: 'openhuman.mcp_clients_detect_auth', params: { server_id } });
+    }>({ method: 'neppy.mcp_clients_detect_auth', params: { server_id } });
     log('detect_auth -> %s', result.kind);
     return result;
   },
@@ -176,7 +176,7 @@ export const mcpClientsApi = {
   oauthBegin: async (server_id: string): Promise<string> => {
     log('oauth_begin server_id=%s', server_id);
     const result = await callCoreRpc<{ authorize_url: string }>({
-      method: 'openhuman.mcp_clients_oauth_begin',
+      method: 'neppy.mcp_clients_oauth_begin',
       params: { server_id },
     });
     log('oauth_begin returned authorize_url');
@@ -187,7 +187,7 @@ export const mcpClientsApi = {
   installedList: async (): Promise<InstalledServer[]> => {
     log('installed_list');
     const result = await callCoreRpc<InstalledListResult>({
-      method: 'openhuman.mcp_clients_installed_list',
+      method: 'neppy.mcp_clients_installed_list',
       params: {},
     });
     log(
@@ -211,7 +211,7 @@ export const mcpClientsApi = {
     log('install qualified_name=%s', params.qualified_name);
     try {
       const result = await callCoreRpc<InstallResult>({
-        method: 'openhuman.mcp_clients_install',
+        method: 'neppy.mcp_clients_install',
         params,
       });
       log('install returned server_id=%s', result.server?.server_id);
@@ -235,7 +235,7 @@ export const mcpClientsApi = {
   }): Promise<UpdateEnvResult> => {
     log('update_env server_id=%s env_keys=%o', params.server_id, Object.keys(params.env));
     const result = await callCoreRpc<UpdateEnvResult>({
-      method: 'openhuman.mcp_clients_update_env',
+      method: 'neppy.mcp_clients_update_env',
       params,
     });
     log('update_env status=%s', result.status);
@@ -246,7 +246,7 @@ export const mcpClientsApi = {
   registrySettingsGet: async (): Promise<RegistrySettings> => {
     log('registry_settings_get');
     const result = await callCoreRpc<RegistrySettings>({
-      method: 'openhuman.mcp_clients_registry_settings_get',
+      method: 'neppy.mcp_clients_registry_settings_get',
       params: {},
     });
     log(
@@ -269,7 +269,7 @@ export const mcpClientsApi = {
   }): Promise<RegistrySettings> => {
     log('registry_settings_set fields=%o', Object.keys(params));
     const result = await callCoreRpc<RegistrySettings>({
-      method: 'openhuman.mcp_clients_registry_settings_set',
+      method: 'neppy.mcp_clients_registry_settings_set',
       params,
     });
     return result;
@@ -279,7 +279,7 @@ export const mcpClientsApi = {
   uninstall: async (server_id: string): Promise<UninstallResult> => {
     log('uninstall server_id=%s', server_id);
     const result = await callCoreRpc<UninstallResult>({
-      method: 'openhuman.mcp_clients_uninstall',
+      method: 'neppy.mcp_clients_uninstall',
       params: { server_id },
     });
     log('uninstall removed=%s', result.removed);
@@ -290,7 +290,7 @@ export const mcpClientsApi = {
   connect: async (server_id: string): Promise<ConnectResult> => {
     log('connect server_id=%s', server_id);
     const result = await callCoreRpc<ConnectResult>({
-      method: 'openhuman.mcp_clients_connect',
+      method: 'neppy.mcp_clients_connect',
       params: { server_id },
     });
     log('connect status=%s tools=%d', result.status, result.tools?.length ?? 0);
@@ -301,7 +301,7 @@ export const mcpClientsApi = {
   disconnect: async (server_id: string): Promise<DisconnectResult> => {
     log('disconnect server_id=%s', server_id);
     const result = await callCoreRpc<DisconnectResult>({
-      method: 'openhuman.mcp_clients_disconnect',
+      method: 'neppy.mcp_clients_disconnect',
       params: { server_id },
     });
     log('disconnect status=%s', result.status);
@@ -312,7 +312,7 @@ export const mcpClientsApi = {
   setEnabled: async (server_id: string, enabled: boolean): Promise<SetEnabledResult> => {
     log('set_enabled server_id=%s enabled=%s', server_id, enabled);
     const result = await callCoreRpc<SetEnabledResult>({
-      method: 'openhuman.mcp_clients_set_enabled',
+      method: 'neppy.mcp_clients_set_enabled',
       params: { server_id, enabled },
     });
     log('set_enabled server_id=%s enabled=%s', result.server_id, result.enabled);
@@ -323,7 +323,7 @@ export const mcpClientsApi = {
   status: async (): Promise<ConnStatus[]> => {
     log('status');
     const result = await callCoreRpc<StatusResult>({
-      method: 'openhuman.mcp_clients_status',
+      method: 'neppy.mcp_clients_status',
       params: {},
     });
     log('status returned %d servers', Array.isArray(result.servers) ? result.servers.length : 0);
@@ -341,7 +341,7 @@ export const mcpClientsApi = {
   }): Promise<ToolCallResult> => {
     log('tool_call server_id=%s tool=%s', params.server_id, params.tool_name);
     const result = await callCoreRpc<ToolCallResult>({
-      method: 'openhuman.mcp_clients_tool_call',
+      method: 'neppy.mcp_clients_tool_call',
       params,
     });
     log('tool_call is_error=%s', result.is_error);
@@ -356,7 +356,7 @@ export const mcpClientsApi = {
   }): Promise<ConfigAssistResult> => {
     log('config_assist qualified_name=%s', params.qualified_name);
     const result = await callCoreRpc<ConfigAssistResult>({
-      method: 'openhuman.mcp_clients_config_assist',
+      method: 'neppy.mcp_clients_config_assist',
       params,
       // config_assist now runs a full agent turn (web search + fetch to read
       // the provider's docs), which legitimately takes far longer than the 30s

@@ -1,4 +1,4 @@
-//! Controller schemas and handlers for `openhuman.skill_runtime_*`.
+//! Controller schemas and handlers for `neppy.skill_runtime_*`.
 //!
 //! This namespace is the CLI/RPC-friendly execution surface for installed
 //! skills. The older `workflows_*` run/log/cancel controllers are kept for

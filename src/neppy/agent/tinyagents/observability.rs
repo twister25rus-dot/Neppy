@@ -1,4 +1,4 @@
-//! Bridge the `tinyagents` harness event stream onto openhuman's
+//! Bridge the `tinyagents` harness event stream onto neppy's
 //! [`AgentProgress`] + cost tracker (issue #4249).
 //!
 //! tinyagents emits a typed [`AgentEvent`] stream (model started/delta/completed,
@@ -178,7 +178,7 @@ struct ResolvedCallFigures {
     reasoning_tokens: u64,
 }
 
-/// An [`EventListener`] that mirrors harness events onto openhuman's progress
+/// An [`EventListener`] that mirrors harness events onto neppy's progress
 /// sink and cost tracker.
 pub(crate) struct NeppyEventBridge {
     on_progress: Option<Sender<AgentProgress>>,
@@ -1452,10 +1452,10 @@ mod tests {
 }
 
 /// A [`GraphEventSink`] that mirrors the `tinyagents` graph executor's lifecycle
-/// stream onto openhuman's `tracing` diagnostics — an observability journal for
+/// stream onto neppy's `tracing` diagnostics — an observability journal for
 /// graph runs (issue #4249 / #28). Node/step/run/route transitions land as
 /// grep-friendly `[graph]` lines tagged with `label`; the running event count is
-/// exposed for tests. Shared by every openhuman graph (council fan-out,
+/// exposed for tests. Shared by every neppy graph (council fan-out,
 /// sub-agent delegation, …).
 pub(crate) struct GraphTracingSink {
     label: String,

@@ -79,7 +79,7 @@ describe('ApprovalRequestCard', () => {
     fireEvent.click(screen.getByText('Approve'));
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_decide',
+      method: 'neppy.approval_decide',
       params: { request_id: 'req-approval-1', decision: 'approve_once' },
     });
     await waitFor(() => {
@@ -94,7 +94,7 @@ describe('ApprovalRequestCard', () => {
     fireEvent.click(screen.getByText('Deny'));
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_decide',
+      method: 'neppy.approval_decide',
       params: { request_id: 'req-approval-1', decision: 'deny' },
     });
     await waitFor(() => {
@@ -109,7 +109,7 @@ describe('ApprovalRequestCard', () => {
     fireEvent.click(screen.getByText('Always allow'));
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_decide',
+      method: 'neppy.approval_decide',
       params: { request_id: 'req-approval-1', decision: 'approve_always_for_tool' },
     });
     await waitFor(() => {

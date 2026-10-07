@@ -23,7 +23,7 @@
 // When the two drift, the domain is compiled out of the shipped desktop app and
 // the failure is invisible — no build error, no failing test:
 //
-//   - `voice`  shipped missing from v0.58.19 to v0.61.x. Every `openhuman.voice_*`
+//   - `voice`  shipped missing from v0.58.19 to v0.61.x. Every `neppy.voice_*`
 //              RPC answered "unknown method"; 56 users, ~93k Sentry events (#4901).
 //   - `tokenjuice-treesitter` was never forwarded once since #4123 and failed
 //              *soft* — AST compression silently degraded to a heuristic (#4918).
@@ -50,7 +50,7 @@
  */
 export const INTENTIONALLY_NOT_FORWARDED = {
   // 'some-gate': 'Reason it must not ship in the desktop build.',
-  tui: 'Terminal UI subcommand (openhuman tui/chat); the desktop app ships its own Tauri UI and never runs the ratatui terminal front-end. NOTE: `tui` is also default-OFF, so it is in NEITHER the contributor nor the product set and no ordinary lane compiles it — the feature-gate-smoke lane checks it explicitly. Any future entry here in the same position needs the same treatment.',
+  tui: 'Terminal UI subcommand (neppy-core tui/chat); the desktop app ships its own Tauri UI and never runs the ratatui terminal front-end. NOTE: `tui` is also default-OFF, so it is in NEITHER the contributor nor the product set and no ordinary lane compiles it — the feature-gate-smoke lane checks it explicitly. Any future entry here in the same position needs the same treatment.',
   medulla: 'Medulla orchestration-backend client; the desktop app is Neppy\'s own product and never dials a Medulla backend. Consumed by the Medulla TUI, which embeds this crate directly.',
 };
 

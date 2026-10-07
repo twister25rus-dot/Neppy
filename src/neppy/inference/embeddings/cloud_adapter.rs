@@ -64,7 +64,7 @@ impl NeppyCloudEmbedding {
 /// "No backend session for cloud embeddings" on every call.
 ///
 /// Resolution mirrors `config::load`'s own directory choice:
-/// 1. `OPENHUMAN_WORKSPACE` when set — resolved through the **same**
+/// 1. `NEPPY_WORKSPACE` when set — resolved through the **same**
 ///    workspace→config-dir mapping `config::load` uses
 ///    (`resolve_config_dir_for_workspace`), not the raw env value. A legacy
 ///    `.../workspace` override maps back to its sibling `.neppy` root, which
@@ -81,13 +81,13 @@ impl NeppyCloudEmbedding {
 /// resolution for the call sites that have no `Config` in scope.
 fn default_state_dir() -> PathBuf {
     log::debug!("[embeddings::cloud] default credential scope: resolving");
-    if let Some(workspace) = std::env::var_os("OPENHUMAN_WORKSPACE")
+    if let Some(workspace) = crate::neppy::util::env::var_os("NEPPY_WORKSPACE")
         .filter(|value| !value.is_empty())
         .map(PathBuf::from)
     {
         // Never log the resolved path: it identifies the user's home layout.
         log::debug!(
-            "[embeddings::cloud] default credential scope = OPENHUMAN_WORKSPACE-derived config dir (env-scoped deployment)"
+            "[embeddings::cloud] default credential scope = NEPPY_WORKSPACE-derived config dir (env-scoped deployment)"
         );
         return env_workspace_state_dir(&workspace);
     }
@@ -109,7 +109,7 @@ fn default_state_dir() -> PathBuf {
     user_scoped_state_dir(&root, user_id.as_deref())
 }
 
-/// Pure core of [`default_state_dir`]'s `OPENHUMAN_WORKSPACE` branch, split out
+/// Pure core of [`default_state_dir`]'s `NEPPY_WORKSPACE` branch, split out
 /// so the workspace→config-dir invariant is unit-testable without touching the
 /// process environment.
 ///
@@ -236,7 +236,7 @@ mod tests {
         );
     }
 
-    /// `OPENHUMAN_WORKSPACE` must resolve through the same workspace→config-dir
+    /// `NEPPY_WORKSPACE` must resolve through the same workspace→config-dir
     /// mapping `config::load` uses, not return the raw workspace path. A legacy
     /// `<X>/workspace` override keeps its credentials in the sibling
     /// `<X>/.neppy` dir; returning the workspace dir itself would send the

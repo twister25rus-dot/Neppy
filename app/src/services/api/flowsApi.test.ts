@@ -42,7 +42,7 @@ describe('flowsApi', () => {
   });
 
   describe('resumeFlow', () => {
-    it('calls openhuman.flows_resume with id, thread_id, approvals', async () => {
+    it('calls neppy.flows_resume with id, thread_id, approvals', async () => {
       mockCallCoreRpc.mockResolvedValue(
         cliEnvelope({ output: { nodes: {} }, pending_approvals: [], thread_id: 't1' })
       );
@@ -50,7 +50,7 @@ describe('flowsApi', () => {
       const result = await resumeFlow('flow-1', 't1', ['node-a']);
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_resume',
+        method: 'neppy.flows_resume',
         params: { id: 'flow-1', thread_id: 't1', approvals: ['node-a'] },
         // flows_resume can run ~600s server-side, so the client budget is raised.
         timeoutMs: 610_000,
@@ -86,13 +86,13 @@ describe('flowsApi', () => {
   });
 
   describe('flowsBuildCancel', () => {
-    it('calls openhuman.flows_build_cancel with thread_id + null request_id and returns cancelled', async () => {
+    it('calls neppy.flows_build_cancel with thread_id + null request_id and returns cancelled', async () => {
       mockCallCoreRpc.mockResolvedValue(cliEnvelope({ cancelled: true }));
 
       const cancelled = await flowsBuildCancel('t1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_build_cancel',
+        method: 'neppy.flows_build_cancel',
         params: { thread_id: 't1', request_id: null },
       });
       expect(cancelled).toBe(true);
@@ -104,7 +104,7 @@ describe('flowsApi', () => {
       const cancelled = await flowsBuildCancel('t1', 'req-9');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_build_cancel',
+        method: 'neppy.flows_build_cancel',
         params: { thread_id: 't1', request_id: 'req-9' },
       });
       // `false` is not an error — it just means nothing was in flight to cancel.
@@ -123,13 +123,13 @@ describe('flowsApi', () => {
   });
 
   describe('listFlowRuns', () => {
-    it('calls openhuman.flows_list_runs with id', async () => {
+    it('calls neppy.flows_list_runs with id', async () => {
       mockCallCoreRpc.mockResolvedValue(cliEnvelope([]));
 
       await listFlowRuns('flow-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_list_runs',
+        method: 'neppy.flows_list_runs',
         params: { id: 'flow-1' },
       });
     });
@@ -140,7 +140,7 @@ describe('flowsApi', () => {
       await listFlowRuns('flow-1', 5);
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_list_runs',
+        method: 'neppy.flows_list_runs',
         params: { id: 'flow-1', limit: 5 },
       });
     });
@@ -174,13 +174,13 @@ describe('flowsApi', () => {
   });
 
   describe('listAllFlowRuns', () => {
-    it('calls openhuman.flows_list_all_runs with no params by default', async () => {
+    it('calls neppy.flows_list_all_runs with no params by default', async () => {
       mockCallCoreRpc.mockResolvedValue(cliEnvelope([]));
 
       await listAllFlowRuns();
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_list_all_runs',
+        method: 'neppy.flows_list_all_runs',
         params: {},
       });
     });
@@ -204,7 +204,7 @@ describe('flowsApi', () => {
       const result = await listAllFlowRuns(50);
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_list_all_runs',
+        method: 'neppy.flows_list_all_runs',
         params: { limit: 50 },
       });
       expect(result).toEqual(runs);
@@ -218,7 +218,7 @@ describe('flowsApi', () => {
   });
 
   describe('getFlowRun', () => {
-    it('calls openhuman.flows_get_run with run_id', async () => {
+    it('calls neppy.flows_get_run with run_id', async () => {
       const run = {
         id: 't1',
         flow_id: 'flow-1',
@@ -235,7 +235,7 @@ describe('flowsApi', () => {
       const result = await getFlowRun('t1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_get_run',
+        method: 'neppy.flows_get_run',
         params: { run_id: 't1' },
       });
       expect(result).toEqual(run);
@@ -261,12 +261,12 @@ describe('flowsApi', () => {
       require_approval: false,
     };
 
-    it('calls openhuman.flows_list with no params', async () => {
+    it('calls neppy.flows_list with no params', async () => {
       mockCallCoreRpc.mockResolvedValue(cliEnvelope([flow]));
 
       await listFlows();
 
-      expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.flows_list', params: {} });
+      expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.flows_list', params: {} });
     });
 
     it('unwraps the { result, logs } envelope into the flow array', async () => {
@@ -285,7 +285,7 @@ describe('flowsApi', () => {
   });
 
   describe('setFlowEnabled', () => {
-    it('calls openhuman.flows_set_enabled with id and enabled', async () => {
+    it('calls neppy.flows_set_enabled with id and enabled', async () => {
       const flow = {
         id: 'flow-1',
         name: 'Demo flow',
@@ -302,7 +302,7 @@ describe('flowsApi', () => {
       const result = await setFlowEnabled('flow-1', false);
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_set_enabled',
+        method: 'neppy.flows_set_enabled',
         params: { id: 'flow-1', enabled: false },
       });
       expect(result).toEqual(flow);
@@ -316,7 +316,7 @@ describe('flowsApi', () => {
   });
 
   describe('runFlow', () => {
-    it('calls openhuman.flows_run with id, input, and the extended timeout', async () => {
+    it('calls neppy.flows_run with id, input, and the extended timeout', async () => {
       mockCallCoreRpc.mockResolvedValue(
         cliEnvelope({ output: { nodes: {} }, pending_approvals: [], thread_id: 't1' })
       );
@@ -324,7 +324,7 @@ describe('flowsApi', () => {
       const result = await runFlow('flow-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_run',
+        method: 'neppy.flows_run',
         params: { id: 'flow-1', input: null, inputs: null },
         timeoutMs: 610_000,
       });
@@ -339,7 +339,7 @@ describe('flowsApi', () => {
       await runFlow('flow-1', { trigger: 'manual' });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_run',
+        method: 'neppy.flows_run',
         params: { id: 'flow-1', input: { trigger: 'manual' }, inputs: null },
         timeoutMs: 610_000,
       });
@@ -353,7 +353,7 @@ describe('flowsApi', () => {
       await runFlow('flow-1', {}, { repo: 'acme/api', depth: 3 });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_run',
+        method: 'neppy.flows_run',
         params: { id: 'flow-1', input: {}, inputs: { repo: 'acme/api', depth: 3 } },
         timeoutMs: 610_000,
       });
@@ -379,7 +379,7 @@ describe('flowsApi', () => {
   // — it must NOT share `runFlow`'s extended `FLOW_RESUME_TIMEOUT_MS` budget,
   // since (unlike `runFlow`) it never waits for the engine.
   describe('runFlowDetached', () => {
-    it('calls openhuman.flows_run_detached with id/input and the DEFAULT timeout (no timeoutMs override)', async () => {
+    it('calls neppy.flows_run_detached with id/input and the DEFAULT timeout (no timeoutMs override)', async () => {
       mockCallCoreRpc.mockResolvedValue(
         cliEnvelope({
           run_id: 'flow:flow-1:t1',
@@ -392,7 +392,7 @@ describe('flowsApi', () => {
       const result = await runFlowDetached('flow-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_run_detached',
+        method: 'neppy.flows_run_detached',
         params: { id: 'flow-1', input: null, inputs: null },
       });
       // No `timeoutMs` key at all — asserted structurally above via
@@ -420,7 +420,7 @@ describe('flowsApi', () => {
       await runFlowDetached('flow-1', { trigger: 'manual' });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_run_detached',
+        method: 'neppy.flows_run_detached',
         params: { id: 'flow-1', input: { trigger: 'manual' }, inputs: null },
       });
     });
@@ -438,7 +438,7 @@ describe('flowsApi', () => {
       await runFlowDetached('flow-1', {}, { repo: 'acme/api' });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_run_detached',
+        method: 'neppy.flows_run_detached',
         params: { id: 'flow-1', input: {}, inputs: { repo: 'acme/api' } },
       });
     });
@@ -487,7 +487,7 @@ describe('flowsApi', () => {
       const result = await discoverWorkflows();
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_discover',
+        method: 'neppy.flows_discover',
         params: {},
         timeoutMs: 610_000,
       });
@@ -500,7 +500,7 @@ describe('flowsApi', () => {
       await discoverWorkflows('scout-thread-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_discover',
+        method: 'neppy.flows_discover',
         params: { thread_id: 'scout-thread-1' },
         timeoutMs: 610_000,
       });
@@ -512,7 +512,7 @@ describe('flowsApi', () => {
       await listSuggestions();
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_list_suggestions',
+        method: 'neppy.flows_list_suggestions',
         params: {},
       });
     });
@@ -523,7 +523,7 @@ describe('flowsApi', () => {
       const result = await listSuggestions('new');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_list_suggestions',
+        method: 'neppy.flows_list_suggestions',
         params: { status: 'new' },
       });
       expect(result).toEqual([suggestion]);
@@ -535,7 +535,7 @@ describe('flowsApi', () => {
       const result = await dismissSuggestion('sug_1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_dismiss_suggestion',
+        method: 'neppy.flows_dismiss_suggestion',
         params: { id: 'sug_1' },
       });
       expect(result).toBe(true);
@@ -547,7 +547,7 @@ describe('flowsApi', () => {
       const result = await markSuggestionBuilt('sug_1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_mark_suggestion_built',
+        method: 'neppy.flows_mark_suggestion_built',
         params: { id: 'sug_1' },
       });
       expect(result).toBe(true);
@@ -577,7 +577,7 @@ describe('flowsApi', () => {
       const result = await buildWorkflow({ mode: 'create', instruction: 'email me a digest' });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_build',
+        method: 'neppy.flows_build',
         params: {
           mode: 'create',
           instruction: 'email me a digest',
@@ -602,7 +602,7 @@ describe('flowsApi', () => {
       await buildWorkflow({ mode: 'revise', instruction: 'add a Slack step' }, 'builder-thread-9');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.flows_build',
+        method: 'neppy.flows_build',
         params: {
           mode: 'revise',
           instruction: 'add a Slack step',
@@ -688,7 +688,7 @@ describe('getApprovalManifest', () => {
     const result = await getApprovalManifest({ id: 'flow-1' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.flows_approval_manifest',
+      method: 'neppy.flows_approval_manifest',
       params: { id: 'flow-1' },
     });
     expect(result).toEqual(manifest);
@@ -700,7 +700,7 @@ describe('getApprovalManifest', () => {
     await getApprovalManifest({ graph: { nodes: [], edges: [] } });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.flows_approval_manifest',
+      method: 'neppy.flows_approval_manifest',
       params: { graph: { nodes: [], edges: [] } },
     });
   });

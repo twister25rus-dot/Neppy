@@ -525,7 +525,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.team_get_usage', source: 'rpc' },
+          detail: { method: 'neppy.team_get_usage', source: 'rpc' },
         })
       );
     });
@@ -556,7 +556,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.team_get_usage', source: 'rpc', reason: 'confirmed' },
+          detail: { method: 'neppy.team_get_usage', source: 'rpc', reason: 'confirmed' },
         })
       );
     });
@@ -567,12 +567,12 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.threads_list', source: 'rpc' },
+          detail: { method: 'neppy.threads_list', source: 'rpc' },
         })
       );
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.billing_get_current_plan', source: 'rpc' },
+          detail: { method: 'neppy.billing_get_current_plan', source: 'rpc' },
         })
       );
     });
@@ -602,7 +602,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.auth_get_me', source: 'rpc', reason: 'unconfirmed' },
+          detail: { method: 'neppy.auth_get_me', source: 'rpc', reason: 'unconfirmed' },
         })
       );
     });
@@ -633,7 +633,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.auth_get_me', source: 'rpc', reason: 'unconfirmed' },
+          detail: { method: 'neppy.auth_get_me', source: 'rpc', reason: 'unconfirmed' },
         })
       );
     });
@@ -664,7 +664,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.auth_get_me', source: 'rpc', reason: 'unconfirmed' },
+          detail: { method: 'neppy.auth_get_me', source: 'rpc', reason: 'unconfirmed' },
         })
       );
     });
@@ -675,7 +675,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.team_get_usage', source: 'rpc', reason: 'confirmed' },
+          detail: { method: 'neppy.team_get_usage', source: 'rpc', reason: 'confirmed' },
         })
       );
     });
@@ -708,7 +708,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.auth_store_session', source: 'rpc' },
+          detail: { method: 'neppy.auth_store_session', source: 'rpc' },
         })
       );
     });
@@ -744,7 +744,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('core-rpc-auth-expired', {
-          detail: { method: 'openhuman.team_get_usage', source: 'rpc', reason: 'confirmed' },
+          detail: { method: 'neppy.team_get_usage', source: 'rpc', reason: 'confirmed' },
         })
       );
     });
@@ -802,7 +802,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
 
     await waitFor(() => expect(screen.getByTestId('ready').textContent).toBe('ready'));
     fetchSnapshot.mockRejectedValueOnce(
-      new Error('Core RPC openhuman.app_state_snapshot timed out after 30000ms')
+      new Error('Core RPC neppy.app_state_snapshot timed out after 30000ms')
     );
 
     await act(async () => {
@@ -842,7 +842,7 @@ describe('CoreStateProvider — identity-change cache clearing', () => {
 
     await waitFor(() => expect(screen.getByTestId('ready').textContent).toBe('ready'));
     fetchSnapshot.mockRejectedValueOnce(
-      new Error('Core RPC openhuman.app_state_snapshot timed out after 30000ms')
+      new Error('Core RPC neppy.app_state_snapshot timed out after 30000ms')
     );
 
     await act(async () => {

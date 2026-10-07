@@ -6,7 +6,7 @@
 
 **Architecture:** Widen the single backend recognition gate (`harness_type_for()` in the Rust orchestration crate), then widen the frontend `HarnessType` union it feeds — the TypeScript type-checker forces the two UI lookup tables (`HarnessGlyph` glyph map, `TinyPlaceRoster` groups) to stay complete. No changes to ingest, pairing, relay, or attention.
 
-**Tech Stack:** Rust (`openhuman` crate, `cargo test`), TypeScript/React (`app/`, `vitest`, `tsc`).
+**Tech Stack:** Rust (`neppy` crate, `cargo test`), TypeScript/React (`app/`, `vitest`, `tsc`).
 
 **Design doc:** `docs/superpowers/specs/2026-07-09-cursor-windsurf-harness-design.md`
 
@@ -52,7 +52,7 @@ Leave the existing `None` assertions (`master` / `user_created` / `orchestration
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `cargo test -p openhuman harness_type_only_for_known_providers`
+Run: `cargo test -p neppy harness_type_only_for_known_providers`
 Expected: FAIL — `assertion \`left == right\` failed` with `left: None, right: Some("cursor")` (the gate doesn't recognize `cursor` yet).
 
 - [ ] **Step 3: Widen the gate**
@@ -88,7 +88,7 @@ Replace `(claude/codex/gemini)` → `(claude/codex/gemini/cursor/windsurf)`.
 
 - [ ] **Step 5: Run the test to verify it passes**
 
-Run: `cargo test -p openhuman harness_type_only_for_known_providers`
+Run: `cargo test -p neppy harness_type_only_for_known_providers`
 Expected: PASS (`test result: ok. 1 passed`).
 
 - [ ] **Step 6: Commit**
@@ -179,7 +179,7 @@ const GLYPH: Record<GlyphKind, { label: string; tone: string }> = {
   claude: { label: 'C', tone: 'bg-[#c96442] text-white' },
   codex: { label: 'Cx', tone: 'bg-content text-surface' },
   gemini: { label: 'G', tone: 'bg-ocean-500 text-white' },
-  openhuman: { label: 'OH', tone: 'bg-sage-500 text-white' },
+  neppy: { label: 'OH', tone: 'bg-sage-500 text-white' },
 };
 ```
 

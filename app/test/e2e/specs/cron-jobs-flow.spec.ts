@@ -7,7 +7,7 @@
  *   1. ONE Appium session for the whole run (see wdio.conf.ts). We never
  *      restart the app between specs.
  *   2. Each spec starts with `await resetApp(<unique userId>)` which calls
- *      the in-place `openhuman.test_reset` RPC, reloads the renderer, and
+ *      the in-place `neppy.test_reset` RPC, reloads the renderer, and
  *      walks the real onboarding UI. After that the app is in the same
  *      state a brand-new install would be in.
  *   3. The rest of the spec drives the product through real UI: clicks on
@@ -138,7 +138,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
 
     // The morning_briefing cron is auto-seeded after onboarding completes.
     // If the async seed hasn't fired yet, seed it explicitly via RPC.
-    const preCheck = await callNeppyRpc('openhuman.cron_list', {});
+    const preCheck = await callNeppyRpc('neppy.cron_list', {});
     expect(preCheck.ok).toBe(true);
     const preJobs = Array.isArray(preCheck.result?.result) ? preCheck.result.result : [];
     const existing = preJobs.find(
@@ -147,7 +147,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
     morningBriefingId = existing?.id ?? '';
     if (!existing) {
       stepLog('morning_briefing not auto-seeded — seeding via cron_create');
-      const seed = await callNeppyRpc('openhuman.cron_create', {
+      const seed = await callNeppyRpc('neppy.cron_create', {
         name: MORNING_BRIEFING,
         schedule: '0 8 * * *',
         enabled: true,
@@ -158,7 +158,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
       await browser.pause(1_000);
     } else if (!existing.enabled) {
       stepLog('morning_briefing is paused — enabling it for toggle assertions');
-      const enable = await callNeppyRpc('openhuman.cron_update', {
+      const enable = await callNeppyRpc('neppy.cron_update', {
         job_id: morningBriefingId,
         patch: { enabled: true },
       });
@@ -224,7 +224,7 @@ describe('Cron jobs settings panel (real UI flow)', () => {
     expect(gone).toBe(true);
 
     // Single oracle RPC: confirm the sidecar agrees with the UI.
-    const list = await callNeppyRpc('openhuman.cron_list', {});
+    const list = await callNeppyRpc('neppy.cron_list', {});
     expect(list.ok).toBe(true);
     const inner = (list.result as { result?: unknown } | undefined)?.result ?? list.result;
     const jobs = Array.isArray(inner) ? inner : [];

@@ -1,4 +1,4 @@
-//! Implementation of `openhuman.test_reset` — wipes persistent state in-place.
+//! Implementation of `neppy.test_reset` — wipes persistent state in-place.
 //!
 //! The reset deliberately mirrors what the user sees on a fresh install:
 //!   - no authenticated user (active_user.toml removed, api_key cleared)
@@ -18,7 +18,7 @@ use crate::neppy::cron;
 use crate::neppy::memory::read_rpc;
 use crate::rpc::RpcOutcome;
 
-const E2E_MODE_ENV_VAR: &str = "OPENHUMAN_E2E_MODE";
+const E2E_MODE_ENV_VAR: &str = "NEPPY_E2E_MODE";
 
 /// Wipe summary returned to the caller for debug visibility.
 #[derive(Debug, Serialize)]
@@ -40,7 +40,11 @@ struct MemoryTreeResetSummary {
 }
 
 fn ensure_e2e_mode_enabled() -> Result<(), String> {
-    ensure_e2e_mode_value(std::env::var(E2E_MODE_ENV_VAR).ok().as_deref())
+    ensure_e2e_mode_value(
+        crate::neppy::util::env::var(E2E_MODE_ENV_VAR)
+            .ok()
+            .as_deref(),
+    )
 }
 
 fn ensure_e2e_mode_value(raw: Option<&str>) -> Result<(), String> {
@@ -187,8 +191,8 @@ mod tests {
     #[tokio::test]
     async fn reset_rejects_when_e2e_mode_unset() {
         let _guard = env_lock();
-        let prior = std::env::var(E2E_MODE_ENV_VAR).ok();
-        std::env::remove_var(E2E_MODE_ENV_VAR);
+        let prior = crate::neppy::util::env::var(E2E_MODE_ENV_VAR).ok();
+        crate::neppy::util::env::remove_var(E2E_MODE_ENV_VAR);
 
         let err = reset()
             .await
@@ -196,11 +200,11 @@ mod tests {
 
         match prior {
             Some(value) => std::env::set_var(E2E_MODE_ENV_VAR, value),
-            None => std::env::remove_var(E2E_MODE_ENV_VAR),
+            None => crate::neppy::util::env::remove_var(E2E_MODE_ENV_VAR),
         }
 
         assert!(
-            err.contains("OPENHUMAN_E2E_MODE") && err.contains("is set to one of"),
+            err.contains("NEPPY_E2E_MODE") && err.contains("is set to one of"),
             "unexpected guard error: {err}"
         );
     }

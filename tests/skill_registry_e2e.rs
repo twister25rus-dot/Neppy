@@ -43,7 +43,7 @@ static KEYRING_INIT: OnceLock<()> = OnceLock::new();
 
 fn env_lock() -> std::sync::MutexGuard<'static, ()> {
     KEYRING_INIT.get_or_init(|| unsafe {
-        std::env::set_var("OPENHUMAN_KEYRING_BACKEND", "file");
+        std::env::set_var("NEPPY_KEYRING_BACKEND", "file");
     });
     let mutex = ENV_LOCK.get_or_init(|| Mutex::new(()));
     match mutex.lock() {
@@ -61,20 +61,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value) };
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -83,7 +83,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -210,7 +210,7 @@ fn assert_no_jsonrpc_error<'a>(v: &'a Value, context: &str) -> &'a Value {
 
 // ── Test ───────────────────────────────────────────────────────────────────
 
-/// End-to-end coverage for the `openhuman.skill_registry_*` endpoints.
+/// End-to-end coverage for the `neppy.skill_registry_*` endpoints.
 ///
 /// Steps:
 /// 1. `sources`  — lists the distinct upstream sources from the Hermes catalog.
@@ -229,9 +229,9 @@ async fn skill_registry_e2e_sources_browse_search_install() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _token_guard = EnvVarGuard::set(CORE_TOKEN_ENV_VAR, TEST_RPC_TOKEN);
-    let _keyring_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
 
     let cfg_dir = neppy_home.clone();
     std::fs::create_dir_all(&cfg_dir).expect("create .neppy dir");
@@ -262,27 +262,22 @@ encrypt = false
     let (fixture_addr, fixture_join) = serve_fixture_catalog().await;
     let fixture_base = format!("http://{fixture_addr}");
     let _catalog_guard = EnvVarGuard::set(
-        "OPENHUMAN_SKILL_REGISTRY_CATALOG_URL",
+        "NEPPY_SKILL_REGISTRY_CATALOG_URL",
         &format!("{fixture_base}/skills.json"),
     );
     let _download_guard = EnvVarGuard::set(
-        "OPENHUMAN_SKILL_REGISTRY_DOWNLOAD_BASE_URL",
+        "NEPPY_SKILL_REGISTRY_DOWNLOAD_BASE_URL",
         &format!("{fixture_base}/skills"),
     );
-    let _local_http_guard = EnvVarGuard::set("OPENHUMAN_SKILL_INSTALL_ALLOW_LOCAL_HTTP", "1");
+    let _local_http_guard = EnvVarGuard::set("NEPPY_SKILL_INSTALL_ALLOW_LOCAL_HTTP", "1");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
 
     // ── Step 1: sources ────────────────────────────────────────────────────
 
-    let sources_resp = post_json_rpc(
-        &rpc_base,
-        9001,
-        "openhuman.skill_registry_sources",
-        json!({}),
-    )
-    .await;
+    let sources_resp =
+        post_json_rpc(&rpc_base, 9001, "neppy.skill_registry_sources", json!({})).await;
     let sources_result = assert_no_jsonrpc_error(&sources_resp, "skill_registry_sources");
 
     let sources = sources_result
@@ -308,7 +303,7 @@ encrypt = false
     let browse_resp = post_json_rpc(
         &rpc_base,
         9002,
-        "openhuman.skill_registry_browse",
+        "neppy.skill_registry_browse",
         json!({ "force_refresh": true }),
     )
     .await;
@@ -347,7 +342,7 @@ encrypt = false
     let search_resp = post_json_rpc(
         &rpc_base,
         9003,
-        "openhuman.skill_registry_search",
+        "neppy.skill_registry_search",
         json!({ "query": "git" }),
     )
     .await;
@@ -408,13 +403,8 @@ encrypt = false
 
     // ── Step 4: schemas ───────────────────────────────────────────────────
 
-    let schemas_resp = post_json_rpc(
-        &rpc_base,
-        9004,
-        "openhuman.skill_registry_schemas",
-        json!({}),
-    )
-    .await;
+    let schemas_resp =
+        post_json_rpc(&rpc_base, 9004, "neppy.skill_registry_schemas", json!({})).await;
     let schemas_result = assert_no_jsonrpc_error(&schemas_resp, "skill_registry_schemas");
     let schemas = schemas_result
         .get("schemas")
@@ -449,7 +439,7 @@ encrypt = false
     let install_resp = post_json_rpc(
         &rpc_base,
         9005,
-        "openhuman.skill_registry_install",
+        "neppy.skill_registry_install",
         json!({ "entry_id": entry_id }),
     )
     .await;
@@ -503,7 +493,7 @@ encrypt = false
     let dup_resp = post_json_rpc(
         &rpc_base,
         9006,
-        "openhuman.skill_registry_install",
+        "neppy.skill_registry_install",
         json!({ "entry_id": entry_id }),
     )
     .await;
@@ -530,7 +520,7 @@ encrypt = false
     let uninstall_resp = post_json_rpc(
         &rpc_base,
         9007,
-        "openhuman.skill_registry_uninstall",
+        "neppy.skill_registry_uninstall",
         json!({ "name": entry_id }),
     )
     .await;

@@ -48,7 +48,7 @@ interface TextSegment {
 
 type BubbleSegment = TextSegment | NeppyLinkSegment;
 
-const OPENHUMAN_LINK_RE =
+const NEPPY_LINK_RE =
   /<openhuman-link\s+path=(?:"([^"]+)"|'([^']+)')\s*>([\s\S]*?)<\/openhuman-link>/gi;
 
 export function parseBubbleSegments(content: string): BubbleSegment[] {
@@ -58,9 +58,9 @@ export function parseBubbleSegments(content: string): BubbleSegment[] {
   const segments: BubbleSegment[] = [];
   let cursor = 0;
   // Reset regex state between calls (the global flag preserves lastIndex).
-  OPENHUMAN_LINK_RE.lastIndex = 0;
+  NEPPY_LINK_RE.lastIndex = 0;
   let match: RegExpExecArray | null;
-  while ((match = OPENHUMAN_LINK_RE.exec(content)) !== null) {
+  while ((match = NEPPY_LINK_RE.exec(content)) !== null) {
     if (match.index > cursor) {
       segments.push({ kind: 'text', text: content.slice(cursor, match.index) });
     }

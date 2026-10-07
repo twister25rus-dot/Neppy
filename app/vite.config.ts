@@ -13,7 +13,7 @@ const host = process.env.TAURI_DEV_HOST;
 // Optional override so parallel `dev:app:win` runs across worktrees can
 // avoid the hardcoded 1420 collision. Default 1420 preserves prior behavior;
 // HMR companion port is dev port + 1 (used only when TAURI_DEV_HOST is set).
-const devPort = Number(process.env.OPENHUMAN_DEV_PORT) || 1420;
+const devPort = Number((process.env.NEPPY_DEV_PORT ?? process.env.OPENHUMAN_DEV_PORT)) || 1420;
 const hmrPort = devPort + 1;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -94,13 +94,13 @@ function guardCefRelListSupportsPlugin(): PluginOption {
   };
 }
 
-// `VITE_OPENHUMAN_TARGET=web` switches the build to the browser-hosted
+// `VITE_NEPPY_TARGET=web` switches the build to the browser-hosted
 // flavor: output lands in `dist-web/` so the desktop build artifact in
 // `dist/` (consumed by `cargo tauri build`) is never clobbered, and the
-// `import.meta.env.VITE_OPENHUMAN_TARGET` value is exposed to runtime code
+// `import.meta.env.VITE_NEPPY_TARGET` value is exposed to runtime code
 // that wants a build-time signal in addition to the runtime `isTauri()`
 // check. Default (`undefined` / `desktop`) keeps the historical behavior.
-const buildTarget = (process.env.VITE_OPENHUMAN_TARGET ?? "desktop").trim();
+const buildTarget = ((process.env.VITE_NEPPY_TARGET ?? process.env.VITE_OPENHUMAN_TARGET) ?? "desktop").trim();
 const isWebTarget = buildTarget === "web";
 
 // https://vite.dev/config/
@@ -109,7 +109,7 @@ export default defineConfig(async () => ({
   publicDir: "../public",
   // Read env files from the repo root (not `app/src/`, which is the vite
   // `root` and would be the default `envDir`). Lets `pnpm dev:app` pick up
-  // `VITE_BACKEND_URL` / `VITE_OPENHUMAN_APP_ENV` from the same root `.env`
+  // `VITE_BACKEND_URL` / `VITE_NEPPY_APP_ENV` from the same root `.env`
   // the Rust shell uses, instead of needing a separate `app/.env.local`.
   // Without this, `import.meta.env.VITE_*` is empty in dev (Vite does not
   // inherit `process.env` for VITE_-prefixed vars), so `BACKEND_URL` falls

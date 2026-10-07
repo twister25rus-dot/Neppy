@@ -12,7 +12,7 @@
 #
 # Options:
 #   -v, --verbose    Enable debug logging
-#   --workspace DIR  Override OPENHUMAN_WORKSPACE
+#   --workspace DIR  Override NEPPY_WORKSPACE
 #   --binary PATH    Override the neppy-core binary path
 
 set -euo pipefail
@@ -50,12 +50,12 @@ resolve_binary() {
     exit 1
 }
 
-OPENHUMAN_BIN="${OPENHUMAN_BIN:-$(resolve_binary)}"
+NEPPY_BIN="${NEPPY_BIN:-$(resolve_binary)}"
 
 # Resolve workspace: env var → active user → first user dir
 resolve_workspace() {
-    if [ -n "${OPENHUMAN_WORKSPACE:-}" ]; then
-        echo "$OPENHUMAN_WORKSPACE"
+    if [ -n "${NEPPY_WORKSPACE:-}" ]; then
+        echo "$NEPPY_WORKSPACE"
         return
     fi
 
@@ -78,11 +78,11 @@ resolve_workspace() {
         fi
     done
 
-    echo >&2 "error: could not resolve OPENHUMAN_WORKSPACE. Set it explicitly."
+    echo >&2 "error: could not resolve NEPPY_WORKSPACE. Set it explicitly."
     exit 1
 }
 
-export OPENHUMAN_WORKSPACE="${OPENHUMAN_WORKSPACE:-$(resolve_workspace)}"
+export NEPPY_WORKSPACE="${NEPPY_WORKSPACE:-$(resolve_workspace)}"
 
 # ── Parse args ─────────────────────────────────────────────────────────
 
@@ -93,11 +93,11 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         --workspace)
-            export OPENHUMAN_WORKSPACE="$2"
+            export NEPPY_WORKSPACE="$2"
             shift 2
             ;;
         --binary)
-            OPENHUMAN_BIN="$2"
+            NEPPY_BIN="$2"
             shift 2
             ;;
         run|status|query|rebuild)
@@ -124,7 +124,7 @@ done
 
 # ── Discover namespaces ────────────────────────────────────────────────
 
-NAMESPACES_DIR="$OPENHUMAN_WORKSPACE/memory/namespaces"
+NAMESPACES_DIR="$NEPPY_WORKSPACE/memory/namespaces"
 
 if [ ! -d "$NAMESPACES_DIR" ]; then
     echo "No namespaces directory found at $NAMESPACES_DIR"
@@ -142,8 +142,8 @@ NS_COUNT=$(echo "$NAMESPACES" | wc -l | tr -d ' ')
 NS_LIST=$(echo "$NAMESPACES" | tr '\n' ' ')
 
 echo "Found $NS_COUNT namespace(s): $NS_LIST"
-echo "Workspace: $OPENHUMAN_WORKSPACE"
-echo "Binary:    $OPENHUMAN_BIN"
+echo "Workspace: $NEPPY_WORKSPACE"
+echo "Binary:    $NEPPY_BIN"
 echo "Command:   tree-summarizer $SUBCOMMAND"
 echo "---"
 
@@ -170,7 +170,7 @@ while IFS= read -r ns; do
         args+=("$VERBOSE")
     fi
 
-    if output=$("$OPENHUMAN_BIN" tree-summarizer "${args[@]}" 2>&1); then
+    if output=$("$NEPPY_BIN" tree-summarizer "${args[@]}" 2>&1); then
         echo "$output" | strip_banner | head -40
         SUCCEEDED=$((SUCCEEDED + 1))
     else

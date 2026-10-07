@@ -1,6 +1,6 @@
 /**
  * tiny.place API client bridge — routes method calls through the Neppy
- * core RPC (`openhuman.tinyplace_*`) rather than the tiny.place HTTP API.
+ * core RPC (`neppy.tinyplace_*`) rather than the tiny.place HTTP API.
  *
  * The factory `createInvokeApiClient()` returns an object whose shape mirrors
  * the tiny.place TypeScript SDK client. Hooks and components in the Agent
@@ -41,7 +41,7 @@ function safeParseJson(s: string): unknown {
 }
 
 /**
- * Call a `openhuman.tinyplace_*` core RPC method and return the typed result.
+ * Call a `neppy.tinyplace_*` core RPC method and return the typed result.
  *
  * If the core returns a string beginning with `"PAYMENT_REQUIRED:"`, this
  * function throws a {@link PaymentRequiredError} with the decoded challenge.
@@ -1667,130 +1667,120 @@ function normalizeGraphqlIdentitySale(sale: GqlIdentitySale): IdentitySale {
  *
  * Method names follow the tiny.place SDK convention:
  *   JS `client.<domain>.<camelMethod>` →
- *   RPC `openhuman.tinyplace_<domain>_<snake_method>`
+ *   RPC `neppy.tinyplace_<domain>_<snake_method>`
  */
 export function createInvokeApiClient() {
   return {
     directory: {
       listAgents: (params?: AgentQueryParams) =>
-        call<ListAgentsResponse>('openhuman.tinyplace_directory_list_agents', {
+        call<ListAgentsResponse>('neppy.tinyplace_directory_list_agents', {
           params: params ?? null,
         }),
       getAgent: (agentId: string) =>
-        call<AgentCard>('openhuman.tinyplace_directory_get_agent', { agentId }),
+        call<AgentCard>('neppy.tinyplace_directory_get_agent', { agentId }),
       resolve: (name: string) =>
-        call<ResolveResponse>('openhuman.tinyplace_directory_resolve', { name }),
+        call<ResolveResponse>('neppy.tinyplace_directory_resolve', { name }),
       reverse: (cryptoId: string) =>
-        call<ReverseResponse>('openhuman.tinyplace_directory_reverse', { cryptoId }),
+        call<ReverseResponse>('neppy.tinyplace_directory_reverse', { cryptoId }),
       listIdentities: (params?: IdentityListingQueryParams) =>
-        call<DirectoryIdentityListingsResponse>('openhuman.tinyplace_directory_list_identities', {
+        call<DirectoryIdentityListingsResponse>('neppy.tinyplace_directory_list_identities', {
           params: params ?? null,
         }),
       skills: (params?: DirectorySkillsParams) =>
-        call<AgentSearchResponse>('openhuman.tinyplace_directory_skills', {
-          params: params ?? null,
-        }),
+        call<AgentSearchResponse>('neppy.tinyplace_directory_skills', { params: params ?? null }),
       /** Reverse-lookup: find agent by Signal encryption public key (base64). */
       findByEncryptionKey: (encryptionKey: string) =>
-        call<AgentCard | null>('openhuman.tinyplace_directory_find_by_encryption_key', {
+        call<AgentCard | null>('neppy.tinyplace_directory_find_by_encryption_key', {
           encryptionKey,
         }),
     },
-    explorer: { overview: () => call<ExplorerOverview>('openhuman.tinyplace_explorer_overview') },
+    explorer: { overview: () => call<ExplorerOverview>('neppy.tinyplace_explorer_overview') },
     search: {
-      unified: (query: string) =>
-        call<SearchResponse>('openhuman.tinyplace_search_unified', { query }),
+      unified: (query: string) => call<SearchResponse>('neppy.tinyplace_search_unified', { query }),
     },
     // === AGENT-WORLD BRIDGE NAMESPACES (append here) ===
     // Each fan-out section agent adds one namespace block:
     //   <sectionName>: {
-    //     <methodCamel>: (...args) => call<ReturnType>('openhuman.tinyplace_<domain>_<method>', { ...args }),
+    //     <methodCamel>: (...args) => call<ReturnType>('neppy.tinyplace_<domain>_<method>', { ...args }),
     //   },
 
     // ── Profiles section ─────────────────────────────────────────────────────
     profiles: {
-      get: (username: string) =>
-        call<AgentProfile>('openhuman.tinyplace_profiles_get', { username }),
+      get: (username: string) => call<AgentProfile>('neppy.tinyplace_profiles_get', { username }),
       activity: (username: string) =>
-        call<ProfileActivity>('openhuman.tinyplace_profiles_activity', { username }),
+        call<ProfileActivity>('neppy.tinyplace_profiles_activity', { username }),
       groups: (username: string) =>
-        call<ProfileGroupsResponse>('openhuman.tinyplace_profiles_groups', { username }),
+        call<ProfileGroupsResponse>('neppy.tinyplace_profiles_groups', { username }),
       broadcasts: (username: string) =>
-        call<ProfileBroadcastsResponse>('openhuman.tinyplace_profiles_broadcasts', { username }),
+        call<ProfileBroadcastsResponse>('neppy.tinyplace_profiles_broadcasts', { username }),
       attestations: (username: string) =>
-        call<ProfileAttestationsResponse>('openhuman.tinyplace_profiles_attestations', {
-          username,
-        }),
+        call<ProfileAttestationsResponse>('neppy.tinyplace_profiles_attestations', { username }),
       agentCard: (username: string) =>
-        call<AgentCard>('openhuman.tinyplace_profiles_agent_card', { username }),
+        call<AgentCard>('neppy.tinyplace_profiles_agent_card', { username }),
     },
 
     // ── Users section ────────────────────────────────────────────────────────
     users: {
-      get: (cryptoId: string) => call<User>('openhuman.tinyplace_users_get', { cryptoId }),
+      get: (cryptoId: string) => call<User>('neppy.tinyplace_users_get', { cryptoId }),
       updateProfile: (cryptoId: string, update: UserProfileUpdate) =>
-        call<User>('openhuman.tinyplace_users_update_profile', { cryptoId, update }),
+        call<User>('neppy.tinyplace_users_update_profile', { cryptoId, update }),
       /** Start email verification — stores the email and sends a code. */
       startEmailVerification: (cryptoId: string, email: string) =>
-        call<User>('openhuman.tinyplace_users_start_email_verification', { cryptoId, email }),
+        call<User>('neppy.tinyplace_users_start_email_verification', { cryptoId, email }),
       /** Confirm the email verification code. */
       confirmEmailVerification: (cryptoId: string, email: string, code: string) =>
-        call<User>('openhuman.tinyplace_users_confirm_email_verification', {
-          cryptoId,
-          email,
-          code,
-        }),
+        call<User>('neppy.tinyplace_users_confirm_email_verification', { cryptoId, email, code }),
     },
     marketplace: {
       /** List identity listings, optionally filtered by status and limit. */
       listIdentities: (params?: { limit?: number; status?: string }) =>
-        call<IdentitiesResponse>('openhuman.tinyplace_marketplace_list_identities', {
+        call<IdentitiesResponse>('neppy.tinyplace_marketplace_list_identities', {
           limit: params?.limit ?? null,
           status: params?.status ?? null,
         }),
       /** Floor price for identity names of a given character length. */
       identityFloor: (length?: number) =>
-        call<IdentityFloor>('openhuman.tinyplace_marketplace_identity_floor', {
+        call<IdentityFloor>('neppy.tinyplace_marketplace_identity_floor', {
           length: length ?? null,
         }),
       /** Most recent completed identity sales. */
-      recent: () => call<RecentSalesResponse>('openhuman.tinyplace_marketplace_recent'),
+      recent: () => call<RecentSalesResponse>('neppy.tinyplace_marketplace_recent'),
       /** Full sale history for a specific @handle. */
       identitySaleHistory: (name: string) =>
-        call<IdentitySaleHistoryResponse>('openhuman.tinyplace_marketplace_identity_sale_history', {
+        call<IdentitySaleHistoryResponse>('neppy.tinyplace_marketplace_identity_sale_history', {
           name,
         }),
       /** Bids on an identity auction listing. */
       listBids: (listingId: string) =>
-        call<BidsResponse>('openhuman.tinyplace_marketplace_list_bids', { listingId }),
+        call<BidsResponse>('neppy.tinyplace_marketplace_list_bids', { listingId }),
       /** Pending identity offers, filtered by name (seller view) or buyer. */
       listOffers: (params?: { name?: string; buyer?: string }) =>
-        call<OffersResponse>('openhuman.tinyplace_marketplace_list_offers', {
+        call<OffersResponse>('neppy.tinyplace_marketplace_list_offers', {
           name: params?.name ?? null,
           buyer: params?.buyer ?? null,
         }),
       browseMarketplace: (params?: ProductQueryParams) =>
-        call<MarketplaceBrowseResponse>('openhuman.tinyplace_marketplace_browse', {
+        call<MarketplaceBrowseResponse>('neppy.tinyplace_marketplace_browse', {
           params: params ?? null,
         }),
       listProducts: (params?: ProductQueryParams) =>
-        call<ProductsResponse>('openhuman.tinyplace_marketplace_list_products', {
+        call<ProductsResponse>('neppy.tinyplace_marketplace_list_products', {
           params: params ?? null,
         }),
       getProduct: (productId: string) =>
-        call<Product>('openhuman.tinyplace_marketplace_get_product', { productId }),
+        call<Product>('neppy.tinyplace_marketplace_get_product', { productId }),
       /**
        * Buy a product via x402 confirm-before-spend. `confirmed:false` returns
        * the challenge + wallet balance (no spend); `confirmed:true` pays + buys.
        */
       buyProduct: (productId: string, opts?: { confirmed?: boolean }) =>
-        call<X402BuyResult>('openhuman.tinyplace_marketplace_buy_product', {
+        call<X402BuyResult>('neppy.tinyplace_marketplace_buy_product', {
           id: productId,
           confirmed: opts?.confirmed ?? false,
         }),
       /** Buy an identity listing (a @handle) via x402 confirm-before-spend. */
       buyIdentity: (listingId: string, opts?: { confirmed?: boolean }) =>
-        call<X402BuyResult>('openhuman.tinyplace_marketplace_buy_identity', {
+        call<X402BuyResult>('neppy.tinyplace_marketplace_buy_identity', {
           id: listingId,
           confirmed: opts?.confirmed ?? false,
         }),
@@ -1799,7 +1789,7 @@ export function createInvokeApiClient() {
        * x402 authorization (a commitment) — no on-chain transfer until accepted.
        */
       bid: (listingId: string, price: CommitPriceParams) =>
-        call<X402CommitResult>('openhuman.tinyplace_marketplace_bid', {
+        call<X402CommitResult>('neppy.tinyplace_marketplace_bid', {
           listingId,
           amount: price.amount,
           asset: price.asset ?? null,
@@ -1807,38 +1797,36 @@ export function createInvokeApiClient() {
         }),
       /** Make an offer to buy an identity (a @handle). Same commitment semantics. */
       offer: (name: string, price: CommitPriceParams) =>
-        call<X402CommitResult>('openhuman.tinyplace_marketplace_offer', {
+        call<X402CommitResult>('neppy.tinyplace_marketplace_offer', {
           name,
           amount: price.amount,
           asset: price.asset ?? null,
           network: price.network,
         }),
-      categories: () => call<CategoriesResponse>('openhuman.tinyplace_marketplace_categories'),
-      featured: () => call<FeaturedResponse>('openhuman.tinyplace_marketplace_featured'),
+      categories: () => call<CategoriesResponse>('neppy.tinyplace_marketplace_categories'),
+      featured: () => call<FeaturedResponse>('neppy.tinyplace_marketplace_featured'),
       listProductReviews: (productId: string) =>
-        call<ProductReviewsResponse>('openhuman.tinyplace_marketplace_list_product_reviews', {
+        call<ProductReviewsResponse>('neppy.tinyplace_marketplace_list_product_reviews', {
           productId,
         }),
     },
     registry: {
       /** Check availability of a @handle (with or without leading @). */
-      get: (name: string) =>
-        call<AvailabilityResponse>('openhuman.tinyplace_registry_get', { name }),
+      get: (name: string) => call<AvailabilityResponse>('neppy.tinyplace_registry_get', { name }),
       /**
        * Register a @handle via x402 confirm-before-spend.
        * Call with `confirmed:false` to get the challenge + wallet balance (no
        * spend); `confirmed:true` pays on-chain and registers.
        */
       register: (params: RegisterParams) =>
-        call<RegistrationResult>('openhuman.tinyplace_registry_register', {
+        call<RegistrationResult>('neppy.tinyplace_registry_register', {
           username: params.username,
           confirmed: params.confirmed ?? false,
           actorType: params.actorType ?? null,
           primary: params.primary ?? null,
         }),
       /** Export an identity with its ledger history and cryptographic proofs. */
-      export: (name: string) =>
-        call<IdentityExport>('openhuman.tinyplace_registry_export', { name }),
+      export: (name: string) => call<IdentityExport>('neppy.tinyplace_registry_export', { name }),
       /**
        * Make one of the wallet's purchased handles its primary (active) identity.
        * The backend clears the primary flag on the wallet's other handles, so
@@ -1847,7 +1835,7 @@ export function createInvokeApiClient() {
        * is proven by the signer-attached signature, not by params.
        */
       assignPrimary: (name: string) =>
-        call<AssignPrimaryResult>('openhuman.tinyplace_registry_assign_primary', { name }),
+        call<AssignPrimaryResult>('neppy.tinyplace_registry_assign_primary', { name }),
       /**
        * Transfer one of the wallet's handles to another tiny.place identity
        * (#4929). DESTRUCTIVE + irreversible: on success the `recipient` handle's
@@ -1857,194 +1845,187 @@ export function createInvokeApiClient() {
        * signer-attached signature, not by params.
        */
       transfer: (name: string, recipient: string) =>
-        call<TransferHandleResult>('openhuman.tinyplace_registry_transfer', { name, recipient }),
+        call<TransferHandleResult>('neppy.tinyplace_registry_transfer', { name, recipient }),
     },
     directoryIdentities: {
       /** List identity listings from the directory. */
       list: (params?: IdentityListingQueryParams) =>
-        call<DirectoryIdentityListingsResponse>('openhuman.tinyplace_directory_list_identities', {
+        call<DirectoryIdentityListingsResponse>('neppy.tinyplace_directory_list_identities', {
           params: params ?? null,
         }),
     },
     artifacts: {
       list: (params?: ArtifactQueryParams, actorId?: string) =>
-        call<ArtifactListResult>('openhuman.tinyplace_artifacts_list', {
+        call<ArtifactListResult>('neppy.tinyplace_artifacts_list', {
           params: params ?? null,
           ...(actorId !== undefined ? { actorId } : {}),
         }),
       get: (artifactId: string, actorId?: string) =>
-        call<Artifact>('openhuman.tinyplace_artifacts_get', {
+        call<Artifact>('neppy.tinyplace_artifacts_get', {
           artifactId,
           ...(actorId !== undefined ? { actorId } : {}),
         }),
     },
     escrow: {
       list: (params?: EscrowQueryParams) =>
-        call<EscrowListResponse>('openhuman.tinyplace_escrow_list', { params: params ?? null }),
-      get: (escrowId: string) => call<Escrow>('openhuman.tinyplace_escrow_get', { escrowId }),
+        call<EscrowListResponse>('neppy.tinyplace_escrow_list', { params: params ?? null }),
+      get: (escrowId: string) => call<Escrow>('neppy.tinyplace_escrow_get', { escrowId }),
     },
     jobs: {
       list: (params?: JobQueryParams) =>
-        call<JobListResponse>('openhuman.tinyplace_jobs_list', { params: params ?? null }),
-      get: (jobId: string) => call<JobPosting>('openhuman.tinyplace_jobs_get', { jobId }),
+        call<JobListResponse>('neppy.tinyplace_jobs_list', { params: params ?? null }),
+      get: (jobId: string) => call<JobPosting>('neppy.tinyplace_jobs_get', { jobId }),
     },
     channels: {
       list: (params?: ChannelQueryParams) =>
-        call<ChannelListResponse>('openhuman.tinyplace_channels_list', { params: params ?? null }),
+        call<ChannelListResponse>('neppy.tinyplace_channels_list', { params: params ?? null }),
       // Membership — result bodies unused (the UI refetches).
-      join: (channelId: string) => call<void>('openhuman.tinyplace_channels_join', { channelId }),
-      leave: (channelId: string) => call<void>('openhuman.tinyplace_channels_leave', { channelId }),
+      join: (channelId: string) => call<void>('neppy.tinyplace_channels_join', { channelId }),
+      leave: (channelId: string) => call<void>('neppy.tinyplace_channels_leave', { channelId }),
     },
     groups: {
       list: (params?: GroupQueryParams) =>
-        call<GroupMetadata[]>('openhuman.tinyplace_groups_list', { params: params ?? null }),
-      join: (groupId: string) => call<void>('openhuman.tinyplace_groups_join', { groupId }),
-      leave: (groupId: string) => call<void>('openhuman.tinyplace_groups_leave', { groupId }),
+        call<GroupMetadata[]>('neppy.tinyplace_groups_list', { params: params ?? null }),
+      join: (groupId: string) => call<void>('neppy.tinyplace_groups_join', { groupId }),
+      leave: (groupId: string) => call<void>('neppy.tinyplace_groups_leave', { groupId }),
       // Invite/role management (Phase 5A)
       setMemberRole: (groupId: string, agentId: string, role: string) =>
-        call<GroupMember>('openhuman.tinyplace_groups_set_member_role', { groupId, agentId, role }),
+        call<GroupMember>('neppy.tinyplace_groups_set_member_role', { groupId, agentId, role }),
       createInvite: (groupId: string, request?: GroupInviteCreateRequest) =>
-        call<GroupInvite>('openhuman.tinyplace_groups_create_invite', {
+        call<GroupInvite>('neppy.tinyplace_groups_create_invite', {
           groupId,
           request: request ?? null,
         }),
       listInvites: (groupId: string) =>
-        call<GroupInvite[]>('openhuman.tinyplace_groups_list_invites', { groupId }),
+        call<GroupInvite[]>('neppy.tinyplace_groups_list_invites', { groupId }),
       previewInvite: (groupId: string, token: string) =>
-        call<GroupInvitePreview>('openhuman.tinyplace_groups_preview_invite', { groupId, token }),
+        call<GroupInvitePreview>('neppy.tinyplace_groups_preview_invite', { groupId, token }),
       revokeInvite: (groupId: string, token: string) =>
-        call<void>('openhuman.tinyplace_groups_revoke_invite', { groupId, token }),
+        call<void>('neppy.tinyplace_groups_revoke_invite', { groupId, token }),
       redeemInvite: (groupId: string, token: string) =>
-        call<GroupMember>('openhuman.tinyplace_groups_redeem_invite', { groupId, token }),
+        call<GroupMember>('neppy.tinyplace_groups_redeem_invite', { groupId, token }),
     },
     broadcasts: {
       list: (params?: BroadcastQueryParams) =>
-        call<BroadcastChannel[]>('openhuman.tinyplace_broadcasts_list', { params: params ?? null }),
+        call<BroadcastChannel[]>('neppy.tinyplace_broadcasts_list', { params: params ?? null }),
       subscribe: (broadcastId: string) =>
-        call<void>('openhuman.tinyplace_broadcasts_subscribe', { broadcastId }),
+        call<void>('neppy.tinyplace_broadcasts_subscribe', { broadcastId }),
       unsubscribe: (broadcastId: string) =>
-        call<void>('openhuman.tinyplace_broadcasts_unsubscribe', { broadcastId }),
+        call<void>('neppy.tinyplace_broadcasts_unsubscribe', { broadcastId }),
     },
     inbox: {
       list: (params?: InboxQueryParams, owner?: string) =>
-        call<InboxListResult>('openhuman.tinyplace_inbox_list', {
+        call<InboxListResult>('neppy.tinyplace_inbox_list', {
           params: params ?? null,
           owner: owner ?? null,
         }),
       counts: (owner?: string) =>
-        call<InboxCounts>('openhuman.tinyplace_inbox_counts', { owner: owner ?? null }),
+        call<InboxCounts>('neppy.tinyplace_inbox_counts', { owner: owner ?? null }),
       // Write actions — manage your own inbox. Result bodies are unused (the UI refetches).
       markRead: (itemId: string, owner?: string) =>
-        call<void>('openhuman.tinyplace_inbox_mark_read', { itemId, owner: owner ?? null }),
+        call<void>('neppy.tinyplace_inbox_mark_read', { itemId, owner: owner ?? null }),
       markAllRead: (owner?: string) =>
-        call<void>('openhuman.tinyplace_inbox_mark_all_read', {
-          params: null,
-          owner: owner ?? null,
-        }),
+        call<void>('neppy.tinyplace_inbox_mark_all_read', { params: null, owner: owner ?? null }),
       archive: (itemId: string, owner?: string) =>
-        call<void>('openhuman.tinyplace_inbox_archive', { itemId, owner: owner ?? null }),
+        call<void>('neppy.tinyplace_inbox_archive', { itemId, owner: owner ?? null }),
       unarchive: (itemId: string, owner?: string) =>
-        call<void>('openhuman.tinyplace_inbox_unarchive', { itemId, owner: owner ?? null }),
+        call<void>('neppy.tinyplace_inbox_unarchive', { itemId, owner: owner ?? null }),
       remove: (itemId: string, owner?: string) =>
-        call<void>('openhuman.tinyplace_inbox_remove', { itemId, owner: owner ?? null }),
+        call<void>('neppy.tinyplace_inbox_remove', { itemId, owner: owner ?? null }),
     },
     // ── Contacts section ─────────────────────────────────────────────────────
     contacts: {
       request: (agentId: string) =>
-        call<ContactView>('openhuman.tinyplace_contacts_request', { agentId }),
+        call<ContactView>('neppy.tinyplace_contacts_request', { agentId }),
       accept: (agentId: string) =>
-        call<ContactView>('openhuman.tinyplace_contacts_accept', { agentId }),
+        call<ContactView>('neppy.tinyplace_contacts_accept', { agentId }),
       remove: (agentId: string) =>
-        call<{ ok?: boolean }>('openhuman.tinyplace_contacts_remove', { agentId }),
-      block: (agentId: string) =>
-        call<ContactView>('openhuman.tinyplace_contacts_block', { agentId }),
+        call<{ ok?: boolean }>('neppy.tinyplace_contacts_remove', { agentId }),
+      block: (agentId: string) => call<ContactView>('neppy.tinyplace_contacts_block', { agentId }),
       unblock: (agentId: string) =>
-        call<{ ok?: boolean }>('openhuman.tinyplace_contacts_unblock', { agentId }),
+        call<{ ok?: boolean }>('neppy.tinyplace_contacts_unblock', { agentId }),
       list: (params?: ContactListParams) =>
-        call<ContactsResponse>('openhuman.tinyplace_contacts_list', { params: params ?? null }),
+        call<ContactsResponse>('neppy.tinyplace_contacts_list', { params: params ?? null }),
       requests: (params?: ContactListParams) =>
-        call<ContactRequestsResponse>('openhuman.tinyplace_contacts_requests', {
+        call<ContactRequestsResponse>('neppy.tinyplace_contacts_requests', {
           params: params ?? null,
         }),
       status: (agentId: string) =>
-        call<ContactStatusResponse>('openhuman.tinyplace_contacts_status', { agentId }),
-      stats: () => call<ContactStats>('openhuman.tinyplace_contacts_stats', {}),
+        call<ContactStatusResponse>('neppy.tinyplace_contacts_status', { agentId }),
+      stats: () => call<ContactStats>('neppy.tinyplace_contacts_stats', {}),
     },
     // ── Orchestration pairing policy ─────────────────────────────────────────
     orchestrationPairing: {
-      list: () => call<PairingSnapshot>('openhuman.orchestration_pairing_list', {}),
+      list: () => call<PairingSnapshot>('neppy.orchestration_pairing_list', {}),
       linkSession: (agentId: string, label?: string) =>
-        call<PairingActionResult>('openhuman.orchestration_pairing_link_session', {
+        call<PairingActionResult>('neppy.orchestration_pairing_link_session', {
           agentId,
           label: label ?? null,
         }),
       acceptRequest: (agentId: string) =>
-        call<PairingActionResult>('openhuman.orchestration_pairing_accept_request', { agentId }),
+        call<PairingActionResult>('neppy.orchestration_pairing_accept_request', { agentId }),
       declineRequest: (agentId: string) =>
-        call<PairingActionResult>('openhuman.orchestration_pairing_decline_request', { agentId }),
+        call<PairingActionResult>('neppy.orchestration_pairing_decline_request', { agentId }),
       blockRequest: (agentId: string) =>
-        call<PairingActionResult>('openhuman.orchestration_pairing_block_request', { agentId }),
+        call<PairingActionResult>('neppy.orchestration_pairing_block_request', { agentId }),
     },
     // ── Follows section ───────────────────────────────────────────────────────
     follows: {
-      follow: (agentId: string) =>
-        call<AgentFollow>('openhuman.tinyplace_follows_follow', { agentId }),
-      unfollow: (agentId: string) =>
-        call<void>('openhuman.tinyplace_follows_unfollow', { agentId }),
+      follow: (agentId: string) => call<AgentFollow>('neppy.tinyplace_follows_follow', { agentId }),
+      unfollow: (agentId: string) => call<void>('neppy.tinyplace_follows_unfollow', { agentId }),
       followers: (agentId: string, params?: FollowListParams) =>
-        call<FollowersResponse>('openhuman.tinyplace_follows_followers', {
+        call<FollowersResponse>('neppy.tinyplace_follows_followers', {
           agentId,
           params: params ?? null,
         }),
       following: (agentId: string, params?: FollowListParams) =>
-        call<FollowingResponse>('openhuman.tinyplace_follows_following', {
+        call<FollowingResponse>('neppy.tinyplace_follows_following', {
           agentId,
           params: params ?? null,
         }),
-      stats: (agentId: string) =>
-        call<FollowStats>('openhuman.tinyplace_follows_stats', { agentId }),
+      stats: (agentId: string) => call<FollowStats>('neppy.tinyplace_follows_stats', { agentId }),
       feed: (params?: FeedListParams) =>
-        call<FeedResponse>('openhuman.tinyplace_follows_feed', { params: params ?? null }),
+        call<FeedResponse>('neppy.tinyplace_follows_feed', { params: params ?? null }),
     },
     // ── Feeds write surface ─────────────────────────────────────────────────
     feeds: {
       /** Create a post on the user's own feed (the feed handle is resolved server-side from the signer). */
       createPost: (body: string, contentType?: string) =>
-        call<FeedsPost>('openhuman.tinyplace_feeds_create_post', {
+        call<FeedsPost>('neppy.tinyplace_feeds_create_post', {
           body,
           contentType: contentType ?? null,
         }),
       /** Delete a post from the user's own feed (the feed handle is resolved server-side from the signer). */
       deletePost: (postId: string) =>
-        call<{ ok: boolean }>('openhuman.tinyplace_feeds_delete_post', { postId }),
+        call<{ ok: boolean }>('neppy.tinyplace_feeds_delete_post', { postId }),
       /** Add a comment to a post (author resolved from signer). */
       addComment: (handle: string, postId: string, body: string) =>
-        call<FeedsComment>('openhuman.tinyplace_feeds_add_comment', { handle, postId, body }),
+        call<FeedsComment>('neppy.tinyplace_feeds_add_comment', { handle, postId, body }),
       /** Delete a comment (actor resolved from signer; must be comment author or feed owner). */
       deleteComment: (handle: string, postId: string, commentId: string) =>
-        call<{ ok: boolean }>('openhuman.tinyplace_feeds_delete_comment', {
+        call<{ ok: boolean }>('neppy.tinyplace_feeds_delete_comment', {
           handle,
           postId,
           commentId,
         }),
       /** Like a post (idempotent, actor resolved from signer). */
       likePost: (handle: string, postId: string) =>
-        call<LikeResult>('openhuman.tinyplace_feeds_like_post', { handle, postId }),
+        call<LikeResult>('neppy.tinyplace_feeds_like_post', { handle, postId }),
       /** Unlike a post (idempotent, actor resolved from signer). */
       unlikePost: (handle: string, postId: string) =>
-        call<LikeResult>('openhuman.tinyplace_feeds_unlike_post', { handle, postId }),
+        call<LikeResult>('neppy.tinyplace_feeds_unlike_post', { handle, postId }),
     },
     // ── Bounties section ────────────────────────────────────────────────────────
     bounties: {
       list: (params?: BountyQueryParams) =>
-        call<BountyListResponse>('openhuman.tinyplace_bounties_list', { params: params ?? null }),
-      get: (bountyId: string) => call<Bounty>('openhuman.tinyplace_bounties_get', { bountyId }),
+        call<BountyListResponse>('neppy.tinyplace_bounties_list', { params: params ?? null }),
+      get: (bountyId: string) => call<Bounty>('neppy.tinyplace_bounties_get', { bountyId }),
       /** Create a bounty via x402 confirm-before-spend (the reward is funded into
        *  escrow at creation). confirmed:false returns the challenge (no spend);
        *  confirmed:true pays and creates. */
       create: (params: BountyCreateParams, opts?: { confirmed?: boolean }) =>
         call<X402BuyResult>(
-          'openhuman.tinyplace_bounties_create',
+          'neppy.tinyplace_bounties_create',
           {
             title: params.title,
             description: params.description,
@@ -2059,32 +2040,31 @@ export function createInvokeApiClient() {
           // also waits on a network round-trip + wallet-balance lookup.
           X402_SPEND_TIMEOUT_MS
         ),
-      cancel: (bountyId: string) =>
-        call<Bounty>('openhuman.tinyplace_bounties_cancel', { bountyId }),
+      cancel: (bountyId: string) => call<Bounty>('neppy.tinyplace_bounties_cancel', { bountyId }),
       submit: (bountyId: string, url: string, title?: string, note?: string) =>
-        call<BountySubmission>('openhuman.tinyplace_bounties_submit', {
+        call<BountySubmission>('neppy.tinyplace_bounties_submit', {
           bountyId,
           url,
           title: title ?? null,
           note: note ?? null,
         }),
       listSubmissions: (bountyId: string, params?: BountySubmissionQueryParams) =>
-        call<BountySubmissionsResponse>('openhuman.tinyplace_bounties_list_submissions', {
+        call<BountySubmissionsResponse>('neppy.tinyplace_bounties_list_submissions', {
           bountyId,
           params: params ?? null,
         }),
       comment: (bountyId: string, body: string) =>
-        call<BountyComment>('openhuman.tinyplace_bounties_comment', { bountyId, body }),
+        call<BountyComment>('neppy.tinyplace_bounties_comment', { bountyId, body }),
       listComments: (bountyId: string, params?: BountyCommentQueryParams) =>
-        call<BountyCommentsResponse>('openhuman.tinyplace_bounties_list_comments', {
+        call<BountyCommentsResponse>('neppy.tinyplace_bounties_list_comments', {
           bountyId,
           params: params ?? null,
         }),
       runCouncil: (bountyId: string) =>
-        call<Bounty>('openhuman.tinyplace_bounties_run_council', { bountyId }),
+        call<Bounty>('neppy.tinyplace_bounties_run_council', { bountyId }),
       /** Admin-only. Not surfaced in v1 UI. */
       approve: (bountyId: string, submissionId?: string) =>
-        call<Bounty>('openhuman.tinyplace_bounties_approve', {
+        call<Bounty>('neppy.tinyplace_bounties_approve', {
           bountyId,
           submissionId: submissionId ?? null,
         }),
@@ -2092,25 +2072,25 @@ export function createInvokeApiClient() {
     // ── Feedback section ────────────────────────────────────────────────────────
     feedback: {
       list: (params?: FeedbackListParams) =>
-        call<FeedbackListResponse>('openhuman.tinyplace_feedback_list', { params: params ?? null }),
+        call<FeedbackListResponse>('neppy.tinyplace_feedback_list', { params: params ?? null }),
       get: (feedbackId: string) =>
-        call<FeedbackItem>('openhuman.tinyplace_feedback_get', { feedbackId }),
+        call<FeedbackItem>('neppy.tinyplace_feedback_get', { feedbackId }),
       create: (title: string, description: string, category?: string) =>
-        call<FeedbackItem>('openhuman.tinyplace_feedback_create', {
+        call<FeedbackItem>('neppy.tinyplace_feedback_create', {
           title,
           description,
           ...(category !== undefined ? { category } : {}),
         }),
       vote: (feedbackId: string, vote: 'up' | 'down') =>
-        call<FeedbackItem>('openhuman.tinyplace_feedback_vote', { feedbackId, vote }),
+        call<FeedbackItem>('neppy.tinyplace_feedback_vote', { feedbackId, vote }),
     },
     // ── Solana section ──────────────────────────────────────────────────────
     solana: {
       /** Public chain metadata for the backend's configured Solana network. */
-      info: () => call<SolanaChainInfo>('openhuman.tinyplace_solana_info'),
+      info: () => call<SolanaChainInfo>('neppy.tinyplace_solana_info'),
       /** Send a Solana JSON-RPC call through the backend's proxy. */
       rpcCall: (method: string, params?: unknown, id?: unknown) =>
-        call<unknown>('openhuman.tinyplace_solana_call', {
+        call<unknown>('neppy.tinyplace_solana_call', {
           method,
           params: params ?? null,
           id: id ?? null,
@@ -2120,52 +2100,47 @@ export function createInvokeApiClient() {
     streams: {
       /** Start a tinyplace WebSocket stream (inbox or conversation). */
       start: (streamType: string, streamId?: string) =>
-        call<StreamStartResult>('openhuman.tinyplace_streams_start', {
+        call<StreamStartResult>('neppy.tinyplace_streams_start', {
           streamType,
           ...(streamId !== undefined ? { streamId } : {}),
         }),
       /** Stop an active tinyplace WebSocket stream. */
-      stop: (streamId: string) => call<void>('openhuman.tinyplace_streams_stop', { streamId }),
+      stop: (streamId: string) => call<void>('neppy.tinyplace_streams_stop', { streamId }),
       /** List all active tinyplace WebSocket streams. */
-      list: () => call<StreamListResult>('openhuman.tinyplace_streams_list', {}),
+      list: () => call<StreamListResult>('neppy.tinyplace_streams_list', {}),
     },
     // ── Signal key management ─────────────────────────────────────────────
     signal: {
       /** Bootstrap Signal keys: generate + store + publish. Returns KeyHealth. */
       provision: (preKeyCount?: number) =>
-        call<KeyHealth>('openhuman.tinyplace_signal_provision', {
-          preKeyCount: preKeyCount ?? null,
-        }),
+        call<KeyHealth>('neppy.tinyplace_signal_provision', { preKeyCount: preKeyCount ?? null }),
       /** Upload additional one-time pre-keys (replenishment). */
       uploadPreKeys: (count?: number) =>
-        call<KeyHealth>('openhuman.tinyplace_signal_upload_pre_keys', { count: count ?? null }),
+        call<KeyHealth>('neppy.tinyplace_signal_upload_pre_keys', { count: count ?? null }),
       /** Rotate the signed pre-key. */
       rotateSignedPreKey: () =>
-        call<{ ok: boolean; keyId: string }>(
-          'openhuman.tinyplace_signal_rotate_signed_pre_key',
-          {}
-        ),
+        call<{ ok: boolean; keyId: string }>('neppy.tinyplace_signal_rotate_signed_pre_key', {}),
       /** Fetch a peer's published pre-key bundle (public endpoint). */
       getBundle: (agentId: string) =>
-        call<KeyBundle>('openhuman.tinyplace_signal_get_bundle', { agentId }),
+        call<KeyBundle>('neppy.tinyplace_signal_get_bundle', { agentId }),
       /** Local + remote key status for the current user. */
-      keyStatus: () => call<SignalKeyStatus>('openhuman.tinyplace_signal_key_status', {}),
+      keyStatus: () => call<SignalKeyStatus>('neppy.tinyplace_signal_key_status', {}),
       /** Encrypt and send a Signal-protocol DM to a peer agent. */
       sendMessage: (params: { recipient: string; plaintext: string }) =>
         call<{ messageId: string; timestamp: string; encrypted: boolean }>(
-          'openhuman.tinyplace_signal_send_message',
+          'neppy.tinyplace_signal_send_message',
           params
         ),
       /** Decrypt an incoming Signal-protocol message envelope. */
       decryptMessage: (params: { envelope: MessageEnvelope }) =>
         call<{ plaintext: string; from: string; messageId: string }>(
-          'openhuman.tinyplace_signal_decrypt_message',
+          'neppy.tinyplace_signal_decrypt_message',
           params
         ),
       /** Publish the user's X25519 identity public key on their directory card. */
       registerEncryptionKey: () =>
         call<{ ok: boolean; encryptionKey: string; agentId: string; updatedAt: string }>(
-          'openhuman.tinyplace_signal_register_encryption_key',
+          'neppy.tinyplace_signal_register_encryption_key',
           {}
         ),
     },
@@ -2173,28 +2148,26 @@ export function createInvokeApiClient() {
     messages: {
       /** List raw message envelopes addressed to the current user. */
       list: (params?: { limit?: number }) =>
-        call<{ messages: MessageEnvelope[] }>('openhuman.tinyplace_messages_list', params ?? {}),
+        call<{ messages: MessageEnvelope[] }>('neppy.tinyplace_messages_list', params ?? {}),
       /** Acknowledge (delete) a delivered message. */
       acknowledge: (messageId: string) =>
-        call<void>('openhuman.tinyplace_messages_acknowledge', { messageId }),
+        call<void>('neppy.tinyplace_messages_acknowledge', { messageId }),
     },
     // ── GraphQL Social Feed ──────────────────────────────────────────────────
     graphql: {
       /** Personalized home feed (requires unlocked wallet — GraphQLAuth::Agent). */
       homeFeed: (params?: { limit?: number; offset?: number; includeSelf?: boolean }) =>
-        call<GqlHomeFeedResult>('openhuman.tinyplace_graphql_home_feed', {
+        call<GqlHomeFeedResult>('neppy.tinyplace_graphql_home_feed', {
           limit: params?.limit ?? null,
           offset: params?.offset ?? null,
           includeSelf: params?.includeSelf ?? null,
         }),
       /** List directory agents through GraphQL, including server-resolved edges. */
       agents: (params?: AgentQueryParams) =>
-        call<GqlAgentCardListResult>('openhuman.tinyplace_graphql_agents', {
-          params: params ?? null,
-        }),
+        call<GqlAgentCardListResult>('neppy.tinyplace_graphql_agents', { params: params ?? null }),
       /** List posts by a specific agent handle (public). */
       posts: (handle: string, params?: { limit?: number; before?: number; viewer?: string }) =>
-        call<GqlPostListResult>('openhuman.tinyplace_graphql_posts', {
+        call<GqlPostListResult>('neppy.tinyplace_graphql_posts', {
           handle,
           limit: params?.limit ?? null,
           before: params?.before ?? null,
@@ -2212,7 +2185,7 @@ export function createInvokeApiClient() {
           likerOffset?: number;
         }
       ) =>
-        call<GqlPostDetail | null>('openhuman.tinyplace_graphql_post', {
+        call<GqlPostDetail | null>('neppy.tinyplace_graphql_post', {
           handle,
           postId,
           viewer: params?.viewer ?? null,
@@ -2226,7 +2199,7 @@ export function createInvokeApiClient() {
         postId: string,
         params?: { feedId?: string; limit?: number; after?: number }
       ) =>
-        call<{ comments: GqlComment[] }>('openhuman.tinyplace_graphql_post_comments', {
+        call<{ comments: GqlComment[] }>('neppy.tinyplace_graphql_post_comments', {
           postId,
           feedId: params?.feedId ?? null,
           limit: params?.limit ?? null,
@@ -2234,21 +2207,21 @@ export function createInvokeApiClient() {
         }),
       /** List agents who liked a post (public). */
       postLikers: (postId: string, params?: { limit?: number; offset?: number }) =>
-        call<GqlPostLikerListResult>('openhuman.tinyplace_graphql_post_likers', {
+        call<GqlPostLikerListResult>('neppy.tinyplace_graphql_post_likers', {
           postId,
           limit: params?.limit ?? null,
           offset: params?.offset ?? null,
         }),
       /** List ledger transactions with optional filters (public, no auth). */
       ledgerTransactions: (params?: LedgerListParams) =>
-        call<GqlLedgerTransactionListResult>('openhuman.tinyplace_graphql_ledger_transactions', {
+        call<GqlLedgerTransactionListResult>('neppy.tinyplace_graphql_ledger_transactions', {
           params: params ?? null,
         }),
       /** Fetch a single ledger transaction by ID (public, no auth). */
       ledgerTransaction: (id: string) =>
-        call<GqlLedgerTransaction | null>('openhuman.tinyplace_graphql_ledger_transaction', { id }),
+        call<GqlLedgerTransaction | null>('neppy.tinyplace_graphql_ledger_transaction', { id }),
       products: async (params?: ProductQueryParams) => {
-        const result = await call<GqlProductListResult>('openhuman.tinyplace_graphql_products', {
+        const result = await call<GqlProductListResult>('neppy.tinyplace_graphql_products', {
           params: params ?? null,
         });
         return {
@@ -2257,35 +2230,35 @@ export function createInvokeApiClient() {
         } satisfies ProductsResponse & { count?: number };
       },
       product: async (id: string) => {
-        const result = await call<GqlProduct | null>('openhuman.tinyplace_graphql_product', { id });
+        const result = await call<GqlProduct | null>('neppy.tinyplace_graphql_product', { id });
         return result ? normalizeGraphqlProduct(result) : null;
       },
       /** List job postings with optional filters (public, no auth). */
       jobs: (params?: GqlJobQueryParams) =>
-        call<GqlJobListResult>('openhuman.tinyplace_graphql_jobs', { params: params ?? null }),
+        call<GqlJobListResult>('neppy.tinyplace_graphql_jobs', { params: params ?? null }),
       /** Fetch a single job posting by ID (public, no auth). */
-      job: (id: string) => call<GqlJobPosting | null>('openhuman.tinyplace_graphql_job', { id }),
+      job: (id: string) => call<GqlJobPosting | null>('neppy.tinyplace_graphql_job', { id }),
       bounties: (params?: GqlBountyQueryParams) =>
-        call<GqlBounty[]>('openhuman.tinyplace_graphql_bounties', { params: params ?? null }),
-      bounty: (id: string) => call<GqlBounty | null>('openhuman.tinyplace_graphql_bounty', { id }),
+        call<GqlBounty[]>('neppy.tinyplace_graphql_bounties', { params: params ?? null }),
+      bounty: (id: string) => call<GqlBounty | null>('neppy.tinyplace_graphql_bounty', { id }),
       /** Fetch a full GqlProfile by @handle (public GraphQL). */
       profile: (username: string) =>
-        call<GqlProfile | null>('openhuman.tinyplace_graphql_profile', { username }),
+        call<GqlProfile | null>('neppy.tinyplace_graphql_profile', { username }),
       /** Fetch a full GqlProfile by Solana address / crypto_id (public GraphQL). */
       user: (cryptoId: string) =>
-        call<GqlProfile | null>('openhuman.tinyplace_graphql_user', { cryptoId }),
+        call<GqlProfile | null>('neppy.tinyplace_graphql_user', { cryptoId }),
       /** Fetch identity registration details with optional owner profile (public GraphQL). */
       identity: (username: string) =>
-        call<GqlIdentity | null>('openhuman.tinyplace_graphql_identity', { username }),
+        call<GqlIdentity | null>('neppy.tinyplace_graphql_identity', { username }),
       /** List all identities owned by a crypto_id (public GraphQL). */
       identities: (cryptoId: string) =>
-        call<{ identities: Identity[] }>('openhuman.tinyplace_graphql_identities', { cryptoId }),
+        call<{ identities: Identity[] }>('neppy.tinyplace_graphql_identities', { cryptoId }),
       /** Fetch an agent card by agent ID (public GraphQL). */
       agentCard: (id: string) =>
-        call<AgentCard | null>('openhuman.tinyplace_graphql_agent_card', { id }),
+        call<AgentCard | null>('neppy.tinyplace_graphql_agent_card', { id }),
       identityListings: async (params?: IdentityListingQueryParams) => {
         const result = await call<GqlIdentityListingListResult>(
-          'openhuman.tinyplace_graphql_identity_listings',
+          'neppy.tinyplace_graphql_identity_listings',
           { params: params ?? null }
         );
         const identities = result.identities ?? result.listings ?? [];
@@ -2304,13 +2277,13 @@ export function createInvokeApiClient() {
         }
       ) => {
         const result = await call<GqlIdentityListing | null>(
-          'openhuman.tinyplace_graphql_identity_listing',
+          'neppy.tinyplace_graphql_identity_listing',
           { id, params: params ?? null }
         );
         return result ? normalizeGraphqlIdentityListing(result) : null;
       },
       identityBids: (listingId: string, params?: { limit?: number; offset?: number }) =>
-        call<GqlIdentityBidListResult>('openhuman.tinyplace_graphql_identity_bids', {
+        call<GqlIdentityBidListResult>('neppy.tinyplace_graphql_identity_bids', {
           listingId,
           params: params ?? null,
         }),
@@ -2323,7 +2296,7 @@ export function createInvokeApiClient() {
         offset?: number;
       }) => {
         const result = await call<GqlIdentityOfferListResult>(
-          'openhuman.tinyplace_graphql_identity_offers',
+          'neppy.tinyplace_graphql_identity_offers',
           { params: params ?? null }
         );
         return {
@@ -2333,7 +2306,7 @@ export function createInvokeApiClient() {
       },
       identitySales: async (name: string, params?: { limit?: number; offset?: number }) => {
         const result = await call<GqlIdentitySaleListResult>(
-          'openhuman.tinyplace_graphql_identity_sales',
+          'neppy.tinyplace_graphql_identity_sales',
           { name, params: params ?? null }
         );
         return {
@@ -2344,7 +2317,7 @@ export function createInvokeApiClient() {
     },
     jobsWrite: {
       create: (params: JobCreateParams) =>
-        call<JobPosting>('openhuman.tinyplace_jobs_create', {
+        call<JobPosting>('neppy.tinyplace_jobs_create', {
           title: params.title,
           description: params.description ?? null,
           category: params.category ?? null,
@@ -2354,9 +2327,9 @@ export function createInvokeApiClient() {
           budgetChain: params.budgetChain ?? null,
           proposalDeadline: params.proposalDeadline ?? null,
         }),
-      cancel: (jobId: string) => call<JobPosting>('openhuman.tinyplace_jobs_cancel', { jobId }),
+      cancel: (jobId: string) => call<JobPosting>('neppy.tinyplace_jobs_cancel', { jobId }),
       apply: (jobId: string, params?: ProposalCreateParams) =>
-        call<Proposal>('openhuman.tinyplace_jobs_apply', {
+        call<Proposal>('neppy.tinyplace_jobs_apply', {
           jobId,
           coverLetter: params?.coverLetter ?? null,
           bidAmount: params?.bidAmount ?? null,
@@ -2364,28 +2337,28 @@ export function createInvokeApiClient() {
           pastWork: params?.pastWork ?? null,
         }),
       listProposals: (jobId: string, params?: ProposalQueryParams) =>
-        call<ProposalListResponse>('openhuman.tinyplace_jobs_list_proposals', {
+        call<ProposalListResponse>('neppy.tinyplace_jobs_list_proposals', {
           jobId,
           status: params?.status ?? null,
           limit: params?.limit ?? null,
           offset: params?.offset ?? null,
         }),
       getProposal: (jobId: string, proposalId: string) =>
-        call<Proposal>('openhuman.tinyplace_jobs_get_proposal', { jobId, proposalId }),
+        call<Proposal>('neppy.tinyplace_jobs_get_proposal', { jobId, proposalId }),
       shortlistProposal: (jobId: string, proposalId: string) =>
-        call<Proposal>('openhuman.tinyplace_jobs_shortlist_proposal', { jobId, proposalId }),
+        call<Proposal>('neppy.tinyplace_jobs_shortlist_proposal', { jobId, proposalId }),
       withdrawProposal: (jobId: string, proposalId: string) =>
-        call<Proposal>('openhuman.tinyplace_jobs_withdraw_proposal', { jobId, proposalId }),
+        call<Proposal>('neppy.tinyplace_jobs_withdraw_proposal', { jobId, proposalId }),
       select: (jobId: string, proposalId: string, network?: string) =>
-        call<SelectCandidateResult>('openhuman.tinyplace_jobs_select', {
+        call<SelectCandidateResult>('neppy.tinyplace_jobs_select', {
           jobId,
           proposalId,
           network: network ?? null,
         }),
       openDispute: (jobId: string, reason: string) =>
-        call<JobPosting>('openhuman.tinyplace_jobs_open_dispute', { jobId, reason }),
+        call<JobPosting>('neppy.tinyplace_jobs_open_dispute', { jobId, reason }),
       adjudicateDispute: (jobId: string) =>
-        call<JobPosting>('openhuman.tinyplace_jobs_adjudicate_dispute', { jobId }),
+        call<JobPosting>('neppy.tinyplace_jobs_adjudicate_dispute', { jobId }),
     },
   };
 }

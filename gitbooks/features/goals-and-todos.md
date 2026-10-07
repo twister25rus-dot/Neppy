@@ -21,7 +21,7 @@ The list is deliberately tiny, capped at roughly **8 items / 500 tokens**, so it
 - **Reflect** runs a background `goals_agent` that reviews your goals against recent memory and conversation, then makes minimal, justified changes: adding what you've clearly started pursuing, retiring what you've dropped. On first run it bootstraps an initial set from your context.
 - The agent reads and updates the same list mid-conversation via its `goals_list` / `goals_add` / edit tools, so your edits and the agent's stay in lock-step.
 
-RPC surface: `openhuman.memory_goals_list` / `_add` / `_edit` / `_delete` / `_reflect`.
+RPC surface: `neppy.memory_goals_list` / `_add` / `_edit` / `_delete` / `_reflect`.
 
 ---
 
@@ -58,7 +58,7 @@ Two reserved boards back special views:
 - **`user-tasks`**: your personal task list, not attached to any conversation. Create and manage these from the **User Task Composer** (Intelligence → Tasks). You can optionally attach a task to a conversation and assign it to the orchestrator with `approvalMode: not_required`, so the background dispatcher auto-picks and runs it.
 - **`task-sources`**: an inbox for tasks ingested from external sources before they're promoted to an agent workstream.
 
-RPC surface: `openhuman.todos_list` / `_add` / `_edit` / `_update_status` / `_set_session_thread`. Responses include a rendered `markdown` field so the board renders identically in the UI and in agent transcripts.
+RPC surface: `neppy.todos_list` / `_add` / `_edit` / `_update_status` / `_set_session_thread`. Responses include a rendered `markdown` field so the board renders identically in the UI and in agent transcripts.
 
 ---
 

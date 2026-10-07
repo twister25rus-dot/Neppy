@@ -50,6 +50,32 @@ tokio::task_local! {
     pub static AGENT_TURN_WORKSPACE: PathBuf;
 }
 
+tokio::task_local! {
+    /// Extra read/write roots granted for the current turn on top of
+    /// [`AGENT_TURN_WORKSPACE`]. Only Debug Mode scopes this, from
+    /// `debug_mode.external_paths` when `allow_external_filesystem` is on; the
+    /// paths are canonical and validated by `debug_mode::policy` before they get
+    /// here. Like the turn root, a grant never reaches `is_always_forbidden` or
+    /// workspace-internal paths.
+    static AGENT_TURN_EXTRA_ROOTS: Vec<PathBuf>;
+}
+
+/// Scope `roots` as additional trusted roots for the duration of `fut`. An empty
+/// list scopes nothing, so the default path policy is untouched.
+pub async fn with_extra_roots<F: std::future::Future>(roots: Vec<PathBuf>, fut: F) -> F::Output {
+    if roots.is_empty() {
+        return fut.await;
+    }
+    AGENT_TURN_EXTRA_ROOTS.scope(roots, Box::pin(fut)).await
+}
+
+/// The extra roots scoped for the current turn (empty by default).
+pub fn extra_roots() -> Vec<PathBuf> {
+    AGENT_TURN_EXTRA_ROOTS
+        .try_with(|roots| roots.clone())
+        .unwrap_or_default()
+}
+
 /// Scope `root` as the workspace for the duration of `fut`.
 ///
 /// `root` should be an existing, absolute directory the caller has already
@@ -88,7 +114,18 @@ pub fn current() -> Option<PathBuf> {
 /// in.
 pub fn propagate<F: std::future::Future>(fut: F) -> impl std::future::Future<Output = F::Output> {
     let captured = current();
+    let extra = extra_roots();
+    // A detached sub-agent of a Debug-mode turn keeps its shell gate and its
+    // secret masking: the debug-turn task-local would otherwise vanish on spawn.
+    let debug_turn = crate::neppy::agent::debug_mode::turn::current();
     async move {
+        let fut = async move {
+            match debug_turn {
+                Some(turn) => crate::neppy::agent::debug_mode::turn::with_turn(turn, fut).await,
+                None => fut.await,
+            }
+        };
+        let fut = with_extra_roots(extra, fut);
         match captured {
             Some(root) => with_workspace(root, fut).await,
             None => fut.await,

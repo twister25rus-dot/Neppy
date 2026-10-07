@@ -399,7 +399,9 @@ impl AgentMemory for NeppyAgentMemory {
             opts,
         )
         .await
-        .map_err(|e| TinyAgentsError::Capability(format!("openhuman memory recall failed: {e}")))?;
+        .map_err(|e| {
+            TinyAgentsError::Capability(format!("neppy-core memory recall failed: {e}"))
+        })?;
 
         let total = entries.len();
         let items: Vec<MemoryItem> = entries
@@ -474,7 +476,7 @@ impl AgentMemory for NeppyAgentMemory {
             )
             .await
             .map_err(|e| {
-                TinyAgentsError::Capability(format!("openhuman memory write failed: {e}"))
+                TinyAgentsError::Capability(format!("neppy-core memory write failed: {e}"))
             })?;
 
         // Read back so the returned id lives in the same space as the ids

@@ -151,7 +151,7 @@ pub fn parse_auth_status_json(raw: &str) -> AuthSource {
 }
 
 /// Spawn `claude auth status --json` and classify the result. Honors the
-/// `OPENHUMAN_CLAUDE_CLI` override via [`version_check::resolve_binary`].
+/// `NEPPY_CLAUDE_CLI` override via [`version_check::resolve_binary`].
 fn probe_via_cli() -> AuthSource {
     let Some(bin) = version_check::resolve_binary() else {
         log::warn!("[claude-code][auth] no usable `claude` binary found; auth state unknown");
@@ -257,7 +257,7 @@ pub fn probe() -> AuthStatus {
         .map(|d| d.as_secs())
         .unwrap_or(0);
 
-    if let Ok(k) = std::env::var("ANTHROPIC_API_KEY") {
+    if let Ok(k) = crate::neppy::util::env::var("ANTHROPIC_API_KEY") {
         if !k.trim().is_empty() {
             log::debug!("[claude-code][auth] ANTHROPIC_API_KEY present → api_key_env");
             return AuthStatus {
@@ -362,7 +362,7 @@ mod tests {
         let _env = super::super::ENV_TEST_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        let prev = std::env::var("ANTHROPIC_API_KEY").ok();
+        let prev = crate::neppy::util::env::var("ANTHROPIC_API_KEY").ok();
         std::env::set_var("ANTHROPIC_API_KEY", "sk-ant-test");
 
         let s = probe();
@@ -370,7 +370,7 @@ mod tests {
 
         match prev {
             Some(v) => std::env::set_var("ANTHROPIC_API_KEY", v),
-            None => std::env::remove_var("ANTHROPIC_API_KEY"),
+            None => crate::neppy::util::env::remove_var("ANTHROPIC_API_KEY"),
         }
     }
 }

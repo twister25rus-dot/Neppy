@@ -22,7 +22,7 @@ const PROMPTS: &[&str] = &[
 ];
 
 pub async fn run() -> Result<ProfileResult> {
-    let turns = std::env::var("OPENHUMAN_PROFILE_TURNS")
+    let turns = neppy_core::neppy::util::env::var("NEPPY_PROFILE_TURNS")
         .ok()
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|n| *n > 0)

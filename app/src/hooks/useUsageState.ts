@@ -26,7 +26,7 @@ interface UsageState {
   shouldShowBudgetCompletedMessage: boolean;
   /**
    * True when every chat workload (reasoning/agentic/coding) is routed to a
-   * non-openhuman provider (a user-configured cloud provider or local Ollama).
+   * non-neppy provider (a user-configured cloud provider or local Ollama).
    * Used to suppress the Neppy-included-budget banner / modal: when the
    * user has explicitly bypassed the hosted backend for chat, the included
    * budget cycle no longer gates them. See #2040 and #2041.
@@ -36,7 +36,7 @@ interface UsageState {
   refresh: () => void;
 }
 
-const logBillingGate = debug('openhuman:billing:gate');
+const logBillingGate = debug('neppy:billing:gate');
 
 const CACHE_TTL_MS = 60_000;
 
@@ -198,7 +198,7 @@ export function useUsageState(activeChatRole: 'chat' | 'reasoning' = 'chat'): Us
   // When every chat workload routes to a user-supplied provider (cloud or
   // local Ollama), the Neppy included-budget cycle does not gate the
   // user. Conservative on missing aiSettings (treat as still using
-  // openhuman) so we never silently disable the gate after a transient
+  // neppy) so we never silently disable the gate after a transient
   // fetch failure (#2040, #2041).
   //
   // #3767: prefer the authoritative, core-side `creditsBypass` decision for the

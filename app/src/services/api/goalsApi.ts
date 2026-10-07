@@ -1,5 +1,5 @@
 /**
- * Frontend client for the long-term goals surface (`openhuman.memory_goals_*`).
+ * Frontend client for the long-term goals surface (`neppy.memory_goals_*`).
  *
  * The Rust handlers persist an editable list of the agent's durable long-term
  * goals to `<workspace>/MEMORY_GOALS.md`. The same list is curated by the
@@ -15,7 +15,7 @@ import debug from 'debug';
 
 import { callCoreRpc } from '../coreRpcClient';
 
-const log = debug('openhuman:goalsApi');
+const log = debug('neppy:goalsApi');
 
 /** A single long-term goal item. */
 export interface GoalItem {
@@ -62,23 +62,20 @@ function extractItems(res: unknown): GoalItem[] {
 export const goalsApi = {
   list: async (): Promise<GoalItem[]> => {
     log('list');
-    const res = await callCoreRpc<unknown>({ method: 'openhuman.memory_goals_list', params: {} });
+    const res = await callCoreRpc<unknown>({ method: 'neppy.memory_goals_list', params: {} });
     return extractItems(res);
   },
 
   add: async (text: string): Promise<GoalItem[]> => {
     log('add');
-    const res = await callCoreRpc<unknown>({
-      method: 'openhuman.memory_goals_add',
-      params: { text },
-    });
+    const res = await callCoreRpc<unknown>({ method: 'neppy.memory_goals_add', params: { text } });
     return extractItems(res);
   },
 
   edit: async (id: string, text: string): Promise<GoalItem[]> => {
     log('edit id=%s', id);
     const res = await callCoreRpc<unknown>({
-      method: 'openhuman.memory_goals_edit',
+      method: 'neppy.memory_goals_edit',
       params: { id, text },
     });
     return extractItems(res);
@@ -86,17 +83,14 @@ export const goalsApi = {
 
   remove: async (id: string): Promise<GoalItem[]> => {
     log('delete id=%s', id);
-    const res = await callCoreRpc<unknown>({
-      method: 'openhuman.memory_goals_delete',
-      params: { id },
-    });
+    const res = await callCoreRpc<unknown>({ method: 'neppy.memory_goals_delete', params: { id } });
     return extractItems(res);
   },
 
   reflect: async (context?: string): Promise<ReflectResult> => {
     log('reflect hasContext=%s', Boolean(context));
     const res = await callCoreRpc<unknown>({
-      method: 'openhuman.memory_goals_reflect',
+      method: 'neppy.memory_goals_reflect',
       params: pruneParams({ context }),
       // Enrichment runs a full agent turn — give it room beyond the default.
       timeoutMs: 180_000,

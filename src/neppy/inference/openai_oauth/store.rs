@@ -110,7 +110,7 @@ pub(super) fn persist_openai_oauth_token_set(
 }
 
 fn codex_cli_auth_path() -> Result<PathBuf, String> {
-    if let Some(codex_home) = std::env::var_os("CODEX_HOME") {
+    if let Some(codex_home) = crate::neppy::util::env::var_os("CODEX_HOME") {
         let path = PathBuf::from(codex_home);
         if !path.as_os_str().is_empty() {
             return Ok(path.join("auth.json"));
@@ -124,7 +124,7 @@ fn codex_cli_auth_path() -> Result<PathBuf, String> {
 
 fn home_dir_from_env() -> Option<PathBuf> {
     for key in ["HOME", "USERPROFILE"] {
-        if let Some(value) = std::env::var_os(key) {
+        if let Some(value) = crate::neppy::util::env::var_os(key) {
             let path = PathBuf::from(value);
             if !path.as_os_str().is_empty() {
                 return Some(path);
@@ -132,7 +132,10 @@ fn home_dir_from_env() -> Option<PathBuf> {
         }
     }
 
-    match (std::env::var_os("HOMEDRIVE"), std::env::var_os("HOMEPATH")) {
+    match (
+        crate::neppy::util::env::var_os("HOMEDRIVE"),
+        crate::neppy::util::env::var_os("HOMEPATH"),
+    ) {
         (Some(drive), Some(path))
             if !drive.as_os_str().is_empty() && !path.as_os_str().is_empty() =>
         {

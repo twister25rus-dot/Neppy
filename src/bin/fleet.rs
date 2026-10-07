@@ -7,8 +7,8 @@
 //!
 //! Design (process-per-user, not in-process multi-tenancy):
 //! - Each tenant gets its own OS process (`neppy-core run --headless-api`),
-//!   its own workspace volume (`OPENHUMAN_WORKSPACE`), and its own core bearer
-//!   (`OPENHUMAN_CORE_TOKEN`). This MVP does not yet run tenants under
+//!   its own workspace volume (`NEPPY_WORKSPACE`), and its own core bearer
+//!   (`NEPPY_CORE_TOKEN`). This MVP does not yet run tenants under
 //!   distinct OS users or containers, so it is not a production multi-tenant
 //!   security boundary for arbitrary agent tools.
 //! - The supervisor mints a distinct **edge token** per tenant for clients; it
@@ -329,12 +329,12 @@ async fn spawn_core(
         .arg("127.0.0.1")
         .arg("--port")
         .arg(instance.port.to_string())
-        .env("OPENHUMAN_WORKSPACE", &instance.workspace_dir)
-        .env("OPENHUMAN_ACTION_DIR", &instance.action_dir)
-        .env("OPENHUMAN_CORE_TOKEN", instance.core_bearer.as_str())
+        .env("NEPPY_WORKSPACE", &instance.workspace_dir)
+        .env("NEPPY_ACTION_DIR", &instance.action_dir)
+        .env("NEPPY_CORE_TOKEN", instance.core_bearer.as_str())
         // Each tenant is a headless single-core; keep channel listeners off so a
         // fleet host doesn't poll every member's messaging integrations.
-        .env("OPENHUMAN_DISABLE_CHANNEL_LISTENERS", "1")
+        .env("NEPPY_DISABLE_CHANNEL_LISTENERS", "1")
         .kill_on_drop(true)
         .spawn()
         .with_context(|| {
@@ -369,7 +369,7 @@ async fn wait_authenticated_ready(
     let body = serde_json::json!({
         "jsonrpc": "2.0",
         "id": "fleet-ready",
-        "method": "openhuman.security_policy_info",
+        "method": "neppy.security_policy_info",
         "params": {}
     });
     for attempt in 1..=attempts {
@@ -548,12 +548,14 @@ fn write_edge_tokens(path: &Path, minted: &[(String, EdgeToken)]) -> anyhow::Res
     Ok(())
 }
 
-const FLEET_ALLOWED_ORIGINS_ENV: &str = "OPENHUMAN_CORE_ALLOWED_ORIGINS";
+const FLEET_ALLOWED_ORIGINS_ENV: &str = "NEPPY_CORE_ALLOWED_ORIGINS";
 
 fn is_fleet_origin_allowed(origin: &str) -> bool {
     is_fleet_origin_allowed_with_extra(
         origin,
-        std::env::var(FLEET_ALLOWED_ORIGINS_ENV).ok().as_deref(),
+        neppy_core::neppy::util::env::var(FLEET_ALLOWED_ORIGINS_ENV)
+            .ok()
+            .as_deref(),
     )
 }
 

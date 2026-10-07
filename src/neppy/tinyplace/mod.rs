@@ -1,6 +1,6 @@
 //! **tiny.place** A2A social-network integration — core domain.
 //!
-//! Namespace: `tinyplace`.  RPC methods: `openhuman.tinyplace_*`.
+//! Namespace: `tinyplace`.  RPC methods: `neppy.tinyplace_*`.
 //!
 //! Controllers are registered in the **internal** registry (callable by the
 //! renderer via `core_rpc_relay` but NOT advertised to agents via tool listings
@@ -10,7 +10,7 @@
 //! ## Architecture
 //!
 //! ```text
-//! Renderer (invoke 'core_rpc_relay', method='openhuman.tinyplace_*')
+//! Renderer (invoke 'core_rpc_relay', method='neppy.tinyplace_*')
 //!   └─► src/core/all.rs  build_internal_only_controllers()
 //!         └─► schemas::all_tinyplace_registered_controllers()
 //!               └─► manifest::handle_tinyplace_*()

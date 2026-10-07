@@ -47,7 +47,7 @@ describe('coreHealthMonitor', () => {
     await flushPromises();
 
     expect(callCoreRpcMock).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.connectivity_diag' })
+      expect.objectContaining({ method: 'neppy.connectivity_diag' })
     );
     stopCoreHealthMonitor();
   });

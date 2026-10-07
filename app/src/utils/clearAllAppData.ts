@@ -64,7 +64,7 @@ interface ClearAllAppDataOptions {
  *
  *  1. Queue the CEF profile directory for deletion on next launch.
  *  2. Best-effort `clearSession` to drop the core's auth state.
- *  3. Reset the openhuman workspace dir + restart the core sidecar.
+ *  3. Reset the neppy workspace dir + restart the core sidecar.
  *  4. Purge redux-persist + window storage.
  *  5. Restart the desktop shell so CEF reboots into the fresh profile.
  *

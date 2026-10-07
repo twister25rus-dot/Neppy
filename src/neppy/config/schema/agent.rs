@@ -312,7 +312,7 @@ pub struct AgentConfig {
     /// users running large local models can extend it without editing config
     /// files (issue #3100). Pushed into the live
     /// [`crate::neppy::tools::timeout`] runtime on save; the
-    /// `OPENHUMAN_TOOL_TIMEOUT_SECS` env var still overrides it when set.
+    /// `NEPPY_TOOL_TIMEOUT_SECS` env var still overrides it when set.
     #[serde(default = "default_agent_timeout_secs")]
     pub agent_timeout_secs: u64,
 
@@ -324,7 +324,7 @@ pub struct AgentConfig {
     /// 04.2 read cutover inherits a complete corpus. The write is additive,
     /// best-effort, and non-fatal — a store-write failure never affects the
     /// chat turn or the authoritative legacy JSONL. The
-    /// `OPENHUMAN_SESSION_DUAL_WRITE` env var is a kill switch that overrides
+    /// `NEPPY_SESSION_DUAL_WRITE` env var is a kill switch that overrides
     /// this flag in either direction: a falsy value (`0`/`false`/`no`/`off`)
     /// forces the dual-write OFF regardless of config; a truthy value forces
     /// it ON. See
@@ -352,7 +352,7 @@ pub struct AgentConfig {
     /// breaks or slows the authoritative read. Sessions written before the
     /// store existed have no stream and report `Unavailable`, not divergence,
     /// so an upgrading user's old transcripts do not generate warnings. The
-    /// `OPENHUMAN_SESSION_SHADOW_READS` env var is a pure **kill switch**: a
+    /// `NEPPY_SESSION_SHADOW_READS` env var is a pure **kill switch**: a
     /// falsy value (`0`/`false`/`no`/`off`/`disable`/`disabled`, case-
     /// insensitive) forces the shadow read
     /// OFF regardless of config; it can never force it ON. See
@@ -393,7 +393,7 @@ fn default_session_shadow_reads() -> bool {
     // ON for the Phase 2 parity soak. Observation-only: the legacy read stays
     // authoritative and the probe runs on a background task, so the worst case
     // of a bad soak is log noise, not a broken resume. Disable per-workspace in
-    // config, or globally with `OPENHUMAN_SESSION_SHADOW_READS=0`.
+    // config, or globally with `NEPPY_SESSION_SHADOW_READS=0`.
     //
     // This default only covers workspaces whose config predates the key.
     // `Config::save` writes every field, so an already-saved workspace carries

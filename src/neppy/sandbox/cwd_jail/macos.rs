@@ -216,8 +216,8 @@ mod tests {
         jail.canonicalize().unwrap();
         let mut cmd = Command::new("/bin/sh");
         cmd.arg("-c")
-            .arg("echo $OPENHUMAN_TEST_VAR > env.out")
-            .env("OPENHUMAN_TEST_VAR", "hello-from-jail")
+            .arg("echo $NEPPY_TEST_VAR > env.out")
+            .env("NEPPY_TEST_VAR", "hello-from-jail")
             .current_dir(&root)
             .stdout(Stdio::null())
             .stderr(Stdio::null());

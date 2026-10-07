@@ -1,5 +1,5 @@
 /**
- * Frontend client for the durable `openhuman.flows_*` run surface (issue B2 /
+ * Frontend client for the durable `neppy.flows_*` run surface (issue B2 /
  * B3 / B4 / B5b). Wraps the subset of controllers the B3a approval card, the
  * B3b run inspector, the B4 agent-proposal card, and the B5b Workflow Canvas
  * need:
@@ -37,7 +37,7 @@ import { callCoreRpc } from '../coreRpcClient';
 const log = debug('flowsApi');
 
 /**
- * `openhuman.flows_resume` and `openhuman.flows_run` both drive the tinyflows
+ * `neppy.flows_resume` and `neppy.flows_run` both drive the tinyflows
  * engine and can run up to ~600s server-side (`FLOW_RUN_TIMEOUT_SECS` in
  * `src/neppy/flows/ops.rs`). Give the client a slightly larger budget than
  * the default 30s so a slow run/resume doesn't fail client-side while the
@@ -113,7 +113,7 @@ export interface FlowRun {
 }
 
 /**
- * Raw resume outcome returned by `openhuman.flows_resume` — the immediate
+ * Raw resume outcome returned by `neppy.flows_resume` — the immediate
  * tinyflows engine result, not the persisted `FlowRun` row. Call
  * {@link getFlowRun} afterwards (thread_id === run id) if the caller needs the
  * up-to-date persisted status.
@@ -152,7 +152,7 @@ export interface Flow {
 }
 
 /**
- * Result of `openhuman.flows_validate` (`src/neppy/flows/types.rs::FlowValidation`).
+ * Result of `neppy.flows_validate` (`src/neppy/flows/types.rs::FlowValidation`).
  * `valid === false` means the graph is structurally rejected and won't
  * persist/enable; `warnings` are advisory and orthogonal to validity (a valid
  * graph can still carry them). `errors` carries at most one message — the
@@ -208,7 +208,7 @@ interface FlowDraft {
 type FlowImportFormat = 'native' | 'n8n' | 'auto';
 
 /**
- * Result of `openhuman.flows_import` (`src/neppy/flows/types.rs::FlowImport`).
+ * Result of `neppy.flows_import` (`src/neppy/flows/types.rs::FlowImport`).
  * The `graph` is the normalized, migrated + validated `WorkflowGraph` ready to
  * open on the canvas as an unsaved draft; `warnings` carries non-fatal import
  * notes (unmapped n8n node types, untranslated expressions, a synthesized or
@@ -348,7 +348,7 @@ function unwrapCliEnvelope<T>(payload: unknown): T {
 // ---------------------------------------------------------------------------
 
 /**
- * Create (and, by default, enable) a new saved flow via `openhuman.flows_create`
+ * Create (and, by default, enable) a new saved flow via `neppy.flows_create`
  * (issue B4). This is the ONLY path that persists a flow — the agent's
  * `propose_workflow` tool (`src/neppy/flows/tools.rs`) only validates a
  * candidate graph and returns a summary; `WorkflowProposalCard`'s "Save &
@@ -377,7 +377,7 @@ export async function createFlow(
 ): Promise<Flow> {
   log('createFlow: request name=%s requireApproval=%s', name, requireApproval ?? 'default');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_create',
+    method: 'neppy.flows_create',
     params:
       requireApproval === undefined
         ? { name, graph }
@@ -390,7 +390,7 @@ export async function createFlow(
 
 /**
  * Resume a `pending_approval` flow run past its checkpoint via
- * `openhuman.flows_resume`. `approvals` should name the node ids from the
+ * `neppy.flows_resume`. `approvals` should name the node ids from the
  * triggering notification's `node_ids` payload — the Rust side rejects the
  * call outright unless at least one named id matches a currently-pending gate.
  */
@@ -401,7 +401,7 @@ export async function resumeFlow(
 ): Promise<FlowResumeResult> {
   log('resumeFlow: request id=%s threadId=%s approvals=%o', id, threadId, approvals);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_resume',
+    method: 'neppy.flows_resume',
     params: { id, thread_id: threadId, approvals },
     timeoutMs: FLOW_RESUME_TIMEOUT_MS,
   });
@@ -416,14 +416,14 @@ export async function resumeFlow(
 }
 
 /**
- * List recent runs for a flow, newest first, via `openhuman.flows_list_runs`.
+ * List recent runs for a flow, newest first, via `neppy.flows_list_runs`.
  * `limit` defaults to 20 server-side. Not used by the B3a approval card —
  * exported now for the B3b run-history inspector.
  */
 export async function listFlowRuns(flowId: string, limit?: number): Promise<FlowRun[]> {
   log('listFlowRuns: request flowId=%s limit=%s', flowId, limit ?? 'default');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_list_runs',
+    method: 'neppy.flows_list_runs',
     params: limit === undefined ? { id: flowId } : { id: flowId, limit },
   });
   const runs = unwrapCliEnvelope<FlowRun[]>(response);
@@ -433,13 +433,13 @@ export async function listFlowRuns(flowId: string, limit?: number): Promise<Flow
 
 /**
  * List the most recent runs across ALL flows, newest first, via
- * `openhuman.flows_list_all_runs` (the aggregate "All runs" page). `limit`
+ * `neppy.flows_list_all_runs` (the aggregate "All runs" page). `limit`
  * defaults to 100 server-side. Each run carries its `flow_id` for grouping.
  */
 export async function listAllFlowRuns(limit?: number): Promise<FlowRun[]> {
   log('listAllFlowRuns: request limit=%s', limit ?? 'default');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_list_all_runs',
+    method: 'neppy.flows_list_all_runs',
     params: limit === undefined ? {} : { limit },
   });
   const runs = unwrapCliEnvelope<FlowRun[]>(response);
@@ -449,13 +449,13 @@ export async function listAllFlowRuns(limit?: number): Promise<FlowRun[]> {
 
 /**
  * Load a single flow run record by id (== thread_id) via
- * `openhuman.flows_get_run`. Not used by the B3a approval card — exported now
+ * `neppy.flows_get_run`. Not used by the B3a approval card — exported now
  * for the B3b run-history inspector.
  */
 export async function getFlowRun(runId: string): Promise<FlowRun> {
   log('getFlowRun: request runId=%s', runId);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_get_run',
+    method: 'neppy.flows_get_run',
     params: { run_id: runId },
   });
   const run = unwrapCliEnvelope<FlowRun>(response);
@@ -464,7 +464,7 @@ export async function getFlowRun(runId: string): Promise<FlowRun> {
 }
 
 /**
- * List all saved flows via `openhuman.flows_list` (the Workflows list page,
+ * List all saved flows via `neppy.flows_list` (the Workflows list page,
  * B5a). No params. Unlike the run-surface calls above, the payload IS the
  * `Flow[]` array directly — there is no outer `{ flows: [...] }` wrapper (see
  * `src/neppy/flows/ops.rs::flows_list`, which returns `Vec<Flow>`
@@ -472,21 +472,21 @@ export async function getFlowRun(runId: string): Promise<FlowRun> {
  */
 export async function listFlows(): Promise<Flow[]> {
   log('listFlows: request');
-  const response = await callCoreRpc<unknown>({ method: 'openhuman.flows_list', params: {} });
+  const response = await callCoreRpc<unknown>({ method: 'neppy.flows_list', params: {} });
   const flows = unwrapCliEnvelope<Flow[]>(response);
   log('listFlows: response count=%d', flows.length);
   return flows;
 }
 
 /**
- * Enable or disable a saved flow via `openhuman.flows_set_enabled`. Returns
+ * Enable or disable a saved flow via `neppy.flows_set_enabled`. Returns
  * the updated `Flow` row directly (same no-wrapper shape as `flows_list`'s
  * elements).
  */
 export async function setFlowEnabled(id: string, enabled: boolean): Promise<Flow> {
   log('setFlowEnabled: request id=%s enabled=%s', id, enabled);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_set_enabled',
+    method: 'neppy.flows_set_enabled',
     params: { id, enabled },
   });
   const flow = unwrapCliEnvelope<Flow>(response);
@@ -495,7 +495,7 @@ export async function setFlowEnabled(id: string, enabled: boolean): Promise<Flow
 }
 
 /**
- * Load a single saved flow by id via `openhuman.flows_get` (the Workflow
+ * Load a single saved flow by id via `neppy.flows_get` (the Workflow
  * Canvas, B5b.1). Returns the `Flow` directly (same no-wrapper shape as
  * `flows_list`'s elements and `flows_set_enabled` — see
  * `src/neppy/flows/schemas.rs::handle_get`, which delegates straight to
@@ -503,7 +503,7 @@ export async function setFlowEnabled(id: string, enabled: boolean): Promise<Flow
  */
 export async function getFlow(id: string): Promise<Flow> {
   log('getFlow: request id=%s', id);
-  const response = await callCoreRpc<unknown>({ method: 'openhuman.flows_get', params: { id } });
+  const response = await callCoreRpc<unknown>({ method: 'neppy.flows_get', params: { id } });
   const flow = unwrapCliEnvelope<Flow>(response);
   log('getFlow: response id=%s name=%s', flow.id, flow.name);
   return flow;
@@ -511,7 +511,7 @@ export async function getFlow(id: string): Promise<Flow> {
 
 /**
  * Run a saved flow to completion (or until it pauses on a human-approval
- * gate) via `openhuman.flows_run`. This is the call that actually drives the
+ * gate) via `neppy.flows_run`. This is the call that actually drives the
  * tinyflows engine, so it shares `flows_resume`'s ~600s server-side budget
  * (see {@link FLOW_RESUME_TIMEOUT_MS}). This BLOCKS the caller until the run
  * settles — prefer {@link runFlowDetached} for any UI entry point (Run
@@ -531,7 +531,7 @@ export async function runFlow(
 ): Promise<FlowResumeResult> {
   log('runFlow: request id=%s inputs=%d', id, Object.keys(inputs ?? {}).length);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_run',
+    method: 'neppy.flows_run',
     params: { id, input: input ?? null, inputs: inputs ?? null },
     timeoutMs: FLOW_RESUME_TIMEOUT_MS,
   });
@@ -546,7 +546,7 @@ export async function runFlow(
 }
 
 /**
- * Immediate response from `openhuman.flows_run_detached` — the run has been
+ * Immediate response from `neppy.flows_run_detached` — the run has been
  * registered and its `running` row inserted, but it has NOT finished (or even
  * necessarily started executing its first action node) yet. Poll
  * {@link getFlowRun} / subscribe to `flow:run_progress` for the terminal
@@ -561,7 +561,7 @@ export interface FlowRunDetachedResult {
 
 /**
  * Start a saved flow WITHOUT waiting for it to finish, via
- * `openhuman.flows_run_detached` (F-M1 / F-M2). Unlike {@link runFlow}, this
+ * `neppy.flows_run_detached` (F-M1 / F-M2). Unlike {@link runFlow}, this
  * returns as soon as the run is registered and its `running` row exists — well
  * under a second, regardless of how long the flow itself takes — so it uses
  * the client's *default* RPC timeout rather than {@link FLOW_RESUME_TIMEOUT_MS}.
@@ -587,7 +587,7 @@ export async function runFlowDetached(
 ): Promise<FlowRunDetachedResult> {
   log('runFlowDetached: request id=%s inputs=%d', id, Object.keys(inputs ?? {}).length);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_run_detached',
+    method: 'neppy.flows_run_detached',
     params: { id, input: input ?? null, inputs: inputs ?? null },
   });
   const result = unwrapCliEnvelope<FlowRunDetachedResult>(response);
@@ -602,7 +602,7 @@ export async function runFlowDetached(
 }
 
 /**
- * Permanently delete a saved flow via `openhuman.flows_delete`. The server
+ * Permanently delete a saved flow via `neppy.flows_delete`. The server
  * unbinds any live trigger (schedule cron job / app-event binding) before
  * removing the row, so deleting an enabled flow also stops it firing. Returns
  * the removed id (the payload is `{ id, removed: true }`); callers typically
@@ -610,31 +610,28 @@ export async function runFlowDetached(
  */
 export async function deleteFlow(id: string): Promise<string> {
   log('deleteFlow: request id=%s', id);
-  const response = await callCoreRpc<unknown>({ method: 'openhuman.flows_delete', params: { id } });
+  const response = await callCoreRpc<unknown>({ method: 'neppy.flows_delete', params: { id } });
   const payload = unwrapCliEnvelope<{ id: string; removed: boolean }>(response);
   log('deleteFlow: response id=%s removed=%s', payload.id, payload.removed);
   return payload.id;
 }
 
 /**
- * Duplicate a saved flow via `openhuman.flows_duplicate`. The copy is created
+ * Duplicate a saved flow via `neppy.flows_duplicate`. The copy is created
  * DISABLED and unbound (no live trigger), with a derived name, so duplicating an
  * enabled flow never silently starts a second live schedule. Returns the new
  * `Flow` row.
  */
 export async function duplicateFlow(id: string): Promise<Flow> {
   log('duplicateFlow: request id=%s', id);
-  const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_duplicate',
-    params: { id },
-  });
+  const response = await callCoreRpc<unknown>({ method: 'neppy.flows_duplicate', params: { id } });
   const flow = unwrapCliEnvelope<Flow>(response);
   log('duplicateFlow: response newId=%s name=%s', flow.id, flow.name);
   return flow;
 }
 
 /**
- * Update a saved flow's name and/or graph via `openhuman.flows_update` (the
+ * Update a saved flow's name and/or graph via `neppy.flows_update` (the
  * Workflow Canvas Save path, B5b.2 / Phase 3d). The server re-validates the
  * graph before persisting and rejects a structurally-invalid one, so callers
  * should {@link validateFlow} first to surface errors pre-save. Omitted fields
@@ -654,20 +651,20 @@ export async function updateFlow(id: string, update: FlowUpdate): Promise<Flow> 
   if (update.requireApproval !== undefined) params.require_approval = update.requireApproval;
   if (update.expectedVersion !== undefined) params.expected_version = update.expectedVersion;
   if (update.strict !== undefined) params.strict = update.strict;
-  const response = await callCoreRpc<unknown>({ method: 'openhuman.flows_update', params });
+  const response = await callCoreRpc<unknown>({ method: 'neppy.flows_update', params });
   const flow = unwrapCliEnvelope<Flow>(response);
   log('updateFlow: response id=%s name=%s', flow.id, flow.name);
   return flow;
 }
 
 /**
- * List a flow's revision history via `openhuman.flows_get_history` (newest first).
+ * List a flow's revision history via `neppy.flows_get_history` (newest first).
  *
  * @knipignore Documented flow history extension contract.
  */
 export async function getFlowHistory(id: string, limit?: number): Promise<FlowRevision[]> {
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_get_history',
+    method: 'neppy.flows_get_history',
     params: { id, limit },
   });
   const result = unwrapCliEnvelope<{ revisions: FlowRevision[] }>(response);
@@ -675,7 +672,7 @@ export async function getFlowHistory(id: string, limit?: number): Promise<FlowRe
 }
 
 /**
- * Roll a flow back to a prior revision via `openhuman.flows_rollback` (restores
+ * Roll a flow back to a prior revision via `neppy.flows_rollback` (restores
  * that revision's graph through the normal update path — itself snapshotted, so
  * a rollback is undoable). Honours optimistic concurrency via `expectedVersion`.
  *
@@ -688,14 +685,14 @@ export async function rollbackFlow(
 ): Promise<Flow> {
   log('rollbackFlow: request id=%s revision=%s', id, revisionId);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_rollback',
+    method: 'neppy.flows_rollback',
     params: { id, revision_id: revisionId, expected_version: expectedVersion },
   });
   return unwrapCliEnvelope<Flow>(response);
 }
 
 /**
- * Validate a candidate `WorkflowGraph` via `openhuman.flows_validate`. Pure and
+ * Validate a candidate `WorkflowGraph` via `neppy.flows_validate`. Pure and
  * cheap server-side (no config load), so it's safe to call on a debounce while
  * editing. Returns {@link FlowValidation} — check `valid` to gate Save, and
  * surface `warnings` separately (they never block).
@@ -703,7 +700,7 @@ export async function rollbackFlow(
 export async function validateFlow(graph: unknown): Promise<FlowValidation> {
   log('validateFlow: request');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_validate',
+    method: 'neppy.flows_validate',
     params: { graph },
   });
   const validation = unwrapCliEnvelope<FlowValidation>(response);
@@ -718,14 +715,14 @@ export async function validateFlow(graph: unknown): Promise<FlowValidation> {
 
 /**
  * List the secret-free credential references (composio + http) available to a
- * node's config credential picker via `openhuman.flows_list_connections`. No
+ * node's config credential picker via `neppy.flows_list_connections`. No
  * params; returns the `FlowConnection[]` directly (same no-wrapper shape as
  * `flows_list`).
  */
 export async function listFlowConnections(): Promise<FlowConnection[]> {
   log('listFlowConnections: request');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_list_connections',
+    method: 'neppy.flows_list_connections',
     params: {},
   });
   const connections = unwrapCliEnvelope<FlowConnection[]>(response);
@@ -735,7 +732,7 @@ export async function listFlowConnections(): Promise<FlowConnection[]> {
 
 /**
  * Import a workflow definition (native tinyflows JSON or an n8n export) via
- * `openhuman.flows_import`. The server migrates + validates it host-side and
+ * `neppy.flows_import`. The server migrates + validates it host-side and
  * returns the normalized graph plus non-fatal warnings WITHOUT persisting — the
  * caller opens the result on the canvas as a draft and Saves via the existing
  * `flows_create` gate. Rejects (throws) when the definition is structurally
@@ -748,7 +745,7 @@ export async function importFlow(
 ): Promise<FlowImport> {
   log('importFlow: request format=%s', format);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_import',
+    method: 'neppy.flows_import',
     params: { graph, format },
   });
   const result = unwrapCliEnvelope<FlowImport>(response);
@@ -758,7 +755,7 @@ export async function importFlow(
 
 // ── Catalog RPCs for the UI (Phase 5, item 16) ───────────────────────────────
 
-/** One search hit from `openhuman.flows_search_tool_catalog` (secret-free). */
+/** One search hit from `neppy.flows_search_tool_catalog` (secret-free). */
 interface ToolCatalogEntry {
   slug: string;
   toolkit: string;
@@ -771,7 +768,7 @@ interface ToolCatalogEntry {
 }
 
 /**
- * Search the live Composio tool catalog via `openhuman.flows_search_tool_catalog`.
+ * Search the live Composio tool catalog via `neppy.flows_search_tool_catalog`.
  *
  * @knipignore Documented tool catalog extension contract.
  */
@@ -781,7 +778,7 @@ export async function searchToolCatalog(
 ): Promise<ToolCatalogEntry[]> {
   log('searchToolCatalog: query=%s toolkit=%s', query, opts?.toolkit ?? '(all)');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_search_tool_catalog',
+    method: 'neppy.flows_search_tool_catalog',
     params: { query, toolkit: opts?.toolkit, limit: opts?.limit },
     timeoutMs: 60_000,
   });
@@ -797,14 +794,14 @@ interface RequiredConnection {
 
 /**
  * Compute which Composio toolkits a candidate graph needs and whether each is
- * connected, via `openhuman.flows_required_connections` — the data behind the
+ * connected, via `neppy.flows_required_connections` — the data behind the
  * "Connect <toolkit>" CTAs. Also surfaced on the workflow_proposal payload.
  *
  * @knipignore Documented tool catalog extension contract.
  */
 export async function requiredConnections(graph: unknown): Promise<RequiredConnection[]> {
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_required_connections',
+    method: 'neppy.flows_required_connections',
     params: { graph },
   });
   const result = unwrapCliEnvelope<{ required_connections: RequiredConnection[] }>(response);
@@ -829,7 +826,7 @@ export interface ApprovalManifestEntry {
   class?: string;
 }
 
-/** Result of `openhuman.flows_approval_manifest`. */
+/** Result of `neppy.flows_approval_manifest`. */
 export interface ApprovalManifest {
   entries: ApprovalManifestEntry[];
   /** Approvable trust keys the flow does not yet hold — what the card asks for. */
@@ -841,7 +838,7 @@ export interface ApprovalManifest {
 
 /**
  * Compute the approval manifest for a saved flow (by id) or candidate graph
- * via `openhuman.flows_approval_manifest` — every permission a run will
+ * via `neppy.flows_approval_manifest` — every permission a run will
  * prompt for, joined against the flow's existing per-flow trust grants. The
  * data behind the consolidated save+enable pre-authorization card.
  */
@@ -850,7 +847,7 @@ export async function getApprovalManifest(
 ): Promise<ApprovalManifest> {
   log('getApprovalManifest: %s', 'id' in target ? `id=${target.id}` : 'candidate graph');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_approval_manifest',
+    method: 'neppy.flows_approval_manifest',
     params: 'id' in target ? { id: target.id } : { graph: target.graph },
   });
   const result = unwrapCliEnvelope<ApprovalManifest>(response);
@@ -863,13 +860,13 @@ export async function getApprovalManifest(
 }
 
 /**
- * Fetch one action's full contract via `openhuman.flows_get_tool_contract`.
+ * Fetch one action's full contract via `neppy.flows_get_tool_contract`.
  *
  * @knipignore Documented tool catalog extension contract.
  */
 export async function getToolContract(slug: string): Promise<unknown> {
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_get_tool_contract',
+    method: 'neppy.flows_get_tool_contract',
     params: { slug },
     timeoutMs: 60_000,
   });
@@ -880,7 +877,7 @@ export async function getToolContract(slug: string): Promise<unknown> {
 // ── Core-managed drafts (F5) ─────────────────────────────────────────────────
 
 /**
- * Create a durable draft via `openhuman.flows_draft_create`.
+ * Create a durable draft via `neppy.flows_draft_create`.
  *
  * @knipignore Documented durable draft extension contract.
  */
@@ -892,7 +889,7 @@ export async function createDraft(params: {
 }): Promise<FlowDraft> {
   log('createDraft: request origin=%s', params.origin ?? 'canvas');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_draft_create',
+    method: 'neppy.flows_draft_create',
     params: {
       name: params.name,
       graph: params.graph,
@@ -904,20 +901,17 @@ export async function createDraft(params: {
 }
 
 /**
- * Fetch a draft by id via `openhuman.flows_draft_get`.
+ * Fetch a draft by id via `neppy.flows_draft_get`.
  *
  * @knipignore Documented durable draft extension contract.
  */
 export async function getDraft(id: string): Promise<FlowDraft> {
-  const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_draft_get',
-    params: { id },
-  });
+  const response = await callCoreRpc<unknown>({ method: 'neppy.flows_draft_get', params: { id } });
   return unwrapCliEnvelope<FlowDraft>(response);
 }
 
 /**
- * Patch a draft's name/graph/flow_id via `openhuman.flows_draft_update`.
+ * Patch a draft's name/graph/flow_id via `neppy.flows_draft_update`.
  *
  * @knipignore Documented durable draft extension contract.
  */
@@ -926,31 +920,31 @@ export async function updateDraft(
   patch: { name?: string; graph?: unknown; flowId?: string }
 ): Promise<FlowDraft> {
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_draft_update',
+    method: 'neppy.flows_draft_update',
     params: { id, name: patch.name, graph: patch.graph, flow_id: patch.flowId },
   });
   return unwrapCliEnvelope<FlowDraft>(response);
 }
 
 /**
- * List all drafts (newest-updated first) via `openhuman.flows_draft_list`.
+ * List all drafts (newest-updated first) via `neppy.flows_draft_list`.
  *
  * @knipignore Documented durable draft extension contract.
  */
 export async function listDrafts(): Promise<FlowDraft[]> {
-  const response = await callCoreRpc<unknown>({ method: 'openhuman.flows_draft_list', params: {} });
+  const response = await callCoreRpc<unknown>({ method: 'neppy.flows_draft_list', params: {} });
   const result = unwrapCliEnvelope<{ drafts: FlowDraft[] }>(response);
   return result.drafts ?? [];
 }
 
 /**
- * Delete a draft via `openhuman.flows_draft_delete`.
+ * Delete a draft via `neppy.flows_draft_delete`.
  *
  * @knipignore Documented durable draft extension contract.
  */
 export async function deleteDraft(id: string): Promise<boolean> {
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_draft_delete',
+    method: 'neppy.flows_draft_delete',
     params: { id },
   });
   const result = unwrapCliEnvelope<{ id: string; deleted: boolean }>(response);
@@ -958,7 +952,7 @@ export async function deleteDraft(id: string): Promise<boolean> {
 }
 
 /**
- * Promote a draft into a saved flow via `openhuman.flows_draft_promote` (runs
+ * Promote a draft into a saved flow via `neppy.flows_draft_promote` (runs
  * the normal create/update gates, then removes the draft). Returns the Flow.
  *
  * @knipignore Documented durable draft extension contract.
@@ -966,14 +960,14 @@ export async function deleteDraft(id: string): Promise<boolean> {
 export async function promoteDraft(id: string, requireApproval?: boolean): Promise<Flow> {
   log('promoteDraft: request id=%s', id);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_draft_promote',
+    method: 'neppy.flows_draft_promote',
     params: { id, require_approval: requireApproval },
   });
   return unwrapCliEnvelope<Flow>(response);
 }
 
 /**
- * `openhuman.flows_discover` runs the read-only Flow Scout agent, which reasons
+ * `neppy.flows_discover` runs the read-only Flow Scout agent, which reasons
  * over the user's memory/threads/connections/flows and can take up to ~600s
  * server-side (`FLOW_DISCOVER_TIMEOUT_SECS` in `src/neppy/flows/ops.rs`,
  * raised to match `FLOW_BUILD_TIMEOUT_SECS` for the same iteration cap). Give
@@ -984,7 +978,7 @@ export async function promoteDraft(id: string, requireApproval?: boolean): Promi
 const FLOW_DISCOVER_TIMEOUT_MS = 610_000;
 
 /**
- * Run the Flow Scout discovery agent via `openhuman.flows_discover` and return
+ * Run the Flow Scout discovery agent via `neppy.flows_discover` and return
  * the active (new) suggestions it produced. Read-only server-side — it never
  * creates, enables, or runs a flow. Returns the `FlowSuggestion[]` directly
  * (same no-wrapper shape as `flows_list`).
@@ -999,7 +993,7 @@ export async function discoverWorkflows(threadId?: string | null): Promise<FlowS
   const params: Record<string, unknown> = {};
   if (threadId) params.thread_id = threadId;
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_discover',
+    method: 'neppy.flows_discover',
     params,
     timeoutMs: FLOW_DISCOVER_TIMEOUT_MS,
   });
@@ -1009,14 +1003,14 @@ export async function discoverWorkflows(threadId?: string | null): Promise<FlowS
 }
 
 /**
- * List persisted workflow suggestions via `openhuman.flows_list_suggestions`.
+ * List persisted workflow suggestions via `neppy.flows_list_suggestions`.
  * `status` filters to one lifecycle state (`new` for the active cards); omit
  * for all. Returns the `FlowSuggestion[]` directly.
  */
 export async function listSuggestions(status?: SuggestionStatus): Promise<FlowSuggestion[]> {
   log('listSuggestions: request status=%s', status ?? 'all');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_list_suggestions',
+    method: 'neppy.flows_list_suggestions',
     params: status === undefined ? {} : { status },
   });
   const suggestions = unwrapCliEnvelope<FlowSuggestion[]>(response);
@@ -1079,7 +1073,7 @@ export interface BuilderTurnResult {
 const FLOW_BUILD_TIMEOUT_MS = 610_000;
 
 /**
- * Run one `workflow_builder` authoring turn via `openhuman.flows_build`. The
+ * Run one `workflow_builder` authoring turn via `neppy.flows_build`. The
  * server renders the agent's brief from `request`, runs the agent to completion,
  * and returns its proposal + final assistant text. This is the backend-agent
  * path that replaces the frontend's old "craft a delegate prompt and route it
@@ -1112,7 +1106,7 @@ export async function buildWorkflow(
   // minted server-side when omitted. Omitting it keeps the headless behaviour.
   if (threadId) params.thread_id = threadId;
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_build',
+    method: 'neppy.flows_build',
     params,
     timeoutMs: FLOW_BUILD_TIMEOUT_MS,
   });
@@ -1137,7 +1131,7 @@ export async function buildWorkflow(
 
 /**
  * Cancel the in-flight `flows_build` (Workflow Copilot) turn streaming into
- * `threadId` via `openhuman.flows_build_cancel` — the real cancellation
+ * `threadId` via `neppy.flows_build_cancel` — the real cancellation
  * behind the composer's Stop button (the RPC actually signals the running
  * `workflow_builder` agent turn to stop, unlike the shared `chatCancel`
  * primitive, which only ever tore down a spawned interactive chat turn and
@@ -1153,7 +1147,7 @@ export async function buildWorkflow(
 export async function flowsBuildCancel(threadId: string, requestId?: string): Promise<boolean> {
   log('flowsBuildCancel: request thread=%s requestId=%s', threadId, requestId ?? '<none>');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_build_cancel',
+    method: 'neppy.flows_build_cancel',
     params: { thread_id: threadId, request_id: requestId ?? null },
   });
   const result = unwrapCliEnvelope<{ cancelled: boolean }>(response);
@@ -1162,14 +1156,14 @@ export async function flowsBuildCancel(threadId: string, requestId?: string): Pr
 }
 
 /**
- * Dismiss a suggestion via `openhuman.flows_dismiss_suggestion` (the user
+ * Dismiss a suggestion via `neppy.flows_dismiss_suggestion` (the user
  * rejected the card). The row is kept server-side so a later discovery run
  * dedupes against it and won't re-surface the idea.
  */
 export async function dismissSuggestion(id: string): Promise<boolean> {
   log('dismissSuggestion: request id=%s', id);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_dismiss_suggestion',
+    method: 'neppy.flows_dismiss_suggestion',
     params: { id },
   });
   const result = unwrapCliEnvelope<{ id: string; dismissed: boolean }>(response);
@@ -1178,14 +1172,14 @@ export async function dismissSuggestion(id: string): Promise<boolean> {
 }
 
 /**
- * Mark a suggestion as built via `openhuman.flows_mark_suggestion_built` —
+ * Mark a suggestion as built via `neppy.flows_mark_suggestion_built` —
  * called after the user saves a flow authored from it, so it drops out of the
  * active cards.
  */
 export async function markSuggestionBuilt(id: string): Promise<boolean> {
   log('markSuggestionBuilt: request id=%s', id);
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.flows_mark_suggestion_built',
+    method: 'neppy.flows_mark_suggestion_built',
     params: { id },
   });
   const result = unwrapCliEnvelope<{ id: string; built: boolean }>(response);

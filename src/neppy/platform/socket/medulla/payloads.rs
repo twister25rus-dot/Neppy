@@ -10,10 +10,10 @@
 use serde::{Deserialize, Serialize};
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Down: backend / medulla → openhuman agent
+// Down: backend / medulla → neppy-core agent
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// `medulla:task_run` — start a task in an openhuman agent session.
+/// `medulla:task_run` — start a task in a neppy-core agent session.
 ///
 /// Creates (or resumes, when `session_id` is supplied) a session and sends
 /// `instruction` as the opening prompt.
@@ -25,7 +25,7 @@ pub struct TaskRun {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
     pub instruction: String,
-    /// Which openhuman agent to run the task as (defaults to the orchestrator).
+    /// Which neppy-core agent to run the task as (defaults to the orchestrator).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent_id: Option<String>,
     /// Hard wall-clock budget for the whole task, in milliseconds.
@@ -50,7 +50,7 @@ pub struct TaskAbort {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Up: openhuman agent → backend / medulla
+// Up: neppy-core agent → backend / medulla
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// `medulla:task_envelope` — one live-stream frame for a task, carrying a
@@ -309,14 +309,14 @@ pub struct CopilotOutcome {
 // Socket.IO event names
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Down events handled by openhuman.
+/// Down events handled by neppy.
 pub const EVENT_TASK_RUN: &str = "medulla:task_run";
 pub const EVENT_TASK_SEND: &str = "medulla:task_send";
 pub const EVENT_TASK_ABORT: &str = "medulla:task_abort";
 pub const EVENT_CAPABILITIES_REQUEST: &str = "medulla:capabilities_request";
 pub const EVENT_WORKFLOW_REQUEST: &str = "medulla:workflow_request";
 
-/// Up events emitted by openhuman.
+/// Up events emitted by neppy.
 pub const EVENT_TASK_ENVELOPE: &str = "medulla:task_envelope";
 pub const EVENT_TASK_RESULT: &str = "medulla:task_result";
 pub const EVENT_REGISTER_AGENTS: &str = "medulla:register_agents";

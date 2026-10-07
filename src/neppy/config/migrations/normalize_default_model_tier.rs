@@ -12,7 +12,7 @@
 //! This migration rewrites **only** those two known stale Neppy tier values
 //! to `chat-v1`. It deliberately leaves every other value untouched —
 //! `default_model` round-trips arbitrary strings (custom/BYOK model ids set via
-//! `config.update_model_settings` or `OPENHUMAN_MODEL`, plus the current
+//! `config.update_model_settings` or `NEPPY_MODEL`, plus the current
 //! `chat-v1` default), and clobbering those would break the config-mutation
 //! contract (see `config_*_e2e` round-trip tests). The only substantive change
 //! is `reasoning-v1` → `chat-v1`; `reasoning-quick-v1` → `chat-v1` is slug

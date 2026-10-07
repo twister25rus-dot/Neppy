@@ -22,7 +22,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, value: &Path) -> Self {
-        let old = std::env::var_os(key);
+        let old = crate::neppy::util::env::var_os(key);
         std::env::set_var(key, value.as_os_str());
         Self { key, old }
     }
@@ -32,7 +32,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => crate::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -361,7 +361,7 @@ async fn message_append_returns_typed_not_found_for_stale_thread() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "thread-missing";
 
     let err = message_append(AppendConversationMessageRequest {
@@ -393,7 +393,7 @@ async fn generate_title_returns_typed_not_found_for_stale_thread() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "thread-missing";
 
     let err = thread_generate_title(GenerateConversationThreadTitleRequest {
@@ -437,7 +437,7 @@ async fn generate_title_leaves_custom_title_unchanged() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "thread-custom";
     create_thread_with_title(&workspace, thread_id, "Already named").await;
     let dir = crate::neppy::config::Config::load_or_init()
@@ -478,7 +478,7 @@ async fn generate_title_returns_existing_title_when_no_user_message_exists() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "thread-no-user";
     create_thread_with_title(&workspace, thread_id, "Chat Jan 1 1:00 AM").await;
 
@@ -501,7 +501,7 @@ async fn generate_title_falls_back_to_first_user_message_when_assistant_missing(
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "thread-fallback";
     create_thread_with_title(&workspace, thread_id, "Chat Jan 1 1:00 AM").await;
     let dir = crate::neppy::config::Config::load_or_init()
@@ -542,7 +542,7 @@ async fn thread_delete_removes_persisted_turn_state_snapshot() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "thread-delete";
     create_thread_with_title(&workspace, thread_id, "Chat Jan 1 1:00 AM").await;
     let dir = crate::neppy::config::Config::load_or_init()
@@ -593,7 +593,7 @@ async fn threads_purge_removes_valid_and_corrupted_turn_state_files() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     create_thread_with_title(&workspace, "thread-a", "Chat Jan 1 1:00 AM").await;
     create_thread_with_title(&workspace, "thread-b", "Chat Jan 1 1:01 AM").await;
     let dir = crate::neppy::config::Config::load_or_init()
@@ -653,7 +653,7 @@ async fn turn_state_clear_reports_false_when_snapshot_is_absent() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
 
     let outcome = turn_state_clear(ClearTurnStateRequest {
         thread_id: "missing-thread".into(),
@@ -672,7 +672,7 @@ async fn thread_update_title_rejects_empty_title() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
 
     let err = thread_update_title(crate::neppy::memory::UpdateConversationThreadTitleRequest {
         thread_id: "t-1".to_string(),
@@ -693,7 +693,7 @@ async fn thread_update_title_rejects_whitespace_only_title() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
 
     let err = thread_update_title(crate::neppy::memory::UpdateConversationThreadTitleRequest {
         thread_id: "t-1".to_string(),
@@ -714,7 +714,7 @@ async fn thread_update_title_persists_new_title() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
 
     let thread_id = "t-title";
     create_thread_with_title(&workspace, thread_id, "Original title").await;
@@ -740,7 +740,7 @@ async fn thread_update_title_returns_error_for_missing_thread() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
 
     let err = thread_update_title(crate::neppy::memory::UpdateConversationThreadTitleRequest {
         thread_id: "nonexistent-thread".to_string(),
@@ -846,7 +846,7 @@ async fn beginning_a_variant_tags_the_existing_answer() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "t-regen";
     create_thread_with_title(&workspace, thread_id, "Regenerate").await;
     append(thread_id, "u1", "user", "why?", Value::Null).await;
@@ -894,7 +894,7 @@ async fn beginning_a_variant_twice_changes_nothing_the_second_time() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "t-regen-twice";
     create_thread_with_title(&workspace, thread_id, "Regenerate").await;
     append(thread_id, "u1", "user", "why?", Value::Null).await;
@@ -927,7 +927,7 @@ async fn beginning_a_variant_clears_an_earlier_choice() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "t-regen-choice";
     create_thread_with_title(&workspace, thread_id, "Regenerate").await;
     append(thread_id, "u1", "user", "why?", Value::Null).await;
@@ -978,7 +978,7 @@ async fn beginning_a_variant_on_something_that_is_not_a_question_fails() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     let thread_id = "t-regen-bad";
     create_thread_with_title(&workspace, thread_id, "Regenerate").await;
     append(thread_id, "u1", "user", "why?", Value::Null).await;
@@ -1017,7 +1017,7 @@ async fn new_and_legacy_threads_default_to_chat_mode() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
 
     let created = thread_from(
         thread_create_new(CreateConversationThreadRequest {
@@ -1055,7 +1055,7 @@ async fn set_mode_persists_is_readable_on_list_and_keeps_labels_clean() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     create_thread_with_title(&workspace, "t1", "Work").await;
 
     let result = thread_set_mode(SetThreadModeRequest {
@@ -1135,7 +1135,7 @@ async fn set_mode_rejects_unknown_modes_and_unknown_threads() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     create_thread_with_title(&workspace, "t1", "Work").await;
 
     let bad = thread_set_mode(SetThreadModeRequest {
@@ -1163,7 +1163,7 @@ async fn update_labels_cannot_flip_the_mode() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     create_thread_with_title(&workspace, "t1", "Work").await;
     thread_set_mode(SetThreadModeRequest {
         thread_id: "t1".into(),
@@ -1211,7 +1211,7 @@ async fn origin_label_is_hidden_kept_and_unforgeable() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     create_thread_with_title(&workspace, "h1", "Pet").await;
     create_thread_with_title(&workspace, "u1", "User").await;
     let dir = mode_test_workspace_dir().await;
@@ -1252,7 +1252,7 @@ async fn mode_change_publishes_a_web_channel_event_without_content() {
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     let workspace = tempfile::tempdir().expect("workspace");
-    let _guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", workspace.path());
     create_thread_with_title(&workspace, "t-evt", "Work").await;
 
     let mut rx = crate::neppy::web_chat::subscribe_web_channel_events();

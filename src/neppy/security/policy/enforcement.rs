@@ -27,7 +27,7 @@ impl SecurityPolicy {
     pub fn enforce_write_tier(&self, operation_name: &str) -> Result<(), String> {
         if !self.can_act() {
             log::warn!(
-                "[openhuman:policy] Operation '{}' blocked: read-only mode",
+                "[neppy:policy] Operation '{}' blocked: read-only mode",
                 operation_name
             );
             return Err(format!(
@@ -54,7 +54,7 @@ impl SecurityPolicy {
 
                 if !self.record_action() {
                     log::warn!(
-                        "[openhuman:policy] Operation '{}' blocked: rate limit exceeded",
+                        "[neppy:policy] Operation '{}' blocked: rate limit exceeded",
                         operation_name
                     );
                     return Err(format!(
@@ -64,7 +64,7 @@ impl SecurityPolicy {
                 }
 
                 log::debug!(
-                    "[openhuman:policy] Operation '{}' allowed (actions: {}/{})",
+                    "[neppy:policy] Operation '{}' allowed (actions: {}/{})",
                     operation_name,
                     self.tracker.count(),
                     self.max_actions_per_hour
@@ -93,7 +93,7 @@ impl SecurityPolicy {
         action_dir: &Path,
     ) -> Self {
         log::info!(
-            "[openhuman:policy] SecurityPolicy created: autonomy={:?}, workspace_only={}, allowed_cmds={}, max_actions/hr={}, auto_approve_all={}",
+            "[neppy:policy] SecurityPolicy created: autonomy={:?}, workspace_only={}, allowed_cmds={}, max_actions/hr={}, auto_approve_all={}",
             autonomy_config.level,
             autonomy_config.workspace_only,
             autonomy_config.allowed_commands.len(),

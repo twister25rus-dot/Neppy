@@ -31,20 +31,20 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -53,7 +53,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -135,17 +135,17 @@ fn setup(api_url: &str) -> Harness {
     let root = tmp.path().join("openhuman");
     write_min_config(&root, api_url);
     let guards = vec![
-        EnvGuard::set_to_path("OPENHUMAN_WORKSPACE", &root),
+        EnvGuard::set_to_path("NEPPY_WORKSPACE", &root),
         EnvGuard::set_to_path("HOME", tmp.path()),
         EnvGuard::unset("BACKEND_URL"),
         EnvGuard::unset("VITE_BACKEND_URL"),
-        EnvGuard::unset("OPENHUMAN_API_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_RPC_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_PORT"),
-        EnvGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvGuard::unset("NEPPY_API_URL"),
+        EnvGuard::unset("NEPPY_CORE_RPC_URL"),
+        EnvGuard::unset("NEPPY_CORE_PORT"),
+        EnvGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
 
     Harness {
@@ -159,19 +159,19 @@ fn setup_default_paths(api_url: &str) -> Harness {
     let tmp = tempdir();
     let guards = vec![
         EnvGuard::set_to_path("HOME", tmp.path()),
-        EnvGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvGuard::unset("NEPPY_WORKSPACE"),
         EnvGuard::unset("BACKEND_URL"),
         EnvGuard::unset("VITE_BACKEND_URL"),
-        EnvGuard::unset("OPENHUMAN_API_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_RPC_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_PORT"),
-        EnvGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvGuard::unset("NEPPY_API_URL"),
+        EnvGuard::unset("NEPPY_CORE_RPC_URL"),
+        EnvGuard::unset("NEPPY_CORE_PORT"),
+        EnvGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
     let default_root = neppy_core::neppy::config::default_root_neppy_dir()
-        .expect("default openhuman root");
+        .expect("default neppy root");
     let root = neppy_core::neppy::config::pre_login_user_dir(&default_root);
     write_min_config(&root, api_url);
 
@@ -536,7 +536,7 @@ async fn snapshot_clears_pending_backend_validation_after_successful_revalidatio
     let harness = setup(&api_url);
     let config = harness.config().await;
     let active_user_root = neppy_core::neppy::config::default_root_neppy_dir()
-        .expect("default openhuman root");
+        .expect("default neppy root");
 
     let mut metadata = HashMap::new();
     metadata.insert("user_id".to_string(), "pending-user".to_string());
@@ -711,7 +711,7 @@ async fn snapshot_activates_user_dir_after_pending_revalidation_without_initial_
     let harness = setup_default_paths(&api_url);
     let config = harness.config().await;
     let active_user_root = neppy_core::neppy::config::default_root_neppy_dir()
-        .expect("default openhuman root");
+        .expect("default neppy root");
     assert_eq!(
         neppy_core::neppy::config::read_active_user_id(&active_user_root),
         None,
@@ -835,7 +835,7 @@ async fn snapshot_errors_without_clearing_pending_session_when_active_user_marke
     let harness = setup_default_paths(&api_url);
     let config = harness.config().await;
     let active_user_root = neppy_core::neppy::config::default_root_neppy_dir()
-        .expect("default openhuman root");
+        .expect("default neppy root");
     assert_eq!(
         neppy_core::neppy::config::read_active_user_id(&active_user_root),
         None,
@@ -953,7 +953,7 @@ async fn snapshot_preserves_default_active_user_when_env_scoped_revalidation_is_
     let harness = setup(&api_url);
     let config = harness.config().await;
     let active_user_root = neppy_core::neppy::config::default_root_neppy_dir()
-        .expect("default openhuman root");
+        .expect("default neppy root");
     neppy_core::neppy::config::write_active_user_id(&active_user_root, "desktop-user")
         .expect("seed default active user");
 
@@ -1076,7 +1076,7 @@ async fn snapshot_clears_supplied_user_pending_session_after_revalidation_reject
     let config = harness.config().await;
     let user_id = "callback-user";
     let active_user_root = neppy_core::neppy::config::default_root_neppy_dir()
-        .expect("default openhuman root");
+        .expect("default neppy root");
     neppy_core::neppy::config::write_active_user_id(&active_user_root, user_id)
         .expect("seed active user marker for supplied pending session");
 

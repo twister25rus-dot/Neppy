@@ -16,7 +16,7 @@ use std::sync::Arc;
 /// stripped on purpose: `web_fetch`/`curl` treat `"*"` as "open to all public
 /// sites", whereas the browser (a real Chromium with JS, cookies, and
 /// logged-in sessions) must NOT inherit blanket access from a fetch-side
-/// toggle. Browser allow-all stays gated by `OPENHUMAN_BROWSER_ALLOW_ALL`
+/// toggle. Browser allow-all stays gated by `NEPPY_BROWSER_ALLOW_ALL`
 /// (`allow_all_browser_domains()`), and the tool itself stays behind
 /// `browser.enabled`. Net effect is fail-safe: unifying can only ever narrow
 /// the browser's reach, never widen it.
@@ -242,7 +242,7 @@ pub fn all_tools_with_runtime(
         // subagent and (by default) waits on its result like a function call;
         // `await_workflow` re-attaches to a run that outlived its inline wait.
         // Both wrap `skill_runtime::spawn_workflow_run_background` +
-        // `await_run_outcome` — the same spawn path `openhuman.skills_run`
+        // `await_run_outcome` — the same spawn path `neppy.skills_run`
         // JSON-RPC uses, so RPC and tool callers stay in sync.
         #[cfg(feature = "skills")]
         Box::new(
@@ -301,6 +301,12 @@ pub fn all_tools_with_runtime(
             config.clone(),
         )),
         Box::new(crate::neppy::pet::tools::PetNoteTool::new(config.clone())),
+        // Debug mode tools. Each acts on the debug task of the current
+        // Debug-mode turn and refuses elsewhere; only the `debug_agent`
+        // definition names them. No rollback tool by design.
+        Box::new(DebugCheckpointTool),
+        Box::new(DebugValidateCandidateTool),
+        Box::new(DebugReportTool),
         // Agent-first Workflow authoring (issue B4): validates a candidate
         // graph and returns a proposal summary — never creates/enables a
         // flow itself. Only the chat UI's WorkflowProposalCard "Save &
@@ -1132,7 +1138,7 @@ pub fn all_tools_with_runtime(
     }
 
     // Coding-harness `lsp` tool (issue #1205) — capability-gated by the
-    // OPENHUMAN_LSP_ENABLED env var. The backend (real language-server
+    // NEPPY_LSP_ENABLED env var. The backend (real language-server
     // bridge) is a follow-up; today the gate just controls visibility
     // so agents don't see a method that always errors.
     if crate::neppy::tools::implementations::lsp_capability_enabled() {
@@ -1141,7 +1147,7 @@ pub fn all_tools_with_runtime(
         ));
         tracing::debug!("[lsp] capability gate on — LspTool registered");
     } else {
-        tracing::debug!("[lsp] capability gate off (set OPENHUMAN_LSP_ENABLED=1 to register)");
+        tracing::debug!("[lsp] capability gate off (set NEPPY_LSP_ENABLED=1 to register)");
     }
 
     // Two INDEPENDENT post-filters over the assembled list (kernel.md §3.7's
@@ -1358,6 +1364,7 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
     // Harness families realigned out of Platform.
     if name.starts_with("artifact_")
         || name.starts_with("learning_")
+        || name.starts_with("debug_")
         || name.contains("subagent")
         || matches!(
             name,

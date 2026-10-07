@@ -1,9 +1,9 @@
-//! Logging for `openhuman run` (and other CLI paths that need stderr output).
+//! Logging for `neppy run` (and other CLI paths that need stderr output).
 //!
 //! Without initializing a subscriber, `log::` and `tracing::` macros are no-ops.
 //!
 //! Two entry points share the same formatter and `EnvFilter`:
-//!   * [`init_for_cli_run`] — stderr only, used by `openhuman run` / CLI
+//!   * [`init_for_cli_run`] — stderr only, used by `neppy run` / CLI
 //!     subcommands.
 //!   * [`init_for_embedded`] — stderr + a daily-rotated file under
 //!     `<data_dir>/logs/neppy-YYYY-MM-DD.log`, used by the Tauri shell
@@ -195,7 +195,7 @@ fn short_target(target: &str) -> &str {
 ///
 /// Used to filter logs to specific parts of the codebase.
 fn parse_log_file_constraints() -> Vec<String> {
-    std::env::var("OPENHUMAN_LOG_FILE_CONSTRAINTS")
+    crate::neppy::util::env::var("NEPPY_LOG_FILE_CONSTRAINTS")
         .ok()
         .map(|raw| {
             raw.split(',')
@@ -237,10 +237,10 @@ pub fn init_for_cli_run(verbose: bool, default_scope: CliLogDefault) {
         let filter = build_env_filter(verbose, default_scope);
 
         // Color resolution logic.
-        let use_color = if std::env::var_os("NO_COLOR").is_some() {
+        let use_color = if crate::neppy::util::env::var_os("NO_COLOR").is_some() {
             false
-        } else if std::env::var_os("FORCE_COLOR").is_some()
-            || std::env::var_os("CLICOLOR_FORCE").is_some()
+        } else if crate::neppy::util::env::var_os("FORCE_COLOR").is_some()
+            || crate::neppy::util::env::var_os("CLICOLOR_FORCE").is_some()
         {
             true
         } else {
@@ -368,7 +368,9 @@ pub fn init_for_embedded(data_dir: &Path, verbose: bool) {
         // only when stderr is a real terminal.
         let stderr_constraints = parse_log_file_constraints();
         let stderr_layer = tracing_subscriber::fmt::layer()
-            .with_ansi(io::stderr().is_terminal() && std::env::var_os("NO_COLOR").is_none())
+            .with_ansi(
+                io::stderr().is_terminal() && crate::neppy::util::env::var_os("NO_COLOR").is_none(),
+            )
             .event_format(CleanCliFormat)
             .with_filter(tracing_subscriber::filter::filter_fn(move |meta| {
                 event_matches_file_constraints(meta, &stderr_constraints)
@@ -418,7 +420,7 @@ pub fn init_for_embedded(data_dir: &Path, verbose: bool) {
     });
 }
 
-/// Initialize logging for the terminal chat UI (`openhuman tui` / `chat`).
+/// Initialize logging for the terminal chat UI (`neppy-core tui` / `chat`).
 ///
 /// **File-only, never stderr.** The TUI owns the whole terminal (alternate
 /// screen + raw mode); a single `tracing`/`log` line written to stdout or
@@ -593,7 +595,7 @@ pub fn shutdown_file_guard() -> bool {
 }
 
 fn seed_rust_log(verbose: bool, default_scope: CliLogDefault) {
-    if std::env::var_os("RUST_LOG").is_some() {
+    if crate::neppy::util::env::var_os("RUST_LOG").is_some() {
         return;
     }
     let default = match default_scope {
@@ -653,7 +655,7 @@ where
 mod tests {
     use super::*;
 
-    /// Serialize tests that mutate `RUST_LOG` / `OPENHUMAN_LOG_FILE_CONSTRAINTS` —
+    /// Serialize tests that mutate `RUST_LOG` / `NEPPY_LOG_FILE_CONSTRAINTS` —
     /// Cargo runs unit tests in parallel threads in the same process, so
     /// concurrent env-var writes would race.
     static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -669,12 +671,12 @@ mod tests {
 
     fn with_clean_rust_log<R>(f: impl FnOnce() -> R) -> R {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let prior = std::env::var("RUST_LOG").ok();
-        std::env::remove_var("RUST_LOG");
+        let prior = crate::neppy::util::env::var("RUST_LOG").ok();
+        crate::neppy::util::env::remove_var("RUST_LOG");
         let result = f();
         match prior {
             Some(v) => std::env::set_var("RUST_LOG", v),
-            None => std::env::remove_var("RUST_LOG"),
+            None => crate::neppy::util::env::remove_var("RUST_LOG"),
         }
         result
     }
@@ -699,7 +701,7 @@ mod tests {
     fn seed_rust_log_global_uses_info_by_default() {
         with_clean_rust_log(|| {
             seed_rust_log(false, CliLogDefault::Global);
-            assert_eq!(std::env::var("RUST_LOG").unwrap(), "info");
+            assert_eq!(crate::neppy::util::env::var("RUST_LOG").unwrap(), "info");
         });
     }
 
@@ -707,21 +709,21 @@ mod tests {
     fn seed_rust_log_global_uses_debug_when_verbose() {
         with_clean_rust_log(|| {
             seed_rust_log(true, CliLogDefault::Global);
-            assert_eq!(std::env::var("RUST_LOG").unwrap(), "debug");
+            assert_eq!(crate::neppy::util::env::var("RUST_LOG").unwrap(), "debug");
         });
     }
 
     #[test]
     fn seed_rust_log_respects_existing_value() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let prior = std::env::var("RUST_LOG").ok();
+        let prior = crate::neppy::util::env::var("RUST_LOG").ok();
         std::env::set_var("RUST_LOG", "warn");
         seed_rust_log(true, CliLogDefault::Global);
         // Caller's existing setting must not be clobbered.
-        assert_eq!(std::env::var("RUST_LOG").unwrap(), "warn");
+        assert_eq!(crate::neppy::util::env::var("RUST_LOG").unwrap(), "warn");
         match prior {
             Some(v) => std::env::set_var("RUST_LOG", v),
-            None => std::env::remove_var("RUST_LOG"),
+            None => crate::neppy::util::env::remove_var("RUST_LOG"),
         }
     }
 
@@ -735,17 +737,17 @@ mod tests {
     #[test]
     fn parse_log_file_constraints_handles_csv_and_whitespace() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let prior = std::env::var("OPENHUMAN_LOG_FILE_CONSTRAINTS").ok();
-        std::env::set_var("OPENHUMAN_LOG_FILE_CONSTRAINTS", "rpc, , agent ,memory");
+        let prior = crate::neppy::util::env::var("NEPPY_LOG_FILE_CONSTRAINTS").ok();
+        std::env::set_var("NEPPY_LOG_FILE_CONSTRAINTS", "rpc, , agent ,memory");
         let parsed = parse_log_file_constraints();
         assert_eq!(parsed, vec!["rpc", "agent", "memory"]);
 
-        std::env::remove_var("OPENHUMAN_LOG_FILE_CONSTRAINTS");
+        crate::neppy::util::env::remove_var("NEPPY_LOG_FILE_CONSTRAINTS");
         assert!(parse_log_file_constraints().is_empty());
 
         match prior {
-            Some(v) => std::env::set_var("OPENHUMAN_LOG_FILE_CONSTRAINTS", v),
-            None => std::env::remove_var("OPENHUMAN_LOG_FILE_CONSTRAINTS"),
+            Some(v) => std::env::set_var("NEPPY_LOG_FILE_CONSTRAINTS", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_LOG_FILE_CONSTRAINTS"),
         }
     }
 

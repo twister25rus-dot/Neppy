@@ -34,7 +34,7 @@ describe('LocalTransport', () => {
     const fetchMock = mockFetchOnce({ jsonrpc: '2.0', id: 1, result: 'ok' });
     const t = new LocalTransport(getUrl, getToken('tok-xyz'));
 
-    await t.call('openhuman.ping', { a: 1 });
+    await t.call('neppy.ping', { a: 1 });
 
     expect(fetchMock).toHaveBeenCalledWith(URL, expect.anything());
     const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
@@ -46,7 +46,7 @@ describe('LocalTransport', () => {
     const fetchMock = mockFetchOnce({ jsonrpc: '2.0', id: 1, result: 'ok' });
     const t = new LocalTransport(getUrl, getToken(null));
 
-    await t.call('openhuman.ping', {});
+    await t.call('neppy.ping', {});
 
     const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
     expect(headers).not.toHaveProperty('Authorization');
@@ -55,19 +55,19 @@ describe('LocalTransport', () => {
   it('throws on HTTP failure', async () => {
     mockFetchOnce('upstream timeout', { ok: false, status: 504, statusText: 'Gateway Timeout' });
     const t = new LocalTransport(getUrl, getToken());
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow(/HTTP 504: upstream timeout/);
+    await expect(t.call('neppy.ping', {})).rejects.toThrow(/HTTP 504: upstream timeout/);
   });
 
   it('surfaces JSON-RPC error.message', async () => {
     mockFetchOnce({ jsonrpc: '2.0', id: 1, error: { code: 1, message: 'local rpc broke' } });
     const t = new LocalTransport(getUrl, getToken());
-    await expect(t.call('openhuman.fail', {})).rejects.toThrow('local rpc broke');
+    await expect(t.call('neppy.fail', {})).rejects.toThrow('local rpc broke');
   });
 
   it('throws when result key is missing', async () => {
     mockFetchOnce({ jsonrpc: '2.0', id: 1 });
     const t = new LocalTransport(getUrl, getToken());
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow('response missing result');
+    await expect(t.call('neppy.ping', {})).rejects.toThrow('response missing result');
   });
 
   it('merges a caller-supplied abort signal with the internal timeout', async () => {
@@ -84,7 +84,7 @@ describe('LocalTransport', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const t = new LocalTransport(getUrl, getToken(), 30);
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow(/timed out after 30ms/);
+    await expect(t.call('neppy.ping', {})).rejects.toThrow(/timed out after 30ms/);
   });
 
   it('a per-call timeoutMs replaces the constructor default for that call', async () => {
@@ -103,7 +103,7 @@ describe('LocalTransport', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const t = new LocalTransport(getUrl, getToken(), 30_000);
-    await expect(t.call('openhuman.ping', {}, { timeoutMs: 30 })).rejects.toThrow(
+    await expect(t.call('neppy.ping', {}, { timeoutMs: 30 })).rejects.toThrow(
       /timed out after 30ms/
     );
   });
@@ -115,7 +115,7 @@ describe('LocalTransport', () => {
 
     mockFetchOnce({ jsonrpc: '2.0', id: 2, result: 'v' });
     const yielded: string[] = [];
-    for await (const v of t.stream<string>('openhuman.value', {})) yielded.push(v);
+    for await (const v of t.stream<string>('neppy.value', {})) yielded.push(v);
     expect(yielded).toEqual(['v']);
 
     await expect(t.close()).resolves.toBeUndefined();

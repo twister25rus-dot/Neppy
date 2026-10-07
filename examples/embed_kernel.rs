@@ -58,7 +58,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Enabled: memory was opted in above.
     match runtime
-        .invoke("openhuman.memory_list_namespaces", serde_json::json!({}))
+        .invoke("neppy.memory_list_namespaces", serde_json::json!({}))
         .await
     {
         Ok(v) => println!("memory_list_namespaces -> {v}"),
@@ -70,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
     // contract: a registered-but-failing method teaches a model the capability
     // exists and makes it retry.
     match runtime
-        .invoke("openhuman.agent_list_definitions", serde_json::json!({}))
+        .invoke("neppy.agent_list_definitions", serde_json::json!({}))
         .await
     {
         Ok(v) => println!("agent_list_definitions -> unexpectedly OK: {v}"),

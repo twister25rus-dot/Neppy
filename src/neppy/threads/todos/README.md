@@ -12,7 +12,7 @@ Neppy keeps this module to preserve app-specific integration:
 - `ops.rs` maps `BoardLocation` onto TinyAgents stores, preserves the optional
   `threadId` snapshot shape used by scratch callers, and emits
   `AgentProgress::TaskBoardUpdated`.
-- `schemas.rs` preserves the `openhuman.todos_*` JSON-RPC API.
+- `schemas.rs` preserves the `neppy.todos_*` JSON-RPC API.
 - `tools.rs` preserves the granular `todo_*` agent tools.
 - `runs.rs` binds the TinyAgents autonomous-run ledger
   (`tinyagents::graph::todos::runs`) to `BoardLocation` addressing, renders its

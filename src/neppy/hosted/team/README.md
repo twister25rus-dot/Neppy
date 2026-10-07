@@ -32,7 +32,7 @@ Internal helpers in `ops.rs` (`require_token`, `normalize_id`, `build_api_path`,
 
 ## RPC / controllers
 
-Namespace `team`. Registered controllers (RPC method `openhuman.team_<function>`):
+Namespace `team`. Registered controllers (RPC method `neppy.team_<function>`):
 
 | Method | Backend call | Required inputs | Optional |
 | --- | --- | --- | --- |

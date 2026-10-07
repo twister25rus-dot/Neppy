@@ -19,7 +19,7 @@
 #   scripts/memory-tree-progress.sh --once            # one snapshot, then exit
 #
 # Env:
-#   OPENHUMAN_WORKSPACE  — workspace dir (default: derive from active_user.toml)
+#   NEPPY_WORKSPACE  — workspace dir (default: derive from active_user.toml)
 #   CORE_BIN             — path to neppy-core (default: target/debug/neppy-core)
 #   CORE_LOG             — core log to scrape for round-trip times (default: /tmp/oh-core.log)
 #
@@ -53,23 +53,23 @@ done
 
 # ── Resolve workspace + DB path ─────────────────────────────────────────────
 
-if [ -z "${OPENHUMAN_WORKSPACE:-}" ]; then
+if [ -z "${NEPPY_WORKSPACE:-}" ]; then
     DEFAULT_DIR="$HOME/.neppy-staging"
     [ -d "$DEFAULT_DIR" ] || DEFAULT_DIR="$HOME/.neppy"
     ACTIVE_USER_FILE="$DEFAULT_DIR/active_user.toml"
     if [ -f "$ACTIVE_USER_FILE" ]; then
         USER_ID=$(awk -F'"' '/user_id/ {print $2; exit}' "$ACTIVE_USER_FILE")
-        OPENHUMAN_WORKSPACE="$DEFAULT_DIR/users/$USER_ID/workspace"
+        NEPPY_WORKSPACE="$DEFAULT_DIR/users/$USER_ID/workspace"
     fi
 fi
-DB="${OPENHUMAN_WORKSPACE:-}/memory_tree/chunks.db"
+DB="${NEPPY_WORKSPACE:-}/memory_tree/chunks.db"
 if [ ! -f "$DB" ]; then
     echo "memory_tree DB not found at: $DB" >&2
-    echo "Set OPENHUMAN_WORKSPACE to override." >&2
+    echo "Set NEPPY_WORKSPACE to override." >&2
     exit 1
 fi
 
-echo "workspace: $OPENHUMAN_WORKSPACE"
+echo "workspace: $NEPPY_WORKSPACE"
 echo "db:        $DB"
 echo "log:       $CORE_LOG"
 echo
@@ -85,7 +85,7 @@ if [ "$DO_FLUSH" = 1 ]; then
     # Capture the full output so we can echo it on failure (the call's
     # exit code is what we gate on; the grep below is just for the
     # success-path summary).
-    flush_out="$("$CORE_BIN" call --method openhuman.memory_tree_flush_now --params '{}' 2>&1)" || {
+    flush_out="$("$CORE_BIN" call --method neppy.memory_tree_flush_now --params '{}' 2>&1)" || {
         echo "$flush_out" >&2
         echo "flush_now failed; aborting monitor start." >&2
         exit 1

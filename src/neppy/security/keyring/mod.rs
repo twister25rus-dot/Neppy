@@ -15,7 +15,7 @@
 //!
 //! The backend is chosen **once** at first use, in this priority order:
 //!
-//! 1. `OPENHUMAN_KEYRING_BACKEND` env var: `"os"` | `"file"` | `"mock"`.
+//! 1. `NEPPY_KEYRING_BACKEND` env var: `"os"` | `"file"` | `"mock"`.
 //! 2. `cfg!(test)` → `file`.
 //! 3. Otherwise → `os`.
 //!

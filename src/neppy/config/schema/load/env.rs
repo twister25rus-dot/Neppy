@@ -5,19 +5,19 @@
 ///
 /// Production code uses [`ProcessEnv`], which delegates to `std::env`.
 pub(crate) trait EnvLookup {
-    /// Equivalent to `std::env::var(key).ok()`.
+    /// Equivalent to `crate::neppy::util::env::var(key).ok()`.
     fn get(&self, key: &str) -> Option<String>;
 
-    /// Equivalent to `std::env::var_os(key).is_some()`. Used to distinguish
+    /// Equivalent to `crate::neppy::util::env::var_os(key).is_some()`. Used to distinguish
     /// "variable not present" from "variable set to empty" where it matters
-    /// (see `OPENHUMAN_CONTEXT_TOOL_RESULT_BUDGET_BYTES` below).
+    /// (see `NEPPY_CONTEXT_TOOL_RESULT_BUDGET_BYTES` below).
     fn contains(&self, key: &str) -> bool {
         self.get(key).is_some()
     }
 
     /// Looks up the first non-`None` value across `keys`, preserving the
     /// precedence used by the manual `or_else` chains throughout this
-    /// module (e.g. `OPENHUMAN_FOO` wins over the bare `FOO` alias).
+    /// module (e.g. `NEPPY_FOO` wins over the bare `FOO` alias).
     fn get_any(&self, keys: &[&str]) -> Option<String> {
         keys.iter().find_map(|k| self.get(k))
     }
@@ -28,21 +28,21 @@ pub(crate) struct ProcessEnv;
 
 impl EnvLookup for ProcessEnv {
     fn get(&self, key: &str) -> Option<String> {
-        std::env::var(key).ok()
+        crate::neppy::util::env::var(key).ok()
     }
 
     fn contains(&self, key: &str) -> bool {
-        std::env::var_os(key).is_some()
+        crate::neppy::util::env::var_os(key).is_some()
     }
 }
 
 /// Process env lookup that preserves every override except
-/// `OPENHUMAN_WORKSPACE`.
+/// `NEPPY_WORKSPACE`.
 pub(crate) struct ProcessEnvWithoutWorkspace;
 
 impl EnvLookup for ProcessEnvWithoutWorkspace {
     fn get(&self, key: &str) -> Option<String> {
-        if key == "OPENHUMAN_WORKSPACE" {
+        if key == "NEPPY_WORKSPACE" {
             None
         } else {
             ProcessEnv.get(key)
@@ -50,7 +50,7 @@ impl EnvLookup for ProcessEnvWithoutWorkspace {
     }
 
     fn contains(&self, key: &str) -> bool {
-        if key == "OPENHUMAN_WORKSPACE" {
+        if key == "NEPPY_WORKSPACE" {
             false
         } else {
             ProcessEnv.contains(key)

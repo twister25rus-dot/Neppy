@@ -173,7 +173,7 @@ export default function RewardsCommunityTab({
     setConnectState('connecting');
     try {
       const response = await callCoreRpc<{ result: { oauthUrl?: string } }>({
-        method: 'openhuman.auth.oauth_connect',
+        method: 'neppy.auth.oauth_connect',
         params: { provider: 'discord' },
       });
       const oauthUrl = response.result?.oauthUrl;

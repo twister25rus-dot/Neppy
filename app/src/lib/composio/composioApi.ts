@@ -3,7 +3,7 @@
  * to `src/neppy/integrations/composio/*` on the Rust side.
  *
  * Every function here calls the core sidecar via JSON-RPC. The core
- * in turn proxies to the openhuman backend's
+ * in turn proxies to the neppy backend's
  * `/agent-integrations/composio/*` routes, so the frontend never talks
  * to Composio directly and never handles the API key.
  *
@@ -88,7 +88,7 @@ export async function listToolkits(
   options?: ComposioReadOptions
 ): Promise<ComposioToolkitsResponse> {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_list_toolkits',
+    method: 'neppy.composio_list_toolkits',
     // Timeout is opt-in: the Connections loading skeleton passes the shorter
     // budget so the hardcoded fallback surfaces fast (#3933); other callers
     // inherit the global default.
@@ -109,9 +109,7 @@ export async function listToolkits(
  * connections cause.
  */
 export async function listAgentReadyToolkits(): Promise<ComposioAgentReadyToolkitsResponse> {
-  const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_list_agent_ready_toolkits',
-  });
+  const raw = await callCoreRpc<unknown>({ method: 'neppy.composio_list_agent_ready_toolkits' });
   return unwrapCliEnvelope<ComposioAgentReadyToolkitsResponse>(raw);
 }
 
@@ -119,7 +117,7 @@ export async function listConnections(
   options?: ComposioReadOptions
 ): Promise<ComposioConnectionsResponse> {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_list_connections',
+    method: 'neppy.composio_list_connections',
     // Timeout is opt-in (see `listToolkits`): only the Connections loading
     // path passes the shorter budget. Shared callers (repo/issue pickers,
     // add-memory-source, connect-modal poll) inherit the global default so a
@@ -131,7 +129,7 @@ export async function listConnections(
 
 export async function listTools(toolkits?: string[]): Promise<ComposioToolsResponse> {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_list_tools',
+    method: 'neppy.composio_list_tools',
     params: toolkits && toolkits.length > 0 ? { toolkits } : {},
   });
   return unwrapCliEnvelope<ComposioToolsResponse>(raw);
@@ -152,7 +150,7 @@ export async function authorize(
   extraParams?: Record<string, string>
 ): Promise<ComposioAuthorizeResponse> {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_authorize',
+    method: 'neppy.composio_authorize',
     params: extraParams ? { toolkit, extra_params: extraParams } : { toolkit },
   });
   return unwrapCliEnvelope<ComposioAuthorizeResponse>(raw);
@@ -170,10 +168,7 @@ export async function deleteConnection(
   if (options?.clearMemory) {
     params.clear_memory = true;
   }
-  const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_delete_connection',
-    params,
-  });
+  const raw = await callCoreRpc<unknown>({ method: 'neppy.composio_delete_connection', params });
   return unwrapCliEnvelope<ComposioDeleteResponse>(raw);
 }
 
@@ -183,14 +178,14 @@ export async function deleteConnection(
  * `{ read: true, write: true, admin: false }` when nothing is stored.
  */
 export async function getUserScopes(toolkit: string): Promise<ComposioUserScopePref> {
-  console.debug('[composio][scopes] → openhuman.composio_get_user_scopes toolkit=%s', toolkit);
+  console.debug('[composio][scopes] → neppy.composio_get_user_scopes toolkit=%s', toolkit);
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_get_user_scopes',
+    method: 'neppy.composio_get_user_scopes',
     params: { toolkit },
   });
   const pref = unwrapCliEnvelope<ComposioUserScopePref>(raw);
   console.debug(
-    '[composio][scopes] ← openhuman.composio_get_user_scopes toolkit=%s pref=%o',
+    '[composio][scopes] ← neppy.composio_get_user_scopes toolkit=%s pref=%o',
     toolkit,
     pref
   );
@@ -207,17 +202,17 @@ export async function setUserScopes(
   pref: ComposioUserScopePref
 ): Promise<ComposioUserScopePref> {
   console.debug(
-    '[composio][scopes] → openhuman.composio_set_user_scopes toolkit=%s pref=%o',
+    '[composio][scopes] → neppy.composio_set_user_scopes toolkit=%s pref=%o',
     toolkit,
     pref
   );
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_set_user_scopes',
+    method: 'neppy.composio_set_user_scopes',
     params: { toolkit, ...pref },
   });
   const persisted = unwrapCliEnvelope<ComposioUserScopePref>(raw);
   console.debug(
-    '[composio][scopes] ← openhuman.composio_set_user_scopes toolkit=%s persisted=%o',
+    '[composio][scopes] ← neppy.composio_set_user_scopes toolkit=%s persisted=%o',
     toolkit,
     persisted
   );
@@ -234,7 +229,7 @@ export async function execute(
   args?: Record<string, unknown>
 ): Promise<ComposioExecuteResponse> {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_execute',
+    method: 'neppy.composio_execute',
     params: { tool, arguments: args ?? {} },
   });
   return unwrapCliEnvelope<ComposioExecuteResponse>(raw);
@@ -242,16 +237,13 @@ export async function execute(
 
 /**
  * List GitHub repositories available through the user's authorized
- * Composio connection. Wraps `openhuman.composio_list_github_repos`
+ * Composio connection. Wraps `neppy.composio_list_github_repos`
  * which hits the dedicated backend endpoint (not `composio_execute`).
  */
 export async function listGithubRepos(connectionId?: string): Promise<ComposioGithubReposResponse> {
   const params: Record<string, unknown> = {};
   if (connectionId) params.connection_id = connectionId;
-  const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_list_github_repos',
-    params,
-  });
+  const raw = await callCoreRpc<unknown>({ method: 'neppy.composio_list_github_repos', params });
   return unwrapCliEnvelope<ComposioGithubReposResponse>(raw);
 }
 
@@ -260,7 +252,7 @@ export async function listGithubRepos(connectionId?: string): Promise<ComposioGi
  * toolkit's native provider implementation (Gmail, Slack, Notion, …).
  * Persists the fetched items into the memory layer — chunks land in
  * `mem_tree_chunks` and the source-tree pipeline picks them up on the
- * next flush. Wraps `openhuman.composio_sync`.
+ * next flush. Wraps `neppy.composio_sync`.
  *
  * `reason` defaults to `"manual"` server-side when omitted.
  */
@@ -268,13 +260,9 @@ export async function syncConnection(
   connectionId: string,
   reason: 'manual' | 'periodic' | 'connection_created' = 'manual'
 ): Promise<unknown> {
-  console.debug(
-    '[composio][sync] → openhuman.composio_sync conn=%s reason=%s',
-    connectionId,
-    reason
-  );
+  console.debug('[composio][sync] → neppy.composio_sync conn=%s reason=%s', connectionId, reason);
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_sync',
+    method: 'neppy.composio_sync',
     params: { connection_id: connectionId, reason },
   });
   const outcome = unwrapCliEnvelope<unknown>(raw);
@@ -286,7 +274,7 @@ export async function syncConnection(
       ? { keys: Object.keys(outcome as Record<string, unknown>).slice(0, 10) }
       : { type: typeof outcome };
   console.debug(
-    '[composio][sync] ← openhuman.composio_sync conn=%s outcome_shape=%o',
+    '[composio][sync] ← neppy.composio_sync conn=%s outcome_shape=%o',
     connectionId,
     outcomeShape
   );
@@ -308,7 +296,7 @@ export async function listAvailableTriggers(
   const params: Record<string, unknown> = { toolkit };
   if (connectionId) params.connection_id = connectionId;
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_list_available_triggers',
+    method: 'neppy.composio_list_available_triggers',
     params,
     // A 401 here is a single trigger-catalog read failure, not whole-session
     // death (the connection itself is still active). Suppress the global
@@ -326,7 +314,7 @@ export async function listTriggers(toolkit?: string): Promise<ComposioActiveTrig
   const params: Record<string, unknown> = {};
   if (toolkit) params.toolkit = toolkit;
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_list_triggers',
+    method: 'neppy.composio_list_triggers',
     params,
     // Loaded alongside the available-triggers catalog in the same panel —
     // keep its 401 handling local too (see `listAvailableTriggers`).
@@ -345,7 +333,7 @@ export async function enableTrigger(
 ): Promise<ComposioEnableTriggerResponse> {
   const params: Record<string, unknown> = { connection_id: connectionId, slug };
   if (triggerConfig !== undefined) params.trigger_config = triggerConfig;
-  const raw = await callCoreRpc<unknown>({ method: 'openhuman.composio_enable_trigger', params });
+  const raw = await callCoreRpc<unknown>({ method: 'neppy.composio_enable_trigger', params });
   return unwrapCliEnvelope<ComposioEnableTriggerResponse>(raw);
 }
 
@@ -354,7 +342,7 @@ export async function enableTrigger(
  */
 export async function disableTrigger(triggerId: string): Promise<ComposioDisableTriggerResponse> {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.composio_disable_trigger',
+    method: 'neppy.composio_disable_trigger',
     params: { trigger_id: triggerId },
   });
   return unwrapCliEnvelope<ComposioDisableTriggerResponse>(raw);

@@ -1,7 +1,7 @@
 /**
  * Vitest for the task-sources tauriCommands surface.
  *
- * Covers each `openhuman.task_sources_*` RPC wrapper plus the
+ * Covers each `neppy.task_sources_*` RPC wrapper plus the
  * `isTauri()` guard. Mirrors the mocking pattern in
  * `subconscious.test.ts` — validates the wrappers against the
  * `callCoreRpc` contract without a real Tauri runtime.
@@ -43,13 +43,13 @@ describe('tauriCommands/taskSources', () => {
   test('list forwards the list method with no params', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
     await neppyTaskSourcesList();
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_list' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.task_sources_list' });
   });
 
   test('get forwards id', async () => {
     await neppyTaskSourcesGet('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.task_sources_get',
+      method: 'neppy.task_sources_get',
       params: { id: 's-1' },
     });
   });
@@ -61,13 +61,13 @@ describe('tauriCommands/taskSources', () => {
       name: 'My issues',
     };
     await neppyTaskSourcesAdd(params);
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_add', params });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.task_sources_add', params });
   });
 
   test('update forwards id + patch', async () => {
     await neppyTaskSourcesUpdate('s-1', { enabled: false });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.task_sources_update',
+      method: 'neppy.task_sources_update',
       params: { id: 's-1', patch: { enabled: false } },
     });
   });
@@ -75,7 +75,7 @@ describe('tauriCommands/taskSources', () => {
   test('remove forwards id', async () => {
     await neppyTaskSourcesRemove('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.task_sources_remove',
+      method: 'neppy.task_sources_remove',
       params: { id: 's-1' },
     });
   });
@@ -83,7 +83,7 @@ describe('tauriCommands/taskSources', () => {
   test('fetch forwards id', async () => {
     await neppyTaskSourcesFetch('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.task_sources_fetch',
+      method: 'neppy.task_sources_fetch',
       params: { id: 's-1' },
     });
   });
@@ -91,14 +91,14 @@ describe('tauriCommands/taskSources', () => {
   test('sync forwards the sync method with no params', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
     await neppyTaskSourcesSync();
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_sync' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.task_sources_sync' });
   });
 
   test('listTasks forwards id + default limit', async () => {
     mockCallCoreRpc.mockResolvedValue([]);
     await neppyTaskSourcesListTasks('s-1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.task_sources_list_tasks',
+      method: 'neppy.task_sources_list_tasks',
       params: { id: 's-1', limit: 50 },
     });
   });
@@ -107,7 +107,7 @@ describe('tauriCommands/taskSources', () => {
     mockCallCoreRpc.mockResolvedValue([]);
     await neppyTaskSourcesListTasks('s-1', 10);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.task_sources_list_tasks',
+      method: 'neppy.task_sources_list_tasks',
       params: { id: 's-1', limit: 10 },
     });
   });
@@ -121,7 +121,7 @@ describe('tauriCommands/taskSources', () => {
       5
     );
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.task_sources_preview_filter',
+      method: 'neppy.task_sources_preview_filter',
       params: {
         provider: 'notion',
         filter: { provider: 'notion', database_id: 'db-1', assigned_to_me: true },
@@ -133,7 +133,7 @@ describe('tauriCommands/taskSources', () => {
 
   test('status forwards the status method', async () => {
     await neppyTaskSourcesStatus();
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.task_sources_status' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.task_sources_status' });
   });
 
   test('every wrapper throws and skips RPC when not in Tauri', async () => {

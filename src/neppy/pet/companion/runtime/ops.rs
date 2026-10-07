@@ -1,4 +1,4 @@
-//! RPC operations for `openhuman.pet_companion_*` (wire contract: plan §2.9 +
+//! RPC operations for `neppy.pet_companion_*` (wire contract: plan §2.9 +
 //! the shell / UI contract). Each takes the runtime explicitly so tests can
 //! drive a runtime built from fakes. Errors are field-named strings.
 

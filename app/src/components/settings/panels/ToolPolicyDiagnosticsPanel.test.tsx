@@ -55,14 +55,14 @@ describe('<ToolPolicyDiagnosticsPanel />', () => {
   // Regression for TAURI-RUST-83E: the panel previously called the bare,
   // unregistered `tool_registry.diagnostics`, which the core dispatcher rejects
   // with "unknown method" (the registered name is the namespaced
-  // `openhuman.tool_registry_diagnostics`). The mismatch broke the panel for
+  // `neppy.tool_registry_diagnostics`). The mismatch broke the panel for
   // every user and flooded Sentry. Pin the exact registered method name.
-  it('invokes the registered openhuman.tool_registry_diagnostics RPC method', async () => {
+  it('invokes the registered neppy.tool_registry_diagnostics RPC method', async () => {
     render(<ToolPolicyDiagnosticsPanel />);
 
     await waitFor(() => {
       expect(callCoreRpc).toHaveBeenCalledWith(
-        expect.objectContaining({ method: 'openhuman.tool_registry_diagnostics' })
+        expect.objectContaining({ method: 'neppy.tool_registry_diagnostics' })
       );
     });
   });

@@ -1,18 +1,18 @@
-//! `openhuman tree-summarizer` — CLI for the hierarchical summary tree.
+//! `neppy-core tree-summarizer` — CLI for the hierarchical summary tree.
 //!
 //! Ingest content, run summarization jobs, query the tree, and inspect
 //! status from the terminal without starting the full app.
 //!
 //! Usage:
-//!   openhuman tree-summarizer ingest  <namespace> [--content <text> | --file <path>] [-v]
-//!   openhuman tree-summarizer run     <namespace> [-v]
-//!   openhuman tree-summarizer query   <namespace> [<node_id>] [-v]
-//!   openhuman tree-summarizer status  <namespace> [-v]
-//!   openhuman tree-summarizer rebuild <namespace> [-v]
+//!   neppy-core tree-summarizer ingest  <namespace> [--content <text> | --file <path>] [-v]
+//!   neppy-core tree-summarizer run     <namespace> [-v]
+//!   neppy-core tree-summarizer query   <namespace> [<node_id>] [-v]
+//!   neppy-core tree-summarizer status  <namespace> [-v]
+//!   neppy-core tree-summarizer rebuild <namespace> [-v]
 
 use anyhow::Result;
 
-/// Entry point for `openhuman tree-summarizer <subcommand>`.
+/// Entry point for `neppy-core tree-summarizer <subcommand>`.
 pub(crate) fn run_tree_summarizer_command(args: &[String]) -> Result<()> {
     if args.is_empty() || is_help(&args[0]) {
         print_help();
@@ -26,7 +26,7 @@ pub(crate) fn run_tree_summarizer_command(args: &[String]) -> Result<()> {
         "status" => run_status(&args[1..]),
         "rebuild" => run_rebuild(&args[1..]),
         other => Err(anyhow::anyhow!(
-            "unknown tree-summarizer subcommand '{other}'. Run `openhuman tree-summarizer --help`."
+            "unknown tree-summarizer subcommand '{other}'. Run `neppy-core tree-summarizer --help`."
         )),
     }
 }
@@ -103,13 +103,13 @@ fn parse_opts(args: &[String]) -> Result<(CliOpts, Vec<String>)> {
 // Subcommands
 // ---------------------------------------------------------------------------
 
-/// `openhuman tree-summarizer ingest <namespace> --content <text>` or `--file <path>`
+/// `neppy-core tree-summarizer ingest <namespace> --content <text>` or `--file <path>`
 fn run_ingest(args: &[String]) -> Result<()> {
     let (opts, rest) = parse_opts(args)?;
 
     if rest.iter().any(|a| is_help(a)) || rest.is_empty() {
         println!(
-            "Usage: openhuman tree-summarizer ingest <namespace> [--content <text>] [--file <path>] [-v]"
+            "Usage: neppy-core tree-summarizer ingest <namespace> [--content <text>] [--file <path>] [-v]"
         );
         println!();
         println!("Append content to the summarization buffer for a namespace.");
@@ -141,7 +141,7 @@ fn run_ingest(args: &[String]) -> Result<()> {
         text.clone()
     } else {
         return Err(anyhow::anyhow!(
-            "either --content or --file is required. Run `openhuman tree-summarizer ingest --help`."
+            "either --content or --file is required. Run `neppy-core tree-summarizer ingest --help`."
         ));
     };
 
@@ -169,12 +169,12 @@ fn run_ingest(args: &[String]) -> Result<()> {
     })
 }
 
-/// `openhuman tree-summarizer run <namespace>`
+/// `neppy-core tree-summarizer run <namespace>`
 fn run_summarize(args: &[String]) -> Result<()> {
     let (opts, rest) = parse_opts(args)?;
 
     if rest.iter().any(|a| is_help(a)) || rest.is_empty() {
-        println!("Usage: openhuman tree-summarizer run <namespace> [-v]");
+        println!("Usage: neppy-core tree-summarizer run <namespace> [-v]");
         println!();
         println!("Trigger the summarization job for a namespace.");
         println!("Drains the buffer, creates the hour leaf, and propagates upward.");
@@ -204,13 +204,13 @@ fn run_summarize(args: &[String]) -> Result<()> {
     })
 }
 
-/// `openhuman tree-summarizer query <namespace> [<node_id>]`
+/// `neppy-core tree-summarizer query <namespace> [<node_id>]`
 fn run_query(args: &[String]) -> Result<()> {
     let (opts, rest) = parse_opts(args)?;
 
     if rest.iter().any(|a| is_help(a)) || rest.is_empty() {
         println!(
-            "Usage: openhuman tree-summarizer query <namespace> [<node_id>] [--node-id <id>] [-v]"
+            "Usage: neppy-core tree-summarizer query <namespace> [<node_id>] [--node-id <id>] [-v]"
         );
         println!();
         println!("Read a summary tree node and its direct children.");
@@ -255,12 +255,12 @@ fn run_query(args: &[String]) -> Result<()> {
     })
 }
 
-/// `openhuman tree-summarizer status <namespace>`
+/// `neppy-core tree-summarizer status <namespace>`
 fn run_status(args: &[String]) -> Result<()> {
     let (opts, rest) = parse_opts(args)?;
 
     if rest.iter().any(|a| is_help(a)) || rest.is_empty() {
-        println!("Usage: openhuman tree-summarizer status <namespace> [-v]");
+        println!("Usage: neppy-core tree-summarizer status <namespace> [-v]");
         println!();
         println!("Show tree metadata: node count, depth, date range.");
         println!();
@@ -290,12 +290,12 @@ fn run_status(args: &[String]) -> Result<()> {
     })
 }
 
-/// `openhuman tree-summarizer rebuild <namespace>`
+/// `neppy-core tree-summarizer rebuild <namespace>`
 fn run_rebuild(args: &[String]) -> Result<()> {
     let (opts, rest) = parse_opts(args)?;
 
     if rest.iter().any(|a| is_help(a)) || rest.is_empty() {
-        println!("Usage: openhuman tree-summarizer rebuild <namespace> [-v]");
+        println!("Usage: neppy-core tree-summarizer rebuild <namespace> [-v]");
         println!();
         println!("Rebuild the entire summary tree from hour leaves upward.");
         println!("This re-summarizes all intermediate levels (day, month, year, root).");
@@ -348,7 +348,7 @@ async fn load_config() -> Result<crate::neppy::config::Config> {
 }
 
 fn init_logging(verbose: bool) {
-    if !verbose && std::env::var_os("RUST_LOG").is_none() {
+    if !verbose && crate::neppy::util::env::var_os("RUST_LOG").is_none() {
         unsafe { std::env::set_var("RUST_LOG", "warn") };
     }
     crate::core::logging::init_for_cli_run(verbose, crate::core::logging::CliLogDefault::Global);
@@ -359,15 +359,15 @@ fn is_help(value: &str) -> bool {
 }
 
 fn print_help() {
-    println!("openhuman tree-summarizer — hierarchical summary tree\n");
+    println!("neppy-core tree-summarizer — hierarchical summary tree\n");
     println!("Usage:");
     println!(
-        "  openhuman tree-summarizer ingest  <namespace> [--content <text>] [--file <path>] [-v]"
+        "  neppy-core tree-summarizer ingest  <namespace> [--content <text>] [--file <path>] [-v]"
     );
-    println!("  openhuman tree-summarizer run     <namespace> [-v]");
-    println!("  openhuman tree-summarizer query   <namespace> [<node_id>] [-v]");
-    println!("  openhuman tree-summarizer status  <namespace> [-v]");
-    println!("  openhuman tree-summarizer rebuild <namespace> [-v]");
+    println!("  neppy-core tree-summarizer run     <namespace> [-v]");
+    println!("  neppy-core tree-summarizer query   <namespace> [<node_id>] [-v]");
+    println!("  neppy-core tree-summarizer status  <namespace> [-v]");
+    println!("  neppy-core tree-summarizer rebuild <namespace> [-v]");
     println!();
     println!("Subcommands:");
     println!("  ingest    Buffer raw content for the next summarization run");
@@ -380,13 +380,13 @@ fn print_help() {
     println!("  -v, --verbose    Enable debug logging");
     println!();
     println!("Examples:");
-    println!("  openhuman tree-summarizer ingest my-ns --content 'Some raw data to summarize'");
-    println!("  openhuman tree-summarizer ingest my-ns --file notes.txt");
-    println!("  cat journal.md | openhuman tree-summarizer ingest my-ns --file -");
-    println!("  openhuman tree-summarizer run my-ns");
-    println!("  openhuman tree-summarizer query my-ns root");
-    println!("  openhuman tree-summarizer query my-ns 2024/03/15");
-    println!("  openhuman tree-summarizer status my-ns");
+    println!("  neppy-core tree-summarizer ingest my-ns --content 'Some raw data to summarize'");
+    println!("  neppy-core tree-summarizer ingest my-ns --file notes.txt");
+    println!("  cat journal.md | neppy-core tree-summarizer ingest my-ns --file -");
+    println!("  neppy-core tree-summarizer run my-ns");
+    println!("  neppy-core tree-summarizer query my-ns root");
+    println!("  neppy-core tree-summarizer query my-ns 2024/03/15");
+    println!("  neppy-core tree-summarizer status my-ns");
 }
 
 #[cfg(test)]
@@ -412,8 +412,8 @@ mod tests {
     impl WorkspaceEnvGuard {
         fn set(path: &std::path::Path) -> Self {
             let lock = lock_env();
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+            std::env::set_var("NEPPY_WORKSPACE", path);
             Self {
                 _lock: lock,
                 previous,
@@ -424,9 +424,9 @@ mod tests {
     impl Drop for WorkspaceEnvGuard {
         fn drop(&mut self) {
             if let Some(previous) = self.previous.as_ref() {
-                std::env::set_var("OPENHUMAN_WORKSPACE", previous);
+                std::env::set_var("NEPPY_WORKSPACE", previous);
             } else {
-                std::env::remove_var("OPENHUMAN_WORKSPACE");
+                crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
             }
         }
     }
@@ -438,14 +438,14 @@ mod tests {
 
     impl EnvVarGuard {
         fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-            let previous = std::env::var_os(key);
+            let previous = crate::neppy::util::env::var_os(key);
             std::env::set_var(key, value);
             Self { key, previous }
         }
 
         fn remove(key: &'static str) -> Self {
-            let previous = std::env::var_os(key);
-            std::env::remove_var(key);
+            let previous = crate::neppy::util::env::var_os(key);
+            crate::neppy::util::env::remove_var(key);
             Self { key, previous }
         }
     }
@@ -455,7 +455,7 @@ mod tests {
             if let Some(previous) = self.previous.as_ref() {
                 std::env::set_var(self.key, previous);
             } else {
-                std::env::remove_var(self.key);
+                crate::neppy::util::env::remove_var(self.key);
             }
         }
     }
@@ -598,7 +598,7 @@ mod tests {
         // With no local AI and no cloud opt-in (default), `run` returns a clean
         // actionable error rather than panicking or giving an opaque failure.
         // Users must enable local AI (Ollama) or set cloud_summarization_opt_in
-        // in config (or via OPENHUMAN_MEMORY_TREE_CLOUD_SUMMARIZATION=true).
+        // in config (or via NEPPY_MEMORY_TREE_CLOUD_SUMMARIZATION=true).
         let tmp = TempDir::new().unwrap();
         let _workspace = WorkspaceEnvGuard::set(tmp.path());
 
@@ -633,8 +633,8 @@ mod tests {
     fn load_config_uses_isolated_workspace_and_env_overrides() {
         let tmp = TempDir::new().unwrap();
         let _workspace = WorkspaceEnvGuard::set(tmp.path());
-        let _model = EnvVarGuard::set("OPENHUMAN_MODEL", "custom-model");
-        let _language = EnvVarGuard::set("OPENHUMAN_OUTPUT_LANGUAGE", "fr-CA");
+        let _model = EnvVarGuard::set("NEPPY_MODEL", "custom-model");
+        let _language = EnvVarGuard::set("NEPPY_OUTPUT_LANGUAGE", "fr-CA");
 
         let runtime = build_runtime().expect("runtime");
         let config = runtime.block_on(load_config()).expect("config");
@@ -653,19 +653,25 @@ mod tests {
         {
             let _rust_log = EnvVarGuard::remove("RUST_LOG");
             init_logging(false);
-            assert_eq!(std::env::var("RUST_LOG").ok().as_deref(), Some("warn"));
+            assert_eq!(
+                crate::neppy::util::env::var("RUST_LOG").ok().as_deref(),
+                Some("warn")
+            );
         }
 
         {
             let _rust_log = EnvVarGuard::remove("RUST_LOG");
             init_logging(true);
-            assert!(std::env::var_os("RUST_LOG").is_none());
+            assert!(crate::neppy::util::env::var_os("RUST_LOG").is_none());
         }
 
         {
             let _rust_log = EnvVarGuard::set("RUST_LOG", "debug");
             init_logging(false);
-            assert_eq!(std::env::var("RUST_LOG").ok().as_deref(), Some("debug"));
+            assert_eq!(
+                crate::neppy::util::env::var("RUST_LOG").ok().as_deref(),
+                Some("debug")
+            );
         }
     }
 

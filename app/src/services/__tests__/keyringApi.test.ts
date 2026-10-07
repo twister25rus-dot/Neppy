@@ -16,7 +16,7 @@ describe('keyringApi', () => {
 
     const result = await fetchKeyringStatus();
     expect(result).toEqual(status);
-    expect(mockRpc).toHaveBeenCalledWith({ method: 'openhuman.keyring_consent_status' });
+    expect(mockRpc).toHaveBeenCalledWith({ method: 'neppy.keyring_consent_status' });
   });
 
   it('decideKeyringConsent sends mode parameter', async () => {
@@ -26,7 +26,7 @@ describe('keyringApi', () => {
     const result = await decideKeyringConsent('local_encrypted');
     expect(result).toEqual(pref);
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.keyring_consent_decide',
+      method: 'neppy.keyring_consent_decide',
       params: { mode: 'local_encrypted' },
     });
   });
@@ -37,6 +37,6 @@ describe('keyringApi', () => {
 
     const result = await retryKeyringProbe();
     expect(result).toEqual(status);
-    expect(mockRpc).toHaveBeenCalledWith({ method: 'openhuman.keyring_consent_retry_probe' });
+    expect(mockRpc).toHaveBeenCalledWith({ method: 'neppy.keyring_consent_retry_probe' });
   });
 });

@@ -15,7 +15,7 @@ export type WorkflowScope = 'user' | 'project' | 'legacy';
 
 /**
  * Wire-format representation of a discovered skill returned by
- * `openhuman.skills_list`.
+ * `neppy.skills_list`.
  *
  * Paths are intentionally serialized as strings (not URLs) to avoid lossy
  * conversions on non-UTF-8 filesystems.
@@ -68,7 +68,7 @@ type RawWorkflowSummary = Omit<WorkflowSummary, 'platforms' | 'relatedSkills' | 
 };
 
 /**
- * Result of `openhuman.skills_read_resource`.
+ * Result of `neppy.skills_read_resource`.
  */
 interface WorkflowResourceContent {
   /** Echo of the requested skill id. */
@@ -89,7 +89,7 @@ interface RawWorkflowsReadResourceResult {
 }
 
 /**
- * Parameters accepted by `openhuman.skills_create`.
+ * Parameters accepted by `neppy.skills_create`.
  *
  * Matches the wire shape defined in `src/neppy/skills/schemas.rs`
  * (`SkillsCreateParams`) — `allowedTools` is rekeyed to `allowed-tools` on
@@ -139,7 +139,7 @@ interface RawWorkflowsCreateResult {
 }
 
 /**
- * Parameters accepted by `openhuman.skills_install_from_url`.
+ * Parameters accepted by `neppy.skills_install_from_url`.
  *
  * `timeoutSecs` is optional — the Rust side defaults to 60s and caps at
  * 600s. Values outside that range are clamped server-side.
@@ -150,7 +150,7 @@ interface InstallWorkflowFromUrlInput {
 }
 
 /**
- * Result of `openhuman.skills_install_from_url`.
+ * Result of `neppy.skills_install_from_url`.
  *
  * `newWorkflows` lists skill ids that appeared post-install (diff vs the
  * pre-install snapshot). `stdout` holds a human-readable diagnostic summary
@@ -173,7 +173,7 @@ interface RawInstallWorkflowFromUrlResult {
 }
 
 /**
- * Result of `openhuman.skill_registry_uninstall`.
+ * Result of `neppy.skill_registry_uninstall`.
  *
  * Mirrors the Rust-side `UninstallSkillOutcome`. `removedPath` is the
  * canonicalised on-disk path that was deleted — surface it in success toasts
@@ -265,7 +265,7 @@ export const skillsApi = {
   listWorkflows: async (opts?: ListWorkflowsOptions): Promise<WorkflowSummary[]> => {
     log('listWorkflows: request includeSkills=%s', opts?.includeSkills ?? false);
     const response = await callCoreRpc<Envelope<WorkflowsListResult> | WorkflowsListResult>({
-      method: 'openhuman.skills_list',
+      method: 'neppy.skills_list',
       params: opts?.includeSkills ? { include_skills: true } : undefined,
     });
     const result = unwrapEnvelope(response);
@@ -290,7 +290,7 @@ export const skillsApi = {
     const response = await callCoreRpc<
       Envelope<RawWorkflowsReadResourceResult> | RawWorkflowsReadResourceResult
     >({
-      method: 'openhuman.skills_read_resource',
+      method: 'neppy.skills_read_resource',
       params: { workflow_id: workflowId, relative_path: relativePath },
     });
     const raw = unwrapEnvelope(response);
@@ -305,7 +305,7 @@ export const skillsApi = {
   },
 
   /**
-   * Scaffold a new SKILL.md skill via `openhuman.skills_create`.
+   * Scaffold a new SKILL.md skill via `neppy.skills_create`.
    *
    * The Rust side slugifies the name, writes `SKILL.md` with the supplied
    * frontmatter, and returns the freshly-discovered `WorkflowSummary` so the
@@ -316,7 +316,7 @@ export const skillsApi = {
     const response = await callCoreRpc<
       Envelope<RawWorkflowsCreateResult> | RawWorkflowsCreateResult
     >({
-      method: 'openhuman.skills_create',
+      method: 'neppy.skills_create',
       params: {
         name: input.name,
         description: input.description,
@@ -338,7 +338,7 @@ export const skillsApi = {
   },
 
   /**
-   * Edit an existing workflow via `openhuman.skills_update`. Same payload
+   * Edit an existing workflow via `neppy.skills_update`. Same payload
    * shape as create; the Rust side overwrites the workflow at the resolved
    * slug — rewriting frontmatter + workflow.toml while preserving the
    * hand-authored SKILL.md/WORKFLOW.md body.
@@ -348,7 +348,7 @@ export const skillsApi = {
     const response = await callCoreRpc<
       Envelope<RawWorkflowsCreateResult> | RawWorkflowsCreateResult
     >({
-      method: 'openhuman.skills_update',
+      method: 'neppy.skills_update',
       params: {
         name: input.name,
         description: input.description,
@@ -370,7 +370,7 @@ export const skillsApi = {
   },
 
   /**
-   * Install a remote SKILL.md by URL via `openhuman.skills_install_from_url`.
+   * Install a remote SKILL.md by URL via `neppy.skills_install_from_url`.
    *
    * The Rust side fetches the SKILL.md directly over HTTPS (no subprocess,
    * no Node toolchain required), validates the frontmatter, and writes it
@@ -386,7 +386,7 @@ export const skillsApi = {
     const response = await callCoreRpc<
       Envelope<RawInstallWorkflowFromUrlResult> | RawInstallWorkflowFromUrlResult
     >({
-      method: 'openhuman.skills_install_from_url',
+      method: 'neppy.skills_install_from_url',
       params: {
         url: input.url,
         ...(input.timeoutSecs !== undefined ? { timeout_secs: input.timeoutSecs } : {}),
@@ -409,7 +409,7 @@ export const skillsApi = {
   },
 
   /**
-   * Remove an installed user-scope SKILL.md skill via `openhuman.skill_registry_uninstall`.
+   * Remove an installed user-scope SKILL.md skill via `neppy.skill_registry_uninstall`.
    *
    * Only user-scope installs (`~/.neppy/skills/<name>/`) are supported.
    * Project-scope and legacy skills are read-only — trying to uninstall one
@@ -421,7 +421,7 @@ export const skillsApi = {
     log('uninstallWorkflow: request name=%s', name);
     const response = await callCoreRpc<
       Envelope<RawUninstallWorkflowResult> | RawUninstallWorkflowResult
-    >({ method: 'openhuman.skill_registry_uninstall', params: { name } });
+    >({ method: 'neppy.skill_registry_uninstall', params: { name } });
     const raw = unwrapEnvelope(response);
     const normalized: UninstallWorkflowResult = {
       name: raw.name,
@@ -447,7 +447,7 @@ export const skillsApi = {
   describeWorkflow: async (workflowId: string): Promise<WorkflowDescription> => {
     log('describeWorkflow: request workflowId=%s', workflowId);
     const response = await callCoreRpc<Envelope<WorkflowDescription> | WorkflowDescription>({
-      method: 'openhuman.skills_describe',
+      method: 'neppy.skills_describe',
       params: { workflow_id: workflowId },
     });
     const raw = unwrapEnvelope(response);
@@ -456,7 +456,7 @@ export const skillsApi = {
   },
 
   /**
-   * Fire-and-forget invocation of `openhuman.skill_runtime_run`. Returns
+   * Fire-and-forget invocation of `neppy.skill_runtime_run`. Returns
    * immediately with the new background run's `run_id`, the canonical
    * skill/workflow id, and the log path the run is streaming into; the actual
    * autonomous work continues in the background and finishes with
@@ -468,7 +468,7 @@ export const skillsApi = {
   ): Promise<WorkflowRunStarted> => {
     log('runWorkflow: request workflowId=%s', workflowId);
     const response = await callCoreRpc<Envelope<RawSkillRunStarted> | RawSkillRunStarted>({
-      method: 'openhuman.skill_runtime_run',
+      method: 'neppy.skill_runtime_run',
       params: { skill_id: workflowId, inputs },
     });
     const raw = unwrapEnvelope(response);
@@ -483,14 +483,14 @@ export const skillsApi = {
     return normalized;
   },
   /**
-   * Request cancellation of an in-flight run via `openhuman.skill_runtime_cancel`.
+   * Request cancellation of an in-flight run via `neppy.skill_runtime_cancel`.
    * Returns `true` if a live run with this id was found and signalled; the run
    * stops at its next await and lands a CANCELLED footer.
    */
   cancelRun: async (runId: string): Promise<boolean> => {
     log('cancelRun: request runId=%s', runId);
     const response = await callCoreRpc<Envelope<{ cancelled: boolean }> | { cancelled: boolean }>({
-      method: 'openhuman.skill_runtime_cancel',
+      method: 'neppy.skill_runtime_cancel',
       params: { run_id: runId },
     });
     const raw = unwrapEnvelope(response);
@@ -517,7 +517,7 @@ export const skillsApi = {
     if (offset !== undefined) params.offset = offset;
     if (maxBytes !== undefined) params.max_bytes = maxBytes;
     const response = await callCoreRpc<Envelope<RunLogSlice> | RunLogSlice>({
-      method: 'openhuman.skill_runtime_read_run_log',
+      method: 'neppy.skill_runtime_read_run_log',
       params,
     });
     const raw = unwrapEnvelope(response);
@@ -536,7 +536,7 @@ export const skillsApi = {
     if (workflowId !== undefined) params.skill_id = workflowId;
     if (limit !== undefined) params.limit = limit;
     const response = await callCoreRpc<Envelope<{ runs: ScannedRun[] }> | { runs: ScannedRun[] }>({
-      method: 'openhuman.skill_runtime_recent_runs',
+      method: 'neppy.skill_runtime_recent_runs',
       params,
     });
     const raw = unwrapEnvelope(response);
@@ -556,7 +556,7 @@ export const skillsApi = {
     const response = await callCoreRpc<
       Envelope<RawResolveSkillRuntimesResult> | RawResolveSkillRuntimesResult
     >({
-      method: 'openhuman.skill_runtime_resolve_runtimes',
+      method: 'neppy.skill_runtime_resolve_runtimes',
       params: runtime === 'all' ? {} : { runtime },
     });
     const raw = unwrapEnvelope(response);
@@ -579,7 +579,7 @@ export const skillsApi = {
 
 /**
  * One input declaration from a skill's `[[inputs]]` block, returned by
- * `openhuman.skills_describe`. The FE renders one form control per entry:
+ * `neppy.skills_describe`. The FE renders one form control per entry:
  * `string`/`integer`/`boolean` map to text/number/checkbox controls.
  */
 export interface WorkflowInputDescription {
@@ -590,7 +590,7 @@ export interface WorkflowInputDescription {
   type: string;
 }
 
-/** Wire shape returned by `openhuman.skills_describe`. */
+/** Wire shape returned by `neppy.skills_describe`. */
 export interface WorkflowDescription {
   id: string;
   display_name: string;
@@ -598,7 +598,7 @@ export interface WorkflowDescription {
   inputs: WorkflowInputDescription[];
 }
 
-/** Wire shape returned by `openhuman.skill_runtime_run` (fire-and-forget). */
+/** Wire shape returned by `neppy.skill_runtime_run` (fire-and-forget). */
 export interface WorkflowRunStarted {
   run_id: string;
   status: string; // "started"
@@ -615,7 +615,7 @@ interface RawSkillRunStarted {
 }
 
 /**
- * Slice of a run log file returned by `openhuman.skill_runtime_read_run_log`.
+ * Slice of a run log file returned by `neppy.skill_runtime_read_run_log`.
  * Mirrors `crate::neppy::skills::run_log::RunLogSlice`. The FE
  * passes the returned `offset` as the next call's `offset` to tail
  * forward; polling can stop once `complete: true` (the `--- result ---`
@@ -633,7 +633,7 @@ export interface RunLogSlice {
 }
 
 /**
- * One run entry returned by `openhuman.skill_runtime_recent_runs`. Wire shape
+ * One run entry returned by `neppy.skill_runtime_recent_runs`. Wire shape
  * mirrors `crate::neppy::skills::run_log::ScannedRun`. `status` is
  * `"RUNNING"` while the run hasn't written its `--- result ---` footer
  * yet; after the footer lands it becomes `"DONE"` / `"DEGENERATE"` /

@@ -13,18 +13,18 @@ use super::super::definitions::ChannelAuthMode;
 use super::connect::credential_provider;
 use super::types::{TelegramLoginCheckResult, TelegramLoginStartResult};
 
-/// Default managed Telegram bot when `OPENHUMAN_APP_ENV` is staging and no username override is set.
+/// Default managed Telegram bot when `NEPPY_APP_ENV` is staging and no username override is set.
 const DEFAULT_TELEGRAM_BOT_USERNAME_STAGING: &str = "alphahumantest_bot";
 /// Default managed Telegram bot when app env is production (or unset) and no username override is set.
 const DEFAULT_TELEGRAM_BOT_USERNAME_PRODUCTION: &str = "openhumanaibot";
 
 /// Resolve the managed Telegram bot username from env, or from staging vs production defaults using
-/// `OPENHUMAN_APP_ENV` / `VITE_OPENHUMAN_APP_ENV` (via `app_env_from_env`).
+/// `NEPPY_APP_ENV` / `VITE_NEPPY_APP_ENV` (via `app_env_from_env`).
 fn telegram_bot_username() -> String {
-    if let Ok(v) = std::env::var("OPENHUMAN_TELEGRAM_BOT_USERNAME") {
+    if let Ok(v) = crate::neppy::util::env::var("NEPPY_TELEGRAM_BOT_USERNAME") {
         return v;
     }
-    if let Ok(v) = std::env::var("VITE_TELEGRAM_BOT_USERNAME") {
+    if let Ok(v) = crate::neppy::util::env::var("VITE_TELEGRAM_BOT_USERNAME") {
         return v;
     }
     if is_staging_app_env(app_env_from_env().as_deref()) {

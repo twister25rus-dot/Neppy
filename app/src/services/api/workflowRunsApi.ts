@@ -1,7 +1,7 @@
 /**
  * Frontend client for the declarative workflow-runs engine (#3375).
  *
- * Wraps the six `openhuman.workflow_run_*` JSON-RPC controllers exposed by the
+ * Wraps the six `neppy.workflow_run_*` JSON-RPC controllers exposed by the
  * Rust `workflow_runs` domain:
  *   - `workflow_run_list_definitions` — catalog of runnable workflow definitions
  *   - `workflow_run_list`             — durable runs (with filters / paging)
@@ -198,7 +198,7 @@ export const workflowRunsApi = {
   listDefinitions: async (): Promise<WorkflowDefinition[]> => {
     log('listDefinitions: request');
     const result = await callCoreRpc<ListDefinitionsResult>({
-      method: 'openhuman.workflow_run_list_definitions',
+      method: 'neppy.workflow_run_list_definitions',
     });
     const definitions = result?.definitions ?? [];
     log('listDefinitions: count=%d', definitions.length);
@@ -208,10 +208,7 @@ export const workflowRunsApi = {
   /** List durable workflow runs, newest first, with optional filters. */
   listRuns: async (params: ListRunsParams = {}): Promise<WorkflowRun[]> => {
     log('listRuns: request %o', params);
-    const result = await callCoreRpc<ListRunsResult>({
-      method: 'openhuman.workflow_run_list',
-      params,
-    });
+    const result = await callCoreRpc<ListRunsResult>({ method: 'neppy.workflow_run_list', params });
     const runs = result?.runs ?? [];
     log('listRuns: count=%d', runs.length);
     return runs;
@@ -221,7 +218,7 @@ export const workflowRunsApi = {
   getRun: async (id: string): Promise<WorkflowRun | null> => {
     log('getRun: request id=%s', id);
     const result = await callCoreRpc<MaybeRunResult>({
-      method: 'openhuman.workflow_run_get',
+      method: 'neppy.workflow_run_get',
       params: { id },
     });
     const run = result?.workflowRun ?? null;
@@ -232,7 +229,7 @@ export const workflowRunsApi = {
   /** Start a run from a definition id; returns the created Running run. */
   startRun: async (params: StartRunParams): Promise<WorkflowRun> => {
     log('startRun: request definitionId=%s', params.definitionId);
-    const result = await callCoreRpc<RunResult>({ method: 'openhuman.workflow_run_start', params });
+    const result = await callCoreRpc<RunResult>({ method: 'neppy.workflow_run_start', params });
     log('startRun: id=%s status=%s', result.workflowRun.id, result.workflowRun.status);
     trackAnalyticsEvent('automation_run_started', { automation_kind: 'orchestration' });
     return result.workflowRun;
@@ -242,7 +239,7 @@ export const workflowRunsApi = {
   stopRun: async (id: string): Promise<WorkflowRun | null> => {
     log('stopRun: request id=%s', id);
     const result = await callCoreRpc<MaybeRunResult>({
-      method: 'openhuman.workflow_run_stop',
+      method: 'neppy.workflow_run_stop',
       params: { id },
     });
     log('stopRun: status=%s', result?.workflowRun?.status ?? 'null');
@@ -256,7 +253,7 @@ export const workflowRunsApi = {
   resumeRun: async (id: string): Promise<WorkflowRun> => {
     log('resumeRun: request id=%s', id);
     const result = await callCoreRpc<RunResult>({
-      method: 'openhuman.workflow_run_resume',
+      method: 'neppy.workflow_run_resume',
       params: { id },
     });
     log('resumeRun: status=%s', result.workflowRun.status);

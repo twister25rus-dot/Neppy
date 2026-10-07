@@ -37,7 +37,7 @@ describe('memorySourcesService', () => {
 
     const sources = await listMemorySources();
 
-    expect(mockedCall).toHaveBeenCalledWith({ method: 'openhuman.memory_sources_list' });
+    expect(mockedCall).toHaveBeenCalledWith({ method: 'neppy.memory_sources_list' });
     expect(sources).toHaveLength(1);
     expect(sources[0].kind).toBe('folder');
   });
@@ -64,7 +64,7 @@ describe('memorySourcesService', () => {
     });
 
     expect(mockedCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_sources_add',
+      method: 'neppy.memory_sources_add',
       params: { kind: 'folder', label: 'Test', enabled: true, path: '/x' },
     });
     expect(result.id).toBe('src_new');
@@ -79,7 +79,7 @@ describe('memorySourcesService', () => {
     await updateMemorySource('src_1', { enabled: false, label: 'X' });
 
     expect(mockedCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_sources_update',
+      method: 'neppy.memory_sources_update',
       params: { id: 'src_1', enabled: false, label: 'X' },
     });
   });
@@ -121,7 +121,7 @@ describe('memorySourcesService', () => {
     });
 
     expect(mockedCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_sources_add',
+      method: 'neppy.memory_sources_add',
       params: { kind: 'conversation', label: 'Conversations', enabled: true },
     });
     expect(result.id).toBe('src_conv');
@@ -144,7 +144,7 @@ describe('memorySourcesService', () => {
     const result = await applyAllIn();
 
     expect(mockedCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_sources_apply_all_in',
+      method: 'neppy.memory_sources_apply_all_in',
       timeoutMs: MEMORY_SYNC_RPC_TIMEOUT_MS,
     });
     expect(result.sync_triggered).toBe(1);
@@ -231,7 +231,7 @@ describe('memorySourcesService', () => {
     const sources = await getCodingSessionStatus();
 
     expect(mockedCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_sources_coding_session_status',
+      method: 'neppy.memory_sources_coding_session_status',
     });
     expect(sources[0]).toMatchObject({ kind: 'codex', evidence_units: 5 });
   });
@@ -256,7 +256,7 @@ describe('memorySourcesService', () => {
     // Clamped to the batch max (5), and the per-call timeout stays under the RPC
     // client's hard 600s ceiling: 120s + 5*90s + 15s = 585s.
     expect(mockedCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_sources_ingest_coding_sessions',
+      method: 'neppy.memory_sources_ingest_coding_sessions',
       params: { backfill: false, max_sessions: 5 },
       timeoutMs: 585_000,
     });
@@ -369,9 +369,7 @@ describe('memorySourcesService', () => {
     // a false success over work that may never have started, which is #5802
     // with the sign flipped. Only the core's own prefix is evidence.
     const abort = Object.assign(
-      new Error(
-        'Core RPC openhuman.memory_sources_ingest_coding_sessions timed out after 585000ms'
-      ),
+      new Error('Core RPC neppy.memory_sources_ingest_coding_sessions timed out after 585000ms'),
       { kind: 'timeout' }
     );
     mockedCall.mockRejectedValueOnce(abort);

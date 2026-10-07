@@ -21,13 +21,13 @@ pub(crate) fn config_root_dir(config: &Config) -> PathBuf {
 /// Default callers see the shared `~/.neppy/` root, which avoids
 /// duplicating multi-GB model files across users on a single machine.
 ///
-/// When `OPENHUMAN_WORKSPACE` is **explicitly** set (test/dev parallel
+/// When `NEPPY_WORKSPACE` is **explicitly** set (test/dev parallel
 /// sessions, multi-workspace deployments, isolated CI runs), the
 /// shared-root contract no longer applies — those callers want full
 /// isolation, including their own copy of any installed binaries. Honor
 /// the override by returning the workspace dir directly.
 fn shared_root_dir(config: &Config) -> PathBuf {
-    if std::env::var_os("OPENHUMAN_WORKSPACE").is_some() {
+    if crate::neppy::util::env::var_os("NEPPY_WORKSPACE").is_some() {
         return config_root_dir(config);
     }
     crate::neppy::config::default_root_neppy_dir().unwrap_or_else(|_| config_root_dir(config))
@@ -82,9 +82,9 @@ pub(crate) fn workspace_local_models_dir(config: &Config) -> PathBuf {
     shared_root_dir(config).join("models").join("local-ai")
 }
 
-/// Spawn marker file recording the PID of any `ollama serve` openhuman
+/// Spawn marker file recording the PID of any `ollama serve` neppy
 /// itself spawned. Read on next launch to recognise our own orphan when
-/// openhuman crashed before its graceful-shutdown hook ran. Lives under
+/// neppy crashed before its graceful-shutdown hook ran. Lives under
 /// the shared root so it survives per-user config rewrites and sits next
 /// to the workspace install dir.
 pub(crate) fn ollama_spawn_marker_path(config: &Config) -> PathBuf {
@@ -178,7 +178,7 @@ pub(crate) fn resolve_piper_binary() -> Option<PathBuf> {
         }
     }
 
-    if let Some(from_env) = std::env::var("PIPER_BIN")
+    if let Some(from_env) = crate::neppy::util::env::var("PIPER_BIN")
         .ok()
         .filter(|v| !v.trim().is_empty())
     {
@@ -189,7 +189,7 @@ pub(crate) fn resolve_piper_binary() -> Option<PathBuf> {
     }
 
     let bin_name = if cfg!(windows) { "piper.exe" } else { "piper" };
-    if let Some(from_path) = std::env::var_os("PATH").and_then(|path_var| {
+    if let Some(from_path) = crate::neppy::util::env::var_os("PATH").and_then(|path_var| {
         let dirs: Vec<PathBuf> = std::env::split_paths(&path_var).collect();
         resolve_binary_in_dirs(bin_name, &dirs)
     }) {
@@ -394,7 +394,7 @@ mod tests {
     /// A `TempDir`-backed config **with the shared root pointed at it**.
     ///
     /// `shared_root_dir` ignores `config.workspace_dir` unless
-    /// `OPENHUMAN_WORKSPACE` is set, and otherwise resolves to the developer's
+    /// `NEPPY_WORKSPACE` is set, and otherwise resolves to the developer's
     /// real `~/.neppy`. Several tests below write stubs through
     /// `workspace_*_dir(&config)` (and one deletes the Piper dir), so every test
     /// here runs under [`HermeticSharedRoot`], which also serialises it with

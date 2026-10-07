@@ -213,14 +213,14 @@ pub fn get_or_create_workspace_audit_logger(
         Ok(path) => path,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
             log::debug!(
-                "[openhuman:audit] workspace path not yet created; keying registry on raw path: {}",
+                "[neppy:audit] workspace path not yet created; keying registry on raw path: {}",
                 neppy_dir.display()
             );
             neppy_dir
         }
         Err(err) => {
             log::warn!(
-                "[openhuman:audit] failed to canonicalize workspace path {} ({err}); keying registry on raw path",
+                "[neppy:audit] failed to canonicalize workspace path {} ({err}); keying registry on raw path",
                 neppy_dir.display()
             );
             neppy_dir
@@ -286,7 +286,7 @@ impl AuditLogger {
     pub fn new(config: AuditConfig, neppy_dir: PathBuf) -> Result<Self> {
         let log_path = neppy_dir.join(&config.log_path);
         log::info!(
-            "[openhuman:audit] Logger initialized: enabled={}, path={}",
+            "[neppy:audit] Logger initialized: enabled={}, path={}",
             config.enabled,
             log_path.display()
         );
@@ -305,7 +305,7 @@ impl AuditLogger {
         }
 
         log::debug!(
-            "[openhuman:audit] Logging event: type={:?}, id={}",
+            "[neppy:audit] Logging event: type={:?}, id={}",
             event.event_type,
             event.event_id
         );
@@ -392,7 +392,7 @@ impl AuditLogger {
     /// Rotate the log file
     fn rotate(&self) -> Result<()> {
         log::info!(
-            "[openhuman:audit] Rotating audit log: {}",
+            "[neppy:audit] Rotating audit log: {}",
             self.log_path.display()
         );
         for i in (1..10).rev() {

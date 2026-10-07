@@ -396,14 +396,14 @@ Output excerpt:
 Input excerpt:
 
 ```json
-{"packages":[{"name":"openhuman","version":"0.58.11","id":"path+file://<OPENHUMAN_ROOT>#openhuman@0.58.11","license":null,"license_file":null,"description":"OpenHuman core business logic and RPC server","source":null,"de...
+{"packages":[{"name":"openhuman","version":"0.58.11","id":"path+file://<NEPPY_ROOT>#openhuman@0.58.11","license":null,"license_file":null,"description":"OpenHuman core business logic and RPC server","source":null,"de...
 
 ```
 
 Output excerpt:
 
 ```markdown
-{"packages":[{"name":"openhuman","version":"0.58.11","id":"path+file://<OPENHUMAN_ROOT>#openhuman@0.58.11","license":null,"license_file":null,"description":"OpenHuman core business logic and RPC server","source":null,"de...
+{"packages":[{"name":"openhuman","version":"0.58.11","id":"path+file://<NEPPY_ROOT>#openhuman@0.58.11","license":null,"license_file":null,"description":"OpenHuman core business logic and RPC server","source":null,"de...
 
 ```
 
@@ -443,7 +443,7 @@ Input excerpt:
     "build:app": "tsc && vite build",
     "build:app:e2e": "tsc && vite build --mode development",
     "build:web:e2e": "bash ./scripts/e2e-web-build.sh",
-    "build:web": "cross-env VITE_OPENHUMAN_TARGET=web tsc && cross-env VITE_OPENHUMAN_TARGET=web vite build",
+    "build:web": "cross-env VITE_NEPPY_TARGET=web tsc && cross-env VITE_NEPPY_TARGET=web vite build",
     "compile": "tsc --noEmit",
     "preview": "vite preview",
     "tauri": "tauri",
@@ -485,7 +485,7 @@ Output excerpt:
     "build:app": "tsc && vite build",
     "build:app:e2e": "tsc && vite build --mode development",
     "build:web:e2e": "bash ./scripts/e2e-web-build.sh",
-    "build:web": "cross-env VITE_OPENHUMAN_TARGET=web tsc && cross-env VITE_OPENHUMAN_TARGET=web vite build",
+    "build:web": "cross-env VITE_NEPPY_TARGET=web tsc && cross-env VITE_NEPPY_TARGET=web vite build",
     "compile": "tsc --noEmit",
     "preview": "vite preview",
     "tauri": "tauri",

@@ -29,7 +29,7 @@ Aggregate, operator-facing views over local config. Today it owns a single read-
 
 | Method | Inputs | Outputs |
 | --- | --- | --- |
-| `openhuman.dashboard_model_health` (namespace `dashboard`, function `model_health`) | none | `models: ModelHealthEntry[]`, `config: ModelHealthConfigView` |
+| `neppy.dashboard_model_health` (namespace `dashboard`, function `model_health`) | none | `models: ModelHealthEntry[]`, `config: ModelHealthConfigView` |
 
 `ModelHealthEntry`: `id`, `provider`, `cost_per_1m_output` (f64), `vision` (bool), `quality_score` (`f64?`, placeholder), `hallucination_rate` (`f64?`, placeholder), `agents_using` (u64, placeholder 0), `tasks_evaluated` (u64, placeholder 0).
 `ModelHealthConfigView`: `hallucination_threshold` (f64), `min_tasks_for_rating` (u64), `evaluation_window_tasks` (u64).

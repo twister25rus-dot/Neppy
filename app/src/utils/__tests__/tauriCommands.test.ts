@@ -55,7 +55,7 @@ describe('tauriCommands', () => {
 
     const response = await getAuthState();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.auth_get_state' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.auth_get_state' });
     expect(response).toEqual({ is_authenticated: true, user: { id: 'u1' } });
   });
 
@@ -63,7 +63,7 @@ describe('tauriCommands', () => {
     await storeSession('jwt-token', { id: 'u1' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.auth_store_session',
+      method: 'neppy.auth_store_session',
       params: { token: 'jwt-token', user: { id: 'u1' } },
     });
   });
@@ -72,7 +72,7 @@ describe('tauriCommands', () => {
     await storeSession('jwt-token', {}, { allowPendingBackendValidation: true });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.auth_store_session',
+      method: 'neppy.auth_store_session',
       params: { token: 'jwt-token', user: {}, allowPendingBackendValidation: true },
     });
   });
@@ -80,7 +80,7 @@ describe('tauriCommands', () => {
   test('resetNeppyDataAndRestartCore invokes the destructive Tauri command', async () => {
     await resetNeppyDataAndRestartCore('user-1');
 
-    // The helper used to call `openhuman.config_reset_local_data` over
+    // The helper used to call `neppy.config_reset_local_data` over
     // JSON-RPC followed by `restart_core_process`, but the in-process
     // remove failed on Windows when the running core held open handles
     // inside the data directory (OPENHUMAN-TAURI-AF). The Tauri shell
@@ -117,7 +117,7 @@ describe('tauriCommands', () => {
   });
 
   test('neppyLocalAiStatus returns upgrade hint on unknown method', async () => {
-    mockCallCoreRpc.mockRejectedValueOnce(new Error('unknown method: openhuman.inference_status'));
+    mockCallCoreRpc.mockRejectedValueOnce(new Error('unknown method: neppy.inference_status'));
 
     await expect(neppyLocalAiStatus()).rejects.toThrow(
       'Local model runtime is unavailable in this core build. Restart app after updating to the latest build.'

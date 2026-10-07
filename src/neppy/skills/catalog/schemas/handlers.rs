@@ -1,4 +1,4 @@
-//! RPC handler functions for `openhuman.skill_registry_*` controllers.
+//! RPC handler functions for `neppy.skill_registry_*` controllers.
 
 use serde_json::{Map, Value};
 

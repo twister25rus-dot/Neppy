@@ -802,7 +802,7 @@ mod tests {
     // broker whose tasks died with the first and the call fails with
     // "connection closed". Verified passing in isolation:
     //
-    //   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+    //   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
     //     execute_tron_quote_signs_and_broadcasts_native_transfer -- --ignored --test-threads=1
     //
     // Same constraint tinydocs documents for its module-backed tool tests.
@@ -816,7 +816,7 @@ mod tests {
 
         let record = TronMockRecord::default();
         let addr = start_tron_mock(record.clone()).await;
-        std::env::set_var("OPENHUMAN_WALLET_RPC_TRON", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_TRON", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -865,7 +865,7 @@ mod tests {
     // broker whose tasks died with the first and the call fails with
     // "connection closed". Verified passing in isolation:
     //
-    //   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+    //   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
     //     execute_tron_quote_signs_and_broadcasts_trc20_transfer -- --ignored --test-threads=1
     //
     // Same constraint tinydocs documents for its module-backed tool tests.
@@ -879,7 +879,7 @@ mod tests {
 
         let record = TronMockRecord::default();
         let addr = start_tron_mock(record.clone()).await;
-        std::env::set_var("OPENHUMAN_WALLET_RPC_TRON", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_TRON", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -927,7 +927,7 @@ mod tests {
     // broker whose tasks died with the first and the call fails with
     // "connection closed". Verified passing in isolation:
     //
-    //   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+    //   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
     //     execute_tron_quote_surfaces_node_rejection -- --ignored --test-threads=1
     //
     // Same constraint tinydocs documents for its module-backed tool tests.
@@ -970,7 +970,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_TRON", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_TRON", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -1085,7 +1085,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_TRON", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_TRON", format!("http://{addr}"));
         let info = tx_status("ab").await.unwrap();
         assert_eq!(info.state, TxState::Confirmed);
         assert_eq!(info.block_number, Some(555));
@@ -1115,7 +1115,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_TRON", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_TRON", format!("http://{addr}"));
         let info = tx_status("missing").await.unwrap();
         assert_eq!(info.state, TxState::NotFound);
     }

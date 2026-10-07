@@ -7,7 +7,7 @@
 //! holding an `agent.toml` (metadata) and `prompt.md` (system prompt). A
 //! thin wrapper in [`super::builtin_definitions`] loads them and appends
 //! the synthetic `fork` definition. Users can ship custom definitions as
-//! TOML files under `$OPENHUMAN_WORKSPACE/agents/*.toml` (with a fallback
+//! TOML files under `$NEPPY_WORKSPACE/agents/*.toml` (with a fallback
 //! to `~/.neppy/agents/*.toml` for user-global specialists) which
 //! override built-ins on id collision. See [`super::definition_loader`]
 //! for the directory scan + TOML parsing contract.
@@ -771,7 +771,7 @@ impl AgentDefinitionRegistry {
 
     /// Convenience: resolve the default workspace via
     /// [`crate::neppy::config::Config::load_or_init`] and load from
-    /// it. Built for sync CLI call sites (`openhuman agent list`,
+    /// it. Built for sync CLI call sites (`neppy-core agent list`,
     /// future inspection tools) so they don't re-implement the Config
     /// → workspace resolution dance. Must NOT be called from an
     /// existing tokio runtime — construct a runtime and `block_on`.
@@ -798,6 +798,16 @@ impl AgentDefinitionRegistry {
         self.order
             .iter()
             .filter_map(|id| self.by_id.get(id))
+            .collect()
+    }
+
+    /// Definitions a model may be offered as a spawn/delegate target: every
+    /// definition except `debug_agent`, which only a Debug-mode turn may run
+    /// (see `debug_mode::turn::ensure_agent_allowed`).
+    pub fn list_delegatable(&self) -> Vec<&AgentDefinition> {
+        self.list()
+            .into_iter()
+            .filter(|d| d.id != crate::neppy::agent::debug_mode::turn::DEBUG_AGENT_ID)
             .collect()
     }
 

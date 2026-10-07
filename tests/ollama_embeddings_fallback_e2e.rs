@@ -34,7 +34,7 @@ use tinymemory_core::store::factories::{
 
 // ── Env isolation ─────────────────────────────────────────────────────────────
 
-/// Serialises all tests in this file: `OPENHUMAN_OLLAMA_BASE_URL` is a
+/// Serialises all tests in this file: `NEPPY_OLLAMA_BASE_URL` is a
 /// process-global env var that the production code reads at call time, so
 /// concurrent mutation across tests would produce non-deterministic results.
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -63,7 +63,7 @@ fn env_lock() -> std::sync::MutexGuard<'static, ()> {
         .unwrap_or_else(|p| p.into_inner())
 }
 
-/// RAII guard: sets `OPENHUMAN_OLLAMA_BASE_URL` while the lock is held and
+/// RAII guard: sets `NEPPY_OLLAMA_BASE_URL` while the lock is held and
 /// restores (or removes) the original value on drop.
 struct OllamaUrlGuard {
     _lock: std::sync::MutexGuard<'static, ()>,
@@ -73,9 +73,9 @@ struct OllamaUrlGuard {
 impl OllamaUrlGuard {
     fn set(url: &str) -> Self {
         let lock = env_lock();
-        let prev = std::env::var("OPENHUMAN_OLLAMA_BASE_URL").ok();
+        let prev = neppy_core::neppy::util::env::var("NEPPY_OLLAMA_BASE_URL").ok();
         // SAFETY: guarded by ENV_LOCK — no concurrent env mutation in this test binary.
-        unsafe { std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", url) };
+        unsafe { std::env::set_var("NEPPY_OLLAMA_BASE_URL", url) };
         Self { _lock: lock, prev }
     }
 }
@@ -84,8 +84,8 @@ impl Drop for OllamaUrlGuard {
     fn drop(&mut self) {
         // SAFETY: same guard justification as OllamaUrlGuard::set.
         match self.prev.take() {
-            Some(v) => unsafe { std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", v) },
-            None => unsafe { std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL") },
+            Some(v) => unsafe { std::env::set_var("NEPPY_OLLAMA_BASE_URL", v) },
+            None => neppy_core::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL"),
         }
     }
 }

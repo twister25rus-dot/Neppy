@@ -48,7 +48,7 @@ mod imp {
     pub(crate) fn reap_stale_neppy_processes() {
         if core_process::reuse_existing_listener_enabled() {
             log::info!(
-                "[startup-recovery] OPENHUMAN_CORE_REUSE_EXISTING=1; skipping stale process reap"
+                "[startup-recovery] NEPPY_CORE_REUSE_EXISTING=1; skipping stale process reap"
             );
             return;
         }
@@ -398,7 +398,7 @@ mod linux_imp {
     pub(crate) fn reap_stale_neppy_processes() {
         if core_process::reuse_existing_listener_enabled() {
             log::info!(
-                "[startup-recovery] OPENHUMAN_CORE_REUSE_EXISTING=1; skipping stale process reap"
+                "[startup-recovery] NEPPY_CORE_REUSE_EXISTING=1; skipping stale process reap"
             );
             return;
         }
@@ -608,7 +608,7 @@ mod windows_imp {
     pub(crate) fn reap_stale_neppy_processes() {
         if core_process::reuse_existing_listener_enabled() {
             log::info!(
-                "[startup-recovery] OPENHUMAN_CORE_REUSE_EXISTING=1; skipping stale process reap"
+                "[startup-recovery] NEPPY_CORE_REUSE_EXISTING=1; skipping stale process reap"
             );
             return;
         }

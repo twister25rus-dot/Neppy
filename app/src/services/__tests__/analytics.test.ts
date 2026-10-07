@@ -266,7 +266,7 @@ describe('initSentry beforeSend manual-staging bypass', () => {
     const beforeSend = await captureBeforeSend();
     const { CoreRpcError } = await import('../coreRpcClient');
     const timeoutErr = new CoreRpcError(
-      'Core RPC openhuman.team_list_teams timed out after 30000ms',
+      'Core RPC neppy.team_list_teams timed out after 30000ms',
       'timeout'
     );
 

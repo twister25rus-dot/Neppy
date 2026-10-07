@@ -45,7 +45,7 @@ Files:
   `tests/{config_auth_app_state_connectivity_e2e.rs,json_rpc_e2e.rs}` with one
   focused regression asserting `openhuman.screen_intelligence_status`,
   `openhuman.screen_intelligence_capture_now`, and
-  `openhuman.config_update_screen_intelligence_settings` return JSON-RPC
+  `neppy.config_update_screen_intelligence_settings` return JSON-RPC
   method-not-found. Delete `tests/screen_intelligence_vision_e2e.rs` and remove
   its suite entry from `scripts/test-rust-e2e.sh`.
 - Remove only screen-intelligence assertions/fixtures from

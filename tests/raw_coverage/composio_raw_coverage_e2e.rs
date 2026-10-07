@@ -840,7 +840,7 @@ async fn composio_controller_registry_and_scope_handlers_cover_validation_edges(
     assert!(registered.iter().all(|controller| {
         controller
             .rpc_method_name()
-            .starts_with("openhuman.composio_")
+            .starts_with("neppy.composio_")
     }));
 
     let unknown = neppy_core::neppy::integrations::composio::schemas::schemas("not_real");

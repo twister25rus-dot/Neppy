@@ -29,7 +29,7 @@
 //! - any logs → `{"result": <value>, "logs": [...]}`
 //!
 //! Whether a given method carries logs is an implementation detail of its
-//! handler and can change without notice — `openhuman.config_get_runtime_flags`,
+//! handler and can change without notice — `neppy.config_get_runtime_flags`,
 //! for instance, always emits exactly one log, so it is *always* wrapped. A
 //! caller that deserialized the raw value would break on that method every
 //! single time, and would break on others only after an unrelated edit added a

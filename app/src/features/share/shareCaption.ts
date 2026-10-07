@@ -1,7 +1,7 @@
 /**
  * LLM-backed headline drafting for the share cards feature (#5006).
  *
- * Reuses the existing one-shot completion RPC (`openhuman.inference_agent_chat_simple`)
+ * Reuses the existing one-shot completion RPC (`neppy.inference_agent_chat_simple`)
  * to turn an agent's chat output into a short, punchy, first-person headline for
  * the card. Every failure mode (RPC error, empty/garbage response, no model
  * configured) degrades gracefully to the deterministic `buildFallbackHeadline`

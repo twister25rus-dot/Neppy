@@ -340,7 +340,7 @@ mod tests {
         );
         let base = spawn_mock(app).await;
         unsafe {
-            std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+            std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
         }
 
         let config = enabled_config();
@@ -351,9 +351,7 @@ mod tests {
         let _ = result; // Ensure the call path completes — exact pass/fail
                         // depends on model name matching in `has_model`.
 
-        unsafe {
-            std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-        }
+        crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     }
 
     #[tokio::test]
@@ -443,7 +441,7 @@ mod tests {
 
         let base = spawn_mock(mock_ollama_echoing_requested_model("llava:7b")).await;
         unsafe {
-            std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+            std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
         }
 
         let mut config = enabled_config();
@@ -459,10 +457,7 @@ mod tests {
             )
             .await;
 
-        unsafe {
-            std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-        }
-
+        crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
         assert_eq!(
             result.expect("vision prompt should succeed"),
             "llava:7b",
@@ -491,7 +486,7 @@ mod tests {
             );
         let base = spawn_mock(app).await;
         unsafe {
-            std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+            std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
         }
 
         let mut config = enabled_config();
@@ -508,10 +503,7 @@ mod tests {
             .await
             .expect_err("an unpullable vision model must fail");
 
-        unsafe {
-            std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-        }
-
+        crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
         assert!(
             err.contains("llava:7b"),
             "error should name the model: {err}"
@@ -553,7 +545,7 @@ mod tests {
             );
         let base = spawn_mock(app).await;
         unsafe {
-            std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+            std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
         }
 
         let mut config = enabled_config();
@@ -570,10 +562,7 @@ mod tests {
             .await
             .expect_err("a chat-only vision model must fail");
 
-        unsafe {
-            std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-        }
-
+        crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
         assert!(
             err.contains("gemma3n:e4b-it-q8_0"),
             "error must name the model the user actually configured: {err}"
@@ -622,7 +611,7 @@ mod tests {
         );
         let base = spawn_mock(app).await;
         unsafe {
-            std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+            std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
         }
 
         let mut config = enabled_config();
@@ -639,10 +628,7 @@ mod tests {
             .await
             .expect_err("a filesystem path is not an image payload");
 
-        unsafe {
-            std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-        }
-
+        crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
         assert!(
             err.contains("base64"),
             "error must say what the parameter accepts: {err}"

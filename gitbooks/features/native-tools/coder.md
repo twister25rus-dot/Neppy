@@ -35,7 +35,7 @@ A shell tool plus `cat`/`sed`/`awk` could _technically_ do all of this. The nati
 
 ## Workspace scoping
 
-Filesystem tools respect a workspace boundary - the agent can't read or write outside it without explicit permission. Same boundary the rest of the app uses for `OPENHUMAN_WORKSPACE`.
+Filesystem tools respect a workspace boundary - the agent can't read or write outside it without explicit permission. Same boundary the rest of the app uses for `NEPPY_WORKSPACE`.
 
 ## See also
 

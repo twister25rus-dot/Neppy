@@ -145,7 +145,7 @@ pub fn is_transient_fs_error(err: &anyhow::Error) -> bool {
                 //      handle. A retry-with-backoff resolves it as soon as
                 //      the holder closes its handle. Sentry OPENHUMAN-TAURI-H8
                 //      bails at `elapsed_ms ≈ 2` against
-                //      `openhuman.team_get_usage` because this code was not
+                //      `neppy.team_get_usage` because this code was not
                 //      previously classified as transient and `create_new`
                 //      returned a `kind = Other` io::Error on the first try.
                 // 665: ERROR_FILE_SYSTEM_LIMITATION — the NTFS filesystem

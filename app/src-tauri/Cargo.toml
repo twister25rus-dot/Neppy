@@ -103,7 +103,7 @@ log = "0.4"
 
 # Sentry for the Tauri shell (desktop host) process — separate Sentry project
 # from the React frontend and the Rust core sidecar. DSN is baked at compile
-# time via `option_env!("OPENHUMAN_TAURI_SENTRY_DSN")` in `lib.rs::run()` and
+# time via `option_env!("NEPPY_TAURI_SENTRY_DSN")` in `lib.rs::run()` and
 # can be overridden at runtime via the same env var. Feature set mirrors the
 # core sidecar (`Cargo.toml` at repo root) minus `tracing`.
 sentry = { version = "0.47.0", default-features = false, features = ["backtrace", "contexts", "panic", "debug-images", "httpdate"] }
@@ -152,7 +152,7 @@ uuid = { version = "1", features = ["v4"] }
 # shipped app silently, with no build error and no test failure:
 #
 # - `voice` — without it the `#[cfg(feature = "voice")]` controllers in
-#   `src/core/all.rs` are never registered, so the whole `openhuman.voice_*`
+#   `src/core/all.rs` are never registered, so the whole `neppy.voice_*`
 #   namespace answers "unknown method" at runtime. This shipped broken from
 #   v0.58.19 to v0.61.x (#4901); the `VOICE_COMPILED_IN` const assert at the
 #   top of `src/lib.rs` now fails the build if it is dropped again.
@@ -275,7 +275,7 @@ gateways = [
 # every `pnpm dev:app` will silently load the production bundle. DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
 sandbox-bubblewrap = []
-# Forwarded to the core crate to expose `openhuman.test_reset`. Off by
+# Forwarded to the core crate to expose `neppy.test_reset`. Off by
 # default; the E2E build flips it on via `cargo tauri build --features
 # e2e-test-support`. See app/scripts/e2e-build.sh.
 e2e-test-support = ["neppy_core/e2e-test-support"]

@@ -126,7 +126,7 @@ function normalizePermissionCheck(payload: unknown): BotPermissionCheck {
 export const channelConnectionsApi = {
   /** Fetch all available channel definitions from the backend. */
   listDefinitions: async (): Promise<ChannelDefinition[]> => {
-    const result = await callCoreRpc<unknown>({ method: 'openhuman.channels_list', params: {} });
+    const result = await callCoreRpc<unknown>({ method: 'neppy.channels_list', params: {} });
     return expectArray<ChannelDefinition>(result, 'Channel definitions');
   },
 
@@ -134,7 +134,7 @@ export const channelConnectionsApi = {
   listStatus: async (channel?: ChannelType): Promise<ChannelStatusEntry[]> => {
     const params: Record<string, string> = {};
     if (channel) params.channel = channel;
-    const result = await callCoreRpc<unknown>({ method: 'openhuman.channels_status', params });
+    const result = await callCoreRpc<unknown>({ method: 'neppy.channels_status', params });
     return expectArray<ChannelStatusEntry>(result, 'Channel status');
   },
 
@@ -144,7 +144,7 @@ export const channelConnectionsApi = {
     payload: ConnectChannelPayload
   ): Promise<ChannelConnectionResult> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_connect',
+      method: 'neppy.channels_connect',
       params: { channel, authMode: payload.authMode, credentials: payload.credentials ?? {} },
     });
     return normalizeConnectResult(result);
@@ -163,7 +163,7 @@ export const channelConnectionsApi = {
     if (options?.clearMemory) {
       params.clearMemory = true;
     }
-    await callCoreRpc({ method: 'openhuman.channels_disconnect', params });
+    await callCoreRpc({ method: 'neppy.channels_disconnect', params });
   },
 
   /** Test channel credentials without persisting. */
@@ -173,7 +173,7 @@ export const channelConnectionsApi = {
     credentials: Record<string, string>
   ): Promise<{ success: boolean; message: string }> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_test',
+      method: 'neppy.channels_test',
       params: { channel, authMode, credentials },
     });
     return expectObject<{ success: boolean; message: string }>(result, 'Channel test');
@@ -182,7 +182,7 @@ export const channelConnectionsApi = {
   /** Initiate managed Telegram DM login — creates a link token and returns a deep link URL. */
   telegramLoginStart: async (): Promise<TelegramLoginStartResult> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_telegram_login_start',
+      method: 'neppy.channels_telegram_login_start',
       params: {},
     });
     return expectObject<TelegramLoginStartResult>(result, 'Telegram login start');
@@ -191,7 +191,7 @@ export const channelConnectionsApi = {
   /** Check whether the Telegram managed DM link has been completed. */
   telegramLoginCheck: async (linkToken: string): Promise<TelegramLoginCheckResult> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_telegram_login_check',
+      method: 'neppy.channels_telegram_login_check',
       params: { linkToken },
     });
     return expectObject<TelegramLoginCheckResult>(result, 'Telegram login check');
@@ -200,7 +200,7 @@ export const channelConnectionsApi = {
   /** Initiate Discord managed link — creates a link token the user pastes into Discord as `!start <token>`. */
   discordLinkStart: async (): Promise<DiscordLinkStartResult> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_discord_link_start',
+      method: 'neppy.channels_discord_link_start',
       params: {},
     });
     return expectDiscordLinkStart(result);
@@ -209,7 +209,7 @@ export const channelConnectionsApi = {
   /** Check whether the Discord managed link has been completed. */
   discordLinkCheck: async (linkToken: string): Promise<DiscordLinkCheckResult> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_discord_link_check',
+      method: 'neppy.channels_discord_link_check',
       params: { linkToken },
     });
     return expectDiscordLinkComplete(result);
@@ -218,7 +218,7 @@ export const channelConnectionsApi = {
   /** List Discord servers (guilds) the connected bot is a member of. */
   listDiscordGuilds: async (): Promise<DiscordGuild[]> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_discord_list_guilds',
+      method: 'neppy.channels_discord_list_guilds',
       params: {},
     });
     return expectArray<DiscordGuild>(result, 'Discord guild list');
@@ -227,7 +227,7 @@ export const channelConnectionsApi = {
   /** List text channels in a Discord server. */
   listDiscordChannels: async (guildId: string): Promise<DiscordTextChannel[]> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_discord_list_channels',
+      method: 'neppy.channels_discord_list_channels',
       params: { guildId },
     });
     return expectArray<DiscordTextChannel>(result, 'Discord channel list');
@@ -239,7 +239,7 @@ export const channelConnectionsApi = {
     channelId: string
   ): Promise<BotPermissionCheck> => {
     const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_discord_check_permissions',
+      method: 'neppy.channels_discord_check_permissions',
       params: { guildId, channelId },
     });
     return normalizePermissionCheck(result);
@@ -252,17 +252,14 @@ export const channelConnectionsApi = {
    */
   updatePreferences: async (defaultMessagingChannel: ChannelType): Promise<void> => {
     await callCoreRpc({
-      method: 'openhuman.channels_set_default',
+      method: 'neppy.channels_set_default',
       params: { channel: defaultMessagingChannel },
     });
   },
 
   /** Read the core's persisted default messaging channel. */
   getDefaultChannel: async (): Promise<ChannelType | null> => {
-    const result = await callCoreRpc<unknown>({
-      method: 'openhuman.channels_get_default',
-      params: {},
-    });
+    const result = await callCoreRpc<unknown>({ method: 'neppy.channels_get_default', params: {} });
     const record = expectObject<{ active_channel?: unknown }>(result, 'Channel get_default');
     // Validate against known slugs so an unexpected core value can't leak into
     // Redux/API consumers despite the `ChannelType | null` contract (#3794 review).

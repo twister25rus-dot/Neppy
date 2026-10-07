@@ -28,7 +28,7 @@ describe('threadGoalApi', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ goal });
     const out = await threadGoalApi.get('t1');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.thread_goals_get',
+      method: 'neppy.thread_goals_get',
       params: { thread_id: 't1' },
     });
     expect(out?.objective).toBe('ship it');
@@ -43,7 +43,7 @@ describe('threadGoalApi', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: { goal }, logs: ['set'] });
     const out = await threadGoalApi.set('t1', 'ship it', 1000);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.thread_goals_set',
+      method: 'neppy.thread_goals_set',
       params: { thread_id: 't1', objective: 'ship it', token_budget: 1000 },
     });
     expect(out?.goalId).toBe('g-uuid');
@@ -53,7 +53,7 @@ describe('threadGoalApi', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: { goal }, logs: [] });
     await threadGoalApi.set('t1', 'ship it');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.thread_goals_set',
+      method: 'neppy.thread_goals_set',
       params: { thread_id: 't1', objective: 'ship it' },
     });
   });
@@ -65,9 +65,9 @@ describe('threadGoalApi', () => {
     await threadGoalApi.resume('t1');
     const methods = mockCallCoreRpc.mock.calls.map(c => (c[0] as { method: string }).method);
     expect(methods).toEqual([
-      'openhuman.thread_goals_complete',
-      'openhuman.thread_goals_pause',
-      'openhuman.thread_goals_resume',
+      'neppy.thread_goals_complete',
+      'neppy.thread_goals_pause',
+      'neppy.thread_goals_resume',
     ]);
   });
 

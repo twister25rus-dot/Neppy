@@ -7,15 +7,15 @@ use tempfile::tempdir;
 
 /// Points config resolution at a throwaway workspace for the duration of a test.
 ///
-/// `OPENHUMAN_WORKSPACE` is process-global, so every user of this must also hold
+/// `NEPPY_WORKSPACE` is process-global, so every user of this must also hold
 /// `TEST_ENV_LOCK`; the guard restores the previous value on drop so a test that
 /// sets it cannot leak into one that does not.
 struct WorkspaceEnvGuard(Option<std::ffi::OsString>);
 
 impl WorkspaceEnvGuard {
     fn set(path: &std::path::Path) -> Self {
-        let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-        std::env::set_var("OPENHUMAN_WORKSPACE", path);
+        let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+        std::env::set_var("NEPPY_WORKSPACE", path);
         Self(previous)
     }
 }
@@ -23,8 +23,8 @@ impl WorkspaceEnvGuard {
 impl Drop for WorkspaceEnvGuard {
     fn drop(&mut self) {
         match &self.0 {
-            Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }

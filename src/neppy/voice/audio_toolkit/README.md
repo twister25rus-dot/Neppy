@@ -8,7 +8,7 @@ Text-to-speech "podcast" toolkit. Synthesizes text into a workspace audio file v
 - Resolve and harden output paths: workspace-relative only, no absolute paths, no `..` traversal; default path is `artifacts/audio/<ts>-<slug>.<ext>`.
 - Enforce provider/format compatibility (`piper` → `wav` only; `cloud` → `mp3` only) and verify the provider's returned MIME matches the requested format.
 - Build a multipart email (plain body + audio attachment) and deliver it via the `EmailChannel` over SMTP.
-- In `e2e-test-support` builds (or when `OPENHUMAN_EMAIL_CAPTURE_DIR` is set), capture the `.eml` to a workspace file instead of sending.
+- In `e2e-test-support` builds (or when `NEPPY_EMAIL_CAPTURE_DIR` is set), capture the `.eml` to a workspace file instead of sending.
 - Surface all three operations as agent tools and JSON-RPC controllers.
 
 ## Key files
@@ -33,7 +33,7 @@ From `mod.rs`:
 
 ## RPC / controllers
 
-Namespace `audio_toolkit` (invoked as `openhuman.audio_toolkit_<function>`):
+Namespace `audio_toolkit` (invoked as `neppy.audio_toolkit_<function>`):
 
 | Method | Inputs | Output |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ Tools are constructed with `Arc<Config>` + `Arc<SecurityPolicy>` and registered 
 No durable domain store. Side effects are filesystem writes within the workspace:
 
 - Audio files → `artifacts/audio/` (or caller-supplied `output_path`).
-- Captured emails (test/e2e) → `artifacts/email-capture/` (or `OPENHUMAN_EMAIL_CAPTURE_DIR`) as `.eml` files named `podcast-email-<ts>-<uuid>.eml`.
+- Captured emails (test/e2e) → `artifacts/email-capture/` (or `NEPPY_EMAIL_CAPTURE_DIR`) as `.eml` files named `podcast-email-<ts>-<uuid>.eml`.
 
 ## Dependencies
 
@@ -83,5 +83,5 @@ No durable domain store. Side effects are filesystem writes within the workspace
 - `provider`/`format` are coupled: `piper` only emits `wav`, `cloud` only emits `mp3` — mismatches are hard errors (`resolve_format`). After synthesis the returned MIME is re-checked against the requested format (`enforce_audio_format`).
 - Default voice is only injected for `piper` (`DEFAULT_PIPER_VOICE`); `cloud` defaults to no explicit voice.
 - `email_podcast` re-validates `audio_path` (workspace-relative, no `..`) independently of `generate_podcast`; the combined flow overwrites the email request's `audio_path` with the freshly generated file's path.
-- Email capture mode is feature/env-gated: enabled under `feature = "e2e-test-support"` or when `OPENHUMAN_EMAIL_CAPTURE_DIR` is non-empty; otherwise SMTP send requires `channels_config.email` to be configured (`from_address` falls back to `openhuman@localhost.test`).
+- Email capture mode is feature/env-gated: enabled under `feature = "e2e-test-support"` or when `NEPPY_EMAIL_CAPTURE_DIR` is non-empty; otherwise SMTP send requires `channels_config.email` to be configured (`from_address` falls back to `openhuman@localhost.test`).
 - `AudioEmailDeliveryResult.mode` is `"capture"` or `"smtp"` to indicate which path ran.

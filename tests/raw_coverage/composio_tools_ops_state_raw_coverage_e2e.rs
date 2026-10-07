@@ -71,20 +71,20 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -93,7 +93,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -127,15 +127,15 @@ async fn setup(api_url: &str) -> Harness {
     std::fs::create_dir_all(&workspace).expect("workspace");
 
     let guards = vec![
-        EnvGuard::set_to_path("OPENHUMAN_WORKSPACE", &root),
+        EnvGuard::set_to_path("NEPPY_WORKSPACE", &root),
         EnvGuard::set_to_path("HOME", tmp.path()),
         EnvGuard::unset("BACKEND_URL"),
         EnvGuard::unset("VITE_BACKEND_URL"),
-        EnvGuard::unset("OPENHUMAN_API_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_RPC_URL"),
-        EnvGuard::unset("OPENHUMAN_CORE_PORT"),
-        EnvGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
+        EnvGuard::unset("NEPPY_API_URL"),
+        EnvGuard::unset("NEPPY_CORE_RPC_URL"),
+        EnvGuard::unset("NEPPY_CORE_PORT"),
+        EnvGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
     ];
 
     let mut config = Config {

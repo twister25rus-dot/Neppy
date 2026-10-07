@@ -13,7 +13,7 @@ describe('goalsApi', () => {
   it('list returns items from the bare GoalsDoc shape', async () => {
     mockCall.mockResolvedValueOnce({ items: [{ id: 'g1', text: 'ship it' }] });
     const res = await goalsApi.list();
-    expect(mockCall).toHaveBeenCalledWith({ method: 'openhuman.memory_goals_list', params: {} });
+    expect(mockCall).toHaveBeenCalledWith({ method: 'neppy.memory_goals_list', params: {} });
     expect(res).toEqual([{ id: 'g1', text: 'ship it' }]);
   });
 
@@ -37,7 +37,7 @@ describe('goalsApi', () => {
     });
     const res = await goalsApi.add('b');
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_goals_add',
+      method: 'neppy.memory_goals_add',
       params: { text: 'b' },
     });
     expect(res.map(g => g.id)).toEqual(['g1', 'g2']);
@@ -47,7 +47,7 @@ describe('goalsApi', () => {
     mockCall.mockResolvedValueOnce({ result: { items: [{ id: 'g1', text: 'new' }] }, logs: [] });
     const res = await goalsApi.edit('g1', 'new');
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_goals_edit',
+      method: 'neppy.memory_goals_edit',
       params: { id: 'g1', text: 'new' },
     });
     expect(res).toEqual([{ id: 'g1', text: 'new' }]);
@@ -57,7 +57,7 @@ describe('goalsApi', () => {
     mockCall.mockResolvedValueOnce({ result: { items: [] }, logs: [] });
     const res = await goalsApi.remove('g1');
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.memory_goals_delete',
+      method: 'neppy.memory_goals_delete',
       params: { id: 'g1' },
     });
     expect(res).toEqual([]);
@@ -70,7 +70,7 @@ describe('goalsApi', () => {
     });
     const res = await goalsApi.reflect();
     expect(mockCall).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.memory_goals_reflect', params: {} })
+      expect.objectContaining({ method: 'neppy.memory_goals_reflect', params: {} })
     );
     expect(res.ran).toBe(true);
     expect(res.summary).toBe('Added 1 goal');

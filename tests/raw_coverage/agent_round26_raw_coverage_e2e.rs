@@ -33,7 +33,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
@@ -43,7 +43,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match self.previous.take() {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -452,7 +452,7 @@ async fn builder_dedupes_visible_native_tools_and_seed_resume_bounds_history() -
 async fn debug_dump_integrations_agent_reports_missing_toolkit_without_network() -> Result<()> {
     let _env = env_lock();
     let workspace = tempfile::tempdir()?;
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", workspace.path());
 
     let err = dump_agent_prompt(DumpPromptOptions::new("integrations_agent"))
         .await

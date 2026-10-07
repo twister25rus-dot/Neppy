@@ -121,8 +121,8 @@ describe('Chat tool-error recovery', () => {
 
       // Also check Redux for a lifecycle state that indicates error/interrupted.
       const lifecycle = await browser.execute((tid: string) => {
-        const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-        const state = winAny.__OPENHUMAN_STORE__?.getState() as
+        const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+        const state = winAny.__NEPPY_STORE__?.getState() as
           | { chatRuntime?: { inferenceTurnLifecycleByThread?: Record<string, string | null> } }
           | undefined;
         return state?.chatRuntime?.inferenceTurnLifecycleByThread?.[tid] ?? null;
@@ -179,7 +179,7 @@ describe('Chat tool-error recovery', () => {
     await browser.waitUntil(
       async () => {
         const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-          'openhuman.test_support_in_flight_chats',
+          'neppy.test_support_in_flight_chats',
           {}
         );
         if (!snap.ok) return false;

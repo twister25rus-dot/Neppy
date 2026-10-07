@@ -126,7 +126,7 @@ export const skillRegistryApi = {
       const response = await callCoreRpc<
         Envelope<{ entries: CatalogEntry[] }> | { entries: CatalogEntry[] }
       >({
-        method: 'openhuman.skill_registry_browse',
+        method: 'neppy.skill_registry_browse',
         params: { force_refresh: forceRefresh },
         timeoutMs: CATALOG_RPC_TIMEOUT_MS,
       });
@@ -151,7 +151,7 @@ export const skillRegistryApi = {
     const response = await callCoreRpc<
       Envelope<{ entries: CatalogEntry[] }> | { entries: CatalogEntry[] }
     >({
-      method: 'openhuman.skill_registry_search',
+      method: 'neppy.skill_registry_search',
       params: { query, ...(source ? { source } : {}), ...(category ? { category } : {}) },
       timeoutMs: CATALOG_RPC_TIMEOUT_MS,
     });
@@ -163,7 +163,7 @@ export const skillRegistryApi = {
   sources: async (): Promise<string[]> => {
     log('sources: request');
     const response = await callCoreRpc<Envelope<{ sources: string[] }> | { sources: string[] }>({
-      method: 'openhuman.skill_registry_sources',
+      method: 'neppy.skill_registry_sources',
       timeoutMs: CATALOG_RPC_TIMEOUT_MS,
     });
     const result = unwrap(response);
@@ -175,7 +175,7 @@ export const skillRegistryApi = {
     log('categories: request');
     const response = await callCoreRpc<
       Envelope<{ categories: string[] }> | { categories: string[] }
-    >({ method: 'openhuman.skill_registry_categories', timeoutMs: CATALOG_RPC_TIMEOUT_MS });
+    >({ method: 'neppy.skill_registry_categories', timeoutMs: CATALOG_RPC_TIMEOUT_MS });
     const result = unwrap(response);
     log('categories: count=%d', result.categories.length);
     return result.categories;
@@ -185,7 +185,7 @@ export const skillRegistryApi = {
     log('install: entryId=%s', entryId);
     const response = await callCoreRpc<
       Envelope<RawRegistryInstallResult> | RawRegistryInstallResult
-    >({ method: 'openhuman.skill_registry_install', params: { entry_id: entryId } });
+    >({ method: 'neppy.skill_registry_install', params: { entry_id: entryId } });
     const raw = unwrap(response);
     const result: RegistryInstallResult = {
       url: raw.url,
@@ -201,7 +201,7 @@ export const skillRegistryApi = {
     log('uninstall: name=%s', name);
     const response = await callCoreRpc<
       Envelope<RawRegistryUninstallResult> | RawRegistryUninstallResult
-    >({ method: 'openhuman.skill_registry_uninstall', params: { name } });
+    >({ method: 'neppy.skill_registry_uninstall', params: { name } });
     const raw = unwrap(response);
     const result: RegistryUninstallResult = {
       name: raw.name,
@@ -216,7 +216,7 @@ export const skillRegistryApi = {
     log('schemas: request');
     const response = await callCoreRpc<
       Envelope<{ schemas: ControllerSchemaSummary[] }> | { schemas: ControllerSchemaSummary[] }
-    >({ method: 'openhuman.skill_registry_schemas' });
+    >({ method: 'neppy.skill_registry_schemas' });
     const result = unwrap(response);
     log('schemas: count=%d', result.schemas.length);
     return result.schemas;

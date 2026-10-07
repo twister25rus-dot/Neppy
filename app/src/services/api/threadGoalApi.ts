@@ -1,5 +1,5 @@
 /**
- * Frontend client for the thread-level goal surface (`openhuman.thread_goals_*`).
+ * Frontend client for the thread-level goal surface (`neppy.thread_goals_*`).
  *
  * A thread goal is a single, thread-scoped "completion contract" (Codex-style)
  * the agent pursues across turns — distinct from the global long-term goals list
@@ -14,7 +14,7 @@ import debug from 'debug';
 
 import { callCoreRpc } from '../coreRpcClient';
 
-const log = debug('openhuman:threadGoalApi');
+const log = debug('neppy:threadGoalApi');
 
 /** Lifecycle state of a thread goal (mirrors the Rust `ThreadGoalStatus`). */
 export type ThreadGoalStatus = 'active' | 'paused' | 'budget_limited' | 'complete';
@@ -52,7 +52,7 @@ export const threadGoalApi = {
   get: async (threadId: string): Promise<ThreadGoal | null> => {
     log('get thread=%s', threadId);
     const res = await callCoreRpc<unknown>({
-      method: 'openhuman.thread_goals_get',
+      method: 'neppy.thread_goals_get',
       params: { thread_id: threadId },
     });
     return extractGoal(res);
@@ -67,7 +67,7 @@ export const threadGoalApi = {
     log('set thread=%s budget=%o', threadId, tokenBudget);
     const params: Record<string, unknown> = { thread_id: threadId, objective };
     if (typeof tokenBudget === 'number') params.token_budget = tokenBudget;
-    const res = await callCoreRpc<unknown>({ method: 'openhuman.thread_goals_set', params });
+    const res = await callCoreRpc<unknown>({ method: 'neppy.thread_goals_set', params });
     return extractGoal(res);
   },
 
@@ -75,7 +75,7 @@ export const threadGoalApi = {
   complete: async (threadId: string): Promise<ThreadGoal | null> => {
     log('complete thread=%s', threadId);
     const res = await callCoreRpc<unknown>({
-      method: 'openhuman.thread_goals_complete',
+      method: 'neppy.thread_goals_complete',
       params: { thread_id: threadId },
     });
     return extractGoal(res);
@@ -85,7 +85,7 @@ export const threadGoalApi = {
   pause: async (threadId: string): Promise<ThreadGoal | null> => {
     log('pause thread=%s', threadId);
     const res = await callCoreRpc<unknown>({
-      method: 'openhuman.thread_goals_pause',
+      method: 'neppy.thread_goals_pause',
       params: { thread_id: threadId },
     });
     return extractGoal(res);
@@ -95,7 +95,7 @@ export const threadGoalApi = {
   resume: async (threadId: string): Promise<ThreadGoal | null> => {
     log('resume thread=%s', threadId);
     const res = await callCoreRpc<unknown>({
-      method: 'openhuman.thread_goals_resume',
+      method: 'neppy.thread_goals_resume',
       params: { thread_id: threadId },
     });
     return extractGoal(res);
@@ -105,7 +105,7 @@ export const threadGoalApi = {
   clear: async (threadId: string): Promise<boolean> => {
     log('clear thread=%s', threadId);
     const res = await callCoreRpc<unknown>({
-      method: 'openhuman.thread_goals_clear',
+      method: 'neppy.thread_goals_clear',
       params: { thread_id: threadId },
     });
     const value = unwrap<{ removed?: boolean }>(res);

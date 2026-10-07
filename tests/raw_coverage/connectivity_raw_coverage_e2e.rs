@@ -39,20 +39,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -61,7 +61,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -146,12 +146,12 @@ async fn setup() -> TestHarness {
     let neppy_dir = tmp.path().join(".neppy");
     write_min_config(&neppy_dir);
     let guards = vec![
-        EnvVarGuard::set_to_path("OPENHUMAN_HOME", &neppy_dir),
-        EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path()),
-        EnvVarGuard::set("OPENHUMAN_API_URL", "http://127.0.0.1:9"),
-        EnvVarGuard::set("OPENHUMAN_SECRETS_ENCRYPT", "false"),
-        EnvVarGuard::unset("OPENHUMAN_CORE_RPC_URL"),
-        EnvVarGuard::unset("OPENHUMAN_CORE_PORT"),
+        EnvVarGuard::set_to_path("NEPPY_HOME", &neppy_dir),
+        EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path()),
+        EnvVarGuard::set("NEPPY_API_URL", "http://127.0.0.1:9"),
+        EnvVarGuard::set("NEPPY_SECRETS_ENCRYPT", "false"),
+        EnvVarGuard::unset("NEPPY_CORE_RPC_URL"),
+        EnvVarGuard::unset("NEPPY_CORE_PORT"),
     ];
     let (addr, rpc_join) = serve_rpc().await;
     TestHarness {
@@ -295,12 +295,12 @@ async fn connectivity_diag_rpc_reports_live_listener_port_and_process() {
         .expect("rpc url")
         .port()
         .expect("rpc port");
-    let _core_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", &rpc_port.to_string());
+    let _core_port = EnvVarGuard::set("NEPPY_CORE_PORT", &rpc_port.to_string());
 
     let diag_result = rpc(
         &harness.rpc_base,
         91_001,
-        "openhuman.connectivity_diag",
+        "neppy.connectivity_diag",
         json!({}),
     )
     .await;
@@ -326,15 +326,15 @@ async fn connectivity_diag_rpc_reports_live_listener_port_and_process() {
 #[tokio::test]
 async fn connectivity_diag_direct_path_prefers_rpc_url_and_handles_invalid_port_env() {
     let _lock = env_lock();
-    let _clean_rpc_url = EnvVarGuard::unset("OPENHUMAN_CORE_RPC_URL");
-    let _clean_core_port = EnvVarGuard::unset("OPENHUMAN_CORE_PORT");
+    let _clean_rpc_url = EnvVarGuard::unset("NEPPY_CORE_RPC_URL");
+    let _clean_core_port = EnvVarGuard::unset("NEPPY_CORE_PORT");
     let listener = reserve_port();
     let port = listener.local_addr().expect("reserved addr").port();
     let _rpc_url = EnvVarGuard::set(
-        "OPENHUMAN_CORE_RPC_URL",
+        "NEPPY_CORE_RPC_URL",
         &format!("http://127.0.0.1:{port}/rpc"),
     );
-    let _port_env = EnvVarGuard::set("OPENHUMAN_CORE_PORT", "not-a-port");
+    let _port_env = EnvVarGuard::set("NEPPY_CORE_PORT", "not-a-port");
 
     let outcome = diag().await.expect("diag should serialize");
     let value = outcome
@@ -352,7 +352,7 @@ async fn connectivity_diag_direct_path_prefers_rpc_url_and_handles_invalid_port_
     drop(listener);
 
     drop(_rpc_url);
-    let _invalid_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", "still-not-a-port");
+    let _invalid_port = EnvVarGuard::set("NEPPY_CORE_PORT", "still-not-a-port");
     let fallback_default = diag()
         .await
         .expect("diag with invalid port env")
@@ -367,7 +367,7 @@ async fn connectivity_diag_direct_path_prefers_rpc_url_and_handles_invalid_port_
     );
 
     drop(_invalid_port);
-    let _valid_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", &port.to_string());
+    let _valid_port = EnvVarGuard::set("NEPPY_CORE_PORT", &port.to_string());
     let env_port = diag()
         .await
         .expect("diag with valid port env")
@@ -382,8 +382,8 @@ async fn connectivity_diag_direct_path_prefers_rpc_url_and_handles_invalid_port_
     );
 
     drop(_valid_port);
-    let _url_without_port = EnvVarGuard::set("OPENHUMAN_CORE_RPC_URL", "http://127.0.0.1/rpc");
-    let _fallback_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", &port.to_string());
+    let _url_without_port = EnvVarGuard::set("NEPPY_CORE_RPC_URL", "http://127.0.0.1/rpc");
+    let _fallback_port = EnvVarGuard::set("NEPPY_CORE_PORT", &port.to_string());
     let url_without_port = diag()
         .await
         .expect("diag should fall through URL without explicit port")
@@ -401,8 +401,8 @@ async fn connectivity_diag_direct_path_prefers_rpc_url_and_handles_invalid_port_
 #[tokio::test]
 async fn connectivity_ops_schema_and_socket_snapshot_paths_are_exercised() {
     let _lock = env_lock();
-    let _clean_rpc_url = EnvVarGuard::unset("OPENHUMAN_CORE_RPC_URL");
-    let _clean_core_port = EnvVarGuard::unset("OPENHUMAN_CORE_PORT");
+    let _clean_rpc_url = EnvVarGuard::unset("NEPPY_CORE_RPC_URL");
+    let _clean_core_port = EnvVarGuard::unset("NEPPY_CORE_PORT");
     let reserved = reserve_port();
     let port = reserved.local_addr().expect("reserved addr").port();
     assert!(is_port_in_use(port));
@@ -422,7 +422,7 @@ async fn connectivity_ops_schema_and_socket_snapshot_paths_are_exercised() {
     assert!(unknown.description.contains("Unknown connectivity"));
 
     set_global_socket_manager(std::sync::Arc::new(SocketManager::new()));
-    let _core_port = EnvVarGuard::set("OPENHUMAN_CORE_PORT", &port.to_string());
+    let _core_port = EnvVarGuard::set("NEPPY_CORE_PORT", &port.to_string());
     let value = diag()
         .await
         .expect("diag with socket manager")
@@ -440,7 +440,7 @@ async fn connectivity_ops_schema_and_socket_snapshot_paths_are_exercised() {
     assert_eq!(registered.len(), 1);
     assert_eq!(
         registered[0].rpc_method_name(),
-        "openhuman.connectivity_diag"
+        "neppy.connectivity_diag"
     );
     let handled = (registered[0].handler)(serde_json::Map::new())
         .await
@@ -504,7 +504,7 @@ async fn pick_listen_port_detects_neppy_listener_for_takeover() {
 
     let err = pick_listen_port_for_host("127.0.0.1", probe.port)
         .await
-        .expect_err("openhuman listener should request takeover");
+        .expect_err("neppy listener should request takeover");
     assert!(err.to_string().contains("stale-listener takeover required"));
     match err {
         PickListenPortError::WouldTakeOver {
@@ -525,7 +525,7 @@ async fn pick_listen_port_falls_back_for_non_neppy_and_status_fingerprints() {
 
     let picked = pick_listen_port_for_host("127.0.0.1", probe.port)
         .await
-        .expect("non-openhuman listener should fall back");
+        .expect("non-neppy listener should fall back");
     assert!(
         picked.port > probe.port,
         "fallback port must be higher than probe port"
@@ -574,7 +574,7 @@ async fn pick_listen_port_identifies_ipv6_neppy_listener_when_supported() {
 
     let err = pick_listen_port_for_host("::1", probe.port)
         .await
-        .expect_err("IPv6 openhuman listener should request takeover");
+        .expect_err("IPv6 neppy listener should request takeover");
     match err {
         PickListenPortError::WouldTakeOver {
             preferred,
@@ -618,7 +618,7 @@ async fn pick_listen_port_reports_no_available_fallbacks() {
         } => {
             assert_eq!(actual_preferred, preferred);
             assert!(
-                fingerprint.contains("did not identify as openhuman"),
+                fingerprint.contains("did not identify as neppy"),
                 "unexpected fingerprint: {fingerprint}"
             );
             assert_eq!(

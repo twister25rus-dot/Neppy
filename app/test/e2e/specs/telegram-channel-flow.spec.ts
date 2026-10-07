@@ -1,7 +1,7 @@
 /**
  * E2E: Telegram channel connect / receive / send / disconnect flows.
  *
- * Drives the `openhuman.channels_*` RPC surface against the mock backend
+ * Drives the `neppy.channels_*` RPC surface against the mock backend
  * (Telegram Bot API routes wired by WS-A, API-base override wired by WS-B).
  *
  * Scenarios implemented:
@@ -22,7 +22,7 @@
  *   - The in-process core starts the channel polling loop AFTER the config is
  *     written (channels_connect sets restart_required: true). In E2E the core
  *     is already running with the bot_token config already applied at startup
- *     via OPENHUMAN_WORKSPACE. For scenarios that require the live polling loop
+ *     via NEPPY_WORKSPACE. For scenarios that require the live polling loop
  *     (C.5–C.10) we rely on the core restarting the channel listener after the
  *     connect call — or we use channels_test to validate the bot token against
  *     the mock without waiting for the full poll loop.
@@ -158,7 +158,7 @@ describe('Telegram channel — connect / receive / send / disconnect', () => {
     this.timeout(30_000);
     console.log(`${LOG_PREFIX} C.1: calling channels_list`);
 
-    const out = await callNeppyRpc('openhuman.channels_list', {});
+    const out = await callNeppyRpc('neppy.channels_list', {});
     console.log(`${LOG_PREFIX} C.1: result = ${JSON.stringify(out).slice(0, 500)}`);
 
     expect(out.ok).toBe(true);
@@ -206,7 +206,7 @@ describe('Telegram channel — connect / receive / send / disconnect', () => {
     this.timeout(30_000);
     console.log(`${LOG_PREFIX} C.2: calling channels_describe`);
 
-    const out = await callNeppyRpc('openhuman.channels_describe', { channel: 'telegram' });
+    const out = await callNeppyRpc('neppy.channels_describe', { channel: 'telegram' });
     console.log(`${LOG_PREFIX} C.2: result = ${JSON.stringify(out).slice(0, 800)}`);
 
     expect(out.ok).toBe(true);
@@ -301,7 +301,7 @@ describe('Telegram channel — connect / receive / send / disconnect', () => {
     // (The telegramGetMeFails behavior key affects the live polling getMe
     // call, not the RPC-level credential write. We test the RPC validation
     // here since that is the observable failure mode at the E2E boundary.)
-    const out = await callNeppyRpc('openhuman.channels_connect', {
+    const out = await callNeppyRpc('neppy.channels_connect', {
       channel: 'telegram',
       authMode: 'bot_token',
       credentials: { bot_token: '' },

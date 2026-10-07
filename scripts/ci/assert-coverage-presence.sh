@@ -46,7 +46,7 @@ die() {
 #                                  forwarded (INTENTIONALLY_NOT_FORWARDED in
 #                                  scripts/lib/feature-forwarding.mjs).
 #   src/neppy/test_support/    `e2e-test-support`; the destructive
-#                                  `openhuman.test_reset` RPC must never ship.
+#                                  `neppy.test_reset` RPC must never ship.
 #   .../browser/native_backend.rs  `browser-native`, an opt-in dev backend.
 UNCOVERED_BY_DESIGN='^(src/tui/|src/neppy/test_support/|src/neppy/tools/impl/browser/native_backend\.rs$)'
 

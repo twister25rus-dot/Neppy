@@ -3,7 +3,7 @@
  *
  * Surfaces the read-only Flow Scout's workflow suggestions as friendly cards.
  * A "Discover" button runs the `flow_discovery` agent
- * (`openhuman.flows_discover`), which reasons over the user's
+ * (`neppy.flows_discover`), which reasons over the user's
  * memory/threads/connections/existing flows and records concrete, buildable
  * suggestions. Each card shows the pitch (title, one-liner, rationale) plus two
  * actions:

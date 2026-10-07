@@ -11,7 +11,7 @@
 //! tell those apart, so an embedder has to present a session like anyone else.
 //!
 //! Before this existed, every embedder reached for `Core::raw()` and hand-wrote
-//! `openhuman.auth_store_session` — which is how an unrelated host ends up
+//! `neppy.auth_store_session` — which is how an unrelated host ends up
 //! owning a copy of the `{result, logs}` envelope heuristic and a private
 //! version of the auth state struct.
 //!
@@ -117,7 +117,7 @@ impl Auth<'_> {
         log::debug!("[embed][auth] storing session local={}", session.is_local());
         let _: serde_json::Value = call(
             self.0,
-            "openhuman.auth_store_session",
+            "neppy.auth_store_session",
             serde_json::json!({
                 "token": session.token,
                 "user": session.user,
@@ -129,7 +129,7 @@ impl Auth<'_> {
 
     /// Read the current auth state. Does not make a network call.
     pub async fn state(&self) -> Result<AuthState, CoreError> {
-        call(self.0, "openhuman.auth_get_state", serde_json::json!({})).await
+        call(self.0, "neppy.auth_get_state", serde_json::json!({})).await
     }
 
     /// The stored session token, if there is one.
@@ -150,7 +150,7 @@ impl Auth<'_> {
         }
         let payload: TokenPayload = call(
             self.0,
-            "openhuman.auth_get_session_token",
+            "neppy.auth_get_session_token",
             serde_json::json!({}),
         )
         .await?;
@@ -161,12 +161,8 @@ impl Auth<'_> {
 
     /// Remove the stored session.
     pub async fn clear(&self) -> Result<(), CoreError> {
-        let _: serde_json::Value = call(
-            self.0,
-            "openhuman.auth_clear_session",
-            serde_json::json!({}),
-        )
-        .await?;
+        let _: serde_json::Value =
+            call(self.0, "neppy.auth_clear_session", serde_json::json!({})).await?;
         Ok(())
     }
 }

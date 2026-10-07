@@ -39,7 +39,7 @@ use std::sync::Arc;
 use tinyagents::harness::model::{ChatModel, ModelRequest, ModelResponse, ModelStream};
 
 /// Sentinel meaning "use the Neppy backend session JWT".
-pub const PROVIDER_OPENHUMAN: &str = "openhuman";
+pub const PROVIDER_NEPPY: &str = "openhuman";
 /// Prefix for Ollama-local providers: `"ollama:<model>"`.
 pub const OLLAMA_PROVIDER_PREFIX: &str = "ollama:";
 /// Prefix for LM Studio-local providers: `"lmstudio:<model>"`.
@@ -55,7 +55,7 @@ pub const CLAUDE_AGENT_SDK_PREFIX: &str = "claude_agent_sdk:";
 /// Sentinel for the Claude Agent SDK provider without a model suffix.
 pub const CLAUDE_AGENT_SDK_PROVIDER: &str = "claude_agent_sdk";
 /// Sentinel returned when a user has expressed custom/BYOK inference intent
-/// (via a non-openhuman `inference_url`) but no matching `cloud_providers`
+/// (via a non-neppy `inference_url`) but no matching `cloud_providers`
 /// entry was found. Passed through `provider_for_role` and caught early in
 /// `create_chat_model_from_string` to produce a clear configuration error
 /// instead of silently routing through the managed Neppy backend.
@@ -160,8 +160,7 @@ pub fn resolve_model_for_hint(hint_or_tier: &str, config: &Config) -> String {
 
     let provider_string = provider_for_role(role, config);
     let ps = provider_string.trim();
-    if ps.is_empty() || ps == "cloud" || ps == PROVIDER_OPENHUMAN || ps == BYOK_INCOMPLETE_SENTINEL
-    {
+    if ps.is_empty() || ps == "cloud" || ps == PROVIDER_NEPPY || ps == BYOK_INCOMPLETE_SENTINEL {
         tier.to_string()
     } else if let Some(idx) = ps.find(':') {
         let model_with_temp = &ps[idx + 1..];
@@ -389,7 +388,7 @@ pub fn provider_for_role(role: &str, config: &Config) -> String {
 /// redirect stays testable — that gate is unconditionally off under `cfg(test)`.
 pub(crate) fn provider_for_role_with_mode(role: &str, config: &Config, local_mode: bool) -> String {
     let resolved = provider_for_role_upstream(role, config);
-    if local_mode && resolved.trim() == PROVIDER_OPENHUMAN {
+    if local_mode && resolved.trim() == PROVIDER_NEPPY {
         if let Some(active) = neppy_active_provider_string(config) {
             log::debug!(
                 "[providers][chat-factory] Neppy: role '{}' resolves to the managed backend, \
@@ -472,7 +471,7 @@ pub fn role_bypasses_managed_credits(role: &str, config: &Config) -> bool {
     let resolved = provider_for_role(role, config);
     let r = resolved.trim();
     let is_managed =
-        r.is_empty() || r == "cloud" || r == PROVIDER_OPENHUMAN || r == BYOK_INCOMPLETE_SENTINEL;
+        r.is_empty() || r == "cloud" || r == PROVIDER_NEPPY || r == BYOK_INCOMPLETE_SENTINEL;
     let usable_byo = !is_managed && route_has_usable_credentials(r, config);
     log::debug!(
         "[billing] role_bypasses_managed_credits role={role} resolved={resolved} \
@@ -541,7 +540,7 @@ pub(crate) fn resolve_byok_fallback_provider_string(config: &Config) -> Option<S
     ];
     for candidate in candidates.iter().flatten() {
         let s = candidate.trim();
-        if s.is_empty() || s == "cloud" || s == PROVIDER_OPENHUMAN {
+        if s.is_empty() || s == "cloud" || s == PROVIDER_NEPPY {
             continue;
         }
         // Skip local providers — they are not suitable fallbacks for agentic
@@ -607,7 +606,7 @@ pub mod test_provider_override {
 /// LocalOnly privacy-mode block message so the user knows what was refused.
 fn external_provider_label(provider: &str) -> String {
     let p = provider.trim();
-    if p == PROVIDER_OPENHUMAN {
+    if p == PROVIDER_NEPPY {
         return "Neppy (managed cloud)".to_string();
     }
     if p == BYOK_INCOMPLETE_SENTINEL {
@@ -695,7 +694,7 @@ fn emit_inference_egress(role: &str, provider: &str) {
         // Defensive: a sentinel would re-resolve on recursion; don't emit here.
         return;
     }
-    if p == PROVIDER_OPENHUMAN {
+    if p == PROVIDER_NEPPY {
         // Managed backend is emitted centrally in `resolve_managed_backend`,
         // the universal managed ChatModel funnel. Skipping here avoids a
         // duplicate descriptor.
@@ -812,7 +811,7 @@ fn resolves_to_managed_backend(role: &str, config: &Config) -> bool {
     if trimmed.is_empty() || trimmed == "cloud" {
         resolved = resolve_primary_cloud_provider_string(config);
     }
-    resolved.trim() == PROVIDER_OPENHUMAN
+    resolved.trim() == PROVIDER_NEPPY
 }
 
 /// Probe whether `role` can actually complete an inference call right now
@@ -928,7 +927,7 @@ fn create_chat_model_from_string_with_model_id_inner(
         if resolved.is_empty() || resolved == "cloud" {
             resolved = resolve_primary_cloud_provider_string(config);
         }
-        if resolved == PROVIDER_OPENHUMAN {
+        if resolved == PROVIDER_NEPPY {
             return make_neppy_backend_model(role, config);
         }
         if let Some(result) =
@@ -1307,14 +1306,14 @@ fn resolve_managed_backend_with_model_override(
     // `~/.neppy`, and reads an unrelated (or empty)
     // profile store — surfacing as "No backend session: store a JWT
     // via auth (app-session)" even though login just succeeded in the
-    // user's actual workspace (e.g. test workspaces under OPENHUMAN_WORKSPACE).
+    // user's actual workspace (e.g. test workspaces under NEPPY_WORKSPACE).
     let options = ProviderRuntimeOptions {
         neppy_dir: config.config_path.parent().map(std::path::PathBuf::from),
         secrets_encrypt: config.secrets.encrypt,
         ..ProviderRuntimeOptions::default()
     };
     log::debug!(
-        "[providers][chat-factory] building openhuman backend provider model={} state_dir={:?} secrets_encrypt={}",
+        "[providers][chat-factory] building neppy backend provider model={} state_dir={:?} secrets_encrypt={}",
         model,
         options.neppy_dir,
         options.secrets_encrypt
@@ -1511,7 +1510,7 @@ fn create_turn_chat_model_with_native_tools_and_route_inner(
                         .with_default_model(model)
                         .with_native_tool_calling(native_tool_calling),
                 ),
-                PROVIDER_OPENHUMAN.to_string(),
+                PROVIDER_NEPPY.to_string(),
                 model.to_string(),
             ));
         }
@@ -1681,12 +1680,12 @@ fn try_create_claude_code_chat_model_from_string(
 /// whose effective provider differs from the role's default resolution.
 ///
 /// The triage path needs this: [`build_remote_provider`](crate::neppy::agent::triage::routing)
-/// forces the managed backend (`provider_string == `[`PROVIDER_OPENHUMAN`]) when the
+/// forces the managed backend (`provider_string == `[`PROVIDER_NEPPY`]) when the
 /// subconscious route is local / BYOK-incomplete — the #1257 *"triage never goes
 /// local"* invariant — which a plain [`create_turn_chat_model`] (role → `provider_for_role`)
 /// would violate by building the local model.
 ///
-/// - `provider_string` empty / `"cloud"` / [`PROVIDER_OPENHUMAN`] → managed
+/// - `provider_string` empty / `"cloud"` / [`PROVIDER_NEPPY`] → managed
 ///   [`NeppyBackendModel`] pinned to `model` (the force-managed case).
 /// - Otherwise the string equals what the role resolves to (a BYOK cloud slug), so
 ///   this delegates to [`create_turn_chat_model`] for `role`.
@@ -1759,7 +1758,7 @@ pub(crate) fn create_turn_chat_model_from_string_with_native_tools_and_route(
         }
     };
     let p = provider_string.trim();
-    let mut is_managed = p.is_empty() || p == "cloud" || p == PROVIDER_OPENHUMAN;
+    let mut is_managed = p.is_empty() || p == "cloud" || p == PROVIDER_NEPPY;
 
     // Neppy: the managed backend has no host. A caller that *forces* it — the
     // triage router's `build_remote_provider`, per the "triage never goes local"
@@ -1792,7 +1791,7 @@ pub(crate) fn create_turn_chat_model_from_string_with_native_tools_and_route(
                 ),
                 temperature,
             ),
-            PROVIDER_OPENHUMAN.to_string(),
+            PROVIDER_NEPPY.to_string(),
             model.to_string(),
         ));
     }
@@ -1835,10 +1834,10 @@ type OptionalChatModelResult = Option<anyhow::Result<ResolvedChatModel>>;
 /// a supervised server to another port left the panel working and chat dialling
 /// the old address.
 ///
-/// `OPENHUMAN_LOCAL_INFERENCE_URL` still wins, because it is the cross-runtime
+/// `NEPPY_LOCAL_INFERENCE_URL` still wins, because it is the cross-runtime
 /// override every other local branch honours through `env_or_config_url`.
 fn mlx_endpoint(config: &Config) -> String {
-    std::env::var("OPENHUMAN_LOCAL_INFERENCE_URL")
+    crate::neppy::util::env::var("NEPPY_LOCAL_INFERENCE_URL")
         .ok()
         .map(|url| url.trim().to_string())
         .filter(|url| !url.is_empty())
@@ -1905,10 +1904,14 @@ fn try_create_local_runtime_chat_model_from_string(
     };
     // First env override, else `local_ai.base_url`, else the profile default.
     let env_or_config_url = |env: &str, default: &str| {
-        std::env::var("OPENHUMAN_LOCAL_INFERENCE_URL")
+        crate::neppy::util::env::var("NEPPY_LOCAL_INFERENCE_URL")
             .ok()
             .filter(|s| !s.trim().is_empty())
-            .or_else(|| std::env::var(env).ok().filter(|s| !s.trim().is_empty()))
+            .or_else(|| {
+                crate::neppy::util::env::var(env)
+                    .ok()
+                    .filter(|s| !s.trim().is_empty())
+            })
             .or_else(|| config.local_ai.base_url.clone())
             .unwrap_or_else(|| default.to_string())
     };
@@ -2058,7 +2061,7 @@ pub(crate) fn neppy_local_mode() -> bool {
     use std::sync::OnceLock;
     static LOCAL_MODE: OnceLock<bool> = OnceLock::new();
     *LOCAL_MODE.get_or_init(|| {
-        match std::env::var("NEPPY_LOCAL_MODE") {
+        match crate::neppy::util::env::var("NEPPY_LOCAL_MODE") {
             Ok(v) => {
                 let v = v.trim().to_ascii_lowercase();
                 !(v == "0" || v == "false" || v == "off" || v == "no")
@@ -2228,7 +2231,7 @@ fn usable_redirect_target(
 /// the Neppy managed-backend redirect. See [`neppy_active_provider_string`].
 fn resolve_primary_cloud_provider_string(config: &Config) -> String {
     let resolved = resolve_primary_cloud_provider_string_upstream(config);
-    if neppy_local_mode() && resolved == PROVIDER_OPENHUMAN {
+    if neppy_local_mode() && resolved == PROVIDER_NEPPY {
         if let Some(active) = neppy_active_provider_string(config) {
             log::debug!(
                 "[providers][chat-factory] Neppy: managed backend has no host; \
@@ -2285,7 +2288,7 @@ fn resolve_primary_cloud_provider_string_upstream(config: &Config) -> String {
             );
             BYOK_INCOMPLETE_SENTINEL.to_string()
         } else {
-            PROVIDER_OPENHUMAN.to_string()
+            PROVIDER_NEPPY.to_string()
         }
     })
 }
@@ -2319,7 +2322,7 @@ fn redact_inference_url(url: Option<&str>) -> &str {
     .unwrap_or("<redacted>")
 }
 
-/// Return `true` when the config contains a non-openhuman `inference_url`,
+/// Return `true` when the config contains a non-neppy `inference_url`,
 /// indicating the user intends custom/BYOK routing rather than the managed
 /// backend.
 fn has_custom_inference_intent(config: &Config) -> bool {
@@ -2388,7 +2391,7 @@ fn cloud_entry_provider_string(
     config: &Config,
 ) -> String {
     if is_neppy_cloud_entry(entry) {
-        return PROVIDER_OPENHUMAN.to_string();
+        return PROVIDER_NEPPY.to_string();
     }
 
     let model = entry
@@ -2411,7 +2414,7 @@ fn cloud_entry_provider_string(
 fn is_neppy_cloud_entry(
     entry: &crate::neppy::config::schema::cloud_providers::CloudProviderCreds,
 ) -> bool {
-    entry.slug == PROVIDER_OPENHUMAN
+    entry.slug == PROVIDER_NEPPY
         || matches!(entry.auth_style, AuthStyle::OpenhumanJwt)
         || looks_like_neppy_backend(&entry.endpoint)
 }
@@ -2692,7 +2695,7 @@ fn try_create_cloud_slug_chat_model_from_string_with_native_tools(
     // Only the "<slug>:<model>[@temp]" cloud form routes here. The managed
     // backend, BYOK-incomplete sentinel, and bespoke subprocess providers
     // (claude-code / claude_agent_sdk) are handled on the `Provider` path.
-    if p == PROVIDER_OPENHUMAN
+    if p == PROVIDER_NEPPY
         || p == BYOK_INCOMPLETE_SENTINEL
         || p == CLAUDE_AGENT_SDK_PROVIDER
         || p.starts_with(CLAUDE_AGENT_SDK_PREFIX)

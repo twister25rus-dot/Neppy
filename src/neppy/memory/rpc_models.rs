@@ -96,7 +96,7 @@ pub struct CreateConversationThreadRequest {
     pub personality_id: Option<String>,
 }
 
-/// Request payload for `openhuman.memory_init`.
+/// Request payload for `neppy.memory_init`.
 ///
 /// `jwt_token` is accepted for backward compatibility but **not used** — memory
 /// is local-only (SQLite). Remote/cloud memory sync is a future consideration.
@@ -108,7 +108,7 @@ pub struct MemoryInitRequest {
     pub jwt_token: Option<String>,
 }
 
-/// Response payload for `openhuman.memory_init`.
+/// Response payload for `neppy.memory_init`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryInitResponse {
     /// Whether the memory system was successfully initialized.
@@ -299,7 +299,7 @@ pub struct PurgeConversationThreadsResponse {
     pub agent_messages_deleted: usize,
 }
 
-/// Request payload for `openhuman.list_documents`.
+/// Request payload for `neppy.list_documents`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ListDocumentsRequest {
@@ -329,7 +329,7 @@ pub struct MemoryDocumentSummary {
     pub updated_at: f64,
 }
 
-/// Response payload for `openhuman.list_documents`.
+/// Response payload for `neppy.list_documents`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListDocumentsResponse {
     /// The namespace used for filtering.
@@ -341,7 +341,7 @@ pub struct ListDocumentsResponse {
     pub count: usize,
 }
 
-/// Response payload for `openhuman.list_namespaces`.
+/// Response payload for `neppy.list_namespaces`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListNamespacesResponse {
     /// List of available namespace names.
@@ -350,7 +350,7 @@ pub struct ListNamespacesResponse {
     pub count: usize,
 }
 
-/// Request payload for `openhuman.delete_document`.
+/// Request payload for `neppy.delete_document`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DeleteDocumentRequest {
@@ -360,7 +360,7 @@ pub struct DeleteDocumentRequest {
     pub document_id: String,
 }
 
-/// Response payload for `openhuman.delete_document`.
+/// Response payload for `neppy.delete_document`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeleteDocumentResponse {
     /// Status message of the operation.
@@ -373,7 +373,7 @@ pub struct DeleteDocumentResponse {
     pub deleted: bool,
 }
 
-/// Request payload for `openhuman.query_namespace`.
+/// Request payload for `neppy.query_namespace`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct QueryNamespaceRequest {
@@ -402,7 +402,7 @@ impl QueryNamespaceRequest {
     }
 }
 
-/// Response payload for `openhuman.query_namespace`.
+/// Response payload for `neppy.query_namespace`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueryNamespaceResponse {
     /// Retrieved context including entities, relations, and chunks.
@@ -413,7 +413,7 @@ pub struct QueryNamespaceResponse {
     pub llm_context_message: Option<String>,
 }
 
-/// Request payload for `openhuman.recall_context`.
+/// Request payload for `neppy.recall_context`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RecallContextRequest {
@@ -437,7 +437,7 @@ impl RecallContextRequest {
     }
 }
 
-/// Response payload for `openhuman.recall_context`.
+/// Response payload for `neppy.recall_context`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecallContextResponse {
     /// Retrieved context.
@@ -448,7 +448,7 @@ pub struct RecallContextResponse {
     pub llm_context_message: Option<String>,
 }
 
-/// Request payload for `openhuman.recall_memories`.
+/// Request payload for `neppy.recall_memories`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RecallMemoriesRequest {
@@ -578,14 +578,14 @@ pub struct MemoryRecallItem {
     pub stability_days: Option<f64>,
 }
 
-/// Response payload for `openhuman.recall_memories`.
+/// Response payload for `neppy.recall_memories`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecallMemoriesResponse {
     /// List of recalled memory items.
     pub memories: Vec<MemoryRecallItem>,
 }
 
-/// Request payload for `openhuman.list_memory_files`.
+/// Request payload for `neppy.list_memory_files`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ListMemoryFilesRequest {
@@ -594,7 +594,7 @@ pub struct ListMemoryFilesRequest {
     pub relative_dir: String,
 }
 
-/// Response payload for `openhuman.list_memory_files`.
+/// Response payload for `neppy.list_memory_files`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListMemoryFilesResponse {
     /// The directory listed.
@@ -605,7 +605,7 @@ pub struct ListMemoryFilesResponse {
     pub count: usize,
 }
 
-/// Request payload for `openhuman.read_memory_file`.
+/// Request payload for `neppy.read_memory_file`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ReadMemoryFileRequest {
@@ -613,7 +613,7 @@ pub struct ReadMemoryFileRequest {
     pub relative_path: String,
 }
 
-/// Response payload for `openhuman.read_memory_file`.
+/// Response payload for `neppy.read_memory_file`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReadMemoryFileResponse {
     /// The path of the file read.
@@ -622,7 +622,7 @@ pub struct ReadMemoryFileResponse {
     pub content: String,
 }
 
-/// Request payload for `openhuman.write_memory_file`.
+/// Request payload for `neppy.write_memory_file`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WriteMemoryFileRequest {
@@ -632,7 +632,7 @@ pub struct WriteMemoryFileRequest {
     pub content: String,
 }
 
-/// Response payload for `openhuman.write_memory_file`.
+/// Response payload for `neppy.write_memory_file`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WriteMemoryFileResponse {
     /// The path of the file written.

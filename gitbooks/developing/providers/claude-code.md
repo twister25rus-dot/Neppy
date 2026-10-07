@@ -6,7 +6,7 @@ Neppy can route any chat workload through **Anthropic's `claude` CLI** instead o
 
 ## Requirements
 
-- Claude Code CLI **≥ 2.0.0** on `PATH` (or `OPENHUMAN_CLAUDE_CLI=/abs/path/to/claude`).
+- Claude Code CLI **≥ 2.0.0** on `PATH` (or `NEPPY_CLAUDE_CLI=/abs/path/to/claude`).
 - An Anthropic API key in `ANTHROPIC_API_KEY`, **or** a pre-existing `~/.claude/.credentials.json` from `claude login`.
 - The `neppy-core` binary on disk: Neppy spawns `neppy-core mcp` as a stdio MCP server so the CLI can call Neppy tools. The path is discovered via `std::env::current_exe()`.
 
@@ -16,7 +16,7 @@ The factory grammar accepts a new prefix: `claude-code:<model>[@<temperature>]`.
 
 ```bash
 # Through the JSON-RPC update endpoint:
-neppy-core rpc openhuman.inference_update_model_settings \
+neppy-core rpc neppy.inference_update_model_settings \
   --json '{"chat_provider":"claude-code:claude-sonnet-4-5"}'
 ```
 
@@ -33,7 +33,7 @@ A workload set to `claude-code:<model>` always spawns a fresh `claude` child per
 The status RPC is on the existing inference namespace:
 
 ```bash
-neppy-core rpc openhuman.inference_claude_code_status
+neppy-core rpc neppy.inference_claude_code_status
 ```
 
 Returns one of (`CliStatus` in [`src/neppy/inference/provider/claude_code/types.rs`](../../../src/neppy/inference/provider/claude_code/types.rs)):
@@ -70,7 +70,7 @@ On exit non-zero the driver bubbles stderr (capped at 16 KiB) up as the error me
 3. `~/.claude/.credentials.json`: the CLI's own OAuth tokens from `claude login` (Pro / Max subscription). We never read or round-trip the access token; auth detection probes this file for non-secret metadata only.
 4. None: the CLI will fail with an auth error.
 
-The `openhuman.inference_claude_code_auth_status` RPC probes sources 1 and 3 without spawning the CLI and surfaces the result in the Settings → AI panel.
+The `neppy.inference_claude_code_auth_status` RPC probes sources 1 and 3 without spawning the CLI and surfaces the result in the Settings → AI panel.
 
 ## Tool surface exposed to the CLI
 

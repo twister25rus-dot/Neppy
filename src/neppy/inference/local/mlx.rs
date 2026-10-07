@@ -33,7 +33,7 @@ pub(crate) fn mlx_base_url(config: &Config) -> String {
     }
 
     for var in ["MLX_SERVER_URL", "OMLX_SERVER_URL"] {
-        if let Some(from_env) = std::env::var(var)
+        if let Some(from_env) = crate::neppy::util::env::var(var)
             .ok()
             .map(|value| value.trim().to_string())
             .filter(|value| !value.is_empty())

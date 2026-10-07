@@ -776,7 +776,7 @@ fn browser_allowed_domains_shares_fetch_list_minus_wildcard() {
     );
 
     // `"*"` (fetch allow-all, and the http_request default) yields an EMPTY
-    // browser list — browser stays closed unless OPENHUMAN_BROWSER_ALLOW_ALL.
+    // browser list — browser stays closed unless NEPPY_BROWSER_ALLOW_ALL.
     assert!(browser_allowed_domains(&["*".into()]).is_empty());
 
     // Mixed: wildcard dropped, explicit hosts kept.
@@ -1197,9 +1197,7 @@ fn all_tools_registers_brave_engine_lsp_and_tool_stats_when_enabled() {
         ],
     );
 
-    unsafe {
-        std::env::remove_var(crate::neppy::tools::implementations::LSP_ENABLED_ENV);
-    }
+    crate::neppy::util::env::remove_var(crate::neppy::tools::implementations::LSP_ENABLED_ENV);
 }
 
 #[test]
@@ -2801,4 +2799,50 @@ fn default_tools_omits_node_tools_when_runtime_node_off() {
             "`{absent}` must not be registered with runtime-node compiled out"
         );
     }
+}
+
+/// Debug mode's two agent tools are registered by default, are classified as
+/// `Agent` tools (so `DomainSet::harness()` keeps them and a gate that drops
+/// `Agent` drops them), and no rollback tool exists.
+#[test]
+fn debug_mode_tools_are_registered_and_belong_to_the_agent_group() {
+    use crate::core::all::DomainGroup;
+    let tmp = TempDir::new().unwrap();
+    let security = Arc::new(SecurityPolicy::default());
+    let browser = BrowserConfig {
+        enabled: false,
+        allowed_domains: vec![],
+        session_name: None,
+        ..BrowserConfig::default()
+    };
+    let http = crate::neppy::config::HttpRequestConfig::default();
+    let cfg = test_config(&tmp);
+    let tools = all_tools(
+        Arc::new(Config::default()),
+        &security,
+        AuditLogger::disabled(),
+        &browser,
+        &http,
+        tmp.path(),
+        &HashMap::new(),
+        &cfg,
+    );
+    let names = tool_names(&tools);
+    for expected in [
+        "debug_checkpoint",
+        "debug_validate_candidate",
+        "debug_report",
+    ] {
+        assert!(
+            names.iter().any(|n| n == expected),
+            "{expected} not registered"
+        );
+        assert_eq!(tool_group(expected), DomainGroup::Agent, "{expected}");
+    }
+    assert!(
+        !names
+            .iter()
+            .any(|n| n.starts_with("debug_") && n.contains("rollback")),
+        "rollback must stay a user-confirmed RPC, not an agent tool"
+    );
 }

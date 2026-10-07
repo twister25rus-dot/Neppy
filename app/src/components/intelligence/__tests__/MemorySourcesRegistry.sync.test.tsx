@@ -76,7 +76,7 @@ function makeSyncStageEvent(detail: {
   connection_id?: string | null;
   detail?: string;
 }): CustomEvent {
-  return new CustomEvent('openhuman:memory-sync-stage', { detail });
+  return new CustomEvent('neppy:memory-sync-stage', { detail });
 }
 
 function makeSource(id: string) {
@@ -337,7 +337,7 @@ describe('MemorySourcesRegistry', () => {
 
     act(() => {
       window.dispatchEvent(
-        new CustomEvent('openhuman:memory-sync-stage', {
+        new CustomEvent('neppy:memory-sync-stage', {
           detail: { stage: 'fetching' }, // no source_id, no connection_id
         })
       );

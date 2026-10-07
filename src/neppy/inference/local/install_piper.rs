@@ -71,14 +71,14 @@ enum ArchiveKind {
 /// unset and stripping surrounding whitespace + trailing slashes so the asset
 /// paths concatenated onto it never produce a doubled slash.
 fn piper_base_override(key: &str) -> Option<String> {
-    std::env::var(key)
+    crate::neppy::util::env::var(key)
         .ok()
         .map(|v| v.trim().trim_end_matches('/').to_string())
         .filter(|v| !v.is_empty())
 }
 
 fn binary_download_asset() -> Option<BinaryAsset> {
-    let base = piper_base_override("OPENHUMAN_PIPER_RELEASE_BASE_URL")
+    let base = piper_base_override("NEPPY_PIPER_RELEASE_BASE_URL")
         .unwrap_or_else(|| "https://github.com/rhasspy/piper/releases/latest/download".to_string());
     if cfg!(target_os = "windows") {
         return Some(BinaryAsset {
@@ -131,7 +131,7 @@ fn voice_download_urls(voice_id: &str) -> (String, String) {
     // We only support the bundled default — multi-voice support is
     // tracked separately. The path components mirror the voice id.
     let (lang_short, locale, name, quality) = decode_voice_id(voice_id);
-    let base = match piper_base_override("OPENHUMAN_PIPER_VOICES_BASE_URL") {
+    let base = match piper_base_override("NEPPY_PIPER_VOICES_BASE_URL") {
         Some(root) => format!("{root}/{lang_short}/{locale}/{name}/{quality}"),
         None => format!(
             "https://huggingface.co/rhasspy/piper-voices/resolve/main/{lang_short}/{locale}/{name}/{quality}"
@@ -623,7 +623,7 @@ mod tests {
     /// [`crate::neppy::inference::HermeticSharedRoot`]. Every test in this module
     /// writes install artifacts through `paths::workspace_piper_*`, which
     /// resolve under the shared root (the developer's real `~/.neppy`) unless
-    /// `OPENHUMAN_WORKSPACE` points at the test's own `TempDir` (CodeRabbit,
+    /// `NEPPY_WORKSPACE` points at the test's own `TempDir` (CodeRabbit,
     /// #5253). The guard also serialises with every sibling that touches the
     /// process-wide env or the shared install status, so a concurrent test can
     /// neither unset the override mid-test nor overwrite the install status.

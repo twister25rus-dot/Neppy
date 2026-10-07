@@ -14,7 +14,7 @@
 //!   agent-facing tools, and the prompt-injection scan over remote tool
 //!   definitions.
 //! - [`audit`] — the RPC surface over the write-audit log.
-//! - [`server`] — the `openhuman mcp` stdio and HTTP server that exposes this
+//! - [`server`] — the `neppy-core mcp` stdio and HTTP server that exposes this
 //!   application's own tools to external MCP hosts. This is the *server* side
 //!   and did not move: it is bound to the tool registry, the permission model
 //!   and the agent turn machinery, none of which a client library should know

@@ -108,7 +108,7 @@ ensure_stub_env() {
     return
   fi
   # Broken symlink → leave it alone, write a sibling stub the build can
-  # source via OPENHUMAN_DOTENV_FILE / VITE handles env loading itself.
+  # source via NEPPY_DOTENV_FILE / VITE handles env loading itself.
   local stub
   stub="${HOME}/openhuman-e2e-$(echo "$target" | tr '/' '_').env"
   : > "$stub"

@@ -10,7 +10,7 @@
 //!
 //! All routes accept `Authorization: Bearer <token>`, but the token may be
 //! either:
-//! - the per-launch `OPENHUMAN_CORE_TOKEN` used by the desktop shell, or
+//! - the per-launch `NEPPY_CORE_TOKEN` used by the desktop shell, or
 //! - a stable user-managed external API key stored under
 //!   `EXTERNAL_OPENAI_COMPAT_PROVIDER` for local harnesses.
 //!

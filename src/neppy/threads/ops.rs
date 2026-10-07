@@ -609,7 +609,7 @@ pub async fn thread_mode_for(dir: &std::path::Path, thread_id: &str) -> ThreadMo
     }
 }
 
-/// Switches a thread between `chat` and `orchestration`.
+/// Switches a thread between `chat`, `orchestration` and `debug`.
 ///
 /// Same thread, same history: only the reserved mode label changes. Publishes
 /// [`DomainEvent::ThreadModeChanged`] and a `thread_mode_changed` web-channel
@@ -621,7 +621,7 @@ pub async fn thread_set_mode(
 ) -> Result<RpcOutcome<ApiEnvelope<ThreadModeResult>>, ThreadsError> {
     let mode = ThreadMode::parse(&request.mode).ok_or_else(|| {
         ThreadsError::Message(format!(
-            "unknown thread mode '{}': expected 'chat' or 'orchestration'",
+            "unknown thread mode '{}': expected 'chat', 'orchestration' or 'debug'",
             request.mode.trim()
         ))
     })?;

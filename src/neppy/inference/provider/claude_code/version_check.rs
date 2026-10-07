@@ -29,10 +29,10 @@ use super::types::{CliStatus, MIN_CLI_VERSION};
 /// anyway so [`probe`] can report `Unusable` against a real path instead of
 /// claiming nothing is installed.
 ///
-/// Honors `OPENHUMAN_CLAUDE_CLI` so tests and power users can point at one
+/// Honors `NEPPY_CLAUDE_CLI` so tests and power users can point at one
 /// exactly; that path is taken as given and never probed.
 pub fn resolve_binary() -> Option<PathBuf> {
-    if let Ok(explicit) = std::env::var("OPENHUMAN_CLAUDE_CLI") {
+    if let Ok(explicit) = crate::neppy::util::env::var("NEPPY_CLAUDE_CLI") {
         let p = PathBuf::from(explicit);
         if p.exists() {
             return Some(p);
@@ -130,9 +130,9 @@ fn candidate_paths_from(path_hit: Option<PathBuf>, home: Option<PathBuf>) -> Vec
 }
 
 fn which_on_path(name: &str) -> Option<PathBuf> {
-    let path_var = std::env::var_os("PATH")?;
+    let path_var = crate::neppy::util::env::var_os("PATH")?;
     let exts: Vec<String> = if cfg!(windows) {
-        std::env::var("PATHEXT")
+        crate::neppy::util::env::var("PATHEXT")
             .unwrap_or_else(|_| ".EXE;.CMD;.BAT;.COM".into())
             .split(';')
             .filter(|s| !s.is_empty())

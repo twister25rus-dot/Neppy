@@ -3,7 +3,7 @@
 //! The cache lives at `~/.neppy/skill-registry/cache.json` with a 1-hour
 //! TTL. Past the TTL the cache is kept (not deleted) so callers can serve it
 //! stale-while-revalidate; see [`load_cached_catalog_state`]. Set
-//! `OPENHUMAN_SKILL_REGISTRY_CACHE_DIR` to relocate the cache (used by tests).
+//! `NEPPY_SKILL_REGISTRY_CACHE_DIR` to relocate the cache (used by tests).
 
 use std::path::PathBuf;
 
@@ -14,7 +14,7 @@ use super::types::CatalogEntry;
 const CACHE_DIR: &str = "skill-registry";
 const CACHE_FILE: &str = "cache.json";
 const CACHE_TTL_SECS: u64 = 3600;
-const CACHE_DIR_ENV: &str = "OPENHUMAN_SKILL_REGISTRY_CACHE_DIR";
+const CACHE_DIR_ENV: &str = "NEPPY_SKILL_REGISTRY_CACHE_DIR";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogCache {
@@ -31,7 +31,7 @@ pub enum CachedCatalog {
 }
 
 fn registry_dir() -> Option<PathBuf> {
-    if let Some(raw) = std::env::var_os(CACHE_DIR_ENV) {
+    if let Some(raw) = crate::neppy::util::env::var_os(CACHE_DIR_ENV) {
         let trimmed = raw.to_string_lossy().trim().to_string();
         if !trimmed.is_empty() {
             return Some(PathBuf::from(trimmed));
@@ -144,7 +144,7 @@ mod tests {
         ));
         assert!(load_cached_catalog().is_none());
 
-        std::env::remove_var(CACHE_DIR_ENV);
+        crate::neppy::util::env::remove_var(CACHE_DIR_ENV);
     }
 
     #[test]
@@ -156,6 +156,6 @@ mod tests {
         std::env::set_var(CACHE_DIR_ENV, tmp.path());
         assert!(load_cached_catalog_state().is_none());
         assert!(load_cached_catalog().is_none());
-        std::env::remove_var(CACHE_DIR_ENV);
+        crate::neppy::util::env::remove_var(CACHE_DIR_ENV);
     }
 }

@@ -69,7 +69,7 @@ Static DH authenticates the peer via the QR-code provenance; ephemeral DH means 
 
 ## Transport strategies
 
-The phone may reach the core three ways. `TransportManager` (`app/src/services/transport/`) picks one from the saved `ConnectionProfile`; for a paired device it **races LAN against the tunnel** (2 s LAN timeout) and uses whichever answers `openhuman.ping` first.
+The phone may reach the core three ways. `TransportManager` (`app/src/services/transport/`) picks one from the saved `ConnectionProfile`; for a paired device it **races LAN against the tunnel** (2 s LAN timeout) and uses whichever answers `neppy.ping` first.
 
 | Strategy                              | Class                                                 | When it's used                                               | Trade-offs                                                                                                                |
 | ------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |

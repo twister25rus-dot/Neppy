@@ -12,13 +12,11 @@ async function getDefaultMessagingChannel(
 ): Promise<string | null> {
   return page.evaluate(() => {
     const win = window as unknown as {
-      __OPENHUMAN_STORE__?: {
+      __NEPPY_STORE__?: {
         getState?: () => { channelConnections?: { defaultMessagingChannel?: string | null } };
       };
     };
-    return (
-      win.__OPENHUMAN_STORE__?.getState?.().channelConnections?.defaultMessagingChannel ?? null
-    );
+    return win.__NEPPY_STORE__?.getState?.().channelConnections?.defaultMessagingChannel ?? null;
   });
 }
 
@@ -32,7 +30,7 @@ test.describe('Settings - Channels & Permissions', () => {
     // workspace the only always-connected channel is Web (built-in chat), so
     // make Telegram the default first (turning Web into a connected,
     // non-default tile with the control), then switch the default to Web.
-    await callCoreRpc('openhuman.channels_set_default', { channel: 'telegram' });
+    await callCoreRpc('neppy.channels_set_default', { channel: 'telegram' });
 
     // Phase 2: default messaging channel UI moved to /connections (Messaging tab).
     // Mounting the panel re-seeds the default from the core.

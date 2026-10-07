@@ -60,8 +60,8 @@ interface RuntimeSnapshot {
 
 async function snapshotRuntime(threadId: string): Promise<RuntimeSnapshot> {
   const winSnapshot = await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | {
           chatRuntime?: {
             toolTimelineByThread?: Record<string, Array<{ id?: string; name?: string }>>;
@@ -76,7 +76,7 @@ async function snapshotRuntime(threadId: string): Promise<RuntimeSnapshot> {
   }, threadId);
 
   const inFlightSnap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-    'openhuman.test_support_in_flight_chats',
+    'neppy.test_support_in_flight_chats',
     {}
   );
 
@@ -222,7 +222,7 @@ describe('Chat tool-call lifecycle', () => {
     await browser.waitUntil(
       async () => {
         const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-          'openhuman.test_support_in_flight_chats',
+          'neppy.test_support_in_flight_chats',
           {}
         );
         if (!snap.ok) return false;

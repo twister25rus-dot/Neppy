@@ -1,4 +1,4 @@
-//! Controller schema definitions for `openhuman.skill_registry_*` RPC methods.
+//! Controller schema definitions for `neppy.skill_registry_*` RPC methods.
 
 use crate::core::all::RegisteredController;
 use crate::core::{ControllerSchema, FieldSchema, TypeSchema};

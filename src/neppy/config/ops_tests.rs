@@ -92,7 +92,7 @@ use crate::neppy::config::TEST_ENV_LOCK as ENV_LOCK;
 #[test]
 fn env_flag_enabled_recognizes_truthy_forms() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    let key = "OPENHUMAN_TEST_FLAG_A";
+    let key = "NEPPY_TEST_FLAG_A";
     for truthy in ["1", "true", "TRUE", "yes", "YES"] {
         unsafe {
             std::env::set_var(key, truthy);
@@ -105,9 +105,7 @@ fn env_flag_enabled_recognizes_truthy_forms() {
         }
         assert!(!env_flag_enabled(key), "{falsy} should be falsy");
     }
-    unsafe {
-        std::env::remove_var(key);
-    }
+    crate::neppy::util::env::remove_var(key);
     assert!(!env_flag_enabled(key), "unset must be falsy");
 }
 
@@ -116,9 +114,7 @@ fn env_flag_enabled_recognizes_truthy_forms() {
 #[test]
 fn core_rpc_url_from_env_returns_default_when_unset() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_CORE_RPC_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL");
     assert_eq!(core_rpc_url_from_env(), "http://127.0.0.1:7788/rpc");
 }
 
@@ -126,12 +122,10 @@ fn core_rpc_url_from_env_returns_default_when_unset() {
 fn core_rpc_url_from_env_uses_override_when_set() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     unsafe {
-        std::env::set_var("OPENHUMAN_CORE_RPC_URL", "http://1.2.3.4:9999/rpc");
+        std::env::set_var("NEPPY_CORE_RPC_URL", "http://1.2.3.4:9999/rpc");
     }
     assert_eq!(core_rpc_url_from_env(), "http://1.2.3.4:9999/rpc");
-    unsafe {
-        std::env::remove_var("OPENHUMAN_CORE_RPC_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL");
 }
 
 // ── Pure path helpers ──────────────────────────────────────────
@@ -188,9 +182,7 @@ fn reset_local_data_remove_error_explains_windows_lock_violation() {
 #[test]
 fn get_runtime_flags_reads_env_overrides() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_BROWSER_ALLOW_ALL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_BROWSER_ALLOW_ALL");
     let flags = get_runtime_flags();
     // Just exercise the path — we don't assume anything about
     // what other tests in the suite may have set.
@@ -200,17 +192,15 @@ fn get_runtime_flags_reads_env_overrides() {
 #[test]
 fn set_browser_allow_all_rejects_enable_without_operator_override() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    let before = std::env::var(BROWSER_ALLOW_ALL_ENV).ok();
-    let before_override = std::env::var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV).ok();
+    let before = crate::neppy::util::env::var(BROWSER_ALLOW_ALL_ENV).ok();
+    let before_override = crate::neppy::util::env::var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV).ok();
 
-    unsafe {
-        std::env::remove_var(BROWSER_ALLOW_ALL_ENV);
-        std::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV);
-    }
+    crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_ENV);
+    crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV);
 
     let err = set_browser_allow_all(true).expect_err("runtime enable should require override");
     assert!(
-        err.contains("Refusing to enable OPENHUMAN_BROWSER_ALLOW_ALL via RPC"),
+        err.contains("Refusing to enable NEPPY_BROWSER_ALLOW_ALL via RPC"),
         "unexpected error: {err}"
     );
     assert!(!env_flag_enabled(BROWSER_ALLOW_ALL_ENV));
@@ -218,11 +208,11 @@ fn set_browser_allow_all_rejects_enable_without_operator_override() {
     unsafe {
         match before {
             Some(v) => std::env::set_var(BROWSER_ALLOW_ALL_ENV, v),
-            None => std::env::remove_var(BROWSER_ALLOW_ALL_ENV),
+            None => crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_ENV),
         }
         match before_override {
             Some(v) => std::env::set_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV, v),
-            None => std::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV),
+            None => crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV),
         }
     }
 }
@@ -230,11 +220,11 @@ fn set_browser_allow_all_rejects_enable_without_operator_override() {
 #[test]
 fn set_browser_allow_all_toggles_env_var_when_operator_override_is_set() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    let before = std::env::var(BROWSER_ALLOW_ALL_ENV).ok();
-    let before_override = std::env::var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV).ok();
+    let before = crate::neppy::util::env::var(BROWSER_ALLOW_ALL_ENV).ok();
+    let before_override = crate::neppy::util::env::var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV).ok();
 
     unsafe {
-        std::env::remove_var(BROWSER_ALLOW_ALL_ENV);
+        crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_ENV);
         std::env::set_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV, "1");
     }
 
@@ -269,11 +259,11 @@ fn set_browser_allow_all_toggles_env_var_when_operator_override_is_set() {
     unsafe {
         match before {
             Some(v) => std::env::set_var(BROWSER_ALLOW_ALL_ENV, v),
-            None => std::env::remove_var(BROWSER_ALLOW_ALL_ENV),
+            None => crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_ENV),
         }
         match before_override {
             Some(v) => std::env::set_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV, v),
-            None => std::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV),
+            None => crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV),
         }
     }
 }
@@ -281,12 +271,12 @@ fn set_browser_allow_all_toggles_env_var_when_operator_override_is_set() {
 #[test]
 fn set_browser_allow_all_disable_does_not_require_operator_override() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    let before = std::env::var(BROWSER_ALLOW_ALL_ENV).ok();
-    let before_override = std::env::var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV).ok();
+    let before = crate::neppy::util::env::var(BROWSER_ALLOW_ALL_ENV).ok();
+    let before_override = crate::neppy::util::env::var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV).ok();
 
     unsafe {
         std::env::set_var(BROWSER_ALLOW_ALL_ENV, "1");
-        std::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV);
+        crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV);
     }
 
     let disable_outcome =
@@ -302,11 +292,11 @@ fn set_browser_allow_all_disable_does_not_require_operator_override() {
     unsafe {
         match before {
             Some(v) => std::env::set_var(BROWSER_ALLOW_ALL_ENV, v),
-            None => std::env::remove_var(BROWSER_ALLOW_ALL_ENV),
+            None => crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_ENV),
         }
         match before_override {
             Some(v) => std::env::set_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV, v),
-            None => std::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV),
+            None => crate::neppy::util::env::remove_var(BROWSER_ALLOW_ALL_RPC_ENABLE_ENV),
         }
     }
 }
@@ -894,7 +884,7 @@ async fn apply_model_settings_preserves_existing_reserved_slug_cloud_providers()
         .cloud_providers
         .iter()
         .find(|e| e.slug == "openhuman")
-        .expect("openhuman built-in must be preserved across saves");
+        .expect("neppy built-in must be preserved across saves");
     assert_eq!(openhuman.id, "openhuman-builtin");
     assert_eq!(openhuman.endpoint, "https://api.tinyhumans.ai");
 }
@@ -1293,7 +1283,7 @@ async fn load_and_apply_dictation_settings_rejects_invalid_activation_mode() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let patch = DictationSettingsPatch {
         enabled: None,
@@ -1305,9 +1295,7 @@ async fn load_and_apply_dictation_settings_rejects_invalid_activation_mode() {
     };
     let err = load_and_apply_dictation_settings(patch).await.unwrap_err();
     assert!(err.contains("invalid activation_mode"));
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1315,7 +1303,7 @@ async fn load_and_apply_voice_server_settings_rejects_invalid_activation_mode() 
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let patch = VoiceServerSettingsPatch {
         auto_start: None,
@@ -1333,9 +1321,7 @@ async fn load_and_apply_voice_server_settings_rejects_invalid_activation_mode() 
         .await
         .unwrap_err();
     assert!(err.contains("invalid activation_mode"));
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1343,7 +1329,7 @@ async fn load_and_apply_dictation_settings_accepts_valid_modes() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     for mode in ["toggle", "push"] {
         let patch = DictationSettingsPatch {
@@ -1359,9 +1345,7 @@ async fn load_and_apply_dictation_settings_accepts_valid_modes() {
             "mode `{mode}` should be accepted"
         );
     }
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1369,7 +1353,7 @@ async fn load_and_apply_voice_server_settings_accepts_valid_modes_and_clamps() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     // Negative min_duration_secs and silence_threshold should be clamped to 0.
     let patch = VoiceServerSettingsPatch {
@@ -1400,9 +1384,7 @@ async fn load_and_apply_voice_server_settings_accepts_valid_modes_and_clamps() {
         "elevenlabs",
         "the engine picker must persist through the config update RPC"
     );
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 /// An engine name the core does not know must fail loudly. Defaulting to the
@@ -1413,7 +1395,7 @@ async fn load_and_apply_voice_server_settings_rejects_unknown_stt_engine() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let patch = VoiceServerSettingsPatch {
         auto_start: None,
@@ -1433,9 +1415,7 @@ async fn load_and_apply_voice_server_settings_rejects_unknown_stt_engine() {
         .await
         .unwrap_err();
     assert!(err.contains("invalid stt_engine"), "got: {err}");
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 // ── get_* via env override ─────────────────────────────────────
@@ -1445,15 +1425,13 @@ async fn get_dictation_settings_reads_from_loaded_config() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let outcome = get_dictation_settings().await.expect("ok");
     assert!(outcome.value.get("enabled").is_some());
     assert!(outcome.value.get("hotkey").is_some());
     assert!(outcome.value.get("streaming_interval_ms").is_some());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1461,14 +1439,12 @@ async fn get_voice_server_settings_reads_from_loaded_config() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let outcome = get_voice_server_settings().await.expect("ok");
     assert!(outcome.value.get("auto_start").is_some());
     assert!(outcome.value.get("custom_dictionary").is_some());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1476,14 +1452,12 @@ async fn get_onboarding_completed_reads_from_loaded_config() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let outcome = get_onboarding_completed().await.expect("ok");
     // Default value — either true or false is fine; we just verify the call path.
     let _ = outcome.value;
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1491,13 +1465,11 @@ async fn load_and_resolve_api_url_returns_api_url_in_response() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let outcome = load_and_resolve_api_url().await.expect("ok");
     assert!(outcome.value.get("api_url").is_some());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[test]
@@ -1518,7 +1490,7 @@ async fn workspace_onboarding_flag_resolve_rejects_invalid_and_defaults() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let err = workspace_onboarding_flag_resolve(Some("a/b".into()), "done")
         .await
@@ -1530,9 +1502,7 @@ async fn workspace_onboarding_flag_resolve_rejects_invalid_and_defaults() {
         .await
         .expect("ok");
     let _ = outcome.value;
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1540,7 +1510,7 @@ async fn workspace_onboarding_flag_set_rejects_invalid_names() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     for bad in ["", "   ", "a/b", "a\\b", ".."] {
         let err = workspace_onboarding_flag_set(Some(bad.into()), "default", true)
@@ -1548,9 +1518,7 @@ async fn workspace_onboarding_flag_set_rejects_invalid_names() {
             .unwrap_err();
         assert!(err.contains("Invalid onboarding flag"), "name {bad}: {err}");
     }
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1558,7 +1526,7 @@ async fn workspace_onboarding_flag_set_round_trip() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     // Create flag
     let created = workspace_onboarding_flag_set(Some("onboarding.done".into()), "default", true)
@@ -1570,9 +1538,7 @@ async fn workspace_onboarding_flag_set_round_trip() {
         .await
         .expect("remove");
     assert!(!removed.value);
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1730,7 +1696,7 @@ async fn load_and_apply_autonomy_settings_roundtrip() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
 
     let patch = AutonomySettingsPatch {
@@ -1746,9 +1712,7 @@ async fn load_and_apply_autonomy_settings_roundtrip() {
     let reloaded = load_config_with_timeout().await.expect("reload");
     assert_eq!(reloaded.autonomy.max_actions_per_hour, 500);
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 #[tokio::test]
@@ -1812,7 +1776,7 @@ async fn autonomy_auto_approve_all_persists() {
     );
 
     // Parse the saved TOML directly (rather than `load_config_with_timeout`,
-    // which resolves the workspace from `OPENHUMAN_WORKSPACE`/discovery and
+    // which resolves the workspace from `NEPPY_WORKSPACE`/discovery and
     // `tmp_config` doesn't point that at `tmp`) to confirm the value survives
     // a fresh deserialize, then flip it back off and confirm that round-trips
     // too.
@@ -1842,7 +1806,7 @@ async fn add_auto_approve_tool_appends_then_dedupes() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempdir().unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
 
     add_auto_approve_tool("git_operations")
@@ -1865,22 +1829,18 @@ async fn add_auto_approve_tool_appends_then_dedupes() {
         "tool must appear exactly once after duplicate adds"
     );
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 // ── agent settings (action/tool timeout, issue #3100) ───────────────────────
 
 #[tokio::test]
 async fn apply_agent_settings_updates_timeout_and_persists_snapshot() {
-    // ENV_LOCK: `set_tool_timeout_secs` reads OPENHUMAN_TOOL_TIMEOUT_SECS and
+    // ENV_LOCK: `set_tool_timeout_secs` reads NEPPY_TOOL_TIMEOUT_SECS and
     // mutates the process-global timeout; serialize against other env-touching
     // tests and ensure no operator override is masking the config value.
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_TOOL_TIMEOUT_SECS");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_TOOL_TIMEOUT_SECS");
     let tmp = tempdir().unwrap();
     let mut cfg = tmp_config(&tmp);
 
@@ -1962,9 +1922,7 @@ async fn apply_agent_settings_none_leaves_timeout_unchanged() {
 async fn apply_agent_paths_valid_abs_path_persists_override_and_recomputes() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     // Ensure no env override is interfering.
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
     let tmp = tempdir().unwrap();
     let mut cfg = tmp_config(&tmp);
     let new_dir = tmp.path().join("agent-projects");
@@ -1994,9 +1952,7 @@ async fn apply_agent_paths_valid_abs_path_persists_override_and_recomputes() {
 #[tokio::test]
 async fn apply_agent_paths_rejects_relative_path() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
     let tmp = tempdir().unwrap();
     let mut cfg = tmp_config(&tmp);
 
@@ -2016,9 +1972,7 @@ async fn apply_agent_paths_rejects_relative_path() {
 #[tokio::test]
 async fn apply_agent_paths_rejects_action_dir_equal_to_workspace() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
     let tmp = tempdir().unwrap();
     let mut cfg = tmp_config(&tmp);
     let workspace = cfg.workspace_dir.clone();
@@ -2039,9 +1993,7 @@ async fn apply_agent_paths_rejects_action_dir_equal_to_workspace() {
 #[tokio::test]
 async fn apply_agent_paths_empty_input_clears_override() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
     let tmp = tempdir().unwrap();
     let mut cfg = tmp_config(&tmp);
     // Start with an override in place.
@@ -2070,9 +2022,7 @@ async fn apply_agent_paths_empty_input_clears_override() {
 #[tokio::test]
 async fn apply_agent_paths_auto_creates_missing_directory() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
     let tmp = tempdir().unwrap();
     let mut cfg = tmp_config(&tmp);
     let missing = tmp.path().join("not-yet").join("created");
@@ -2094,9 +2044,7 @@ async fn apply_agent_paths_auto_creates_missing_directory() {
 #[tokio::test]
 async fn apply_agent_paths_rejects_existing_file() {
     let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
     let tmp = tempdir().unwrap();
     let mut cfg = tmp_config(&tmp);
     let file = tmp.path().join("a-file.txt");
@@ -2122,7 +2070,7 @@ async fn apply_agent_paths_env_set_reports_source_env() {
     let env_dir = tmp.path().join("env-pinned");
     std::fs::create_dir_all(&env_dir).unwrap();
     unsafe {
-        std::env::set_var("OPENHUMAN_ACTION_DIR", &env_dir);
+        std::env::set_var("NEPPY_ACTION_DIR", &env_dir);
     }
 
     let mut cfg = tmp_config(&tmp);
@@ -2145,9 +2093,7 @@ async fn apply_agent_paths_env_set_reports_source_env() {
     assert_eq!(cfg.action_dir, env_dir);
     assert_eq!(outcome.value["action_dir_source"], serde_json::json!("env"));
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_ACTION_DIR");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
 }
 
 // --- #3353 regression tests -------------------------------------------------
@@ -2219,9 +2165,9 @@ async fn ensure_agent_dirs_creates_missing_action_dir_and_trusted_root() {
     // Point the default projects home at the tempdir so the helper doesn't touch
     // the real `~/Neppy/projects`.
     let projects_dir = tmp.path().join("projects-home");
-    let prev_projects_dir = std::env::var_os("OPENHUMAN_PROJECTS_DIR");
+    let prev_projects_dir = crate::neppy::util::env::var_os("NEPPY_PROJECTS_DIR");
     unsafe {
-        std::env::set_var("OPENHUMAN_PROJECTS_DIR", &projects_dir);
+        std::env::set_var("NEPPY_PROJECTS_DIR", &projects_dir);
     }
 
     let mut cfg = tmp_config(&tmp);
@@ -2259,8 +2205,8 @@ async fn ensure_agent_dirs_creates_missing_action_dir_and_trusted_root() {
     // Restore the prior env state so later tests observe the real environment.
     unsafe {
         match prev_projects_dir {
-            Some(v) => std::env::set_var("OPENHUMAN_PROJECTS_DIR", v),
-            None => std::env::remove_var("OPENHUMAN_PROJECTS_DIR"),
+            Some(v) => std::env::set_var("NEPPY_PROJECTS_DIR", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_PROJECTS_DIR"),
         }
     }
 }

@@ -124,14 +124,14 @@ async function assertSessionNotNuked(page: Page) {
     .poll(async () =>
       page.evaluate(() => {
         const win = window as typeof window & {
-          __OPENHUMAN_CORE_STATE__?: () => {
+          __NEPPY_CORE_STATE__?: () => {
             snapshot?: {
               sessionToken?: string | null;
               currentUser?: { _id?: string | null } | null;
             };
           };
         };
-        const snapshot = win.__OPENHUMAN_CORE_STATE__?.()?.snapshot;
+        const snapshot = win.__NEPPY_CORE_STATE__?.()?.snapshot;
         return {
           // The connections page now appends an active-tab query (e.g.
           // `#/connections?tab=composio`); strip it so we assert we're still on
@@ -171,7 +171,7 @@ test.describe('Gmail connector', () => {
   });
 
   test('routes authorize through the mock backend', async () => {
-    await callCoreRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
+    await callCoreRpc('neppy.composio_authorize', { toolkit: TOOLKIT_SLUG });
     const requests = await getRequestLog();
     const authReq = requests.find(
       request =>
@@ -182,7 +182,7 @@ test.describe('Gmail connector', () => {
   });
 
   test('persists connected state through list_connections', async () => {
-    const payload = await callCoreRpc<unknown>('openhuman.composio_list_connections', {});
+    const payload = await callCoreRpc<unknown>('neppy.composio_list_connections', {});
     const hit = unwrapConnections(payload).find(
       connection => connection.toolkit?.toLowerCase() === TOOLKIT_SLUG
     );
@@ -190,19 +190,19 @@ test.describe('Gmail connector', () => {
   });
 
   test.skip('keeps the session alive after composio_sync', async ({ page }) => {
-    await callCoreRpc('openhuman.composio_sync', { connection_id: CONNECTION_ID });
+    await callCoreRpc('neppy.composio_sync', { connection_id: CONNECTION_ID });
     await assertSessionNotNuked(page);
   });
 
   test('routes composio_execute without blanking the app', async ({ page }) => {
-    await callCoreRpc('openhuman.composio_execute', { tool: ACTION, arguments: {} });
+    await callCoreRpc('neppy.composio_execute', { tool: ACTION, arguments: {} });
     await assertSessionNotNuked(page);
   });
 
   test('survives a 400 fetch emails error and keeps the skills page usable', async ({ page }) => {
     await setMockBehavior({ composioExecuteFails: '1' });
     await expect(
-      callCoreRpc('openhuman.composio_execute', {
+      callCoreRpc('neppy.composio_execute', {
         connection_id: CONNECTION_ID,
         tool: ACTION,
         arguments: {},
@@ -234,7 +234,7 @@ test.describe('Gmail connector', () => {
   test('survives a 4xx composio execute error', async ({ page }) => {
     await setMockBehavior({ composioExecuteFails: '400' });
     await expect(
-      callCoreRpc('openhuman.composio_execute', {
+      callCoreRpc('neppy.composio_execute', {
         connection_id: CONNECTION_ID,
         tool: ACTION,
         arguments: {},
@@ -244,7 +244,7 @@ test.describe('Gmail connector', () => {
   });
 
   test('routes disconnect through the mock backend', async ({ page }) => {
-    await callCoreRpc('openhuman.composio_delete_connection', { connection_id: CONNECTION_ID });
+    await callCoreRpc('neppy.composio_delete_connection', { connection_id: CONNECTION_ID });
     const requests = await getRequestLog();
     const deleteReq = requests.find(
       request =>

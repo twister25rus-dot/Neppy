@@ -44,16 +44,16 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: validation runs this integration test with --test-threads=1.
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
 
     fn unset(key: &'static str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: validation runs this integration test with --test-threads=1.
-        unsafe { std::env::remove_var(key) };
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, previous }
     }
 }
@@ -67,7 +67,7 @@ impl Drop for EnvVarGuard {
             }
             None => {
                 // SAFETY: validation runs this integration test with --test-threads=1.
-                unsafe { std::env::remove_var(self.key) }
+                unsafe { neppy_core::neppy::util::env::remove_var(self.key) }
             }
         }
     }
@@ -100,9 +100,9 @@ async fn piper_controller_installs_skips_existing_and_records_failures_from_mock
     write_stub_script(scripts.path(), "piper", "#!/bin/sh\nexit 42\n");
 
     let _path = EnvVarGuard::set("PATH", scripts.path());
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", tmp.path().join(".neppy"));
-    let _release = EnvVarGuard::set("OPENHUMAN_PIPER_RELEASE_BASE_URL", &base);
-    let _voices = EnvVarGuard::set("OPENHUMAN_PIPER_VOICES_BASE_URL", format!("{base}/voices"));
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", tmp.path().join(".neppy"));
+    let _release = EnvVarGuard::set("NEPPY_PIPER_RELEASE_BASE_URL", &base);
+    let _voices = EnvVarGuard::set("NEPPY_PIPER_VOICES_BASE_URL", format!("{base}/voices"));
     let _ollama_bin = EnvVarGuard::unset("OLLAMA_BIN");
     let _piper_bin = EnvVarGuard::unset("PIPER_BIN");
     let _whisper_bin = EnvVarGuard::unset("WHISPER_BIN");

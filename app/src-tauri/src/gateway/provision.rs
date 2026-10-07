@@ -54,7 +54,7 @@ pub(super) async fn provision(
 
     // Minted here and handed to the core as an environment variable, so it is
     // never written to disk and never reused across activations. The core
-    // reads `OPENHUMAN_CORE_TOKEN` and gates `/rpc` on it; `/health` stays
+    // reads `NEPPY_CORE_TOKEN` and gates `/rpc` on it; `/health` stays
     // unauthenticated, which is what makes the readiness poll below possible
     // before any credential is established.
     let token = crate::core_process::generate_rpc_token();
@@ -232,12 +232,12 @@ pub(super) fn core_command(confinement: &Confinement, token: &str) -> ExecReques
         // Handed over as environment and never written down: minted per
         // activation, so a stored gateway record cannot leak a credential for
         // a core that is still running.
-        .with_env("OPENHUMAN_CORE_TOKEN", token)
+        .with_env("NEPPY_CORE_TOKEN", token)
         // Bind every interface *inside the box*, so the published port has
         // something to reach. Loopback there would be reachable only from
         // inside the container, which is the one place nothing is asking.
-        .with_env("OPENHUMAN_CORE_HOST", "0.0.0.0")
-        .with_env("OPENHUMAN_CORE_PORT", CORE_PORT_IN_BOX.to_string())
+        .with_env("NEPPY_CORE_HOST", "0.0.0.0")
+        .with_env("NEPPY_CORE_PORT", CORE_PORT_IN_BOX.to_string())
 }
 
 /// Start `neppy-core` in the box, detached, and return its handle.

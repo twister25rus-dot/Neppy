@@ -68,14 +68,11 @@ export interface VoiceServerSettings {
 export type SttEngine = 'backend' | 'elevenlabs' | 'openai';
 
 export async function neppyVoiceStatus(): Promise<VoiceStatus> {
-  return await callCoreRpc<VoiceStatus>({ method: 'openhuman.voice_status', params: {} });
+  return await callCoreRpc<VoiceStatus>({ method: 'neppy.voice_status', params: {} });
 }
 
 export async function neppyVoiceServerStatus(): Promise<VoiceServerStatus> {
-  return await callCoreRpc<VoiceServerStatus>({
-    method: 'openhuman.voice_server_status',
-    params: {},
-  });
+  return await callCoreRpc<VoiceServerStatus>({ method: 'neppy.voice_server_status', params: {} });
 }
 
 export async function neppyVoiceServerStart(params?: {
@@ -84,21 +81,18 @@ export async function neppyVoiceServerStart(params?: {
   skip_cleanup?: boolean;
 }): Promise<VoiceServerStatus> {
   return await callCoreRpc<VoiceServerStatus>({
-    method: 'openhuman.voice_server_start',
+    method: 'neppy.voice_server_start',
     params: params ?? {},
   });
 }
 
 export async function neppyVoiceServerStop(): Promise<VoiceServerStatus> {
-  return await callCoreRpc<VoiceServerStatus>({
-    method: 'openhuman.voice_server_stop',
-    params: {},
-  });
+  return await callCoreRpc<VoiceServerStatus>({ method: 'neppy.voice_server_stop', params: {} });
 }
 
 export async function neppyGetVoiceServerSettings(): Promise<CommandResponse<VoiceServerSettings>> {
   return await callCoreRpc<CommandResponse<VoiceServerSettings>>({
-    method: 'openhuman.config_get_voice_server_settings',
+    method: 'neppy.config_get_voice_server_settings',
     params: {},
   });
 }
@@ -115,7 +109,7 @@ export async function neppyUpdateVoiceServerSettings(update: {
   stt_engine?: SttEngine;
 }): Promise<CommandResponse<ConfigSnapshot>> {
   return await callCoreRpc<CommandResponse<ConfigSnapshot>>({
-    method: 'openhuman.config_update_voice_server_settings',
+    method: 'neppy.config_update_voice_server_settings',
     params: update,
   });
 }
@@ -138,14 +132,14 @@ export interface VoiceProvidersSnapshot {
 
 /**
  * Persist the STT / TTS provider selection. Maps to the
- * `openhuman.voice_set_providers` RPC, which validates each value against
+ * `neppy.voice_set_providers` RPC, which validates each value against
  * the supported provider list and rejects unknown ids server-side.
  */
 export async function neppyVoiceSetProviders(
   update: VoiceProvidersUpdate
 ): Promise<VoiceProvidersSnapshot> {
   return await callCoreRpc<VoiceProvidersSnapshot>({
-    method: 'openhuman.voice_set_providers',
+    method: 'neppy.voice_set_providers',
     params: update,
   });
 }
@@ -156,7 +150,7 @@ export async function neppyVoiceTranscribe(
   skipCleanup?: boolean
 ): Promise<VoiceSpeechResult> {
   return await callCoreRpc<VoiceSpeechResult>({
-    method: 'openhuman.voice_transcribe',
+    method: 'neppy.voice_transcribe',
     params: { audio_path: audioPath, context, skip_cleanup: skipCleanup },
   });
 }
@@ -168,14 +162,14 @@ export async function neppyVoiceTranscribeBytes(
   skipCleanup?: boolean
 ): Promise<VoiceSpeechResult> {
   return await callCoreRpc<VoiceSpeechResult>({
-    method: 'openhuman.voice_transcribe_bytes',
+    method: 'neppy.voice_transcribe_bytes',
     params: { audio_bytes: audioBytes, extension, context, skip_cleanup: skipCleanup },
   });
 }
 
 export async function neppyVoiceTts(text: string, outputPath?: string): Promise<VoiceTtsResult> {
   return await callCoreRpc<VoiceTtsResult>({
-    method: 'openhuman.voice_tts',
+    method: 'neppy.voice_tts',
     params: { text, output_path: outputPath },
   });
 }
@@ -219,7 +213,7 @@ export const notifyOverlaySttState = (
 ): void => {
   void (async () => {
     try {
-      await callCoreRpc({ method: 'openhuman.overlay_stt_notify', params: { state, text } });
+      await callCoreRpc({ method: 'neppy.overlay_stt_notify', params: { state, text } });
     } catch (err: unknown) {
       console.debug('[overlay_stt_notify] fire-and-forget error:', err);
     }

@@ -100,7 +100,7 @@ fn domain_subscriber_plan_harness_gates_by_owning_group() {
 /// #5027 — the tool-execution timeout must be seeded on the always-on core boot
 /// path (`register_domain_subscribers`), NOT inside
 /// `channels::runtime::startup::start_channels`, which is skipped for
-/// channel-less / web-chat-only cores (and when `OPENHUMAN_DISABLE_CHANNEL_LISTENERS`
+/// channel-less / web-chat-only cores (and when `NEPPY_DISABLE_CHANNEL_LISTENERS`
 /// is set). A minimal `DomainSet::none()` must still seed, because the seed is
 /// DomainSet-independent.
 ///
@@ -108,7 +108,7 @@ fn domain_subscriber_plan_harness_gates_by_owning_group() {
 /// every `register_domain_subscribers` call (each `bootstrap_core_runtime`),
 /// re-applying the freshly reloaded config on an in-process restart — a seed gated
 /// by the process-global `Once` would only fire on the first boot. `TEST_ENV_LOCK`
-/// (via `EnvVarGuard`) serializes with `OPENHUMAN_TOOL_TIMEOUT_SECS` cleared so the
+/// (via `EnvVarGuard`) serializes with `NEPPY_TOOL_TIMEOUT_SECS` cleared so the
 /// operator env override cannot mask the config-derived value. Runs under a tokio
 /// runtime like the real boot paths — the INFRA block calls `subscribe_global`,
 /// which `tokio::spawn`s when the global bus is already initialized by another test
@@ -118,7 +118,7 @@ async fn tool_timeout_seeds_on_channelless_core_boot() {
     // Clear the operator override behind a panic-safe RAII guard: if any assertion
     // below panics, `Drop` still restores the previous value, so sibling tests that
     // share `TEST_ENV_LOCK` never inherit the cleared var.
-    let _env = EnvVarGuard::remove_many(vec!["OPENHUMAN_TOOL_TIMEOUT_SECS"]);
+    let _env = EnvVarGuard::remove_many(vec!["NEPPY_TOOL_TIMEOUT_SECS"]);
 
     // Distinctive, in-range (1..=3600) value so the assertion can only pass on a
     // real seed, never on the default. Channel-less: `channels_config` stays empty,
@@ -160,7 +160,7 @@ impl EnvVarGuard {
             .expect("test env lock poisoned");
         let mut old_values = Vec::with_capacity(vars.len());
         for (key, value) in vars {
-            let old = std::env::var_os(key);
+            let old = crate::neppy::util::env::var_os(key);
             std::env::set_var(key, value);
             old_values.push((key, old));
         }
@@ -179,8 +179,8 @@ impl EnvVarGuard {
             .expect("test env lock poisoned");
         let mut old_values = Vec::with_capacity(keys.len());
         for key in keys {
-            let old = std::env::var_os(key);
-            std::env::remove_var(key);
+            let old = crate::neppy::util::env::var_os(key);
+            crate::neppy::util::env::remove_var(key);
             old_values.push((key, old));
         }
         Self {
@@ -195,7 +195,7 @@ impl Drop for EnvVarGuard {
         for (key, old) in self.old_values.iter().rev() {
             match old {
                 Some(value) => std::env::set_var(key, value),
-                None => std::env::remove_var(key),
+                None => crate::neppy::util::env::remove_var(key),
             }
         }
     }
@@ -254,7 +254,7 @@ async fn wait_until_port_released(port: u16) {
 /// dedicated `tests/` binary where global pollution doesn't affect
 /// siblings — tracked as a follow-up.
 ///
-/// To run manually: `cargo test --lib -p openhuman -- --ignored
+/// To run manually: `cargo test --lib -p neppy -- --ignored
 /// shutdown_token`.
 #[tokio::test]
 #[ignore = "calls full server bootstrap; leaks process-global state into sibling tests (#1552). Re-cover via integration test."]
@@ -273,14 +273,11 @@ async fn shutdown_token_stops_axum_listener_within_timeout() {
     .expect("seed scheduler_gate=always_on config.toml");
     let _env = EnvVarGuard::set_many(vec![
         (
-            "OPENHUMAN_WORKSPACE",
+            "NEPPY_WORKSPACE",
             workspace.path().as_os_str().to_os_string(),
         ),
-        ("OPENHUMAN_DISABLE_CHANNEL_LISTENERS", OsString::from("1")),
-        (
-            "OPENHUMAN_CORE_TOKEN",
-            OsString::from("test-token-shutdown"),
-        ),
+        ("NEPPY_DISABLE_CHANNEL_LISTENERS", OsString::from("1")),
+        ("NEPPY_CORE_TOKEN", OsString::from("test-token-shutdown")),
     ]);
 
     let probe = std::net::TcpListener::bind("127.0.0.1:0").expect("allocate test port");
@@ -306,15 +303,46 @@ async fn shutdown_token_stops_axum_listener_within_timeout() {
 
 #[tokio::test]
 async fn invoke_health_snapshot_via_registry() {
-    let result = invoke_method(default_state(), "openhuman.health_snapshot", json!({}))
+    let result = invoke_method(default_state(), "neppy.health_snapshot", json!({}))
         .await
         .expect("health snapshot should succeed");
     assert!(result.get("result").is_some());
 }
 
 #[tokio::test]
-async fn invoke_encrypt_secret_missing_required_param_fails_validation() {
+async fn invoke_method_accepts_legacy_openhuman_prefix() {
+    // Pre-rebrand clients still send `openhuman.<x>`; it must reach the same
+    // handler as `neppy.<x>` through the shared entry point (HTTP, CLI, socket
+    // and `CoreRuntime::invoke` all funnel through `invoke_method`).
+    let old = invoke_method(default_state(), "openhuman.health_snapshot", json!({}))
+        .await
+        .expect("legacy-prefixed health snapshot should succeed");
+    assert!(old.get("result").is_some());
+
+    let ping_old = invoke_method(default_state(), "openhuman.ping", json!({}))
+        .await
+        .expect("openhuman.ping should succeed");
+    let ping_new = invoke_method(default_state(), "neppy.ping", json!({}))
+        .await
+        .expect("neppy.ping should succeed");
+    assert_eq!(ping_old, ping_new);
+
+    // Param validation runs against the resolved controller, too.
     let err = invoke_method(default_state(), "openhuman.encrypt_secret", json!({}))
+        .await
+        .expect_err("missing plaintext should fail");
+    assert!(err.contains("missing required param 'plaintext'"));
+
+    // Unknown-method errors report the resolved neppy. name.
+    let err = invoke_method(default_state(), "openhuman.nonexistent_zzz", json!({}))
+        .await
+        .expect_err("unknown method");
+    assert!(err.contains("neppy.nonexistent_zzz"), "got: {err}");
+}
+
+#[tokio::test]
+async fn invoke_encrypt_secret_missing_required_param_fails_validation() {
+    let err = invoke_method(default_state(), "neppy.encrypt_secret", json!({}))
         .await
         .expect_err("missing plaintext should fail");
     assert!(err.contains("missing required param 'plaintext'"));
@@ -324,7 +352,7 @@ async fn invoke_encrypt_secret_missing_required_param_fails_validation() {
 async fn invoke_doctor_models_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.doctor_models",
+        "neppy.doctor_models",
         json!({ "invalid": true }),
     )
     .await
@@ -374,19 +402,15 @@ async fn gated_method_is_unknown_at_transport_even_with_malformed_params() {
 
 #[tokio::test]
 async fn invoke_config_get_runtime_flags_via_registry() {
-    let result = invoke_method(
-        default_state(),
-        "openhuman.config_get_runtime_flags",
-        json!({}),
-    )
-    .await
-    .expect("runtime flags should succeed");
+    let result = invoke_method(default_state(), "neppy.config_get_runtime_flags", json!({}))
+        .await
+        .expect("runtime flags should succeed");
     assert!(result.get("result").is_some());
 }
 
 #[tokio::test]
 async fn invoke_auth_store_session_missing_token_fails_validation() {
-    let err = invoke_method(default_state(), "openhuman.auth_store_session", json!({}))
+    let err = invoke_method(default_state(), "neppy.auth_store_session", json!({}))
         .await
         .expect_err("missing token should fail");
     assert!(err.contains("missing required param 'token'"));
@@ -394,13 +418,9 @@ async fn invoke_auth_store_session_missing_token_fails_validation() {
 
 #[tokio::test]
 async fn invoke_service_status_rejects_unknown_param() {
-    let err = invoke_method(
-        default_state(),
-        "openhuman.service_status",
-        json!({ "x": 1 }),
-    )
-    .await
-    .expect_err("unknown param should fail");
+    let err = invoke_method(default_state(), "neppy.service_status", json!({ "x": 1 }))
+        .await
+        .expect_err("unknown param should fail");
     assert!(err.contains("unknown param 'x'"));
 }
 
@@ -409,7 +429,7 @@ async fn invoke_memory_init_accepts_empty_params() {
     // jwt_token is optional (accepted for backward compat but ignored).
     // The call may still fail for workspace reasons in test, but must NOT
     // fail with a missing-param error for jwt_token.
-    let result = invoke_method(default_state(), "openhuman.memory_init", json!({})).await;
+    let result = invoke_method(default_state(), "neppy.memory_init", json!({})).await;
     if let Err(ref e) = result {
         assert!(
             !e.contains("missing required param") || !e.contains("jwt_token"),
@@ -422,7 +442,7 @@ async fn invoke_memory_init_accepts_empty_params() {
 async fn invoke_memory_list_namespaces_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.memory_list_namespaces",
+        "neppy.memory_list_namespaces",
         json!({ "extra": true }),
     )
     .await
@@ -434,7 +454,7 @@ async fn invoke_memory_list_namespaces_rejects_unknown_param() {
 async fn invoke_memory_query_namespace_missing_namespace_fails() {
     let err = invoke_method(
         default_state(),
-        "openhuman.memory_query_namespace",
+        "neppy.memory_query_namespace",
         json!({ "query": "who owns atlas" }),
     )
     .await
@@ -446,7 +466,7 @@ async fn invoke_memory_query_namespace_missing_namespace_fails() {
 async fn invoke_memory_recall_memories_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.memory_recall_memories",
+        "neppy.memory_recall_memories",
         json!({ "namespace": "team", "extra": true }),
     )
     .await
@@ -456,25 +476,17 @@ async fn invoke_memory_recall_memories_rejects_unknown_param() {
 
 #[tokio::test]
 async fn invoke_migrate_openclaw_rejects_unknown_param() {
-    let err = invoke_method(
-        default_state(),
-        "openhuman.migrate_openclaw",
-        json!({ "x": 1 }),
-    )
-    .await
-    .expect_err("unknown param should fail");
+    let err = invoke_method(default_state(), "neppy.migrate_openclaw", json!({ "x": 1 }))
+        .await
+        .expect_err("unknown param should fail");
     assert!(err.contains("unknown param 'x'"));
 }
 
 #[tokio::test]
 async fn invoke_migrate_hermes_rejects_unknown_param() {
-    let err = invoke_method(
-        default_state(),
-        "openhuman.migrate_hermes",
-        json!({ "x": 1 }),
-    )
-    .await
-    .expect_err("unknown param should fail");
+    let err = invoke_method(default_state(), "neppy.migrate_hermes", json!({ "x": 1 }))
+        .await
+        .expect_err("unknown param should fail");
     assert!(err.contains("unknown param 'x'"));
 }
 
@@ -491,23 +503,21 @@ fn http_schema_dump_includes_neppy_and_core_methods() {
     );
 
     assert!(
-        methods
-            .iter()
-            .any(|m| m.method == "openhuman.health_snapshot"),
-        "schema dump should include migrated openhuman methods"
+        methods.iter().any(|m| m.method == "neppy.health_snapshot"),
+        "schema dump should include migrated neppy methods"
     );
 
     assert!(
         methods
             .iter()
-            .any(|m| m.method == "openhuman.billing_get_current_plan"),
+            .any(|m| m.method == "neppy.billing_get_current_plan"),
         "schema dump should include billing methods"
     );
 
     assert!(
         methods
             .iter()
-            .any(|m| m.method == "openhuman.team_list_members"),
+            .any(|m| m.method == "neppy.team_list_members"),
         "schema dump should include team methods"
     );
 }
@@ -516,7 +526,7 @@ fn http_schema_dump_includes_neppy_and_core_methods() {
 async fn billing_get_current_plan_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.billing_get_current_plan",
+        "neppy.billing_get_current_plan",
         json!({ "extra": true }),
     )
     .await
@@ -526,19 +536,15 @@ async fn billing_get_current_plan_rejects_unknown_param() {
 
 #[tokio::test]
 async fn billing_purchase_plan_missing_plan_fails_validation() {
-    let err = invoke_method(
-        default_state(),
-        "openhuman.billing_purchase_plan",
-        json!({}),
-    )
-    .await
-    .expect_err("missing plan should fail");
+    let err = invoke_method(default_state(), "neppy.billing_purchase_plan", json!({}))
+        .await
+        .expect_err("missing plan should fail");
     assert!(err.contains("missing required param 'plan'"));
 }
 
 #[tokio::test]
 async fn billing_top_up_missing_amount_fails_validation() {
-    let err = invoke_method(default_state(), "openhuman.billing_top_up", json!({}))
+    let err = invoke_method(default_state(), "neppy.billing_top_up", json!({}))
         .await
         .expect_err("missing amountUsd should fail");
     assert!(err.contains("missing required param 'amountUsd'"));
@@ -548,7 +554,7 @@ async fn billing_top_up_missing_amount_fails_validation() {
 async fn billing_top_up_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.billing_top_up",
+        "neppy.billing_top_up",
         json!({ "amountUsd": 10.0, "unknownField": true }),
     )
     .await
@@ -560,7 +566,7 @@ async fn billing_top_up_rejects_unknown_param() {
 async fn billing_create_portal_session_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.billing_create_portal_session",
+        "neppy.billing_create_portal_session",
         json!({ "x": 1 }),
     )
     .await
@@ -570,7 +576,7 @@ async fn billing_create_portal_session_rejects_unknown_param() {
 
 #[tokio::test]
 async fn team_list_members_missing_team_id_fails_validation() {
-    let err = invoke_method(default_state(), "openhuman.team_list_members", json!({}))
+    let err = invoke_method(default_state(), "neppy.team_list_members", json!({}))
         .await
         .expect_err("missing teamId should fail");
     assert!(err.contains("missing required param 'teamId'"));
@@ -580,7 +586,7 @@ async fn team_list_members_missing_team_id_fails_validation() {
 async fn team_list_members_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.team_list_members",
+        "neppy.team_list_members",
         json!({ "teamId": "t1", "extra": true }),
     )
     .await
@@ -590,7 +596,7 @@ async fn team_list_members_rejects_unknown_param() {
 
 #[tokio::test]
 async fn team_create_invite_missing_team_id_fails_validation() {
-    let err = invoke_method(default_state(), "openhuman.team_create_invite", json!({}))
+    let err = invoke_method(default_state(), "neppy.team_create_invite", json!({}))
         .await
         .expect_err("missing teamId should fail");
     assert!(err.contains("missing required param 'teamId'"));
@@ -600,7 +606,7 @@ async fn team_create_invite_missing_team_id_fails_validation() {
 async fn team_remove_member_missing_required_params_fails_validation() {
     let err = invoke_method(
         default_state(),
-        "openhuman.team_remove_member",
+        "neppy.team_remove_member",
         json!({ "teamId": "t1" }),
     )
     .await
@@ -612,7 +618,7 @@ async fn team_remove_member_missing_required_params_fails_validation() {
 async fn team_change_member_role_missing_role_fails_validation() {
     let err = invoke_method(
         default_state(),
-        "openhuman.team_change_member_role",
+        "neppy.team_change_member_role",
         json!({ "teamId": "t1", "userId": "u1" }),
     )
     .await
@@ -624,7 +630,7 @@ async fn team_change_member_role_missing_role_fails_validation() {
 async fn billing_create_coinbase_charge_missing_plan_fails_validation() {
     let err = invoke_method(
         default_state(),
-        "openhuman.billing_create_coinbase_charge",
+        "neppy.billing_create_coinbase_charge",
         json!({}),
     )
     .await
@@ -636,7 +642,7 @@ async fn billing_create_coinbase_charge_missing_plan_fails_validation() {
 async fn billing_create_coinbase_charge_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.billing_create_coinbase_charge",
+        "neppy.billing_create_coinbase_charge",
         json!({ "plan": "pro", "extra": true }),
     )
     .await
@@ -646,7 +652,7 @@ async fn billing_create_coinbase_charge_rejects_unknown_param() {
 
 #[tokio::test]
 async fn team_list_invites_missing_team_id_fails_validation() {
-    let err = invoke_method(default_state(), "openhuman.team_list_invites", json!({}))
+    let err = invoke_method(default_state(), "neppy.team_list_invites", json!({}))
         .await
         .expect_err("missing teamId should fail");
     assert!(err.contains("missing required param 'teamId'"));
@@ -656,7 +662,7 @@ async fn team_list_invites_missing_team_id_fails_validation() {
 async fn team_list_invites_rejects_unknown_param() {
     let err = invoke_method(
         default_state(),
-        "openhuman.team_list_invites",
+        "neppy.team_list_invites",
         json!({ "teamId": "t1", "extra": true }),
     )
     .await
@@ -666,7 +672,7 @@ async fn team_list_invites_rejects_unknown_param() {
 
 #[tokio::test]
 async fn team_revoke_invite_missing_team_id_fails_validation() {
-    let err = invoke_method(default_state(), "openhuman.team_revoke_invite", json!({}))
+    let err = invoke_method(default_state(), "neppy.team_revoke_invite", json!({}))
         .await
         .expect_err("missing teamId should fail");
     assert!(err.contains("missing required param 'teamId'"));
@@ -676,7 +682,7 @@ async fn team_revoke_invite_missing_team_id_fails_validation() {
 async fn team_revoke_invite_missing_invite_id_fails_validation() {
     let err = invoke_method(
         default_state(),
-        "openhuman.team_revoke_invite",
+        "neppy.team_revoke_invite",
         json!({ "teamId": "t1" }),
     )
     .await
@@ -690,17 +696,17 @@ async fn schema_dump_includes_new_billing_and_team_methods() {
     let dump = build_http_schema_dump();
     let methods: Vec<&str> = dump.methods.iter().map(|m| m.method.as_str()).collect();
     for expected in &[
-        "openhuman.billing_get_current_plan",
-        "openhuman.billing_purchase_plan",
-        "openhuman.billing_create_portal_session",
-        "openhuman.billing_top_up",
-        "openhuman.billing_create_coinbase_charge",
-        "openhuman.team_list_members",
-        "openhuman.team_create_invite",
-        "openhuman.team_list_invites",
-        "openhuman.team_revoke_invite",
-        "openhuman.team_remove_member",
-        "openhuman.team_change_member_role",
+        "neppy.billing_get_current_plan",
+        "neppy.billing_purchase_plan",
+        "neppy.billing_create_portal_session",
+        "neppy.billing_top_up",
+        "neppy.billing_create_coinbase_charge",
+        "neppy.team_list_members",
+        "neppy.team_create_invite",
+        "neppy.team_list_invites",
+        "neppy.team_revoke_invite",
+        "neppy.team_remove_member",
+        "neppy.team_change_member_role",
     ] {
         assert!(
             methods.contains(expected),
@@ -1029,14 +1035,14 @@ async fn structured_rpc_error_envelope_passes_through_generic_dispatch() {
 
     let workspace = tempfile::tempdir().expect("workspace tempdir");
     let _env = EnvVarGuard::set_many(vec![(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         workspace.path().as_os_str().to_os_string(),
     )]);
 
     let stale_thread_request = crate::core::types::RpcRequest {
         jsonrpc: "2.0".to_string(),
         id: json!(7),
-        method: "openhuman.threads_generate_title".to_string(),
+        method: "neppy.threads_generate_title".to_string(),
         params: json!({ "thread_id": "thread-ghost" }),
     };
     let response = rpc_handler(State(default_state()), Json(stale_thread_request)).await;
@@ -1069,7 +1075,7 @@ async fn thread_not_found_rpc_error_does_not_report_to_sentry() {
 
     let workspace = tempfile::tempdir().expect("workspace tempdir");
     let _env = EnvVarGuard::set_many(vec![(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         workspace.path().as_os_str().to_os_string(),
     )]);
 
@@ -1106,7 +1112,7 @@ async fn thread_not_found_rpc_error_does_not_report_to_sentry() {
     let stale_thread_request = crate::core::types::RpcRequest {
         jsonrpc: "2.0".to_string(),
         id: json!(1),
-        method: "openhuman.threads_message_append".to_string(),
+        method: "neppy.threads_message_append".to_string(),
         params: json!({
             "thread_id": "thread-missing",
             "message": {
@@ -1188,7 +1194,7 @@ async fn unknown_method_severity_split_by_probe_allow_list() {
 
     let workspace = tempfile::tempdir().expect("workspace tempdir");
     let _env = EnvVarGuard::set_many(vec![(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         workspace.path().as_os_str().to_os_string(),
     )]);
 
@@ -1301,7 +1307,7 @@ async fn invalid_ingest_payload_is_captured_at_warn_not_error() {
 
     let workspace = tempfile::tempdir().expect("workspace tempdir");
     let _env = EnvVarGuard::set_many(vec![(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         workspace.path().as_os_str().to_os_string(),
     )]);
 
@@ -1337,7 +1343,7 @@ async fn invalid_ingest_payload_is_captured_at_warn_not_error() {
     let request = crate::core::types::RpcRequest {
         jsonrpc: "2.0".to_string(),
         id: json!(1),
-        method: "openhuman.memory_tree_ingest".to_string(),
+        method: "neppy.memory_tree_ingest".to_string(),
         params: json!({
             "source_kind": "chat",
             "source_id": "#general",
@@ -1373,7 +1379,7 @@ async fn invalid_ingest_payload_is_captured_at_warn_not_error() {
     );
     assert_eq!(
         events[0].tags.get("method").map(String::as_str),
-        Some("openhuman.memory_tree_ingest")
+        Some("neppy.memory_tree_ingest")
     );
 }
 
@@ -1527,20 +1533,16 @@ async fn invoke_method_rejects_array_params_for_registered_method() {
     // Registered controllers expect named-argument style (JSON object).
     // Passing an array must fail with a clear "invalid params" error
     // instead of silently calling the handler with no args.
-    let err = invoke_method(
-        default_state(),
-        "openhuman.health_snapshot",
-        json!([1, 2, 3]),
-    )
-    .await
-    .expect_err("array params should be rejected");
+    let err = invoke_method(default_state(), "neppy.health_snapshot", json!([1, 2, 3]))
+        .await
+        .expect_err("array params should be rejected");
     assert!(err.contains("invalid params"));
     assert!(err.contains("array"));
 }
 
 #[tokio::test]
 async fn invoke_method_rejects_string_params_for_registered_method() {
-    let err = invoke_method(default_state(), "openhuman.health_snapshot", json!("oops"))
+    let err = invoke_method(default_state(), "neppy.health_snapshot", json!("oops"))
         .await
         .expect_err("string params should be rejected");
     assert!(err.contains("invalid params"));
@@ -1550,7 +1552,7 @@ async fn invoke_method_rejects_string_params_for_registered_method() {
 #[tokio::test]
 async fn invoke_method_accepts_null_params_for_registered_method() {
     // JSON-RPC 2.0 allows omitting params; null must be treated like {}.
-    let result = invoke_method(default_state(), "openhuman.health_snapshot", json!(null)).await;
+    let result = invoke_method(default_state(), "neppy.health_snapshot", json!(null)).await;
     // Call should succeed or fail for domain reasons — but must NOT
     // fail with the "invalid params" shape error.
     if let Err(e) = result {
@@ -1563,7 +1565,7 @@ async fn invoke_method_accepts_null_params_for_registered_method() {
 
 #[tokio::test]
 async fn invoke_method_unknown_method_returns_unknown_error() {
-    let err = invoke_method(default_state(), "openhuman.totally_made_up_xyz", json!({}))
+    let err = invoke_method(default_state(), "neppy.totally_made_up_xyz", json!({}))
         .await
         .expect_err("unknown methods must error");
     assert!(err.contains("unknown method"));

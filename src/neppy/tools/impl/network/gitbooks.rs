@@ -203,7 +203,7 @@ mod tests {
 
     #[tokio::test]
     async fn live_search_smoke() {
-        if std::env::var("OPENHUMAN_GITBOOKS_LIVE_TEST")
+        if crate::neppy::util::env::var("NEPPY_GITBOOKS_LIVE_TEST")
             .ok()
             .as_deref()
             != Some("1")
@@ -215,10 +215,7 @@ mod tests {
             30,
         )
         .expect("a client builds");
-        let result = t
-            .execute(json!({"query": "what is openhuman"}))
-            .await
-            .unwrap();
+        let result = t.execute(json!({"query": "what is neppy"})).await.unwrap();
         assert!(
             !result.is_error,
             "live search returned error: {}",

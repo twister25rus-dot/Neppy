@@ -28,7 +28,7 @@ The selected change is compatible with the current repository:
 - `.github/workflows/ci-full.yml` treats the reusable `e2e-desktop` workflow as
   a dependency of `CI Full Gate`, so no gate-topology edit is needed.
 - Root `package.json` defines `pnpm rust:clippy` as root
-  `cargo clippy -p openhuman -- -D warnings` followed by the app workspace's
+  `cargo clippy -p neppy -- -D warnings` followed by the app workspace's
   `rust:clippy`; `app/package.json` defines the latter as Tauri
   `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings`.
 - The workflow already grants `actions: read` and exports `GH_TOKEN`, which
@@ -220,7 +220,7 @@ Inspect `Build (macOS full)` and confirm:
 1. `Build E2E app` succeeds before the new step.
 2. `Clippy (macOS-gated Rust)` executes
    `bash scripts/ci-cancel-aware.sh pnpm rust:clippy`.
-3. The log shows root `cargo clippy -p openhuman -- -D warnings` and then Tauri
+3. The log shows root `cargo clippy -p neppy -- -D warnings` and then Tauri
    `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings`.
 4. `Package build artifact` and `Upload build artifact` run only after Clippy
    succeeds.

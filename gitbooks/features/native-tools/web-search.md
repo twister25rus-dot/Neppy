@@ -59,16 +59,16 @@ Do not commit a plaintext API key from this example. A key entered directly in `
 Or via environment:
 
 ```bash
-OPENHUMAN_SEARCH_ENGINE=exa
+NEPPY_SEARCH_ENGINE=exa
 EXA_API_KEY=your-exa-api-key
-# OPENHUMAN_EXA_API_KEY is accepted as well
+# NEPPY_EXA_API_KEY is accepted as well
 ```
 
-`OPENHUMAN_EXA_API_KEY` and `EXA_API_KEY` both override `search.exa.api_key`; treat environment-provided keys as sensitive secrets.
+`NEPPY_EXA_API_KEY` and `EXA_API_KEY` both override `search.exa.api_key`; treat environment-provided keys as sensitive secrets.
 
 ## Self-hosted SearXNG
 
-SearXNG search is opt-in and exposed through the `openhuman.tools_searxng_search` RPC controller and MCP catalog; it is not registered as an agent tool. The controller calls your configured SearXNG `/search?format=json` endpoint and returns normalized `{ title, url, snippet, source }` results.
+SearXNG search is opt-in and exposed through the `neppy.tools_searxng_search` RPC controller and MCP catalog; it is not registered as an agent tool. The controller calls your configured SearXNG `/search?format=json` endpoint and returns normalized `{ title, url, snippet, source }` results.
 
 Enable it in `config.toml`:
 
@@ -84,11 +84,11 @@ timeout_seconds = 10
 Or via environment:
 
 ```bash
-OPENHUMAN_SEARXNG_ENABLED=true
-OPENHUMAN_SEARXNG_BASE_URL=http://localhost:8080
-OPENHUMAN_SEARXNG_MAX_RESULTS=10
-OPENHUMAN_SEARXNG_DEFAULT_LANGUAGE=en
-OPENHUMAN_SEARXNG_TIMEOUT_SECONDS=10
+NEPPY_SEARXNG_ENABLED=true
+NEPPY_SEARXNG_BASE_URL=http://localhost:8080
+NEPPY_SEARXNG_MAX_RESULTS=10
+NEPPY_SEARXNG_DEFAULT_LANGUAGE=en
+NEPPY_SEARXNG_TIMEOUT_SECONDS=10
 ```
 
 Per call, the tool accepts `query`, optional `categories` (`web`, `news`, `images`), optional `language`, and optional `max_results` up to 50. Empty queries, unsupported categories, non-2xx SearXNG responses, and timeout failures return structured tool errors instead of silently falling back to a cloud search provider.

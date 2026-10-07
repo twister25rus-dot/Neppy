@@ -37,8 +37,8 @@ Live-tests the memory_goals flow (list/add/edit/delete + reflect enrichment)
 and prints the goals_agent's thoughts, tool calls, token usage and cost.
 
 Options:
-  --core-url <url>     JSON-RPC endpoint (default: OPENHUMAN_CORE_RPC_URL or ${DEFAULT_RPC_URL})
-  --token <token>      RPC bearer (default: OPENHUMAN_CORE_TOKEN or <workspace>/core.token)
+  --core-url <url>     JSON-RPC endpoint (default: NEPPY_CORE_RPC_URL or ${DEFAULT_RPC_URL})
+  --token <token>      RPC bearer (default: NEPPY_CORE_TOKEN or <workspace>/core.token)
   --workspace <path>   Workspace whose MEMORY_GOALS.md + transcripts are used
   --spawn-core         Start neppy-core for the run (uses the real workspace unless --isolated-workspace)
   --isolated-workspace With --spawn-core, use a throwaway temp workspace (needs provider creds in env to enrich)
@@ -56,9 +56,9 @@ Options:
 
 function parseArgs(argv) {
   const opts = {
-    coreUrl: process.env.OPENHUMAN_CORE_RPC_URL || DEFAULT_RPC_URL,
-    token: process.env.OPENHUMAN_CORE_TOKEN || "",
-    workspace: process.env.OPENHUMAN_WORKSPACE || "",
+    coreUrl: (process.env.NEPPY_CORE_RPC_URL ?? process.env.OPENHUMAN_CORE_RPC_URL) || DEFAULT_RPC_URL,
+    token: (process.env.NEPPY_CORE_TOKEN ?? process.env.OPENHUMAN_CORE_TOKEN) || "",
+    workspace: (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE) || "",
     spawnCore: false,
     isolatedWorkspace: false,
     keepWorkspace: false,
@@ -69,7 +69,7 @@ function parseArgs(argv) {
     showThoughts: false,
     rpcTimeoutMs: 600_000,
     verbose: false,
-    coreUrlExplicit: Boolean(process.env.OPENHUMAN_CORE_RPC_URL),
+    coreUrlExplicit: Boolean((process.env.NEPPY_CORE_RPC_URL ?? process.env.OPENHUMAN_CORE_RPC_URL)),
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -139,13 +139,13 @@ function parseArgs(argv) {
 // ── workspace / token resolution (mirrors harness-cache-audit) ──────────────
 
 function defaultNeppyDir() {
-  return process.env.OPENHUMAN_APP_ENV === "staging"
+  return (process.env.NEPPY_APP_ENV ?? process.env.OPENHUMAN_APP_ENV) === "staging"
     ? path.join(homedir(), ".neppy-staging")
     : path.join(homedir(), ".neppy");
 }
 
 async function defaultWorkspace() {
-  if (process.env.OPENHUMAN_WORKSPACE) return process.env.OPENHUMAN_WORKSPACE;
+  if ((process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)) return (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE);
   const dir = defaultNeppyDir();
   try {
     const active = await readFile(path.join(dir, "active_user.toml"), "utf8");
@@ -167,7 +167,7 @@ async function readToken(opts) {
     return (await readFile(tokenPath, "utf8")).trim();
   } catch {
     throw new Error(
-      `RPC token not found at ${tokenPath}. Pass --token or set OPENHUMAN_CORE_TOKEN.`,
+      `RPC token not found at ${tokenPath}. Pass --token or set NEPPY_CORE_TOKEN.`,
     );
   }
 }
@@ -360,11 +360,11 @@ async function pickFreePort() {
 
 async function startCore(opts) {
   const token = opts.token || `goals-${randomBytes(24).toString("hex")}`;
-  const env = { ...process.env, OPENHUMAN_CORE_TOKEN: token };
-  if (opts.workspace) env.OPENHUMAN_WORKSPACE = opts.workspace;
+  const env = { ...process.env, NEPPY_CORE_TOKEN: token };
+  if (opts.workspace) env.NEPPY_WORKSPACE = opts.workspace;
   const port = new URL(opts.coreUrl).port || "7788";
-  env.OPENHUMAN_CORE_PORT = port;
-  env.OPENHUMAN_CORE_RPC_URL = opts.coreUrl;
+  env.NEPPY_CORE_PORT = port;
+  env.NEPPY_CORE_RPC_URL = opts.coreUrl;
   const args = ["run", "--host", "127.0.0.1", "--port", port, "--jsonrpc-only"];
   const child = spawn(
     "cargo",
@@ -420,17 +420,17 @@ function call(opts, method, params = {}) {
 }
 
 async function resetGoals(opts) {
-  const { value } = unwrap(await call(opts, "openhuman.memory_goals_list"));
+  const { value } = unwrap(await call(opts, "neppy.memory_goals_list"));
   const items = value?.items || [];
   for (const g of items) {
-    await call(opts, "openhuman.memory_goals_delete", { id: g.id });
+    await call(opts, "neppy.memory_goals_delete", { id: g.id });
   }
   if (items.length > 0) console.log(`  reset: deleted ${items.length} existing goal(s)`);
 }
 
 async function caseList(opts, label = "list") {
   console.log(`\n=== case: ${label} ===`);
-  const { value } = unwrap(await call(opts, "openhuman.memory_goals_list"));
+  const { value } = unwrap(await call(opts, "neppy.memory_goals_list"));
   console.log(`  current goals:\n${renderGoals(value)}`);
   return value;
 }
@@ -443,25 +443,25 @@ async function caseAdd(opts) {
   ];
   for (const text of seeds) {
     const { value, logs } = unwrap(
-      await call(opts, "openhuman.memory_goals_add", { text }),
+      await call(opts, "neppy.memory_goals_add", { text }),
     );
     console.log(`  + ${logs[0] || "added"} -> ${value.id}`);
   }
-  const { value } = unwrap(await call(opts, "openhuman.memory_goals_list"));
+  const { value } = unwrap(await call(opts, "neppy.memory_goals_list"));
   console.log(`  goals now:\n${renderGoals(value)}`);
   return value;
 }
 
 async function caseEdit(opts) {
   console.log("\n=== case: edit ===");
-  const { value: before } = unwrap(await call(opts, "openhuman.memory_goals_list"));
+  const { value: before } = unwrap(await call(opts, "neppy.memory_goals_list"));
   const target = before?.items?.[0];
   if (!target) {
     console.log("  (no goal to edit — run the add case first)");
     return before;
   }
   const { value, logs } = unwrap(
-    await call(opts, "openhuman.memory_goals_edit", {
+    await call(opts, "neppy.memory_goals_edit", {
       id: target.id,
       text: `${target.text} (edited live at ${new Date().toISOString()})`,
     }),
@@ -473,14 +473,14 @@ async function caseEdit(opts) {
 
 async function caseDelete(opts) {
   console.log("\n=== case: delete ===");
-  const { value: before } = unwrap(await call(opts, "openhuman.memory_goals_list"));
+  const { value: before } = unwrap(await call(opts, "neppy.memory_goals_list"));
   const target = before?.items?.at(-1);
   if (!target) {
     console.log("  (no goal to delete)");
     return before;
   }
   const { value, logs } = unwrap(
-    await call(opts, "openhuman.memory_goals_delete", { id: target.id }),
+    await call(opts, "neppy.memory_goals_delete", { id: target.id }),
   );
   console.log(`  - ${logs[0] || "deleted"} (${target.id})`);
   console.log(`  goals now:\n${renderGoals(value)}`);
@@ -500,7 +500,7 @@ async function caseReflect(opts) {
   const started = Date.now();
   let result;
   try {
-    result = unwrap(await call(opts, "openhuman.memory_goals_reflect", params)).value;
+    result = unwrap(await call(opts, "neppy.memory_goals_reflect", params)).value;
   } catch (err) {
     console.error(`  reflect RPC failed: ${err.message}`);
     console.error(

@@ -5,7 +5,7 @@
 //! no user-visible feedback. This domain runs them eagerly at core startup
 //! (spawned non-blocking after the RPC server is ready), tracks per-step
 //! progress in an in-memory snapshot, and exposes it over
-//! `openhuman.harness_init_status` / `openhuman.harness_init_run` for the
+//! `neppy.harness_init_status` / `neppy.harness_init_run` for the
 //! frontend initialization screen.
 //!
 //! Steps delegate to the existing idempotent provisioning code

@@ -16,7 +16,7 @@ describe('worktreeApi', () => {
     const view = { worktrees: [], overlaps: [] };
     mockRpc.mockResolvedValueOnce(view);
     const out = await worktreeApi.list();
-    expect(mockRpc).toHaveBeenCalledWith({ method: 'openhuman.worktree_list', params: {} });
+    expect(mockRpc).toHaveBeenCalledWith({ method: 'neppy.worktree_list', params: {} });
     expect(out).toBe(view);
   });
 
@@ -25,7 +25,7 @@ describe('worktreeApi', () => {
     mockRpc.mockResolvedValueOnce(status);
     const out = await worktreeApi.status('/r/.claude/worktrees/a');
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.worktree_status',
+      method: 'neppy.worktree_status',
       params: { path: '/r/.claude/worktrees/a' },
     });
     expect(out).toBe(status);
@@ -40,7 +40,7 @@ describe('worktreeApi', () => {
     mockRpc.mockResolvedValueOnce({ summary: ' src/a.rs | 2 +-' });
     const out = await worktreeApi.diff('/r/.claude/worktrees/a');
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.worktree_diff',
+      method: 'neppy.worktree_diff',
       params: { path: '/r/.claude/worktrees/a' },
     });
     expect(out).toBe(' src/a.rs | 2 +-');
@@ -50,7 +50,7 @@ describe('worktreeApi', () => {
     mockRpc.mockResolvedValueOnce({ removed: true });
     const out = await worktreeApi.remove('/r/.claude/worktrees/a');
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.worktree_remove',
+      method: 'neppy.worktree_remove',
       params: { path: '/r/.claude/worktrees/a', force: false },
     });
     expect(out).toBe(true);
@@ -60,7 +60,7 @@ describe('worktreeApi', () => {
     mockRpc.mockResolvedValueOnce({ removed: true });
     await worktreeApi.remove('/r/.claude/worktrees/a', true);
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.worktree_remove',
+      method: 'neppy.worktree_remove',
       params: { path: '/r/.claude/worktrees/a', force: true },
     });
   });

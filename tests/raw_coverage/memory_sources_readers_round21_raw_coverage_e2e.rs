@@ -16,7 +16,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value.as_os_str()) };
         Self { key, old }
     }
@@ -26,7 +26,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -148,7 +148,7 @@ async fn round21_github_reader_covers_commit_issue_comments_and_error_paths() {
     std::fs::create_dir_all(&bin).expect("bin dir");
     write_fake_gh(&bin.join("gh"));
     write_fake_git(&bin.join("git"));
-    let old_path = std::env::var("PATH").unwrap_or_default();
+    let old_path = neppy_core::neppy::util::env::var("PATH").unwrap_or_default();
     let _path = EnvGuard::set_path("PATH", Path::new(&format!("{}:{old_path}", bin.display())));
 
     let reader = neppy_core::neppy::memory::sources::readers::github::GithubReader;

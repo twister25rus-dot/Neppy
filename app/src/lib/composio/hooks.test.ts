@@ -68,7 +68,7 @@ describe('useComposioIntegrations', () => {
 
     // Cold-start: first toolkit fetch times out, the silent retry succeeds.
     mockListToolkits
-      .mockRejectedValueOnce(new Error('Core RPC openhuman.composio_list_toolkits timed out'))
+      .mockRejectedValueOnce(new Error('Core RPC neppy.composio_list_toolkits timed out'))
       .mockResolvedValue({ toolkits: ['gmail'] });
     mockListConnections.mockResolvedValue({ connections: [] });
 

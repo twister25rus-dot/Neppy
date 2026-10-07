@@ -3,7 +3,7 @@ import debug from 'debug';
 import { callCoreRpc } from '../coreRpcClient';
 
 // ---------------------------------------------------------------------------
-// Pet desktop companion RPC client (`openhuman.pet_companion_*`).
+// Pet desktop companion RPC client (`neppy.pet_companion_*`).
 //
 // The wire shapes mirror the §2.9 contract of the Pet companion plan. Handlers
 // return the bare JSON value, but the core may also hand back the CLI-compatible
@@ -13,7 +13,7 @@ import { callCoreRpc } from '../coreRpcClient';
 // suggestion bodies and hand-off prompts never reach a log line.
 // ---------------------------------------------------------------------------
 
-const log = debug('openhuman:petCompanionApi');
+const log = debug('neppy:petCompanionApi');
 
 /** 0 Observe, 1 Suggest, 2 Assist, 3 Trusted. */
 export type CompanionLevel = 0 | 1 | 2 | 3;
@@ -262,7 +262,7 @@ const unwrapValue = <T>(raw: unknown): T => {
 
 async function call<T>(fn: string, params: Record<string, unknown> = {}): Promise<T> {
   log('rpc %s', fn);
-  const raw = await callCoreRpc<unknown>({ method: `openhuman.pet_companion_${fn}`, params });
+  const raw = await callCoreRpc<unknown>({ method: `neppy.pet_companion_${fn}`, params });
   return unwrapValue<T>(raw);
 }
 

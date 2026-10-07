@@ -81,7 +81,7 @@
 //!     serde-monomorphised `Visitor` frames don't compound with the
 //!     agent-harness frames that called it.
 //!   * `load_config_with_timeout` is fronted by a process-global cache
-//!     keyed on `OPENHUMAN_WORKSPACE`, invalidated by `Config::save()`.
+//!     keyed on `NEPPY_WORKSPACE`, invalidated by `Config::save()`.
 //!     Hot-path consumers (composio per-call reload, #1710 Wave 4) get
 //!     a clone, never re-entering the parser.
 //!
@@ -91,7 +91,7 @@
 //!     (production default), so the test runs in the same stack budget
 //!     production does — anything larger would let dormant regressions
 //!     hide for longer,
-//!   * `OPENHUMAN_WORKSPACE` pointed at a tempdir with a representative
+//!   * `NEPPY_WORKSPACE` pointed at a tempdir with a representative
 //!     `config.toml` so the TOML parser does real work,
 //!   * `run_subagent(integrations_agent)` exactly like
 //!     `delegate_to_integrations_agent` does, with a stubbed `ChatModel`
@@ -144,7 +144,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, val: &str) -> Self {
-        let prev = std::env::var(key).ok();
+        let prev = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: caller holds env_lock().
         unsafe { std::env::set_var(key, val) };
         Self { key, prev }
@@ -156,7 +156,7 @@ impl Drop for EnvGuard {
         match &self.prev {
             // SAFETY: caller's env_lock guard is still alive during drop.
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -294,14 +294,14 @@ impl Memory for StubMemory {
 #[test]
 fn composio_list_tools_via_subagent_runs_on_production_worker_stack() {
     // Serialise env mutation across the test binary (other tests may
-    // poke OPENHUMAN_WORKSPACE concurrently).
+    // poke NEPPY_WORKSPACE concurrently).
     let _env = env_lock();
 
     let tmp = tempdir().expect("tempdir");
     std::fs::write(tmp.path().join("config.toml"), REPRESENTATIVE_CONFIG_TOML)
         .expect("write representative config.toml");
     let _ws_guard = EnvGuard::set(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         tmp.path().to_str().expect("tempdir path utf-8"),
     );
 

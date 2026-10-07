@@ -3,7 +3,7 @@
 //! Background: `WORKSPACE_DIR` and `BACKEND` are process-global `OnceLock`s, so
 //! every test in the binary shared one credential store, pinned to whatever
 //! workspace the first keyring call in the process happened to observe. Several
-//! tests point `OPENHUMAN_WORKSPACE` at a `TempDir` behind an RAII env guard;
+//! tests point `NEPPY_WORKSPACE` at a `TempDir` behind an RAII env guard;
 //! when one of those won the race, the whole binary's secrets were written into
 //! a directory that was deleted at the end of that test. `FileBackend::read_map`
 //! treats a missing file as an empty map, so the next write silently reset the
@@ -30,7 +30,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var(key).ok();
+        let previous = crate::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, previous }
     }
@@ -40,7 +40,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match self.previous.take() {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => crate::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -55,22 +55,22 @@ impl Drop for EnvVarGuard {
 fn test_builds_ignore_the_process_wide_workspace_env_var() {
     let _env_lock = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().expect("tempdir");
-    let _guard = EnvVarGuard::set("OPENHUMAN_WORKSPACE", tmp.path());
+    let _guard = EnvVarGuard::set("NEPPY_WORKSPACE", tmp.path());
 
     assert_ne!(
         workspace_dir_for_file_backend(),
         tmp.path().to_path_buf(),
-        "test builds must not resolve the keyring workspace from OPENHUMAN_WORKSPACE"
+        "test builds must not resolve the keyring workspace from NEPPY_WORKSPACE"
     );
 }
 
-/// The production rule is unchanged: `OPENHUMAN_WORKSPACE` still wins there.
+/// The production rule is unchanged: `NEPPY_WORKSPACE` still wins there.
 /// This is the half that guarantees the fix is test-only.
 #[test]
 fn production_resolution_still_honours_the_workspace_env_var() {
     let _env_lock = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let tmp = tempfile::tempdir().expect("tempdir");
-    let _guard = EnvVarGuard::set("OPENHUMAN_WORKSPACE", tmp.path());
+    let _guard = EnvVarGuard::set("NEPPY_WORKSPACE", tmp.path());
 
     assert_eq!(
         resolve_workspace_dir_from_process_state(),

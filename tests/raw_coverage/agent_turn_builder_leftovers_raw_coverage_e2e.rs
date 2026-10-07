@@ -29,7 +29,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
@@ -39,7 +39,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match self.previous.take() {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -331,7 +331,7 @@ fn tool(
 async fn native_turn_dedups_duplicate_tool_specs_and_executes_empty_arguments() {
     let _env = env_lock();
     let (_temp, workspace_path) = workspace("native-dedup-invalid-args");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
 
     let first_calls = Arc::new(AtomicUsize::new(0));
     let second_calls = Arc::new(AtomicUsize::new(0));
@@ -394,7 +394,7 @@ async fn native_turn_dedups_duplicate_tool_specs_and_executes_empty_arguments() 
 async fn xml_turn_persists_tool_cycle_and_fires_failure_hook_context() {
     let _env = env_lock();
     let (_temp, workspace_path) = workspace("xml-hook-persistence");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     let hook_calls = Arc::new(AtomicUsize::new(0));
     let hook_contexts = Arc::new(Mutex::new(Vec::new()));
     let failure_calls = Arc::new(AtomicUsize::new(0));
@@ -467,7 +467,7 @@ async fn xml_turn_persists_tool_cycle_and_fires_failure_hook_context() {
 async fn session_memory_threshold_path_runs_only_after_successful_turn() {
     let _env = env_lock();
     let (_temp, workspace_path) = workspace("session-memory-threshold");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     let hook_calls = Arc::new(AtomicUsize::new(0));
     let hook_contexts = Arc::new(Mutex::new(Vec::new()));
     let calls = Arc::new(AtomicUsize::new(0));

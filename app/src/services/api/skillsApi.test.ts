@@ -27,7 +27,7 @@ describe('skillsApi', () => {
   });
 
   describe('describeWorkflow', () => {
-    it('calls openhuman.skills_describe with workflow_id', async () => {
+    it('calls neppy.skills_describe with workflow_id', async () => {
       mockCallCoreRpc.mockResolvedValue({
         id: 'dev-workflow',
         name: 'Dev Workflow',
@@ -37,7 +37,7 @@ describe('skillsApi', () => {
       const result = await skillsApi.describeWorkflow('dev-workflow');
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skills_describe',
+          method: 'neppy.skills_describe',
           params: { workflow_id: 'dev-workflow' },
         })
       );
@@ -54,7 +54,7 @@ describe('skillsApi', () => {
   });
 
   describe('runWorkflow', () => {
-    it('calls openhuman.skill_runtime_run with skill_id and inputs', async () => {
+    it('calls neppy.skill_runtime_run with skill_id and inputs', async () => {
       mockCallCoreRpc.mockResolvedValue({
         run_id: 'run-1',
         status: 'started',
@@ -64,7 +64,7 @@ describe('skillsApi', () => {
       const result = await skillsApi.runWorkflow('s', { repo: 'owner/repo' });
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skill_runtime_run',
+          method: 'neppy.skill_runtime_run',
           params: { skill_id: 's', inputs: { repo: 'owner/repo' } },
         })
       );
@@ -85,7 +85,7 @@ describe('skillsApi', () => {
       const result = await skillsApi.readRunLog('run-1');
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skill_runtime_read_run_log',
+          method: 'neppy.skill_runtime_read_run_log',
           params: expect.objectContaining({ run_id: 'run-1' }),
         })
       );
@@ -121,7 +121,7 @@ describe('skillsApi', () => {
       await skillsApi.recentRuns('dev-workflow', 5);
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skill_runtime_recent_runs',
+          method: 'neppy.skill_runtime_recent_runs',
           params: expect.objectContaining({ skill_id: 'dev-workflow', limit: 5 }),
         })
       );
@@ -145,7 +145,7 @@ describe('skillsApi', () => {
       });
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skills_create',
+          method: 'neppy.skills_create',
           params: expect.objectContaining({
             when_to_use: 'when asked',
             scope: 'user',
@@ -169,7 +169,7 @@ describe('skillsApi', () => {
   });
 
   describe('updateWorkflow', () => {
-    it('calls openhuman.skills_update and returns the skill', async () => {
+    it('calls neppy.skills_update and returns the skill', async () => {
       mockCallCoreRpc.mockResolvedValue({
         workflow: { id: 'wf', name: 'WF', description: 'd', scope: 'user' as const },
       });
@@ -181,7 +181,7 @@ describe('skillsApi', () => {
       });
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skills_update',
+          method: 'neppy.skills_update',
           params: expect.objectContaining({
             name: 'WF',
             when_to_use: 'edit trigger',
@@ -202,12 +202,12 @@ describe('skillsApi', () => {
   });
 
   describe('cancelRun', () => {
-    it('calls openhuman.skill_runtime_cancel with run_id and returns cancelled', async () => {
+    it('calls neppy.skill_runtime_cancel with run_id and returns cancelled', async () => {
       mockCallCoreRpc.mockResolvedValue({ cancelled: true });
       const result = await skillsApi.cancelRun('run-9');
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skill_runtime_cancel',
+          method: 'neppy.skill_runtime_cancel',
           params: { run_id: 'run-9' },
         })
       );
@@ -222,12 +222,12 @@ describe('skillsApi', () => {
   });
 
   describe('uninstallWorkflow', () => {
-    it('calls openhuman.skill_registry_uninstall and normalizes removed_path', async () => {
+    it('calls neppy.skill_registry_uninstall and normalizes removed_path', async () => {
       mockCallCoreRpc.mockResolvedValue({ name: 'demo', removed_path: '/tmp/demo', scope: 'user' });
       const result = await skillsApi.uninstallWorkflow('demo');
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skill_registry_uninstall',
+          method: 'neppy.skill_registry_uninstall',
           params: { name: 'demo' },
         })
       );
@@ -236,7 +236,7 @@ describe('skillsApi', () => {
   });
 
   describe('resolveRuntimes', () => {
-    it('calls openhuman.skill_runtime_resolve_runtimes and normalizes bin_dir', async () => {
+    it('calls neppy.skill_runtime_resolve_runtimes and normalizes bin_dir', async () => {
       mockCallCoreRpc.mockResolvedValue({
         runtimes: [
           {
@@ -254,7 +254,7 @@ describe('skillsApi', () => {
       const result = await skillsApi.resolveRuntimes('node');
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.skill_runtime_resolve_runtimes',
+          method: 'neppy.skill_runtime_resolve_runtimes',
           params: { runtime: 'node' },
         })
       );
@@ -267,7 +267,7 @@ describe('skillsApi', () => {
       await skillsApi.resolveRuntimes('all');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
-        expect.objectContaining({ method: 'openhuman.skill_runtime_resolve_runtimes', params: {} })
+        expect.objectContaining({ method: 'neppy.skill_runtime_resolve_runtimes', params: {} })
       );
     });
 

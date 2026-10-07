@@ -36,7 +36,7 @@ import { Button, TextField } from '../ui';
  * polling + field-collection contract of `ComposioConnectModal` so the two
  * connect surfaces behave identically.
  */
-const log = debug('openhuman:chat:integration-connect-card');
+const log = debug('neppy:chat:integration-connect-card');
 
 const POLL_INTERVAL_MS = 4_000;
 const POLL_TIMEOUT_MS = 5 * 60 * 1_000;
@@ -112,7 +112,7 @@ const IntegrationConnectCard: React.FC<Props> = ({ threadId, approval }) => {
     async (decision: 'approve_once' | 'deny') => {
       try {
         await callCoreRpc({
-          method: 'openhuman.approval_decide',
+          method: 'neppy.approval_decide',
           params: { request_id: approval.requestId, decision },
         });
       } catch (e) {

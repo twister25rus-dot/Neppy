@@ -282,12 +282,12 @@ export function normalizeReferralStats(raw: unknown): ReferralStats {
 
 export const referralApi = {
   /**
-   * Referral stats via core RPC (`openhuman.referral_get_stats` → backend GET /referral/stats).
+   * Referral stats via core RPC (`neppy.referral_get_stats` → backend GET /referral/stats).
    * Uses the sidecar HTTP client so the desktop WebView avoids direct `fetch` (fixes WKWebView "Load failed" / CORS to the API host).
    */
   getStats: async (): Promise<ReferralStats> => {
     try {
-      const data = await callCoreCommand<unknown>('openhuman.referral_get_stats');
+      const data = await callCoreCommand<unknown>('neppy.referral_get_stats');
       console.debug('[referral] stats loaded via core', {
         hasCode: !!(data && typeof data === 'object'),
       });
@@ -299,7 +299,7 @@ export const referralApi = {
   },
 
   /**
-   * Claim a referral link via core RPC (`openhuman.referral_claim` → backend POST /referral/claim).
+   * Claim a referral link via core RPC (`neppy.referral_claim` → backend POST /referral/claim).
    * Only users who have not yet subscribed are eligible.
    */
   claimReferral: async (code: string): Promise<void> => {
@@ -309,10 +309,7 @@ export const referralApi = {
     }
     const deviceFingerprint = getOrCreateDeviceFingerprint();
     try {
-      await callCoreCommand<unknown>('openhuman.referral_claim', {
-        code: trimmed,
-        deviceFingerprint,
-      });
+      await callCoreCommand<unknown>('neppy.referral_claim', { code: trimmed, deviceFingerprint });
       console.debug('[referral] claim succeeded', { codeLength: trimmed.length });
     } catch (err) {
       console.debug('[referral] claim RPC failed', referralRpcErrorMessage(err));

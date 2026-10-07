@@ -3,9 +3,9 @@
  *
  * Single source of truth for **what feeds memory**: folders, GitHub
  * repos, RSS feeds, web pages, Twitter queries, and Composio
- * integrations. Polls `openhuman.memory_sources_status_list` every 5s
+ * integrations. Polls `neppy.memory_sources_status_list` every 5s
  * for per-source chunk counts and freshness. The Sync button on each
- * row dispatches `openhuman.memory_sources_sync` which runs in the
+ * row dispatches `neppy.memory_sources_sync` which runs in the
  * background and emits MemorySyncStageChanged events.
  */
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -237,8 +237,8 @@ export function MemorySourcesRegistry({
         });
       }
     };
-    window.addEventListener('openhuman:memory-sync-stage', handler);
-    return () => window.removeEventListener('openhuman:memory-sync-stage', handler);
+    window.addEventListener('neppy:memory-sync-stage', handler);
+    return () => window.removeEventListener('neppy:memory-sync-stage', handler);
   }, []);
 
   const refresh = useCallback(async () => {

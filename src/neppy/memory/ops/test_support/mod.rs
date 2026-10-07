@@ -54,7 +54,7 @@ pub(crate) fn shared_memory_test_workspace() -> PathBuf {
 /// the same workspace path return the existing client without rebinding.
 ///
 /// The returned path lets callers whose RPC path *also* resolves the workspace
-/// from `OPENHUMAN_WORKSPACE` (notably `memory::ops::documents` via
+/// from `NEPPY_WORKSPACE` (notably `memory::ops::documents` via
 /// `memory_init` → `current_workspace_dir`) pin the env var to this same path so
 /// the env and the bound client agree. See `documents::tests`.
 pub(crate) fn ensure_shared_memory_client() -> PathBuf {

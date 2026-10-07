@@ -4,7 +4,7 @@ import { callCoreRpc } from '../coreRpcClient';
 import type { PendingApproval } from './approvalApi';
 
 // ---------------------------------------------------------------------------
-// Pet mode RPC client (`openhuman.pet_*`).
+// Pet mode RPC client (`neppy.pet_*`).
 //
 // The wire shapes mirror the backend contract. Handlers return the bare JSON
 // value, but the core may also hand back the CLI-compatible `{ result, logs }`
@@ -14,7 +14,7 @@ import type { PendingApproval } from './approvalApi';
 // and digest bodies never reach a log line.
 // ---------------------------------------------------------------------------
 
-const log = debug('openhuman:petApi');
+const log = debug('neppy:petApi');
 
 export type ResearchPreset = 'light' | 'standard' | 'frequent';
 /**
@@ -172,7 +172,7 @@ const unwrapValue = <T>(raw: unknown): T => {
 
 async function call<T>(fn: string, params: Record<string, unknown> = {}): Promise<T> {
   log('rpc %s', fn);
-  const raw = await callCoreRpc<unknown>({ method: `openhuman.pet_${fn}`, params });
+  const raw = await callCoreRpc<unknown>({ method: `neppy.pet_${fn}`, params });
   return unwrapValue<T>(raw);
 }
 

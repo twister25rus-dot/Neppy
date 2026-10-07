@@ -35,20 +35,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -57,12 +57,12 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(v) => std::env::set_var(self.key, v),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
 
-/// Serializes tests in this binary: `HOME` / `OPENHUMAN_WORKSPACE` / backend URL overrides are
+/// Serializes tests in this binary: `HOME` / `NEPPY_WORKSPACE` / backend URL overrides are
 /// process-global, so parallel tests would clobber each other and hit the wrong `config.toml` or
 /// inherited `VITE_BACKEND_URL`.
 static JSON_RPC_E2E_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -73,7 +73,7 @@ static CHAT_COMPLETION_REQUESTS: OnceLock<Mutex<Vec<Value>>> = OnceLock::new();
 
 fn json_rpc_e2e_env_lock() -> std::sync::MutexGuard<'static, ()> {
     JSON_RPC_E2E_KEYRING_INIT.get_or_init(|| unsafe {
-        std::env::set_var("OPENHUMAN_KEYRING_BACKEND", "file");
+        std::env::set_var("NEPPY_KEYRING_BACKEND", "file");
         // Neppy's local mode (default ON in a non-`cfg(test)` build, which is how
         // this integration binary links the core) redirects every managed-backend
         // inference call to the user's *active local provider* (Ollama/MLX), not
@@ -103,7 +103,7 @@ fn json_rpc_e2e_env_lock() -> std::sync::MutexGuard<'static, ()> {
 /// handlers name one object. This reproduces that arrangement by pointing both
 /// at a single path — the policy below is built from it, and the cases that mix
 /// contract-routed writes with direct-SQLite reads export it as
-/// `OPENHUMAN_WORKSPACE`, which `config::schema::load::env_overlay` honours.
+/// `NEPPY_WORKSPACE`, which `config::schema::load::env_overlay` honours.
 ///
 /// The path ends in `workspace` on purpose: `resolve_config_dir_for_workspace`
 /// treats such a path as the workspace dir itself rather than appending another
@@ -1035,7 +1035,7 @@ async fn wait_for_chat_completion_request_with_message(message: &str) -> Value {
 }
 
 async fn encrypt_test_mnemonic() -> String {
-    let _keyring_backend_guard = EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file");
+    let _keyring_backend_guard = EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file");
     let config = neppy_core::neppy::config::load_config_with_timeout()
         .await
         .expect("load config for encrypted test mnemonic");
@@ -1120,7 +1120,7 @@ encrypt = false
 "#
     );
     fn write_config_file(config_dir: &Path, cfg: &str) {
-        std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
+        std::fs::create_dir_all(config_dir).expect("mkdir neppy");
         let path = config_dir.join("config.toml");
         std::fs::write(&path, cfg).expect("write config");
     }
@@ -1156,7 +1156,7 @@ enabled = false
 "#
     );
     fn write_config_file(config_dir: &Path, cfg: &str) {
-        std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
+        std::fs::create_dir_all(config_dir).expect("mkdir neppy");
         let path = config_dir.join("config.toml");
         std::fs::write(&path, cfg).expect("write config");
     }
@@ -1215,7 +1215,7 @@ async fn json_rpc_discovers_codex_and_claude_sessions_for_memory_ingestion() {
     let response = post_json_rpc(
         &rpc_base,
         4_914_001,
-        "openhuman.memory_sources_coding_session_status",
+        "neppy.memory_sources_coding_session_status",
         json!({}),
     )
     .await;
@@ -1239,7 +1239,7 @@ async fn json_rpc_config_update_browser_settings_persists_backend() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -1251,7 +1251,7 @@ async fn json_rpc_config_update_browser_settings_persists_backend() {
     let updated = post_json_rpc(
         &rpc_base,
         41_241,
-        "openhuman.config_update_browser_settings",
+        "neppy.config_update_browser_settings",
         json!({
             "enabled": true,
             "backend": "playwright"
@@ -1276,7 +1276,7 @@ async fn json_rpc_config_update_browser_settings_persists_backend() {
         "browser backend should persist in update response: {updated_snapshot}"
     );
 
-    let get = post_json_rpc(&rpc_base, 41_242, "openhuman.config_get", json!({})).await;
+    let get = post_json_rpc(&rpc_base, 41_242, "neppy.config_get", json!({})).await;
     let get_result = assert_no_jsonrpc_error(&get, "config_get");
     let snapshot = peel_logs_envelope(get_result);
     assert_eq!(
@@ -1290,7 +1290,7 @@ async fn json_rpc_config_update_browser_settings_persists_backend() {
     let invalid = post_json_rpc(
         &rpc_base,
         41_243,
-        "openhuman.config_update_browser_settings",
+        "neppy.config_update_browser_settings",
         json!({
             "backend": "netscape"
         }),
@@ -1311,7 +1311,7 @@ async fn json_rpc_tokenjuice_detect_and_cache_stats() {
     let detect = post_json_rpc(
         &rpc_base,
         18_601,
-        "openhuman.tokenjuice_detect",
+        "neppy.tokenjuice_detect",
         json!({ "content": r#"[{"a":1,"b":2},{"a":3,"b":4}]"# }),
     )
     .await;
@@ -1322,13 +1322,7 @@ async fn json_rpc_tokenjuice_detect_and_cache_stats() {
     );
 
     // cache_stats: returns numeric occupancy fields.
-    let stats = post_json_rpc(
-        &rpc_base,
-        18_602,
-        "openhuman.tokenjuice_cache_stats",
-        json!({}),
-    )
-    .await;
+    let stats = post_json_rpc(&rpc_base, 18_602, "neppy.tokenjuice_cache_stats", json!({})).await;
     let stats_result = assert_no_jsonrpc_error(&stats, "tokenjuice_cache_stats");
     assert!(stats_result
         .get("entries")
@@ -1350,7 +1344,7 @@ async fn json_rpc_tokenjuice_settings_and_savings() {
     let get = post_json_rpc(
         &rpc_base,
         18_611,
-        "openhuman.tokenjuice_settings_get",
+        "neppy.tokenjuice_settings_get",
         json!({}),
     )
     .await;
@@ -1371,7 +1365,7 @@ async fn json_rpc_tokenjuice_settings_and_savings() {
     let updated = post_json_rpc(
         &rpc_base,
         18_612,
-        "openhuman.tokenjuice_settings_update",
+        "neppy.tokenjuice_settings_update",
         json!({ "patch": { "ccr_min_tokens": 750 } }),
     )
     .await;
@@ -1388,7 +1382,7 @@ async fn json_rpc_tokenjuice_settings_and_savings() {
     let savings = post_json_rpc(
         &rpc_base,
         18_613,
-        "openhuman.tokenjuice_savings_stats",
+        "neppy.tokenjuice_savings_stats",
         json!({}),
     )
     .await;
@@ -1405,7 +1399,7 @@ async fn json_rpc_tokenjuice_settings_and_savings() {
     let reset = post_json_rpc(
         &rpc_base,
         18_614,
-        "openhuman.tokenjuice_savings_reset",
+        "neppy.tokenjuice_savings_reset",
         json!({}),
     )
     .await;
@@ -1421,7 +1415,7 @@ async fn json_rpc_tool_registry_lists_and_gets_entries() {
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
 
-    let list = post_json_rpc(&rpc_base, 18_481, "openhuman.tool_registry_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 18_481, "neppy.tool_registry_list", json!({})).await;
     let list_result = assert_no_jsonrpc_error(&list, "tool_registry_list");
     let tools = list_result
         .get("tools")
@@ -1459,7 +1453,7 @@ async fn json_rpc_tool_registry_lists_and_gets_entries() {
             .get("route")
             .and_then(|route| route.get("method"))
             .and_then(Value::as_str),
-        Some("openhuman.tools_web_search")
+        Some("neppy.tools_web_search")
     );
     assert_eq!(
         controller_tool.get("health").and_then(Value::as_str),
@@ -1469,7 +1463,7 @@ async fn json_rpc_tool_registry_lists_and_gets_entries() {
     let get = post_json_rpc(
         &rpc_base,
         18_482,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": "tools.web_search" }),
     )
     .await;
@@ -1491,7 +1485,7 @@ async fn json_rpc_tool_registry_lists_and_gets_entries() {
     let missing = post_json_rpc(
         &rpc_base,
         18_483,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": "missing.tool" }),
     )
     .await;
@@ -1515,15 +1509,9 @@ async fn json_rpc_harness_init_status_returns_snapshot_envelope() {
     let rpc_base = format!("http://{rpc_addr}");
 
     // status is read-only — no provisioning is triggered, so it is safe in CI
-    // (we deliberately do NOT call `openhuman.harness_init_run`, which would
+    // (we deliberately do NOT call `neppy.harness_init_run`, which would
     // attempt real Python/Node/spaCy downloads).
-    let resp = post_json_rpc(
-        &rpc_base,
-        44_711,
-        "openhuman.harness_init_status",
-        json!({}),
-    )
-    .await;
+    let resp = post_json_rpc(&rpc_base, 44_711, "neppy.harness_init_status", json!({})).await;
     let result = assert_no_jsonrpc_error(&resp, "harness_init_status");
 
     let snapshot = result
@@ -1561,7 +1549,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -1573,7 +1561,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let list = post_json_rpc(
         &rpc_base,
         28_621,
-        "openhuman.agent_registry_list",
+        "neppy.agent_registry_list",
         json!({ "include_disabled": true }),
     )
     .await;
@@ -1598,7 +1586,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let definitions = post_json_rpc(
         &rpc_base,
         286_211,
-        "openhuman.agent_list_definitions",
+        "neppy.agent_list_definitions",
         json!({}),
     )
     .await;
@@ -1633,7 +1621,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let missing = post_json_rpc(
         &rpc_base,
         286_210,
-        "openhuman.agent_registry_get",
+        "neppy.agent_registry_get",
         json!({ "id": "does_not_exist" }),
     )
     .await;
@@ -1645,7 +1633,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let update_default = post_json_rpc(
         &rpc_base,
         286_211,
-        "openhuman.agent_registry_update",
+        "neppy.agent_registry_update",
         json!({
             "id": "researcher",
             "name": "Research Specialist",
@@ -1677,7 +1665,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let update_missing = post_json_rpc(
         &rpc_base,
         286_212,
-        "openhuman.agent_registry_update",
+        "neppy.agent_registry_update",
         json!({ "id": "missing_agent", "enabled": false }),
     )
     .await;
@@ -1695,7 +1683,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let disabled = post_json_rpc(
         &rpc_base,
         28_622,
-        "openhuman.agent_registry_set_enabled",
+        "neppy.agent_registry_set_enabled",
         json!({ "id": "code_executor", "enabled": false }),
     )
     .await;
@@ -1715,13 +1703,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
         Some(false)
     );
 
-    let visible = post_json_rpc(
-        &rpc_base,
-        28_623,
-        "openhuman.agent_registry_list",
-        json!({}),
-    )
-    .await;
+    let visible = post_json_rpc(&rpc_base, 28_623, "neppy.agent_registry_list", json!({})).await;
     let visible_result = assert_no_jsonrpc_error(&visible, "agent_registry_list visible");
     let visible_agents = visible_result
         .get("agents")
@@ -1737,7 +1719,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let all_after_disable = post_json_rpc(
         &rpc_base,
         286_213,
-        "openhuman.agent_registry_list",
+        "neppy.agent_registry_list",
         json!({ "include_disabled": true }),
     )
     .await;
@@ -1762,7 +1744,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let reenabled = post_json_rpc(
         &rpc_base,
         286_214,
-        "openhuman.agent_registry_set_enabled",
+        "neppy.agent_registry_set_enabled",
         json!({ "id": "code_executor", "enabled": true }),
     )
     .await;
@@ -1777,7 +1759,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let disabled_orchestrator = post_json_rpc(
         &rpc_base,
         286_231,
-        "openhuman.agent_registry_set_enabled",
+        "neppy.agent_registry_set_enabled",
         json!({ "id": "orchestrator", "enabled": false }),
     )
     .await;
@@ -1797,7 +1779,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let update_orchestrator_disabled = post_json_rpc(
         &rpc_base,
         286_232,
-        "openhuman.agent_registry_update",
+        "neppy.agent_registry_update",
         json!({ "id": "orchestrator", "enabled": false }),
     )
     .await;
@@ -1817,7 +1799,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let created = post_json_rpc(
         &rpc_base,
         28_624,
-        "openhuman.agent_registry_create_custom",
+        "neppy.agent_registry_create_custom",
         json!({
             "id": "custom_writer",
             "name": "Custom Writer",
@@ -1853,7 +1835,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let get_custom = post_json_rpc(
         &rpc_base,
         28_625,
-        "openhuman.agent_registry_get",
+        "neppy.agent_registry_get",
         json!({ "id": "custom_writer" }),
     )
     .await;
@@ -1870,7 +1852,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let updated_custom = post_json_rpc(
         &rpc_base,
         286_215,
-        "openhuman.agent_registry_update",
+        "neppy.agent_registry_update",
         json!({
             "id": "custom_writer",
             "name": "Custom Writer v2",
@@ -1911,7 +1893,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let reenabled_custom = post_json_rpc(
         &rpc_base,
         286_216,
-        "openhuman.agent_registry_set_enabled",
+        "neppy.agent_registry_set_enabled",
         json!({ "id": "custom_writer", "enabled": true }),
     )
     .await;
@@ -1926,7 +1908,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let full_upsert = post_json_rpc(
         &rpc_base,
         286_217,
-        "openhuman.agent_registry_upsert_custom",
+        "neppy.agent_registry_upsert_custom",
         json!({
             "agent": {
                 "id": "custom_reviewer",
@@ -1971,13 +1953,8 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
         Some("critic")
     );
 
-    let visible_after_custom_disable = post_json_rpc(
-        &rpc_base,
-        286_218,
-        "openhuman.agent_registry_list",
-        json!({}),
-    )
-    .await;
+    let visible_after_custom_disable =
+        post_json_rpc(&rpc_base, 286_218, "neppy.agent_registry_list", json!({})).await;
     let visible_after_custom_disable_result = assert_no_jsonrpc_error(
         &visible_after_custom_disable,
         "agent_registry_list hides disabled custom",
@@ -1995,7 +1972,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let default_collision = post_json_rpc(
         &rpc_base,
         28_626,
-        "openhuman.agent_registry_create_custom",
+        "neppy.agent_registry_create_custom",
         json!({
             "id": "orchestrator",
             "name": "Bad Override",
@@ -2019,7 +1996,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let removed_reviewer = post_json_rpc(
         &rpc_base,
         286_219,
-        "openhuman.agent_registry_remove",
+        "neppy.agent_registry_remove",
         json!({ "id": "custom_reviewer" }),
     )
     .await;
@@ -2033,7 +2010,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let removed_custom = post_json_rpc(
         &rpc_base,
         28_627,
-        "openhuman.agent_registry_remove",
+        "neppy.agent_registry_remove",
         json!({ "id": "custom_writer" }),
     )
     .await;
@@ -2049,7 +2026,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let removed_missing = post_json_rpc(
         &rpc_base,
         286_220,
-        "openhuman.agent_registry_remove",
+        "neppy.agent_registry_remove",
         json!({ "id": "missing_agent" }),
     )
     .await;
@@ -2063,7 +2040,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let reset_default = post_json_rpc(
         &rpc_base,
         286_221,
-        "openhuman.agent_registry_remove",
+        "neppy.agent_registry_remove",
         json!({ "id": "researcher" }),
     )
     .await;
@@ -2077,7 +2054,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let reset_code_executor = post_json_rpc(
         &rpc_base,
         286_222,
-        "openhuman.agent_registry_remove",
+        "neppy.agent_registry_remove",
         json!({ "id": "code_executor" }),
     )
     .await;
@@ -2094,7 +2071,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let code_executor = post_json_rpc(
         &rpc_base,
         286_223,
-        "openhuman.agent_registry_get",
+        "neppy.agent_registry_get",
         json!({ "id": "code_executor" }),
     )
     .await;
@@ -2111,7 +2088,7 @@ async fn json_rpc_agent_registry_manages_defaults_and_custom_agents() {
     let available_tools = post_json_rpc(
         &rpc_base,
         286_224,
-        "openhuman.agent_registry_available_tools",
+        "neppy.agent_registry_available_tools",
         json!({}),
     )
     .await;
@@ -2163,7 +2140,7 @@ async fn json_rpc_protocol_auth_and_agent_hello_inner() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     // Always use the in-process Axum mock for /settings + /openai so this test does not pick up
     // BACKEND_URL/VITE_BACKEND_URL from the developer shell (e.g. mock-api that returns 401 for
     // the synthetic JWT used below).
@@ -2199,7 +2176,7 @@ async fn json_rpc_protocol_auth_and_agent_hello_inner() {
     );
 
     // --- auth: session state (no JWT yet) ---
-    let state_before = post_json_rpc(&rpc_base, 3, "openhuman.auth_get_state", json!({})).await;
+    let state_before = post_json_rpc(&rpc_base, 3, "neppy.auth_get_state", json!({})).await;
     let state_outer = assert_no_jsonrpc_error(&state_before, "get_state");
     let state_body = state_outer.get("result").unwrap_or(state_outer);
     assert!(
@@ -2211,7 +2188,7 @@ async fn json_rpc_protocol_auth_and_agent_hello_inner() {
     let store = post_json_rpc(
         &rpc_base,
         4,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "e2e-test-jwt",
             "user_id": "e2e-user"
@@ -2224,7 +2201,7 @@ async fn json_rpc_protocol_auth_and_agent_hello_inner() {
     let chat = post_json_rpc(
         &rpc_base,
         5,
-        "openhuman.inference_agent_chat",
+        "neppy.inference_agent_chat",
         json!({
             "message": "Hello",
         }),
@@ -2246,7 +2223,7 @@ async fn json_rpc_protocol_auth_and_agent_hello_inner() {
     let web_chat = post_json_rpc(
         &rpc_base,
         6,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": client_id,
             "thread_id": thread_id,
@@ -2293,10 +2270,10 @@ async fn json_rpc_prompt_injection_is_rejected_before_model_call() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -2310,7 +2287,7 @@ async fn json_rpc_prompt_injection_is_rejected_before_model_call() {
     let store = post_json_rpc(
         &rpc_base,
         4001,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "e2e-test-jwt",
             "user_id": "e2e-user"
@@ -2325,7 +2302,7 @@ async fn json_rpc_prompt_injection_is_rejected_before_model_call() {
     let blocked_web = post_json_rpc(
         &rpc_base,
         4002,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": "pi-client",
             "thread_id": "pi-thread",
@@ -2349,7 +2326,7 @@ async fn json_rpc_prompt_injection_is_rejected_before_model_call() {
     let blocked_agent = post_json_rpc(
         &rpc_base,
         4003,
-        "openhuman.inference_agent_chat",
+        "neppy.inference_agent_chat",
         json!({
             "message": payload,
             "model_override": "e2e-mock-model",
@@ -2386,10 +2363,10 @@ async fn json_rpc_thread_labels_create_and_update() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -2402,7 +2379,7 @@ async fn json_rpc_thread_labels_create_and_update() {
     let create = post_json_rpc(
         &rpc_base,
         9001,
-        "openhuman.threads_create_new",
+        "neppy.threads_create_new",
         json!({ "labels": ["custom"] }),
     )
     .await;
@@ -2432,7 +2409,7 @@ async fn json_rpc_thread_labels_create_and_update() {
     let update = post_json_rpc(
         &rpc_base,
         9002,
-        "openhuman.threads_update_labels",
+        "neppy.threads_update_labels",
         json!({ "thread_id": thread_id, "labels": ["work", "briefing"] }),
     )
     .await;
@@ -2454,7 +2431,7 @@ async fn json_rpc_thread_labels_create_and_update() {
     );
 
     // 3. Verify the updated labels are reflected in threads_list.
-    let list = post_json_rpc(&rpc_base, 9003, "openhuman.threads_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 9003, "neppy.threads_list", json!({})).await;
     let list_outer = assert_no_jsonrpc_error(&list, "threads_list after label update");
     let list_result = list_outer
         .get("data")
@@ -2492,10 +2469,10 @@ async fn json_rpc_todos_crud_on_personal_board() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -2513,7 +2490,7 @@ async fn json_rpc_todos_crud_on_personal_board() {
     let add = post_json_rpc(
         &rpc_base,
         9101,
-        "openhuman.todos_add",
+        "neppy.todos_add",
         json!({ "thread_id": board, "content": "Buy milk", "status": "todo" }),
     )
     .await;
@@ -2543,7 +2520,7 @@ async fn json_rpc_todos_crud_on_personal_board() {
     let list = post_json_rpc(
         &rpc_base,
         9102,
-        "openhuman.todos_list",
+        "neppy.todos_list",
         json!({ "thread_id": board }),
     )
     .await;
@@ -2561,7 +2538,7 @@ async fn json_rpc_todos_crud_on_personal_board() {
     let upd = post_json_rpc(
         &rpc_base,
         9103,
-        "openhuman.todos_update_status",
+        "neppy.todos_update_status",
         json!({ "thread_id": board, "id": card_id, "status": "done" }),
     )
     .await;
@@ -2580,7 +2557,7 @@ async fn json_rpc_todos_crud_on_personal_board() {
     let rem = post_json_rpc(
         &rpc_base,
         9104,
-        "openhuman.todos_remove",
+        "neppy.todos_remove",
         json!({ "thread_id": board, "id": card_id }),
     )
     .await;
@@ -2610,10 +2587,10 @@ async fn json_rpc_todos_revise_plan_rejects_awaiting() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -2627,7 +2604,7 @@ async fn json_rpc_todos_revise_plan_rejects_awaiting() {
     let add = post_json_rpc(
         &rpc_base,
         9201,
-        "openhuman.todos_add",
+        "neppy.todos_add",
         json!({ "thread_id": board, "content": "Refactor schema", "status": "awaiting_approval" }),
     )
     .await;
@@ -2645,7 +2622,7 @@ async fn json_rpc_todos_revise_plan_rejects_awaiting() {
     let revise = post_json_rpc(
         &rpc_base,
         9202,
-        "openhuman.todos_revise_plan",
+        "neppy.todos_revise_plan",
         json!({ "thread_id": board, "feedback": "split into smaller steps" }),
     )
     .await;
@@ -2681,10 +2658,10 @@ async fn json_rpc_plan_review_decide_unknown_and_invalid() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -2697,7 +2674,7 @@ async fn json_rpc_plan_review_decide_unknown_and_invalid() {
     let unknown = post_json_rpc(
         &rpc_base,
         9301,
-        "openhuman.plan_review_decide",
+        "neppy.plan_review_decide",
         json!({ "request_id": "plan-does-not-exist", "decision": "approve" }),
     )
     .await;
@@ -2712,7 +2689,7 @@ async fn json_rpc_plan_review_decide_unknown_and_invalid() {
     let bad_revise = post_json_rpc(
         &rpc_base,
         9302,
-        "openhuman.plan_review_decide",
+        "neppy.plan_review_decide",
         json!({ "request_id": "plan-x", "decision": "revise" }),
     )
     .await;
@@ -2722,7 +2699,7 @@ async fn json_rpc_plan_review_decide_unknown_and_invalid() {
     let bad_decision = post_json_rpc(
         &rpc_base,
         9303,
-        "openhuman.plan_review_decide",
+        "neppy.plan_review_decide",
         json!({ "request_id": "plan-x", "decision": "maybe" }),
     )
     .await;
@@ -2740,10 +2717,10 @@ async fn json_rpc_thread_goal_lifecycle() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -2768,7 +2745,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let got = post_json_rpc(
         &rpc_base,
         9201,
-        "openhuman.thread_goals_get",
+        "neppy.thread_goals_get",
         json!({ "thread_id": thread }),
     )
     .await;
@@ -2781,7 +2758,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let set = post_json_rpc(
         &rpc_base,
         9202,
-        "openhuman.thread_goals_set",
+        "neppy.thread_goals_set",
         json!({ "thread_id": thread, "objective": "Ship the release", "token_budget": 5000 }),
     )
     .await;
@@ -2802,7 +2779,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let got2 = post_json_rpc(
         &rpc_base,
         9203,
-        "openhuman.thread_goals_get",
+        "neppy.thread_goals_get",
         json!({ "thread_id": thread }),
     )
     .await;
@@ -2817,7 +2794,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let paused = post_json_rpc(
         &rpc_base,
         9204,
-        "openhuman.thread_goals_pause",
+        "neppy.thread_goals_pause",
         json!({ "thread_id": thread }),
     )
     .await;
@@ -2830,7 +2807,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let resumed = post_json_rpc(
         &rpc_base,
         9205,
-        "openhuman.thread_goals_resume",
+        "neppy.thread_goals_resume",
         json!({ "thread_id": thread }),
     )
     .await;
@@ -2845,7 +2822,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let done = post_json_rpc(
         &rpc_base,
         9206,
-        "openhuman.thread_goals_complete",
+        "neppy.thread_goals_complete",
         json!({ "thread_id": thread }),
     )
     .await;
@@ -2860,7 +2837,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let cleared = post_json_rpc(
         &rpc_base,
         9207,
-        "openhuman.thread_goals_clear",
+        "neppy.thread_goals_clear",
         json!({ "thread_id": thread }),
     )
     .await;
@@ -2876,7 +2853,7 @@ async fn json_rpc_thread_goal_lifecycle() {
     let got3 = post_json_rpc(
         &rpc_base,
         9208,
-        "openhuman.thread_goals_get",
+        "neppy.thread_goals_get",
         json!({ "thread_id": thread }),
     )
     .await;
@@ -2897,10 +2874,10 @@ async fn json_rpc_thread_title_create_and_update() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -2910,7 +2887,7 @@ async fn json_rpc_thread_title_create_and_update() {
     let rpc_base = format!("http://{rpc_addr}");
 
     // 1. Create a thread.
-    let create = post_json_rpc(&rpc_base, 9101, "openhuman.threads_create_new", json!({})).await;
+    let create = post_json_rpc(&rpc_base, 9101, "neppy.threads_create_new", json!({})).await;
     let create_outer = assert_no_jsonrpc_error(&create, "threads_create_new for title update");
     let created = create_outer
         .get("data")
@@ -2924,7 +2901,7 @@ async fn json_rpc_thread_title_create_and_update() {
     let update = post_json_rpc(
         &rpc_base,
         9102,
-        "openhuman.threads_update_title",
+        "neppy.threads_update_title",
         json!({ "thread_id": thread_id, "title": "Invoice follow-up" }),
     )
     .await;
@@ -2944,7 +2921,7 @@ async fn json_rpc_thread_title_create_and_update() {
     );
 
     // 3. Verify the new title is reflected in threads_list.
-    let list = post_json_rpc(&rpc_base, 9103, "openhuman.threads_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 9103, "neppy.threads_list", json!({})).await;
     let list_outer = assert_no_jsonrpc_error(&list, "threads_list after title update");
     let threads = list_outer
         .get("data")
@@ -2965,7 +2942,7 @@ async fn json_rpc_thread_title_create_and_update() {
     let bad = post_json_rpc(
         &rpc_base,
         9104,
-        "openhuman.threads_update_title",
+        "neppy.threads_update_title",
         json!({ "thread_id": thread_id, "title": "" }),
     )
     .await;
@@ -2991,10 +2968,10 @@ async fn json_rpc_thread_not_found_errors_are_structured() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -3007,7 +2984,7 @@ async fn json_rpc_thread_not_found_errors_are_structured() {
     let append = post_json_rpc(
         &rpc_base,
         9011,
-        "openhuman.threads_message_append",
+        "neppy.threads_message_append",
         json!({
             "thread_id": thread_id,
             "message": {
@@ -3037,7 +3014,7 @@ async fn json_rpc_thread_not_found_errors_are_structured() {
     let title = post_json_rpc(
         &rpc_base,
         9012,
-        "openhuman.threads_generate_title",
+        "neppy.threads_generate_title",
         json!({ "thread_id": thread_id }),
     )
     .await;
@@ -3058,10 +3035,10 @@ async fn json_rpc_thread_generate_title_falls_back_when_provider_path_is_unavail
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     with_chat_completion_models(|models| models.clear());
     with_chat_completion_requests(|requests| requests.clear());
@@ -3073,7 +3050,7 @@ async fn json_rpc_thread_generate_title_falls_back_when_provider_path_is_unavail
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
 
-    let create = post_json_rpc(&rpc_base, 9013, "openhuman.threads_create_new", json!({})).await;
+    let create = post_json_rpc(&rpc_base, 9013, "neppy.threads_create_new", json!({})).await;
     let create_outer = assert_no_jsonrpc_error(&create, "threads_create_new");
     let created = create_outer
         .get("data")
@@ -3091,7 +3068,7 @@ async fn json_rpc_thread_generate_title_falls_back_when_provider_path_is_unavail
     let user_append = post_json_rpc(
         &rpc_base,
         9014,
-        "openhuman.threads_message_append",
+        "neppy.threads_message_append",
         json!({
             "thread_id": thread_id,
             "message": {
@@ -3110,7 +3087,7 @@ async fn json_rpc_thread_generate_title_falls_back_when_provider_path_is_unavail
     let agent_append = post_json_rpc(
         &rpc_base,
         9015,
-        "openhuman.threads_message_append",
+        "neppy.threads_message_append",
         json!({
             "thread_id": thread_id,
             "message": {
@@ -3129,7 +3106,7 @@ async fn json_rpc_thread_generate_title_falls_back_when_provider_path_is_unavail
     let title = post_json_rpc(
         &rpc_base,
         9016,
-        "openhuman.threads_generate_title",
+        "neppy.threads_generate_title",
         json!({ "thread_id": thread_id }),
     )
     .await;
@@ -3167,10 +3144,10 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -3180,13 +3157,8 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let rpc_base = format!("http://{rpc_addr}");
 
     // Empty workspace → no snapshots.
-    let empty_list = post_json_rpc(
-        &rpc_base,
-        9101,
-        "openhuman.threads_turn_state_list",
-        json!({}),
-    )
-    .await;
+    let empty_list =
+        post_json_rpc(&rpc_base, 9101, "neppy.threads_turn_state_list", json!({})).await;
     let outer = assert_no_jsonrpc_error(&empty_list, "turn_state_list (empty)");
     assert_eq!(
         outer
@@ -3220,7 +3192,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let got = post_json_rpc(
         &rpc_base,
         9102,
-        "openhuman.threads_turn_state_get",
+        "neppy.threads_turn_state_get",
         json!({ "thread_id": "thread-turn-1" }),
     )
     .await;
@@ -3243,13 +3215,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     );
 
     // list → contains the seeded snapshot
-    let list = post_json_rpc(
-        &rpc_base,
-        9103,
-        "openhuman.threads_turn_state_list",
-        json!({}),
-    )
-    .await;
+    let list = post_json_rpc(&rpc_base, 9103, "neppy.threads_turn_state_list", json!({})).await;
     let list_outer = assert_no_jsonrpc_error(&list, "turn_state_list (one)");
     assert_eq!(
         list_outer
@@ -3278,7 +3244,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let history = post_json_rpc(
         &rpc_base,
         9106,
-        "openhuman.threads_turn_state_history",
+        "neppy.threads_turn_state_history",
         json!({ "thread_id": "thread-turn-1" }),
     )
     .await;
@@ -3301,7 +3267,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let get_turn = post_json_rpc(
         &rpc_base,
         9107,
-        "openhuman.threads_turn_state_get_turn",
+        "neppy.threads_turn_state_get_turn",
         json!({ "thread_id": "thread-turn-1", "request_id": "req-turn-1" }),
     )
     .await;
@@ -3319,7 +3285,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let get_turn_missing = post_json_rpc(
         &rpc_base,
         9108,
-        "openhuman.threads_turn_state_get_turn",
+        "neppy.threads_turn_state_get_turn",
         json!({ "thread_id": "thread-turn-1", "request_id": "nope" }),
     )
     .await;
@@ -3334,7 +3300,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let cleared = post_json_rpc(
         &rpc_base,
         9104,
-        "openhuman.threads_turn_state_clear",
+        "neppy.threads_turn_state_clear",
         json!({ "thread_id": "thread-turn-1" }),
     )
     .await;
@@ -3351,7 +3317,7 @@ async fn json_rpc_thread_turn_state_lifecycle() {
     let got_again = post_json_rpc(
         &rpc_base,
         9105,
-        "openhuman.threads_turn_state_get",
+        "neppy.threads_turn_state_get",
         json!({ "thread_id": "thread-turn-1" }),
     )
     .await;
@@ -3374,10 +3340,10 @@ async fn json_rpc_run_ledger_lifecycle() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -3430,7 +3396,7 @@ async fn json_rpc_run_ledger_lifecycle() {
     let list = post_json_rpc(
         &rpc_base,
         9111,
-        "openhuman.run_ledger_list",
+        "neppy.run_ledger_list",
         json!({ "parentThreadId": "thread-run-1" }),
     )
     .await;
@@ -3451,7 +3417,7 @@ async fn json_rpc_run_ledger_lifecycle() {
     let get = post_json_rpc(
         &rpc_base,
         9112,
-        "openhuman.run_ledger_get",
+        "neppy.run_ledger_get",
         json!({ "id": "sub-run-1" }),
     )
     .await;
@@ -3467,7 +3433,7 @@ async fn json_rpc_run_ledger_lifecycle() {
     let events = post_json_rpc(
         &rpc_base,
         9113,
-        "openhuman.run_ledger_events",
+        "neppy.run_ledger_events",
         json!({ "runId": "sub-run-1" }),
     )
     .await;
@@ -3493,10 +3459,10 @@ async fn json_rpc_agent_work_list_groups_runs_by_bucket() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -3553,7 +3519,7 @@ async fn json_rpc_agent_work_list_groups_runs_by_bucket() {
     )
     .expect("seed d");
 
-    let list = post_json_rpc(&rpc_base, 9131, "openhuman.agent_work_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 9131, "neppy.agent_work_list", json!({})).await;
     let outer = assert_no_jsonrpc_error(&list, "agent_work_list");
 
     assert_eq!(
@@ -3601,10 +3567,10 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -3621,7 +3587,7 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
     let defs = post_json_rpc(
         &rpc_base,
         9141,
-        "openhuman.workflow_run_list_definitions",
+        "neppy.workflow_run_list_definitions",
         json!({}),
     )
     .await;
@@ -3660,7 +3626,7 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
     let list = post_json_rpc(
         &rpc_base,
         9142,
-        "openhuman.workflow_run_list",
+        "neppy.workflow_run_list",
         json!({ "definitionId": "parallel_research_cross_check" }),
     )
     .await;
@@ -3681,7 +3647,7 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
     let get = post_json_rpc(
         &rpc_base,
         9143,
-        "openhuman.workflow_run_get",
+        "neppy.workflow_run_get",
         json!({ "id": "wf-run-1" }),
     )
     .await;
@@ -3706,10 +3672,10 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -3726,7 +3692,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let created = post_json_rpc(
         &rpc_base,
         9341,
-        "openhuman.agent_team_create",
+        "neppy.agent_team_create",
         json!({
             "leadAgentId": "lead",
             "parentThreadId": "thread-team-e2e",
@@ -3765,7 +3731,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let assign_a = post_json_rpc(
         &rpc_base,
         9342,
-        "openhuman.agent_team_assign_task",
+        "neppy.agent_team_assign_task",
         json!({ "teamId": team_id, "title": "Task A", "dependsOn": [] }),
     )
     .await;
@@ -3780,7 +3746,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let assign_b = post_json_rpc(
         &rpc_base,
         9343,
-        "openhuman.agent_team_assign_task",
+        "neppy.agent_team_assign_task",
         json!({ "teamId": team_id, "title": "Task B", "dependsOn": [task_a_id.clone()] }),
     )
     .await;
@@ -3796,7 +3762,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let claim_b_blocked = post_json_rpc(
         &rpc_base,
         9344,
-        "openhuman.agent_team_claim_task",
+        "neppy.agent_team_claim_task",
         json!({
             "teamId": team_id,
             "taskId": task_b_id,
@@ -3819,7 +3785,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let claim_a = post_json_rpc(
         &rpc_base,
         9345,
-        "openhuman.agent_team_claim_task",
+        "neppy.agent_team_claim_task",
         json!({
             "teamId": team_id,
             "taskId": task_a_id,
@@ -3865,7 +3831,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let claim_b_ok = post_json_rpc(
         &rpc_base,
         9346,
-        "openhuman.agent_team_claim_task",
+        "neppy.agent_team_claim_task",
         json!({
             "teamId": team_id,
             "taskId": task_b_id,
@@ -3887,7 +3853,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let complete_b_blocked = post_json_rpc(
         &rpc_base,
         9360,
-        "openhuman.agent_team_complete_task",
+        "neppy.agent_team_complete_task",
         json!({
             "teamId": team_id,
             "taskId": task_b_id,
@@ -3911,7 +3877,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let complete_b_ok = post_json_rpc(
         &rpc_base,
         9361,
-        "openhuman.agent_team_complete_task",
+        "neppy.agent_team_complete_task",
         json!({
             "teamId": team_id,
             "taskId": task_b_id,
@@ -3936,7 +3902,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let shutdown_alice = post_json_rpc(
         &rpc_base,
         9362,
-        "openhuman.agent_team_shutdown_member",
+        "neppy.agent_team_shutdown_member",
         json!({ "teamId": team_id, "memberId": alice_id }),
     )
     .await;
@@ -3963,7 +3929,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let message = post_json_rpc(
         &rpc_base,
         9347,
-        "openhuman.agent_team_message_member",
+        "neppy.agent_team_message_member",
         json!({
             "teamId": team_id,
             "fromMemberId": alice_id,
@@ -3977,7 +3943,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let messages = post_json_rpc(
         &rpc_base,
         9348,
-        "openhuman.agent_team_list_messages",
+        "neppy.agent_team_list_messages",
         json!({ "teamId": team_id }),
     )
     .await;
@@ -3994,7 +3960,7 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
     let get = post_json_rpc(
         &rpc_base,
         9349,
-        "openhuman.agent_team_get",
+        "neppy.agent_team_get",
         json!({ "teamId": team_id }),
     )
     .await;
@@ -4028,10 +3994,10 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -4044,7 +4010,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let added = post_json_rpc(
         &rpc_base,
         9201,
-        "openhuman.todos_add",
+        "neppy.todos_add",
         json!({
             "thread_id": thread_id,
             "content": " Draft implementation plan ",
@@ -4091,7 +4057,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let edited = post_json_rpc(
         &rpc_base,
         9202,
-        "openhuman.todos_edit",
+        "neppy.todos_edit",
         json!({
             "thread_id": thread_id,
             "id": task_id,
@@ -4127,7 +4093,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let cleared_approval = post_json_rpc(
         &rpc_base,
         9207,
-        "openhuman.todos_edit",
+        "neppy.todos_edit",
         json!({
             "thread_id": thread_id,
             "id": task_id,
@@ -4145,7 +4111,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let thread_get = post_json_rpc(
         &rpc_base,
         9203,
-        "openhuman.threads_task_board_get",
+        "neppy.threads_task_board_get",
         json!({ "thread_id": thread_id }),
     )
     .await;
@@ -4170,7 +4136,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let replaced = post_json_rpc(
         &rpc_base,
         9204,
-        "openhuman.threads_task_board_put",
+        "neppy.threads_task_board_put",
         json!({
             "thread_id": thread_id,
             "cards": cards
@@ -4186,7 +4152,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let listed = post_json_rpc(
         &rpc_base,
         9205,
-        "openhuman.todos_list",
+        "neppy.todos_list",
         json!({ "thread_id": thread_id }),
     )
     .await;
@@ -4207,7 +4173,7 @@ async fn json_rpc_task_board_brief_roundtrips_across_todos_and_threads_rpc() {
     let invalid_approval = post_json_rpc(
         &rpc_base,
         9206,
-        "openhuman.todos_add",
+        "neppy.todos_add",
         json!({
             "thread_id": thread_id,
             "content": "Invalid approval",
@@ -4241,12 +4207,12 @@ async fn json_rpc_memory_sync_and_learn() {
     // contract and reads back through direct SQLite, so the two must name
     // one store. See `json_rpc_e2e_shared_workspace`.
     let _workspace_guard =
-        EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", json_rpc_e2e_shared_workspace());
+        EnvVarGuard::set_to_path("NEPPY_WORKSPACE", json_rpc_e2e_shared_workspace());
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _embed_strict_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false");
-    let _embed_endpoint_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", "");
-    let _embed_model_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", "");
+    let _embed_strict_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false");
+    let _embed_endpoint_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", "");
+    let _embed_model_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", "");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -4258,7 +4224,7 @@ async fn json_rpc_memory_sync_and_learn() {
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // ── memory_sync_all: returns requested:true ──────────────────────────────
-    let sync_all = post_json_rpc(&rpc_base, 7001, "openhuman.memory_sync_all", json!({})).await;
+    let sync_all = post_json_rpc(&rpc_base, 7001, "neppy.memory_sync_all", json!({})).await;
     let sync_all_result = assert_no_jsonrpc_error(&sync_all, "memory_sync_all");
     assert_eq!(
         sync_all_result.get("requested"),
@@ -4270,7 +4236,7 @@ async fn json_rpc_memory_sync_and_learn() {
     let sync_ch = post_json_rpc(
         &rpc_base,
         7002,
-        "openhuman.memory_sync_channel",
+        "neppy.memory_sync_channel",
         json!({ "channel_id": "test-channel-abc" }),
     )
     .await;
@@ -4287,14 +4253,14 @@ async fn json_rpc_memory_sync_and_learn() {
     );
 
     // ── memory_sync_channel: missing channel_id returns a JSON-RPC error ────
-    let sync_bad = post_json_rpc(&rpc_base, 7003, "openhuman.memory_sync_channel", json!({})).await;
+    let sync_bad = post_json_rpc(&rpc_base, 7003, "neppy.memory_sync_channel", json!({})).await;
     assert!(
         sync_bad.get("error").is_some(),
         "missing channel_id must return an error, got: {sync_bad}"
     );
 
     // ── memory.init: explicit one-shot bootstrap (no auto-init fallback) ────
-    let init_resp = post_json_rpc(&rpc_base, 7003, "openhuman.memory_init", json!({})).await;
+    let init_resp = post_json_rpc(&rpc_base, 7003, "neppy.memory_init", json!({})).await;
     assert_no_jsonrpc_error(&init_resp, "memory_init");
 
     // The assertions below are about an EMPTY store, and the workspace is now
@@ -4309,7 +4275,7 @@ async fn json_rpc_memory_sync_and_learn() {
     //   llvm_cov ... --test "${target}" -- --test-threads=1
     // If that ever stops being true, a concurrent case would have its store
     // wiped underneath it and this is the line that made that possible.
-    let wiped = post_json_rpc(&rpc_base, 7099, "openhuman.memory_tree_wipe_all", json!({})).await;
+    let wiped = post_json_rpc(&rpc_base, 7099, "neppy.memory_tree_wipe_all", json!({})).await;
     assert_no_jsonrpc_error(&wiped, "memory_tree_wipe_all before fresh-store checks");
 
     // ── ...and the wipe is not enough on its own ────────────────────────────
@@ -4344,8 +4310,7 @@ async fn json_rpc_memory_sync_and_learn() {
     // by construction. Do not replace this with a bigger wipe — no wipe scoped to
     // a workspace can empty a store shared by every workspace in the process.
     async fn list_namespaces(rpc_base: &str, id: i64) -> Vec<Value> {
-        let listed =
-            post_json_rpc(rpc_base, id, "openhuman.memory_namespace_list", json!({})).await;
+        let listed = post_json_rpc(rpc_base, id, "neppy.memory_namespace_list", json!({})).await;
         assert_no_jsonrpc_error(&listed, "memory_namespace_list");
         listed["result"]["result"]
             .as_array()
@@ -4358,7 +4323,7 @@ async fn json_rpc_memory_sync_and_learn() {
         let cleared = post_json_rpc(
             &rpc_base,
             7101,
-            "openhuman.memory_clear_namespace",
+            "neppy.memory_clear_namespace",
             json!({ "namespace": namespace }),
         )
         .await;
@@ -4375,7 +4340,7 @@ async fn json_rpc_memory_sync_and_learn() {
     );
 
     // ── memory_learn_all: no namespaces → zero processed (empty store) ──────
-    let learn_all = post_json_rpc(&rpc_base, 7004, "openhuman.memory_learn_all", json!({})).await;
+    let learn_all = post_json_rpc(&rpc_base, 7004, "neppy.memory_learn_all", json!({})).await;
     let learn_result = assert_no_jsonrpc_error(&learn_all, "memory_learn_all");
     let processed = learn_result
         .get("namespaces_processed")
@@ -4395,7 +4360,7 @@ async fn json_rpc_memory_sync_and_learn() {
     let learn_constrained = post_json_rpc(
         &rpc_base,
         7005,
-        "openhuman.memory_learn_all",
+        "neppy.memory_learn_all",
         json!({ "namespaces": ["does-not-exist"] }),
     )
     .await;
@@ -4410,13 +4375,8 @@ async fn json_rpc_memory_sync_and_learn() {
     );
 
     // ── memory_ingestion_status: idle on a fresh store ──────────────────────
-    let ing_status = post_json_rpc(
-        &rpc_base,
-        7006,
-        "openhuman.memory_ingestion_status",
-        json!({}),
-    )
-    .await;
+    let ing_status =
+        post_json_rpc(&rpc_base, 7006, "neppy.memory_ingestion_status", json!({})).await;
     let ing_result = assert_no_jsonrpc_error(&ing_status, "memory_ingestion_status");
     assert_eq!(
         ing_result.get("running"),
@@ -4441,7 +4401,7 @@ async fn json_rpc_memory_tree_end_to_end() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // Phase 4 (#710): disable strict embedding so ingest falls back to the
@@ -4449,9 +4409,9 @@ async fn json_rpc_memory_tree_end_to_end() {
     // CI has no local Ollama; without this the `memory_tree_ingest` call
     // would fail with `embed chunk_id=<id> during ingest` before writing
     // any chunks.
-    let _embed_strict_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false");
-    let _embed_endpoint_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", "");
-    let _embed_model_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", "");
+    let _embed_strict_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false");
+    let _embed_endpoint_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", "");
+    let _embed_model_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", "");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -4465,9 +4425,9 @@ async fn json_rpc_memory_tree_end_to_end() {
     // and adding a new RPC shouldn't break this smoke test. We just
     // assert the four sampled methods exercised below are registered.
     let expected_methods = vec![
-        "openhuman.memory_tree_ingest".to_string(),
-        "openhuman.memory_tree_list_chunks".to_string(),
-        "openhuman.memory_tree_get_chunk".to_string(),
+        "neppy.memory_tree_ingest".to_string(),
+        "neppy.memory_tree_list_chunks".to_string(),
+        "neppy.memory_tree_get_chunk".to_string(),
     ];
     assert!(
         controllers.len() >= expected_methods.len(),
@@ -4614,7 +4574,7 @@ async fn json_rpc_memory_tree_end_to_end() {
     let _ = mock_join.await;
 }
 
-/// `openhuman.memory_diff_*` full lifecycle over JSON-RPC.
+/// `neppy.memory_diff_*` full lifecycle over JSON-RPC.
 ///
 /// Drives the snapshot-based change tracker end to end: register a folder
 /// source, ingest chunks under its `mem_src:<id>:%` prefix across several
@@ -4635,13 +4595,13 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     // contract and reads back through direct SQLite, so the two must name
     // one store. See `json_rpc_e2e_shared_workspace`.
     let _workspace_guard =
-        EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", json_rpc_e2e_shared_workspace());
+        EnvVarGuard::set_to_path("NEPPY_WORKSPACE", json_rpc_e2e_shared_workspace());
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // Fall back to the inert (zero-vector) embedder; CI has no local Ollama.
-    let _embed_strict_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false");
-    let _embed_endpoint_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", "");
-    let _embed_model_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", "");
+    let _embed_strict_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false");
+    let _embed_endpoint_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", "");
+    let _embed_model_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", "");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -4656,7 +4616,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let add = post_json_rpc(
         &rpc_base,
         9001,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "folder",
             "label": "Diff E2E Docs",
@@ -4678,7 +4638,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
         post_json_rpc(
             &rpc_base,
             id,
-            "openhuman.memory_tree_ingest",
+            "neppy.memory_tree_ingest",
             json!({
                 "source_kind": "document",
                 "source_id": composite,
@@ -4701,7 +4661,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let snap1 = post_json_rpc(
         &rpc_base,
         9003,
-        "openhuman.memory_diff_take_snapshot",
+        "neppy.memory_diff_take_snapshot",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -4720,7 +4680,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let snap2 = post_json_rpc(
         &rpc_base,
         9006,
-        "openhuman.memory_diff_take_snapshot",
+        "neppy.memory_diff_take_snapshot",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -4736,7 +4696,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let dsl = post_json_rpc(
         &rpc_base,
         9007,
-        "openhuman.memory_diff_diff_since_last",
+        "neppy.memory_diff_diff_since_last",
         json!({ "source_id": source_id, "include_text_diff": true }),
     )
     .await;
@@ -4753,7 +4713,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let read1 = post_json_rpc(
         &rpc_base,
         9008,
-        "openhuman.memory_diff_diff_since_read",
+        "neppy.memory_diff_diff_since_read",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -4769,7 +4729,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let read2 = post_json_rpc(
         &rpc_base,
         9009,
-        "openhuman.memory_diff_diff_since_read",
+        "neppy.memory_diff_diff_since_read",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -4790,7 +4750,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let mark = post_json_rpc(
         &rpc_base,
         9010,
-        "openhuman.memory_diff_mark_read",
+        "neppy.memory_diff_mark_read",
         json!({ "source_ids": [source_id] }),
     )
     .await;
@@ -4802,7 +4762,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let ckpt = post_json_rpc(
         &rpc_base,
         9011,
-        "openhuman.memory_diff_create_checkpoint",
+        "neppy.memory_diff_create_checkpoint",
         json!({ "label": "baseline" }),
     )
     .await;
@@ -4820,7 +4780,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let snap3 = post_json_rpc(
         &rpc_base,
         9013,
-        "openhuman.memory_diff_take_snapshot",
+        "neppy.memory_diff_take_snapshot",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -4829,7 +4789,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let since_ckpt = post_json_rpc(
         &rpc_base,
         9014,
-        "openhuman.memory_diff_diff_since_checkpoint",
+        "neppy.memory_diff_diff_since_checkpoint",
         json!({ "checkpoint_id": checkpoint_id }),
     )
     .await;
@@ -4847,7 +4807,7 @@ async fn json_rpc_memory_diff_snapshot_diff_and_read_marker_lifecycle() {
     let _ = mock_join.await;
 }
 
-/// `openhuman.memory_tree_cover_window` over RPC: ingest a chunk, then assert
+/// `neppy.memory_tree_cover_window` over RPC: ingest a chunk, then assert
 /// the windowed minimum-cover returns it raw inside the window and nothing
 /// outside it. One ingested chunk doesn't reach the seal fanout, so this also
 /// exercises the not-yet-sealed (no Tree row) raw-leaf fallback end to end.
@@ -4859,13 +4819,13 @@ async fn json_rpc_memory_tree_cover_window_end_to_end() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // Fall back to the Inert (zero-vector) embedder — no Ollama in CI.
-    let _embed_strict_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false");
-    let _embed_endpoint_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", "");
-    let _embed_model_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", "");
+    let _embed_strict_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false");
+    let _embed_endpoint_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", "");
+    let _embed_model_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", "");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -4879,7 +4839,7 @@ async fn json_rpc_memory_tree_cover_window_end_to_end() {
     let ingest = post_json_rpc(
         &rpc_base,
         300,
-        "openhuman.memory_tree_ingest",
+        "neppy.memory_tree_ingest",
         json!({
             "source_kind": "document",
             "source_id": "notion:daily-note",
@@ -4906,7 +4866,7 @@ async fn json_rpc_memory_tree_cover_window_end_to_end() {
     let inside = post_json_rpc(
         &rpc_base,
         301,
-        "openhuman.memory_tree_cover_window",
+        "neppy.memory_tree_cover_window",
         json!({ "since_ms": 0_i64, "until_ms": 4_000_000_000_000_i64 }),
     )
     .await;
@@ -4928,7 +4888,7 @@ async fn json_rpc_memory_tree_cover_window_end_to_end() {
     let outside = post_json_rpc(
         &rpc_base,
         302,
-        "openhuman.memory_tree_cover_window",
+        "neppy.memory_tree_cover_window",
         json!({ "since_ms": 3_500_000_000_000_i64, "until_ms": 4_000_000_000_000_i64 }),
     )
     .await;
@@ -4947,7 +4907,7 @@ async fn json_rpc_memory_tree_cover_window_end_to_end() {
     let inverted = post_json_rpc(
         &rpc_base,
         303,
-        "openhuman.memory_tree_cover_window",
+        "neppy.memory_tree_cover_window",
         json!({ "since_ms": 100_i64, "until_ms": 50_i64 }),
     )
     .await;
@@ -4985,7 +4945,7 @@ async fn json_rpc_web_chat_routing_cases_use_expected_backend_models_inner() {
     // Keep this router on its own fixture even if a previous test's server
     // still has an active-user marker while it winds down.
     let _workspace_guard = EnvVarGuard::set_to_path(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         &neppy_home.join("users").join("routing-e2e-user"),
     );
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
@@ -5005,7 +4965,7 @@ async fn json_rpc_web_chat_routing_cases_use_expected_backend_models_inner() {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "e2e-test-jwt",
             "user_id": "routing-e2e-user"
@@ -5036,7 +4996,7 @@ async fn json_rpc_web_chat_routing_cases_use_expected_backend_models_inner() {
         let web_chat = post_json_rpc(
             &rpc_base,
             100 + idx as i64,
-            "openhuman.channel_web_chat",
+            "neppy.channel_web_chat",
             json!({
                 "client_id": client_id,
                 "thread_id": thread_id,
@@ -5094,7 +5054,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     // Keep this router on its own fixture even if a previous test's server
     // still has an active-user marker while it winds down.
     let _workspace_guard = EnvVarGuard::set_to_path(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         &neppy_home.join("users").join("custom-provider-e2e-user"),
     );
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
@@ -5114,7 +5074,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let store = post_json_rpc(
         &rpc_base,
         6001,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "e2e-test-jwt",
             "user_id": "custom-provider-e2e-user"
@@ -5126,7 +5086,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let update = post_json_rpc(
         &rpc_base,
         6002,
-        "openhuman.update_model_settings",
+        "neppy.update_model_settings",
         json!({
             "cloud_providers": [{
                 "id": "p_openai_1",
@@ -5144,7 +5104,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let store_provider = post_json_rpc(
         &rpc_base,
         6003,
-        "openhuman.auth_store_provider_credentials",
+        "neppy.auth_store_provider_credentials",
         json!({
             "provider": "provider:openai",
             "profile": "default",
@@ -5167,7 +5127,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let accepted = post_json_rpc(
         &rpc_base,
         6004,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": client_id,
             "thread_id": thread_id,
@@ -5210,7 +5170,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let update_again = post_json_rpc(
         &rpc_base,
         6005,
-        "openhuman.update_model_settings",
+        "neppy.update_model_settings",
         json!({
             "chat_provider": "openai:gpt-4.1-nano"
         }),
@@ -5224,7 +5184,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let accepted = post_json_rpc(
         &rpc_base,
         6006,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": client_id,
             "thread_id": thread_id,
@@ -5273,7 +5233,7 @@ async fn json_rpc_web_chat_custom_chat_provider_uses_stored_key_and_rebuilds_on_
     let accepted = post_json_rpc(
         &rpc_base,
         6007,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": client_id,
             "thread_id": thread_id,
@@ -5334,7 +5294,7 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -5352,7 +5312,7 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
     let store = post_json_rpc(
         &rpc_base,
         6101,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "e2e-test-jwt",
             "user_id": "e2e-user"
@@ -5364,7 +5324,7 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
     let update = post_json_rpc(
         &rpc_base,
         6102,
-        "openhuman.update_model_settings",
+        "neppy.update_model_settings",
         json!({
             "cloud_providers": [{
                 "id": "p_proxy_1",
@@ -5378,7 +5338,7 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
     )
     .await;
     assert_no_jsonrpc_error(&update, "update_model_settings");
-    let cfg = post_json_rpc(&rpc_base, 61_021, "openhuman.config_get", json!({})).await;
+    let cfg = post_json_rpc(&rpc_base, 61_021, "neppy.config_get", json!({})).await;
     let cfg_outer = assert_no_jsonrpc_error(&cfg, "config_get auth-none");
     let cfg_payload = cfg_outer.get("result").unwrap_or(cfg_outer);
     let config = cfg_payload.get("config").unwrap_or(cfg_payload);
@@ -5437,7 +5397,7 @@ async fn json_rpc_web_chat_custom_chat_provider_with_auth_none_omits_auth_header
     let accepted = post_json_rpc(
         &rpc_base,
         6103,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": client_id,
             "thread_id": thread_id,
@@ -5501,7 +5461,7 @@ async fn json_rpc_rejects_non_object_params_with_clear_error() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -5516,7 +5476,7 @@ async fn json_rpc_rejects_non_object_params_with_clear_error() {
     let invalid = post_json_rpc(
         &rpc_base,
         1001,
-        "openhuman.auth_get_state",
+        "neppy.auth_get_state",
         json!(["invalid", "params"]),
     )
     .await;
@@ -5542,7 +5502,7 @@ async fn json_rpc_removed_screen_intelligence_methods_are_not_found() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -5555,9 +5515,9 @@ async fn json_rpc_removed_screen_intelligence_methods_are_not_found() {
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     for (id, method) in [
-        (1002, "openhuman.screen_intelligence_status"),
-        (1003, "openhuman.screen_intelligence_capture_now"),
-        (1004, "openhuman.config_update_screen_intelligence_settings"),
+        (1002, "neppy.screen_intelligence_status"),
+        (1003, "neppy.screen_intelligence_capture_now"),
+        (1004, "neppy.config_update_screen_intelligence_settings"),
     ] {
         let response = post_json_rpc(&rpc_base, id, method, json!({})).await;
         assert_unknown_method(&response, method);
@@ -5575,7 +5535,7 @@ async fn json_rpc_app_state_snapshot_returns_runtime_shape() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -5587,7 +5547,7 @@ async fn json_rpc_app_state_snapshot_returns_runtime_shape() {
     let rpc_base = format!("http://{}", rpc_addr);
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    let snapshot = post_json_rpc(&rpc_base, 1004, "openhuman.app_state_snapshot", json!({})).await;
+    let snapshot = post_json_rpc(&rpc_base, 1004, "neppy.app_state_snapshot", json!({})).await;
     let result = assert_no_jsonrpc_error(&snapshot, "app_state_snapshot");
     let body = result.get("result").unwrap_or(result);
 
@@ -5662,7 +5622,7 @@ async fn json_rpc_app_state_update_local_state_round_trips_into_snapshot() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -5677,7 +5637,7 @@ async fn json_rpc_app_state_update_local_state_round_trips_into_snapshot() {
     let update = post_json_rpc(
         &rpc_base,
         10041,
-        "openhuman.app_state_update_local_state",
+        "neppy.app_state_update_local_state",
         json!({
             "encryptionKey": "  secret-key  ",
             "onboardingTasks": {
@@ -5695,7 +5655,7 @@ async fn json_rpc_app_state_update_local_state_round_trips_into_snapshot() {
         Some("secret-key")
     );
 
-    let snapshot = post_json_rpc(&rpc_base, 10042, "openhuman.app_state_snapshot", json!({})).await;
+    let snapshot = post_json_rpc(&rpc_base, 10042, "neppy.app_state_snapshot", json!({})).await;
     let snapshot_result = assert_no_jsonrpc_error(&snapshot, "app_state_snapshot after update");
     let body = snapshot_result.get("result").unwrap_or(snapshot_result);
     let local_state = body
@@ -5731,7 +5691,7 @@ async fn json_rpc_wallet_setup_round_trips_status() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -5744,7 +5704,7 @@ async fn json_rpc_wallet_setup_round_trips_status() {
     tokio::time::sleep(Duration::from_millis(100)).await;
     let encrypted_mnemonic = encrypt_test_mnemonic().await;
 
-    let initial_status = post_json_rpc(&rpc_base, 1005, "openhuman.wallet_status", json!({})).await;
+    let initial_status = post_json_rpc(&rpc_base, 1005, "neppy.wallet_status", json!({})).await;
     let initial_body = assert_no_jsonrpc_error(&initial_status, "wallet_status_initial");
     let initial_result = initial_body.get("result").unwrap_or(initial_body);
     assert_eq!(
@@ -5756,7 +5716,7 @@ async fn json_rpc_wallet_setup_round_trips_status() {
     let setup = post_json_rpc(
         &rpc_base,
         1006,
-        "openhuman.wallet_setup",
+        "neppy.wallet_setup",
         json!({
             "consentGranted": true,
             "source": "generated",
@@ -5787,8 +5747,7 @@ async fn json_rpc_wallet_setup_round_trips_status() {
         "expected four wallet accounts after setup: {setup_result}"
     );
 
-    let persisted_status =
-        post_json_rpc(&rpc_base, 1007, "openhuman.wallet_status", json!({})).await;
+    let persisted_status = post_json_rpc(&rpc_base, 1007, "neppy.wallet_status", json!({})).await;
     let persisted_body = assert_no_jsonrpc_error(&persisted_status, "wallet_status_persisted");
     let persisted_result = persisted_body.get("result").unwrap_or(persisted_body);
     assert_eq!(
@@ -5839,17 +5798,15 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     let (wallet_rpc_addr, raw_txs) = start_mock_wallet_evm_rpc().await;
-    let _evm_provider_guard = EnvVarGuard::set(
-        "OPENHUMAN_WALLET_RPC_EVM",
-        &format!("http://{wallet_rpc_addr}"),
-    );
-    let _btc_provider_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_BTC");
-    let _sol_provider_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_SOLANA");
-    let _tron_provider_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_TRON");
+    let _evm_provider_guard =
+        EnvVarGuard::set("NEPPY_WALLET_RPC_EVM", &format!("http://{wallet_rpc_addr}"));
+    let _btc_provider_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_BTC");
+    let _sol_provider_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_SOLANA");
+    let _tron_provider_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_TRON");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -5864,7 +5821,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     let setup = post_json_rpc(
         &rpc_base,
         2001,
-        "openhuman.wallet_setup",
+        "neppy.wallet_setup",
         json!({
             "consentGranted": true,
             "source": "imported",
@@ -5882,13 +5839,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     assert_no_jsonrpc_error(&setup, "wallet_setup_for_execution");
 
     // supported_assets: 4 native assets plus the default EVM token catalog.
-    let assets = post_json_rpc(
-        &rpc_base,
-        2002,
-        "openhuman.wallet_supported_assets",
-        json!({}),
-    )
-    .await;
+    let assets = post_json_rpc(&rpc_base, 2002, "neppy.wallet_supported_assets", json!({})).await;
     let body = assert_no_jsonrpc_error(&assets, "wallet_supported_assets");
     let result = body.get("result").unwrap_or(body);
     let list = result.as_array().expect("supported_assets array");
@@ -5933,7 +5884,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     );
 
     // chain_status: every chain is configured, so the provider row is ready.
-    let cs = post_json_rpc(&rpc_base, 2003, "openhuman.wallet_chain_status", json!({})).await;
+    let cs = post_json_rpc(&rpc_base, 2003, "neppy.wallet_chain_status", json!({})).await;
     let body = assert_no_jsonrpc_error(&cs, "wallet_chain_status");
     let result = body.get("result").unwrap_or(body);
     let rows = result.as_array().expect("chain_status array");
@@ -5948,7 +5899,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     // balances: one row per native asset. The EVM account fans out into one
     // row per displayed network (Ethereum, Base, BNB Chain), so 3 EVM rows +
     // BTC + Solana + Tron = 6.
-    let balances = post_json_rpc(&rpc_base, 2004, "openhuman.wallet_balances", json!({})).await;
+    let balances = post_json_rpc(&rpc_base, 2004, "neppy.wallet_balances", json!({})).await;
     let body = assert_no_jsonrpc_error(&balances, "wallet_balances");
     let result = body.get("result").unwrap_or(body);
     let rows = result.as_array().expect("balances array");
@@ -5975,7 +5926,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     let prep = post_json_rpc(
         &rpc_base,
         2005,
-        "openhuman.wallet_prepare_transfer",
+        "neppy.wallet_prepare_transfer",
         json!({
             "chain": "evm",
             "toAddress": "0x000000000000000000000000000000000000dEaD",
@@ -6003,7 +5954,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     let bad = post_json_rpc(
         &rpc_base,
         2006,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({ "quoteId": quote_id, "confirmed": false }),
     )
     .await;
@@ -6016,7 +5967,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     let exec = post_json_rpc(
         &rpc_base,
         2007,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({ "quoteId": quote_id, "confirmed": true }),
     )
     .await;
@@ -6047,7 +5998,7 @@ async fn json_rpc_wallet_execution_surface_round_trips() {
     let dup = post_json_rpc(
         &rpc_base,
         2008,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({ "quoteId": quote_id, "confirmed": true }),
     )
     .await;
@@ -6075,14 +6026,12 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     let (wallet_rpc_addr, _raw_txs) = start_mock_wallet_evm_rpc().await;
-    let _evm_provider_guard = EnvVarGuard::set(
-        "OPENHUMAN_WALLET_RPC_EVM",
-        &format!("http://{wallet_rpc_addr}"),
-    );
+    let _evm_provider_guard =
+        EnvVarGuard::set("NEPPY_WALLET_RPC_EVM", &format!("http://{wallet_rpc_addr}"));
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -6096,7 +6045,7 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let status = post_json_rpc(
         &rpc_base,
         2101,
-        "openhuman.wallet_tx_status",
+        "neppy.wallet_tx_status",
         json!({ "chain": "evm", "hash": "0xdeadbeef" }),
     )
     .await;
@@ -6111,7 +6060,7 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let receipt = post_json_rpc(
         &rpc_base,
         2102,
-        "openhuman.wallet_tx_receipt",
+        "neppy.wallet_tx_receipt",
         json!({ "chain": "evm", "hash": "0xdeadbeef" }),
     )
     .await;
@@ -6124,7 +6073,7 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let lookup = post_json_rpc(
         &rpc_base,
         2103,
-        "openhuman.wallet_lookup_tx",
+        "neppy.wallet_lookup_tx",
         json!({ "chain": "evm", "hash": "0xdeadbeef" }),
     )
     .await;
@@ -6138,7 +6087,7 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let same_chain = post_json_rpc(
         &rpc_base,
         2104,
-        "openhuman.web3_bridge_quote",
+        "neppy.web3_bridge_quote",
         json!({
             "srcChainId": 1, "srcChainTokenIn": "0x0", "srcChainTokenInAmount": "1",
             "dstChainId": 1, "dstChainTokenOut": "0x1"
@@ -6159,7 +6108,7 @@ async fn json_rpc_wallet_tx_reads_and_web3_gates_round_trip() {
     let unsignable = post_json_rpc(
         &rpc_base,
         2105,
-        "openhuman.web3_swap_quote",
+        "neppy.web3_swap_quote",
         json!({
             "chainId": 999999, "tokenIn": "0x0", "tokenInAmount": "1", "tokenOut": "0x1"
         }),
@@ -6478,7 +6427,7 @@ async fn wallet_setup_via_rpc(rpc_base: &str, encrypted_mnemonic: &str) {
     let setup = post_json_rpc(
         rpc_base,
         9001,
-        "openhuman.wallet_setup",
+        "neppy.wallet_setup",
         json!({
             "consentGranted": true,
             "source": "imported",
@@ -6503,11 +6452,11 @@ async fn json_rpc_wallet_evm_base_network_prepare_execute_round_trips() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _evm_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_EVM");
-    let _base_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_BASE");
+    let _evm_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_EVM");
+    let _base_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_BASE");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -6520,17 +6469,14 @@ async fn json_rpc_wallet_evm_base_network_prepare_execute_round_trips() {
 
     // Mock Base RPC at 0x2105 = 8453.
     let (base_rpc_addr, base_raw_txs) = start_mock_evm_with_chain_id("0x2105").await;
-    std::env::set_var(
-        "OPENHUMAN_WALLET_RPC_BASE",
-        format!("http://{base_rpc_addr}"),
-    );
+    std::env::set_var("NEPPY_WALLET_RPC_BASE", format!("http://{base_rpc_addr}"));
 
     wallet_setup_via_rpc(&rpc_base, &encrypted_mnemonic).await;
 
     let prep = post_json_rpc(
         &rpc_base,
         9101,
-        "openhuman.wallet_prepare_transfer",
+        "neppy.wallet_prepare_transfer",
         json!({
             "chain": "evm",
             "evmNetwork": "base_mainnet",
@@ -6554,7 +6500,7 @@ async fn json_rpc_wallet_evm_base_network_prepare_execute_round_trips() {
     let exec = post_json_rpc(
         &rpc_base,
         9102,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({"quoteId": quote_id, "confirmed": true}),
     )
     .await;
@@ -6588,10 +6534,10 @@ async fn json_rpc_wallet_btc_prepare_execute_round_trips() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _btc_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_BTC");
+    let _btc_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_BTC");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -6603,17 +6549,14 @@ async fn json_rpc_wallet_btc_prepare_execute_round_trips() {
     let encrypted_mnemonic = encrypt_test_mnemonic().await;
 
     let btc_mock = start_mock_btc().await;
-    std::env::set_var(
-        "OPENHUMAN_WALLET_RPC_BTC",
-        format!("http://{}", btc_mock.addr),
-    );
+    std::env::set_var("NEPPY_WALLET_RPC_BTC", format!("http://{}", btc_mock.addr));
 
     wallet_setup_via_rpc(&rpc_base, &encrypted_mnemonic).await;
 
     let prep = post_json_rpc(
         &rpc_base,
         9201,
-        "openhuman.wallet_prepare_transfer",
+        "neppy.wallet_prepare_transfer",
         json!({
             "chain": "btc",
             "toAddress": "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
@@ -6632,7 +6575,7 @@ async fn json_rpc_wallet_btc_prepare_execute_round_trips() {
     let exec = post_json_rpc(
         &rpc_base,
         9202,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({"quoteId": quote_id, "confirmed": true}),
     )
     .await;
@@ -6684,10 +6627,10 @@ async fn json_rpc_wallet_solana_prepare_execute_round_trips() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _sol_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_SOLANA");
+    let _sol_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_SOLANA");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -6699,14 +6642,14 @@ async fn json_rpc_wallet_solana_prepare_execute_round_trips() {
     let encrypted_mnemonic = encrypt_test_mnemonic().await;
 
     let sol_addr = start_mock_solana().await;
-    std::env::set_var("OPENHUMAN_WALLET_RPC_SOLANA", format!("http://{sol_addr}"));
+    std::env::set_var("NEPPY_WALLET_RPC_SOLANA", format!("http://{sol_addr}"));
 
     wallet_setup_via_rpc(&rpc_base, &encrypted_mnemonic).await;
 
     let prep = post_json_rpc(
         &rpc_base,
         9301,
-        "openhuman.wallet_prepare_transfer",
+        "neppy.wallet_prepare_transfer",
         json!({
             "chain": "solana",
             "toAddress": "Vote111111111111111111111111111111111111111",
@@ -6725,7 +6668,7 @@ async fn json_rpc_wallet_solana_prepare_execute_round_trips() {
     let exec = post_json_rpc(
         &rpc_base,
         9302,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({"quoteId": quote_id, "confirmed": true}),
     )
     .await;
@@ -6754,10 +6697,10 @@ async fn json_rpc_wallet_tron_prepare_execute_round_trips() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _tron_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_TRON");
+    let _tron_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_TRON");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -6770,7 +6713,7 @@ async fn json_rpc_wallet_tron_prepare_execute_round_trips() {
 
     let tron_mock = start_mock_tron().await;
     std::env::set_var(
-        "OPENHUMAN_WALLET_RPC_TRON",
+        "NEPPY_WALLET_RPC_TRON",
         format!("http://{}", tron_mock.addr),
     );
 
@@ -6779,7 +6722,7 @@ async fn json_rpc_wallet_tron_prepare_execute_round_trips() {
     let prep = post_json_rpc(
         &rpc_base,
         9401,
-        "openhuman.wallet_prepare_transfer",
+        "neppy.wallet_prepare_transfer",
         json!({
             "chain": "tron",
             "toAddress": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
@@ -6798,7 +6741,7 @@ async fn json_rpc_wallet_tron_prepare_execute_round_trips() {
     let exec = post_json_rpc(
         &rpc_base,
         9402,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({"quoteId": quote_id, "confirmed": true}),
     )
     .await;
@@ -6843,10 +6786,10 @@ async fn json_rpc_wallet_tron_trc20_prepare_execute_round_trips() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _tron_guard = EnvVarGuard::unset("OPENHUMAN_WALLET_RPC_TRON");
+    let _tron_guard = EnvVarGuard::unset("NEPPY_WALLET_RPC_TRON");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -6859,7 +6802,7 @@ async fn json_rpc_wallet_tron_trc20_prepare_execute_round_trips() {
 
     let tron_mock = start_mock_tron().await;
     std::env::set_var(
-        "OPENHUMAN_WALLET_RPC_TRON",
+        "NEPPY_WALLET_RPC_TRON",
         format!("http://{}", tron_mock.addr),
     );
 
@@ -6868,7 +6811,7 @@ async fn json_rpc_wallet_tron_trc20_prepare_execute_round_trips() {
     let prep = post_json_rpc(
         &rpc_base,
         9501,
-        "openhuman.wallet_prepare_transfer",
+        "neppy.wallet_prepare_transfer",
         json!({
             "chain": "tron",
             "toAddress": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
@@ -6892,7 +6835,7 @@ async fn json_rpc_wallet_tron_trc20_prepare_execute_round_trips() {
     let exec = post_json_rpc(
         &rpc_base,
         9502,
-        "openhuman.wallet_execute_prepared",
+        "neppy.wallet_execute_prepared",
         json!({"quoteId": quote_id, "confirmed": true}),
     )
     .await;
@@ -6937,7 +6880,7 @@ async fn json_rpc_wallet_network_defaults_lists_all_chains() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -6949,13 +6892,7 @@ async fn json_rpc_wallet_network_defaults_lists_all_chains() {
     let rpc_base = format!("http://{}", rpc_addr);
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    let resp = post_json_rpc(
-        &rpc_base,
-        9601,
-        "openhuman.wallet_network_defaults",
-        json!({}),
-    )
-    .await;
+    let resp = post_json_rpc(&rpc_base, 9601, "neppy.wallet_network_defaults", json!({})).await;
     let body = assert_no_jsonrpc_error(&resp, "wallet_network_defaults");
     let result = body.get("result").unwrap_or(body);
     let rows = result.as_array().expect("array");
@@ -6992,7 +6929,7 @@ async fn json_rpc_wallet_network_defaults_lists_all_chains() {
 }
 
 /// Verify that when `chat_onboarding_completed` is unset in config.toml (fresh
-/// user), the `openhuman.app_state_snapshot` RPC surfaces the flag as `false`
+/// user), the `neppy.app_state_snapshot` RPC surfaces the flag as `false`
 /// (its serde default). The field is deprecated but still surfaced for backward compat.
 #[tokio::test]
 async fn json_rpc_app_state_snapshot_chat_onboarding_defaults_false() {
@@ -7002,7 +6939,7 @@ async fn json_rpc_app_state_snapshot_chat_onboarding_defaults_false() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -7020,7 +6957,7 @@ default_temperature = 0.7
 encrypt = false
 "#
     );
-    std::fs::create_dir_all(&neppy_home).expect("mkdir openhuman");
+    std::fs::create_dir_all(&neppy_home).expect("mkdir neppy");
     std::fs::write(neppy_home.join("config.toml"), &cfg).expect("write config");
     std::fs::create_dir_all(neppy_home.join("users").join("local")).expect("mkdir users/local");
     std::fs::write(
@@ -7033,7 +6970,7 @@ encrypt = false
     let rpc_base = format!("http://{}", rpc_addr);
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    let snapshot = post_json_rpc(&rpc_base, 1005, "openhuman.app_state_snapshot", json!({})).await;
+    let snapshot = post_json_rpc(&rpc_base, 1005, "neppy.app_state_snapshot", json!({})).await;
     let result = assert_no_jsonrpc_error(&snapshot, "app_state_snapshot");
     let body = result.get("result").unwrap_or(result);
 
@@ -7059,10 +6996,10 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _tier_guard = EnvVarGuard::unset("OPENHUMAN_LOCAL_AI_TIER");
+    let _tier_guard = EnvVarGuard::unset("NEPPY_LOCAL_AI_TIER");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -7073,13 +7010,7 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // --- device_profile ---
-    let profile = post_json_rpc(
-        &rpc_base,
-        30,
-        "openhuman.inference_device_profile",
-        json!({}),
-    )
-    .await;
+    let profile = post_json_rpc(&rpc_base, 30, "neppy.inference_device_profile", json!({})).await;
     let profile_result = assert_no_jsonrpc_error(&profile, "device_profile");
     let profile_payload = profile_result.get("result").unwrap_or(profile_result);
     assert!(
@@ -7100,7 +7031,7 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
     );
 
     // --- presets ---
-    let presets = post_json_rpc(&rpc_base, 31, "openhuman.inference_presets", json!({})).await;
+    let presets = post_json_rpc(&rpc_base, 31, "neppy.inference_presets", json!({})).await;
     let presets_result = assert_no_jsonrpc_error(&presets, "presets");
     let presets_payload = presets_result.get("result").unwrap_or(presets_result);
     let presets_arr = presets_payload
@@ -7141,7 +7072,7 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
     let apply = post_json_rpc(
         &rpc_base,
         32,
-        "openhuman.inference_apply_preset",
+        "neppy.inference_apply_preset",
         json!({"tier": "ram_2_4gb"}),
     )
     .await;
@@ -7161,8 +7092,7 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
     );
 
     // --- verify presets reflects the change ---
-    let presets_after =
-        post_json_rpc(&rpc_base, 33, "openhuman.inference_presets", json!({})).await;
+    let presets_after = post_json_rpc(&rpc_base, 33, "neppy.inference_presets", json!({})).await;
     let presets_after_result = assert_no_jsonrpc_error(&presets_after, "presets_after");
     let presets_after_payload = presets_after_result
         .get("result")
@@ -7179,7 +7109,7 @@ async fn json_rpc_local_ai_device_profile_and_presets() {
     let bad_apply = post_json_rpc(
         &rpc_base,
         34,
-        "openhuman.inference_apply_preset",
+        "neppy.inference_apply_preset",
         json!({"tier": "ultra"}),
     )
     .await;
@@ -7204,8 +7134,8 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
-    let _action_guard = EnvVarGuard::unset("OPENHUMAN_ACTION_DIR");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
+    let _action_guard = EnvVarGuard::unset("NEPPY_ACTION_DIR");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -7223,7 +7153,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let upsert = post_json_rpc(
         &rpc_base,
         60,
-        "openhuman.profiles_upsert",
+        "neppy.profiles_upsert",
         json!({
             "profile": {
                 "id": "writer",
@@ -7252,7 +7182,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     );
 
     // --- list must surface the field + the resolved soulMdFile path ---
-    let list = post_json_rpc(&rpc_base, 61, "openhuman.profiles_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 61, "neppy.profiles_list", json!({})).await;
     let list_result = assert_no_jsonrpc_error(&list, "profiles_list");
     let list_payload = list_result.get("result").unwrap_or(list_result);
     let listed_writer = list_payload
@@ -7288,7 +7218,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let cron_add = post_json_rpc(
         &rpc_base,
         64,
-        "openhuman.cron_add",
+        "neppy.cron_add",
         json!({
             "schedule": "0 9 * * *",
             "prompt": "draft the daily note",
@@ -7310,7 +7240,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
         "cron_add must round-trip profile_id: {cron_add_result}"
     );
 
-    let cron_list = post_json_rpc(&rpc_base, 65, "openhuman.cron_list", json!({})).await;
+    let cron_list = post_json_rpc(&rpc_base, 65, "neppy.cron_list", json!({})).await;
     let cron_list_result = assert_no_jsonrpc_error(&cron_list, "cron_list");
     let jobs = cron_list_result
         .get("result")
@@ -7330,7 +7260,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let cron_update = post_json_rpc(
         &rpc_base,
         66,
-        "openhuman.cron_update",
+        "neppy.cron_update",
         json!({ "job_id": job_id, "patch": { "profile_id": "editor" } }),
     )
     .await;
@@ -7349,7 +7279,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let cron_clear = post_json_rpc(
         &rpc_base,
         67,
-        "openhuman.cron_update",
+        "neppy.cron_update",
         json!({ "job_id": job_id, "patch": { "profile_id": null } }),
     )
     .await;
@@ -7361,7 +7291,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     );
 
     // ...and cron_list confirms the attribution is gone.
-    let cron_list_after = post_json_rpc(&rpc_base, 68, "openhuman.cron_list", json!({})).await;
+    let cron_list_after = post_json_rpc(&rpc_base, 68, "neppy.cron_list", json!({})).await;
     let cron_list_after_result = assert_no_jsonrpc_error(&cron_list_after, "cron_list after clear");
     let jobs_after = cron_list_after_result
         .get("result")
@@ -7380,7 +7310,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let select = post_json_rpc(
         &rpc_base,
         62,
-        "openhuman.profiles_select",
+        "neppy.profiles_select",
         json!({"profile_id": "writer"}),
     )
     .await;
@@ -7396,7 +7326,7 @@ async fn json_rpc_profiles_dedicated_memory_lifecycle() {
     let delete = post_json_rpc(
         &rpc_base,
         63,
-        "openhuman.profiles_delete",
+        "neppy.profiles_delete",
         json!({"profile_id": "writer"}),
     )
     .await;
@@ -7422,11 +7352,11 @@ async fn json_rpc_local_ai_lm_studio_config_diagnostics_and_prompt() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _tier_guard = EnvVarGuard::unset("OPENHUMAN_LOCAL_AI_TIER");
-    let _lm_env_guard = EnvVarGuard::unset("OPENHUMAN_LM_STUDIO_BASE_URL");
+    let _tier_guard = EnvVarGuard::unset("NEPPY_LOCAL_AI_TIER");
+    let _lm_env_guard = EnvVarGuard::unset("NEPPY_LM_STUDIO_BASE_URL");
     let _lm_alias_env_guard = EnvVarGuard::unset("LM_STUDIO_BASE_URL");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
@@ -7492,7 +7422,7 @@ async fn json_rpc_local_ai_lm_studio_config_diagnostics_and_prompt() {
     let update = post_json_rpc(
         &rpc_base,
         36,
-        "openhuman.inference_update_local_settings",
+        "neppy.inference_update_local_settings",
         json!({
             "runtime_enabled": true,
             "opt_in_confirmed": true,
@@ -7523,8 +7453,7 @@ async fn json_rpc_local_ai_lm_studio_config_diagnostics_and_prompt() {
         Some(true)
     );
 
-    let diagnostics =
-        post_json_rpc(&rpc_base, 37, "openhuman.inference_diagnostics", json!({})).await;
+    let diagnostics = post_json_rpc(&rpc_base, 37, "neppy.inference_diagnostics", json!({})).await;
     let diagnostics_result = assert_no_jsonrpc_error(&diagnostics, "lm_studio_diagnostics");
     assert_eq!(
         diagnostics_result.get("provider").and_then(Value::as_str),
@@ -7547,7 +7476,7 @@ async fn json_rpc_local_ai_lm_studio_config_diagnostics_and_prompt() {
     let prompt = post_json_rpc(
         &rpc_base,
         38,
-        "openhuman.inference_prompt",
+        "neppy.inference_prompt",
         json!({
             "prompt": "hello",
             "max_tokens": 16,
@@ -7574,7 +7503,7 @@ async fn json_rpc_local_ai_ollama_endpoint_normalizes_bind_address_and_clears() 
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -7589,7 +7518,7 @@ async fn json_rpc_local_ai_ollama_endpoint_normalizes_bind_address_and_clears() 
     let update = post_json_rpc(
         &rpc_base,
         390,
-        "openhuman.inference_update_local_settings",
+        "neppy.inference_update_local_settings",
         json!({
             "provider": "ollama",
             "base_url": "http://0.0.0.0:11434/api/tags"
@@ -7610,7 +7539,7 @@ async fn json_rpc_local_ai_ollama_endpoint_normalizes_bind_address_and_clears() 
     let clear = post_json_rpc(
         &rpc_base,
         391,
-        "openhuman.inference_update_local_settings",
+        "neppy.inference_update_local_settings",
         json!({ "base_url": null }),
     )
     .await;
@@ -7634,11 +7563,11 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _tier_guard = EnvVarGuard::unset("OPENHUMAN_LOCAL_AI_TIER");
-    let _lm_env_guard = EnvVarGuard::unset("OPENHUMAN_LM_STUDIO_BASE_URL");
+    let _tier_guard = EnvVarGuard::unset("NEPPY_LOCAL_AI_TIER");
+    let _lm_env_guard = EnvVarGuard::unset("NEPPY_LM_STUDIO_BASE_URL");
     let _lm_alias_env_guard = EnvVarGuard::unset("LM_STUDIO_BASE_URL");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
@@ -7689,7 +7618,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let update = post_json_rpc(
         &rpc_base,
         360,
-        "openhuman.inference_update_local_settings",
+        "neppy.inference_update_local_settings",
         json!({
             "runtime_enabled": true,
             "opt_in_confirmed": true,
@@ -7702,7 +7631,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     .await;
     assert_no_jsonrpc_error(&update, "update_local_ai_settings for inference namespace");
 
-    let status = post_json_rpc(&rpc_base, 361, "openhuman.inference_status", json!({})).await;
+    let status = post_json_rpc(&rpc_base, 361, "neppy.inference_status", json!({})).await;
     let status_result = assert_no_jsonrpc_error(&status, "inference_status");
     let status_payload = status_result.get("result").unwrap_or(status_result);
     assert_eq!(
@@ -7713,7 +7642,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let prompt = post_json_rpc(
         &rpc_base,
         362,
-        "openhuman.inference_prompt",
+        "neppy.inference_prompt",
         json!({
             "prompt": "hello",
             "max_tokens": 16,
@@ -7730,7 +7659,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let summarize = post_json_rpc(
         &rpc_base,
         363,
-        "openhuman.inference_summarize",
+        "neppy.inference_summarize",
         json!({
             "text": "summarize me",
             "max_tokens": 16
@@ -7743,7 +7672,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
         "hello from inference namespace"
     );
 
-    // openhuman.inference_update_model_settings — mutate `default_model`
+    // neppy.inference_update_model_settings — mutate `default_model`
     // through the RPC transport so a controller-registration or param-shape
     // regression surfaces here instead of in the settings-save UI flow.
     // (We assert on `default_model` because that field is exposed by
@@ -7751,7 +7680,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let model_update = post_json_rpc(
         &rpc_base,
         366,
-        "openhuman.inference_update_model_settings",
+        "neppy.inference_update_model_settings",
         json!({ "default_model": "e2e-updated-model" }),
     )
     .await;
@@ -7759,7 +7688,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let client_cfg = post_json_rpc(
         &rpc_base,
         367,
-        "openhuman.inference_get_client_config",
+        "neppy.inference_get_client_config",
         json!({}),
     )
     .await;
@@ -7774,7 +7703,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
         "inference_get_client_config did not reflect updated default_model: {client_cfg_result}"
     );
 
-    // openhuman.inference_list_models — no cloud provider configured for this
+    // neppy.inference_list_models — no cloud provider configured for this
     // local-only test, so we expect a structured error rather than a panic.
     // Asserting an error here proves the controller is registered and reaches
     // its handler over the RPC transport (the empty-picker symptom CodeRabbit
@@ -7782,7 +7711,7 @@ async fn json_rpc_inference_namespace_lm_studio_prompt_and_status() {
     let list_models = post_json_rpc(
         &rpc_base,
         368,
-        "openhuman.inference_list_models",
+        "neppy.inference_list_models",
         json!({ "provider_id": "does-not-exist" }),
     )
     .await;
@@ -7804,11 +7733,11 @@ async fn json_rpc_inference_prompt_requires_external_ollama_runtime_when_unreach
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _tier_guard = EnvVarGuard::unset("OPENHUMAN_LOCAL_AI_TIER");
-    let _ollama_url_guard = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+    let _tier_guard = EnvVarGuard::unset("NEPPY_LOCAL_AI_TIER");
+    let _ollama_url_guard = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -7821,7 +7750,7 @@ async fn json_rpc_inference_prompt_requires_external_ollama_runtime_when_unreach
     let update = post_json_rpc(
         &rpc_base,
         364,
-        "openhuman.inference_update_local_settings",
+        "neppy.inference_update_local_settings",
         json!({
             "runtime_enabled": true,
             "opt_in_confirmed": true,
@@ -7836,7 +7765,7 @@ async fn json_rpc_inference_prompt_requires_external_ollama_runtime_when_unreach
     let prompt = post_json_rpc(
         &rpc_base,
         365,
-        "openhuman.inference_prompt",
+        "neppy.inference_prompt",
         json!({
             "prompt": "hello",
             "max_tokens": 16,
@@ -7873,7 +7802,7 @@ async fn billing_rpc_e2e() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -7894,7 +7823,7 @@ async fn billing_rpc_e2e() {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-billing-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -7910,13 +7839,7 @@ async fn billing_rpc_e2e() {
     }
 
     // --- billing_get_current_plan ---
-    let plan = post_json_rpc(
-        &rpc_base,
-        2,
-        "openhuman.billing_get_current_plan",
-        json!({}),
-    )
-    .await;
+    let plan = post_json_rpc(&rpc_base, 2, "neppy.billing_get_current_plan", json!({})).await;
     let plan_outer = assert_no_jsonrpc_error(&plan, "billing_get_current_plan");
     let plan_result = inner(plan_outer, "billing_get_current_plan");
     assert_eq!(
@@ -7936,7 +7859,7 @@ async fn billing_rpc_e2e() {
     let purchase = post_json_rpc(
         &rpc_base,
         3,
-        "openhuman.billing_purchase_plan",
+        "neppy.billing_purchase_plan",
         json!({ "plan": "pro" }),
     )
     .await;
@@ -7954,7 +7877,7 @@ async fn billing_rpc_e2e() {
     let portal = post_json_rpc(
         &rpc_base,
         4,
-        "openhuman.billing_create_portal_session",
+        "neppy.billing_create_portal_session",
         json!({}),
     )
     .await;
@@ -7972,7 +7895,7 @@ async fn billing_rpc_e2e() {
     let top_up = post_json_rpc(
         &rpc_base,
         5,
-        "openhuman.billing_top_up",
+        "neppy.billing_top_up",
         json!({ "amountUsd": 10.0, "gateway": "stripe" }),
     )
     .await;
@@ -7988,7 +7911,7 @@ async fn billing_rpc_e2e() {
     let charge = post_json_rpc(
         &rpc_base,
         6,
-        "openhuman.billing_create_coinbase_charge",
+        "neppy.billing_create_coinbase_charge",
         json!({ "plan": "pro" }),
     )
     .await;
@@ -8023,7 +7946,7 @@ async fn team_rpc_e2e() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -8044,7 +7967,7 @@ async fn team_rpc_e2e() {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-team-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -8064,7 +7987,7 @@ async fn team_rpc_e2e() {
     let members = post_json_rpc(
         &rpc_base,
         2,
-        "openhuman.team_list_members",
+        "neppy.team_list_members",
         json!({ "teamId": team_id }),
     )
     .await;
@@ -8083,7 +8006,7 @@ async fn team_rpc_e2e() {
     let invite = post_json_rpc(
         &rpc_base,
         3,
-        "openhuman.team_create_invite",
+        "neppy.team_create_invite",
         json!({ "teamId": team_id, "maxUses": 3, "expiresInDays": 7 }),
     )
     .await;
@@ -8098,7 +8021,7 @@ async fn team_rpc_e2e() {
     let invites = post_json_rpc(
         &rpc_base,
         4,
-        "openhuman.team_list_invites",
+        "neppy.team_list_invites",
         json!({ "teamId": team_id }),
     )
     .await;
@@ -8116,7 +8039,7 @@ async fn team_rpc_e2e() {
     let revoke = post_json_rpc(
         &rpc_base,
         5,
-        "openhuman.team_revoke_invite",
+        "neppy.team_revoke_invite",
         json!({ "teamId": team_id, "inviteId": "inv-1" }),
     )
     .await;
@@ -8126,7 +8049,7 @@ async fn team_rpc_e2e() {
     let remove = post_json_rpc(
         &rpc_base,
         6,
-        "openhuman.team_remove_member",
+        "neppy.team_remove_member",
         json!({ "teamId": team_id, "userId": "user-2" }),
     )
     .await;
@@ -8136,7 +8059,7 @@ async fn team_rpc_e2e() {
     let role_change = post_json_rpc(
         &rpc_base,
         7,
-        "openhuman.team_change_member_role",
+        "neppy.team_change_member_role",
         json!({ "teamId": team_id, "userId": "user-1", "role": "MEMBER" }),
     )
     .await;
@@ -8154,7 +8077,7 @@ async fn about_app_rpc_list_lookup_and_search() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -8174,7 +8097,7 @@ async fn about_app_rpc_list_lookup_and_search() {
             .unwrap_or_else(|| outer.clone())
     }
 
-    let list = post_json_rpc(&rpc_base, 200, "openhuman.about_app_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 200, "neppy.about_app_list", json!({})).await;
     let list_outer = assert_no_jsonrpc_error(&list, "about_app_list");
     let list_result = inner(list_outer);
     let capabilities = list_result
@@ -8191,7 +8114,7 @@ async fn about_app_rpc_list_lookup_and_search() {
     let filtered = post_json_rpc(
         &rpc_base,
         201,
-        "openhuman.about_app_list",
+        "neppy.about_app_list",
         json!({ "category": "local_ai" }),
     )
     .await;
@@ -8211,7 +8134,7 @@ async fn about_app_rpc_list_lookup_and_search() {
     let lookup = post_json_rpc(
         &rpc_base,
         202,
-        "openhuman.about_app_lookup",
+        "neppy.about_app_lookup",
         json!({ "id": "team.generate_invite_codes" }),
     )
     .await;
@@ -8229,7 +8152,7 @@ async fn about_app_rpc_list_lookup_and_search() {
     let search = post_json_rpc(
         &rpc_base,
         203,
-        "openhuman.about_app_search",
+        "neppy.about_app_search",
         json!({ "query": "invite" }),
     )
     .await;
@@ -8263,7 +8186,7 @@ async fn voice_status_returns_availability() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     let _piper_guard = EnvVarGuard::unset("PIPER_BIN");
@@ -8278,7 +8201,7 @@ async fn voice_status_returns_availability() {
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // voice_status does not require auth — it only checks filesystem availability
-    let status = post_json_rpc(&rpc_base, 1, "openhuman.voice_status", json!({})).await;
+    let status = post_json_rpc(&rpc_base, 1, "neppy.voice_status", json!({})).await;
     let result = assert_no_jsonrpc_error(&status, "voice_status");
 
     // Without piper installed in the test env, TTS should be unavailable. STT
@@ -8328,7 +8251,7 @@ async fn notification_settings_roundtrip_and_disabled_ingest_skip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -8343,7 +8266,7 @@ async fn notification_settings_roundtrip_and_disabled_ingest_skip() {
     let set = post_json_rpc(
         &rpc_base,
         4001,
-        "openhuman.notification_settings_set",
+        "neppy.notification_settings_set",
         json!({
             "provider": "gmail",
             "enabled": false,
@@ -8358,7 +8281,7 @@ async fn notification_settings_roundtrip_and_disabled_ingest_skip() {
     let get = post_json_rpc(
         &rpc_base,
         4002,
-        "openhuman.notification_settings_get",
+        "neppy.notification_settings_get",
         json!({ "provider": "gmail" }),
     )
     .await;
@@ -8386,7 +8309,7 @@ async fn notification_settings_roundtrip_and_disabled_ingest_skip() {
     let ingest = post_json_rpc(
         &rpc_base,
         4003,
-        "openhuman.notification_ingest",
+        "neppy.notification_ingest",
         json!({
             "provider": "gmail",
             "account_id": "acct-1",
@@ -8419,7 +8342,7 @@ async fn credentials_crud_roundtrip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -8437,7 +8360,7 @@ async fn credentials_crud_roundtrip() {
     let store = post_json_rpc(
         &rpc_base,
         5001,
-        "openhuman.auth_store_provider_credentials",
+        "neppy.auth_store_provider_credentials",
         json!({
             "provider": "openai",
             "profile": "default",
@@ -8470,7 +8393,7 @@ async fn credentials_crud_roundtrip() {
     let list_all = post_json_rpc(
         &rpc_base,
         5002,
-        "openhuman.auth_list_provider_credentials",
+        "neppy.auth_list_provider_credentials",
         json!({}),
     )
     .await;
@@ -8489,7 +8412,7 @@ async fn credentials_crud_roundtrip() {
     let list_filtered = post_json_rpc(
         &rpc_base,
         5003,
-        "openhuman.auth_list_provider_credentials",
+        "neppy.auth_list_provider_credentials",
         json!({ "provider": "openai" }),
     )
     .await;
@@ -8509,7 +8432,7 @@ async fn credentials_crud_roundtrip() {
     let remove = post_json_rpc(
         &rpc_base,
         5004,
-        "openhuman.auth_remove_provider_credentials",
+        "neppy.auth_remove_provider_credentials",
         json!({
             "provider": "openai",
             "profile": "default"
@@ -8528,7 +8451,7 @@ async fn credentials_crud_roundtrip() {
     let list_after = post_json_rpc(
         &rpc_base,
         5005,
-        "openhuman.auth_list_provider_credentials",
+        "neppy.auth_list_provider_credentials",
         json!({}),
     )
     .await;
@@ -8547,7 +8470,7 @@ async fn credentials_crud_roundtrip() {
     rpc_join.abort();
 }
 
-/// End-to-end coverage for `openhuman.skills_uninstall`.
+/// End-to-end coverage for `neppy.skills_uninstall`.
 ///
 /// Validates that the RPC method is registered, wire-decodes
 /// `UninstallSkillParams`, resolves the slug against
@@ -8563,7 +8486,7 @@ async fn skills_uninstall_rpc_e2e() {
     let home = tmp.path();
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
 
     let skills_root = home.join(".neppy").join("skills");
     std::fs::create_dir_all(&skills_root).expect("mkdir skills root");
@@ -8587,7 +8510,7 @@ async fn skills_uninstall_rpc_e2e() {
     let ok = post_json_rpc(
         &rpc_base,
         6001,
-        "openhuman.skills_uninstall",
+        "neppy.skills_uninstall",
         json!({ "name": slug }),
     )
     .await;
@@ -8620,7 +8543,7 @@ async fn skills_uninstall_rpc_e2e() {
     let missing = post_json_rpc(
         &rpc_base,
         6002,
-        "openhuman.skills_uninstall",
+        "neppy.skills_uninstall",
         json!({ "name": "does-not-exist" }),
     )
     .await;
@@ -8641,7 +8564,7 @@ async fn skills_uninstall_rpc_e2e() {
     let traversal = post_json_rpc(
         &rpc_base,
         6003,
-        "openhuman.skills_uninstall",
+        "neppy.skills_uninstall",
         json!({ "name": "../etc" }),
     )
     .await;
@@ -9015,7 +8938,7 @@ async fn rpc_update_apply_can_be_disabled_by_config_policy() {
     ensure_test_rpc_auth();
 
     let tmp = tempdir().expect("tempdir");
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path());
 
     let mut config = neppy_core::neppy::config::Config {
         workspace_dir: tmp.path().join("workspace"),
@@ -9039,7 +8962,7 @@ async fn rpc_update_apply_can_be_disabled_by_config_policy() {
         .json(&json!({
             "jsonrpc": "2.0",
             "id": 1,
-            "method": "openhuman.update_apply",
+            "method": "neppy.update_apply",
             "params": {
                 "download_url": "https://github.com/owner/repo/releases/download/v1/x",
                 "asset_name": "neppy-core-x86_64-unknown-linux-gnu"
@@ -9067,7 +8990,7 @@ async fn rpc_update_apply_can_be_disabled_by_config_policy() {
 
 /// End-to-end coverage for issue #1149: storing a managed-DM channel
 /// credential under `channel:<slug>:<mode>` and immediately observing
-/// `connected:true` from `openhuman.channels_status`.
+/// `connected:true` from `neppy.channels_status`.
 ///
 /// Before the fix, `channels_status` always returned `connected:false`
 /// because the underlying `list_provider_credentials` call used an
@@ -9088,7 +9011,7 @@ async fn channels_status_reflects_managed_dm_credential_e2e() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -9104,7 +9027,7 @@ async fn channels_status_reflects_managed_dm_credential_e2e() {
     let baseline = post_json_rpc(
         &rpc_base,
         7001,
-        "openhuman.channels_status",
+        "neppy.channels_status",
         json!({ "channel": "telegram" }),
     )
     .await;
@@ -9128,7 +9051,7 @@ async fn channels_status_reflects_managed_dm_credential_e2e() {
     let store = post_json_rpc(
         &rpc_base,
         7002,
-        "openhuman.auth_store_provider_credentials",
+        "neppy.auth_store_provider_credentials",
         json!({
             "provider": "channel:telegram:managed_dm",
             "profile": "default",
@@ -9144,7 +9067,7 @@ async fn channels_status_reflects_managed_dm_credential_e2e() {
     let after = post_json_rpc(
         &rpc_base,
         7003,
-        "openhuman.channels_status",
+        "neppy.channels_status",
         json!({ "channel": "telegram" }),
     )
     .await;
@@ -9181,16 +9104,16 @@ async fn whatsapp_memory_doc_ingest_e2e() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // Disable strict embedding so ingest falls back to the Inert
     // (zero-vector) embedder when no Ollama endpoint is reachable. CI
     // has no local Ollama; without this the memory_doc_ingest call
     // would fail at the chunk-embedding step.
-    let _embed_strict_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false");
-    let _embed_endpoint_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", "");
-    let _embed_model_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", "");
+    let _embed_strict_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false");
+    let _embed_endpoint_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", "");
+    let _embed_model_guard = EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", "");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -9204,7 +9127,7 @@ async fn whatsapp_memory_doc_ingest_e2e() {
     let ingest = post_json_rpc(
         &rpc_base,
         9101,
-        "openhuman.memory_doc_ingest",
+        "neppy.memory_doc_ingest",
         json!({
             "namespace": "whatsapp-web:test-acct@c.us",
             "key": "alice@c.us:2026-05-07",
@@ -9225,7 +9148,7 @@ async fn whatsapp_memory_doc_ingest_e2e() {
     let doc_list = post_json_rpc(
         &rpc_base,
         9102,
-        "openhuman.memory_doc_list",
+        "neppy.memory_doc_list",
         json!({ "namespace": "whatsapp-web:test-acct@c.us" }),
     )
     .await;
@@ -9276,16 +9199,16 @@ async fn whatsapp_memory_doc_ingest_e2e() {
     rpc_join.abort();
 }
 
-/// Regression guard for issue #1289: `openhuman.voice_cloud_transcribe`
+/// Regression guard for issue #1289: `neppy.voice_cloud_transcribe`
 /// must stay registered in the controller registry and reachable via
 /// JSON-RPC dispatch.
 ///
 /// The user-visible symptom was "Voice transcription failed: unknown
-/// method: openhuman.voice_cloud_transcribe" — the frontend (mascot
+/// method: neppy.voice_cloud_transcribe" — the frontend (mascot
 /// mic-only composer) was calling a method that wasn't reachable.
 /// This test pins both ends:
 ///
-/// 1. `/schema` exposes `openhuman.voice_cloud_transcribe` so the
+/// 1. `/schema` exposes `neppy.voice_cloud_transcribe` so the
 ///    discovery surface stays in sync with the live registry.
 /// 2. Calling the method over RPC does NOT hit the dispatcher's
 ///    unknown-method branch (`Err("unknown method: …")`). The call may
@@ -9300,7 +9223,7 @@ async fn voice_cloud_transcribe_registered_e2e() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -9312,7 +9235,7 @@ async fn voice_cloud_transcribe_registered_e2e() {
     let rpc_base = format!("http://{}", rpc_addr);
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // ── 1. /schema must list openhuman.voice_cloud_transcribe ───────────────
+    // ── 1. /schema must list neppy.voice_cloud_transcribe ───────────────
     let schema = reqwest::get(format!("{rpc_base}/schema"))
         .await
         .expect("GET /schema")
@@ -9327,7 +9250,7 @@ async fn voice_cloud_transcribe_registered_e2e() {
         .filter_map(|m| m.get("method").and_then(Value::as_str))
         .collect();
     assert!(
-        names.contains(&"openhuman.voice_cloud_transcribe"),
+        names.contains(&"neppy.voice_cloud_transcribe"),
         "voice_cloud_transcribe must appear in /schema dump (got {} methods)",
         names.len()
     );
@@ -9339,7 +9262,7 @@ async fn voice_cloud_transcribe_registered_e2e() {
     let resp = post_json_rpc(
         &rpc_base,
         9101,
-        "openhuman.voice_cloud_transcribe",
+        "neppy.voice_cloud_transcribe",
         json!({ "audio_base64": "" }),
     )
     .await;
@@ -9517,7 +9440,7 @@ async fn mcp_clients_lifecycle() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -9536,7 +9459,7 @@ async fn mcp_clients_lifecycle() {
     let list1 = post_json_rpc(
         &rpc_base,
         9901,
-        "openhuman.mcp_clients_installed_list",
+        "neppy.mcp_clients_installed_list",
         json!({}),
     )
     .await;
@@ -9552,7 +9475,7 @@ async fn mcp_clients_lifecycle() {
     );
 
     // ── 2. status should return empty servers ─────────────────────────────────
-    let status1 = post_json_rpc(&rpc_base, 9902, "openhuman.mcp_clients_status", json!({})).await;
+    let status1 = post_json_rpc(&rpc_base, 9902, "neppy.mcp_clients_status", json!({})).await;
     let status1_result = assert_no_jsonrpc_error(&status1, "mcp_clients_status (initial)");
     let status1_body = peel_logs_envelope(status1_result);
     let servers = status1_body
@@ -9565,7 +9488,7 @@ async fn mcp_clients_lifecycle() {
     let uninstall_missing = post_json_rpc(
         &rpc_base,
         9903,
-        "openhuman.mcp_clients_uninstall",
+        "neppy.mcp_clients_uninstall",
         json!({ "server_id": "00000000-0000-0000-0000-000000000000" }),
     )
     .await;
@@ -9580,7 +9503,7 @@ async fn mcp_clients_lifecycle() {
     let search = post_json_rpc(
         &rpc_base,
         9904,
-        "openhuman.mcp_clients_registry_search",
+        "neppy.mcp_clients_registry_search",
         json!({ "query": "test", "page": 1, "page_size": 5 }),
     )
     .await;
@@ -9594,7 +9517,7 @@ async fn mcp_clients_lifecycle() {
     let connect_missing = post_json_rpc(
         &rpc_base,
         9905,
-        "openhuman.mcp_clients_connect",
+        "neppy.mcp_clients_connect",
         json!({ "server_id": "00000000-0000-0000-0000-000000000001" }),
     )
     .await;
@@ -9607,7 +9530,7 @@ async fn mcp_clients_lifecycle() {
     let tool_call_disconnected = post_json_rpc(
         &rpc_base,
         9906,
-        "openhuman.mcp_clients_tool_call",
+        "neppy.mcp_clients_tool_call",
         json!({
             "server_id": "00000000-0000-0000-0000-000000000002",
             "tool_name": "search",
@@ -9628,7 +9551,7 @@ async fn mcp_clients_lifecycle() {
     let disconnect_noop = post_json_rpc(
         &rpc_base,
         9907,
-        "openhuman.mcp_clients_disconnect",
+        "neppy.mcp_clients_disconnect",
         json!({ "server_id": "00000000-0000-0000-0000-000000000003" }),
     )
     .await;
@@ -9667,7 +9590,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -9711,7 +9634,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let install = post_json_rpc(
         &rpc_base,
         9920,
-        "openhuman.mcp_clients_install",
+        "neppy.mcp_clients_install",
         json!({ "qualified_name": format!("smithery::{qualified_name}"), "env": {} }),
     )
     .await;
@@ -9728,7 +9651,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let connect = post_json_rpc(
         &rpc_base,
         9921,
-        "openhuman.mcp_clients_connect",
+        "neppy.mcp_clients_connect",
         json!({ "server_id": server_id }),
     )
     .await;
@@ -9754,7 +9677,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let tool_call = post_json_rpc(
         &rpc_base,
         9922,
-        "openhuman.mcp_clients_tool_call",
+        "neppy.mcp_clients_tool_call",
         json!({
             "server_id": server_id,
             "tool_name": "echo",
@@ -9779,7 +9702,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let update_env = post_json_rpc(
         &rpc_base,
         9923,
-        "openhuman.mcp_clients_update_env",
+        "neppy.mcp_clients_update_env",
         json!({ "server_id": server_id, "env": { "EXAMPLE_TOKEN": "rotated" } }),
     )
     .await;
@@ -9803,7 +9726,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let tool_call2 = post_json_rpc(
         &rpc_base,
         9925,
-        "openhuman.mcp_clients_tool_call",
+        "neppy.mcp_clients_tool_call",
         json!({
             "server_id": server_id,
             "tool_name": "echo",
@@ -9829,7 +9752,7 @@ async fn mcp_clients_install_connect_tool_call_happy_path() {
     let disconnect = post_json_rpc(
         &rpc_base,
         9924,
-        "openhuman.mcp_clients_disconnect",
+        "neppy.mcp_clients_disconnect",
         json!({ "server_id": server_id }),
     )
     .await;
@@ -9855,7 +9778,7 @@ async fn mcp_clients_set_enabled_smoke() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -9899,7 +9822,7 @@ async fn mcp_clients_set_enabled_smoke() {
     let install = post_json_rpc(
         &rpc_base,
         9940,
-        "openhuman.mcp_clients_install",
+        "neppy.mcp_clients_install",
         json!({ "qualified_name": format!("smithery::{qualified_name}"), "env": {} }),
     )
     .await;
@@ -9917,7 +9840,7 @@ async fn mcp_clients_set_enabled_smoke() {
     let set_enabled = post_json_rpc(
         &rpc_base,
         9941,
-        "openhuman.mcp_clients_set_enabled",
+        "neppy.mcp_clients_set_enabled",
         json!({ "server_id": server_id, "enabled": false }),
     )
     .await;
@@ -9938,7 +9861,7 @@ async fn mcp_clients_set_enabled_smoke() {
     let set_enabled_true = post_json_rpc(
         &rpc_base,
         9942,
-        "openhuman.mcp_clients_set_enabled",
+        "neppy.mcp_clients_set_enabled",
         json!({ "server_id": server_id, "enabled": true }),
     )
     .await;
@@ -9969,7 +9892,7 @@ async fn mcp_clients_install_idempotent_refresh_and_canonical_dedup() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -10012,7 +9935,7 @@ async fn mcp_clients_install_idempotent_refresh_and_canonical_dedup() {
     let install1 = post_json_rpc(
         &rpc_base,
         9960,
-        "openhuman.mcp_clients_install",
+        "neppy.mcp_clients_install",
         json!({
             "qualified_name": format!("smithery::{qualified_name}"),
             "env": { "TOKEN": "old", "KEEP": "v1" }
@@ -10040,7 +9963,7 @@ async fn mcp_clients_install_idempotent_refresh_and_canonical_dedup() {
     let install2 = post_json_rpc(
         &rpc_base,
         9961,
-        "openhuman.mcp_clients_install",
+        "neppy.mcp_clients_install",
         json!({ "qualified_name": qualified_name, "env": { "TOKEN": "new" } }),
     )
     .await;
@@ -10076,7 +9999,7 @@ async fn mcp_clients_install_idempotent_refresh_and_canonical_dedup() {
     let listed = post_json_rpc(
         &rpc_base,
         9962,
-        "openhuman.mcp_clients_installed_list",
+        "neppy.mcp_clients_installed_list",
         json!({}),
     )
     .await;
@@ -10111,7 +10034,7 @@ async fn mcp_clients_registry_settings_roundtrip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _smithery_guard = EnvVarGuard::unset("SMITHERY_API_KEY");
     let _official_token_guard = EnvVarGuard::unset("MCP_OFFICIAL_REGISTRY_TOKEN");
 
@@ -10128,7 +10051,7 @@ async fn mcp_clients_registry_settings_roundtrip() {
     let get1 = post_json_rpc(
         &rpc_base,
         9930,
-        "openhuman.mcp_clients_registry_settings_get",
+        "neppy.mcp_clients_registry_settings_get",
         json!({}),
     )
     .await;
@@ -10141,7 +10064,7 @@ async fn mcp_clients_registry_settings_roundtrip() {
     let set1 = post_json_rpc(
         &rpc_base,
         9931,
-        "openhuman.mcp_clients_registry_settings_set",
+        "neppy.mcp_clients_registry_settings_set",
         json!({
             "smithery_api_key": "sk-secret-value",
             "mcp_official_base": "https://registry.example.test"
@@ -10165,7 +10088,7 @@ async fn mcp_clients_registry_settings_roundtrip() {
     let get2 = post_json_rpc(
         &rpc_base,
         9933,
-        "openhuman.mcp_clients_registry_settings_get",
+        "neppy.mcp_clients_registry_settings_get",
         json!({}),
     )
     .await;
@@ -10186,7 +10109,7 @@ async fn mcp_clients_registry_settings_roundtrip() {
     let set2 = post_json_rpc(
         &rpc_base,
         9932,
-        "openhuman.mcp_clients_registry_settings_set",
+        "neppy.mcp_clients_registry_settings_set",
         json!({ "smithery_api_key": "" }),
     )
     .await;
@@ -10203,7 +10126,7 @@ async fn mcp_clients_registry_settings_roundtrip() {
     let get3 = post_json_rpc(
         &rpc_base,
         9934,
-        "openhuman.mcp_clients_registry_settings_get",
+        "neppy.mcp_clients_registry_settings_get",
         json!({}),
     )
     .await;
@@ -10241,7 +10164,7 @@ async fn json_rpc_proxy_config_corruption_recovery() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -10263,7 +10186,7 @@ encrypt = false
     // the workspace root. Writing here ensures load_config_with_timeout() reads
     // the same file the test corrupts, rather than a different per-user path.
     let config_dir = neppy_home.join("users").join("local");
-    std::fs::create_dir_all(&config_dir).expect("mkdir openhuman users/local");
+    std::fs::create_dir_all(&config_dir).expect("mkdir neppy users/local");
     let config_path = config_dir.join("config.toml");
     std::fs::write(&config_path, valid_toml.as_bytes()).expect("write valid config");
 
@@ -10326,7 +10249,7 @@ encrypt = false
 ///
 /// End-to-end signal:
 ///   1. A valid config is written and `Config::save()` is driven via RPC
-///      (`openhuman.config_update`) so the runtime actually calls `save()` and
+///      (`neppy.config_update`) so the runtime actually calls `save()` and
 ///      the `.bak` is written as a side-effect.
 ///   2. The primary `config.toml` is replaced with garbage on disk.
 ///   3. `load_config_with_timeout()` — the same code path used by all RPC
@@ -10347,7 +10270,7 @@ async fn json_rpc_config_bak_recovery_after_primary_corruption() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -10385,13 +10308,13 @@ encrypt = false
     );
 
     // B. Drive a config save via RPC so `Config::save()` writes the `.bak`.
-    //    We use `openhuman.config_update` preserving the sentinel temperature so
+    //    We use `neppy.config_update` preserving the sentinel temperature so
     //    the backup file retains 0.91. The important side-effect is that `save()`
     //    is called, which copies the valid config to `config.toml.bak`.
     let update = post_json_rpc(
         &rpc_base,
         20_002,
-        "openhuman.config_update",
+        "neppy.config_update",
         json!({ "default_temperature": 0.91 }),
     )
     .await;
@@ -10446,7 +10369,7 @@ encrypt = false
 ///
 /// Strategy: create a lock file containing a PID that is guaranteed not to
 /// be alive (PID 0 is never a user process on any supported platform), then
-/// issue `openhuman.auth_list_provider_credentials`. The call must succeed
+/// issue `neppy.auth_list_provider_credentials`. The call must succeed
 /// rather than timing out, proving that stale-lock recovery unblocked it.
 #[tokio::test]
 async fn json_rpc_stale_auth_profile_lock_auto_recovered() {
@@ -10456,7 +10379,7 @@ async fn json_rpc_stale_auth_profile_lock_auto_recovered() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -10493,7 +10416,7 @@ async fn json_rpc_stale_auth_profile_lock_auto_recovered() {
     let list = post_json_rpc(
         &rpc_base,
         21_001,
-        "openhuman.auth_list_provider_credentials",
+        "neppy.auth_list_provider_credentials",
         json!({}),
     )
     .await;
@@ -10528,7 +10451,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -10544,7 +10467,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let initial = post_json_rpc(
         &rpc_base,
         7001,
-        "openhuman.config_get_autonomy_settings",
+        "neppy.config_get_autonomy_settings",
         json!({}),
     )
     .await;
@@ -10577,7 +10500,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let update = post_json_rpc(
         &rpc_base,
         7002,
-        "openhuman.config_update_autonomy_settings",
+        "neppy.config_update_autonomy_settings",
         json!({ "max_actions_per_hour": 250, "require_task_plan_approval": false }),
     )
     .await;
@@ -10587,7 +10510,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let after = post_json_rpc(
         &rpc_base,
         7003,
-        "openhuman.config_get_autonomy_settings",
+        "neppy.config_get_autonomy_settings",
         json!({}),
     )
     .await;
@@ -10617,7 +10540,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let bad = post_json_rpc(
         &rpc_base,
         7004,
-        "openhuman.config_update_autonomy_settings",
+        "neppy.config_update_autonomy_settings",
         json!({ "max_actions_per_hour": 0 }),
     )
     .await;
@@ -10636,7 +10559,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let update_allow = post_json_rpc(
         &rpc_base,
         7005,
-        "openhuman.config_update_autonomy_settings",
+        "neppy.config_update_autonomy_settings",
         json!({ "auto_approve": ["shell", "curl"] }),
     )
     .await;
@@ -10645,7 +10568,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let after_allow = post_json_rpc(
         &rpc_base,
         7006,
-        "openhuman.config_get_autonomy_settings",
+        "neppy.config_get_autonomy_settings",
         json!({}),
     )
     .await;
@@ -10682,7 +10605,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let update_auto_all = post_json_rpc(
         &rpc_base,
         7007,
-        "openhuman.config_update_autonomy_settings",
+        "neppy.config_update_autonomy_settings",
         json!({ "auto_approve_all": true }),
     )
     .await;
@@ -10694,7 +10617,7 @@ async fn json_rpc_config_autonomy_settings_roundtrip() {
     let after_auto_all = post_json_rpc(
         &rpc_base,
         7008,
-        "openhuman.config_get_autonomy_settings",
+        "neppy.config_get_autonomy_settings",
         json!({}),
     )
     .await;
@@ -10725,11 +10648,11 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // No operator override so the config value drives the effective timeout.
-    let _timeout_env_guard = EnvVarGuard::unset("OPENHUMAN_TOOL_TIMEOUT_SECS");
+    let _timeout_env_guard = EnvVarGuard::unset("NEPPY_TOOL_TIMEOUT_SECS");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{}", mock_addr);
@@ -10743,7 +10666,7 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
     let initial = post_json_rpc(
         &rpc_base,
         7101,
-        "openhuman.config_get_agent_settings",
+        "neppy.config_get_agent_settings",
         json!({}),
     )
     .await;
@@ -10779,7 +10702,7 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
     let update = post_json_rpc(
         &rpc_base,
         7102,
-        "openhuman.config_update_agent_settings",
+        "neppy.config_update_agent_settings",
         json!({ "agent_timeout_secs": 300 }),
     )
     .await;
@@ -10789,7 +10712,7 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
     let after = post_json_rpc(
         &rpc_base,
         7103,
-        "openhuman.config_get_agent_settings",
+        "neppy.config_get_agent_settings",
         json!({}),
     )
     .await;
@@ -10816,7 +10739,7 @@ async fn json_rpc_config_agent_timeout_settings_roundtrip() {
     let bad = post_json_rpc(
         &rpc_base,
         7104,
-        "openhuman.config_update_agent_settings",
+        "neppy.config_update_agent_settings",
         json!({ "agent_timeout_secs": 0 }),
     )
     .await;
@@ -10898,7 +10821,7 @@ async fn port_conflict_recovery_core_starts_on_fallback_port_e2e() {
     );
 
     // ── 4. RPC health-check on the fallback port ─────────────────────────
-    let diag = post_json_rpc(&rpc_base, 26170, "openhuman.connectivity_diag", json!({})).await;
+    let diag = post_json_rpc(&rpc_base, 26170, "neppy.connectivity_diag", json!({})).await;
     // JSON-RPC result envelope → inner cli-compatible wrapper → diag payload.
     // post_json_rpc returns the raw JSON-RPC response; assert_no_jsonrpc_error
     // unwraps the outer "result". The inner value is {"logs":[...],"result":{"diag":{...}}},
@@ -10941,7 +10864,7 @@ async fn port_conflict_recovery_core_starts_on_fallback_port_e2e() {
 
 /// Task-sources CRUD + status + dry-run over JSON-RPC.
 ///
-/// Exercises `openhuman.task_sources_{add,list,get,update,remove,status,
+/// Exercises `neppy.task_sources_{add,list,get,update,remove,status,
 /// list_tasks,preview_filter}` against an isolated HOME workspace. The
 /// fetch/preview paths require no network here: with no signed-in
 /// Composio session, `preview_filter` returns a clean JSON-RPC error
@@ -10954,7 +10877,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -10967,7 +10890,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let add = post_json_rpc(
         &rpc_base,
         7301,
-        "openhuman.task_sources_add",
+        "neppy.task_sources_add",
         json!({
             "provider": "github",
             "name": "My issues",
@@ -11001,7 +10924,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let bad = post_json_rpc(
         &rpc_base,
         7302,
-        "openhuman.task_sources_add",
+        "neppy.task_sources_add",
         json!({
             "provider": "notion",
             "filter": { "provider": "github", "assignee_is_me": true }
@@ -11011,7 +10934,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     assert_jsonrpc_error(&bad, "task_sources_add mismatch");
 
     // ── list contains the new source ─────────────────────────────────
-    let list = post_json_rpc(&rpc_base, 7303, "openhuman.task_sources_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 7303, "neppy.task_sources_list", json!({})).await;
     let sources = assert_no_jsonrpc_error(&list, "task_sources_list")
         .as_array()
         .expect("list returns array")
@@ -11024,7 +10947,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let get = post_json_rpc(
         &rpc_base,
         7304,
-        "openhuman.task_sources_get",
+        "neppy.task_sources_get",
         json!({ "id": id }),
     )
     .await;
@@ -11035,7 +10958,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let update = post_json_rpc(
         &rpc_base,
         7305,
-        "openhuman.task_sources_update",
+        "neppy.task_sources_update",
         json!({ "id": id, "patch": { "enabled": false, "intervalSecs": 600 } }),
     )
     .await;
@@ -11044,7 +10967,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     assert_eq!(updated.get("intervalSecs"), Some(&json!(600)));
 
     // ── status reflects the configured source ────────────────────────
-    let status = post_json_rpc(&rpc_base, 7306, "openhuman.task_sources_status", json!({})).await;
+    let status = post_json_rpc(&rpc_base, 7306, "neppy.task_sources_status", json!({})).await;
     let status_result = assert_no_jsonrpc_error(&status, "task_sources_status");
     assert_eq!(status_result.get("enabled"), Some(&json!(true)));
     assert!(
@@ -11059,7 +10982,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let tasks = post_json_rpc(
         &rpc_base,
         7307,
-        "openhuman.task_sources_list_tasks",
+        "neppy.task_sources_list_tasks",
         json!({ "id": id }),
     )
     .await;
@@ -11075,7 +10998,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let remove = post_json_rpc(
         &rpc_base,
         7309,
-        "openhuman.task_sources_remove",
+        "neppy.task_sources_remove",
         json!({ "id": id }),
     )
     .await;
@@ -11085,7 +11008,7 @@ async fn json_rpc_task_sources_crud_and_status() {
     let get_after = post_json_rpc(
         &rpc_base,
         7310,
-        "openhuman.task_sources_get",
+        "neppy.task_sources_get",
         json!({ "id": id }),
     )
     .await;
@@ -11154,7 +11077,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -11179,7 +11102,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let add = post_json_rpc(
         &rpc_base,
         7401,
-        "openhuman.task_sources_add",
+        "neppy.task_sources_add",
         json!({
             "provider": "github",
             "name": "Pipeline source",
@@ -11199,7 +11122,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let fetch1 = post_json_rpc(
         &rpc_base,
         7402,
-        "openhuman.task_sources_fetch",
+        "neppy.task_sources_fetch",
         json!({ "id": id }),
     )
     .await;
@@ -11217,7 +11140,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let tasks = post_json_rpc(
         &rpc_base,
         7403,
-        "openhuman.task_sources_list_tasks",
+        "neppy.task_sources_list_tasks",
         json!({ "id": id }),
     )
     .await;
@@ -11237,7 +11160,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let fetch2 = post_json_rpc(
         &rpc_base,
         7404,
-        "openhuman.task_sources_fetch",
+        "neppy.task_sources_fetch",
         json!({ "id": id }),
     )
     .await;
@@ -11250,7 +11173,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let preview = post_json_rpc(
         &rpc_base,
         7405,
-        "openhuman.task_sources_preview_filter",
+        "neppy.task_sources_preview_filter",
         json!({
             "provider": "github",
             "filter": { "provider": "github", "assignee_is_me": true }
@@ -11266,7 +11189,7 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let tasks_after = post_json_rpc(
         &rpc_base,
         7406,
-        "openhuman.task_sources_list_tasks",
+        "neppy.task_sources_list_tasks",
         json!({ "id": id }),
     )
     .await;
@@ -11300,10 +11223,10 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let api_origin = format!("http://{api_addr}");
@@ -11316,7 +11239,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
     let create = post_json_rpc(
         &rpc_base,
         9201,
-        "openhuman.skills_create",
+        "neppy.skills_create",
         json!({
             "name": "Bug Triage",
             "description": "How to handle an incoming bug report",
@@ -11334,7 +11257,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
     assert_eq!(wf.get("name").and_then(Value::as_str), Some("bug-triage"));
 
     // 2. List reflects the new workflow.
-    let list = post_json_rpc(&rpc_base, 9202, "openhuman.skills_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 9202, "neppy.skills_list", json!({})).await;
     let list_result = assert_no_jsonrpc_error(&list, "skills_list");
     let workflows = list_result
         .get("workflows")
@@ -11351,7 +11274,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
     let describe = post_json_rpc(
         &rpc_base,
         9203,
-        "openhuman.skills_describe",
+        "neppy.skills_describe",
         json!({ "workflow_id": "bug-triage" }),
     )
     .await;
@@ -11379,7 +11302,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
     let uninstall = post_json_rpc(
         &rpc_base,
         9205,
-        "openhuman.skills_uninstall",
+        "neppy.skills_uninstall",
         json!({ "name": "bug-triage" }),
     )
     .await;
@@ -11390,7 +11313,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
         "uninstall echoes the slug it removed"
     );
 
-    let after = post_json_rpc(&rpc_base, 9206, "openhuman.skills_list", json!({})).await;
+    let after = post_json_rpc(&rpc_base, 9206, "neppy.skills_list", json!({})).await;
     let after_result = assert_no_jsonrpc_error(&after, "skills_list");
     assert!(
         after_result
@@ -11405,7 +11328,7 @@ async fn json_rpc_workflows_lifecycle_round_trip() {
     rpc_join.abort();
 }
 
-// ── openhuman.flows_* (tinyflows) JSON-RPC E2E — PHASE 1e (G5) ─────────────
+// ── neppy.flows_* (tinyflows) JSON-RPC E2E — PHASE 1e (G5) ─────────────
 //
 // These exercise the tinyflows `flows_*` controller surface end-to-end over
 // HTTP JSON-RPC (distinct from the legacy markdown `workflows_*` namespace
@@ -11433,10 +11356,10 @@ async fn boot_flows_rpc_env() -> (
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
+        EnvVarGuard::unset("NEPPY_API_URL"),
     ];
 
     let (api_addr, api_join) = serve_on_ephemeral(mock_upstream_router()).await;
@@ -11485,7 +11408,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let create = post_json_rpc(
         &rpc_base,
         9301,
-        "openhuman.flows_create",
+        "neppy.flows_create",
         json!({ "name": "Gated Demo", "graph": approval_gated_graph_json() }),
     )
     .await;
@@ -11499,7 +11422,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     assert_eq!(flow.get("enabled").and_then(Value::as_bool), Some(true));
 
     // 2. List reflects exactly the new flow.
-    let list = post_json_rpc(&rpc_base, 9302, "openhuman.flows_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 9302, "neppy.flows_list", json!({})).await;
     let flows = peel_logs_envelope(assert_no_jsonrpc_error(&list, "flows_list"))
         .as_array()
         .expect("flows array");
@@ -11513,7 +11436,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let run = post_json_rpc(
         &rpc_base,
         9303,
-        "openhuman.flows_run",
+        "neppy.flows_run",
         json!({ "id": flow_id, "input": { "x": 1 } }),
     )
     .await;
@@ -11538,7 +11461,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let get_run = post_json_rpc(
         &rpc_base,
         9304,
-        "openhuman.flows_get_run",
+        "neppy.flows_get_run",
         json!({ "run_id": thread_id }),
     )
     .await;
@@ -11560,7 +11483,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let list_runs = post_json_rpc(
         &rpc_base,
         9305,
-        "openhuman.flows_list_runs",
+        "neppy.flows_list_runs",
         json!({ "id": flow_id }),
     )
     .await;
@@ -11577,7 +11500,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let resume = post_json_rpc(
         &rpc_base,
         9306,
-        "openhuman.flows_resume",
+        "neppy.flows_resume",
         json!({ "id": flow_id, "thread_id": thread_id, "approvals": ["gate"] }),
     )
     .await;
@@ -11592,7 +11515,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let get_run2 = post_json_rpc(
         &rpc_base,
         9307,
-        "openhuman.flows_get_run",
+        "neppy.flows_get_run",
         json!({ "run_id": thread_id }),
     )
     .await;
@@ -11606,7 +11529,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let run2 = post_json_rpc(
         &rpc_base,
         9308,
-        "openhuman.flows_run",
+        "neppy.flows_run",
         json!({ "id": flow_id, "input": { "x": 2 } }),
     )
     .await;
@@ -11620,7 +11543,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let cancel = post_json_rpc(
         &rpc_base,
         9309,
-        "openhuman.flows_cancel_run",
+        "neppy.flows_cancel_run",
         json!({ "run_id": thread_id_2 }),
     )
     .await;
@@ -11643,7 +11566,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let get_run3 = post_json_rpc(
         &rpc_base,
         9310,
-        "openhuman.flows_get_run",
+        "neppy.flows_get_run",
         json!({ "run_id": thread_id_2 }),
     )
     .await;
@@ -11656,7 +11579,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let resume_cancelled = post_json_rpc(
         &rpc_base,
         9311,
-        "openhuman.flows_resume",
+        "neppy.flows_resume",
         json!({ "id": flow_id, "thread_id": thread_id_2, "approvals": ["gate"] }),
     )
     .await;
@@ -11666,14 +11589,14 @@ async fn json_rpc_flows_lifecycle_round_trip() {
     let delete = post_json_rpc(
         &rpc_base,
         9312,
-        "openhuman.flows_delete",
+        "neppy.flows_delete",
         json!({ "id": flow_id }),
     )
     .await;
     let del_out = peel_logs_envelope(assert_no_jsonrpc_error(&delete, "flows_delete"));
     assert_eq!(del_out.get("removed").and_then(Value::as_bool), Some(true));
 
-    let after = post_json_rpc(&rpc_base, 9313, "openhuman.flows_list", json!({})).await;
+    let after = post_json_rpc(&rpc_base, 9313, "neppy.flows_list", json!({})).await;
     assert!(
         peel_logs_envelope(assert_no_jsonrpc_error(&after, "flows_list"))
             .as_array()
@@ -11697,7 +11620,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
 /// `flows_run_detached_returns_running_run_id_and_inserts_row` /
 /// `flows_run_detached_registers_the_run_before_returning_its_id` in
 /// `src/neppy/flows/ops_tests.rs` — same contract, exercised through the
-/// `openhuman.flows_run_detached` controller (schema + handler wiring), not
+/// `neppy.flows_run_detached` controller (schema + handler wiring), not
 /// just the `ops::flows_run_detached` fn directly.
 #[cfg(feature = "flows")]
 #[tokio::test]
@@ -11709,7 +11632,7 @@ async fn json_rpc_flows_run_detached_returns_before_run_completes() {
     let create = post_json_rpc(
         &rpc_base,
         9401,
-        "openhuman.flows_create",
+        "neppy.flows_create",
         json!({
             "name": "Detached Demo",
             "graph": {
@@ -11732,7 +11655,7 @@ async fn json_rpc_flows_run_detached_returns_before_run_completes() {
     let run = post_json_rpc(
         &rpc_base,
         9402,
-        "openhuman.flows_run_detached",
+        "neppy.flows_run_detached",
         json!({ "id": flow_id }),
     )
     .await;
@@ -11759,7 +11682,7 @@ async fn json_rpc_flows_run_detached_returns_before_run_completes() {
     let get_run = post_json_rpc(
         &rpc_base,
         9403,
-        "openhuman.flows_get_run",
+        "neppy.flows_get_run",
         json!({ "run_id": run_id }),
     )
     .await;
@@ -11777,7 +11700,7 @@ async fn json_rpc_flows_run_detached_returns_before_run_completes() {
         let get_run = post_json_rpc(
             &rpc_base,
             9404,
-            "openhuman.flows_get_run",
+            "neppy.flows_get_run",
             json!({ "run_id": run_id }),
         )
         .await;
@@ -11811,7 +11734,7 @@ async fn json_rpc_flows_run_detached_returns_before_run_completes() {
 /// tests `flows_update_forces_require_approval_when_adding_side_effect_nodes`
 /// / `flows_update_does_not_force_require_approval_on_readonly_graph` in
 /// `src/neppy/flows/ops_tests.rs` — same rule, exercised through the
-/// `openhuman.flows_update` controller (schema + handler wiring), not just
+/// `neppy.flows_update` controller (schema + handler wiring), not just
 /// the `ops::flows_update` fn directly.
 #[cfg(feature = "flows")]
 #[tokio::test]
@@ -11823,7 +11746,7 @@ async fn json_rpc_flows_update_forces_require_approval_on_side_effect_graph() {
     let create = post_json_rpc(
         &rpc_base,
         9401,
-        "openhuman.flows_create",
+        "neppy.flows_create",
         json!({
             "name": "rpc-rule2-demo",
             "graph": {
@@ -11853,7 +11776,7 @@ async fn json_rpc_flows_update_forces_require_approval_on_side_effect_graph() {
     let update = post_json_rpc(
         &rpc_base,
         9402,
-        "openhuman.flows_update",
+        "neppy.flows_update",
         json!({
             "id": flow_id,
             "graph": {
@@ -11884,13 +11807,7 @@ async fn json_rpc_flows_update_forces_require_approval_on_side_effect_graph() {
 
     // 3. The forced value must also be what's persisted, not just what's
     // echoed back in the update response.
-    let get = post_json_rpc(
-        &rpc_base,
-        9403,
-        "openhuman.flows_get",
-        json!({ "id": flow_id }),
-    )
-    .await;
+    let get = post_json_rpc(&rpc_base, 9403, "neppy.flows_get", json!({ "id": flow_id })).await;
     let persisted = peel_logs_envelope(assert_no_jsonrpc_error(&get, "flows_get"));
     assert_eq!(
         persisted.get("require_approval").and_then(Value::as_bool),
@@ -11915,13 +11832,7 @@ async fn json_rpc_flows_suggestion_lifecycle_methods_are_wired() {
     let (rpc_base, _tmp, api_join, rpc_join, _guards) = boot_flows_rpc_env().await;
 
     // Empty to start.
-    let list = post_json_rpc(
-        &rpc_base,
-        9501,
-        "openhuman.flows_list_suggestions",
-        json!({}),
-    )
-    .await;
+    let list = post_json_rpc(&rpc_base, 9501, "neppy.flows_list_suggestions", json!({})).await;
     assert!(
         peel_logs_envelope(assert_no_jsonrpc_error(&list, "flows_list_suggestions"))
             .as_array()
@@ -11934,7 +11845,7 @@ async fn json_rpc_flows_suggestion_lifecycle_methods_are_wired() {
     let list_new = post_json_rpc(
         &rpc_base,
         9502,
-        "openhuman.flows_list_suggestions",
+        "neppy.flows_list_suggestions",
         json!({ "status": "new" }),
     )
     .await;
@@ -11944,7 +11855,7 @@ async fn json_rpc_flows_suggestion_lifecycle_methods_are_wired() {
     let dismiss = post_json_rpc(
         &rpc_base,
         9503,
-        "openhuman.flows_dismiss_suggestion",
+        "neppy.flows_dismiss_suggestion",
         json!({ "id": "does-not-exist" }),
     )
     .await;
@@ -11960,7 +11871,7 @@ async fn json_rpc_flows_suggestion_lifecycle_methods_are_wired() {
     let built = post_json_rpc(
         &rpc_base,
         9504,
-        "openhuman.flows_mark_suggestion_built",
+        "neppy.flows_mark_suggestion_built",
         json!({ "id": "does-not-exist" }),
     )
     .await;
@@ -12000,7 +11911,7 @@ compaction_enabled = false
 "#
     );
     fn write_config_file(config_dir: &Path, cfg: &str) {
-        std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
+        std::fs::create_dir_all(config_dir).expect("mkdir neppy");
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
     write_config_file(neppy_dir, &cfg);
@@ -12115,10 +12026,10 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{mock_addr}");
@@ -12135,7 +12046,7 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
     let store = post_json_rpc(
         &rpc_base,
         71_000,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -12166,7 +12077,7 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
         forced_text_completion("Recorded one workflow suggestion for you."),
     );
 
-    let discover = post_json_rpc(&rpc_base, 71_001, "openhuman.flows_discover", json!({})).await;
+    let discover = post_json_rpc(&rpc_base, 71_001, "neppy.flows_discover", json!({})).await;
     let discovered = peel_logs_envelope(assert_no_jsonrpc_error(&discover, "flows_discover"))
         .as_array()
         .cloned()
@@ -12182,7 +12093,7 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
     let listed = post_json_rpc(
         &rpc_base,
         71_002,
-        "openhuman.flows_list_suggestions",
+        "neppy.flows_list_suggestions",
         json!({ "status": "new" }),
     )
     .await;
@@ -12222,7 +12133,7 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
     let build = post_json_rpc(
         &rpc_base,
         71_010,
-        "openhuman.flows_build",
+        "neppy.flows_build",
         json!({
             "mode": "create",
             "instruction": "Build a research brief workflow where a reasoning model plans and a chat model drafts."
@@ -12258,7 +12169,7 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
     let create = post_json_rpc(
         &rpc_base,
         71_020,
-        "openhuman.flows_create",
+        "neppy.flows_create",
         json!({ "name": "Research brief (e2e)", "graph": demo_graph.clone() }),
     )
     .await;
@@ -12287,7 +12198,7 @@ async fn json_rpc_flows_full_arc_discover_build_create_run_inner() {
     let run = post_json_rpc(
         &rpc_base,
         71_021,
-        "openhuman.flows_run",
+        "neppy.flows_run",
         json!({ "id": flow_id, "input": { "topic": "renewable microgrids" } }),
     )
     .await;
@@ -12372,7 +12283,7 @@ async fn json_rpc_flows_resume_deny_routes_to_error_port() {
     let create = post_json_rpc(
         &rpc_base,
         9401,
-        "openhuman.flows_create",
+        "neppy.flows_create",
         json!({ "name": "Deny Demo", "graph": graph }),
     )
     .await;
@@ -12385,7 +12296,7 @@ async fn json_rpc_flows_resume_deny_routes_to_error_port() {
     let run = post_json_rpc(
         &rpc_base,
         9402,
-        "openhuman.flows_run",
+        "neppy.flows_run",
         json!({ "id": flow_id, "input": { "x": 1 } }),
     )
     .await;
@@ -12399,7 +12310,7 @@ async fn json_rpc_flows_resume_deny_routes_to_error_port() {
     let resume = post_json_rpc(
         &rpc_base,
         9403,
-        "openhuman.flows_resume",
+        "neppy.flows_resume",
         json!({ "id": flow_id, "thread_id": thread_id, "rejections": ["gate"] }),
     )
     .await;
@@ -12418,7 +12329,7 @@ async fn json_rpc_flows_resume_deny_routes_to_error_port() {
     let get_run = post_json_rpc(
         &rpc_base,
         9404,
-        "openhuman.flows_get_run",
+        "neppy.flows_get_run",
         json!({ "run_id": thread_id }),
     )
     .await;
@@ -12432,7 +12343,7 @@ async fn json_rpc_flows_resume_deny_routes_to_error_port() {
     rpc_join.abort();
 }
 
-/// `openhuman.flows_validate` over JSON-RPC (PHASE 3c): a structurally valid
+/// `neppy.flows_validate` over JSON-RPC (PHASE 3c): a structurally valid
 /// graph whose trigger kind does not fire automatically (`webhook`) validates
 /// clean but returns a loud, non-fatal warning; a `schedule` trigger (which
 /// does fire) warns nothing; a graph with no trigger is `valid: false` with a
@@ -12454,7 +12365,7 @@ async fn json_rpc_flows_validate_reports_warnings_and_errors() {
     let validate = post_json_rpc(
         &rpc_base,
         9501,
-        "openhuman.flows_validate",
+        "neppy.flows_validate",
         json!({ "graph": webhook_graph }),
     )
     .await;
@@ -12494,7 +12405,7 @@ async fn json_rpc_flows_validate_reports_warnings_and_errors() {
     let validate_sched = post_json_rpc(
         &rpc_base,
         9502,
-        "openhuman.flows_validate",
+        "neppy.flows_validate",
         json!({ "graph": schedule_graph }),
     )
     .await;
@@ -12517,7 +12428,7 @@ async fn json_rpc_flows_validate_reports_warnings_and_errors() {
     let validate_bad = post_json_rpc(
         &rpc_base,
         9503,
-        "openhuman.flows_validate",
+        "neppy.flows_validate",
         json!({ "graph": invalid_graph }),
     )
     .await;
@@ -12542,7 +12453,7 @@ async fn json_rpc_flows_validate_reports_warnings_and_errors() {
     rpc_join.abort();
 }
 
-/// `openhuman.flows_import` over JSON-RPC (PHASE 4d): a native tinyflows graph
+/// `neppy.flows_import` over JSON-RPC (PHASE 4d): a native tinyflows graph
 /// imports clean (no warnings), and an n8n workflow export is mapped
 /// best-effort — an `if` node becomes a `condition`, an unmapped node type
 /// becomes an annotated placeholder, and the approximations come back as
@@ -12565,7 +12476,7 @@ async fn json_rpc_flows_import_native_and_n8n() {
     let imp = post_json_rpc(
         &rpc_base,
         9601,
-        "openhuman.flows_import",
+        "neppy.flows_import",
         json!({ "graph": native, "format": "native" }),
     )
     .await;
@@ -12601,7 +12512,7 @@ async fn json_rpc_flows_import_native_and_n8n() {
     let imp2 = post_json_rpc(
         &rpc_base,
         9602,
-        "openhuman.flows_import",
+        "neppy.flows_import",
         json!({ "graph": n8n }),
     )
     .await;
@@ -12638,7 +12549,7 @@ async fn json_rpc_flows_import_native_and_n8n() {
     );
 
     // 3. Import never persists — no flow row was created by either call.
-    let list = post_json_rpc(&rpc_base, 9603, "openhuman.flows_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 9603, "neppy.flows_list", json!({})).await;
     let flows = peel_logs_envelope(assert_no_jsonrpc_error(&list, "flows_list"))
         .as_array()
         .expect("flows array")
@@ -12649,7 +12560,7 @@ async fn json_rpc_flows_import_native_and_n8n() {
     rpc_join.abort();
 }
 
-/// `openhuman.flows_list_connections` (PHASE 2): the connection picker source.
+/// `neppy.flows_list_connections` (PHASE 2): the connection picker source.
 /// Aggregates Composio connected accounts + stored HTTP credentials into a flat
 /// list of `connection_ref` + display + kind — and NEVER any secret material.
 ///
@@ -12676,13 +12587,7 @@ async fn json_rpc_flows_list_connections_aggregates_secret_free() {
         .upsert(&neppy_core::neppy::security::credentials::HttpCredential::bearer("stripe", SECRET))
         .expect("seed http_cred");
 
-    let resp = post_json_rpc(
-        &rpc_base,
-        9330,
-        "openhuman.flows_list_connections",
-        json!({}),
-    )
-    .await;
+    let resp = post_json_rpc(&rpc_base, 9330, "neppy.flows_list_connections", json!({})).await;
     let raw = assert_no_jsonrpc_error(&resp, "flows_list_connections");
 
     // The seeded secret must never appear anywhere in the RPC response.
@@ -12717,7 +12622,7 @@ async fn json_rpc_flows_list_connections_aggregates_secret_free() {
 /// through `voice::reply_speech::synthesize_reply` after the turn completes.
 ///
 /// We activate the [`reply_speech::test_seam`] short-circuit via the
-/// `OPENHUMAN_TEST_REPLY_SPEECH_SEAM` env var so the call is recorded
+/// `NEPPY_TEST_REPLY_SPEECH_SEAM` env var so the call is recorded
 /// without contacting the ElevenLabs proxy.
 #[test]
 fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech() {
@@ -12734,7 +12639,7 @@ async fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech_inner()
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // Activate the reply_speech test seam so synthesize_reply records and
@@ -12758,7 +12663,7 @@ async fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech_inner()
     let store = post_json_rpc(
         &rpc_base,
         9300,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": "e2e-test-jwt",
             "user_id": "e2e-user"
@@ -12776,7 +12681,7 @@ async fn json_rpc_channel_web_chat_with_speak_reply_invokes_reply_speech_inner()
     let web_chat = post_json_rpc(
         &rpc_base,
         9301,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": client_id,
             "thread_id": thread_id,
@@ -12850,7 +12755,7 @@ async fn json_rpc_voice_server_settings_roundtrip_always_on_and_wake_word() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -12864,7 +12769,7 @@ async fn json_rpc_voice_server_settings_roundtrip_always_on_and_wake_word() {
     let initial = post_json_rpc(
         &rpc_base,
         7401,
-        "openhuman.config_get_voice_server_settings",
+        "neppy.config_get_voice_server_settings",
         json!({}),
     )
     .await;
@@ -12891,7 +12796,7 @@ async fn json_rpc_voice_server_settings_roundtrip_always_on_and_wake_word() {
     let update = post_json_rpc(
         &rpc_base,
         7402,
-        "openhuman.config_update_voice_server_settings",
+        "neppy.config_update_voice_server_settings",
         json!({ "always_on_enabled": false, "wake_word": "Computer" }),
     )
     .await;
@@ -12904,7 +12809,7 @@ async fn json_rpc_voice_server_settings_roundtrip_always_on_and_wake_word() {
     let after = post_json_rpc(
         &rpc_base,
         7403,
-        "openhuman.config_get_voice_server_settings",
+        "neppy.config_get_voice_server_settings",
         json!({}),
     )
     .await;
@@ -12931,11 +12836,11 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // The global override would mask the persisted value; keep it unset here.
-    let _interval_guard = EnvVarGuard::unset("OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS");
+    let _interval_guard = EnvVarGuard::unset("NEPPY_MEMORY_SYNC_INTERVAL_SECS");
 
     write_min_config(&neppy_home, "http://127.0.0.1:9");
 
@@ -12947,7 +12852,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     let initial = post_json_rpc(
         &rpc_base,
         7501,
-        "openhuman.config_get_memory_sync_settings",
+        "neppy.config_get_memory_sync_settings",
         json!({}),
     )
     .await;
@@ -12972,7 +12877,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     let update = post_json_rpc(
         &rpc_base,
         7502,
-        "openhuman.config_update_memory_sync_settings",
+        "neppy.config_update_memory_sync_settings",
         json!({ "sync_interval_secs": 14400 }),
     )
     .await;
@@ -12994,7 +12899,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     let after = post_json_rpc(
         &rpc_base,
         7503,
-        "openhuman.config_get_memory_sync_settings",
+        "neppy.config_get_memory_sync_settings",
         json!({}),
     )
     .await;
@@ -13012,7 +12917,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     let manual = post_json_rpc(
         &rpc_base,
         7504,
-        "openhuman.config_update_memory_sync_settings",
+        "neppy.config_update_memory_sync_settings",
         json!({ "sync_interval_secs": 0 }),
     )
     .await;
@@ -13028,7 +12933,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
     let manual_get = post_json_rpc(
         &rpc_base,
         7505,
-        "openhuman.config_get_memory_sync_settings",
+        "neppy.config_get_memory_sync_settings",
         json!({}),
     )
     .await;
@@ -13051,7 +12956,7 @@ async fn json_rpc_memory_sync_settings_roundtrip_interval_and_manual() {
 }
 
 /// Ops / headless path (#3302): a fleet operator sets
-/// `OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS` in the environment, and the running
+/// `NEPPY_MEMORY_SYNC_INTERVAL_SECS` in the environment, and the running
 /// core surfaces that cadence through `config_get_memory_sync_settings` with no
 /// UI interaction. Verifies the env override flows all the way through the RPC.
 /// (The `0` = "Manual only" sentinel on the env path is covered at the parse
@@ -13064,11 +12969,11 @@ async fn json_rpc_memory_sync_settings_env_override_is_reflected() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
     // Operator sets an 8h cadence via the environment (not a UI write).
-    let _interval_guard = EnvVarGuard::set("OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS", "28800");
+    let _interval_guard = EnvVarGuard::set("NEPPY_MEMORY_SYNC_INTERVAL_SECS", "28800");
 
     write_min_config(&neppy_home, "http://127.0.0.1:9");
 
@@ -13080,7 +12985,7 @@ async fn json_rpc_memory_sync_settings_env_override_is_reflected() {
     let resp = post_json_rpc(
         &rpc_base,
         7601,
-        "openhuman.config_get_memory_sync_settings",
+        "neppy.config_get_memory_sync_settings",
         json!({}),
     )
     .await;
@@ -13111,8 +13016,8 @@ async fn json_rpc_memory_sources_conversation_crud() {
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _ws_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", home);
-    let _action_guard = EnvVarGuard::set_to_path("OPENHUMAN_ACTION_DIR", home);
+    let _ws_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", home);
+    let _action_guard = EnvVarGuard::set_to_path("NEPPY_ACTION_DIR", home);
     let _backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -13122,7 +13027,7 @@ async fn json_rpc_memory_sources_conversation_crud() {
     let add_resp = post_json_rpc(
         &rpc_base,
         9501,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "conversation",
             "label": "Agent Conversations",
@@ -13149,8 +13054,7 @@ async fn json_rpc_memory_sources_conversation_crud() {
     assert_eq!(source.get("enabled").and_then(Value::as_bool), Some(true));
 
     // 2. List sources — should contain our conversation source
-    let list_resp =
-        post_json_rpc(&rpc_base, 9502, "openhuman.memory_sources_list", json!({})).await;
+    let list_resp = post_json_rpc(&rpc_base, 9502, "neppy.memory_sources_list", json!({})).await;
     let list_result = assert_no_jsonrpc_error(&list_resp, "memory_sources_list");
     let sources = list_result
         .get("sources")
@@ -13170,7 +13074,7 @@ async fn json_rpc_memory_sources_conversation_crud() {
     let get_resp = post_json_rpc(
         &rpc_base,
         9503,
-        "openhuman.memory_sources_get",
+        "neppy.memory_sources_get",
         json!({ "id": source_id }),
     )
     .await;
@@ -13187,7 +13091,7 @@ async fn json_rpc_memory_sources_conversation_crud() {
     let update_resp = post_json_rpc(
         &rpc_base,
         9504,
-        "openhuman.memory_sources_update",
+        "neppy.memory_sources_update",
         json!({ "id": source_id, "enabled": false }),
     )
     .await;
@@ -13205,7 +13109,7 @@ async fn json_rpc_memory_sources_conversation_crud() {
     let remove_resp = post_json_rpc(
         &rpc_base,
         9505,
-        "openhuman.memory_sources_remove",
+        "neppy.memory_sources_remove",
         json!({ "id": source_id }),
     )
     .await;
@@ -13216,8 +13120,7 @@ async fn json_rpc_memory_sources_conversation_crud() {
     );
 
     // 6. List again — empty
-    let list2_resp =
-        post_json_rpc(&rpc_base, 9506, "openhuman.memory_sources_list", json!({})).await;
+    let list2_resp = post_json_rpc(&rpc_base, 9506, "neppy.memory_sources_list", json!({})).await;
     let list2_result = assert_no_jsonrpc_error(&list2_resp, "memory_sources_list after remove");
     let sources2 = list2_result
         .get("sources")
@@ -13237,7 +13140,7 @@ async fn json_rpc_memory_sources_conversation_crud() {
 
 /// Raw-archive coverage reconcile over JSON-RPC: a GitHub source whose raw
 /// archive holds files that no tree summary covers must be reported as
-/// pending by `openhuman.memory_sources_reconcile` (report-only mode).
+/// pending by `neppy.memory_sources_reconcile` (report-only mode).
 /// Regression for the silent divergence where thousands of raw files sat
 /// unsummarised with no way to see or repair it.
 #[tokio::test]
@@ -13249,9 +13152,8 @@ async fn json_rpc_memory_sources_reconcile_reports_pending_raw_files() {
     // `reconcile_rpc` resolves the bound driver (`as_source_sync`), so it reads
     // the module's store while the raw files below are planted on disk. Both
     // must name one workspace — see `json_rpc_e2e_shared_workspace`.
-    let _ws_guard =
-        EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", json_rpc_e2e_shared_workspace());
-    let _action_guard = EnvVarGuard::set_to_path("OPENHUMAN_ACTION_DIR", home);
+    let _ws_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", json_rpc_e2e_shared_workspace());
+    let _action_guard = EnvVarGuard::set_to_path("NEPPY_ACTION_DIR", home);
     let _backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
@@ -13261,7 +13163,7 @@ async fn json_rpc_memory_sources_reconcile_reports_pending_raw_files() {
     let add_resp = post_json_rpc(
         &rpc_base,
         9601,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "github_repo",
             "label": "Repo",
@@ -13280,7 +13182,7 @@ async fn json_rpc_memory_sources_reconcile_reports_pending_raw_files() {
 
     // 2. Plant two uncovered raw archive files where a fetch would write
     //    them: <workspace>/memory_tree/content/raw/github-com-owner-repo/.
-    //    `OPENHUMAN_WORKSPACE` is the shared workspace above, and its basename
+    //    `NEPPY_WORKSPACE` is the shared workspace above, and its basename
     //    is `workspace`, so `resolve_config_dir_for_workspace` returns it
     //    unchanged rather than appending a second segment.
     let commits_dir = json_rpc_e2e_shared_workspace()
@@ -13297,7 +13199,7 @@ async fn json_rpc_memory_sources_reconcile_reports_pending_raw_files() {
     let reconcile_resp = post_json_rpc(
         &rpc_base,
         9602,
-        "openhuman.memory_sources_reconcile",
+        "neppy.memory_sources_reconcile",
         json!({ "source_id": source_id }),
     )
     .await;
@@ -13350,7 +13252,7 @@ fn mock_composio_connected_accounts_router() -> Router {
 
 /// Write a minimal config that selects Composio **direct** mode with an inline
 /// API key, so `scan_active_sync_targets` resolves a direct client that hits the
-/// loopback mock pointed at by `OPENHUMAN_COMPOSIO_DIRECT_BASE_V3`.
+/// loopback mock pointed at by `NEPPY_COMPOSIO_DIRECT_BASE_V3`.
 fn write_composio_direct_config(neppy_dir: &Path, api_origin: &str) {
     let cfg = format!(
         r#"api_url = "{api_origin}"
@@ -13367,7 +13269,7 @@ api_key = "ck_e2e_test"
 "#
     );
     fn write_config_file(config_dir: &Path, cfg: &str) {
-        std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
+        std::fs::create_dir_all(config_dir).expect("mkdir neppy");
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
     write_config_file(neppy_dir, &cfg);
@@ -13391,7 +13293,7 @@ async fn add_composio_memory_source(
     let add = post_json_rpc(
         rpc_base,
         id,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({
             "kind": "composio",
             "label": label,
@@ -13407,7 +13309,7 @@ async fn add_folder_memory_source(rpc_base: &str, id: i64, label: &str, path: &s
     let add = post_json_rpc(
         rpc_base,
         id,
-        "openhuman.memory_sources_add",
+        "neppy.memory_sources_add",
         json!({ "kind": "folder", "label": label, "path": path }),
     )
     .await;
@@ -13437,7 +13339,7 @@ async fn json_rpc_memory_sources_list_filters_to_active_connections() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -13445,8 +13347,8 @@ async fn json_rpc_memory_sources_list_filters_to_active_connections() {
     let (composio_addr, composio_join) =
         serve_on_ephemeral(mock_composio_connected_accounts_router()).await;
     let composio_base = format!("http://{composio_addr}");
-    let _v2_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &composio_base);
-    let _v3_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &composio_base);
+    let _v2_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V2", &composio_base);
+    let _v3_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V3", &composio_base);
 
     write_composio_direct_config(&neppy_home, "http://127.0.0.1:1");
 
@@ -13483,7 +13385,7 @@ async fn json_rpc_memory_sources_list_filters_to_active_connections() {
     .await;
     add_folder_memory_source(&rpc_base, 8804, "My notes", "/tmp/notes").await;
 
-    let list = post_json_rpc(&rpc_base, 8805, "openhuman.memory_sources_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 8805, "neppy.memory_sources_list", json!({})).await;
     let result = assert_no_jsonrpc_error(&list, "memory_sources_list").clone();
     let sources = memory_sources_from_list(&result);
 
@@ -13523,15 +13425,15 @@ async fn json_rpc_memory_sources_list_shows_all_when_scan_unavailable() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
     // Point the direct Composio base at a loopback port nothing listens on so
     // the scan errors out → active set is None → no filtering applied.
     let dead_base = "http://127.0.0.1:1";
-    let _v2_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", dead_base);
-    let _v3_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", dead_base);
+    let _v2_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V2", dead_base);
+    let _v3_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V3", dead_base);
 
     write_composio_direct_config(&neppy_home, "http://127.0.0.1:1");
 
@@ -13542,7 +13444,7 @@ async fn json_rpc_memory_sources_list_shows_all_when_scan_unavailable() {
     add_composio_memory_source(&rpc_base, 8902, "Gmail · B", "gmail", "conn_B").await;
     add_folder_memory_source(&rpc_base, 8903, "My notes", "/tmp/notes").await;
 
-    let list = post_json_rpc(&rpc_base, 8904, "openhuman.memory_sources_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 8904, "neppy.memory_sources_list", json!({})).await;
     let result = assert_no_jsonrpc_error(&list, "memory_sources_list").clone();
     let sources = memory_sources_from_list(&result);
 
@@ -13591,7 +13493,7 @@ async fn json_rpc_memory_sources_list_keeps_multiple_active_connections_per_tool
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -13599,8 +13501,8 @@ async fn json_rpc_memory_sources_list_keeps_multiple_active_connections_per_tool
     let (composio_addr, composio_join) =
         serve_on_ephemeral(mock_composio_two_gmail_accounts_router()).await;
     let composio_base = format!("http://{composio_addr}");
-    let _v2_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &composio_base);
-    let _v3_guard = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &composio_base);
+    let _v2_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V2", &composio_base);
+    let _v3_guard = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V3", &composio_base);
 
     write_composio_direct_config(&neppy_home, "http://127.0.0.1:1");
 
@@ -13619,7 +13521,7 @@ async fn json_rpc_memory_sources_list_keeps_multiple_active_connections_per_tool
     )
     .await;
 
-    let list = post_json_rpc(&rpc_base, 8954, "openhuman.memory_sources_list", json!({})).await;
+    let list = post_json_rpc(&rpc_base, 8954, "neppy.memory_sources_list", json!({})).await;
     let result = assert_no_jsonrpc_error(&list, "memory_sources_list").clone();
     let sources = memory_sources_from_list(&result);
 
@@ -13669,7 +13571,7 @@ async fn json_rpc_workflow_run_engine_executes_builtin_to_completion_inner() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -13689,7 +13591,7 @@ async fn json_rpc_workflow_run_engine_executes_builtin_to_completion_inner() {
     let store = post_json_rpc(
         &rpc_base,
         375_001,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -13699,7 +13601,7 @@ async fn json_rpc_workflow_run_engine_executes_builtin_to_completion_inner() {
     let defs = post_json_rpc(
         &rpc_base,
         375_002,
-        "openhuman.workflow_run_list_definitions",
+        "neppy.workflow_run_list_definitions",
         json!({}),
     )
     .await;
@@ -13720,7 +13622,7 @@ async fn json_rpc_workflow_run_engine_executes_builtin_to_completion_inner() {
     let start = post_json_rpc(
         &rpc_base,
         375_003,
-        "openhuman.workflow_run_start",
+        "neppy.workflow_run_start",
         json!({
             "definitionId": definition_id,
             "input": { "question": "What is the capital of France?", "modelOverride": "e2e-mock-model" },
@@ -13752,7 +13654,7 @@ async fn json_rpc_workflow_run_engine_executes_builtin_to_completion_inner() {
         let got = post_json_rpc(
             &rpc_base,
             37_500_100 + attempt,
-            "openhuman.workflow_run_get",
+            "neppy.workflow_run_get",
             json!({ "id": run_id }),
         )
         .await;
@@ -13814,7 +13716,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -13834,7 +13736,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let store = post_json_rpc(
         &rpc_base,
         380_001,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -13844,7 +13746,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let created = post_json_rpc(
         &rpc_base,
         380_002,
-        "openhuman.agent_team_create",
+        "neppy.agent_team_create",
         json!({
             "leadAgentId": "lead",
             "summary": "live run e2e",
@@ -13881,7 +13783,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let assign_a = post_json_rpc(
         &rpc_base,
         380_003,
-        "openhuman.agent_team_assign_task",
+        "neppy.agent_team_assign_task",
         json!({ "teamId": team_id, "title": "Task A", "ownerMemberId": alice_id, "dependsOn": [] }),
     )
     .await;
@@ -13894,7 +13796,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let assign_b = post_json_rpc(
         &rpc_base,
         380_004,
-        "openhuman.agent_team_assign_task",
+        "neppy.agent_team_assign_task",
         json!({ "teamId": team_id, "title": "Task B", "ownerMemberId": bob_id, "dependsOn": [task_a_id.clone()] }),
     )
     .await;
@@ -13909,7 +13811,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let msg = post_json_rpc(
         &rpc_base,
         380_005,
-        "openhuman.agent_team_message_member",
+        "neppy.agent_team_message_member",
         json!({ "teamId": team_id, "toMemberId": alice_id, "content": "please start Task A" }),
     )
     .await;
@@ -13919,7 +13821,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let start_a = post_json_rpc(
         &rpc_base,
         380_006,
-        "openhuman.agent_team_start_member",
+        "neppy.agent_team_start_member",
         json!({ "teamId": team_id, "memberId": alice_id, "taskId": task_a_id, "modelOverride": "e2e-mock-model" }),
     )
     .await;
@@ -13942,7 +13844,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let start_b = post_json_rpc(
         &rpc_base,
         380_007,
-        "openhuman.agent_team_start_member",
+        "neppy.agent_team_start_member",
         json!({ "teamId": team_id, "memberId": bob_id, "taskId": task_b_id, "modelOverride": "e2e-mock-model" }),
     )
     .await;
@@ -13974,7 +13876,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let got = post_json_rpc(
         &rpc_base,
         380_008,
-        "openhuman.agent_team_get",
+        "neppy.agent_team_get",
         json!({ "teamId": team_id }),
     )
     .await;
@@ -14015,7 +13917,7 @@ async fn json_rpc_agent_team_live_member_run_roundtrip_inner() {
     let messages = post_json_rpc(
         &rpc_base,
         380_009,
-        "openhuman.agent_team_list_messages",
+        "neppy.agent_team_list_messages",
         json!({ "teamId": team_id }),
     )
     .await;
@@ -14043,7 +13945,7 @@ async fn poll_team_task_status(rpc_base: &str, team_id: &str, task_id: &str, wan
         let got = post_json_rpc(
             rpc_base,
             38_100_000 + attempt,
-            "openhuman.agent_team_get",
+            "neppy.agent_team_get",
             json!({ "teamId": team_id }),
         )
         .await;
@@ -14082,7 +13984,7 @@ async fn poll_team_members_status(
         let got = post_json_rpc(
             rpc_base,
             38_200_000 + attempt,
-            "openhuman.agent_team_get",
+            "neppy.agent_team_get",
             json!({ "teamId": team_id }),
         )
         .await;
@@ -14108,7 +14010,7 @@ async fn poll_team_members_status(
 }
 
 /// End-to-end: plant a thread's session transcript on disk, then verify the
-/// `openhuman.threads_token_usage` RPC reads back the correct cumulative token
+/// `neppy.threads_token_usage` RPC reads back the correct cumulative token
 /// totals, cost, last-turn usage, model, and inferred context window — the data
 /// the composer footer seeds itself from when a thread is selected.
 #[tokio::test]
@@ -14120,7 +14022,7 @@ async fn json_rpc_threads_token_usage_reads_persisted_thread_totals() {
     let workspace = home.join("workspace");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -14173,7 +14075,7 @@ async fn json_rpc_threads_token_usage_reads_persisted_thread_totals() {
     let resp = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.threads_token_usage",
+        "neppy.threads_token_usage",
         json!({ "thread_id": "thr-e2e" }),
     )
     .await;
@@ -14216,7 +14118,7 @@ async fn json_rpc_threads_token_usage_reads_persisted_thread_totals() {
     let resp_unknown = post_json_rpc(
         &rpc_base,
         2,
-        "openhuman.threads_token_usage",
+        "neppy.threads_token_usage",
         json!({ "thread_id": "thr-does-not-exist" }),
     )
     .await;
@@ -14252,16 +14154,16 @@ fn seed_raw_transcript(workspace: &Path, stem: &str, thread_id: &str, body: &[&s
 async fn json_rpc_threads_transcript_get_projects_and_paginates() {
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
-    // Config resolves the runtime workspace to `OPENHUMAN_WORKSPACE/workspace`
+    // Config resolves the runtime workspace to `NEPPY_WORKSPACE/workspace`
     // (see resolve_config_dir_for_workspace), so seed transcripts there.
     let workspace = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace).expect("create workspace");
     let workspace = workspace.as_path();
 
-    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace_guard = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path());
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_url_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let thread_id = "thr_transcript_e2e";
     let root_stem = "1000_orchestrator";
@@ -14298,7 +14200,7 @@ async fn json_rpc_threads_transcript_get_projects_and_paginates() {
     let full = post_json_rpc(
         &rpc_base,
         41_001,
-        "openhuman.threads_transcript_get",
+        "neppy.threads_transcript_get",
         json!({ "thread_id": thread_id }),
     )
     .await;
@@ -14383,7 +14285,7 @@ async fn json_rpc_threads_transcript_get_projects_and_paginates() {
     let page1 = post_json_rpc(
         &rpc_base,
         41_002,
-        "openhuman.threads_transcript_get",
+        "neppy.threads_transcript_get",
         json!({ "thread_id": thread_id, "limit": 2 }),
     )
     .await;
@@ -14411,7 +14313,7 @@ async fn json_rpc_threads_transcript_get_projects_and_paginates() {
     let page2 = post_json_rpc(
         &rpc_base,
         41_003,
-        "openhuman.threads_transcript_get",
+        "neppy.threads_transcript_get",
         json!({ "thread_id": thread_id, "limit": 2, "cursor": cursor }),
     )
     .await;
@@ -14432,7 +14334,7 @@ async fn json_rpc_threads_transcript_get_projects_and_paginates() {
     let missing = post_json_rpc(
         &rpc_base,
         41_004,
-        "openhuman.threads_transcript_get",
+        "neppy.threads_transcript_get",
         json!({ "thread_id": "no_such_thread" }),
     )
     .await;
@@ -14567,10 +14469,10 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let mock = mock_upstream_router().layer(axum::middleware::from_fn(record_pet_upstream_request));
     let (mock_addr, mock_join) = serve_on_ephemeral(mock).await;
@@ -14586,7 +14488,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let store = post_json_rpc(
         &rpc_base,
         91_000,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -14599,7 +14501,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let models = post_json_rpc(
         &rpc_base,
         90_998,
-        "openhuman.update_model_settings",
+        "neppy.update_model_settings",
         json!({
             "cloud_providers": [{
                 "id": "p_openai_pet",
@@ -14616,7 +14518,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let key = post_json_rpc(
         &rpc_base,
         90_999,
-        "openhuman.auth_store_provider_credentials",
+        "neppy.auth_store_provider_credentials",
         json!({
             "provider": "provider:openai",
             "profile": "default",
@@ -14628,7 +14530,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     assert_no_jsonrpc_error(&key, "auth_store_provider_credentials");
 
     // ── 1. The pet starts disabled; enable it, name it, add a goal ──
-    let got = post_json_rpc(&rpc_base, 91_001, "openhuman.pet_get", json!({})).await;
+    let got = post_json_rpc(&rpc_base, 91_001, "neppy.pet_get", json!({})).await;
     let got = peel_logs_envelope(assert_no_jsonrpc_error(&got, "pet_get")).clone();
     assert_eq!(
         got["enabled"], false,
@@ -14639,7 +14541,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let updated = post_json_rpc(
         &rpc_base,
         91_002,
-        "openhuman.pet_update",
+        "neppy.pet_update",
         json!({ "patch": {
             "enabled": true, "name": "Pip",
             // quiet_start == quiet_end disables quiet hours, so the wall clock
@@ -14657,7 +14559,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let bad = post_json_rpc(
         &rpc_base,
         91_003,
-        "openhuman.pet_update",
+        "neppy.pet_update",
         json!({ "patch": { "digest_time": "7am" } }),
     )
     .await;
@@ -14669,7 +14571,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let goal = post_json_rpc(
         &rpc_base,
         91_004,
-        "openhuman.pet_goal_add",
+        "neppy.pet_goal_add",
         json!({ "text": "Finish the PGCE portfolio" }),
     )
     .await;
@@ -14699,7 +14601,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     let run = post_json_rpc(
         &rpc_base,
         91_010,
-        "openhuman.pet_run_now",
+        "neppy.pet_run_now",
         json!({ "wait": true }),
     )
     .await;
@@ -14709,7 +14611,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
         let runs = post_json_rpc(
             &rpc_base,
             91_099,
-            "openhuman.cron_runs",
+            "neppy.cron_runs",
             json!({ "job_id": job_id }),
         )
         .await;
@@ -14726,7 +14628,7 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     assert_eq!(run["dropped"], 1, "{run}");
 
     // ── 4. The digest lists the request before the deadline, drops the fyi ──
-    let digest = post_json_rpc(&rpc_base, 91_011, "openhuman.pet_digest_now", json!({})).await;
+    let digest = post_json_rpc(&rpc_base, 91_011, "neppy.pet_digest_now", json!({})).await;
     let digest = peel_logs_envelope(assert_no_jsonrpc_error(&digest, "pet_digest_now")).clone();
     let body = digest["body_md"]
         .as_str()
@@ -14745,11 +14647,11 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     assert_eq!(digest["item_count"], 2);
 
     // ── 5. Feed shows the digest; the suggestion waits in the inbox ──
-    let feed = post_json_rpc(&rpc_base, 91_012, "openhuman.pet_feed", json!({})).await;
+    let feed = post_json_rpc(&rpc_base, 91_012, "neppy.pet_feed", json!({})).await;
     let feed = peel_logs_envelope(assert_no_jsonrpc_error(&feed, "pet_feed")).clone();
     assert_eq!(feed["digests"].as_array().map(Vec::len), Some(1), "{feed}");
     assert_eq!(feed["last_run"]["notes_seen"], 3);
-    let inbox = post_json_rpc(&rpc_base, 91_013, "openhuman.pet_inbox_list", json!({})).await;
+    let inbox = post_json_rpc(&rpc_base, 91_013, "neppy.pet_inbox_list", json!({})).await;
     let inbox = peel_logs_envelope(assert_no_jsonrpc_error(&inbox, "pet_inbox_list")).clone();
     let proposals = inbox["proposals"].as_array().cloned().unwrap_or_default();
     assert_eq!(proposals.len(), 1, "{inbox}");
@@ -14759,19 +14661,13 @@ async fn json_rpc_pet_research_pass_produces_ranked_digest_without_sending_inner
     );
 
     // ── 6. Nothing was sent ──
-    let pending = post_json_rpc(
-        &rpc_base,
-        91_014,
-        "openhuman.approval_list_pending",
-        json!({}),
-    )
-    .await;
+    let pending = post_json_rpc(&rpc_base, 91_014, "neppy.approval_list_pending", json!({})).await;
     let pending = peel_logs_envelope(assert_no_jsonrpc_error(&pending, "approval_list_pending"));
     assert_eq!(pending.as_array().map(Vec::len), Some(0), "{pending}");
     let decided = post_json_rpc(
         &rpc_base,
         91_015,
-        "openhuman.approval_list_recent_decisions",
+        "neppy.approval_list_recent_decisions",
         json!({}),
     )
     .await;
@@ -14829,10 +14725,10 @@ async fn json_rpc_pet_companion_settings_lease_pause_and_delete_inner() {
     let home = tmp.path();
     let neppy_home = home.join(".neppy");
     let _home_guard = EnvVarGuard::set_to_path("HOME", home);
-    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
-    let _api_url_guard = EnvVarGuard::unset("OPENHUMAN_API_URL");
+    let _api_url_guard = EnvVarGuard::unset("NEPPY_API_URL");
 
     let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
     let mock_origin = format!("http://{mock_addr}");
@@ -14845,7 +14741,7 @@ async fn json_rpc_pet_companion_settings_lease_pause_and_delete_inner() {
     let store = post_json_rpc(
         &rpc_base,
         92_000,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -14853,7 +14749,7 @@ async fn json_rpc_pet_companion_settings_lease_pause_and_delete_inner() {
 
     let call = |id: i64, m: &'static str, p: Value| {
         let base = rpc_base.clone();
-        async move { post_json_rpc(&base, id, &format!("openhuman.pet_companion_{m}"), p).await }
+        async move { post_json_rpc(&base, id, &format!("neppy.pet_companion_{m}"), p).await }
     };
 
     // ── 1. Defaults: OFF until consent; every source on once enabled ──

@@ -1,4 +1,4 @@
-//! RPC handler functions for all `openhuman.skills_*` controllers.
+//! RPC handler functions for all `neppy.skills_*` controllers.
 //!
 //! Each `handle_*` function deserialises its params, calls into the domain
 //! ops layer, and serialises the result back as JSON. Business logic lives in
@@ -65,7 +65,7 @@ pub(super) fn handle_skills_list(params: Map<String, Value>) -> ControllerFuture
     })
 }
 
-/// `openhuman.skills_describe` — return a single skill's display metadata
+/// `neppy.skills_describe` — return a single skill's display metadata
 /// and its declared `[[inputs]]` so the Skills Runner panel can render
 /// the right form controls. `skills_list` deliberately stays the cheap
 /// enumeration without input declarations (its `Workflow` source struct
@@ -105,7 +105,7 @@ pub(super) fn handle_skills_describe(params: Map<String, Value>) -> ControllerFu
     })
 }
 
-/// `openhuman.skills_read_run_log` — return a slice of a skill run's
+/// `neppy.skills_read_run_log` — return a slice of a skill run's
 /// log file, identified by `run_id` (NOT a path — no traversal surface).
 /// FE Skills Runner panel uses this to render the streaming log inline
 /// when the user clicks a Recent Runs row, and tails it every 2s while
@@ -128,7 +128,7 @@ pub(super) fn handle_skills_read_run_log(params: Map<String, Value>) -> Controll
     })
 }
 
-/// `openhuman.skills_recent_runs` — list runs from `<workspace>/skills/.runs/`
+/// `neppy.skills_recent_runs` — list runs from `<workspace>/skills/.runs/`
 /// (most-recent first), optionally filtered to one skill, capped by `limit`.
 /// Powers the Skills Runner panel's "Recent runs" section + future live-log
 /// tail. Delegates the actual scan + parse to `run_log::scan_runs`.
@@ -171,7 +171,7 @@ pub(super) fn handle_skills_run(params: Map<String, Value>) -> ControllerFuture 
     })
 }
 
-/// `openhuman.skills_cancel` — request cancellation of an in-flight run.
+/// `neppy.skills_cancel` — request cancellation of an in-flight run.
 /// Fires the run's cancellation token; the run stops at its next await and
 /// writes a `CANCELLED` footer. Returns `cancelled: false` when the run id is
 /// unknown (already finished or never existed).
@@ -252,7 +252,7 @@ pub(super) fn handle_skills_create(params: Map<String, Value>) -> ControllerFutu
     })
 }
 
-/// `openhuman.skills_update` — edit an existing workflow. Same payload as
+/// `neppy.skills_update` — edit an existing workflow. Same payload as
 /// create, but overwrites the workflow at the resolved slug (frontmatter +
 /// workflow.toml rewritten; the hand-authored body is preserved).
 pub(super) fn handle_skills_update(params: Map<String, Value>) -> ControllerFuture {

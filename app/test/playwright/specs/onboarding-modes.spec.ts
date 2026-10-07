@@ -31,7 +31,7 @@ async function clickTestId(page: Page, testId: string, timeout = 10_000): Promis
 async function bootIntoOnboarding(page: Page, userId: string): Promise<void> {
   await resetMock().catch(() => undefined);
   await bootAuthenticatedPage(page, userId, '/home');
-  await callCoreRpc('openhuman.config_set_onboarding_completed', { value: false });
+  await callCoreRpc('neppy.config_set_onboarding_completed', { value: false });
   await page.goto('/#/onboarding/welcome');
   await waitForAppReady(page);
   await expect
@@ -42,7 +42,7 @@ async function bootIntoOnboarding(page: Page, userId: string): Promise<void> {
 async function expectOnboardingCompleted(): Promise<void> {
   const readValue = async (): Promise<boolean> => {
     const completed = await callCoreRpc<boolean | { result?: boolean }>(
-      'openhuman.config_get_onboarding_completed',
+      'neppy.config_get_onboarding_completed',
       {}
     );
     return typeof completed === 'boolean'
@@ -52,7 +52,7 @@ async function expectOnboardingCompleted(): Promise<void> {
 
   let value = await readValue();
   if (!value) {
-    await callCoreRpc('openhuman.config_set_onboarding_completed', { value: true });
+    await callCoreRpc('neppy.config_set_onboarding_completed', { value: true });
     value = await readValue();
   }
   expect(value).toBe(true);
@@ -69,7 +69,7 @@ async function ensureHomeOrForceComplete(page: Page): Promise<void> {
 
   if (reachedHome) return;
 
-  await callCoreRpc('openhuman.config_set_onboarding_completed', { value: true });
+  await callCoreRpc('neppy.config_set_onboarding_completed', { value: true });
   await page.goto('/#/home');
   await waitForAppReady(page);
 }

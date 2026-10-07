@@ -79,11 +79,11 @@ describe('System tools — Browser (open URL + automation registry)', () => {
     await startMockServer();
     await waitForApp();
     await resetApp(USER_ID);
-    const browserSettings = await callNeppyRpc('openhuman.config_update_browser_settings', {
+    const browserSettings = await callNeppyRpc('neppy.config_update_browser_settings', {
       enabled: true,
     });
     expect(browserSettings.ok).toBe(true);
-    const toolPreferences = await callNeppyRpc('openhuman.app_state_update_local_state', {
+    const toolPreferences = await callNeppyRpc('neppy.app_state_update_local_state', {
       onboardingTasks: { enabledTools: ['browser'] },
     });
     expect(toolPreferences.ok).toBe(true);
@@ -98,14 +98,14 @@ describe('System tools — Browser (open URL + automation registry)', () => {
     // The registry path that resolves `browser_open` lives behind
     // `agent_list_definitions`; failure to find tools_agent means the
     // browser-tool surface is unreachable from JSON-RPC.
-    const status = await callNeppyRpc<ServerStatus>('openhuman.agent_server_status', {});
+    const status = await callNeppyRpc<ServerStatus>('neppy.agent_server_status', {});
     stepLog('agent_server_status response', status);
     expect(status.ok).toBe(true);
     // agent_server_status uses single_log → result is {result: {running, url}, logs: [...]}
     const statusPayload = (status.result as any)?.result ?? status.result;
     expect(statusPayload?.running).toBe(true);
 
-    const list = await callNeppyRpc<ListDefinitionsResult>('openhuman.agent_list_definitions', {});
+    const list = await callNeppyRpc<ListDefinitionsResult>('neppy.agent_list_definitions', {});
     stepLog('agent_list_definitions response (count only)', {
       count: list.result?.definitions?.length ?? 0,
     });
@@ -158,7 +158,7 @@ describe('System tools — Browser (open URL + automation registry)', () => {
     // parameters-schema action enum is pinned by
     // `browser_tests.rs::browser_tool_schema_has_required_action`.
     const list = await callNeppyRpc<AvailableToolsResult>(
-      'openhuman.agent_registry_available_tools',
+      'neppy.agent_registry_available_tools',
       {}
     );
     expect(list.ok).toBe(true);

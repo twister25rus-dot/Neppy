@@ -44,7 +44,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: guarded by ENV_LOCK which serialises process-global env mutations.
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
@@ -56,12 +56,12 @@ impl Drop for EnvVarGuard {
         match &self.old {
             // SAFETY: symmetric teardown under the same ENV_LOCK guard.
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
 
-/// Serialise tests: `HOME` and `OPENHUMAN_WORKSPACE` are process-global.
+/// Serialise tests: `HOME` and `NEPPY_WORKSPACE` are process-global.
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 fn env_lock() -> std::sync::MutexGuard<'static, ()> {
@@ -194,7 +194,7 @@ async fn builds_hour_day_month_year_chain() {
     std::fs::create_dir_all(&workspace).expect("create workspace");
 
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
 
     log::debug!("[memory_tree_summarizer_e2e] builds_hour_day_month_year_chain: start");
 
@@ -363,7 +363,7 @@ async fn merges_into_existing_hour_node() {
     std::fs::create_dir_all(&workspace).expect("create workspace");
 
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
 
     log::debug!("[memory_tree_summarizer_e2e] merges_into_existing_hour_node: start");
 
@@ -477,7 +477,7 @@ async fn survives_llm_error_with_partial_progress() {
     std::fs::create_dir_all(&workspace).expect("create workspace");
 
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
 
     log::debug!("[memory_tree_summarizer_e2e] survives_llm_error_with_partial_progress: start");
 

@@ -253,7 +253,7 @@ function configArgs(config: Record<string, unknown>): Record<string, unknown> {
 function ToolCallForm({ config, onChange, connections, upstreamOptions }: NodeConfigFormProps) {
   const { t } = useT();
   const slug = configString(config, 'slug');
-  // Two flavours of tool_call: a native OpenHuman "Tool" (provider=openhuman /
+  // Two flavours of tool_call: a native Neppy "Tool" (provider=openhuman /
   // slug `oh:...`) vs a Composio "App action". The palette seeds `provider`.
   const isNative =
     configString(config, 'provider') === 'openhuman' || slug.startsWith(NATIVE_TOOL_PREFIX);

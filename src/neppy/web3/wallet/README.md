@@ -48,7 +48,7 @@ From `mod.rs` re-exports:
 
 ## RPC / controllers
 
-Namespace `wallet` (method form `openhuman.wallet_<function>`), 12 controllers registered via `all_wallet_registered_controllers`:
+Namespace `wallet` (method form `neppy.wallet_<function>`), 12 controllers registered via `all_wallet_registered_controllers`:
 
 | Function | Purpose |
 | --- | --- |
@@ -114,5 +114,5 @@ None. The module publishes/subscribes no `DomainEvent`s and has no `bus.rs`. Cha
 - **Quotes are consumed atomically**: `take_quote_for` removes the quote before broadcast so concurrent confirmations can't double-submit; on failure the quote is restored with a refreshed TTL.
 - **Setup requires exactly one account per chain** (EVM, BTC, Solana, Tron) and a non-empty encrypted mnemonic; valid mnemonic word counts are 12/15/18/21/24.
 - **EVM is one `WalletChain::Evm` variant across 6 networks** (Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain) selected by `EvmNetwork` (defaults to `ethereum_mainnet`); other chains ignore `evmNetwork`. BTC rejects token transfers. Swaps / bridges / contract calls are not in the wallet — they live in the [`web3`](../README.md) module.
-- **RPC endpoints are overridable** per chain/network via `OPENHUMAN_WALLET_RPC_*` env vars (used by tests pointing at an axum mock). Log lines redact URLs to scheme+host.
+- **RPC endpoints are overridable** per chain/network via `NEPPY_WALLET_RPC_*` env vars (used by tests pointing at an axum mock). Log lines redact URLs to scheme+host.
 - **`balances`**: only EVM reads live (Ethereum mainnet); BTC/Solana/Tron call their providers but fall back to zero with `ProviderStatus::Missing` on error.

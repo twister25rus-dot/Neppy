@@ -78,7 +78,7 @@ Tauri v2 compiles the Rust core into native binaries per platform, embedding the
      (Socket.io Server)        (Telegram, etc.)
 ```
 
-The frontend communicates with the **openhuman** Rust core in two ways: **Tauri IPC** for shell commands (windows, webview accounts, hotkeys, and the **`relay_http_rpc`** HTTP relay) and **HTTP JSON-RPC** to the core process for business logic and tools. The core owns persistent connections where applicable, cryptographic work for memory/features, and tool execution: native Rust handlers plus Node-backed helpers via `runtime_node`, gated by the `security/` sandbox policy. Skills no longer execute in-process; the `src/neppy/skills/` domain contributes metadata + tool descriptors that get injected into agent prompts.
+The frontend communicates with the **neppy** Rust core in two ways: **Tauri IPC** for shell commands (windows, webview accounts, hotkeys, and the **`relay_http_rpc`** HTTP relay) and **HTTP JSON-RPC** to the core process for business logic and tools. The core owns persistent connections where applicable, cryptographic work for memory/features, and tool execution: native Rust handlers plus Node-backed helpers via `runtime_node`, gated by the `security/` sandbox policy. Skills no longer execute in-process; the `src/neppy/skills/` domain contributes metadata + tool descriptors that get injected into agent prompts.
 
 ---
 

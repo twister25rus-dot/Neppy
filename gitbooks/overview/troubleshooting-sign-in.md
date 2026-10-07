@@ -39,7 +39,7 @@ Successful desktop OAuth ends with an `neppy://auth?...` callback. If the browse
 
 1. Make sure only one Neppy desktop instance is running.
 2. Restart the app, keep the same remote-core settings, and retry sign-in.
-3. If using a remote core, check whether the core receives `openhuman.auth_store_session`.
+3. If using a remote core, check whether the core receives `neppy.auth_store_session`.
 
 ## Windows: `neppy://` handler not registered
 
@@ -71,7 +71,7 @@ For a remote core, a temporary manual injection can confirm the core is otherwis
 curl -sS https://your-core.example/rpc \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer CORE_TOKEN" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"openhuman.auth_store_session","params":{"token":"JWT_FROM_CALLBACK"} }'
+  -d '{"jsonrpc":"2.0","id":1,"method":"neppy.auth_store_session","params":{"token":"JWT_FROM_CALLBACK"} }'
 ```
 
 Do not paste real JWTs into public GitHub issues. Redact tokens and attach only status codes, hostnames, app version, OS, and the relevant log lines.

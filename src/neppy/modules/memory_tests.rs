@@ -85,7 +85,7 @@ fn the_advertised_capabilities_match_the_pinned_artifact() {
 fn the_full_capability_override_restores_the_whole_contract() {
     // The escape hatch for a locally-built module, which serves the whole
     // contract. Asserted through `capabilities_for` rather than by setting
-    // `OPENHUMAN_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES` — mutating a
+    // `NEPPY_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES` — mutating a
     // process-global env var would race every other test in this binary.
     //
     // With the pinned list now covering the full contract, the override is a
@@ -264,7 +264,7 @@ fn the_advertised_set_does_not_over_claim_the_artifact() {
     // `capabilities_for(false)` rather than `artifact_capabilities()`: the
     // invariant is a property of the pinned list, and reading the environment
     // here would make this test fail for anyone running with the documented
-    // `OPENHUMAN_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES=1` override.
+    // `NEPPY_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES=1` override.
     let advertised = super::capabilities_for(false);
 
     // Four of the five families v1.0.1 lacked arrived in the v1.2.0 artifact,

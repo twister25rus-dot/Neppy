@@ -7,7 +7,7 @@
 //! tools can detect the conflict and return a model-facing error
 //! requiring the agent to re-read.
 //!
-//! Disable with `OPENHUMAN_FILE_STATE_GUARD=0` (or `false`).
+//! Disable with `NEPPY_FILE_STATE_GUARD=0` (or `false`).
 
 mod agent_context;
 mod ops;

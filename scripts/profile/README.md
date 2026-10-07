@@ -34,7 +34,7 @@ noise by default (matching the documented cold-path CPU recipe).
 
 ```bash
 ./scripts/profile/library-cpu.sh subagents
-./scripts/profile/library-cpu.sh long-agent -- OPENHUMAN_PROFILE_TURNS=50
+./scripts/profile/library-cpu.sh long-agent -- NEPPY_PROFILE_TURNS=50
 samply load target/profile/rust-library/subagents-cpu.json.gz
 ```
 
@@ -71,7 +71,7 @@ for the budget math.
 ### `library-instances.sh` — multi-instance (many-processes) sweep
 
 Spawns N independent `library-profile` processes (each a live instance held
-alive via `OPENHUMAN_PROFILE_HOLD_SECS`), staggered on startup, and measures
+alive via `NEPPY_PROFILE_HOLD_SECS`), staggered on startup, and measures
 **per-process** cost and box survivability — the opencompany "N independent
 processes/containers" deployment model, as opposed to `library-fleet.sh`'s
 "N agents in one process" model. Samples aggregate sum-RSS + live count every

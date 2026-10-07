@@ -97,7 +97,7 @@ function sendRuleError(res, rule) {
 // ── Streaming helpers ─────────────────────────────────────────────
 //
 // When the agent harness calls the OpenAI-compatible endpoint with
-// `stream: true`, openhuman/providers/compatible.rs expects SSE chunks
+// `stream: true`, neppy/providers/compatible.rs expects SSE chunks
 // shaped like:
 //
 //   data: {"choices":[{"delta":{"content":"hello"},"finish_reason":null}]}

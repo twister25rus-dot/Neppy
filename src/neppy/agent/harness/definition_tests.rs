@@ -366,6 +366,8 @@ fn all_builtin_agent_definitions_have_expected_effective_max_iterations() {
         // Extended policy (or high `max_iterations`) -> effective cap raised.
         ("orchestrator", 15),
         ("code_executor", 50),
+        // Debug mode: `max_iterations = 40` + `extended` -> the harness-wide 50.
+        ("debug_agent", 50),
         ("context_scout", 50),
         // #5204: general-purpose read-only flow context/memory retrieval
         // agent — `iteration_policy = "extended"` so it can loop across
@@ -452,4 +454,15 @@ fn all_builtin_agent_definitions_have_expected_effective_max_iterations() {
         "the set of built-in agent ids changed — add/remove the new agent from this audit \
          snapshot's `expected` list with a deliberate effective_max_iterations() entry"
     );
+}
+
+#[test]
+fn list_delegatable_hides_debug_agent_but_list_keeps_it() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let reg = AgentDefinitionRegistry::load(tmp.path()).unwrap();
+    assert!(reg.list().iter().any(|d| d.id == "debug_agent"));
+    assert!(reg.get("debug_agent").is_some());
+    let delegatable = reg.list_delegatable();
+    assert!(delegatable.iter().all(|d| d.id != "debug_agent"));
+    assert_eq!(delegatable.len() + 1, reg.list().len());
 }

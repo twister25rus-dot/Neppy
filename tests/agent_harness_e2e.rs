@@ -53,7 +53,7 @@ fn init_agent_def_registry() {
 
 fn env_lock() -> std::sync::MutexGuard<'static, ()> {
     AGENT_HARNESS_KEYRING_INIT.get_or_init(|| unsafe {
-        std::env::set_var("OPENHUMAN_KEYRING_BACKEND", "file");
+        std::env::set_var("NEPPY_KEYRING_BACKEND", "file");
     });
     let mutex = AGENT_HARNESS_E2E_ENV_LOCK.get_or_init(|| Mutex::new(()));
     match mutex.lock() {
@@ -69,20 +69,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -91,7 +91,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(v) => std::env::set_var(self.key, v),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -465,7 +465,7 @@ encrypt = false
 "#
     );
     fn write_config_file(config_dir: &Path, cfg: &str) {
-        std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
+        std::fs::create_dir_all(config_dir).expect("mkdir neppy");
         std::fs::write(config_dir.join("config.toml"), cfg).expect("write config");
     }
     write_config_file(neppy_dir, &cfg);
@@ -621,7 +621,7 @@ async fn boot_stack() -> Stack {
     let neppy_home = home.join(".neppy");
 
     let home_guard = EnvVarGuard::set_to_path("HOME", &home);
-    let workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let backend_guard = EnvVarGuard::unset("BACKEND_URL");
     let vite_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -647,7 +647,7 @@ async fn boot_stack() -> Stack {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": "e2e-test-jwt", "user_id": "e2e-user" }),
     )
     .await;
@@ -669,7 +669,7 @@ async fn send_web_chat(rpc_base: &str, id: i64, client_id: &str, thread_id: &str
     let resp = post_json_rpc(
         rpc_base,
         id,
-        "openhuman.channel_web_chat",
+        "neppy.channel_web_chat",
         json!({
             "client_id": client_id,
             "thread_id": thread_id,
@@ -1216,7 +1216,7 @@ async fn subagent_clarification_flow_inner() {
 // GLOBAL_GATE is a process-wide OnceLock — first install wins. The
 // `ensure_approval_gate` helper is idempotent; all approval tests call it.
 //
-// `OPENHUMAN_APPROVAL_TTL_SECS` (Task 6 production change in gate.rs) is read
+// `NEPPY_APPROVAL_TTL_SECS` (Task 6 production change in gate.rs) is read
 // per-intercept via `effective_ttl()`. Tests set it before `send_web_chat` and
 // restore it on drop via EnvVarGuard.
 
@@ -1346,7 +1346,7 @@ fn approval_gate_approve_flow() {
 
 async fn approval_gate_approve_flow_inner() {
     let _lock = env_lock();
-    let _ttl = EnvVarGuard::set("OPENHUMAN_APPROVAL_TTL_SECS", "120");
+    let _ttl = EnvVarGuard::set("NEPPY_APPROVAL_TTL_SECS", "120");
     ensure_approval_gate().await;
     // Register a fresh approval bridge on the current runtime. Each approval test needs
     // its own per-runtime bridge so the background task does not die when a previous
@@ -1414,7 +1414,7 @@ async fn approval_gate_approve_flow_inner() {
     let decide = post_json_rpc(
         &stack.rpc_base,
         501,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({ "request_id": request_id, "decision": "approve_once" }),
     )
     .await;
@@ -1462,7 +1462,7 @@ fn approval_gate_deny_flow() {
 
 async fn approval_gate_deny_flow_inner() {
     let _lock = env_lock();
-    let _ttl = EnvVarGuard::set("OPENHUMAN_APPROVAL_TTL_SECS", "120");
+    let _ttl = EnvVarGuard::set("NEPPY_APPROVAL_TTL_SECS", "120");
     ensure_approval_gate().await;
     let _approval_bridge = register_approval_bridge();
     // Same delegation chain as approve_flow: orchestrator → run_code → code_executor
@@ -1512,7 +1512,7 @@ async fn approval_gate_deny_flow_inner() {
     let decide = post_json_rpc(
         &stack.rpc_base,
         511,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({ "request_id": request_id, "decision": "deny" }),
     )
     .await;
@@ -1585,7 +1585,7 @@ fn subagent_with_approval_gate() {
 
 async fn subagent_with_approval_gate_inner() {
     let _lock = env_lock();
-    let _ttl = EnvVarGuard::set("OPENHUMAN_APPROVAL_TTL_SECS", "120");
+    let _ttl = EnvVarGuard::set("NEPPY_APPROVAL_TTL_SECS", "120");
     ensure_approval_gate().await;
     let _approval_bridge = register_approval_bridge();
     reset_script(vec![
@@ -1647,7 +1647,7 @@ async fn subagent_with_approval_gate_inner() {
     let decide = post_json_rpc(
         &stack.rpc_base,
         531,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({ "request_id": request_id, "decision": "approve_once" }),
     )
     .await;
@@ -1711,8 +1711,8 @@ fn approval_gate_timeout() {
 
 async fn approval_gate_timeout_inner() {
     let _lock = env_lock();
-    // 2-second TTL via OPENHUMAN_APPROVAL_TTL_SECS → effective_ttl() in gate.rs.
-    let _ttl = EnvVarGuard::set("OPENHUMAN_APPROVAL_TTL_SECS", "2");
+    // 2-second TTL via NEPPY_APPROVAL_TTL_SECS → effective_ttl() in gate.rs.
+    let _ttl = EnvVarGuard::set("NEPPY_APPROVAL_TTL_SECS", "2");
     ensure_approval_gate().await;
     let _approval_bridge = register_approval_bridge();
     // Same delegation chain as approve/deny: orchestrator → run_code → code_executor
@@ -2593,7 +2593,7 @@ async fn streaming_tool_call_accumulation() {
 
     let _lock = env_lock();
     let (_temp, workspace_path) = workspace_s("stream-accum");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace_path);
     let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
 
     // The full args JSON to be split into 4 ModelStreamItem::ToolCallDelta chunks.

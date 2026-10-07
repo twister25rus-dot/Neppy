@@ -45,7 +45,7 @@ describe('ToolPolicyDiagnosticsPanel', () => {
     expect(screen.getAllByText('10').length).toBeGreaterThan(0);
     expect(screen.getByText(/Recent \(24h\): 5/i)).toBeInTheDocument();
     expect(hoisted.callCoreRpc).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.tool_registry_diagnostics' })
+      expect.objectContaining({ method: 'neppy.tool_registry_diagnostics' })
     );
   });
 

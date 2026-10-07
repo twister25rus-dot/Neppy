@@ -9,7 +9,7 @@
 //! projects and groups it for display.
 //!
 //! Control verbs (stop / retry / continue / follow-up) live in [`control`]:
-//! durable run-ledger transitions exposed over `openhuman.agent_work_control`.
+//! durable run-ledger transitions exposed over `neppy.agent_work_control`.
 
 mod control;
 mod ops;

@@ -88,7 +88,7 @@ describe('workflowRunsApi', () => {
   it('listDefinitions calls the RPC and returns the array', async () => {
     mockRpc.mockResolvedValueOnce({ definitions: [def()], count: 1 });
     const defs = await workflowRunsApi.listDefinitions();
-    expect(mockRpc).toHaveBeenCalledWith({ method: 'openhuman.workflow_run_list_definitions' });
+    expect(mockRpc).toHaveBeenCalledWith({ method: 'neppy.workflow_run_list_definitions' });
     expect(defs).toHaveLength(1);
     expect(defs[0].id).toBe('parallel_research_cross_check');
   });
@@ -102,7 +102,7 @@ describe('workflowRunsApi', () => {
     mockRpc.mockResolvedValueOnce({ runs: [run()], count: 1 });
     const runs = await workflowRunsApi.listRuns({ limit: 50, status: 'running' });
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workflow_run_list',
+      method: 'neppy.workflow_run_list',
       params: { limit: 50, status: 'running' },
     });
     expect(runs).toHaveLength(1);
@@ -112,7 +112,7 @@ describe('workflowRunsApi', () => {
   it('listRuns defaults params and tolerates a missing array', async () => {
     mockRpc.mockResolvedValueOnce({});
     const runs = await workflowRunsApi.listRuns();
-    expect(mockRpc).toHaveBeenCalledWith({ method: 'openhuman.workflow_run_list', params: {} });
+    expect(mockRpc).toHaveBeenCalledWith({ method: 'neppy.workflow_run_list', params: {} });
     expect(runs).toEqual([]);
   });
 
@@ -120,7 +120,7 @@ describe('workflowRunsApi', () => {
     mockRpc.mockResolvedValueOnce({ workflowRun: run() });
     const fetched = await workflowRunsApi.getRun('wfrun-1');
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workflow_run_get',
+      method: 'neppy.workflow_run_get',
       params: { id: 'wfrun-1' },
     });
     expect(fetched?.id).toBe('wfrun-1');
@@ -133,7 +133,7 @@ describe('workflowRunsApi', () => {
       input: { question: 'q' },
     });
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workflow_run_start',
+      method: 'neppy.workflow_run_start',
       params: { definitionId: 'parallel_research_cross_check', input: { question: 'q' } },
     });
     expect(started.id).toBe('wfrun-1');
@@ -148,7 +148,7 @@ describe('workflowRunsApi', () => {
     mockRpc.mockResolvedValueOnce({ workflowRun: run({ status: 'interrupted' }) });
     const stopped = await workflowRunsApi.stopRun('wfrun-1');
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workflow_run_stop',
+      method: 'neppy.workflow_run_stop',
       params: { id: 'wfrun-1' },
     });
     expect(stopped?.status).toBe('interrupted');
@@ -158,7 +158,7 @@ describe('workflowRunsApi', () => {
     mockRpc.mockResolvedValueOnce({ workflowRun: run({ status: 'running' }) });
     const resumed = await workflowRunsApi.resumeRun('wfrun-1');
     expect(mockRpc).toHaveBeenCalledWith({
-      method: 'openhuman.workflow_run_resume',
+      method: 'neppy.workflow_run_resume',
       params: { id: 'wfrun-1' },
     });
     expect(resumed.status).toBe('running');

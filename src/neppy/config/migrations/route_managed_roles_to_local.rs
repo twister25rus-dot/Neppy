@@ -26,9 +26,7 @@
 //! - Idempotent: a second run finds no managed values left to rewrite.
 
 use crate::neppy::config::Config;
-use crate::neppy::inference::provider::factory::{
-    neppy_active_provider_string, PROVIDER_OPENHUMAN,
-};
+use crate::neppy::inference::provider::factory::{neppy_active_provider_string, PROVIDER_NEPPY};
 
 /// Counters returned by [`run`] for diagnostics.
 #[derive(Debug, Default, Clone)]
@@ -87,10 +85,10 @@ pub fn run(config: &mut Config) -> anyhow::Result<MigrationStats> {
             ("subconscious", &mut config.subconscious_provider),
         ];
         for (name, slot) in roles {
-            if slot.as_deref().map(str::trim) == Some(PROVIDER_OPENHUMAN) {
+            if slot.as_deref().map(str::trim) == Some(PROVIDER_NEPPY) {
                 log::info!(
                     "[migrations][route-managed-roles] {name}_provider: \
-                     '{PROVIDER_OPENHUMAN}' -> '{target}'"
+                     '{PROVIDER_NEPPY}' -> '{target}'"
                 );
                 *slot = Some(target.clone());
                 stats.roles_rerouted += 1;
@@ -113,9 +111,9 @@ mod tests {
     /// until the user routes a workload by hand.
     fn managed_config() -> Config {
         let mut config = Config::default();
-        config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
-        config.reasoning_provider = Some(PROVIDER_OPENHUMAN.to_string());
-        config.vision_provider = Some(PROVIDER_OPENHUMAN.to_string());
+        config.chat_provider = Some(PROVIDER_NEPPY.to_string());
+        config.reasoning_provider = Some(PROVIDER_NEPPY.to_string());
+        config.vision_provider = Some(PROVIDER_NEPPY.to_string());
         config.local_ai.runtime_enabled = true;
         config.local_ai.provider = "mlx".to_string();
         config.local_ai.chat_model_id = "LiquidAI/LFM2.5-1.2B-Instruct-MLX-4bit".to_string();
@@ -176,7 +174,7 @@ mod tests {
     #[test]
     fn is_a_no_op_when_nothing_reachable_is_configured() {
         let mut config = Config::default();
-        config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
+        config.chat_provider = Some(PROVIDER_NEPPY.to_string());
         config.local_ai.chat_model_id = String::new();
         config.local_ai.model_id = String::new();
 
@@ -185,7 +183,7 @@ mod tests {
         assert_eq!(stats.roles_rerouted, 0);
         assert_eq!(
             config.chat_provider.as_deref(),
-            Some(PROVIDER_OPENHUMAN),
+            Some(PROVIDER_NEPPY),
             "an unreachable rewrite would hide the real setup error"
         );
     }
@@ -196,7 +194,7 @@ mod tests {
         // That is a default, not a choice — writing it would make a fresh
         // install claim to be configured for a model nobody installed.
         let mut config = Config::default();
-        config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
+        config.chat_provider = Some(PROVIDER_NEPPY.to_string());
         assert!(
             !config.local_ai.runtime_enabled,
             "the local runtime ships off"
@@ -205,7 +203,7 @@ mod tests {
         let stats = run(&mut config).expect("migration should succeed");
 
         assert_eq!(stats.roles_rerouted, 0);
-        assert_eq!(config.chat_provider.as_deref(), Some(PROVIDER_OPENHUMAN));
+        assert_eq!(config.chat_provider.as_deref(), Some(PROVIDER_NEPPY));
     }
 
     #[test]

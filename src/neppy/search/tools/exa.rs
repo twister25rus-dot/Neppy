@@ -179,7 +179,7 @@ impl ExaClient {
                 anyhow::anyhow!(
                     "Exa search unavailable: no API key configured. Add your Exa API key \
                      under Connections > Search engine, set EXA_API_KEY or \
-                     OPENHUMAN_EXA_API_KEY, or add search.exa.api_key to config.toml."
+                     NEPPY_EXA_API_KEY, or add search.exa.api_key to config.toml."
                 )
             })
     }

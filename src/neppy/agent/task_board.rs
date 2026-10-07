@@ -8,7 +8,7 @@
 //! operation directly to `tinyagents::graph::todos`.
 //!
 //! The agent updates boards through the `todo` tool; the UI can fetch or replace
-//! them through the `threads.task_board_*` and granular `openhuman.todos_*` RPC
+//! them through the `threads.task_board_*` and granular `neppy.todos_*` RPC
 //! surfaces. The core process remains the single writer.
 
 use std::path::{Path, PathBuf};

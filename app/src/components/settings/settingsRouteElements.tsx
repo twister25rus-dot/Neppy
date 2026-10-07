@@ -12,6 +12,7 @@ import AppearancePanel from './panels/AppearancePanel';
 import ApprovalHistoryPanel from './panels/ApprovalHistoryPanel';
 import BillingPanel from './panels/BillingPanel';
 import CoreConnectionPanel from './panels/CoreConnectionPanel';
+import DebugModePanel from './panels/DebugModePanel';
 import DeveloperOptionsPanel from './panels/DeveloperOptionsPanel';
 import DevicesPanel from './panels/DevicesPanel';
 import EventLogPanel from './panels/EventLogPanel';
@@ -106,6 +107,7 @@ export function settingsRouteElements(): ReactNode {
       <Route path="profiles/new" element={wrapSettingsPage(<ProfileEditorPage />)} />
       <Route path="profiles/edit/:id" element={wrapSettingsPage(<ProfileEditorPage />)} />
       <Route path="agent-access" element={wrapSettingsPage(<AgentAccessPanel />)} />
+      <Route path="debug-mode" element={wrapSettingsPage(<DebugModePanel />)} />
       <Route path="activity-level" element={wrapSettingsPage(<AgentActivityPanel />)} />
       <Route path="sandbox-settings" element={wrapSettingsPage(<SandboxSettingsPanel />)} />
       <Route path="approval-history" element={wrapSettingsPage(<ApprovalHistoryPanel />)} />

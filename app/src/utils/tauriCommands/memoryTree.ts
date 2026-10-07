@@ -1,7 +1,7 @@
 /**
  * memory_tree subsystem commands.
  *
- * Thin wrappers over the `openhuman.memory_tree_*` JSON-RPC surface that
+ * Thin wrappers over the `neppy.memory_tree_*` JSON-RPC surface that
  * powers the Memory tab and the Settings → AI backend chooser. Method
  * shapes mirror the Rust handlers in `src/neppy/memory/tree/read_rpc.rs`
  * and `schemas.rs`.
@@ -152,7 +152,7 @@ export interface LlmResponse {
 }
 
 /**
- * Wire shape for `openhuman.memory_tree_set_llm`.
+ * Wire shape for `neppy.memory_tree_set_llm`.
  *
  * `backend` is required and always overwrites `memory_tree.llm_backend`.
  *
@@ -195,12 +195,12 @@ function unwrapResult<T>(resp: T | ResultEnvelope<T>): T {
 
 /**
  * Paginated chunk listing with optional filters. Backed by
- * `openhuman.memory_tree_list_chunks`.
+ * `neppy.memory_tree_list_chunks`.
  */
 export async function memoryTreeListChunks(filter: ChunkFilter): Promise<ListChunksResponse> {
   console.debug('[memory-tree-rpc] memoryTreeListChunks: entry filter=%o', filter);
   const resp = await callCoreRpc<ListChunksResponse | ResultEnvelope<ListChunksResponse>>({
-    method: 'openhuman.memory_tree_list_chunks',
+    method: 'neppy.memory_tree_list_chunks',
     params: filter,
   });
   const out = unwrapResult(resp);
@@ -226,7 +226,7 @@ export async function memoryTreeListSources(userEmailHint?: string): Promise<Sou
   );
   const params = userEmailHint ? { user_email_hint: userEmailHint } : {};
   const resp = await callCoreRpc<Source[] | ResultEnvelope<Source[]>>({
-    method: 'openhuman.memory_tree_list_sources',
+    method: 'neppy.memory_tree_list_sources',
     params,
   });
   const out = unwrapResult(resp);
@@ -243,7 +243,7 @@ export async function memoryTreeListSources(userEmailHint?: string): Promise<Sou
 export async function memoryTreeSearch(query: string, k: number): Promise<Chunk[]> {
   console.debug('[memory-tree-rpc] memoryTreeSearch: entry query_len=%d k=%d', query.length, k);
   const resp = await callCoreRpc<Chunk[] | ResultEnvelope<Chunk[]>>({
-    method: 'openhuman.memory_tree_search',
+    method: 'neppy.memory_tree_search',
     params: { query, k },
   });
   const out = unwrapResult(resp);
@@ -260,7 +260,7 @@ export async function memoryTreeSearch(query: string, k: number): Promise<Chunk[
 export async function memoryTreeRecall(query: string, k: number): Promise<RecallResponse> {
   console.debug('[memory-tree-rpc] memoryTreeRecall: entry query_len=%d k=%d', query.length, k);
   const resp = await callCoreRpc<RecallResponse | ResultEnvelope<RecallResponse>>({
-    method: 'openhuman.memory_tree_recall',
+    method: 'neppy.memory_tree_recall',
     params: { query, k },
   });
   const out = unwrapResult(resp);
@@ -276,7 +276,7 @@ export async function memoryTreeRecall(query: string, k: number): Promise<Recall
 export async function memoryTreeEntityIndexFor(chunkId: string): Promise<EntityRef[]> {
   console.debug('[memory-tree-rpc] memoryTreeEntityIndexFor: entry chunk_id=%s', chunkId);
   const resp = await callCoreRpc<EntityRef[] | ResultEnvelope<EntityRef[]>>({
-    method: 'openhuman.memory_tree_entity_index_for',
+    method: 'neppy.memory_tree_entity_index_for',
     params: { chunk_id: chunkId },
   });
   const out = unwrapResult(resp);
@@ -294,7 +294,7 @@ export async function memoryTreeEntityIndexFor(chunkId: string): Promise<EntityR
 export async function memoryTreeChunksForEntity(entityId: string): Promise<string[]> {
   console.debug('[memory-tree-rpc] memoryTreeChunksForEntity: entry entity_id=%s', entityId);
   const resp = await callCoreRpc<string[] | ResultEnvelope<string[]>>({
-    method: 'openhuman.memory_tree_chunks_for_entity',
+    method: 'neppy.memory_tree_chunks_for_entity',
     params: { entity_id: entityId },
   });
   const out = unwrapResult(resp);
@@ -318,7 +318,7 @@ export async function memoryTreeTopEntities(kind?: string, limit = 50): Promise<
   const params: Record<string, unknown> = { limit };
   if (kind) params.kind = kind;
   const resp = await callCoreRpc<EntityRef[] | ResultEnvelope<EntityRef[]>>({
-    method: 'openhuman.memory_tree_top_entities',
+    method: 'neppy.memory_tree_top_entities',
     params,
   });
   const out = unwrapResult(resp);
@@ -336,7 +336,7 @@ export async function memoryTreeTopEntities(kind?: string, limit = 50): Promise<
 export async function memoryTreeChunkScore(chunkId: string): Promise<ScoreBreakdown | null> {
   console.debug('[memory-tree-rpc] memoryTreeChunkScore: entry chunk_id=%s', chunkId);
   const resp = await callCoreRpc<ScoreBreakdown | null | ResultEnvelope<ScoreBreakdown | null>>({
-    method: 'openhuman.memory_tree_chunk_score',
+    method: 'neppy.memory_tree_chunk_score',
     params: { chunk_id: chunkId },
   });
   const out = unwrapResult(resp);
@@ -353,7 +353,7 @@ export async function memoryTreeChunkScore(chunkId: string): Promise<ScoreBreakd
 export async function memoryTreeDeleteChunk(chunkId: string): Promise<DeleteChunkResponse> {
   console.debug('[memory-tree-rpc] memoryTreeDeleteChunk: entry chunk_id=%s', chunkId);
   const resp = await callCoreRpc<DeleteChunkResponse | ResultEnvelope<DeleteChunkResponse>>({
-    method: 'openhuman.memory_tree_delete_chunk',
+    method: 'neppy.memory_tree_delete_chunk',
     params: { chunk_id: chunkId },
   });
   const out = unwrapResult(resp);
@@ -374,7 +374,7 @@ export async function memoryTreeDeleteChunk(chunkId: string): Promise<DeleteChun
 export async function memoryTreeGetLlm(): Promise<LlmResponse> {
   console.debug('[memory-tree-rpc] memoryTreeGetLlm: entry');
   const resp = await callCoreRpc<LlmResponse | ResultEnvelope<LlmResponse>>({
-    method: 'openhuman.memory_tree_get_llm',
+    method: 'neppy.memory_tree_get_llm',
   });
   const out = unwrapResult(resp);
   console.debug('[memory-tree-rpc] memoryTreeGetLlm: exit current=%s', out?.current);
@@ -409,7 +409,7 @@ export async function memoryTreeSetLlm(
     params.summariser_model ?? '<none>'
   );
   const resp = await callCoreRpc<LlmResponse | ResultEnvelope<LlmResponse>>({
-    method: 'openhuman.memory_tree_set_llm',
+    method: 'neppy.memory_tree_set_llm',
     params,
   });
   const out = unwrapResult(resp);
@@ -500,7 +500,7 @@ export interface WipeAllResponse {
  * **and** clear the `composio-sync-state` KV namespace so the next
  * sync re-fetches every upstream item from scratch (no
  * synced-id-dedup carry-over). Backed by
- * `openhuman.memory_tree_wipe_all`.
+ * `neppy.memory_tree_wipe_all`.
  *
  * Callers can rely on `sync_state_cleared` in the response — a
  * positive count means the next sync will be a full re-fetch; `0`
@@ -509,7 +509,7 @@ export interface WipeAllResponse {
 export async function memoryTreeWipeAll(): Promise<WipeAllResponse> {
   console.debug('[memory-tree-rpc] memoryTreeWipeAll: entry');
   const resp = await callCoreRpc<WipeAllResponse | ResultEnvelope<WipeAllResponse>>({
-    method: 'openhuman.memory_tree_wipe_all',
+    method: 'neppy.memory_tree_wipe_all',
   });
   const out = unwrapResult(resp);
   console.debug(
@@ -534,7 +534,7 @@ export interface ResetTreeResponse {
  * Wipe summary-tree state but keep chunks, raw archive, and sync
  * state — then re-enqueue every chunk through extraction so the
  * tree rebuilds without a fresh upstream sync. Backed by
- * `openhuman.memory_tree_reset_tree`.
+ * `neppy.memory_tree_reset_tree`.
  *
  * Use after changing the summariser backend (e.g. flipping inert
  * → real local LLM) to re-summarise existing data on the new
@@ -543,7 +543,7 @@ export interface ResetTreeResponse {
 export async function memoryTreeResetTree(): Promise<ResetTreeResponse> {
   console.debug('[memory-tree-rpc] memoryTreeResetTree: entry');
   const resp = await callCoreRpc<ResetTreeResponse | ResultEnvelope<ResetTreeResponse>>({
-    method: 'openhuman.memory_tree_reset_tree',
+    method: 'neppy.memory_tree_reset_tree',
   });
   const out = unwrapResult(resp);
   console.debug(
@@ -565,7 +565,7 @@ export interface FlushNowResponse {
  * Manually trigger the summary-tree build. Enqueues a `flush_stale` job
  * with `max_age_secs=0` so every L0 buffer force-seals immediately; the
  * seal worker runs each through the configured cloud or local
- * summariser. Backed by `openhuman.memory_tree_flush_now`.
+ * summariser. Backed by `neppy.memory_tree_flush_now`.
  *
  * Safe to spam — same UTC-day dedupe key as the scheduled flush, so
  * duplicate clicks return `enqueued=false` rather than queuing twice.
@@ -578,7 +578,7 @@ interface FlushSourceResponse {
 export async function memoryTreeFlushSource(sourceScope: string): Promise<FlushSourceResponse> {
   console.debug('[memory-tree-rpc] memoryTreeFlushSource: entry scope=%s', sourceScope);
   const resp = await callCoreRpc<FlushSourceResponse | ResultEnvelope<FlushSourceResponse>>({
-    method: 'openhuman.memory_tree_flush_source',
+    method: 'neppy.memory_tree_flush_source',
     params: { source_scope: sourceScope },
   });
   const out = unwrapResult(resp);
@@ -593,7 +593,7 @@ export async function memoryTreeFlushSource(sourceScope: string): Promise<FlushS
 export async function memoryTreeFlushNow(): Promise<FlushNowResponse> {
   console.debug('[memory-tree-rpc] memoryTreeFlushNow: entry');
   const resp = await callCoreRpc<FlushNowResponse | ResultEnvelope<FlushNowResponse>>({
-    method: 'openhuman.memory_tree_flush_now',
+    method: 'neppy.memory_tree_flush_now',
   });
   const out = unwrapResult(resp);
   console.debug(
@@ -607,14 +607,14 @@ export async function memoryTreeFlushNow(): Promise<FlushNowResponse> {
 /**
  * Return either the summary tree (parent→child links between sealed
  * summaries) or the document↔contact graph (chunks linked to person
- * entities they mention). Backed by `openhuman.memory_tree_graph_export`.
+ * entities they mention). Backed by `neppy.memory_tree_graph_export`.
  */
 export async function memoryTreeGraphExport(
   mode: GraphMode = 'tree'
 ): Promise<GraphExportResponse> {
   console.debug('[memory-tree-rpc] memoryTreeGraphExport: entry mode=%s', mode);
   const resp = await callCoreRpc<GraphExportResponse | ResultEnvelope<GraphExportResponse>>({
-    method: 'openhuman.memory_tree_graph_export',
+    method: 'neppy.memory_tree_graph_export',
     params: { mode },
   });
   const out = unwrapResult(resp);
@@ -661,7 +661,7 @@ export interface ObsidianVaultStatus {
  *
  * `obsidianConfigDir` optionally overrides where the core looks for
  * `obsidian.json` (non-standard installs: Flatpak / Snap / portable). Backed
- * by `openhuman.memory_tree_obsidian_vault_status`.
+ * by `neppy.memory_tree_obsidian_vault_status`.
  */
 export async function memoryTreeObsidianVaultStatus(
   obsidianConfigDir?: string
@@ -671,7 +671,7 @@ export async function memoryTreeObsidianVaultStatus(
     obsidianConfigDir ? 'set' : 'none'
   );
   const resp = await callCoreRpc<ObsidianVaultStatus | ResultEnvelope<ObsidianVaultStatus>>({
-    method: 'openhuman.memory_tree_obsidian_vault_status',
+    method: 'neppy.memory_tree_obsidian_vault_status',
     // Only send the override when present so the core uses its default probe.
     params: obsidianConfigDir ? { obsidian_config_dir: obsidianConfigDir } : {},
   });
@@ -713,7 +713,7 @@ export interface VaultHealthCheck {
  * Consolidated onboarding/settings health snapshot for the workspace memory
  * vault (`<workspace>/memory_tree/content/`).
  *
- * Backed by `openhuman.memory_tree_vault_health_check`.
+ * Backed by `neppy.memory_tree_vault_health_check`.
  */
 export async function memoryTreeVaultHealthCheck(
   obsidianConfigDir?: string
@@ -723,7 +723,7 @@ export async function memoryTreeVaultHealthCheck(
     obsidianConfigDir ? 'set' : 'none'
   );
   const resp = await callCoreRpc<VaultHealthCheck | ResultEnvelope<VaultHealthCheck>>({
-    method: 'openhuman.memory_tree_vault_health_check',
+    method: 'neppy.memory_tree_vault_health_check',
     params: obsidianConfigDir ? { obsidian_config_dir: obsidianConfigDir } : {},
   });
   const out = unwrapResult(resp);
@@ -743,7 +743,7 @@ export async function memoryTreeVaultHealthCheck(
  * panel polls this after an embedder change to warn that semantic recall
  * is reduced until the new embedding space is fully re-embedded, and to
  * dismiss the warning once the chain drains. Backed by
- * `openhuman.memory_tree_memory_backfill_status`.
+ * `neppy.memory_tree_memory_backfill_status`.
  */
 export interface BackfillStatus {
   /** True while a re-embed backfill still has work pending. */
@@ -755,7 +755,7 @@ export interface BackfillStatus {
 export async function memoryTreeBackfillStatus(): Promise<BackfillStatus> {
   console.debug('[memory-tree-rpc] memoryTreeBackfillStatus: entry');
   const resp = await callCoreRpc<BackfillStatus | ResultEnvelope<BackfillStatus>>({
-    method: 'openhuman.memory_tree_memory_backfill_status',
+    method: 'neppy.memory_tree_memory_backfill_status',
   });
   const out = unwrapResult(resp);
   console.debug(
@@ -837,7 +837,7 @@ export interface MemoryTreePipelineJobCounts {
 
 /**
  * Aggregated Memory Tree health snapshot returned by
- * `openhuman.memory_tree_pipeline_status`. The UI status panel polls this
+ * `neppy.memory_tree_pipeline_status`. The UI status panel polls this
  * (every ~1.5s while syncing, ~4s otherwise) and renders the four tiles
  * directly from the payload — no client-side derivation required.
  */
@@ -903,13 +903,13 @@ export interface MemoryTreeQuarantine {
  * the handler runs three SQL counters + one recursive dir walk. Safe to
  * poll at ~1.5s intervals while the panel is mounted.
  *
- * Backed by `openhuman.memory_tree_pipeline_status` (#1856 Part 1).
+ * Backed by `neppy.memory_tree_pipeline_status` (#1856 Part 1).
  */
 export async function memoryTreePipelineStatus(): Promise<MemoryTreePipelineStatus> {
   console.debug('[memory-tree-rpc] memoryTreePipelineStatus: entry');
   const resp = await callCoreRpc<
     MemoryTreePipelineStatus | ResultEnvelope<MemoryTreePipelineStatus>
-  >({ method: 'openhuman.memory_tree_pipeline_status', params: {} });
+  >({ method: 'neppy.memory_tree_pipeline_status', params: {} });
   const out = unwrapResult(resp);
   console.debug(
     '[memory-tree-rpc] memoryTreePipelineStatus: exit status=%s total=%d syncing=%s paused=%s',
@@ -923,7 +923,7 @@ export async function memoryTreePipelineStatus(): Promise<MemoryTreePipelineStat
 
 // ── memory_tree_retry_failed (#002 FR-011) ───────────────────────────────
 
-/** Response shape for `openhuman.memory_tree_retry_failed`. */
+/** Response shape for `neppy.memory_tree_retry_failed`. */
 export interface MemoryTreeRetryFailedResponse {
   /** Number of terminally-failed jobs flipped back to `ready`. */
   requeued: number;
@@ -937,13 +937,13 @@ export interface MemoryTreeRetryFailedResponse {
  * underlying cause this is the only thing that unparks the work. Without it a
  * single bad batch pins the panel on `error` permanently.
  *
- * Backed by `openhuman.memory_tree_retry_failed`.
+ * Backed by `neppy.memory_tree_retry_failed`.
  */
 export async function memoryTreeRetryFailed(): Promise<MemoryTreeRetryFailedResponse> {
   console.debug('[memory-tree-rpc] memoryTreeRetryFailed: entry');
   const resp = await callCoreRpc<
     MemoryTreeRetryFailedResponse | ResultEnvelope<MemoryTreeRetryFailedResponse>
-  >({ method: 'openhuman.memory_tree_retry_failed', params: {} });
+  >({ method: 'neppy.memory_tree_retry_failed', params: {} });
   const out = unwrapResult(resp);
   console.debug('[memory-tree-rpc] memoryTreeRetryFailed: exit requeued=%d', out.requeued);
   return out;
@@ -952,7 +952,7 @@ export async function memoryTreeRetryFailed(): Promise<MemoryTreeRetryFailedResp
 // ── memory_tree_set_enabled (#1856 Part 1) ───────────────────────────────
 
 /**
- * Wire shape returned by `openhuman.memory_tree_set_enabled`. `changed=false`
+ * Wire shape returned by `neppy.memory_tree_set_enabled`. `changed=false`
  * means the persisted mode already matched the request (idempotent toggle).
  */
 export interface MemoryTreeSetEnabledResponse {
@@ -970,7 +970,7 @@ export interface MemoryTreeSetEnabledResponse {
  * background worker cooperatively at their next `wait_for_capacity()`
  * await on the Rust side.
  *
- * Backed by `openhuman.memory_tree_set_enabled` (#1856 Part 1). The 20-min
+ * Backed by `neppy.memory_tree_set_enabled` (#1856 Part 1). The 20-min
  * Composio fetch loop is *not* paused by this toggle yet — that lands in
  * #1856 Part 2.
  */
@@ -980,7 +980,7 @@ export async function memoryTreeSetEnabled(
   console.debug('[memory-tree-rpc] memoryTreeSetEnabled: entry enabled=%s', enabled);
   const resp = await callCoreRpc<
     MemoryTreeSetEnabledResponse | ResultEnvelope<MemoryTreeSetEnabledResponse>
-  >({ method: 'openhuman.memory_tree_set_enabled', params: { enabled } });
+  >({ method: 'neppy.memory_tree_set_enabled', params: { enabled } });
   const out = unwrapResult(resp);
   console.debug(
     '[memory-tree-rpc] memoryTreeSetEnabled: exit enabled=%s changed=%s mode=%s',
@@ -1020,14 +1020,14 @@ export interface SyncAuditEntry {
 export async function memorySyncAuditLog(): Promise<SyncAuditEntry[]> {
   const resp = await callCoreRpc<
     { entries: SyncAuditEntry[] } | ResultEnvelope<{ entries: SyncAuditEntry[] }>
-  >({ method: 'openhuman.memory_sources_sync_audit_log', params: {} });
+  >({ method: 'neppy.memory_sources_sync_audit_log', params: {} });
   return unwrapResult(resp).entries ?? [];
 }
 
 // ── memory_sync_status_list (#2763 — per-integration health strip) ───────
 
 /**
- * Freshness label emitted by `openhuman.memory_sync_status_list`. Snake-case
+ * Freshness label emitted by `neppy.memory_sync_status_list`. Snake-case
  * mirrors the Rust `FreshnessLabel` serde rename. Derived from
  * `now - last_chunk_at_ms` at RPC time, not stored.
  */
@@ -1060,14 +1060,14 @@ export interface MemorySyncStatusRow {
  * `mem_tree_chunks` (GROUP BY source_kind); safe to poll alongside
  * `memoryTreePipelineStatus` on the same 1.5s / 4s adaptive cadence.
  *
- * Backed by `openhuman.memory_sync_status_list` (#1136). Surfaced by the
+ * Backed by `neppy.memory_sync_status_list` (#1136). Surfaced by the
  * per-integration health strip in `MemoryTreeStatusPanel` (#2763).
  */
 export async function memorySyncStatusList(): Promise<MemorySyncStatusRow[]> {
   console.debug('[memory-tree-rpc] memorySyncStatusList: entry');
   const resp = await callCoreRpc<
     { statuses: MemorySyncStatusRow[] } | ResultEnvelope<{ statuses: MemorySyncStatusRow[] }>
-  >({ method: 'openhuman.memory_sync_status_list', params: {} });
+  >({ method: 'neppy.memory_sync_status_list', params: {} });
   const out = unwrapResult(resp);
   const rows = out.statuses ?? [];
   console.debug('[memory-tree-rpc] memorySyncStatusList: exit rows=%d', rows.length);

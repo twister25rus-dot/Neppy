@@ -25,7 +25,7 @@ Normal app quit runs teardown from `RunEvent::ExitRequested`: child webviews are
 
 On macOS, hard exits (Force Quit, `SIGKILL`, renderer crash) can skip normal teardown. The next launch runs startup recovery before CEF cache preflight: it lists Neppy processes whose executable path belongs to the launching `.app/Contents`, skips the current process, sends `SIGTERM`, waits briefly, then `SIGKILL`s stragglers that still match the same pid+command. Logs use the `[startup-recovery]` prefix.
 
-Startup recovery skips when `OPENHUMAN_CORE_REUSE_EXISTING=1` is set (so manual CLI-core reuse still works) and when the CEF `SingletonLock` is held by a live process (so the normal second-instance path can fail without killing the already-running app). The Tauri command `process_diagnostics_list_owned` returns the currently owned process list; the macOS implementation is bundle-scoped, Linux/Windows currently return empty.
+Startup recovery skips when `NEPPY_CORE_REUSE_EXISTING=1` is set (so manual CLI-core reuse still works) and when the CEF `SingletonLock` is held by a live process (so the normal second-instance path can fail without killing the already-running app). The Tauri command `process_diagnostics_list_owned` returns the currently owned process list; the macOS implementation is bundle-scoped, Linux/Windows currently return empty.
 
 ## Tauri shell architecture (`app/src-tauri/`)
 
@@ -80,7 +80,7 @@ There is **no** `src-tauri/src/services/session_service.rs` in this tree; sessio
 React (fetch)
     → POST http://127.0.0.1:<port>/rpc   (URL from `core_rpc_url`,
                                           bearer from `core_rpc_token`)
-        → embedded openhuman core server (tokio task in this process)
+        → embedded neppy core server (tokio task in this process)
 ```
 
 The renderer talks to the local core **directly over HTTP** — `app/src/services/coreRpcClient.ts` invokes `core_rpc_url` / `core_rpc_token` once, then issues plain `fetch()` calls. The `relay_http_rpc` Tauri command is a host-side fallback used only when the RPC URL is **not** a trustworthy origin for the secure `tauri://localhost` webview (e.g. a self-hosted runtime on a LAN IP, blocked as mixed content — #3865): the Rust host performs the POST with `reqwest` and mirrors status + body back verbatim.
@@ -114,7 +114,7 @@ All commands are registered in **`app/src-tauri/src/lib.rs`** inside `tauri::gen
 | `core_rpc_url`                   | Return the **active gateway's** JSON-RPC URL — the embedded core's `http://127.0.0.1:<port>/rpc` unless another gateway is active               |
 | `core_rpc_token`                 | Return the active gateway's bearer. Paired with `core_rpc_url`: a token minted for the embedded core is meaningless to a core in a container    |
 | `relay_http_rpc`                 | Host-side JSON-RPC POST (`{ url, token?, body }` → `{ status, body }`) for self-hosted runtimes the webview cannot fetch (mixed content, #3865) |
-| `overlay_parent_rpc_url`         | RPC URL inherited from a parent process (overlay windows), from `OPENHUMAN_CORE_RPC_URL`                                                        |
+| `overlay_parent_rpc_url`         | RPC URL inherited from a parent process (overlay windows), from `NEPPY_CORE_RPC_URL`                                                        |
 | `process_diagnostics_list_owned` | List Neppy processes owned by this app bundle (macOS; empty elsewhere)                                                                      |
 
 Use **`app/src/services/coreRpcClient.ts`** (`callCoreRpc`) from the frontend.
@@ -293,10 +293,10 @@ The Tauri crate **does not** embed a duplicate Socket.io server or Telegram clie
 
 - Runs the core's HTTP/JSON-RPC server as a **tokio task inside the Tauri host** via `neppy_core::core::jsonrpc::run_server_embedded_with_ready` — no sidecar binary.
 - Generates a per-launch 256-bit hex bearer token (`generate_rpc_token`) and hands it to the embedded server; the renderer reads it via the `core_rpc_token` command.
-- Stale-listener policy (#1130): if the core port is already occupied, probes whether the listener is an old Neppy core (terminate + respawn) or something foreign (surface the conflict). `OPENHUMAN_CORE_REUSE_EXISTING=1` opts back into attach-to-existing for debugging.
+- Stale-listener policy (#1130): if the core port is already occupied, probes whether the listener is an old Neppy core (terminate + respawn) or something foreign (surface the conflict). `NEPPY_CORE_REUSE_EXISTING=1` opts back into attach-to-existing for debugging.
 - Managed as Tauri state in `lib.rs` (`app.manage(core_handle)`).
 
 ### `core_rpc` (`core_rpc.rs`)
 
-- Shared auth helpers for host-side calls to the local core (URL from `OPENHUMAN_CORE_RPC_URL` or the default port; bearer from `core_process::current_rpc_token`).
+- Shared auth helpers for host-side calls to the local core (URL from `NEPPY_CORE_RPC_URL` or the default port; bearer from `core_process::current_rpc_token`).
 - **`relay_http_rpc`** Tauri command: host-side `reqwest` POST for self-hosted runtimes on non-trustworthy origins (see [Core RPC & diagnostics](#core-rpc--diagnostics)).

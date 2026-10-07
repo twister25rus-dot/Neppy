@@ -108,7 +108,7 @@ Triage runs on the fast model tier (see [Automatic Model Routing](../model-routi
 ## Configuration and opt-out
 
 - **On by default.** Once an integration is connected, its triggers feed into the pipeline automatically.
-- **Opt-out.** The triage path is gated on the `OPENHUMAN_TRIGGER_TRIAGE_DISABLED` environment variable. Setting it to `1` / `true` / `yes` turns off agent classification and falls back to passive logging only. The integration itself stays connected; only the auto-action behaviour is suppressed.
+- **Opt-out.** The triage path is gated on the `NEPPY_TRIGGER_TRIAGE_DISABLED` environment variable. Setting it to `1` / `true` / `yes` turns off agent classification and falls back to passive logging only. The integration itself stays connected; only the auto-action behaviour is suppressed.
 - **Per-trigger settings.** Trigger settings (which integrations and event types should be evaluated) are managed under **Settings**; the underlying RPC methods are `update_composio_trigger_settings` / `get_composio_trigger_settings`.
 - **Audit log.** Every trigger, regardless of decision, is written to the trigger history so you can see what arrived, what the classifier decided, and what (if anything) ran. Decisions and escalations are also published as `TriggerEvaluated` / `TriggerEscalated` events on the in-process bus, which means anything inside the core can subscribe to them.
 

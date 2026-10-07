@@ -54,8 +54,8 @@ const FORCED_RESPONSES = [
 /** Read the selected thread's board cards straight out of the redux store. */
 async function boardCardTitles(threadId: string): Promise<string[]> {
   return (await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | {
           chatRuntime?: {
             taskBoardByThread?: Record<string, { cards?: Array<{ title?: string }> }>;

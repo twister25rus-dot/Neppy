@@ -159,7 +159,7 @@ pub fn wallet_schemas(function: &str) -> ControllerSchema {
                     name: "encryptedMnemonic",
                     ty: TypeSchema::String,
                     comment:
-                        "Encrypted recovery phrase payload created via openhuman.encrypt_secret. Required for on-chain signing/broadcast.",
+                        "Encrypted recovery phrase payload created via neppy.encrypt_secret. Required for on-chain signing/broadcast.",
                     required: true,
                 },
                 required_json(

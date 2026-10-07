@@ -183,8 +183,8 @@ mod tests {
             let lock = crate::neppy::config::TEST_ENV_LOCK
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+            std::env::set_var("NEPPY_WORKSPACE", path);
             Self {
                 _lock: lock,
                 previous,
@@ -195,9 +195,9 @@ mod tests {
     impl Drop for WorkspaceEnvGuard {
         fn drop(&mut self) {
             if let Some(previous) = self.previous.as_ref() {
-                std::env::set_var("OPENHUMAN_WORKSPACE", previous);
+                std::env::set_var("NEPPY_WORKSPACE", previous);
             } else {
-                std::env::remove_var("OPENHUMAN_WORKSPACE");
+                crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
             }
         }
     }
@@ -215,7 +215,7 @@ mod tests {
     ///
     /// `ensure_memory_client` stays: `active_memory_guard`'s no-context
     /// fallback prefers the workspace the global client is already bound to,
-    /// and the callers below move `OPENHUMAN_WORKSPACE` to a tempdir *after*
+    /// and the callers below move `NEPPY_WORKSPACE` to a tempdir *after*
     /// seeding.
     async fn seed_namespace(prefix: &str) -> String {
         ensure_memory_client();

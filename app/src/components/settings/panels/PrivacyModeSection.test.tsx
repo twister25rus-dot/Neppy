@@ -12,10 +12,10 @@ vi.mock('../../../services/coreRpcClient', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   callCoreRpc.mockImplementation((arg: { method: string; params: { mode?: string } }) => {
-    if (arg.method === 'openhuman.config_get_privacy_mode') {
+    if (arg.method === 'neppy.config_get_privacy_mode') {
       return Promise.resolve({ result: { mode: 'standard' } });
     }
-    if (arg.method === 'openhuman.config_set_privacy_mode') {
+    if (arg.method === 'neppy.config_set_privacy_mode') {
       return Promise.resolve({ result: { mode: arg.params.mode } });
     }
     return Promise.reject(new Error(`unexpected method ${arg.method}`));
@@ -57,7 +57,7 @@ describe('PrivacyModeSection', () => {
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.config_set_privacy_mode',
+        method: 'neppy.config_set_privacy_mode',
         params: { mode: 'local_only' },
       })
     );
@@ -84,7 +84,7 @@ describe('PrivacyModeSection', () => {
 
     // Only the initial get RPC should have fired — no set for an unchanged mode.
     expect(
-      callCoreRpc.mock.calls.filter(c => c[0].method === 'openhuman.config_set_privacy_mode')
+      callCoreRpc.mock.calls.filter(c => c[0].method === 'neppy.config_set_privacy_mode')
     ).toHaveLength(0);
   });
 });

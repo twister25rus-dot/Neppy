@@ -64,7 +64,7 @@ async fn inference_hits_ollama_chat_completions_and_returns_response() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -75,9 +75,7 @@ async fn inference_hits_ollama_chat_completions_and_returns_response() {
         .expect("ollama prompt");
     assert_eq!(reply, "hello from mock");
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -90,7 +88,7 @@ async fn inference_errors_on_non_success_status() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -98,9 +96,7 @@ async fn inference_errors_on_non_success_status() {
     let err = service.prompt(&config, "hi", None, true).await.unwrap_err();
     assert!(err.contains("500"));
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -108,17 +104,14 @@ async fn inference_connection_failure_mentions_external_ollama_runtime() {
     let _guard = crate::neppy::inference::inference_test_guard();
 
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
 
     let config = enabled_config();
     let service = ready_service(&config);
     let err = service.prompt(&config, "hi", None, true).await.unwrap_err();
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     assert!(
         err.contains("external Ollama endpoint"),
         "unexpected error: {err}"
@@ -136,7 +129,7 @@ async fn inference_errors_on_empty_response_when_allow_empty_false() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -146,10 +139,7 @@ async fn inference_errors_on_empty_response_when_allow_empty_false() {
     // surface as the "empty content" error.
     let res = service.inference(&config, "", "hi", None, false).await;
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     let err = res.expect_err("whitespace response must be rejected when allow_empty=false");
     assert!(
         err.contains("empty"),
@@ -279,7 +269,7 @@ async fn inline_complete_interactive_does_not_block_on_held_permit() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -294,10 +284,7 @@ async fn inline_complete_interactive_does_not_block_on_held_permit() {
     )
     .await;
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     let inner = result.expect("interactive variant must NOT block on held permit");
     assert!(
         inner.is_ok(),
@@ -320,7 +307,7 @@ async fn prompt_interactive_does_not_block_on_held_permit() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -332,10 +319,7 @@ async fn prompt_interactive_does_not_block_on_held_permit() {
     )
     .await;
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     let reply = result
         .expect("interactive prompt must not block on a held permit")
         .expect("interactive prompt response");
@@ -366,7 +350,7 @@ async fn summarize_interactive_does_not_block_on_held_permit() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -378,10 +362,7 @@ async fn summarize_interactive_does_not_block_on_held_permit() {
     )
     .await;
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     let reply = result
         .expect("interactive summary must not block on a held permit")
         .expect("interactive summary response");
@@ -403,7 +384,7 @@ async fn chat_with_history_interactive_does_not_block_on_held_permit() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -422,10 +403,7 @@ async fn chat_with_history_interactive_does_not_block_on_held_permit() {
     )
     .await;
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     let reply = result
         .expect("interactive chat must not block on a held permit")
         .expect("interactive chat response");
@@ -456,7 +434,7 @@ async fn gated_inline_complete_blocks_on_held_permit() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = enabled_config();
@@ -485,7 +463,5 @@ async fn gated_inline_complete_blocks_on_held_permit() {
         .expect("ollama call");
     assert!(!resolved.is_empty() || resolved.is_empty()); // sanity — value depends on sanitiser
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }

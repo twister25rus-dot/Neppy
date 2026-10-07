@@ -61,11 +61,11 @@ export default function AgentActivityPanel() {
       setStatus('loading');
       const [settingsResp, costResp] = await Promise.all([
         callCoreRpc<{ result: ActivityLevelSettings }>({
-          method: 'openhuman.config_get_activity_level_settings',
+          method: 'neppy.config_get_activity_level_settings',
           params: {},
         }),
         callCoreRpc<{ result: MonthlyCostSummary }>({
-          method: 'openhuman.memory_sources_monthly_cost_summary',
+          method: 'neppy.memory_sources_monthly_cost_summary',
           params: {},
         }),
       ]);
@@ -87,7 +87,7 @@ export default function AgentActivityPanel() {
       setStatus('saving');
       setError(null);
       const resp = await callCoreRpc<{ result: ActivityLevelSettings }>({
-        method: 'openhuman.config_update_activity_level_settings',
+        method: 'neppy.config_update_activity_level_settings',
         params: { level: levelKey },
       });
       setSettings(resp.result);

@@ -129,7 +129,7 @@ SH
 
   set +e
   explicit_deb_output=$(
-    PATH="$tmpdir:$PATH" OPENHUMAN_INSTALLER_LINUX_PACKAGE=deb bash "$REPO_ROOT/scripts/install.sh" --dry-run 2>&1
+    PATH="$tmpdir:$PATH" NEPPY_INSTALLER_LINUX_PACKAGE=deb bash "$REPO_ROOT/scripts/install.sh" --dry-run 2>&1
   )
   explicit_deb_rc=$?
   set -e
@@ -152,7 +152,7 @@ SH
 
   set +e
   explicit_deb_install_output=$(
-    PATH="$tmpdir:$PATH" OPENHUMAN_INSTALLER_LINUX_PACKAGE=deb bash "$REPO_ROOT/scripts/install.sh" 2>&1
+    PATH="$tmpdir:$PATH" NEPPY_INSTALLER_LINUX_PACKAGE=deb bash "$REPO_ROOT/scripts/install.sh" 2>&1
   )
   explicit_deb_install_rc=$?
   set -e
@@ -162,7 +162,7 @@ SH
     echo "$explicit_deb_install_output"
     exit 1
   fi
-  if [[ "$explicit_deb_install_output" != *"Set OPENHUMAN_INSTALLER_LINUX_PACKAGE=appimage"* ]]; then
+  if [[ "$explicit_deb_install_output" != *"Set NEPPY_INSTALLER_LINUX_PACKAGE=appimage"* ]]; then
     echo "FAIL: explicit .deb install should explain how to opt into the AppImage fallback"
     echo "$explicit_deb_install_output"
     exit 1

@@ -115,12 +115,12 @@ async fn run_one(config: &Config, step: &HarnessInitStep, force: bool, failed_re
 
 // ── RPC handlers ────────────────────────────────────────────────────────────
 
-/// `openhuman.harness_init_status` — return the current snapshot.
+/// `neppy.harness_init_status` — return the current snapshot.
 pub fn handle_status(_params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move { snapshot_response(store::snapshot()) })
 }
 
-/// `openhuman.harness_init_run` — re-run init (retry). `force` re-runs even
+/// `neppy.harness_init_run` — re-run init (retry). `force` re-runs even
 /// already-satisfied steps; defaults to false (only retries pending/failed).
 pub fn handle_run(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {

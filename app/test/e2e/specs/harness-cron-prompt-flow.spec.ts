@@ -66,7 +66,7 @@ const USER_ID = 'e2e-harness-cron-prompt-flow';
 
 /** Retrieve the current cron job list via oracle RPC. */
 async function listCronJobs(): Promise<Array<{ id: string; name: string; schedule?: string }>> {
-  const out = await callNeppyRpc('openhuman.cron_list', {});
+  const out = await callNeppyRpc('neppy.cron_list', {});
   if (!out.ok) {
     console.warn(`${LOG_PREFIX} cron_list RPC failed: ${JSON.stringify(out)}`);
     return [];
@@ -77,7 +77,7 @@ async function listCronJobs(): Promise<Array<{ id: string; name: string; schedul
 
 /** Create a cron job via oracle RPC. Returns the created job id.
  *
- * The `openhuman.cron_add` RPC requires either a `command` (shell job) or a
+ * The `neppy.cron_add` RPC requires either a `command` (shell job) or a
  * `prompt` (agent job); with neither, it defaults to shell and rejects with
  * `"'command' is required for shell jobs"`. This oracle seeds an agent job
  * because the harness scenarios exercise agent-style scheduled reminders.
@@ -95,7 +95,7 @@ async function createCronJobOracle(params: {
   schedule: string;
   enabled?: boolean;
 }): Promise<string | null> {
-  const out = await callNeppyRpc('openhuman.cron_add', {
+  const out = await callNeppyRpc('neppy.cron_add', {
     name: params.name,
     schedule: { kind: 'cron', expr: params.schedule },
     job_type: 'agent',
@@ -109,7 +109,7 @@ async function createCronJobOracle(params: {
   const id = (result as { id?: string })?.id ?? null;
   console.log(`${LOG_PREFIX} oracle cron_add: name=${params.name}, id=${id}`);
   if (id) {
-    const disable = await callNeppyRpc('openhuman.cron_update', {
+    const disable = await callNeppyRpc('neppy.cron_update', {
       job_id: id,
       patch: { enabled: false },
     });

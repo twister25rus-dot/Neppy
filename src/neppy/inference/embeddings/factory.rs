@@ -186,7 +186,7 @@ pub fn create_embedding_provider_with_credentials(
 ///
 /// The keyless constructors hardcode `(None, true)`, which resolves to
 /// `default_state_dir()` (`~/.neppy` root) with encryption forced on. On a
-/// shipped desktop `OPENHUMAN_WORKSPACE` is unset and the session token lives
+/// shipped desktop `NEPPY_WORKSPACE` is unset and the session token lives
 /// under the user-scoped `~/.neppy/users/<uid>/auth-profiles.json`, so that
 /// hardcode reads the *wrong* file and a signed-in user's managed "Test
 /// connection" / embed falsely reports "No backend session" (#5356). Callers
@@ -532,7 +532,7 @@ mod tests {
         // own BACKEND_URL tests) so the process-global env can't race.
         let provider = {
             let _env_guard = crate::api::config::backend_env_test_lock();
-            let prev = std::env::var("BACKEND_URL").ok();
+            let prev = crate::neppy::util::env::var("BACKEND_URL").ok();
             std::env::set_var("BACKEND_URL", &base);
             let built = create_embedding_provider_with_config(
                 &config,
@@ -545,7 +545,7 @@ mod tests {
             .expect("managed provider builds via config-aware factory");
             match prev {
                 Some(v) => std::env::set_var("BACKEND_URL", v),
-                None => std::env::remove_var("BACKEND_URL"),
+                None => crate::neppy::util::env::remove_var("BACKEND_URL"),
             }
             built
         };
@@ -626,12 +626,12 @@ mod tests {
 
         let provider = {
             let _env_guard = crate::api::config::backend_env_test_lock();
-            let prev = std::env::var("BACKEND_URL").ok();
+            let prev = crate::neppy::util::env::var("BACKEND_URL").ok();
             std::env::set_var("BACKEND_URL", &base);
             let built = default_embedding_provider_with_config(&config);
             match prev {
                 Some(v) => std::env::set_var("BACKEND_URL", v),
-                None => std::env::remove_var("BACKEND_URL"),
+                None => crate::neppy::util::env::remove_var("BACKEND_URL"),
             }
             built
         };

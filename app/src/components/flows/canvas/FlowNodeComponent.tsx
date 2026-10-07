@@ -87,7 +87,7 @@ function FlowNodeComponent({ id, data, selected }: NodeProps<FlowNode>) {
   const { t, locale } = useT();
   const actions = useCanvasActions();
   const stepNumber = useStepNumber(id);
-  // A native "Tool" node (provider=openhuman / oh: slug) reads differently from
+  // A native "Tool" node (provider=neppy / oh: slug) reads differently from
   // the Composio "App action" node even though both are `tool_call` — the
   // former calls one of the assistant's own built-ins, the latter reaches a
   // connected third-party account. Distinguish them with the sparkles glyph on

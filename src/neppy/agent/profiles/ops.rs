@@ -302,9 +302,9 @@ mod tests {
     }
     impl WorkspaceEnvGuard {
         fn set(path: &std::path::Path) -> Self {
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
             unsafe {
-                std::env::set_var("OPENHUMAN_WORKSPACE", path);
+                std::env::set_var("NEPPY_WORKSPACE", path);
             }
             Self { previous }
         }
@@ -312,8 +312,8 @@ mod tests {
     impl Drop for WorkspaceEnvGuard {
         fn drop(&mut self) {
             match self.previous.take() {
-                Some(value) => unsafe { std::env::set_var("OPENHUMAN_WORKSPACE", value) },
-                None => unsafe { std::env::remove_var("OPENHUMAN_WORKSPACE") },
+                Some(value) => unsafe { std::env::set_var("NEPPY_WORKSPACE", value) },
+                None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
             }
         }
     }
@@ -323,9 +323,9 @@ mod tests {
     }
     impl ActionDirEnvGuard {
         fn set(path: &std::path::Path) -> Self {
-            let previous = std::env::var_os("OPENHUMAN_ACTION_DIR");
+            let previous = crate::neppy::util::env::var_os("NEPPY_ACTION_DIR");
             unsafe {
-                std::env::set_var("OPENHUMAN_ACTION_DIR", path);
+                std::env::set_var("NEPPY_ACTION_DIR", path);
             }
             Self { previous }
         }
@@ -333,8 +333,8 @@ mod tests {
     impl Drop for ActionDirEnvGuard {
         fn drop(&mut self) {
             match self.previous.take() {
-                Some(value) => unsafe { std::env::set_var("OPENHUMAN_ACTION_DIR", value) },
-                None => unsafe { std::env::remove_var("OPENHUMAN_ACTION_DIR") },
+                Some(value) => unsafe { std::env::set_var("NEPPY_ACTION_DIR", value) },
+                None => crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR"),
             }
         }
     }

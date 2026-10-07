@@ -1,4 +1,4 @@
-//! Controller-registry schemas for `openhuman.agent_registry_*`.
+//! Controller-registry schemas for `neppy.agent_registry_*`.
 
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};

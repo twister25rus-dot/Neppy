@@ -68,7 +68,7 @@ Front-matter is built by `compose/chunk.rs::compose_chunk_file`, which returns
   at the second `---` delimiter.
 
 Two format constants are stamped for vault compatibility (`compose/mod.rs`):
-`MEMORY_ARTIFACT_FORMAT = 2` and `OPENHUMAN_CORE_VERSION` (the crate version; the
+`MEMORY_ARTIFACT_FORMAT = 2` and `NEPPY_CORE_VERSION` (the crate version; the
 front-matter key keeps the OpenHuman wire name `openhuman_core_version`).
 
 ### Paths and Obsidian-vault layout

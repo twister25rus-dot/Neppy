@@ -121,16 +121,16 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint-core.sh \
 USER root
 
 # Default workspace directory
-ENV OPENHUMAN_WORKSPACE=/home/openhuman/.neppy
+ENV NEPPY_WORKSPACE=/home/openhuman/.neppy
 # Bind to all interfaces so the container is reachable
-ENV OPENHUMAN_CORE_HOST=0.0.0.0
-ENV OPENHUMAN_CORE_PORT=7788
+ENV NEPPY_CORE_HOST=0.0.0.0
+ENV NEPPY_CORE_PORT=7788
 # Stable first-party signal for CLI launch policy; containers default headless.
-ENV OPENHUMAN_DOCKER=1
+ENV NEPPY_DOCKER=1
 ENV RUST_LOG=info
 # AgentBox marketplace mode — off by default for desktop builds. The
 # AgentBox console flips this on per deployment, along with GMI_MAAS_*.
-ENV OPENHUMAN_AGENTBOX_MODE=0
+ENV NEPPY_AGENTBOX_MODE=0
 
 EXPOSE 7788
 

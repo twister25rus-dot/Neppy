@@ -38,7 +38,9 @@ import {
 } from '../../features/conversations/composerSendDecision';
 import { useMemorySyncActive } from '../../features/conversations/hooks/useBackgroundActivity';
 import {
+  DEBUG_TAB_VALUE,
   GENERAL_TAB_VALUE,
+  isDebugThread,
   isThreadVisibleInTab,
 } from '../../features/conversations/utils/threadFilter';
 import {
@@ -103,6 +105,7 @@ import {
   addMessageLocal,
   clearCreateThreadError,
   clearThreadInferenceActive,
+  createDebugThread,
   createNewThread,
   deleteThread,
   loadThreadMessages,
@@ -169,6 +172,13 @@ interface ConversationsProps {
    * the embedded conversation.
    */
   projectThreadList?: boolean;
+  /**
+   * Which family of threads this surface owns. `chat` (default) is the normal
+   * `/chat` page and never lists or restores Debug-mode threads; `debug` is the
+   * `/debug` page: it lists only Debug-mode threads, keeps navigation under
+   * `/debug/:threadId`, and creates new threads in Debug mode.
+   */
+  scope?: 'chat' | 'debug';
 }
 
 // Stable empty reference so the `activeThreadIds` selector returns the same
@@ -261,6 +271,7 @@ const Conversations = ({
   voiceChatControl = null,
   showMicComposer = true,
   projectThreadList = false,
+  scope = 'chat',
 }: ConversationsProps = {}) => {
   const [composerOverride, setComposerOverride] = useState<'mic-cloud' | 'text' | null>(null);
   const composer = composerOverride ?? composerProp;
@@ -269,7 +280,9 @@ const Conversations = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { threadId: routeThreadId } = useParams<{ threadId?: string }>();
-  const shouldSyncChatRoute = variant === 'page' && location.pathname.startsWith('/chat');
+  const routeBase = scope === 'debug' ? '/debug' : '/chat';
+  const threadPath = (id: string) => `${routeBase}/${encodeURIComponent(id)}`;
+  const shouldSyncChatRoute = variant === 'page' && location.pathname.startsWith(routeBase);
   const { threads, selectedThreadId, messages, isLoadingMessages, messagesError } = useAppSelector(
     state => state.thread
   );
@@ -313,7 +326,7 @@ const Conversations = ({
   // Thread-list filtering is fixed to the General bucket — the in-sidebar
   // General/Subconscious/Tasks chips were removed. Subconscious reflections and
   // task/worker threads have dedicated surfaces (Intelligence, Tasks board).
-  const selectedLabel = GENERAL_TAB_VALUE;
+  const selectedLabel = scope === 'debug' ? DEBUG_TAB_VALUE : GENERAL_TAB_VALUE;
   const [sendError, setSendError] = useState<ChatSendError | null>(null);
   // Recorded by the slice for *every* create path (#5156) — including the shell's
   // "New chat" button and the home-nav shortcut, which have no UI of their own —
@@ -514,11 +527,11 @@ const Conversations = ({
         const hint = profile?.modelOverride ?? CHAT_MODEL_HINT;
         const [res, visionRes] = await Promise.all([
           callCoreRpc<{ model: string; vision?: boolean }>({
-            method: 'openhuman.inference_resolve_model',
+            method: 'neppy.inference_resolve_model',
             params: { hint },
           }),
           callCoreRpc<{ model: string; vision?: boolean }>({
-            method: 'openhuman.inference_resolve_model',
+            method: 'neppy.inference_resolve_model',
             params: { hint: 'hint:vision' },
           }).catch(() => ({ model: '', vision: false })),
         ]);
@@ -599,12 +612,15 @@ const Conversations = ({
 
   const handleCreateNewThread = async () => {
     try {
-      const thread = await dispatch(createNewThread()).unwrap();
+      const thread =
+        scope === 'debug'
+          ? await dispatch(createDebugThread()).unwrap()
+          : await dispatch(createNewThread()).unwrap();
       dispatch(setSelectedThread(thread.id));
       void dispatch(loadThreadMessages(thread.id));
       if (shouldSyncChatRoute) {
         debug('[chat][route] created thread thread=%s navigate=true', thread.id);
-        navigate(chatThreadPath(thread.id));
+        navigate(threadPath(thread.id));
       } else {
         debug('[chat][route] created thread thread=%s navigate=false', thread.id);
       }
@@ -695,7 +711,7 @@ const Conversations = ({
         if (cancelled) return;
         // Match the sidebar's default General filter here so initial/resume
         // selection can't auto-pick a thread hidden by the selected tab.
-        const visibleThreads = data.threads.filter(t => isThreadVisibleInTab(t, GENERAL_TAB_VALUE));
+        const visibleThreads = data.threads.filter(t => isThreadVisibleInTab(t, selectedLabel));
         // An explicit "open this session" intent (e.g. View work from the Agent
         // Tasks board) wins over passive resume — and bypasses the General-tab
         // visibility filter so a task-labelled session thread can actually be
@@ -714,7 +730,7 @@ const Conversations = ({
         }
         if (openThreadId) {
           debug('[chat][route] requested thread not found thread=%s; falling back', openThreadId);
-          navigate('/chat', { replace: true });
+          navigate(routeBase, { replace: true });
           return;
         }
         // Restore the thread the user last had open — persisted across reloads
@@ -726,8 +742,14 @@ const Conversations = ({
         // Chat tab and back would drop the active thread and either resume an
         // unrelated General thread or spawn a fresh chat — losing the
         // conversation the user was in (#chat-tab-active-thread).
+        // Scope-guarded: a Debug thread left selected by the Debug page must
+        // not be restored into normal chat (and vice versa).
         const persistedThread = selectedThreadId
-          ? data.threads.find(t => t.id === selectedThreadId)
+          ? data.threads.find(
+              t =>
+                t.id === selectedThreadId &&
+                (isDebugThread(t) === (scope === 'debug') || routeThreadId === t.id)
+            )
           : undefined;
         if (persistedThread) {
           dispatch(setSelectedThread(persistedThread.id));
@@ -2030,7 +2052,7 @@ const Conversations = ({
         dispatch(setSelectedThread(id));
         void dispatch(loadThreadMessages(id));
         if (shouldSyncChatRoute) {
-          navigate(chatThreadPath(id));
+          navigate(threadPath(id));
         }
       }}
       resolveTitle={resolveThreadDisplayTitle}
@@ -2047,7 +2069,7 @@ const Conversations = ({
           destructive: true,
           onConfirm: () => {
             if (shouldSyncChatRoute && routeThreadId === thread.id) {
-              navigate('/chat', { replace: true });
+              navigate(routeBase, { replace: true });
             }
             void dispatch(deleteThread(thread.id));
           },
@@ -2665,4 +2687,6 @@ export default Conversations;
  * Embeddable variant — same component, page layout (floating centered
  * card). Mounted inside /accounts when the Agent entry is selected.
  */
-export const ConversationsPage = () => <Conversations variant="page" />;
+export const ConversationsPage = ({ scope }: Pick<ConversationsProps, 'scope'> = {}) => (
+  <Conversations variant="page" scope={scope} />
+);

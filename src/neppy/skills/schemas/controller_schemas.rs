@@ -1,4 +1,4 @@
-//! Controller schema definitions for every `openhuman.skills_*` RPC method.
+//! Controller schema definitions for every `neppy.skills_*` RPC method.
 //!
 //! `skills_schemas(function)` returns the [`ControllerSchema`] for the
 //! named function. `all_skills_controller_schemas` and

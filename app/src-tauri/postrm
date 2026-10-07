@@ -9,8 +9,8 @@ set -e
 
 # Overridable for the maintainer-script test only; dpkg sets neither variable,
 # so production uses the defaults. See scripts/test-deb-maintainer-scripts.sh.
-LINK="${OPENHUMAN_DEB_SYMLINK:-/usr/local/bin/neppy}"
-TARGET="${OPENHUMAN_DEB_BINARY:-/usr/bin/Neppy}"
+LINK="${NEPPY_DEB_SYMLINK:-${OPENHUMAN_DEB_SYMLINK:-/usr/local/bin/neppy}}"
+TARGET="${NEPPY_DEB_BINARY:-${OPENHUMAN_DEB_BINARY:-/usr/bin/Neppy}}"
 
 case "$1" in
   remove|purge)

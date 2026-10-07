@@ -301,7 +301,7 @@ describe('AgentAccessPanel (advanced)', () => {
     renderWithProviders(<AgentAccessPanel />);
     const input = (await screen.findByLabelText('Action timeout')) as HTMLInputElement;
     expect(input.disabled).toBe(true);
-    expect(screen.getByText(/OPENHUMAN_TOOL_TIMEOUT_SECS/)).toBeInTheDocument();
+    expect(screen.getByText(/NEPPY_TOOL_TIMEOUT_SECS/)).toBeInTheDocument();
   });
 
   it('approval history link button is present and has the correct data-testid', async () => {

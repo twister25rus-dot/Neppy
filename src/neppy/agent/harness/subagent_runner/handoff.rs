@@ -141,7 +141,7 @@ pub(crate) fn apply_handoff(
     // the threshold so the handoff path can be exercised on payloads that
     // survive tokenjuice's compaction cap. Never consulted in production
     // (the env var is absent) so there is zero runtime cost.
-    let effective_threshold = std::env::var("OPENHUMAN_TEST_HANDOFF_THRESHOLD_TOKENS")
+    let effective_threshold = crate::neppy::util::env::var("NEPPY_TEST_HANDOFF_THRESHOLD_TOKENS")
         .ok()
         .and_then(|v| v.parse::<usize>().ok())
         .unwrap_or(HANDOFF_OVERSIZE_THRESHOLD_TOKENS);

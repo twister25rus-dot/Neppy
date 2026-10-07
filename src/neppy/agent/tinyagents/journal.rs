@@ -2,7 +2,7 @@
 //! Workstream 05-events, 05.1).
 //!
 //! The live [`crate::neppy::agent::tinyagents::observability::NeppyEventBridge`]
-//! mirrors the harness [`EventSink`] onto openhuman's in-process `AgentProgress`
+//! mirrors the harness [`EventSink`] onto neppy's in-process `AgentProgress`
 //! stream — transient state that is lost the moment the UI detaches. This module
 //! makes that history **durable**: it attaches, *in addition to* the untouched
 //! bridge, a crate [`StoreEventJournal`] (over the same 04-sessions

@@ -10,7 +10,7 @@ pub struct SeltzConfig {
     #[serde(default)]
     pub enabled: bool,
     /// Seltz API key. Can also be set via `SELTZ_API_KEY` or
-    /// `OPENHUMAN_SELTZ_API_KEY` env var.
+    /// `NEPPY_SELTZ_API_KEY` env var.
     #[serde(default)]
     pub api_key: Option<String>,
     /// Override the Seltz API base URL (default: `https://api.seltz.ai/v1`).

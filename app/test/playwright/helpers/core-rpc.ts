@@ -43,9 +43,9 @@ export async function callCoreRpc<T>(
 }
 
 async function resetCoreForWebUser(userId: string): Promise<void> {
-  await callCoreRpc('openhuman.auth_clear_session', {});
-  await callCoreRpc('openhuman.config_set_onboarding_completed', { value: true });
-  await callCoreRpc('openhuman.auth_store_session', { token: buildBypassJwt(userId) });
+  await callCoreRpc('neppy.auth_clear_session', {});
+  await callCoreRpc('neppy.config_set_onboarding_completed', { value: true });
+  await callCoreRpc('neppy.auth_store_session', { token: buildBypassJwt(userId) });
 }
 
 export async function seedBrowserCoreMode(page: Page): Promise<void> {
@@ -113,8 +113,8 @@ async function completeAuthCallback(page: Page, token: string): Promise<void> {
 }
 
 async function resetCoreForWebGuest(): Promise<void> {
-  await callCoreRpc('openhuman.auth_clear_session', {});
-  await callCoreRpc('openhuman.config_set_onboarding_completed', { value: true });
+  await callCoreRpc('neppy.auth_clear_session', {});
+  await callCoreRpc('neppy.config_set_onboarding_completed', { value: true });
 }
 
 export async function bootRuntimeReadyGuestPage(page: Page): Promise<void> {
@@ -276,14 +276,14 @@ async function waitForAuthenticatedSnapshot(page: Page): Promise<void> {
       async () =>
         page.evaluate(() => {
           const winAny = window as unknown as {
-            __OPENHUMAN_CORE_STATE__?: () => {
+            __NEPPY_CORE_STATE__?: () => {
               snapshot?: {
                 sessionToken?: string | null;
                 currentUser?: { _id?: string | null } | null;
               };
             };
           };
-          const snapshot = winAny.__OPENHUMAN_CORE_STATE__?.()?.snapshot;
+          const snapshot = winAny.__NEPPY_CORE_STATE__?.()?.snapshot;
           return {
             hasToken: Boolean(snapshot?.sessionToken),
             hasUser: Boolean(snapshot?.currentUser?._id),

@@ -100,7 +100,7 @@ Everything else (`boot`, `bus`, `connections`, `store`, `setup`, `setup_ops`) is
 ## Called by
 
 - `bootstrap_core_runtime` (via `boot::spawn_installed_servers`).
-- Frontend Skills UI: the **MCP** tab at `/skills?tab=mcp` (`McpServersTab`) dispatches through `ops.rs` over the `openhuman.mcp_clients_*` RPC namespace: browse, install (auto-connects), connect/disconnect, status, tool*call, `update_env` (reconfigure + reconnect), and `registry_settings_get` / `registry_settings_set` (Smithery / official-registry credentials; secret values are write-only). The agent-native flow uses `openhuman.mcp_setup*\*`via the`mcp_setup`sub-agent (orchestrator delegate`setup_mcp_server`).
+- Frontend Skills UI: the **MCP** tab at `/skills?tab=mcp` (`McpServersTab`) dispatches through `ops.rs` over the `neppy.mcp_clients_*` RPC namespace: browse, install (auto-connects), connect/disconnect, status, tool*call, `update_env` (reconfigure + reconnect), and `registry_settings_get` / `registry_settings_set` (Smithery / official-registry credentials; secret values are write-only). The agent-native flow uses `openhuman.mcp_setup*\*`via the`mcp_setup`sub-agent (orchestrator delegate`setup_mcp_server`).
 - The setup agent in `setup_ops.rs`, for first-connect onboarding.
 
 ## Tests

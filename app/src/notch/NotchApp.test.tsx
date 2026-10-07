@@ -45,7 +45,7 @@ describe('NotchApp', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     MockSocket.last = null;
-    (window as { __OPENHUMAN_NOTCH_CORE_URL__?: string }).__OPENHUMAN_NOTCH_CORE_URL__ =
+    (window as { __NEPPY_NOTCH_CORE_URL__?: string }).__NEPPY_NOTCH_CORE_URL__ =
       'http://127.0.0.1:9999';
     vi.mocked(connectCoreSocket).mockImplementation(
       async () => new MockSocket() as unknown as Awaited<ReturnType<typeof connectCoreSocket>>
@@ -53,7 +53,7 @@ describe('NotchApp', () => {
   });
 
   afterEach(() => {
-    delete (window as { __OPENHUMAN_NOTCH_CORE_URL__?: string }).__OPENHUMAN_NOTCH_CORE_URL__;
+    delete (window as { __NEPPY_NOTCH_CORE_URL__?: string }).__NEPPY_NOTCH_CORE_URL__;
   });
 
   const renderAndConnect = async () => {
@@ -93,7 +93,7 @@ describe('NotchApp', () => {
   });
 
   it('connects via the notch:core-url event when no URL was preloaded', async () => {
-    delete (window as { __OPENHUMAN_NOTCH_CORE_URL__?: string }).__OPENHUMAN_NOTCH_CORE_URL__;
+    delete (window as { __NEPPY_NOTCH_CORE_URL__?: string }).__NEPPY_NOTCH_CORE_URL__;
     render(<NotchApp />);
     expect(screen.getByText('Ready')).toBeInTheDocument();
     expect(connectCoreSocket).not.toHaveBeenCalled();

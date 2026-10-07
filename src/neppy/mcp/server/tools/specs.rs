@@ -72,7 +72,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             name: "memory.search",
             title: "Search Memory",
             description: "Keyword-search Neppy's local memory tree and return matching chunks ordered by recency.",
-            rpc_method: Some("openhuman.memory_tree_search"),
+            rpc_method: Some("neppy.memory_tree_search"),
             input_schema: query_schema("Substring to match against stored memory chunks."),
             annotations: read_only_local_annotations(),
         },
@@ -80,7 +80,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             name: "memory.recall",
             title: "Recall Memory",
             description: "Semantically recall local memory-tree chunks relevant to a natural-language query.",
-            rpc_method: Some("openhuman.memory_tree_recall"),
+            rpc_method: Some("neppy.memory_tree_recall"),
             input_schema: query_schema("Natural-language query to embed and rerank against memory summaries."),
             annotations: read_only_local_annotations(),
         },
@@ -88,7 +88,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             name: "tree.read_chunk",
             title: "Read Memory Chunk",
             description: "Read one memory-tree chunk by id. Use this to inspect the source text behind search or recall results.",
-            rpc_method: Some("openhuman.memory_tree_get_chunk"),
+            rpc_method: Some("neppy.memory_tree_get_chunk"),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -111,7 +111,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
                           recent in my Gmail\", \"show me everything from last week about Alice\") \
                           rather than search by query. Returns chunks plus a total match count for \
                           pagination.",
-            rpc_method: Some("openhuman.memory_tree_list_chunks"),
+            rpc_method: Some("neppy.memory_tree_list_chunks"),
             input_schema: tree_browse_schema(),
             annotations: read_only_local_annotations(),
         },
@@ -122,7 +122,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
                           topics, emails) across the local memory tree. Call this for entity \
                           discovery before drilling in with `tree.browse` (passing `entity_ids`) \
                           or `memory.search`. Returns entities ordered by reference count.",
-            rpc_method: Some("openhuman.memory_tree_top_entities"),
+            rpc_method: Some("neppy.memory_tree_top_entities"),
             input_schema: tree_top_entities_schema(),
             annotations: read_only_local_annotations(),
         },
@@ -134,7 +134,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
                           chunk counts and last-activity timestamps. Use this when the user asks \
                           \"what data sources do I have\" or to discover source ids to pass into \
                           `tree.browse`.",
-            rpc_method: Some("openhuman.memory_tree_list_sources"),
+            rpc_method: Some("neppy.memory_tree_list_sources"),
             input_schema: tree_list_sources_schema(),
             annotations: read_only_local_annotations(),
         },
@@ -144,7 +144,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             description: "Create a new memory document from content. The document is stored in \
                           the specified namespace (default `mcp`) and can be retrieved via \
                           `memory.search` or `memory.recall`.",
-            rpc_method: Some("openhuman.memory_doc_put"),
+            rpc_method: Some("neppy.memory_doc_put"),
             input_schema: memory_store_schema(),
             annotations: write_local_annotations(),
         },
@@ -154,7 +154,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             description: "Append a note to an existing memory chunk by storing a linked annotation \
                           document. The note references the original chunk_id for provenance and \
                           can be retrieved alongside it.",
-            rpc_method: Some("openhuman.memory_doc_put"),
+            rpc_method: Some("neppy.memory_doc_put"),
             input_schema: memory_note_schema(),
             annotations: write_local_annotations(),
         },
@@ -167,7 +167,7 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
                           rather than accumulating duplicate annotations. Differs from \
                           `memory.note` in that the payload is a categorical label list — \
                           queryable via the document `tags` field — rather than free-form text.",
-            rpc_method: Some("openhuman.memory_doc_put"),
+            rpc_method: Some("neppy.memory_doc_put"),
             input_schema: tree_tag_schema(),
             annotations: write_local_annotations(),
         },
@@ -209,7 +209,7 @@ pub fn searxng_tool_spec() -> McpToolSpec {
         name: "searxng_search",
         title: "SearXNG Search",
         description: "Search the configured self-hosted SearXNG instance and return normalized title, URL, snippet, and source results. Requires searxng.enabled=true in Neppy config.",
-        rpc_method: Some("openhuman.tools_searxng_search"),
+        rpc_method: Some("neppy.tools_searxng_search"),
         input_schema: searxng_search_schema(),
         // SearXNG queries an external (self-hosted but network-reachable)
         // search engine: read-only (no state mutation), open-world (results

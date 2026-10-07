@@ -51,7 +51,7 @@ pub struct BrowserConfig {
     /// in `[http_request].allowed_domains` (see `tools::ops::all_tools_with_runtime`).
     /// Still parsed for backward compatibility but no longer gates browser
     /// navigation. Manage allowed hosts via Settings → Search → Allowed websites;
-    /// browser allow-all remains gated by `OPENHUMAN_BROWSER_ALLOW_ALL`.
+    /// browser allow-all remains gated by `NEPPY_BROWSER_ALLOW_ALL`.
     #[serde(default)]
     pub allowed_domains: Vec<String>,
     #[serde(default)]

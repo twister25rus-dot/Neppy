@@ -57,11 +57,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   callCoreRpc.mockImplementation((arg: { method: string }) => {
     switch (arg.method) {
-      case 'openhuman.config_get_activity_level_settings':
+      case 'neppy.config_get_activity_level_settings':
         return Promise.resolve(settingsResult());
-      case 'openhuman.memory_sources_monthly_cost_summary':
+      case 'neppy.memory_sources_monthly_cost_summary':
         return Promise.resolve(costResult);
-      case 'openhuman.config_update_activity_level_settings':
+      case 'neppy.config_update_activity_level_settings':
         return Promise.resolve(settingsResult(4));
       default:
         return Promise.reject(new Error(`unexpected method ${arg.method}`));
@@ -97,7 +97,7 @@ describe('<AgentActivityPanel />', () => {
     await waitFor(() => {
       expect(callCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.config_update_activity_level_settings',
+          method: 'neppy.config_update_activity_level_settings',
           params: { level: 'always_on' },
         })
       );

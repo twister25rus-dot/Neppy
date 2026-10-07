@@ -137,8 +137,8 @@ unsafe fn spawn_in_container(jail: &Jail, cmd: Command) -> io::Result<Child> {
     // 1. Create or open the AppContainer profile and obtain its SID.
     let profile_name = sanitize_profile_name(&jail.label);
     let wide_name = to_wide(&profile_name);
-    let display = to_wide(&format!("openhuman {}", jail.label));
-    let desc = to_wide("openhuman spawnd agent process");
+    let display = to_wide(&format!("neppy {}", jail.label));
+    let desc = to_wide("neppy spawnd agent process");
 
     let mut sid: PSID = ptr::null_mut();
     let hr = CreateAppContainerProfile(

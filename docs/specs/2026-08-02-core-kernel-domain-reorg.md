@@ -288,7 +288,7 @@ The clean shape, and the vendor crate is already 90% of the way there —
 1. **tinycortex PR** — carve `memory::diff::{types, source, snapshot, checkpoint, diff}` out from
    behind `git-diff`, leaving only `ledger`/`ledger_helpers`/`DiffEngine` gated. Same "inert types
    stay ungated, only behaviour gates" rule the `skills` and `mcp` gates follow.
-2. **openhuman PR** — `memory-git = ["dep:git2", "tinycortex/git-diff"]`; pin tinycortex with
+2. **neppy PR** — `memory-git = ["dep:git2", "tinycortex/git-diff"]`; pin tinycortex with
    `default-features = false, features = ["persona", "sync"]`; leaf-gate host `wiki_git`; make
    `memory_diff` facade+stub with `types` ungated so the two callers need no `#[cfg]`.
 3. Bump the gitlink; lower `kernel-floor.limits` in the same PR.

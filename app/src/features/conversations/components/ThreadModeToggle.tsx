@@ -7,8 +7,13 @@ import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { setThreadMode } from '../../../store/threadSlice';
 import { resolveThreadMode, type ThreadMode } from '../../../types/thread';
 
-const log = debug('openhuman:conversations:thread-mode');
+const log = debug('neppy:conversations:thread-mode');
 
+/**
+ * The modes the toggle offers. `debug` is deliberately absent: Debug threads
+ * are created only from the Debug page (it scopes the agent to the app's
+ * source repository), so a normal chat can neither enter nor leave it here.
+ */
 const MODES: readonly ThreadMode[] = ['chat', 'orchestration'];
 
 /**
@@ -45,7 +50,9 @@ export function ThreadModeToggle({ threadId }: { threadId: string | null }) {
     [dispatch, mode, threadId]
   );
 
-  if (!threadId) return null;
+  // A Debug thread is not switchable from here; show nothing rather than a
+  // control that would silently drop the thread out of Debug mode.
+  if (!threadId || mode === 'debug') return null;
 
   return (
     <div className="flex items-center gap-1.5">

@@ -16,7 +16,7 @@ describe('neppyLocalAiTestConnection', () => {
     const result = await neppyLocalAiTestConnection('http://localhost:11434');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_test_connection',
+      method: 'neppy.inference_test_connection',
       params: { url: 'http://localhost:11434' },
     });
     expect(result).toEqual({ reachable: true, models_count: 4 });

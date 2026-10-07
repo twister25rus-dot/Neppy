@@ -19,7 +19,7 @@ src/core/runtime/
 Public API per README §2.1. Additional decisions:
 
 - **`TokenSource`**: `Fixed(Arc<String>)` (Tauri in-memory handoff),
-  `EnvOrFile` (read `OPENHUMAN_CORE_TOKEN` when present, otherwise generate
+  `EnvOrFile` (read `NEPPY_CORE_TOKEN` when present, otherwise generate
   and write the standalone `{root}/core.token` fallback 0600). `build()` seeds
   `auth::init_rpc_token*` exactly once, same precedence as today
   (`src/core/auth.rs`).
@@ -34,7 +34,7 @@ Public API per README §2.1. Additional decisions:
 - **`serve()`** spawns only the services selected by `ServiceSet`. The HTTP
   listener (bind, port fallback, router from `build_core_http_router`,
   `axum::serve`) moves into `spawn_rpc_http_service`; **the
-  `set_var OPENHUMAN_CORE_RPC_URL` call keeps its exact timing** (post-bind,
+  `set_var NEPPY_CORE_RPC_URL` call keeps its exact timing** (post-bind,
   `jsonrpc.rs:2010`) inside that service — child tools depend on it. It is
   flagged in the drift ledger as single-runtime-only.
 - **Ready signal**: `EmbeddedReadySignal` (port-fallback reporting) is kept
@@ -69,7 +69,7 @@ turn through `run_turn_via_tinyagents_shared`, and asserts no listener was
 bound.
 
 **Acceptance test status: done.** `tests/harness_embed.rs` and `examples/run_turn.rs` exist. The
-turn goes through `openhuman.inference_agent_chat` rather than reaching
+turn goes through `neppy.inference_agent_chat` rather than reaching
 `run_turn_via_tinyagents_shared` directly — dispatch is the only path that
 honours `DomainSet` gating and installs `CoreContext` scope (see
 `src/embed/call.rs`), and bypassing it would serve domains the embedder switched
@@ -106,7 +106,7 @@ for a library host:
 | `src/lib.rs`                                                   | re-export the new surface; keep `run_core_from_args`                                                                                                                                                                       |
 
 Plus `examples/embed_headless.rs` (build + `serve()` with
-`ServiceSet::headless_api()`, call `openhuman.ping` over HTTP) and
+`ServiceSet::headless_api()`, call `neppy.ping` over HTTP) and
 `examples/run_turn.rs` (above).
 
 ## Risks & mitigations

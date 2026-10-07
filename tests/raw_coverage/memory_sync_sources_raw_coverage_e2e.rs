@@ -72,7 +72,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: impl Into<String>) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value.into()) };
         Self { key, old }
     }
@@ -82,8 +82,8 @@ impl EnvGuard {
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -92,7 +92,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -156,7 +156,7 @@ async fn memory_sources_registry_persists_crud_and_composio_upserts() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
     let config = config_in(&tmp);
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
     persist_config(&config).await;
@@ -227,7 +227,7 @@ async fn remove_composio_source_by_connection_id_prunes_on_disconnect_and_surviv
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
     let config = config_in(&tmp);
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
     persist_config(&config).await;
@@ -337,7 +337,7 @@ async fn github_reader_uses_fake_gh_for_list_and_read_paths() {
     let script = bin.join("gh");
     write_fake_gh(&script);
     write_fake_git(&bin.join("git"));
-    let old_path = std::env::var("PATH").unwrap_or_default();
+    let old_path = neppy_core::neppy::util::env::var("PATH").unwrap_or_default();
     let _path = EnvGuard::set("PATH", format!("{}:{old_path}", bin.display()));
 
     let reader = neppy_core::neppy::memory::sources::readers::github::GithubReader;
@@ -427,7 +427,7 @@ async fn composio_providers_fetch_profiles_tasks_and_cover_error_branches() {
     let (base, server) = loopback_router(router).await;
     config.api_url = Some(base);
     persist_config(&config).await;
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     AuthService::from_config(&config)
         .store_provider_token(

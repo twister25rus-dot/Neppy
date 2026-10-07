@@ -8,11 +8,11 @@
 # This runs the #[ignore]d `live_flows_demo_discover_build_save_run` test, which
 # needs real credentials. It reads them from your `.env` (via load-dotenv.sh) or
 # the ambient environment:
-#   OPENHUMAN_LIVE_API_URL   backend origin (e.g. https://api.example.com)
-#   OPENHUMAN_LIVE_TOKEN     a valid user session JWT
-#   OPENHUMAN_LIVE_USER_ID   the user id owning that session
+#   NEPPY_LIVE_API_URL   backend origin (e.g. https://api.example.com)
+#   NEPPY_LIVE_TOKEN     a valid user session JWT
+#   NEPPY_LIVE_USER_ID   the user id owning that session
 # Optional:
-#   OPENHUMAN_LIVE_FLOWS_TOPIC  research topic to run the demo flow on
+#   NEPPY_LIVE_FLOWS_TOPIC  research topic to run the demo flow on
 #
 # Usage:
 #   scripts/live-flows-demo.sh [path/to/.env]
@@ -30,11 +30,11 @@ if [[ -f "$ENV_FILE" ]]; then
   source "$SCRIPT_DIR/load-dotenv.sh" "$ENV_FILE"
 fi
 
-: "${OPENHUMAN_LIVE_API_URL:?set OPENHUMAN_LIVE_API_URL (backend origin)}"
-: "${OPENHUMAN_LIVE_TOKEN:?set OPENHUMAN_LIVE_TOKEN (user session JWT)}"
-: "${OPENHUMAN_LIVE_USER_ID:?set OPENHUMAN_LIVE_USER_ID (user id)}"
+: "${NEPPY_LIVE_API_URL:?set NEPPY_LIVE_API_URL (backend origin)}"
+: "${NEPPY_LIVE_TOKEN:?set NEPPY_LIVE_TOKEN (user session JWT)}"
+: "${NEPPY_LIVE_USER_ID:?set NEPPY_LIVE_USER_ID (user id)}"
 
-echo "[live-flows-demo] backend=$OPENHUMAN_LIVE_API_URL user=$OPENHUMAN_LIVE_USER_ID"
+echo "[live-flows-demo] backend=$NEPPY_LIVE_API_URL user=$NEPPY_LIVE_USER_ID"
 
 # macOS Apple-Silicon llama.cpp build workaround (see AGENTS.md).
 export GGML_NATIVE="${GGML_NATIVE:-OFF}"

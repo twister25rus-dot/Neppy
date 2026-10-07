@@ -602,7 +602,7 @@ fn same_config_state_dir(a: &Config, b: &Config) -> bool {
 }
 
 fn config_dir_for_workspace_env() -> Option<PathBuf> {
-    let workspace = std::env::var_os("OPENHUMAN_WORKSPACE")?;
+    let workspace = crate::neppy::util::env::var_os("NEPPY_WORKSPACE")?;
     if workspace.as_os_str().is_empty() {
         return None;
     }
@@ -731,9 +731,7 @@ async fn persist_revalidated_session_user(
     let target_config = if !workspace_env_scoped {
         activate_revalidated_user_dir(&user_id).await?
     } else {
-        debug!(
-            "{LOG_PREFIX} keeping revalidated pending session in OPENHUMAN_WORKSPACE-scoped config"
-        );
+        debug!("{LOG_PREFIX} keeping revalidated pending session in NEPPY_WORKSPACE-scoped config");
         config.clone()
     };
     let source_config = config.clone();
@@ -820,7 +818,7 @@ async fn clear_deferred_session_after_backend_rejection(
                 }
             } else {
                 debug!(
-                    "{LOG_PREFIX} preserving default active_user.toml for rejected OPENHUMAN_WORKSPACE-scoped pending session"
+                    "{LOG_PREFIX} preserving default active_user.toml for rejected NEPPY_WORKSPACE-scoped pending session"
                 );
             }
         }
@@ -954,13 +952,13 @@ pub fn peek_cached_current_user_identity() -> Option<crate::neppy::agent::prompt
 /// Return the cached runtime snapshot when it is still within
 /// `RUNTIME_SNAPSHOT_TTL`, else `None`. Kept as a small helper so both the
 /// fast-path read and the post-lock double-check share identical freshness logic.
-/// A service-status mock is injected via `OPENHUMAN_SERVICE_MOCK` (test-only env
+/// A service-status mock is injected via `NEPPY_SERVICE_MOCK` (test-only env
 /// hook that production `service` status already honors). While it is active the
 /// runtime snapshot must never be served from — or written to — the process-
 /// global cache: the mock's state changes between calls, so caching it would
 /// both mask the freshly-injected value and poison later (non-mocked) reads.
 fn service_status_mock_active() -> bool {
-    std::env::var_os("OPENHUMAN_SERVICE_MOCK").is_some()
+    crate::neppy::util::env::var_os("NEPPY_SERVICE_MOCK").is_some()
 }
 
 fn fresh_cached_runtime_snapshot(config: &Config, req_id: u64) -> Option<RuntimeSnapshot> {
@@ -1107,7 +1105,7 @@ pub async fn snapshot() -> Result<RpcOutcome<AppStateSnapshot>, String> {
     // separately, which acquired the auth-profile file lock twice per
     // snapshot. On Windows this doubled the surface area for the
     // "Timed out waiting for auth profile lock" failure reported in
-    // Sentry against `openhuman.app_state_snapshot`.
+    // Sentry against `neppy.app_state_snapshot`.
     //
     // `load_app_session_profile` calls `acquire_lock()`, which busy-waits
     // with `thread::sleep` for up to ~35s when the lock is contended. Calling

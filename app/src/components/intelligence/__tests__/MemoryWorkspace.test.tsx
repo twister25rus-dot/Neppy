@@ -407,7 +407,7 @@ describe('MemoryWorkspace (graph view)', () => {
     // (#3295). Simulate the core emitting completion for this source.
     act(() => {
       window.dispatchEvent(
-        new CustomEvent('openhuman:memory-sync-stage', {
+        new CustomEvent('neppy:memory-sync-stage', {
           detail: { stage: 'completed', source_id: 'src-gmail-001', detail: 'ingested 4 item(s)' },
         })
       );

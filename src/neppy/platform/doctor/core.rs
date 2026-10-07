@@ -898,7 +898,7 @@ fn check_memory_tree_db(
 ///
 /// This check is synchronous (uses a small blocking HTTP call) so it fits
 /// the existing `run()` contract. The timeout is capped at 3 s to avoid
-/// stalling `openhuman doctor` on a very slow Ollama daemon.
+/// stalling `neppy-core doctor` on a very slow Ollama daemon.
 fn check_embedding_model_health(config: &Config, items: &mut Vec<DiagnosticItem>) {
     let cat = "embedding_model";
 

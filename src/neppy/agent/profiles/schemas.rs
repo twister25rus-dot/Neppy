@@ -1,7 +1,7 @@
 //! Controller schemas + handlers for the `profiles` RPC namespace.
 //!
-//! Methods: `openhuman.profiles_list`, `openhuman.profile_select`,
-//! `openhuman.profile_upsert`, `openhuman.profile_delete`.
+//! Methods: `neppy.profiles_list`, `neppy.profile_select`,
+//! `neppy.profile_upsert`, `neppy.profile_delete`.
 
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -198,9 +198,9 @@ mod tests {
 
     impl WorkspaceEnvGuard {
         fn set(path: &std::path::Path) -> Self {
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
             unsafe {
-                std::env::set_var("OPENHUMAN_WORKSPACE", path);
+                std::env::set_var("NEPPY_WORKSPACE", path);
             }
             Self { previous }
         }
@@ -210,11 +210,9 @@ mod tests {
         fn drop(&mut self) {
             match self.previous.take() {
                 Some(value) => unsafe {
-                    std::env::set_var("OPENHUMAN_WORKSPACE", value);
+                    std::env::set_var("NEPPY_WORKSPACE", value);
                 },
-                None => unsafe {
-                    std::env::remove_var("OPENHUMAN_WORKSPACE");
-                },
+                None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
             }
         }
     }

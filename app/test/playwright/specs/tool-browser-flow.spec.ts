@@ -28,10 +28,10 @@ test.describe('System tools - Browser (open URL + automation registry)', () => {
   });
 
   test('agent runtime is reachable and tools_agent is registered', async () => {
-    const status = unwrapStatus(await callCoreRpc<unknown>('openhuman.agent_server_status', {}));
+    const status = unwrapStatus(await callCoreRpc<unknown>('neppy.agent_server_status', {}));
     expect(status.running).toBe(true);
 
-    const list = await callCoreRpc<ListDefinitionsResult>('openhuman.agent_list_definitions', {});
+    const list = await callCoreRpc<ListDefinitionsResult>('neppy.agent_list_definitions', {});
     const defs = list.definitions ?? [];
     const toolsAgent = defs.find(def => def?.id === 'tools_agent');
     expect(toolsAgent).toBeDefined();
@@ -39,7 +39,7 @@ test.describe('System tools - Browser (open URL + automation registry)', () => {
   });
 
   test('browser-bearing agent definitions are exposed in the live registry', async () => {
-    const list = await callCoreRpc<ListDefinitionsResult>('openhuman.agent_list_definitions', {});
+    const list = await callCoreRpc<ListDefinitionsResult>('neppy.agent_list_definitions', {});
     const defs = list.definitions ?? [];
     const browserBearing = defs.filter(def =>
       ['tools_agent', 'integrations_agent', 'researcher', 'planner'].includes(def?.id ?? '')

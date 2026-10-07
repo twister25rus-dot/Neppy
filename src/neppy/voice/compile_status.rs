@@ -11,7 +11,7 @@
 /// consumer that *requires* voice (the desktop shell) has no other way to detect
 /// that it silently got the stubbed build — which is exactly how #4901 shipped:
 /// `app/src-tauri/Cargo.toml` set `default-features = false`, dropping the
-/// default-ON `voice` feature, so every `openhuman.voice_*` controller went
+/// default-ON `voice` feature, so every `neppy.voice_*` controller went
 /// unregistered and answered "unknown method" at runtime.
 ///
 /// The shell asserts this at compile time (`const _: () = assert!(...)` in

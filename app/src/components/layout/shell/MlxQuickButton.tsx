@@ -110,8 +110,8 @@ export default function MlxQuickButton() {
   const load = useCallback(async () => {
     try {
       const [statusResp, cacheResp] = await Promise.all([
-        callCoreRpc<MlxStatus>({ method: 'openhuman.mlx_status', params: {} }),
-        callCoreRpc<{ models: CachedModel[] }>({ method: 'openhuman.mlx_models_list', params: {} }),
+        callCoreRpc<MlxStatus>({ method: 'neppy.mlx_status', params: {} }),
+        callCoreRpc<{ models: CachedModel[] }>({ method: 'neppy.mlx_models_list', params: {} }),
       ]);
       if (!mounted.current) return;
       setStatus(statusResp);
@@ -270,7 +270,7 @@ export default function MlxQuickButton() {
                   analyticsId={up ? 'mlx-quick-stop' : 'mlx-quick-start'}
                   data-testid={`mlx-quick-toggle-${server.id}`}
                   onClick={() =>
-                    void act(up ? 'openhuman.mlx_stop' : 'openhuman.mlx_start', { id: server.id })
+                    void act(up ? 'neppy.mlx_stop' : 'neppy.mlx_start', { id: server.id })
                   }>
                   {t(up ? 'mlx.stop' : 'mlx.start')}
                 </Button>
@@ -293,7 +293,7 @@ export default function MlxQuickButton() {
                       : null;
                     const patch: Record<string, string> = { model: next };
                     if (previous && previous !== 'model') patch[previous] = '';
-                    void act('openhuman.mlx_update_server', { id: server.id, patch });
+                    void act('neppy.mlx_update_server', { id: server.id, patch });
                   }}>
                   <option value="">{t('mlx.modelNone')}</option>
                   {chatModels.map(id => (

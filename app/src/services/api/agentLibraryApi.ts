@@ -33,7 +33,7 @@ export const agentLibraryApi = {
   listDefinitions: async (): Promise<AgentDefinitionDisplay[]> => {
     log('[agent-library] listDefinitions entry');
     const response = await callCoreRpc<{ definitions?: AgentDefinitionDisplay[] }>({
-      method: 'openhuman.agent_list_definitions',
+      method: 'neppy.agent_list_definitions',
       params: {},
     });
     const definitions = Array.isArray(response?.definitions) ? response.definitions : [];

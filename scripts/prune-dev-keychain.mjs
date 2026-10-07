@@ -6,7 +6,7 @@
  * Why this exists
  * ---------------
  * Until the keyring test-isolation fix, `cfg(test)` builds resolved their
- * credential store from process-global state (`OPENHUMAN_WORKSPACE` / the
+ * credential store from process-global state (`NEPPY_WORKSPACE` / the
  * `WORKSPACE_DIR` OnceLock). When no test held a workspace guard, that resolved
  * to the developer's real `~/.neppy`, so every `cargo test` run appended
  * entries keyed by the basename of a `TempDir` that no longer exists. These
@@ -56,10 +56,10 @@ function parseArgs(argv) {
 }
 
 function defaultKeychainPath() {
-  const workspace = process.env.OPENHUMAN_WORKSPACE?.trim();
+  const workspace = (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)?.trim();
   if (workspace) return path.join(workspace, "dev-keychain.json");
   const dir =
-    process.env.OPENHUMAN_APP_ENV === "staging"
+    (process.env.NEPPY_APP_ENV ?? process.env.OPENHUMAN_APP_ENV) === "staging"
       ? ".neppy-staging"
       : ".neppy";
   return path.join(os.homedir(), dir, "dev-keychain.json");

@@ -228,7 +228,7 @@ pub async fn start_loopback_oauth_listener(
 
     // Prefer the caller's requested port (so the backend allowlist, if any,
     // matches) but fall back to an ephemeral OS-assigned port if the requested
-    // one is taken by another process (stale openhuman, second instance,
+    // one is taken by another process (stale neppy, second instance,
     // unrelated service). The backend `redirectUri` whitelist restricts host
     // but not port, so an ephemeral fallback is safe.
     let listener: TcpListener = match bind_loopback(port) {

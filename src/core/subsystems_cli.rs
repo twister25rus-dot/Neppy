@@ -1,16 +1,16 @@
-//! `openhuman subsystems` — the human-readable subsystem slot table.
+//! `neppy-core subsystems` — the human-readable subsystem slot table.
 //!
 //! Reached through the `RegisteredCliAdapter` seam
 //! ([`crate::core::all::cli_handler_for_namespace`]), which
 //! `run_namespace_command` consults when the namespace is invoked with no
-//! function or with `--help`. `openhuman subsystems status` bypasses this and
+//! function or with `--help`. `neppy-core subsystems status` bypasses this and
 //! prints the raw JSON through the generic namespace dispatcher, so there is
 //! no hand-written subcommand match arm anywhere — registering the controller
 //! is what makes the subcommand exist.
 //!
 //! ```text
-//! openhuman subsystems           # table
-//! openhuman subsystems status    # JSON
+//! neppy-core subsystems           # table
+//! neppy-core subsystems status    # JSON
 //! ```
 
 use anyhow::Result;
@@ -78,11 +78,11 @@ async fn cli_subsystems_status() -> Vec<SubsystemStatus> {
 }
 
 fn print_help() {
-    println!("openhuman subsystems — kernel subsystem slots and their bound drivers");
+    println!("neppy-core subsystems — kernel subsystem slots and their bound drivers");
     println!();
     println!("USAGE:");
-    println!("  openhuman subsystems           Print the slot table");
-    println!("  openhuman subsystems status    Print the same data as JSON");
+    println!("  neppy-core subsystems           Print the slot table");
+    println!("  neppy-core subsystems status    Print the same data as JSON");
 }
 
 #[cfg(test)]
@@ -104,7 +104,7 @@ mod tests {
     fn namespace_has_a_registered_cli_adapter() {
         assert!(
             crate::core::all::cli_handler_for_namespace("subsystems").is_some(),
-            "bare `openhuman subsystems` must reach the table, not the generic help"
+            "bare `neppy-core subsystems` must reach the table, not the generic help"
         );
     }
 }

@@ -2,7 +2,7 @@
  * Artifact export service (#2779, #3162).
  *
  * All paths first resolve the artifact's absolute on-disk path + meta
- * via the `openhuman.ai_get_artifact` core RPC, then hand a source path
+ * via the `neppy.ai_get_artifact` core RPC, then hand a source path
  * + filename hint to a Tauri command:
  *
  *  - {@link saveArtifactViaDialog} (#3162) — native Save-As dialog
@@ -88,7 +88,7 @@ interface ListThreadArtifactsOutcome {
 
 /**
  * Shape of the `data` field returned by the
- * `openhuman.ai_get_artifact` JSON-RPC method. We pull only the
+ * `neppy.ai_get_artifact` JSON-RPC method. We pull only the
  * fields we need; extra fields are tolerated.
  */
 interface AiGetArtifactData {
@@ -158,7 +158,7 @@ export async function listArtifactsForThread(
 
     for (let offset = 0; ; offset += limit) {
       const raw = await callCoreRpc<AiListArtifactsData>({
-        method: 'openhuman.ai_list_artifacts',
+        method: 'neppy.ai_list_artifacts',
         params: { thread_id: trimmedThreadId, offset, limit },
       });
       const page = raw?.artifacts ?? [];
@@ -194,7 +194,7 @@ async function resolveArtifactForExport(
   let resolved: AiGetArtifactData;
   try {
     const raw = await callCoreRpc<AiGetArtifactData>({
-      method: 'openhuman.ai_get_artifact',
+      method: 'neppy.ai_get_artifact',
       params: { artifact_id: artifactId },
     });
     resolved = raw ?? {};
@@ -321,7 +321,7 @@ export async function deleteArtifact(artifactId: string): Promise<DeleteArtifact
   }
   try {
     await callCoreRpc<unknown>({
-      method: 'openhuman.ai_delete_artifact',
+      method: 'neppy.ai_delete_artifact',
       params: { artifact_id: artifactId },
     });
     return { ok: true };

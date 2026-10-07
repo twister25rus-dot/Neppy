@@ -56,10 +56,10 @@ describe('formatThreadLoadError', () => {
     expect(
       formatThreadLoadError({
         name: 'Error',
-        message: 'Core RPC openhuman.threads_list timed out after 30000ms',
+        message: 'Core RPC neppy.threads_list timed out after 30000ms',
         code: undefined,
       })
-    ).toBe('Core RPC openhuman.threads_list timed out after 30000ms');
+    ).toBe('Core RPC neppy.threads_list timed out after 30000ms');
   });
 
   it('falls back to String(err) for objects with no message field', () => {
@@ -86,7 +86,7 @@ describe('deriveChatErrorBanner (#5156)', () => {
   it('surfaces a slice-recorded thread-create failure when there is no send error', () => {
     const banner = deriveChatErrorBanner(
       null,
-      'Core RPC openhuman.threads_create_new timed out after 30000ms',
+      'Core RPC neppy.threads_create_new timed out after 30000ms',
       CREATE_FAILED
     );
 

@@ -9,9 +9,9 @@
 # Fix (gosu pattern):
 #   1. Start as root so we can chown the mount point(s).
 #   2. mkdir -p + chown the workspace directory *and everything inside it*
-#      before any application code runs, so the openhuman user owns it
+#      before any application code runs, so the neppy user owns it
 #      regardless of whether Docker created the volume as root.
-#   3. exec gosu openhuman to drop privileges and hand off to the binary.
+#   3. exec gosu neppy to drop privileges and hand off to the binary.
 #
 # The chown MUST be recursive.  Healing only the directory inode leaves any
 # file inside it — most importantly `config.toml`, which the core writes at
@@ -25,7 +25,7 @@
 # on every config-dependent RPC (sign-in included) while the container kept
 # answering /health with 200.
 #
-# This is idempotent: files already owned by the openhuman user are skipped, so
+# This is idempotent: files already owned by the neppy user are skipped, so
 # a healthy re-used volume costs one `find` traversal.  No manual
 # "docker volume rm" is required when upgrading from a previously broken image.
 #
@@ -36,23 +36,23 @@
 # POSIX sh — no bashisms.
 set -e
 
-OPENHUMAN_USER="openhuman"
-OPENHUMAN_UID="$(id -u "${OPENHUMAN_USER}" 2>/dev/null || echo '')"
-OPENHUMAN_GID="$(id -g "${OPENHUMAN_USER}" 2>/dev/null || echo '')"
+NEPPY_USER="openhuman"
+NEPPY_UID="$(id -u "${NEPPY_USER}" 2>/dev/null || echo '')"
+NEPPY_GID="$(id -g "${NEPPY_USER}" 2>/dev/null || echo '')"
 
 # The workspace path the core will actually write to.
 # Prefer the env var if set; otherwise fall back to the image default.
-WORKSPACE_DIR="${OPENHUMAN_WORKSPACE:-/home/openhuman/.neppy}"
-# The home directory (where core.token is written when OPENHUMAN_CORE_TOKEN is
-# unset — see src/core/auth.rs default_root_openhuman_dir()).
-HOME_OPENHUMAN_DIR="/home/openhuman/.neppy"
+WORKSPACE_DIR="${NEPPY_WORKSPACE:-${OPENHUMAN_WORKSPACE:-/home/openhuman/.neppy}}" # legacy OPENHUMAN_WORKSPACE still honoured
+# The home directory (where core.token is written when NEPPY_CORE_TOKEN is
+# unset — see src/core/auth.rs default_root_neppy_dir()).
+HOME_NEPPY_DIR="/home/openhuman/.neppy"
 
 echo "[docker-entrypoint] uid=$(id -u), gid=$(id -g), user=$(id -un 2>/dev/null || echo unknown)"
-echo "[docker-entrypoint] target user=${OPENHUMAN_USER} uid=${OPENHUMAN_UID} gid=${OPENHUMAN_GID}"
+echo "[docker-entrypoint] target user=${NEPPY_USER} uid=${NEPPY_UID} gid=${NEPPY_GID}"
 echo "[docker-entrypoint] WORKSPACE_DIR=${WORKSPACE_DIR}"
-echo "[docker-entrypoint] HOME_OPENHUMAN_DIR=${HOME_OPENHUMAN_DIR}"
+echo "[docker-entrypoint] HOME_NEPPY_DIR=${HOME_NEPPY_DIR}"
 
-# Make DIR and every entry under it owned by the openhuman user.
+# Make DIR and every entry under it owned by the neppy user.
 heal_dir() {
     _dir="$1"
 
@@ -83,25 +83,25 @@ heal_dir() {
     # Numeric uid:gid rather than `openhuman:openhuman`: the name pair only
     # works while the primary group happens to share the user's name, and it
     # keeps this symmetric with the numeric remedy printed on failure below.
-    if find "${_dir}" ! -user "${OPENHUMAN_USER}" -exec \
-        chown -h "${OPENHUMAN_UID}:${OPENHUMAN_GID}" {} + 2>/dev/null; then
-        echo "[docker-entrypoint] heal ${_dir} -> ${OPENHUMAN_UID}:${OPENHUMAN_GID} done"
+    if find "${_dir}" ! -user "${NEPPY_USER}" -exec \
+        chown -h "${NEPPY_UID}:${NEPPY_GID}" {} + 2>/dev/null; then
+        echo "[docker-entrypoint] heal ${_dir} -> ${NEPPY_UID}:${NEPPY_GID} done"
     else
         echo "[docker-entrypoint] WARN chown under ${_dir} failed — no CAP_CHOWN? (cap_drop: ALL)"
-        echo "[docker-entrypoint] WARN files not owned by uid=${OPENHUMAN_UID} will be unreadable"
+        echo "[docker-entrypoint] WARN files not owned by uid=${NEPPY_UID} will be unreadable"
     fi
 }
 
 # Every directory the core may resolve a config.toml out of, deduplicated.
 #
-#   WORKSPACE_DIR        OPENHUMAN_WORKSPACE, the primary candidate.
-#   HOME_OPENHUMAN_DIR   core.token always lands in $HOME/.neppy, whatever
-#                        OPENHUMAN_WORKSPACE says.
+#   WORKSPACE_DIR        NEPPY_WORKSPACE, the primary candidate.
+#   HOME_NEPPY_DIR   core.token always lands in $HOME/.neppy, whatever
+#                        NEPPY_WORKSPACE says.
 #   LEGACY_DIR           `resolve_config_dir_for_workspace`
 #                        (src/neppy/config/schema/load/dirs.rs) falls back to
 #                        `<parent-of-workspace>/.neppy` when the workspace
 #                        itself holds no config.toml. For the image default the
-#                        three collapse to one path; a custom OPENHUMAN_WORKSPACE
+#                        three collapse to one path; a custom NEPPY_WORKSPACE
 #                        makes them diverge, and healing only the first left the
 #                        actually-resolved config untouched.
 #
@@ -123,7 +123,7 @@ add_config_dir() {
 }
 
 add_config_dir "${WORKSPACE_DIR}"
-add_config_dir "${HOME_OPENHUMAN_DIR}"
+add_config_dir "${HOME_NEPPY_DIR}"
 # The legacy candidate is DERIVED, not configured, so it is only a candidate
 # when it already exists: `heal_dir` runs `mkdir -p`, and materializing an empty
 # sibling `.neppy` that the core may never resolve into is a side effect a
@@ -156,8 +156,8 @@ fi
 # Only the root path needs these: the heal chowns to them and gosu drops to
 # them. A pinned non-root run never touches them, so it must not be blocked by
 # an image that happens not to define the user.
-if [ -z "${OPENHUMAN_UID}" ] || [ -z "${OPENHUMAN_GID}" ]; then
-    echo "[docker-entrypoint] FATAL user '${OPENHUMAN_USER}' does not exist in this image" >&2
+if [ -z "${NEPPY_UID}" ] || [ -z "${NEPPY_GID}" ]; then
+    echo "[docker-entrypoint] FATAL user '${NEPPY_USER}' does not exist in this image" >&2
     echo "[docker-entrypoint] FATAL the image must create it (see Dockerfile: groupadd/useradd)" >&2
     exit 1
 fi
@@ -170,10 +170,10 @@ done
 # workspace for anything.  Without CAP_SETUID/CAP_SETGID (e.g. `cap_drop: ALL`
 # with no matching `cap_add`) every gosu call fails, and attributing that to
 # file ownership would send the operator chasing the wrong `chown`.
-if ! gosu "${OPENHUMAN_USER}" true 2>/dev/null; then
-    echo "[docker-entrypoint] FATAL cannot drop privileges to ${OPENHUMAN_USER} via gosu" >&2
+if ! gosu "${NEPPY_USER}" true 2>/dev/null; then
+    echo "[docker-entrypoint] FATAL cannot drop privileges to ${NEPPY_USER} via gosu" >&2
     echo "[docker-entrypoint] FATAL the container needs CAP_SETUID + CAP_SETGID (and CAP_CHOWN to heal a root-owned volume)" >&2
-    echo "[docker-entrypoint] FATAL with 'cap_drop: ALL', add: cap_add: [CHOWN, SETUID, SETGID] — or pin 'user: \"${OPENHUMAN_UID}:${OPENHUMAN_GID}\"'" >&2
+    echo "[docker-entrypoint] FATAL with 'cap_drop: ALL', add: cap_add: [CHOWN, SETUID, SETGID] — or pin 'user: \"${NEPPY_UID}:${NEPPY_GID}\"'" >&2
     exit 1
 fi
 
@@ -187,13 +187,13 @@ fi
 # config in any directory we manage is broken regardless of which one wins.
 for _dir in ${CONFIG_DIRS}; do
     if [ -e "${_dir}/config.toml" ] \
-        && ! gosu "${OPENHUMAN_USER}" test -r "${_dir}/config.toml"; then
-        echo "[docker-entrypoint] FATAL ${_dir}/config.toml is not readable by ${OPENHUMAN_USER} (uid=${OPENHUMAN_UID})" >&2
+        && ! gosu "${NEPPY_USER}" test -r "${_dir}/config.toml"; then
+        echo "[docker-entrypoint] FATAL ${_dir}/config.toml is not readable by ${NEPPY_USER} (uid=${NEPPY_UID})" >&2
         ls -ln "${_dir}/config.toml" >&2 || true
-        echo "[docker-entrypoint] FATAL remedy: docker exec -u 0 <container> chown -Rh ${OPENHUMAN_UID}:${OPENHUMAN_GID} ${_dir}" >&2
+        echo "[docker-entrypoint] FATAL remedy: docker exec -u 0 <container> chown -Rh ${NEPPY_UID}:${NEPPY_GID} ${_dir}" >&2
         exit 1
     fi
 done
 
-echo "[docker-entrypoint] dropping privileges -> exec gosu ${OPENHUMAN_USER} neppy-core"
-exec gosu "${OPENHUMAN_USER}" neppy-core "$@"
+echo "[docker-entrypoint] dropping privileges -> exec gosu ${NEPPY_USER} neppy-core"
+exec gosu "${NEPPY_USER}" neppy-core "$@"

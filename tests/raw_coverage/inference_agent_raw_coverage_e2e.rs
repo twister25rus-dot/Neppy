@@ -181,16 +181,16 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var(key).ok();
+        let previous = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: tests in this file serialize env mutation with ENV_LOCK.
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
 
     fn unset(key: &'static str) -> Self {
-        let previous = std::env::var(key).ok();
+        let previous = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: tests in this file serialize env mutation with ENV_LOCK.
-        unsafe { std::env::remove_var(key) };
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, previous }
     }
 }
@@ -204,7 +204,7 @@ impl Drop for EnvVarGuard {
             }
             None => {
                 // SAFETY: the owning test keeps ENV_LOCK held until drop.
-                unsafe { std::env::remove_var(self.key) }
+                unsafe { neppy_core::neppy::util::env::remove_var(self.key) }
             }
         }
     }
@@ -502,9 +502,9 @@ fn isolated_env() -> IsolatedEnv {
     let home = tempdir().expect("home tempdir");
     let workspace = tempdir().expect("workspace tempdir");
     let home_guard = EnvVarGuard::set("HOME", home.path());
-    let workspace_guard = EnvVarGuard::set("OPENHUMAN_WORKSPACE", workspace.path());
-    let config_guard = EnvVarGuard::unset("OPENHUMAN_CONFIG_PATH");
-    let neppy_dir_guard = EnvVarGuard::unset("OPENHUMAN_DIR");
+    let workspace_guard = EnvVarGuard::set("NEPPY_WORKSPACE", workspace.path());
+    let config_guard = EnvVarGuard::unset("NEPPY_CONFIG_PATH");
+    let neppy_dir_guard = EnvVarGuard::unset("NEPPY_DIR");
     IsolatedEnv {
         _home: home,
         _workspace: workspace,
@@ -819,7 +819,7 @@ async fn inference_registry_drives_config_oauth_models_and_provider_chat() {
     assert!(registered.iter().all(|controller| {
         controller
             .rpc_method_name()
-            .starts_with("openhuman.inference_")
+            .starts_with("neppy.inference_")
     }));
 
     let invalid_update = call(
@@ -931,7 +931,7 @@ async fn inference_registry_drives_config_oauth_models_and_provider_chat() {
     assert_eq!(provider_schemas.len(), provider_registered.len());
     assert_eq!(
         provider_registered[0].rpc_method_name(),
-        "openhuman.providers_list_models"
+        "neppy.providers_list_models"
     );
     let provider_models = call(
         controller(&provider_registered, "list_models"),
@@ -1042,15 +1042,15 @@ async fn agent_registry_and_profile_controllers_cover_success_and_errors() {
     assert_eq!(schemas.len(), registered.len());
     assert!(registered
         .iter()
-        .all(|controller| controller.rpc_method_name().starts_with("openhuman.agent_")));
+        .all(|controller| controller.rpc_method_name().starts_with("neppy.agent_")));
 
-    // Profiles moved to their own top-level domain (`openhuman.profiles_*`).
+    // Profiles moved to their own top-level domain (`neppy.profiles_*`).
     let profile_schemas = all_profiles_controller_schemas();
     let profiles = all_profiles_registered_controllers();
     assert_eq!(profile_schemas.len(), profiles.len());
     assert!(profiles.iter().all(|controller| controller
         .rpc_method_name()
-        .starts_with("openhuman.profiles_")));
+        .starts_with("neppy.profiles_")));
 
     let status = call(controller(&registered, "server_status"), json!({}))
         .await
@@ -1929,7 +1929,7 @@ async fn inference_provider_factory_and_classifiers_cover_user_state_edges() {
         &config,
         0.0,
     )
-    .expect("openhuman model");
+    .expect("neppy model");
     assert_eq!(neppy_model, "stale-provider-model");
 
     let byok_err = provider_factory_error("chat", BYOK_INCOMPLETE_SENTINEL, &config);
@@ -1967,7 +1967,7 @@ async fn inference_neppy_backend_provider_covers_authless_and_streaming_edges() 
     use tinyagents::harness::message::Message;
     use tinyagents::harness::model::{ChatModel, ModelRequest};
 
-    let state_dir = tempdir().expect("openhuman provider state");
+    let state_dir = tempdir().expect("neppy provider state");
     let provider = NeppyBackendModel::new(
         Some(" https://api.example.test/ "),
         &ProviderRuntimeOptions {
@@ -2597,7 +2597,7 @@ async fn inference_local_controllers_and_presets_cover_public_paths() {
         .is_file());
     let _path_guard = EnvVarGuard::set("PATH", mock_bin_dir.path());
     let _ollama_bin_guard = EnvVarGuard::set("OLLAMA_BIN", &mock_ollama);
-    let _ollama_base_guard = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &provider_base);
+    let _ollama_base_guard = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &provider_base);
 
     let local_schemas = all_local_inference_controller_schemas();
     let local_registered = all_local_inference_registered_controllers();
@@ -2605,7 +2605,7 @@ async fn inference_local_controllers_and_presets_cover_public_paths() {
     assert!(local_registered.iter().all(|controller| {
         controller
             .rpc_method_name()
-            .starts_with("openhuman.inference_")
+            .starts_with("neppy.inference_")
     }));
 
     let reachable = call(

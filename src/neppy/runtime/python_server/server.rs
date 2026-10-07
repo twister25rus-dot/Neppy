@@ -410,7 +410,7 @@ async fn prepare_launch(config: &Config) -> Result<ServerLaunch> {
     };
 
     env.push((
-        "OPENHUMAN_RPS_BACKENDS".to_string(),
+        "NEPPY_RPS_BACKENDS".to_string(),
         backends
             .iter()
             .map(|b| b.id())
@@ -431,19 +431,19 @@ async fn prepare_launch(config: &Config) -> Result<ServerLaunch> {
 /// Environment the worker needs to load + run the Kompress model offline.
 fn push_kompress_env(env: &mut Vec<(String, String)>, config: &Config, hf_home: &std::path::Path) {
     env.push((
-        "OPENHUMAN_RPS_KOMPRESS_MODEL".to_string(),
+        "NEPPY_RPS_KOMPRESS_MODEL".to_string(),
         config.tokenjuice.ml_model_id.clone(),
     ));
     env.push((
-        "OPENHUMAN_RPS_KOMPRESS_DEVICE".to_string(),
+        "NEPPY_RPS_KOMPRESS_DEVICE".to_string(),
         config.tokenjuice.ml_device.clone(),
     ));
     env.push((
-        "OPENHUMAN_RPS_KOMPRESS_TARGET_RATIO".to_string(),
+        "NEPPY_RPS_KOMPRESS_TARGET_RATIO".to_string(),
         config.tokenjuice.ml_target_ratio.to_string(),
     ));
     env.push((
-        "OPENHUMAN_RPS_KOMPRESS_MAX_INPUT_CHARS".to_string(),
+        "NEPPY_RPS_KOMPRESS_MAX_INPUT_CHARS".to_string(),
         config.tokenjuice.ml_max_input_chars.to_string(),
     ));
     env.push(("HF_HOME".to_string(), hf_home.display().to_string()));

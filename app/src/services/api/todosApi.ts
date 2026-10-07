@@ -1,6 +1,6 @@
 /**
  * Frontend client for the per-board todo CRUD surface
- * (`openhuman.todos_*`). The Rust handlers persist to the same
+ * (`neppy.todos_*`). The Rust handlers persist to the same
  * `<workspace>/agent_task_boards/<hex(thread_id)>.json` store used by the
  * agent task board, so user-driven edits made here and agent-driven edits
  * made by the `todo` tool stay in lock-step.
@@ -110,7 +110,7 @@ export const todosApi = {
   list: async (threadId: string): Promise<TaskBoard> => {
     log('list threadId=%s', threadId);
     const snap = await callCoreRpc<TodosSnapshotWire>({
-      method: 'openhuman.todos_list',
+      method: 'neppy.todos_list',
       params: { thread_id: threadId },
     });
     return snapshotToBoard(snap, threadId);
@@ -120,7 +120,7 @@ export const todosApi = {
   add: async (input: AddTodoInput): Promise<TaskBoard> => {
     log('add threadId=%s', input.threadId);
     const snap = await callCoreRpc<TodosSnapshotWire>({
-      method: 'openhuman.todos_add',
+      method: 'neppy.todos_add',
       params: pruneParams({
         thread_id: input.threadId,
         content: input.content,
@@ -139,7 +139,7 @@ export const todosApi = {
   edit: async (input: EditTodoInput): Promise<TaskBoard> => {
     log('edit threadId=%s id=%s', input.threadId, input.id);
     const snap = await callCoreRpc<TodosSnapshotWire>({
-      method: 'openhuman.todos_edit',
+      method: 'neppy.todos_edit',
       params: pruneParams({
         thread_id: input.threadId,
         id: input.id,
@@ -167,7 +167,7 @@ export const todosApi = {
   ): Promise<TaskBoard> => {
     log('updateStatus threadId=%s id=%s status=%s', threadId, id, status);
     const snap = await callCoreRpc<TodosSnapshotWire>({
-      method: 'openhuman.todos_update_status',
+      method: 'neppy.todos_update_status',
       params: { thread_id: threadId, id, status },
     });
     return snapshotToBoard(snap, threadId);
@@ -182,7 +182,7 @@ export const todosApi = {
   ): Promise<TaskBoard> => {
     log('setSessionThread threadId=%s id=%s sessionThreadId=%s', threadId, id, sessionThreadId);
     const snap = await callCoreRpc<TodosSnapshotWire>({
-      method: 'openhuman.todos_set_session_thread',
+      method: 'neppy.todos_set_session_thread',
       params: { thread_id: threadId, id, sessionThreadId },
     });
     return snapshotToBoard(snap, threadId);
@@ -192,7 +192,7 @@ export const todosApi = {
   remove: async (threadId: string, id: string): Promise<TaskBoard> => {
     log('remove threadId=%s id=%s', threadId, id);
     const snap = await callCoreRpc<TodosSnapshotWire>({
-      method: 'openhuman.todos_remove',
+      method: 'neppy.todos_remove',
       params: { thread_id: threadId, id },
     });
     return snapshotToBoard(snap, threadId);

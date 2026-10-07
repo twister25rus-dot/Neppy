@@ -181,6 +181,8 @@ fn fp_with_mode(
         model_registry_signature: "m".into(),
         profile_signature: "pr".into(),
         mode,
+        turn_workspace: None,
+        debug_prompt_hash: None,
     }
 }
 
@@ -309,5 +311,109 @@ async fn non_web_orchestrator_turn_without_a_mode_hides_the_fleet_tools() {
     assert_eq!(visible(&orch), before, "orchestration keeps the belt");
     for tool in ORCHESTRATION_ONLY_TOOLS {
         assert!(visible(&orch).contains(*tool), "{tool} kept");
+    }
+}
+
+#[test]
+fn debug_thread_routes_to_debug_agent_whatever_the_profile_says() {
+    for profile_agent in ["orchestrator", "researcher", "code_executor"] {
+        assert_eq!(
+            target_agent_id(profile_agent.to_string(), ThreadMode::Debug),
+            DEBUG_AGENT_ID
+        );
+    }
+    // Non-debug threads keep the profile's agent untouched.
+    for mode in [ThreadMode::Chat, ThreadMode::Orchestration] {
+        assert_eq!(
+            target_agent_id("orchestrator".to_string(), mode),
+            "orchestrator"
+        );
+        assert_eq!(
+            target_agent_id("researcher".to_string(), mode),
+            "researcher"
+        );
+    }
+}
+
+#[test]
+fn debug_agent_runs_in_debug_mode_only() {
+    assert_eq!(
+        effective_mode(DEBUG_AGENT_ID, ThreadMode::Debug),
+        Some(ThreadMode::Debug)
+    );
+    assert_eq!(effective_mode(DEBUG_AGENT_ID, ThreadMode::Chat), None);
+    // The orchestrator never reports Debug on its own.
+    assert_eq!(
+        effective_mode("orchestrator", ThreadMode::Chat),
+        Some(ThreadMode::Chat)
+    );
+    assert!(debug_agent_allowed(DEBUG_AGENT_ID, ThreadMode::Debug));
+    assert!(!debug_agent_allowed(DEBUG_AGENT_ID, ThreadMode::Chat));
+    assert!(!debug_agent_allowed(
+        DEBUG_AGENT_ID,
+        ThreadMode::Orchestration
+    ));
+    assert!(debug_agent_allowed("orchestrator", ThreadMode::Chat));
+}
+
+#[test]
+fn debug_addendum_states_the_ground_rules() {
+    let debug = prompt_addendum(ThreadMode::Debug);
+    assert!(debug.contains("Debug mode"));
+    assert!(debug.contains("debug_report"));
+    assert!(debug.contains("git push"));
+    assert!(!debug.to_lowercase().contains("openhuman"));
+}
+
+#[test]
+fn fingerprint_differs_by_turn_workspace_so_a_moved_root_rebuilds_the_session() {
+    let a = fp_with_mode(Some(ThreadMode::Debug));
+    let mut b = fp_with_mode(Some(ThreadMode::Debug));
+    assert_eq!(a, b);
+    b.turn_workspace = Some(std::path::PathBuf::from("/some/other/checkout"));
+    assert_ne!(a, b);
+}
+
+#[tokio::test]
+async fn debug_prompt_hash_tracks_debug_settings_and_is_none_outside_debug() {
+    use super::super::session::debug_prompt_hash;
+    use crate::neppy::agent::debug_mode::ops::DebugCtx;
+    use crate::neppy::agent::debug_mode::turn::{with_turn, DebugTurn};
+    use crate::neppy::config::schema::debug_mode::DebugModeConfig;
+
+    let turn = |settings: DebugModeConfig| DebugTurn {
+        ctx: DebugCtx::new(&std::env::temp_dir()),
+        root: std::env::temp_dir(),
+        task_id: None,
+        checkpoint_id: None,
+        settings,
+    };
+    let base = DebugModeConfig::default();
+    let changed = DebugModeConfig {
+        allow_git_push: !base.allow_git_push,
+        max_repair_iterations: base.max_repair_iterations + 3,
+        ..base.clone()
+    };
+    let h_base = with_turn(turn(base.clone()), async {
+        debug_prompt_hash(Some(ThreadMode::Debug))
+    })
+    .await;
+    let h_same = with_turn(turn(base), async {
+        debug_prompt_hash(Some(ThreadMode::Debug))
+    })
+    .await;
+    let h_changed = with_turn(turn(changed), async {
+        debug_prompt_hash(Some(ThreadMode::Debug))
+    })
+    .await;
+    assert!(h_base.is_some());
+    assert_eq!(h_base, h_same, "same settings, same fingerprint");
+    assert_ne!(h_base, h_changed, "edited Debug settings must rebuild");
+    for m in [
+        None,
+        Some(ThreadMode::Chat),
+        Some(ThreadMode::Orchestration),
+    ] {
+        assert_eq!(debug_prompt_hash(m), None);
     }
 }

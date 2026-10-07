@@ -6,7 +6,7 @@ The agent tool layer. Defines the core [`Tool`] trait every agent-callable capab
 
 - Define the [`Tool`] async trait and its supporting value types (`ToolResult`, `ToolSpec`, `PermissionLevel`, `ToolScope`, `ToolCategory`, `ToolCallOptions`).
 - Assemble the registry the agent loop runs against — `default_tools[_with_runtime]` (minimal: shell + file read/write) and `all_tools[_with_runtime]` (full, config-gated set).
-- Gate registration on config flags / env (`browser.enabled`, `node.enabled`, `computer_control.enabled`, `learning.*`, `integrations.*`, `search.engine`, `gitbooks.enabled`, MCP registry presence, `OPENHUMAN_LSP_ENABLED`).
+- Gate registration on config flags / env (`browser.enabled`, `node.enabled`, `computer_control.enabled`, `learning.*`, `integrations.*`, `search.engine`, `gitbooks.enabled`, MCP registry presence, `NEPPY_LSP_ENABLED`).
 - Own the cross-cutting built-in tool impls under `impl/` (filesystem, browser, computer, generic system, generic network).
 - Provide the pre-execution [`ToolPolicy`] middleware (allow/deny gate) and the default allow-all policy.
 - Normalize tool JSON schemas for provider compatibility (`SchemaCleanr`).
@@ -54,12 +54,12 @@ Namespace `tools` (wired into `src/core/all.rs` via `all_tools_registered_contro
 
 | Method | Purpose |
 | --- | --- |
-| `openhuman.tools_composio_execute` | Run a Composio action via the mode-aware factory (backend-proxied or direct). |
-| `openhuman.tools_web_search` | Web search via the backend Parallel proxy; structured results. |
-| `openhuman.tools_seltz_search` | Seltz web search (gated on `seltz.enabled`). |
-| `openhuman.tools_querit_search` | Querit web search (gated on a configured Querit key). |
-| `openhuman.tools_searxng_search` | Self-hosted SearXNG search (gated on `searxng.enabled`). |
-| `openhuman.tools_apify_linkedin_scrape` | Apify LinkedIn profile scrape → raw JSON + rendered markdown. |
+| `neppy.tools_composio_execute` | Run a Composio action via the mode-aware factory (backend-proxied or direct). |
+| `neppy.tools_web_search` | Web search via the backend Parallel proxy; structured results. |
+| `neppy.tools_seltz_search` | Seltz web search (gated on `seltz.enabled`). |
+| `neppy.tools_querit_search` | Querit web search (gated on a configured Querit key). |
+| `neppy.tools_searxng_search` | Self-hosted SearXNG search (gated on `searxng.enabled`). |
+| `neppy.tools_apify_linkedin_scrape` | Apify LinkedIn profile scrape → raw JSON + rendered markdown. |
 
 Handlers load config via `config::rpc::load_config_with_timeout`, build the backend integration client where needed, and return `RpcOutcome`.
 
@@ -113,7 +113,7 @@ None. No `store.rs`; the module holds no persisted state. Tools that persist (me
 
 - **Ownership rule**: only genuinely cross-cutting tool families (filesystem, browser/computer, generic system/network) belong in `impl/`. New domain tools go in the owning domain's `tools.rs` and are re-exported via `mod.rs` — do not add them under `impl/`.
 - **One unified `ToolResult`**: `traits.rs` re-exports it from `skills::types` so every tool uses the same type.
-- **Browser allowlist is fail-safe**: the browser shares `http_request.allowed_domains` but `browser_allowed_domains` strips the `"*"` wildcard — unifying can only narrow browser reach. Allow-all stays behind `OPENHUMAN_BROWSER_ALLOW_ALL`.
+- **Browser allowlist is fail-safe**: the browser shares `http_request.allowed_domains` but `browser_allowed_domains` strips the `"*"` wildcard — unifying can only narrow browser reach. Allow-all stays behind `NEPPY_BROWSER_ALLOW_ALL`.
 - **Node tools are co-gated**: `shell`, `node_exec`, and `npm_exec` share one memoised `NodeBootstrap`; with `node.enabled = false`, node/npm tools are not registered and shell skips PATH injection.
 - **`external_effect_with_args`** is the hook the harness checks at the gate-decision point (not the arg-less variant) — override it for per-call gating (e.g. composio `execute` vs `list`).
 - **`PermissionLevel` ordering is load-bearing**: the runtime compares `<` to reject tools above a channel's max; `permission_level()` should return the *minimum* level across a multi-action tool, with `permission_level_with_args` doing the per-call check.

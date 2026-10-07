@@ -205,9 +205,9 @@ async fn balances_fans_evm_account_into_eth_base_bsc_rows() {
     // Point all three displayed EVM networks at a mock returning 1e18 wei.
     let (addr, _estimate_calls, _raw_txs) = start_mock_rpc().await.unwrap();
     for var in [
-        "OPENHUMAN_WALLET_RPC_EVM",
-        "OPENHUMAN_WALLET_RPC_BASE",
-        "OPENHUMAN_WALLET_RPC_BSC",
+        "NEPPY_WALLET_RPC_EVM",
+        "NEPPY_WALLET_RPC_BASE",
+        "NEPPY_WALLET_RPC_BSC",
     ] {
         std::env::set_var(var, format!("http://{addr}"));
     }
@@ -243,11 +243,11 @@ async fn balances_fans_evm_account_into_eth_base_bsc_rows() {
     }
 
     for var in [
-        "OPENHUMAN_WALLET_RPC_EVM",
-        "OPENHUMAN_WALLET_RPC_BASE",
-        "OPENHUMAN_WALLET_RPC_BSC",
+        "NEPPY_WALLET_RPC_EVM",
+        "NEPPY_WALLET_RPC_BASE",
+        "NEPPY_WALLET_RPC_BSC",
     ] {
-        std::env::remove_var(var);
+        crate::neppy::util::env::remove_var(var);
     }
 }
 
@@ -263,7 +263,7 @@ async fn tx_status_rejects_empty_hash() {
 // broker whose tasks died with the first and the call fails with
 // "connection closed". Verified passing in isolation:
 //
-//   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+//   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
 //     execute_prepared_broadcasts_native_evm_transaction -- --ignored --test-threads=1
 //
 // Same constraint tinydocs documents for its module-backed tool tests.
@@ -275,7 +275,7 @@ async fn execute_prepared_broadcasts_native_evm_transaction() {
     let temp = TempDir::new().unwrap();
     let _workspace_guard = setup_wallet_in(&temp).await.unwrap();
     let (addr, estimate_calls, raw_txs) = start_mock_rpc().await.unwrap();
-    std::env::set_var("OPENHUMAN_WALLET_RPC_EVM", format!("http://{addr}"));
+    std::env::set_var("NEPPY_WALLET_RPC_EVM", format!("http://{addr}"));
 
     let prepared = prepare_transfer(PrepareTransferParams {
         chain: WalletChain::Evm,
@@ -311,7 +311,7 @@ async fn execute_prepared_broadcasts_native_evm_transaction() {
 // broker whose tasks died with the first and the call fails with
 // "connection closed". Verified passing in isolation:
 //
-//   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+//   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
 //     execute_prepared_broadcasts_erc20_transfer_using_default_token_catalog -- --ignored --test-threads=1
 //
 // Same constraint tinydocs documents for its module-backed tool tests.
@@ -323,7 +323,7 @@ async fn execute_prepared_broadcasts_erc20_transfer_using_default_token_catalog(
     let temp = TempDir::new().unwrap();
     let _workspace_guard = setup_wallet_in(&temp).await.unwrap();
     let (addr, estimate_calls, raw_txs) = start_mock_rpc().await.unwrap();
-    std::env::set_var("OPENHUMAN_WALLET_RPC_EVM", format!("http://{addr}"));
+    std::env::set_var("NEPPY_WALLET_RPC_EVM", format!("http://{addr}"));
 
     let prepared = prepare_transfer(PrepareTransferParams {
         chain: WalletChain::Evm,
@@ -363,7 +363,7 @@ async fn execute_prepared_broadcasts_erc20_transfer_using_default_token_catalog(
 // broker whose tasks died with the first and the call fails with
 // "connection closed". Verified passing in isolation:
 //
-//   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+//   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
 //     execute_prepared_broadcasts_native_evm_on_base_with_chain_id_8453 -- --ignored --test-threads=1
 //
 // Same constraint tinydocs documents for its module-backed tool tests.
@@ -376,7 +376,7 @@ async fn execute_prepared_broadcasts_native_evm_on_base_with_chain_id_8453() {
     let _workspace_guard = setup_wallet_in(&temp).await.unwrap();
     // Base uses chain_id 8453 = 0x2105.
     let (addr, _estimate_calls, raw_txs) = start_mock_rpc_with_chain_id("0x2105").await.unwrap();
-    std::env::set_var("OPENHUMAN_WALLET_RPC_BASE", format!("http://{addr}"));
+    std::env::set_var("NEPPY_WALLET_RPC_BASE", format!("http://{addr}"));
 
     let prepared = prepare_transfer(PrepareTransferParams {
         chain: WalletChain::Evm,
@@ -640,7 +640,7 @@ async fn execute_prepared_rejects_evm_chain_id_mismatch() {
     let _workspace_guard = setup_wallet_in(&temp).await.unwrap();
     // Quote says Base; mock reports Ethereum (0x1) — must fail.
     let (addr, _e, _r) = start_mock_rpc_with_chain_id("0x1").await.unwrap();
-    std::env::set_var("OPENHUMAN_WALLET_RPC_BASE", format!("http://{addr}"));
+    std::env::set_var("NEPPY_WALLET_RPC_BASE", format!("http://{addr}"));
 
     let prepared = prepare_transfer(PrepareTransferParams {
         chain: WalletChain::Evm,

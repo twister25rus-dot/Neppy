@@ -1,7 +1,7 @@
 //! Per-thread todo list (a.k.a. agent task board) — CRUD operations plus
 //! a markdown renderer. Backed by [`crate::neppy::agent::task_board`]
 //! for persistence, so agent-side edits via the `todo` tool and user-side
-//! edits via `openhuman.todos_*` RPCs share the same source of truth.
+//! edits via `neppy.todos_*` RPCs share the same source of truth.
 //!
 //! Design notes:
 //! - **Per-thread scoped.** The current agent thread id (or an explicit

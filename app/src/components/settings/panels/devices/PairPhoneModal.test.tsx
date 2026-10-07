@@ -87,7 +87,7 @@ describe('PairPhoneModal', () => {
 
   it('shows loading then renders a QR code after create_pairing resolves', async () => {
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') return makePairingSession();
+      if (method === 'neppy.devices_create_pairing') return makePairingSession();
       return { devices: [] };
     });
 
@@ -102,7 +102,7 @@ describe('PairPhoneModal', () => {
   it('QR code value contains all required URL params', async () => {
     const session = makePairingSession({ rpc_url: 'http://192.168.1.5:7788/rpc' });
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') return session;
+      if (method === 'neppy.devices_create_pairing') return session;
       return { devices: [] };
     });
 
@@ -129,7 +129,7 @@ describe('PairPhoneModal', () => {
     setupFakeTimers();
 
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') return makePairingSession();
+      if (method === 'neppy.devices_create_pairing') return makePairingSession();
       return { devices: [makeDevice()] };
     });
 
@@ -150,7 +150,7 @@ describe('PairPhoneModal', () => {
     setupFakeTimers();
 
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') return makePairingSession();
+      if (method === 'neppy.devices_create_pairing') return makePairingSession();
       return { devices: [makeDevice()] };
     });
 
@@ -178,7 +178,7 @@ describe('PairPhoneModal', () => {
 
     const session = makePairingSession({ expires_at: new Date(Date.now() + 50).toISOString() });
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') return session;
+      if (method === 'neppy.devices_create_pairing') return session;
       return { devices: [] };
     });
 
@@ -206,7 +206,7 @@ describe('PairPhoneModal', () => {
 
     let createCount = 0;
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') {
+      if (method === 'neppy.devices_create_pairing') {
         return createCount++ === 0 ? expiredSession : freshSession;
       }
       return { devices: [] };
@@ -250,7 +250,7 @@ describe('PairPhoneModal', () => {
 
   it('calls onClose when the X button is pressed', async () => {
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') return makePairingSession();
+      if (method === 'neppy.devices_create_pairing') return makePairingSession();
       return { devices: [] };
     });
 
@@ -267,7 +267,7 @@ describe('PairPhoneModal', () => {
 
   it('toggles details section when "Show details" / "Hide details" is clicked', async () => {
     mockCall.mockImplementation(async ({ method }: { method: string }) => {
-      if (method === 'openhuman.devices_create_pairing') return makePairingSession();
+      if (method === 'neppy.devices_create_pairing') return makePairingSession();
       return { devices: [] };
     });
 

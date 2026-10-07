@@ -36,7 +36,7 @@ pub struct ModelHealthConfigView {
     pub evaluation_window_tasks: usize,
 }
 
-/// `openhuman.dashboard_model_health` RPC response.
+/// `neppy.dashboard_model_health` RPC response.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModelHealthResponse {
     pub models: Vec<ModelHealthEntry>,

@@ -224,7 +224,7 @@ Here is the split.
   `neppy-core`, `neppy-fleet` → `neppy-fleet`, `neppy-app`, `neppy-repo`
 - The directory `src/neppy/` → `src/neppy/`, and every `crate::neppy::`
   and `neppy_core::` path with it
-- Env vars `OPENHUMAN_*` → `NEPPY_*`, everywhere at once: `.env.example`,
+- Env vars `NEPPY_*` → `NEPPY_*`, everywhere at once: `.env.example`,
   `app/.env.example`, `scripts/load-dotenv.sh`, CI workflows, docs
 - Filesystem roots: `~/.neppy` → `~/.neppy`, `~/Neppy/projects` →
   `~/Neppy/projects`

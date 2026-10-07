@@ -149,24 +149,24 @@ run_integration_target() {
     while IFS= read -r module; do
       [ -n "${module}" ] || continue
       log "running raw coverage module: ${module}"
-      llvm_cov --no-report --no-fail-fast -p openhuman --test "${target}" -- "${module}::" --test-threads=1 || return
+      llvm_cov --no-report --no-fail-fast -p neppy --test "${target}" -- "${module}::" --test-threads=1 || return
     done < <(raw_coverage_modules)
   elif [ "${target}" = "json_rpc_e2e" ]; then
     # This target exercises process-global runtime/config state. Its tests take
     # an environment lock, but background agent tasks can outlive an individual
     # case briefly; keeping libtest serial prevents a successor from observing
     # that teardown window.
-    llvm_cov --no-report --no-fail-fast -p openhuman --test "${target}" -- --test-threads=1
+    llvm_cov --no-report --no-fail-fast -p neppy --test "${target}" -- --test-threads=1
   else
-    llvm_cov --no-report --no-fail-fast -p openhuman --test "${target}"
+    llvm_cov --no-report --no-fail-fast -p neppy --test "${target}"
   fi
 }
 
 run_full() {
   log "running FULL instrumented suite (reason: $1)"
   llvm_cov clean --workspace
-  llvm_cov --no-report --no-fail-fast -p openhuman --lib
-  llvm_cov --no-report --no-fail-fast -p openhuman --bins
+  llvm_cov --no-report --no-fail-fast -p neppy --lib
+  llvm_cov --no-report --no-fail-fast -p neppy --bins
   while IFS= read -r target; do
     [ -n "${target}" ] || continue
     log "running full-suite integration target: ${target}"
@@ -326,7 +326,7 @@ llvm_cov clean --workspace
 if [ "${#lib_filters[@]}" -gt 0 ]; then
   log "running scoped lib unit tests with filters: ${lib_filters[*]}"
   # libtest ORs multiple positional filters — one run covers all domains.
-  run_counted llvm_cov --no-report --no-fail-fast -p openhuman --lib -- "${lib_filters[@]}"
+  run_counted llvm_cov --no-report --no-fail-fast -p neppy --lib -- "${lib_filters[@]}"
 fi
 
 if [ "${#test_targets[@]}" -gt 0 ]; then

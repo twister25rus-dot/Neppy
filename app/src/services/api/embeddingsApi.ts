@@ -1,7 +1,7 @@
 /**
  * Embeddings settings API — facade for the Settings → Embeddings panel.
  *
- * Wraps the `openhuman.embeddings_*` RPC methods. The panel never imports
+ * Wraps the `neppy.embeddings_*` RPC methods. The panel never imports
  * `coreRpcClient` directly — every call goes through this file.
  */
 import { callCoreRpc } from '../coreRpcClient';

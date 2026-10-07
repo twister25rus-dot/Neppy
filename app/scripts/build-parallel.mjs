@@ -10,7 +10,7 @@
 // are discarded).
 //
 // Any extra args are forwarded to `vite build` (e.g. `--mode development`).
-// Env vars (e.g. VITE_OPENHUMAN_TARGET set via cross-env) are inherited by both
+// Env vars (e.g. VITE_NEPPY_TARGET set via cross-env) are inherited by both
 // children. `shell: true` resolves the `tsc`/`vite` shims from node_modules/.bin
 // on every platform, including the `.cmd` wrappers on Windows.
 import { spawn } from 'node:child_process';

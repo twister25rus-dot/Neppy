@@ -15,7 +15,7 @@
 //! on disk — but the flag is observation-only (the legacy read stays
 //! authoritative and the probe runs off the turn path), and both escape hatches
 //! survive the migration: set `session_shadow_reads = false` again after the
-//! bump, or set `OPENHUMAN_SESSION_SHADOW_READS=0`, which is a kill switch that
+//! bump, or set `NEPPY_SESSION_SHADOW_READS=0`, which is a kill switch that
 //! config can never override.
 
 use crate::neppy::config::Config;

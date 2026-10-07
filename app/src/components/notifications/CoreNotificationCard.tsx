@@ -29,7 +29,7 @@ interface Props {
  * dropped: `NotificationCenter` sources core items only through this branch.
  * It deliberately renders no buttons — the meeting auto-join prompt that owned
  * them went with the Meet domain, and its
- * `openhuman.agent_meetings_notification_action` RPC no longer exists.
+ * `neppy.agent_meetings_notification_action` RPC no longer exists.
  */
 const CoreNotificationCard = ({ notification: n }: Props) => {
   const { t } = useT();

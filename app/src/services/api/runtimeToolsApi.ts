@@ -1,6 +1,6 @@
 /**
  * Frontend client for the agent's native tool registry, exposed over
- * `openhuman.javascript_list_tools` (the same registry the assistant uses). The
+ * `neppy.javascript_list_tools` (the same registry the assistant uses). The
  * flows "Tool" node (native Neppy tools, as opposed to the Composio "App
  * action" node) uses this to offer a dropdown of real tool names + descriptions.
  */
@@ -43,7 +43,7 @@ function unwrapCliEnvelope<T>(payload: unknown): T {
 export async function listRuntimeTools(): Promise<RuntimeTool[]> {
   log('listRuntimeTools: request');
   const response = await callCoreRpc<unknown>({
-    method: 'openhuman.javascript_list_tools',
+    method: 'neppy.javascript_list_tools',
     params: {},
   });
   const payload = unwrapCliEnvelope<unknown>(response);

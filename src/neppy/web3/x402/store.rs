@@ -277,19 +277,19 @@ pub fn init_global(workspace_dir: &Path, session_id: &str) {
 
 fn budget_from_env() -> SpendingBudget {
     let mut budget = SpendingBudget::default();
-    if let Ok(v) = std::env::var("OPENHUMAN_X402_PER_REQUEST_MAX") {
+    if let Ok(v) = crate::neppy::util::env::var("NEPPY_X402_PER_REQUEST_MAX") {
         if let Ok(n) = v.parse::<u64>() {
             debug!("{LOG_PREFIX} env override per_request_max={n}");
             budget.per_request_max_atomic = n;
         }
     }
-    if let Ok(v) = std::env::var("OPENHUMAN_X402_DAILY_MAX") {
+    if let Ok(v) = crate::neppy::util::env::var("NEPPY_X402_DAILY_MAX") {
         if let Ok(n) = v.parse::<u64>() {
             debug!("{LOG_PREFIX} env override daily_max={n}");
             budget.daily_max_atomic = n;
         }
     }
-    if let Ok(v) = std::env::var("OPENHUMAN_X402_MONTHLY_MAX") {
+    if let Ok(v) = crate::neppy::util::env::var("NEPPY_X402_MONTHLY_MAX") {
         if let Ok(n) = v.parse::<u64>() {
             debug!("{LOG_PREFIX} env override monthly_max={n}");
             budget.monthly_max_atomic = n;

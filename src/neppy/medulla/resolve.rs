@@ -9,12 +9,12 @@
 //! endpoint and one credential — exactly the drift this migration exists to
 //! remove.
 //!
-//! `OPENHUMAN_MEDULLA_BASE_URL` remains as an override for pointing a
+//! `NEPPY_MEDULLA_BASE_URL` remains as an override for pointing a
 //! development host at a different Medulla deployment than its Neppy one.
 //! Unset — the normal case — everything resolves through
 //! [`effective_backend_api_url`], the same chain every other hosted-backend
 //! call uses: `api_url`, then the `BACKEND_URL` keys, then the prod or staging
-//! default selected by `OPENHUMAN_APP_ENV`. Resolving from the raw `api_url`
+//! default selected by `NEPPY_APP_ENV`. Resolving from the raw `api_url`
 //! instead would leave Medulla as the one backend surface with no default,
 //! reporting itself unconfigured on an install where every other call works.
 
@@ -25,7 +25,7 @@ use crate::neppy::security::credentials::session_support::get_session_token;
 use super::client::MedullaClient;
 
 /// Environment override for the Medulla backend base URL.
-pub const MEDULLA_BASE_URL_ENV: &str = "OPENHUMAN_MEDULLA_BASE_URL";
+pub const MEDULLA_BASE_URL_ENV: &str = "NEPPY_MEDULLA_BASE_URL";
 
 /// Why a Medulla client could not be built.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -44,7 +44,7 @@ impl NotConfigured {
     pub fn message(&self) -> &'static str {
         match self {
             NotConfigured::NoBaseUrl => {
-                "no Medulla backend configured; set OPENHUMAN_MEDULLA_BASE_URL or api_url"
+                "no Medulla backend configured; set NEPPY_MEDULLA_BASE_URL or api_url"
             }
             NotConfigured::NoSessionToken => "not signed in; no session token available",
         }
@@ -61,11 +61,11 @@ impl NotConfigured {
 
 /// The configured base URL, if any.
 ///
-/// Precedence: `OPENHUMAN_MEDULLA_BASE_URL`, then whatever every other
+/// Precedence: `NEPPY_MEDULLA_BASE_URL`, then whatever every other
 /// hosted-backend call resolves to — [`effective_backend_api_url`], which
 /// applies `config.api_url`, the `BACKEND_URL` env/compile-time keys, and
 /// finally the environment-aware default (prod or staging by
-/// `OPENHUMAN_APP_ENV`).
+/// `NEPPY_APP_ENV`).
 ///
 /// Reading `config.api_url` directly, as this used to, made Medulla the one
 /// hosted-backend surface with no default: an install that had never written an
@@ -79,7 +79,7 @@ impl NotConfigured {
 /// Empty or whitespace-only values count as unset, so an exported-but-blank env
 /// var does not shadow a working config value.
 pub fn base_url(config: &Config) -> Option<String> {
-    let from_env = std::env::var(MEDULLA_BASE_URL_ENV)
+    let from_env = crate::neppy::util::env::var(MEDULLA_BASE_URL_ENV)
         .ok()
         .filter(|v| !v.trim().is_empty());
 
@@ -143,16 +143,16 @@ mod tests {
 
     impl EnvGuard {
         fn set(key: &'static str, val: &str) -> Self {
-            let prev = std::env::var(key).ok();
+            let prev = crate::neppy::util::env::var(key).ok();
             // SAFETY: caller holds ENV_LOCK guard.
             unsafe { std::env::set_var(key, val) };
             Self { key, prev }
         }
 
         fn remove(key: &'static str) -> Self {
-            let prev = std::env::var(key).ok();
+            let prev = crate::neppy::util::env::var(key).ok();
             // SAFETY: caller holds ENV_LOCK guard.
-            unsafe { std::env::remove_var(key) };
+            crate::neppy::util::env::remove_var(key);
             Self { key, prev }
         }
     }
@@ -162,7 +162,7 @@ mod tests {
             match &self.prev {
                 // SAFETY: caller's ENV_LOCK guard is still alive during drop.
                 Some(v) => unsafe { std::env::set_var(self.key, v) },
-                None => unsafe { std::env::remove_var(self.key) },
+                None => crate::neppy::util::env::remove_var(self.key),
             }
         }
     }

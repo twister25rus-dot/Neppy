@@ -28,7 +28,7 @@ use tinyagents::harness::providers::openai::{AuthStyle, OpenAiModel};
 
 // ── Environment serialisation lock ───────────────────────────────────────────
 //
-// Tests that mutate OPENHUMAN_WORKSPACE or OPENHUMAN_CORE_TOKEN must acquire
+// Tests that mutate NEPPY_WORKSPACE or NEPPY_CORE_TOKEN must acquire
 // this lock first to prevent races when cargo runs tests in parallel threads
 // within the same process.
 
@@ -102,7 +102,7 @@ async fn invoke_text(
 
 // ── Helper: build an env-isolated Config pointing at tempdir ─────────────────
 
-/// Sets OPENHUMAN_WORKSPACE to `dir` and returns an `EnvVarGuard` that
+/// Sets NEPPY_WORKSPACE to `dir` and returns an `EnvVarGuard` that
 /// restores the previous value on drop.  Must be called under `env_lock()`.
 struct EnvGuard {
     key: &'static str,
@@ -111,7 +111,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, val: &str) -> Self {
-        let prev = std::env::var(key).ok();
+        let prev = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: caller holds env_lock().
         unsafe { std::env::set_var(key, val) };
         Self { key, prev }
@@ -123,7 +123,7 @@ impl Drop for EnvGuard {
         match &self.prev {
             // SAFETY: caller's env_lock guard is still alive during drop.
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -423,7 +423,7 @@ async fn http_endpoint_models_with_bearer_returns_model_list() {
     ensure_rpc_auth();
 
     let tmp = tempdir().expect("tempdir");
-    let _workspace_guard = EnvGuard::set("OPENHUMAN_WORKSPACE", tmp.path().to_str().unwrap());
+    let _workspace_guard = EnvGuard::set("NEPPY_WORKSPACE", tmp.path().to_str().unwrap());
 
     let req = Request::builder()
         .method(Method::GET)

@@ -24,7 +24,7 @@ use super::router;
 /// Env var the Tauri host writes (before spawning core) and core reads
 /// (in `src/neppy/webview_apis/client.rs`) so both agree on the
 /// port without a discovery round-trip.
-pub const PORT_ENV: &str = "OPENHUMAN_WEBVIEW_APIS_PORT";
+pub const PORT_ENV: &str = "NEPPY_WEBVIEW_APIS_PORT";
 
 /// The port the server is bound to. `0` before `start()` resolves it.
 static RESOLVED_PORT: AtomicU16 = AtomicU16::new(0);
@@ -301,7 +301,7 @@ mod tests {
         // #1543.) `std::env::set_var` is process-global; without the
         // restore, an unrelated test asserting on `PORT_ENV` could observe
         // `stale_port` and flake.
-        let prev_port_env = std::env::var(PORT_ENV).ok();
+        let prev_port_env = neppy_core::neppy::util::env::var(PORT_ENV).ok();
         std::env::set_var(PORT_ENV, stale_port.to_string());
 
         let bound = start()
@@ -328,7 +328,7 @@ mod tests {
         stop();
         match prev_port_env {
             Some(v) => std::env::set_var(PORT_ENV, v),
-            None => std::env::remove_var(PORT_ENV),
+            None => neppy_core::neppy::util::env::remove_var(PORT_ENV),
         }
     }
 }

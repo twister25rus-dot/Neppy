@@ -51,7 +51,7 @@ describe('userApi.getMe', () => {
 
     const user = await userApi.getMe();
 
-    expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.auth_get_me');
+    expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.auth_get_me');
     expect(user._id).toBe('user-123');
     expect(user.firstName).toBe('Test');
     expect(user.username).toBe('testuser');

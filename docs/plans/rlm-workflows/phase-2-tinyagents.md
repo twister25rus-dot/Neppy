@@ -1,11 +1,11 @@
 # Phase 2 — TinyAgents-side changes (separate PR)
 
 Branch: `feat/repl-host-embedding` in `vendor/tinyagents` (repo
-`tinyhumansai/tinyagents`). Raised as its **own PR**; the openhuman PR bumps
+`tinyhumansai/tinyagents`). Raised as its **own PR**; the neppy PR bumps
 the submodule pointer to the merged commit.
 
 Scope is intentionally minimal — only the host-embedding gaps identified in
-Phase 1 that cannot be worked around from openhuman.
+Phase 1 that cannot be worked around from neppy.
 
 ## 2.1 External cancellation (`ReplCancelFlag`)
 
@@ -37,7 +37,7 @@ long fan-outs look frozen in the UI.
 (the existing `EventSink` shared with the run context) at capability-call
 start and completion — `AgentEvent::Custom`-style records carrying
 `{session_id, kind: model|tool|agent|emit, name, elapsed?}`. The host
-(openhuman) subscribes an `EventListener` and forwards to its own progress
+(neppy) subscribes an `EventListener` and forwards to its own progress
 sink. No new public types beyond what the event enum already supports; if
 `AgentEvent` lacks a suitable variant, add `AgentEvent::ReplCall
 { record: ReplCallRecord, phase: Started|Completed }` behind the `repl`

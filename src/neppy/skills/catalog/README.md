@@ -21,27 +21,27 @@ https://hermes-agent.nousresearch.com/docs/api/skills.json
 Useful environment overrides for prod scripts and deterministic tests:
 
 ```bash
-OPENHUMAN_SKILL_REGISTRY_CATALOG_URL=https://example.com/skills.json
-OPENHUMAN_SKILL_REGISTRY_DOWNLOAD_BASE_URL=https://example.com/skills
-OPENHUMAN_SKILL_REGISTRY_REFRESH_ON_BOOT=0
+NEPPY_SKILL_REGISTRY_CATALOG_URL=https://example.com/skills.json
+NEPPY_SKILL_REGISTRY_DOWNLOAD_BASE_URL=https://example.com/skills
+NEPPY_SKILL_REGISTRY_REFRESH_ON_BOOT=0
 ```
 
-`OPENHUMAN_SKILL_REGISTRY_REFRESH_ON_BOOT=0` disables the best-effort startup
+`NEPPY_SKILL_REGISTRY_REFRESH_ON_BOOT=0` disables the best-effort startup
 refresh. By default, core startup spawns a background task that force-refreshes
 the remote catalog and updates the local cache without blocking core readiness.
 
 Production smoke examples:
 
 ```bash
-openhuman skill_registry schemas
-openhuman skill_registry browse --force_refresh true
-openhuman skill_registry search --query git
-openhuman skill_registry sources
-openhuman skill_registry install --entry_id git-helper
-openhuman skill_registry uninstall --name git-helper
+neppy skill_registry schemas
+neppy skill_registry browse --force_refresh true
+neppy skill_registry search --query git
+neppy skill_registry sources
+neppy skill_registry install --entry_id git-helper
+neppy skill_registry uninstall --name git-helper
 ```
 
 Security notes:
 
 - Production installs still go through the hardened `workflows` URL installer.
-- HTTP localhost installs require `OPENHUMAN_SKILL_INSTALL_ALLOW_LOCAL_HTTP=1` and are intended for local fixtures only.
+- HTTP localhost installs require `NEPPY_SKILL_INSTALL_ALLOW_LOCAL_HTTP=1` and are intended for local fixtures only.

@@ -388,7 +388,7 @@ fn github_repo_memory_source_reports_github_destination() {
         privacy.destinations
     );
     assert!(
-        !haystack.contains("openhuman backend"),
+        !haystack.contains("neppy backend"),
         "the reader talks to GitHub directly, not the managed backend — listing \
          the backend would mis-attribute the destination: {:?}",
         privacy.destinations

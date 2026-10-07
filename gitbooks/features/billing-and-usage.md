@@ -54,7 +54,7 @@ The desktop **Settings → Billing** panel intentionally has no embedded payment
 
 ### RPC surface
 
-Namespace `billing`, exposed as `openhuman.billing_*` (15 methods), e.g. `billing_get_current_plan`, `billing_get_balance`, `billing_get_transactions`, `billing_purchase_plan`, `billing_top_up`, `billing_create_coinbase_charge`, `billing_get_cards`, `billing_create_setup_intent`, `billing_update_auto_recharge`, `billing_redeem_coupon`.
+Namespace `billing`, exposed as `neppy.billing_*` (15 methods), e.g. `billing_get_current_plan`, `billing_get_balance`, `billing_get_transactions`, `billing_purchase_plan`, `billing_top_up`, `billing_create_coinbase_charge`, `billing_get_cards`, `billing_create_setup_intent`, `billing_update_auto_recharge`, `billing_redeem_coupon`.
 
 ---
 
@@ -85,7 +85,7 @@ Settings → **Usage & Limits** hosts the cost dashboard (alongside background-a
 
 ### RPC surface
 
-Namespace `cost`, exposed as `openhuman.cost_*`:
+Namespace `cost`, exposed as `neppy.cost_*`:
 
 | Method                   | Inputs                                | Output                                                                         |
 | ------------------------ | ------------------------------------- | ------------------------------------------------------------------------------ |

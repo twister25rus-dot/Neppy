@@ -42,7 +42,7 @@ const ApiKeysStep = ({ onNext, onSkip }: ApiKeysStepProps) => {
     }
     try {
       const res = await callCoreRpc<{ result: OpenAiOAuthStatus }>({
-        method: 'openhuman.inference_openai_oauth_status',
+        method: 'neppy.inference_openai_oauth_status',
         params: {},
       });
       setOauthConnected(Boolean(res?.result?.connected));
@@ -64,7 +64,7 @@ const ApiKeysStep = ({ onNext, onSkip }: ApiKeysStepProps) => {
     setError(null);
     try {
       const res = await callCoreRpc<{ result: { authUrl: string } }>({
-        method: 'openhuman.inference_openai_oauth_start',
+        method: 'neppy.inference_openai_oauth_start',
         params: {},
       });
       const authUrl = res?.result?.authUrl?.trim();
@@ -91,7 +91,7 @@ const ApiKeysStep = ({ onNext, onSkip }: ApiKeysStepProps) => {
     setError(null);
     try {
       await callCoreRpc({
-        method: 'openhuman.inference_openai_oauth_complete',
+        method: 'neppy.inference_openai_oauth_complete',
         params: { callback_url: callback },
       });
       setOauthCallbackUrl('');

@@ -14,7 +14,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value);
         }
@@ -22,7 +22,7 @@ impl EnvGuard {
     }
 
     fn set_str(key: &'static str, value: &'static str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value);
         }
@@ -36,9 +36,7 @@ impl Drop for EnvGuard {
             Some(value) => unsafe {
                 std::env::set_var(self.key, value);
             },
-            None => unsafe {
-                std::env::remove_var(self.key);
-            },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -55,8 +53,8 @@ async fn config_secrets_create_master_key_in_keyring_on_fresh_install() {
     let workspace_dir = neppy_dir.join("workspace");
     std::fs::create_dir_all(&workspace_dir).expect("workspace dir");
 
-    let _keyring_backend = EnvGuard::set_str("OPENHUMAN_KEYRING_BACKEND", "file");
-    let _workspace_override = EnvGuard::set("OPENHUMAN_WORKSPACE", &neppy_dir);
+    let _keyring_backend = EnvGuard::set_str("NEPPY_KEYRING_BACKEND", "file");
+    let _workspace_override = EnvGuard::set("NEPPY_WORKSPACE", &neppy_dir);
     keyring::init_workspace(&workspace_dir);
 
     let legacy_key_path = neppy_dir.join(".secret_key");

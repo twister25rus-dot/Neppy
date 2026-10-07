@@ -84,7 +84,7 @@ use neppy_core::core::jsonrpc::build_core_http_router;
 
 // ── env serialisation ─────────────────────────────────────────────────────────
 //
-// HOME / OPENHUMAN_WORKSPACE / BACKEND_URL are process-global; parallel tests
+// HOME / NEPPY_WORKSPACE / BACKEND_URL are process-global; parallel tests
 // in this binary would clobber each other without a lock.
 
 static COMPOSIO_E2E_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -121,14 +121,14 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let prev = std::env::var(key).ok();
+        let prev = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, prev }
     }
 
     fn unset(key: &'static str) -> Self {
-        let prev = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let prev = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, prev }
     }
 }
@@ -137,14 +137,14 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.prev {
             Some(v) => std::env::set_var(self.key, v),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
 
 // ── mock backend builders ─────────────────────────────────────────────────────
 
-/// Minimal mock of the openhuman backend for the composio e2e tests.
+/// Minimal mock of the neppy backend for the composio e2e tests.
 /// Handles:
 ///   - `GET /settings` and `GET /auth/me` — JWT validation probe issued by
 ///     `auth_store_session`. Returns a synthetic user object.
@@ -306,7 +306,7 @@ fn assert_no_jsonrpc_error<'a>(v: &'a Value, ctx: &str) -> &'a Value {
 /// should return real data. The RPC result observed by the caller must be
 /// `successful=true` with the action data — the transient error is invisible.
 ///
-/// The test drives this through the full `openhuman.composio_execute` RPC
+/// The test drives this through the full `neppy.composio_execute` RPC
 /// handler so the retry logic in `execute_with_auth_retry_inner` and
 /// `execute_tool_with_post_oauth_retry` is exercised end-to-end.
 #[tokio::test]
@@ -318,7 +318,7 @@ async fn post_oauth_gap_retries_and_returns_real_data() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvGuard::set_to_path("HOME", home);
-    let _ws_guard = EnvGuard::unset("OPENHUMAN_WORKSPACE");
+    let _ws_guard = EnvGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvGuard::unset("BACKEND_URL");
     let _vite_guard = EnvGuard::unset("VITE_BACKEND_URL");
 
@@ -364,7 +364,7 @@ async fn post_oauth_gap_retries_and_returns_real_data() {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": TEST_JWT, "user_id": "composio-e2e-user" }),
     )
     .await;
@@ -378,7 +378,7 @@ async fn post_oauth_gap_retries_and_returns_real_data() {
     let exec = post_json_rpc(
         &rpc_base,
         2,
-        "openhuman.composio_execute",
+        "neppy.composio_execute",
         json!({
             "tool": "GOOGLECALENDAR_EVENTS_LIST",
             "arguments": {}
@@ -457,7 +457,7 @@ async fn revoked_token_surfaces_without_retry() {
     let neppy_home = home.join(".neppy");
 
     let _home_guard = EnvGuard::set_to_path("HOME", home);
-    let _ws_guard = EnvGuard::unset("OPENHUMAN_WORKSPACE");
+    let _ws_guard = EnvGuard::unset("NEPPY_WORKSPACE");
     let _backend_url_guard = EnvGuard::unset("BACKEND_URL");
     let _vite_guard = EnvGuard::unset("VITE_BACKEND_URL");
 
@@ -488,7 +488,7 @@ async fn revoked_token_surfaces_without_retry() {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({ "token": TEST_JWT, "user_id": "composio-e2e-user" }),
     )
     .await;
@@ -497,7 +497,7 @@ async fn revoked_token_surfaces_without_retry() {
     let exec = post_json_rpc(
         &rpc_base,
         2,
-        "openhuman.composio_execute",
+        "neppy.composio_execute",
         json!({
             "tool": "GMAIL_SEND_EMAIL",
             "arguments": { "to": "test@example.com", "subject": "hi", "body": "hello" }

@@ -2,7 +2,7 @@
 //!
 //! Runs on a configurable interval (default 1 hour) and logs when a newer
 //! version is available on GitHub Releases. The actual download + staging is
-//! left to the Tauri shell or an explicit `openhuman.update_apply` RPC call.
+//! left to the Tauri shell or an explicit `neppy.update_apply` RPC call.
 
 use std::time::Duration;
 

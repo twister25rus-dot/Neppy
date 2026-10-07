@@ -22,7 +22,7 @@ TMPDIR_CERT=$(mktemp -d)
 KEY="$TMPDIR_CERT/openhuman-dev.key"
 CERT="$TMPDIR_CERT/openhuman-dev.crt"
 P12="$TMPDIR_CERT/openhuman-dev.p12"
-P12_PASS="${OPENHUMAN_P12_PASS:-openhuman-dev}"
+P12_PASS="${NEPPY_P12_PASS:-openhuman-dev}"
 
 cleanup() {
   rm -rf "$TMPDIR_CERT"

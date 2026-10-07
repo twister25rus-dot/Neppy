@@ -97,7 +97,12 @@ impl Tool for SpawnSubagentTool {
         // when it's been initialised. Falls back to a string-with-hint
         // when the registry hasn't been set up yet (e.g. early tests).
         let agent_ids: Vec<String> = AgentDefinitionRegistry::global()
-            .map(|reg| reg.list().iter().map(|d| d.id.clone()).collect())
+            .map(|reg| {
+                reg.list_delegatable()
+                    .iter()
+                    .map(|d| d.id.clone())
+                    .collect()
+            })
             .unwrap_or_default();
 
         let agent_id_schema = if agent_ids.is_empty() {
@@ -253,7 +258,11 @@ impl Tool for SpawnSubagentTool {
         let definition = match registry.get(agent_id.as_str()) {
             Some(def) => def,
             None => {
-                let available: Vec<&str> = registry.list().iter().map(|d| d.id.as_str()).collect();
+                let available: Vec<&str> = registry
+                    .list_delegatable()
+                    .iter()
+                    .map(|d| d.id.as_str())
+                    .collect();
                 return Ok(ToolResult::error(format!(
                     "spawn_subagent: unknown agent_id '{agent_id}'. Available: {}",
                     available.join(", ")
@@ -1410,5 +1419,34 @@ mod tests {
         assert!(initiated.contains("OAuth flow in progress"));
         let expired = describe_unconnected_state("gmail", Some("Expired"));
         assert!(expired.contains("OAuth token has expired"));
+    }
+
+    /// `debug_agent` must be unreachable through the spawn tool outside a
+    /// Debug-mode turn: it is absent from the advertised `agent_id` enum, and a
+    /// direct request is refused at the `run_subagent` choke point.
+    #[tokio::test]
+    async fn debug_agent_cannot_be_spawned_outside_a_debug_turn() {
+        let tmp = TempDir::new().unwrap();
+        crate::neppy::agent::harness::AgentDefinitionRegistry::init_global(tmp.path()).unwrap();
+        let tool = SpawnSubagentTool;
+        let schema = tool.parameters_schema();
+        let listed = schema["properties"]["agent_id"]["enum"]
+            .as_array()
+            .expect("agent_id enum is advertised once the registry is up");
+        assert!(listed.iter().all(|v| v.as_str() != Some("debug_agent")));
+        assert!(listed.iter().any(|v| v.as_str() == Some("researcher")));
+
+        let result = tool
+            .execute(json!({ "agent_id": "debug_agent", "prompt": "edit src/main.rs" }))
+            .await
+            .unwrap();
+        assert!(result.is_error, "{}", result.text());
+        assert!(
+            result
+                .text()
+                .contains("only available inside a Debug-mode turn"),
+            "{}",
+            result.text()
+        );
     }
 }

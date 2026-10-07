@@ -53,7 +53,7 @@ pub const LEGACY_CLIENT_UNAVAILABLE_PREFIX: &str = "memory driver ";
 /// The operator-facing sentence.
 ///
 /// `invocation` is a CLI form built from static strings only (e.g.
-/// `"openhuman memory_tree list_chunks"`), never from user argument values.
+/// `"neppy memory_tree list_chunks"`), never from user argument values.
 pub fn capability_unavailable_message(
     driver_id: &str,
     capability: Capability,
@@ -61,7 +61,7 @@ pub fn capability_unavailable_message(
 ) -> String {
     format!(
         "{CAPABILITY_UNAVAILABLE_PREFIX}`{driver_id}` does not advertise the `{cap}` capability, \
-         so `{invocation}` is unavailable in this configuration. Run `openhuman subsystems` to \
+         so `{invocation}` is unavailable in this configuration. Run `neppy-core subsystems` to \
          see the bound driver and the families it advertises, or change \
          `[subsystems.memory] driver` in your config.",
         cap = capability.as_str()
@@ -97,7 +97,7 @@ pub fn legacy_client_unavailable_message(
     format!(
         "{LEGACY_CLIENT_UNAVAILABLE_PREFIX}`{driver_id}` does not keep memory in the \
          local store, so `{invocation}` is unavailable: it reads that store \
-         directly, and {detail}. Run `openhuman subsystems` to see the bound driver, \
+         directly, and {detail}. Run `neppy-core subsystems` to see the bound driver, \
          or change `[subsystems.memory] driver` in your config.",
     )
 }
@@ -156,7 +156,7 @@ pub async fn bound_memory_driver() -> Option<(String, DriverClass, Capabilities)
 /// memory-guard bypass ratchet
 /// (`memory::bypass_allowlist_tests`) carries one allowlisted line rather than
 /// one per CLI entry point. Callers that already hold a `Config` — the
-/// `openhuman memory` adapter does — use this instead of loading it twice.
+/// `neppy-core memory` adapter does — use this instead of loading it twice.
 ///
 /// Nothing here touches memory *data*: only the driver id, its class, and the
 /// advertised capability set — exactly what `memory.provider_status` already
@@ -220,7 +220,7 @@ pub fn ensure_capability_blocking(required: Option<Capability>, invocation: &str
 /// already been defaulted-OPEN upstream by the caller skipping this entirely.
 pub fn legacy_client_verdict(driver_id: &str, class: DriverClass, invocation: &str) -> Result<()> {
     // `Module` passes for the same reason `Embedded` does, and omitting it was
-    // refusing every `openhuman memory` subcommand in the field: `binding::admit`
+    // refusing every `neppy-core memory` subcommand in the field: `binding::admit`
     // stopped admitting `Embedded` at all (the built-in driver binds as
     // `Module`), so a gate that only accepted `Embedded` accepted nothing.
     //

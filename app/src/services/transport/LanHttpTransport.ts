@@ -99,7 +99,7 @@ export class LanHttpTransport implements CoreTransport {
 
   async isHealthy(): Promise<boolean> {
     try {
-      await this.call('openhuman.ping', {}, { signal: AbortSignal.timeout(2000) });
+      await this.call('neppy.ping', {}, { signal: AbortSignal.timeout(2000) });
       return true;
     } catch {
       return false;

@@ -2,7 +2,7 @@
 //!
 //! The shell owns the one thing the core cannot: the user-visible indicator.
 //! It grants the core an *indicator lease* every ~2 s
-//! (`openhuman.pet_companion_lease {indicator:"tray", visible}`); the core
+//! (`neppy.pet_companion_lease {indicator:"tray", visible}`); the core
 //! only samples while a lease is live, so observation cannot outlive a
 //! visible tray icon by more than the core's 6 s expiry. If there is no tray
 //! (Linux, failed `setup_tray`) the shell reports `visible:false` and no

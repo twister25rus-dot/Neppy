@@ -21,7 +21,7 @@
 use std::sync::OnceLock;
 
 // Re-export the tinyagents task-orchestration primitives so the detached
-// sub-agent control plane imports lifecycle types from one openhuman path.
+// sub-agent control plane imports lifecycle types from one neppy path.
 pub(crate) use tinyagents::graph::orchestration::OrchestrationTaskStatus;
 #[allow(unused_imports)]
 pub(crate) use tinyagents::graph::orchestration::SteeringRegistry;

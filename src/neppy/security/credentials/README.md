@@ -5,7 +5,7 @@ Credential management for the Neppy app session and provider/OAuth auth profiles
 ## Responsibilities
 
 - Store and validate the app session JWT (`app-session` provider, `default` profile), including local offline sessions and backend `GET /auth/me` validation.
-- On login: activate the user-scoped openhuman directory, purge pre-login (anonymous) conversation threads on first activation, bind memory/conversation persistence, bootstrap subconscious, and start login-gated services (local AI, voice, dictation, autocomplete).
+- On login: activate the user-scoped neppy directory, purge pre-login (anonymous) conversation threads on first activation, bind memory/conversation persistence, bootstrap subconscious, and start login-gated services (local AI, voice, dictation, autocomplete).
 - On logout / session-expiry: remove the JWT, clear the active-user marker, stop login-gated services, reset subconscious, and flip the scheduler-gate signed-out override.
 - Persist arbitrary provider credentials (token + metadata fields) as named auth profiles; list/remove/set-active; prefix-list profiles for grouped namespaces (e.g. `channel:*`).
 - Run backend OAuth flows: connect URL, list integrations, fetch integration handoff tokens, fetch one-time client key, revoke integration.
@@ -41,7 +41,7 @@ Credential management for the Neppy app session and provider/OAuth auth profiles
 
 ## RPC / controllers
 
-Namespace `auth` (JSON-RPC `openhuman.auth_*` / CLI). Defined in `schemas.rs`:
+Namespace `auth` (JSON-RPC `neppy.auth_*` / CLI). Defined in `schemas.rs`:
 
 | Method | Description |
 | --- | --- |
@@ -82,7 +82,7 @@ None. This module owns no agent tools (`tools.rs` does not exist).
 
 ## Dependencies
 
-- `crate::neppy::config` — `Config`, config load (`load_config_with_timeout`), user-dir activation (`default_root_openhuman_dir`, `user_openhuman_dir`, `read/write/clear_active_user`, `pre_login_user_dir`), onboarding state.
+- `crate::neppy::config` — `Config`, config load (`load_config_with_timeout`), user-dir activation (`default_root_neppy_dir`, `user_neppy_dir`, `read/write/clear_active_user`, `pre_login_user_dir`), onboarding state.
 - `crate::neppy::security::keyring` — `SecretStore` (encrypt/decrypt) and OS keychain `get`/`set`/`delete`/`is_available`.
 - `crate::neppy::cron::scheduler_gate` — signed-out override flipped on login/logout/session-expiry.
 - `crate::neppy::memory::conversations` — purge pre-login threads, bind conversation persistence after login.

@@ -18,12 +18,12 @@
  *
  * Safety: this component renders **only** text + button elements. It never
  * uses `dangerouslySetInnerHTML`, never sets an `href`, and the dispatched
- * `OPENHUMAN_LINK_EVENT` is consumed by `NeppyLinkModal`, which hard-
+ * `NEPPY_LINK_EVENT` is consumed by `NeppyLinkModal`, which hard-
  * allowlists `path` values before routing. See `NeppyLinkModal.tsx`
  * `ALLOWED_PATHS_SET`.
  */
 import { parseBubbleSegments } from '../../features/conversations/utils/format';
-import { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
+import { NEPPY_LINK_EVENT } from '../NeppyLinkModal';
 
 function NotificationLinkPill({ path, label }: { path: string; label: string }) {
   return (
@@ -33,7 +33,7 @@ function NotificationLinkPill({ path, label }: { path: string; label: string }) 
         // Don't trigger the surrounding card / row click — the pill is its
         // own action.
         e.stopPropagation();
-        window.dispatchEvent(new CustomEvent(OPENHUMAN_LINK_EVENT, { detail: { path } }));
+        window.dispatchEvent(new CustomEvent(NEPPY_LINK_EVENT, { detail: { path } }));
       }}
       className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2 py-0.5 text-[11px] font-medium text-primary-700 transition-colors hover:bg-primary-100">
       {label}

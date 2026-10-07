@@ -434,7 +434,7 @@ impl Tool for QueritSearchTool {
         let api_key = self.api_key.as_deref().ok_or_else(|| {
             anyhow::anyhow!(
                 "Querit search unavailable: no API key configured. \
-                 Set QUERIT_API_KEY or OPENHUMAN_QUERIT_API_KEY, \
+                 Set QUERIT_API_KEY or NEPPY_QUERIT_API_KEY, \
                  or add search.querit.api_key to config.toml."
             )
         })?;

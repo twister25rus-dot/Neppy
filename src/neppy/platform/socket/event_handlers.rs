@@ -358,7 +358,7 @@ pub(super) fn handle_sio_event(
         }
 
         // ── Medulla harness plane ────────────────────────────────────────
-        // A medulla operator (running in the backend) drives an openhuman agent
+        // A medulla operator (running in the backend) drives a neppy-core agent
         // session as a delegated sub-agent. See `socket::medulla`.
         "medulla:task_run" => {
             match serde_json::from_value::<super::medulla::payloads::TaskRun>(data) {

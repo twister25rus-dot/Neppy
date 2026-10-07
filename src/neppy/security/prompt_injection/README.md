@@ -33,7 +33,7 @@ Internal-only (not exported): `DetectionRule`, `NormalizedPrompt`, `HeuristicCla
 
 ## Configuration
 
-- `OPENHUMAN_PROMPT_INJECTION_CLASSIFIER` (env) — resolved once via `Lazy`. `"heuristic"` enables `HeuristicClassifier`; anything else (default `"off"`) disables the optional classifier. The active choice is logged at `debug`.
+- `NEPPY_PROMPT_INJECTION_CLASSIFIER` (env) — resolved once via `Lazy`. `"heuristic"` enables `HeuristicClassifier`; anything else (default `"off"`) disables the optional classifier. The active choice is logged at `debug`.
 
 ## Persistence
 

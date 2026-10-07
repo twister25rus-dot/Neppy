@@ -6,7 +6,7 @@
 #
 # Usage:
 #   1. cp .env.example .env  (then edit values — at minimum BACKEND_URL and
-#      OPENHUMAN_CORE_TOKEN; the latter is required for any client that calls
+#      NEPPY_CORE_TOKEN; the latter is required for any client that calls
 #      /rpc on this instance)
 #   2. docker compose up -d
 #   3. curl http://localhost:7788/health
@@ -44,7 +44,7 @@ services:
     tmpfs:
       - /tmp
     ports:
-      - "${OPENHUMAN_CORE_PORT:-7788}:7788"
+      - "${NEPPY_CORE_PORT:-7788}:7788"
     env_file:
       - path: .env
         required: false
@@ -52,16 +52,16 @@ services:
       # Bind to 0.0.0.0 inside the container so port-forwarding works regardless
       # of what `.env` says. The Dockerfile already sets this default, but make
       # it explicit so an inherited shell value cannot override it.
-      OPENHUMAN_CORE_HOST: 0.0.0.0
-      OPENHUMAN_CORE_PORT: "7788"
-      OPENHUMAN_WORKSPACE: /home/openhuman/.neppy
+      NEPPY_CORE_HOST: 0.0.0.0
+      NEPPY_CORE_PORT: "7788"
+      NEPPY_WORKSPACE: /home/openhuman/.neppy
       XDG_CACHE_HOME: /home/openhuman/.neppy/cache
       TMPDIR: /tmp
       RUST_LOG: ${RUST_LOG:-info}
     volumes:
       - openhuman-workspace:/home/openhuman/.neppy
-    mem_limit: ${OPENHUMAN_CORE_MEM_LIMIT:-4g}
-    cpus: ${OPENHUMAN_CORE_CPUS:-2.0}
+    mem_limit: ${NEPPY_CORE_MEM_LIMIT:-4g}
+    cpus: ${NEPPY_CORE_CPUS:-2.0}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:7788/health"]
       interval: 30s

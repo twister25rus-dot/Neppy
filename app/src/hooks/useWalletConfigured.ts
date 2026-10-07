@@ -13,7 +13,7 @@
  * The core-side classifier (`ExpectedErrorKind::WalletNotConfigured`) keeps
  * those out of Sentry, and it is deliberately kept as defense-in-depth. This
  * hook is the other half: **do not make the call at all when we have a positive
- * signal that no wallet exists.** `openhuman.wallet_status` answers the same
+ * signal that no wallet exists.** `neppy.wallet_status` answers the same
  * question and resolves normally for a wallet-less user, so the gate costs one
  * non-erroring RPC and removes an erroring one.
  *

@@ -9,9 +9,9 @@
 # (`openhuman-core`) from the repo Dockerfile, exposing JSON-RPC on http_port.
 # After deploy:
 #   - /health is publicly reachable (no auth — used for liveness)
-#   - /rpc requires Authorization: Bearer $OPENHUMAN_CORE_TOKEN
+#   - /rpc requires Authorization: Bearer $NEPPY_CORE_TOKEN
 #
-# Operators MUST set OPENHUMAN_CORE_TOKEN to a strong secret in App Platform's
+# Operators MUST set NEPPY_CORE_TOKEN to a strong secret in App Platform's
 # environment editor before any client calls /rpc.
 
 spec:
@@ -37,13 +37,13 @@ spec:
         success_threshold: 1
         failure_threshold: 3
       envs:
-        - key: OPENHUMAN_CORE_HOST
+        - key: NEPPY_CORE_HOST
           scope: RUN_TIME
           value: "0.0.0.0"
-        - key: OPENHUMAN_CORE_PORT
+        - key: NEPPY_CORE_PORT
           scope: RUN_TIME
           value: "7788"
-        - key: OPENHUMAN_APP_ENV
+        - key: NEPPY_APP_ENV
           scope: RUN_TIME
           value: production
         - key: BACKEND_URL
@@ -54,7 +54,7 @@ spec:
           value: info
         # Required for clients to authenticate against /rpc. Set to a strong
         # random value (e.g. `openssl rand -hex 32`) in the App Platform UI.
-        - key: OPENHUMAN_CORE_TOKEN
+        - key: NEPPY_CORE_TOKEN
           scope: RUN_TIME
           type: SECRET
           value: "CHANGE_ME_BEFORE_DEPLOY"

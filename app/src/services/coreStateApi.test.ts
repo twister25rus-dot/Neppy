@@ -83,7 +83,7 @@ describe('coreStateApi.fetchCoreAppSnapshot', () => {
     // on slow M-series machines; verify the longer-but-still-bounded budget
     // is threaded through to callCoreRpc instead of relying on the default.
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.app_state_snapshot',
+      method: 'neppy.app_state_snapshot',
       timeoutMs: SNAPSHOT_TIMEOUT_MS,
     });
     expect(SNAPSHOT_TIMEOUT_MS).toBeGreaterThan(30_000);
@@ -123,7 +123,7 @@ describe('coreStateApi.updateCoreLocalState', () => {
     await updateCoreLocalState(params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.app_state_update_local_state',
+      method: 'neppy.app_state_update_local_state',
       params,
     });
   });
@@ -166,7 +166,7 @@ describe('coreStateApi.listTeams', () => {
     const { listTeams } = await import('./coreStateApi');
     const out = await listTeams();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.team_list_teams' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.team_list_teams' });
     expect(out).toHaveLength(2);
     expect(out[0].team._id).toBe('t-1');
   });
@@ -194,7 +194,7 @@ describe('coreStateApi.getTeamMembers', () => {
     const out = await getTeamMembers('t-1');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.team_list_members',
+      method: 'neppy.team_list_members',
       params: { teamId: 't-1' },
     });
     expect(out[0]._id).toBe('m-1');
@@ -224,7 +224,7 @@ describe('coreStateApi.getTeamInvites', () => {
     const out = await getTeamInvites('t-1');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.team_list_invites',
+      method: 'neppy.team_list_invites',
       params: { teamId: 't-1' },
     });
     expect(out[0]._id).toBe('inv-1');

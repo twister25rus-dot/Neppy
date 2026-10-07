@@ -15,8 +15,10 @@ pub async fn list_definition_metadata() -> Result<Vec<AgentDefinitionDisplay>, S
     }
     let registry = AgentDefinitionRegistry::global()
         .ok_or_else(|| "AgentDefinitionRegistry not initialised".to_string())?;
+    // `debug_agent` runs only on Debug-mode threads, so it is not offered as a
+    // selectable agent definition.
     let definitions = registry
-        .list()
+        .list_delegatable()
         .into_iter()
         .map(metadata_from_definition)
         .collect::<Vec<_>>();

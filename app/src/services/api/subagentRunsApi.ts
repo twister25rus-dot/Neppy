@@ -10,7 +10,7 @@ interface Envelope<T> {
 }
 
 /**
- * Fetch the cross-thread agent-run history (`openhuman.subagent_runs_history`).
+ * Fetch the cross-thread agent-run history (`neppy.subagent_runs_history`).
  * Only filters the caller set are sent; the core applies its own defaults
  * (limit 50, max 200; `onlyThreaded` true). Tolerates a missing/partial result
  * so a core that predates the method surfaces as an error to the caller, never
@@ -25,7 +25,7 @@ export async function fetchSubagentRunsHistory(
   }
   log('fetch params=%o', clean);
   const response = await callCoreRpc<Envelope<SubagentRunsHistory> | SubagentRunsHistory>({
-    method: 'openhuman.subagent_runs_history',
+    method: 'neppy.subagent_runs_history',
     params: clean,
   });
   const data: Partial<SubagentRunsHistory> | undefined =

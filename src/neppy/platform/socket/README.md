@@ -36,7 +36,7 @@ Internal-only (`pub(crate)` / `pub(super)`): `TokenProvider` and its builders, `
 
 ## RPC / controllers
 
-Namespace `socket` (called as `openhuman.socket_<function>`):
+Namespace `socket` (called as `neppy.socket_<function>`):
 
 | Function | Inputs | Output | Notes |
 | --- | --- | --- | --- |

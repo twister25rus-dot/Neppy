@@ -35,7 +35,7 @@ describe('tauriCommands/config', () => {
       expect(mockCallCoreRpc).not.toHaveBeenCalled();
     });
 
-    test('forwards the patch to openhuman.inference_update_local_settings', async () => {
+    test('forwards the patch to neppy.inference_update_local_settings', async () => {
       mockCallCoreRpc.mockResolvedValue({
         result: { config: {}, workspace_dir: '/tmp', config_path: '/tmp/cfg.toml' },
         logs: [],
@@ -52,7 +52,7 @@ describe('tauriCommands/config', () => {
       };
       await neppyUpdateLocalAiSettings(patch);
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.inference_update_local_settings',
+        method: 'neppy.inference_update_local_settings',
         params: patch,
       });
     });
@@ -67,14 +67,14 @@ describe('tauriCommands/config', () => {
       expect(mockCallCoreRpc).not.toHaveBeenCalled();
     });
 
-    test('forwards the patch to openhuman.config_update_autonomy_settings', async () => {
+    test('forwards the patch to neppy.config_update_autonomy_settings', async () => {
       mockCallCoreRpc.mockResolvedValue({
         result: { config: {}, workspace_dir: '/tmp', config_path: '/tmp/cfg.toml' },
         logs: [],
       });
       await neppyUpdateAutonomySettings({ max_actions_per_hour: 100 });
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.config_update_autonomy_settings',
+        method: 'neppy.config_update_autonomy_settings',
         params: { max_actions_per_hour: 100 },
       });
     });
@@ -87,11 +87,11 @@ describe('tauriCommands/config', () => {
       expect(mockCallCoreRpc).not.toHaveBeenCalled();
     });
 
-    test('reads via openhuman.config_get_autonomy_settings', async () => {
+    test('reads via neppy.config_get_autonomy_settings', async () => {
       mockCallCoreRpc.mockResolvedValue({ result: { max_actions_per_hour: 250 }, logs: [] });
       const out = await neppyGetAutonomySettings();
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.config_get_autonomy_settings',
+        method: 'neppy.config_get_autonomy_settings',
       });
       expect(out.result.max_actions_per_hour).toBe(250);
     });
@@ -113,7 +113,7 @@ describe('tauriCommands/config', () => {
       expect(mockCallCoreRpc).not.toHaveBeenCalled();
     });
 
-    test('forwards the patch to openhuman.config_update_composio_trigger_settings', async () => {
+    test('forwards the patch to neppy.config_update_composio_trigger_settings', async () => {
       mockCallCoreRpc.mockResolvedValue({
         result: { config: {}, workspace_dir: '/tmp', config_path: '/tmp/cfg.toml' },
         logs: [],
@@ -121,14 +121,14 @@ describe('tauriCommands/config', () => {
       const patch = { triage_disabled: true, triage_disabled_toolkits: ['gmail', 'slack'] };
       await neppyUpdateComposioTriggerSettings(patch);
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.config_update_composio_trigger_settings',
+        method: 'neppy.config_update_composio_trigger_settings',
         params: patch,
       });
     });
 
     test('returns no-op on unknown method from stale core (#1597)', async () => {
       mockCallCoreRpc.mockRejectedValue(
-        new Error('unknown method: openhuman.config_update_composio_trigger_settings')
+        new Error('unknown method: neppy.config_update_composio_trigger_settings')
       );
       const out = await neppyUpdateComposioTriggerSettings({ triage_disabled: true });
       expect(out).toEqual({ result: { config: {}, workspace_dir: '', config_path: '' }, logs: [] });
@@ -156,14 +156,14 @@ describe('tauriCommands/config', () => {
       expect(mockCallCoreRpc).not.toHaveBeenCalled();
     });
 
-    test('reads via openhuman.config_get_composio_trigger_settings', async () => {
+    test('reads via neppy.config_get_composio_trigger_settings', async () => {
       mockCallCoreRpc.mockResolvedValue({
         result: { triage_disabled: false, triage_disabled_toolkits: ['slack'] },
         logs: [],
       });
       const out = await neppyGetComposioTriggerSettings();
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.config_get_composio_trigger_settings',
+        method: 'neppy.config_get_composio_trigger_settings',
       });
       expect(out.result.triage_disabled).toBe(false);
       expect(out.result.triage_disabled_toolkits).toEqual(['slack']);
@@ -171,7 +171,7 @@ describe('tauriCommands/config', () => {
 
     test('returns defaults on unknown method from stale core (#1597)', async () => {
       mockCallCoreRpc.mockRejectedValue(
-        new Error('unknown method: openhuman.config_get_composio_trigger_settings')
+        new Error('unknown method: neppy.config_get_composio_trigger_settings')
       );
       const out = await neppyGetComposioTriggerSettings();
       expect(out.result.triage_disabled).toBe(false);

@@ -42,7 +42,7 @@ describe('PlanReviewCard', () => {
     fireEvent.click(screen.getByText('conversations.planReview.approve'));
     await waitFor(() =>
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.plan_review_decide',
+        method: 'neppy.plan_review_decide',
         params: { request_id: 'r1', decision: 'approve', feedback: undefined },
       })
     );
@@ -54,7 +54,7 @@ describe('PlanReviewCard', () => {
     fireEvent.click(screen.getByText('conversations.planReview.reject'));
     await waitFor(() =>
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.plan_review_decide',
+        method: 'neppy.plan_review_decide',
         params: { request_id: 'r1', decision: 'reject', feedback: undefined },
       })
     );
@@ -73,7 +73,7 @@ describe('PlanReviewCard', () => {
     fireEvent.click(send);
     await waitFor(() =>
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.plan_review_decide',
+        method: 'neppy.plan_review_decide',
         params: { request_id: 'r1', decision: 'revise', feedback: 'add a verification step' },
       })
     );

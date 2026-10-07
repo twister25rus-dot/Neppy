@@ -18,7 +18,7 @@ export async function restartCoreProcess(): Promise<void> {
     throw new Error('Restart Core is only available in the desktop app.');
   }
   await invoke('restart_core_process');
-  // The Tauri shell mints a fresh `OPENHUMAN_CORE_TOKEN` for the new core
+  // The Tauri shell mints a fresh `NEPPY_CORE_TOKEN` for the new core
   // process. Drop the cached bearer so token-bearing long-lived consumers
   // (e.g. webhook SSE, see #1922) reconnect with the new value.
   clearCoreRpcTokenCache();

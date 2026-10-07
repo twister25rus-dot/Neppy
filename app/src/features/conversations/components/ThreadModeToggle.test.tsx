@@ -24,7 +24,7 @@ const thread = (overrides: Record<string, unknown> = {}) => ({
 async function setup(threadOverrides: Record<string, unknown> = {}) {
   const store = configureStore({ reducer: { thread: threadReducer } });
   vi.mocked(callCoreRpc).mockImplementation(async ({ method }) => {
-    if (method === 'openhuman.threads_list') {
+    if (method === 'neppy.threads_list') {
       return { data: { threads: [thread(threadOverrides)], count: 1 } };
     }
     throw new Error(`unexpected ${method}`);
@@ -74,7 +74,7 @@ describe('ThreadModeToggle', () => {
     fireEvent.click(screen.getByTestId('thread-mode-orchestration'));
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.threads_set_mode',
+      method: 'neppy.threads_set_mode',
       params: { thread_id: 't-1', mode: 'orchestration', source: 'composer_toggle' },
     });
     await waitFor(() =>
@@ -110,6 +110,18 @@ describe('ThreadModeToggle', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not change the mode.');
     expect(screen.getByTestId('thread-mode-orchestration')).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('never offers Debug as a choice', async () => {
+    await setup();
+    expect(screen.queryByTestId('thread-mode-debug')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+  });
+
+  it('renders nothing for a thread that is in Debug mode', async () => {
+    await setup({ mode: 'debug', labels: ['mode:debug'] });
+    expect(screen.queryByTestId('thread-mode-toggle')).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
   });
 
   it('renders nothing without a thread', () => {

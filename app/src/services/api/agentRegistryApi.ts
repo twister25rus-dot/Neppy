@@ -1,6 +1,6 @@
 /**
  * Frontend client for the user-facing agent registry
- * (`openhuman.agent_registry_*`). Surfaces the shipped default agents plus
+ * (`neppy.agent_registry_*`). Surfaces the shipped default agents plus
  * user-authored custom agents, their enable/disable state, and tool policy.
  *
  * Wire shape note: the Rust handlers return the bare controller payload
@@ -84,7 +84,7 @@ export const agentRegistryApi = {
   list: async (includeDisabled = true): Promise<AgentRegistryEntry[]> => {
     log('list includeDisabled=%s', includeDisabled);
     const res = await callCoreRpc<{ agents?: AgentRegistryEntry[] }>({
-      method: 'openhuman.agent_registry_list',
+      method: 'neppy.agent_registry_list',
       params: { include_disabled: includeDisabled },
     });
     return res?.agents ?? [];
@@ -96,7 +96,7 @@ export const agentRegistryApi = {
   availableTools: async (): Promise<AgentToolInfo[]> => {
     log('availableTools');
     const res = await callCoreRpc<{ tools?: AgentToolInfo[] }>({
-      method: 'openhuman.agent_registry_available_tools',
+      method: 'neppy.agent_registry_available_tools',
       params: {},
     });
     return res?.tools ?? [];
@@ -106,7 +106,7 @@ export const agentRegistryApi = {
   get: async (id: string): Promise<AgentRegistryEntry | null> => {
     log('get id=%s', id);
     const res = await callCoreRpc<{ agent?: AgentRegistryEntry | null }>({
-      method: 'openhuman.agent_registry_get',
+      method: 'neppy.agent_registry_get',
       params: { id },
     });
     return res?.agent ?? null;
@@ -116,7 +116,7 @@ export const agentRegistryApi = {
   createCustom: async (input: CreateCustomAgentInput): Promise<AgentRegistryEntry> => {
     log('createCustom id=%s', input.id);
     const res = await callCoreRpc<{ agent: AgentRegistryEntry }>({
-      method: 'openhuman.agent_registry_create_custom',
+      method: 'neppy.agent_registry_create_custom',
       params: pruneParams({ ...input }),
     });
     return res.agent;
@@ -126,7 +126,7 @@ export const agentRegistryApi = {
   update: async (id: string, patch: UpdateAgentInput): Promise<AgentRegistryEntry> => {
     log('update id=%s', id);
     const res = await callCoreRpc<{ agent: AgentRegistryEntry }>({
-      method: 'openhuman.agent_registry_update',
+      method: 'neppy.agent_registry_update',
       params: pruneParams({ id, ...patch }),
     });
     return res.agent;
@@ -136,7 +136,7 @@ export const agentRegistryApi = {
   setEnabled: async (id: string, enabled: boolean): Promise<AgentRegistryEntry> => {
     log('setEnabled id=%s enabled=%s', id, enabled);
     const res = await callCoreRpc<{ agent: AgentRegistryEntry }>({
-      method: 'openhuman.agent_registry_set_enabled',
+      method: 'neppy.agent_registry_set_enabled',
       params: { id, enabled },
     });
     return res.agent;
@@ -147,7 +147,7 @@ export const agentRegistryApi = {
   remove: async (id: string): Promise<boolean> => {
     log('remove id=%s', id);
     const res = await callCoreRpc<{ removed?: boolean }>({
-      method: 'openhuman.agent_registry_remove',
+      method: 'neppy.agent_registry_remove',
       params: { id },
     });
     return Boolean(res?.removed);

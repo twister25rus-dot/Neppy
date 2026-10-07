@@ -47,7 +47,7 @@ use crate::neppy::inference::INFERENCE_AGENT_CHAT as AGENT_CHAT;
 
 /// The routed chat entry point.
 ///
-/// Deliberately not `openhuman.agent_chat`, which is the same op with the
+/// Deliberately not `neppy.agent_chat`, which is the same op with the
 /// per-call route parameters removed — it describes a turn on the account's own
 /// configured inference. An embedder that cannot say where a turn runs is
 /// strictly less capable, so the facade uses the wider surface and lets

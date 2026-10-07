@@ -29,7 +29,7 @@ describe('Web → frontend JSON-RPC → Core bridge', () => {
 
     const response = await neppyServiceStatus();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.service_status' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.service_status' });
     expect(response).toEqual(rpcResponse);
     expect(response.result.state).toBe(expectedState);
   });
@@ -44,7 +44,7 @@ describe('Web → frontend JSON-RPC → Core bridge', () => {
 
     const response = await neppyAgentServerStatus();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.agent_server_status' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.agent_server_status' });
     expect(response.result.running).toBe(true);
     expect(response.result.url).toContain('127.0.0.1');
   });

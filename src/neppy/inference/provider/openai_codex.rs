@@ -43,7 +43,7 @@ pub(crate) fn openai_codex_client_version() -> String {
 }
 
 fn resolve_openai_codex_client_version() -> (String, &'static str) {
-    if let Some(version) = std::env::var("OPENAI_CODEX_CLIENT_VERSION")
+    if let Some(version) = crate::neppy::util::env::var("OPENAI_CODEX_CLIENT_VERSION")
         .ok()
         .and_then(non_empty_trimmed)
     {
@@ -81,7 +81,7 @@ fn non_empty_trimmed(value: String) -> Option<String> {
 }
 
 fn codex_home_dir() -> Option<PathBuf> {
-    if let Some(codex_home) = std::env::var_os("CODEX_HOME") {
+    if let Some(codex_home) = crate::neppy::util::env::var_os("CODEX_HOME") {
         let path = PathBuf::from(codex_home);
         if !path.as_os_str().is_empty() {
             return Some(path);
@@ -93,7 +93,7 @@ fn codex_home_dir() -> Option<PathBuf> {
 
 fn home_dir_from_env() -> Option<PathBuf> {
     for key in ["HOME", "USERPROFILE"] {
-        if let Some(value) = std::env::var_os(key) {
+        if let Some(value) = crate::neppy::util::env::var_os(key) {
             let path = PathBuf::from(value);
             if !path.as_os_str().is_empty() {
                 return Some(path);
@@ -101,7 +101,10 @@ fn home_dir_from_env() -> Option<PathBuf> {
         }
     }
 
-    match (std::env::var_os("HOMEDRIVE"), std::env::var_os("HOMEPATH")) {
+    match (
+        crate::neppy::util::env::var_os("HOMEDRIVE"),
+        crate::neppy::util::env::var_os("HOMEPATH"),
+    ) {
         (Some(drive), Some(path))
             if !drive.as_os_str().is_empty() && !path.as_os_str().is_empty() =>
         {
@@ -203,14 +206,14 @@ mod tests {
 
     impl EnvVarGuard {
         fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-            let previous = std::env::var_os(key);
+            let previous = crate::neppy::util::env::var_os(key);
             unsafe { std::env::set_var(key, value) };
             Self { key, previous }
         }
 
         fn remove(key: &'static str) -> Self {
-            let previous = std::env::var_os(key);
-            unsafe { std::env::remove_var(key) };
+            let previous = crate::neppy::util::env::var_os(key);
+            crate::neppy::util::env::remove_var(key);
             Self { key, previous }
         }
     }
@@ -220,7 +223,7 @@ mod tests {
             unsafe {
                 match self.previous.take() {
                     Some(value) => std::env::set_var(self.key, value),
-                    None => std::env::remove_var(self.key),
+                    None => crate::neppy::util::env::remove_var(self.key),
                 }
             }
         }

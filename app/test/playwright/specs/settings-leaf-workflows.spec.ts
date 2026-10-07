@@ -19,13 +19,13 @@ async function themeState(
   return page.evaluate(() => {
     const store = (
       window as unknown as {
-        __OPENHUMAN_STORE__?: {
+        __NEPPY_STORE__?: {
           getState?: () => {
             theme?: { mode?: string; tabBarLabels?: string; agentMessageViewMode?: string };
           };
         };
       }
-    ).__OPENHUMAN_STORE__;
+    ).__NEPPY_STORE__;
     return store?.getState?.().theme ?? {};
   });
 }
@@ -96,7 +96,7 @@ test.describe('Settings leaf workflows', () => {
     await expect(page).toHaveURL(/#\/settings\/agents$/);
     const agent = await callCoreRpc<{
       agent?: { id: string; model?: string; tool_allowlist?: string[] };
-    }>('openhuman.agent_registry_get', { id: agentId });
+    }>('neppy.agent_registry_get', { id: agentId });
     expect(agent.agent).toMatchObject({
       id: agentId,
       model: 'hint:reasoning',

@@ -403,6 +403,23 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
     navParent: 'agents',
   },
   {
+    id: 'debug-mode',
+    titleKey: 'settings.debugMode.title',
+    descriptionKey: 'settings.debugMode.menuDesc',
+    section: 'agents',
+    searchKeywords: [
+      'debug',
+      'debug mode',
+      'development',
+      'self edit',
+      'source code',
+      'checkpoint',
+      'git push',
+      'dependency install',
+    ],
+    navGroup: 'agentsAutonomy',
+  },
+  {
     id: 'activity-level',
     titleKey: 'activityLevel.title',
     descriptionKey: 'activityLevel.description',

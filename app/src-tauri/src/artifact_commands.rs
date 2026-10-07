@@ -1,7 +1,7 @@
 //! Tauri commands for exporting agent-generated artifacts (#2779, #3162).
 //!
 //! Two export paths, both fed by the frontend resolving an artifact's
-//! absolute source path via the `openhuman.ai_get_artifact` core RPC:
+//! absolute source path via the `neppy.ai_get_artifact` core RPC:
 //!
 //! 1. [`save_artifact_via_dialog`] (#3162) — opens a native Save-As
 //!    dialog (macOS / Windows / Linux) pre-filled with the artifact's

@@ -1,5 +1,5 @@
 //! Deterministic, file-backed service manager used by E2E tests.
-//! Enabled via `OPENHUMAN_SERVICE_MOCK`.
+//! Enabled via `NEPPY_SERVICE_MOCK`.
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -14,8 +14,8 @@ use crate::neppy::config::Config;
 use super::common::SERVICE_LABEL;
 use super::{ServiceState, ServiceStatus};
 
-const ENV_SERVICE_MOCK: &str = "OPENHUMAN_SERVICE_MOCK";
-const ENV_SERVICE_MOCK_STATE_FILE: &str = "OPENHUMAN_SERVICE_MOCK_STATE_FILE";
+const ENV_SERVICE_MOCK: &str = "NEPPY_SERVICE_MOCK";
+const ENV_SERVICE_MOCK_STATE_FILE: &str = "NEPPY_SERVICE_MOCK_STATE_FILE";
 const DEFAULT_STATE_FILE: &str = "service-mock-state.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -49,7 +49,7 @@ impl Default for MockServiceState {
 }
 
 pub(crate) fn is_enabled() -> bool {
-    match std::env::var(ENV_SERVICE_MOCK) {
+    match crate::neppy::util::env::var(ENV_SERVICE_MOCK) {
         Ok(raw) => matches!(
             raw.trim().to_ascii_lowercase().as_str(),
             "1" | "true" | "yes" | "on"
@@ -193,7 +193,7 @@ fn state_file_path_without_config() -> PathBuf {
 }
 
 fn env_state_file() -> Option<PathBuf> {
-    let path = std::env::var(ENV_SERVICE_MOCK_STATE_FILE).ok()?;
+    let path = crate::neppy::util::env::var(ENV_SERVICE_MOCK_STATE_FILE).ok()?;
     let trimmed = path.trim();
     if trimmed.is_empty() {
         return None;
@@ -230,7 +230,7 @@ fn service_status_from_state(config: &Config, state: &MockServiceState) -> Servi
 
 #[cfg(target_os = "macos")]
 fn mock_unit_path(_config: &Config) -> Option<PathBuf> {
-    let home = std::env::var("HOME").ok()?;
+    let home = crate::neppy::util::env::var("HOME").ok()?;
     Some(
         PathBuf::from(home)
             .join("Library")

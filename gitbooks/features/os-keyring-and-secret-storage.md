@@ -107,7 +107,7 @@ Sometimes the OS keyring is unreachable, for example on Linux without a Secret S
 
 ### How it works
 
-1. **Detection.** On startup the core probes the OS keychain. If the probe fails, it classifies the reason (no daemon, locked, denied) and reports a structured `KeyringStatus` via the `openhuman.keyring_consent_status` RPC and the app snapshot.
+1. **Detection.** On startup the core probes the OS keychain. If the probe fails, it classifies the reason (no daemon, locked, denied) and reports a structured `KeyringStatus` via the `neppy.keyring_consent_status` RPC and the app snapshot.
 
 2. **Consent prompt.** The first time a secret must be read or written and no consent has been recorded, a modal overlay explains what happened, what "store locally" means, and what the risks are. The user can:
    - **Use Local Encrypted Storage**: consent to ChaCha20-Poly1305 encrypted files (master key also on disk).

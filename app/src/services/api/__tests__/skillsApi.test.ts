@@ -39,7 +39,7 @@ describe('skillsApi.createWorkflow', () => {
     });
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skills_create',
+      method: 'neppy.skills_create',
       params: {
         name: 'My Skill',
         description: 'does stuff',
@@ -126,7 +126,7 @@ describe('skillsApi.installWorkflowFromUrl', () => {
     });
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skills_install_from_url',
+      method: 'neppy.skills_install_from_url',
       params: { url: 'https://example.com/my-skill.tgz', timeout_secs: 120 },
     });
     expect(result.newWorkflows).toEqual(['my-skill']);
@@ -190,7 +190,7 @@ describe('skillsApi.updateWorkflow', () => {
     });
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skills_update',
+      method: 'neppy.skills_update',
       params: {
         name: 'WF',
         description: 'd',
@@ -223,7 +223,7 @@ describe('skillsApi.listWorkflows', () => {
 
     const result = await skillsApi.listWorkflows();
 
-    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.skills_list' });
+    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'neppy.skills_list' });
     expect(result.map(w => w.id)).toEqual(['a', 'b']);
   });
 
@@ -275,7 +275,7 @@ describe('skillsApi.listWorkflows', () => {
 
     const result = await skillsApi.listWorkflows();
 
-    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.skills_list' });
+    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'neppy.skills_list' });
     expect(result[0].relatedSkills).toEqual(['browser-automation']);
     expect(result[0].sourceFormat).toBe('hermes');
     expect(result[0].platforms).toEqual([]);
@@ -287,7 +287,7 @@ describe('skillsApi.listWorkflows', () => {
     vi.mocked(callCoreRpc).mockResolvedValueOnce({ workflows: [] });
     await skillsApi.listWorkflows();
     const call = vi.mocked(callCoreRpc).mock.calls[0][0];
-    expect(call.method).toBe('openhuman.skills_list');
+    expect(call.method).toBe('neppy.skills_list');
     expect(call.params).toBeUndefined();
   });
 
@@ -296,7 +296,7 @@ describe('skillsApi.listWorkflows', () => {
     vi.mocked(callCoreRpc).mockResolvedValueOnce({ workflows: [] });
     await skillsApi.listWorkflows({ includeSkills: true });
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skills_list',
+      method: 'neppy.skills_list',
       params: { include_skills: true },
     });
   });
@@ -323,7 +323,7 @@ describe('skillsApi.readWorkflowResource', () => {
     });
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skills_read_resource',
+      method: 'neppy.skills_read_resource',
       params: { workflow_id: 'wf', relative_path: 'scripts/run.sh' },
     });
     expect(result).toEqual({
@@ -352,7 +352,7 @@ describe('skillsApi.uninstallWorkflow', () => {
     const result = await skillsApi.uninstallWorkflow('weather-helper');
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.skill_registry_uninstall',
+      method: 'neppy.skill_registry_uninstall',
       params: { name: 'weather-helper' },
     });
     expect(result).toEqual({

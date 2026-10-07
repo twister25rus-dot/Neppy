@@ -73,7 +73,7 @@ fn an_explicit_action_dir_overrides_the_default() {
 
 #[test]
 fn inherit_computes_no_paths_of_its_own() {
-    // The operator's resolution chain (OPENHUMAN_WORKSPACE, active_user.toml,
+    // The operator's resolution chain (NEPPY_WORKSPACE, active_user.toml,
     // per-user scoping) belongs to `Config::load_or_init`. Re-deriving it here
     // would be a second implementation free to drift from it.
     let resolved = ResolvedWorkspace::resolve(&Workspace::Inherit, None).expect("resolve");

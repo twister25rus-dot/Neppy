@@ -25,10 +25,7 @@ describe('petCompanionApi', () => {
   it('getCompanionSettings calls pet_companion_get and returns the bare value', async () => {
     mockCallCoreRpc.mockResolvedValue({ enabled: false });
     const settings = await getCompanionSettings();
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_companion_get',
-      params: {},
-    });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.pet_companion_get', params: {} });
     expect(settings.enabled).toBe(false);
   });
 
@@ -41,7 +38,7 @@ describe('petCompanionApi', () => {
     mockCallCoreRpc.mockResolvedValue({ enabled: true });
     await updateCompanionSettings({ enabled: true, allow_cloud_model: false });
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_companion_update',
+      method: 'neppy.pet_companion_update',
       params: { enabled: true, allow_cloud_model: false },
     });
   });
@@ -58,12 +55,12 @@ describe('petCompanionApi', () => {
     mockCallCoreRpc.mockResolvedValue({ state: 'paused' });
     await pauseCompanion();
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_companion_pause',
+      method: 'neppy.pet_companion_pause',
       params: { source: 'ui' },
     });
     await pauseCompanion(60);
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_companion_pause',
+      method: 'neppy.pet_companion_pause',
       params: { minutes: 60, source: 'ui' },
     });
   });
@@ -72,7 +69,7 @@ describe('petCompanionApi', () => {
     mockCallCoreRpc.mockResolvedValue({ state: 'observing' });
     await resumeCompanion();
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_companion_resume',
+      method: 'neppy.pet_companion_resume',
       params: { source: 'ui' },
     });
   });
@@ -86,12 +83,12 @@ describe('petCompanionApi', () => {
     mockCallCoreRpc.mockResolvedValue({ suggestion: { id: 's1' } });
     await actOnCompanionSuggestion('s1', 'dismiss');
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_companion_suggestion_act',
+      method: 'neppy.pet_companion_suggestion_act',
       params: { id: 's1', action: 'dismiss' },
     });
     await actOnCompanionSuggestion('s1', 'handoff', 'do it');
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_companion_suggestion_act',
+      method: 'neppy.pet_companion_suggestion_act',
       params: { id: 's1', action: 'handoff', text: 'do it' },
     });
   });
@@ -106,17 +103,17 @@ describe('petCompanionApi', () => {
     mockCallCoreRpc.mockResolvedValue({});
     await deleteCompanionData({ all: true });
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_companion_data_delete',
+      method: 'neppy.pet_companion_data_delete',
       params: { all: true },
     });
     await deleteCompanionData({ all: true, includeSavedNotes: true });
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_companion_data_delete',
+      method: 'neppy.pet_companion_data_delete',
       params: { all: true, include_saved_notes: true },
     });
     await deleteCompanionData({ suggestionId: 's9' });
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.pet_companion_data_delete',
+      method: 'neppy.pet_companion_data_delete',
       params: { suggestion_id: 's9' },
     });
   });
@@ -125,7 +122,7 @@ describe('petCompanionApi', () => {
     mockCallCoreRpc.mockResolvedValue({ state: 'denied', opened_settings: true });
     const res = await requestCompanionPermission('screen_recording');
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.pet_companion_request_permission',
+      method: 'neppy.pet_companion_request_permission',
       params: { kind: 'screen_recording' },
     });
     expect(res.opened_settings).toBe(true);

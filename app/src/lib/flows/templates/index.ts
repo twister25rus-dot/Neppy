@@ -6,7 +6,7 @@
  * the editable canvas exactly like any other flow.
  *
  * Every bundled graph is structurally valid against the same rules
- * `openhuman.flows_validate` enforces (`tinyflows::validate`): unique node ids,
+ * `neppy.flows_validate` enforces (`tinyflows::validate`): unique node ids,
  * exactly one `trigger` node, and every edge referencing an existing node
  * (asserted in `templates.test.ts`). Node configs are realistic starting
  * points, not finished automations — the user is expected to fill in the

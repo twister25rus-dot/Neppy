@@ -124,11 +124,11 @@ describe('parseProviderString', () => {
     expect(parseProviderString('cloud')).toEqual({ kind: 'default' });
   });
 
-  it('returns openhuman for the "openhuman" literal', () => {
+  it('returns neppy for the "openhuman" literal', () => {
     expect(parseProviderString('openhuman')).toEqual({ kind: 'openhuman' });
   });
 
-  it('returns openhuman for "openhuman:<anything>"', () => {
+  it('returns neppy for "neppy:<anything>"', () => {
     expect(parseProviderString('openhuman:gpt-4o')).toEqual({ kind: 'openhuman' });
   });
 
@@ -152,7 +152,7 @@ describe('parseProviderString', () => {
     });
   });
 
-  it('falls back to openhuman for unrecognised bare strings', () => {
+  it('falls back to neppy for unrecognised bare strings', () => {
     expect(parseProviderString('unknown-provider')).toEqual({ kind: 'openhuman' });
   });
 
@@ -199,7 +199,7 @@ describe('parseProviderString', () => {
 // ─── serializeProviderRef ─────────────────────────────────────────────────────
 
 describe('serializeProviderRef', () => {
-  it('serializes openhuman refs', () => {
+  it('serializes neppy refs', () => {
     const ref: ProviderRef = { kind: 'openhuman' };
     expect(serializeProviderRef(ref)).toBe('openhuman');
   });
@@ -866,7 +866,7 @@ describe('OpenAI Codex OAuth helpers', () => {
     await completeOpenAiCodexOAuth('  neppy://oauth/callback?code=abc  ');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_openai_oauth_complete',
+      method: 'neppy.inference_openai_oauth_complete',
       params: { callback_url: 'neppy://oauth/callback?code=abc' },
     });
   });
@@ -877,7 +877,7 @@ describe('OpenAI Codex OAuth helpers', () => {
     await importOpenAiCodexCliAuth();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_openai_oauth_import_codex_cli',
+      method: 'neppy.inference_openai_oauth_import_codex_cli',
       params: {},
     });
   });
@@ -891,7 +891,7 @@ describe('listProviderModels', () => {
     mockIsTauri.mockReturnValue(true);
   });
 
-  it('dispatches openhuman.inference_list_models with provider slug and returns models', async () => {
+  it('dispatches neppy.inference_list_models with provider slug and returns models', async () => {
     mockCallCoreRpc.mockResolvedValue({
       result: {
         models: [
@@ -904,7 +904,7 @@ describe('listProviderModels', () => {
     const models = await listProviderModels('openai');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_list_models',
+      method: 'neppy.inference_list_models',
       params: { provider_id: 'openai' },
     });
     expect(models).toHaveLength(2);
@@ -942,7 +942,7 @@ describe('loadProviderAuthErrors', () => {
     mockIsTauri.mockReturnValue(true);
   });
 
-  it('dispatches openhuman.inference_provider_auth_errors and returns the errors', async () => {
+  it('dispatches neppy.inference_provider_auth_errors and returns the errors', async () => {
     mockCallCoreRpc.mockResolvedValue({
       result: {
         errors: [
@@ -960,7 +960,7 @@ describe('loadProviderAuthErrors', () => {
     const errors = await loadProviderAuthErrors();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_provider_auth_errors',
+      method: 'neppy.inference_provider_auth_errors',
       params: {},
     });
     expect(errors).toHaveLength(1);
@@ -992,13 +992,13 @@ describe('testProviderModel', () => {
     mockIsTauri.mockReturnValue(true);
   });
 
-  it('dispatches openhuman.inference_test_provider_model and returns the reply', async () => {
+  it('dispatches neppy.inference_test_provider_model and returns the reply', async () => {
     mockCallCoreRpc.mockResolvedValue({ result: { reply: 'Hello from model' } });
 
     const result = await testProviderModel('reasoning', 'openai:gpt-4o');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_test_provider_model',
+      method: 'neppy.inference_test_provider_model',
       params: { workload: 'reasoning', provider: 'openai:gpt-4o', prompt: 'Hello world' },
       timeoutMs: 120000,
     });
@@ -1243,7 +1243,7 @@ describe('verifyCloudProviderConnection', () => {
 
     expect(result).toEqual({ ok: true, message: '', detail: '' });
     expect(mockCallCoreRpc).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.inference_test_provider_model' })
+      expect.objectContaining({ method: 'neppy.inference_test_provider_model' })
     );
   });
 

@@ -8,7 +8,7 @@
 //! thread, and the thread's title and operating mode joined in — without
 //! changing or duplicating the ledger itself.
 //!
-//! RPC: `openhuman.subagent_runs_history` (see `subagent_control.rs`).
+//! RPC: `neppy.subagent_runs_history` (see `subagent_control.rs`).
 //!
 //! # Phases
 //!

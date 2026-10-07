@@ -10,7 +10,7 @@
 //! 2. **FileBackend tests** — run against a temp directory.  Always run,
 //!    no OS dependency.
 //!
-//! 3. **Backend selection tests** — verify that `OPENHUMAN_KEYRING_BACKEND`
+//! 3. **Backend selection tests** — verify that `NEPPY_KEYRING_BACKEND`
 //!    is honoured and that the file backend round-trips correctly.
 
 use std::io::Write as _;
@@ -23,7 +23,7 @@ use super::*;
 // ── OS backend helpers ────────────────────────────────────────────────────────
 
 /// Returns true ONLY when the user has explicitly opted into hitting the real
-/// OS keychain by setting `OPENHUMAN_TEST_OS_KEYCHAIN=1`.
+/// OS keychain by setting `NEPPY_TEST_OS_KEYCHAIN=1`.
 ///
 /// Why opt-in instead of probe-first: on macOS, the first `keyring::Entry::set`
 /// from an unsigned/changing debug binary blocks on a GUI permission prompt —
@@ -31,7 +31,7 @@ use super::*;
 /// hangs the suite indefinitely. We keep `cargo test` defaulting to the
 /// FileBackend path so it never touches the OS keychain.
 fn os_keychain_available() -> bool {
-    if std::env::var("OPENHUMAN_TEST_OS_KEYCHAIN").as_deref() != Ok("1") {
+    if crate::neppy::util::env::var("NEPPY_TEST_OS_KEYCHAIN").as_deref() != Ok("1") {
         return false;
     }
     let b = backend::OsBackend;
@@ -376,7 +376,7 @@ fn file_backend_mode_0600() {
 #[test]
 fn file_backend_env_var_explicit_file() {
     // Verify FileBackend::new works correctly with a tempdir (simulates the
-    // OPENHUMAN_KEYRING_BACKEND=file code path without touching the global OnceLock).
+    // NEPPY_KEYRING_BACKEND=file code path without touching the global OnceLock).
     let dir = TempDir::new().expect("tempdir");
     let fb = FileBackend::new(dir.path());
     fb.set("u:k", "hello").unwrap();
@@ -477,7 +477,7 @@ fn get_or_create_random_idempotent_file_backend() {
 // We verify this with a `StrictSetBackend` — a `FileBackend` wrapper that
 // rejects `set()` on an already-existing key, exactly matching the Keychain
 // semantics that exposed the bug. This lets the regression run in CI without
-// the `OPENHUMAN_TEST_OS_KEYCHAIN=1` gate.
+// the `NEPPY_TEST_OS_KEYCHAIN=1` gate.
 
 /// Wraps `FileBackend` but fails `set` with `KeyringError::Backend` when the
 /// key already exists, mirroring macOS Keychain's `-25299` behaviour.
@@ -599,10 +599,10 @@ fn probe_new_logic_is_idempotent_across_multiple_runs() {
 fn is_available_returns_true_on_repeated_calls_os_backend() {
     // End-to-end: the real `is_available()` must return true on consecutive
     // calls even when the OS backend retains the probe key between runs.
-    // Guarded by OPENHUMAN_TEST_OS_KEYCHAIN=1 to avoid blocking CI on a
+    // Guarded by NEPPY_TEST_OS_KEYCHAIN=1 to avoid blocking CI on a
     // Keychain permission dialog.
     if !os_keychain_available() {
-        eprintln!("skip: set OPENHUMAN_TEST_OS_KEYCHAIN=1 to run OS keychain tests");
+        eprintln!("skip: set NEPPY_TEST_OS_KEYCHAIN=1 to run OS keychain tests");
         return;
     }
     // Use the OsBackend directly to simulate the cross-launch residue.

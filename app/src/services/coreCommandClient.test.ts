@@ -15,7 +15,7 @@ describe('coreCommandClient', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: 42, logs: [] });
 
     const { callCoreCommand } = await import('./coreCommandClient');
-    const out = await callCoreCommand<number>('openhuman.some_method');
+    const out = await callCoreCommand<number>('neppy.some_method');
 
     expect(out).toBe(42);
   });
@@ -24,10 +24,10 @@ describe('coreCommandClient', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: 'ok', logs: [] });
 
     const { callCoreCommand } = await import('./coreCommandClient');
-    await callCoreCommand('openhuman.webhooks_list_tunnels');
+    await callCoreCommand('neppy.webhooks_list_tunnels');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.webhooks_list_tunnels',
+      method: 'neppy.webhooks_list_tunnels',
       params: undefined,
     });
   });
@@ -37,10 +37,10 @@ describe('coreCommandClient', () => {
 
     const { callCoreCommand } = await import('./coreCommandClient');
     const params = { id: 'tunnel-99', name: 'my-hook' };
-    await callCoreCommand('openhuman.webhooks_update_tunnel', params);
+    await callCoreCommand('neppy.webhooks_update_tunnel', params);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.webhooks_update_tunnel',
+      method: 'neppy.webhooks_update_tunnel',
       params,
     });
   });
@@ -50,7 +50,7 @@ describe('coreCommandClient', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: payload, logs: ['created'] });
 
     const { callCoreCommand } = await import('./coreCommandClient');
-    const out = await callCoreCommand<typeof payload>('openhuman.webhooks_create_tunnel', {
+    const out = await callCoreCommand<typeof payload>('neppy.webhooks_create_tunnel', {
       name: 'test',
     });
 
@@ -61,21 +61,21 @@ describe('coreCommandClient', () => {
     mockCallCoreRpc.mockRejectedValueOnce(new Error('core offline'));
 
     const { callCoreCommand } = await import('./coreCommandClient');
-    await expect(callCoreCommand('openhuman.config_get')).rejects.toThrow('core offline');
+    await expect(callCoreCommand('neppy.config_get')).rejects.toThrow('core offline');
   });
 
   it('handles undefined params gracefully (does not throw)', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: null, logs: [] });
 
     const { callCoreCommand } = await import('./coreCommandClient');
-    await expect(callCoreCommand('openhuman.app_state_snapshot')).resolves.toBeNull();
+    await expect(callCoreCommand('neppy.app_state_snapshot')).resolves.toBeNull();
   });
 
   it('returns null result when core responds with null', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: null, logs: [] });
 
     const { callCoreCommand } = await import('./coreCommandClient');
-    const out = await callCoreCommand('openhuman.some_nullable_method');
+    const out = await callCoreCommand('neppy.some_nullable_method');
     expect(out).toBeNull();
   });
 
@@ -84,7 +84,7 @@ describe('coreCommandClient', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ result: list, logs: [] });
 
     const { callCoreCommand } = await import('./coreCommandClient');
-    const out = await callCoreCommand<typeof list>('openhuman.list_items');
+    const out = await callCoreCommand<typeof list>('neppy.list_items');
     expect(out).toEqual(list);
     expect(out).toHaveLength(2);
   });

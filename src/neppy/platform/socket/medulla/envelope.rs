@@ -1,5 +1,5 @@
 //! Maps the agent's per-turn [`AgentProgress`] stream onto the
-//! `tinyplace.harness.session.v2` envelope kinds openhuman already emits
+//! `tinyplace.harness.session.v2` envelope kinds neppy already emits
 //! through its tinyplace wrapper.
 //!
 //! We deliberately reuse the tinyplace v2 types (`SessionEnvelopeV2`,
@@ -15,7 +15,7 @@ use tinyplace::types::{
 
 use crate::neppy::agent::progress::AgentProgress;
 
-/// `role` stamped on every openhuman-produced event: these are agent-side
+/// `role` stamped on every neppy-produced event: these are agent-side
 /// stream frames (`owner` is reserved for `user_prompt`, which the agent never
 /// emits about itself).
 const AGENT_ROLE: &str = "agent";

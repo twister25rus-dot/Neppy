@@ -80,18 +80,18 @@ pub struct Config {
     /// Agent action sandbox root — the default cwd for shell/file/git tools.
     /// Kept separate from `workspace_dir` (which holds internal state like
     /// memory DBs, sessions, tokens). Defaults to `~/Neppy/projects`
-    /// (`default_action_dir()`); overridable via `OPENHUMAN_ACTION_DIR`.
+    /// (`default_action_dir()`); overridable via `NEPPY_ACTION_DIR`.
     ///
     /// This is the **resolved runtime value** and is `#[serde(skip)]` — it is
     /// recomputed on every load from the precedence chain
-    /// (env `OPENHUMAN_ACTION_DIR` > [`Self::action_dir_override`] > default).
+    /// (env `NEPPY_ACTION_DIR` > [`Self::action_dir_override`] > default).
     /// To persist a user choice, write [`Self::action_dir_override`] instead.
     #[serde(skip)]
     pub action_dir: PathBuf,
     /// Persisted user override for [`Self::action_dir`], set via the Settings UI
     /// (`config.update_agent_paths` RPC). Unlike `action_dir`, this field **is**
     /// serialized so the choice survives restarts. Resolution precedence on load:
-    /// env `OPENHUMAN_ACTION_DIR` wins, then this override (when `Some`), then the
+    /// env `NEPPY_ACTION_DIR` wins, then this override (when `Some`), then the
     /// default projects dir. `None` means "use the default" — the env var still
     /// overrides at runtime so existing env-driven deployments are unaffected.
     #[serde(default)]
@@ -232,7 +232,7 @@ pub struct Config {
     ///   `max(n, provider_default)` so it overrides the provider's own
     ///   cadence while never syncing more often than the provider intends.
     ///
-    /// Overridable via `OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS` (`0` = manual).
+    /// Overridable via `NEPPY_MEMORY_SYNC_INTERVAL_SECS` (`0` = manual).
     #[serde(default)]
     pub memory_sync_interval_secs: Option<u64>,
 
@@ -334,6 +334,12 @@ pub struct Config {
     #[serde(default)]
     pub modules: super::ModulesConfig,
 
+    /// Debug Mode (in-app self-development): master switch, project root and
+    /// per-capability permissions. Every field defaults, so configs written
+    /// before this block existed load unchanged.
+    #[serde(default)]
+    pub debug_mode: super::DebugModeConfig,
+
     /// Trust metadata for external capability providers. Empty by default so
     /// existing installations keep the same tool-discovery behavior.
     #[serde(default)]
@@ -403,7 +409,7 @@ pub struct Config {
     // Provider-string grammar (consumed by `providers::factory`):
     //
     //   "cloud"                → resolves to `primary_cloud`; if primary is
-    //                            openhuman, behaves identically to "openhuman"
+    //                            neppy, behaves identically to "openhuman"
     //   "openhuman"            → Neppy backend (api_url + api_key session JWT)
     //   "openai:<model>"       → look up cloud_providers entry of type=openai;
     //                            build crate OpenAiModel with Bearer auth
@@ -864,6 +870,7 @@ impl Default for Config {
             gitbooks: GitbooksConfig::default(),
             mcp_client: McpClientConfig::default(),
             modules: super::ModulesConfig::default(),
+            debug_mode: super::DebugModeConfig::default(),
             capability_providers: Vec::new(),
             multimodal: MultimodalConfig::default(),
             multimodal_files: MultimodalFileConfig::default(),

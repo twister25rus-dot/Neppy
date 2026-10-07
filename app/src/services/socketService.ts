@@ -314,7 +314,7 @@ class SocketService {
           : undefined) ?? 'unknown';
       socketLog('Session expired notification received', { source });
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('openhuman:session-expired', { detail: { source } }));
+        window.dispatchEvent(new CustomEvent('neppy:session-expired', { detail: { source } }));
       }
     };
     this.socket.on('auth:session_expired', handleSessionExpired);
@@ -323,7 +323,7 @@ class SocketService {
     // MCP setup agent: server-side `request_secret` blocks until the
     // user submits a value. Dispatch a window event so a singleton React
     // dialog can render a native input and POST back via
-    // openhuman.mcp_setup_submit_secret. Raw secret values never travel
+    // neppy.mcp_setup_submit_secret. Raw secret values never travel
     // through the socket — only the opaque ref + safe display fields.
     const handleSecretRequested = (data: unknown) => {
       const obj = data as Record<string, unknown> | null;
@@ -341,7 +341,7 @@ class SocketService {
       socketLog('mcp_setup:secret_requested', { refId, keyName });
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent('openhuman:mcp-setup-secret-requested', {
+          new CustomEvent('neppy:mcp-setup-secret-requested', {
             detail: { refId, keyName, prompt },
           })
         );
@@ -352,22 +352,22 @@ class SocketService {
 
     this.socket.on('memory:sync_stage', (data: unknown) => {
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('openhuman:memory-sync-stage', { detail: data }));
+        window.dispatchEvent(new CustomEvent('neppy:memory-sync-stage', { detail: data }));
       }
     });
     this.socket.on('memory:tree_progress', (data: unknown) => {
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('openhuman:memory-tree-progress', { detail: data }));
+        window.dispatchEvent(new CustomEvent('neppy:memory-tree-progress', { detail: data }));
       }
     });
     this.socket.on('memory:tree_completed', (data: unknown) => {
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('openhuman:memory-tree-completed', { detail: data }));
+        window.dispatchEvent(new CustomEvent('neppy:memory-tree-completed', { detail: data }));
       }
     });
     this.socket.on('memory:build_progress', (data: unknown) => {
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('openhuman:memory-build-progress', { detail: data }));
+        window.dispatchEvent(new CustomEvent('neppy:memory-build-progress', { detail: data }));
       }
     });
 

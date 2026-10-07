@@ -50,7 +50,7 @@ async fn has_model_detects_exact_and_prefixed_tag() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -60,9 +60,7 @@ async fn has_model_detects_exact_and_prefixed_tag() {
     assert!(service.has_model("nomic-embed-text").await.unwrap());
     assert!(!service.has_model("__missing__").await.unwrap());
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -75,7 +73,7 @@ async fn has_model_errors_on_non_success_tags_response() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -83,9 +81,7 @@ async fn has_model_errors_on_non_success_tags_response() {
     let err = service.has_model("any").await.unwrap_err();
     assert!(err.contains("500") || err.contains("tags failed"));
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -95,16 +91,14 @@ async fn ollama_healthy_returns_true_on_200_tags_response() {
     let app = Router::new().route("/api/tags", get(|| async { Json(json!({ "models": [] })) }));
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
     let service = LocalAiService::new(&config);
     assert!(service.ollama_healthy().await);
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -113,14 +107,12 @@ async fn ollama_healthy_returns_false_on_unreachable_url() {
 
     // Point at a port we never bind → connect fails → healthy = false.
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
     let config = Config::default();
     let service = LocalAiService::new(&config);
     assert!(!service.ollama_healthy().await);
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -128,7 +120,7 @@ async fn ensure_ollama_server_requires_external_runtime_when_unreachable() {
     let _guard = crate::neppy::inference::inference_test_guard();
 
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
 
     let config = Config::default();
@@ -138,10 +130,7 @@ async fn ensure_ollama_server_requires_external_runtime_when_unreachable() {
         .await
         .expect_err("unreachable runtime should fail");
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     assert!(
         err.contains("no longer starts or installs Ollama automatically"),
         "unexpected error: {err}"
@@ -227,7 +216,7 @@ async fn ensure_ollama_server_reports_broken_external_runner_without_restart_att
         );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -237,10 +226,7 @@ async fn ensure_ollama_server_reports_broken_external_runner_without_restart_att
         .await
         .expect_err("broken runner should fail");
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     assert!(
         err.contains("cannot execute models") || err.contains("Restart the external runtime"),
         "unexpected error: {err}"
@@ -264,7 +250,7 @@ async fn ensure_ollama_server_accepts_healthy_external_runner() {
         );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -274,9 +260,7 @@ async fn ensure_ollama_server_accepts_healthy_external_runner() {
         .await
         .expect("healthy external runner should pass");
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -284,10 +268,10 @@ async fn assets_status_marks_ollama_unavailable_when_runtime_is_down_even_if_bin
     let _guard = crate::neppy::inference::inference_test_guard();
 
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
     let fake_ollama = std::env::current_exe().expect("current exe");
-    let prev_ollama_bin = std::env::var_os("OLLAMA_BIN");
+    let prev_ollama_bin = crate::neppy::util::env::var_os("OLLAMA_BIN");
     unsafe {
         std::env::set_var("OLLAMA_BIN", &fake_ollama);
     }
@@ -297,10 +281,10 @@ async fn assets_status_marks_ollama_unavailable_when_runtime_is_down_even_if_bin
     let status = service.assets_status(&config).await.expect("assets status");
 
     unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
+        crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
         match prev_ollama_bin {
             Some(value) => std::env::set_var("OLLAMA_BIN", value),
-            None => std::env::remove_var("OLLAMA_BIN"),
+            None => crate::neppy::util::env::remove_var("OLLAMA_BIN"),
         }
     }
 
@@ -316,7 +300,7 @@ async fn diagnostics_reports_server_unreachable_when_url_unbound() {
     let _guard = crate::neppy::inference::inference_test_guard();
 
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
     let config = Config::default();
     let service = LocalAiService::new(&config);
@@ -342,9 +326,7 @@ async fn diagnostics_reports_server_unreachable_when_url_unbound() {
         repair_actions.is_empty(),
         "Neppy should not suggest app-managed repair actions anymore"
     );
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -354,7 +336,7 @@ async fn diagnostics_with_running_server_but_missing_models_flags_issues() {
     let app = Router::new().route("/api/tags", get(|| async { Json(json!({ "models": [] })) }));
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -377,9 +359,7 @@ async fn diagnostics_with_running_server_but_missing_models_flags_issues() {
         repair_actions.is_empty(),
         "missing models should no longer surface app-managed pull actions"
     );
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -408,7 +388,7 @@ async fn diagnostics_ok_when_expected_models_are_present() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let service = LocalAiService::new(&config);
@@ -432,9 +412,7 @@ async fn diagnostics_ok_when_expected_models_are_present() {
         repair_actions.is_empty(),
         "no issues should produce no repair actions"
     );
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -490,16 +468,13 @@ async fn diagnostics_reports_broken_runner_even_when_models_are_present() {
         );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let service = LocalAiService::new(&config);
     let diag = service.diagnostics(&config).await.expect("diagnostics");
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     assert_eq!(diag["ollama_running"], true);
     assert_eq!(diag["ok"], false);
     let issues = diag["issues"].as_array().cloned().unwrap_or_default();
@@ -528,7 +503,7 @@ async fn resolve_binary_path_finds_binary_via_ollama_bin_env() {
     unsafe {
         std::env::set_var("OLLAMA_BIN", fake_bin.to_str().unwrap());
         // Point the base URL at a dead port so we don't depend on a real server.
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
 
     let config = Config::default();
@@ -540,10 +515,8 @@ async fn resolve_binary_path_finds_binary_via_ollama_bin_env() {
         "diagnostics should resolve binary via OLLAMA_BIN"
     );
 
-    unsafe {
-        std::env::remove_var("OLLAMA_BIN");
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("OLLAMA_BIN");
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -560,7 +533,7 @@ async fn diagnostics_repair_actions_are_empty_when_binary_is_known_but_server_is
 
     unsafe {
         std::env::set_var("OLLAMA_BIN", fake_bin.to_str().unwrap());
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
 
     let config = Config::default();
@@ -577,10 +550,8 @@ async fn diagnostics_repair_actions_are_empty_when_binary_is_known_but_server_is
         "when server is down, diagnostics should not advertise app-managed start actions"
     );
 
-    unsafe {
-        std::env::remove_var("OLLAMA_BIN");
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("OLLAMA_BIN");
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -590,7 +561,7 @@ async fn diagnostics_repair_actions_field_always_present() {
     let _guard = crate::neppy::inference::inference_test_guard();
 
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", "http://127.0.0.1:1");
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", "http://127.0.0.1:1");
     }
     let config = Config::default();
     let service = LocalAiService::new(&config);
@@ -601,9 +572,7 @@ async fn diagnostics_repair_actions_field_always_present() {
         "repair_actions must always be a JSON array"
     );
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -623,7 +592,7 @@ async fn list_models_returns_parsed_payload() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -632,9 +601,7 @@ async fn list_models_returns_parsed_payload() {
     assert_eq!(models.len(), 2);
     assert_eq!(models[0].name, "a:latest");
     assert_eq!(models[1].name, "b:v2");
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -647,16 +614,14 @@ async fn list_models_errors_on_non_success() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
     let service = LocalAiService::new(&config);
     let err = service.list_models_at(&base).await.unwrap_err();
     assert!(err.contains("503") || err.contains("tags failed"));
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -683,7 +648,7 @@ async fn list_models_degrades_on_200_with_non_json_body() {
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -693,9 +658,7 @@ async fn list_models_degrades_on_200_with_non_json_body() {
         err.contains("parse failed"),
         "200 non-JSON body must yield a graceful parse-failed Err, got: {err}"
     );
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 #[tokio::test]
@@ -882,7 +845,7 @@ async fn lm_studio_assets_reports_embedding_as_ollama_managed() {
     let mut config = lm_studio_config(&base);
     config.local_ai.embedding_model_id = "bge-m3".to_string();
 
-    let prev_ollama_bin = std::env::var_os("OLLAMA_BIN");
+    let prev_ollama_bin = crate::neppy::util::env::var_os("OLLAMA_BIN");
     let fake_ollama = std::env::current_exe().expect("current test exe path");
     unsafe {
         std::env::set_var("OLLAMA_BIN", &fake_ollama);
@@ -894,7 +857,7 @@ async fn lm_studio_assets_reports_embedding_as_ollama_managed() {
     unsafe {
         match prev_ollama_bin {
             Some(value) => std::env::set_var("OLLAMA_BIN", value),
-            None => std::env::remove_var("OLLAMA_BIN"),
+            None => crate::neppy::util::env::remove_var("OLLAMA_BIN"),
         }
     }
 
@@ -913,10 +876,10 @@ async fn lm_studio_assets_reports_embedding_as_ollama_managed() {
 // ---- owned-PID lifecycle ------------------------------------------------
 //
 // These tests pin the contract that `kill_ollama_server` only touches
-// daemons openhuman spawned itself, and that the kill path actually
+// daemons neppy spawned itself, and that the kill path actually
 // reaches the child process (the previous `taskkill /F /IM ollama.exe` /
 // `pkill -f` would terminate any Ollama on the host, including ones the
-// user started outside openhuman — the issue #1622 friendly-fire bug).
+// user started outside neppy — the issue #1622 friendly-fire bug).
 
 #[tokio::test]
 async fn kill_ollama_server_with_no_owned_child_is_noop() {
@@ -1092,11 +1055,8 @@ async fn assets_status_sets_ollama_available_false_when_binary_missing() {
     config.local_ai.ollama_binary_path = None;
 
     // Remove OLLAMA_BIN so the env-var probe is also skipped.
-    let prev_ollama_bin = std::env::var_os("OLLAMA_BIN");
-    unsafe {
-        std::env::remove_var("OLLAMA_BIN");
-    }
-
+    let prev_ollama_bin = crate::neppy::util::env::var_os("OLLAMA_BIN");
+    crate::neppy::util::env::remove_var("OLLAMA_BIN");
     let service = LocalAiService::new(&config);
 
     // `ollama_binary_present` is the cheapest check — no HTTP probes.
@@ -1123,7 +1083,7 @@ async fn assets_status_sets_ollama_available_false_when_binary_missing() {
     unsafe {
         match prev_ollama_bin {
             Some(v) => std::env::set_var("OLLAMA_BIN", v),
-            None => std::env::remove_var("OLLAMA_BIN"),
+            None => crate::neppy::util::env::remove_var("OLLAMA_BIN"),
         }
     }
 
@@ -1183,7 +1143,7 @@ fn binary_present_uses_ollama_bin_env_var_when_set() {
     let _guard = crate::neppy::inference::inference_test_guard();
 
     let real_file = std::env::current_exe().expect("current test exe path");
-    let prev = std::env::var_os("OLLAMA_BIN");
+    let prev = crate::neppy::util::env::var_os("OLLAMA_BIN");
     unsafe {
         std::env::set_var("OLLAMA_BIN", &real_file);
     }
@@ -1199,7 +1159,7 @@ fn binary_present_uses_ollama_bin_env_var_when_set() {
     unsafe {
         match prev {
             Some(v) => std::env::set_var("OLLAMA_BIN", v),
-            None => std::env::remove_var("OLLAMA_BIN"),
+            None => crate::neppy::util::env::remove_var("OLLAMA_BIN"),
         }
     }
 
@@ -1243,7 +1203,7 @@ async fn diagnostics_gates_models_by_context_window() {
         );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let config = Config::default();
@@ -1273,9 +1233,7 @@ async fn diagnostics_gates_models_by_context_window() {
     assert_eq!(rejected["eligibility"]["status"], "below_minimum");
     assert_eq!(rejected["eligibility"]["required"], 8192);
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
 }
 
 // ── GH #5055: one-shot /api/tags fallback on a /v1/models 404 ───────────────
@@ -1531,7 +1489,7 @@ async fn bundled_vision_misconfiguration_does_not_abort_the_rest_of_bootstrap() 
     );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let mut config = Config::default();
@@ -1550,10 +1508,7 @@ async fn bundled_vision_misconfiguration_does_not_abort_the_rest_of_bootstrap() 
     let service = LocalAiService::new(&config);
     let result = service.ensure_models_available(&config).await;
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     result.expect("a chat-only vision model must not fail the whole bootstrap");
 
     let status = service.status.lock();
@@ -1625,7 +1580,7 @@ async fn a_later_preload_does_not_bury_the_vision_failure_reason() {
         );
     let base = spawn_mock(app).await;
     unsafe {
-        std::env::set_var("OPENHUMAN_OLLAMA_BASE_URL", &base);
+        std::env::set_var("NEPPY_OLLAMA_BASE_URL", &base);
     }
 
     let mut config = Config::default();
@@ -1640,10 +1595,7 @@ async fn a_later_preload_does_not_bury_the_vision_failure_reason() {
     let service = LocalAiService::new(&config);
     let result = service.ensure_models_available(&config).await;
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_OLLAMA_BASE_URL");
-    }
-
+    crate::neppy::util::env::remove_var("NEPPY_OLLAMA_BASE_URL");
     result.expect("a chat-only vision model must not fail the whole bootstrap");
     assert!(
         pulled.load(Ordering::SeqCst),

@@ -348,7 +348,7 @@ fn browser_tool_empty_allowlist_blocks() {
     let _guard = BROWSER_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let security = Arc::new(SecurityPolicy::default());
     let tool = BrowserTool::new(security, vec![], None);
-    std::env::remove_var("OPENHUMAN_BROWSER_ALLOW_ALL");
+    crate::neppy::util::env::remove_var("NEPPY_BROWSER_ALLOW_ALL");
     assert!(tool.validate_url("https://example.com").is_err());
 }
 
@@ -357,9 +357,9 @@ fn browser_tool_empty_allowlist_allows_with_env_flag() {
     let _guard = BROWSER_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let security = Arc::new(SecurityPolicy::default());
     let tool = BrowserTool::new(security, vec![], None);
-    std::env::set_var("OPENHUMAN_BROWSER_ALLOW_ALL", "1");
+    std::env::set_var("NEPPY_BROWSER_ALLOW_ALL", "1");
     assert!(tool.validate_url("https://example.com").is_ok());
-    std::env::remove_var("OPENHUMAN_BROWSER_ALLOW_ALL");
+    crate::neppy::util::env::remove_var("NEPPY_BROWSER_ALLOW_ALL");
 }
 
 #[test]

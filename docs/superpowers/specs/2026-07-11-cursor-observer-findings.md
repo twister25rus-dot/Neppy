@@ -53,7 +53,7 @@ The observer used **hooks**, not the MCP subprocess, so it did not need the
 sanitized-env workaround. But the same run confirmed the constraint the spike
 called out: Cursor hands MCP/hook subprocesses a **sanitized environment** (only
 `HOME`/`PATH`/`SHELL`/…). The observer therefore had to inject
-`TINYPLACE_CURSOR_HOME` / `OPENHUMAN_ADDR` / `TINYPLACE_API_URL` explicitly via a
+`TINYPLACE_CURSOR_HOME` / `NEPPY_ADDR` / `TINYPLACE_API_URL` explicitly via a
 wrapper `.sh`. **Implication for the real adapter:** its `launch.prepare()` must
 bake every env var the MCP server needs into the written `mcp.json` `env` block —
 it cannot rely on inheriting the parent shell's environment. (This matches what

@@ -7,7 +7,7 @@
 # 2. Spawns a fresh `neppy-core` binary on port 7789 with debug logs
 #    (non-default port so it doesn't fight a running `tauri dev` on 7788).
 # 3. Connects a Socket.IO client that logs every event it receives.
-# 4. Calls `openhuman.config_set_onboarding_completed` with value=true.
+# 4. Calls `neppy.config_set_onboarding_completed` with value=true.
 # 5. Watches the log up to 120s for each checkpoint in the pipeline.
 # 6. Reports pass/miss per checkpoint AND whether the socket client got
 #    a `proactive_message` event.
@@ -22,7 +22,7 @@ PORT=7789
 USER_ID="69d9cb73e61f755583c3671f"
 # Source-built binaries default to `.neppy-staging`. Production
 # staged binary reads `.neppy`. We point at staging here.
-CONFIG_ROOT="${OPENHUMAN_CONFIG_ROOT:-$HOME/.neppy-staging}"
+CONFIG_ROOT="${NEPPY_CONFIG_ROOT:-$HOME/.neppy-staging}"
 CONFIG_PATH="$CONFIG_ROOT/users/$USER_ID/config.toml"
 LOG_FILE="$(mktemp -t openhuman-proactive-welcome-XXXXXX).log"
 SIO_LOG="$(mktemp -t openhuman-sio-XXXXXX).log"
@@ -88,7 +88,7 @@ log "starting $BIN on port $PORT (log: $LOG_FILE)"
 # Pre-seed the RPC bearer token so the single curl call below can authenticate.
 RPC_TOKEN="$(openssl rand -hex 32 2>/dev/null || python3 -c 'import secrets; print(secrets.token_hex(32))')"
 RUST_LOG=debug,hyper=info,tungstenite=info,socketioxide=info \
-    OPENHUMAN_CORE_TOKEN="$RPC_TOKEN" \
+    NEPPY_CORE_TOKEN="$RPC_TOKEN" \
     "$BIN" run --port "$PORT" > "$LOG_FILE" 2>&1 &
 BIN_PID=$!
 
@@ -146,11 +146,11 @@ else
     SIO_PID=""
 fi
 
-log "POST /rpc openhuman.config_set_onboarding_completed {value:true}"
+log "POST /rpc neppy.config_set_onboarding_completed {value:true}"
 RPC_RESP=$(curl -s -X POST "http://127.0.0.1:$PORT/rpc" \
     -H 'content-type: application/json' \
     -H "Authorization: Bearer $RPC_TOKEN" \
-    -d '{"jsonrpc":"2.0","id":1,"method":"openhuman.config_set_onboarding_completed","params":{"value":true}}')
+    -d '{"jsonrpc":"2.0","id":1,"method":"neppy.config_set_onboarding_completed","params":{"value":true}}')
 echo "[test][rpc-response] $RPC_RESP"
 echo "$RPC_RESP" | grep -q '"result"' || fail "RPC did not return a result"
 

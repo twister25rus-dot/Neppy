@@ -513,20 +513,20 @@ jobs:
             clang
       - name: Verify Sentry DSN is present
         env:
-          OPENHUMAN_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
+          NEPPY_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
         run: |
-          if [ -z "${OPENHUMAN_CORE_SENTRY_DSN}" ]; then
+          if [ -z "${NEPPY_CORE_SENTRY_DSN}" ]; then
             echo "::error::vars.OPENHUMAN_CORE_SENTRY_DSN (or legacy vars.OPENHUMAN_SENTRY_DSN) is empty — the Linux CLI tarball would ship without crash reporting."
             exit 1
           fi
-          echo "OPENHUMAN_CORE_SENTRY_DSN is set (length=${#OPENHUMAN_CORE_SENTRY_DSN})"
+          echo "NEPPY_CORE_SENTRY_DSN is set (length=${#NEPPY_CORE_SENTRY_DSN})"
       - name: Build openhuman-core binary
         env:
-          OPENHUMAN_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
+          NEPPY_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
           # Match the runtime release tag (`openhuman@<version>+<short_sha>`)
           # baked elsewhere — see prepare-build.outputs.short_sha comment.
-          OPENHUMAN_BUILD_SHA: ${{ needs.prepare-build.outputs.short_sha }}
-          OPENHUMAN_APP_ENV: production
+          NEPPY_BUILD_SHA: ${{ needs.prepare-build.outputs.short_sha }}
+          NEPPY_APP_ENV: production
         run: bash scripts/ci-cancel-aware.sh cargo build --release --bin openhuman-core
       - name: Package and upload tarball to release
         env:

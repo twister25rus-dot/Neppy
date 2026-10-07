@@ -86,14 +86,14 @@ export function parseHarnessInitSnapshot(payload: unknown): HarnessInitSnapshot 
 
 /** Read the current init progress. Read-only — never triggers provisioning. */
 export async function fetchHarnessInitStatus(): Promise<HarnessInitSnapshot | null> {
-  const payload = await callCoreRpc<unknown>({ method: 'openhuman.harness_init_status' });
+  const payload = await callCoreRpc<unknown>({ method: 'neppy.harness_init_status' });
   return parseHarnessInitSnapshot(payload);
 }
 
 /** Re-run init (retry). `force` re-runs even already-satisfied steps. */
 export async function runHarnessInit(force = false): Promise<HarnessInitSnapshot | null> {
   const payload = await callCoreRpc<unknown>({
-    method: 'openhuman.harness_init_run',
+    method: 'neppy.harness_init_run',
     params: { force },
     // Provisioning can download Python / Node / spaCy — allow a long budget.
     timeoutMs: 10 * 60 * 1000,

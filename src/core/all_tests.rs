@@ -103,7 +103,51 @@ fn validate_registry_accepts_valid_registry() {
 #[test]
 fn rpc_method_name_formats_correctly() {
     let s = schema("memory", "doc_put", vec![]);
-    assert_eq!(rpc_method_name(&s), "openhuman.memory_doc_put");
+    assert_eq!(rpc_method_name(&s), "neppy.memory_doc_put");
+}
+
+/// The published surface (`/schema`, the method list, `rpc_method_name`) is
+/// `neppy.`-only: the legacy `openhuman.` prefix is an inbound alias and must
+/// never be advertised.
+#[test]
+fn published_method_list_only_shows_the_neppy_prefix() {
+    let methods = all_http_method_schemas();
+    assert!(!methods.is_empty());
+    for m in &methods {
+        assert!(
+            m.method.starts_with("neppy.") || m.method.starts_with("core."),
+            "published method {} must use the neppy. prefix",
+            m.method
+        );
+        assert!(
+            !m.method.contains("openhuman"),
+            "published method {} must not carry the legacy prefix",
+            m.method
+        );
+    }
+    for schema in all_controller_schemas() {
+        assert!(rpc_method_name(&schema).starts_with("neppy."));
+    }
+}
+
+/// Registry lookups used by MCP dispatch and embedders resolve the legacy
+/// `openhuman.` spelling to the same controller as the canonical one.
+#[test]
+fn registry_lookups_accept_the_legacy_openhuman_prefix() {
+    let schema = all_controller_schemas()
+        .into_iter()
+        .next()
+        .expect("at least one controller");
+    let canonical = rpc_method_name(&schema);
+    let legacy = canonical.replacen("neppy.", "openhuman.", 1);
+    let via_canonical = schema_for_rpc_method(&canonical).expect("canonical resolves");
+    let via_legacy = schema_for_rpc_method(&legacy).expect("legacy spelling resolves");
+    assert_eq!(via_canonical.namespace, via_legacy.namespace);
+    assert_eq!(via_canonical.function, via_legacy.function);
+    assert_eq!(
+        capability_for_rpc_method(&canonical),
+        capability_for_rpc_method(&legacy)
+    );
 }
 
 #[test]
@@ -113,7 +157,7 @@ fn registered_controller_rpc_method_name() {
         schema: s,
         handler: noop_handler,
     };
-    assert_eq!(rc.rpc_method_name(), "openhuman.billing_get_balance");
+    assert_eq!(rc.rpc_method_name(), "neppy.billing_get_balance");
 }
 
 #[test]
@@ -346,7 +390,7 @@ fn wallet_web3_x402_controllers_absent_when_feature_off() {
 
 #[test]
 fn schema_for_rpc_method_finds_known_method() {
-    let schema = schema_for_rpc_method("openhuman.health_snapshot");
+    let schema = schema_for_rpc_method("neppy.health_snapshot");
     assert!(schema.is_some(), "health.snapshot should be findable");
     let s = schema.unwrap();
     assert_eq!(s.namespace, "health");
@@ -355,7 +399,7 @@ fn schema_for_rpc_method_finds_known_method() {
 
 #[test]
 fn schema_for_rpc_method_finds_security_policy_info() {
-    let schema = schema_for_rpc_method("openhuman.security_policy_info");
+    let schema = schema_for_rpc_method("neppy.security_policy_info");
     assert!(schema.is_some(), "security.policy_info should be findable");
     let s = schema.unwrap();
     assert_eq!(s.namespace, "security");
@@ -365,7 +409,7 @@ fn schema_for_rpc_method_finds_security_policy_info() {
 #[test]
 #[cfg(feature = "mcp")]
 fn schema_for_rpc_method_finds_internal_mcp_audit_list() {
-    let schema = schema_for_rpc_method("openhuman.mcp_audit_list");
+    let schema = schema_for_rpc_method("neppy.mcp_audit_list");
     assert!(
         schema.is_some(),
         "mcp_audit.list should be internally routable"
@@ -377,7 +421,7 @@ fn schema_for_rpc_method_finds_internal_mcp_audit_list() {
 
 #[test]
 fn schema_for_rpc_method_finds_internal_orchestration_pairing_link_session() {
-    let schema = schema_for_rpc_method("openhuman.orchestration_pairing_link_session");
+    let schema = schema_for_rpc_method("neppy.orchestration_pairing_link_session");
     assert!(
         schema.is_some(),
         "orchestration_pairing.link_session should be internally routable"
@@ -405,13 +449,13 @@ fn rpc_method_from_parts_does_not_expose_internal_orchestration_pairing() {
 
 #[test]
 fn schema_for_rpc_method_returns_none_for_unknown() {
-    assert!(schema_for_rpc_method("openhuman.nonexistent_method_xyz").is_none());
+    assert!(schema_for_rpc_method("neppy.nonexistent_method_xyz").is_none());
 }
 
 #[test]
 fn rpc_method_from_parts_finds_known() {
     let method = rpc_method_from_parts("health", "snapshot");
-    assert_eq!(method.as_deref(), Some("openhuman.health_snapshot"));
+    assert_eq!(method.as_deref(), Some("neppy.health_snapshot"));
 }
 
 #[test]
@@ -698,7 +742,7 @@ fn validate_registry_rejects_empty_function() {
 #[test]
 fn validate_registry_rejects_whitespace_only_namespace() {
     // `trim().is_empty()` is the invariant — a namespace of "   " must
-    // be rejected to prevent `openhuman.   _fn` nonsense RPC method names.
+    // be rejected to prevent `neppy.   _fn` nonsense RPC method names.
     let declared = vec![schema("   ", "fn", vec![])];
     let registered = vec![RegisteredController {
         schema: declared[0].clone(),
@@ -733,21 +777,21 @@ fn validate_registry_rejects_duplicate_registered_controllers() {
 
 #[tokio::test]
 async fn try_invoke_registered_rpc_returns_none_for_unknown_method() {
-    let out = try_invoke_registered_rpc("openhuman.not_a_real_method_xyz_123", Map::new()).await;
+    let out = try_invoke_registered_rpc("neppy.not_a_real_method_xyz_123", Map::new()).await;
     assert!(out.is_none(), "unknown methods must return None");
 }
 
 #[tokio::test]
 async fn try_invoke_registered_rpc_returns_some_for_known_method() {
-    // `openhuman.health_snapshot` is registered at startup and takes no
+    // `neppy.health_snapshot` is registered at startup and takes no
     // required params — it must route and produce Some(_).
-    let out = try_invoke_registered_rpc("openhuman.health_snapshot", Map::new()).await;
+    let out = try_invoke_registered_rpc("neppy.health_snapshot", Map::new()).await;
     assert!(out.is_some(), "known method must route");
 }
 
 #[tokio::test]
 async fn try_invoke_registered_rpc_routes_security_policy_info() {
-    let out = try_invoke_registered_rpc("openhuman.security_policy_info", Map::new())
+    let out = try_invoke_registered_rpc("neppy.security_policy_info", Map::new())
         .await
         .expect("security policy info should be registered")
         .expect("security policy info should succeed");
@@ -763,7 +807,7 @@ fn rpc_method_name_handles_multi_underscore_function() {
     // Functions often contain underscores — the RPC method name must
     // preserve them verbatim, separated from the namespace with `_`.
     let s = schema("team", "change_member_role", vec![]);
-    assert_eq!(rpc_method_name(&s), "openhuman.team_change_member_role");
+    assert_eq!(rpc_method_name(&s), "neppy.team_change_member_role");
 }
 
 #[test]
@@ -936,7 +980,7 @@ async fn dispatch_returns_none_for_gated_method() {
     let ctx = CoreContext::for_test(DomainSet::harness(), None, None);
     let out = CoreContext::scope(
         ctx,
-        try_invoke_registered_rpc("openhuman.security_policy_info", Map::new()),
+        try_invoke_registered_rpc("neppy.security_policy_info", Map::new()),
     )
     .await;
     assert!(
@@ -979,7 +1023,7 @@ async fn schema_lookup_is_gated_in_lockstep_with_dispatch() {
 
     let ctx = CoreContext::for_test(DomainSet::harness(), None, None);
     let kept_schema = CoreContext::scope(ctx, async {
-        schema_for_rpc_method("openhuman.security_policy_info")
+        schema_for_rpc_method("neppy.security_policy_info")
     })
     .await;
     assert!(
@@ -1046,7 +1090,7 @@ fn mcp_namespaces_registered_when_gate_on() {
 }
 
 /// With the `mcp` feature OFF, both MCP namespaces are gone from the live
-/// registry — every `openhuman.mcp_clients_*` / `openhuman.mcp_audit_*` method
+/// registry — every `neppy.mcp_clients_*` / `neppy.mcp_audit_*` method
 /// is an unknown method over `/rpc` and absent from `/schema`.
 ///
 /// This is the compile-time analogue of the runtime `DomainSet::mcp` filter:
@@ -2111,7 +2155,7 @@ async fn dispatch_returns_none_for_capability_gated_method() {
     );
     let out = CoreContext::scope(
         ctx,
-        try_invoke_registered_rpc("openhuman.memory_tool_rules_json", Map::new()),
+        try_invoke_registered_rpc("neppy.memory_tool_rules_json", Map::new()),
     )
     .await;
     assert!(
@@ -2127,7 +2171,7 @@ async fn dispatch_returns_none_for_capability_gated_method() {
     );
     let out = CoreContext::scope(
         ctx,
-        try_invoke_registered_rpc("openhuman.memory_provider_status", Map::new()),
+        try_invoke_registered_rpc("neppy.memory_provider_status", Map::new()),
     )
     .await;
     assert!(
@@ -2142,7 +2186,7 @@ async fn schema_lookup_is_gated_in_lockstep_with_capability_dispatch() {
     // param validation against a hidden method and return the controller's
     // validation error instead of method-not-found — leaking the surface the
     // gate exists to hide.
-    let method = "openhuman.memory_tool_rules_json";
+    let method = "neppy.memory_tool_rules_json";
     assert!(
         schema_for_rpc_method(method).is_some(),
         "unscoped, the schema must resolve — so the None below is the gate, not a typo"
@@ -2165,7 +2209,7 @@ async fn schema_lookup_is_gated_in_lockstep_with_capability_dispatch() {
         Some(null_driver_cfg()),
     );
     let kept = CoreContext::scope(ctx, async {
-        schema_for_rpc_method("openhuman.memory_provider_status")
+        schema_for_rpc_method("neppy.memory_provider_status")
     })
     .await;
     assert!(
@@ -2188,7 +2232,7 @@ async fn rpc_method_from_parts_stays_unfiltered_by_capability() {
         rpc_method_from_parts("memory", "tool_rules_json")
     })
     .await;
-    assert_eq!(out.as_deref(), Some("openhuman.memory_tool_rules_json"));
+    assert_eq!(out.as_deref(), Some("neppy.memory_tool_rules_json"));
 }
 
 // --- M5.4: the null-driver degradation gate (milestone definition of done) --
@@ -2219,7 +2263,7 @@ async fn rpc_method_from_parts_stays_unfiltered_by_capability() {
 /// fails teaches a model the capability is real and makes it retry.
 #[tokio::test]
 async fn null_driver_makes_tree_methods_unknown_over_rpc() {
-    let method = "openhuman.memory_tree_list_chunks";
+    let method = "neppy.memory_tree_list_chunks";
 
     // Positive control FIRST: unscoped (⇒ the default-open fallback) the method
     // routes. Without this the assertion below could pass because the method
@@ -2295,7 +2339,7 @@ async fn null_driver_removes_tree_namespace_from_schema() {
     );
 
     // Lockstep: no schema resolves for a tree method either.
-    let method = "openhuman.memory_tree_list_chunks";
+    let method = "neppy.memory_tree_list_chunks";
     assert!(
         schema_for_rpc_method(method).is_some(),
         "unscoped the schema must resolve — so the None below is the gate, not a typo"
@@ -2353,7 +2397,7 @@ async fn null_driver_keeps_memory_status_routable() {
             Some(caps_ws("m54-boot")),
             Some(null_driver_cfg()),
         ),
-        try_invoke_registered_rpc("openhuman.memory_provider_status", Map::new()),
+        try_invoke_registered_rpc("neppy.memory_provider_status", Map::new()),
     )
     .await;
     assert!(
@@ -2368,7 +2412,7 @@ async fn null_driver_keeps_memory_status_routable() {
             Some(caps_ws("m54-boot")),
             Some(null_driver_cfg()),
         ),
-        try_invoke_registered_rpc("openhuman.memory_recall_memories", Map::new()),
+        try_invoke_registered_rpc("neppy.memory_recall_memories", Map::new()),
     )
     .await;
     assert!(
@@ -2415,7 +2459,7 @@ async fn capability_for_parts_is_not_narrowed_by_the_ambient_context() {
     let (unfiltered, filtered) = CoreContext::scope(ctx, async {
         (
             capability_for_parts("memory_tree", "list_chunks"),
-            schema_for_rpc_method("openhuman.memory_tree_list_chunks"),
+            schema_for_rpc_method("neppy.memory_tree_list_chunks"),
         )
     })
     .await;
@@ -2520,4 +2564,16 @@ fn memory_diff_controllers_absent_when_feature_off() {
         namespaces.contains(&"memory"),
         "the `memory-git` gate must remove the git ledger, not the memory domain"
     );
+}
+
+#[test]
+fn debug_mode_candidate_controllers_are_registered() {
+    let methods: Vec<String> = all_registered_controllers()
+        .iter()
+        .map(|c| rpc_method_name(&c.schema))
+        .collect();
+    for f in ["start", "status", "cancel"] {
+        let m = format!("neppy.debug_mode_candidate_{f}");
+        assert!(methods.contains(&m), "{m} missing from the registry");
+    }
 }

@@ -3,7 +3,7 @@
  *
  * We keep ONE Appium session across the whole spec run (see wdio.conf.ts).
  * Instead of restarting the sidecar between specs we call the in-place
- * `openhuman.test_reset` RPC: it wipes the auth marker, clears the
+ * `neppy.test_reset` RPC: it wipes the auth marker, clears the
  * `chat_onboarding_completed` flag, removes all cron jobs and saves the
  * config back. The renderer is then reloaded so Redux/localStorage are
  * also flushed, and the spec re-authenticates via the deep-link bypass
@@ -67,14 +67,14 @@ function stepLog(message: string): void {
 export async function resetApp(userId: string, options: ResetAppOptions = {}): Promise<string> {
   const logPrefix = options.logPrefix ?? '[resetApp]';
 
-  stepLog(`Calling openhuman.test_reset for ${userId}`);
+  stepLog(`Calling neppy.test_reset for ${userId}`);
   // The sidecar only spawns after the first successful user login, so the
   // very first spec of a run hits an unreachable RPC — that's not an error,
   // a freshly-launched workspace is already in the same "pristine" state
   // the wipe would have produced. Race the RPC call against a short budget
   // and treat the result as a flag: did we actually wipe anything?
   const reset = await Promise.race([
-    callNeppyRpc('openhuman.test_reset', {}),
+    callNeppyRpc('neppy.test_reset', {}),
     new Promise<{ ok: false; error: string }>(resolve =>
       setTimeout(
         () =>
@@ -94,7 +94,7 @@ export async function resetApp(userId: string, options: ResetAppOptions = {}): P
     // test_reset clears onboarding_completed=false (mirrors a fresh install).
     // E2E specs assume an already-onboarded user — restore the flag so
     // App.tsx's onboarding gate doesn't redirect every spec into the wizard.
-    const setOnboarding = await callNeppyRpc('openhuman.config_set_onboarding_completed', {
+    const setOnboarding = await callNeppyRpc('neppy.config_set_onboarding_completed', {
       value: true,
     }).catch((err: unknown) => {
       stepLog(`config_set_onboarding_completed failed (non-fatal): ${err}`);
@@ -113,12 +113,10 @@ export async function resetApp(userId: string, options: ResetAppOptions = {}): P
     // behind `clearAuthSession` because specs that re-authenticate right after
     // reset must NOT have their freshly-minted session wiped.
     if (options.clearAuthSession) {
-      const cleared = await callNeppyRpc('openhuman.auth_clear_session', {}).catch(
-        (err: unknown) => {
-          stepLog(`auth_clear_session failed (non-fatal): ${err}`);
-          return { ok: false as const };
-        }
-      );
+      const cleared = await callNeppyRpc('neppy.auth_clear_session', {}).catch((err: unknown) => {
+        stepLog(`auth_clear_session failed (non-fatal): ${err}`);
+        return { ok: false as const };
+      });
       if (cleared.ok) {
         stepLog('Cleared auth session after reset (clearAuthSession)');
       }
@@ -130,7 +128,7 @@ export async function resetApp(userId: string, options: ResetAppOptions = {}): P
       errText.includes('probe timed out') ||
       errText.includes('ECONNREFUSED');
     if (!unreachable) {
-      throw new Error(`openhuman.test_reset failed: ${errText || JSON.stringify(reset)}`);
+      throw new Error(`neppy.test_reset failed: ${errText || JSON.stringify(reset)}`);
     }
     stepLog(`Sidecar not reachable (${errText}) — treating as fresh launch, skipping wipe`);
   }

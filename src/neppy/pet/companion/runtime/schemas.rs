@@ -1,4 +1,4 @@
-//! Controller schemas + handlers for `openhuman.pet_companion_*`, chained into
+//! Controller schemas + handlers for `neppy.pet_companion_*`, chained into
 //! the `pet` namespace by `pet::schemas`. Handlers resolve the global runtime
 //! and delegate to [`super::ops`]. `lease` is the shell's 2 s heartbeat, so it
 //! reloads config at most every 30 s instead of on every call.

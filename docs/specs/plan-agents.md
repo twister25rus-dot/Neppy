@@ -265,7 +265,7 @@ shadow-read parity, mismatch logged never panicked, legacy `DDMMYYYY/` and
 - **`session_shadow_reads` now defaults ON**, starting the parity soak. Safe to
   default on because it is observation-only: legacy stays authoritative, the
   probe runs on a background task once per *resume* (not per turn), a store-read
-  failure degrades to `Unavailable`, and `OPENHUMAN_SESSION_SHADOW_READS=0` is a
+  failure degrades to `Unavailable`, and `NEPPY_SESSION_SHADOW_READS=0` is a
   kill switch. Worst case of a bad soak is log noise, not a broken resume.
 
 **Remaining for Phase 2** — and the reason it is not yet done:

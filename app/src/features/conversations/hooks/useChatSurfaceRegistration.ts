@@ -3,7 +3,7 @@ import { type RefObject, useEffect } from 'react';
 
 import { registerChatSurface } from '../../../providers/chatSurfaceHandlers';
 
-const debug = debugFactory('openhuman:chat-surface');
+const debug = debugFactory('neppy:chat-surface');
 
 /**
  * Claim ownership of a thread's write path for assistant-ui's runtime.

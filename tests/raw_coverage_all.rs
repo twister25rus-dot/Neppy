@@ -20,7 +20,7 @@
 use std::sync::{Mutex, OnceLock};
 
 /// Process-global env lock shared by every aggregated suite that mutates
-/// process-global env (`OPENHUMAN_WORKSPACE`, `HOME`, `BACKEND_URL`, …).
+/// process-global env (`NEPPY_WORKSPACE`, `HOME`, `BACKEND_URL`, …).
 ///
 /// Before these files were collapsed into this single binary they ran as
 /// separate processes, so each file's own env lock was sufficient — different

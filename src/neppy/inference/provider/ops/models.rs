@@ -457,7 +457,7 @@ fn json_value_kind(v: &serde_json::Value) -> &'static str {
 /// `inference_list_models("ollama")` without that entry — config drift,
 /// flush-vs-probe race, or upgrade from a build that only persisted
 /// `config.local_ai.base_url`. Sentry TAURI-RUST-28Z captures this:
-/// 24 events / 7d, all `domain=rpc, method=openhuman.inference_list_models,
+/// 24 events / 7d, all `domain=rpc, method=neppy.inference_list_models,
 /// operation=invoke_method`. Without this fallback, the dropdown surfaces
 /// the bare `"no cloud provider with id or slug 'ollama' found"` error
 /// (also visible in the Sentry breadcrumb) instead of returning models.

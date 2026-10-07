@@ -1,6 +1,6 @@
 //! Voice CLI adapter — domain-owned.
 //!
-//! Handles the `openhuman voice` / `openhuman dictate` subcommand which runs a
+//! Handles the `neppy-core voice` / `neppy-core dictate` subcommand which runs a
 //! long-lived, blocking standalone dictation server (hotkey → record →
 //! transcribe → insert). This flow doesn't fit the request/response controller
 //! registry pattern because it blocks forever on the hotkey listener, so the
@@ -12,7 +12,7 @@ use crate::core::logging::{init_for_cli_run, CliLogDefault};
 use crate::neppy::voice::hotkey::ActivationMode;
 use crate::neppy::voice::server::{run_standalone, VoiceServerConfig};
 
-/// Parse and execute the `openhuman voice` / `openhuman dictate` subcommand.
+/// Parse and execute the `neppy-core voice` / `neppy-core dictate` subcommand.
 ///
 /// Supported flags:
 ///   --hotkey <combo>   Key combination (default from config, usually `fn`)
@@ -110,7 +110,9 @@ pub(crate) fn run_standalone_subcommand(args: &[String]) -> Result<()> {
 }
 
 fn print_help() {
-    println!("Usage: openhuman voice [--hotkey <combo>] [--mode <tap|push>] [--skip-cleanup] [-v]");
+    println!(
+        "Usage: neppy-core voice [--hotkey <combo>] [--mode <tap|push>] [--skip-cleanup] [-v]"
+    );
     println!();
     println!("  --hotkey <combo>   Key combination (default: fn)");
     println!("  --mode <tap|push>  Activation: tap to toggle, push to hold (default: push)");

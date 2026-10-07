@@ -9,7 +9,7 @@ pub fn health_snapshot() -> RpcOutcome<serde_json::Value> {
     RpcOutcome::single_log(health::snapshot_json(), "health_snapshot requested")
 }
 
-/// Static system information returned by `openhuman.health_system_info`.
+/// Static system information returned by `neppy.health_system_info`.
 #[derive(Debug, Serialize)]
 pub struct SystemInfo {
     /// Cargo package version of the running core binary.
@@ -24,8 +24,8 @@ pub struct SystemInfo {
 
 /// Returns static system information: version, OS, architecture, and PID.
 ///
-/// This is the handler backing the `openhuman.health_system_info` RPC method
-/// (legacy callers may send `openhuman.system_info`, which the alias table
+/// This is the handler backing the `neppy.health_system_info` RPC method
+/// (legacy callers may send `neppy.system_info`, which the alias table
 /// rewrites before dispatch).
 pub fn system_info() -> RpcOutcome<SystemInfo> {
     let info = SystemInfo {

@@ -16,7 +16,7 @@
 //!   *advisory* [`ensure_cluster_matches`] check (Risk R6); it does NOT block,
 //!   because tiny.place labels every cluster with the mainnet genesis, so the
 //!   challenge network is not an authoritative cluster signal. Cluster alignment
-//!   is governed by `OPENHUMAN_SOLANA_CLUSTER` + operator config.
+//!   is governed by `NEPPY_SOLANA_CLUSTER` + operator config.
 //! - It does **not** expose an RPC controller. The section write-handlers
 //!   (register / marketplace, in later PRs) call [`fulfill_payment`] and attach
 //!   the returned payment map to their domain request.
@@ -249,7 +249,7 @@ fn classify_network(network: &str) -> Option<SolanaCluster> {
 /// rejects valid devnet payments.
 ///
 /// Cluster alignment is therefore governed by explicit config
-/// (`OPENHUMAN_SOLANA_CLUSTER`) + the operator pointing the wallet at the same
+/// (`NEPPY_SOLANA_CLUSTER`) + the operator pointing the wallet at the same
 /// chain the backend settles on. The wallet only ever transfers the configured
 /// cluster's USDC mint, so a true mismatch fails *safely* at verification (the
 /// backend never credits a tx it can't see) rather than mis-spending. We log a
@@ -313,7 +313,7 @@ fn mint_cross_check(configured_mint: &str, backend_usdc_mint: Option<&str>) -> R
             Err(format!(
                 "cluster mismatch: wallet configured USDC mint={configured_mint} but \
                  the backend reports USDC mint={backend_mint}; refusing to spend — \
-                 check OPENHUMAN_SOLANA_CLUSTER and the backend's Solana config"
+                 check NEPPY_SOLANA_CLUSTER and the backend's Solana config"
             ))
         }
         None => {

@@ -24,7 +24,7 @@ if [[ -f "$ROOT_DIR/scripts/load-dotenv.sh" ]]; then
   source "$ROOT_DIR/scripts/load-dotenv.sh" 2>/dev/null || true
 fi
 
-CORE_BIN="${OPENHUMAN_CORE_BIN:-}"
+CORE_BIN="${NEPPY_CORE_BIN:-}"
 if [[ -z "$CORE_BIN" ]]; then
   CORE_BIN="$ROOT_DIR/target/debug/neppy-core"
   if [[ ! -x "$CORE_BIN" ]]; then
@@ -133,9 +133,9 @@ echo ""
 echo "✅ Channel messaging E2E test complete."
 echo ""
 echo "Available RPC methods:"
-echo "  openhuman.channels_send_message    — Send rich message (text, photo, stickers, buttons)"
-echo "  openhuman.channels_send_reaction   — React to a message with emoji"
-echo "  openhuman.channels_create_thread   — Create a conversation thread"
-echo "  openhuman.channels_update_thread   — Close or reopen a thread"
-echo "  openhuman.channels_list_threads    — List threads for a channel"
+echo "  neppy.channels_send_message    — Send rich message (text, photo, stickers, buttons)"
+echo "  neppy.channels_send_reaction   — React to a message with emoji"
+echo "  neppy.channels_create_thread   — Create a conversation thread"
+echo "  neppy.channels_update_thread   — Close or reopen a thread"
+echo "  neppy.channels_list_threads    — List threads for a channel"
 echo ""

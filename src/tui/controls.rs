@@ -55,34 +55,34 @@ async fn save_config(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
 fn config_update(key: ConfigKey, value: String) -> (&'static str, serde_json::Value) {
     match key {
         ConfigKey::ApiUrl => (
-            "openhuman.config_update_model_settings",
+            "neppy.config_update_model_settings",
             json!({"api_url": value}),
         ),
         ConfigKey::InferenceUrl => (
-            "openhuman.config_update_model_settings",
+            "neppy.config_update_model_settings",
             json!({"inference_url": value}),
         ),
         ConfigKey::DefaultModel => (
-            "openhuman.config_update_model_settings",
+            "neppy.config_update_model_settings",
             json!({"default_model": value}),
         ),
         ConfigKey::AutonomyLevel => (
-            "openhuman.config_update_autonomy_settings",
+            "neppy.config_update_autonomy_settings",
             json!({"level": value}),
         ),
-        ConfigKey::PrivacyMode => ("openhuman.config_set_privacy_mode", json!({"mode": value})),
+        ConfigKey::PrivacyMode => ("neppy.config_set_privacy_mode", json!({"mode": value})),
     }
 }
 
 pub async fn refresh_config(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
     let client = runtime
-        .invoke("openhuman.config_get_client_config", json!({}))
+        .invoke("neppy.config_get_client_config", json!({}))
         .await;
     let autonomy = runtime
-        .invoke("openhuman.config_get_autonomy_settings", json!({}))
+        .invoke("neppy.config_get_autonomy_settings", json!({}))
         .await;
     let privacy = runtime
-        .invoke("openhuman.config_get_privacy_mode", json!({}))
+        .invoke("neppy.config_get_privacy_mode", json!({}))
         .await;
     match (client, autonomy, privacy) {
         (Ok(client), Ok(autonomy), Ok(privacy)) => {
@@ -143,7 +143,7 @@ pub async fn handle_settings_key(key: KeyEvent, runtime: &Arc<CoreRuntime>, ui: 
 }
 
 pub async fn refresh_auth(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
-    match runtime.invoke("openhuman.auth_get_state", json!({})).await {
+    match runtime.invoke("neppy.auth_get_state", json!({})).await {
         Ok(value) => {
             let state = rpc_payload(&value);
             if state
@@ -168,7 +168,7 @@ pub async fn refresh_auth(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
 
 async fn view_account(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
     ui.settings_status = "Refreshing account…".to_string();
-    match runtime.invoke("openhuman.auth_get_me", json!({})).await {
+    match runtime.invoke("neppy.auth_get_me", json!({})).await {
         Ok(value) => {
             let user = rpc_payload(&value);
             ui.account_detail = account_detail(user);
@@ -189,7 +189,7 @@ async fn login_with_token(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
     ui.settings_status = "Signing in…".to_string();
     let consumed = runtime
         .invoke(
-            "openhuman.auth_consume_login_token",
+            "neppy.auth_consume_login_token",
             json!({"loginToken": token.trim()}),
         )
         .await;
@@ -207,7 +207,7 @@ async fn login_with_token(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
         return;
     }
     let stored = runtime
-        .invoke("openhuman.auth_store_session", json!({"token": jwt}))
+        .invoke("neppy.auth_store_session", json!({"token": jwt}))
         .await;
     jwt.zeroize();
     match stored {
@@ -222,10 +222,7 @@ async fn login_with_token(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
 
 async fn logout(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
     ui.logout_confirm = false;
-    match runtime
-        .invoke("openhuman.auth_clear_session", json!({}))
-        .await
-    {
+    match runtime.invoke("neppy.auth_clear_session", json!({})).await {
         Ok(_) => {
             ui.settings_status = "Signed out.".to_string();
             refresh_auth(runtime, ui).await;
@@ -305,27 +302,27 @@ mod tests {
         let cases = [
             (
                 ConfigKey::ApiUrl,
-                "openhuman.config_update_model_settings",
+                "neppy.config_update_model_settings",
                 json!({"api_url": "value"}),
             ),
             (
                 ConfigKey::InferenceUrl,
-                "openhuman.config_update_model_settings",
+                "neppy.config_update_model_settings",
                 json!({"inference_url": "value"}),
             ),
             (
                 ConfigKey::DefaultModel,
-                "openhuman.config_update_model_settings",
+                "neppy.config_update_model_settings",
                 json!({"default_model": "value"}),
             ),
             (
                 ConfigKey::AutonomyLevel,
-                "openhuman.config_update_autonomy_settings",
+                "neppy.config_update_autonomy_settings",
                 json!({"level": "value"}),
             ),
             (
                 ConfigKey::PrivacyMode,
-                "openhuman.config_set_privacy_mode",
+                "neppy.config_set_privacy_mode",
                 json!({"mode": "value"}),
             ),
         ];

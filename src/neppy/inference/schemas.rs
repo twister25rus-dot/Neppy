@@ -10,11 +10,11 @@ use crate::rpc::RpcOutcome;
 /// The canonical RPC method name for `inference.agent_chat`.
 ///
 /// The controller's `namespace` + `function` combine into the wire method
-/// `openhuman.inference_agent_chat` ([`rpc_method_name`](crate::core::ControllerSchema)).
+/// `neppy.inference_agent_chat` ([`rpc_method_name`](crate::core::ControllerSchema)).
 /// Host facades (the embed library) reference this constant rather than
 /// spelling the string out, so a rename upstream cannot silently drift an
 /// embedder's dispatch string away from the registered controller.
-pub const INFERENCE_AGENT_CHAT: &str = "openhuman.inference_agent_chat";
+pub const INFERENCE_AGENT_CHAT: &str = "neppy.inference_agent_chat";
 
 #[derive(Debug, Deserialize)]
 struct InferenceSummarizeParams {
@@ -553,7 +553,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
         "claude_code_set_full_access" => ControllerSchema {
             namespace: "inference",
             function: "claude_code_set_full_access",
-            description: "Persist the Claude Code full-access toggle. true → bypassPermissions + full native toolset (Bash/network/subagents); false (default) → acceptEdits (file edits only). The OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE env var overrides this at runtime.",
+            description: "Persist the Claude Code full-access toggle. true → bypassPermissions + full native toolset (Bash/network/subagents); false (default) → acceptEdits (file edits only). The NEPPY_CLAUDE_CODE_PERMISSION_MODE env var overrides this at runtime.",
             inputs: vec![required_bool(
                 "enabled",
                 "true → full access (bypassPermissions); false → acceptEdits.",

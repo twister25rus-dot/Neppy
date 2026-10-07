@@ -48,7 +48,7 @@ fn apply_host_overlay(contract: NodeKindContract) -> NodeKindContract {
                  per input item, so it is far more expensive than a per_item tool_call — fan out \
                  over a list you have already narrowed, not a raw fetch. In THIS host \
                  simultaneous harness turns are additionally capped process-wide (8 by default, \
-                 OPENHUMAN_FLOWS_MAX_PARALLEL_AGENTS): a higher config.concurrency is throttled \
+                 NEPPY_FLOWS_MAX_PARALLEL_AGENTS): a higher config.concurrency is throttled \
                  to that ceiling, never rejected, so the run still completes.",
             ),
         "tool_call" => contract
@@ -145,7 +145,7 @@ fn apply_host_overlay(contract: NodeKindContract) -> NodeKindContract {
             "Lanes multiply everything inside the region, including COST: a lane body \
              containing an agent node runs a full harness turn per lane. This host additionally \
              caps simultaneous harness turns process-wide (8 by default, \
-             OPENHUMAN_FLOWS_MAX_PARALLEL_AGENTS), so a 200-lane scatter over an agent node \
+             NEPPY_FLOWS_MAX_PARALLEL_AGENTS), so a 200-lane scatter over an agent node \
              queues rather than running 200 wide — correct, but not the throughput the lane \
              count suggests. Use config.lanes to chunk deliberately.",
         ),

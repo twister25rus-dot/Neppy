@@ -9,7 +9,7 @@
  * as a fixed overlay regardless of where the parent mounts it in the DOM.
  *
  * Data comes from {@link useFlowRunPoller}, which polls
- * `openhuman.flows_get_run` every 2s until the run reaches a terminal status
+ * `neppy.flows_get_run` every 2s until the run reaches a terminal status
  * (`completed`/`failed`) — `pending_approval` keeps polling since the run can
  * still be resumed elsewhere.
  *
@@ -386,7 +386,7 @@ export function FlowRunInspectorDrawer({ runId, onClose, onFixWithAgent }: Props
               {/* Actionable pending-approval gates for this run (flow-approval
                   surface). Replaces the old read-only "N node(s) awaiting
                   approval" banner — Approve once / Approve always / Deny
-                  resolve the gate in place via `openhuman.approval_decide`;
+                  resolve the gate in place via `neppy.approval_decide`;
                   the run poller above picks up the resulting steps on its
                   own 2s cadence once the gate clears. */}
               {isActiveRun && pendingApprovals.length > 0 && (

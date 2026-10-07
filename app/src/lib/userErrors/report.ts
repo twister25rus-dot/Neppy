@@ -19,7 +19,7 @@ import {
   userErrorId,
 } from './classify';
 
-const log = debug('openhuman:user-errors');
+const log = debug('neppy:user-errors');
 
 /**
  * Classify `signal` and, if user-actionable, report it to the panel store.

@@ -75,18 +75,14 @@ function configFilePathFor(client: McpClient, os: string): string {
 function buildSnippet(client: McpClient, binaryPath: string): string {
   if (client === 'zed') {
     return JSON.stringify(
-      { context_servers: { openhuman: { command: { path: binaryPath, args: ['mcp'] } } } },
+      { context_servers: { neppy: { command: { path: binaryPath, args: ['mcp'] } } } },
       null,
       2
     );
   }
 
   // Claude Desktop, Cursor, Codex
-  return JSON.stringify(
-    { mcpServers: { openhuman: { command: binaryPath, args: ['mcp'] } } },
-    null,
-    2
-  );
+  return JSON.stringify({ mcpServers: { neppy: { command: binaryPath, args: ['mcp'] } } }, null, 2);
 }
 
 // ---------------------------------------------------------------------------

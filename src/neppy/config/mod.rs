@@ -69,7 +69,7 @@ pub use schemas::{
 };
 
 /// Shared mutex used by test modules in this crate that mutate the
-/// `OPENHUMAN_WORKSPACE` env var so they serialize against one another.
+/// `NEPPY_WORKSPACE` env var so they serialize against one another.
 /// Living at the module root means multiple test submodules — `ops::tests`,
 /// `schema::load::tests`, etc. — can grab the same lock and avoid
 /// interleaved mutations.

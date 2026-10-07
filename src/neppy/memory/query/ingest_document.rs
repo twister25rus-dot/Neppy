@@ -161,8 +161,8 @@ mod tests {
     impl WorkspaceEnvGuard {
         fn set(path: &std::path::Path) -> Self {
             let lock = TEST_ENV_LOCK.lock().unwrap_or_else(|err| err.into_inner());
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+            std::env::set_var("NEPPY_WORKSPACE", path);
             Self {
                 _lock: lock,
                 previous,
@@ -173,9 +173,9 @@ mod tests {
     impl Drop for WorkspaceEnvGuard {
         fn drop(&mut self) {
             if let Some(previous) = self.previous.as_ref() {
-                std::env::set_var("OPENHUMAN_WORKSPACE", previous);
+                std::env::set_var("NEPPY_WORKSPACE", previous);
             } else {
-                std::env::remove_var("OPENHUMAN_WORKSPACE");
+                crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
             }
         }
     }

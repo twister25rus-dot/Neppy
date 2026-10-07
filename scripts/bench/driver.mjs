@@ -2,7 +2,7 @@
 /**
  * Load driver for the agent-scale benchmark tier.
  *
- * Fires `openhuman.agent_chat` turns at a running core over /rpc at a fixed
+ * Fires `neppy.agent_chat` turns at a running core over /rpc at a fixed
  * concurrency and records per-turn latency and outcome. Writes a JSON summary
  * to --out and, with --turns-out, a JSONL turn log the analyzer correlates
  * against the resource samples.
@@ -54,7 +54,7 @@ function assertTransportAllowed(url, what) {
 function parseArgs(argv) {
   const opts = {
     coreUrl: "http://127.0.0.1:17788",
-    token: process.env.OPENHUMAN_CORE_TOKEN ?? "",
+    token: (process.env.NEPPY_CORE_TOKEN ?? process.env.OPENHUMAN_CORE_TOKEN) ?? "",
     concurrency: 4,
     turns: 100,
     durationMs: null,
@@ -177,7 +177,7 @@ async function rpc(method, params, timeoutMs = opts.timeoutMs) {
  * inference and telemetry routes.
  */
 async function seedSession() {
-  await rpc("openhuman.auth_store_session", {
+  await rpc("neppy.auth_store_session", {
     token: "bench.session.local",
     user: { name: "agent-scale-bench", email: "bench@localhost" },
   });
@@ -213,7 +213,7 @@ async function runTurn(workerId, threadId, index) {
   let ok = true;
   let errMessage = null;
   try {
-    await rpc("openhuman.agent_chat", params);
+    await rpc("neppy.agent_chat", params);
   } catch (err) {
     ok = false;
     errMessage = String(err?.message ?? err);
@@ -274,7 +274,7 @@ async function main() {
     process.stderr.write(`[driver] warmup: ${opts.warmupTurns} turns\n`);
     for (let i = 0; i < opts.warmupTurns; i += 1) {
       try {
-        await rpc("openhuman.agent_chat", {
+        await rpc("neppy.agent_chat", {
           message: `${opts.message} (warmup ${i})`,
         });
       } catch (err) {

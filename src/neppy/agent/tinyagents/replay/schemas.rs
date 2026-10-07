@@ -4,14 +4,14 @@
 //! Three controllers, all in the `agent` namespace, all **read-only** (no
 //! mutation, no security/approval/sandbox bypass, no writes):
 //!
-//! - `openhuman.agent_run_events` — paged late-attach replay of a run's durable
+//! - `neppy.agent_run_events` — paged late-attach replay of a run's durable
 //!   event stream. Params: `run_id`, `offset` (default 0), `limit` (default
 //!   [`DEFAULT_EVENTS_LIMIT`], capped at [`MAX_EVENTS_LIMIT`]). Returns
 //!   `{ events: [<AgentObservation>...], next_offset: <int|null> }` — `null`
 //!   once the stream is drained.
-//! - `openhuman.agent_run_status` — latest [`HarnessRunStatus`] for `run_id`,
+//! - `neppy.agent_run_status` — latest [`HarnessRunStatus`] for `run_id`,
 //!   or `null` for an unknown run.
-//! - `openhuman.agent_runs_active` — active runs, optionally filtered by
+//! - `neppy.agent_runs_active` — active runs, optionally filtered by
 //!   `thread_id` and/or `root_run_id`. Returns `{ runs: [<HarnessRunStatus>...] }`.
 //!
 //! ## Serialization / DTO note
@@ -246,7 +246,7 @@ fn handle_run_events(params: Map<String, Value>) -> ControllerFuture {
             .unwrap_or(DEFAULT_EVENTS_LIMIT)
             .min(MAX_EVENTS_LIMIT);
         log::debug!(
-            "[rpc] openhuman.agent_run_events run_id={} offset={} limit={}",
+            "[rpc] neppy.agent_run_events run_id={} offset={} limit={}",
             payload.run_id,
             payload.offset,
             limit
@@ -257,7 +257,7 @@ fn handle_run_events(params: Map<String, Value>) -> ControllerFuture {
             .await
             .map_err(|e| format!("read run events failed: {e:#}"))?;
         log::debug!(
-            "[rpc] openhuman.agent_run_events run_id={} returned={} next_offset={:?}",
+            "[rpc] neppy.agent_run_events run_id={} returned={} next_offset={:?}",
             payload.run_id,
             page.events.len(),
             page.next_offset
@@ -275,14 +275,14 @@ fn handle_run_status(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let payload: RunStatusParams = serde_json::from_value(Value::Object(params))
             .map_err(|e| format!("invalid params: {e}"))?;
-        log::debug!("[rpc] openhuman.agent_run_status run_id={}", payload.run_id);
+        log::debug!("[rpc] neppy.agent_run_status run_id={}", payload.run_id);
 
         let workspace = configured_workspace().await?;
         let status = read_run_status(&workspace, &payload.run_id)
             .await
             .map_err(|e| format!("read run status failed: {e:#}"))?;
         log::debug!(
-            "[rpc] openhuman.agent_run_status run_id={} found={}",
+            "[rpc] neppy.agent_run_status run_id={} found={}",
             payload.run_id,
             status.is_some()
         );
@@ -297,7 +297,7 @@ fn handle_runs_active(params: Map<String, Value>) -> ControllerFuture {
         let payload: RunsActiveParams = serde_json::from_value(Value::Object(params))
             .map_err(|e| format!("invalid params: {e}"))?;
         log::debug!(
-            "[rpc] openhuman.agent_runs_active thread_id={:?} root_run_id={:?}",
+            "[rpc] neppy.agent_runs_active thread_id={:?} root_run_id={:?}",
             payload.thread_id,
             payload.root_run_id
         );
@@ -310,7 +310,7 @@ fn handle_runs_active(params: Map<String, Value>) -> ControllerFuture {
         )
         .await
         .map_err(|e| format!("list active runs failed: {e:#}"))?;
-        log::debug!("[rpc] openhuman.agent_runs_active returned={}", runs.len());
+        log::debug!("[rpc] neppy.agent_runs_active returned={}", runs.len());
 
         serde_json::to_value(RunsActiveResponse { runs })
             .map_err(|e| format!("serialize response failed: {e}"))
@@ -333,11 +333,11 @@ mod tests {
 
         let controllers = all_agent_replay_registered_controllers();
         assert_eq!(controllers.len(), 3);
-        // rpc method names follow openhuman.<namespace>_<function>.
+        // rpc method names follow neppy.<namespace>_<function>.
         let methods: Vec<String> = controllers.iter().map(|c| c.rpc_method_name()).collect();
-        assert!(methods.contains(&"openhuman.agent_run_events".to_string()));
-        assert!(methods.contains(&"openhuman.agent_run_status".to_string()));
-        assert!(methods.contains(&"openhuman.agent_runs_active".to_string()));
+        assert!(methods.contains(&"neppy.agent_run_events".to_string()));
+        assert!(methods.contains(&"neppy.agent_run_status".to_string()));
+        assert!(methods.contains(&"neppy.agent_runs_active".to_string()));
     }
 
     #[tokio::test]

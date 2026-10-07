@@ -9,6 +9,9 @@ pub mod code_executor;
 pub mod context_scout;
 pub mod critic;
 pub mod crypto_agent;
+// Debug mode's repo-scoped development agent. Reached only by a Debug-mode
+// thread, never an orchestrator subagent.
+pub mod debug_agent;
 #[cfg(feature = "flows")]
 pub mod flow_memory_agent;
 pub mod goals_agent;

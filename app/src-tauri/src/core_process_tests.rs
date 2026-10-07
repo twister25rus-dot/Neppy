@@ -26,14 +26,14 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -42,7 +42,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(v) => std::env::set_var(self.key, v),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -50,10 +50,10 @@ impl Drop for EnvGuard {
 #[test]
 fn default_core_port_env_and_fallback() {
     let _env_lock = env_lock();
-    let _unset = EnvGuard::unset("OPENHUMAN_CORE_PORT");
+    let _unset = EnvGuard::unset("NEPPY_CORE_PORT");
     assert_eq!(default_core_port(), 7788);
 
-    let _set = EnvGuard::set("OPENHUMAN_CORE_PORT", "8899");
+    let _set = EnvGuard::set("NEPPY_CORE_PORT", "8899");
     assert_eq!(default_core_port(), 8899);
 }
 
@@ -85,7 +85,7 @@ fn ready_signal_updates_runtime_port_and_fallback_notice() {
 }
 
 /// Regression: `ensure_running` must NOT publish the per-launch RPC bearer
-/// to the `OPENHUMAN_CORE_TOKEN` environment variable.
+/// to the `NEPPY_CORE_TOKEN` environment variable.
 ///
 /// The bearer is now handed to the in-process core in-memory via the
 /// `rpc_token` argument of `run_server_embedded_with_ready`; setting it on
@@ -95,9 +95,9 @@ fn ready_signal_updates_runtime_port_and_fallback_notice() {
 #[test]
 fn ensure_running_does_not_publish_token_to_env() {
     let _env_lock = env_lock();
-    let _unset = EnvGuard::unset("OPENHUMAN_CORE_REUSE_EXISTING");
+    let _unset = EnvGuard::unset("NEPPY_CORE_REUSE_EXISTING");
     // Force a clean slate so we can assert on the post-spawn value.
-    let _wipe = EnvGuard::unset("OPENHUMAN_CORE_TOKEN");
+    let _wipe = EnvGuard::unset("NEPPY_CORE_TOKEN");
     let rt = tokio::runtime::Runtime::new().expect("runtime");
     let (result, env_after, expected_token, env_during_spawn) = rt.block_on(async {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -113,11 +113,11 @@ fn ensure_running_does_not_publish_token_to_env() {
         let result = handle.ensure_running().await;
         // Capture env immediately after spawn returns Ok — before any
         // tokio task could plausibly have set the var.
-        let env_after = std::env::var("OPENHUMAN_CORE_TOKEN").ok();
+        let env_after = neppy_core::neppy::util::env::var("NEPPY_CORE_TOKEN").ok();
         // Also peek midway via spawning a tiny check task in the same
         // runtime — guards against the codepath setting+removing the var
         // within the spawn window.
-        let env_during_spawn = std::env::var("OPENHUMAN_CORE_TOKEN").ok();
+        let env_during_spawn = neppy_core::neppy::util::env::var("NEPPY_CORE_TOKEN").ok();
         handle.shutdown().await;
         (result, env_after, expected_token, env_during_spawn)
     });
@@ -128,12 +128,12 @@ fn ensure_running_does_not_publish_token_to_env() {
     );
     assert!(
         env_after.is_none(),
-        "ensure_running must NOT publish OPENHUMAN_CORE_TOKEN to the process env \
+        "ensure_running must NOT publish NEPPY_CORE_TOKEN to the process env \
          (sidecar-era leak channel removed). Found: {env_after:?} (handle token was {expected_token:?})"
     );
     assert!(
         env_during_spawn.is_none(),
-        "OPENHUMAN_CORE_TOKEN must remain unset even momentarily during spawn. \
+        "NEPPY_CORE_TOKEN must remain unset even momentarily during spawn. \
          Found: {env_during_spawn:?}"
     );
 }
@@ -143,7 +143,7 @@ fn ensure_running_does_not_publish_token_to_env() {
 #[test]
 fn ensure_running_falls_back_for_unknown_listener_on_port() {
     let _env_lock = env_lock();
-    let _unset = EnvGuard::unset("OPENHUMAN_CORE_REUSE_EXISTING");
+    let _unset = EnvGuard::unset("NEPPY_CORE_REUSE_EXISTING");
     let rt = tokio::runtime::Runtime::new().expect("runtime");
     let (result, chosen_port, notice) = rt.block_on(async {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -179,7 +179,7 @@ fn ensure_running_falls_back_for_unknown_listener_on_port() {
 #[test]
 fn ensure_running_falls_back_to_7789_when_7788_is_busy() {
     let _env_lock = env_lock();
-    let _unset = EnvGuard::unset("OPENHUMAN_CORE_REUSE_EXISTING");
+    let _unset = EnvGuard::unset("NEPPY_CORE_REUSE_EXISTING");
     let rt = tokio::runtime::Runtime::new().expect("runtime");
     rt.block_on(async {
         let listener = match tokio::net::TcpListener::bind("127.0.0.1:7788").await {
@@ -224,12 +224,12 @@ fn ensure_running_falls_back_to_7789_when_7788_is_busy() {
     });
 }
 
-/// Escape hatch: setting `OPENHUMAN_CORE_REUSE_EXISTING=1` opts back into
+/// Escape hatch: setting `NEPPY_CORE_REUSE_EXISTING=1` opts back into
 /// the legacy attach-to-anything behavior for manual harnesses.
 #[test]
 fn ensure_running_reuses_unknown_listener_when_override_set() {
     let _env_lock = env_lock();
-    let _override = EnvGuard::set("OPENHUMAN_CORE_REUSE_EXISTING", "1");
+    let _override = EnvGuard::set("NEPPY_CORE_REUSE_EXISTING", "1");
     let rt = tokio::runtime::Runtime::new().expect("runtime");
     let result = rt.block_on(async {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -283,7 +283,7 @@ fn expected_port_clash_classifier_matches_benign_probe_shapes() {
     ));
     assert!(is_expected_port_clash("probe GET / returned status 200 OK"));
     assert!(is_expected_port_clash(
-        "probe GET / body did not identify as openhuman (\"hello\")"
+        "probe GET / body did not identify as neppy (\"hello\")"
     ));
 }
 
@@ -534,7 +534,7 @@ fn core_process_handle_new_token_is_valid() {
 
 /// `CoreProcessHandle::new()` must NOT publish the token to the global
 /// `CURRENT_RPC_TOKEN`. The global is set only after `ensure_running()`
-/// successfully spawns the embedded server with `OPENHUMAN_CORE_TOKEN` in
+/// successfully spawns the embedded server with `NEPPY_CORE_TOKEN` in
 /// scope. Advertising the token before spawn would 401 against any process
 /// already listening on the port that never received this token.
 #[test]
@@ -747,7 +747,7 @@ fn validate_kill_target_refuses_protected_pids() {
 #[test]
 fn recover_port_conflict_succeeds_when_port_is_free() {
     let _env_lock = env_lock();
-    let _unset = EnvGuard::unset("OPENHUMAN_CORE_REUSE_EXISTING");
+    let _unset = EnvGuard::unset("NEPPY_CORE_REUSE_EXISTING");
     let rt = tokio::runtime::Runtime::new().expect("runtime");
 
     let outcome = rt.block_on(async {
@@ -780,7 +780,7 @@ fn recover_port_conflict_succeeds_when_port_is_free() {
 #[test]
 fn recover_port_conflict_handles_stale_listener() {
     let _env_lock = env_lock();
-    let _unset = EnvGuard::unset("OPENHUMAN_CORE_REUSE_EXISTING");
+    let _unset = EnvGuard::unset("NEPPY_CORE_REUSE_EXISTING");
     let rt = tokio::runtime::Runtime::new().expect("runtime");
 
     // Bind a port, attempt recovery — the recovery must still succeed because

@@ -229,7 +229,7 @@ describe('FlowRunInspectorDrawer', () => {
   // ── Actionable pending-approval gates (flow-approval surface — run
   // details). Replaces the old read-only "N node(s) awaiting approval"
   // banner with Approve once / Approve always / Deny cards wired to
-  // `openhuman.approval_decide` via `useFlowPendingApprovals`.
+  // `neppy.approval_decide` via `useFlowPendingApprovals`.
   it('polls scoped to this run only while pending_approval/running, passing null otherwise', () => {
     useFlowRunPoller.mockReturnValue({
       run: makeRun({ status: 'pending_approval', flow_id: 'flow-9', thread_id: 'thread-9' }),

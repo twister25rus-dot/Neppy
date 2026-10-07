@@ -1,7 +1,7 @@
 //! Bitcoin P2WPKH signing + broadcast. Uses the `bitcoin` crate plus the
 //! Esplora REST API (https://blockstream.info/api) for UTXO discovery and
 //! transaction broadcast. Tests can point at any URL via
-//! `OPENHUMAN_WALLET_RPC_BTC`.
+//! `NEPPY_WALLET_RPC_BTC`.
 //!
 //! Address derivation uses BIP84 (`m/84'/0'/0'/0/0` mainnet) so any wallet
 //! seeded with a standard recovery phrase + this path produces a `bc1q…`
@@ -514,7 +514,7 @@ mod tests {
     // broker whose tasks died with the first and the call fails with
     // "connection closed". Verified passing in isolation:
     //
-    //   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+    //   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
     //     execute_btc_quote_builds_psbt_signs_and_broadcasts -- --ignored --test-threads=1
     //
     // Same constraint tinydocs documents for its module-backed tool tests.
@@ -562,7 +562,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_BTC", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_BTC", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -622,7 +622,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_BTC", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_BTC", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -696,7 +696,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_BTC", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_BTC", format!("http://{addr}"));
         let info = tx_status("deadbeef").await.unwrap();
         assert_eq!(
             info.state,
@@ -721,7 +721,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_BTC", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_BTC", format!("http://{addr}"));
         let info = lookup_tx("deadbeef").await.unwrap();
         assert!(!info.found);
     }

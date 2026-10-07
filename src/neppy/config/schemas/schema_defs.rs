@@ -207,7 +207,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
         "get_agent_settings" => ControllerSchema {
             namespace: "config",
             function: "get_agent_settings",
-            description: "Read agent execution settings: the action/tool wall-clock timeout, the runtime-effective value, and whether the OPENHUMAN_TOOL_TIMEOUT_SECS env var overrides it.",
+            description: "Read agent execution settings: the action/tool wall-clock timeout, the runtime-effective value, and whether the NEPPY_TOOL_TIMEOUT_SECS env var overrides it.",
             inputs: vec![],
             outputs: vec![json_output(
                 "settings",
@@ -217,7 +217,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
         "update_agent_settings" => ControllerSchema {
             namespace: "config",
             function: "update_agent_settings",
-            description: "Update agent execution settings. Currently the action/tool wall-clock timeout (seconds). Applies to the next tool call without a restart; the OPENHUMAN_TOOL_TIMEOUT_SECS env var still overrides it when set.",
+            description: "Update agent execution settings. Currently the action/tool wall-clock timeout (seconds). Applies to the next tool call without a restart; the NEPPY_TOOL_TIMEOUT_SECS env var still overrides it when set.",
             inputs: vec![FieldSchema {
                 name: "agent_timeout_secs",
                 ty: TypeSchema::Option(Box::new(TypeSchema::U64)),
@@ -319,7 +319,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
             inputs: vec![FieldSchema {
                 name: "enabled",
                 ty: TypeSchema::Bool,
-                comment: "Whether to enable browser allow-all mode. Runtime enable is refused unless OPENHUMAN_BROWSER_ALLOW_ALL_RPC_ENABLE=1.",
+                comment: "Whether to enable browser allow-all mode. Runtime enable is refused unless NEPPY_BROWSER_ALLOW_ALL_RPC_ENABLE=1.",
                 required: true,
             }],
             outputs: vec![FieldSchema {
@@ -572,7 +572,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
             namespace: "config",
             function: "get_agent_paths",
             description:
-                "Resolve the agent's filesystem roots (action_dir, workspace_dir, projects_dir) so the UI can render live values instead of hard-coded strings. Read-only. Also returns `action_dir_env_override: bool` so the UI knows when OPENHUMAN_ACTION_DIR is forcing the value (Settings → action_dir editing disabled in that case).",
+                "Resolve the agent's filesystem roots (action_dir, workspace_dir, projects_dir) so the UI can render live values instead of hard-coded strings. Read-only. Also returns `action_dir_env_override: bool` so the UI knows when NEPPY_ACTION_DIR is forcing the value (Settings → action_dir editing disabled in that case).",
             inputs: vec![],
             outputs: vec![json_output(
                 "paths",
@@ -583,7 +583,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
             namespace: "config",
             function: "update_agent_paths",
             description:
-                "Update the agent's editable filesystem roots. Currently only action_dir (the acting-tool sandbox). The path must be absolute; a missing directory is auto-created; it cannot equal the internal workspace_dir. An empty string clears the override and reverts to the default. Applies to new sessions immediately (live policy hot-swap), no restart. OPENHUMAN_ACTION_DIR still overrides at runtime when set.",
+                "Update the agent's editable filesystem roots. Currently only action_dir (the acting-tool sandbox). The path must be absolute; a missing directory is auto-created; it cannot equal the internal workspace_dir. An empty string clears the override and reverts to the default. Applies to new sessions immediately (live policy hot-swap), no restart. NEPPY_ACTION_DIR still overrides at runtime when set.",
             inputs: vec![FieldSchema {
                 name: "action_dir",
                 ty: TypeSchema::Option(Box::new(TypeSchema::String)),

@@ -112,7 +112,7 @@ test.describe('Gmail Integration Flows', () => {
   });
 
   test('authorize routes through the mock backend', async () => {
-    await callCoreRpc('openhuman.composio_authorize', { toolkit: TOOLKIT_SLUG });
+    await callCoreRpc('neppy.composio_authorize', { toolkit: TOOLKIT_SLUG });
     const requests = await getRequestLog();
     const authReq = requests.find(
       request =>
@@ -140,12 +140,12 @@ test.describe('Gmail Integration Flows', () => {
   });
 
   test('execute and disconnect routes do not blank the skills page', async ({ page }) => {
-    await callCoreRpc('openhuman.composio_execute', { tool: ACTION, arguments: {} });
+    await callCoreRpc('neppy.composio_execute', { tool: ACTION, arguments: {} });
     // Tab is "Apps"; the grid renders in the composio-integrations-card container.
     await page.getByTestId('two-pane-nav-composio').click();
     await expect(page.getByTestId('composio-integrations-card')).toBeVisible();
 
-    await callCoreRpc('openhuman.composio_delete_connection', { connection_id: CONNECTION_ID });
+    await callCoreRpc('neppy.composio_delete_connection', { connection_id: CONNECTION_ID });
     const requests = await getRequestLog();
     const deleteReq = requests.find(
       request =>

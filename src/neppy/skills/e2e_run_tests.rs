@@ -10,8 +10,8 @@
 //!
 //! The inner workflow run is a detached `tokio::spawn` that rebuilds its LLM
 //! provider from config and resolves the workspace from the **process-global**
-//! `OPENHUMAN_WORKSPACE` env. So these tests install a process-global mock
-//! provider (`factory::test_provider_override`) and set `OPENHUMAN_WORKSPACE`
+//! `NEPPY_WORKSPACE` env. So these tests install a process-global mock
+//! provider (`factory::test_provider_override`) and set `NEPPY_WORKSPACE`
 //! — global state that would race other tests under the default parallel
 //! runner. They are therefore `#[ignore]`d (kept out of the parallel default
 //! run) and meant to be run serially:
@@ -51,22 +51,22 @@ fn serial() -> &'static tokio::sync::Mutex<()> {
     L.get_or_init(|| tokio::sync::Mutex::new(()))
 }
 
-/// RAII override of the global `OPENHUMAN_WORKSPACE` env (restored on drop).
+/// RAII override of the global `NEPPY_WORKSPACE` env (restored on drop).
 struct WorkspaceEnv {
     prev: Option<String>,
 }
 impl WorkspaceEnv {
     fn set(path: &std::path::Path) -> Self {
-        let prev = std::env::var("OPENHUMAN_WORKSPACE").ok();
-        std::env::set_var("OPENHUMAN_WORKSPACE", path);
+        let prev = crate::neppy::util::env::var("NEPPY_WORKSPACE").ok();
+        std::env::set_var("NEPPY_WORKSPACE", path);
         Self { prev }
     }
 }
 impl Drop for WorkspaceEnv {
     fn drop(&mut self) {
         match &self.prev {
-            Some(v) => std::env::set_var("OPENHUMAN_WORKSPACE", v),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(v) => std::env::set_var("NEPPY_WORKSPACE", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }
@@ -172,7 +172,7 @@ fn seed_runnable_workflow(ws: &std::path::Path, id: &str) {
 
 // ── Test 1: a workflow RUN executes via the mock LLM and reaches DONE ─────
 
-#[ignore = "process-global model override + OPENHUMAN_WORKSPACE; run with \
+#[ignore = "process-global model override + NEPPY_WORKSPACE; run with \
             RUST_MIN_STACK=16777216 and --ignored --test-threads=1"]
 #[tokio::test]
 async fn inner_workflow_run_executes_via_mock_llm_and_reaches_done() {
@@ -180,7 +180,7 @@ async fn inner_workflow_run_executes_via_mock_llm_and_reaches_done() {
     let ws_root = tempfile::tempdir().unwrap();
     let _env = WorkspaceEnv::set(ws_root.path());
     // Seed exactly where the run path resolves the workspace to (the env maps
-    // OPENHUMAN_WORKSPACE → <root>/workspace), so get_workflow/load_workflow_metadata finds it.
+    // NEPPY_WORKSPACE → <root>/workspace), so get_workflow/load_workflow_metadata finds it.
     let workspace = crate::neppy::skills::schemas::resolve_workspace_dir().await;
     seed_runnable_workflow(&workspace, "triage-inbox");
     let _inference = crate::neppy::inference::inference_test_guard();
@@ -212,7 +212,7 @@ async fn inner_workflow_run_executes_via_mock_llm_and_reaches_done() {
 
 // ── Test 2: orchestrator composes a workflow via the run_workflow tool ────
 
-#[ignore = "process-global model override + OPENHUMAN_WORKSPACE; run with \
+#[ignore = "process-global model override + NEPPY_WORKSPACE; run with \
             RUST_MIN_STACK=16777216 and --ignored --test-threads=1"]
 #[tokio::test]
 async fn orchestrator_runs_workflow_tool_and_gets_inner_result() {
@@ -289,7 +289,7 @@ async fn wait_for_status(
     }
 }
 
-#[ignore = "process-global model override + OPENHUMAN_WORKSPACE; run with \
+#[ignore = "process-global model override + NEPPY_WORKSPACE; run with \
             RUST_MIN_STACK=16777216 and --ignored --test-threads=1"]
 #[tokio::test]
 async fn task_card_picked_up_runs_workflow_and_resolves_done() {
@@ -366,7 +366,7 @@ async fn task_card_picked_up_runs_workflow_and_resolves_done() {
 
 // ── Test 4: a task with NO workflow selected runs directly → resolves Done ─
 
-#[ignore = "process-global model override + OPENHUMAN_WORKSPACE; run with \
+#[ignore = "process-global model override + NEPPY_WORKSPACE; run with \
             RUST_MIN_STACK=16777216 and --ignored --test-threads=1"]
 #[tokio::test]
 async fn task_with_no_workflow_runs_directly_and_resolves_done() {
@@ -458,7 +458,7 @@ impl ChatModel<()> for FailingLlm {
     }
 }
 
-#[ignore = "process-global model override + OPENHUMAN_WORKSPACE; run with \
+#[ignore = "process-global model override + NEPPY_WORKSPACE; run with \
             RUST_MIN_STACK=16777216 and --ignored --test-threads=1"]
 #[tokio::test]
 async fn task_run_failure_resolves_card_to_blocked() {
@@ -526,7 +526,7 @@ async fn task_run_failure_resolves_card_to_blocked() {
 
 // ── Test 6: re-dispatching an already-claimed card is rejected (dedup) ─────
 
-#[ignore = "process-global model override + OPENHUMAN_WORKSPACE; run with \
+#[ignore = "process-global model override + NEPPY_WORKSPACE; run with \
             RUST_MIN_STACK=16777216 and --ignored --test-threads=1"]
 #[tokio::test]
 async fn redispatch_of_claimed_card_is_rejected() {

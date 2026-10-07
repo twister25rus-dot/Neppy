@@ -32,7 +32,7 @@ export async function getAuthState(): Promise<{ is_authenticated: boolean; user:
   }
 
   const response = await callCoreRpc<{ result: { isAuthenticated: boolean; user: object | null } }>(
-    { method: 'openhuman.auth_get_state' }
+    { method: 'neppy.auth_get_state' }
   );
 
   return { is_authenticated: response.result.isAuthenticated, user: response.result.user };
@@ -43,7 +43,7 @@ export async function getAuthState(): Promise<{ is_authenticated: boolean; user:
  */
 export async function getSessionToken(): Promise<string | null> {
   const response = await callCoreRpc<{ result: { token: string | null } }>({
-    method: 'openhuman.auth_get_session_token',
+    method: 'neppy.auth_get_session_token',
   });
   return response.result.token;
 }
@@ -52,7 +52,7 @@ export async function getSessionToken(): Promise<string | null> {
  * Logout and clear session
  */
 export async function logout(): Promise<void> {
-  await callCoreRpc({ method: 'openhuman.auth_clear_session' });
+  await callCoreRpc({ method: 'neppy.auth_clear_session' });
 }
 
 /**
@@ -71,7 +71,7 @@ export async function storeSession(
   options?: { allowPendingBackendValidation?: boolean; timeoutMs?: number }
 ): Promise<void> {
   await callCoreRpc({
-    method: 'openhuman.auth_store_session',
+    method: 'neppy.auth_store_session',
     params: {
       token,
       user,
@@ -86,7 +86,7 @@ export async function neppyEncryptSecret(plaintext: string): Promise<CommandResp
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<string>>({
-    method: 'openhuman.encrypt_secret',
+    method: 'neppy.encrypt_secret',
     params: { plaintext },
   });
 }
@@ -96,7 +96,7 @@ export async function neppyDecryptSecret(ciphertext: string): Promise<CommandRes
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<string>>({
-    method: 'openhuman.decrypt_secret',
+    method: 'neppy.decrypt_secret',
     params: { ciphertext },
   });
 }
@@ -135,7 +135,7 @@ export async function authStoreProviderCredentials(args: {
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<AuthProfileSummary>>({
-    method: 'openhuman.auth_store_provider_credentials',
+    method: 'neppy.auth_store_provider_credentials',
     params: args,
   });
 }
@@ -150,7 +150,7 @@ export async function authRemoveProviderCredentials(args: {
   }
   return await callCoreRpc<
     CommandResponse<{ removed: boolean; provider: string; profile: string }>
-  >({ method: 'openhuman.auth_remove_provider_credentials', params: args });
+  >({ method: 'neppy.auth_remove_provider_credentials', params: args });
 }
 
 /** List stored provider credential profiles, optionally filtered by provider. */
@@ -161,7 +161,7 @@ export async function authListProviderCredentials(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<AuthProfileSummary[]>>({
-    method: 'openhuman.auth_list_provider_credentials',
+    method: 'neppy.auth_list_provider_credentials',
     params: provider ? { provider } : {},
   });
 }

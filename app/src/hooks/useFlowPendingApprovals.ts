@@ -4,7 +4,7 @@
  *
  * Feeds the actionable approval cards in `FlowRunInspectorDrawer`. The core
  * has no dedicated "pending approvals for this run" endpoint — approvals are
- * a single shared queue (`openhuman.approval_list_pending`) covering chat,
+ * a single shared queue (`neppy.approval_list_pending`) covering chat,
  * flow, and any future origin. The module-scoped approval source polls that
  * queue once for every active consumer, and this hook filters its snapshot to
  * one flow run via `PendingApproval.source_context`.

@@ -53,7 +53,7 @@ fn pformat_registry_from_request(
         .collect()
 }
 
-/// Translate an openhuman [`ChatResponse`] into a harness [`ModelResponse`]
+/// Translate a neppy [`ChatResponse`] into a harness [`ModelResponse`]
 /// (visible text + tool calls + token usage).
 ///
 /// Native `tool_calls` take precedence; when absent and the request advertised
@@ -218,7 +218,7 @@ pub(crate) fn prompt_guided_text_response(text: String, request: &ModelRequest) 
 /// JSON key under which the model adapter stashes the provider-reported
 /// billing/context metadata that the crate [`Usage`] has no field for
 /// (gap G1). Consumed by [`usage_info_from_response`].
-const OPENHUMAN_USAGE_META_KEY: &str = "neppy_usage_meta";
+const NEPPY_USAGE_META_KEY: &str = "neppy_usage_meta";
 
 /// The two host [`UsageInfo`] fields with no crate [`Usage`] home, ferried
 /// through [`ModelResponse::raw`] so a standalone `invoke` stays usage-faithful.
@@ -244,11 +244,11 @@ fn neppy_usage_meta_raw(usage: Option<&UsageInfo>) -> Option<serde_json::Value> 
         charged_amount_usd: u.charged_amount_usd,
         context_window: u.context_window,
     };
-    Some(serde_json::json!({ OPENHUMAN_USAGE_META_KEY: meta }))
+    Some(serde_json::json!({ NEPPY_USAGE_META_KEY: meta }))
 }
 
 /// Merge the host billing/context metadata the crate [`Usage`] cannot carry into
-/// a crate [`ModelResponse::raw`] under [`OPENHUMAN_USAGE_META_KEY`], so
+/// a crate [`ModelResponse::raw`] under [`NEPPY_USAGE_META_KEY`], so
 /// [`usage_info_from_response`] recovers the charged-USD + context window from a
 /// crate-native model (e.g. [`NeppyBackendModel`](crate::neppy::inference::provider::NeppyBackendModel))
 /// exactly as it does from a [`native model adapter`].
@@ -279,12 +279,12 @@ pub(crate) fn merge_neppy_usage_meta(
     };
     match raw {
         Some(serde_json::Value::Object(mut obj)) => {
-            obj.insert(OPENHUMAN_USAGE_META_KEY.to_string(), meta);
+            obj.insert(NEPPY_USAGE_META_KEY.to_string(), meta);
             Some(serde_json::Value::Object(obj))
         }
         // A non-object (or absent) raw can't hold the key alongside wire fields —
         // stash the meta on its own so the reader still recovers it.
-        _ => Some(serde_json::json!({ OPENHUMAN_USAGE_META_KEY: meta })),
+        _ => Some(serde_json::json!({ NEPPY_USAGE_META_KEY: meta })),
     }
 }
 
@@ -302,7 +302,7 @@ pub(crate) fn usage_info_from_response(response: &ModelResponse) -> Option<Usage
     let meta = response
         .raw
         .as_ref()
-        .and_then(|v| v.get(OPENHUMAN_USAGE_META_KEY))
+        .and_then(|v| v.get(NEPPY_USAGE_META_KEY))
         .and_then(|v| serde_json::from_value::<NeppyUsageMeta>(v.clone()).ok())
         .unwrap_or_default();
     Some(UsageInfo {
@@ -316,7 +316,7 @@ pub(crate) fn usage_info_from_response(response: &ModelResponse) -> Option<Usage
     })
 }
 
-/// Forward one openhuman [`ProviderDelta`]. Visible text, reasoning, and
+/// Forward one neppy [`ProviderDelta`]. Visible text, reasoning, and
 /// tool-call **argument** fragments all become harness [`ModelStreamItem`]s (so
 /// the [`NeppyEventBridge`](super::NeppyEventBridge) mirrors them as
 /// progress deltas from the crate stream alone): text/reasoning as
@@ -380,7 +380,7 @@ pub(crate) fn forward_provider_delta(tx: &UnboundedSender<ModelStreamItem>, delt
 /// Shared slot that preserves the most recent original provider error.
 ///
 /// tinyagents carries errors as `TinyAgentsError::Model(String)`, which would
-/// stringify openhuman's typed `anyhow::Error` (e.g. `AgentError::PermissionDenied`
+/// stringify neppy's typed `anyhow::Error` (e.g. `AgentError::PermissionDenied`
 /// / `MaxIterationsExceeded`) and break the downcast the caller relies on for
 /// Sentry suppression and `AgentError`-tagged events. The adapter stashes the
 /// original error here before returning the stringified one to the harness, so

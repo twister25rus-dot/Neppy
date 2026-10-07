@@ -26,7 +26,7 @@ describe('agentRegistryApi', () => {
     mockCall.mockResolvedValueOnce({ agents: [agent()] });
     const res = await agentRegistryApi.list(true);
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_registry_list',
+      method: 'neppy.agent_registry_list',
       params: { include_disabled: true },
     });
     expect(res).toHaveLength(1);
@@ -48,7 +48,7 @@ describe('agentRegistryApi', () => {
       tool_allowlist: ['memory.search'],
     });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_registry_create_custom',
+      method: 'neppy.agent_registry_create_custom',
       params: {
         id: 'finance',
         name: 'Finance',
@@ -63,7 +63,7 @@ describe('agentRegistryApi', () => {
     mockCall.mockResolvedValueOnce({ agent: agent({ name: 'Renamed' }) });
     const res = await agentRegistryApi.update('researcher', { name: 'Renamed' });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_registry_update',
+      method: 'neppy.agent_registry_update',
       params: { id: 'researcher', name: 'Renamed' },
     });
     expect(res.name).toBe('Renamed');
@@ -73,7 +73,7 @@ describe('agentRegistryApi', () => {
     mockCall.mockResolvedValueOnce({ agent: agent({ enabled: false }) });
     const res = await agentRegistryApi.setEnabled('researcher', false);
     expect(mockCall).toHaveBeenLastCalledWith({
-      method: 'openhuman.agent_registry_set_enabled',
+      method: 'neppy.agent_registry_set_enabled',
       params: { id: 'researcher', enabled: false },
     });
     expect(res.enabled).toBe(false);
@@ -83,7 +83,7 @@ describe('agentRegistryApi', () => {
     mockCall.mockResolvedValueOnce({ removed: true });
     expect(await agentRegistryApi.remove('finance')).toBe(true);
     expect(mockCall).toHaveBeenLastCalledWith({
-      method: 'openhuman.agent_registry_remove',
+      method: 'neppy.agent_registry_remove',
       params: { id: 'finance' },
     });
   });

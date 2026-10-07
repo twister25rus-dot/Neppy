@@ -1,7 +1,7 @@
 //! Wallet network helpers — JSON-RPC POST + REST GET/POST primitives.
 //!
 //! JSON-RPC is used for EVM and Solana. REST is used for BTC (Esplora) and
-//! Tron (TronGrid). Both honor an `OPENHUMAN_WALLET_RPC_<CHAIN>` env override
+//! Tron (TronGrid). Both honor an `NEPPY_WALLET_RPC_<CHAIN>` env override
 //! so tests can point everything at an axum mock.
 
 use std::time::Duration;

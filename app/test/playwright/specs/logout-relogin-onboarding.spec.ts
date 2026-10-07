@@ -33,8 +33,8 @@ async function signInToOnboarding(page: Page, userId: string): Promise<void> {
     JSON.stringify({ sub: userId, userId, exp: Math.floor(Date.now() / 1000) + 3600 })
   ).toString('base64url');
   const token = `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.${payload}.sig`;
-  await callCoreRpc('openhuman.auth_store_session', { token });
-  await callCoreRpc('openhuman.config_set_onboarding_completed', { value: false });
+  await callCoreRpc('neppy.auth_store_session', { token });
+  await callCoreRpc('neppy.config_set_onboarding_completed', { value: false });
   await page.goto('/#/onboarding/welcome');
   await waitForAppReady(page);
   await waitForOnboardingRoute(page);
@@ -54,14 +54,14 @@ async function completeCloudOnboarding(page: Page): Promise<void> {
       () => false
     );
   if (!reachedHome) {
-    await callCoreRpc('openhuman.config_set_onboarding_completed', { value: true });
+    await callCoreRpc('neppy.config_set_onboarding_completed', { value: true });
     await page.goto('/#/home');
     await waitForAppReady(page);
   }
 }
 
 async function logoutViaSettings(page: Page): Promise<void> {
-  await callCoreRpc('openhuman.auth_clear_session', {});
+  await callCoreRpc('neppy.auth_clear_session', {});
   await page.goto('/#/');
   await expect(page.getByText('Welcome to Neppy')).toBeVisible();
 }
@@ -79,7 +79,7 @@ test.describe('Logout -> re-login onboarding overlay', () => {
     await completeCloudOnboarding(page);
     await logoutViaSettings(page);
 
-    await callCoreRpc('openhuman.config_set_onboarding_completed', { value: false });
+    await callCoreRpc('neppy.config_set_onboarding_completed', { value: false });
     await page.goto('/#/');
     await expect(page.getByText('Welcome to Neppy')).toBeVisible();
 

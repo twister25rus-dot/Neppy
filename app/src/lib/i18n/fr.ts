@@ -4444,7 +4444,7 @@ const messages: TranslationMap = {
     'Le premier lancement peut prendre 30 à 60 secondes pendant que nous préparons ton modèle local et tes outils. Tu peux accéder au chat à tout moment: la construction du profil continue en arrière-plan.',
   'onboarding.contextGathering.stillWorkingTitle': 'Construction de ton profil en cours…',
   'onboarding.contextGathering.title': 'Collecte de contexte',
-  'openhuman.team_list_teams': 'Liste des équipes',
+  'neppy.team_list_teams': 'Liste des équipes',
   'overlay.ariaAttention': "Message d'attention",
   'overlay.ariaOrb': 'Overlay Neppy',
   'overlay.ariaVoiceActive': 'Saisie vocale active',
@@ -5379,7 +5379,7 @@ const messages: TranslationMap = {
   'settings.agentAccess.timeout.invalid':
     'Saisissez un nombre entier de secondes dans la plage autorisée',
   'settings.agentAccess.timeout.envOverride':
-    "La variable d'environnement OPENHUMAN_TOOL_TIMEOUT_SECS remplace ce paramètre ; les modifications effectuées ici n'auront donc aucun effet tant qu'elle n'est pas supprimée.",
+    "La variable d'environnement NEPPY_TOOL_TIMEOUT_SECS remplace ce paramètre ; les modifications effectuées ici n'auront donc aucun effet tant qu'elle n'est pas supprimée.",
   'settings.agentAccess.grantedFolders': 'Dossiers accordés',
   'settings.agentAccess.alwaysAllow': 'Outils toujours autorisés',
   'settings.agentAccess.alwaysAllowDesc':
@@ -5406,7 +5406,7 @@ const messages: TranslationMap = {
   'settings.agentAccess.actionDir.cancel': 'Annuler',
   'settings.agentAccess.actionDir.placeholder': 'Chemin absolu, par ex. /Users/you/Projects',
   'settings.agentAccess.actionDir.envLocked':
-    'Défini par OPENHUMAN_ACTION_DIR. Modifiez la variable d’environnement pour le remplacer.',
+    'Défini par NEPPY_ACTION_DIR. Modifiez la variable d’environnement pour le remplacer.',
   'settings.agentAccess.actionDir.saved': 'Répertoire d’action mis à jour.',
   'settings.agentAccess.internalState': 'État interne',
   'settings.agentAccess.agentBlocked': "bloqué pour l'agent",
@@ -5420,9 +5420,9 @@ const messages: TranslationMap = {
   'settings.agentAccess.actionDirSaveError':
     "Impossible de mettre à jour le bac à sable d'actions.",
   'settings.agentAccess.actionDirEnvOverrideError':
-    "OPENHUMAN_ACTION_DIR est défini: désactivez la variable d'environnement pour modifier cela depuis les Paramètres.",
+    "NEPPY_ACTION_DIR est défini: désactivez la variable d'environnement pour modifier cela depuis les Paramètres.",
   'settings.agentAccess.actionDirEnvOverrideNote':
-    "Remplacé par OPENHUMAN_ACTION_DIR: désactivez la variable d'environnement pour gérer cela depuis les Paramètres.",
+    "Remplacé par NEPPY_ACTION_DIR: désactivez la variable d'environnement pour gérer cela depuis les Paramètres.",
   'settings.agentAccess.approvalHistory': 'Historique des approbations',
   'settings.agentAccess.approvalHistoryDesc':
     "Consultez les décisions Approuver / Refuser passées demandées par l'agent.",
@@ -6791,10 +6791,10 @@ const messages: TranslationMap = {
   // Security banner (approval-gate host-aware boot state)
   'security.approvalGateDisabled.title': "Porte d'approbation désactivée",
   'security.approvalGateDisabled.body':
-    "OPENHUMAN_APPROVAL_GATE=0 est défini dans votre environnement. Les outils à effet externe s'exécuteront sans demander de confirmation.",
+    "NEPPY_APPROVAL_GATE=0 est défini dans votre environnement. Les outils à effet externe s'exécuteront sans demander de confirmation.",
   'security.approvalGateOverrideIgnored.title': 'Contournement bloqué',
   'security.approvalGateOverrideIgnored.body':
-    "Un contournement OPENHUMAN_APPROVAL_GATE=0 a été détecté mais ignoré : l'application de bureau garde toujours la porte d'approbation activée.",
+    "Un contournement NEPPY_APPROVAL_GATE=0 a été détecté mais ignoré : l'application de bureau garde toujours la porte d'approbation activée.",
 
   // Run queue
   'runQueue.mode.interrupt': 'Interrompre',
@@ -7586,6 +7586,177 @@ const messages: TranslationMap = {
   'orchestrationRuns.showRuns': 'Afficher les exécutions',
   'orchestrationRuns.hideRuns': 'Masquer les exécutions',
   'orchestrationRuns.allRuns': "Toutes les exécutions d'agents",
+  'nav.debug': 'Débogage',
+  'debug.banner.title': 'MODE DÉBOGAGE',
+  'debug.banner.access': 'Accès développement activé',
+  'debug.banner.repo': 'Dépôt',
+  'debug.banner.branch': 'Branche',
+  'debug.banner.head': 'HEAD',
+  'debug.banner.dirty': 'Fichiers modifiés',
+  'debug.banner.detached': 'détaché',
+  'debug.banner.noCommits': 'aucun commit',
+  'debug.newTask': 'Nouvelle tâche de débogage',
+  'debug.loading': 'Ouverture du mode débogage…',
+  'debug.unavailable.title': 'Le mode débogage nécessite le dépôt source de Neppy',
+  'debug.unavailable.body':
+    "Le mode débogage travaille sur le code source de l'application elle-même, mais aucun dépôt n'a été trouvé. Définissez NEPPY_DEBUG_PROJECT_ROOT avec le chemin de votre copie de Neppy (le dossier qui contient .git), puis redémarrez l'application.",
+  'debug.unavailable.detail': 'Détails : {error}',
+  'debug.unavailable.retry': 'Réessayer',
+  'debug.createFailed': 'Impossible de démarrer la session de débogage.',
+  'debug.unknownError': 'Une erreur est survenue.',
+  'debug.lastTask.title': 'Dernière tâche',
+  'debug.lastTask.files': 'Fichiers modifiés : {count}',
+  'debug.lastTask.committed': 'Commité sous {sha}',
+  'debug.status.planning': 'Planification',
+  'debug.status.editing': 'Édition',
+  'debug.status.validating': 'Validation',
+  'debug.status.pass': 'Réussie',
+  'debug.status.partial': 'Partielle',
+  'debug.status.failed': 'Échouée',
+  'debug.status.rolled_back': 'Annulée',
+  'debug.action.commit': 'Commiter',
+  'debug.action.keep': 'Conserver',
+  'debug.action.rollback': 'Annuler les changements',
+  'debug.commit.title': 'Commiter les changements de la tâche',
+  'debug.commit.body':
+    "Seuls les {count} fichiers modifiés par cette tâche seront commités. Rien n'est poussé.",
+  'debug.commit.messageLabel': 'Message de commit',
+  'debug.commit.confirm': 'Commiter',
+  'debug.commit.working': 'Commit en cours…',
+  'debug.commit.error': 'Échec du commit : {error}',
+  'debug.commit.done': 'Commité sous {sha}.',
+  'debug.rollback.title': 'Annuler cette tâche ?',
+  'debug.rollback.body':
+    "Cela remet les fichiers dans l'état d'avant la tâche et supprime ceux qu'elle a créés. Un point de contrôle est d'abord enregistré, vous pourrez donc annuler cette opération.",
+  'debug.rollback.confirm': 'Annuler les changements',
+  'debug.rollback.done':
+    "Changements annulés. Un point de contrôle de l'état précédent a été enregistré.",
+  'debug.rollback.error': "Échec de l'annulation : {error}",
+  'debug.panels.loading': 'Chargement…',
+  'debug.panels.unknownError': 'Erreur inconnue',
+  'debug.panels.tabsLabel': 'Vues de débogage',
+  'debug.panels.tab.diff': 'Diff',
+  'debug.panels.tab.history': 'Historique',
+  'debug.panels.tab.checkpoints': 'Points de contrôle',
+  'debug.panels.diff.summary': 'Modifiés {modified} · Créés {created} · Supprimés {deleted}',
+  'debug.panels.diff.empty': 'Aucune modification dans l’arborescence de travail.',
+  'debug.panels.diff.error': 'Impossible de charger le diff : {error}',
+  'debug.panels.diff.truncated':
+    'Le diff est trop volumineux et a été tronqué. Seule une partie est affichée.',
+  'debug.panels.diff.untracked': 'Fichiers non suivis ({count})',
+  'debug.panels.diff.binary': 'Binaire',
+  'debug.panels.diff.binaryNote': 'Fichier binaire, aucun diff texte disponible.',
+  'debug.panels.diff.status.created': 'Nouveau',
+  'debug.panels.diff.status.deleted': 'Supprimé',
+  'debug.panels.diff.status.renamed': 'Renommé',
+  'debug.panels.history.status.pass': 'Réussi',
+  'debug.panels.history.status.failed': 'Échoué',
+  'debug.panels.history.status.partial': 'Partiel',
+  'debug.panels.history.status.rolled_back': 'Annulé',
+  'debug.panels.history.status.planning': 'Planification',
+  'debug.panels.history.status.editing': 'Édition',
+  'debug.panels.history.status.validating': 'Validation',
+  'debug.panels.history.empty': 'Aucune tâche de débogage pour le moment.',
+  'debug.panels.history.error': 'Impossible de charger l’historique des tâches : {error}',
+  'debug.panels.history.detailError': 'Impossible de charger les détails de la tâche : {error}',
+  'debug.panels.history.noSummary': 'Aucun résumé enregistré.',
+  'debug.panels.history.validation': 'Validation',
+  'debug.panels.history.noValidation': 'Aucune validation n’a été exécutée.',
+  'debug.panels.history.passed': 'réussi',
+  'debug.panels.history.failed': 'échoué',
+  'debug.panels.history.timedOut': 'délai dépassé',
+  'debug.panels.history.checkpoint': 'Point de contrôle',
+  'debug.panels.history.branch': 'Branche',
+  'debug.panels.history.commit': 'Commit',
+  'debug.panels.history.notCommitted': 'Non commité',
+  'debug.panels.history.none': 'Aucun',
+  'debug.panels.history.updated': 'Mis à jour',
+  'debug.panels.history.filesChanged': '{count} fichiers modifiés',
+  'debug.panels.history.viewDiff': 'Voir le diff',
+  'debug.panels.history.hideDiff': 'Masquer le diff',
+  'debug.panels.checkpoints.empty': 'Aucun point de contrôle pour le moment.',
+  'debug.panels.checkpoints.error': 'Impossible de charger les points de contrôle : {error}',
+  'debug.panels.checkpoints.rollback': 'Revenir à ce point',
+  'debug.panels.checkpoints.confirmTitle': 'Revenir à ce point de contrôle ?',
+  'debug.panels.checkpoints.confirm': 'Revenir en arrière',
+  'debug.panels.checkpoints.confirmBody':
+    'Vos fichiers seront restaurés au point de contrôle « {description} ». Neppy enregistre d’abord un point de contrôle de l’état actuel, vous pourrez donc annuler ce retour en arrière.',
+  'debug.panels.checkpoints.rollbackError': 'Échec du retour en arrière : {error}',
+  'debug.panels.checkpoints.rollbackDone': 'Retour en arrière terminé.',
+  'debug.panels.checkpoints.rollbackCounts':
+    '{restored} fichiers restaurés, {removed} fichiers supprimés.',
+  'debug.panels.checkpoints.preRollback': 'Point de contrôle avant retour enregistré : {id}',
+  'debug.panels.toggle': 'Diff, historique et points de contrôle',
+  'settings.debugMode.title': 'Mode débogage',
+  'settings.debugMode.menuDesc':
+    "Définit ce que l'agent du mode débogage peut faire sur le code source de cette application.",
+  'settings.debugMode.bannerLink': 'Réglages du mode débogage',
+  'settings.debugMode.loading': 'Chargement des réglages du mode débogage...',
+  'settings.debugMode.loadError': 'Impossible de charger les réglages du mode débogage.',
+  'settings.debugMode.saveError': "Impossible d'enregistrer la modification.",
+  'settings.debugMode.saving': 'Enregistrement...',
+  'settings.debugMode.saved': 'Enregistré',
+  'settings.debugMode.retry': 'Réessayer',
+  'settings.debugMode.alwaysOn': 'Toujours actif',
+  'settings.debugMode.enabled.label': 'Activer le mode débogage',
+  'settings.debugMode.enabled.desc':
+    "Permet à l'agent de travailler sur le dépôt de code source de l'application depuis la page de débogage.",
+  'settings.debugMode.projectRoot.label': 'Racine du projet',
+  'settings.debugMode.projectRoot.desc':
+    'Le dépôt dans lequel travaille le mode débogage. Laissez vide pour le détecter automatiquement.',
+  'settings.debugMode.projectRoot.placeholder': 'Détecté automatiquement',
+  'settings.debugMode.projectRoot.useDefault': 'Utiliser la valeur par défaut',
+  'settings.debugMode.allowed.title': 'Autorisé',
+  'settings.debugMode.allowed.desc':
+    "En mode débogage, l'agent peut toujours faire ceci. Impossible de le désactiver.",
+  'settings.debugMode.allowed.readFiles': 'Lire les fichiers du projet',
+  'settings.debugMode.allowed.modifyFiles': 'Modifier les fichiers du projet',
+  'settings.debugMode.allowed.runTests': 'Exécuter les tests',
+  'settings.debugMode.allowed.runBuilds': 'Exécuter les commandes de build',
+  'settings.debugMode.autoCheckpoint.label': 'Point de contrôle avant les modifications',
+  'settings.debugMode.autoCheckpoint.desc':
+    "Enregistre un instantané restaurable avant que l'agent ne modifie quoi que ce soit.",
+  'settings.debugMode.autoRepair.label': 'Réparer automatiquement',
+  'settings.debugMode.autoRepair.desc':
+    "Laisse l'agent corriger seul les tests ou builds en échec.",
+  'settings.debugMode.maxRepairs.label': 'Nombre maximal de tentatives de réparation',
+  'settings.debugMode.maxRepairs.desc':
+    "Combien de cycles de correction et de nouvel essai l'agent peut effectuer avant de s'arrêter.",
+  'settings.debugMode.maxRepairs.unit': 'tentatives',
+  'settings.debugMode.runTests.label': 'Lancer les tests après les modifications',
+  'settings.debugMode.runTests.desc':
+    'Exécute les tests du projet après chaque série de modifications.',
+  'settings.debugMode.runBuild.label': 'Lancer le build après les modifications',
+  'settings.debugMode.runBuild.desc':
+    'Exécute le build du projet après chaque série de modifications.',
+  'settings.debugMode.gitCommit.label': 'Autoriser les commits Git',
+  'settings.debugMode.gitCommit.desc':
+    "Permet à l'agent de valider les fichiers qu'il a modifiés. Ne pousse jamais.",
+  'settings.debugMode.dangerous.title': 'Capacités dangereuses',
+  'settings.debugMode.dangerous.desc':
+    'Désactivées par défaut. Ne les activez que si vous faites confiance à la tâche.',
+  'settings.debugMode.depInstall.label': 'Installer des dépendances',
+  'settings.debugMode.depInstall.desc':
+    "Permet à l'agent d'ajouter des paquets et de mettre à jour les lockfiles.",
+  'settings.debugMode.externalFs.label': 'Accéder aux dossiers en dehors du projet',
+  'settings.debugMode.externalFs.desc':
+    "Permet à l'agent de lire et d'écrire dans les dossiers listés ci-dessous.",
+  'settings.debugMode.externalPaths.none': 'Aucun dossier externe ajouté.',
+  'settings.debugMode.externalPaths.placeholder': 'Chemin absolu, p. ex. /Users/moi/partage',
+  'settings.debugMode.externalPaths.add': 'Ajouter',
+  'settings.debugMode.externalPaths.remove': 'Retirer',
+  'settings.debugMode.externalPaths.invalid': 'Saisissez un chemin absolu.',
+  'settings.debugMode.systemCommands.label': 'Exécuter des commandes système',
+  'settings.debugMode.systemCommands.desc':
+    "Permet à l'agent d'exécuter des commandes autres que les scripts propres au projet.",
+  'settings.debugMode.gitPush.label': 'Pousser les changements Git',
+  'settings.debugMode.gitPush.desc':
+    "Permet à l'agent de pousser des commits vers un dépôt distant. À vérifier avant d'activer.",
+  'settings.debugMode.confirmDangerous.label': 'Confirmer les commandes dangereuses',
+  'settings.debugMode.confirmDangerous.desc':
+    "Demande votre accord avant que l'agent n'exécute une commande risquée.",
+  'settings.debugMode.confirmDangerous.warning':
+    "La confirmation est désactivée. L'agent peut exécuter des commandes risquées sans vous demander.",
 };
 
 export default messages;

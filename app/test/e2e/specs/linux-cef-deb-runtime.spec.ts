@@ -289,7 +289,7 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
     it('core process logs contain expected diagnostic patterns', async () => {
       // This test documents the expected log patterns from PR #3:
       // - "[core] default_core_bin: using packaged linux core binary"
-      // - "[core] default_core_bin: using OPENHUMAN_CORE_BIN override"
+      // - "[core] default_core_bin: using NEPPY_CORE_BIN override"
       // - "[tray] skipping tray setup on linux+cef"
       // - "[core] core process ready"
 
@@ -308,8 +308,8 @@ describe('Linux CEF deb package runtime (UI → Tauri → sidecar)', () => {
   // ==========================================================================
 
   describe('packaged linux binary path resolution', () => {
-    it('sidecar is running with non-default port when OPENHUMAN_CORE_PORT is set', async () => {
-      // When OPENHUMAN_CORE_PORT is set, the sidecar should use that port
+    it('sidecar is running with non-default port when NEPPY_CORE_PORT is set', async () => {
+      // When NEPPY_CORE_PORT is set, the sidecar should use that port
       // This verifies env var propagation to the sidecar
 
       const result = await invokeTauriCommand<string>('core_rpc_url');

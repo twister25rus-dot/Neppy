@@ -227,7 +227,7 @@ Before a fresh tool result enters history (and ahead of the byte-budget backstop
 - **HTML** → strip markup to readable text.
 - **Plain text** → the opt-in Python/ML "Kompress" compressor (ModernBERT), or pass-through.
 
-Every lossy compression offloads the original to the **CCR (Compress-Cache-Retrieve)** store behind a `⟦tj:<hash>⟧` marker, so compaction is effectively lossless: the agent calls `tokenjuice_retrieve` (token + optional byte/line range) to fetch the full original on demand. The same engine is exposed as a universal `compress_content(content, hint, opts)` for any large payload (file reads, web fetches), and as read-only `tokenjuice.*` debug RPCs. Configured via the `[tokenjuice]` block / `OPENHUMAN_TOKENJUICE_*` env. Agent definitions can override tool-result compression with `tokenjuice_compression = "auto" | "full" | "light" | "off"`; `auto` resolves coding-model agents (`[model] hint = "coding"`) to `light`, which disables CCR-backed lossy compression so coding agents keep raw build/test/diff/search text unless a reduction is truly lossless. Other agents default to `full`. The ML (Kompress) path runs as a `kompress` backend of the shared [`runtime_python_server`](../../../src/neppy/runtime/python_server/) (torch + ModernBERT pip-installed at runtime), gated by the `ml_compression_enabled` flag and degrading gracefully to a native compressor when the Python runtime is unavailable.
+Every lossy compression offloads the original to the **CCR (Compress-Cache-Retrieve)** store behind a `⟦tj:<hash>⟧` marker, so compaction is effectively lossless: the agent calls `tokenjuice_retrieve` (token + optional byte/line range) to fetch the full original on demand. The same engine is exposed as a universal `compress_content(content, hint, opts)` for any large payload (file reads, web fetches), and as read-only `tokenjuice.*` debug RPCs. Configured via the `[tokenjuice]` block / `NEPPY_TOKENJUICE_*` env. Agent definitions can override tool-result compression with `tokenjuice_compression = "auto" | "full" | "light" | "off"`; `auto` resolves coding-model agents (`[model] hint = "coding"`) to `light`, which disables CCR-backed lossy compression so coding agents keep raw build/test/diff/search text unless a reduction is truly lossless. Other agents default to `full`. The ML (Kompress) path runs as a `kompress` backend of the shared [`runtime_python_server`](../../../src/neppy/runtime/python_server/) (torch + ModernBERT pip-installed at runtime), gated by the `ml_compression_enabled` flag and degrading gracefully to a native compressor when the Python runtime is unavailable.
 
 ### The `tool_maker` archetype
 
@@ -267,7 +267,7 @@ Each archetype lives under `agents/<name>/` with an `agent.toml` (metadata, tool
 | `morning_briefing`   | Curated daily digest run by cron.                                                        |
 | `welcome` / `help`   | Onboarding flows.                                                                        |
 
-Custom archetypes ship as TOML files under `$OPENHUMAN_WORKSPACE/agents/*.toml` (or `~/.neppy/agents/*.toml` for user-global specialists). Custom definitions override built-ins on id collision.
+Custom archetypes ship as TOML files under `$NEPPY_WORKSPACE/agents/*.toml` (or `~/.neppy/agents/*.toml` for user-global specialists). Custom definitions override built-ins on id collision.
 
 ### Running a reusable sub-agent
 
@@ -344,7 +344,7 @@ The domain lives in [`src/neppy/flows/rhai/`](../../../src/neppy/flows/rhai/READ
 - **`sessions.rs`** is a bounded (LRU + idle-TTL) manager of persistent sessions, one cell at a time (a concurrent call on a busy session returns a typed "busy" error).
 - **`ops.rs`** runs the cell on `spawn_blocking` under a layered time bound (rhai `on_progress` deadline → `bridge_block_on` timer race → outer `tokio::timeout` backstop → harness `ToolTimeout`), wires the run-cancellation token to a fresh per-cell `ReplCancelFlag`, and maps every failure mode to a model-consumable result.
 
-The tool is registered for the orchestrator on `supervised`/`full` tiers only, behind the `OPENHUMAN_RHAI_WORKFLOWS=0` kill switch; `OPENHUMAN_RHAI=0` and `OPENHUMAN_RLM=0` remain legacy aliases. The TinyAgents-side host-embedding support (external cancellation, live capability events) landed in that crate's `repl` feature.
+The tool is registered for the orchestrator on `supervised`/`full` tiers only, behind the `NEPPY_RHAI_WORKFLOWS=0` kill switch; `NEPPY_RHAI=0` and `NEPPY_RLM=0` remain legacy aliases. The TinyAgents-side host-embedding support (external cancellation, live capability events) landed in that crate's `repl` feature.
 
 ## Triage - handling external triggers
 
@@ -373,7 +373,7 @@ Stop hooks fire **between** iterations of the tool-call loop. They're the policy
 
 - **Budget stop hook** - caps cumulative turn cost in USD using the per-iteration cost accumulator.
 - **Max-iterations stop hook** - caps iteration count from outside the agent's persistent config.
-- **Action budget policy** - `SecurityPolicy` enforces `config.autonomy.max_actions_per_hour` for side-effecting tool operations. Users can tune it in Settings -> Advanced -> Agent autonomy, or operators can override it with `OPENHUMAN_MAX_ACTIONS_PER_HOUR`.
+- **Action budget policy** - `SecurityPolicy` enforces `config.autonomy.max_actions_per_hour` for side-effecting tool operations. Users can tune it in Settings -> Advanced -> Agent autonomy, or operators can override it with `NEPPY_MAX_ACTIONS_PER_HOUR`.
 
 A hook returning `Stop` aborts the loop with a clear reason the caller can surface to the user. Stop hooks are distinct from interrupts (next section): they're policy-driven, not user-driven.
 
@@ -481,7 +481,7 @@ StateGraph::new(name)
 | `summarization/` | Node-boundary wrapper over `context::summarize_chat_history`.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `memory/`        | Pre-node wrapper over `DefaultMemoryLoader::load_context`.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `definitions/`   | Built-in graphs over a shared `ProductState`: `canonical_turn` (the agent turn as a `dispatch → parse → stop_check → tools → compact → loop / finalize` graph) and `plan_execute_review` (composes the `planner` + `code_executor` archetypes around a HITL review gate), plus a deterministic `demo_review` twin for tests. A registry (`list_definitions`/`build_definition`) + `runner` (`run_graph`/`resume_graph`) persist runs to the checkpointer and emit bus events.                                 |
-| `blueprint/`     | The per-agent chain type. Every built-in agent declares its LangGraph-compatible chain in a `graph.rs` next to `prompt.rs` (`pub fn graph() -> GraphBlueprint`), wired into `BuiltinAgent.graph_fn`. `GraphBlueprint` is serializable (typed `NodeKind`/`EdgeSpec`), structurally validated, and `compile()`s to a real `CompiledGraph`. Reusable shapes: `canonical_turn` (most agents), `single_shot`, `orchestrator`, `plan_execute_review`. Inspect via `openhuman.agent_graph_{agent_list,agent_graph}`. |
+| `blueprint/`     | The per-agent chain type. Every built-in agent declares its LangGraph-compatible chain in a `graph.rs` next to `prompt.rs` (`pub fn graph() -> GraphBlueprint`), wired into `BuiltinAgent.graph_fn`. `GraphBlueprint` is serializable (typed `NodeKind`/`EdgeSpec`), structurally validated, and `compile()`s to a real `CompiledGraph`. Reusable shapes: `canonical_turn` (most agents), `single_shot`, `orchestrator`, `plan_execute_review`. Inspect via `neppy.agent_graph_{agent_list,agent_graph}`. |
 
 ### Per-agent graphs (`graph.rs`)
 
@@ -491,9 +491,9 @@ Each agent folder under `src/neppy/agent/registry/agents/<name>/` (and the four 
 
 Most agents reuse `blueprint::canonical_turn(id)` (the standard tool-calling loop); one-pass agents use `single_shot`, the orchestrator uses the delegation chain, and the planner uses `plan_execute_review`.
 
-**RPC surface** (`schemas.rs` + `ops.rs`, registered in `src/core/all.rs`): `openhuman.agent_graph_definition_list`, `_run`, `_run_list`, `_run_get`, `_checkpoint_list`, `_resume`.
+**RPC surface** (`schemas.rs` + `ops.rs`, registered in `src/core/all.rs`): `neppy.agent_graph_definition_list`, `_run`, `_run_list`, `_run_get`, `_checkpoint_list`, `_resume`.
 
-> **Status (issue #4249, superseded by the published `tinyagents` crate):** the in-house `agent_graph` engine described in this section **no longer exists**. openhuman's agent engine + orchestration now run on the published [`tinyagents`](https://crates.io/crates/tinyagents) **2.1** crate (the same LangGraph-style harness + durable graph runtime), via the adapter seam in `src/neppy/agent/tinyagents/`. The sections above are retained as design history; the subsection below describes the live architecture.
+> **Status (issue #4249, superseded by the published `tinyagents` crate):** the in-house `agent_graph` engine described in this section **no longer exists**. neppy's agent engine + orchestration now run on the published [`tinyagents`](https://crates.io/crates/tinyagents) **2.1** crate (the same LangGraph-style harness + durable graph runtime), via the adapter seam in `src/neppy/agent/tinyagents/`. The sections above are retained as design history; the subsection below describes the live architecture.
 
 ## Agent engine + orchestration on tinyagents (live)
 
@@ -505,7 +505,7 @@ Every agent turn (chat via `harness/session/turn/core.rs`, channel/CLI via `harn
 | `mod.rs` / `model.rs` / `tools.rs` / `convert.rs` | `RunPolicy` / `ChatModel` / `Tool` / message adapters (incl. unknown-tool policy and out-of-band reasoning forwarding).                                                                                                                                                        |
 | `observability.rs`                                | Harness `AgentEvent` → `AgentProgress` + cost; `GraphTracingSink` for graph events.                                                                                                                                                                                            |
 | `orchestration.rs`                                | Re-exported `graph::orchestration` task-store types; map-reduce fanout now uses the TinyAgents SDK surface directly.                                                                                                                                                           |
-| `checkpoint.rs`                                   | `SqlRunLedgerCheckpointer`: a `Checkpointer` over openhuman's SQLite (`graph_checkpoints` table). TinyAgents 2.1 ships `SqliteCheckpointer`; Neppy keeps this adapter until existing checkpoint rows are migrated or expired and schema ownership is settled.              |
+| `checkpoint.rs`                                   | `SqlRunLedgerCheckpointer`: a `Checkpointer` over neppy's SQLite (`graph_checkpoints` table). TinyAgents 2.1 ships `SqliteCheckpointer`; Neppy keeps this adapter until existing checkpoint rows are migrated or expired and schema ownership is settled.              |
 | `delegation.rs`                                   | The durable `plan → execute ⇄ review → finalize` delegation graph (production worker wired in `agent_orchestration::delegation`).                                                                                                                                              |
 
 **Orchestration on graphs** (`src/neppy/agent/orchestration/`):
@@ -517,8 +517,8 @@ Every agent turn (chat via `harness/session/turn/core.rs`, channel/CLI via `harn
 
 **Deliberately kept off the crate's primitives** (documented engineering decisions, not gaps):
 
-- **Sub-agent build pipeline** (`subagent_runner/`) stays openhuman-owned: definition resolution, archetype tool filtering, provider resolution, narrow prompt building, memory context, worker-thread mirror, handoff cache, checkpoint/resume. Sub-agents already _execute_ on the harness; the crate's generic `SubAgentTool` would discard this pipeline for marginal crate-native depth tracking (openhuman's `spawn_depth_context` already bounds recursion).
-- **Durable run ledgers** (`workflow_runs`, `agent_teams`, `command_center`, `subagent_sessions`) stay on openhuman SQLite/JSON until their controller projections and restart semantics are mapped onto TinyAgents task/status/journal records. The `agent_teams` race-safe SQL compare-and-swap task claim remains Neppy-owned.
+- **Sub-agent build pipeline** (`subagent_runner/`) stays neppy-owned: definition resolution, archetype tool filtering, provider resolution, narrow prompt building, memory context, worker-thread mirror, handoff cache, checkpoint/resume. Sub-agents already _execute_ on the harness; the crate's generic `SubAgentTool` would discard this pipeline for marginal crate-native depth tracking (neppy's `spawn_depth_context` already bounds recursion).
+- **Durable run ledgers** (`workflow_runs`, `agent_teams`, `command_center`, `subagent_sessions`) stay on neppy SQLite/JSON until their controller projections and restart semantics are mapped onto TinyAgents task/status/journal records. The `agent_teams` race-safe SQL compare-and-swap task claim remains Neppy-owned.
 
 > **Note:** TinyAgents 2.1 ships harness store/cache/session primitives (`harness::store` with JSONL append stores, `harness::cache`, `harness::subagent`, lineage-aware status), graph task stores, the detached runtime registry, and conformance contracts. The session shell and product-specific sub-agent build/delivery pipeline remain Neppy-owned.
 

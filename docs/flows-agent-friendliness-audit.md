@@ -13,7 +13,7 @@ creating, editing, saving, testing, and debugging automations — across the Rus
 - A flow is a typed JSON node graph (`tinyflows::model::WorkflowGraph` — nodes, edges, 12
   `NodeKind`s, jq `=`-expressions for bindings), persisted in SQLite
   (`{workspace}/flows/flows.db`, `flow_definitions.graph_json`).
-- 21 RPC controllers under `openhuman.flows_*` (`src/neppy/flows/schemas.rs`).
+- 21 RPC controllers under `neppy.flows_*` (`src/neppy/flows/schemas.rs`).
 - Agent surface: `propose_workflow` / `revise_workflow` (validate-only, never persist),
   `save_workflow` (update existing flows only), `dry_run_workflow` (mock capabilities),
   `run_flow` (saved flows, real effects), plus read tools (`list_flows`, `get_flow`,

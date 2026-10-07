@@ -20,7 +20,7 @@ Opt-in **Model Context Protocol (MCP) server** that exposes a curated, security-
 | `src/neppy/mcp/server/mod.rs` | Module docstring + private submodule decls; re-exports `run_http`/`HttpServerConfig`, `run_stdio_from_cli`, `tool_specs`/`McpToolSpec`. |
 | `src/neppy/mcp/server/protocol.rs` | JSON-RPC 2.0 dispatch core: parses lines/values (single + batch), routes `initialize`/`ping`/`tools/*`/`resources/*`, builds success/error envelopes, negotiates protocol version. |
 | `src/neppy/mcp/server/tools.rs` | Tool catalog (`tool_specs`, `base_tool_specs`, `searxng_tool_spec`), input schemas, argument validation, `call_tool` dispatch, read/act policy enforcement, subagent execution, slug/key helpers. |
-| `src/neppy/mcp/server/write_dispatch.rs` | Write/audit pipeline for `memory.store`/`memory.note`/`tree.tag`: config load, act-policy enforcement, RPC dispatch to `openhuman.memory_doc_put`, audit-record write (success/rejection), PII-redacting arg summaries. |
+| `src/neppy/mcp/server/write_dispatch.rs` | Write/audit pipeline for `memory.store`/`memory.note`/`tree.tag`: config load, act-policy enforcement, RPC dispatch to `neppy.memory_doc_put`, audit-record write (success/rejection), PII-redacting arg summaries. |
 | `src/neppy/mcp/server/resources.rs` | Static `RESOURCE_CATALOG` of compile-time-embedded (`include_str!`) prompt markdown; `resources/list`, `resources/templates/list` (always empty), `resources/read`. Test cross-checks catalog vs `agent::agents::BUILTINS`. |
 | `src/neppy/mcp/server/session.rs` | `McpSession` — captures + normalizes client name from `initialize` into a `source_type`; first observation locks the value. |
 | `src/neppy/mcp/server/http.rs` | Axum Streamable HTTP + SSE transport (`run_http`, `HttpServerConfig`): POST/GET/DELETE on `/`, session map, protocol-version checks, optional `Authorization: Bearer`, SSE keep-alive, session-id redaction. |
@@ -37,18 +37,18 @@ Re-exported from `mod.rs`:
 
 ## RPC / controllers
 
-This module exposes **no** registered core RPC methods (no `schemas.rs`, no controllers, no `openhuman.mcp_server_*` namespace). It is the **client/server-of-MCP**, not an RPC domain. Instead it *consumes* existing registered RPC methods, mapping each MCP tool to one via `all::try_invoke_registered_rpc` after validating against `all::schema_for_rpc_method`:
+This module exposes **no** registered core RPC methods (no `schemas.rs`, no controllers, no `neppy.mcp_server_*` namespace). It is the **client/server-of-MCP**, not an RPC domain. Instead it *consumes* existing registered RPC methods, mapping each MCP tool to one via `all::try_invoke_registered_rpc` after validating against `all::schema_for_rpc_method`:
 
 | MCP tool | Mapped core RPC method |
 | --- | --- |
-| `memory.search` | `openhuman.memory_tree_search` |
-| `memory.recall` | `openhuman.memory_tree_recall` |
-| `tree.read_chunk` | `openhuman.memory_tree_get_chunk` |
-| `tree.browse` | `openhuman.memory_tree_list_chunks` |
-| `tree.top_entities` | `openhuman.memory_tree_top_entities` |
-| `tree.list_sources` | `openhuman.memory_tree_list_sources` |
-| `memory.store` / `memory.note` / `tree.tag` | `openhuman.memory_doc_put` |
-| `searxng_search` | `openhuman.tools_searxng_search` |
+| `memory.search` | `neppy.memory_tree_search` |
+| `memory.recall` | `neppy.memory_tree_recall` |
+| `tree.read_chunk` | `neppy.memory_tree_get_chunk` |
+| `tree.browse` | `neppy.memory_tree_list_chunks` |
+| `tree.top_entities` | `neppy.memory_tree_top_entities` |
+| `tree.list_sources` | `neppy.memory_tree_list_sources` |
+| `memory.store` / `memory.note` / `tree.tag` | `neppy.memory_doc_put` |
+| `searxng_search` | `neppy.tools_searxng_search` |
 | `core.list_tools` / `core.tool_instructions` / `agent.list_subagents` / `agent.run_subagent` | (no RPC mapping — handled in-process via `Agent` / `AgentDefinitionRegistry`) |
 
 ## Agent tools

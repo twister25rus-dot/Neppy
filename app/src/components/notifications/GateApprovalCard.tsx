@@ -10,8 +10,8 @@
  *
  * Distinct from the older `FlowApprovalCard` (`flow-pending-approval:`-id
  * notifications, issue B3a): that card resumes the run via
- * `openhuman.flows_resume` naming specific node ids. This one decides a
- * single gate via the shared `openhuman.approval_decide` RPC — the same
+ * `neppy.flows_resume` naming specific node ids. This one decides a
+ * single gate via the shared `neppy.approval_decide` RPC — the same
  * decision vocabulary as the chat `ApprovalRequestCard` and the flow-run
  * inspector's actionable cards (Approve once / Approve always / Deny).
  *

@@ -17,7 +17,7 @@ fn cli_model_and_provider_flags_override_the_loaded_session_without_persisting()
             "inference",
             "get_client_config",
         ])
-        .env("OPENHUMAN_WORKSPACE", workspace.path())
+        .env("NEPPY_WORKSPACE", workspace.path())
         .output()
         .expect("run Neppy CLI");
 
@@ -59,7 +59,7 @@ fn a_mutating_cli_command_does_not_persist_launch_overrides() {
     let workspace = tempfile::tempdir().expect("temporary Neppy workspace");
     let initialize = Command::new(env!("CARGO_BIN_EXE_neppy-core"))
         .args(["--no-tui", "config", "get"])
-        .env("OPENHUMAN_WORKSPACE", workspace.path())
+        .env("NEPPY_WORKSPACE", workspace.path())
         .output()
         .expect("initialize Neppy config");
     assert!(initialize.status.success());
@@ -78,7 +78,7 @@ fn a_mutating_cli_command_does_not_persist_launch_overrides() {
             "--value",
             "true",
         ])
-        .env("OPENHUMAN_WORKSPACE", workspace.path())
+        .env("NEPPY_WORKSPACE", workspace.path())
         .output()
         .expect("run mutating Neppy command");
     assert!(

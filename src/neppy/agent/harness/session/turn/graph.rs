@@ -68,7 +68,7 @@ pub(crate) struct ChatTurnGraph {
     pub context_window: Option<u64>,
     /// Session run queue for mid-flight steering.
     pub run_queue: Option<Arc<RunQueue>>,
-    /// openhuman context middlewares (cache-align, microcompact, tool-output
+    /// neppy context middlewares (cache-align, microcompact, tool-output
     /// budget + payload summarizer) sourced from the session's `ContextManager`.
     pub context_mw: TurnContextMiddleware,
     /// The agent's builder-configured tool policy + session context, enforced at

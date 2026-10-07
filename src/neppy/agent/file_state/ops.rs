@@ -15,7 +15,7 @@ static GLOBAL: OnceLock<Arc<FileStateCoordinator>> = OnceLock::new();
 fn is_disabled() -> bool {
     static DISABLED: OnceLock<bool> = OnceLock::new();
     *DISABLED.get_or_init(|| {
-        std::env::var("OPENHUMAN_FILE_STATE_GUARD")
+        crate::neppy::util::env::var("NEPPY_FILE_STATE_GUARD")
             .map(|v| matches!(v.as_str(), "0" | "false" | "off" | "no"))
             .unwrap_or(false)
     })
@@ -25,7 +25,7 @@ fn is_disabled() -> bool {
 /// only the first call wins.
 pub fn init_global() {
     if is_disabled() {
-        tracing::debug!("[file_state] guard disabled via OPENHUMAN_FILE_STATE_GUARD");
+        tracing::debug!("[file_state] guard disabled via NEPPY_FILE_STATE_GUARD");
         return;
     }
     let _ = GLOBAL.set(Arc::new(FileStateCoordinator::new()));

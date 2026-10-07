@@ -16,12 +16,12 @@ pub(crate) fn lm_studio_base_url(config: &Config) -> String {
 pub(crate) fn lm_studio_base_url_from_local_ai(local_ai: &LocalAiConfig) -> String {
     for (source, candidate) in [
         (
-            "OPENHUMAN_LM_STUDIO_BASE_URL",
-            std::env::var("OPENHUMAN_LM_STUDIO_BASE_URL").ok(),
+            "NEPPY_LM_STUDIO_BASE_URL",
+            crate::neppy::util::env::var("NEPPY_LM_STUDIO_BASE_URL").ok(),
         ),
         (
             "LM_STUDIO_BASE_URL",
-            std::env::var("LM_STUDIO_BASE_URL").ok(),
+            crate::neppy::util::env::var("LM_STUDIO_BASE_URL").ok(),
         ),
         ("config.local_ai.base_url", local_ai.base_url.clone()),
     ] {

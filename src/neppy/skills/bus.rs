@@ -242,7 +242,7 @@ static TRIGGERED_WORKFLOW_HANDLE: OnceLock<Option<SubscriptionHandle>> = OnceLoc
 /// [`crate::core::jsonrpc::bootstrap_core_runtime`] (always-run serve boot)
 /// invoke this. `start_channels` is skipped for web-chat-only desktop installs
 /// (no messaging integration connected) and when
-/// `OPENHUMAN_DISABLE_CHANNEL_LISTENERS=1`; registering from
+/// `NEPPY_DISABLE_CHANNEL_LISTENERS=1`; registering from
 /// `bootstrap_core_runtime` too means those cores still honour workflow
 /// `triggers:`. The shared `OnceLock` guarantees a single registration
 /// regardless of which path runs first.

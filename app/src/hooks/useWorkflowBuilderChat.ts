@@ -3,14 +3,14 @@
  * running the `workflow_builder` agent server-side. It owns a DEDICATED thread
  * (created lazily on first send) so an authoring conversation never collides
  * with the user's main chat, sends a STRUCTURED turn request to
- * `openhuman.flows_build` (which renders the brief and runs the agent), and
+ * `neppy.flows_build` (which renders the brief and runs the agent), and
  * surfaces the returned `WorkflowProposal` on this thread.
  *
  * The builder is now a first-class backend agent (like the Flow Scout): the core
  * constructs the prompt and drives the agent to completion. Phase B streams that
  * turn onto the copilot's dedicated thread (text / thinking / tool events +
  * a terminal `chat_done`), so this hook passes its `threadId` into
- * `openhuman.flows_build` and lets the GLOBAL `ChatRuntimeProvider` own the
+ * `neppy.flows_build` and lets the GLOBAL `ChatRuntimeProvider` own the
  * transcript: the provider appends the final assistant message on `chat_done`
  * and populates `streamingAssistantByThread` / `toolTimelineByThread` /
  * `pendingWorkflowProposalsByThread` for this thread as the turn runs. This hook
@@ -62,7 +62,7 @@ interface WorkflowBuilderSendParams {
   displayText: string;
   /**
    * The structured builder-turn request. The core renders the agent's brief
-   * from this and runs `workflow_builder` directly (via `openhuman.flows_build`)
+   * from this and runs `workflow_builder` directly (via `neppy.flows_build`)
    * — the frontend no longer crafts delegate prompt strings.
    */
   request: BuilderTurnRequest;

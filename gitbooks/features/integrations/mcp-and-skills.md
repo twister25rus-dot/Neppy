@@ -33,7 +33,7 @@ Neppy can run the other way around, too. `neppy-core mcp` exposes Neppy over std
 
 **Skills** are a large, browsable catalog of agent skills (`SKILL.md`-style capability bundles) aggregated from multiple upstream sources (HermesHub, ClawHub, LobeHub, and more).
 
-- **One aggregated catalog.** Sourced from HermesHub (configurable via `OPENHUMAN_SKILL_REGISTRY_CATALOG_URL`), the catalog runs to roughly **90,000 entries**. Each entry carries id, name, description, source, author, version, tags, platforms, a download URL, and license.
+- **One aggregated catalog.** Sourced from HermesHub (configurable via `NEPPY_SKILL_REGISTRY_CATALOG_URL`), the catalog runs to roughly **90,000 entries**. Each entry carries id, name, description, source, author, version, tags, platforms, a download URL, and license.
 - **Cached and fast.** The catalog is fetched on boot in the background (without blocking startup), cached locally at `~/.neppy/skill-registry/cache.json` with a ~1-hour TTL and served stale-while-revalidate. A single-flight gate prevents duplicate downloads of the large catalog.
 - **Metadata-first.** Neppy's in-app skills runtime (the old QuickJS sandbox) has been **removed**. Skills are now a metadata catalog you browse and install from the **Connections → Skills** tab, not code executing inside the app. Availability varies per entry: some expose a direct `SKILL.md` download, others point to external hosting.
 

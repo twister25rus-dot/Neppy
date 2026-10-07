@@ -3,7 +3,7 @@
 //!
 //! Everything stays local: temp workspaces plus a loopback backend that
 //! returns Composio execute envelopes. Run single-threaded because HOME,
-//! OPENHUMAN_WORKSPACE, and config loading are process globals.
+//! NEPPY_WORKSPACE, and config loading are process globals.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -67,7 +67,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: impl Into<String>) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value.into()) };
         Self { key, old }
     }
@@ -77,8 +77,8 @@ impl EnvGuard {
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -87,7 +87,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -291,12 +291,12 @@ async fn configured_loopback_context(
 async fn slack_full_sync_search_backfill_and_bus_use_loopback_composio() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
-    let _triage_off = EnvGuard::set("OPENHUMAN_TRIGGER_TRIAGE_DISABLED", "1");
-    let _pacing = EnvGuard::set("OPENHUMAN_SLACK_INTER_CALL_PACING_MS", "0");
-    let _backfill = EnvGuard::set("OPENHUMAN_SLACK_BACKFILL_DAYS", "1");
+    let _triage_off = EnvGuard::set("NEPPY_TRIGGER_TRIAGE_DISABLED", "1");
+    let _pacing = EnvGuard::set("NEPPY_SLACK_INTER_CALL_PACING_MS", "0");
+    let _backfill = EnvGuard::set("NEPPY_SLACK_BACKFILL_DAYS", "1");
 
     let requests: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
     let (_config, ctx, server) = configured_loopback_context(&tmp, Arc::clone(&requests)).await;

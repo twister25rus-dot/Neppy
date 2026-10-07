@@ -29,7 +29,7 @@ describe('voiceInstallApi', () => {
       );
       const result = await installPiper({ voiceId: 'en_US-lessac-medium', force: false });
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.inference_install_piper',
+        method: 'neppy.inference_install_piper',
         params: { voice_id: 'en_US-lessac-medium', force: false },
       });
       expect(result.state).toBe('installing');
@@ -41,7 +41,7 @@ describe('voiceInstallApi', () => {
       vi.mocked(callCoreRpc).mockResolvedValueOnce(buildStatus({ engine: 'piper' }));
       await installPiper();
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.inference_install_piper',
+        method: 'neppy.inference_install_piper',
         params: { voice_id: undefined, force: undefined },
       });
     });
@@ -55,7 +55,7 @@ describe('voiceInstallApi', () => {
       );
       const result = await piperInstallStatus();
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.inference_piper_install_status',
+        method: 'neppy.inference_piper_install_status',
         params: {},
       });
       expect(result.state).toBe('error');

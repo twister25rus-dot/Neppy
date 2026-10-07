@@ -116,6 +116,9 @@ impl FileReadTool {
 
         match tokio::fs::read_to_string(&resolved_path).await {
             Ok(contents) => {
+                let mask_secret = crate::neppy::agent::debug_mode::turn::current().is_some()
+                    && crate::neppy::agent::debug_mode::secrets::is_secret_path(&resolved_path);
+                let resolved_path_for_mask = resolved_path.clone();
                 if let Some(agent_id) = file_state::current_file_state_agent_id() {
                     let mtime = tokio::fs::metadata(&resolved_path)
                         .await
@@ -124,6 +127,17 @@ impl FileReadTool {
                         .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
                     file_state::record_read(&agent_id, resolved_path, mtime, false);
                 }
+                // Debug Mode (spec section 22): inside a Debug turn the model
+                // sees that a secret file's keys exist, never its values.
+                let contents = if mask_secret {
+                    log::debug!("[file_read] masking secret file in a debug turn");
+                    crate::neppy::agent::debug_mode::secrets::mask_file_for_agent(
+                        &resolved_path_for_mask,
+                        &contents,
+                    )
+                } else {
+                    contents
+                };
                 Ok(ToolResult::success(contents))
             }
             Err(e) => Ok(ToolResult::error(format!("Failed to read file: {e}"))),
@@ -405,5 +419,49 @@ mod tests {
         assert!(&result.output().contains("File too large"));
 
         let _ = tokio::fs::remove_dir_all(&dir).await;
+    }
+
+    #[tokio::test]
+    async fn secret_files_are_masked_only_inside_a_debug_turn() {
+        use crate::neppy::agent::debug_mode::ops::DebugCtx;
+        use crate::neppy::agent::debug_mode::turn::{with_turn, DebugTurn};
+
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("cfg")).unwrap();
+        std::fs::write(
+            dir.path().join("cfg/.env"),
+            "# c\nAPI_KEY=sk-live-1\nEMPTY=\n",
+        )
+        .unwrap();
+        std::fs::write(dir.path().join("cfg/.env.example"), "API_KEY=changeme\n").unwrap();
+        std::fs::write(dir.path().join("cfg/server.pem"), "-----BEGIN\nabc==\n").unwrap();
+        let tool = FileReadTool::new(test_security(dir.path().to_path_buf()));
+
+        // Outside a Debug turn: byte-identical to before.
+        let r = tool.execute(json!({"path": "cfg/.env"})).await.unwrap();
+        assert_eq!(r.output(), "# c\nAPI_KEY=sk-live-1\nEMPTY=\n");
+
+        let turn = DebugTurn {
+            ctx: DebugCtx::new(dir.path()),
+            root: dir.path().to_path_buf(),
+            task_id: None,
+            checkpoint_id: None,
+            settings: Default::default(),
+        };
+        with_turn(turn, async {
+            let r = tool.execute(json!({"path": "cfg/.env"})).await.unwrap();
+            assert_eq!(r.output(), "# c\nAPI_KEY=********\nEMPTY=\n");
+            let r = tool
+                .execute(json!({"path": "cfg/.env.example"}))
+                .await
+                .unwrap();
+            assert_eq!(r.output(), "API_KEY=changeme\n");
+            let r = tool
+                .execute(json!({"path": "cfg/server.pem"}))
+                .await
+                .unwrap();
+            assert_eq!(r.output(), "[key material hidden]");
+        })
+        .await;
     }
 }

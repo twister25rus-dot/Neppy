@@ -31,7 +31,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, value: &Path) -> Self {
-        let old = std::env::var_os(key);
+        let old = neppy_core::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value.as_os_str());
         }
@@ -44,7 +44,7 @@ impl Drop for EnvVarGuard {
         unsafe {
             match &self.old {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -267,7 +267,7 @@ async fn tree_runtime_rpc_and_registered_handlers_cover_status_and_errors() {
     let _lock = env_lock();
     let tmp = TempDir::new().expect("tempdir");
     let config = config_in(&tmp);
-    let _workspace = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", tmp.path());
     let timestamp = Utc.with_ymd_and_hms(2026, 5, 30, 11, 0, 0).unwrap();
 
     let ingest = tree_runtime_rpc::tree_summarizer_ingest(
@@ -306,7 +306,7 @@ async fn tree_runtime_rpc_and_registered_handlers_cover_status_and_errors() {
     assert_eq!(controllers.len(), 5);
     assert!(controllers
         .iter()
-        .any(|controller| controller.rpc_method_name() == "openhuman.tree_summarizer_ingest"));
+        .any(|controller| controller.rpc_method_name() == "neppy.tree_summarizer_ingest"));
 
     let ingest_handler = controllers
         .iter()

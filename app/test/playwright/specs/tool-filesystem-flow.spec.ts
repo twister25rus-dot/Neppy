@@ -23,9 +23,9 @@ interface ListResultEnvelope {
 }
 
 function workspaceDir(): string {
-  const ws = process.env.OPENHUMAN_WORKSPACE;
+  const ws = process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE;
   if (!ws) {
-    throw new Error('OPENHUMAN_WORKSPACE not set for tool-filesystem-flow Playwright run');
+    throw new Error('NEPPY_WORKSPACE not set for tool-filesystem-flow Playwright run');
   }
   return ws;
 }
@@ -37,7 +37,7 @@ test.describe('System tools - Filesystem', () => {
   });
 
   test('writes a file inside the workspace and bytes match on disk', async () => {
-    const writeResult = await callCoreRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const writeResult = await callCoreRpc<WriteResultEnvelope>('neppy.memory_write_file', {
       relative_path: TEST_RELATIVE_PATH,
       content: TEST_CONTENT,
     });
@@ -59,18 +59,18 @@ test.describe('System tools - Filesystem', () => {
   });
 
   test('reads back the file and list_files surfaces it', async () => {
-    await callCoreRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    await callCoreRpc<WriteResultEnvelope>('neppy.memory_write_file', {
       relative_path: TEST_RELATIVE_PATH,
       content: TEST_CONTENT,
     });
 
-    const readResult = await callCoreRpc<ReadResultEnvelope>('openhuman.memory_read_file', {
+    const readResult = await callCoreRpc<ReadResultEnvelope>('neppy.memory_read_file', {
       relative_path: TEST_RELATIVE_PATH,
     });
     expect(readResult.data?.content).toBe(TEST_CONTENT);
     expect(readResult.data?.relative_path).toBe(TEST_RELATIVE_PATH);
 
-    const listResult = await callCoreRpc<ListResultEnvelope>('openhuman.memory_list_files', {
+    const listResult = await callCoreRpc<ListResultEnvelope>('neppy.memory_list_files', {
       relative_dir: '',
     });
     const files = listResult.data?.files ?? [];
@@ -79,14 +79,14 @@ test.describe('System tools - Filesystem', () => {
 
   test('rejects parent-traversal and absolute paths', async () => {
     await expect(
-      callCoreRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+      callCoreRpc<WriteResultEnvelope>('neppy.memory_write_file', {
         relative_path: TRAVERSAL_PATH,
         content: 'should never be written',
       })
     ).rejects.toThrow(/traversal|not allowed|escape/i);
 
     await expect(
-      callCoreRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+      callCoreRpc<WriteResultEnvelope>('neppy.memory_write_file', {
         relative_path: ABSOLUTE_PATH,
         content: 'should never be written',
       })

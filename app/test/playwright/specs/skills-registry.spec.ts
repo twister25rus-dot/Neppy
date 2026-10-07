@@ -68,7 +68,7 @@ test.describe('Skills registry flow', () => {
 
 test.describe('Skill registry RPC smoke', () => {
   test('sources returns upstream source names', async () => {
-    const result = await callCoreRpc<{ sources: string[] }>('openhuman.skill_registry_sources');
+    const result = await callCoreRpc<{ sources: string[] }>('neppy.skill_registry_sources');
     expect(result.sources).toBeDefined();
     expect(result.sources.length).toBeGreaterThan(0);
 
@@ -88,7 +88,7 @@ test.describe('Skill registry RPC smoke', () => {
         category: string;
         download_url: string;
       }>;
-    }>('openhuman.skill_registry_browse', { force_refresh: true });
+    }>('neppy.skill_registry_browse', { force_refresh: true });
     expect(result.entries).toBeDefined();
     expect(result.entries.length).toBeGreaterThan(0);
 
@@ -103,7 +103,7 @@ test.describe('Skill registry RPC smoke', () => {
     test.setTimeout(30_000);
     const result = await callCoreRpc<{
       entries: Array<{ id: string; name: string; description: string }>;
-    }>('openhuman.skill_registry_search', { query: 'git' });
+    }>('neppy.skill_registry_search', { query: 'git' });
     expect(result.entries).toBeDefined();
     expect(result.entries.length).toBeGreaterThan(0);
   });
@@ -112,7 +112,7 @@ test.describe('Skill registry RPC smoke', () => {
     test.setTimeout(30_000);
     const result = await callCoreRpc<{
       entries: Array<{ id: string; name: string; description: string; source: string }>;
-    }>('openhuman.skill_registry_search', { query: 'docker' });
+    }>('neppy.skill_registry_search', { query: 'docker' });
     expect(result.entries).toBeDefined();
     expect(result.entries.length).toBeGreaterThan(0);
 
@@ -125,12 +125,12 @@ test.describe('Skill registry RPC smoke', () => {
   test('search with source filter narrows results', async () => {
     test.setTimeout(30_000);
     const all = await callCoreRpc<{ entries: Array<{ id: string; source: string }> }>(
-      'openhuman.skill_registry_search',
+      'neppy.skill_registry_search',
       { query: 'git' }
     );
 
     const filtered = await callCoreRpc<{ entries: Array<{ id: string; source: string }> }>(
-      'openhuman.skill_registry_search',
+      'neppy.skill_registry_search',
       { query: 'git', source: 'built-in' }
     );
 
@@ -142,7 +142,7 @@ test.describe('Skill registry RPC smoke', () => {
 
   test('search with empty query returns all entries', async () => {
     test.setTimeout(30_000);
-    const all = await callCoreRpc<{ entries: Array<unknown> }>('openhuman.skill_registry_search', {
+    const all = await callCoreRpc<{ entries: Array<unknown> }>('neppy.skill_registry_search', {
       query: '',
     });
     expect(all.entries.length).toBeGreaterThan(0);

@@ -99,16 +99,16 @@ The gate is **interactive-only**. Background, triage, and cron turns carry no ch
 
 ## Configuration & RPC
 
-- **`OPENHUMAN_APPROVAL_GATE`**: set to `0` / `false` to skip installing the gate entirely. With no gate, `Prompt`-class calls run unprompted. On by default.
+- **`NEPPY_APPROVAL_GATE`**: set to `0` / `false` to skip installing the gate entirely. With no gate, `Prompt`-class calls run unprompted. On by default.
 - **`[autonomy].level`** and **`[autonomy].auto_approve`**: tier and allowlist, via the `config.update_autonomy_settings` RPC or Settings → Agent access.
 
 The `approval` controller exposes three JSON-RPC methods:
 
 | Method                                     | Purpose                                                                                                  |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `openhuman.approval_list_pending`          | The live queue of parked requests.                                                                       |
-| `openhuman.approval_list_recent_decisions` | Decided/executed audit rows (`limit` 1 to 500, default 50). Surfaced in **Settings → Approval history**. |
-| `openhuman.approval_decide`                | Apply a decision (`approve_once` / `approve_always_for_tool` / `deny`).                                  |
+| `neppy.approval_list_pending`          | The live queue of parked requests.                                                                       |
+| `neppy.approval_list_recent_decisions` | Decided/executed audit rows (`limit` 1 to 500, default 50). Surfaced in **Settings → Approval history**. |
+| `neppy.approval_decide`                | Apply a decision (`approve_once` / `approve_always_for_tool` / `deny`).                                  |
 
 `list_pending` / `list_recent_decisions` return empty (not an error) when no gate is installed; `decide` errors when the gate is absent or the request is unknown or already decided.
 

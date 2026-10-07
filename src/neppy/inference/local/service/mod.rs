@@ -20,8 +20,8 @@ pub struct LocalAiService {
     pub(crate) bootstrap_lock: tokio::sync::Mutex<()>,
     pub(crate) last_memory_summary_at: Mutex<Option<std::time::Instant>>,
     pub(crate) http: reqwest::Client,
-    /// Handle to any `ollama serve` openhuman itself spawned. `None` when
-    /// the daemon currently on `:11434` was started outside openhuman (and
+    /// Handle to any `ollama serve` neppy itself spawned. `None` when
+    /// the daemon currently on `:11434` was started outside neppy (and
     /// adopted via the health probe) — those are never killed on exit.
     pub(crate) owned_ollama: Mutex<Option<tokio::process::Child>>,
     /// Supervisor for managed MLX servers. Owns every MLX process Neppy
@@ -37,7 +37,7 @@ pub struct LocalAiService {
 }
 
 impl LocalAiService {
-    /// Returns `true` iff openhuman currently holds an owned Ollama child handle.
+    /// Returns `true` iff neppy currently holds an owned Ollama child handle.
     ///
     /// Intended for tests and health-check callers that need to inspect the
     /// ownership state without going through the full bootstrap path.

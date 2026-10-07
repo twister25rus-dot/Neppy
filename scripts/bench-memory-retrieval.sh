@@ -23,7 +23,7 @@ if [[ ! -x "$CORE_BIN" ]]; then
     exit 1
 fi
 
-WORKSPACE_DIR="${OPENHUMAN_WORKSPACE:-$HOME/.neppy-staging}"
+WORKSPACE_DIR="${NEPPY_WORKSPACE:-$HOME/.neppy-staging}"
 USERS_DIR="$WORKSPACE_DIR/users"
 
 if [[ ! -d "$USERS_DIR" ]]; then
@@ -76,8 +76,8 @@ QUERIES=(
     "what technical decisions have been made"
 )
 
-export OPENHUMAN_APP_ENV=staging
-export OPENHUMAN_KEYRING_BACKEND=file
+export NEPPY_APP_ENV=staging
+export NEPPY_KEYRING_BACKEND=file
 
 for query in "${QUERIES[@]}"; do
     echo "" | tee -a "$RESULTS_FILE"
@@ -148,9 +148,9 @@ EOF
 
 # Test the tree RPC APIs
 RPC_METHODS=(
-    "openhuman.memory_tree_search_entities::{\"query\":\"Neppy project\",\"limit\":5}"
-    "openhuman.memory_tree_query_source::{\"source_kind\":\"chat\",\"limit\":5}"
-    "openhuman.memory_tree_query_source::{\"source_kind\":\"episodic\",\"limit\":5}"
+    "neppy.memory_tree_search_entities::{\"query\":\"Neppy project\",\"limit\":5}"
+    "neppy.memory_tree_query_source::{\"source_kind\":\"chat\",\"limit\":5}"
+    "neppy.memory_tree_query_source::{\"source_kind\":\"episodic\",\"limit\":5}"
 )
 
 for spec in "${RPC_METHODS[@]}"; do

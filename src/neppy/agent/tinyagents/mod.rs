@@ -1,11 +1,11 @@
-//! `tinyagents` integration — drive an openhuman agent turn on the published
+//! `tinyagents` integration — drive a neppy-core agent turn on the published
 //! [`tinyagents`](https://crates.io/crates/tinyagents) orchestration framework
 //! (issue #4249).
 //!
-//! openhuman's agent execution runs on the `tinyagents` crate
+//! neppy's agent execution runs on the `tinyagents` crate
 //! (LangGraph/LangChain-style durable graphs + an agent-loop harness with model/
 //! tool registries, middleware, retry/fallback, and limits). This module is the
-//! **adapter seam**: it bridges openhuman's `Provider`, `Tool`, and `ChatMessage`
+//! **adapter seam**: it bridges neppy's `Provider`, `Tool`, and `ChatMessage`
 //! types onto the crate's `ChatModel`, `Tool`, and `Message` traits, then drives
 //! a turn through [`AgentHarness::invoke`]. The chat / channel / sub-agent
 //! routes call [`run_turn_via_tinyagents_shared`] (default ON in production).
@@ -117,11 +117,11 @@ pub(crate) struct ToolPolicyEnforcement {
     pub agent_definition_id: String,
 }
 
-/// Build the harness [`RunPolicy`] for an openhuman turn.
+/// Build the harness [`RunPolicy`] for a neppy turn.
 ///
 /// The loop enforces limits from `self.policy.limits` (not the per-run
 /// `RunConfig`), so the model-call cap **must** be set here or it falls back to
-/// the tinyagents default of 25 — far more than openhuman's `max_iterations`.
+/// the tinyagents default of 25 — far more than neppy's `max_iterations`.
 /// The recursion depth cap is also set here so TinyAgents uses Neppy's
 /// existing sub-agent spawn depth instead of the SDK default.
 /// Retry is now owned by the crate [`RetryPolicy`] (issue #4249, Phase 3a): the
@@ -150,7 +150,7 @@ pub(crate) struct ToolPolicyEnforcement {
 /// [`routes::route_fallback_policy`]); it is safe to enable now because
 /// `ReliableProvider` does *not* fail over across the registered workload-tier
 /// routes (chat→burst, reasoning→agentic, …) the way the harness registry can.
-/// Default per-turn wall-clock ceiling for an openhuman agent turn, in seconds
+/// Default per-turn wall-clock ceiling for a neppy-core agent turn, in seconds
 /// (issue #4746). Applied as the harness `RunLimits::max_wall_clock_ms` so the
 /// loop interrupts a hung/slow model or tool/sub-agent call instead of parking
 /// forever with no terminal event. Deliberately generous — a normal turn, even
@@ -159,20 +159,20 @@ pub(crate) struct ToolPolicyEnforcement {
 const DEFAULT_AGENT_TURN_TIMEOUT_SECS: u64 = 600;
 
 /// Resolve the per-turn wall-clock ceiling in milliseconds for the harness
-/// policy. Reads `OPENHUMAN_AGENT_TURN_TIMEOUT_SECS` (falling back to
+/// policy. Reads `NEPPY_AGENT_TURN_TIMEOUT_SECS` (falling back to
 /// [`DEFAULT_AGENT_TURN_TIMEOUT_SECS`]); `0` means "no ceiling" → `None`, which
 /// restores the previous unbounded behavior for callers that deliberately opt
 /// out (e.g. very long autonomous runs).
 pub(crate) fn agent_turn_wall_clock_ms() -> Option<u64> {
     parse_agent_turn_wall_clock_ms(
-        std::env::var("OPENHUMAN_AGENT_TURN_TIMEOUT_SECS")
+        crate::neppy::util::env::var("NEPPY_AGENT_TURN_TIMEOUT_SECS")
             .ok()
             .as_deref(),
     )
 }
 
 /// Pure core of [`agent_turn_wall_clock_ms`]: map an optional
-/// `OPENHUMAN_AGENT_TURN_TIMEOUT_SECS` value to a wall-clock ceiling in
+/// `NEPPY_AGENT_TURN_TIMEOUT_SECS` value to a wall-clock ceiling in
 /// milliseconds. An absent/unparseable value falls back to
 /// [`DEFAULT_AGENT_TURN_TIMEOUT_SECS`]; `0` yields `None` (unbounded opt-out).
 /// Kept env-free so it is deterministically unit-testable.
@@ -345,7 +345,7 @@ fn effective_max_iterations(max_iterations: usize) -> usize {
 pub(crate) struct TinyagentsTurnOutcome {
     /// Final assistant text.
     pub text: String,
-    /// The full transcript, converted back to openhuman messages (flat — tool
+    /// The full transcript, converted back to neppy messages (flat — tool
     /// calls rendered as text).
     pub history: Vec<ChatMessage>,
     /// The **typed** messages this turn appended (after the user turn):
@@ -418,7 +418,7 @@ pub(crate) type HaltSummarySlot = std::sync::Arc<std::sync::Mutex<Option<String>
 /// Registers `provider` as the default model and every entry in `resolved_tools`
 /// as a harness tool, seeds the loop with `history`, and runs the loop bounded
 /// by `max_iterations` model calls. Returns the final text plus the resulting
-/// transcript translated back to openhuman [`ChatMessage`]s.
+/// transcript translated back to neppy [`ChatMessage`]s.
 #[cfg(test)]
 pub(crate) async fn run_turn_via_tinyagents(
     chat_model: TurnChatModel,
@@ -1324,7 +1324,7 @@ fn tinyagents_depth_error(
 }
 
 /// The per-turn crate [`ChatModel`](tinyagents::harness::model::ChatModel) set,
-/// built once from an openhuman [`Provider`] by [`build_turn_models`] — the
+/// built once from a neppy [`Provider`] by [`build_turn_models`] — the
 /// single place a turn's `native model adapters are constructed (issue #4249, Phase 5).
 ///
 /// [`assemble_turn_harness`] takes this bundle instead of the raw provider, so
@@ -1579,7 +1579,7 @@ fn build_configured_fallback(
     build_primary: &dyn Fn(&str) -> anyhow::Result<TurnChatModel>,
 ) -> anyhow::Result<TurnChatModel> {
     use crate::neppy::inference::provider::factory;
-    if primary_provider == factory::PROVIDER_OPENHUMAN {
+    if primary_provider == factory::PROVIDER_NEPPY {
         return build_primary(entry);
     }
     let (provider_string, fallback_model) =
@@ -2213,7 +2213,7 @@ fn assemble_turn_harness(
     // Project the agents visible to this turn into the registry as name-only
     // `ComponentKind::Agent` descriptors (issue #4249, Workstream 10.1). This is
     // metadata only: no executable `HarnessAgent` is attached (sub-agent
-    // dispatch still flows through the openhuman sub-agent runner), so the
+    // dispatch still flows through the neppy sub-agent runner), so the
     // registration is cheap and leaves the turn hot path unchanged. Agents are
     // sourced from BOTH the runtime `AgentDefinitionRegistry` global (built-ins
     // plus any workspace/config custom overrides, already merged by id) AND the
@@ -2344,7 +2344,7 @@ fn assemble_turn_harness(
     let prompt_cache_guard = Arc::new(PromptCacheGuardMiddleware::new());
     harness.push_middleware(prompt_cache_guard.clone());
 
-    // openhuman context concerns as graph middlewares (issue #4249): microcompact
+    // neppy context concerns as graph middlewares (issue #4249): microcompact
     // tool-body clearing and the after-tool byte cap / payload summarizer.
     // Installed before the summarization/trim block below so `before_model` hooks
     // run microcompact → compress → trim. (KV-cache-prefix drift is handled above

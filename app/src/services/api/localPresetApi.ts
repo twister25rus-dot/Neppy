@@ -10,7 +10,7 @@ import { callCoreRpc } from '../coreRpcClient';
  */
 export async function getLocalModelPreset(): Promise<PresetId> {
   const result = await callCoreRpc<{ local_model_preset?: string } | null>({
-    method: 'openhuman.inference_get_client_config',
+    method: 'neppy.inference_get_client_config',
   });
   const value = result?.local_model_preset;
   return isPresetId(value) ? value : 'auto';
@@ -18,7 +18,7 @@ export async function getLocalModelPreset(): Promise<PresetId> {
 
 export async function setLocalModelPreset(preset: PresetId): Promise<void> {
   await callCoreRpc({
-    method: 'openhuman.config_update_model_settings',
+    method: 'neppy.config_update_model_settings',
     params: { local_model_preset: preset },
   });
 }

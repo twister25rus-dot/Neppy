@@ -199,7 +199,7 @@ impl Tool for ComposioActionTool {
         // consulting the captured spawn-time `self.config` here would let the gate
         // resolve (or skip) a contract against stale routing while dispatch used
         // fresh routing. Anchored to this tool's original config path rather than
-        // re-resolving process-global `OPENHUMAN_WORKSPACE` (the tool is scoped to
+        // re-resolving process-global `NEPPY_WORKSPACE` (the tool is scoped to
         // the user/workspace it was created for).
         let live_config =
             match config_rpc::reload_config_snapshot_with_timeout(self.config.as_ref()).await {
@@ -363,14 +363,14 @@ mod tests {
 
     impl WorkspaceEnvGuard {
         fn set(path: &Path) -> Self {
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
             Self::set_current(path);
             Self { previous }
         }
 
         fn set_current(path: &Path) {
             unsafe {
-                std::env::set_var("OPENHUMAN_WORKSPACE", path);
+                std::env::set_var("NEPPY_WORKSPACE", path);
             }
         }
     }
@@ -379,8 +379,8 @@ mod tests {
         fn drop(&mut self) {
             unsafe {
                 match self.previous.take() {
-                    Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-                    None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+                    Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+                    None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
                 }
             }
         }
@@ -498,7 +498,7 @@ mod tests {
         //
         // The sandbox gate is a no-op here, so dispatch falls through to
         // the live config reload (#1710 Wave 4). Hold `TEST_ENV_LOCK`
-        // and point `OPENHUMAN_WORKSPACE` at an isolated, persisted
+        // and point `NEPPY_WORKSPACE` at an isolated, persisted
         // config for compatibility with sibling config-loading tests.
         use crate::neppy::config::TEST_ENV_LOCK;
         let _env_guard = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
@@ -605,9 +605,9 @@ mod tests {
     // These two tests assert the *factory routing decision* by mode. They
     // call `create_composio_client(&Config)` directly — the pure routing
     // function — instead of going through `tool.execute()`, which reloads
-    // config via `load_config_with_timeout()` (reads `OPENHUMAN_WORKSPACE`)
+    // config via `load_config_with_timeout()` (reads `NEPPY_WORKSPACE`)
     // and was therefore subject to a parallel-test env-var race: another
-    // non-`TEST_ENV_LOCK` test mutating `OPENHUMAN_WORKSPACE` in the await
+    // non-`TEST_ENV_LOCK` test mutating `NEPPY_WORKSPACE` in the await
     // window flipped the reloaded config, intermittently failing
     // `factory_routes_through_direct_when_mode_is_direct`. The factory reads
     // mode + session purely from the passed `Config` (the auth-store path is
@@ -682,7 +682,7 @@ mod tests {
         // `Config::load_or_init().await`. Here we simulate that by
         // rewriting config.toml between the two halves.
         //
-        // Deliberately NO `OPENHUMAN_WORKSPACE` mutation: `execute` reloads
+        // Deliberately NO `NEPPY_WORKSPACE` mutation: `execute` reloads
         // from the snapshot's own `config_path` (`reload_config_snapshot_*`
         // never reads the env var), so the env var adds nothing to what is
         // under test. With it set, the direct half intermittently reloaded a

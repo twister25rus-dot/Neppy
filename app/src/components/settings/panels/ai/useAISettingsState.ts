@@ -161,7 +161,7 @@ export function useAISettings() {
     try {
       // Defensive verification at global-Save time. Each provider that is new
       // or whose endpoint changed since the last saved snapshot is re-probed
-      // through `openhuman.inference_list_models`. The chip / editor dialogs
+      // through `neppy.inference_list_models`. The chip / editor dialogs
       // already probe at add-time; this is a belt-and-suspenders check that
       // catches stale entries (endpoint flipped externally, daemon went
       // unreachable between add-time and save-time, etc.) before they reach

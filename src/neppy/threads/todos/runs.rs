@@ -36,7 +36,7 @@ fn map_err<T>(result: tinyagents::error::Result<T>) -> Result<T, String> {
     result.map_err(|error| error.to_string())
 }
 
-/// Crate stamps are unix-epoch milliseconds; the `openhuman.todos_run_*` RPC
+/// Crate stamps are unix-epoch milliseconds; the `neppy.todos_run_*` RPC
 /// surface has always spoken RFC 3339, so translate on the way out.
 fn for_wire(mut run: TaskRun) -> TaskRun {
     run.started_at = normalize_timestamp_for_wire(&run.started_at);

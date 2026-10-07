@@ -20,10 +20,10 @@ describe('bootCheckTransport', () => {
     callCoreRpcMock.mockResolvedValueOnce({ ok: true });
 
     const { bootCheckTransport } = await import('./bootCheckService');
-    const result = await bootCheckTransport.callRpc<{ ok: boolean }>('openhuman.ping', { x: 1 });
+    const result = await bootCheckTransport.callRpc<{ ok: boolean }>('neppy.ping', { x: 1 });
 
     expect(result).toEqual({ ok: true });
-    expect(callCoreRpcMock).toHaveBeenCalledWith({ method: 'openhuman.ping', params: { x: 1 } });
+    expect(callCoreRpcMock).toHaveBeenCalledWith({ method: 'neppy.ping', params: { x: 1 } });
   });
 
   it('invokeCmd forwards cmd+args to Tauri invoke', async () => {

@@ -7,19 +7,19 @@ import DiscordServerChannelPicker from '../DiscordServerChannelPicker';
 // Mock the RPC client to avoid actual network calls
 vi.mock('../../../services/coreRpcClient', () => ({
   callCoreRpc: vi.fn().mockImplementation(({ method }: { method: string }) => {
-    if (method === 'openhuman.channels_discord_list_guilds') {
+    if (method === 'neppy.channels_discord_list_guilds') {
       return Promise.resolve([
         { id: '111', name: 'Test Server', icon: null },
         { id: '222', name: 'Another Server', icon: 'abc' },
       ]);
     }
-    if (method === 'openhuman.channels_discord_list_channels') {
+    if (method === 'neppy.channels_discord_list_channels') {
       return Promise.resolve([
         { id: '901', name: 'general', type: 0, position: 0, parent_id: null },
         { id: '902', name: 'dev', type: 0, position: 1, parent_id: '800' },
       ]);
     }
-    if (method === 'openhuman.channels_discord_check_permissions') {
+    if (method === 'neppy.channels_discord_check_permissions') {
       return Promise.resolve({
         can_view_channel: true,
         can_send_messages: true,

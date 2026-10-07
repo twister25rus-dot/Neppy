@@ -82,7 +82,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: only used under env_lock(), which serialises env mutation.
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
@@ -94,12 +94,12 @@ impl Drop for EnvVarGuard {
         match &self.old {
             // SAFETY: see set_to_path; teardown runs under the same env_lock().
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
 
-/// Serialises tests: `HOME` + `OPENHUMAN_WORKSPACE` are process-global.
+/// Serialises tests: `HOME` + `NEPPY_WORKSPACE` are process-global.
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 static MEMORY_SEAMS_INIT: OnceLock<()> = OnceLock::new();
 
@@ -400,7 +400,7 @@ async fn golden_workspace_composes_substrate_and_unified_tiers() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace).expect("mkdir workspace");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
     ensure_memory_seams(&workspace);
 
     let tables = init_and_scan("golden-parity-e2e", &workspace).await;

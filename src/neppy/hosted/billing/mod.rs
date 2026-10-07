@@ -1,7 +1,7 @@
 //! Billing and payment RPC adapters that thin-wrap the hosted API.
 //!
 //! Exposes plan lookup, purchase flows, and credit top-ups through the
-//! standard controller registry (`openhuman.billing_*`).
+//! standard controller registry (`neppy.billing_*`).
 
 mod ops;
 mod schemas;

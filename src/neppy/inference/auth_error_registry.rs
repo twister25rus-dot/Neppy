@@ -7,7 +7,7 @@
 //!     DomainEvent::ProviderApiKeyRejected`] published the first time a
 //!     provider starts failing, and
 //!   - the **AI-settings provider-error notice** — read live via the
-//!     `openhuman.inference_provider_auth_errors` RPC ([`snapshot`]).
+//!     `neppy.inference_provider_auth_errors` RPC ([`snapshot`]).
 //!
 //! Entries are recorded at the demote site
 //! ([`provider::ops::http_error::log_byo_provider_auth_failure`](super::provider::ops::http_error::log_byo_provider_auth_failure)) and cleared

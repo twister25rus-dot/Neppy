@@ -30,7 +30,7 @@
 #
 services:
   e2e:
-    image: ${OPENHUMAN_CI_IMAGE:-ghcr.io/tinyhumansai/openhuman_ci:latest}
+    image: ${NEPPY_CI_IMAGE:-ghcr.io/tinyhumansai/openhuman_ci:latest}
     # Use the bind-mounted local bootstrap (Xvfb + dbus + Appium + pnpm).
     # The image's baked-in /docker-entrypoint.sh is the CI version; the
     # local wrapper additionally lazy-installs Appium and JS deps so a
@@ -85,7 +85,7 @@ services:
   # Rust inference provider E2E tests (wiremock-based, no live LLM needed).
   # Run: docker compose -f e2e/docker-compose.yml run --rm inference-e2e
   inference-e2e:
-    image: ${OPENHUMAN_CI_IMAGE:-ghcr.io/tinyhumansai/openhuman_ci:latest}
+    image: ${NEPPY_CI_IMAGE:-ghcr.io/tinyhumansai/openhuman_ci:latest}
     working_dir: /workspace
     volumes:
       - ../:/workspace

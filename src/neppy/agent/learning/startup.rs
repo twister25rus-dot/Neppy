@@ -16,7 +16,7 @@
 //! `channels::runtime::startup::start_channels`. That function is a misnamed
 //! process-wide bootstrap that `core::runtime::services::spawn_channels_service`
 //! **skips entirely** when no chat integration is configured (or when
-//! `OPENHUMAN_DISABLE_CHANNEL_LISTENERS` is set) — logging only at debug. As a
+//! `NEPPY_DISABLE_CHANNEL_LISTENERS` is set) — logging only at debug. As a
 //! result, channel-less users silently got **no** learning at all.
 //!
 //! [`register_learning_subscribers`] is invoked from the always-on Platform

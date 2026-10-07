@@ -19,7 +19,7 @@ import Button from '../../components/ui/Button';
 import { useT } from '../../lib/i18n/I18nContext';
 import { dismissGithubStarCta } from '../../store/githubStarSlice';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { OPENHUMAN_GITHUB_REPO_URL } from '../../utils/config';
+import { NEPPY_GITHUB_REPO_URL } from '../../utils/config';
 import { openUrl } from '../../utils/openUrl';
 
 const LOG_PREFIX = '[github-star-cta]';
@@ -35,7 +35,7 @@ export function GitHubStarCard() {
     // Acting on the CTA also retires it — a user who starred does not want the
     // nudge to keep reappearing.
     dispatch(dismissGithubStarCta());
-    void openUrl(OPENHUMAN_GITHUB_REPO_URL).catch(err =>
+    void openUrl(NEPPY_GITHUB_REPO_URL).catch(err =>
       console.debug(`${LOG_PREFIX} openUrl failed: ${String(err)}`)
     );
   }, [dispatch]);

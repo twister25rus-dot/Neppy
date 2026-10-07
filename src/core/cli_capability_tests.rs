@@ -4,7 +4,7 @@
 //! `capability_unavailable_message`) plus a directly-resolved binding, rather
 //! than `run_from_cli_args`. Reaching a narrowed capability set end-to-end
 //! would need `driver = "null"` written into a real `config.toml` under a
-//! process-global `OPENHUMAN_WORKSPACE`, i.e. env mutation plus disk writes,
+//! process-global `NEPPY_WORKSPACE`, i.e. env mutation plus disk writes,
 //! and `run_from_cli_args` also loads dotenv and prints the banner. The helper
 //! assertions are stronger, not weaker: they can actually reach the null-driver
 //! state deterministically.
@@ -31,7 +31,7 @@ fn verdict_is_ok_for_ungated_surface() {
         "null",
         Capabilities::mandatory(),
         None,
-        "openhuman memory docs"
+        "neppy-core memory docs"
     )
     .is_ok());
 }
@@ -42,13 +42,13 @@ fn verdict_names_the_driver_and_the_capability() {
         "null",
         Capabilities::mandatory(),
         Some(Capability::Tree),
-        "openhuman memory_tree list_chunks",
+        "neppy memory_tree list_chunks",
     )
     .expect_err("a mandatory-only driver does not advertise `tree`");
     let msg = err.to_string();
     assert!(msg.contains("null"), "{msg}");
     assert!(msg.contains("tree"), "{msg}");
-    assert!(msg.contains("openhuman memory_tree list_chunks"), "{msg}");
+    assert!(msg.contains("neppy memory_tree list_chunks"), "{msg}");
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn verdict_error_does_not_read_like_a_typo() {
         "null",
         Capabilities::mandatory(),
         Some(Capability::Tree),
-        "openhuman memory_tree list_chunks",
+        "neppy memory_tree list_chunks",
     )
     .expect_err("gated");
     let msg = err.to_string();
@@ -72,7 +72,7 @@ fn verdict_is_ok_when_the_driver_advertises_the_family() {
         "tinycortex",
         Capabilities::all(),
         Some(Capability::Tree),
-        "openhuman memory_tree list_chunks",
+        "neppy memory_tree list_chunks",
     )
     .is_ok());
 }
@@ -84,7 +84,7 @@ fn message_never_contains_a_credential_or_endpoint() {
     let msg = capability_unavailable_message(
         "supermemory",
         Capability::Tree,
-        "openhuman memory_tree list_chunks",
+        "neppy memory_tree list_chunks",
     );
     assert!(!msg.contains("keychain:"), "{msg}");
     assert!(!msg.contains("api.supermemory.ai"), "{msg}");
@@ -151,7 +151,7 @@ fn ensure_capability_blocking_is_a_noop_for_an_unknown_controller() {
         None
     );
     assert!(
-        ensure_capability_blocking(None, "openhuman does_not_exist nope").is_ok(),
+        ensure_capability_blocking(None, "neppy does_not_exist nope").is_ok(),
         "an unregistered controller must not be reported as a capability fact"
     );
 }

@@ -3,7 +3,7 @@
 //! Provides:
 //! - [`TEST_LOCK`]: serializes wallet tests that mutate the global quote store
 //!   and per-chain env-var overrides. Tests that mutate
-//!   `OPENHUMAN_WORKSPACE` also hold the config `TEST_ENV_LOCK`.
+//!   `NEPPY_WORKSPACE` also hold the config `TEST_ENV_LOCK`.
 //! - [`setup_wallet_in`]: writes a configured wallet state into a
 //!   [`tempfile::TempDir`] using the standard "abandon × 11 about" mnemonic
 //!   so every chain's signer derives a deterministic address.
@@ -56,7 +56,7 @@ pub(crate) fn sample_account(chain: WalletChain) -> WalletAccount {
     }
 }
 
-/// RAII guard returned to callers so `OPENHUMAN_WORKSPACE` is restored when
+/// RAII guard returned to callers so `NEPPY_WORKSPACE` is restored when
 /// the test scope ends — prevents one test's tempdir from leaking into the
 /// next test in the same process. Drop the guard explicitly or let it fall
 /// out of scope at the end of the test.
@@ -67,11 +67,11 @@ pub(crate) struct WorkspaceEnvGuard {
 
 impl WorkspaceEnvGuard {
     pub(crate) fn set(path: impl AsRef<Path>) -> Self {
-        // OPENHUMAN_WORKSPACE is process-global, so hold the shared config env
+        // NEPPY_WORKSPACE is process-global, so hold the shared config env
         // lock for the full lifetime of the test workspace override.
         let env_lock = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let prev = std::env::var_os("OPENHUMAN_WORKSPACE");
-        std::env::set_var("OPENHUMAN_WORKSPACE", path.as_ref());
+        let prev = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+        std::env::set_var("NEPPY_WORKSPACE", path.as_ref());
         Self {
             prev,
             _env_lock: env_lock,
@@ -82,8 +82,8 @@ impl WorkspaceEnvGuard {
 impl Drop for WorkspaceEnvGuard {
     fn drop(&mut self) {
         match self.prev.take() {
-            Some(v) => std::env::set_var("OPENHUMAN_WORKSPACE", v),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(v) => std::env::set_var("NEPPY_WORKSPACE", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }
@@ -93,7 +93,7 @@ pub(crate) fn set_workspace_env_for_test(temp: &TempDir) -> WorkspaceEnvGuard {
 }
 
 pub(crate) async fn setup_wallet_in(temp: &TempDir) -> Result<WorkspaceEnvGuard, String> {
-    // Wallet state lookups rely on OPENHUMAN_WORKSPACE for the duration of
+    // Wallet state lookups rely on NEPPY_WORKSPACE for the duration of
     // each test. Return a guard so the tempdir path does not leak into later
     // parallel tests after this test's TempDir has been dropped.
     let workspace_guard = set_workspace_env_for_test(temp);
@@ -129,33 +129,33 @@ mod tests {
     #[tokio::test]
     async fn workspace_env_guard_restores_workspace_env_when_dropped() {
         let env_lock = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-        std::env::set_var("OPENHUMAN_WORKSPACE", "/tmp/openhuman-existing-workspace");
+        let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+        std::env::set_var("NEPPY_WORKSPACE", "/tmp/openhuman-existing-workspace");
 
         let temp = TempDir::new().expect("temp dir");
-        let prev = std::env::var_os("OPENHUMAN_WORKSPACE");
-        std::env::set_var("OPENHUMAN_WORKSPACE", temp.path());
+        let prev = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+        std::env::set_var("NEPPY_WORKSPACE", temp.path());
         let workspace_guard = WorkspaceEnvGuard {
             prev,
             _env_lock: env_lock,
         };
         assert_eq!(
-            std::env::var_os("OPENHUMAN_WORKSPACE"),
+            crate::neppy::util::env::var_os("NEPPY_WORKSPACE"),
             Some(temp.path().as_os_str().to_os_string())
         );
 
         drop(workspace_guard);
         let _cleanup_lock = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         assert_eq!(
-            std::env::var_os("OPENHUMAN_WORKSPACE"),
+            crate::neppy::util::env::var_os("NEPPY_WORKSPACE"),
             Some(std::ffi::OsString::from(
                 "/tmp/openhuman-existing-workspace"
             ))
         );
 
         match previous {
-            Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }

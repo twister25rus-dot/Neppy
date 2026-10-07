@@ -29,7 +29,7 @@ describe('todosApi', () => {
     );
     const board = await todosApi.list(USER_TASKS_THREAD_ID);
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.todos_list',
+      method: 'neppy.todos_list',
       params: { thread_id: USER_TASKS_THREAD_ID },
     });
     expect(board.threadId).toBe(USER_TASKS_THREAD_ID);
@@ -46,7 +46,7 @@ describe('todosApi', () => {
       objective: null,
     });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.todos_add',
+      method: 'neppy.todos_add',
       params: {
         thread_id: USER_TASKS_THREAD_ID,
         content: 'Buy milk',
@@ -69,7 +69,7 @@ describe('todosApi', () => {
       allowedTools: ['todo'],
     });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.todos_edit',
+      method: 'neppy.todos_edit',
       params: {
         thread_id: 't-1',
         id: 'card-1',
@@ -84,14 +84,14 @@ describe('todosApi', () => {
     mockCall.mockResolvedValueOnce(snapshot([]));
     await todosApi.updateStatus('t-1', 'card-1', 'done');
     expect(mockCall).toHaveBeenLastCalledWith({
-      method: 'openhuman.todos_update_status',
+      method: 'neppy.todos_update_status',
       params: { thread_id: 't-1', id: 'card-1', status: 'done' },
     });
 
     mockCall.mockResolvedValueOnce(snapshot([]));
     await todosApi.remove('t-1', 'card-1');
     expect(mockCall).toHaveBeenLastCalledWith({
-      method: 'openhuman.todos_remove',
+      method: 'neppy.todos_remove',
       params: { thread_id: 't-1', id: 'card-1' },
     });
   });

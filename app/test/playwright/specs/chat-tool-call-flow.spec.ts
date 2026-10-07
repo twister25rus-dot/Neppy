@@ -75,11 +75,9 @@ async function selectedThreadId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const store = (
       window as unknown as {
-        __OPENHUMAN_STORE__?: {
-          getState?: () => { thread?: { selectedThreadId?: string | null } };
-        };
+        __NEPPY_STORE__?: { getState?: () => { thread?: { selectedThreadId?: string | null } } };
       }
-    ).__OPENHUMAN_STORE__;
+    ).__NEPPY_STORE__;
     return store?.getState?.().thread?.selectedThreadId ?? null;
   });
 }
@@ -120,11 +118,11 @@ async function waitForSocketConnected(page: Page): Promise<void> {
         page.evaluate(() => {
           const store = (
             window as unknown as {
-              __OPENHUMAN_STORE__?: {
+              __NEPPY_STORE__?: {
                 getState?: () => { socket?: { byUser?: Record<string, { status?: string }> } };
               };
             }
-          ).__OPENHUMAN_STORE__;
+          ).__NEPPY_STORE__;
           const byUser = store?.getState?.().socket?.byUser ?? {};
           return Object.values(byUser).some(entry => entry?.status === 'connected');
         }),
@@ -146,13 +144,13 @@ async function toolTimelineNames(page: Page, threadId: string): Promise<string[]
   return page.evaluate(currentThreadId => {
     const store = (
       window as unknown as {
-        __OPENHUMAN_STORE__?: {
+        __NEPPY_STORE__?: {
           getState?: () => {
             chatRuntime?: { toolTimelineByThread?: Record<string, Array<{ name?: string }>> };
           };
         };
       }
-    ).__OPENHUMAN_STORE__;
+    ).__NEPPY_STORE__;
     const entries = store?.getState?.().chatRuntime?.toolTimelineByThread?.[currentThreadId] ?? [];
     return entries.map(entry => entry.name ?? '');
   }, threadId);

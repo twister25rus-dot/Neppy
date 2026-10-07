@@ -18,7 +18,7 @@ Gates background AI work (memory-tree digests, embeddings, summarisation, triage
 | `src/neppy/cron/scheduler_gate/mod.rs` | Module docstring + re-exports of the public surface. |
 | `src/neppy/cron/scheduler_gate/gate.rs` | Process-wide singleton: cached `State` (config + signals + policy), the 30s sampler task, the single-slot LLM semaphore, `LlmPermit` RAII guard, signed-out override, and `init_global`/`update_config`/`current_policy`/`current_signals`/`wait_for_capacity`. Holds the per-tokio-runtime test-state scaffolding. |
 | `src/neppy/cron/scheduler_gate/policy.rs` | Pure decision logic: `decide(signals, cfg) -> Policy`, the `Policy` and `PauseReason` enums, and their `as_str` / `pause_reason` helpers. Evaluation order: user mode override → server mode → power-aware stand-down → hard CPU ceiling → battery/CPU headroom. |
-| `src/neppy/cron/scheduler_gate/signals.rs` | `Signals` snapshot + `Signals::sample()`. Probes battery (via `starship_battery`), CPU usage (via `sysinfo`, two-refresh delta), and detects server/container mode. Honours `OPENHUMAN_ON_AC_POWER`, `OPENHUMAN_BATTERY_CHARGE`, `OPENHUMAN_DEPLOYMENT` env overrides plus Kubernetes / `/.dockerenv` heuristics. |
+| `src/neppy/cron/scheduler_gate/signals.rs` | `Signals` snapshot + `Signals::sample()`. Probes battery (via `starship_battery`), CPU usage (via `sysinfo`, two-refresh delta), and detects server/container mode. Honours `NEPPY_ON_AC_POWER`, `NEPPY_BATTERY_CHARGE`, `NEPPY_DEPLOYMENT` env overrides plus Kubernetes / `/.dockerenv` heuristics. |
 
 ## Public surface
 
@@ -50,16 +50,16 @@ None. State is process-memory only (`OnceLock<Arc<RwLock<State>>>` + a process-w
 - `crate::neppy::config` — reads `Config`, `SchedulerGateConfig` (the `[scheduler_gate]` block: `mode`, `battery_floor`, `cpu_busy_threshold_pct`, `cpu_severe_pct`, `throttled_backoff_ms`, `paused_poll_ms`, `require_ac_power`) and `SchedulerGateMode` (`Auto` / `AlwaysOn` / `Off`).
 - External crates: `parking_lot` (RwLock/Mutex), `tokio::sync::Semaphore`, `sysinfo` (CPU), `starship_battery` (power probe), `once_cell` (lazy CPU `System`).
 
-No dependency on any other `openhuman` domain or on `crate::core::*`.
+No dependency on any other `neppy` domain or on `crate::core::*`.
 
 ## Used by
 
 Consumed in-process across the codebase (discoverable via `grep scheduler_gate`):
 
 - **Background workers / pipelines**: `memory/schema.rs`, `memory_queue/worker.rs`, `memory_tree/tree/rpc.rs`, `memory_sync/composio/periodic.rs`, `subconscious/engine.rs`, `learning/reflection.rs`, `autocomplete/core/engine.rs`, `task_sources/route.rs`, `agent/task_dispatcher.rs`, `agent/triage/evaluator.rs`.
-- **Inference layer**: `inference/provider/openhuman_backend.rs`, `inference/provider/factory.rs`, `inference/local/service/{vision_embed.rs,public_infer.rs}`, `inference/voice/postprocess.rs`.
+- **Inference layer**: `inference/provider/neppy_backend.rs`, `inference/provider/factory.rs`, `inference/local/service/{vision_embed.rs,public_infer.rs}`, `inference/voice/postprocess.rs`.
 - **Credentials lifecycle** (signed-out kill switch): `credentials/ops.rs`, `credentials/bus.rs`.
-- **Bootstrap / transport**: `core/jsonrpc.rs` (calls `init_global` during server bootstrap), `core/observability.rs`, plus the domain wiring in `openhuman/mod.rs` and config schema in `config/schema/scheduler_gate.rs`.
+- **Bootstrap / transport**: `core/jsonrpc.rs` (calls `init_global` during server bootstrap), `core/observability.rs`, plus the domain wiring in `neppy/mod.rs` and config schema in `config/schema/scheduler_gate.rs`.
 
 ## Notes / gotchas
 

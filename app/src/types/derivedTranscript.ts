@@ -1,6 +1,6 @@
 /**
  * Wire shape of the transcript-derived view RPC
- * (`openhuman.threads_transcript_get`, Phase B — see
+ * (`neppy.threads_transcript_get`, Phase B — see
  * `src/neppy/threads/transcript_view/types.rs`).
  *
  * The Rust core projects the append-only `session_raw/*.jsonl` source of truth

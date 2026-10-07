@@ -133,7 +133,7 @@ jobs:
       # Consumed by scripts/ci-cancel-aware.sh's cancellation watchdog.
       GH_TOKEN: ${{ github.token }}
       # Keep in sync with DEFAULT_TELEGRAM_BOT_USERNAME_* in channels/controllers/ops.rs
-      OPENHUMAN_TELEGRAM_BOT_USERNAME: ${{ inputs.telegram_bot_username }}
+      NEPPY_TELEGRAM_BOT_USERNAME: ${{ inputs.telegram_bot_username }}
       VITE_TELEGRAM_BOT_USERNAME: ${{ inputs.telegram_bot_username }}
     steps:
       - name: Checkout build ref
@@ -339,11 +339,11 @@ jobs:
           MATRIX_TARGET: ${{ matrix.settings.target }}
           CORE_MANIFEST: ${{ steps.core-paths.outputs.core_manifest }}
           CORE_BIN_NAME: ${{ steps.core-paths.outputs.core_bin_name }}
-          OPENHUMAN_APP_ENV: ${{ inputs.app_env }}
+          NEPPY_APP_ENV: ${{ inputs.app_env }}
           # Bake the short SHA into the CLI so build_release_tag() in
           # src/main.rs produces openhuman@<version>+<sha> matching the
           # Sentry release tag used when uploading the standalone CLI symbols.
-          OPENHUMAN_BUILD_SHA: ${{ inputs.short_sha }}
+          NEPPY_BUILD_SHA: ${{ inputs.short_sha }}
           # Bake the core Sentry DSN into the binary via `option_env!` in
           # src/main.rs. Without this the standalone CLI ships with Sentry
           # disabled and the symbols uploaded below have nothing to attach
@@ -351,9 +351,9 @@ jobs:
           # tarball — there is one openhuman-core Sentry project that all
           # standalone-CLI surfaces report to. Prefer the namespaced GH
           # var, fall back to the legacy unprefixed one during transition.
-          OPENHUMAN_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
+          NEPPY_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
         run: |
-          if [ -z "${OPENHUMAN_CORE_SENTRY_DSN}" ]; then
+          if [ -z "${NEPPY_CORE_SENTRY_DSN}" ]; then
             echo "::warning::vars.OPENHUMAN_CORE_SENTRY_DSN (or legacy vars.OPENHUMAN_SENTRY_DSN) is empty — the standalone CLI artifact will ship without crash reporting."
           fi
           bash scripts/ci-cancel-aware.sh cargo build \
@@ -382,25 +382,25 @@ jobs:
         working-directory: app
         env:
           BASE_URL: ${{ inputs.base_url }}
-          OPENHUMAN_APP_ENV: ${{ inputs.app_env }}
-          VITE_OPENHUMAN_APP_ENV: ${{ inputs.app_env }}
+          NEPPY_APP_ENV: ${{ inputs.app_env }}
+          VITE_NEPPY_APP_ENV: ${{ inputs.app_env }}
           VITE_BACKEND_URL: ${{ inputs.base_url }}
           VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID }}
           # React frontend Sentry DSN — separate Sentry project. Baked by the
           # Vite plugin via `import.meta.env.VITE_SENTRY_DSN`.
           VITE_SENTRY_DSN: ${{ vars.OPENHUMAN_REACT_SENTRY_DSN }}
           # Tauri shell (desktop host) Sentry DSN. Baked into the shell binary
-          # via `option_env!("OPENHUMAN_TAURI_SENTRY_DSN")` at compile time.
-          OPENHUMAN_TAURI_SENTRY_DSN: ${{ vars.OPENHUMAN_TAURI_SENTRY_DSN }}
+          # via `option_env!("NEPPY_TAURI_SENTRY_DSN")` at compile time.
+          NEPPY_TAURI_SENTRY_DSN: ${{ vars.OPENHUMAN_TAURI_SENTRY_DSN }}
           # Bake the build SHA into the Tauri shell so its Sentry release tag
           # (`openhuman@<version>+<sha>`) matches the React bundle and the
           # standalone CLI — events across all surfaces group under one release.
-          OPENHUMAN_BUILD_SHA: ${{ inputs.sha }}
+          NEPPY_BUILD_SHA: ${{ inputs.sha }}
           VITE_DEBUG: ${{ vars.VITE_DEBUG }}
           VITE_BUILD_SHA: ${{ inputs.sha }}
           # Use short_sha (12 chars) — matches what config.ts / vite.config.ts
           # / main.rs / app/src-tauri/src/lib.rs all slice VITE_BUILD_SHA /
-          # OPENHUMAN_BUILD_SHA down to at runtime when emitting events. The
+          # NEPPY_BUILD_SHA down to at runtime when emitting events. The
           # sentry-vite-plugin reads SENTRY_RELEASE raw, so a long-SHA value
           # here would tag uploads against a different release than events.
           SENTRY_RELEASE: openhuman@${{ inputs.version }}+${{ inputs.short_sha }}

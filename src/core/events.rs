@@ -289,8 +289,8 @@ pub enum DomainEvent {
     },
     /// A memory sync was requested for a specific channel or all channels.
     ///
-    /// Published by `openhuman.memory_sync_channel` (channel_id = Some(...)) and
-    /// `openhuman.memory_sync_all` (channel_id = None). No consumers exist yet —
+    /// Published by `neppy.memory_sync_channel` (channel_id = Some(...)) and
+    /// `neppy.memory_sync_all` (channel_id = None). No consumers exist yet —
     /// this variant is a hook for future ingestion subscribers to react to pull
     /// requests. See `src/neppy/memory/ops.rs` for the RPC handlers.
     MemorySyncRequested { channel_id: Option<String> },
@@ -1090,7 +1090,7 @@ pub enum DomainEvent {
     },
     /// The MCP setup agent asked the user for a secret value. The UI
     /// subscribes to this and renders a native prompt; on submit it calls
-    /// `openhuman.mcp_setup_submit_secret`. `ref_id` is the opaque handle
+    /// `neppy.mcp_setup_submit_secret`. `ref_id` is the opaque handle
     /// returned to the agent; the raw secret value never traverses this
     /// event.
     McpSetupSecretRequested {
@@ -1113,7 +1113,7 @@ pub enum DomainEvent {
         reason: String,
     },
 
-    /// An `OPENHUMAN_APPROVAL_GATE=0` env override was observed but
+    /// An `NEPPY_APPROVAL_GATE=0` env override was observed but
     /// IGNORED because the host is the Tauri desktop shell. The gate is
     /// always installed under the desktop host; this event lets the UI
     /// surface a one-shot info banner so the user sees the override was
@@ -1124,7 +1124,7 @@ pub enum DomainEvent {
         host: String,
     },
     /// The approval gate was NOT installed because an
-    /// `OPENHUMAN_APPROVAL_GATE=0` env override was honored on a
+    /// `NEPPY_APPROVAL_GATE=0` env override was honored on a
     /// standalone host (CLI / Docker). Surfaces the elevated-privilege
     /// state so any connected dashboard can flag it; the desktop UI
     /// banner subscribes to this variant.

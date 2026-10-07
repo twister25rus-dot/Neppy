@@ -3,8 +3,8 @@
 //! A [ratatui]-based agent cockpit with Chat, Logs, Config, and Settings,
 //! persistent thread resume, command/file pickers, approvals, plan review,
 //! task/goal/agent/skill/MCP/artifact views, Git review, and a multiline composer.
-//! Chat uses the **same `web_chat` surface** the desktop app drives (`openhuman.channel_web_chat` /
-//! `openhuman.channel_web_cancel` +
+//! Chat uses the **same `web_chat` surface** the desktop app drives (`neppy.channel_web_chat` /
+//! `neppy.channel_web_cancel` +
 //! [`web_chat::subscribe_web_channel_events`](crate::neppy::web_chat::subscribe_web_channel_events)).
 //! It boots the core in-process — no HTTP, no sockets — via
 //! `CoreBuilder::new(HostKind::Cli).domains(DomainSet::full()).services(ServiceSet::none())`

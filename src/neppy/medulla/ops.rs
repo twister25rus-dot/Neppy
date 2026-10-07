@@ -242,9 +242,9 @@ mod tests {
 
     impl EnvGuard {
         fn remove(key: &'static str) -> Self {
-            let prev = std::env::var(key).ok();
+            let prev = crate::neppy::util::env::var(key).ok();
             // SAFETY: caller holds ENV_LOCK guard.
-            unsafe { std::env::remove_var(key) };
+            crate::neppy::util::env::remove_var(key);
             Self { key, prev }
         }
     }
@@ -254,7 +254,7 @@ mod tests {
             match &self.prev {
                 // SAFETY: caller's ENV_LOCK guard is still alive during drop.
                 Some(v) => unsafe { std::env::set_var(self.key, v) },
-                None => unsafe { std::env::remove_var(self.key) },
+                None => crate::neppy::util::env::remove_var(self.key),
             }
         }
     }

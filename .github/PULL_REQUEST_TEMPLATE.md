@@ -62,7 +62,7 @@ A bare "#123" reference is just a link — it does NOT close the issue.
 
 ### Validation Run
 
-- [ ] `pnpm --filter openhuman-app format:check`
+- [ ] `pnpm --filter neppy-app format:check`
 - [ ] `pnpm typecheck`
 - [ ] Focused tests:
 - [ ] Rust fmt/check (if changed):

@@ -143,8 +143,7 @@ describe('PTT — global push-to-talk flow', function () {
     // Sanity: store handle is exposed (gated on E2E build flag).
     const storePresent = await browser.execute(
       () =>
-        typeof (window as unknown as { __OPENHUMAN_STORE__?: unknown }).__OPENHUMAN_STORE__ !==
-        'undefined'
+        typeof (window as unknown as { __NEPPY_STORE__?: unknown }).__NEPPY_STORE__ !== 'undefined'
     );
     expect(storePresent).toBe(true);
 
@@ -154,9 +153,9 @@ describe('PTT — global push-to-talk flow', function () {
     await browser.execute(() => {
       const store = (
         window as unknown as {
-          __OPENHUMAN_STORE__: { dispatch: (a: { type: string; payload: unknown }) => unknown };
+          __NEPPY_STORE__: { dispatch: (a: { type: string; payload: unknown }) => unknown };
         }
-      ).__OPENHUMAN_STORE__;
+      ).__NEPPY_STORE__;
       store.dispatch({ type: 'ptt/setSpeakReplies', payload: true });
       store.dispatch({ type: 'ptt/setShowOverlay', payload: true });
     });
@@ -165,9 +164,9 @@ describe('PTT — global push-to-talk flow', function () {
     await browser.execute((shortcut: string) => {
       const store = (
         window as unknown as {
-          __OPENHUMAN_STORE__: { dispatch: (a: { type: string; payload: string }) => unknown };
+          __NEPPY_STORE__: { dispatch: (a: { type: string; payload: string }) => unknown };
         }
-      ).__OPENHUMAN_STORE__;
+      ).__NEPPY_STORE__;
       store.dispatch({ type: 'ptt/setPttShortcut', payload: shortcut });
     }, SHORTCUT);
 
@@ -178,9 +177,9 @@ describe('PTT — global push-to-talk flow', function () {
           (await browser.execute(() => {
             const state = (
               window as unknown as {
-                __OPENHUMAN_STORE__: { getState: () => { ptt?: { shortcut?: string | null } } };
+                __NEPPY_STORE__: { getState: () => { ptt?: { shortcut?: string | null } } };
               }
-            ).__OPENHUMAN_STORE__.getState();
+            ).__NEPPY_STORE__.getState();
             return state.ptt?.shortcut ?? null;
           })) === SHORTCUT
         );
@@ -198,9 +197,9 @@ describe('PTT — global push-to-talk flow', function () {
     const registrationError = await browser.execute(() => {
       const state = (
         window as unknown as {
-          __OPENHUMAN_STORE__: { getState: () => { ptt?: { registrationError?: string | null } } };
+          __NEPPY_STORE__: { getState: () => { ptt?: { registrationError?: string | null } } };
         }
-      ).__OPENHUMAN_STORE__.getState();
+      ).__NEPPY_STORE__.getState();
       return state.ptt?.registrationError ?? null;
     });
     if (registrationError) {
@@ -480,7 +479,7 @@ describe('PTT — global push-to-talk flow', function () {
 
     // -------------------------------------------------------------------------
     // 10b. Assert at least one core_rpc_relay invocation included
-    //      method: 'openhuman.channel_web_chat' with speak_reply: true.
+    //      method: 'neppy.channel_web_chat' with speak_reply: true.
     // -------------------------------------------------------------------------
     const relayCalls = (await browser.execute(() => {
       return (window as unknown as { __e2e_ptt_relay_calls?: unknown[] }).__e2e_ptt_relay_calls;
@@ -495,10 +494,7 @@ describe('PTT — global push-to-talk flow', function () {
         // { method, params, body } or a single string — we coerce robustly.
         const args = call.args as Record<string, unknown> | undefined;
         const payload = args && typeof args === 'object' ? JSON.stringify(args) : String(args);
-        if (
-          payload.includes('openhuman.channel_web_chat') &&
-          payload.includes('"speak_reply":true')
-        ) {
+        if (payload.includes('neppy.channel_web_chat') && payload.includes('"speak_reply":true')) {
           sawSpeakReplyChat = true;
           break;
         }
@@ -596,7 +592,7 @@ describe('PTT — global push-to-talk flow', function () {
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
       const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
-        'openhuman.test_support_read_workspace_file',
+        'neppy.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 65_536 }
       );
       if (read.ok && read.result?.result?.content_utf8) {

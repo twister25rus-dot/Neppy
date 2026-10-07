@@ -54,7 +54,7 @@ Retrieval can target any scope: search a single source, drill down a topic, or p
 
 ## Where it lives on disk
 
-Inside your workspace (default `~/.neppy`, or whatever `OPENHUMAN_WORKSPACE` points at):
+Inside your workspace (default `~/.neppy`, or whatever `NEPPY_WORKSPACE` points at):
 
 | Path                    | What's there                                           |
 | ----------------------- | ------------------------------------------------------ |
@@ -139,7 +139,7 @@ This is why retrieval can show provenance without re-running the pipeline: the c
 
 - **Automatic** - every active integration is auto-fetched every twenty minutes; see [Auto-fetch](auto-fetch.md).
 - **Manual** - the Memory tab in the desktop app exposes a "Run ingest" trigger per source.
-- **RPC** - `openhuman.memory_tree_ingest` for advanced workflows.
+- **RPC** - `neppy.memory_tree_ingest` for advanced workflows.
 
 ## In the desktop app - the Intelligence tab
 

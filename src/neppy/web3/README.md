@@ -5,7 +5,7 @@ module. The wallet stays basic (keys, balances, transfers, tx inspection); this
 module focuses on EVM/Solana(/BTC) dapp interactions: **swaps**, **bridges**, and
 generic **dapp contract calls**.
 
-Quotes and ready-to-sign **unsigned transactions** come from the openhuman
+Quotes and ready-to-sign **unsigned transactions** come from the neppy
 backend's deBridge proxy (`/agent-integrations/crypto/{routes,swap,bridge}`,
 backend PR #852). This module only resolves the caller's wallet address,
 forwards the request, and stores a confirm→execute quote. On execute it hands
@@ -36,7 +36,7 @@ keys never leave the wallet.
 
 ## RPC / controllers
 
-- `web3_swap`: `quote`, `execute`, `routes` (`openhuman.web3_swap_quote`, …).
+- `web3_swap`: `quote`, `execute`, `routes` (`neppy.web3_swap_quote`, …).
 - `web3_bridge`: `quote`, `execute`.
 - `web3_dapp`: `call`, `execute`.
 

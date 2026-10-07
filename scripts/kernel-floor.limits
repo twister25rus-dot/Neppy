@@ -52,7 +52,7 @@
 #                      name / 0 native. The package that leaves is `tinymcp`
 #                      itself and nothing beneath it, because its dependencies
 #                      are shared with kernel surface: in this profile
-#                      `rusqlite` has SIX parents (openhuman, tinyagents,
+#                      `rusqlite` has SIX parents (neppy, tinyagents,
 #                      tinychannels, tinycortex, tinymcp, tinymemory-core) and
 #                      `reqwest` has TEN. Confirmed with `cargo tree
 #                      --no-default-features --features flows -e normal -i
@@ -430,7 +430,7 @@
 #   280/6  2026-08-02  tinychannels provider gating (-28). Gated the two heavy
 #                      PROVIDERS inside the vendored crate (`email` = lettre/
 #                      async-imap/mail-parser, `lark` = axum/prost) rather than
-#                      gating the crate out of openhuman — the crate itself is
+#                      gating the crate out of neppy — the crate itself is
 #                      load-bearing (DomainEvent embeds its envelope, config and
 #                      security::pairing re-export its types), so gating it
 #                      would have meant stubbing ~28 items including crypto

@@ -1,5 +1,5 @@
 /**
- * Wire types for `openhuman.subagent_runs_history` (camelCase): a read-only
+ * Wire types for `neppy.subagent_runs_history` (camelCase): a read-only
  * projection of the run ledger across all threads. See the core's
  * Chat / Orchestration modes contract.
  */

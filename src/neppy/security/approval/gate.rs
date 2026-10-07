@@ -143,7 +143,7 @@ pub fn parse_approval_reply(message: &str) -> Option<ApprovalDecision> {
 static GLOBAL_GATE: OnceLock<Arc<ApprovalGate>> = OnceLock::new();
 
 /// Snapshot of the host-aware boot decision the runtime made when it
-/// evaluated `OPENHUMAN_APPROVAL_GATE`. Surfaced to the UI banner via
+/// evaluated `NEPPY_APPROVAL_GATE`. Surfaced to the UI banner via
 /// `approval_get_gate_state` so the user sees a banner the *first* time
 /// they open the app after an override was honored, not only when a
 /// connected socket happens to receive the boot-time domain event.
@@ -155,11 +155,11 @@ static GLOBAL_GATE: OnceLock<Arc<ApprovalGate>> = OnceLock::new();
 pub struct ApprovalGateBootState {
     /// True when the gate was installed at boot.
     pub installed: bool,
-    /// True when an `OPENHUMAN_APPROVAL_GATE=0` env override was honored
+    /// True when an `NEPPY_APPROVAL_GATE=0` env override was honored
     /// (CLI / Docker host) — the gate is OFF and external_effect tools
     /// run unprompted. UI banners on this state.
     pub disabled_by_env: bool,
-    /// True when an `OPENHUMAN_APPROVAL_GATE=0` env override was observed
+    /// True when an `NEPPY_APPROVAL_GATE=0` env override was observed
     /// but suppressed because the host is the Tauri desktop shell. UI
     /// surfaces a softer one-shot info banner so the user knows the
     /// override was rejected.
@@ -315,19 +315,19 @@ impl ApprovalGate {
         }
     }
 
-    /// TTL for parking an approval. In debug builds `OPENHUMAN_APPROVAL_TTL_SECS`
+    /// TTL for parking an approval. In debug builds `NEPPY_APPROVAL_TTL_SECS`
     /// overrides the boot-time default per intercept so E2E tests can exercise
     /// the timeout path without waiting the full `DEFAULT_APPROVAL_TTL`.
     ///
     /// The override is compiled out of release builds (`#[cfg(debug_assertions)]`):
     /// the shipped product never reads this env var, so a hostile process
     /// environment cannot shorten the supervised-mode approval window. This
-    /// mirrors the host-aware discipline of the `OPENHUMAN_APPROVAL_GATE`
+    /// mirrors the host-aware discipline of the `NEPPY_APPROVAL_GATE`
     /// kill-switch — neither override can make the gate fail open; the timeout
     /// path always denies.
     fn effective_ttl(&self) -> Duration {
         #[cfg(debug_assertions)]
-        if let Some(ttl) = std::env::var("OPENHUMAN_APPROVAL_TTL_SECS")
+        if let Some(ttl) = crate::neppy::util::env::var("NEPPY_APPROVAL_TTL_SECS")
             .ok()
             .and_then(|v| v.parse::<u64>().ok())
             .map(Duration::from_secs)
@@ -580,6 +580,20 @@ impl ApprovalGate {
             );
         }
 
+        // Debug Mode (spec 20): a dangerous shell command in a Debug turn must be
+        // confirmed by a human every time. Computed here so neither the
+        // `auto_approve_all` bypass nor a remembered "Always allow" for `shell`
+        // can skip the prompt (a safe command in the same turn is unaffected).
+        let debug_force_prompt =
+            debug_dangerous_command(tool_name, raw_args.unwrap_or(&args_redacted));
+        if debug_force_prompt {
+            tracing::info!(
+                tool = tool_name,
+                "[approval::gate] debug-mode dangerous command — always parks \
+                 (auto_approve_all / allowlist do not apply)"
+            );
+        }
+
         // Per-flow tool trust shortcut (flow-approval-surface, PR2): a prior
         // `ApproveAlwaysForFlow` decision on this exact `(flow_id, tool_name)`
         // pair short-circuits to `Allow` for every future Workflow-origin call
@@ -638,6 +652,7 @@ impl ApprovalGate {
                 ..
             }
         ) || pet_companion_high_risk.is_some()
+            || debug_force_prompt
             // A goal continuation on a Pet hand-off thread runs under the Pet
             // companion origin, but keeps GoalContinuation's rule too: nobody
             // is present, so the allowlist shortcut never applies (strictest
@@ -685,6 +700,7 @@ impl ApprovalGate {
         // Every OTHER companion call honours this flag like a chat turn.
         let auto_all = self.is_auto_approve_all_enabled()
             && pet_companion_high_risk.is_none()
+            && !debug_force_prompt
             && !matches!(
                 &origin,
                 AgentTurnOrigin::TrustedAutomation {
@@ -1615,6 +1631,18 @@ fn pet_research_decision(tool_name: &str, job_id: &str) -> (GateOutcome, Option<
 // `shell` command lexer); re-exported here so the gate and its tests name it
 // unqualified.
 pub(crate) use super::pet_classifier::pet_companion_high_risk;
+
+/// True when `tool_name` is the shell tool and the ambient Debug turn's command
+/// gate answers `Ask` for its `command` (a dangerous command). `false` outside
+/// a Debug turn, so every other call keeps its normal approval rules.
+fn debug_dangerous_command(tool_name: &str, args: &serde_json::Value) -> bool {
+    use crate::neppy::agent::debug_mode::policy::{gate_current_command, DebugCommandDecision};
+    tool_name == "shell"
+        && args
+            .get("command")
+            .and_then(|c| c.as_str())
+            .is_some_and(|c| matches!(gate_current_command(c), DebugCommandDecision::Ask(_)))
+}
 
 /// Whether the current task runs under a Pet companion origin (a hand-off run,
 /// or a sub-agent it delegated to — the origin propagates across delegation).
@@ -2656,13 +2684,13 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let (gate, _dir) = test_gate(); // boot-time TTL = 2s
-        unsafe { std::env::set_var("OPENHUMAN_APPROVAL_TTL_SECS", "42") };
+        unsafe { std::env::set_var("NEPPY_APPROVAL_TTL_SECS", "42") };
         assert_eq!(
             gate.effective_ttl(),
             Duration::from_secs(42),
-            "valid OPENHUMAN_APPROVAL_TTL_SECS must override boot-time TTL"
+            "valid NEPPY_APPROVAL_TTL_SECS must override boot-time TTL"
         );
-        unsafe { std::env::remove_var("OPENHUMAN_APPROVAL_TTL_SECS") };
+        crate::neppy::util::env::remove_var("NEPPY_APPROVAL_TTL_SECS");
     }
 
     #[test]
@@ -2671,13 +2699,13 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let (gate, _dir) = test_gate(); // boot-time TTL = 2s
-        unsafe { std::env::set_var("OPENHUMAN_APPROVAL_TTL_SECS", "not-a-number") };
+        unsafe { std::env::set_var("NEPPY_APPROVAL_TTL_SECS", "not-a-number") };
         assert_eq!(
             gate.effective_ttl(),
             Duration::from_secs(2),
-            "garbage OPENHUMAN_APPROVAL_TTL_SECS must fall back to boot-time TTL"
+            "garbage NEPPY_APPROVAL_TTL_SECS must fall back to boot-time TTL"
         );
-        unsafe { std::env::remove_var("OPENHUMAN_APPROVAL_TTL_SECS") };
+        crate::neppy::util::env::remove_var("NEPPY_APPROVAL_TTL_SECS");
     }
 
     #[test]
@@ -2686,11 +2714,11 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let (gate, _dir) = test_gate(); // boot-time TTL = 2s
-        unsafe { std::env::remove_var("OPENHUMAN_APPROVAL_TTL_SECS") };
+        crate::neppy::util::env::remove_var("NEPPY_APPROVAL_TTL_SECS");
         assert_eq!(
             gate.effective_ttl(),
             Duration::from_secs(2),
-            "unset OPENHUMAN_APPROVAL_TTL_SECS must fall back to boot-time TTL"
+            "unset NEPPY_APPROVAL_TTL_SECS must fall back to boot-time TTL"
         );
     }
 
@@ -2729,7 +2757,7 @@ mod tests {
         fn a_clamp_never_extends_a_shorter_boot_time_ttl() {
             // Mirrors production's env-override guard: a clamp may only
             // narrow, never widen, the gate's own effective TTL (e.g. a
-            // debug-only `OPENHUMAN_APPROVAL_TTL_SECS=60` override that is
+            // debug-only `NEPPY_APPROVAL_TTL_SECS=60` override that is
             // already shorter than either clamp).
             let short_ttl = Duration::from_secs(60);
             assert_eq!(
@@ -3725,3 +3753,7 @@ mod background_turn_tests;
 #[cfg(test)]
 #[path = "gate_pet_companion_tests.rs"]
 mod pet_companion_tests;
+
+#[cfg(test)]
+#[path = "gate_debug_dangerous_tests.rs"]
+mod debug_dangerous_tests;

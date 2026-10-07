@@ -1,5 +1,5 @@
 //! Unit tests for `service::mock` — the deterministic file-backed service
-//! manager activated by `OPENHUMAN_SERVICE_MOCK`.
+//! manager activated by `NEPPY_SERVICE_MOCK`.
 //!
 //! These tests cover:
 //! - `is_enabled()` responds to the env-var values accepted as truthy/falsy.
@@ -7,15 +7,15 @@
 //!   correct `ServiceState` at each step.
 //! - Forced-failure injection via the `failures` JSON field.
 //! - Dispatch routing: `core::install / start / stop / status / uninstall`
-//!   delegate to mock when `OPENHUMAN_SERVICE_MOCK` is set.
+//!   delegate to mock when `NEPPY_SERVICE_MOCK` is set.
 
 use super::*;
 use crate::neppy::config::Config;
 use std::sync::Mutex;
 use tempfile::TempDir;
 
-/// Serialise tests that touch `OPENHUMAN_SERVICE_MOCK` and
-/// `OPENHUMAN_SERVICE_MOCK_STATE_FILE` so they don't race.
+/// Serialise tests that touch `NEPPY_SERVICE_MOCK` and
+/// `NEPPY_SERVICE_MOCK_STATE_FILE` so they don't race.
 static MOCK_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 // ── is_enabled ────────────────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ static MOCK_TEST_LOCK: Mutex<()> = Mutex::new(());
 fn is_enabled_returns_false_when_var_absent() {
     let _g = MOCK_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     // Remove any stale value from a previous test.
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK");
     assert!(!is_enabled());
 }
 
@@ -32,26 +32,26 @@ fn is_enabled_returns_false_when_var_absent() {
 fn is_enabled_returns_true_for_truthy_values() {
     let _g = MOCK_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     for v in ["1", "true", "yes", "on", "TRUE", "YES", "ON"] {
-        std::env::set_var("OPENHUMAN_SERVICE_MOCK", v);
+        std::env::set_var("NEPPY_SERVICE_MOCK", v);
         assert!(
             is_enabled(),
-            "is_enabled should be true for OPENHUMAN_SERVICE_MOCK={v}"
+            "is_enabled should be true for NEPPY_SERVICE_MOCK={v}"
         );
     }
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK");
 }
 
 #[test]
 fn is_enabled_returns_false_for_falsy_values() {
     let _g = MOCK_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     for v in ["0", "false", "no", "off", "FALSE"] {
-        std::env::set_var("OPENHUMAN_SERVICE_MOCK", v);
+        std::env::set_var("NEPPY_SERVICE_MOCK", v);
         assert!(
             !is_enabled(),
-            "is_enabled should be false for OPENHUMAN_SERVICE_MOCK={v}"
+            "is_enabled should be false for NEPPY_SERVICE_MOCK={v}"
         );
     }
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK");
 }
 
 // ── state-machine transitions ─────────────────────────────────────────────────
@@ -74,14 +74,14 @@ impl StateFileGuard {
     fn new() -> Self {
         let dir = TempDir::new().expect("tempdir");
         let path = dir.path().join("svc-mock-state.json");
-        std::env::set_var("OPENHUMAN_SERVICE_MOCK_STATE_FILE", &path);
+        std::env::set_var("NEPPY_SERVICE_MOCK_STATE_FILE", &path);
         StateFileGuard { _dir: dir }
     }
 }
 
 impl Drop for StateFileGuard {
     fn drop(&mut self) {
-        std::env::remove_var("OPENHUMAN_SERVICE_MOCK_STATE_FILE");
+        crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK_STATE_FILE");
     }
 }
 
@@ -213,13 +213,13 @@ fn forced_install_failure_returns_error() {
     let dir = TempDir::new().unwrap();
     let state_path = dir.path().join("fail-state.json");
     write_state_file_with_install_failure(&state_path);
-    std::env::set_var("OPENHUMAN_SERVICE_MOCK_STATE_FILE", &state_path);
+    std::env::set_var("NEPPY_SERVICE_MOCK_STATE_FILE", &state_path);
 
     let tmp = TempDir::new().unwrap();
     let cfg = test_config(&tmp);
     let result = install(&cfg);
 
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK_STATE_FILE");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK_STATE_FILE");
 
     assert!(
         result.is_err(),
@@ -238,13 +238,13 @@ fn forced_start_failure_returns_error() {
     let dir = TempDir::new().unwrap();
     let state_path = dir.path().join("fail-state.json");
     write_state_file_with_start_failure(&state_path);
-    std::env::set_var("OPENHUMAN_SERVICE_MOCK_STATE_FILE", &state_path);
+    std::env::set_var("NEPPY_SERVICE_MOCK_STATE_FILE", &state_path);
 
     let tmp = TempDir::new().unwrap();
     let cfg = test_config(&tmp);
     let result = start(&cfg);
 
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK_STATE_FILE");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK_STATE_FILE");
 
     assert!(result.is_err(), "start with forced failure must return Err");
 }
@@ -259,9 +259,9 @@ fn core_dispatch_routes_install_to_mock_when_env_set() {
     let cfg = test_config(&tmp);
 
     // Enable the mock.
-    std::env::set_var("OPENHUMAN_SERVICE_MOCK", "1");
+    std::env::set_var("NEPPY_SERVICE_MOCK", "1");
     let status = crate::neppy::platform::service::install(&cfg).expect("core::install via mock");
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK");
 
     assert!(
         matches!(status.state, ServiceState::Stopped),
@@ -282,9 +282,9 @@ fn core_dispatch_routes_status_to_mock_when_env_set() {
     let tmp = TempDir::new().unwrap();
     let cfg = test_config(&tmp);
 
-    std::env::set_var("OPENHUMAN_SERVICE_MOCK", "1");
+    std::env::set_var("NEPPY_SERVICE_MOCK", "1");
     let status = crate::neppy::platform::service::status(&cfg).expect("core::status via mock");
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK");
 
     // Fresh state → NotInstalled
     assert!(
@@ -299,7 +299,7 @@ fn core_dispatch_routes_status_to_mock_when_env_set() {
 #[test]
 fn mock_agent_running_returns_none_when_disabled() {
     let _g = MOCK_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK");
     assert!(
         mock_agent_running().is_none(),
         "mock_agent_running must be None when the mock env var is absent"
@@ -313,10 +313,10 @@ fn mock_agent_running_returns_true_by_default_state() {
     let tmp = TempDir::new().unwrap();
     let cfg = test_config(&tmp);
     // Initialise the state file by calling status (creates default).
-    std::env::set_var("OPENHUMAN_SERVICE_MOCK", "1");
+    std::env::set_var("NEPPY_SERVICE_MOCK", "1");
     let _ = status(&cfg).ok();
     let result = mock_agent_running();
-    std::env::remove_var("OPENHUMAN_SERVICE_MOCK");
+    crate::neppy::util::env::remove_var("NEPPY_SERVICE_MOCK");
 
     // Default state has agent_running = true.
     assert_eq!(

@@ -38,7 +38,7 @@ interface ThreadState {
    * invisible: before #5156 nothing in the store observed
    * `createNewThread.rejected`, so every call site had to remember its own
    * `.catch` — one that forgot produced `UnhandledRejection: Core RPC
-   * openhuman.threads_create_new timed out after 30000ms` (Sentry
+   * neppy.threads_create_new timed out after 30000ms` (Sentry
    * TAURI-REACT-10) and one that caught-and-ignored left the user staring at a
    * dead "New chat" button. The chat surface renders this.
    */
@@ -137,6 +137,32 @@ export const createNewThread = createAsyncThunk(
       // Keep the payload a plain string (redux-serializable) but normalise every
       // throw shape, including the `SerializedError` a nested `.unwrap()` raises
       // when `loadThreads` is what actually failed (#5156).
+      return rejectWithValue(formatThreadCreateError(error));
+    }
+  }
+);
+
+/**
+ * Create a thread and put it in Debug mode (the Debug page's only way to make
+ * one). The thread is created through the normal path, then switched with
+ * `threads_set_mode`; the list is reloaded so the label and mode are present.
+ * If the mode switch fails the fresh, empty thread is deleted so no stray
+ * normal-chat thread is left behind.
+ */
+export const createDebugThread = createAsyncThunk(
+  'thread/createDebugThread',
+  async (_: void, { dispatch, rejectWithValue }) => {
+    try {
+      const created = await dispatch(createNewThread()).unwrap();
+      try {
+        await threadApi.setMode(created.id, 'debug', 'debug_page');
+      } catch (error) {
+        await threadApi.deleteThread(created.id).catch(() => undefined);
+        throw error;
+      }
+      await dispatch(loadThreads()).unwrap();
+      return { ...created, mode: 'debug' as ThreadMode };
+    } catch (error) {
       return rejectWithValue(formatThreadCreateError(error));
     }
   }

@@ -1,4 +1,4 @@
-//! Tauri-focused daemon configuration wrapper for openhuman.
+//! Tauri-focused daemon configuration wrapper for neppy.
 
 use crate::neppy::config::{
     AuditConfig, AutonomyConfig, ReliabilityConfig, SecretsConfig, SecurityConfig,
@@ -36,7 +36,7 @@ impl DaemonConfig {
         let data_dir = app_data_dir.join("openhuman");
         let workspace_dir = data_dir.join("workspace");
         log::info!(
-            "[openhuman:config] Initialized config: data_dir={}, workspace_dir={}",
+            "[neppy:config] Initialized config: data_dir={}, workspace_dir={}",
             data_dir.display(),
             workspace_dir.display()
         );

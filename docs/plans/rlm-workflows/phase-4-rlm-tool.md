@@ -56,7 +56,7 @@
   `src/neppy/tools/mod.rs` like other domains.
 - Add to `all_tools_with_runtime` (`src/neppy/tools/ops.rs`), gated:
   **not registered** when the autonomy tier is `readonly`, or when
-  `OPENHUMAN_RLM=0`. Env/config default: **on** for `supervised`/`full`.
+  `NEPPY_RLM=0`. Env/config default: **on** for `supervised`/`full`.
 - The tool needs the turn's tool list + provider to build its bridge, so it
   is constructed with the same runtime handles `all_tools_with_runtime`
   already passes (security policy, config) plus a late-bound

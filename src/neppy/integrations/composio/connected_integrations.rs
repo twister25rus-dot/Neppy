@@ -64,7 +64,7 @@ pub(crate) fn composio_cache_test_lock() -> std::sync::MutexGuard<'static, ()> {
 
 /// Derive a stable cache key from a [`Config`]. We use the stringified
 /// `config_path` because it uniquely identifies a user context (it
-/// resolves to the per-user openhuman dir).
+/// resolves to the per-user neppy dir).
 pub(crate) fn cache_key(config: &Config) -> String {
     config.config_path.display().to_string()
 }
@@ -455,7 +455,7 @@ pub async fn fetch_connected_integrations_status(
 /// The connectable toolkit slugs to surface in the agent prompt, aligned
 /// with the backend's execution gate.
 ///
-/// Prefers the dynamic catalog's **enabled** entries (openhuman PR #3933 /
+/// Prefers the dynamic catalog's **enabled** entries (neppy PR #3933 /
 /// backend #1012). The backend gate (`isToolkitConnectable` →
 /// `getProjectList().filter(p => p.enabled)`) and `catalog[].enabled` are
 /// driven by the same project auth-config status, so sourcing membership from
@@ -494,7 +494,7 @@ fn connectable_toolkit_slugs(
 /// Choose the one-line description rendered for a toolkit in the agent
 /// prompt's `## Connected Integrations` block.
 ///
-/// Prefers the backend's **dynamic catalog** description (openhuman PR #3933
+/// Prefers the backend's **dynamic catalog** description (neppy PR #3933
 /// / backend #1012 — `GET /agent-integrations/composio/toolkits` now returns
 /// a `catalog[]` with per-toolkit metadata) so the orchestrator advertises
 /// what Composio actually offers. Falls back to the hardcoded

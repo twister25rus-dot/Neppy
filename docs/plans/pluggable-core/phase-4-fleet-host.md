@@ -16,8 +16,8 @@ weight on the shipped desktop/lib build: it is gated behind the default-OFF
 `bin-tools` feature):
 
 - **Process-per-tenant MVP**: spawns `neppy-core run --jsonrpc-only` per tenant
-  with a per-user `OPENHUMAN_WORKSPACE`, a minted `OPENHUMAN_CORE_TOKEN`, and
-  `OPENHUMAN_DISABLE_CHANNEL_LISTENERS=1` (this is the `ServiceSet::headless_api`
+  with a per-user `NEPPY_WORKSPACE`, a minted `NEPPY_CORE_TOKEN`, and
+  `NEPPY_DISABLE_CHANNEL_LISTENERS=1` (this is the `ServiceSet::headless_api`
   shape from Phase 1). Before keeping a tenant registered, probes the assigned
   port through authenticated JSON-RPC with that tenant's core bearer; stale or
   fallback ports fail closed. Production multi-tenant security still requires

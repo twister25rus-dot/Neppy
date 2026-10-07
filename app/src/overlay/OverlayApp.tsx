@@ -356,7 +356,7 @@ export default function OverlayApp() {
           activation_mode: string;
           transcription_count: number;
           last_error: string | null;
-        }>({ method: 'openhuman.voice_server_status' });
+        }>({ method: 'neppy.voice_server_status' });
 
         if (disposed) return;
 

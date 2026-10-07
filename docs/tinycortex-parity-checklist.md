@@ -163,7 +163,7 @@ Engine tests now run at their ownership boundary rather than through Neppy re-ex
   security-critical `MemoryTaint` seam.
 - Neppy CI now runs `cargo test --manifest-path vendor/tinycortex/Cargo.toml --features
   git-diff,sync,persona` when the submodule pointer changes and in the reusable full Rust suite. This is
-  required because Cargo does not run dependency test targets while testing `openhuman`.
+  required because Cargo does not run dependency test targets while testing `neppy`.
 
 The focused local verification commands are:
 

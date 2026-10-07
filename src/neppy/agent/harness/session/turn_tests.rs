@@ -320,7 +320,7 @@ impl PostTurnHook for RecordingHook {
     }
 }
 
-/// Point `OPENHUMAN_WORKSPACE` at a scratch directory for the lifetime of a
+/// Point `NEPPY_WORKSPACE` at a scratch directory for the lifetime of a
 /// test, restoring the previous value on drop.
 ///
 /// Needed by any test that lets the harness reach `Config::load_or_init()` —
@@ -345,9 +345,9 @@ impl WorkspaceEnvGuard {
         let lock = crate::neppy::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
+        let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
         unsafe {
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            std::env::set_var("NEPPY_WORKSPACE", path);
         }
         Self {
             _lock: lock,
@@ -360,9 +360,9 @@ impl Drop for WorkspaceEnvGuard {
     fn drop(&mut self) {
         unsafe {
             if let Some(previous) = self.previous.take() {
-                std::env::set_var("OPENHUMAN_WORKSPACE", previous);
+                std::env::set_var("NEPPY_WORKSPACE", previous);
             } else {
-                std::env::remove_var("OPENHUMAN_WORKSPACE");
+                crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
             }
         }
     }

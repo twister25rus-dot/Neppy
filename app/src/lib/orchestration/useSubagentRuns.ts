@@ -5,7 +5,7 @@ import { fetchSubagentRunsHistory } from '../../services/api/subagentRunsApi';
 import type { SubagentRunsHistory, SubagentRunsHistoryParams } from '../../types/subagentRuns';
 import { isLiveRun } from './agentRunPhases';
 
-const log = debug('openhuman:orchestration:runs');
+const log = debug('neppy:orchestration:runs');
 
 export interface UseSubagentRunsOptions {
   /** Poll interval while any run is live. `0` disables polling. */

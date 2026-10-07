@@ -72,14 +72,14 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: impl AsRef<Path>) -> Self {
-        let old = std::env::var_os(key);
+        let old = neppy_core::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value.as_ref()) };
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var_os(key);
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var_os(key);
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -89,7 +89,7 @@ impl Drop for EnvGuard {
         unsafe {
             match &self.old {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -335,7 +335,7 @@ fn gmail_post_process_slims_wrapped_messages_and_honours_raw_flag() {
 async fn linear_provider_profile_tasks_sync_and_periodic_bookkeeping_use_loopback() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
     let requests: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
@@ -412,7 +412,7 @@ async fn linear_provider_profile_tasks_sync_and_periodic_bookkeeping_use_loopbac
 async fn slack_sync_status_rpc_reads_mock_connections_and_persisted_state() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
     let mut config = config_in(&tmp);

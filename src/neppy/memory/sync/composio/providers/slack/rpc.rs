@@ -4,10 +4,10 @@
 //! entire Slack integration lives under `composio::providers::slack`.
 //!
 //! Public JSON-RPC surface:
-//! - `openhuman.slack_memory_sync_trigger` — run `SlackProvider::sync()`
+//! - `neppy.slack_memory_sync_trigger` — run `SlackProvider::sync()`
 //!   once for each active Slack connection (or just one, if
 //!   `connection_id` is supplied).
-//! - `openhuman.slack_memory_sync_status` — list the per-connection
+//! - `neppy.slack_memory_sync_status` — list the per-connection
 //!   sync cursors + last-synced timestamps.
 
 use serde::{Deserialize, Serialize};

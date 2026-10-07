@@ -38,7 +38,7 @@ If `origin` resolves to `tinyhumansai`, stop and ask the user to add a fork remo
 - Mock backend calls all the way through with `scripts/mock-api-server.mjs`, `scripts/mock-api/*`, or `app/test/e2e/mock-server.ts`; do not hit real backend services or third-party APIs in E2E.
 - Use focused commands when possible:
   - `pnpm test:rust:e2e -- --suite <suite>`
-  - `pnpm --filter openhuman-app test:e2e:web:build`
+  - `pnpm --filter neppy-app test:e2e:web:build`
   - `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts`
 - Unit tests still matter for narrow logic, but they do not replace E2E coverage for newly built features.
 

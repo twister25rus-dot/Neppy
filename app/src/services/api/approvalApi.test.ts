@@ -54,7 +54,7 @@ describe('fetchRecentApprovalDecisions', () => {
     const rows = await fetchRecentApprovalDecisions();
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_list_recent_decisions',
+      method: 'neppy.approval_list_recent_decisions',
       params: {},
     });
     expect(rows).toHaveLength(1);
@@ -67,7 +67,7 @@ describe('fetchRecentApprovalDecisions', () => {
     await fetchRecentApprovalDecisions(10);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_list_recent_decisions',
+      method: 'neppy.approval_list_recent_decisions',
       params: { limit: 10 },
     });
   });
@@ -89,7 +89,7 @@ describe('fetchPendingApprovals', () => {
 
     const rows = await fetchPendingApprovals();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.approval_list_pending' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.approval_list_pending' });
     expect(rows[0].request_id).toBe('p-1');
   });
 
@@ -111,13 +111,13 @@ describe('fetchPendingApprovals', () => {
 describe('decideApproval', () => {
   beforeEach(() => mockCallCoreRpc.mockReset());
 
-  it('calls openhuman.approval_decide with the request id and decision', async () => {
+  it('calls neppy.approval_decide with the request id and decision', async () => {
     mockCallCoreRpc.mockResolvedValueOnce({});
 
     await decideApproval('req-1', 'approve_always_for_flow');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_decide',
+      method: 'neppy.approval_decide',
       params: { request_id: 'req-1', decision: 'approve_always_for_flow' },
     });
   });
@@ -140,7 +140,7 @@ describe('preauthorizeFlow', () => {
     const result = await preauthorizeFlow('flow-1', ['flows_http_request', 'GMAIL_SEND_EMAIL']);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_preauthorize_flow',
+      method: 'neppy.approval_preauthorize_flow',
       params: { flow_id: 'flow-1', tool_names: ['flows_http_request', 'GMAIL_SEND_EMAIL'] },
     });
     expect(result.granted).toEqual(['flows_http_request']);

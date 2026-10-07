@@ -43,7 +43,7 @@ describe('tauriCommands/cron — neppyCronRun / neppyCronRuns', () => {
       mockCallCoreRpc.mockResolvedValue({ id: 'job-1' });
       await neppyCronAdd(params);
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
-        expect.objectContaining({ method: 'openhuman.cron_add' })
+        expect.objectContaining({ method: 'neppy.cron_add' })
       );
     });
   });
@@ -63,7 +63,7 @@ describe('tauriCommands/cron — neppyCronRun / neppyCronRuns', () => {
       });
       await neppyCronRun('job-1');
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
-        expect.objectContaining({ method: 'openhuman.cron_run', params: { job_id: 'job-1' } })
+        expect.objectContaining({ method: 'neppy.cron_run', params: { job_id: 'job-1' } })
       );
     });
   });
@@ -79,7 +79,7 @@ describe('tauriCommands/cron — neppyCronRun / neppyCronRuns', () => {
       await neppyCronRuns('job-1');
       expect(mockCallCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.cron_runs',
+          method: 'neppy.cron_runs',
           params: expect.objectContaining({ job_id: 'job-1', limit: 20 }),
         })
       );

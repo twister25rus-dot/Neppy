@@ -36,7 +36,7 @@ Static directory hosting over ad-hoc, in-process HTTP listeners owned by the cor
 
 ## RPC / controllers
 
-Namespace `http_host` (invoked as `openhuman.http_host_<function>`):
+Namespace `http_host` (invoked as `neppy.http_host_<function>`):
 
 | Method | Inputs | Outputs |
 | --- | --- | --- |

@@ -194,7 +194,7 @@ pub async fn add_auto_approve_tool(tool_name: &str) -> Result<(), String> {
 ///
 /// After persisting, pushes the new value into the live
 /// [`crate::neppy::tools::timeout`] runtime so subsequent tool calls honour
-/// it without a core restart. The `OPENHUMAN_TOOL_TIMEOUT_SECS` env var, when
+/// it without a core restart. The `NEPPY_TOOL_TIMEOUT_SECS` env var, when
 /// set, still overrides the config value (the push is a no-op in that case).
 /// Returns the updated config snapshot.
 pub async fn apply_agent_settings(
@@ -244,7 +244,7 @@ pub async fn load_and_apply_agent_settings(
 }
 
 /// Returns the agent execution settings (currently the action timeout) plus the
-/// runtime-effective value and whether the `OPENHUMAN_TOOL_TIMEOUT_SECS` env var
+/// runtime-effective value and whether the `NEPPY_TOOL_TIMEOUT_SECS` env var
 /// is overriding the configured value, so the UI can explain a no-op control.
 pub async fn get_agent_settings() -> Result<RpcOutcome<serde_json::Value>, String> {
     let config = load_config_with_timeout().await?;
@@ -412,7 +412,7 @@ fn agent_paths_payload(config: &Config) -> serde_json::Value {
 /// (`live_policy::set_action_dir`), and `DomainEvent::AgentPathsChanged` is
 /// published. Returns the same payload shape as [`get_agent_paths`].
 ///
-/// When `OPENHUMAN_ACTION_DIR` is set the env var wins: the override is still
+/// When `NEPPY_ACTION_DIR` is set the env var wins: the override is still
 /// persisted, but the effective `action_dir` (and the returned `action_dir`)
 /// continues to reflect the env value, and `action_dir_source` reports `"env"`.
 pub async fn apply_agent_paths_settings(

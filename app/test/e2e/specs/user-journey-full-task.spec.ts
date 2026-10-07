@@ -118,8 +118,8 @@ describe('User journey — full research task', () => {
     const deadline = Date.now() + 45_000;
     while (Date.now() < deadline) {
       const snap = (await browser.execute((tid: string) => {
-        const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-        const state = winAny.__OPENHUMAN_STORE__?.getState() as
+        const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+        const state = winAny.__NEPPY_STORE__?.getState() as
           | { chatRuntime?: { toolTimelineByThread?: Record<string, Array<{ name?: string }>> } }
           | undefined;
         const timeline = state?.chatRuntime?.toolTimelineByThread?.[tid] ?? [];
@@ -164,7 +164,7 @@ describe('User journey — full research task', () => {
     await browser.waitUntil(
       async () => {
         const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-          'openhuman.test_support_in_flight_chats',
+          'neppy.test_support_in_flight_chats',
           {}
         );
         return snap.ok && (snap.result?.result?.entries ?? []).length === 0;

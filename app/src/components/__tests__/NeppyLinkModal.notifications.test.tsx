@@ -7,7 +7,7 @@ import {
   showNativeNotification,
 } from '../../lib/nativeNotifications/tauriBridge';
 import { isTauri } from '../../utils/tauriCommands/common';
-import NeppyLinkModal, { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
+import NeppyLinkModal, { NEPPY_LINK_EVENT } from '../NeppyLinkModal';
 
 vi.mock('../../utils/tauriCommands/common', () => ({ isTauri: vi.fn(() => false) }));
 
@@ -26,7 +26,7 @@ describe('NeppyLinkModal notifications test flow', () => {
   function openNotificationsModal() {
     act(() => {
       window.dispatchEvent(
-        new CustomEvent(OPENHUMAN_LINK_EVENT, { detail: { path: 'settings/notifications' } })
+        new CustomEvent(NEPPY_LINK_EVENT, { detail: { path: 'settings/notifications' } })
       );
     });
   }

@@ -27,7 +27,7 @@ interface ThreadTokenUsage {
   subagents: ThreadSubagentUsage[];
 }
 
-/** Wire shape returned by `openhuman.threads_token_usage` (snake_case). */
+/** Wire shape returned by `neppy.threads_token_usage` (snake_case). */
 interface ThreadSubagentUsageWire {
   agent_id: string;
   input_tokens: number;
@@ -63,7 +63,7 @@ interface Envelope<T> {
  */
 export async function fetchThreadTokenUsage(threadId: string): Promise<ThreadTokenUsage> {
   const response = await callCoreRpc<Envelope<ThreadTokenUsageWire>>({
-    method: 'openhuman.threads_token_usage',
+    method: 'neppy.threads_token_usage',
     params: { thread_id: threadId },
   });
   const d = response?.data;

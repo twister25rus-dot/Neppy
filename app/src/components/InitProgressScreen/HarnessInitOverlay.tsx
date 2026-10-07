@@ -127,7 +127,7 @@ function isRunDismissed(snapshot: HarnessInitSnapshot | null): boolean {
 /**
  * Blocking first-run initialization gate.
  *
- * Polls `openhuman.harness_init_status` and, while the run is in progress,
+ * Polls `neppy.harness_init_status` and, while the run is in progress,
  * covers the app with a full-screen overlay showing per-step progress. The
  * overlay offers a "Run in background" action so the user can dismiss it and
  * keep working while setup continues — the core runs init as a background task

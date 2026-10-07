@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # library-instances.sh — multi-instance fuzz driver: spawn N independent
 # `library-profile` processes (one live instance each, held alive at settled
-# state via OPENHUMAN_PROFILE_HOLD_SECS) and measure per-INSTANCE cost and
+# state via NEPPY_PROFILE_HOLD_SECS) and measure per-INSTANCE cost and
 # box survivability under the "N processes" deployment model, as opposed to
 # the "N agents in one process" model that `library-fleet.sh` measures.
 #
@@ -157,7 +157,7 @@ probe_binary() {
     local probe_file="$OUT_DIR/probe.json"
     local probe_log="$OUT_DIR/probe.log"
 
-    OPENHUMAN_PROFILE_HOLD_SECS=0 "$BIN" "$SCENARIO" >"$probe_file" 2>"$probe_log"
+    NEPPY_PROFILE_HOLD_SECS=0 "$BIN" "$SCENARIO" >"$probe_file" 2>"$probe_log"
 
     if ! jq empty "$probe_file" >/dev/null 2>&1; then
         echo "ERROR: probe run did not produce valid JSON: $probe_file" >&2
@@ -264,7 +264,7 @@ run_sweep_point() {
         local out_file="$point_dir/proc-$i.json"
         local log_file="$point_dir/proc-$i.log"
 
-        env "OPENHUMAN_PROFILE_HOLD_SECS=$HOLD_SECS" "$BIN" "$SCENARIO" \
+        env "NEPPY_PROFILE_HOLD_SECS=$HOLD_SECS" "$BIN" "$SCENARIO" \
             >"$out_file" 2>"$log_file" &
         pids+=("$!")
 

@@ -11,7 +11,7 @@ Proactive ingestion of work items from external tools. A **task source** is a us
 - Deterministically enrich raw tasks into agent-ready ones — urgency heuristic, summary, linked assignee, templated agent prompt (`enrich.rs`).
 - Route enriched tasks onto the `task-sources` thread board as todo cards and, for proactive sources, dispatch a triage turn through the same path Composio webhooks use (`route.rs`).
 - Fire a one-shot fetch when a matching Composio connection is created (`bus.rs`).
-- Expose an `openhuman.task_sources_*` RPC surface for CRUD, manual fetch, filter preview, ingested-task listing, and status (`schemas.rs` + `ops.rs`).
+- Expose an `neppy.task_sources_*` RPC surface for CRUD, manual fetch, filter preview, ingested-task listing, and status (`schemas.rs` + `ops.rs`).
 
 ## Key files
 
@@ -42,7 +42,7 @@ Re-exported from `mod.rs`:
 
 ## RPC / controllers
 
-Namespace `task_sources` (methods `openhuman.task_sources_<function>`):
+Namespace `task_sources` (methods `neppy.task_sources_<function>`):
 
 | Function | Description |
 | --- | --- |

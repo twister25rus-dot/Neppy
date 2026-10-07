@@ -6,7 +6,7 @@ Process-wide wall-clock timeout policy for tool execution (the node/tool runtime
 
 Highest precedence first:
 
-1. `OPENHUMAN_TOOL_TIMEOUT_SECS` environment variable — operator override. When set to a valid value (`1..=3600`) it always wins; config pushes are ignored while it is present.
+1. `NEPPY_TOOL_TIMEOUT_SECS` environment variable — operator override. When set to a valid value (`1..=3600`) it always wins; config pushes are ignored while it is present.
 2. The persisted config value (`[agent].agent_timeout_secs`), pushed in via `set_tool_timeout_secs` at startup (from `core::jsonrpc::register_domain_subscribers`, the always-on core boot path) and on every `config.update_agent_settings` RPC.
 3. The built-in `DEFAULT_TIMEOUT_SECS` (`120`) default.
 
@@ -28,12 +28,12 @@ Highest precedence first:
 
 - `parse_tool_timeout_secs(raw: Option<&str>) -> u64` — pure parser; bounds to `1..=3600`, else returns the `120`s default.
 - `set_tool_timeout_secs(config_secs: u64) -> u64` — push a config-sourced value into the runtime atomic, honouring the env override. Returns the effective value stored. Called at startup and on each config update.
-- `env_override_active() -> bool` — `true` when `OPENHUMAN_TOOL_TIMEOUT_SECS` is set to a valid override (so UI changes are ignored). Surfaced to the settings panel.
+- `env_override_active() -> bool` — `true` when `NEPPY_TOOL_TIMEOUT_SECS` is set to a valid override (so UI changes are ignored). Surfaced to the settings panel.
 - `tool_execution_timeout_secs() -> u64` — effective timeout in seconds (read fresh each call).
 - `tool_execution_timeout_duration() -> Duration` — same effective value as a `Duration`.
 - `explicit_call_timeout_secs(requested: Option<u64>, cap: u64) -> Option<u64>` — resolve an **explicit** per-call timeout for an otherwise-unbounded scripting tool. `None`/`Some(0)` ⇒ `None` (run unbounded); any positive value clamps to `MIN_TIMEOUT_SECS..=cap`. Callers pass their own ceiling (`MAX_TIMEOUT_SECS` for `shell`, `1800` for `node_exec`/`npm_exec`).
 - `explicit_call_timeout_duration(requested: Option<u64>, cap: u64) -> Option<Duration>` — same as a `Duration`, `None` for unbounded.
-- Constants: `DEFAULT_TIMEOUT_SECS = 120`, `MIN_TIMEOUT_SECS = 1`, `MAX_TIMEOUT_SECS = 3600`, `SANDBOX_UNBOUNDED_CAP_SECS = 86_400`, `ENV_VAR = "OPENHUMAN_TOOL_TIMEOUT_SECS"`.
+- Constants: `DEFAULT_TIMEOUT_SECS = 120`, `MIN_TIMEOUT_SECS = 1`, `MAX_TIMEOUT_SECS = 3600`, `SANDBOX_UNBOUNDED_CAP_SECS = 86_400`, `ENV_VAR = "NEPPY_TOOL_TIMEOUT_SECS"`.
 
 ## Scripting tools run unbounded (issue #4023)
 
@@ -42,7 +42,7 @@ The global timeout governs **non-scripting** tools only — a hung network/MCP c
 ## Configuration
 
 - `[agent].agent_timeout_secs` (config TOML) — integer seconds, valid range `1..=3600`, default `120`. Editable live via **Settings → Agent OS access → Action timeout** or the `config.update_agent_settings` RPC.
-- `OPENHUMAN_TOOL_TIMEOUT_SECS` (env) — operator override with the same range. When valid it overrides the config value; an invalid value is ignored so the config value still applies.
+- `NEPPY_TOOL_TIMEOUT_SECS` (env) — operator override with the same range. When valid it overrides the config value; an invalid value is ignored so the config value still applies.
 
 ## Dependencies
 

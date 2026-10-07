@@ -7,7 +7,7 @@
  *   - `summary` → the sealed summary's `.md` file in the workspace content
  *     vault, through the shared guarded `preview_workspace_text` command (the
  *     same path the hover "Preview" button uses).
- *   - `chunk`   → `openhuman.memory_tree_get_chunk`, preferring the vault
+ *   - `chunk`   → `neppy.memory_tree_get_chunk`, preferring the vault
  *     `body` (full note) over `chunk.content` (the stored ≤500-char preview).
  *     Synthetic document leaves (`doc:<scope>:<child>`) are not chunks and
  *     have nothing to fetch.
@@ -70,7 +70,7 @@ function unwrap<T>(resp: T | { result?: T }): T {
 async function loadChunk(node: GraphNode): Promise<GraphNodeContent> {
   console.debug('[memory-graph-details] get_chunk entry id=%s', node.id);
   const raw = await callCoreRpc<GetChunkResponse | { result?: GetChunkResponse }>({
-    method: 'openhuman.memory_tree_get_chunk',
+    method: 'neppy.memory_tree_get_chunk',
     params: { id: node.id },
   });
   const resp = unwrap<GetChunkResponse>(raw);

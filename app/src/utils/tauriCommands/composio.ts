@@ -24,7 +24,7 @@ export async function neppyComposioListTriggerHistory(
   }
 
   return await callCoreRpc<CommandResponse<{ result: ComposioTriggerHistoryResult }>>({
-    method: 'openhuman.composio_list_trigger_history',
+    method: 'neppy.composio_list_trigger_history',
     params: { limit },
   });
 }
@@ -48,7 +48,7 @@ export async function neppyComposioGetMode(): Promise<CommandResponse<ComposioMo
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<ComposioModeStatus>>({
-    method: 'openhuman.composio_get_mode',
+    method: 'neppy.composio_get_mode',
   });
 }
 
@@ -67,7 +67,7 @@ export async function neppyComposioSetApiKey(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<ComposioSetApiKeyResult>>({
-    method: 'openhuman.composio_set_api_key',
+    method: 'neppy.composio_set_api_key',
     params: { api_key: apiKey, activate_direct: activateDirect },
   });
 }
@@ -81,6 +81,6 @@ export async function neppyComposioClearApiKey(): Promise<
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<{ cleared: boolean; mode: string }>>({
-    method: 'openhuman.composio_clear_api_key',
+    method: 'neppy.composio_clear_api_key',
   });
 }

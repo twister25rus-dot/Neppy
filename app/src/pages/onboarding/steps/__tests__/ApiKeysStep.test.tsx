@@ -66,7 +66,7 @@ describe('ApiKeysStep OpenAI OAuth', () => {
     await waitFor(() => {
       expect(callCoreRpc).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'openhuman.inference_openai_oauth_complete',
+          method: 'neppy.inference_openai_oauth_complete',
           params: { callback_url: 'http://127.0.0.1:1455/auth/callback?code=abc&state=state-1' },
         })
       );
@@ -121,7 +121,7 @@ describe('ApiKeysStep OpenAI OAuth', () => {
       await screen.findByText('Paste the redirect URL from your browser after signing in.')
     ).toBeInTheDocument();
     expect(callCoreRpc).not.toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.inference_openai_oauth_complete' })
+      expect.objectContaining({ method: 'neppy.inference_openai_oauth_complete' })
     );
   });
 

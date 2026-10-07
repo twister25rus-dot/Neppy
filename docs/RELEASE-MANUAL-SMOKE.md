@@ -26,7 +26,7 @@ Applies to every release, all platforms.
 
 ### Terminal agent cockpit
 
-- [ ] **`openhuman tui --last` completes an interactive agent turn and restores the terminal** — In a real PTY, first run `openhuman tui --new`, send `Remember marker TUI-SMOKE-42`, wait for completion, and exit with Ctrl+C. Run `openhuman tui --last`, verify that marker and its answer are restored, send a multiline prompt, steer the active turn with Enter, then type a follow-up and press Tab while streaming; verify the queued follow-up executes after the active turn. Open `/help` and `/status`, exit with Ctrl+C, and confirm shell echo/line editing still work. Repeat the resume, one turn, and exit flow with `openhuman tui --last --no-alt-screen`; confirm history renders in the current buffer and the shell is usable afterward.
+- [ ] **`neppy-core tui --last` completes an interactive agent turn and restores the terminal** — In a real PTY, first run `neppy-core tui --new`, send `Remember marker TUI-SMOKE-42`, wait for completion, and exit with Ctrl+C. Run `neppy-core tui --last`, verify that marker and its answer are restored, send a multiline prompt, steer the active turn with Enter, then type a follow-up and press Tab while streaming; verify the queued follow-up executes after the active turn. Open `/help` and `/status`, exit with Ctrl+C, and confirm shell echo/line editing still work. Repeat the resume, one turn, and exit flow with `neppy-core tui --last --no-alt-screen`; confirm history renders in the current buffer and the shell is usable afterward.
 
 ### macOS
 
@@ -50,7 +50,7 @@ Applies to every release, all platforms.
 - [ ] **`.deb` and/or `.AppImage` install on a clean Ubuntu 22.04** — `sudo apt-get install -y --no-install-recommends ./Neppy_*.deb` or `chmod +x Neppy_*.AppImage && ./Neppy_*.AppImage`. Expected: no missing-dependency errors; app launches.
 - [ ] **`.AppImage` launches on a clean Ubuntu 24.04 host without a sibling extracted tree** — Run the downloaded AppImage directly from an empty directory. Expected: no `Interpreter not found!` error; `sharun` finds its bundled dynamic linker and the app reaches the first window.
 - [ ] **OS-native notification toasts fire** — Trigger a notification from inside the app (e.g. memory captured, agent finished). Expected: a libnotify-style toast appears outside the app window. (CI Linux sees only Xvfb; this surface verifies on a real desktop.)
-- [ ] **Headless supervisor update stages without self-exit** — On a Linux service deployment with `[update] restart_strategy = "supervisor"` and `rpc_mutations_enabled = false`, stage a new core binary through the documented operator flow. Expected: the running process stays up until the supervisor restart, the staged binary is present on disk, and `systemctl restart openhuman` (or equivalent) picks up the new version.
+- [ ] **Headless supervisor update stages without self-exit** — On a Linux service deployment with `[update] restart_strategy = "supervisor"` and `rpc_mutations_enabled = false`, stage a new core binary through the documented operator flow. Expected: the running process stays up until the supervisor restart, the staged binary is present on disk, and `systemctl restart neppy` (or equivalent) picks up the new version.
 
 ### Cross-platform
 

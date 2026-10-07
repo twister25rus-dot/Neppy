@@ -192,7 +192,7 @@ const DevicesPanel = () => {
     setError(null);
     try {
       const res = await callCoreRpc<ListDevicesResponse>({
-        method: 'openhuman.devices_list',
+        method: 'neppy.devices_list',
         params: {},
       });
       const active = res.devices.filter(d => !d.revoked);
@@ -263,7 +263,7 @@ const DevicesPanel = () => {
     log('[devices-ui] revoking channel_id=%s', target.channel_id);
     try {
       await callCoreRpc({
-        method: 'openhuman.devices_revoke',
+        method: 'neppy.devices_revoke',
         params: { channel_id: target.channel_id },
       });
       log('[devices-ui] revoke ok channel_id=%s', target.channel_id);

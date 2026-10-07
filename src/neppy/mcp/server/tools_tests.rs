@@ -810,7 +810,7 @@ async fn call_tool_records_write_argument_rejection() {
         .unwrap_or_else(|err| err.into_inner());
     let tmp = tempfile::tempdir().expect("tempdir");
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let config = config_rpc::load_config_with_timeout()
         .await
@@ -850,9 +850,7 @@ async fn call_tool_records_write_argument_rejection() {
         .contains("missing required argument `content`"));
     assert!(rows[0].args_summary.get("content").is_none());
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 }
 
 // ── slug_from ─────────────────────────────────────────────────────

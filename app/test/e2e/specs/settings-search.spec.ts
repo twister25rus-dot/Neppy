@@ -29,7 +29,7 @@ async function selectedSearchEngine(): Promise<string | null> {
 }
 
 async function getSearchSettings(): Promise<Record<string, unknown>> {
-  const response = await callNeppyRpc('openhuman.config_get_search_settings', {});
+  const response = await callNeppyRpc('neppy.config_get_search_settings', {});
   expect(response.ok).toBe(true);
   return response.result?.result ?? {};
 }
@@ -46,9 +46,7 @@ describe('Settings - Search', () => {
   });
 
   it('persists Disabled search engine from the search settings panel', async () => {
-    const reset = await callNeppyRpc('openhuman.config_update_search_settings', {
-      engine: 'managed',
-    });
+    const reset = await callNeppyRpc('neppy.config_update_search_settings', { engine: 'managed' });
     expect(reset.ok).toBe(true);
 
     await navigateViaHash('/settings/search');

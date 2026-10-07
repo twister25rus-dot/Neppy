@@ -10,7 +10,7 @@
  * routes any such notification here instead of the generic
  * `CoreNotificationCard`.
  *
- * Approve calls `openhuman.flows_resume` (via {@link resumeFlow}) naming the
+ * Approve calls `neppy.flows_resume` (via {@link resumeFlow}) naming the
  * pending node ids as the approvals; success clears the notification's
  * actions and marks it read. Dismiss is UI-only: there is no `flows_deny` /
  * cancel-run RPC yet (documented follow-up — the run stays parked

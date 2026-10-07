@@ -132,17 +132,17 @@ impl UnavailableReason {
     pub fn notice(self) -> &'static str {
         match self {
             Self::PayloadTooLarge => concat!(
-                "[openhuman: summarization unavailable — this output exceeds the summarizer's ",
+                "[neppy: summarization unavailable — this output exceeds the summarizer's ",
                 "size cap, so the tool output follows and may be truncated. ",
                 "Do not re-run the tool for a summary.]"
             ),
             Self::Disabled => concat!(
-                "[openhuman: summarization unavailable — it is switched off for this session ",
+                "[neppy: summarization unavailable — it is switched off for this session ",
                 "after repeated failures, so the tool output follows. ",
                 "Do not re-run the tool for a summary.]"
             ),
             Self::Failed => concat!(
-                "[openhuman: summarization unavailable — the summarizer did not return a usable ",
+                "[neppy: summarization unavailable — the summarizer did not return a usable ",
                 "summary for this result, so the tool output follows. ",
                 "Do not re-run the tool for a summary.]"
             ),
@@ -731,7 +731,7 @@ mod tests {
                 );
             }
             assert!(
-                notice.starts_with("[openhuman: summarization unavailable"),
+                notice.starts_with("[neppy: summarization unavailable"),
                 "{reason:?} must be greppable and self-identifying: {notice}"
             );
         }

@@ -27,7 +27,7 @@ describe('neppyGetClientConfig', () => {
     await expect(neppyGetClientConfig()).rejects.toThrow(/Not running in Tauri/i);
   });
 
-  it('dispatches openhuman.inference_get_client_config and returns the response', async () => {
+  it('dispatches neppy.inference_get_client_config and returns the response', async () => {
     const expected = {
       result: {
         api_url: 'https://api.openai.com/v1/chat/completions',
@@ -41,7 +41,7 @@ describe('neppyGetClientConfig', () => {
 
     const got = await neppyGetClientConfig();
 
-    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.inference_get_client_config' });
+    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'neppy.inference_get_client_config' });
     expect(got).toEqual(expected);
   });
 });
@@ -58,18 +58,14 @@ describe('Claude Code wrappers', () => {
     const auth = { source: 'subscription', account_email: 'a@b.co', last_checked: 1 };
     vi.mocked(callCoreRpc).mockResolvedValueOnce(auth as never);
     const got = await neppyClaudeCodeAuthStatus();
-    expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_claude_code_auth_status',
-    });
+    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'neppy.inference_claude_code_auth_status' });
     expect(got).toEqual(auth);
   });
 
   it('neppyClaudeCodeSettings dispatches the bare settings RPC', async () => {
     vi.mocked(callCoreRpc).mockResolvedValueOnce({ full_access: true } as never);
     const got = await neppyClaudeCodeSettings();
-    expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_claude_code_settings',
-    });
+    expect(callCoreRpc).toHaveBeenCalledWith({ method: 'neppy.inference_claude_code_settings' });
     expect(got).toEqual({ full_access: true });
   });
 
@@ -77,7 +73,7 @@ describe('Claude Code wrappers', () => {
     vi.mocked(callCoreRpc).mockResolvedValueOnce({ full_access: false } as never);
     const got = await neppyClaudeCodeSetFullAccess(false);
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.inference_claude_code_set_full_access',
+      method: 'neppy.inference_claude_code_set_full_access',
       params: { enabled: false },
     });
     expect(got).toEqual({ full_access: false });

@@ -5,7 +5,7 @@
 //! via `ConversationStore`, then exercise both the `threads::ops::transcript_search`
 //! op. The agent-facing `transcript_search` tool was removed with the rest of
 //! the `thread_*` tool family; the op below still backs the RPC surface.
-//! against that on-disk data under a per-test temp `OPENHUMAN_WORKSPACE`.
+//! against that on-disk data under a per-test temp `NEPPY_WORKSPACE`.
 //!
 //! This is the Rust contract counterpart to the live-session audit in
 //! `scripts/debug/agent-prepare-context-audit.mjs` (which drives the same path
@@ -34,7 +34,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: only used in tests that first acquire env_lock(), which
         // serializes process-global env mutations.
         unsafe { std::env::set_var(key, path.as_os_str()) };
@@ -47,12 +47,12 @@ impl Drop for EnvVarGuard {
         match &self.old {
             // SAFETY: teardown runs under the same env_lock() critical section.
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
 
-/// Serialises tests: `HOME` + `OPENHUMAN_WORKSPACE` are process-global.
+/// Serialises tests: `HOME` + `NEPPY_WORKSPACE` are process-global.
 static ENV_LOCK: OnceLock<tokio::sync::Mutex<()>> = OnceLock::new();
 
 async fn env_lock() -> tokio::sync::MutexGuard<'static, ()> {
@@ -148,7 +148,7 @@ async fn transcript_search_op_finds_message_in_prior_thread() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace).expect("create workspace");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
     seed_workspace(&workspace);
 
     let hits = transcript_search("Postgres migration script", 10, None)
@@ -179,7 +179,7 @@ async fn transcript_search_op_honours_exclude_thread() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace).expect("create workspace");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
     seed_workspace(&workspace);
 
     let hits = transcript_search("migration", 10, Some("thread-pg"))
@@ -200,7 +200,7 @@ async fn transcript_search_op_returns_empty_on_no_match() {
     let _home = EnvVarGuard::set_to_path("HOME", tmp.path());
     let workspace = tmp.path().join("workspace");
     std::fs::create_dir_all(&workspace).expect("create workspace");
-    let _ws = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _ws = EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace);
     seed_workspace(&workspace);
 
     let hits = transcript_search("quantum chromodynamics zzz", 10, None)

@@ -2,9 +2,9 @@
 //!
 //! One orchestrator turn fans out to **K** parallel researcher subagents (all
 //! in-process tokio tasks, not child processes) via `spawn_parallel_agents`.
-//! K comes from `OPENHUMAN_PROFILE_SUBAGENTS` (default 8; tested up to 32), and
+//! K comes from `NEPPY_PROFILE_SUBAGENTS` (default 8; tested up to 32), and
 //! each researcher carries per-subagent mock latency drawn from the shared
-//! `OPENHUMAN_PROFILE_MOCK_LATENCY_MS` / `_JITTER_MS` knobs.
+//! `NEPPY_PROFILE_MOCK_LATENCY_MS` / `_JITTER_MS` knobs.
 //!
 //! ## Measurement shape (and a hard constraint we hit)
 //!
@@ -53,7 +53,7 @@ const STORM_PROMPT: &str = "Research every subsystem in parallel and merge the f
 const RESEARCHER_IDENTITY: &str = "You are the **Researcher** agent";
 
 fn env_usize(key: &str, default: usize) -> usize {
-    std::env::var(key)
+    neppy_core::neppy::util::env::var(key)
         .ok()
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|n| *n > 0)
@@ -84,7 +84,7 @@ fn latency_summary(mut samples: Vec<u128>) -> Option<TurnLatency> {
 }
 
 pub async fn run() -> Result<ProfileResult> {
-    let width = env_usize("OPENHUMAN_PROFILE_SUBAGENTS", DEFAULT_SUBAGENTS);
+    let width = env_usize("NEPPY_PROFILE_SUBAGENTS", DEFAULT_SUBAGENTS);
 
     let mut fixture = fixture()?;
     // `spawn_parallel_agents` rejects a fan-out wider than the orchestrator's
@@ -181,6 +181,6 @@ mod tests {
 
     #[test]
     fn env_usize_falls_back_on_zero_or_unset() {
-        assert_eq!(env_usize("OPENHUMAN_PROFILE_STORM_UNSET_XYZ", 8), 8);
+        assert_eq!(env_usize("NEPPY_PROFILE_STORM_UNSET_XYZ", 8), 8);
     }
 }

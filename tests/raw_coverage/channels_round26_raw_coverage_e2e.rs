@@ -156,7 +156,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: String) -> Self {
-        let prior = std::env::var(key).ok();
+        let prior = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, prior }
     }
@@ -167,15 +167,15 @@ impl Drop for EnvGuard {
         if let Some(value) = self.prior.take() {
             std::env::set_var(self.key, value);
         } else {
-            std::env::remove_var(self.key);
+            neppy_core::neppy::util::env::remove_var(self.key);
         }
     }
 }
 
 impl EnvGuard {
     fn unset(key: &'static str) -> Self {
-        let prior = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let prior = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, prior }
     }
 }

@@ -172,9 +172,9 @@ unconfigured host pays nothing per tool call.
 
 Hook processes inherit the core's environment plus:
 
-`OPENHUMAN_PROJECT_DIR` (also exported as `CLAUDE_PROJECT_DIR` and
-`CURSOR_PROJECT_DIR`), `OPENHUMAN_VERSION`, `OPENHUMAN_HOOK_EVENT`,
-`OPENHUMAN_SESSION_ID`, `OPENHUMAN_AGENT_ID`.
+`NEPPY_PROJECT_DIR` (also exported as `CLAUDE_PROJECT_DIR` and
+`CURSOR_PROJECT_DIR`), `NEPPY_VERSION`, `NEPPY_HOOK_EVENT`,
+`NEPPY_SESSION_ID`, `NEPPY_AGENT_ID`.
 
 ## Prompt hooks
 
@@ -194,14 +194,14 @@ every tool call.
 Three RPC methods, on the `hooks` namespace:
 
 ```bash
-openhuman hooks list      # what is configured, from which file, and whether it is wired
-openhuman hooks reload    # re-read every layer
-openhuman hooks test --event beforeShellExecution \
+neppy-core hooks list      # what is configured, from which file, and whether it is wired
+neppy-core hooks reload    # re-read every layer
+neppy-core hooks test --event beforeShellExecution \
   --payload '{"command":"rm -rf /","sandbox":false}'
 ```
 
-Over JSON-RPC the same three are `openhuman.hooks_list`, `openhuman.hooks_reload`
-and `openhuman.hooks_test`.
+Over JSON-RPC the same three are `neppy.hooks_list`, `neppy.hooks_reload`
+and `neppy.hooks_test`.
 
 `hooks test` fires one synthetic event in the foreground and reports what each
 matching hook decided, including hooks for observational events that a real

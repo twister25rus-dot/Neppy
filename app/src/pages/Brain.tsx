@@ -162,10 +162,10 @@ export default function Brain() {
       console.debug('[brain] memory-tree-completed → refetch');
       void load();
     };
-    window.addEventListener('openhuman:memory-tree-completed', onTreeDone);
+    window.addEventListener('neppy:memory-tree-completed', onTreeDone);
     return () => {
       cancelled = true;
-      window.removeEventListener('openhuman:memory-tree-completed', onTreeDone);
+      window.removeEventListener('neppy:memory-tree-completed', onTreeDone);
     };
     // `authUserId` is a dependency so a logout→login (identity becomes
     // available again) re-pulls the persisted graph instead of leaving the

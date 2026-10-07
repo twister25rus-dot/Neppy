@@ -33,7 +33,7 @@ body:
     id: workspace
     attributes:
       label: Where is the workspace?
-      description: The OPENHUMAN_WORKSPACE path, and whether it is a local disk, an external drive, or a network mount.
+      description: The NEPPY_WORKSPACE path, and whether it is a local disk, an external drive, or a network mount.
     validations:
       required: true
   - type: input

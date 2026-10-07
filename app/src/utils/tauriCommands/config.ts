@@ -268,7 +268,7 @@ export async function neppyGetClientConfig(): Promise<CommandResponse<ClientConf
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<ClientConfig>>({
-    method: 'openhuman.inference_get_client_config',
+    method: 'neppy.inference_get_client_config',
   });
 }
 
@@ -294,7 +294,7 @@ export async function neppyClaudeCodeStatus(): Promise<CommandResponse<ClaudeCod
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<ClaudeCodeStatus>>({
-    method: 'openhuman.inference_claude_code_status',
+    method: 'neppy.inference_claude_code_status',
   });
 }
 
@@ -333,7 +333,7 @@ export async function neppyClaudeCodeAuthStatus(): Promise<ClaudeCodeAuthStatus>
   // `{ result, logs }` envelope). `callCoreRpc` returns the JSON-RPC `result`,
   // so this resolves directly to the AuthStatus — do NOT read `.result`.
   return await callCoreRpc<ClaudeCodeAuthStatus>({
-    method: 'openhuman.inference_claude_code_auth_status',
+    method: 'neppy.inference_claude_code_auth_status',
   });
 }
 
@@ -357,9 +357,7 @@ export async function neppyClaudeCodeSettings(): Promise<ClaudeCodeSettings> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
-  return await callCoreRpc<ClaudeCodeSettings>({
-    method: 'openhuman.inference_claude_code_settings',
-  });
+  return await callCoreRpc<ClaudeCodeSettings>({ method: 'neppy.inference_claude_code_settings' });
 }
 
 /**
@@ -371,7 +369,7 @@ export async function neppyClaudeCodeSetFullAccess(enabled: boolean): Promise<Cl
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<ClaudeCodeSettings>({
-    method: 'openhuman.inference_claude_code_set_full_access',
+    method: 'neppy.inference_claude_code_set_full_access',
     params: { enabled },
   });
 }
@@ -398,7 +396,7 @@ export async function neppyUpdateModelSettings(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<ConfigSnapshot>>({
-    method: 'openhuman.inference_update_model_settings',
+    method: 'neppy.inference_update_model_settings',
     params: update,
   });
 }
@@ -503,13 +501,13 @@ export async function neppyGetAutonomySettings(): Promise<CommandResponse<Autono
  * hard-coding defaults like `~/Neppy/projects`.
  *
  * - `action_dir` — agent CWD for `shell` / `node_exec` / `npm_exec` / file
- *   writes. Defaults to `projects_dir`; overridable via `OPENHUMAN_ACTION_DIR`.
+ *   writes. Defaults to `projects_dir`; overridable via `NEPPY_ACTION_DIR`.
  * - `workspace_dir` — internal product state (memory / sessions / vault).
  *   Agent-blocked.
  * - `projects_dir` — default projects home; matches `action_dir` when no
  *   override is set.
  * - `action_dir_source` — where the effective `action_dir` came from:
- *   `'env'` (pinned by OPENHUMAN_ACTION_DIR — UI must disable editing),
+ *   `'env'` (pinned by NEPPY_ACTION_DIR — UI must disable editing),
  *   `'override'` (a persisted user choice), or `'default'`.
  */
 export interface AgentPaths {
@@ -657,7 +655,7 @@ export interface AgentSettings {
   agent_timeout_secs: number;
   /** Runtime-effective timeout (may differ from configured when env-overridden). */
   effective_timeout_secs: number;
-  /** True when OPENHUMAN_TOOL_TIMEOUT_SECS overrides the configured value. */
+  /** True when NEPPY_TOOL_TIMEOUT_SECS overrides the configured value. */
   env_override: boolean;
   /** Lowest accepted timeout (seconds). */
   min_timeout_secs: number;
@@ -698,7 +696,7 @@ export async function neppyUpdateLocalAiSettings(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<ConfigSnapshot>>({
-    method: 'openhuman.inference_update_local_settings',
+    method: 'neppy.inference_update_local_settings',
     params: update,
   });
 }
@@ -829,7 +827,7 @@ export async function neppyUpdateComposioTriggerSettings(
   }
   try {
     return await callCoreRpc<CommandResponse<ConfigSnapshot>>({
-      method: 'openhuman.config_update_composio_trigger_settings',
+      method: 'neppy.config_update_composio_trigger_settings',
       params: update,
     });
   } catch (err) {
@@ -852,7 +850,7 @@ export async function neppyGetComposioTriggerSettings(): Promise<
   }
   try {
     return await callCoreRpc<CommandResponse<ComposioTriggerSettings>>({
-      method: 'openhuman.config_get_composio_trigger_settings',
+      method: 'neppy.config_get_composio_trigger_settings',
     });
   } catch (err) {
     if (tauriErrorMessage(err).includes('unknown method')) {

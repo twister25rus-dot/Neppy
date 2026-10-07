@@ -21,7 +21,7 @@ Neppy is a **React + Tauri v2 desktop app** with a **Rust core** that does the h
 └──────────────────────────────────────────────────┘
  │ JSON-RPC (HTTP) ↕
 ┌──────────────────────────────────────────────────┐
-│ Rust core (`openhuman` binary, `src/`) │
+│ Rust core (`neppy` binary, `src/`) │
 │ • Memory Tree pipeline │
 │ • Integration adapters + auto-fetch scheduler │
 │ • Provider router (model routing) │

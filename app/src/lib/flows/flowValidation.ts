@@ -1,7 +1,7 @@
 /**
  * Pure helpers for the editable Workflow Canvas's validation UX (Phase 3c).
  *
- * The `openhuman.flows_validate` RPC returns a graph-level
+ * The `neppy.flows_validate` RPC returns a graph-level
  * {@link FlowValidation} — a `valid` flag plus opaque `errors[]` / `warnings[]`
  * message strings (see `services/api/flowsApi.ts` and, upstream, the
  * `tinyflows::error::ValidationError` `Display` impls). Several of those error

@@ -64,7 +64,7 @@ pub use embed::{Session, Turn, TurnOutcome, TurnRequest};
 /// Live agent-turn progress for **in-process embedders**.
 ///
 /// An embedder that drives a turn through an RPC returning a single final
-/// string (`openhuman.inference_agent_chat`) sees nothing while the turn runs.
+/// string (`neppy.inference_agent_chat`) sees nothing while the turn runs.
 /// Scope a [`ProgressSink`](agent_progress::ProgressSink) around the future it
 /// awaits and the entry point attaches it to the agent it builds internally, so
 /// tool calls, deltas and turn boundaries stream out live:

@@ -5,7 +5,7 @@ durable-workflow runtime the orchestration wake path uses. This phase tracks
 (a) what we reuse as-is, and (b) the gaps that warrant changes **inside
 `vendor/tinyagents`**, which is a git submodule of the separate repo
 `tinyhumansai/tinyagents`: those changes go on their own branch there, raised
-as their **own PR**, and the openhuman PR bumps the submodule pointer to the
+as their **own PR**, and the neppy PR bumps the submodule pointer to the
 merged commit (same workflow as `docs/plans/rlm-workflows/phase-2-tinyagents.md`).
 
 ## 6.1 Reused as-is (no upstream change)
@@ -23,7 +23,7 @@ merged commit (same workflow as `docs/plans/rlm-workflows/phase-2-tinyagents.md`
 ## 6.2 Candidate upstream changes (each = one small PR to `tinyhumansai/tinyagents`)
 
 Confirm each gap against the vendored source before writing code; drop any
-that turn out to already exist. Ordered by how much openhuman scaffolding
+that turn out to already exist. Ordered by how much neppy scaffolding
 they delete:
 
 1. **Wall-clock graph deadline.** Today `TICK_TIMEOUT` wraps the whole run in
@@ -46,7 +46,7 @@ they delete:
 4. **(Stretch) periodic-trigger helper.** A `graph::orchestration`-level
    "run this compiled graph every interval with jitter + overlap policy"
    would absorb our heartbeat fan-out (phase 4.3). Only worth it if the
-   upstream maintainers want it — the openhuman heartbeat already works, so
+   upstream maintainers want it — the neppy heartbeat already works, so
    this is explicitly optional and last.
 
 Items 1–3 are independent; none blocks phases 1–5. Phase 1 ships with the
@@ -59,12 +59,12 @@ a small follow-up PR that deletes code.
 1. Branch in `vendor/tinyagents` (e.g. `feat/graph-run-deadline`), implement
    with unit tests in the tinyagents style (`types.rs`/`mod.rs`/`test.rs`),
    PR against `tinyhumansai/tinyagents`.
-2. Meanwhile openhuman phases 1–5 proceed against the current pin.
-3. After the upstream merge: one openhuman PR per adopted primitive — bump
+2. Meanwhile neppy phases 1–5 proceed against the current pin.
+3. After the upstream merge: one neppy PR per adopted primitive — bump
    the submodule pointer, replace the scaffolding (external timeout →
    deadline; end-of-tick supersede → cancel flag; add GC config), keep the
    behavior tests green.
-4. Never point the openhuman submodule at an unmerged tinyagents branch on
+4. Never point the neppy submodule at an unmerged tinyagents branch on
    `main`-bound PRs.
 
 ## 6.4 Confirmation findings (checked against the current vendored pin)

@@ -1,6 +1,6 @@
 /**
  * Frontend client for the Background Agent Command Center surface
- * (`openhuman.agent_work_list`). The Rust handler aggregates every tracked
+ * (`neppy.agent_work_list`). The Rust handler aggregates every tracked
  * background agent run into five lifecycle buckets and returns the rows
  * pre-grouped so the UI renders them in a stable order.
  *
@@ -48,14 +48,14 @@ export interface AgentWorkGroup {
   rows: AgentWorkRow[];
 }
 
-/** Full response from `openhuman.agent_work_list`. */
+/** Full response from `neppy.agent_work_list`. */
 export interface AgentWorkResponse {
   groups: AgentWorkGroup[];
   total: number;
 }
 
 /**
- * Control verb applied to a single run via `openhuman.agent_work_control`.
+ * Control verb applied to a single run via `neppy.agent_work_control`.
  * Mirrors the Rust `ControlVerb`. `continue` / `followUp` require a message.
  */
 type AgentWorkAction = 'stop' | 'retry' | 'continue' | 'follow_up';
@@ -70,7 +70,7 @@ interface AgentWorkControlArgs {
   reason?: string;
 }
 
-/** Response from `openhuman.agent_work_control`: the re-projected row. */
+/** Response from `neppy.agent_work_control`: the re-projected row. */
 interface AgentWorkControlResponse {
   row: AgentWorkRow;
 }
@@ -88,7 +88,7 @@ export const agentWorkApi = {
     }
     log('list limit=%o', limit);
     const response = await callCoreRpc<AgentWorkResponse>({
-      method: 'openhuman.agent_work_list',
+      method: 'neppy.agent_work_list',
       params: limit === undefined ? {} : { limit },
     });
     log('list received groups=%d total=%d', response.groups.length, response.total);
@@ -115,7 +115,7 @@ export const agentWorkApi = {
     if (reason) params.reason = reason;
     log('control runId=%s action=%s', runId, args.action);
     const response = await callCoreRpc<AgentWorkControlResponse>({
-      method: 'openhuman.agent_work_control',
+      method: 'neppy.agent_work_control',
       params,
     });
     log('control received status=%s', response.row.status);

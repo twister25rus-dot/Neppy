@@ -243,14 +243,14 @@ struct MlxUrlEnvGuard(Vec<(&'static str, Option<String>)>);
 impl MlxUrlEnvGuard {
     fn clear() -> Self {
         let saved = [
-            "OPENHUMAN_LOCAL_INFERENCE_URL",
+            "NEPPY_LOCAL_INFERENCE_URL",
             "MLX_SERVER_URL",
             "OMLX_SERVER_URL",
         ]
         .into_iter()
         .map(|key| {
-            let previous = std::env::var(key).ok();
-            std::env::remove_var(key);
+            let previous = crate::neppy::util::env::var(key).ok();
+            crate::neppy::util::env::remove_var(key);
             (key, previous)
         })
         .collect();
@@ -263,7 +263,7 @@ impl Drop for MlxUrlEnvGuard {
         for (key, previous) in self.0.drain(..) {
             match previous {
                 Some(value) => std::env::set_var(key, value),
-                None => std::env::remove_var(key),
+                None => crate::neppy::util::env::remove_var(key),
             }
         }
     }
@@ -748,7 +748,7 @@ fn local_only_blocks_external_cloud_slug() {
 #[test]
 fn local_only_blocks_managed_backend() {
     use crate::neppy::config::PrivacyMode;
-    let v = local_only_violation(PrivacyMode::LocalOnly, PROVIDER_OPENHUMAN);
+    let v = local_only_violation(PrivacyMode::LocalOnly, PROVIDER_NEPPY);
     assert_eq!(v.as_deref(), Some("Neppy (managed cloud)"));
 }
 
@@ -1078,12 +1078,12 @@ fn neppy_redirect_engages_for_an_explicit_managed_role_provider() {
     // for the managed backend, so the role otherwise builds a client for
     // `DEFAULT_API_BASE_URL` and every turn dies mid-stream.
     let mut config = Config::default();
-    config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
+    config.chat_provider = Some(PROVIDER_NEPPY.to_string());
 
     let resolved = super::provider_for_role_with_mode("chat", &config, true);
     assert_ne!(
         resolved.trim(),
-        PROVIDER_OPENHUMAN,
+        PROVIDER_NEPPY,
         "an explicit managed role provider must be redirected in local mode"
     );
     assert_eq!(resolved, "ollama:gemma3:1b-it-qat");
@@ -1094,11 +1094,11 @@ fn explicit_managed_role_provider_is_untouched_when_local_mode_is_off() {
     // `NEPPY_LOCAL_MODE=0` restores upstream hosted routing: the role keeps
     // resolving to the managed backend.
     let mut config = Config::default();
-    config.chat_provider = Some(PROVIDER_OPENHUMAN.to_string());
+    config.chat_provider = Some(PROVIDER_NEPPY.to_string());
 
     assert_eq!(
         super::provider_for_role_with_mode("chat", &config, false),
-        PROVIDER_OPENHUMAN
+        PROVIDER_NEPPY
     );
 }
 

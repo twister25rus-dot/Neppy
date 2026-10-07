@@ -239,10 +239,7 @@ impl SecurityPolicy {
             // matches the log truncation so a long base command with safe args
             // still shows enough context to diagnose the block.
             let truncated = &command[..floor_char_boundary(command, 80)];
-            log::warn!(
-                "[openhuman:policy] Command blocked by allowlist: {}",
-                truncated
-            );
+            log::warn!("[neppy:policy] Command blocked by allowlist: {}", truncated);
             return Err(format!(
                 "{POLICY_BLOCKED_MARKER} Command not allowed by security policy: {truncated}. \
                  Do not retry this command; it is off the allowlist for this mode."
@@ -254,7 +251,7 @@ impl SecurityPolicy {
         if risk == CommandRiskLevel::High {
             if self.block_high_risk_commands {
                 log::warn!(
-                    "[openhuman:policy] High-risk command blocked: {}",
+                    "[neppy:policy] High-risk command blocked: {}",
                     &command[..floor_char_boundary(command, 80)]
                 );
                 return Err(format!(
@@ -265,7 +262,7 @@ impl SecurityPolicy {
             }
             if self.autonomy == AutonomyLevel::Supervised && !approved {
                 log::warn!(
-                    "[openhuman:policy] High-risk command needs approval: {}",
+                    "[neppy:policy] High-risk command needs approval: {}",
                     &command[..floor_char_boundary(command, 80)]
                 );
                 return Err(
@@ -281,7 +278,7 @@ impl SecurityPolicy {
             && !approved
         {
             log::info!(
-                "[openhuman:policy] Medium-risk command needs approval: {}",
+                "[neppy:policy] Medium-risk command needs approval: {}",
                 &command[..floor_char_boundary(command, 80)]
             );
             return Err(
@@ -290,7 +287,7 @@ impl SecurityPolicy {
         }
 
         log::debug!(
-            "[openhuman:policy] Command validated: risk={:?}, approved={}, cmd={}",
+            "[neppy:policy] Command validated: risk={:?}, approved={}, cmd={}",
             risk,
             approved,
             &command[..floor_char_boundary(command, 80)]

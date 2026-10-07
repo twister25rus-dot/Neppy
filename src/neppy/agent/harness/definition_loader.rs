@@ -119,8 +119,8 @@ pub fn load_file(path: &Path) -> Result<AgentDefinition> {
 }
 
 fn user_home_agents_dir() -> Option<PathBuf> {
-    // Honour OPENHUMAN_HOME first if set; otherwise ~/.neppy.
-    if let Ok(custom) = std::env::var("OPENHUMAN_HOME") {
+    // Honour NEPPY_HOME first if set; otherwise ~/.neppy.
+    if let Ok(custom) = crate::neppy::util::env::var("NEPPY_HOME") {
         return Some(PathBuf::from(custom).join("agents"));
     }
     match crate::neppy::config::default_root_neppy_dir() {
@@ -128,7 +128,7 @@ fn user_home_agents_dir() -> Option<PathBuf> {
         Err(error) => {
             tracing::debug!(
                 error = %error,
-                "[agent-definition-loader] resolving root openhuman dir failed"
+                "[agent-definition-loader] resolving root neppy dir failed"
             );
             None
         }

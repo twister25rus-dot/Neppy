@@ -25,20 +25,20 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
     }
 
     fn set(key: &'static str, value: impl Into<String>) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value.into()) };
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -47,7 +47,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -115,13 +115,13 @@ embedding_strict = false
     )
     .expect("config");
     let guards = vec![
-        EnvGuard::set_path("OPENHUMAN_WORKSPACE", &root),
+        EnvGuard::set_path("NEPPY_WORKSPACE", &root),
         EnvGuard::set_path("HOME", tmp.path()),
-        EnvGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
-        EnvGuard::unset("OPENHUMAN_API_URL"),
+        EnvGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
+        EnvGuard::unset("NEPPY_API_URL"),
         EnvGuard::unset("BACKEND_URL"),
         EnvGuard::unset("VITE_BACKEND_URL"),
     ];

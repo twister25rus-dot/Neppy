@@ -1,4 +1,4 @@
-//! Controller-registry schemas for `openhuman.memory_sources_*`.
+//! Controller-registry schemas for `neppy.memory_sources_*`.
 
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};

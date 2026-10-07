@@ -30,13 +30,13 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
@@ -46,12 +46,12 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match self.previous.take() {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
 
-/// Serialize tests in this binary that mutate process-global `OPENHUMAN_WORKSPACE`
+/// Serialize tests in this binary that mutate process-global `NEPPY_WORKSPACE`
 /// (read by `apply_env_overrides` during config load), so parallel test threads
 /// can't observe each other's workspace override mid-run.
 fn env_lock() -> std::sync::MutexGuard<'static, ()> {
@@ -227,7 +227,7 @@ impl Tool for LargePayloadTool {
         // 70% of the clamp window — so a long single-line body keeps ~840
         // chars in the head half. Combined with the tail the result is ~880
         // chars (≈220 tokens), which exceeds the test-mode threshold of 200
-        // tokens set via `OPENHUMAN_TEST_HANDOFF_THRESHOLD_TOKENS=200`.
+        // tokens set via `NEPPY_TEST_HANDOFF_THRESHOLD_TOKENS=200`.
         // No HTML markup: clean_tool_output runs after tokenjuice and would
         // strip HTML tags, shrinking the output.
         let mut seed: u64 = 0x9E3779B97F4A7C15;
@@ -364,14 +364,14 @@ fn parent(workspace_dir: PathBuf, model: Arc<ScriptedModel>) -> ParentExecutionC
 async fn integrations_text_mode_handoffs_oversized_result_and_extracts_from_cache() -> Result<()> {
     let _env = env_lock();
     let workspace = tempfile::tempdir()?;
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", workspace.path());
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", workspace.path());
     // Lower the handoff threshold and chunk budget so this test can exercise
     // the oversized-result path with payloads that survive tokenjuice's
     // default 1200-char compaction. These env vars are only read in
     // `apply_handoff` / `extract_from_result::execute` and have no effect
     // outside of test runs.
-    let _handoff_thresh_guard = EnvGuard::set("OPENHUMAN_TEST_HANDOFF_THRESHOLD_TOKENS", "200");
-    let _chunk_budget_guard = EnvGuard::set("OPENHUMAN_TEST_EXTRACT_CHUNK_BUDGET", "300");
+    let _handoff_thresh_guard = EnvGuard::set("NEPPY_TEST_HANDOFF_THRESHOLD_TOKENS", "200");
+    let _chunk_budget_guard = EnvGuard::set("NEPPY_TEST_EXTRACT_CHUNK_BUDGET", "300");
     let provider = ScriptedModel::new(vec![
         tool_response("round25_large_payload", json!({"query": "find needle"})),
         tool_response(

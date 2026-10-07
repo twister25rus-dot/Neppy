@@ -325,8 +325,7 @@ function ModePicker({ onConfirm }: PickerProps) {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-content-secondary">
-                {t('bootCheck.authToken')} (
-                <code className="text-[10px]">OPENHUMAN_CORE_TOKEN</code>)
+                {t('bootCheck.authToken')} (<code className="text-[10px]">NEPPY_CORE_TOKEN</code>)
               </label>
               <input
                 type="text"
@@ -713,8 +712,8 @@ export default function BootCheckGate({ children }: BootCheckGateProps) {
     try {
       if (result.kind === 'daemonDetected') {
         log('[boot-check] gate — removing legacy daemon');
-        await transport.callRpc('openhuman.service_stop', {});
-        await transport.callRpc('openhuman.service_uninstall', {});
+        await transport.callRpc('neppy.service_stop', {});
+        await transport.callRpc('neppy.service_uninstall', {});
         log('[boot-check] gate — daemon removed, re-running check');
       } else if (result.kind === 'outdatedLocal' || result.kind === 'noVersionMethod') {
         log('[boot-check] gate — restarting local core');
@@ -722,7 +721,7 @@ export default function BootCheckGate({ children }: BootCheckGateProps) {
         log('[boot-check] gate — local core restarted');
       } else if (result.kind === 'outdatedCloud') {
         log('[boot-check] gate — triggering cloud core update');
-        await transport.callRpc('openhuman.update_run', {});
+        await transport.callRpc('neppy.update_run', {});
         log('[boot-check] gate — cloud core update triggered');
       } else if (result.kind === 'unreachable' && result.portConflict) {
         log('[boot-check-gate] port conflict — invoking recover_port_conflict');

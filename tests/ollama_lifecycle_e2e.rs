@@ -6,7 +6,7 @@
 //! 1. **Owned-spawn → graceful exit**: `shutdown_owned_ollama` kills the child
 //!    process and clears the on-disk spawn marker.
 //! 2. **External adoption → graceful exit**: when the daemon on `:11434` was not
-//!    spawned by openhuman (`owned_ollama == None`), `shutdown_owned_ollama` is
+//!    spawned by neppy (`owned_ollama == None`), `shutdown_owned_ollama` is
 //!    a no-op; a substitute long-running process stands in for the "external"
 //!    daemon and survives the call.
 //! 3. **Crash recovery (stale marker + dead PID)**: `diagnostics` completes
@@ -32,7 +32,7 @@ use neppy_core::neppy::inference::local::LocalAiService;
 
 // ── Environment serialization lock ───────────────────────────────────────────
 //
-// Each test temporarily sets OPENHUMAN_WORKSPACE to redirect the marker path
+// Each test temporarily sets NEPPY_WORKSPACE to redirect the marker path
 // away from ~/.neppy/. The mutex prevents parallel tests from stomping
 // each other's env state.
 
@@ -59,7 +59,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: &std::ffi::OsStr) -> Self {
-        let prev = std::env::var_os(key);
+        let prev = neppy_core::neppy::util::env::var_os(key);
         std::env::set_var(key, value);
         Self { key, prev }
     }
@@ -69,7 +69,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.prev {
             Some(v) => std::env::set_var(self.key, v),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -77,7 +77,7 @@ impl Drop for EnvVarGuard {
 // ── Marker path helper ────────────────────────────────────────────────────────
 //
 // Mirrors the logic of `paths::ollama_spawn_marker_path`: when
-// OPENHUMAN_WORKSPACE is set, the marker lives under config_path.parent()
+// NEPPY_WORKSPACE is set, the marker lives under config_path.parent()
 // (i.e. the directory containing config.toml).
 
 fn marker_path_for(config: &Config) -> std::path::PathBuf {
@@ -106,7 +106,7 @@ fn write_marker(path: &std::path::Path, pid: u32) {
 
 // ── Test 1: owned-spawn lifecycle — graceful exit ─────────────────────────────
 
-/// When openhuman spawned Ollama itself (owned_ollama is Some), calling
+/// When neppy spawned Ollama itself (owned_ollama is Some), calling
 /// `shutdown_owned_ollama` must:
 ///   - kill the owned child process,
 ///   - clear the on-disk spawn marker.
@@ -115,9 +115,9 @@ async fn owned_spawn_shutdown_kills_child_and_clears_marker() {
     let _guard = env_lock();
     let tmp = tempfile::tempdir().unwrap();
 
-    // Set OPENHUMAN_WORKSPACE so the marker path resolves under our tempdir.
+    // Set NEPPY_WORKSPACE so the marker path resolves under our tempdir.
     // EnvVarGuard restores the previous value on drop — even if an assertion panics.
-    let _ws_guard = EnvVarGuard::set("OPENHUMAN_WORKSPACE", tmp.path().as_os_str());
+    let _ws_guard = EnvVarGuard::set("NEPPY_WORKSPACE", tmp.path().as_os_str());
     let mut config = Config::default();
     config.workspace_dir = tmp.path().to_path_buf();
     config.config_path = tmp.path().join("config.toml");
@@ -182,12 +182,12 @@ async fn owned_spawn_shutdown_kills_child_and_clears_marker() {
         !still_alive,
         "child pid {child_pid} should be dead after shutdown_owned_ollama"
     );
-    // _ws_guard restores OPENHUMAN_WORKSPACE when it drops.
+    // _ws_guard restores NEPPY_WORKSPACE when it drops.
 }
 
 // ── Test 2: external adoption — shutdown leaves external daemon untouched ─────
 
-/// When openhuman adopted an external Ollama (owned_ollama is None),
+/// When neppy adopted an external Ollama (owned_ollama is None),
 /// `shutdown_owned_ollama` must be a no-op: the external daemon must not be
 /// killed. We simulate the external daemon with a second stub process whose
 /// PID we track directly and assert is still alive after the call.
@@ -196,7 +196,7 @@ async fn external_adoption_shutdown_leaves_external_process_running() {
     let _guard = env_lock();
     let tmp = tempfile::tempdir().unwrap();
 
-    let _ws_guard = EnvVarGuard::set("OPENHUMAN_WORKSPACE", tmp.path().as_os_str());
+    let _ws_guard = EnvVarGuard::set("NEPPY_WORKSPACE", tmp.path().as_os_str());
     let mut config = Config::default();
     config.workspace_dir = tmp.path().to_path_buf();
     config.config_path = tmp.path().join("config.toml");
@@ -253,7 +253,7 @@ async fn external_adoption_shutdown_leaves_external_process_running() {
     // Clean up the external stub ourselves.
     let _ = ext_child.kill().await;
     let _ = ext_child.wait().await;
-    // _ws_guard restores OPENHUMAN_WORKSPACE when it drops.
+    // _ws_guard restores NEPPY_WORKSPACE when it drops.
 }
 
 // ── Test 3: crash recovery — stale marker with dead PID ───────────────────────
@@ -281,10 +281,10 @@ async fn crash_recovery_stale_marker_does_not_break_service() {
     let _guard = env_lock();
     let tmp = tempfile::tempdir().unwrap();
 
-    let _ws_guard = EnvVarGuard::set("OPENHUMAN_WORKSPACE", tmp.path().as_os_str());
+    let _ws_guard = EnvVarGuard::set("NEPPY_WORKSPACE", tmp.path().as_os_str());
     // Redirect Ollama health checks to a dead port so no real daemon is needed.
     let _ollama_url_guard = EnvVarGuard::set(
-        "OPENHUMAN_OLLAMA_BASE_URL",
+        "NEPPY_OLLAMA_BASE_URL",
         std::ffi::OsStr::new("http://127.0.0.1:1"),
     );
 

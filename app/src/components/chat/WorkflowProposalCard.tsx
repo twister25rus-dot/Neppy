@@ -17,7 +17,7 @@ import { useAppDispatch } from '../../store/hooks';
 import { FlowPreauthorizationCard } from '../flows/FlowPreauthorizationCard';
 import Button from '../ui/Button';
 
-const log = debug('openhuman:chat:workflow-proposal-card');
+const log = debug('neppy:chat:workflow-proposal-card');
 
 // Maps the wire `step.kind` (a `tinyflows` node type, snake_case, e.g.
 // `tool_call`) to the i18n key for its plain-language badge label. Kinds not
@@ -80,7 +80,7 @@ interface Props {
  * agent-first Workflow authoring). The tool only VALIDATES a candidate
  * `tinyflows` graph and returns a summary — it can NEVER create or enable a
  * flow itself. This card is the only path from a proposal to a saved
- * automation: "Save & enable" calls `openhuman.flows_create` directly from
+ * automation: "Save & enable" calls `neppy.flows_create` directly from
  * the client; the agent has no way to reach that RPC on its own. "Dismiss"
  * just clears the proposal without saving anything.
  *

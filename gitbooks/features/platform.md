@@ -58,7 +58,7 @@ Neppy is built as a native application rather than a web wrapper for three reaso
 └──────────────────────────────────────────────────┘
  │ JSON-RPC ↕
 ┌──────────────────────────────────────────────────┐
-│ Rust core (`openhuman` sidecar) │
+│ Rust core (`neppy` sidecar) │
 │ • Memory Tree, integrations, auto-fetch │
 │ • Model router, TokenJuice, native tools │
 │ • Voice (STT in, TTS out, Meet agent) │

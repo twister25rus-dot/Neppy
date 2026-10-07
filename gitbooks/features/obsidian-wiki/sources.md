@@ -8,7 +8,7 @@ icon: database
 
 # Memory Sources & Scoping
 
-A **memory source** is a configured connector that feeds the [Memory Tree](memory-tree.md). Where the tree owns _"how do I store and summarize?"_, the `memory_sources` domain (`src/neppy/memory/sources/`) owns the upstream question: **"what feeds my memory?"** It is a typed registry of connectors, persisted in `config.toml` under `[[memory_sources]]`, with CRUD at runtime, a uniform reader abstraction, per-source sync status, and the `openhuman.memory_sources_*` RPC surface.
+A **memory source** is a configured connector that feeds the [Memory Tree](memory-tree.md). Where the tree owns _"how do I store and summarize?"_, the `memory_sources` domain (`src/neppy/memory/sources/`) owns the upstream question: **"what feeds my memory?"** It is a typed registry of connectors, persisted in `config.toml` under `[[memory_sources]]`, with CRUD at runtime, a uniform reader abstraction, per-source sync status, and the `neppy.memory_sources_*` RPC surface.
 
 The domain only _defines connectors and reads from them_. The ingestion engine and sync scheduling live in `memory` / `memory_sync`; sources dispatch work to the right backend.
 
@@ -34,7 +34,7 @@ Each entry also carries optional per-sync budgets (`max_tokens_per_sync`, `max_c
 
 ## Adding and configuring sources
 
-Sources are CRUD-ed through the `memory_sources` controllers (`src/neppy/memory/sources/schemas.rs` → `rpc.rs`), namespace `openhuman.memory_sources_*`:
+Sources are CRUD-ed through the `memory_sources` controllers (`src/neppy/memory/sources/schemas.rs` → `rpc.rs`), namespace `neppy.memory_sources_*`:
 
 | RPC           | Purpose                                                         |
 | ------------- | --------------------------------------------------------------- |

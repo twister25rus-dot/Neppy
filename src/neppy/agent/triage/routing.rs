@@ -61,7 +61,7 @@ pub async fn resolve_provider_with_config(config: &Config) -> anyhow::Result<Res
 ///
 /// The returned source is crate-native and targets the configured local
 /// inference base (Ollama by default, overridable via
-/// `OPENHUMAN_LOCAL_INFERENCE_URL`).
+/// `NEPPY_LOCAL_INFERENCE_URL`).
 pub fn build_local_provider_with_config(config: &Config) -> Option<ResolvedProvider> {
     let local_cfg = &config.local_ai;
     if !local_cfg.runtime_enabled {
@@ -73,7 +73,7 @@ pub fn build_local_provider_with_config(config: &Config) -> Option<ResolvedProvi
         return None;
     }
 
-    let override_base = std::env::var("OPENHUMAN_LOCAL_INFERENCE_URL")
+    let override_base = crate::neppy::util::env::var("NEPPY_LOCAL_INFERENCE_URL")
         .ok()
         .map(|s| s.trim().trim_end_matches('/').to_string())
         .filter(|s| !s.is_empty());
@@ -163,7 +163,7 @@ fn is_local_cli_route(provider_string: &str) -> bool {
 fn build_remote_provider(config: &Config) -> anyhow::Result<ResolvedProvider> {
     use crate::neppy::inference::local::profile::is_local_provider_string;
     use crate::neppy::inference::provider::factory::{
-        create_chat_model_from_string_with_model_id, PROVIDER_OPENHUMAN,
+        create_chat_model_from_string_with_model_id, PROVIDER_NEPPY,
     };
 
     let resolved = provider::provider_for_role("subconscious", config);
@@ -179,7 +179,7 @@ fn build_remote_provider(config: &Config) -> anyhow::Result<ResolvedProvider> {
     let force_managed = is_local_provider_string(r)
         || is_local_cli_route(r)
         || r == provider::BYOK_INCOMPLETE_SENTINEL;
-    let effective = if force_managed { PROVIDER_OPENHUMAN } else { r };
+    let effective = if force_managed { PROVIDER_NEPPY } else { r };
     if force_managed {
         tracing::info!(
             resolved = %r,
@@ -198,7 +198,7 @@ fn build_remote_provider(config: &Config) -> anyhow::Result<ResolvedProvider> {
             config,
             config.default_temperature,
         )?;
-        let provider_name = if provider_string == PROVIDER_OPENHUMAN {
+        let provider_name = if provider_string == PROVIDER_NEPPY {
             INFERENCE_BACKEND_ID.to_string()
         } else {
             provider_string
@@ -236,7 +236,7 @@ fn build_remote_provider(config: &Config) -> anyhow::Result<ResolvedProvider> {
                 "[triage::routing] subconscious workload provider build failed — \
                  falling back to managed backend"
             );
-            build(PROVIDER_OPENHUMAN)
+            build(PROVIDER_NEPPY)
         }
     }
 }

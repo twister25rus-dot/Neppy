@@ -39,7 +39,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
@@ -49,7 +49,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match self.previous.take() {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -409,7 +409,7 @@ fn prompt_ctx<'a>(
 async fn max_iteration_checkpoint_uses_deterministic_fallback_and_hooks() {
     let _env = env_lock();
     let (_temp, workspace_path) = workspace("checkpoint-fallback");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     let calls = Arc::new(AtomicUsize::new(0));
     let hook_calls = Arc::new(AtomicUsize::new(0));
     let hook_contexts = Arc::new(Mutex::new(Vec::new()));
@@ -504,7 +504,7 @@ async fn builder_validation_and_system_prompt_cover_defaults_and_learning() {
     assert!(missing_tools.to_string().contains("tools are required"));
 
     let (_temp, workspace_path) = workspace("builder-prompt");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     std::fs::write(workspace_path.join("PROFILE.md"), "Round24 profile").unwrap();
     std::fs::write(workspace_path.join("MEMORY.md"), "Round24 memory").unwrap();
 

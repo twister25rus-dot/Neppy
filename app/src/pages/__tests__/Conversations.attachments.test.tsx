@@ -159,7 +159,7 @@ vi.mock('../../utils/openUrl', () => ({ openUrl: vi.fn() }));
 // `mockVisionState.vision` to exercise the non-vision path.
 vi.mock('../../services/coreRpcClient', () => ({
   callCoreRpc: vi.fn(async ({ method }: { method: string }) =>
-    method === 'openhuman.inference_resolve_model'
+    method === 'neppy.inference_resolve_model'
       ? {
           model: mockVisionState.vision ? 'test-vision-model' : 'reasoning-v1',
           vision: mockVisionState.vision,

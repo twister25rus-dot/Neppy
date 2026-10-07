@@ -82,7 +82,7 @@ fi
 echo "[library-heap] running scenario '$SCENARIO' under dhat" >&2
 echo "[library-heap] WARNING: dhat instrumentation perturbs RSS and timing; do not compare these numbers against library-bench.sh output" >&2
 
-env OPENHUMAN_PROFILE_DHAT_OUT="$OUT_FILE" "${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"}" "$BIN" "$SCENARIO" >/dev/null
+env NEPPY_PROFILE_DHAT_OUT="$OUT_FILE" "${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"}" "$BIN" "$SCENARIO" >/dev/null
 
 if [[ ! -f "$OUT_FILE" ]]; then
     echo "ERROR: expected dhat output was not written: $OUT_FILE" >&2

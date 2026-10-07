@@ -5,7 +5,7 @@ Private JSONL stdio protocol. Rust owns the process and sends one compact JSON
 request per line. This server keeps expensive Python backends warm for the
 life of the Rust core process.
 
-Enabled backends are passed via the OPENHUMAN_RPS_BACKENDS env var (comma
+Enabled backends are passed via the NEPPY_RPS_BACKENDS env var (legacy OPENHUMAN_RPS_BACKENDS still honoured) (comma
 separated, e.g. "spacy,kompress"). Each backend lazy- or eager-loads its model
 as appropriate; spaCy loads at startup (fast), Kompress (torch/ModernBERT)
 loads on first request so a missing/slow model never blocks the handshake.
@@ -16,12 +16,21 @@ import os
 import re
 import sys
 
+
+def _env(name, default):
+    """Read NEPPY_<name>, falling back to the legacy OPENHUMAN_<name>."""
+    value = os.environ.get("NEPPY_" + name)
+    if value is None:
+        value = os.environ.get("OPENHUMAN_" + name)
+    return default if value is None else value
+
+
 PROTOCOL = 1
 SPACY_MODEL = "en_core_web_sm"
 
 _BACKENDS = [
     b.strip()
-    for b in os.environ.get("OPENHUMAN_RPS_BACKENDS", "spacy").split(",")
+    for b in _env("RPS_BACKENDS", "spacy").split(",")
     if b.strip()
 ]
 
@@ -30,10 +39,10 @@ _spacy_nlp = None
 # Kompress (ModernBERT) lazy-loaded state.
 _kompress_tok = None
 _kompress_model = None
-_KOMPRESS_MODEL = os.environ.get("OPENHUMAN_RPS_KOMPRESS_MODEL", "answerdotai/ModernBERT-base")
-_KOMPRESS_DEVICE = os.environ.get("OPENHUMAN_RPS_KOMPRESS_DEVICE", "cpu")
-_KOMPRESS_TARGET_RATIO = float(os.environ.get("OPENHUMAN_RPS_KOMPRESS_TARGET_RATIO", "0.5"))
-_KOMPRESS_MAX_INPUT = int(os.environ.get("OPENHUMAN_RPS_KOMPRESS_MAX_INPUT_CHARS", "200000"))
+_KOMPRESS_MODEL = _env("RPS_KOMPRESS_MODEL", "answerdotai/ModernBERT-base")
+_KOMPRESS_DEVICE = _env("RPS_KOMPRESS_DEVICE", "cpu")
+_KOMPRESS_TARGET_RATIO = float(_env("RPS_KOMPRESS_TARGET_RATIO", "0.5"))
+_KOMPRESS_MAX_INPUT = int(_env("RPS_KOMPRESS_MAX_INPUT_CHARS", "200000"))
 
 
 def _emit(obj):

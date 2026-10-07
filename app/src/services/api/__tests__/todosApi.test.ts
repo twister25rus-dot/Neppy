@@ -24,7 +24,7 @@ describe('todosApi.setSessionThread', () => {
     const board = await todosApi.setSessionThread('user-tasks', 'c1', 'task-abc');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.todos_set_session_thread',
+      method: 'neppy.todos_set_session_thread',
       params: { thread_id: 'user-tasks', id: 'c1', sessionThreadId: 'task-abc' },
     });
     expect(board.threadId).toBe('user-tasks');
@@ -37,7 +37,7 @@ describe('todosApi.setSessionThread', () => {
     await todosApi.setSessionThread('user-tasks', 'c1', null);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.todos_set_session_thread',
+      method: 'neppy.todos_set_session_thread',
       params: { thread_id: 'user-tasks', id: 'c1', sessionThreadId: null },
     });
   });

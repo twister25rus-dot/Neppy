@@ -1,6 +1,6 @@
 /**
  * Structural validity tests for the bundled Phase 4c templates. Mirrors the
- * exact checks `tinyflows::validate` (and therefore `openhuman.flows_validate`)
+ * exact checks `tinyflows::validate` (and therefore `neppy.flows_validate`)
  * enforces — unique node ids, exactly one `trigger` node, every edge endpoint
  * referencing an existing node — so a template can never ship in a shape the
  * backend would reject at `flows_create` time. Also asserts each template

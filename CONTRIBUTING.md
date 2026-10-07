@@ -172,8 +172,8 @@ cp app/.env.example app/.env.local
 Minimal configuration guidance:
 
 - **Web UI / frontend work**: the defaults in `app/.env.local` are usually enough for local startup. Set `VITE_BACKEND_URL` only if you need a non-production backend in web mode.
-- **Desktop work**: leave `OPENHUMAN_CORE_TOKEN` blank for local child-mode development unless you are intentionally wiring an external core. The shell manages the embedded core token flow.
-- **Core RPC / standalone core work**: `OPENHUMAN_CORE_PORT=7788` and `OPENHUMAN_CORE_RPC_URL=http://127.0.0.1:7788/rpc` are already documented in the root template and are the normal local defaults.
+- **Desktop work**: leave `NEPPY_CORE_TOKEN` blank for local child-mode development unless you are intentionally wiring an external core. The shell manages the embedded core token flow.
+- **Core RPC / standalone core work**: `NEPPY_CORE_PORT=7788` and `NEPPY_CORE_RPC_URL=http://127.0.0.1:7788/rpc` are already documented in the root template and are the normal local defaults.
 - **Skills development**: use `SKILLS_REGISTRY_URL` or `SKILLS_LOCAL_DIR` from the root template when pointing the app at a local built skills checkout.
 
 Never commit `.env`, `app/.env.local`, tokens, or other secrets.
@@ -217,10 +217,10 @@ The default development port is `1420`. Hyper-V or WSL can reserve ranges that i
 netsh interface ipv4 show excludedportrange protocol=tcp
 ```
 
-If `1420` is excluded or already in use, choose a port `N` such that both `N` and `N + 1` are available and outside the listed ranges; use a value below `65535`. `dev:app:win` applies `OPENHUMAN_DEV_PORT` to both Vite and Tauri, so their URLs remain synchronized:
+If `1420` is excluded or already in use, choose a port `N` such that both `N` and `N + 1` are available and outside the listed ranges; use a value below `65535`. `dev:app:win` applies `NEPPY_DEV_PORT` to both Vite and Tauri, so their URLs remain synchronized:
 
 ```powershell
-$env:OPENHUMAN_DEV_PORT = "14320"
+$env:NEPPY_DEV_PORT = "14320"
 pnpm dev:app:win
 ```
 
@@ -269,7 +269,7 @@ Merge-gate context:
 Useful local paths during development:
 
 - `~/.neppy/`: default workspace for the Rust core and local app data.
-- `~/.neppy-staging/`: staging workspace when `OPENHUMAN_APP_ENV=staging`.
+- `~/.neppy-staging/`: staging workspace when `NEPPY_APP_ENV=staging`.
 - `app/.env.local`: browser-facing `VITE_*` overrides.
 - `.env`: Rust core, Tauri shell, and shared runtime overrides.
 

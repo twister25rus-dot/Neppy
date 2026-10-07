@@ -140,7 +140,7 @@ describe('Chat harness — wallet flow', () => {
     );
 
     const alreadyConfigured = await callNeppyRpc<{ result: { configured: boolean } }>(
-      'openhuman.wallet_status',
+      'neppy.wallet_status',
       {}
     );
     if (alreadyConfigured.ok && alreadyConfigured.result?.result?.configured === true) {
@@ -160,7 +160,7 @@ describe('Chat harness — wallet flow', () => {
     await browser.waitUntil(
       async () => {
         const status = await callNeppyRpc<{ result: { configured: boolean } }>(
-          'openhuman.wallet_status',
+          'neppy.wallet_status',
           {}
         );
         return status.ok && status.result?.result?.configured === true;
@@ -170,7 +170,7 @@ describe('Chat harness — wallet flow', () => {
 
     const walletState = await callNeppyRpc<{
       result: { content_utf8: string; truncated: boolean };
-    }>('openhuman.test_support_read_workspace_file', {
+    }>('neppy.test_support_read_workspace_file', {
       rel_path: 'state/wallet-state.json',
       max_bytes: 131_072,
     });
@@ -231,7 +231,7 @@ describe('Chat harness — wallet flow', () => {
         count: number;
         quotes: Array<{ toAddress: string; amountRaw: string; status: string; kind: string }>;
       };
-    }>('openhuman.test_support_wallet_prepared_quotes', {});
+    }>('neppy.test_support_wallet_prepared_quotes', {});
     if (quotes.ok && (quotes.result?.result?.quotes ?? []).length > 0) {
       const hasExpectedQuote = (quotes.result?.result?.quotes ?? []).some(
         quote =>

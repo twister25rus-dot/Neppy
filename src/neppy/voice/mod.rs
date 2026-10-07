@@ -1,6 +1,6 @@
 //! Voice domain — hosted speech-to-text and text-to-speech (local piper / hosted).
 //!
-//! Provides RPC endpoints under the `openhuman.voice_*` namespace for
+//! Provides RPC endpoints under the `neppy.voice_*` namespace for
 //! transcription, synthesis, proactive availability checking, and a
 //! standalone voice dictation server (hotkey → record → transcribe → insert).
 //!

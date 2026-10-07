@@ -40,24 +40,24 @@ fn restore_command_preserves_minimized_and_maximized_frames() {
 /// Targets `core_rpc_url_value` rather than the `core_rpc_url` command: the
 /// command now answers from the active gateway, so it needs a
 /// `CoreProcessHandle` and an async context. What this test is actually about —
-/// that `OPENHUMAN_CORE_RPC_URL` overrides the default and that the default is
+/// that `NEPPY_CORE_RPC_URL` overrides the default and that the default is
 /// the embedded port — is unchanged and still lives in that function.
 #[test]
 fn core_rpc_url_returns_expected_format() {
     let _g = ENV_LOCK.lock().unwrap();
-    let original = std::env::var("OPENHUMAN_CORE_RPC_URL").ok();
+    let original = neppy_core::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok();
 
-    std::env::set_var("OPENHUMAN_CORE_RPC_URL", "http://localhost:9999/rpc");
+    std::env::set_var("NEPPY_CORE_RPC_URL", "http://localhost:9999/rpc");
     let url = crate::core_rpc::core_rpc_url_value();
     assert_eq!(url, "http://localhost:9999/rpc");
 
-    std::env::remove_var("OPENHUMAN_CORE_RPC_URL");
+    neppy_core::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL");
     let url = crate::core_rpc::core_rpc_url_value();
     assert_eq!(url, "http://127.0.0.1:7788/rpc");
 
     match original {
-        Some(v) => std::env::set_var("OPENHUMAN_CORE_RPC_URL", v),
-        None => std::env::remove_var("OPENHUMAN_CORE_RPC_URL"),
+        Some(v) => std::env::set_var("NEPPY_CORE_RPC_URL", v),
+        None => neppy_core::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL"),
     }
 }
 
@@ -65,23 +65,23 @@ fn core_rpc_url_returns_expected_format() {
 #[test]
 fn overlay_parent_rpc_url_handles_empty() {
     let _g = ENV_LOCK.lock().unwrap();
-    let original = std::env::var("OPENHUMAN_CORE_RPC_URL").ok();
+    let original = neppy_core::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok();
 
-    std::env::set_var("OPENHUMAN_CORE_RPC_URL", "");
+    std::env::set_var("NEPPY_CORE_RPC_URL", "");
     assert!(overlay_parent_rpc_url().is_none());
 
-    std::env::set_var("OPENHUMAN_CORE_RPC_URL", "   ");
+    std::env::set_var("NEPPY_CORE_RPC_URL", "   ");
     assert!(overlay_parent_rpc_url().is_none());
 
-    std::env::set_var("OPENHUMAN_CORE_RPC_URL", "http://127.0.0.1:7788/rpc");
+    std::env::set_var("NEPPY_CORE_RPC_URL", "http://127.0.0.1:7788/rpc");
     assert_eq!(
         overlay_parent_rpc_url(),
         Some("http://127.0.0.1:7788/rpc".to_string())
     );
 
     match original {
-        Some(v) => std::env::set_var("OPENHUMAN_CORE_RPC_URL", v),
-        None => std::env::remove_var("OPENHUMAN_CORE_RPC_URL"),
+        Some(v) => std::env::set_var("NEPPY_CORE_RPC_URL", v),
+        None => neppy_core::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL"),
     }
 }
 
@@ -345,7 +345,7 @@ fn platform_cef_gpu_workarounds_leave_other_platforms_alone() {
 }
 
 // -------------------------------------------------------------------------
-// OPENHUMAN_FORCE_GPU override (re-enables WebGL2 surfaces — Rive mascot)
+// NEPPY_FORCE_GPU override (re-enables WebGL2 surfaces — Rive mascot)
 // -------------------------------------------------------------------------
 
 #[test]
@@ -358,7 +358,7 @@ fn force_gpu_explicit_enable_values_match_prewarm_pattern() {
     for v in ["1", "true", "yes", "on", "TRUE", "Yes", "On"] {
         assert!(
             cef_force_gpu_enabled(Some(v)),
-            "OPENHUMAN_FORCE_GPU={v:?} should opt in"
+            "NEPPY_FORCE_GPU={v:?} should opt in"
         );
     }
 }
@@ -369,7 +369,7 @@ fn force_gpu_anything_else_is_off() {
     for v in ["", "0", "false", "no", "off", "FALSE", "Off", "maybe", " "] {
         assert!(
             !cef_force_gpu_enabled(Some(v)),
-            "OPENHUMAN_FORCE_GPU={v:?} must not silently opt in"
+            "NEPPY_FORCE_GPU={v:?} must not silently opt in"
         );
     }
 }
@@ -386,24 +386,24 @@ fn platform_cef_gpu_workarounds_skip_linux_disable_when_force_gpu_set() {
 
     assert!(
         !args.contains(&("--disable-gpu", None)),
-        "OPENHUMAN_FORCE_GPU=1 must suppress --disable-gpu, got: {args:?}"
+        "NEPPY_FORCE_GPU=1 must suppress --disable-gpu, got: {args:?}"
     );
     assert!(
         !args.contains(&("--disable-gpu-compositing", None)),
-        "OPENHUMAN_FORCE_GPU=1 must suppress --disable-gpu-compositing, got: {args:?}"
+        "NEPPY_FORCE_GPU=1 must suppress --disable-gpu-compositing, got: {args:?}"
     );
     // With hardware acceleration opted in, the SwiftShader software-GL fallback
     // must NOT be forced either — otherwise WebGL would still be stuck on the
     // software rasteriser despite the override.
     assert!(
         !args.contains(&("--use-angle", Some("swiftshader"))),
-        "OPENHUMAN_FORCE_GPU=1 must not force SwiftShader, got: {args:?}"
+        "NEPPY_FORCE_GPU=1 must not force SwiftShader, got: {args:?}"
     );
 }
 
 #[test]
 fn platform_cef_gpu_workarounds_force_gpu_does_not_affect_intel_macos_path() {
-    // OPENHUMAN_FORCE_GPU only governs the Linux #1697 workaround; the
+    // NEPPY_FORCE_GPU only governs the Linux #1697 workaround; the
     // separate Intel-macOS #1012 disable must still apply, regardless of
     // the env var.
     let mut args = Vec::new();
@@ -413,7 +413,7 @@ fn platform_cef_gpu_workarounds_force_gpu_does_not_affect_intel_macos_path() {
 }
 
 // -------------------------------------------------------------------------
-// OPENHUMAN_DISABLE_GPU override (emergency CEF startup escape hatch)
+// NEPPY_DISABLE_GPU override (emergency CEF startup escape hatch)
 // -------------------------------------------------------------------------
 
 #[test]
@@ -426,7 +426,7 @@ fn disable_gpu_explicit_enable_values_match_force_gpu_pattern() {
     for v in ["1", "true", "yes", "on", "TRUE", "Yes", "On"] {
         assert!(
             cef_disable_gpu_enabled(Some(v)),
-            "OPENHUMAN_DISABLE_GPU={v:?} should opt in"
+            "NEPPY_DISABLE_GPU={v:?} should opt in"
         );
     }
 }
@@ -436,7 +436,7 @@ fn disable_gpu_anything_else_is_off() {
     for v in ["", "0", "false", "no", "off", "FALSE", "Off", "maybe", " "] {
         assert!(
             !cef_disable_gpu_enabled(Some(v)),
-            "OPENHUMAN_DISABLE_GPU={v:?} must not silently opt in"
+            "NEPPY_DISABLE_GPU={v:?} must not silently opt in"
         );
     }
 }
@@ -472,11 +472,11 @@ fn platform_cef_gpu_workarounds_windows_disable_gpu_avoids_bare_disable_gpu() {
 
     assert!(
         !args.contains(&("--disable-gpu", None)),
-        "Windows OPENHUMAN_DISABLE_GPU must not emit bare --disable-gpu (#4385), got: {args:?}"
+        "Windows NEPPY_DISABLE_GPU must not emit bare --disable-gpu (#4385), got: {args:?}"
     );
     assert!(
         args.contains(&("--use-angle", Some("swiftshader"))),
-        "Windows OPENHUMAN_DISABLE_GPU must force SwiftShader software GL (#4385), got: {args:?}"
+        "Windows NEPPY_DISABLE_GPU must force SwiftShader software GL (#4385), got: {args:?}"
     );
 }
 
@@ -489,7 +489,7 @@ fn platform_cef_gpu_workarounds_disable_gpu_wins_over_linux_force_gpu() {
     assert!(args.contains(&("--disable-gpu-compositing", None)));
     assert!(
         !args.contains(&("--use-angle", Some("swiftshader"))),
-        "OPENHUMAN_DISABLE_GPU=1 must not also force SwiftShader, got: {args:?}"
+        "NEPPY_DISABLE_GPU=1 must not also force SwiftShader, got: {args:?}"
     );
 }
 
@@ -649,13 +649,13 @@ fn sentry_release_tag_is_nonempty() {
 #[test]
 fn sentry_environment_reads_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
-    let key = "OPENHUMAN_APP_ENV";
-    let original = std::env::var(key).ok();
+    let key = "NEPPY_APP_ENV";
+    let original = neppy_core::neppy::util::env::var(key).ok();
     std::env::set_var(key, "staging");
     let env = resolve_sentry_environment();
     match original {
         Some(v) => std::env::set_var(key, v),
-        None => std::env::remove_var(key),
+        None => neppy_core::neppy::util::env::remove_var(key),
     }
     assert_eq!(env, "staging");
 }
@@ -663,13 +663,13 @@ fn sentry_environment_reads_neppy_app_env() {
 #[test]
 fn sentry_environment_trims_whitespace_from_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
-    let key = "OPENHUMAN_APP_ENV";
-    let original = std::env::var(key).ok();
+    let key = "NEPPY_APP_ENV";
+    let original = neppy_core::neppy::util::env::var(key).ok();
     std::env::set_var(key, "  dev  ");
     let env = resolve_sentry_environment();
     match original {
         Some(v) => std::env::set_var(key, v),
-        None => std::env::remove_var(key),
+        None => neppy_core::neppy::util::env::remove_var(key),
     }
     assert_eq!(env, "dev");
 }
@@ -677,13 +677,13 @@ fn sentry_environment_trims_whitespace_from_neppy_app_env() {
 #[test]
 fn sentry_environment_skips_empty_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
-    let key = "OPENHUMAN_APP_ENV";
-    let original = std::env::var(key).ok();
+    let key = "NEPPY_APP_ENV";
+    let original = neppy_core::neppy::util::env::var(key).ok();
     std::env::set_var(key, "");
     let env = resolve_sentry_environment();
     match original {
         Some(v) => std::env::set_var(key, v),
-        None => std::env::remove_var(key),
+        None => neppy_core::neppy::util::env::remove_var(key),
     }
     // Falls through to VITE_ compile-time value or "production"; must be non-empty.
     assert!(!env.is_empty());
@@ -692,13 +692,13 @@ fn sentry_environment_skips_empty_neppy_app_env() {
 #[test]
 fn sentry_environment_skips_whitespace_only_neppy_app_env() {
     let _g = ENV_LOCK.lock().unwrap();
-    let key = "OPENHUMAN_APP_ENV";
-    let original = std::env::var(key).ok();
+    let key = "NEPPY_APP_ENV";
+    let original = neppy_core::neppy::util::env::var(key).ok();
     std::env::set_var(key, "   ");
     let env = resolve_sentry_environment();
     match original {
         Some(v) => std::env::set_var(key, v),
-        None => std::env::remove_var(key),
+        None => neppy_core::neppy::util::env::remove_var(key),
     }
     assert!(!env.is_empty());
 }
@@ -709,18 +709,21 @@ fn sentry_environment_skips_whitespace_only_neppy_app_env() {
 #[test]
 fn sentry_environment_defaults_to_production_when_unset() {
     let _g = ENV_LOCK.lock().unwrap();
-    if option_env!("VITE_OPENHUMAN_APP_ENV").is_some() {
+    if option_env!("VITE_NEPPY_APP_ENV")
+        .or(option_env!("VITE_NEPPY_APP_ENV"))
+        .is_some()
+    {
         // A compile-time override is baked in; skip — the fallback path is
         // exercised by sentry_environment_skips_empty_neppy_app_env.
         return;
     }
-    let key = "OPENHUMAN_APP_ENV";
-    let original = std::env::var(key).ok();
-    std::env::remove_var(key);
+    let key = "NEPPY_APP_ENV";
+    let original = neppy_core::neppy::util::env::var(key).ok();
+    neppy_core::neppy::util::env::remove_var(key);
     let env = resolve_sentry_environment();
     match original {
         Some(v) => std::env::set_var(key, v),
-        None => std::env::remove_var(key),
+        None => neppy_core::neppy::util::env::remove_var(key),
     }
     assert_eq!(env, "production");
 }
@@ -855,7 +858,7 @@ fn localhost_dev_fetch_noise_anchors_to_message_start() {
 #[test]
 fn path_has_executable_finds_file_on_path() {
     let _g = ENV_LOCK.lock().unwrap();
-    let original = std::env::var_os("PATH");
+    let original = neppy_core::neppy::util::env::var_os("PATH");
 
     let dir = tempfile::tempdir().expect("tempdir");
     std::fs::write(dir.path().join("xdg-mime"), b"#!/bin/sh\n").expect("write stub");
@@ -868,7 +871,7 @@ fn path_has_executable_finds_file_on_path() {
 
     match original {
         Some(v) => std::env::set_var("PATH", v),
-        None => std::env::remove_var("PATH"),
+        None => neppy_core::neppy::util::env::remove_var("PATH"),
     }
 }
 
@@ -879,7 +882,7 @@ fn path_has_executable_finds_file_on_path() {
 #[test]
 fn path_has_executable_returns_false_when_missing() {
     let _g = ENV_LOCK.lock().unwrap();
-    let original = std::env::var_os("PATH");
+    let original = neppy_core::neppy::util::env::var_os("PATH");
 
     let dir = tempfile::tempdir().expect("tempdir");
     // Intentionally do not create xdg-mime in `dir`.
@@ -892,7 +895,7 @@ fn path_has_executable_returns_false_when_missing() {
 
     match original {
         Some(v) => std::env::set_var("PATH", v),
-        None => std::env::remove_var("PATH"),
+        None => neppy_core::neppy::util::env::remove_var("PATH"),
     }
 }
 
@@ -902,9 +905,9 @@ fn path_has_executable_returns_false_when_missing() {
 #[test]
 fn path_has_executable_returns_false_when_path_unset() {
     let _g = ENV_LOCK.lock().unwrap();
-    let original = std::env::var_os("PATH");
+    let original = neppy_core::neppy::util::env::var_os("PATH");
 
-    std::env::remove_var("PATH");
+    neppy_core::neppy::util::env::remove_var("PATH");
     assert!(
         !path_has_executable("xdg-mime"),
         "unset $PATH must yield false (skip register_all on the missing-xdg-utils branch)"
@@ -912,7 +915,7 @@ fn path_has_executable_returns_false_when_path_unset() {
 
     match original {
         Some(v) => std::env::set_var("PATH", v),
-        None => std::env::remove_var("PATH"),
+        None => neppy_core::neppy::util::env::remove_var("PATH"),
     }
 }
 
@@ -929,7 +932,7 @@ fn path_has_executable_returns_false_when_path_unset() {
 #[test]
 fn path_has_executable_returns_false_for_partial_xdg_utils_install() {
     let _g = ENV_LOCK.lock().unwrap();
-    let original = std::env::var_os("PATH");
+    let original = neppy_core::neppy::util::env::var_os("PATH");
 
     let dir = tempfile::tempdir().expect("tempdir");
     // Only `xdg-mime` exists; `update-desktop-database` and
@@ -952,7 +955,7 @@ fn path_has_executable_returns_false_for_partial_xdg_utils_install() {
 
     match original {
         Some(v) => std::env::set_var("PATH", v),
-        None => std::env::remove_var("PATH"),
+        None => neppy_core::neppy::util::env::remove_var("PATH"),
     }
 }
 

@@ -1,6 +1,10 @@
 import packageJson from '../../package.json';
 
-const APP_ENV = (import.meta.env.VITE_OPENHUMAN_APP_ENV as string | undefined)
+const APP_ENV = (
+  (import.meta.env.VITE_NEPPY_APP_ENV ?? import.meta.env.VITE_OPENHUMAN_APP_ENV) as
+    | string
+    | undefined
+)
   ?.trim()
   .toLowerCase();
 
@@ -19,12 +23,13 @@ const DEFAULT_BACKEND_URL =
  * falls back to this constant. Never read this constant directly from product
  * code that needs the live endpoint — call `getCoreRpcUrl()` instead.
  *
- * Override at build time via `VITE_OPENHUMAN_CORE_RPC_URL`.
+ * Override at build time via `VITE_NEPPY_CORE_RPC_URL`.
  */
 export const CORE_RPC_URL =
-  import.meta.env.VITE_OPENHUMAN_CORE_RPC_URL || 'http://127.0.0.1:7788/rpc';
+  (import.meta.env.VITE_NEPPY_CORE_RPC_URL ?? import.meta.env.VITE_OPENHUMAN_CORE_RPC_URL) ||
+  'http://127.0.0.1:7788/rpc';
 
-/** Matches core `OPENHUMAN_TOOL_TIMEOUT_SECS` (default 120s, max 3600s). */
+/** Matches core `NEPPY_TOOL_TIMEOUT_SECS` (default 120s, max 3600s). */
 const DEFAULT_TOOL_TIMEOUT_SECS = 120;
 const MAX_TOOL_TIMEOUT_SECS = 3600;
 
@@ -65,9 +70,11 @@ export const CORE_RPC_TIMEOUT_MS = parseCoreRpcTimeoutMs();
 export const IS_DEV = import.meta.env.DEV;
 export const IS_PROD = import.meta.env.PROD;
 export const E2E_RESTART_APP_AS_RELOAD =
-  import.meta.env.VITE_OPENHUMAN_E2E_RESTART_APP_AS_RELOAD === 'true';
+  (import.meta.env.VITE_NEPPY_E2E_RESTART_APP_AS_RELOAD ??
+    import.meta.env.VITE_OPENHUMAN_E2E_RESTART_APP_AS_RELOAD) === 'true';
 export const E2E_DEFAULT_CORE_MODE =
-  (import.meta.env.VITE_OPENHUMAN_E2E_DEFAULT_CORE_MODE as string | undefined) || '';
+  ((import.meta.env.VITE_NEPPY_E2E_DEFAULT_CORE_MODE ??
+    import.meta.env.VITE_OPENHUMAN_E2E_DEFAULT_CORE_MODE) as string | undefined) || '';
 
 /**
  * True when the build behaves like a dev build for runtime purposes — either
@@ -109,7 +116,7 @@ export const SKILLS_GITHUB_REPO =
  * Transcript-derived restore path (Phase C, `docs/plans/transcript-derived-view.md`).
  *
  * When **on** (default), the settled-turn process trails on thread open are
- * hydrated from the `openhuman.threads_transcript_get` projection of the
+ * hydrated from the `neppy.threads_transcript_get` projection of the
  * append-only `session_raw/*.jsonl` source of truth, instead of the legacy
  * `turn_state_history` snapshot ring. Live token streaming is untouched either
  * way — in-flight turns still render from socket-fed `chatRuntimeSlice` state.
@@ -149,7 +156,7 @@ export const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
  *
  * **Not runtime-authoritative in Tauri.** In the desktop app, `getBackendUrl()`
  * (in `services/backendUrl.ts`) asks the core sidecar for the live API URL via
- * `openhuman.config_resolve_api_url`. If that call fails or returns an empty
+ * `neppy.config_resolve_api_url`. If that call fails or returns an empty
  * URL, `getBackendUrl()` **throws** — it does not fall back to this constant.
  * This constant is only used in web/non-Tauri mode (where the sidecar is not
  * present).
@@ -172,21 +179,30 @@ export const APP_VERSION = packageJson.version;
 
 /** Desktop binary/package version reported with analytics events. */
 export const APP_BINARY_VERSION =
-  (import.meta.env.VITE_OPENHUMAN_BINARY_VERSION as string | undefined)?.trim() || APP_VERSION;
+  (
+    (import.meta.env.VITE_NEPPY_BINARY_VERSION ?? import.meta.env.VITE_OPENHUMAN_BINARY_VERSION) as
+      | string
+      | undefined
+  )?.trim() || APP_VERSION;
 
 /** Root Rust core crate version reported with analytics events. */
 export const CORE_CARGO_VERSION =
-  (import.meta.env.VITE_OPENHUMAN_CORE_CARGO_VERSION as string | undefined)?.trim() || APP_VERSION;
+  (
+    (import.meta.env.VITE_NEPPY_CORE_CARGO_VERSION ??
+      import.meta.env.VITE_OPENHUMAN_CORE_CARGO_VERSION) as string | undefined
+  )?.trim() || APP_VERSION;
 
 /** Tauri shell Cargo crate version reported with analytics events. */
 export const TAURI_CARGO_VERSION =
-  (import.meta.env.VITE_OPENHUMAN_TAURI_CARGO_VERSION as string | undefined)?.trim() ||
-  APP_BINARY_VERSION;
+  (
+    (import.meta.env.VITE_NEPPY_TAURI_CARGO_VERSION ??
+      import.meta.env.VITE_OPENHUMAN_TAURI_CARGO_VERSION) as string | undefined
+  )?.trim() || APP_BINARY_VERSION;
 
 /**
  * Deployment environment reported to Sentry and other observability surfaces.
  *
- * Derived from `VITE_OPENHUMAN_APP_ENV` (set by CI for production / staging
+ * Derived from `VITE_NEPPY_APP_ENV` (set by CI for production / staging
  * bundles). Falls back to `development` in non-production builds so local
  * debugging never mingles with real user events.
  */
@@ -233,16 +249,19 @@ export const LATEST_APP_DOWNLOAD_URL =
 
 /**
  * Public GitHub repository URL. Target of the in-app "Star us on GitHub" CTA
- * (#5005). Override via VITE_OPENHUMAN_GITHUB_REPO_URL for forks.
+ * (#5005). Override via VITE_NEPPY_GITHUB_REPO_URL for forks.
  *
  * The override is accepted only when it parses as an `https:` URL. This value is
  * handed straight to `openUrl` by the CTA, so a malformed string or a
  * custom-scheme override could break the button or invoke an unintended
  * protocol handler; anything that is not valid HTTPS falls back to the default.
  */
-export const OPENHUMAN_GITHUB_REPO_URL = ((): string => {
+export const NEPPY_GITHUB_REPO_URL = ((): string => {
   const fallback = 'https://github.com/tinyhumansai/openhuman';
-  const override = (import.meta.env.VITE_OPENHUMAN_GITHUB_REPO_URL as string | undefined)?.trim();
+  const override = (
+    (import.meta.env.VITE_NEPPY_GITHUB_REPO_URL ??
+      import.meta.env.VITE_OPENHUMAN_GITHUB_REPO_URL) as string | undefined
+  )?.trim();
   if (!override) return fallback;
   try {
     return new URL(override).protocol === 'https:' ? override : fallback;

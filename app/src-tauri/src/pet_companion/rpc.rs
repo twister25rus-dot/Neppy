@@ -13,11 +13,11 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-pub(crate) const METHOD_LEASE: &str = "openhuman.pet_companion_lease";
-pub(crate) const METHOD_PAUSE: &str = "openhuman.pet_companion_pause";
-pub(crate) const METHOD_RESUME: &str = "openhuman.pet_companion_resume";
-pub(crate) const METHOD_ASK: &str = "openhuman.pet_companion_ask";
-pub(crate) const METHOD_CAPTURE: &str = "openhuman.pet_companion_capture";
+pub(crate) const METHOD_LEASE: &str = "neppy.pet_companion_lease";
+pub(crate) const METHOD_PAUSE: &str = "neppy.pet_companion_pause";
+pub(crate) const METHOD_RESUME: &str = "neppy.pet_companion_resume";
+pub(crate) const METHOD_ASK: &str = "neppy.pet_companion_ask";
+pub(crate) const METHOD_CAPTURE: &str = "neppy.pet_companion_capture";
 
 const CALL_TIMEOUT: Duration = Duration::from_secs(5);
 /// `capture` blocks until the user finishes selecting (core caps it at 60 s).

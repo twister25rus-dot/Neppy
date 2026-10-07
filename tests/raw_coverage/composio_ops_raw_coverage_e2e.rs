@@ -59,7 +59,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
@@ -69,7 +69,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -361,8 +361,8 @@ async fn composio_direct_key_ops_and_agent_tools_take_local_validation_paths() {
         get(composio_direct_connected_accounts),
     ))
     .await;
-    let _direct_v2_guard = EnvGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &direct_base);
-    let _direct_v3_guard = EnvGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &direct_base);
+    let _direct_v2_guard = EnvGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V2", &direct_base);
+    let _direct_v3_guard = EnvGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V3", &direct_base);
 
     let dir = tempdir().expect("tempdir");
     let mut config = Config {
@@ -445,7 +445,7 @@ async fn composio_controller_registry_validates_params_without_backend_network()
     assert!(controllers.iter().all(|controller| {
         controller
             .rpc_method_name()
-            .starts_with("openhuman.composio_")
+            .starts_with("neppy.composio_")
     }));
 
     for (function, input_count) in [

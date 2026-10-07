@@ -27,7 +27,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = crate::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
@@ -38,7 +38,7 @@ impl Drop for EnvVarGuard {
         unsafe {
             match self.previous.take() {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => crate::neppy::util::env::remove_var(self.key),
             }
         }
     }

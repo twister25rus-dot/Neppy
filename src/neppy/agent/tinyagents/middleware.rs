@@ -1,4 +1,4 @@
-//! openhuman context concerns expressed as tinyagents graph middlewares
+//! neppy context concerns expressed as tinyagents graph middlewares
 //! (issue #4249).
 //!
 //! Historically these ran in the in-house engine's tool/prompt plumbing
@@ -65,7 +65,7 @@ use super::policy_denial::PolicyDenial;
 /// Mirrors the `ContextConfig::tool_result_budget_bytes` default (16 KiB).
 const DEFAULT_TOOL_RESULT_BUDGET_BYTES: usize = 16 * 1024;
 
-/// Config bundle for the openhuman context middlewares installed on a turn.
+/// Config bundle for the neppy context middlewares installed on a turn.
 ///
 /// Cheap to clone (the summarizer is an `Arc`). An all-default value installs
 /// nothing — [`install`](Self::install) is a no-op.
@@ -96,7 +96,7 @@ pub(crate) struct TurnContextMiddleware {
     pub(crate) handoff: Option<HandoffConfig>,
     /// Live transcript snapshot sink (#4466). When set, a
     /// [`TranscriptSnapshotMiddleware`] mirrors the running conversation (as
-    /// openhuman [`ChatMessage`]s) into this shared buffer before every model
+    /// neppy [`ChatMessage`]s) into this shared buffer before every model
     /// call. Only the sub-agent path sets it, so an erroring run can persist the
     /// rounds completed before the failure (the harness drops its partial
     /// transcript on `Err`). `None` everywhere else (chat persists post-run).
@@ -118,7 +118,7 @@ pub(crate) type TranscriptSnapshotSink =
 /// `learning/transcript_ingest` can read it — but a failed run used to persist
 /// nothing. This middleware mirrors each `before_model` request's messages
 /// (which include every prior completed assistant/tool round) into an
-/// openhuman-owned buffer, so the runner's error path can still write the rounds
+/// neppy-owned buffer, so the runner's error path can still write the rounds
 /// that completed before the failure. Converts to [`ChatMessage`] eagerly so the
 /// caller does not need access to the private `convert` module.
 pub(crate) struct TranscriptSnapshotMiddleware {
@@ -725,7 +725,7 @@ impl Middleware<()> for ToolOutputMiddleware {
         // the output was most aggressively truncated. Capping the payload first
         // and prefixing afterwards also means a tool's declared cap bounds the
         // tool's own output, which is what it is a contract about, rather than
-        // openhuman's annotation about it.
+        // neppy's annotation about it.
         let mut pending_notice: Option<&'static str> = None;
 
         if !compaction_exempt {
@@ -3457,7 +3457,7 @@ mod tests {
         );
     }
 
-    /// A minimal openhuman [`Tool`] for the tool-set–backed middlewares. Its
+    /// A minimal neppy [`Tool`] for the tool-set–backed middlewares. Its
     /// `max_result_size_chars` and `external_effect` are configurable so the
     /// budget/approval resolution paths can be exercised.
     struct FakeTool {

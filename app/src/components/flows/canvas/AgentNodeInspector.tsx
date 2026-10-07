@@ -8,7 +8,7 @@
  *    through the FULL agent tool loop (that definition's ToolScope / sandbox /
  *    max-iterations govern the turn); leaving it blank runs the bare
  *    persona-shaped completion. The options come from the same
- *    `openhuman.agent_registry_list` RPC the Settings → Agents panel uses.
+ *    `neppy.agent_registry_list` RPC the Settings → Agents panel uses.
  *    `agent_ref` is trusted config (never model output), so this picker is the
  *    only way it's set from the UI.
  *  - `model` — a MANAGED capability tier (`reasoning-v1` ≈ Opus-class,

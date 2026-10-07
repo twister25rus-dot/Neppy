@@ -57,7 +57,7 @@ export async function restartCoreProcess(): Promise<void> {
   }
   console.debug('[core] restartCoreProcess: invoking restart_core_process');
   await invoke<void>('restart_core_process');
-  // The Tauri shell mints a fresh `OPENHUMAN_CORE_TOKEN` for the new core
+  // The Tauri shell mints a fresh `NEPPY_CORE_TOKEN` for the new core
   // process. Drop the cached bearer so token-bearing long-lived consumers
   // (e.g. webhook SSE per #1922) reconnect with the new value.
   clearCoreRpcTokenCache();
@@ -294,7 +294,7 @@ export async function resetNeppyDataAndRestartCore(userId?: string | null): Prom
 export async function getOnboardingCompleted(): Promise<boolean> {
   if (!isTauri()) return false;
   const res = await callCoreRpc<boolean | { result: boolean }>({
-    method: 'openhuman.config_get_onboarding_completed',
+    method: 'neppy.config_get_onboarding_completed',
   });
   // RpcOutcome may wrap value in { result, logs } when logs are present
   if (typeof res === 'boolean') return res;
@@ -306,7 +306,7 @@ export async function getOnboardingCompleted(): Promise<boolean> {
 export async function setOnboardingCompleted(value: boolean): Promise<boolean> {
   if (!isTauri()) return false;
   const res = await callCoreRpc<boolean | { result: boolean }>({
-    method: 'openhuman.config_set_onboarding_completed',
+    method: 'neppy.config_set_onboarding_completed',
     params: { value },
   });
   if (typeof res === 'boolean') return res;
@@ -318,7 +318,7 @@ export async function neppyDoctorReport(): Promise<CommandResponse<DoctorReport>
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
-  return await callCoreRpc<CommandResponse<DoctorReport>>({ method: 'openhuman.doctor_report' });
+  return await callCoreRpc<CommandResponse<DoctorReport>>({ method: 'neppy.doctor_report' });
 }
 
 export async function neppyDoctorModels(
@@ -328,7 +328,7 @@ export async function neppyDoctorModels(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<ModelProbeReport>>({
-    method: 'openhuman.doctor_models',
+    method: 'neppy.doctor_models',
     params: { use_cache: useCache },
   });
 }
@@ -341,7 +341,7 @@ export async function neppyMigrateOpenclaw(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<MigrationReport>>({
-    method: 'openhuman.migrate_openclaw',
+    method: 'neppy.migrate_openclaw',
     params: { source_workspace: sourceWorkspace, dry_run: dryRun },
   });
 }
@@ -354,7 +354,7 @@ export async function neppyMigrateHermes(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<MigrationReport>>({
-    method: 'openhuman.migrate_hermes',
+    method: 'neppy.migrate_hermes',
     params: { source_workspace: sourceWorkspace, dry_run: dryRun },
   });
 }

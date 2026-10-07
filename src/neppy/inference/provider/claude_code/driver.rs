@@ -47,13 +47,13 @@ const DISALLOWED_CC_BUILTINS: &[&str] = &[
 /// power.
 ///
 /// Resolution order:
-/// 1. `OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE` env var, when set to a recognised
+/// 1. `NEPPY_CLAUDE_CODE_PERMISSION_MODE` env var, when set to a recognised
 ///    value, wins (debugging / power users). `bypass`/`bypassPermissions`/`full`
 ///    force ON; `acceptEdits`/`edits`/`default`/`off`/`false`/`0` force OFF.
 /// 2. Otherwise the persisted UI toggle in
 ///    [`super::settings`] (the Claude Code modal "Full access" switch).
 fn claude_code_full_access(workspace_dir: &std::path::Path) -> bool {
-    if let Ok(raw) = std::env::var("OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE") {
+    if let Ok(raw) = crate::neppy::util::env::var("NEPPY_CLAUDE_CODE_PERMISSION_MODE") {
         match raw.trim() {
             "bypass" | "bypassPermissions" | "full" => return true,
             "acceptEdits" | "edits" | "default" | "off" | "false" | "0" => return false,
@@ -65,11 +65,11 @@ fn claude_code_full_access(workspace_dir: &std::path::Path) -> bool {
 
 /// Whether to wrap the `claude` spawn in the macOS Seatbelt jail. On by
 /// default on macOS where `sandbox-exec` exists; opt out with
-/// `OPENHUMAN_CLAUDE_CODE_SANDBOX=0`.
+/// `NEPPY_CLAUDE_CODE_SANDBOX=0`.
 fn seatbelt_available() -> bool {
     #[cfg(target_os = "macos")]
     {
-        let opted_out = std::env::var("OPENHUMAN_CLAUDE_CODE_SANDBOX")
+        let opted_out = crate::neppy::util::env::var("NEPPY_CLAUDE_CODE_SANDBOX")
             .map(|v| v == "0")
             .unwrap_or(false);
         !opted_out && std::path::Path::new("/usr/bin/sandbox-exec").exists()
@@ -603,15 +603,15 @@ mod tests {
         let _env = super::super::ENV_TEST_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        let prev = std::env::var("OPENHUMAN_CLAUDE_CODE_SANDBOX").ok();
-        std::env::set_var("OPENHUMAN_CLAUDE_CODE_SANDBOX", "0");
+        let prev = crate::neppy::util::env::var("NEPPY_CLAUDE_CODE_SANDBOX").ok();
+        std::env::set_var("NEPPY_CLAUDE_CODE_SANDBOX", "0");
         assert!(
             !seatbelt_available(),
             "explicit opt-out must disable the jail"
         );
         match prev {
-            Some(v) => std::env::set_var("OPENHUMAN_CLAUDE_CODE_SANDBOX", v),
-            None => std::env::remove_var("OPENHUMAN_CLAUDE_CODE_SANDBOX"),
+            Some(v) => std::env::set_var("NEPPY_CLAUDE_CODE_SANDBOX", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_CLAUDE_CODE_SANDBOX"),
         }
     }
 
@@ -623,9 +623,9 @@ mod tests {
         // Empty workspace (no persisted toggle) → file layer resolves to OFF.
         let ws = std::env::temp_dir().join("oh_cc_fullaccess_env_test");
         let _ = std::fs::remove_dir_all(&ws);
-        let key = "OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE";
-        let prev = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let key = "NEPPY_CLAUDE_CODE_PERMISSION_MODE";
+        let prev = crate::neppy::util::env::var(key).ok();
+        crate::neppy::util::env::remove_var(key);
         assert!(
             !claude_code_full_access(&ws),
             "default posture must be acceptEdits (full access OFF)"
@@ -642,7 +642,7 @@ mod tests {
         );
         match prev {
             Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
+            None => crate::neppy::util::env::remove_var(key),
         }
     }
 
@@ -655,9 +655,9 @@ mod tests {
         let ws = std::env::temp_dir().join("oh_cc_fullaccess_file_test");
         let _ = std::fs::remove_dir_all(&ws);
         std::fs::create_dir_all(&ws).unwrap();
-        let key = "OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE";
-        let prev = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let key = "NEPPY_CLAUDE_CODE_PERMISSION_MODE";
+        let prev = crate::neppy::util::env::var(key).ok();
+        crate::neppy::util::env::remove_var(key);
 
         settings::save(&ws, &ClaudeCodeSettings { full_access: true }).unwrap();
         assert!(
@@ -674,7 +674,7 @@ mod tests {
 
         match prev {
             Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
+            None => crate::neppy::util::env::remove_var(key),
         }
         let _ = std::fs::remove_dir_all(&ws);
     }

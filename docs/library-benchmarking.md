@@ -30,7 +30,7 @@ stderr). Each models a distinct embedding use case:
 | `memory-ingest` | Canonicalizing and ingesting a batch of chat messages through the real extraction/admission/tree-queue pipeline. |
 | `subagents` | A delegation turn: an orchestrator session spawns real subagents via `spawn_parallel_agents` and merges their findings. |
 | `agent-turn` | The minimal embed case: one agent, one turn, no delegation, no workflow. The smallest useful "hello world" for a host that just wants a single reply. |
-| `long-agent` | A long-running agent loop (`OPENHUMAN_PROFILE_TURNS`, default 25) in one process, to see whether RSS plateaus or grows per turn. |
+| `long-agent` | A long-running agent loop (`NEPPY_PROFILE_TURNS`, default 25) in one process, to see whether RSS plateaus or grows per turn. |
 | `workflow` | A saved automation run (`flows_create` + `flows_run`), representing the flows/automation embedding path rather than ad hoc chat. |
 | `subconscious` | A background subconscious turn (the always-on reflective pass), distinct from an interactive chat turn. |
 | `cold-phases` | Bootstrap attribution: per-phase checkpoints (config load, registry init, agent build, memory construction, first turn) so cold-start cost can be attributed to a phase instead of one lump sum. |
@@ -79,7 +79,7 @@ Six scripts under `scripts/profile/` (each has `-h`/`--help`):
   ```
 
 - **`library-instances.sh`** — sweeps N independent *processes* (not agents
-  in one process) of a scenario, held alive via `OPENHUMAN_PROFILE_HOLD_SECS`,
+  in one process) of a scenario, held alive via `NEPPY_PROFILE_HOLD_SECS`,
   and measures per-instance/aggregate cost — the many-processes counterpart
   to `library-fleet.sh`'s one-process model (see
   [below](#fleet-one-process-vs-instances-many-processes)).
@@ -117,15 +117,15 @@ behavior, not linked code size.
 
 | Variable | Effect |
 | --- | --- |
-| `OPENHUMAN_PROFILE_TURNS` | Turn count for `long-agent` (default 25). |
-| `OPENHUMAN_PROFILE_PREWARM_SUBAGENTS=1` | Run one warm-up turn before measuring (`subagents`/`subconscious`), isolating first-use cost from steady state. |
-| `OPENHUMAN_PROFILE_DISABLE_MEMORY_WRITES=1` | Disable `memory.auto_save` and episodic capture, isolating orchestration from persistence. |
-| `OPENHUMAN_PROFILE_FORCE_UTC=1` | Skip `iana_time_zone`/CoreFoundation timezone resolution. |
-| `OPENHUMAN_PROFILE_HOLD_SECS` / `HOLD_BEFORE_SECS` | Pause the process at settled/baseline state for external inspection (`vmmap`, `heap`, `malloc_history`, Instruments). |
-| `OPENHUMAN_PROFILE_DHAT_OUT` | Output path for dhat JSON (set by `library-heap.sh`). |
-| `OPENHUMAN_PROFILE_SKILL_RUN_CONCURRENCY` | `skill-run`: number of parallel `code_executor` turns (K), each spawning a `node_exec` job (default 1). |
-| `OPENHUMAN_PROFILE_SKILL_RUN_POOL` | `skill-run`: `off` disables the shared runtime pool (legacy per-call spawn; tree then shows ~K resident `node` children). Default on. |
-| `OPENHUMAN_PROFILE_SKILL_RUN_POOL_WORKERS` | `skill-run`: pool size W when pooling is on (default 1). The scenario asserts `child_count <= W` for K > 1 — the #5106 regression gate. |
+| `NEPPY_PROFILE_TURNS` | Turn count for `long-agent` (default 25). |
+| `NEPPY_PROFILE_PREWARM_SUBAGENTS=1` | Run one warm-up turn before measuring (`subagents`/`subconscious`), isolating first-use cost from steady state. |
+| `NEPPY_PROFILE_DISABLE_MEMORY_WRITES=1` | Disable `memory.auto_save` and episodic capture, isolating orchestration from persistence. |
+| `NEPPY_PROFILE_FORCE_UTC=1` | Skip `iana_time_zone`/CoreFoundation timezone resolution. |
+| `NEPPY_PROFILE_HOLD_SECS` / `HOLD_BEFORE_SECS` | Pause the process at settled/baseline state for external inspection (`vmmap`, `heap`, `malloc_history`, Instruments). |
+| `NEPPY_PROFILE_DHAT_OUT` | Output path for dhat JSON (set by `library-heap.sh`). |
+| `NEPPY_PROFILE_SKILL_RUN_CONCURRENCY` | `skill-run`: number of parallel `code_executor` turns (K), each spawning a `node_exec` job (default 1). |
+| `NEPPY_PROFILE_SKILL_RUN_POOL` | `skill-run`: `off` disables the shared runtime pool (legacy per-call spawn; tree then shows ~K resident `node` children). Default on. |
+| `NEPPY_PROFILE_SKILL_RUN_POOL_WORKERS` | `skill-run`: pool size W when pooling is on (default 1). The scenario asserts `child_count <= W` for K > 1 — the #5106 regression gate. |
 
 ## Metrics and interpretation
 
@@ -188,7 +188,7 @@ stay roughly flat as N grows if per-agent state is cheap and idle agents cost
 
 Working targets: marginal cost ≤ 1.5 MiB/agent, threads and FDs flat (not
 linear) in N, and idle CPU low regardless of N — an agent that isn't mid-turn
-should not be spending cycles. `OPENHUMAN_PROFILE_WORKER_THREADS=2` pins the
+should not be spending cycles. `NEPPY_PROFILE_WORKER_THREADS=2` pins the
 scenario's tokio runtime to 2 worker threads to simulate the 2 vCPU box rather
 than scaling with the host's actual core count. The `budget` block in each
 run's JSON (`target_agents`, `ram_budget_mib`, `projected_rss_mib_at_target`,
@@ -261,14 +261,14 @@ Start cheap, escalate only as needed:
 1. **`library-bench.sh`** — RSS/duration medians across fresh processes. Answers "did this change move the needle" for most changes.
 2. **`library-cpu.sh` (samply)** — symbolized CPU profile when a scenario is slower than expected, or to attribute cold-path CPU to a specific phase (registry init, agent build, memory construction, SQLite init, TinyAgents turn runner were the top contributors in the prior session).
 3. **`library-heap.sh` (dhat)** — live-heap allocation sites and retained bytes when RSS is high but the cause isn't obvious from CPU alone (e.g. the TinyCortex PII `RegexSet` finding came from stack-logged allocation attribution, not CPU sampling).
-4. **Instruments / `vmmap` / `heap` / `malloc_history`** — deepest macOS-native attribution, using the `OPENHUMAN_PROFILE_HOLD_SECS` / `HOLD_BEFORE_SECS` hooks to pause the process at baseline or settled state:
+4. **Instruments / `vmmap` / `heap` / `malloc_history`** — deepest macOS-native attribution, using the `NEPPY_PROFILE_HOLD_SECS` / `HOLD_BEFORE_SECS` hooks to pause the process at baseline or settled state:
 
    ```bash
-   OPENHUMAN_PROFILE_HOLD_SECS=120 target/release/library-profile subagents &
+   NEPPY_PROFILE_HOLD_SECS=120 target/release/library-profile subagents &
    vmmap -summary <pid>
    heap -sH <pid>
 
-   MallocStackLogging=1 OPENHUMAN_PROFILE_HOLD_SECS=120 \
+   MallocStackLogging=1 NEPPY_PROFILE_HOLD_SECS=120 \
      target/release/library-profile subagents &
    malloc_history <pid> -allBySize
    ```
@@ -355,10 +355,10 @@ grows with K. Compare the two regimes directly:
 
 ```bash
 # Legacy: K interpreters resident at peak.
-OPENHUMAN_PROFILE_SKILL_RUN_CONCURRENCY=8 OPENHUMAN_PROFILE_SKILL_RUN_POOL=off \
+NEPPY_PROFILE_SKILL_RUN_CONCURRENCY=8 NEPPY_PROFILE_SKILL_RUN_POOL=off \
   target/release/library-profile skill-run
 # Pooled: child_count stays at the pool size (asserted), not K.
-OPENHUMAN_PROFILE_SKILL_RUN_CONCURRENCY=8 OPENHUMAN_PROFILE_SKILL_RUN_POOL_WORKERS=1 \
+NEPPY_PROFILE_SKILL_RUN_CONCURRENCY=8 NEPPY_PROFILE_SKILL_RUN_POOL_WORKERS=1 \
   target/release/library-profile skill-run
 ```
 

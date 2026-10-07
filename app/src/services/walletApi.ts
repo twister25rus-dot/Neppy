@@ -56,15 +56,13 @@ interface SetupWalletParams {
 }
 
 export const fetchWalletStatus = async (): Promise<WalletStatus> => {
-  const response = await callCoreRpc<{ result: WalletStatus }>({
-    method: 'openhuman.wallet_status',
-  });
+  const response = await callCoreRpc<{ result: WalletStatus }>({ method: 'neppy.wallet_status' });
   return response.result;
 };
 
 export const setupLocalWallet = async (params: SetupWalletParams): Promise<WalletStatus> => {
   const response = await callCoreRpc<{ result: WalletStatus }>({
-    method: 'openhuman.wallet_setup',
+    method: 'neppy.wallet_setup',
     params,
   });
   return response.result;
@@ -83,7 +81,7 @@ export const setupLocalWallet = async (params: SetupWalletParams): Promise<Walle
  */
 export const fetchWalletBalances = async (): Promise<BalanceInfo[]> => {
   const response = await callCoreRpc<{ result: BalanceInfo[] }>({
-    method: 'openhuman.wallet_balances',
+    method: 'neppy.wallet_balances',
   });
   return response.result;
 };
@@ -157,7 +155,7 @@ export const prepareTransfer = async (
   params: PrepareTransferParams
 ): Promise<PreparedTransaction> => {
   const response = await callCoreRpc<{ result: PreparedTransaction }>({
-    method: 'openhuman.wallet_prepare_transfer',
+    method: 'neppy.wallet_prepare_transfer',
     params,
   });
   return response.result;
@@ -169,7 +167,7 @@ export const prepareTransfer = async (
  */
 export const executePrepared = async (quoteId: string): Promise<ExecutionResult> => {
   const response = await callCoreRpc<{ result: ExecutionResult }>({
-    method: 'openhuman.wallet_execute_prepared',
+    method: 'neppy.wallet_execute_prepared',
     params: { quoteId, confirmed: true },
   });
   return response.result;
@@ -184,11 +182,11 @@ interface RevealRecoveryPhraseResult {
  * Reveal the plaintext recovery phrase for the currently configured wallet.
  *
  * The phrase is held only in transient React state — never written to disk.
- * Calls openhuman.wallet_reveal_recovery_phrase on the Rust core.
+ * Calls neppy.wallet_reveal_recovery_phrase on the Rust core.
  */
 export const revealRecoveryPhrase = async (): Promise<RevealRecoveryPhraseResult> => {
   const response = await callCoreRpc<{ result: RevealRecoveryPhraseResult }>({
-    method: 'openhuman.wallet_reveal_recovery_phrase',
+    method: 'neppy.wallet_reveal_recovery_phrase',
   });
   return response.result;
 };

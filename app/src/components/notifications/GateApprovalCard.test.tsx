@@ -3,7 +3,7 @@
  * decision contract for the `flow-gate-approval` CoreNotification kind.
  * Asserts: renders as an alertdialog with tool + summary; Approve once /
  * Approve always / Deny each route the matching decision to
- * `openhuman.approval_decide` reading `{ request_id }` from the action
+ * `neppy.approval_decide` reading `{ request_id }` from the action
  * payload; a successful decision marks the notification read and clears its
  * actions; a failed decision surfaces a localized error and re-enables the
  * buttons without touching the notification; and an invalid payload is

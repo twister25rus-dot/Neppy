@@ -28,7 +28,7 @@ export interface NavTab {
 
 /**
  * Ordered list of sidebar nav entries:
- *   chat → pet → brain → flows → connections → rewards
+ *   chat → pet → brain → flows → connections → debug → rewards
  *
  * Orchestration (TinyPlace multi-agent coordination) is no longer a top-level
  * tab — it was folded back under Brain as the `/brain?tab=orchestration`
@@ -63,6 +63,10 @@ export const NAV_TABS: NavTab[] = [
     path: '/connections',
     walkthroughAttr: 'tab-connections',
   },
+  // Debug Mode: a development chat scoped to the app's own source repository
+  // (`/debug`). Always listed so the entry point is discoverable; the page
+  // itself explains what is missing when no repository is configured.
+  { id: 'debug', labelKey: 'nav.debug', path: '/debug', walkthroughAttr: 'tab-debug' },
   // Rewards was a footer row beside Feedback; it is a primary destination now,
   // directly below Connections. The cloud gate travelled with it — a local
   // session still never sees it, because the page has nothing to show one.

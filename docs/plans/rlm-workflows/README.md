@@ -27,7 +27,7 @@ Orchestrator model turn
   └─ rlm tool call { script, session_id?, timeout_secs?, limits? }
        └─ src/neppy/rlm/  (new domain)
             ├─ session manager  (persistent ReplSession per rlm session_id)
-            ├─ capability bridge (openhuman Tools/Subagents/Provider →
+            ├─ capability bridge (neppy Tools/Subagents/Provider →
             │                     tinyagents CapabilityRegistry)
             ├─ policy mapping   (autonomy tier + SecurityPolicy → ReplPolicy)
             ├─ progress bridge  (ReplCallRecord / EventSink → AgentProgress
@@ -52,13 +52,13 @@ Two repos change:
 
 | Phase | File | Deliverable |
 | ----- | ---- | ----------- |
-| 1 | [phase-1-research.md](phase-1-research.md) | Research findings: what tinyagents `repl` provides, what openhuman provides, the gaps |
+| 1 | [phase-1-research.md](phase-1-research.md) | Research findings: what tinyagents `repl` provides, what neppy provides, the gaps |
 | 2 | [phase-2-tinyagents.md](phase-2-tinyagents.md) | TinyAgents-side changes (cancellation, live events) — separate PR |
 | 3 | [phase-3-rlm-domain.md](phase-3-rlm-domain.md) | `src/neppy/rlm/` domain: sessions, capability bridge, policy |
 | 4 | [phase-4-rlm-tool.md](phase-4-rlm-tool.md) | First-class `rlm` tool: schema, registration, prompt surfacing |
 | 5 | [phase-5-hardening.md](phase-5-hardening.md) | Error handling, timeouts, cancellation, limits, observability |
 | 6 | [phase-6-tests.md](phase-6-tests.md) | Tests (written last): unit, timeout/cancel/limit, RPC E2E |
-| 7 | [phase-7-delivery.md](phase-7-delivery.md) | PR strategy: tinyagents PR + one gigantic openhuman PR |
+| 7 | [phase-7-delivery.md](phase-7-delivery.md) | PR strategy: tinyagents PR + one gigantic neppy PR |
 
 Tests are deliberately the **final implementation phase** (per the feature
 brief): phases 3–5 land the behavior with verbose debug logging; phase 6

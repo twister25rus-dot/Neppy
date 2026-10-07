@@ -303,7 +303,7 @@ impl NeppyModelResolver {
             create_chat_model_with_model_id(role, &self.config, self.temperature).map_err(
                 |error| {
                     TinyAgentsError::Model(format!(
-                        "openhuman: no model for workload role `{role}`: {error}"
+                        "neppy: no model for workload role `{role}`: {error}"
                     ))
                 },
             )?;
@@ -581,7 +581,7 @@ mod tests {
         // `base_model_for_role` only ever fails by way of the factory, so pin the
         // shape of the error the runtime sees rather than forcing that failure.
         let error = TinyAgentsError::Model(
-            "openhuman: no model for workload role `chat`: unresolved".to_string(),
+            "neppy: no model for workload role `chat`: unresolved".to_string(),
         );
         assert!(error.to_string().contains("no model for workload role"));
     }

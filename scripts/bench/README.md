@@ -123,7 +123,7 @@ refuses to start on one rather than failing mysteriously later.
 Three further details the runner handles, each of which silently ruins a run if
 you reproduce this setup by hand:
 
-- **The approval gate must be off** (`OPENHUMAN_APPROVAL_GATE=0`). It is on by
+- **The approval gate must be off** (`NEPPY_APPROVAL_GATE=0`). It is on by
   default and parks interactive chat turns pending a human decision, with a
   10-minute TTL that resolves to Deny.
 - **The daily cost limit must be raised.** The core prices the mock's reported

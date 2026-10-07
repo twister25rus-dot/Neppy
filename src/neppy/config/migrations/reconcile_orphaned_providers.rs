@@ -32,7 +32,7 @@
 //!
 //! - For each of the nine `*_provider` fields, reset to `None` (= managed) any
 //!   value that the factory could not resolve: a `"<slug>:<model>"` whose slug
-//!   is absent from `cloud_providers`, the always-managed `"openhuman:<model>"`
+//!   is absent from `cloud_providers`, the always-managed `"neppy:<model>"`
 //!   form, or a bare non-sentinel string. Sentinels (`""`, `"cloud"`,
 //!   `"openhuman"`) and local providers (`ollama:`/`lmstudio:`, valid without a
 //!   `cloud_providers` entry) are left untouched.
@@ -42,7 +42,7 @@
 //!
 //! Mirrors the factory's *exact*, case-sensitive grammar so "resolvable here"
 //! means the same as "resolvable at inference time". The one intentional step
-//! beyond the factory is normalizing `"openhuman:<model>"` → `None`: both route
+//! beyond the factory is normalizing `"neppy:<model>"` → `None`: both route
 //! to the managed backend, and `None` matches what the settings UI persists.
 //!
 //! ## Behaviour
@@ -55,7 +55,7 @@
 use crate::neppy::config::Config;
 use crate::neppy::inference::provider::factory::{
     LM_STUDIO_PROVIDER_PREFIX, LOCAL_OPENAI_PROVIDER_PREFIX, MLX_PROVIDER_PREFIX,
-    OLLAMA_PROVIDER_PREFIX, OMLX_PROVIDER_PREFIX, PROVIDER_OPENHUMAN,
+    OLLAMA_PROVIDER_PREFIX, OMLX_PROVIDER_PREFIX, PROVIDER_NEPPY,
 };
 use std::collections::HashSet;
 
@@ -110,7 +110,7 @@ pub fn run(config: &mut Config) -> anyhow::Result<MigrationStats> {
         // local provider prefixes the factory accepts.
         if s.is_empty()
             || s == "cloud"
-            || s == PROVIDER_OPENHUMAN
+            || s == PROVIDER_NEPPY
             || s.starts_with(OLLAMA_PROVIDER_PREFIX)
             || s.starts_with(LM_STUDIO_PROVIDER_PREFIX)
             || s.starts_with(MLX_PROVIDER_PREFIX)
@@ -121,9 +121,9 @@ pub fn run(config: &mut Config) -> anyhow::Result<MigrationStats> {
         }
 
         let scrub_reason = match s.split_once(':') {
-            // "openhuman:<model>" is always the managed backend regardless of
+            // "neppy:<model>" is always the managed backend regardless of
             // the suffix — normalize to None to match the bare sentinel.
-            Some((slug, _)) if slug.trim() == PROVIDER_OPENHUMAN => Some("openhuman-slug"),
+            Some((slug, _)) if slug.trim() == PROVIDER_NEPPY => Some("openhuman-slug"),
             // "<slug>:<model>" whose slug is no longer configured — the orphan.
             Some((slug, _)) if !known_slugs.contains(slug.trim()) => Some("missing-slug"),
             Some(_) => None,

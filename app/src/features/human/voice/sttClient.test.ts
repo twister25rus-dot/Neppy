@@ -9,7 +9,7 @@ describe('transcribeCloud', () => {
   beforeEach(() => {
     (callCoreRpc as ReturnType<typeof vi.fn>).mockReset();
   });
-  it('routes through openhuman.voice_cloud_transcribe with base64 + mime', async () => {
+  it('routes through neppy.voice_cloud_transcribe with base64 + mime', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
     mock.mockResolvedValueOnce({ text: 'hello there' });
     const blob = new Blob([new Uint8Array([1, 2, 3, 4, 5])], { type: 'audio/webm;codecs=opus' });
@@ -22,7 +22,7 @@ describe('transcribeCloud', () => {
       method: string;
       params: { audio_base64: string; mime_type: string; file_name: string };
     };
-    expect(call.method).toBe('openhuman.voice_cloud_transcribe');
+    expect(call.method).toBe('neppy.voice_cloud_transcribe');
     // `audio/webm;codecs=opus` should collapse to the bare type the backend
     // allow-list accepts.
     expect(call.params.mime_type).toBe('audio/webm');
@@ -94,19 +94,19 @@ describe('transcribeCloud', () => {
   });
 
   // #4901: a core built without the `voice` feature never registers the
-  // `openhuman.voice_*` controllers, so they answer "unknown method". That is a
+  // `neppy.voice_*` controllers, so they answer "unknown method". That is a
   // compile-time property of the binary, so the message must NOT tell users to
   // restart (the pre-#4901 copy did, which could never work).
   it('rewrites "unknown method" errors to a not-compiled-in message', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
-    mock.mockRejectedValueOnce(new Error('unknown method: openhuman.voice_cloud_transcribe'));
+    mock.mockRejectedValueOnce(new Error('unknown method: neppy.voice_cloud_transcribe'));
     const blob = new Blob([new Uint8Array([1])], { type: 'audio/webm' });
     await expect(transcribeCloud(blob)).rejects.toThrow(/not compiled into the app/i);
   });
 
   it('does not advise restarting for a compile-time voice gate', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
-    mock.mockRejectedValueOnce(new Error('unknown method: openhuman.voice_cloud_transcribe'));
+    mock.mockRejectedValueOnce(new Error('unknown method: neppy.voice_cloud_transcribe'));
     const blob = new Blob([new Uint8Array([1])], { type: 'audio/webm' });
     await expect(transcribeCloud(blob)).rejects.not.toThrow(/restart the openhuman desktop app/i);
   });
@@ -115,7 +115,7 @@ describe('transcribeCloud', () => {
   // retry/backoff loop — a compile-time gate can never succeed on retry.
   it('keeps the "unavailable in this build" substring for retry suppression', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
-    mock.mockRejectedValueOnce(new Error('unknown method: openhuman.voice_cloud_transcribe'));
+    mock.mockRejectedValueOnce(new Error('unknown method: neppy.voice_cloud_transcribe'));
     const blob = new Blob([new Uint8Array([1])], { type: 'audio/webm' });
     await expect(transcribeCloud(blob)).rejects.toThrow(/unavailable in this build/i);
   });
@@ -133,7 +133,7 @@ describe('transcribeWithFactory', () => {
     (callCoreRpc as ReturnType<typeof vi.fn>).mockReset();
   });
 
-  it('routes through openhuman.voice_stt_dispatch and returns text', async () => {
+  it('routes through neppy.voice_stt_dispatch and returns text', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
     mock.mockResolvedValueOnce({ text: 'hello via factory', provider: 'cloud' });
     const blob = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/webm' });
@@ -141,7 +141,7 @@ describe('transcribeWithFactory', () => {
     const text = await transcribeWithFactory(blob);
     expect(text).toBe('hello via factory');
     const call = mock.mock.calls[0][0] as { method: string; params: Record<string, unknown> };
-    expect(call.method).toBe('openhuman.voice_stt_dispatch');
+    expect(call.method).toBe('neppy.voice_stt_dispatch');
     expect(call.params.mime_type).toBe('audio/webm');
     expect(call.params.file_name).toBe('audio.webm');
     // No provider override unless caller pins one.
@@ -168,14 +168,14 @@ describe('transcribeWithFactory', () => {
   // #4901 — same compile-time gate as the cloud path above.
   it('rewrites "unknown method" errors to a not-compiled-in message', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
-    mock.mockRejectedValueOnce(new Error('unknown method: openhuman.voice_stt_dispatch'));
+    mock.mockRejectedValueOnce(new Error('unknown method: neppy.voice_stt_dispatch'));
     const blob = new Blob([new Uint8Array([1])], { type: 'audio/webm' });
     await expect(transcribeWithFactory(blob)).rejects.toThrow(/not compiled into the app/i);
   });
 
   it('does not advise restarting for a compile-time voice gate', async () => {
     const mock = callCoreRpc as ReturnType<typeof vi.fn>;
-    mock.mockRejectedValueOnce(new Error('unknown method: openhuman.voice_stt_dispatch'));
+    mock.mockRejectedValueOnce(new Error('unknown method: neppy.voice_stt_dispatch'));
     const blob = new Blob([new Uint8Array([1])], { type: 'audio/webm' });
     await expect(transcribeWithFactory(blob)).rejects.not.toThrow(
       /restart the openhuman desktop app/i

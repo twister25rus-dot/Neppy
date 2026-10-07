@@ -112,7 +112,7 @@ pub async fn docker_exec(
 
     // Environment passthrough.
     for var_name in &policy.env_passthrough {
-        if let Ok(val) = std::env::var(var_name) {
+        if let Ok(val) = crate::neppy::util::env::var(var_name) {
             cmd.arg("-e").arg(format!("{var_name}={val}"));
         }
     }

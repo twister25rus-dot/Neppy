@@ -39,7 +39,7 @@ interface NeppyLinkEvent {
   path: string;
 }
 
-export const OPENHUMAN_LINK_EVENT = 'openhuman-link';
+export const NEPPY_LINK_EVENT = 'openhuman-link';
 
 const ALLOWED_PATHS = [
   'settings/notifications',
@@ -65,8 +65,8 @@ const NeppyLinkModal = () => {
         setActivePath(detail.path as AllowedPath);
       }
     };
-    window.addEventListener(OPENHUMAN_LINK_EVENT, handler);
-    return () => window.removeEventListener(OPENHUMAN_LINK_EVENT, handler);
+    window.addEventListener(NEPPY_LINK_EVENT, handler);
+    return () => window.removeEventListener(NEPPY_LINK_EVENT, handler);
   }, []);
 
   const close = useCallback(() => setActivePath(null), []);

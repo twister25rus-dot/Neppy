@@ -283,7 +283,7 @@ impl DomainSet {
             // talks to `app.composio.dev` directly, reaching the hosted backend
             // at no point. Dropping the group took that with it, so a key
             // entered in settings hit `unknown method:
-            // openhuman.composio_set_api_key` — a working local-first feature
+            // neppy.composio_set_api_key` — a working local-first feature
             // switched off for a hosted-backend reason that does not apply.
             //
             // What keeps the hosted half off is not this flag:
@@ -479,7 +479,7 @@ pub enum TokenSource {
     /// [`crate::core::auth::init_rpc_token_with_value`] — never crosses the
     /// process environment.
     Fixed(Arc<String>),
-    /// Standalone fallback: read `OPENHUMAN_CORE_TOKEN` from the environment when
+    /// Standalone fallback: read `NEPPY_CORE_TOKEN` from the environment when
     /// present (operator config), otherwise generate a fresh token and write
     /// `{root}/core.token` (0o600 on Unix) so CLI callers can authenticate.
     EnvOrFile,
@@ -562,13 +562,13 @@ impl CoreBuilder {
         self
     }
 
-    /// Override the bind host (default: `OPENHUMAN_CORE_HOST` env or `127.0.0.1`).
+    /// Override the bind host (default: `NEPPY_CORE_HOST` env or `127.0.0.1`).
     pub fn host(mut self, host: impl Into<String>) -> Self {
         self.host = Some(host.into());
         self
     }
 
-    /// Override the bind port (default: `OPENHUMAN_CORE_PORT` env or `7788`).
+    /// Override the bind port (default: `NEPPY_CORE_PORT` env or `7788`).
     pub fn port(mut self, port: u16) -> Self {
         self.port = Some(port);
         self
@@ -632,7 +632,7 @@ impl CoreBuilder {
     /// Sugar over [`config`](Self::config), like [`workspace`](Self::workspace).
     /// Worth having as its own method because the value reaches more than the
     /// obvious client: `/auth/me` session validation, the hosted-backend
-    /// surfaces, and — with no `OPENHUMAN_MEDULLA_BASE_URL` override — the
+    /// surfaces, and — with no `NEPPY_MEDULLA_BASE_URL` override — the
     /// Medulla client all resolve through it. A host that sets only one of
     /// those has the other two pointing at a different deployment, which fails
     /// as "backend rejected session token" rather than as a mismatch.
@@ -739,7 +739,7 @@ impl CoreRuntime {
             // `rpc_http` was requested (we passed the guard above) but the HTTP +
             // Socket.IO transport is compiled out of this slim build. Fail loudly
             // rather than returning Ok with no listener bound — a supervisor / CLI
-            // (`openhuman run`, `serve`, `--headless-api`) would otherwise observe
+            // (`neppy run`, `serve`, `--headless-api`) would otherwise observe
             // a clean start while the requested API is unavailable. Embedders that
             // genuinely want no transport leave `ServiceSet::rpc_http` unset, which
             // is handled by the early return above.
@@ -784,8 +784,8 @@ impl CoreRuntime {
             Some(p) => (p, "builder port"),
             None => (
                 jsonrpc::core_port(),
-                if std::env::var("OPENHUMAN_CORE_PORT").is_ok() {
-                    "env OPENHUMAN_CORE_PORT"
+                if crate::neppy::util::env::var("NEPPY_CORE_PORT").is_ok() {
+                    "env NEPPY_CORE_PORT"
                 } else {
                     "default"
                 },
@@ -795,12 +795,12 @@ impl CoreRuntime {
             Some(h) => (h.clone(), "builder host"),
             None => (
                 jsonrpc::core_host(),
-                if std::env::var("OPENHUMAN_CORE_HOST")
+                if crate::neppy::util::env::var("NEPPY_CORE_HOST")
                     .ok()
                     .filter(|s| !s.is_empty())
                     .is_some()
                 {
-                    "env OPENHUMAN_CORE_HOST"
+                    "env NEPPY_CORE_HOST"
                 } else {
                     "default"
                 },
@@ -856,14 +856,14 @@ impl CoreRuntime {
         let bind_addr = format!("{host}:{listen_port}");
         let listener = pick.listener;
 
-        // Synchronize OPENHUMAN_CORE_RPC_URL with the actual bound port so
+        // Synchronize NEPPY_CORE_RPC_URL with the actual bound port so
         // connectivity::rpc::resolve_listen_port() reports the live listener
         // instead of the originally-requested port when fallback engaged.
         //
         // SAFETY: set_var is process-global; this runs once during bind. Flagged
         // in the pluggable-core drift ledger as single-runtime-per-process.
         unsafe {
-            std::env::set_var("OPENHUMAN_CORE_RPC_URL", format!("http://{bind_addr}/rpc"));
+            std::env::set_var("NEPPY_CORE_RPC_URL", format!("http://{bind_addr}/rpc"));
         }
 
         let ctx = Arc::clone(&self.ctx);
@@ -924,14 +924,14 @@ impl CoreRuntime {
         crate::neppy::inference::local::shutdown_mlx_workers().await;
 
         // Server has stopped accepting and in-flight requests drained. Kill any
-        // `ollama serve` openhuman itself spawned (no-op when externally
+        // `ollama serve` neppy itself spawned (no-op when externally
         // managed) so the next launch doesn't try to reclaim a dead daemon.
         // Bounded so a wedged Ollama can't hold up app shutdown.
         if let Some(svc) = crate::neppy::inference::local::try_global() {
             let cfg = crate::neppy::config::Config::load_or_init()
                 .await
                 .unwrap_or_default();
-            log::info!("[core] shutdown: cleaning up openhuman-owned ollama if any");
+            log::info!("[core] shutdown: cleaning up neppy-owned ollama if any");
             let shutdown_fut = svc.shutdown_owned_ollama(&cfg);
             if tokio::time::timeout(std::time::Duration::from_secs(2), shutdown_fut)
                 .await
@@ -994,7 +994,7 @@ mod tests {
     /// `Direct` client variant uses the user's own API key against
     /// `app.composio.dev` and never reaches the hosted backend. Dropping the
     /// group unregistered its controllers too, so saving a key in settings
-    /// failed with `unknown method: openhuman.composio_set_api_key`.
+    /// failed with `unknown method: neppy.composio_set_api_key`.
     ///
     /// What holds the hosted half off is `services.integrations`, asserted
     /// below — not this flag. Re-dropping the domain to silence a hosted call

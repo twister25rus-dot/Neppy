@@ -405,7 +405,7 @@ describe('chatService.subscribeChatEvents', () => {
     await chatSend({ threadId: 'thread-1', message: 'hello' });
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.channel_web_chat',
+      method: 'neppy.channel_web_chat',
       params: {
         client_id: 'socket-1',
         thread_id: 'thread-1',
@@ -430,7 +430,7 @@ describe('chatService.subscribeChatEvents', () => {
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'openhuman.channel_web_chat',
+        method: 'neppy.channel_web_chat',
         params: expect.objectContaining({
           // `reasoning_effort` is the portable field: mlx_vlm.server and the
           // OpenAI reasoning models both read it, so this is not local-only.
@@ -456,7 +456,7 @@ describe('chatService.subscribeChatEvents', () => {
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'openhuman.channel_web_chat',
+        method: 'neppy.channel_web_chat',
         params: expect.objectContaining({
           message: 'hello',
           speak_reply: true,
@@ -490,7 +490,7 @@ describe('chatService.chatClearQueue', () => {
     const dropped = await chatClearQueue('thread-9');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.channel_web_queue_clear',
+      method: 'neppy.channel_web_queue_clear',
       params: { thread_id: 'thread-9' },
     });
     expect(dropped).toBe(2);

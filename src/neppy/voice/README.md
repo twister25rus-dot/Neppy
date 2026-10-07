@@ -1,6 +1,6 @@
 # voice
 
-Speech-to-text (STT) and text-to-speech (TTS) domain. Exposes the `openhuman.voice_*` RPC namespace for transcription, synthesis, availability checks, provider configuration, agent reply-speech (with mascot lip-sync visemes), and a standalone voice **dictation server** (hotkey → record → transcribe → insert text). Routing between cloud (hosted backend proxy) and local engines (whisper.cpp / Piper) is decided by a provider factory driven by config. The low-level inference implementations themselves now live under `crate::neppy::inference::voice` and are re-exported through this module's surface for back-compat.
+Speech-to-text (STT) and text-to-speech (TTS) domain. Exposes the `neppy.voice_*` RPC namespace for transcription, synthesis, availability checks, provider configuration, agent reply-speech (with mascot lip-sync visemes), and a standalone voice **dictation server** (hotkey → record → transcribe → insert text). Routing between cloud (hosted backend proxy) and local engines (whisper.cpp / Piper) is decided by a provider factory driven by config. The low-level inference implementations themselves now live under `crate::neppy::inference::voice` and are re-exported through this module's surface for back-compat.
 
 ## Responsibilities
 
@@ -28,7 +28,7 @@ Speech-to-text (STT) and text-to-speech (TTS) domain. Exposes the `openhuman.voi
 | `text_input.rs` | Clipboard-paste text insertion (`insert_text`) — writes clipboard then simulates Cmd/Ctrl+V via enigo, restoring prior clipboard. |
 | `dictation_listener.rs` | Core-side dictation broadcast bus: `DictationEvent`, `publish_dictation_event` / `subscribe_dictation_events`, `publish_transcription` / `subscribe_transcription_results`, rdev listener lifecycle (`start_if_enabled` / `stop`), `normalize_hotkey_for_rdev`. |
 | `reply_speech.rs` | Agent reply synthesis via backend `/openai/v1/audio/speech`; `ReplySpeechResult`, `VisemeFrame`, `AlignmentFrame`, `ReplySpeechOptions`, `synthesize_reply`, tolerant response normalization. |
-| `cli.rs` | `openhuman voice` / `openhuman dictate` subcommand adapter — runs a blocking standalone dictation server (domain-owned, since it blocks forever and doesn't fit the controller registry). |
+| `cli.rs` | `neppy-core voice` / `neppy-core dictate` subcommand adapter — runs a blocking standalone dictation server (domain-owned, since it blocks forever and doesn't fit the controller registry). |
 | `*_tests.rs` | Sibling test suites: `audio_capture_tests.rs`, `schemas_tests.rs`, `server_tests.rs` (wired via `#[path = ...]`); other files use inline `#[cfg(test)]`. |
 
 ## Public surface

@@ -284,13 +284,13 @@ async fn backend_client_sends_x_tauri_version_when_env_set() {
     static ENV_LOCK: Mutex<()> = Mutex::new(());
     let _guard = ENV_LOCK.lock().unwrap();
 
-    std::env::set_var("OPENHUMAN_TAURI_VERSION", "9.8.7-shell+test");
+    std::env::set_var("NEPPY_TAURI_VERSION", "9.8.7-shell+test");
     let (base_url, captured) = spawn_header_capture_server().await;
     let client = BackendOAuthClient::new(&base_url).unwrap();
     let url = client.url_for("/probe").unwrap();
     let response = client.raw_client().get(url).send().await.unwrap();
     assert!(response.status().is_success());
-    std::env::remove_var("OPENHUMAN_TAURI_VERSION");
+    crate::neppy::util::env::remove_var("NEPPY_TAURI_VERSION");
 
     let headers = captured.take();
     let request_headers = headers.last().unwrap();

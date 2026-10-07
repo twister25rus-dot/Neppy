@@ -49,14 +49,14 @@ describe('agentWorkApi', () => {
   it('list calls the agent_work_list RPC with no params when limit is omitted', async () => {
     mockCall.mockResolvedValueOnce(response());
     await agentWorkApi.list();
-    expect(mockCall).toHaveBeenCalledWith({ method: 'openhuman.agent_work_list', params: {} });
+    expect(mockCall).toHaveBeenCalledWith({ method: 'neppy.agent_work_list', params: {} });
   });
 
   it('list forwards an explicit limit', async () => {
     mockCall.mockResolvedValueOnce(response());
     await agentWorkApi.list(25);
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_work_list',
+      method: 'neppy.agent_work_list',
       params: { limit: 25 },
     });
   });
@@ -115,7 +115,7 @@ describe('agentWorkApi.control', () => {
     mockCall.mockResolvedValueOnce(controlled('cancelled'));
     const row = await agentWorkApi.control({ runId: 'run-1', action: 'stop' });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_work_control',
+      method: 'neppy.agent_work_control',
       params: { runId: 'run-1', action: 'stop' },
     });
     expect(row.status).toBe('cancelled');
@@ -125,7 +125,7 @@ describe('agentWorkApi.control', () => {
     mockCall.mockResolvedValueOnce(controlled('cancelled'));
     await agentWorkApi.control({ runId: 'run-1', action: 'stop', reason: '  manual  ' });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_work_control',
+      method: 'neppy.agent_work_control',
       params: { runId: 'run-1', action: 'stop', reason: 'manual' },
     });
   });
@@ -134,7 +134,7 @@ describe('agentWorkApi.control', () => {
     mockCall.mockResolvedValueOnce(controlled('running'));
     await agentWorkApi.control({ runId: 'run-1', action: 'continue', message: '  go  ' });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_work_control',
+      method: 'neppy.agent_work_control',
       params: { runId: 'run-1', action: 'continue', message: 'go' },
     });
   });

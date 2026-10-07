@@ -37,7 +37,7 @@ impl FlowRunTrigger {
 }
 
 /// The result of validating a candidate `tinyflows` graph without persisting
-/// it — returned by `openhuman.flows_validate` (PHASE 3c) and used to surface
+/// it — returned by `neppy.flows_validate` (PHASE 3c) and used to surface
 /// structural errors and non-fatal warnings (e.g. "this trigger kind never
 /// fires automatically yet") to an authoring surface *before* a flow is saved.
 ///
@@ -98,7 +98,7 @@ pub struct FlowValidationError {
 }
 
 /// The result of importing a workflow definition (native tinyflows JSON or an
-/// n8n export) via `openhuman.flows_import` (PHASE 4d) — the normalized,
+/// n8n export) via `neppy.flows_import` (PHASE 4d) — the normalized,
 /// migrated + validated [`WorkflowGraph`] plus any non-fatal import warnings
 /// (unmapped n8n node types, untranslated expressions, a synthesized/demoted
 /// trigger, …).
@@ -268,7 +268,7 @@ pub struct FlowRunStep {
 }
 
 /// A resolvable connection the flows UI / agent picker can attach to a node's
-/// `connection_ref`. Aggregated by `openhuman.flows_list_connections` from two
+/// `connection_ref`. Aggregated by `neppy.flows_list_connections` from two
 /// host-side sources:
 ///
 /// - **Composio connected accounts** (`kind = "composio"`) — each active OAuth

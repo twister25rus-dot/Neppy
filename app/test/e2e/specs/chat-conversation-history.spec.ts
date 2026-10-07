@@ -142,7 +142,7 @@ describe('Chat conversation history', () => {
     await browser.waitUntil(
       async () => {
         const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-          'openhuman.test_support_in_flight_chats',
+          'neppy.test_support_in_flight_chats',
           {}
         );
         return snap.ok && (snap.result?.result?.entries ?? []).length === 0;
@@ -185,7 +185,7 @@ describe('Chat conversation history', () => {
     await browser.waitUntil(
       async () => {
         const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-          'openhuman.test_support_in_flight_chats',
+          'neppy.test_support_in_flight_chats',
           {}
         );
         return snap.ok && (snap.result?.result?.entries ?? []).length === 0;
@@ -253,7 +253,7 @@ describe('Chat conversation history', () => {
     const deadline = Date.now() + 15_000;
     while (Date.now() < deadline) {
       const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
-        'openhuman.test_support_read_workspace_file',
+        'neppy.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 131_072 }
       );
       if (read.ok && read.result?.result?.content_utf8) {

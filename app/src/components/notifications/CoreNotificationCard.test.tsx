@@ -2,7 +2,7 @@
  * Display-only contract for the generic core notification card.
  *
  * The card used to render the meeting auto-join prompt's buttons and dispatch
- * `openhuman.agent_meetings_notification_action`. Both went with the Meet
+ * `neppy.agent_meetings_notification_action`. Both went with the Meet
  * domain, so the card is now a catch-all that must still *show* an
  * action-carrying notification (`NotificationCenter` routes core items only
  * through this branch) while rendering no buttons and calling no RPC.

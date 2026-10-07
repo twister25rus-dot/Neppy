@@ -120,13 +120,13 @@ async function waitForCore(
 }
 
 /**
- * Check `openhuman.service_status`.  Returns true when a separate
+ * Check `neppy.service_status`.  Returns true when a separate
  * background daemon (distinct from our embedded core) is detected.
  */
 async function isDaemonRunning(callRpc: BootCheckTransport['callRpc']): Promise<boolean> {
   try {
     const result = await callRpc<{ installed?: boolean; running?: boolean }>(
-      'openhuman.service_status',
+      'neppy.service_status',
       {}
     );
     const detected = Boolean(result?.installed || result?.running);
@@ -156,17 +156,14 @@ type VersionCheckResult = 'match' | 'outdated' | 'noVersionMethod' | 'unreachabl
 
 async function checkVersion(callRpc: BootCheckTransport['callRpc']): Promise<VersionCheckResult> {
   try {
-    // `openhuman.update_version` is wrapped by RpcOutcome::single_log
+    // `neppy.update_version` is wrapped by RpcOutcome::single_log
     // (see src/neppy/platform/update/ops.rs + src/rpc/mod.rs::into_cli_compatible_json):
     // when logs are present the response shape is `{ result: VersionInfo, logs }`,
     // and VersionInfo is `{ version, target_triple, asset_prefix }`. Earlier
     // attempts read `result.version_info.version` (no such field) and then
     // `result.version` (skipped the RpcOutcome `result` wrapper) — both
     // yielded '' and pinned every boot to "outdated local".
-    const response = await callRpc<{ result?: { version?: string } }>(
-      'openhuman.update_version',
-      {}
-    );
+    const response = await callRpc<{ result?: { version?: string } }>('neppy.update_version', {});
     const coreVersion = response?.result?.version ?? '';
     log('[boot-check] version_check app=%s core=%s', APP_VERSION, coreVersion);
 

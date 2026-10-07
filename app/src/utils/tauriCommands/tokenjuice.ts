@@ -1,7 +1,7 @@
 /**
  * TokenJuice content-router client.
  *
- * Thin wrapper around the `openhuman.tokenjuice_*` JSON-RPC methods exposed by
+ * Thin wrapper around the `neppy.tokenjuice_*` JSON-RPC methods exposed by
  * the Rust core (`src/neppy/inference/tokenjuice/schemas.rs`): read/update the
  * `[tokenjuice]` settings block and read/reset compaction savings statistics.
  */
@@ -49,7 +49,7 @@ export interface SavingsStats {
 
 export async function getTokenjuiceSettings(): Promise<TokenjuiceSettings> {
   const res = await callCoreRpc<{ settings: TokenjuiceSettings }>({
-    method: 'openhuman.tokenjuice_settings_get',
+    method: 'neppy.tokenjuice_settings_get',
     params: {},
   });
   return res.settings;
@@ -59,19 +59,16 @@ export async function updateTokenjuiceSettings(
   patch: TokenjuiceSettingsPatch
 ): Promise<TokenjuiceSettings> {
   const res = await callCoreRpc<{ settings: TokenjuiceSettings }>({
-    method: 'openhuman.tokenjuice_settings_update',
+    method: 'neppy.tokenjuice_settings_update',
     params: { patch },
   });
   return res.settings;
 }
 
 export async function getTokenjuiceSavings(): Promise<SavingsStats> {
-  return await callCoreRpc<SavingsStats>({
-    method: 'openhuman.tokenjuice_savings_stats',
-    params: {},
-  });
+  return await callCoreRpc<SavingsStats>({ method: 'neppy.tokenjuice_savings_stats', params: {} });
 }
 
 export async function resetTokenjuiceSavings(): Promise<void> {
-  await callCoreRpc<{ ok: boolean }>({ method: 'openhuman.tokenjuice_savings_reset', params: {} });
+  await callCoreRpc<{ ok: boolean }>({ method: 'neppy.tokenjuice_savings_reset', params: {} });
 }

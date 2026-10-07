@@ -18,8 +18,8 @@ struct WorkspaceEnvGuard {
 
 impl WorkspaceEnvGuard {
     fn set(path: &Path) -> Self {
-        let previous = std::env::var("OPENHUMAN_WORKSPACE").ok();
-        std::env::set_var("OPENHUMAN_WORKSPACE", path);
+        let previous = neppy_core::neppy::util::env::var("NEPPY_WORKSPACE").ok();
+        std::env::set_var("NEPPY_WORKSPACE", path);
         Self { previous }
     }
 }
@@ -27,8 +27,8 @@ impl WorkspaceEnvGuard {
 impl Drop for WorkspaceEnvGuard {
     fn drop(&mut self) {
         match &self.previous {
-            Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+            None => neppy_core::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }

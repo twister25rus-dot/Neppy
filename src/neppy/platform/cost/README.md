@@ -38,7 +38,7 @@ Notable `CostTracker` methods: `new`, `session_id`, `check_budget`, `record_usag
 
 ## RPC / controllers
 
-Namespace `cost` (methods `openhuman.cost_*` via the registry):
+Namespace `cost` (methods `neppy.cost_*` via the registry):
 
 | Method                   | Inputs                                       | Output                                                                                                     |
 | ------------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |

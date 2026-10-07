@@ -242,7 +242,7 @@ describe('OnboardingLayout — Joyride walkthrough integration (#1123)', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { mockSetOnboardingCompletedFlag, mockSetOnboardingTasks } = await setupLayout();
     mockSetOnboardingTasks.mockRejectedValueOnce(
-      new Error('Core RPC openhuman.app_state_snapshot timed out after 30000ms')
+      new Error('Core RPC neppy.app_state_snapshot timed out after 30000ms')
     );
 
     await act(async () => {

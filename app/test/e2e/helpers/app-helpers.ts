@@ -190,12 +190,12 @@ export async function waitForAuthBootstrap(timeout: number = 20_000): Promise<vo
     try {
       const userId = await browser.execute(() => {
         const winAny = window as unknown as {
-          __OPENHUMAN_CORE_STATE__?: () => {
+          __NEPPY_CORE_STATE__?: () => {
             isReady?: boolean;
             snapshot?: { auth?: { userId?: string | null } };
           };
         };
-        const coreState = winAny.__OPENHUMAN_CORE_STATE__?.();
+        const coreState = winAny.__NEPPY_CORE_STATE__?.();
         if (!coreState?.isReady) return null;
         return coreState.snapshot?.auth?.userId ?? null;
       });

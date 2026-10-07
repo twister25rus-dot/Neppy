@@ -8,7 +8,7 @@ import {
   setFlowEnabled,
 } from '../services/api/flowsApi';
 
-const log = debug('openhuman:flows:preauthorization');
+const log = debug('neppy:flows:preauthorization');
 
 /** Whether the manifest warrants the consolidated card at all: missing
  * grants to approve, or tier-Blocked rows the user must see at save time
@@ -44,7 +44,7 @@ export type FlowPreauthorizationOutcome =
  *   may already be enabled. Surfaces the card only when grants are missing;
  *   "Deny" then turns the flow off ("saved but not live").
  * - `approveAll()` / `deny()` — resolve the pending card. Approve batches the
- *   grants via `openhuman.approval_preauthorize_flow`, then enables. Deny
+ *   grants via `neppy.approval_preauthorize_flow`, then enables. Deny
  *   ensures the flow is disabled.
  *
  * Fail-open on manifest errors: a broken manifest RPC must never make a flow

@@ -138,7 +138,7 @@ describe('Chat harness — send + stream', () => {
     const inFlightDeadline = Date.now() + 8_000;
     while (Date.now() < inFlightDeadline) {
       const snap = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-        'openhuman.test_support_in_flight_chats',
+        'neppy.test_support_in_flight_chats',
         {}
       );
       if (snap.ok && snap.result?.result?.entries?.length) {
@@ -170,7 +170,7 @@ describe('Chat harness — send + stream', () => {
     const currentThreadId = await getSelectedThreadId();
     expect(typeof currentThreadId).toBe('string');
     const after = await callNeppyRpc<{ result: { entries: Array<{ key: string }> } }>(
-      'openhuman.test_support_in_flight_chats',
+      'neppy.test_support_in_flight_chats',
       {}
     );
     expect(after.ok).toBe(true);
@@ -204,7 +204,7 @@ describe('Chat harness — send + stream', () => {
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
       const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
-        'openhuman.test_support_read_workspace_file',
+        'neppy.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 65_536 }
       );
       if (read.ok && read.result?.result?.content_utf8) {
@@ -221,7 +221,7 @@ describe('Chat harness — send + stream', () => {
   it('reads thread state from the workspace via list_workspace_files', async () => {
     const list = await callNeppyRpc<{
       result: { entries: Array<{ rel_path: string; size: number; is_dir: boolean }> };
-    }>('openhuman.test_support_list_workspace_files', {
+    }>('neppy.test_support_list_workspace_files', {
       rel_root: 'memory/conversations/threads',
       max_depth: 1,
     });

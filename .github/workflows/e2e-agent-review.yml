@@ -113,7 +113,7 @@ jobs:
           touch app/.env
       - name: Build E2E app
         if: steps.gate.outputs.present == 'true'
-        run: pnpm --filter openhuman-app test:e2e:build
+        run: pnpm --filter neppy-app test:e2e:build
       - name: Run agent-review E2E spec under Xvfb
         if: steps.gate.outputs.present == 'true'
         run: |

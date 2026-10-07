@@ -202,40 +202,40 @@ fn load_dotenv_for_cli_reads_cwd_dotenv_without_overwriting_existing_env() {
     let env_path = tmp.path().join(".env");
     std::fs::write(
         &env_path,
-        "BACKEND_URL=https://staging-api.example.test\nOPENHUMAN_APP_ENV=staging\n",
+        "BACKEND_URL=https://staging-api.example.test\nNEPPY_APP_ENV=staging\n",
     )
     .expect("write .env");
 
     let original_dir = std::env::current_dir().expect("current dir");
-    let prior_backend = std::env::var("BACKEND_URL").ok();
-    let prior_app_env = std::env::var("OPENHUMAN_APP_ENV").ok();
-    let prior_dotenv_path = std::env::var("OPENHUMAN_DOTENV_PATH").ok();
+    let prior_backend = crate::neppy::util::env::var("BACKEND_URL").ok();
+    let prior_app_env = crate::neppy::util::env::var("NEPPY_APP_ENV").ok();
+    let prior_dotenv_path = crate::neppy::util::env::var("NEPPY_DOTENV_PATH").ok();
 
     unsafe {
-        std::env::remove_var("BACKEND_URL");
-        std::env::set_var("OPENHUMAN_APP_ENV", "production");
-        std::env::remove_var("OPENHUMAN_DOTENV_PATH");
+        crate::neppy::util::env::remove_var("BACKEND_URL");
+        std::env::set_var("NEPPY_APP_ENV", "production");
+        crate::neppy::util::env::remove_var("NEPPY_DOTENV_PATH");
     }
     std::env::set_current_dir(tmp.path()).expect("set current dir");
 
     let result = load_dotenv_for_cli();
 
-    let loaded_backend = std::env::var("BACKEND_URL").ok();
-    let loaded_app_env = std::env::var("OPENHUMAN_APP_ENV").ok();
+    let loaded_backend = crate::neppy::util::env::var("BACKEND_URL").ok();
+    let loaded_app_env = crate::neppy::util::env::var("NEPPY_APP_ENV").ok();
 
     std::env::set_current_dir(&original_dir).expect("restore current dir");
     unsafe {
         match prior_backend {
             Some(value) => std::env::set_var("BACKEND_URL", value),
-            None => std::env::remove_var("BACKEND_URL"),
+            None => crate::neppy::util::env::remove_var("BACKEND_URL"),
         }
         match prior_app_env {
-            Some(value) => std::env::set_var("OPENHUMAN_APP_ENV", value),
-            None => std::env::remove_var("OPENHUMAN_APP_ENV"),
+            Some(value) => std::env::set_var("NEPPY_APP_ENV", value),
+            None => crate::neppy::util::env::remove_var("NEPPY_APP_ENV"),
         }
         match prior_dotenv_path {
-            Some(value) => std::env::set_var("OPENHUMAN_DOTENV_PATH", value),
-            None => std::env::remove_var("OPENHUMAN_DOTENV_PATH"),
+            Some(value) => std::env::set_var("NEPPY_DOTENV_PATH", value),
+            None => crate::neppy::util::env::remove_var("NEPPY_DOTENV_PATH"),
         }
     }
 
@@ -249,7 +249,7 @@ fn load_dotenv_for_cli_reads_cwd_dotenv_without_overwriting_existing_env() {
 
 // --- `mcp` compile-time gate (#4799) ------------------------------------
 
-/// With the `mcp` feature compiled out, `openhuman mcp` must fail with a
+/// With the `mcp` feature compiled out, `neppy-core mcp` must fail with a
 /// diagnostic that names the BUILD as the cause — not a generic
 /// "unknown namespace" error.
 ///
@@ -260,7 +260,7 @@ fn load_dotenv_for_cli_reads_cwd_dotenv_without_overwriting_existing_env() {
 /// property of this build. Instead `cli.rs` is untouched and the arm resolves
 /// to `mcp::server::stub::run_stdio_from_cli`, which bails with the message
 /// asserted below. An MCP host (Claude Desktop, Cursor, …) spawning
-/// `openhuman mcp` therefore gets a non-zero exit + a one-line reason on
+/// `neppy-core mcp` therefore gets a non-zero exit + a one-line reason on
 /// stderr instead of hanging on stdout that never speaks JSON-RPC.
 #[test]
 #[cfg(not(feature = "mcp"))]
@@ -268,7 +268,7 @@ fn mcp_subcommand_reports_disabled_build_when_gate_off() {
     let _guard = env_lock();
 
     let err = crate::core::cli::run_from_cli_args(&["mcp".to_string()])
-        .expect_err("`openhuman mcp` must fail when the `mcp` feature is compiled out");
+        .expect_err("`neppy-core mcp` must fail when the `mcp` feature is compiled out");
     let msg = err.to_string();
 
     assert!(
@@ -294,7 +294,7 @@ fn mcp_server_alias_reports_disabled_build_when_gate_off() {
     let _guard = env_lock();
 
     let err = crate::core::cli::run_from_cli_args(&["mcp-server".to_string()])
-        .expect_err("`openhuman mcp-server` must fail when the `mcp` feature is compiled out");
+        .expect_err("`neppy-core mcp-server` must fail when the `mcp` feature is compiled out");
 
     assert!(
         err.to_string().contains("mcp feature disabled"),
@@ -304,7 +304,7 @@ fn mcp_server_alias_reports_disabled_build_when_gate_off() {
 
 // --- `tui` compile-time gate --------------------------------------------
 
-/// With the `tui` feature compiled out, `openhuman tui` must fail with a
+/// With the `tui` feature compiled out, `neppy-core tui` must fail with a
 /// diagnostic that names the BUILD as the cause — not a generic
 /// "unknown namespace" error.
 ///
@@ -320,7 +320,7 @@ fn tui_subcommand_reports_disabled_build_when_gate_off() {
     let _guard = env_lock();
 
     let err = crate::core::cli::run_from_cli_args(&["tui".to_string()])
-        .expect_err("`openhuman tui` must fail when the `tui` feature is compiled out");
+        .expect_err("`neppy-core tui` must fail when the `tui` feature is compiled out");
     let msg = err.to_string();
 
     assert!(
@@ -346,7 +346,7 @@ fn chat_alias_reports_disabled_build_when_gate_off() {
     let _guard = env_lock();
 
     let err = crate::core::cli::run_from_cli_args(&["chat".to_string()])
-        .expect_err("`openhuman chat` must fail when the `tui` feature is compiled out");
+        .expect_err("`neppy-core chat` must fail when the `tui` feature is compiled out");
 
     assert!(
         err.to_string().contains("tui feature disabled"),
@@ -359,7 +359,7 @@ fn chat_alias_reports_disabled_build_when_gate_off() {
 // Driven through the pure helpers plus a directly-resolved capability set,
 // rather than `run_from_cli_args`: reaching a narrowed set end-to-end needs
 // `driver = "null"` in a real `config.toml` under a process-global
-// `OPENHUMAN_WORKSPACE`, i.e. env mutation plus disk writes. Same reasoning
+// `NEPPY_WORKSPACE`, i.e. env mutation plus disk writes. Same reasoning
 // recorded in the M5.4 block of `all_tests.rs`.
 
 use crate::core::all::{
@@ -376,7 +376,7 @@ fn capability_gated_namespace_reports_a_config_fact_not_a_typo() {
         "null",
         Capabilities::mandatory(),
         required,
-        "openhuman memory_tree",
+        "neppy memory_tree",
     )
     .expect_err("the null driver does not advertise `tree`");
     let msg = err.to_string();
@@ -392,7 +392,7 @@ fn capability_gated_function_reports_a_config_fact_not_a_typo() {
         "null",
         Capabilities::mandatory(),
         required,
-        "openhuman memory doc_ingest",
+        "neppy-core memory doc_ingest",
     )
     .expect_err("the null driver does not advertise `ingest`");
     let msg = err.to_string();
@@ -403,7 +403,7 @@ fn capability_gated_function_reports_a_config_fact_not_a_typo() {
 #[test]
 fn capability_gated_rpc_method_reports_its_family_unfiltered() {
     assert_eq!(
-        capability_for_rpc_method("openhuman.memory_tree_wipe_all"),
+        capability_for_rpc_method("neppy.memory_tree_wipe_all"),
         Some(Some(tinymemory_api::capabilities::Capability::Tree))
     );
 }
@@ -475,8 +475,8 @@ fn generic_namespace_path_reports_the_config_fact_under_a_driver_without_the_fam
     let workspace = tempdir().expect("temp workspace");
 
     // SAFETY: serialised by TEST_ENV_LOCK, and both vars are restored below.
-    std::env::set_var("OPENHUMAN_WORKSPACE", workspace.path());
-    std::env::set_var("OPENHUMAN_MEMORY_DRIVER", "null");
+    std::env::set_var("NEPPY_WORKSPACE", workspace.path());
+    std::env::set_var("NEPPY_MEMORY_DRIVER", "null");
 
     let err = super::run_namespace_command(
         "memory_tree",
@@ -485,8 +485,8 @@ fn generic_namespace_path_reports_the_config_fact_under_a_driver_without_the_fam
     )
     .expect_err("`tree` is not advertised by the null driver, so this must not run");
 
-    std::env::remove_var("OPENHUMAN_MEMORY_DRIVER");
-    std::env::remove_var("OPENHUMAN_WORKSPACE");
+    crate::neppy::util::env::remove_var("NEPPY_MEMORY_DRIVER");
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 
     let message = err.to_string();
     assert!(
@@ -511,17 +511,17 @@ fn raw_call_path_rejects_a_method_the_bound_driver_does_not_advertise() {
     let workspace = tempdir().expect("temp workspace");
 
     // SAFETY: serialised by TEST_ENV_LOCK, and both vars are restored below.
-    std::env::set_var("OPENHUMAN_WORKSPACE", workspace.path());
-    std::env::set_var("OPENHUMAN_MEMORY_DRIVER", "null");
+    std::env::set_var("NEPPY_WORKSPACE", workspace.path());
+    std::env::set_var("NEPPY_MEMORY_DRIVER", "null");
 
     let err = super::run_call_command(&[
         "--method".to_string(),
-        "openhuman.memory_tree_wipe_all".to_string(),
+        "neppy.memory_tree_wipe_all".to_string(),
     ])
     .expect_err("the null driver must not dispatch a tree wipe");
 
-    std::env::remove_var("OPENHUMAN_MEMORY_DRIVER");
-    std::env::remove_var("OPENHUMAN_WORKSPACE");
+    crate::neppy::util::env::remove_var("NEPPY_MEMORY_DRIVER");
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
 
     let message = err.to_string();
     assert!(

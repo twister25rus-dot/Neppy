@@ -7,7 +7,7 @@
 //! * [`pipeline`]: event → suggestion, and background generation;
 //! * [`actions`] / [`handoff`]: what a suggestion can do;
 //! * [`generate`] / [`sensor`]: the model and screen seams;
-//! * [`ops`] / [`schemas`]: `openhuman.pet_companion_*`;
+//! * [`ops`] / [`schemas`]: `neppy.pet_companion_*`;
 //! * [`bus`]: the `pet:companion` socket stream.
 //!
 //! Logging (PC16): prefix `[pet::companion]`; state transitions, sources of

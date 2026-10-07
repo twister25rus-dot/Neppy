@@ -16,7 +16,7 @@
 //! `tinymemory_api::MemoryHealth` into [`DriverHealth`] and the contract's
 //! typed capability set into [`DriverCapabilities`]), and M2c added the
 //! read-only [`status`] projection plus the `subsystems` RPC namespace and the
-//! `openhuman subsystems` CLI table.
+//! `neppy-core subsystems` CLI table.
 //!
 //! Still to land in later steps, despite being named in the same §6 sentence:
 //! the generic `Driver` trait and the policy `Guard` (§3.4).

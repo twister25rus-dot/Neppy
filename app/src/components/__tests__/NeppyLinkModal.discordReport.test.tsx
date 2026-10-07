@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as openUrlModule from '../../utils/openUrl';
-import NeppyLinkModal, { OPENHUMAN_LINK_EVENT } from '../NeppyLinkModal';
+import NeppyLinkModal, { NEPPY_LINK_EVENT } from '../NeppyLinkModal';
 
 // Mock modules that require Tauri runtime or browser APIs not in jsdom
 vi.mock('../../utils/tauriCommands/common', () => ({ isTauri: vi.fn(() => false) }));
@@ -24,7 +24,7 @@ describe('NeppyLinkModal discord-report flow', () => {
   function openReportModal() {
     act(() => {
       window.dispatchEvent(
-        new CustomEvent(OPENHUMAN_LINK_EVENT, { detail: { path: 'community/discord-report' } })
+        new CustomEvent(NEPPY_LINK_EVENT, { detail: { path: 'community/discord-report' } })
       );
     });
   }
@@ -73,7 +73,7 @@ describe('NeppyLinkModal discord join-community flow', () => {
   function openJoinModal() {
     act(() => {
       window.dispatchEvent(
-        new CustomEvent(OPENHUMAN_LINK_EVENT, { detail: { path: 'community/discord' } })
+        new CustomEvent(NEPPY_LINK_EVENT, { detail: { path: 'community/discord' } })
       );
     });
   }

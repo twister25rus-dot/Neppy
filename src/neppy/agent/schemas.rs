@@ -240,7 +240,7 @@ fn handle_chat(params: Map<String, Value>) -> ControllerFuture {
                 p.temperature,
                 p.thread_id,
                 p.cwd,
-                // `openhuman.agent_chat` describes a turn on the account's own
+                // `neppy.agent_chat` describes a turn on the account's own
                 // configured inference. A caller that wants this one turn
                 // somewhere else says so through `inference_agent_chat`, which
                 // takes the endpoint and bearer as parameters.

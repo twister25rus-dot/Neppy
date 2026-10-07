@@ -37,50 +37,50 @@ grep -q '"productName": "Neppy"' "$CONF" \
 # override env vars, so we exercise the real logic without touching the system.
 SANDBOX="$(mktemp -d)"
 trap 'rm -rf "$SANDBOX"' EXIT
-export OPENHUMAN_DEB_BINARY="$SANDBOX/usr/bin/Neppy"
-export OPENHUMAN_DEB_SYMLINK="$SANDBOX/usr/local/bin/neppy"
+export NEPPY_DEB_BINARY="$SANDBOX/usr/bin/Neppy"
+export NEPPY_DEB_SYMLINK="$SANDBOX/usr/local/bin/neppy"
 
-mkdir -p "$(dirname "$OPENHUMAN_DEB_BINARY")"
-printf '#!/bin/sh\nexit 0\n' >"$OPENHUMAN_DEB_BINARY"
-chmod +x "$OPENHUMAN_DEB_BINARY"
+mkdir -p "$(dirname "$NEPPY_DEB_BINARY")"
+printf '#!/bin/sh\nexit 0\n' >"$NEPPY_DEB_BINARY"
+chmod +x "$NEPPY_DEB_BINARY"
 
 # 3a. Fresh install creates the lowercase symlink pointing at the binary.
 sh "$POSTINST" configure
-[ -L "$OPENHUMAN_DEB_SYMLINK" ] || fail "postinst did not create the symlink"
-[ "$(readlink "$OPENHUMAN_DEB_SYMLINK")" = "$OPENHUMAN_DEB_BINARY" ] \
+[ -L "$NEPPY_DEB_SYMLINK" ] || fail "postinst did not create the symlink"
+[ "$(readlink "$NEPPY_DEB_SYMLINK")" = "$NEPPY_DEB_BINARY" ] \
   || fail "symlink points at the wrong target"
 
 # 3b. Re-running (upgrade reconfigure) is idempotent.
 sh "$POSTINST" configure
-[ -L "$OPENHUMAN_DEB_SYMLINK" ] || fail "postinst not idempotent"
+[ -L "$NEPPY_DEB_SYMLINK" ] || fail "postinst not idempotent"
 
 # 3c. Removal deletes our symlink.
 sh "$POSTRM" remove
-[ -e "$OPENHUMAN_DEB_SYMLINK" ] && fail "postrm did not remove the symlink"
+[ -e "$NEPPY_DEB_SYMLINK" ] && fail "postrm did not remove the symlink"
 
 # 3d. postrm on 'upgrade' must NOT remove the link (postinst recreates it).
 sh "$POSTINST" configure
 sh "$POSTRM" upgrade
-[ -L "$OPENHUMAN_DEB_SYMLINK" ] || fail "postrm removed the symlink on upgrade"
+[ -L "$NEPPY_DEB_SYMLINK" ] || fail "postrm removed the symlink on upgrade"
 
 # 3e. A user's own file at the link path is never clobbered or deleted.
-rm -f "$OPENHUMAN_DEB_SYMLINK"
-printf 'user data\n' >"$OPENHUMAN_DEB_SYMLINK"
+rm -f "$NEPPY_DEB_SYMLINK"
+printf 'user data\n' >"$NEPPY_DEB_SYMLINK"
 sh "$POSTINST" configure
-[ -L "$OPENHUMAN_DEB_SYMLINK" ] && fail "postinst clobbered a user's real file"
+[ -L "$NEPPY_DEB_SYMLINK" ] && fail "postinst clobbered a user's real file"
 sh "$POSTRM" purge
-[ -f "$OPENHUMAN_DEB_SYMLINK" ] || fail "postrm deleted a user's real file"
+[ -f "$NEPPY_DEB_SYMLINK" ] || fail "postrm deleted a user's real file"
 
 # 3f. A pre-existing symlink at the link path that points to a DIRECTORY must be
 # replaced in place — never followed. `ln -sf` would create the launcher inside
 # that directory (CWE-59); postinst must land the link at $LINK and write
 # nothing into the target directory.
-rm -f "$OPENHUMAN_DEB_SYMLINK"
+rm -f "$NEPPY_DEB_SYMLINK"
 DECOY_DIR="$SANDBOX/decoy-dir"
 mkdir -p "$DECOY_DIR"
-ln -s "$DECOY_DIR" "$OPENHUMAN_DEB_SYMLINK"
+ln -s "$DECOY_DIR" "$NEPPY_DEB_SYMLINK"
 sh "$POSTINST" configure
-[ -e "$DECOY_DIR/$(basename "$OPENHUMAN_DEB_BINARY")" ] && fail "postinst followed a symlink and wrote inside the target directory (CWE-59)"
-[ "$(readlink "$OPENHUMAN_DEB_SYMLINK")" = "$OPENHUMAN_DEB_BINARY" ] || fail "postinst did not replace the directory symlink with the launcher link"
+[ -e "$DECOY_DIR/$(basename "$NEPPY_DEB_BINARY")" ] && fail "postinst followed a symlink and wrote inside the target directory (CWE-59)"
+[ "$(readlink "$NEPPY_DEB_SYMLINK")" = "$NEPPY_DEB_BINARY" ] || fail "postinst did not replace the directory symlink with the launcher link"
 
 echo "PASS: deb maintainer scripts create/remove the neppy symlink safely"

@@ -12,12 +12,12 @@ test.describe('Memory subsystem round-trip', () => {
     const slug = testInfo.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     await bootAuthenticatedPage(page, `pw-memory-roundtrip-${slug}`, '/home');
 
-    await callCoreRpc<unknown>('openhuman.memory_init', { jwt_token: '' });
-    await callCoreRpc<unknown>('openhuman.memory_clear_namespace', { namespace: TEST_NAMESPACE });
+    await callCoreRpc<unknown>('neppy.memory_init', { jwt_token: '' });
+    await callCoreRpc<unknown>('neppy.memory_clear_namespace', { namespace: TEST_NAMESPACE });
   });
 
   test('stores a document and finds it via recall_memories', async () => {
-    const storeResult = await callCoreRpc<unknown>('openhuman.memory_doc_put', {
+    const storeResult = await callCoreRpc<unknown>('neppy.memory_doc_put', {
       namespace: TEST_NAMESPACE,
       key: TEST_KEY,
       title: TEST_TITLE,
@@ -25,7 +25,7 @@ test.describe('Memory subsystem round-trip', () => {
     });
     expect(storeResult).toBeDefined();
 
-    const recallResult = await callCoreRpc<unknown>('openhuman.memory_recall_memories', {
+    const recallResult = await callCoreRpc<unknown>('neppy.memory_recall_memories', {
       namespace: TEST_NAMESPACE,
       limit: 10,
     });
@@ -39,37 +39,37 @@ test.describe('Memory subsystem round-trip', () => {
     const factKey = 'phoenix-landing-fact';
     const factContent = 'Phoenix migration landing confirmed for Friday evening. E2E canary #773';
 
-    await callCoreRpc<unknown>('openhuman.memory_clear_namespace', { namespace: nsA });
-    await callCoreRpc<unknown>('openhuman.memory_clear_namespace', { namespace: nsB });
+    await callCoreRpc<unknown>('neppy.memory_clear_namespace', { namespace: nsA });
+    await callCoreRpc<unknown>('neppy.memory_clear_namespace', { namespace: nsB });
 
-    await callCoreRpc<unknown>('openhuman.memory_doc_put', {
+    await callCoreRpc<unknown>('neppy.memory_doc_put', {
       namespace: nsA,
       key: factKey,
       title: 'Phoenix landing fact',
       content: factContent,
     });
 
-    const recallResult = await callCoreRpc<unknown>('openhuman.memory_recall_memories', {
+    const recallResult = await callCoreRpc<unknown>('neppy.memory_recall_memories', {
       namespace: nsB,
       limit: 20,
     });
     expect(typeof recallResult).not.toBe('undefined');
 
-    await callCoreRpc<unknown>('openhuman.memory_clear_namespace', { namespace: nsA });
-    await callCoreRpc<unknown>('openhuman.memory_clear_namespace', { namespace: nsB });
+    await callCoreRpc<unknown>('neppy.memory_clear_namespace', { namespace: nsA });
+    await callCoreRpc<unknown>('neppy.memory_clear_namespace', { namespace: nsB });
   });
 
   test('clears a namespace and recall no longer returns the canary', async () => {
-    await callCoreRpc<unknown>('openhuman.memory_doc_put', {
+    await callCoreRpc<unknown>('neppy.memory_doc_put', {
       namespace: TEST_NAMESPACE,
       key: TEST_KEY,
       title: TEST_TITLE,
       content: TEST_CONTENT,
     });
 
-    await callCoreRpc<unknown>('openhuman.memory_clear_namespace', { namespace: TEST_NAMESPACE });
+    await callCoreRpc<unknown>('neppy.memory_clear_namespace', { namespace: TEST_NAMESPACE });
 
-    const recallAfterForget = await callCoreRpc<unknown>('openhuman.memory_recall_memories', {
+    const recallAfterForget = await callCoreRpc<unknown>('neppy.memory_recall_memories', {
       namespace: TEST_NAMESPACE,
       limit: 10,
     });
@@ -80,7 +80,7 @@ test.describe('Memory subsystem round-trip', () => {
       attempt++
     ) {
       await new Promise(resolve => setTimeout(resolve, 500));
-      const retry = await callCoreRpc<unknown>('openhuman.memory_recall_memories', {
+      const retry = await callCoreRpc<unknown>('neppy.memory_recall_memories', {
         namespace: TEST_NAMESPACE,
         limit: 10,
       });

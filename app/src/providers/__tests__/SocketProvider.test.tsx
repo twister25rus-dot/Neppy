@@ -77,7 +77,7 @@ describe('SocketProvider — token transitions', () => {
     expect(vi.mocked(socketService.connect)).toHaveBeenCalledTimes(1);
     expect(vi.mocked(socketService.connect)).toHaveBeenCalledWith('jwt-abc');
     expect(vi.mocked(callCoreRpc)).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.socket_connect_with_session' })
+      expect.objectContaining({ method: 'neppy.socket_connect_with_session' })
     );
   });
 

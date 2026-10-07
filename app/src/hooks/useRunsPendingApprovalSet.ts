@@ -6,7 +6,7 @@
  *
  * The core has no separate DB status for "parked at an approval gate" — a
  * run stays `status: "running"` in `FlowRun` while it waits; only the shared
- * `openhuman.approval_list_pending` queue (see `useFlowPendingApprovals`,
+ * `neppy.approval_list_pending` queue (see `useFlowPendingApprovals`,
  * the single-run analogue used by `FlowRunInspectorDrawer`) knows it's
  * parked, via `PendingApproval.source_context = { kind: "flow", run_id }`.
  *

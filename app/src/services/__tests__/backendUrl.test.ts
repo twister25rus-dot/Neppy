@@ -27,14 +27,14 @@ describe('getBackendUrl', () => {
     hoisted.callCoreRpcMock.mockReset();
   });
 
-  test('in Tauri pulls api_url from openhuman.config_resolve_api_url and trims trailing slash', async () => {
+  test('in Tauri pulls api_url from neppy.config_resolve_api_url and trims trailing slash', async () => {
     hoisted.isTauriMock.mockReturnValue(true);
     hoisted.callCoreRpcMock.mockResolvedValue({ api_url: 'https://core-derived.example.com/' });
 
     const { getBackendUrl } = await loadFreshModule();
     expect(await getBackendUrl()).toBe('https://core-derived.example.com');
     expect(hoisted.callCoreRpcMock).toHaveBeenCalledWith({
-      method: 'openhuman.config_resolve_api_url',
+      method: 'neppy.config_resolve_api_url',
     });
   });
 

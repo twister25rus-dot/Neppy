@@ -147,13 +147,13 @@ mod tests {
 
     #[test]
     fn method_name_is_not_an_rpc_method_name() {
-        // The dotted controller key and the `openhuman.<ns>_<fn>` RPC method
+        // The dotted controller key and the `neppy.<ns>_<fn>` RPC method
         // name are intentionally different — guard against drift.
         let s = mk("memory", "doc_put");
         assert_eq!(s.method_name(), "memory.doc_put");
         assert_eq!(
             crate::core::all::rpc_method_name(&s),
-            "openhuman.memory_doc_put"
+            "neppy.memory_doc_put"
         );
     }
 

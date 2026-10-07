@@ -211,6 +211,10 @@ pub enum SubagentRunError {
     #[error("agent definition '{0}' not found in registry")]
     DefinitionNotFound(String),
 
+    /// The agent may only run inside a Debug-mode turn.
+    #[error("agent '{0}' is only available inside a Debug-mode turn")]
+    DebugOnly(String),
+
     #[error("failed to load archetype prompt from '{path}': {source}")]
     PromptLoad {
         path: String,

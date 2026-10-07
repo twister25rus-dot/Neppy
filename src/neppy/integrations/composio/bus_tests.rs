@@ -26,19 +26,19 @@ async fn handles_trigger_event_without_panic() {
     // `config_rpc::load_config_with_timeout()` at the very top (the
     // direct-mode trigger gate, `bus.rs`), *before* the
     // `TRIAGE_DISABLED_ENV` kill-switch. That read hits the
-    // process-global `OPENHUMAN_WORKSPACE`, so without isolation it
+    // process-global `NEPPY_WORKSPACE`, so without isolation it
     // races the `config.toml` `save()` of a concurrent
     // `TEST_ENV_LOCK`-holding composio test and its corrupted-config
     // recovery can overwrite that test's config. Hold `TEST_ENV_LOCK`
     // (acquired before `TRIAGE_ENV_GUARD` for a stable lock order) and
-    // point `OPENHUMAN_WORKSPACE` at an isolated, persisted config.
+    // point `NEPPY_WORKSPACE` at an isolated, persisted config.
     use crate::neppy::config::{Config, TEST_ENV_LOCK};
     let _env_lock = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let _guard = TRIAGE_ENV_GUARD.lock().unwrap_or_else(|e| e.into_inner());
 
     let tmp = tempfile::tempdir().expect("tempdir");
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let mut config = Config::default();
     config.config_path = tmp.path().join("config.toml");
@@ -57,12 +57,9 @@ async fn handles_trigger_event_without_panic() {
         payload: json!({ "from": "a@b.com", "subject": "hi" }),
     })
     .await;
-    std::env::remove_var(TRIAGE_DISABLED_ENV);
+    crate::neppy::util::env::remove_var(TRIAGE_DISABLED_ENV);
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
-}
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");}
 
 #[test]
 fn triage_disabled_flag_parser() {
@@ -78,7 +75,7 @@ fn triage_disabled_flag_parser() {
         assert!(!triage_disabled(), "expected '{val}' to keep triage on");
     }
     // Unset = triage on (default).
-    std::env::remove_var(TRIAGE_DISABLED_ENV);
+    crate::neppy::util::env::remove_var(TRIAGE_DISABLED_ENV);
     assert!(!triage_disabled(), "unset must default to triage enabled");
 }
 
@@ -146,7 +143,7 @@ async fn trigger_subscriber_skips_triage_when_env_disabled() {
     // Same rationale as `handles_trigger_event_without_panic`: the
     // direct-mode trigger gate in `ComposioTriggerSubscriber::handle`
     // calls `load_config_with_timeout()` before the env kill-switch, so
-    // this test must isolate `OPENHUMAN_WORKSPACE` under `TEST_ENV_LOCK`
+    // this test must isolate `NEPPY_WORKSPACE` under `TEST_ENV_LOCK`
     // (acquired before `TRIAGE_ENV_GUARD`).
     use crate::neppy::config::{Config, TEST_ENV_LOCK};
     let _env_lock = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
@@ -154,7 +151,7 @@ async fn trigger_subscriber_skips_triage_when_env_disabled() {
 
     let tmp = tempfile::tempdir().expect("tempdir");
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let mut config = Config::default();
     config.config_path = tmp.path().join("config.toml");
@@ -172,23 +169,20 @@ async fn trigger_subscriber_skips_triage_when_env_disabled() {
         payload: json!({ "subject": "env gate test" }),
     })
     .await;
-    std::env::remove_var(TRIAGE_DISABLED_ENV);
+    crate::neppy::util::env::remove_var(TRIAGE_DISABLED_ENV);
 
-    unsafe {
-        std::env::remove_var("OPENHUMAN_WORKSPACE");
-    }
-}
+    crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");}
 
 #[tokio::test]
 async fn handles_connection_created_event_without_panic() {
     // `ComposioConnectionCreatedSubscriber::handle` spawns a detached
     // task that calls `config_rpc::load_config_with_timeout()` (and,
     // post-#1710-Wave-4, `ProviderContext::backend_client()` which loads
-    // again). Those reads hit the process-global `OPENHUMAN_WORKSPACE`.
+    // again). Those reads hit the process-global `NEPPY_WORKSPACE`.
     // Without isolation the detached load races the `config.toml`
     // `save()` of a concurrent `TEST_ENV_LOCK`-holding composio test and
     // its corrupted-config recovery can overwrite that test's config
-    // with a default. Hold `TEST_ENV_LOCK`, point `OPENHUMAN_WORKSPACE`
+    // with a default. Hold `TEST_ENV_LOCK`, point `NEPPY_WORKSPACE`
     // at a *leaked* persisted tempdir (so the path stays valid for the
     // detached task even after this test returns) and let the spawned
     // task drain its config loads before releasing the lock. The env
@@ -199,7 +193,7 @@ async fn handles_connection_created_event_without_panic() {
 
     let tmp = tempfile::tempdir().expect("tempdir");
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let mut config = Config::default();
     config.config_path = tmp.path().join("config.toml");
@@ -219,7 +213,7 @@ async fn handles_connection_created_event_without_panic() {
 
     // Drain the detached spawn's `load_config_with_timeout()` /
     // `backend_client()` calls while we still hold `TEST_ENV_LOCK` and
-    // `OPENHUMAN_WORKSPACE` points at the isolated dir, so it can never
+    // `NEPPY_WORKSPACE` points at the isolated dir, so it can never
     // touch another test's config.toml. With no backend session the
     // spawn early-returns after the loads, well within this window.
     for _ in 0..50 {
@@ -283,14 +277,14 @@ async fn connection_subscriber_skips_when_no_provider_registered() {
     // `config_rpc::load_config_with_timeout()` (the provider lookup
     // happens *after* the config load in `bus.rs`). Same isolation
     // rationale as `handles_connection_created_event_without_panic`:
-    // hold `TEST_ENV_LOCK`, point `OPENHUMAN_WORKSPACE` at a leaked
+    // hold `TEST_ENV_LOCK`, point `NEPPY_WORKSPACE` at a leaked
     // persisted tempdir, and drain the spawn before releasing the lock.
     use crate::neppy::config::{Config, TEST_ENV_LOCK};
     let _env_guard = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
 
     let tmp = tempfile::tempdir().expect("tempdir");
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
     let mut config = Config::default();
     config.config_path = tmp.path().join("config.toml");

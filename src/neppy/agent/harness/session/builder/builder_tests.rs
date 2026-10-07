@@ -896,3 +896,21 @@ async fn pet_research_definition_overrides_fail_closed() {
     // No resolved definition at all is refused too.
     assert!(build(None).is_err());
 }
+
+#[tokio::test]
+async fn session_builder_refuses_debug_agent_outside_a_debug_turn() {
+    use crate::neppy::agent::harness::session::types::Agent;
+
+    let tmp = tempfile::TempDir::new().unwrap();
+    let config = test_config(&tmp);
+    let def = builtin_def("debug_agent");
+    let err =
+        Agent::build_session_agent_inner(&config, "debug_agent", Some(&def), None, false, None)
+            .err()
+            .expect("must refuse")
+            .to_string();
+    assert!(
+        err.contains("only available inside a Debug-mode turn"),
+        "{err}"
+    );
+}

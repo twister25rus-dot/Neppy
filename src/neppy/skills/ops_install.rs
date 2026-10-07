@@ -37,7 +37,7 @@ pub const MAX_INSTALL_URL_LEN: usize = 2048;
 /// a few KB; the 1 MiB cap here is a defensive limit against a hostile or
 /// misconfigured host streaming an unbounded response into memory.
 pub const MAX_WORKFLOW_MD_BYTES: usize = 1024 * 1024;
-const ALLOW_LOCAL_HTTP_ENV: &str = "OPENHUMAN_SKILL_INSTALL_ALLOW_LOCAL_HTTP";
+const ALLOW_LOCAL_HTTP_ENV: &str = "NEPPY_SKILL_INSTALL_ALLOW_LOCAL_HTTP";
 
 /// Input for [`install_workflow_from_url`]. Mirrors the `skills.install_from_url`
 /// JSON-RPC payload.
@@ -78,11 +78,11 @@ pub struct InstallWorkflowFromUrlOutcome {
 /// Install a skill by fetching its `SKILL.md` directly over HTTPS and writing
 /// it to `<workspace>/.neppy/skills/<slug>/SKILL.md`.
 ///
-/// Design rationale: openhuman's skill discovery scans
+/// Design rationale: neppy's skill discovery scans
 /// `<workspace>/.neppy/skills/` (plus `~/.neppy/skills/` and legacy
 /// paths), **not** the per-agent subdirectories that the vercel-labs `skills`
 /// CLI writes to (`./claude-code/skills/`, `./cursor/skills/`, …). The CLI's
-/// agent ecosystem is incompatible with openhuman's skill layout, so we fetch
+/// agent ecosystem is incompatible with neppy's skill layout, so we fetch
 /// the SKILL.md file directly and install it into a layout discovery sees.
 ///
 /// Validation applied before any network I/O:
@@ -701,7 +701,7 @@ pub fn validate_install_url(raw: &str) -> Result<(), String> {
 }
 
 /// Same as [`validate_install_url`] but takes an explicit `allow_local_http`
-/// flag instead of reading `OPENHUMAN_SKILL_INSTALL_ALLOW_LOCAL_HTTP` from the
+/// flag instead of reading `NEPPY_SKILL_INSTALL_ALLOW_LOCAL_HTTP` from the
 /// process environment. Callers below the public entry point should always use
 /// this variant — the env-var read in `validate_install_url` is racy across
 /// threads under the parallel test runner (#4567), and the escape hatch is
@@ -749,7 +749,10 @@ pub(crate) fn validate_install_url_with_config(
 /// touches process-global state — required to stop the parallel-test race
 /// described in #4567.
 fn read_allow_local_http_env() -> bool {
-    std::env::var(ALLOW_LOCAL_HTTP_ENV).ok().as_deref() == Some("1")
+    crate::neppy::util::env::var(ALLOW_LOCAL_HTTP_ENV)
+        .ok()
+        .as_deref()
+        == Some("1")
 }
 
 fn is_loopback_http_url(raw: &str) -> bool {

@@ -39,16 +39,16 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: validation runs this integration test with --test-threads=1.
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
 
     fn unset(key: &'static str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: validation runs this integration test with --test-threads=1.
-        unsafe { std::env::remove_var(key) };
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, previous }
     }
 }
@@ -62,7 +62,7 @@ impl Drop for EnvVarGuard {
             }
             None => {
                 // SAFETY: validation runs this integration test with --test-threads=1.
-                unsafe { std::env::remove_var(self.key) }
+                unsafe { neppy_core::neppy::util::env::remove_var(self.key) }
             }
         }
     }
@@ -111,8 +111,8 @@ async fn local_services_cover_mocked_inference_assets_speech_and_ops_entry_point
     config.save().await.expect("save config");
 
     let _path = EnvVarGuard::set("PATH", scripts.path());
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", config.config_path.parent().unwrap());
-    let _ollama_base = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &base);
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", config.config_path.parent().unwrap());
+    let _ollama_base = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &base);
     let _ollama_bin = EnvVarGuard::unset("OLLAMA_BIN");
     let _piper_bin = EnvVarGuard::unset("PIPER_BIN");
 

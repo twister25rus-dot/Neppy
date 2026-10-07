@@ -45,7 +45,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
@@ -55,7 +55,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match self.previous.take() {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -659,7 +659,7 @@ async fn turn_native_tool_progress_reasoning_usage_and_resume_seed_paths_inner()
     ensure_memory_seams();
     let _env = env_lock();
     let (_temp, workspace_path) = workspace("native-progress");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     let calls = Arc::new(AtomicUsize::new(0));
     let provider = Arc::new(ScriptedModel {
         responses: Mutex::new(
@@ -809,7 +809,7 @@ async fn turn_citation_task_replaces_previous_handle_and_joins_successfully_inne
     ensure_memory_seams();
     let _env = env_lock();
     let (_temp, workspace_path) = workspace("citation-task");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     let citation = |id: &str| MemoryEntry {
         id: id.to_string(),
         key: "project.summary".to_string(),
@@ -898,7 +898,7 @@ async fn turn_xml_failures_checkpoint_policy_visibility_and_hooks_are_publicly_e
     ensure_memory_seams();
     let _env = env_lock();
     let (_temp, workspace_path) = workspace("xml-failures");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     let ok_calls = Arc::new(AtomicUsize::new(0));
     let err_calls = Arc::new(AtomicUsize::new(0));
     let boom_calls = Arc::new(AtomicUsize::new(0));
@@ -1082,7 +1082,7 @@ async fn subagent_runner_parent_context_filters_tools_caps_output_and_reports_er
     assert!(matches!(no_parent, SubagentRunError::NoParentContext));
 
     let (_temp, workspace_path) = workspace("subagent");
-    let _workspace_guard = EnvGuard::set_path("OPENHUMAN_WORKSPACE", &workspace_path);
+    let _workspace_guard = EnvGuard::set_path("NEPPY_WORKSPACE", &workspace_path);
     let echo_calls = Arc::new(AtomicUsize::new(0));
     let hidden_calls = Arc::new(AtomicUsize::new(0));
     let provider = Arc::new(ScriptedModel {

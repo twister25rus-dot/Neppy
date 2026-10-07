@@ -241,14 +241,14 @@ Read these as "this has happened", not "this could happen".
 
 ```bash
 # both clippy lanes CI runs — the second catches gates-off breakage
-cargo clippy -p openhuman --features "$(bash scripts/ci/product-features.sh)" -- -D warnings
-cargo clippy -p openhuman -- -D warnings
+cargo clippy -p neppy --features "$(bash scripts/ci/product-features.sh)" -- -D warnings
+cargo clippy -p neppy -- -D warnings
 
 # tests/ targets are NOT built by PR CI (test.yml is workflow_dispatch-only),
 # so this is the only place they get checked before a release lane sees them
-cargo check --locked -p openhuman --features "$(bash scripts/ci/product-features.sh)" --tests
+cargo check --locked -p neppy --features "$(bash scripts/ci/product-features.sh)" --tests
 
-cargo test -p openhuman --lib -- memory:: modules::      # multi-filter needs `-- a b`
+cargo test -p neppy --lib -- memory:: modules::      # multi-filter needs `-- a b`
 
 # Two Cargo worlds, two lockfiles — the root command does NOT validate the
 # shell's. Check both, or a stale `app/src-tauri/Cargo.lock` fails the release

@@ -6,7 +6,7 @@ openhuman's real core against a real tiny.place backend. Two layers:
 
 | Layer | File | What it drives |
 | ----- | ---- | -------------- |
-| **Core** | [`messaging.e2e.mjs`](messaging.e2e.mjs) | Two real `neppy-core` processes talking to each other over the `openhuman.tinyplace_*` JSON-RPC surface (the exact API the desktop UI calls via `core_rpc_relay`). |
+| **Core** | [`messaging.e2e.mjs`](messaging.e2e.mjs) | Two real `neppy-core` processes talking to each other over the `neppy.tinyplace_*` JSON-RPC surface (the exact API the desktop UI calls via `core_rpc_relay`). |
 | **UI** | [`../../app/test/playwright/specs/tinyplace-messaging.spec.ts`](../../app/test/playwright/specs/tinyplace-messaging.spec.ts) | The web build of the app (Messaging screen) driving the same flow through the browser, with a second core as the peer. |
 
 Both run against the **real Go backend** (identity/contacts/relay/Signal
@@ -72,7 +72,7 @@ user actually performs on screen.
 | Var | Default | Meaning |
 | --- | ------- | ------- |
 | `TINYPLACE_API_BASE_URL` | `http://localhost:18080` | Backend base URL both cores point at. |
-| `OPENHUMAN_CORE_BIN` | `target/debug/neppy-core` | Path to the core binary. |
+| `NEPPY_CORE_BIN` | `target/debug/neppy-core` | Path to the core binary. |
 | `MANAGE_STACK` | `1` | `0` disables auto start/stop of the backend. |
 | `BACKEND_PORT` | `18080` | Host port for the managed backend. |
 | `VERBOSE` | – | `1` streams each core's stdout/stderr. |

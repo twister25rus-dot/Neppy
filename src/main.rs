@@ -17,15 +17,15 @@ fn main() {
     // file is visible to the Sentry client at startup. `dotenvy::dotenv()` is
     // a no-op for variables already present in the process environment, and
     // the CLI dispatcher later calls `load_dotenv_for_cli` which honors
-    // `OPENHUMAN_DOTENV_PATH`; this early call handles the common default
+    // `NEPPY_DOTENV_PATH`; this early call handles the common default
     // case (repo-local `.env`) so startup-time consumers (Sentry, config
     // overrides) see the same values as runtime RPC handlers.
     let _ = dotenvy::dotenv();
 
     // Initialize Sentry as the very first operation so the guard outlives everything.
     // Resolves the core Sentry DSN by checking, in order:
-    //   1. `OPENHUMAN_CORE_SENTRY_DSN` at runtime (preferred, namespaced name)
-    //   2. `OPENHUMAN_SENTRY_DSN` at runtime (legacy unprefixed name — kept
+    //   1. `NEPPY_CORE_SENTRY_DSN` at runtime (preferred, namespaced name)
+    //   2. `NEPPY_SENTRY_DSN` at runtime (legacy unprefixed name — kept
     //      so existing CI vars and contributor `.env` files keep working until
     //      the GH org-level variable can be renamed)
     //   3. Each of the same names baked at compile time via `option_env!`
@@ -35,14 +35,22 @@ fn main() {
     // `crash-reporting` feature; a slim build compiles it out entirely.
     #[cfg(feature = "crash-reporting")]
     let _sentry_guard = sentry::init(sentry::ClientOptions {
-        dsn: std::env::var("OPENHUMAN_CORE_SENTRY_DSN")
+        dsn: neppy_core::neppy::util::env::var("NEPPY_CORE_SENTRY_DSN")
             .ok()
             .filter(|s| !s.is_empty())
-            .or_else(|| std::env::var("OPENHUMAN_SENTRY_DSN").ok())
+            .or_else(|| neppy_core::neppy::util::env::var("NEPPY_SENTRY_DSN").ok())
             .filter(|s| !s.is_empty())
-            .or_else(|| option_env!("OPENHUMAN_CORE_SENTRY_DSN").map(|s| s.to_string()))
+            .or_else(|| {
+                option_env!("NEPPY_CORE_SENTRY_DSN")
+                    .or(option_env!("NEPPY_CORE_SENTRY_DSN"))
+                    .map(|s| s.to_string())
+            })
             .filter(|s| !s.is_empty())
-            .or_else(|| option_env!("OPENHUMAN_SENTRY_DSN").map(|s| s.to_string()))
+            .or_else(|| {
+                option_env!("NEPPY_SENTRY_DSN")
+                    .or(option_env!("NEPPY_SENTRY_DSN"))
+                    .map(|s| s.to_string())
+            })
             .filter(|s| !s.is_empty())
             .and_then(|s| s.parse().ok()),
         release: Some(std::borrow::Cow::Owned(build_release_tag())),
@@ -172,7 +180,7 @@ fn main() {
             // shape — keeping OPENHUMAN-TAURI-25 / -1Q / -27 / -1G off
             // Sentry permanently (~185 events/day combined).
             // Defense-in-depth: drop opaque "GET /auth/me" events from the
-            // `openhuman.auth_get_me` RPC. The primary fix in
+            // `neppy.auth_get_me` RPC. The primary fix in
             // `credentials::ops::auth_get_me` walks the full anyhow context
             // chain so `is_transient_message_failure` can demote transient
             // transport failures at the rpc dispatcher. This catches any
@@ -315,7 +323,10 @@ fn restore_default_sigpipe() {}
 #[cfg(feature = "crash-reporting")]
 fn build_release_tag() -> String {
     let version = env!("CARGO_PKG_VERSION");
-    let sha = option_env!("OPENHUMAN_BUILD_SHA").unwrap_or("").trim();
+    let sha = option_env!("NEPPY_BUILD_SHA")
+        .or(option_env!("NEPPY_BUILD_SHA"))
+        .unwrap_or("")
+        .trim();
     let sha_short: String = sha.chars().take(12).collect();
     if sha_short.is_empty() {
         format!("openhuman@{version}")
@@ -326,12 +337,12 @@ fn build_release_tag() -> String {
 
 /// Resolve the deployment environment reported to Sentry.
 ///
-/// Honors `OPENHUMAN_APP_ENV` at runtime (`staging` / `production`) so the
+/// Honors `NEPPY_APP_ENV` at runtime (`staging` / `production`) so the
 /// same binary could in principle be redeployed between environments; falls
 /// back to debug/release detection when unset.
 #[cfg(feature = "crash-reporting")]
 fn resolve_environment() -> String {
-    if let Ok(value) = std::env::var("OPENHUMAN_APP_ENV") {
+    if let Ok(value) = neppy_core::neppy::util::env::var("NEPPY_APP_ENV") {
         let trimmed = value.trim().to_ascii_lowercase();
         if !trimmed.is_empty() {
             return trimmed;

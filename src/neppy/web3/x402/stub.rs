@@ -30,7 +30,7 @@ pub fn all_x402_controller_schemas() -> Vec<ControllerSchema> {
 }
 
 /// No x402 controllers are registered when the domain is compiled out — the
-/// `openhuman.x402_*` RPCs become unknown-method.
+/// `neppy.x402_*` RPCs become unknown-method.
 pub fn all_x402_registered_controllers() -> Vec<RegisteredController> {
     Vec::new()
 }

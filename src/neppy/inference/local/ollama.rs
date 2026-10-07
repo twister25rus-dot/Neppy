@@ -73,7 +73,7 @@ fn normalize_unspecified_host(url: &str) -> String {
 /// Returns the effective Ollama base URL.
 ///
 /// Priority (highest to lowest):
-/// 1. `OPENHUMAN_OLLAMA_BASE_URL` — app-specific override, used in tests.
+/// 1. `NEPPY_OLLAMA_BASE_URL` — app-specific override, used in tests.
 /// 2. `OLLAMA_HOST` — Ollama's own env var; normalized to a full URL by
 ///    prepending `http://` when no scheme is present.
 /// 3. [`DEFAULT_OLLAMA_BASE_URL`] — `http://localhost:11434`.
@@ -81,7 +81,7 @@ fn normalize_unspecified_host(url: &str) -> String {
 /// Unspecified bind addresses (`0.0.0.0`, `[::]`) are rewritten to their
 /// loopback equivalents so the URL is valid as a client connect target.
 pub(crate) fn ollama_base_url() -> String {
-    if let Ok(url) = std::env::var("OPENHUMAN_OLLAMA_BASE_URL") {
+    if let Ok(url) = crate::neppy::util::env::var("NEPPY_OLLAMA_BASE_URL") {
         let trimmed = url.trim();
         if !trimmed.is_empty() {
             return reject_registry_host_or_default(normalize_unspecified_host(
@@ -90,7 +90,7 @@ pub(crate) fn ollama_base_url() -> String {
         }
     }
 
-    if let Ok(host) = std::env::var("OLLAMA_HOST") {
+    if let Ok(host) = crate::neppy::util::env::var("OLLAMA_HOST") {
         let trimmed = host.trim().trim_end_matches('/');
         if !trimmed.is_empty() {
             let url = if trimmed.contains("://") {
@@ -111,7 +111,7 @@ pub(crate) fn ollama_base_url() -> String {
 ///
 /// Priority (highest to lowest):
 /// 1. `config.local_ai.base_url` if `Some` and non-empty (after trim)
-/// 2. `OPENHUMAN_OLLAMA_BASE_URL` env var
+/// 2. `NEPPY_OLLAMA_BASE_URL` env var
 /// 3. `OLLAMA_HOST` env var
 /// 4. [`DEFAULT_OLLAMA_BASE_URL`]
 ///
@@ -647,12 +647,12 @@ mod tests {
 
     // ── ollama_base_url env-override behaviour ───────────────────────
     //
-    // These tests mutate the process-global `OPENHUMAN_OLLAMA_BASE_URL`
+    // These tests mutate the process-global `NEPPY_OLLAMA_BASE_URL`
     // variable, so they coordinate with the shared `LOCAL_AI_TEST_MUTEX`
     // used by `public_infer.rs` tests to prevent interleaved set/remove
     // calls from other tests in the same binary.
 
-    const ENV_VAR: &str = "OPENHUMAN_OLLAMA_BASE_URL";
+    const ENV_VAR: &str = "NEPPY_OLLAMA_BASE_URL";
     const OLLAMA_HOST_VAR: &str = "OLLAMA_HOST";
 
     struct OllamaEnvGuard {
@@ -662,8 +662,8 @@ mod tests {
 
     impl OllamaEnvGuard {
         fn clear() -> Self {
-            let prior = std::env::var(ENV_VAR).ok();
-            unsafe { std::env::remove_var(ENV_VAR) };
+            let prior = crate::neppy::util::env::var(ENV_VAR).ok();
+            crate::neppy::util::env::remove_var(ENV_VAR);
             Self {
                 var: ENV_VAR,
                 prior,
@@ -671,7 +671,7 @@ mod tests {
         }
 
         fn set(value: &str) -> Self {
-            let prior = std::env::var(ENV_VAR).ok();
+            let prior = crate::neppy::util::env::var(ENV_VAR).ok();
             unsafe { std::env::set_var(ENV_VAR, value) };
             Self {
                 var: ENV_VAR,
@@ -680,13 +680,13 @@ mod tests {
         }
 
         fn clear_var(var: &'static str) -> Self {
-            let prior = std::env::var(var).ok();
-            unsafe { std::env::remove_var(var) };
+            let prior = crate::neppy::util::env::var(var).ok();
+            crate::neppy::util::env::remove_var(var);
             Self { var, prior }
         }
 
         fn set_var(var: &'static str, value: &str) -> Self {
-            let prior = std::env::var(var).ok();
+            let prior = crate::neppy::util::env::var(var).ok();
             unsafe { std::env::set_var(var, value) };
             Self { var, prior }
         }
@@ -697,7 +697,7 @@ mod tests {
             unsafe {
                 match self.prior.take() {
                     Some(v) => std::env::set_var(self.var, v),
-                    None => std::env::remove_var(self.var),
+                    None => crate::neppy::util::env::remove_var(self.var),
                 }
             }
         }

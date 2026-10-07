@@ -326,15 +326,24 @@ export async function triggerDeepLink(url: string): Promise<void> {
  * Convenience wrapper for auth deep links.
  */
 export function triggerAuthDeepLink(token: string): Promise<void> {
-  const envBypassToken = (process.env.OPENHUMAN_E2E_AUTH_BYPASS_TOKEN || '').trim();
+  const envBypassToken = (
+    (process.env.NEPPY_E2E_AUTH_BYPASS_TOKEN ?? process.env.OPENHUMAN_E2E_AUTH_BYPASS_TOKEN) ||
+    ''
+  ).trim();
   deepLinkDebug('triggerAuthDeepLink', { token, envBypassToken: envBypassToken || '(none)' });
   if (envBypassToken) {
     return triggerDeepLink(`neppy://auth?token=${encodeURIComponent(envBypassToken)}&key=auth`);
   }
 
-  const authBypassEnabled = (process.env.OPENHUMAN_E2E_AUTH_BYPASS || '').trim() === '1';
+  const authBypassEnabled =
+    ((process.env.NEPPY_E2E_AUTH_BYPASS ?? process.env.OPENHUMAN_E2E_AUTH_BYPASS) || '').trim() ===
+    '1';
   if (authBypassEnabled) {
-    const userId = (process.env.OPENHUMAN_E2E_AUTH_BYPASS_USER_ID || 'e2e-user').trim();
+    const userId = (
+      (process.env.NEPPY_E2E_AUTH_BYPASS_USER_ID ??
+        process.env.OPENHUMAN_E2E_AUTH_BYPASS_USER_ID) ||
+      'e2e-user'
+    ).trim();
     deepLinkDebug('triggerAuthDeepLink bypass JWT path', { userId });
     return triggerAuthDeepLinkBypass(userId || 'e2e-user');
   }

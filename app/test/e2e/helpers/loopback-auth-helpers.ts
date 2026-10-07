@@ -141,7 +141,7 @@ async function waitForHookExposed(deadlineMs = 15_000): Promise<void> {
   }
   throw new Error(
     '[loopback-auth] window.__startLoopbackOauthListener never exposed — ' +
-      'is VITE_OPENHUMAN_E2E_RESTART_APP_AS_RELOAD set in the build?'
+      'is VITE_NEPPY_E2E_RESTART_APP_AS_RELOAD set in the build?'
   );
 }
 

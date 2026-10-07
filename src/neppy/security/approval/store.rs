@@ -138,7 +138,7 @@ pub const PRE_MIGRATION_SESSION_ID: &str = "pre-migration-redacted";
 /// Idempotently scrub legacy `session_id` rows.
 ///
 /// Earlier builds wrote the verbatim JSON-RPC bearer
-/// (`OPENHUMAN_CORE_TOKEN`) into `pending_approvals.session_id`. The
+/// (`NEPPY_CORE_TOKEN`) into `pending_approvals.session_id`. The
 /// column is retained for downgrade safety, but its stored value is
 /// now a per-launch UUID with no credential material. This migration
 /// overwrites any pre-existing value with [`PRE_MIGRATION_SESSION_ID`]

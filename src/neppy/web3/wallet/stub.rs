@@ -254,7 +254,7 @@ pub mod tools {}
 // ---------------------------------------------------------------------------
 
 /// No wallet controllers are registered when the wallet is compiled out — the
-/// `openhuman.wallet_*` RPCs become unknown-method.
+/// `neppy.wallet_*` RPCs become unknown-method.
 pub fn all_wallet_registered_controllers() -> Vec<RegisteredController> {
     Vec::new()
 }

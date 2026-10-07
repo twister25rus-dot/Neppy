@@ -132,7 +132,7 @@ describe('RewardsCommunityTab — Connect Discord', () => {
     // Return route is persisted only after the consent URL launches.
     await waitFor(() => expect(setOAuthReturnRoute).toHaveBeenCalledWith('/rewards?view=main'));
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.auth.oauth_connect',
+      method: 'neppy.auth.oauth_connect',
       params: { provider: 'discord' },
     });
   });

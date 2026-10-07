@@ -662,7 +662,7 @@ mod tests {
 
     use super::*;
 
-    /// Pins `OPENHUMAN_WORKSPACE` to the shared memory workspace for a test's
+    /// Pins `NEPPY_WORKSPACE` to the shared memory workspace for a test's
     /// duration, holding [`crate::neppy::config::TEST_ENV_LOCK`] so sibling
     /// tests that mutate the env var (e.g. `config::ops`, `update::ops`,
     /// autonomy settings) cannot change it mid-run.
@@ -684,8 +684,8 @@ mod tests {
             let env_lock = crate::neppy::config::TEST_ENV_LOCK
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
-            let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-            std::env::set_var("OPENHUMAN_WORKSPACE", workspace);
+            let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+            std::env::set_var("NEPPY_WORKSPACE", workspace);
             Self {
                 _env_lock: env_lock,
                 previous,
@@ -696,13 +696,13 @@ mod tests {
     impl Drop for WorkspaceEnvGuard {
         fn drop(&mut self) {
             match self.previous.take() {
-                Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-                None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+                Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+                None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
             }
         }
     }
 
-    /// Bind the shared memory client and pin `OPENHUMAN_WORKSPACE` to its
+    /// Bind the shared memory client and pin `NEPPY_WORKSPACE` to its
     /// workspace for the test (see [`WorkspaceEnvGuard`]). Hold the returned
     /// guard for the whole test: `let _env = ensure_memory_client();`.
     #[must_use]

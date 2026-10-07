@@ -14,7 +14,7 @@ test.describe('MCP Setup — Secret Collection Flow', () => {
     await page.route('**/rpc', async (route, request) => {
       const body = JSON.parse(request.postData() || '{}');
       rpcCalls.push({ method: body.method, params: body.params });
-      if (body.method === 'openhuman.mcp_setup_submit_secret') {
+      if (body.method === 'neppy.mcp_setup_submit_secret') {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -33,7 +33,7 @@ test.describe('MCP Setup — Secret Collection Flow', () => {
     // In production this comes via the socket → window event bridge.
     await page.evaluate(() => {
       window.dispatchEvent(
-        new CustomEvent('openhuman:mcp-setup-secret-requested', {
+        new CustomEvent('neppy:mcp-setup-secret-requested', {
           detail: {
             refId: 'secret://aabbccdd1122',
             keyName: 'NOTION_API_KEY',
@@ -68,7 +68,7 @@ test.describe('MCP Setup — Secret Collection Flow', () => {
 
     // Verify the RPC call was made with the correct ref but the value
     // only goes to submit_secret (never to any agent-facing method)
-    const submitCall = rpcCalls.find(c => c.method === 'openhuman.mcp_setup_submit_secret');
+    const submitCall = rpcCalls.find(c => c.method === 'neppy.mcp_setup_submit_secret');
     expect(submitCall).toBeTruthy();
     expect(submitCall!.params.ref_id).toBe('secret://aabbccdd1122');
     expect(submitCall!.params.value).toBe('ntn_secret_test_value_12345');
@@ -78,10 +78,10 @@ test.describe('MCP Setup — Secret Collection Flow', () => {
     // contain the raw secret value in its params.
     const agentFacingCalls = rpcCalls.filter(
       c =>
-        c.method !== 'openhuman.mcp_setup_submit_secret' &&
-        c.method !== 'openhuman.auth_store_session' &&
-        c.method !== 'openhuman.auth_clear_session' &&
-        c.method !== 'openhuman.config_set_onboarding_completed'
+        c.method !== 'neppy.mcp_setup_submit_secret' &&
+        c.method !== 'neppy.auth_store_session' &&
+        c.method !== 'neppy.auth_clear_session' &&
+        c.method !== 'neppy.config_set_onboarding_completed'
     );
     for (const call of agentFacingCalls) {
       const serialized = JSON.stringify(call.params);
@@ -101,7 +101,7 @@ test.describe('MCP Setup — Secret Collection Flow', () => {
 
     await page.evaluate(() => {
       window.dispatchEvent(
-        new CustomEvent('openhuman:mcp-setup-secret-requested', {
+        new CustomEvent('neppy:mcp-setup-secret-requested', {
           detail: { refId: 'secret://cancel123456', keyName: 'API_KEY', prompt: 'Enter key' },
         })
       );
@@ -118,7 +118,7 @@ test.describe('MCP Setup — Secret Collection Flow', () => {
     await expect(dialog).not.toBeVisible({ timeout: 3_000 });
 
     // No submit_secret call should have been made
-    const submitCalls = rpcCalls.filter(c => c.method === 'openhuman.mcp_setup_submit_secret');
+    const submitCalls = rpcCalls.filter(c => c.method === 'neppy.mcp_setup_submit_secret');
     expect(submitCalls).toHaveLength(0);
   });
 
@@ -127,7 +127,7 @@ test.describe('MCP Setup — Secret Collection Flow', () => {
 
     await page.evaluate(() => {
       window.dispatchEvent(
-        new CustomEvent('openhuman:mcp-setup-secret-requested', {
+        new CustomEvent('neppy:mcp-setup-secret-requested', {
           detail: { refId: 'secret://mask123456', keyName: 'TOKEN', prompt: '' },
         })
       );

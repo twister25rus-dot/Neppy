@@ -87,10 +87,13 @@ function normalizeRpcUrl(raw: string): string {
 }
 
 function coreHost(): string {
-  return (process.env.OPENHUMAN_CORE_HOST || '127.0.0.1').trim() || '127.0.0.1';
+  return (
+    ((process.env.NEPPY_CORE_HOST ?? process.env.OPENHUMAN_CORE_HOST) || '127.0.0.1').trim() ||
+    '127.0.0.1'
+  );
 }
 
-/** Ports to try when OPENHUMAN_CORE_PORT is unset.
+/** Ports to try when NEPPY_CORE_PORT is unset.
  *
  * Keep this exactly aligned with connectivity::rpc's desktop fallback range.
  * A data reset restarts the embedded core; on Windows the preferred socket can
@@ -98,7 +101,7 @@ function coreHost(): string {
  * 7798. Stopping at 7793 makes every later RPC test wait out the full probe
  * deadline even though the restarted core is healthy. */
 function defaultPortProbeList(): number[] {
-  const raw = process.env.OPENHUMAN_CORE_PORT?.trim();
+  const raw = (process.env.NEPPY_CORE_PORT ?? process.env.OPENHUMAN_CORE_PORT)?.trim();
   if (raw) {
     const p = Number.parseInt(raw, 10);
     if (!Number.isNaN(p) && p > 0 && p < 65536) {
@@ -135,8 +138,8 @@ async function tryPingRpc(url: string): Promise<boolean> {
 }
 
 /**
- * Resolve the sidecar JSON-RPC URL: full `OPENHUMAN_CORE_RPC_URL`, or
- * `OPENHUMAN_CORE_HOST` + `OPENHUMAN_CORE_PORT`, then probe host:port until core.ping succeeds.
+ * Resolve the sidecar JSON-RPC URL: full `NEPPY_CORE_RPC_URL`, or
+ * `NEPPY_CORE_HOST` + `NEPPY_CORE_PORT`, then probe host:port until core.ping succeeds.
  */
 async function resolveCoreRpcUrl(): Promise<string> {
   if (cachedRpcUrl) {
@@ -144,7 +147,7 @@ async function resolveCoreRpcUrl(): Promise<string> {
     cachedRpcUrl = null;
   }
 
-  const env = process.env.OPENHUMAN_CORE_RPC_URL?.trim();
+  const env = (process.env.NEPPY_CORE_RPC_URL ?? process.env.OPENHUMAN_CORE_RPC_URL)?.trim();
   if (env) {
     cachedRpcUrl = normalizeRpcUrl(env);
     return cachedRpcUrl;
@@ -166,7 +169,7 @@ async function resolveCoreRpcUrl(): Promise<string> {
   }
 
   throw new Error(
-    `Core JSON-RPC not reachable: set OPENHUMAN_CORE_RPC_URL or OPENHUMAN_CORE_HOST/OPENHUMAN_CORE_PORT (tried ${host} ports ${ports.join(', ')})`
+    `Core JSON-RPC not reachable: set NEPPY_CORE_RPC_URL or NEPPY_CORE_HOST/NEPPY_CORE_PORT (tried ${host} ports ${ports.join(', ')})`
   );
 }
 

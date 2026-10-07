@@ -179,14 +179,8 @@ mod tests {
     fn the_manifest_declares_the_catalog_in_both_directions() {
         let manifest = manifest();
         let interface = EVENTS_INTERFACE.try_into().unwrap();
-        assert!(
-            manifest.provided(&interface).is_some(),
-            "openhuman publishes"
-        );
-        assert!(
-            manifest.consumed(&interface).is_some(),
-            "openhuman subscribes"
-        );
+        assert!(manifest.provided(&interface).is_some(), "neppy publishes");
+        assert!(manifest.consumed(&interface).is_some(), "neppy subscribes");
     }
 
     #[tokio::test]

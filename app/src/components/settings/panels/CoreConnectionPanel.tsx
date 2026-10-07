@@ -9,8 +9,8 @@
  * This deliberately reuses the existing cloud-mode plumbing — the `coreMode`
  * Redux slice, `configPersistence` storage keys, and
  * `testCoreRpcConnection` — rather than introducing a second remote-core
- * mechanism. The shell-level env-var attach path (`OPENHUMAN_CORE_REUSE_EXISTING`,
- * `OPENHUMAN_CORE_TOKEN`) is intentionally left as a documented dev-only
+ * mechanism. The shell-level env-var attach path (`NEPPY_CORE_REUSE_EXISTING`,
+ * `NEPPY_CORE_TOKEN`) is intentionally left as a documented dev-only
  * override and is not surfaced here (GH-4396).
  *
  * Boot-gate hard-fail/fallback semantics are unchanged: switching mode here
@@ -425,8 +425,7 @@ const CoreConnectionPanel = () => {
                 <Label
                   htmlFor="core-remote-token"
                   className="text-xs font-medium text-content-secondary">
-                  {t('bootCheck.authToken')} (
-                  <code className="text-[10px]">OPENHUMAN_CORE_TOKEN</code>)
+                  {t('bootCheck.authToken')} (<code className="text-[10px]">NEPPY_CORE_TOKEN</code>)
                 </Label>
                 <Button
                   type="button"

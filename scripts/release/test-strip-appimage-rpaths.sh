@@ -464,7 +464,7 @@ printf '%s\n' \
   '      printf "env-assignment=%s\n" "$arg" >>"$SMOKE_RECORD"' \
   '      index=$((index + 1))' \
   '      ;;' \
-  '    OPENHUMAN_CEF_PREWARM=*|OPENHUMAN_DISABLE_GPU=*) index=$((index + 1)) ;;' \
+  '    NEPPY_CEF_PREWARM=*|NEPPY_DISABLE_GPU=*) index=$((index + 1)) ;;' \
   '    *) break ;;' \
   '  esac' \
   'done' \
@@ -510,7 +510,7 @@ grep -Fx "xvfb-invoked" "$SMOKE_RECORD" >/dev/null \
 for secret_name in \
   GITHUB_TOKEN \
   GH_TOKEN \
-  OPENHUMAN_CEF_NO_SANDBOX \
+  NEPPY_CEF_NO_SANDBOX \
   TAURI_SIGNING_PRIVATE_KEY \
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD \
   SENTRY_AUTH_TOKEN \

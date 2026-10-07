@@ -249,9 +249,9 @@ struct WorkspaceEnvGuard {
 
 impl WorkspaceEnvGuard {
     fn set(path: &std::path::Path) -> Self {
-        let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
+        let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
         unsafe {
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            std::env::set_var("NEPPY_WORKSPACE", path);
         }
         Self { previous }
     }
@@ -261,11 +261,9 @@ impl Drop for WorkspaceEnvGuard {
     fn drop(&mut self) {
         match self.previous.take() {
             Some(prev) => unsafe {
-                std::env::set_var("OPENHUMAN_WORKSPACE", prev);
+                std::env::set_var("NEPPY_WORKSPACE", prev);
             },
-            None => unsafe {
-                std::env::remove_var("OPENHUMAN_WORKSPACE");
-            },
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }
@@ -277,7 +275,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = crate::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value);
         }
@@ -291,9 +289,7 @@ impl Drop for EnvVarGuard {
             Some(prev) => unsafe {
                 std::env::set_var(self.key, prev);
             },
-            None => unsafe {
-                std::env::remove_var(self.key);
-            },
+            None => crate::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -2095,8 +2091,8 @@ async fn composio_set_api_key_rejects_invalid_direct_key_before_persisting() {
         }),
     );
     let base = start_mock_backend(app).await;
-    let _base_v2 = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &base);
-    let _base_v3 = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &base);
+    let _base_v2 = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V2", &base);
+    let _base_v3 = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V3", &base);
 
     let tmp = tempfile::tempdir().unwrap();
     let config = direct_mode_no_key_config(&tmp);
@@ -2148,8 +2144,8 @@ async fn composio_set_api_key_validates_candidate_key_even_when_stored_key_exist
         )
         .with_state(seen_keys.clone());
     let base = start_mock_backend(app).await;
-    let _base_v2 = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V2", &base);
-    let _base_v3 = EnvVarGuard::set("OPENHUMAN_COMPOSIO_DIRECT_BASE_V3", &base);
+    let _base_v2 = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V2", &base);
+    let _base_v3 = EnvVarGuard::set("NEPPY_COMPOSIO_DIRECT_BASE_V3", &base);
 
     let tmp = tempfile::tempdir().unwrap();
     let config = direct_mode_no_key_config(&tmp);

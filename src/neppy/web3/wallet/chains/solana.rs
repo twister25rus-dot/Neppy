@@ -889,7 +889,7 @@ mod tests {
 
         let fake_sig = "5xS9pXmqVz8R1nuRZTfsdsAxBdBFmtnAtuYbCsmK5DYzGn5vR4VqWGmiR5McLnYx8oFqLdo62q4qiUZpQyR4Hkn3";
         let (addr, calls) = start_solana_mock(fake_sig).await;
-        std::env::set_var("OPENHUMAN_WALLET_RPC_SOLANA", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_SOLANA", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -942,7 +942,7 @@ mod tests {
 
         let fake_sig = "5xS9pXmqVz8R1nuRZTfsdsAxBdBFmtnAtuYbCsmK5DYzGn5vR4VqWGmiR5McLnYx8oFqLdo62q4qiUZpQyR4Hkn3";
         let (addr, calls) = start_solana_mock(fake_sig).await;
-        std::env::set_var("OPENHUMAN_WALLET_RPC_SOLANA", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_SOLANA", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -1040,7 +1040,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_SOLANA", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_SOLANA", format!("http://{addr}"));
 
         let now = now_ms();
         let quote = PreparedTransaction {
@@ -1141,7 +1141,7 @@ mod tests {
 
         let fake_sig = "5xS9pXmqVz8R1nuRZTfsdsAxBdBFmtnAtuYbCsmK5DYzGn5vR4VqWGmiR5McLnYx8oFqLdo62q4qiUZpQyR4Hkn3";
         let (addr, calls) = start_solana_mock(fake_sig).await;
-        std::env::set_var("OPENHUMAN_WALLET_RPC_SOLANA", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_SOLANA", format!("http://{addr}"));
 
         let signer = b58_to_pubkey(sample_solana_address()).unwrap();
         let wire = build_unsigned_legacy(&signer);
@@ -1206,7 +1206,7 @@ mod tests {
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();
         });
-        std::env::set_var("OPENHUMAN_WALLET_RPC_SOLANA", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_SOLANA", format!("http://{addr}"));
         let info = tx_status("somesig").await.unwrap();
         assert_eq!(
             info.state,

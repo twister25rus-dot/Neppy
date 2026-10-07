@@ -21,7 +21,7 @@ pub struct RefreshIdentitiesReport {
     pub rows_written: usize,
 }
 
-/// `openhuman.composio_get_user_profile` — fetch a normalized user
+/// `neppy.composio_get_user_profile` — fetch a normalized user
 /// profile for a connected account by dispatching to the toolkit's
 /// registered [`super::super::providers::ComposioProvider`].
 pub async fn composio_get_user_profile(
@@ -66,7 +66,7 @@ pub async fn composio_get_user_profile(
     ))
 }
 
-/// `openhuman.composio_refresh_all_identities` — re-fetch the user
+/// `neppy.composio_refresh_all_identities` — re-fetch the user
 /// profile for every active connection and persist via `identity_set`.
 /// Used to populate kind-tagged `user_profile` rows on existing
 /// connections after the #1365 schema rewrite without waiting for the
@@ -159,7 +159,7 @@ pub async fn composio_refresh_all_identities(
     Ok(RpcOutcome::new(report, envelope))
 }
 
-/// `openhuman.composio_sync` — run a sync pass for a connected account
+/// `neppy.composio_sync` — run a sync pass for a connected account
 /// by dispatching to the toolkit's registered provider. `reason` is
 /// `"manual"` by default; the periodic scheduler passes `"periodic"`
 /// and the OAuth event subscriber passes `"connection_created"`.

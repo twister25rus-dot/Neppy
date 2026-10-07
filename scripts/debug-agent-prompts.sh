@@ -16,13 +16,13 @@
 # (`Agent::from_config_for_agent` → `Agent::build_system_prompt`), so the
 # Composio surface reflects the signed-in user's actual integrations.
 # If you need the toolkit list populated, sign in via the desktop app or
-# point `OPENHUMAN_WORKSPACE` at a workspace that already holds the
+# point `NEPPY_WORKSPACE` at a workspace that already holds the
 # connection state.
 #
 # The dumper runs against the currently-logged-in user's workspace
-# (`$OPENHUMAN_WORKSPACE`, falling back to `~/.neppy/workspace`) so
+# (`$NEPPY_WORKSPACE`, falling back to `~/.neppy/workspace`) so
 # onboarding-generated files like `PROFILE.md` appear in the dump. Export
-# `OPENHUMAN_WORKSPACE=<path>` before running if you want to target a
+# `NEPPY_WORKSPACE=<path>` before running if you want to target a
 # different workspace.
 #
 # Usage:
@@ -173,7 +173,7 @@ mkdir -p "${OUT_DIR}"
 # binary: it reads `~/.neppy/active_user.toml`, falls back to the
 # persisted workspace marker, then to the pre-login user directory. We
 # only pass `--workspace` when the caller has explicitly exported one
-# (an empty `OPENHUMAN_WORKSPACE=` in `.env` counts as unset — the
+# (an empty `NEPPY_WORKSPACE=` in `.env` counts as unset — the
 # binary's resolver is what we want in that case).
 #
 # Previously this script duplicated the resolution in shell and guessed
@@ -181,24 +181,24 @@ mkdir -p "${OUT_DIR}"
 # `~/.neppy/users/<user_id>/workspace` without a top-level
 # `active_user.toml`, causing the dumper to bail with "workspace not
 # found". Delegating to the binary removes that divergence and makes
-# `.env` (including `OPENHUMAN_APP_ENV=staging`) take effect
+# `.env` (including `NEPPY_APP_ENV=staging`) take effect
 # automatically.
 WORKSPACE_OVERRIDE=""
-if [[ -n "${OPENHUMAN_WORKSPACE:-}" ]]; then
-  WORKSPACE_OVERRIDE="${OPENHUMAN_WORKSPACE}"
+if [[ -n "${NEPPY_WORKSPACE:-}" ]]; then
+  WORKSPACE_OVERRIDE="${NEPPY_WORKSPACE}"
 fi
 
 echo "[debug-agent-prompts] output dir : ${OUT_DIR}" >&2
 if [[ -n "${WORKSPACE_OVERRIDE}" ]]; then
-  echo "[debug-agent-prompts] workspace  : ${WORKSPACE_OVERRIDE} (OPENHUMAN_WORKSPACE override)" >&2
+  echo "[debug-agent-prompts] workspace  : ${WORKSPACE_OVERRIDE} (NEPPY_WORKSPACE override)" >&2
 else
   echo "[debug-agent-prompts] workspace  : <resolved by Config::load_or_init>" >&2
 fi
-if [[ -n "${OPENHUMAN_APP_ENV:-}" ]]; then
-  echo "[debug-agent-prompts] app env    : ${OPENHUMAN_APP_ENV}" >&2
+if [[ -n "${NEPPY_APP_ENV:-}" ]]; then
+  echo "[debug-agent-prompts] app env    : ${NEPPY_APP_ENV}" >&2
 fi
-if [[ -n "${OPENHUMAN_BASE_URL:-}" ]]; then
-  echo "[debug-agent-prompts] base url   : ${OPENHUMAN_BASE_URL}" >&2
+if [[ -n "${NEPPY_BASE_URL:-}" ]]; then
+  echo "[debug-agent-prompts] base url   : ${NEPPY_BASE_URL}" >&2
 fi
 echo >&2
 

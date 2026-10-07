@@ -24,7 +24,7 @@
 
 // The Streamable-HTTP + SSE transport is axum-only, so it needs BOTH `mcp` and
 // `http-server` (#5048). The stdio transport (below) works under `mcp` alone;
-// `local`/`stdio` gate their own HTTP-serve paths so `openhuman mcp` (stdio)
+// `local`/`stdio` gate their own HTTP-serve paths so `neppy-core mcp` (stdio)
 // and the Claude-Code in-process MCP bridge still degrade gracefully when
 // `http-server` is off.
 #[cfg(all(feature = "mcp", feature = "http-server"))]

@@ -293,12 +293,12 @@ export const persistor = persistStore(store);
 
 // Expose the store on `window` so WDIO E2E specs can read Redux state directly
 // to assert backing-state changes (see app/test/e2e/specs/*.spec.ts). Gated on
-// the E2E build flag (`VITE_OPENHUMAN_E2E_RESTART_APP_AS_RELOAD`, baked by
+// the E2E build flag (`VITE_NEPPY_E2E_RESTART_APP_AS_RELOAD`, baked by
 // `app/scripts/e2e-build.sh`) so shipped production bundles do NOT expose the
 // store handle — denying a same-origin attacker (compromised CDN, supply-chain
 // asset, XSS) a one-call read/mutate path into full Redux state.
 if (typeof window !== 'undefined' && (IS_DEV || E2E_RESTART_APP_AS_RELOAD)) {
-  (window as unknown as { __OPENHUMAN_STORE__?: typeof store }).__OPENHUMAN_STORE__ = store;
+  (window as unknown as { __NEPPY_STORE__?: typeof store }).__NEPPY_STORE__ = store;
 }
 
 export type RootState = ReturnType<typeof store.getState>;

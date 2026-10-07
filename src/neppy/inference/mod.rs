@@ -74,13 +74,13 @@ pub(crate) fn inference_test_guard() -> std::sync::MutexGuard<'static, ()> {
 /// Test guard that makes the *shared* install root hermetic.
 ///
 /// `paths::shared_root_dir` only honours `config.workspace_dir` when
-/// `OPENHUMAN_WORKSPACE` is set; otherwise it resolves to the developer's real
+/// `NEPPY_WORKSPACE` is set; otherwise it resolves to the developer's real
 /// `~/.neppy`, so a test that writes Piper/Ollama/model stubs through
 /// `workspace_*_dir(&config)` writes (and its cleanup deletes) real user files.
 ///
 /// `lock_and_set` points the variable at `root` for the guard's lifetime and
 /// holds both process-wide locks involved, always in this order:
-/// `config::TEST_ENV_LOCK` (every other test that sets `OPENHUMAN_WORKSPACE`)
+/// `config::TEST_ENV_LOCK` (every other test that sets `NEPPY_WORKSPACE`)
 /// then [`inference_test_guard`] (the install status/slot lock). The previous
 /// value is restored on drop, including on unwind.
 ///
@@ -101,8 +101,8 @@ impl HermeticSharedRoot {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let inference = inference_test_guard();
-        let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
-        std::env::set_var("OPENHUMAN_WORKSPACE", root);
+        let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
+        std::env::set_var("NEPPY_WORKSPACE", root);
         Self {
             previous,
             _inference: inference,
@@ -115,8 +115,8 @@ impl HermeticSharedRoot {
 impl Drop for HermeticSharedRoot {
     fn drop(&mut self) {
         match self.previous.as_ref() {
-            Some(previous) => std::env::set_var("OPENHUMAN_WORKSPACE", previous),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(previous) => std::env::set_var("NEPPY_WORKSPACE", previous),
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 }

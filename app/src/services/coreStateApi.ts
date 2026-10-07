@@ -106,7 +106,7 @@ export const SNAPSHOT_TIMEOUT_MS = 90_000;
 
 export const fetchCoreAppSnapshot = async (): Promise<AppStateSnapshotResult> => {
   const response = await callCoreRpc<{ result: AppStateSnapshotResult }>({
-    method: 'openhuman.app_state_snapshot',
+    method: 'neppy.app_state_snapshot',
     timeoutMs: SNAPSHOT_TIMEOUT_MS,
   });
   // Normalise the optional #1299 field at the API boundary so older core
@@ -115,19 +115,19 @@ export const fetchCoreAppSnapshot = async (): Promise<AppStateSnapshotResult> =>
 };
 
 export const updateCoreLocalState = async (params: UpdateCoreLocalStateParams): Promise<void> => {
-  await callCoreRpc({ method: 'openhuman.app_state_update_local_state', params });
+  await callCoreRpc({ method: 'neppy.app_state_update_local_state', params });
 };
 
 export const listTeams = async (): Promise<TeamWithRole[]> => {
   const response = await callCoreRpc<{ result: TeamWithRole[] }>({
-    method: 'openhuman.team_list_teams',
+    method: 'neppy.team_list_teams',
   });
   return response.result;
 };
 
 export const getTeamMembers = async (teamId: string): Promise<TeamMember[]> => {
   const response = await callCoreRpc<{ result: TeamMember[] }>({
-    method: 'openhuman.team_list_members',
+    method: 'neppy.team_list_members',
     params: { teamId },
   });
   return response.result;
@@ -135,7 +135,7 @@ export const getTeamMembers = async (teamId: string): Promise<TeamMember[]> => {
 
 export const getTeamInvites = async (teamId: string): Promise<TeamInvite[]> => {
   const response = await callCoreRpc<{ result: TeamInvite[] }>({
-    method: 'openhuman.team_list_invites',
+    method: 'neppy.team_list_invites',
     params: { teamId },
   });
   return response.result;

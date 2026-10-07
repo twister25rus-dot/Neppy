@@ -64,10 +64,10 @@ Audits harness-driven prepared context live: starts a fresh thread per query, th
 returned context bundle, the scout's turns, and tokens/cache/cost.
 
 Options:
-  --core-url <url>        JSON-RPC endpoint (default: OPENHUMAN_CORE_RPC_URL or ${DEFAULT_RPC_URL})
-  --token <token>         RPC bearer (default: OPENHUMAN_CORE_TOKEN or <workspace>/core.token)
+  --core-url <url>        JSON-RPC endpoint (default: NEPPY_CORE_RPC_URL or ${DEFAULT_RPC_URL})
+  --token <token>         RPC bearer (default: NEPPY_CORE_TOKEN or <workspace>/core.token)
   --workspace <path>      Workspace whose session_raw transcripts are read
-  --model <model>         Optional model_override passed to openhuman.inference_agent_chat
+  --model <model>         Optional model_override passed to neppy.inference_agent_chat
   --query <text>          Add a custom query (repeatable). Replaces the defaults.
   --raw                   Deprecated no-op; queries are always sent directly so
                           the harness scout sees the real case request.
@@ -94,9 +94,9 @@ Examples:
 
 function parseArgs(argv) {
   const opts = {
-    coreUrl: process.env.OPENHUMAN_CORE_RPC_URL || DEFAULT_RPC_URL,
-    token: process.env.OPENHUMAN_CORE_TOKEN || "",
-    workspace: process.env.OPENHUMAN_WORKSPACE || "",
+    coreUrl: (process.env.NEPPY_CORE_RPC_URL ?? process.env.OPENHUMAN_CORE_RPC_URL) || DEFAULT_RPC_URL,
+    token: (process.env.NEPPY_CORE_TOKEN ?? process.env.OPENHUMAN_CORE_TOKEN) || "",
+    workspace: (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE) || "",
     model: "",
     queries: [],
     raw: false,
@@ -109,8 +109,8 @@ function parseArgs(argv) {
     keepWorkspace: false,
     json: false,
     verbose: false,
-    coreUrlExplicit: Boolean(process.env.OPENHUMAN_CORE_RPC_URL),
-    workspaceExplicit: Boolean(process.env.OPENHUMAN_WORKSPACE),
+    coreUrlExplicit: Boolean((process.env.NEPPY_CORE_RPC_URL ?? process.env.OPENHUMAN_CORE_RPC_URL)),
+    workspaceExplicit: Boolean((process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)),
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -189,14 +189,14 @@ function parsePositiveInt(raw, label) {
 }
 
 function defaultNeppyDir() {
-  if (process.env.OPENHUMAN_APP_ENV === "staging") {
+  if ((process.env.NEPPY_APP_ENV ?? process.env.OPENHUMAN_APP_ENV) === "staging") {
     return path.join(homedir(), ".neppy-staging");
   }
-  if (process.env.OPENHUMAN_APP_ENV) {
+  if ((process.env.NEPPY_APP_ENV ?? process.env.OPENHUMAN_APP_ENV)) {
     return path.join(homedir(), ".neppy");
   }
   // APP_ENV unset: the core (launched from a shell that may export
-  // OPENHUMAN_APP_ENV=staging) and this script can disagree. Auto-pick the
+  // NEPPY_APP_ENV=staging) and this script can disagree. Auto-pick the
   // dir whose active_user.toml was touched most recently so transcript reads
   // land in the same env the core actually uses. Falls back to prod.
   const prod = path.join(homedir(), ".neppy");
@@ -212,20 +212,20 @@ function defaultNeppyDir() {
 }
 
 async function defaultWorkspace() {
-  if (process.env.OPENHUMAN_WORKSPACE) return process.env.OPENHUMAN_WORKSPACE;
-  const openhumanDir = defaultNeppyDir();
+  if ((process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE)) return (process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE);
+  const neppyDir = defaultNeppyDir();
   try {
     const active = await readFile(
-      path.join(openhumanDir, "active_user.toml"),
+      path.join(neppyDir, "active_user.toml"),
       "utf8",
     );
     const match = active.match(/^\s*user_id\s*=\s*"([^"]+)"\s*$/m);
     if (match?.[1])
-      return path.join(openhumanDir, "users", match[1], "workspace");
+      return path.join(neppyDir, "users", match[1], "workspace");
   } catch {
     // fall through to legacy root
   }
-  return openhumanDir;
+  return neppyDir;
 }
 
 async function readToken(opts) {
@@ -238,7 +238,7 @@ async function readToken(opts) {
     return (await readFile(tokenPath, "utf8")).trim();
   } catch {
     throw new Error(
-      `RPC token not provided and ${tokenPath} could not be read. Pass --token or set OPENHUMAN_CORE_TOKEN.`,
+      `RPC token not provided and ${tokenPath} could not be read. Pass --token or set NEPPY_CORE_TOKEN.`,
     );
   }
 }
@@ -471,7 +471,7 @@ async function seedTranscript(opts) {
     const created = await rpc(
       opts.coreUrl,
       opts.token,
-      "openhuman.threads_create_new",
+      "neppy.threads_create_new",
       { labels: ["apc-audit-seed"] },
       opts.rpcTimeoutMs,
     );
@@ -491,7 +491,7 @@ async function seedTranscript(opts) {
     await rpc(
       opts.coreUrl,
       opts.token,
-      "openhuman.threads_message_append",
+      "neppy.threads_message_append",
       { thread_id: threadId, message },
       opts.rpcTimeoutMs,
     );
@@ -575,18 +575,18 @@ async function pickFreePort() {
 
 async function startCore(opts) {
   const token = opts.token || `apc-${randomBytes(24).toString("hex")}`;
-  const env = { ...process.env, OPENHUMAN_CORE_TOKEN: token };
-  // Only pin OPENHUMAN_WORKSPACE when the user explicitly asked for one.
+  const env = { ...process.env, NEPPY_CORE_TOKEN: token };
+  // Only pin NEPPY_WORKSPACE when the user explicitly asked for one.
   // Setting it to the auto-resolved active-user workspace makes the core
   // create a *nested* `.neppy/` config dir without the signed-in
   // session (→ SESSION_EXPIRED). Leaving it unset lets the core resolve the
   // active user from ~/.neppy/active_user.toml and load its live session;
   // transcripts then land in that same workspace the script reads.
   if (opts.workspaceExplicit && opts.workspace)
-    env.OPENHUMAN_WORKSPACE = opts.workspace;
+    env.NEPPY_WORKSPACE = opts.workspace;
   const port = new URL(opts.coreUrl).port || "7788";
-  env.OPENHUMAN_CORE_PORT = port;
-  env.OPENHUMAN_CORE_RPC_URL = opts.coreUrl;
+  env.NEPPY_CORE_PORT = port;
+  env.NEPPY_CORE_RPC_URL = opts.coreUrl;
   const args = ["run", "--host", "127.0.0.1", "--port", port, "--jsonrpc-only"];
   const child = spawn(
     "cargo",
@@ -841,7 +841,7 @@ async function main() {
         await rpc(
           opts.coreUrl,
           opts.token,
-          "openhuman.inference_agent_chat",
+          "neppy.inference_agent_chat",
           params,
           opts.rpcTimeoutMs,
         );
@@ -897,7 +897,7 @@ async function main() {
         await rpc(
           opts.coreUrl,
           opts.token,
-          "openhuman.threads_delete",
+          "neppy.threads_delete",
           { thread_id: seed.threadId, deleted_at: new Date().toISOString() },
           opts.rpcTimeoutMs,
         );

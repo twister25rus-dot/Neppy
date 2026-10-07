@@ -651,7 +651,7 @@ impl Agent {
                 self.persisted_transcript_messages = messages.to_vec();
                 // Best-effort, non-fatal dual-write into the TinyAgents store.
                 // Gated by the default-ON session dual-write flag
-                // (`OPENHUMAN_SESSION_DUAL_WRITE` is a kill switch). Only runs
+                // (`NEPPY_SESSION_DUAL_WRITE` is a kill switch). Only runs
                 // after the legacy JSONL append above succeeds; the legacy path
                 // is primary and untouched (issue #4249, 04.1).
                 self.maybe_dual_write_session_store(&path, messages, &meta, turn_usage);
@@ -671,7 +671,7 @@ impl Agent {
     /// Mirror the just-persisted turn into the TinyAgents session store.
     ///
     /// Additive and gated on the default-ON session dual-write flag
-    /// (`OPENHUMAN_SESSION_DUAL_WRITE` is a kill switch): when killed this is a
+    /// (`NEPPY_SESSION_DUAL_WRITE` is a kill switch): when killed this is a
     /// cheap early return — no store handle is constructed and behavior is
     /// byte-identical to the legacy-only path. When on (the default), the
     /// store write is fired best-effort on a background task and any error is
@@ -742,7 +742,7 @@ impl Agent {
     /// compare, and log any divergence (`[session_shadow_read]`, issue #4249,
     /// 04.2 phase 2). Additive and gated on the default-**OFF**
     /// `AgentConfig::session_shadow_reads` flag
-    /// (`OPENHUMAN_SESSION_SHADOW_READS` is a kill switch): when disabled this
+    /// (`NEPPY_SESSION_SHADOW_READS` is a kill switch): when disabled this
     /// is a cheap early return.
     ///
     /// The legacy transcript stays authoritative — this only observes. The

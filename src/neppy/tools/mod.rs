@@ -16,6 +16,7 @@ pub(crate) mod user_filter;
 pub(crate) mod implementations;
 
 pub use crate::neppy::agent::artifacts::tools::*;
+pub use crate::neppy::agent::debug_mode::tools::*;
 pub use crate::neppy::agent::learning::tools::*;
 pub use crate::neppy::agent::orchestration::tools::*;
 pub use crate::neppy::agent::tools::*;

@@ -18,14 +18,14 @@ It deliberately reuses:
 Production smoke examples:
 
 ```bash
-openhuman skill_runtime schemas
-openhuman skill_runtime resolve_runtimes --runtime all
-openhuman skill_runtime run --skill_id git-helper --inputs '{}'
-openhuman skill_runtime recent_runs --limit 10
+neppy skill_runtime schemas
+neppy skill_runtime resolve_runtimes --runtime all
+neppy skill_runtime run --skill_id git-helper --inputs '{}'
+neppy skill_runtime recent_runs --limit 10
 ```
 
 Compatibility:
 
-- Existing `openhuman workflows run`, `workflows cancel`, and run-log RPCs remain available.
+- Existing `neppy workflows run`, `workflows cancel`, and run-log RPCs remain available.
 - New scripts should prefer the `skill_runtime` namespace for execution.
 

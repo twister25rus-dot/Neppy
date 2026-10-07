@@ -286,7 +286,7 @@ impl PythonExecTool {
 
         cmd.env_clear();
 
-        let host_path = std::env::var("PATH").unwrap_or_default();
+        let host_path = crate::neppy::util::env::var("PATH").unwrap_or_default();
         let sep = if cfg!(windows) { ";" } else { ":" };
         let prepended_path = if host_path.is_empty() {
             resolved.bin_dir.to_string_lossy().into_owned()
@@ -298,7 +298,7 @@ impl PythonExecTool {
         cmd.env("PYTHONUNBUFFERED", "1");
 
         for var in SAFE_ENV_VARS {
-            if let Ok(val) = std::env::var(var) {
+            if let Ok(val) = crate::neppy::util::env::var(var) {
                 cmd.env(var, val);
             }
         }
@@ -440,7 +440,7 @@ impl PythonExecTool {
         );
 
         let mut extra_env = std::collections::HashMap::new();
-        let host_path = std::env::var("PATH").unwrap_or_default();
+        let host_path = crate::neppy::util::env::var("PATH").unwrap_or_default();
         let sep = if cfg!(windows) { ";" } else { ":" };
         let prepended = if host_path.is_empty() {
             bin_dir.to_string_lossy().into_owned()

@@ -7,7 +7,7 @@
 //!
 //! Today these are launched unconditionally from `run_server_inner`; the
 //! per-service *config* gates (`config.cron.enabled`, `config.heartbeat.enabled`,
-//! `OPENHUMAN_DISABLE_CHANNEL_LISTENERS`, `has_listening_integrations()`) stay
+//! `NEPPY_DISABLE_CHANNEL_LISTENERS`, `has_listening_integrations()`) stay
 //! inside each function. Phase 1 lifts the *selection* (should this service be
 //! spawned at all) up to a `ServiceSet` chosen by the embedder, while these
 //! functions keep their config gates (is it enabled for this user).
@@ -161,9 +161,9 @@ pub fn spawn_cron_service() {
 
 /// Realtime channel listeners (Telegram getUpdates, Discord gateway, etc.).
 ///
-/// Without this task, `openhuman run` would only expose RPC while inbound bot
+/// Without this task, `neppy run` would only expose RPC while inbound bot
 /// messages are never polled. Skipped entirely when
-/// `OPENHUMAN_DISABLE_CHANNEL_LISTENERS` is set to `1`/`true`, and returns early
+/// `NEPPY_DISABLE_CHANNEL_LISTENERS` is set to `1`/`true`, and returns early
 /// when no channel integrations are configured.
 /// Local assistant background service: the MLX worker watchdog (idle unload,
 /// pressure stop, crash reaping, metrics) plus resumption of any local
@@ -182,7 +182,7 @@ pub fn spawn_channels_service() {
     // so the whole thing is `#[cfg]`-gated. With the feature off there are no
     // realtime listeners to spawn.
     #[cfg(feature = "channels")]
-    if std::env::var("OPENHUMAN_DISABLE_CHANNEL_LISTENERS")
+    if crate::neppy::util::env::var("NEPPY_DISABLE_CHANNEL_LISTENERS")
         .ok()
         .filter(|s| s == "1" || s.eq_ignore_ascii_case("true"))
         .is_none()
@@ -207,7 +207,7 @@ pub fn spawn_channels_service() {
             }
         });
     } else {
-        log::info!("[channels] OPENHUMAN_DISABLE_CHANNEL_LISTENERS set — skipping start_channels");
+        log::info!("[channels] NEPPY_DISABLE_CHANNEL_LISTENERS set — skipping start_channels");
     }
     #[cfg(not(feature = "channels"))]
     log::debug!("[channels] channels feature disabled at compile time — not spawning listeners");

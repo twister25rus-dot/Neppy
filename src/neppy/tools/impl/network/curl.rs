@@ -599,11 +599,15 @@ mod tests {
     }
 
     /// Live integration smoke: downloads example.com (a tiny, stable
-    /// public page). Gated behind `OPENHUMAN_CURL_LIVE_TEST=1` so CI /
+    /// public page). Gated behind `NEPPY_CURL_LIVE_TEST=1` so CI /
     /// offline runs don't depend on the network.
     #[tokio::test]
     async fn live_download_example_com() {
-        if std::env::var("OPENHUMAN_CURL_LIVE_TEST").ok().as_deref() != Some("1") {
+        if crate::neppy::util::env::var("NEPPY_CURL_LIVE_TEST")
+            .ok()
+            .as_deref()
+            != Some("1")
+        {
             return;
         }
         let tmp = TempDir::new().unwrap();

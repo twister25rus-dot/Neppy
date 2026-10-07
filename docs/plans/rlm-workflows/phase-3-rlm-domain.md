@@ -8,7 +8,7 @@ src/neppy/rlm/
 ├── mod.rs        # exports only + controller schema pair (none in v1)
 ├── types.rs      # RlmSessionId, RlmRunSummary, RlmLimitsOverride, serde types
 ├── policy.rs     # autonomy tier + tool_timeout → tinyagents ReplPolicy
-├── bridge.rs     # capability bridge: openhuman tools/model/subagents →
+├── bridge.rs     # capability bridge: neppy tools/model/subagents →
 │                 # tinyagents CapabilityRegistry<()>
 ├── sessions.rs   # session manager: persistent ReplSession per session_id
 ├── ops.rs        # eval_cell orchestration: spawn_blocking, cancel, events
@@ -16,7 +16,7 @@ src/neppy/rlm/
 └── README.md     # module design doc
 ```
 
-## 3.1 `policy.rs` — mapping openhuman config to `ReplPolicy`
+## 3.1 `policy.rs` — mapping neppy config to `ReplPolicy`
 
 - Base on `ReplPolicy::default()` (already conservative).
 - `timeout` = min(caller `timeout_secs` clamped by
@@ -32,7 +32,7 @@ src/neppy/rlm/
 
 Builds a `tinyagents::registry::CapabilityRegistry<()>` for a session:
 
-- **Tools**: take the turn's `Vec<Arc<dyn openhuman Tool>>` (the same list
+- **Tools**: take the turn's `Vec<Arc<dyn neppy Tool>>` (the same list
   the harness registered, minus exclusions), wrap each in the existing
   `crate::neppy::agent::tinyagents::tools::ToolAdapter`, and
   `registry.replace_tool(name, adapter)`. **Exclusions** (recursion +

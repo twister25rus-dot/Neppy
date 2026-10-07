@@ -6,6 +6,7 @@ import type {
   ToolFailureExplanation,
   ToolTimelineEntryStatus,
 } from '../../../store/chatRuntimeSlice';
+import type { ThreadMode } from '../../../types/thread';
 import { basename } from '../../../utils/pathUtils';
 import { formatToolName, stripToolCallEnvelopes } from '../../../utils/toolTimelineFormatting';
 import { BubbleMarkdown } from './AgentMessageBubble';
@@ -285,7 +286,7 @@ export function SubagentActivityDisclosure({
   onView,
 }: {
   subagent: SubagentActivity;
-  mode: 'chat' | 'orchestration' | null;
+  mode: ThreadMode | null;
   onView?: () => void;
 }) {
   const { t } = useT();

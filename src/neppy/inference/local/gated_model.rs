@@ -279,7 +279,7 @@ pub(crate) fn gate_mlx_chat_model(
     let svc = super::global(config);
     // An explicit endpoint override points somewhere the supervisor does not
     // own; serialize requests to it but do not start or unload anything.
-    let manage = std::env::var("OPENHUMAN_LOCAL_INFERENCE_URL")
+    let manage = crate::neppy::util::env::var("NEPPY_LOCAL_INFERENCE_URL")
         .map(|value| value.trim().is_empty())
         .unwrap_or(true);
     let worker = Arc::new(ServiceWorker {

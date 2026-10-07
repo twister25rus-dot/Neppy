@@ -54,7 +54,7 @@ pub(crate) fn install(config: &Config) -> Result<()> {
   <string>{stderr}</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>OPENHUMAN_DAEMON_INTERNAL</key>
+    <key>NEPPY_DAEMON_INTERNAL</key>
     <string>false</string>
   </dict>
   <key>WorkingDirectory</key>
@@ -236,7 +236,7 @@ fn macos_service_file() -> Result<PathBuf> {
 }
 
 fn macos_service_file_for(label: &str) -> Result<PathBuf> {
-    let home = std::env::var("HOME").context("$HOME is not set")?;
+    let home = crate::neppy::util::env::var("HOME").context("$HOME is not set")?;
     Ok(PathBuf::from(home)
         .join("Library")
         .join("LaunchAgents")

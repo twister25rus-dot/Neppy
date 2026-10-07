@@ -1,15 +1,15 @@
-//! `openhuman memory` — CLI for memory ingestion, graph inspection, and debugging.
+//! `neppy-core memory` — CLI for memory ingestion, graph inspection, and debugging.
 //!
 //! Provides direct access to the memory system from the command line, including
 //! document ingestion with heuristic entity/relation extraction, graph querying,
 //! and document listing.
 //!
 //! Usage:
-//!   openhuman memory ingest  <file|->  [--namespace <ns>] [--key <key>] [--title <title>] [-v]
-//!   openhuman memory docs    [--namespace <ns>]
-//!   openhuman memory graph   [--namespace <ns>] [--subject <s>] [--predicate <p>]
-//!   openhuman memory query   --namespace <ns> --query <text> [--limit <n>]
-//!   openhuman memory namespaces
+//!   neppy-core memory ingest  <file|->  [--namespace <ns>] [--key <key>] [--title <title>] [-v]
+//!   neppy-core memory docs    [--namespace <ns>]
+//!   neppy-core memory graph   [--namespace <ns>] [--subject <s>] [--predicate <p>]
+//!   neppy-core memory query   --namespace <ns> --query <text> [--limit <n>]
+//!   neppy-core memory namespaces
 
 use anyhow::Result;
 use std::io::Read;
@@ -17,7 +17,7 @@ use std::path::PathBuf;
 
 use crate::neppy::memory::api::types::NamespaceDocumentInput;
 
-/// Entry point for `openhuman memory <subcommand>`.
+/// Entry point for `neppy-core memory <subcommand>`.
 pub fn run_memory_command(args: &[String]) -> Result<()> {
     if args.is_empty() || is_help(&args[0]) {
         print_memory_help();
@@ -32,12 +32,12 @@ pub fn run_memory_command(args: &[String]) -> Result<()> {
         "namespaces" | "ns" => run_namespaces(&args[1..]),
         "clear" => run_clear(&args[1..]),
         other => Err(anyhow::anyhow!(
-            "unknown memory subcommand '{other}'. Run `openhuman memory --help`."
+            "unknown memory subcommand '{other}'. Run `neppy-core memory --help`."
         )),
     }
 }
 
-/// Each `openhuman memory <sub>` subcommand and the registered RPC controller
+/// Each `neppy-core memory <sub>` subcommand and the registered RPC controller
 /// whose surface it duplicates.
 ///
 /// The CAPABILITY is deliberately NOT written here — it is read from the
@@ -59,7 +59,7 @@ const SUBCOMMAND_CONTROLLER: &[(&str, &str)] = &[
     ("clear", "clear_namespace"),
 ];
 
-/// The capability `openhuman memory <sub>` needs, if any. Resolved from the
+/// The capability `neppy-core memory <sub>` needs, if any. Resolved from the
 /// controller registry, never from a local table.
 fn required_capability(subcommand: &str) -> Option<tinymemory_api::capabilities::Capability> {
     let function = SUBCOMMAND_CONTROLLER
@@ -73,7 +73,7 @@ fn required_capability(subcommand: &str) -> Option<tinymemory_api::capabilities:
 // Subcommands
 // ---------------------------------------------------------------------------
 
-/// `openhuman memory ingest <file|-> [options]`
+/// `neppy-core memory ingest <file|-> [options]`
 ///
 /// Reads a file (or stdin with `-`) and performs full synchronous ingestion
 /// including heuristic entity/relation extraction. Outputs the ingestion result
@@ -102,7 +102,7 @@ fn run_ingest(args: &[String]) -> Result<()> {
                 i += 1;
             }
             "-h" | "--help" => {
-                println!("Usage: openhuman memory ingest <file|-> [options]");
+                println!("Usage: neppy-core memory ingest <file|-> [options]");
                 println!();
                 println!("  <file>               Path to file to ingest (use '-' for stdin)");
                 println!("  -n, --namespace <ns>  Target namespace (default: 'cli')");
@@ -203,7 +203,7 @@ fn run_ingest(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-/// `openhuman memory docs [--namespace <ns>]`
+/// `neppy-core memory docs [--namespace <ns>]`
 fn run_docs(args: &[String]) -> Result<()> {
     let mut namespace: Option<String> = None;
     let mut verbose = false;
@@ -219,7 +219,7 @@ fn run_docs(args: &[String]) -> Result<()> {
                 i += 1;
             }
             "-h" | "--help" => {
-                println!("Usage: openhuman memory docs [--namespace <ns>] [-v]");
+                println!("Usage: neppy-core memory docs [--namespace <ns>] [-v]");
                 return Ok(());
             }
             other => return Err(anyhow::anyhow!("unknown docs arg: {other}")),
@@ -244,7 +244,7 @@ fn run_docs(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-/// `openhuman memory graph [--namespace <ns>] [--subject <s>] [--predicate <p>]`
+/// `neppy-core memory graph [--namespace <ns>] [--subject <s>] [--predicate <p>]`
 fn run_graph_query(args: &[String]) -> Result<()> {
     let mut namespace: Option<String> = None;
     let mut subject: Option<String> = None;
@@ -269,7 +269,7 @@ fn run_graph_query(args: &[String]) -> Result<()> {
             }
             "-h" | "--help" => {
                 println!(
-                    "Usage: openhuman memory graph [--namespace <ns>] [--subject <s>] [--predicate <p>] [-v]"
+                    "Usage: neppy-core memory graph [--namespace <ns>] [--subject <s>] [--predicate <p>] [-v]"
                 );
                 return Ok(());
             }
@@ -314,7 +314,7 @@ fn run_graph_query(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-/// `openhuman memory query --namespace <ns> --query <text> [--limit <n>]`
+/// `neppy-core memory query --namespace <ns> --query <text> [--limit <n>]`
 fn run_query(args: &[String]) -> Result<()> {
     let mut namespace: Option<String> = None;
     let mut query: Option<String> = None;
@@ -342,7 +342,7 @@ fn run_query(args: &[String]) -> Result<()> {
             }
             "-h" | "--help" => {
                 println!(
-                    "Usage: openhuman memory query --namespace <ns> --query <text> [--limit <n>] [-v]"
+                    "Usage: neppy-core memory query --namespace <ns> --query <text> [--limit <n>] [-v]"
                 );
                 return Ok(());
             }
@@ -382,14 +382,14 @@ fn run_query(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-/// `openhuman memory namespaces`
+/// `neppy-core memory namespaces`
 fn run_namespaces(args: &[String]) -> Result<()> {
     let mut verbose = false;
     for arg in args {
         match arg.as_str() {
             "-v" | "--verbose" => verbose = true,
             "-h" | "--help" => {
-                println!("Usage: openhuman memory namespaces [-v]");
+                println!("Usage: neppy-core memory namespaces [-v]");
                 return Ok(());
             }
             other => return Err(anyhow::anyhow!("unknown namespaces arg: {other}")),
@@ -420,7 +420,7 @@ fn run_namespaces(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-/// `openhuman memory clear --namespace <ns>`
+/// `neppy-core memory clear --namespace <ns>`
 fn run_clear(args: &[String]) -> Result<()> {
     let mut namespace: Option<String> = None;
     let mut verbose = false;
@@ -436,7 +436,7 @@ fn run_clear(args: &[String]) -> Result<()> {
                 i += 1;
             }
             "-h" | "--help" => {
-                println!("Usage: openhuman memory clear --namespace <ns> [-v]");
+                println!("Usage: neppy-core memory clear --namespace <ns> [-v]");
                 return Ok(());
             }
             other => return Err(anyhow::anyhow!("unknown clear arg: {other}")),
@@ -528,7 +528,7 @@ async fn create_memory_binding(
     // does: the memory-guard bypass ratchet carries one allowlisted line for the
     // whole CLI layer. The binding is cached per workspace, so asking twice
     // costs one map lookup.
-    let invocation = format!("openhuman memory {subcommand}");
+    let invocation = format!("neppy-core memory {subcommand}");
     if let Some((driver_id, _class, advertised)) =
         crate::core::cli_capability::bound_memory_driver_for(
             &config.workspace_dir,
@@ -596,14 +596,14 @@ fn documents_family(
 /// 2. **Legacy-client gate** — both subcommands below operate on the embedded
 ///    store directly (via `memory::global::init`), so the bound driver must be
 ///    the embedded engine. This is what makes `driver = "null"` (or a fallback)
-///    actually disable `openhuman memory query`, which has no gated capability
+///    actually disable `neppy-core memory query`, which has no gated capability
 ///    to refuse on beyond the one every driver advertises.
 ///
 /// Both gates are default-OPEN when the binding cannot be resolved, mirroring
 /// [`crate::core::all::capability_allowed`]: denying is only ever correct after
 /// a driver has actually answered `capabilities()`.
 fn print_memory_help() {
-    println!("Usage: openhuman memory <subcommand> [options]");
+    println!("Usage: neppy-core memory <subcommand> [options]");
     println!();
     println!("Subcommands:");
     println!("  ingest <file|->     Ingest a document with heuristic extraction");
@@ -614,14 +614,14 @@ fn print_memory_help() {
     println!("  clear               Clear all data in a namespace");
     println!();
     println!("Some subcommands need capability families the bound memory driver may not");
-    println!("advertise. Run `openhuman subsystems` to see what is bound.");
+    println!("advertise. Run `neppy-core subsystems` to see what is bound.");
     println!();
     println!("Examples:");
-    println!("  openhuman memory ingest notes.md -n my-project -v");
-    println!("  echo 'Alice works on ProjectX' | openhuman memory ingest - -n test -v");
-    println!("  openhuman memory graph -n my-project");
-    println!("  openhuman memory docs -n my-project");
-    println!("  openhuman memory query -n my-project -q 'who works on what?'");
+    println!("  neppy-core memory ingest notes.md -n my-project -v");
+    println!("  echo 'Alice works on ProjectX' | neppy-core memory ingest - -n test -v");
+    println!("  neppy-core memory graph -n my-project");
+    println!("  neppy-core memory docs -n my-project");
+    println!("  neppy-core memory query -n my-project -q 'who works on what?'");
 }
 
 #[cfg(test)]
@@ -639,7 +639,7 @@ mod tests {
         for (sub, function) in SUBCOMMAND_CONTROLLER {
             assert!(
                 crate::core::all::rpc_method_from_parts("memory", function).is_some(),
-                "`openhuman memory {sub}` maps to memory.{function}, which is not registered"
+                "`neppy-core memory {sub}` maps to memory.{function}, which is not registered"
             );
         }
     }
@@ -660,7 +660,7 @@ mod tests {
         ] {
             assert!(
                 SUBCOMMAND_CONTROLLER.iter().any(|(s, _)| *s == sub),
-                "`openhuman memory {sub}` is dispatched but has no controller mapping"
+                "`neppy-core memory {sub}` is dispatched but has no controller mapping"
             );
         }
     }
@@ -703,7 +703,7 @@ mod tests {
             "null",
             Capabilities::mandatory(),
             required_capability("ingest"),
-            "openhuman memory ingest",
+            "neppy-core memory ingest",
         )
         .expect_err("the null driver does not advertise `ingest`");
         let msg = err.to_string();
@@ -721,10 +721,10 @@ mod tests {
                     "tinycortex",
                     Capabilities::all(),
                     required_capability(sub),
-                    "openhuman memory <sub>",
+                    "neppy-core memory <sub>",
                 )
                 .is_ok(),
-                "`openhuman memory {sub}` must stay available under the default driver"
+                "`neppy-core memory {sub}` must stay available under the default driver"
             );
         }
     }
@@ -738,7 +738,7 @@ mod tests {
     /// Every legacy subcommand — gated or not — must be rejected under a null
     /// binding: they operate on the embedded store directly, and the null
     /// driver is not that engine. This is the regression the reviewer flagged:
-    /// `openhuman memory clear` used to open the embedded DB even with
+    /// `neppy-core memory clear` used to open the embedded DB even with
     /// `driver = "null"` (and now does not open it at all).
     #[test]
     fn null_driver_rejects_every_legacy_subcommand() {
@@ -746,7 +746,7 @@ mod tests {
             let err = crate::core::cli_capability::legacy_client_verdict(
                 "null",
                 DriverClass::Null,
-                &format!("openhuman memory {sub}"),
+                &format!("neppy-core memory {sub}"),
             )
             .expect_err("a null binding must reject legacy subcommands");
             let msg = err.to_string();
@@ -774,10 +774,10 @@ mod tests {
                     crate::core::cli_capability::legacy_client_verdict(
                         driver,
                         class,
-                        &format!("openhuman memory {sub}"),
+                        &format!("neppy-core memory {sub}"),
                     )
                     .is_ok(),
-                    "`openhuman memory {sub}` must stay available under {driver} ({class:?})"
+                    "`neppy-core memory {sub}` must stay available under {driver} ({class:?})"
                 );
             }
         }
@@ -792,10 +792,10 @@ mod tests {
                 crate::core::cli_capability::legacy_client_verdict(
                     "supermemory",
                     DriverClass::External,
-                    &format!("openhuman memory {sub}"),
+                    &format!("neppy-core memory {sub}"),
                 )
                 .is_err(),
-                "`openhuman memory {sub}` must stay refused under a remote driver"
+                "`neppy-core memory {sub}` must stay refused under a remote driver"
             );
         }
     }
@@ -807,7 +807,7 @@ mod tests {
         let msg = crate::core::cli_capability::legacy_client_unavailable_message(
             "supermemory",
             DriverClass::External,
-            "openhuman memory clear",
+            "neppy-core memory clear",
         );
         assert!(!msg.contains("keychain:"), "{msg}");
         assert!(!msg.contains("api.supermemory.ai"), "{msg}");

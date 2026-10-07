@@ -1,7 +1,7 @@
 //! JSON-RPC E2E tests for the embeddings domain.
 //!
 //! Spins up the core HTTP router against a temp workspace and exercises the
-//! `openhuman.embeddings_*` controller surface end-to-end. No real Voyage /
+//! `neppy.embeddings_*` controller surface end-to-end. No real Voyage /
 //! OpenAI / Cohere calls are made — tests either use the "none" noop provider
 //! or assert error shapes from providers that require live credentials.
 //!
@@ -27,8 +27,8 @@ use neppy_core::core::jsonrpc::build_core_http_router;
 const TEST_RPC_TOKEN: &str = "embeddings-e2e-test-token";
 static E2E_AUTH_INIT: OnceLock<()> = OnceLock::new();
 
-/// Serialises tests: env-var mutations (`HOME`, `OPENHUMAN_WORKSPACE`,
-/// `OPENHUMAN_APP_ENV`) are process-global. The OnceLock+Mutex pattern mirrors
+/// Serialises tests: env-var mutations (`HOME`, `NEPPY_WORKSPACE`,
+/// `NEPPY_APP_ENV`) are process-global. The OnceLock+Mutex pattern mirrors
 /// `json_rpc_e2e.rs` so tests don't race each other.
 static EMBEDDINGS_E2E_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -60,21 +60,21 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, path.as_os_str()) };
         Self { key, old }
     }
 
     #[allow(dead_code)]
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value) };
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -83,7 +83,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(v) => unsafe { std::env::set_var(self.key, v) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -233,7 +233,7 @@ fn assert_no_rpc_error<'a>(v: &'a Value, ctx: &str) -> &'a Value {
         .unwrap_or_else(|| panic!("{ctx}: missing 'result' field in: {v}"))
 }
 
-// ── Test scaffolding: set up HOME + OPENHUMAN_WORKSPACE then start RPC server ─
+// ── Test scaffolding: set up HOME + NEPPY_WORKSPACE then start RPC server ─
 
 /// Returns `(rpc_base, tempdir, guards)`. The `guards` tuple keeps all
 /// `EnvVarGuard` values alive for the duration of the test.
@@ -292,7 +292,7 @@ async fn setup_embeddings_test() -> (
     write_min_config(&neppy_home.join("users").join("local"));
 
     let home_guard = EnvVarGuard::set_to_path("HOME", &home);
-    let workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let workspace_guard = EnvVarGuard::unset("NEPPY_WORKSPACE");
     let backend_guard = EnvVarGuard::unset("BACKEND_URL");
     let vite_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
@@ -314,7 +314,7 @@ async fn embeddings_get_settings_returns_catalog() {
     let _lock = embeddings_e2e_env_lock();
     let (rpc_base, _tmp, _guards, _join) = setup_embeddings_test().await;
 
-    let resp = post_json_rpc(&rpc_base, 1, "openhuman.embeddings_get_settings", json!({})).await;
+    let resp = post_json_rpc(&rpc_base, 1, "neppy.embeddings_get_settings", json!({})).await;
     let result = assert_no_rpc_error(&resp, "embeddings_get_settings");
 
     // Unwrap one more layer if the controller wraps in {result: ...}
@@ -410,7 +410,7 @@ async fn embeddings_update_settings_switches_provider() {
     let update = post_json_rpc(
         &rpc_base,
         2,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({ "provider": "none", "confirm_wipe": true }),
     )
     .await;
@@ -424,7 +424,7 @@ async fn embeddings_update_settings_switches_provider() {
     );
 
     // Subsequent get_settings should reflect the change
-    let get = post_json_rpc(&rpc_base, 3, "openhuman.embeddings_get_settings", json!({})).await;
+    let get = post_json_rpc(&rpc_base, 3, "neppy.embeddings_get_settings", json!({})).await;
     let get_result = assert_no_rpc_error(&get, "embeddings_get_settings after update");
     let get_inner = get_result.get("result").unwrap_or(get_result);
 
@@ -444,7 +444,7 @@ async fn embeddings_update_settings_dimension_change_requires_wipe() {
     let _ = post_json_rpc(
         &rpc_base,
         10,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({ "provider": "voyage", "model": "voyage-3-large", "dimensions": 1024, "confirm_wipe": true }),
     )
     .await;
@@ -454,7 +454,7 @@ async fn embeddings_update_settings_dimension_change_requires_wipe() {
     let resp = post_json_rpc(
         &rpc_base,
         11,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({ "dimensions": 512 }),
     )
     .await;
@@ -479,7 +479,7 @@ async fn embeddings_update_settings_dimension_change_requires_wipe() {
     let confirmed = post_json_rpc(
         &rpc_base,
         12,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({ "dimensions": 512, "confirm_wipe": true }),
     )
     .await;
@@ -502,7 +502,7 @@ async fn embeddings_set_and_clear_api_key() {
     let set_resp = post_json_rpc(
         &rpc_base,
         20,
-        "openhuman.embeddings_set_api_key",
+        "neppy.embeddings_set_api_key",
         json!({ "provider": "voyage", "api_key": "voy-test-1234" }),
     )
     .await;
@@ -515,13 +515,7 @@ async fn embeddings_set_and_clear_api_key() {
     );
 
     // get_settings should now show has_api_key=true for voyage
-    let get_resp = post_json_rpc(
-        &rpc_base,
-        21,
-        "openhuman.embeddings_get_settings",
-        json!({}),
-    )
-    .await;
+    let get_resp = post_json_rpc(&rpc_base, 21, "neppy.embeddings_get_settings", json!({})).await;
     let get_result = assert_no_rpc_error(&get_resp, "get_settings after set_api_key");
     let get_inner = get_result.get("result").unwrap_or(get_result);
     let providers = get_inner
@@ -542,7 +536,7 @@ async fn embeddings_set_and_clear_api_key() {
     let clear_resp = post_json_rpc(
         &rpc_base,
         22,
-        "openhuman.embeddings_clear_api_key",
+        "neppy.embeddings_clear_api_key",
         json!({ "provider": "voyage" }),
     )
     .await;
@@ -555,13 +549,7 @@ async fn embeddings_set_and_clear_api_key() {
     );
 
     // has_api_key should be false again
-    let get2_resp = post_json_rpc(
-        &rpc_base,
-        23,
-        "openhuman.embeddings_get_settings",
-        json!({}),
-    )
-    .await;
+    let get2_resp = post_json_rpc(&rpc_base, 23, "neppy.embeddings_get_settings", json!({})).await;
     let get2_result = assert_no_rpc_error(&get2_resp, "get_settings after clear_api_key");
     let get2_inner = get2_result.get("result").unwrap_or(get2_result);
     let providers2 = get2_inner
@@ -588,18 +576,12 @@ async fn embeddings_test_connection_with_none_provider() {
     let _ = post_json_rpc(
         &rpc_base,
         30,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({ "provider": "none", "confirm_wipe": true }),
     )
     .await;
 
-    let resp = post_json_rpc(
-        &rpc_base,
-        31,
-        "openhuman.embeddings_test_connection",
-        json!({}),
-    )
-    .await;
+    let resp = post_json_rpc(&rpc_base, 31, "neppy.embeddings_test_connection", json!({})).await;
     let result = assert_no_rpc_error(&resp, "embeddings_test_connection none");
     let inner = result.get("result").unwrap_or(result);
 
@@ -626,7 +608,7 @@ async fn embeddings_embed_with_none_returns_empty_vectors() {
     let _ = post_json_rpc(
         &rpc_base,
         40,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({ "provider": "none", "confirm_wipe": true }),
     )
     .await;
@@ -634,7 +616,7 @@ async fn embeddings_embed_with_none_returns_empty_vectors() {
     let resp = post_json_rpc(
         &rpc_base,
         41,
-        "openhuman.embeddings_embed",
+        "neppy.embeddings_embed",
         json!({ "inputs": ["hello", "world"] }),
     )
     .await;
@@ -668,7 +650,7 @@ async fn embeddings_embed_with_custom_openai_endpoint_round_trips_vectors_and_ap
     let set_key = post_json_rpc(
         &rpc_base,
         45,
-        "openhuman.embeddings_set_api_key",
+        "neppy.embeddings_set_api_key",
         json!({ "provider": "custom", "api_key": "custom-embedding-key" }),
     )
     .await;
@@ -677,7 +659,7 @@ async fn embeddings_embed_with_custom_openai_endpoint_round_trips_vectors_and_ap
     let update = post_json_rpc(
         &rpc_base,
         46,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({
             "provider": "custom",
             "custom_endpoint": mock_base,
@@ -698,7 +680,7 @@ async fn embeddings_embed_with_custom_openai_endpoint_round_trips_vectors_and_ap
     let embed = post_json_rpc(
         &rpc_base,
         47,
-        "openhuman.embeddings_embed",
+        "neppy.embeddings_embed",
         json!({ "inputs": ["first custom text", "second custom text"] }),
     )
     .await;
@@ -786,13 +768,7 @@ async fn embeddings_update_settings_rejects_endpoint_with_no_embeddings_api() {
     let (mock_base, mock_join) = serve_mock_embeddings_no_api().await;
 
     // Snapshot the provider before the rejected save.
-    let before = post_json_rpc(
-        &rpc_base,
-        80,
-        "openhuman.embeddings_get_settings",
-        json!({}),
-    )
-    .await;
+    let before = post_json_rpc(&rpc_base, 80, "neppy.embeddings_get_settings", json!({})).await;
     let before_result = assert_no_rpc_error(&before, "get_settings before");
     let before_inner = before_result.get("result").unwrap_or(before_result);
     let before_provider = before_inner
@@ -804,7 +780,7 @@ async fn embeddings_update_settings_rejects_endpoint_with_no_embeddings_api() {
     let update = post_json_rpc(
         &rpc_base,
         81,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({
             "provider": "custom",
             "custom_endpoint": mock_base,
@@ -823,13 +799,7 @@ async fn embeddings_update_settings_rejects_endpoint_with_no_embeddings_api() {
     );
 
     // The stored provider must be unchanged — nothing was persisted.
-    let after = post_json_rpc(
-        &rpc_base,
-        82,
-        "openhuman.embeddings_get_settings",
-        json!({}),
-    )
-    .await;
+    let after = post_json_rpc(&rpc_base, 82, "neppy.embeddings_get_settings", json!({})).await;
     let after_result = assert_no_rpc_error(&after, "get_settings after");
     let after_inner = after_result.get("result").unwrap_or(after_result);
     assert_eq!(
@@ -850,17 +820,17 @@ async fn legacy_alias_inference_embed_resolves() {
     let _ = post_json_rpc(
         &rpc_base,
         50,
-        "openhuman.embeddings_update_settings",
+        "neppy.embeddings_update_settings",
         json!({ "provider": "none", "confirm_wipe": true }),
     )
     .await;
 
     // Call via the legacy alias — must NOT return an "unknown method" JSON-RPC
-    // error; the alias table must rewrite it to openhuman.embeddings_embed.
+    // error; the alias table must rewrite it to neppy.embeddings_embed.
     let resp = post_json_rpc(
         &rpc_base,
         51,
-        "openhuman.inference_embed",
+        "neppy.inference_embed",
         json!({ "inputs": [] }),
     )
     .await;
@@ -870,7 +840,7 @@ async fn legacy_alias_inference_embed_resolves() {
         let code = err.get("code").and_then(Value::as_i64).unwrap_or(0);
         assert_ne!(
             code, -32601,
-            "legacy alias openhuman.inference_embed resolved to 'method not found' — alias table may be broken: {err}"
+            "legacy alias neppy.inference_embed resolved to 'method not found' — alias table may be broken: {err}"
         );
     }
 

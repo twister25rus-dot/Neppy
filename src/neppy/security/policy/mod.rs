@@ -1,4 +1,5 @@
 mod command_checks;
+mod debug_guard;
 mod enforcement;
 mod path_checks;
 

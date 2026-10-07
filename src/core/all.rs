@@ -42,7 +42,7 @@ pub struct RegisteredController {
 }
 
 impl RegisteredController {
-    /// Returns the canonical RPC method name for this controller (e.g., `openhuman.memory_doc_put`).
+    /// Returns the canonical RPC method name for this controller (e.g., `neppy.memory_doc_put`).
     pub fn rpc_method_name(&self) -> String {
         rpc_method_name(&self.schema)
     }
@@ -366,13 +366,13 @@ fn cli_adapters() -> &'static [RegisteredCliAdapter] {
         // The `voice` namespace stays registered regardless of the `voice`
         // feature: with the feature off, `voice::cli::run_standalone_subcommand`
         // resolves to the facade stub, which returns a "voice disabled" error so
-        // `openhuman voice` fails gracefully instead of the subcommand vanishing.
+        // `neppy-core voice` fails gracefully instead of the subcommand vanishing.
         vec![
             RegisteredCliAdapter {
                 namespace: "voice",
                 handler: crate::neppy::voice::cli::run_standalone_subcommand,
             },
-            // Bare `openhuman subsystems` prints the slot table; `openhuman
+            // Bare `neppy-core subsystems` prints the slot table; `neppy
             // subsystems status` still routes through the generic namespace
             // dispatcher and prints JSON.
             RegisteredCliAdapter {
@@ -423,6 +423,12 @@ fn build_registered_controllers() -> Vec<GroupedController> {
         &mut controllers,
         DomainGroup::Automation,
         crate::neppy::cron::all_cron_registered_controllers(),
+    );
+    // Debug Mode (in-app self-development substrate: checkpoints, rollback, task history).
+    push(
+        &mut controllers,
+        DomainGroup::Agent,
+        crate::neppy::agent::debug_mode::all_debug_mode_registered_controllers(),
     );
     // Pet mode (background read-only research + ranked digest). Tagged with
     // Automation: it cannot run without the cron scheduler.
@@ -899,7 +905,7 @@ fn build_registered_controllers() -> Vec<GroupedController> {
         DomainGroup::Hosted,
         crate::neppy::hosted::team::all_team_registered_controllers(),
     );
-    // E2E test support — `openhuman.test_reset` wipes sidecar state in-place.
+    // E2E test support — `neppy.test_reset` wipes sidecar state in-place.
     // Gated behind the `e2e-test-support` cargo feature so shipped binaries
     // never even register the destructive wipe RPC. Flipped on by the E2E
     // build script (app/scripts/e2e-build.sh).
@@ -1126,7 +1132,12 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
 
 /// Generates a standardized RPC method name from a controller schema.
 pub fn rpc_method_name(schema: &ControllerSchema) -> String {
-    format!("openhuman.{}_{}", schema.namespace, schema.function)
+    format!(
+        "{}{}_{}",
+        crate::core::legacy_aliases::RPC_METHOD_PREFIX,
+        schema.namespace,
+        schema.function
+    )
 }
 
 /// Returns a human-readable description for a given namespace.
@@ -1148,6 +1159,9 @@ pub fn namespace_description(namespace: &str) -> Option<&'static str> {
             "Connectivity diagnostics for the local sidecar, listening port, and backend Socket.IO state.",
         ),
         "cron" => Some("Manage scheduled jobs and run history."),
+        "debug_mode" => Some(
+            "Debug Mode: project status, checkpoints, rollback, diffs, task history and validation checks.",
+        ),
         "flows" => Some("Create, store, and run automation workflows."),
         "dashboard" => Some(
             "Operator-facing dashboard aggregations: per-model health comparison rows.",
@@ -1321,10 +1335,12 @@ pub fn capability_for_parts(namespace: &str, function: &str) -> Option<Option<Ca
 /// the **UNFILTERED** registry.
 ///
 /// This is the method-name counterpart of [`capability_for_parts`]. The raw
-/// `openhuman call --method …` CLI form has no namespace/function split, but
+/// `neppy-core call --method …` CLI form has no namespace/function split, but
 /// must still produce the CLI's configuration-fact diagnostic before it
 /// dispatches a capability-gated method.
 pub fn capability_for_rpc_method(method: &str) -> Option<Option<Capability>> {
+    let method = crate::core::legacy_aliases::resolve_legacy(method);
+    let method = method.as_ref();
     registry()
         .iter()
         .find(|g| g.controller.rpc_method_name() == method)
@@ -1374,11 +1390,16 @@ pub fn sole_capability_for_namespace(namespace: &str) -> Option<Capability> {
 /// Checks both the agent-facing registry and the internal registry so that
 /// parameter validation still applies to internal-only methods (e.g. ingest).
 pub fn schema_for_rpc_method(method: &str) -> Option<ControllerSchema> {
+    // Accept the pre-rebrand `openhuman.` prefix (and the legacy alias table) at
+    // this chokepoint too: MCP tool dispatch and embedders reach the registry
+    // here without going through `jsonrpc::invoke_method`.
+    let method = crate::core::legacy_aliases::resolve_legacy(method);
+    let method = method.as_ref();
     // DomainSet gate (#4796): a method whose group is disabled under the ambient
     // context must be indistinguishable from a genuinely-unregistered method at
     // EVERY public lookup, not just at dispatch. Filtering here (identically to
     // `try_invoke_registered_rpc`) means `invoke_method_inner` never runs param
-    // validation against a gated method — otherwise a gated `openhuman.flows_*`
+    // validation against a gated method — otherwise a gated `neppy.flows_*`
     // call with bad params would return the controller's validation error
     // instead of method-not-found, leaking the hidden RPC surface. No ambient
     // context ⇒ `group_allowed` is `true` ⇒ unfiltered, identical to pre-#4796.
@@ -1542,6 +1563,8 @@ pub async fn try_invoke_registered_rpc(
     method: &str,
     params: Map<String, Value>,
 ) -> Option<Result<Value, String>> {
+    let method = crate::core::legacy_aliases::resolve_legacy(method);
+    let method = method.as_ref();
     let grouped = registry()
         .iter()
         .chain(internal_registry().iter())

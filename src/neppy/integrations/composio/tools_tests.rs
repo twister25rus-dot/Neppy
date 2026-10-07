@@ -38,9 +38,9 @@ struct WorkspaceEnvGuard {
 
 impl WorkspaceEnvGuard {
     fn set(path: &Path) -> Self {
-        let previous = std::env::var_os("OPENHUMAN_WORKSPACE");
+        let previous = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
         unsafe {
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            std::env::set_var("NEPPY_WORKSPACE", path);
         }
         Self { previous }
     }
@@ -52,7 +52,7 @@ struct HomeEnvGuard {
 
 impl HomeEnvGuard {
     fn set(path: &Path) -> Self {
-        let previous = std::env::var_os("HOME");
+        let previous = crate::neppy::util::env::var_os("HOME");
         unsafe {
             std::env::set_var("HOME", path);
         }
@@ -65,7 +65,7 @@ impl Drop for HomeEnvGuard {
         unsafe {
             match self.previous.take() {
                 Some(value) => std::env::set_var("HOME", value),
-                None => std::env::remove_var("HOME"),
+                None => crate::neppy::util::env::remove_var("HOME"),
             }
         }
     }
@@ -75,8 +75,8 @@ impl Drop for WorkspaceEnvGuard {
     fn drop(&mut self) {
         unsafe {
             match self.previous.take() {
-                Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-                None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+                Some(value) => std::env::set_var("NEPPY_WORKSPACE", value),
+                None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
             }
         }
     }
@@ -503,7 +503,7 @@ async fn sandbox_read_only_passes_through_read_scope_actions_to_downstream_gates
     //
     // A read-scoped slug clears the sandbox gate, so dispatch falls
     // through to `load_config_with_timeout()` (#1710 Wave 4). Hold
-    // `TEST_ENV_LOCK` and point `OPENHUMAN_WORKSPACE` at an isolated,
+    // `TEST_ENV_LOCK` and point `NEPPY_WORKSPACE` at an isolated,
     // persisted config so this test neither reads the dev's real
     // config nor races the shared env var against the other
     // config-loading composio tests.
@@ -541,7 +541,7 @@ async fn sandbox_unset_leaves_all_scopes_to_downstream_gates() {
     //
     // The sandbox gate is a no-op here, so dispatch falls through to
     // `load_config_with_timeout()` (#1710 Wave 4). Hold `TEST_ENV_LOCK`
-    // and point `OPENHUMAN_WORKSPACE` at an isolated, persisted config
+    // and point `NEPPY_WORKSPACE` at an isolated, persisted config
     // so this test neither reads the dev's real config nor races the
     // shared env var against the other config-loading composio tests.
     use crate::neppy::config::TEST_ENV_LOCK;
@@ -575,7 +575,7 @@ async fn sandbox_sandboxed_mode_does_not_trigger_readonly_gate() {
     //
     // `Sandboxed` is a no-op for this gate, so dispatch falls through
     // to `load_config_with_timeout()` (#1710 Wave 4). Hold
-    // `TEST_ENV_LOCK` and point `OPENHUMAN_WORKSPACE` at an isolated,
+    // `TEST_ENV_LOCK` and point `NEPPY_WORKSPACE` at an isolated,
     // persisted config so this test neither reads the dev's real
     // config nor races the shared env var against the other
     // config-loading composio tests.
@@ -927,9 +927,9 @@ async fn execute_tool_per_call_factory_means_no_baked_client() {
     //
     // Production `.execute(..)` calls `load_config_with_timeout()`
     // per call which reads from `~/.neppy/config.toml` (or the
-    // workspace pointed at by `OPENHUMAN_WORKSPACE`). To isolate the
+    // workspace pointed at by `NEPPY_WORKSPACE`). To isolate the
     // test from the dev's real config we hold `TEST_ENV_LOCK`, point
-    // `OPENHUMAN_WORKSPACE` at a tempdir, and persist the test's
+    // `NEPPY_WORKSPACE` at a tempdir, and persist the test's
     // `Config` to that tempdir's `config.toml` before invoking the tool.
     use crate::neppy::config::TEST_ENV_LOCK;
     let _env_guard = TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());

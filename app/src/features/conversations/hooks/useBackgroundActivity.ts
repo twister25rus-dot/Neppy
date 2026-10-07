@@ -54,7 +54,7 @@ function sortCronJobs(jobs: CoreCronJob[]): CoreCronJob[] {
 
 /**
  * Fetch + adaptive-poll the background activity snapshot, but only while
- * `open` is true. Also refreshes immediately on `openhuman:memory-sync-stage`
+ * `open` is true. Also refreshes immediately on `neppy:memory-sync-stage`
  * window events (dispatched globally by `socketService` from the core's
  * `memory:sync_stage` socket event) so the memory section reacts live.
  */
@@ -76,7 +76,7 @@ export function useBackgroundActivity(open: boolean): BackgroundActivity {
 
     const [cronRes, ingestRes, providerRes] = await Promise.allSettled([
       neppyCronList(),
-      callCoreRpc<IngestionStatusEnvelope>({ method: 'openhuman.memory_ingestion_status' }),
+      callCoreRpc<IngestionStatusEnvelope>({ method: 'neppy.memory_ingestion_status' }),
       memorySyncStatusList(),
     ]);
     if (cancelledRef.current) return;
@@ -137,8 +137,8 @@ export function useBackgroundActivity(open: boolean): BackgroundActivity {
     const onStage = () => {
       void fetchOnce();
     };
-    window.addEventListener('openhuman:memory-sync-stage', onStage);
-    return () => window.removeEventListener('openhuman:memory-sync-stage', onStage);
+    window.addEventListener('neppy:memory-sync-stage', onStage);
+    return () => window.removeEventListener('neppy:memory-sync-stage', onStage);
   }, [open, fetchOnce]);
 
   return { cronJobs, memory, loading };
@@ -149,7 +149,7 @@ const TERMINAL_STAGES = new Set(['completed', 'failed']);
 
 /**
  * Poll-free "is any memory sync in flight right now" signal, driven purely by
- * the `openhuman:memory-sync-stage` window events that `socketService`
+ * the `neppy:memory-sync-stage` window events that `socketService`
  * dispatches. Cheap enough to keep mounted while the panel is closed so the
  * background-activity badge can light up for live syncing without polling.
  */
@@ -171,8 +171,8 @@ export function useMemorySyncActive(): boolean {
       else ids.add(rowId);
       setActive(ids.size > 0);
     };
-    window.addEventListener('openhuman:memory-sync-stage', onStage);
-    return () => window.removeEventListener('openhuman:memory-sync-stage', onStage);
+    window.addEventListener('neppy:memory-sync-stage', onStage);
+    return () => window.removeEventListener('neppy:memory-sync-stage', onStage);
   }, []);
 
   return active;

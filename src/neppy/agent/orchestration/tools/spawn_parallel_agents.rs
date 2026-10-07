@@ -50,7 +50,12 @@ impl Tool for SpawnParallelAgentsTool {
 
     fn parameters_schema(&self) -> serde_json::Value {
         let agent_ids: Vec<String> = AgentDefinitionRegistry::global()
-            .map(|reg| reg.list().iter().map(|d| d.id.clone()).collect())
+            .map(|reg| {
+                reg.list_delegatable()
+                    .iter()
+                    .map(|d| d.id.clone())
+                    .collect()
+            })
             .unwrap_or_default();
         let agent_id_schema = if agent_ids.is_empty() {
             json!({ "type": "string" })

@@ -2,7 +2,7 @@
 //
 // openhuman is a Rust core exposing JSON-RPC over `POST /rpc`. All tiny.place
 // messaging lives in the core's `tinyplace` domain (methods
-// `openhuman.tinyplace_*`), backed by the vendored Rust tiny.place SDK. The
+// `neppy.tinyplace_*`), backed by the vendored Rust tiny.place SDK. The
 // core derives its tiny.place identity (a base58 Solana cryptoId) from the
 // wallet mnemonic at m/44'/501'/0'/0'. So: one core process = one identity, and
 // two cores with two mnemonics = two agents that can message each other over a
@@ -19,7 +19,7 @@ const HERE = resolve(fileURLToPath(import.meta.url), "..");
 const REPO_ROOT = resolve(HERE, "..", "..", "..");
 
 export const DEFAULT_CORE_BIN =
-  process.env.OPENHUMAN_CORE_BIN || join(REPO_ROOT, "target", "debug", "neppy-core");
+  (process.env.NEPPY_CORE_BIN ?? process.env.OPENHUMAN_CORE_BIN) || join(REPO_ROOT, "target", "debug", "neppy-core");
 export const DEFAULT_BACKEND =
   process.env.TINYPLACE_API_BASE_URL || "http://localhost:18080";
 
@@ -88,9 +88,9 @@ export async function launchAgent(name, opts = {}) {
     {
       env: {
         ...process.env,
-        OPENHUMAN_WORKSPACE: workspace,
-        OPENHUMAN_KEYRING_BACKEND: "file",
-        OPENHUMAN_CORE_TOKEN: token,
+        NEPPY_WORKSPACE: workspace,
+        NEPPY_KEYRING_BACKEND: "file",
+        NEPPY_CORE_TOKEN: token,
         TINYPLACE_API_BASE_URL: backend,
       },
       stdio: ["ignore", "pipe", "pipe"],
@@ -135,8 +135,8 @@ export async function launchAgent(name, opts = {}) {
     const rpc = makeRpc(port, token, name);
 
     // 2) Import a fresh wallet identity (encrypt the mnemonic, then persist it).
-    const encryptedMnemonic = await rpc("openhuman.encrypt_secret", { plaintext: mnemonic });
-    await rpc("openhuman.wallet_setup", {
+    const encryptedMnemonic = await rpc("neppy.encrypt_secret", { plaintext: mnemonic });
+    await rpc("neppy.wallet_setup", {
       consentGranted: true,
       source: "imported",
       mnemonicWordCount: mnemonic.split(" ").length,
@@ -147,10 +147,10 @@ export async function launchAgent(name, opts = {}) {
 
     // 3) Publish Signal pre-keys so peers can start an encrypted session, and
     //    advertise the encryption key on the directory card so it's routable.
-    await rpc("openhuman.tinyplace_signal_provision", { preKeyCount });
-    await rpc("openhuman.tinyplace_signal_register_encryption_key", {});
+    await rpc("neppy.tinyplace_signal_provision", { preKeyCount });
+    await rpc("neppy.tinyplace_signal_register_encryption_key", {});
 
-    const status = await rpc("openhuman.tinyplace_signal_key_status", {});
+    const status = await rpc("neppy.tinyplace_signal_key_status", {});
     const cryptoId = status.agentId;
     if (!cryptoId) throw fail(`core '${name}' produced an empty cryptoId`);
 
@@ -169,15 +169,15 @@ export async function launchAgent(name, opts = {}) {
 export async function receiveMessage(core, { fromCryptoId, timeoutMs = 8_000 } = {}) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const list = await core.rpc("openhuman.tinyplace_messages_list", { limit: 50 });
+    const list = await core.rpc("neppy.tinyplace_messages_list", { limit: 50 });
     const envelopes = Array.isArray(list) ? list : list?.messages ?? [];
     for (const envelope of envelopes) {
       let decoded;
       try {
-        decoded = await core.rpc("openhuman.tinyplace_signal_decrypt_message", { envelope });
+        decoded = await core.rpc("neppy.tinyplace_signal_decrypt_message", { envelope });
       } finally {
         // Acknowledge (delete) regardless: the ratchet already advanced.
-        await core.rpc("openhuman.tinyplace_messages_acknowledge", { messageId: envelope.id });
+        await core.rpc("neppy.tinyplace_messages_acknowledge", { messageId: envelope.id });
       }
       if (decoded && (!fromCryptoId || decoded.from === fromCryptoId)) {
         return decoded.plaintext;

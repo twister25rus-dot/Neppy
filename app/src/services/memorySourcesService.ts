@@ -1,7 +1,7 @@
 /**
  * RPC client for the memory_sources domain.
  *
- * Wraps `openhuman.memory_sources_*` RPCs so UI components get typed
+ * Wraps `neppy.memory_sources_*` RPCs so UI components get typed
  * responses without knowing the wire shape.
  */
 import debug from 'debug';
@@ -69,7 +69,7 @@ function unwrap<T>(raw: unknown): T {
 export async function listMemorySources(): Promise<MemorySourceEntry[]> {
   log('list');
   const resp = await callCoreRpc<{ sources: MemorySourceEntry[] }>({
-    method: 'openhuman.memory_sources_list',
+    method: 'neppy.memory_sources_list',
   });
   const data = unwrap<{ sources: MemorySourceEntry[] }>(resp);
   return data.sources ?? [];
@@ -78,7 +78,7 @@ export async function listMemorySources(): Promise<MemorySourceEntry[]> {
 export async function getMemorySource(id: string): Promise<MemorySourceEntry | null> {
   log('get id=%s', id);
   const resp = await callCoreRpc<{ source: MemorySourceEntry | null }>({
-    method: 'openhuman.memory_sources_get',
+    method: 'neppy.memory_sources_get',
     params: { id },
   });
   const data = unwrap<{ source: MemorySourceEntry | null }>(resp);
@@ -90,7 +90,7 @@ export async function addMemorySource(
 ): Promise<MemorySourceEntry> {
   log('add kind=%s label=%s', params.kind, params.label);
   const resp = await callCoreRpc<{ source: MemorySourceEntry }>({
-    method: 'openhuman.memory_sources_add',
+    method: 'neppy.memory_sources_add',
     params,
   });
   const data = unwrap<{ source: MemorySourceEntry }>(resp);
@@ -103,7 +103,7 @@ export async function updateMemorySource(
 ): Promise<MemorySourceEntry> {
   log('update id=%s', id);
   const resp = await callCoreRpc<{ source: MemorySourceEntry }>({
-    method: 'openhuman.memory_sources_update',
+    method: 'neppy.memory_sources_update',
     params: { id, ...patch },
   });
   const data = unwrap<{ source: MemorySourceEntry }>(resp);
@@ -113,7 +113,7 @@ export async function updateMemorySource(
 export async function removeMemorySource(id: string): Promise<boolean> {
   log('remove id=%s', id);
   const resp = await callCoreRpc<{ removed: boolean }>({
-    method: 'openhuman.memory_sources_remove',
+    method: 'neppy.memory_sources_remove',
     params: { id },
   });
   const data = unwrap<{ removed: boolean }>(resp);
@@ -123,7 +123,7 @@ export async function removeMemorySource(id: string): Promise<boolean> {
 export async function listSourceItems(sourceId: string): Promise<SourceItem[]> {
   log('list_items source_id=%s', sourceId);
   const resp = await callCoreRpc<{ items: SourceItem[] }>({
-    method: 'openhuman.memory_sources_list_items',
+    method: 'neppy.memory_sources_list_items',
     params: { source_id: sourceId },
   });
   const data = unwrap<{ items: SourceItem[] }>(resp);
@@ -133,7 +133,7 @@ export async function listSourceItems(sourceId: string): Promise<SourceItem[]> {
 export async function readSourceItem(sourceId: string, itemId: string): Promise<SourceContent> {
   log('read_item source_id=%s item_id=%s', sourceId, itemId);
   const resp = await callCoreRpc<{ content: SourceContent }>({
-    method: 'openhuman.memory_sources_read_item',
+    method: 'neppy.memory_sources_read_item',
     params: { source_id: sourceId, item_id: itemId },
   });
   const data = unwrap<{ content: SourceContent }>(resp);
@@ -153,7 +153,7 @@ export interface SourceStatus {
 export async function memorySourcesStatusList(): Promise<SourceStatus[]> {
   log('status_list');
   const resp = await callCoreRpc<{ statuses: SourceStatus[] }>({
-    method: 'openhuman.memory_sources_status_list',
+    method: 'neppy.memory_sources_status_list',
   });
   const data = unwrap<{ statuses: SourceStatus[] }>(resp);
   return data.statuses ?? [];
@@ -175,7 +175,7 @@ export const MEMORY_SYNC_RPC_TIMEOUT_MS = 10 * 60 * 1_000;
 export async function syncMemorySource(sourceId: string): Promise<void> {
   log('sync source_id=%s', sourceId);
   await callCoreRpc<{ requested: boolean }>({
-    method: 'openhuman.memory_sources_sync',
+    method: 'neppy.memory_sources_sync',
     params: { source_id: sourceId },
     timeoutMs: MEMORY_SYNC_RPC_TIMEOUT_MS,
   });
@@ -185,12 +185,12 @@ export async function syncMemorySource(sourceId: string): Promise<void> {
  * Toolkit slugs that ship a native memory-sync provider (backend registry —
  * `all_providers()`). The Add Source connection picker uses this to disable
  * connections whose toolkit can never sync. Maps to
- * `openhuman.memory_sources_supported_toolkits`. See issue #3352.
+ * `neppy.memory_sources_supported_toolkits`. See issue #3352.
  */
 export async function getSupportedToolkits(): Promise<string[]> {
   log('supported_toolkits');
   const resp = await callCoreRpc<{ toolkits: string[] }>({
-    method: 'openhuman.memory_sources_supported_toolkits',
+    method: 'neppy.memory_sources_supported_toolkits',
   });
   const data = unwrap<{ toolkits: string[] }>(resp);
   return data.toolkits ?? [];
@@ -213,14 +213,14 @@ export interface ApplyAllInResult {
 /**
  * Enables every memory source, clears all per-source sync caps, and
  * triggers a background sync for each. Equivalent to the UI "All In"
- * action. Maps to `openhuman.memory_sources_apply_all_in`.
+ * action. Maps to `neppy.memory_sources_apply_all_in`.
  */
 export async function applyAllIn(): Promise<ApplyAllInResult> {
   log('apply_all_in');
   // All In runs every enabled source's sync to completion, one after another,
   // before it answers; the budget has to cover the whole sweep.
   const resp = await callCoreRpc<ApplyAllInResult>({
-    method: 'openhuman.memory_sources_apply_all_in',
+    method: 'neppy.memory_sources_apply_all_in',
     timeoutMs: MEMORY_SYNC_RPC_TIMEOUT_MS,
   });
   const data = unwrap<ApplyAllInResult>(resp);
@@ -277,7 +277,7 @@ const CODING_SESSION_MAX_DRAIN_PASSES = 2000;
 export async function getCodingSessionStatus(): Promise<CodingSessionSourceStatus[]> {
   log('coding_session_status: entry');
   const resp = await callCoreRpc<{ sources: CodingSessionSourceStatus[] }>({
-    method: 'openhuman.memory_sources_coding_session_status',
+    method: 'neppy.memory_sources_coding_session_status',
   });
   const data = unwrap<{ sources: CodingSessionSourceStatus[] }>(resp);
   log('coding_session_status: exit sources=%d', data.sources?.length ?? 0);
@@ -303,7 +303,7 @@ export async function ingestCodingSessions(
     timeoutMs
   );
   const resp = await callCoreRpc<CodingSessionIngestResult>({
-    method: 'openhuman.memory_sources_ingest_coding_sessions',
+    method: 'neppy.memory_sources_ingest_coding_sessions',
     params: { backfill, max_sessions: boundedMaxSessions },
     timeoutMs,
   });

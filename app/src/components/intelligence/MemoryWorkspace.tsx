@@ -96,11 +96,11 @@ export function MemoryWorkspace({ onToast }: MemoryWorkspaceProps) {
         setTimeout(() => setGraphVersion(v => v + 1), 3000);
       }
     };
-    window.addEventListener('openhuman:memory-tree-completed', onTreeDone);
-    window.addEventListener('openhuman:memory-sync-stage', onSyncDone);
+    window.addEventListener('neppy:memory-tree-completed', onTreeDone);
+    window.addEventListener('neppy:memory-sync-stage', onSyncDone);
     return () => {
-      window.removeEventListener('openhuman:memory-tree-completed', onTreeDone);
-      window.removeEventListener('openhuman:memory-sync-stage', onSyncDone);
+      window.removeEventListener('neppy:memory-tree-completed', onTreeDone);
+      window.removeEventListener('neppy:memory-sync-stage', onSyncDone);
     };
   }, []);
 

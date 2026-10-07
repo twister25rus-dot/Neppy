@@ -22,6 +22,7 @@ pub mod bus;
 pub mod context;
 pub(crate) mod cost;
 pub mod debug;
+pub mod debug_mode;
 pub mod dispatcher;
 pub mod error;
 pub mod experience;

@@ -17,7 +17,7 @@ describe('agentTeamApi.list', () => {
     const teams = await agentTeamApi.list();
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBe('t1');
-    expect(mockCall).toHaveBeenCalledWith({ method: 'openhuman.agent_team_list', params: {} });
+    expect(mockCall).toHaveBeenCalledWith({ method: 'neppy.agent_team_list', params: {} });
   });
 
   it('returns [] when the envelope omits teams', async () => {
@@ -29,7 +29,7 @@ describe('agentTeamApi.list', () => {
     mockCall.mockResolvedValueOnce({ teams: [], count: 0 });
     await agentTeamApi.list({ parentThreadId: 'thread-1', status: 'active', limit: 10 });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_list',
+      method: 'neppy.agent_team_list',
       params: { parentThreadId: 'thread-1', status: 'active', limit: 10 },
     });
   });
@@ -48,7 +48,7 @@ describe('agentTeamApi.get', () => {
     const result = await agentTeamApi.get('t1');
     expect(result).toBe(view);
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_get',
+      method: 'neppy.agent_team_get',
       params: { teamId: 't1' },
     });
   });
@@ -112,13 +112,13 @@ describe('agentTeamApi.listMessages', () => {
     mockCall.mockResolvedValueOnce({ messages: [] });
     await agentTeamApi.listMessages('team-1', 50);
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_list_messages',
+      method: 'neppy.agent_team_list_messages',
       params: { teamId: 'team-1', limit: 50 },
     });
     mockCall.mockResolvedValueOnce({ messages: [] });
     await agentTeamApi.listMessages('team-1');
     expect(mockCall).toHaveBeenLastCalledWith({
-      method: 'openhuman.agent_team_list_messages',
+      method: 'neppy.agent_team_list_messages',
       params: { teamId: 'team-1' },
     });
   });
@@ -134,7 +134,7 @@ describe('agentTeamApi.completeTask', () => {
     });
     expect(outcome.kind).toBe('completed');
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_complete_task',
+      method: 'neppy.agent_team_complete_task',
       params: {
         teamId: 'team-1',
         taskId: 'task-1',
@@ -161,7 +161,7 @@ describe('agentTeamApi.completeTask', () => {
       reasons: ['completion requires at least one evidence link'],
     });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_complete_task',
+      method: 'neppy.agent_team_complete_task',
       params: {
         teamId: 'team-1',
         taskId: 'task-1',
@@ -187,7 +187,7 @@ describe('agentTeamApi.shutdownMember', () => {
     const outcome = await agentTeamApi.shutdownMember('team-1', 'm1');
     expect(outcome).toBe(result);
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_shutdown_member',
+      method: 'neppy.agent_team_shutdown_member',
       params: { teamId: 'team-1', memberId: 'm1' },
     });
   });
@@ -218,7 +218,7 @@ describe('agentTeamApi.messageMember', () => {
     expect(msg.payload).toEqual({ from: 'lead', to: 'm1', content: 'go', visibility: 'team' });
     // fromMemberId omitted → lead origin; no empty keys forwarded.
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_message_member',
+      method: 'neppy.agent_team_message_member',
       params: { teamId: 'team-1', content: 'go', toMemberId: 'm1' },
     });
   });
@@ -240,7 +240,7 @@ describe('agentTeamApi.messageMember', () => {
       content: 'hi',
     });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_message_member',
+      method: 'neppy.agent_team_message_member',
       params: { teamId: 'team-1', content: 'hi', fromMemberId: 'm1', toMemberId: 'm2' },
     });
   });
@@ -268,7 +268,7 @@ describe('agentTeamApi.startMember', () => {
     });
     expect(outcome).toEqual({ kind: 'started', runId: 'teamrun-1', task: { id: 'task-1' } });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_start_member',
+      method: 'neppy.agent_team_start_member',
       params: { teamId: 'team-1', memberId: 'm1', taskId: 'task-1' },
     });
   });
@@ -278,7 +278,7 @@ describe('agentTeamApi.startMember', () => {
     const outcome = await agentTeamApi.startMember({ teamId: 'team-1', memberId: 'm1' });
     expect(outcome).toEqual({ kind: 'blocked', unmet: ['task-a'] });
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.agent_team_start_member',
+      method: 'neppy.agent_team_start_member',
       params: { teamId: 'team-1', memberId: 'm1' },
     });
   });

@@ -30,7 +30,7 @@ describe('LanHttpTransport', () => {
     const fetchMock = mockFetchOnce({ jsonrpc: '2.0', id: 1, result: { ok: true } });
     const t = new LanHttpTransport(URL);
 
-    const result = await t.call<{ ok: boolean }>('openhuman.ping', { who: 'me' });
+    const result = await t.call<{ ok: boolean }>('neppy.ping', { who: 'me' });
 
     expect(result).toEqual({ ok: true });
     expect(fetchMock).toHaveBeenCalledWith(
@@ -41,26 +41,26 @@ describe('LanHttpTransport', () => {
       })
     );
     const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
-    expect(body).toMatchObject({ jsonrpc: '2.0', method: 'openhuman.ping', params: { who: 'me' } });
+    expect(body).toMatchObject({ jsonrpc: '2.0', method: 'neppy.ping', params: { who: 'me' } });
     expect(typeof body.id).toBe('number');
   });
 
   it('throws when the server returns an HTTP error', async () => {
     mockFetchOnce('Server is sad', { ok: false, status: 500, statusText: 'Server Error' });
     const t = new LanHttpTransport(URL);
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow(/HTTP 500: Server is sad/);
+    await expect(t.call('neppy.ping', {})).rejects.toThrow(/HTTP 500: Server is sad/);
   });
 
   it('throws the JSON-RPC error message when present', async () => {
     mockFetchOnce({ jsonrpc: '2.0', id: 1, error: { code: -32601, message: 'Method not found' } });
     const t = new LanHttpTransport(URL);
-    await expect(t.call('openhuman.unknown', {})).rejects.toThrow('Method not found');
+    await expect(t.call('neppy.unknown', {})).rejects.toThrow('Method not found');
   });
 
   it('throws when result key is missing', async () => {
     mockFetchOnce({ jsonrpc: '2.0', id: 1 });
     const t = new LanHttpTransport(URL);
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow('response missing result');
+    await expect(t.call('neppy.ping', {})).rejects.toThrow('response missing result');
   });
 
   it('treats AbortController-induced abort as a timeout', async () => {
@@ -78,7 +78,7 @@ describe('LanHttpTransport', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const t = new LanHttpTransport(URL, 30);
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow(/timed out after 30ms/);
+    await expect(t.call('neppy.ping', {})).rejects.toThrow(/timed out after 30ms/);
   });
 
   it('isHealthy returns true on a successful ping', async () => {
@@ -97,7 +97,7 @@ describe('LanHttpTransport', () => {
     mockFetchOnce({ jsonrpc: '2.0', id: 1, result: 42 });
     const t = new LanHttpTransport(URL);
     const yielded: number[] = [];
-    for await (const v of t.stream<number>('openhuman.value', {})) yielded.push(v);
+    for await (const v of t.stream<number>('neppy.value', {})) yielded.push(v);
     expect(yielded).toEqual([42]);
   });
 
@@ -121,8 +121,8 @@ describe('LanHttpTransport', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const t = new LanHttpTransport(URL, 30_000);
-    await expect(t.call('openhuman.ping', {}, { timeoutMs: 30 })).rejects.toThrow(
-      /\[transport:lan\] openhuman.ping timed out after 30ms/
+    await expect(t.call('neppy.ping', {}, { timeoutMs: 30 })).rejects.toThrow(
+      /\[transport:lan\] neppy.ping timed out after 30ms/
     );
   });
 });

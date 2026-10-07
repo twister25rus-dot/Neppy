@@ -2,7 +2,7 @@
 //!
 //! These tests stay local: temp workspaces plus a loopback backend that
 //! returns Composio execute envelopes. Run with `--test-threads=1` because
-//! config, HOME, and OPENHUMAN_WORKSPACE are process globals.
+//! config, HOME, and NEPPY_WORKSPACE are process globals.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -68,7 +68,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: impl Into<String>) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         unsafe { std::env::set_var(key, value.into()) };
         Self { key, old }
     }
@@ -78,8 +78,8 @@ impl EnvGuard {
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        unsafe { std::env::remove_var(key) };
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -88,7 +88,7 @@ impl Drop for EnvGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => unsafe { std::env::set_var(self.key, value) },
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -330,7 +330,7 @@ async fn configured_loopback_context(
 async fn github_clickup_and_composio_bus_cover_provider_branches() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
     let requests: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
@@ -526,11 +526,11 @@ fn slack_cap_router(requests: Arc<Mutex<Vec<Value>>>) -> Router {
 async fn slack_sync_max_items_caps_ingest_to_exact_count() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
     // Disable inter-call pacing so the test runs quickly.
-    let _pacing = EnvGuard::set("OPENHUMAN_SLACK_INTER_CALL_PACING_MS", "0");
+    let _pacing = EnvGuard::set("NEPPY_SLACK_INTER_CALL_PACING_MS", "0");
 
     let requests: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
     let (base, server) = loopback_router(slack_cap_router(Arc::clone(&requests))).await;
@@ -635,7 +635,7 @@ fn gmail_cap_router(messages: Vec<Value>, requests: Arc<Mutex<Vec<Value>>>) -> R
 async fn gmail_sync_max_items_caps_ingest_to_exact_count() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -680,7 +680,7 @@ async fn gmail_sync_max_items_caps_ingest_to_exact_count() {
 async fn gmail_sync_depth_days_injects_after_floor_into_query() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -771,7 +771,7 @@ fn gmail_repeating_router(messages: Vec<Value>, requests: Arc<Mutex<Vec<Value>>>
 async fn gmail_sync_stops_after_an_all_already_synced_page() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -902,7 +902,7 @@ fn notion_cap_router(pages: Vec<Value>, requests: Arc<Mutex<Vec<Value>>>) -> Rou
 async fn notion_sync_max_items_caps_ingest_to_exact_count() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -982,7 +982,7 @@ fn notion_depth_pages(recent: usize, old: usize) -> Vec<Value> {
 async fn notion_sync_depth_days_filters_old_pages() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -1093,7 +1093,7 @@ fn linear_cap_router(issues: Vec<Value>, requests: Arc<Mutex<Vec<Value>>>) -> Ro
 async fn linear_sync_max_items_caps_ingest_to_exact_count() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -1173,7 +1173,7 @@ fn linear_depth_issues(recent: usize, old: usize) -> Vec<Value> {
 async fn linear_sync_depth_days_filters_old_issues() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -1289,7 +1289,7 @@ fn clickup_cap_router(tasks: Vec<Value>, requests: Arc<Mutex<Vec<Value>>>) -> Ro
 async fn clickup_sync_max_items_caps_ingest_to_exact_count() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -1370,7 +1370,7 @@ fn clickup_depth_tasks(recent: usize, old: usize) -> Vec<Value> {
 async fn clickup_sync_depth_days_filters_old_tasks() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -1523,7 +1523,7 @@ fn github_ctx(
 async fn github_sync_max_items_caps_ingest_to_exact_count() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -1551,7 +1551,7 @@ async fn github_sync_max_items_caps_ingest_to_exact_count() {
 async fn github_sync_without_max_items_ingests_full_page() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 
@@ -1579,7 +1579,7 @@ async fn github_sync_without_max_items_ingests_full_page() {
 async fn github_sync_depth_days_injects_updated_floor_into_query() {
     let _guard = env_lock();
     let tmp = TempDir::new().expect("tempdir");
-    let _workspace = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _workspace = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let _home = EnvGuard::set_path("HOME", tmp.path());
     let _backend = EnvGuard::unset("BACKEND_URL");
 

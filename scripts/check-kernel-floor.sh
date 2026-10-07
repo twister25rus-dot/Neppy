@@ -2,7 +2,7 @@
 # Enforce the dependency-floor ratchet declared in `scripts/kernel-floor.limits`.
 #
 # The kernel profile (`--no-default-features --features flows`) is the surface a
-# second host would embed. Left unmeasured it grows: openhuman already carries
+# second host would embed. Left unmeasured it grows: neppy already carries
 # seven unconditional heavy dependencies that a reviewer would probably have
 # questioned had a number moved when they landed. This lane is that number.
 #

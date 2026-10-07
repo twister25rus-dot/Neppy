@@ -10,11 +10,11 @@ const USER_ID = 'e2e-tool-filesystem';
  * Filesystem tool E2E spec — coverage matrix rows 6.1.1 (read), 6.1.2 (write),
  * and 6.1.3 (path-restriction denial). Tracked by issue #967.
  *
- * Drives the workspace-restricted file I/O surface — `openhuman.memory_write_file`,
- * `openhuman.memory_read_file`, `openhuman.memory_list_files` — which is the
+ * Drives the workspace-restricted file I/O surface — `neppy.memory_write_file`,
+ * `neppy.memory_read_file`, `neppy.memory_list_files` — which is the
  * same security contract the agent-facing `file_read` / `file_write` tools
  * enforce: workspace-relative paths only, parent-traversal blocked, absolute
- * paths blocked, all writes confined to `OPENHUMAN_WORKSPACE`. The Rust unit
+ * paths blocked, all writes confined to `NEPPY_WORKSPACE`. The Rust unit
  * tests in `src/neppy/tools/impl/filesystem/file_read.rs` /
  * `file_write.rs` cover the in-process tool path; this WDIO spec proves the
  * UI⇄Tauri⇄sidecar wiring honours the same gates over JSON-RPC.
@@ -82,7 +82,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
       relative_path: TEST_RELATIVE_PATH,
       bytes: TEST_CONTENT.length,
     });
-    const writeResult = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const writeResult = await callNeppyRpc<WriteResultEnvelope>('neppy.memory_write_file', {
       relative_path: TEST_RELATIVE_PATH,
       content: TEST_CONTENT,
     });
@@ -99,7 +99,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
     // This is the load-bearing "side effect proof" that the sidecar actually
     // wrote the file rather than only echoing a success payload.
     const diskRead = await callNeppyRpc<WorkspaceReadResultEnvelope>(
-      'openhuman.test_support_read_workspace_file',
+      'neppy.test_support_read_workspace_file',
       { rel_path: TEST_WORKSPACE_RELATIVE_PATH, max_bytes: 1024 }
     );
     expect(diskRead.ok).toBe(true);
@@ -110,14 +110,14 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
   it('6.1.1 reads back the file via memory_read_file and content matches', async () => {
     // Seed the canary in-test so the read assertion remains valid when the
     // suite is run with `--grep` and the write test has not preceded it.
-    const seed = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const seed = await callNeppyRpc<WriteResultEnvelope>('neppy.memory_write_file', {
       relative_path: TEST_RELATIVE_PATH,
       content: TEST_CONTENT,
     });
     expect(seed.ok).toBe(true);
 
     stepLog('issuing memory_read_file', { relative_path: TEST_RELATIVE_PATH });
-    const readResult = await callNeppyRpc<ReadResultEnvelope>('openhuman.memory_read_file', {
+    const readResult = await callNeppyRpc<ReadResultEnvelope>('neppy.memory_read_file', {
       relative_path: TEST_RELATIVE_PATH,
     });
     stepLog('read response', readResult);
@@ -127,7 +127,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
 
     // Cross-check with memory_list_files to prove directory listing also
     // honours the workspace boundary and surfaces the canary.
-    const listResult = await callNeppyRpc<ListResultEnvelope>('openhuman.memory_list_files', {
+    const listResult = await callNeppyRpc<ListResultEnvelope>('neppy.memory_list_files', {
       relative_dir: '',
     });
     stepLog('list response', listResult);
@@ -143,7 +143,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
     stepLog('issuing memory_write_file with parent-traversal payload', {
       relative_path: TRAVERSAL_PATH,
     });
-    const traversal = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const traversal = await callNeppyRpc<WriteResultEnvelope>('neppy.memory_write_file', {
       relative_path: TRAVERSAL_PATH,
       content: 'should never be written',
     });
@@ -155,7 +155,7 @@ describe('System tools — Filesystem (file_read / file_write / path restriction
     // 6.1.3b — absolute paths must also be denied; this guards a different
     // branch of the validator (`is_absolute()` short-circuit).
     stepLog('issuing memory_write_file with absolute payload', { relative_path: ABSOLUTE_PATH });
-    const absolute = await callNeppyRpc<WriteResultEnvelope>('openhuman.memory_write_file', {
+    const absolute = await callNeppyRpc<WriteResultEnvelope>('neppy.memory_write_file', {
       relative_path: ABSOLUTE_PATH,
       content: 'should never be written',
     });

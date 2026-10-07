@@ -432,7 +432,7 @@ and converting back with `message_to_chat_message` flattens
 `bound_cached_transcript_messages`' TAURI-RUST-7 trailing strip inspects, and
 what native providers reject with `400 assistant message with 'tool_calls' must
 be followed by tool messages`. (A round-trip probe confirmed the loss set:
-assistant `tool_calls`, plus `openhuman_turn_usage` `extra_metadata` and
+assistant `tool_calls`, plus `neppy_turn_usage` `extra_metadata` and
 `AssistantMessage.id`, both inert here. The tool-failure marker is *not* in it —
 that is a write-side/display-side field `read_transcript` never re-emits.)
 

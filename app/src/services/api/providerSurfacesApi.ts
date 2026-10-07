@@ -26,7 +26,7 @@ function parseQueueEnvelope(raw: unknown): RespondQueueList {
 
 export const providerSurfacesApi = {
   async listQueue(): Promise<RespondQueueList> {
-    const raw = await callCoreRpc<unknown>({ method: 'openhuman.provider_surfaces_list_queue' });
+    const raw = await callCoreRpc<unknown>({ method: 'neppy.provider_surfaces_list_queue' });
     return parseQueueEnvelope(raw);
   },
 };

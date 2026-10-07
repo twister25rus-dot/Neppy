@@ -16,7 +16,7 @@ pub const CORE_PORT_IN_BOX: u16 = 7788;
 ///
 /// Every gateway resolves to one of these and nothing else, which is what keeps
 /// the rest of the app out of this: `core_rpc_url` and `core_rpc_token` answer
-/// from here, so a screen calling `openhuman.app_state_snapshot` cannot tell a
+/// from here, so a screen calling `neppy.app_state_snapshot` cannot tell a
 /// container on another continent from the core in this process.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ActiveGateway {

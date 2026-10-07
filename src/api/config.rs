@@ -54,17 +54,17 @@
 pub const DEFAULT_API_BASE_URL: &str = "http://127.0.0.1:8788";
 
 /// Staging root. Same loopback posture as [`DEFAULT_API_BASE_URL`] — the
-/// staging/production split is kept so `OPENHUMAN_APP_ENV=staging` still
+/// staging/production split is kept so `NEPPY_APP_ENV=staging` still
 /// resolves through the documented path, but neither arm leaves the machine.
 pub const DEFAULT_STAGING_API_BASE_URL: &str = "http://127.0.0.1:8788";
 
 /// Runtime env key used by the Tauri/core side to select the app environment.
-pub const APP_ENV_VAR: &str = "OPENHUMAN_APP_ENV";
+pub const APP_ENV_VAR: &str = "NEPPY_APP_ENV";
 
 /// Runtime env key exposed to the Vite frontend bundle. Mirrors `APP_ENV_VAR`
 /// so both the core sidecar and the renderer agree on the environment without
 /// a separate IPC round-trip.
-pub const VITE_APP_ENV_VAR: &str = "VITE_OPENHUMAN_APP_ENV";
+pub const VITE_APP_ENV_VAR: &str = "VITE_NEPPY_APP_ENV";
 
 /// The path the hosted backend appends to its root to expose the
 /// OpenAI-compatible inference proxy. Joined onto [`effective_api_url`] when
@@ -72,7 +72,7 @@ pub const VITE_APP_ENV_VAR: &str = "VITE_OPENHUMAN_APP_ENV";
 ///
 /// Having this as a named constant (rather than a string literal scattered
 /// across call-sites) means a backend path rename shows up as a single diff.
-pub const OPENHUMAN_INFERENCE_PATH: &str = "/openai/v1/chat/completions";
+pub const NEPPY_INFERENCE_PATH: &str = "/openai/v1/chat/completions";
 
 // ─── Known local-AI ports ────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ const LOCAL_AI_PORTS: &[u16] = &[11434, 8000, 8080, 1234, 8888];
 /// 1. `inference_url_override` — user explicitly pointed inference at a
 ///    custom OpenAI-compatible endpoint (e.g. `https://api.openai.com/v1/chat/completions`
 ///    or a local Ollama). Used as-is; no path stripping.
-/// 2. [`effective_api_url`]`(api_url_override)` + [`OPENHUMAN_INFERENCE_PATH`] —
+/// 2. [`effective_api_url`]`(api_url_override)` + [`NEPPY_INFERENCE_PATH`] —
 ///    inference proxied through the hosted backend.
 ///
 /// # Why the split matters
@@ -120,10 +120,7 @@ pub fn effective_inference_url(
         return u.to_string();
     }
 
-    api_url(
-        &effective_api_url(api_url_override),
-        OPENHUMAN_INFERENCE_PATH,
-    )
+    api_url(&effective_api_url(api_url_override), NEPPY_INFERENCE_PATH)
 }
 
 /// Resolve the **chat/inference base URL** (used for inference routing only,
@@ -163,7 +160,7 @@ pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
     if let Some(u) = non_empty_str(api_url) {
         let is_local_ai = looks_like_local_ai_endpoint(u);
         let is_inference_provider = looks_like_inference_provider_endpoint(u);
-        let is_openhuman = looks_like_neppy_backend_endpoint(u);
+        let is_neppy = looks_like_neppy_backend_endpoint(u);
         // A public third-party inference host (openrouter.ai, api.openai.com, …)
         // set to its canonical base (`https://openrouter.ai/api/v1`) is neither
         // local-AI nor an Neppy backend, so without this check the override
@@ -181,7 +178,7 @@ pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
             is_local_ai,
             is_inference_provider,
             is_cloud_inference,
-            is_openhuman,
+            is_neppy,
             "[api/config] evaluating backend api_url override"
         );
 
@@ -210,7 +207,7 @@ pub fn effective_backend_api_url(api_url: &Option<String>) -> String {
         // OpenAI `/v1` path), so either flagging the override as an inference
         // base is enough to skip it — strictly safer against control-plane
         // misroute.
-        if (!is_local_ai && !is_inference_provider && !is_cloud_inference) || is_openhuman {
+        if (!is_local_ai && !is_inference_provider && !is_cloud_inference) || is_neppy {
             let normalized = normalize_backend_api_base_url(u);
             tracing::trace!(
                 api_url        = %redact_url_for_log(u),
@@ -430,7 +427,7 @@ fn looks_like_neppy_backend_endpoint(url: &str) -> bool {
         return false;
     };
 
-    let is_openhuman = matches!(
+    let is_neppy = matches!(
         host.as_str(),
         "api.tinyhumans.ai" | "staging-api.tinyhumans.ai"
     );
@@ -438,11 +435,11 @@ fn looks_like_neppy_backend_endpoint(url: &str) -> bool {
     tracing::debug!(
         api_url = %redacted,
         host    = %host,
-        is_openhuman,
+        is_neppy,
         "[api/config] Neppy backend classification complete"
     );
 
-    is_openhuman
+    is_neppy
 }
 
 // ─── URL normalization helpers ───────────────────────────────────────────────
@@ -557,7 +554,7 @@ fn fallback_concat(base: &str, path: &str) -> String {
 pub fn api_base_from_env() -> Option<String> {
     // 1. Runtime — each key checked independently.
     for key in ["BACKEND_URL", "VITE_BACKEND_URL"] {
-        if let Ok(v) = std::env::var(key) {
+        if let Ok(v) = crate::neppy::util::env::var(key) {
             let url = normalize_api_base_url(&v);
             if !url.is_empty() {
                 return Some(url);
@@ -584,7 +581,7 @@ pub fn api_base_from_env() -> Option<String> {
 /// compile-time bakes, each key checked independently.
 pub fn app_env_from_env() -> Option<String> {
     for key in [APP_ENV_VAR, VITE_APP_ENV_VAR] {
-        if let Ok(v) = std::env::var(key) {
+        if let Ok(v) = crate::neppy::util::env::var(key) {
             let s = v.trim().to_ascii_lowercase();
             if !s.is_empty() {
                 return Some(s);
@@ -635,8 +632,8 @@ fn compile_time_api_base_env_values() -> [Option<&'static str>; 2] {
 #[cfg(not(test))]
 fn compile_time_app_env_values() -> [Option<&'static str>; 2] {
     [
-        option_env!("OPENHUMAN_APP_ENV"),
-        option_env!("VITE_OPENHUMAN_APP_ENV"),
+        option_env!("NEPPY_APP_ENV").or(option_env!("OPENHUMAN_APP_ENV")),
+        option_env!("VITE_NEPPY_APP_ENV").or(option_env!("VITE_OPENHUMAN_APP_ENV")),
     ]
 }
 
@@ -767,9 +764,9 @@ mod tests {
                 APP_ENV_VAR,
                 VITE_APP_ENV_VAR,
             ];
-            let vars = keys.map(|k| (k, std::env::var(k).ok()));
+            let vars = keys.map(|k| (k, crate::neppy::util::env::var(k).ok()));
             for (k, _) in &vars {
-                std::env::remove_var(k);
+                crate::neppy::util::env::remove_var(k);
             }
             Self { vars }
         }
@@ -780,7 +777,7 @@ mod tests {
             for (key, value) in &self.vars {
                 match value {
                     Some(v) => std::env::set_var(key, v),
-                    None => std::env::remove_var(key),
+                    None => crate::neppy::util::env::remove_var(key),
                 }
             }
         }
@@ -980,18 +977,18 @@ mod tests {
     fn app_env_from_env_reads_runtime_var() {
         // Setting APP_ENV to "staging" flips `default_root_dir_name()` to
         // `.neppy-staging` process-wide, which breaks any concurrent test
-        // resolving the root openhuman dir. Hold the crate-wide env lock too,
+        // resolving the root neppy dir. Hold the crate-wide env lock too,
         // in the established order (TEST_ENV_LOCK before the backend lock).
         let _env_guard = crate::neppy::config::TEST_ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let _guard = env_lock();
-        let prev = std::env::var(APP_ENV_VAR).ok();
+        let prev = crate::neppy::util::env::var(APP_ENV_VAR).ok();
         std::env::set_var(APP_ENV_VAR, "staging");
         let result = app_env_from_env();
         match prev {
             Some(v) => std::env::set_var(APP_ENV_VAR, v),
-            None => std::env::remove_var(APP_ENV_VAR),
+            None => crate::neppy::util::env::remove_var(APP_ENV_VAR),
         }
         assert_eq!(result.as_deref(), Some("staging"));
     }
@@ -1003,18 +1000,18 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let _guard = env_lock();
-        let prev_p = std::env::var(APP_ENV_VAR).ok();
-        let prev_s = std::env::var(VITE_APP_ENV_VAR).ok();
+        let prev_p = crate::neppy::util::env::var(APP_ENV_VAR).ok();
+        let prev_s = crate::neppy::util::env::var(VITE_APP_ENV_VAR).ok();
         std::env::set_var(APP_ENV_VAR, "");
         std::env::set_var(VITE_APP_ENV_VAR, "staging");
         let result = app_env_from_env();
         match prev_p {
             Some(v) => std::env::set_var(APP_ENV_VAR, v),
-            None => std::env::remove_var(APP_ENV_VAR),
+            None => crate::neppy::util::env::remove_var(APP_ENV_VAR),
         }
         match prev_s {
             Some(v) => std::env::set_var(VITE_APP_ENV_VAR, v),
-            None => std::env::remove_var(VITE_APP_ENV_VAR),
+            None => crate::neppy::util::env::remove_var(VITE_APP_ENV_VAR),
         }
         assert_eq!(result.as_deref(), Some("staging"));
     }
@@ -1022,12 +1019,12 @@ mod tests {
     #[test]
     fn api_base_from_env_reads_runtime_var() {
         let _guard = env_lock();
-        let prev = std::env::var("BACKEND_URL").ok();
+        let prev = crate::neppy::util::env::var("BACKEND_URL").ok();
         std::env::set_var("BACKEND_URL", "https://staging-api.tinyhumans.ai/");
         let result = api_base_from_env();
         match prev {
             Some(v) => std::env::set_var("BACKEND_URL", v),
-            None => std::env::remove_var("BACKEND_URL"),
+            None => crate::neppy::util::env::remove_var("BACKEND_URL"),
         }
         assert_eq!(result.as_deref(), Some("https://staging-api.tinyhumans.ai"));
     }
@@ -1035,18 +1032,18 @@ mod tests {
     #[test]
     fn api_base_empty_primary_falls_through_to_secondary() {
         let _guard = env_lock();
-        let prev_p = std::env::var("BACKEND_URL").ok();
-        let prev_s = std::env::var("VITE_BACKEND_URL").ok();
+        let prev_p = crate::neppy::util::env::var("BACKEND_URL").ok();
+        let prev_s = crate::neppy::util::env::var("VITE_BACKEND_URL").ok();
         std::env::set_var("BACKEND_URL", "");
         std::env::set_var("VITE_BACKEND_URL", "https://staging-api.tinyhumans.ai/");
         let result = api_base_from_env();
         match prev_p {
             Some(v) => std::env::set_var("BACKEND_URL", v),
-            None => std::env::remove_var("BACKEND_URL"),
+            None => crate::neppy::util::env::remove_var("BACKEND_URL"),
         }
         match prev_s {
             Some(v) => std::env::set_var("VITE_BACKEND_URL", v),
-            None => std::env::remove_var("VITE_BACKEND_URL"),
+            None => crate::neppy::util::env::remove_var("VITE_BACKEND_URL"),
         }
         assert_eq!(result.as_deref(), Some("https://staging-api.tinyhumans.ai"));
     }
@@ -1231,7 +1228,7 @@ mod tests {
             );
         }
 
-        // Our own hosted backend still passes through (is_openhuman short-circuit),
+        // Our own hosted backend still passes through (is_neppy short-circuit),
         // but an UNKNOWN custom backend at a bare `/v1` base is now classified as
         // an OpenAI-compatible inference base (#4153, Signal 2) and falls back so
         // control-plane calls are not misrouted. A self-hosted backend must use a
@@ -1239,7 +1236,7 @@ mod tests {
         assert_eq!(
             effective_backend_api_url(&Some("https://api.tinyhumans.ai/v1".to_string())),
             "https://api.tinyhumans.ai",
-            "openhuman backend host must pass through"
+            "neppy backend host must pass through"
         );
         assert_eq!(
             effective_backend_api_url(&Some("https://my-backend.example/v1".to_string())),

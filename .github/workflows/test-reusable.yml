@@ -25,7 +25,7 @@ on:
         type: boolean
         default: true
       run_rust_core:
-        description: Run `cargo test -p openhuman` (core crate).
+        description: Run `cargo test -p neppy` (core crate).
         type: boolean
         default: true
       run_rust_tauri:
@@ -211,8 +211,8 @@ jobs:
           # it `--bins` silently skips them and this lane goes green having
           # compiled none of them. fleet.rs carries a `#[cfg(test)] mod`, so those
           # tests would vanish too, with no error.
-          bash scripts/ci-cancel-aware.sh cargo test -p openhuman --lib --bins --features "${FEATURES}"
-          bash scripts/ci-cancel-aware.sh cargo test -p openhuman --doc --features "${FEATURES}"
+          bash scripts/ci-cancel-aware.sh cargo test -p neppy --lib --bins --features "${FEATURES}"
+          bash scripts/ci-cancel-aware.sh cargo test -p neppy --doc --features "${FEATURES}"
 
           while IFS= read -r target; do
             [ -n "${target}" ] || continue
@@ -220,7 +220,7 @@ jobs:
               while IFS= read -r module; do
                 [ -n "${module}" ] || continue
                 echo "[test-reusable] raw coverage module: ${module}"
-                bash scripts/ci-cancel-aware.sh cargo test -p openhuman --features "${FEATURES}" --test "${target}" -- "${module}::" --test-threads=1
+                bash scripts/ci-cancel-aware.sh cargo test -p neppy --features "${FEATURES}" --test "${target}" -- "${module}::" --test-threads=1
               done < <(raw_coverage_modules)
             elif [ "${target}" = "json_rpc_e2e" ]; then
               # JSON-RPC E2E cases change process-global provider routes and
@@ -230,13 +230,13 @@ jobs:
               while IFS= read -r test_name; do
                 [ -n "${test_name}" ] || continue
                 echo "[test-reusable] JSON-RPC E2E test: ${test_name}"
-                bash scripts/ci-cancel-aware.sh cargo test -p openhuman --test "${target}" "${test_name}" -- --exact --test-threads=1
+                bash scripts/ci-cancel-aware.sh cargo test -p neppy --test "${target}" "${test_name}" -- --exact --test-threads=1
               done < <(
-                cargo test -p openhuman --test "${target}" -- --list \
+                cargo test -p neppy --test "${target}" -- --list \
                   | sed -n 's/: test$//p'
               )
             else
-              bash scripts/ci-cancel-aware.sh cargo test -p openhuman --features "${FEATURES}" --test "${target}"
+              bash scripts/ci-cancel-aware.sh cargo test -p neppy --features "${FEATURES}" --test "${target}"
             fi
           done < <(integration_test_targets)
 
@@ -309,7 +309,7 @@ jobs:
         # Note: repair_windows_acl is a helper fn, not a test.
         # security/secrets.rs is a one-line re-export with no tests of its own;
         # the old filter (-- security::secrets) silently matched nothing.
-        run: bash scripts/ci-cancel-aware.sh cargo test -p openhuman -- keyring::encrypted_store --nocapture
+        run: bash scripts/ci-cancel-aware.sh cargo test -p neppy -- keyring::encrypted_store --nocapture
 
   rust-tauri-tests:
     if: inputs.run_rust_tauri

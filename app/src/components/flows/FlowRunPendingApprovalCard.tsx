@@ -5,7 +5,7 @@
  * Actionable replacement for the old read-only "N node(s) awaiting approval"
  * banner in `FlowRunInspectorDrawer`. Renders one gate from
  * `useFlowPendingApprovals` with Approve once / Approve always / Deny,
- * routing every decision through `openhuman.approval_decide` (same RPC and
+ * routing every decision through `neppy.approval_decide` (same RPC and
  * decision vocabulary as the chat `ApprovalRequestCard`). Styling mirrors
  * that card's amber warning chrome, scaled down for the drawer's narrower
  * column.

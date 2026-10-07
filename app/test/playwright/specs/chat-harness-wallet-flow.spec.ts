@@ -91,11 +91,9 @@ async function selectedThreadId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const store = (
       window as unknown as {
-        __OPENHUMAN_STORE__?: {
-          getState?: () => { thread?: { selectedThreadId?: string | null } };
-        };
+        __NEPPY_STORE__?: { getState?: () => { thread?: { selectedThreadId?: string | null } } };
       }
-    ).__OPENHUMAN_STORE__;
+    ).__NEPPY_STORE__;
     return store?.getState?.().thread?.selectedThreadId ?? null;
   });
 }
@@ -136,11 +134,11 @@ async function waitForSocketConnected(page: Page): Promise<void> {
         page.evaluate(() => {
           const store = (
             window as unknown as {
-              __OPENHUMAN_STORE__?: {
+              __NEPPY_STORE__?: {
                 getState?: () => { socket?: { byUser?: Record<string, { status?: string }> } };
               };
             }
-          ).__OPENHUMAN_STORE__;
+          ).__NEPPY_STORE__;
           const byUser = store?.getState?.().socket?.byUser ?? {};
           return Object.values(byUser).some(entry => entry?.status === 'connected');
         }),
@@ -179,7 +177,7 @@ test.describe('Chat Harness - Wallet Flow', () => {
       .poll(async () => {
         const wallet = await callCoreRpc<{
           result?: { configured?: boolean; accounts?: unknown[] };
-        }>('openhuman.wallet_status', {});
+        }>('neppy.wallet_status', {});
         return {
           configured: Boolean(wallet.result?.configured),
           accountCount: wallet.result?.accounts?.length ?? 0,

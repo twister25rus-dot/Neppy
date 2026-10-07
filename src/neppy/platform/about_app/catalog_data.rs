@@ -247,12 +247,12 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         category: CapabilityCategory::Conversation,
         description: "Operate Neppy from a terminal through four tabs: live core logs, \
                       orchestrator chat, safe configuration, and account settings. Bare \
-                      `openhuman` opens it on an interactive non-container host; `openhuman tui` \
+                      `openhuman` opens it on an interactive non-container host; `neppy-core tui` \
                       (alias `chat`) forces it. The chat streams replies, thinking, and tools live.",
-        how_to: "Run `openhuman`, or `openhuman tui` to force the UI. Use Tab/Shift+Tab or Alt+1-4 \
+        how_to: "Run `openhuman`, or `neppy-core tui` to force the UI. Use Tab/Shift+Tab or Alt+1-4 \
                  to switch Logs, Chat, Config, and Settings. `--thread <id>` resumes a chat and \
                  `--new` starts one. Settings accepts a one-time login token and supports account \
-                 refresh and logout. Use `openhuman --no-tui` to suppress automatic launch.",
+                 refresh and logout. Use `neppy --no-tui` to suppress automatic launch.",
         status: CapabilityStatus::Beta,
         privacy: DERIVED_TO_BACKEND,
     },
@@ -528,7 +528,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
             per sync by default, overridable per source via max_commits / max_issues / \
             max_prs.",
         how_to: "Settings > Memory & Data > Memory Sources — add a GitHub repository URL. \
-            Programmatic: openhuman.memory_sources_add (RPC).",
+            Programmatic: neppy.memory_sources_add (RPC).",
         status: CapabilityStatus::Beta,
         privacy: GITHUB_REPO_SOURCE,
     },
@@ -546,8 +546,8 @@ pub(super) const CAPABILITIES: &[Capability] = &[
             memory graph, then triggers a full sync. Already-connected sources are migrated to \
             the new defaults once.",
         how_to: "Intelligence > Memory Sources — toggle a source, open its gear for per-source \
-            limits, or use \"All In\". Programmatic: openhuman.memory_sources_update and \
-            openhuman.memory_sources_apply_all_in (RPC).",
+            limits, or use \"All In\". Programmatic: neppy.memory_sources_update and \
+            neppy.memory_sources_apply_all_in (RPC).",
         status: CapabilityStatus::Beta,
         privacy: LOCAL_RAW,
     },
@@ -557,7 +557,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "memory_sources",
         category: CapabilityCategory::Intelligence,
         description: "Discover local Codex and Claude Code session histories, retain only human-authored decisions and corrections, and distill them into a durable TinyCortex persona memory pack. Tool output, reasoning, developer prompts, and subagent traffic are excluded before inference.",
-        how_to: "Brain > Sources > Coding-agent sessions > Ingest new sessions. Programmatic: openhuman.memory_sources_coding_session_status and openhuman.memory_sources_ingest_coding_sessions (RPC).",
+        how_to: "Brain > Sources > Coding-agent sessions > Ingest new sessions. Programmatic: neppy.memory_sources_coding_session_status and neppy.memory_sources_ingest_coding_sessions (RPC).",
         status: CapabilityStatus::Beta,
         privacy: CODING_SESSION_TO_BACKEND,
     },
@@ -574,9 +574,9 @@ pub(super) const CAPABILITIES: &[Capability] = &[
             the provider intends — handy for keeping credit spend predictable. Unset defaults to \
             every 24h.",
         how_to: "Intelligence > Memory Sources — choose a Sync every… preset or Manual only. \
-            Programmatic: openhuman.config_get_memory_sync_settings / \
-            openhuman.config_update_memory_sync_settings (RPC); ops override via the \
-            OPENHUMAN_MEMORY_SYNC_INTERVAL_SECS env var (0 = manual).",
+            Programmatic: neppy.config_get_memory_sync_settings / \
+            neppy.config_update_memory_sync_settings (RPC); ops override via the \
+            NEPPY_MEMORY_SYNC_INTERVAL_SECS env var (0 = manual).",
         status: CapabilityStatus::Beta,
         privacy: LOCAL_RAW,
     },
@@ -640,7 +640,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "intelligence",
         category: CapabilityCategory::Intelligence,
         description: "Search a configured self-hosted SearXNG instance from agent and MCP tools, returning normalized title, URL, snippet, and source results.",
-        how_to: "Set `[searxng] enabled = true` and `base_url` in config.toml, or use OPENHUMAN_SEARXNG_* environment variables.",
+        how_to: "Set `[searxng] enabled = true` and `base_url` in config.toml, or use NEPPY_SEARXNG_* environment variables.",
         status: CapabilityStatus::Beta,
         privacy: SEARXNG_RAW_TO_CONFIGURED_INSTANCE,
     },
@@ -650,7 +650,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "intelligence",
         category: CapabilityCategory::Intelligence,
         description: "Discover Neppy's MCP stdio tools and controller-backed tools from one local registry, including versions, routes, input/output schemas, allowed agents, and health state.",
-        how_to: "Call openhuman.tool_registry_list over core JSON-RPC, or openhuman.tool_registry_get with a tool_id such as memory.search.",
+        how_to: "Call neppy.tool_registry_list over core JSON-RPC, or neppy.tool_registry_get with a tool_id such as memory.search.",
         status: CapabilityStatus::Beta,
         privacy: LOCAL_RAW,
     },
@@ -958,7 +958,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         domain: "local_ai",
         category: CapabilityCategory::LocalAI,
         description: "Run multi-step project tasks on an on-device MLX model with bounded memory: one request at a time, idle unload, pressure-aware stop and resume, an incremental project index, and resumable checkpoints.",
-        how_to: "RPC: openhuman.local_assistant_start_task; worker state via openhuman.mlx_worker_status",
+        how_to: "RPC: neppy.local_assistant_start_task; worker state via neppy.mlx_worker_status",
         status: CapabilityStatus::Beta,
         privacy: None,
     },
@@ -1585,6 +1585,24 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         status: CapabilityStatus::Beta,
         privacy: LOCAL_CREDENTIALS,
     },
+    Capability {
+        id: "conversation.debug_mode",
+        name: "Debug Mode",
+        domain: "debug_mode",
+        category: CapabilityCategory::Conversation,
+        description: "A development chat that can read and edit Neppy's own source repository, \
+                      run its lint, type and test checks, and report what changed. Every turn \
+                      saves a checkpoint first, so any task can be rolled back (a pre-rollback \
+                      checkpoint keeps the rollback itself reversible). Commits stage only the \
+                      files the task changed, run the repository's own hooks, and never push; \
+                      each commit and rollback needs your explicit confirmation. File contents \
+                      the agent reads are sent to the configured inference provider.",
+        how_to: "Open Debug in the sidebar (requires the app's source repository, set via \
+                 NEPPY_DEBUG_PROJECT_ROOT). Or call neppy.debug_mode_status / task_list / diff / \
+                 rollback / commit over RPC.",
+        status: CapabilityStatus::Beta,
+        privacy: CODING_SESSION_TO_BACKEND,
+    },
     // ── Update ──────────────────────────────────────────────────────────────
     // ── Mobile (iOS client) ─────────────────────────────────────────────────
     Capability {
@@ -1674,7 +1692,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
         description: "Set how long a single tool or action may run before it is cancelled \
                       (1–3600 seconds, default 120). Increase it when a large local model is \
                       interrupted before finishing its response. Applies to the next tool call \
-                      without a restart; the OPENHUMAN_TOOL_TIMEOUT_SECS env var still overrides it.",
+                      without a restart; the NEPPY_TOOL_TIMEOUT_SECS env var still overrides it.",
         how_to: "Settings → Agent OS access → Action timeout",
         status: CapabilityStatus::Stable,
         privacy: None,
@@ -1749,8 +1767,8 @@ pub(super) const CAPABILITIES: &[Capability] = &[
                       reduced blast radius on remote, channel, cron, or background sessions. \
                       Configurable per agent/session/channel with safe defaults for non-main sessions.",
         how_to: "Set sandbox_mode = \"sandboxed\" in agent.toml, or configure runtime.kind = \
-                 \"docker\" in the TOML config. Use openhuman.sandbox_status / \
-                 openhuman.sandbox_resolve_policy RPC to inspect.",
+                 \"docker\" in the TOML config. Use neppy.sandbox_status / \
+                 neppy.sandbox_resolve_policy RPC to inspect.",
         status: CapabilityStatus::Beta,
         privacy: None,
     },
@@ -1779,7 +1797,7 @@ pub(super) const CAPABILITIES: &[Capability] = &[
                       memory), renders the hosted read surface, and can run the paid Medulla API \
                       directly with its local contact, session-history, and send-to-agent tools.",
         how_to: "Intelligence > Orchestration (pair a wrapped session, then chat via the Master \
-                 window), or call openhuman.orchestration_run. Prompt, graph, and resource \
+                 window), or call neppy.orchestration_run. Prompt, graph, and resource \
                  overrides live under [orchestration.medulla] in config.toml.",
         status: CapabilityStatus::Beta,
         privacy: DERIVED_TO_BACKEND,

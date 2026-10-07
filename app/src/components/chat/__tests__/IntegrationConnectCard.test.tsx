@@ -74,7 +74,7 @@ describe('IntegrationConnectCard', () => {
     // Polling detected the live connection → parked tool call resolved as approved.
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: 'req-connect-1', decision: 'approve_once' },
       })
     );
@@ -90,7 +90,7 @@ describe('IntegrationConnectCard', () => {
     fireEvent.click(screen.getByText('Deny'));
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.approval_decide',
+      method: 'neppy.approval_decide',
       params: { request_id: 'req-connect-1', decision: 'deny' },
     });
     await waitFor(() =>
@@ -109,7 +109,7 @@ describe('IntegrationConnectCard', () => {
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: 'req-connect-1', decision: 'deny' },
       })
     );
@@ -273,7 +273,7 @@ describe('IntegrationConnectCard', () => {
     // The ACTIVE row wins over the stale FAILED row → approve.
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: 'req-connect-1', decision: 'approve_once' },
       })
     );
@@ -294,7 +294,7 @@ describe('IntegrationConnectCard', () => {
     fireEvent.click(screen.getByText('Deny'));
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: 'req-connect-1', decision: 'deny' },
       })
     );
@@ -330,7 +330,7 @@ describe('IntegrationConnectCard', () => {
 
       // Timeout resolves the parked tool call as deny so the agent resumes.
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.approval_decide',
+        method: 'neppy.approval_decide',
         params: { request_id: 'req-connect-1', decision: 'deny' },
       });
     } finally {

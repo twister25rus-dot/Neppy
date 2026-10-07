@@ -1,4 +1,4 @@
-//! Thin HTTP wrapper over the openhuman backend's `/agent-integrations/crypto/*`
+//! Thin HTTP wrapper over the neppy backend's `/agent-integrations/crypto/*`
 //! routes (deBridge DLN — see backend PR #852). All calls go through the shared
 //! [`IntegrationClient`] so they inherit Bearer JWT auth, timeout, the
 //! `{success,data}` envelope parsing, and proxy behavior.

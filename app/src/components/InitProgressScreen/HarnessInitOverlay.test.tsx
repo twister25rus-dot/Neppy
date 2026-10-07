@@ -129,7 +129,7 @@ describe('HarnessInitOverlay', () => {
   it('stops polling when the core does not expose harness_init_status (#5157)', async () => {
     vi.useFakeTimers();
     fetchHarnessInitStatus.mockRejectedValue(
-      new CoreRpcError('unknown method: openhuman.harness_init_status', 'method_not_found')
+      new CoreRpcError('unknown method: neppy.harness_init_status', 'method_not_found')
     );
 
     const { container } = renderWithProviders(<HarnessInitOverlay />);

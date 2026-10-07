@@ -313,6 +313,7 @@ impl SecurityPolicy {
         self.check_resolved_against_forbidden(&canonical_ancestor, &workspace_root)?;
         self.check_resolved_against_forbidden(&result, &workspace_root)?;
         self.check_cross_profile(&result)?;
+        self.check_debug_protected_write(&result)?;
 
         log::debug!(
             "[security] validate_parent_path: '{}' resolved parent to '{}'",
@@ -489,6 +490,25 @@ impl SecurityPolicy {
                 .canonicalize()
                 .unwrap_or_else(|_| turn_root.clone());
             if path.starts_with(&turn_root) || path.starts_with(&canonical_turn_root) {
+                return true;
+            }
+        }
+        // Debug Mode's extra roots (`debug_mode.external_paths`): same strength
+        // as the turn root above — read/write for this turn, after the
+        // `is_always_forbidden` gate, so credential stores stay unreachable.
+        // Empty (and free) outside a Debug turn.
+        let extras = crate::neppy::agent::turn_workspace::extra_roots();
+        if !extras.is_empty() && path.is_absolute() {
+            // Decide on the resolved location when it can be resolved (a
+            // symlink inside an extra root must not lead out of it); fall back
+            // to the literal path for a target that does not exist yet.
+            let resolved = path.canonicalize().ok().or_else(|| {
+                let parent = path.parent()?.canonicalize().ok()?;
+                Some(parent.join(path.file_name()?))
+            });
+            let probe = resolved.as_deref().unwrap_or(path);
+            if !Self::is_always_forbidden(probe) && extras.iter().any(|e| probe.starts_with(e)) {
+                log::trace!("[security:policy] path granted by a debug extra root");
                 return true;
             }
         }

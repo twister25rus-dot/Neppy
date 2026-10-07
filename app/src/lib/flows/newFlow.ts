@@ -11,7 +11,7 @@ export const BLANK_TRIGGER_NODE_ID = 'trigger';
 /**
  * A minimal, structurally-valid `WorkflowGraph` for "start from scratch": a
  * single `manual` trigger node and no edges. Passes the same
- * `openhuman.flows_validate` rules the templates do (exactly one trigger,
+ * `neppy.flows_validate` rules the templates do (exactly one trigger,
  * unique ids, no dangling edges), so `flows_create` accepts it directly.
  *
  * `name` is used for both the flow name (passed separately to `flows_create`)

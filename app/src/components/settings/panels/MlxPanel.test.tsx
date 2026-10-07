@@ -83,7 +83,7 @@ function cacheListing(overrides: Record<string, unknown> = {}) {
 function router(handlers: Record<string, unknown>) {
   return (arg: { method: string }) => {
     if (arg.method in handlers) return Promise.resolve(handlers[arg.method]);
-    if (arg.method === 'openhuman.mlx_models_list') return Promise.resolve(cacheListing());
+    if (arg.method === 'neppy.mlx_models_list') return Promise.resolve(cacheListing());
     return Promise.resolve(status());
   };
 }
@@ -111,7 +111,7 @@ describe('MlxPanel', () => {
     // This is the number that decides whether a second server can start, so
     // it is the one thing the panel must always surface.
     callCoreRpc.mockImplementation(
-      router({ 'openhuman.mlx_status': status({ memory_used_gib: 14.4 }) })
+      router({ 'neppy.mlx_status': status({ memory_used_gib: 14.4 }) })
     );
     render(<MlxPanel />);
 
@@ -128,9 +128,7 @@ describe('MlxPanel', () => {
     unmount();
 
     callCoreRpc.mockImplementation(
-      router({
-        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
-      })
+      router({ 'neppy.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }) })
     );
     render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.stop')).toBeInTheDocument());
@@ -140,7 +138,7 @@ describe('MlxPanel', () => {
 
   it('starts the addressed server by id', async () => {
     callCoreRpc.mockImplementation(
-      router({ 'openhuman.mlx_status': status({ servers: [server({ id: 'vision' })] }) })
+      router({ 'neppy.mlx_status': status({ servers: [server({ id: 'vision' })] }) })
     );
     render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.start')).toBeInTheDocument());
@@ -149,7 +147,7 @@ describe('MlxPanel', () => {
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mlx_start',
+        method: 'neppy.mlx_start',
         params: { id: 'vision' },
       })
     );
@@ -161,7 +159,7 @@ describe('MlxPanel', () => {
     const refusal =
       'mlx-community/Qwen3.8-27B-nvfp4 needs about 14.4 GiB but only 9.1 GiB of the 25.2 GiB MLX budget is free. Stop another MLX server first, or raise mlx.memory_budget_gib.';
     callCoreRpc.mockImplementation((arg: { method: string }) => {
-      if (arg.method === 'openhuman.mlx_start') return Promise.reject(new Error(refusal));
+      if (arg.method === 'neppy.mlx_start') return Promise.reject(new Error(refusal));
       return router({})(arg);
     });
 
@@ -182,7 +180,7 @@ describe('MlxPanel', () => {
   });
 
   it('says when the runtime is switched off', async () => {
-    callCoreRpc.mockImplementation(router({ 'openhuman.mlx_status': status({ enabled: false }) }));
+    callCoreRpc.mockImplementation(router({ 'neppy.mlx_status': status({ enabled: false }) }));
     render(<MlxPanel />);
 
     await waitFor(() => expect(screen.getByText('mlx.disabledNotice')).toBeInTheDocument());
@@ -191,15 +189,15 @@ describe('MlxPanel', () => {
   it('loads the log tail only when details are opened', async () => {
     callCoreRpc.mockImplementation(
       router({
-        'openhuman.mlx_logs': { id: 'primary', lines: ['[err] out of memory'] },
-        'openhuman.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
+        'neppy.mlx_logs': { id: 'primary', lines: ['[err] out of memory'] },
+        'neppy.mlx_status': status({ servers: [server({ state: 'ready', port: 8794 })] }),
       })
     );
 
     render(<MlxPanel />);
     await waitFor(() => expect(screen.getByText('mlx.showDetails')).toBeInTheDocument());
     expect(callCoreRpc).not.toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.mlx_logs' })
+      expect.objectContaining({ method: 'neppy.mlx_logs' })
     );
 
     await userEvent.click(screen.getByText('mlx.showDetails'));
@@ -239,14 +237,14 @@ describe('MlxPanel', () => {
 
     // First click only arms the confirmation; nothing is deleted yet.
     expect(callCoreRpc).not.toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.mlx_models_delete' })
+      expect.objectContaining({ method: 'neppy.mlx_models_delete' })
     );
 
     await userEvent.click(screen.getByText('mlx.confirmDelete'));
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mlx_models_delete',
+        method: 'neppy.mlx_models_delete',
         params: { model_id: 'mlx-community/Qwen3.8-27B-nvfp4' },
       })
     );
@@ -254,7 +252,7 @@ describe('MlxPanel', () => {
 
   it('survives a malformed cache payload rather than blanking the panel', async () => {
     // A shape change upstream must not take down the server cards above it.
-    callCoreRpc.mockImplementation(router({ 'openhuman.mlx_models_list': { unexpected: true } }));
+    callCoreRpc.mockImplementation(router({ 'neppy.mlx_models_list': { unexpected: true } }));
     render(<MlxPanel />);
 
     await waitFor(() => expect(screen.getByText('mlx.start')).toBeInTheDocument());
@@ -264,8 +262,8 @@ describe('MlxPanel', () => {
   it('renders the redacted command rather than hiding what ran', async () => {
     callCoreRpc.mockImplementation(
       router({
-        'openhuman.mlx_logs': { id: 'primary', lines: [] },
-        'openhuman.mlx_status': status({
+        'neppy.mlx_logs': { id: 'primary', lines: [] },
+        'neppy.mlx_status': status({
           servers: [
             server({
               state: 'ready',
@@ -315,7 +313,7 @@ describe('MlxPanel model selection and chat routing', () => {
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mlx_update_server',
+        method: 'neppy.mlx_update_server',
         params: { id: 'primary', patch: { model: 'mlx-community/Qwen3.8-27B-nvfp4' } },
       })
     );
@@ -325,7 +323,7 @@ describe('MlxPanel model selection and chat routing', () => {
     // Without this the slot would stay loaded after the user cleared it.
     callCoreRpc.mockImplementation(
       router({
-        'openhuman.mlx_status': status({
+        'neppy.mlx_status': status({
           servers: [
             server({ settings: { model: 'mlx-community/Qwen3.8-27B-nvfp4', embedding_model: '' } }),
           ],
@@ -339,7 +337,7 @@ describe('MlxPanel model selection and chat routing', () => {
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mlx_update_server',
+        method: 'neppy.mlx_update_server',
         params: { id: 'primary', patch: { model: '' } },
       })
     );
@@ -348,7 +346,7 @@ describe('MlxPanel model selection and chat routing', () => {
   it('a speech model is inferred into the speech slot, not chat', async () => {
     callCoreRpc.mockImplementation(
       router({
-        'openhuman.mlx_models_list': cacheListing({
+        'neppy.mlx_models_list': cacheListing({
           models: [{ id: 'mlx-community/whisper-large-v3', size_gib: 3.1, looks_like_mlx: true }],
         }),
       })
@@ -360,7 +358,7 @@ describe('MlxPanel model selection and chat routing', () => {
 
     await waitFor(() =>
       expect(callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mlx_update_server',
+        method: 'neppy.mlx_update_server',
         params: { id: 'primary', patch: { stt_model: 'mlx-community/whisper-large-v3' } },
       })
     );
@@ -371,7 +369,7 @@ describe('MlxPanel model selection and chat routing', () => {
     // that is serving, which is precisely what the first release got wrong.
     callCoreRpc.mockImplementation(
       router({
-        'openhuman.mlx_status': status({
+        'neppy.mlx_status': status({
           chat_provider: 'mlx:mlx-community/Qwen3.8-27B-nvfp4',
           chat_uses_mlx: true,
           servers: [

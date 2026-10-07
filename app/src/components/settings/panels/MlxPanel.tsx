@@ -113,8 +113,8 @@ export default function MlxPanel() {
   const load = useCallback(async () => {
     try {
       const [statusResp, cacheResp] = await Promise.all([
-        callCoreRpc<MlxStatus>({ method: 'openhuman.mlx_status', params: {} }),
-        callCoreRpc<CacheListing>({ method: 'openhuman.mlx_models_list', params: {} }),
+        callCoreRpc<MlxStatus>({ method: 'neppy.mlx_status', params: {} }),
+        callCoreRpc<CacheListing>({ method: 'neppy.mlx_models_list', params: {} }),
       ]);
       if (!mounted.current) return;
       setStatus(statusResp);
@@ -158,7 +158,7 @@ export default function MlxPanel() {
     async (modelId: string) => {
       setError(null);
       try {
-        await callCoreRpc({ method: 'openhuman.mlx_models_delete', params: { model_id: modelId } });
+        await callCoreRpc({ method: 'neppy.mlx_models_delete', params: { model_id: modelId } });
         setConfirmingDelete(null);
         await load();
       } catch (e) {
@@ -179,7 +179,7 @@ export default function MlxPanel() {
       setBusyId(id);
       setError(null);
       try {
-        await callCoreRpc({ method: 'openhuman.mlx_update_server', params: { id, patch } });
+        await callCoreRpc({ method: 'neppy.mlx_update_server', params: { id, patch } });
         await load();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -209,7 +209,7 @@ export default function MlxPanel() {
     async (backend: string) => {
       setError(null);
       try {
-        await callCoreRpc({ method: 'openhuman.mlx_set_embeddings_backend', params: { backend } });
+        await callCoreRpc({ method: 'neppy.mlx_set_embeddings_backend', params: { backend } });
         await load();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -227,7 +227,7 @@ export default function MlxPanel() {
       setExpanded(id);
       try {
         const resp = await callCoreRpc<{ id: string; lines: string[] }>({
-          method: 'openhuman.mlx_logs',
+          method: 'neppy.mlx_logs',
           params: { id, limit: 40 },
         });
         if (mounted.current) setLogs(prev => ({ ...prev, [id]: resp.lines }));
@@ -441,21 +441,21 @@ export default function MlxPanel() {
                     variant="secondary"
                     disabled={busy}
                     analyticsId="mlx-server-stop"
-                    onClick={() => void act(server.id, 'openhuman.mlx_stop')}>
+                    onClick={() => void act(server.id, 'neppy.mlx_stop')}>
                     {t('mlx.stop')}
                   </Button>
                   <Button
                     variant="secondary"
                     disabled={busy}
                     analyticsId="mlx-server-restart"
-                    onClick={() => void act(server.id, 'openhuman.mlx_restart')}>
+                    onClick={() => void act(server.id, 'neppy.mlx_restart')}>
                     {t('mlx.restart')}
                   </Button>
                   <Button
                     variant="secondary"
                     disabled={busy}
                     analyticsId="mlx-server-unload"
-                    onClick={() => void act(server.id, 'openhuman.mlx_unload')}>
+                    onClick={() => void act(server.id, 'neppy.mlx_unload')}>
                     {t('mlx.unload')}
                   </Button>
                 </>
@@ -464,7 +464,7 @@ export default function MlxPanel() {
                   variant="primary"
                   disabled={busy}
                   analyticsId="mlx-server-start"
-                  onClick={() => void act(server.id, 'openhuman.mlx_start')}>
+                  onClick={() => void act(server.id, 'neppy.mlx_start')}>
                   {t('mlx.start')}
                 </Button>
               )}

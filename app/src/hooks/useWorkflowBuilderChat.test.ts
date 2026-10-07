@@ -10,9 +10,9 @@ import type {
 import type { ThreadMessage } from '../types/thread';
 import { useWorkflowBuilderChat, type WorkflowBuilderSendResult } from './useWorkflowBuilderChat';
 
-// The hook now runs the builder server-side via `openhuman.flows_build`.
+// The hook now runs the builder server-side via `neppy.flows_build`.
 const buildWorkflow = vi.hoisted(() => vi.fn());
-// Stop button cancels the in-flight turn via `openhuman.flows_build_cancel`
+// Stop button cancels the in-flight turn via `neppy.flows_build_cancel`
 // (the RPC that actually signals the running agent turn to stop — unlike the
 // shared `chatCancel`/`channel_web_cancel` primitive, which silently no-ops
 // for a `flows_build` turn since it runs inline and is never registered

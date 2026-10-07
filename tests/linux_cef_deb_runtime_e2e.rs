@@ -1,7 +1,7 @@
 //! E2E: Linux CEF deb package runtime - core binary resolution
 //!
 //! Tests the core binary resolution paths introduced in PR #3:
-//! - OPENHUMAN_CORE_BIN env override
+//! - NEPPY_CORE_BIN env override
 //! - Packaged Linux paths (/usr/bin/neppy-core, /usr/lib/Neppy/neppy-core)
 //! - Staged sidecar detection in dev builds
 //! - Fallback to self-subcommand
@@ -16,7 +16,7 @@ use std::sync::{Mutex, MutexGuard};
 
 /// Serializes every env-mutating test in this file. `std::env` is
 /// process-global; cargo runs these tests in parallel within one binary,
-/// and several mutate the SAME vars (e.g. `OPENHUMAN_CORE_BIN`), so without
+/// and several mutate the SAME vars (e.g. `NEPPY_CORE_BIN`), so without
 /// this an interleaving made one test read back another's value and the
 /// `assert_eq!` flaked. `EnvGuard` holds this lock for its whole lifetime,
 /// so at most one env-mutating test runs at a time. Poison-safe (a
@@ -35,7 +35,7 @@ struct EnvGuard {
 impl EnvGuard {
     fn set(key: &'static str, value: &str) -> Self {
         let lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self {
             key,
@@ -46,8 +46,8 @@ impl EnvGuard {
 
     fn unset(key: &'static str) -> Self {
         let lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self {
             key,
             old,
@@ -61,7 +61,7 @@ impl Drop for EnvGuard {
         if let Some(old) = &self.old {
             std::env::set_var(self.key, old);
         } else {
-            std::env::remove_var(self.key);
+            neppy_core::neppy::util::env::remove_var(self.key);
         }
     }
 }
@@ -84,7 +84,7 @@ fn create_fake_core_binary(dir: &std::path::Path, name: &str) -> PathBuf {
     path
 }
 
-/// Test that OPENHUMAN_CORE_BIN override takes precedence when file exists.
+/// Test that NEPPY_CORE_BIN override takes precedence when file exists.
 #[test]
 fn core_bin_env_override_takes_precedence_when_exists() {
     let temp_dir = std::env::temp_dir().join("neppy-core-test-override");
@@ -96,14 +96,16 @@ fn core_bin_env_override_takes_precedence_when_exists() {
     let fake_core_str = fake_core.to_str().unwrap();
 
     // Set the env override
-    let _guard = EnvGuard::set("OPENHUMAN_CORE_BIN", fake_core_str);
+    let _guard = EnvGuard::set("NEPPY_CORE_BIN", fake_core_str);
 
     // Import and call the function from the tauri crate
     // We can't directly import from src-tauri, but we verify the behavior
     // by checking that the env var is set and file exists
     assert!(fake_core.exists(), "Fake core binary should exist");
     assert_eq!(
-        std::env::var("OPENHUMAN_CORE_BIN").ok().as_deref(),
+        neppy_core::neppy::util::env::var("NEPPY_CORE_BIN")
+            .ok()
+            .as_deref(),
         Some(fake_core_str)
     );
 
@@ -111,15 +113,17 @@ fn core_bin_env_override_takes_precedence_when_exists() {
     let _ = fs::remove_dir_all(&temp_dir);
 }
 
-/// Test that OPENHUMAN_CORE_BIN override gracefully handles non-existent files.
+/// Test that NEPPY_CORE_BIN override gracefully handles non-existent files.
 #[test]
 fn core_bin_env_override_graceful_when_nonexistent() {
     // Set env override to a non-existent path
-    let _guard = EnvGuard::set("OPENHUMAN_CORE_BIN", "/nonexistent/path/neppy-core");
+    let _guard = EnvGuard::set("NEPPY_CORE_BIN", "/nonexistent/path/neppy-core");
 
     // Verify the env var is set
     assert_eq!(
-        std::env::var("OPENHUMAN_CORE_BIN").ok().as_deref(),
+        neppy_core::neppy::util::env::var("NEPPY_CORE_BIN")
+            .ok()
+            .as_deref(),
         Some("/nonexistent/path/neppy-core")
     );
 
@@ -156,8 +160,8 @@ fn core_bin_packaged_linux_paths_order() {
 fn core_port_env_configuration() {
     // Test default port
     {
-        let _guard = EnvGuard::unset("OPENHUMAN_CORE_PORT");
-        let port = std::env::var("OPENHUMAN_CORE_PORT")
+        let _guard = EnvGuard::unset("NEPPY_CORE_PORT");
+        let port = neppy_core::neppy::util::env::var("NEPPY_CORE_PORT")
             .ok()
             .and_then(|v| v.parse::<u16>().ok())
             .unwrap_or(7788);
@@ -166,8 +170,8 @@ fn core_port_env_configuration() {
 
     // Test custom port
     {
-        let _guard = EnvGuard::set("OPENHUMAN_CORE_PORT", "9999");
-        let port = std::env::var("OPENHUMAN_CORE_PORT")
+        let _guard = EnvGuard::set("NEPPY_CORE_PORT", "9999");
+        let port = neppy_core::neppy::util::env::var("NEPPY_CORE_PORT")
             .ok()
             .and_then(|v| v.parse::<u16>().ok())
             .unwrap_or(7788);
@@ -199,12 +203,12 @@ fn core_rpc_url_format() {
     }
 }
 
-/// Test OPENHUMAN_CORE_RPC_URL environment variable handling.
+/// Test NEPPY_CORE_RPC_URL environment variable handling.
 #[test]
 fn core_rpc_url_env_override() {
     // Test with env var set
-    let _guard = EnvGuard::set("OPENHUMAN_CORE_RPC_URL", "http://localhost:8888/rpc");
-    let url = std::env::var("OPENHUMAN_CORE_RPC_URL").unwrap();
+    let _guard = EnvGuard::set("NEPPY_CORE_RPC_URL", "http://localhost:8888/rpc");
+    let url = neppy_core::neppy::util::env::var("NEPPY_CORE_RPC_URL").unwrap();
     assert_eq!(url, "http://localhost:8888/rpc");
 
     // Verify format

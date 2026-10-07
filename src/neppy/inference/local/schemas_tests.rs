@@ -119,9 +119,9 @@ async fn install_piper_handler_serializes_concurrent_calls() {
     // `install_piper::tests::HermeticInstall`: env lock, then inference guard).
     let _inference = crate::neppy::inference::inference_test_guard();
     let tmp = TempDir::new().unwrap();
-    let previous_workspace = std::env::var_os("OPENHUMAN_WORKSPACE");
+    let previous_workspace = crate::neppy::util::env::var_os("NEPPY_WORKSPACE");
     unsafe {
-        std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
+        std::env::set_var("NEPPY_WORKSPACE", tmp.path());
     }
 
     let slot = crate::neppy::inference::local::voice_install_common::try_acquire_install_slot(
@@ -149,8 +149,8 @@ async fn install_piper_handler_serializes_concurrent_calls() {
 
     unsafe {
         match previous_workspace {
-            Some(previous) => std::env::set_var("OPENHUMAN_WORKSPACE", previous),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(previous) => std::env::set_var("NEPPY_WORKSPACE", previous),
+            None => crate::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
     drop(slot);

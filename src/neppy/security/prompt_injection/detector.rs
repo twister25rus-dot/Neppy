@@ -2,7 +2,6 @@ use once_cell::sync::Lazy;
 use regex::{Regex, RegexSet};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::env;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -197,7 +196,7 @@ static DETECTION_RULE_SET: Lazy<RegexSet> = Lazy::new(|| {
 });
 
 static OPTIONAL_CLASSIFIER: Lazy<Option<Box<dyn OptionalClassifier>>> = Lazy::new(|| {
-    let choice = env::var("OPENHUMAN_PROMPT_INJECTION_CLASSIFIER")
+    let choice = crate::neppy::util::env::var("NEPPY_PROMPT_INJECTION_CLASSIFIER")
         .unwrap_or_else(|_| "off".to_string())
         .to_ascii_lowercase();
     let classifier: Option<Box<dyn OptionalClassifier>> = match choice.as_str() {

@@ -45,7 +45,7 @@ describe('useMemoryIngestionStatus', () => {
       lastSuccess: true,
     });
     expect(result.current.error).toBeNull();
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.memory_ingestion_status' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.memory_ingestion_status' });
   });
 
   it('reports an error when the RPC fails and keeps idle defaults', async () => {

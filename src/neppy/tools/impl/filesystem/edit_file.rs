@@ -147,6 +147,9 @@ impl EditFileTool {
             Ok(p) => p,
             Err(msg) => return Ok(ToolResult::error(msg)),
         };
+        if let Err(msg) = path_policy.check_debug_protected_write(&resolved) {
+            return Ok(ToolResult::error(msg));
+        }
 
         if let Ok(meta) = tokio::fs::metadata(&resolved).await {
             if meta.len() > MAX_FILE_BYTES {

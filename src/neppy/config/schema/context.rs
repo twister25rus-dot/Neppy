@@ -112,7 +112,7 @@ pub struct ContextConfig {
     ///
     /// This is invisible infrastructure (like microcompact/autocompact): no
     /// user-facing UI. The only reason to flip it off is a support / debugging
-    /// / A/B bisect, via config or the `OPENHUMAN_COMPACTION=0` env override.
+    /// / A/B bisect, via config or the `NEPPY_COMPACTION=0` env override.
     /// See `compaction-plan.md`.
     #[serde(default = "default_true")]
     pub compaction_enabled: bool,

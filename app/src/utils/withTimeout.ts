@@ -25,7 +25,7 @@ export async function withTimeout<T>(
   }
 }
 
-/** Default matches core `OPENHUMAN_TOOL_TIMEOUT_SECS` (120). */
+/** Default matches core `NEPPY_TOOL_TIMEOUT_SECS` (120). */
 export function toolExecutionTimeoutMsFromEnv(): number {
   return Math.round(TOOL_TIMEOUT_SECS * 1000);
 }

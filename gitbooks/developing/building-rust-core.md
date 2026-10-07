@@ -9,7 +9,7 @@ This page is the contributor-facing reference for compiling the Rust core on a f
 
 It covers the **repo-root crate only**:
 
-- Cargo package: `openhuman`
+- Cargo package: `neppy`
 - Binary: `neppy-core`
 - Library: `neppy_core`
 
@@ -67,13 +67,13 @@ cargo test --manifest-path Cargo.toml
 
 Notes:
 
-- The **package** name is `openhuman`, but the runnable binary is **`neppy-core`**.
-- If you prefer package-oriented cargo commands for packager scripts, use `-p openhuman`.
+- The **package** name is `neppy`, but the runnable binary is **`neppy-core`**.
+- If you prefer package-oriented cargo commands for packager scripts, use `-p neppy`.
 - The built binary lands at `target/debug/neppy-core` or `target/release/neppy-core`.
 
 ### Faster local linking (optional)
 
-The `openhuman` core crate links a large single rlib, so the edit → `cargo
+The `neppy` core crate links a large single rlib, so the edit → `cargo
 check`/`cargo test` inner loop is frequently link-bound. A faster linker (mold
 on Linux, lld on macOS) can cut a large slice off every incremental relink.
 [`.cargo/config.toml`](../../.cargo/config.toml) documents the manual

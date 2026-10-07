@@ -19,7 +19,7 @@ pub use tinychannels::security::{
 };
 
 /// Environment variable for the core JSON-RPC bearer token (see `crate::core::auth`).
-pub const CORE_TOKEN_ENV_VAR: &str = "OPENHUMAN_CORE_TOKEN";
+pub const CORE_TOKEN_ENV_VAR: &str = "NEPPY_CORE_TOKEN";
 
 /// Check if a host string represents a non-localhost bind address.
 pub fn is_public_bind(host: &str) -> bool {
@@ -63,13 +63,13 @@ pub fn ensure_core_rpc_token_for_bind(
         let trimmed = raw.trim();
         if !trimmed.is_empty() {
             log::info!(
-                "[openhuman:pairing] core RPC token supplied via {CORE_TOKEN_ENV_VAR} for bind host={host}"
+                "[neppy:pairing] core RPC token supplied via {CORE_TOKEN_ENV_VAR} for bind host={host}"
             );
             return Ok(Some(trimmed.to_string()));
         }
         if is_public_bind(host) {
             log::error!(
-                "[openhuman:pairing] {CORE_TOKEN_ENV_VAR} is set but empty on public bind host={host}"
+                "[neppy:pairing] {CORE_TOKEN_ENV_VAR} is set but empty on public bind host={host}"
             );
             return Err(CoreBindTokenError::EmptyEnvToken {
                 host: host.to_string(),
@@ -79,7 +79,7 @@ pub fn ensure_core_rpc_token_for_bind(
 
     if !is_public_bind(host) {
         log::debug!(
-            "[openhuman:pairing] loopback bind host={host}: no {CORE_TOKEN_ENV_VAR} configured"
+            "[neppy:pairing] loopback bind host={host}: no {CORE_TOKEN_ENV_VAR} configured"
         );
         return Ok(None);
     }
@@ -91,7 +91,7 @@ pub fn ensure_core_rpc_token_for_bind(
         source,
     })?;
     log::warn!(
-        "[openhuman:pairing] Public bind on {host} without {CORE_TOKEN_ENV_VAR}: \
+        "[neppy:pairing] Public bind on {host} without {CORE_TOKEN_ENV_VAR}: \
          generated token at {} — set {CORE_TOKEN_ENV_VAR} explicitly for stable deployments",
         token_path.display()
     );

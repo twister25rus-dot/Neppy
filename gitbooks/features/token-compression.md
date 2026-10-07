@@ -105,7 +105,7 @@ So the agent gets the cheap compacted view by default, and can transparently "zo
 
 Every compression is metered by an Neppy savings callback (`src/neppy/inference/tokenjuice/savings.rs`). TokenJuice reports events and token deltas; Neppy applies per-model input pricing, aggregates `total`, `by_model`, and `by_compressor`, and persists stats to `<workspace>/state/tokenjuice_savings.json`.
 
-Read them over RPC with `openhuman.tokenjuice_savings_stats`; clear them with `openhuman.tokenjuice_savings_reset`.
+Read them over RPC with `neppy.tokenjuice_savings_stats`; clear them with `neppy.tokenjuice_savings_reset`.
 
 ---
 
@@ -131,7 +131,7 @@ Everything lives under the `[tokenjuice]` config block (`src/neppy/config/schema
 - **Thresholds:** `min_bytes_to_compress`, `ccr_min_tokens`.
 - **CCR:** `ccr_enabled`, `ccr_disk_enabled`, `max_cache_entries`, `max_cache_bytes`, `ccr_ttl_secs`.
 - **Per-kind:** `search_enabled`, `code_enabled`, `html_enabled`, plus the `ml_*` keys.
-- **RPC** (`openhuman.tokenjuice_*`): `detect`, `compress` (dry-run the pipeline), `settings_get` / `settings_update` (live partial patch), `cache_stats`, `retrieve`, `savings_stats`, `savings_reset`.
+- **RPC** (`neppy.tokenjuice_*`): `detect`, `compress` (dry-run the pipeline), `settings_get` / `settings_update` (live partial patch), `cache_stats`, `retrieve`, `savings_stats`, `savings_reset`.
 - **Agent tool:** `tokenjuice_retrieve` (read-only) recovers offloaded originals.
 - **Debugging:** start the core with `RUST_LOG=neppy_core::neppy::inference::tokenjuice=debug` to watch detection, matching, and how much each blob is trimmed.
 

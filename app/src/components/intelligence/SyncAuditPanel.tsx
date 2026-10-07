@@ -1,6 +1,6 @@
 /**
  * Sync audit history panel — shows when syncs happened, tokens consumed,
- * cost, and duration. Fetches from `openhuman.memory_sources_sync_audit_log`.
+ * cost, and duration. Fetches from `neppy.memory_sources_sync_audit_log`.
  */
 import { useEffect, useState } from 'react';
 

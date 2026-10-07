@@ -49,6 +49,16 @@ pub(crate) struct SessionCacheFingerprint {
     /// that do not implement modes, so a profile-routed agent never rebuilds on
     /// a mode toggle it ignores.
     pub(super) mode: Option<crate::neppy::threads::mode::ThreadMode>,
+    /// Per-turn workspace root the agent was built under
+    /// (`agent::turn_workspace`). The session builder bakes it into the agent's
+    /// default cwd, so a Debug-mode session must not be reused once the
+    /// resolved project root changes. `None` for every unscoped turn.
+    pub(super) turn_workspace: Option<std::path::PathBuf>,
+    /// Hash of the config-derived Debug prompt addendum the session was built
+    /// with, so editing Debug settings mid-thread rebuilds the agent instead of
+    /// serving the old prompt. `None` for every non-Debug turn, which leaves
+    /// those fingerprints unchanged.
+    pub(super) debug_prompt_hash: Option<u64>,
 }
 
 pub(super) struct SessionEntry {

@@ -388,7 +388,7 @@ export const creditsApi = {
    * GET /credits/balance
    */
   getBalance: async (): Promise<CreditBalance> => {
-    const result = await callCoreCommand<CreditBalance>('openhuman.billing_get_balance');
+    const result = await callCoreCommand<CreditBalance>('neppy.billing_get_balance');
     return normalizeCreditBalance(result);
   },
 
@@ -397,7 +397,7 @@ export const creditsApi = {
    * GET /teams/me/usage
    */
   getTeamUsage: async (): Promise<TeamUsage> => {
-    const result = await callCoreCommand<TeamUsage>('openhuman.team_get_usage');
+    const result = await callCoreCommand<TeamUsage>('neppy.team_get_usage');
     return normalizeTeamUsage(result);
   },
 
@@ -409,7 +409,7 @@ export const creditsApi = {
     amountUsd: number,
     gateway: 'stripe' | 'coinbase' = 'stripe'
   ): Promise<TopUpResult> => {
-    return await callCoreCommand<TopUpResult>('openhuman.billing_top_up', { amountUsd, gateway });
+    return await callCoreCommand<TopUpResult>('neppy.billing_top_up', { amountUsd, gateway });
   },
 
   /**
@@ -417,7 +417,7 @@ export const creditsApi = {
    * GET /credits/transactions
    */
   getTransactions: async (limit = 20, offset = 0): Promise<PaginatedTransactions> => {
-    return await callCoreCommand<PaginatedTransactions>('openhuman.billing_get_transactions', {
+    return await callCoreCommand<PaginatedTransactions>('neppy.billing_get_transactions', {
       limit,
       offset,
     });
@@ -430,7 +430,7 @@ export const creditsApi = {
    * GET /payments/credits/auto-recharge
    */
   getAutoRecharge: async (): Promise<AutoRechargeSettings> => {
-    return await callCoreCommand<AutoRechargeSettings>('openhuman.billing_get_auto_recharge');
+    return await callCoreCommand<AutoRechargeSettings>('neppy.billing_get_auto_recharge');
   },
 
   /**
@@ -438,7 +438,7 @@ export const creditsApi = {
    * PATCH /payments/credits/auto-recharge
    */
   updateAutoRecharge: async (payload: AutoRechargeUpdatePayload): Promise<AutoRechargeSettings> => {
-    return await callCoreCommand<AutoRechargeSettings>('openhuman.billing_update_auto_recharge', {
+    return await callCoreCommand<AutoRechargeSettings>('neppy.billing_update_auto_recharge', {
       payload,
     });
   },
@@ -448,7 +448,7 @@ export const creditsApi = {
    * GET /payments/credits/auto-recharge/cards
    */
   getCards: async (): Promise<CardsData> => {
-    return await callCoreCommand<CardsData>('openhuman.billing_get_cards');
+    return await callCoreCommand<CardsData>('neppy.billing_get_cards');
   },
 
   /**
@@ -457,7 +457,7 @@ export const creditsApi = {
    * POST /payments/credits/auto-recharge/cards/setup-intent
    */
   createSetupIntent: async (): Promise<SetupIntentData> => {
-    return await callCoreCommand<SetupIntentData>('openhuman.billing_create_setup_intent');
+    return await callCoreCommand<SetupIntentData>('neppy.billing_create_setup_intent');
   },
 
   /**
@@ -465,7 +465,7 @@ export const creditsApi = {
    * PATCH /payments/credits/auto-recharge/cards/:paymentMethodId
    */
   updateCard: async (paymentMethodId: string, payload: UpdateCardPayload): Promise<CardsData> => {
-    return await callCoreCommand<CardsData>('openhuman.billing_update_card', {
+    return await callCoreCommand<CardsData>('neppy.billing_update_card', {
       paymentMethodId,
       payload,
     });
@@ -476,7 +476,7 @@ export const creditsApi = {
    * DELETE /payments/credits/auto-recharge/cards/:paymentMethodId
    */
   deleteCard: async (paymentMethodId: string): Promise<CardsData> => {
-    return await callCoreCommand<CardsData>('openhuman.billing_delete_card', { paymentMethodId });
+    return await callCoreCommand<CardsData>('neppy.billing_delete_card', { paymentMethodId });
   },
 
   // ── Coupons ──────────────────────────────────────────────────────────────
@@ -486,7 +486,7 @@ export const creditsApi = {
    * POST /coupons/redeem
    */
   redeemCoupon: async (code: string): Promise<CouponRedeemResult> => {
-    const result = await callCoreCommand<unknown>('openhuman.billing_redeem_coupon', { code });
+    const result = await callCoreCommand<unknown>('neppy.billing_redeem_coupon', { code });
     return normalizeCouponRedeemResult(result);
   },
 
@@ -495,7 +495,7 @@ export const creditsApi = {
    * GET /coupons/me
    */
   getUserCoupons: async (): Promise<RedeemedCoupon[]> => {
-    const coupons = await callCoreCommand<unknown[]>('openhuman.billing_get_coupons');
+    const coupons = await callCoreCommand<unknown[]>('neppy.billing_get_coupons');
     return Array.isArray(coupons) ? coupons.map(normalizeRedeemedCoupon) : [];
   },
 };

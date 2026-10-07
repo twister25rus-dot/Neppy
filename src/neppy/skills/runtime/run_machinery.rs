@@ -43,7 +43,7 @@ pub struct WorkflowRunStarted {
 }
 
 /// Spawn a single autonomous workflow_run as a detached `tokio::spawn`. Used by
-/// both the `openhuman.skills_run` JSON-RPC controller and the `run_skill`
+/// both the `neppy.skills_run` JSON-RPC controller and the `run_skill`
 /// agent tool (which lets the orchestrator chain one skill into another —
 /// e.g. `github-issue-crusher` → `pr-review-shepherd` once the draft PR is
 /// open).

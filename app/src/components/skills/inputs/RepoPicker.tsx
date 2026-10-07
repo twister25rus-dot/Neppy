@@ -22,7 +22,7 @@ import { NativeSelect } from '../../ui';
 
 const log = createDebug('app:skills:RepoPicker');
 
-/** Shape returned by `openhuman.composio_list_github_repos`. */
+/** Shape returned by `neppy.composio_list_github_repos`. */
 interface ComposioGhRepo {
   owner: string;
   repo: string;

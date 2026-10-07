@@ -49,7 +49,12 @@ impl Tool for SpawnAsyncSubagentTool {
 
     fn parameters_schema(&self) -> serde_json::Value {
         let agent_ids: Vec<String> = AgentDefinitionRegistry::global()
-            .map(|reg| reg.list().iter().map(|d| d.id.clone()).collect())
+            .map(|reg| {
+                reg.list_delegatable()
+                    .iter()
+                    .map(|d| d.id.clone())
+                    .collect()
+            })
             .unwrap_or_default();
 
         let agent_id_schema = if agent_ids.is_empty() {
@@ -185,7 +190,11 @@ impl Tool for SpawnAsyncSubagentTool {
         let definition = match registry.get(&agent_id).cloned() {
             Some(definition) => definition,
             None => {
-                let available: Vec<&str> = registry.list().iter().map(|d| d.id.as_str()).collect();
+                let available: Vec<&str> = registry
+                    .list_delegatable()
+                    .iter()
+                    .map(|d| d.id.as_str())
+                    .collect();
                 return Ok(ToolResult::error(format!(
                     "spawn_async_subagent: unknown agent_id '{agent_id}'. Available: {}",
                     available.join(", ")

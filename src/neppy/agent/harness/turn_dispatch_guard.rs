@@ -75,7 +75,7 @@ pub struct TurnDispatchState {
     pause_completed_calls: AtomicU64,
     pause_cap: AtomicU64,
     /// When this turn's wall-clock budget started, and how long it is. `None`
-    /// budget means the ceiling is disabled (`OPENHUMAN_AGENT_TURN_TIMEOUT_SECS=0`),
+    /// budget means the ceiling is disabled (`NEPPY_AGENT_TURN_TIMEOUT_SECS=0`),
     /// in which case no dispatch can ever be refused for want of time.
     started: Instant,
     budget: Option<Duration>,

@@ -1,4 +1,4 @@
-//! Per-thread operating mode: `chat` or `orchestration`.
+//! Per-thread operating mode: `chat`, `orchestration` or `debug`.
 //!
 //! A thread is always in exactly one mode. The mode decides which delegation
 //! surface the thread's agent is handed and how it is told to use it (see
@@ -9,7 +9,7 @@
 //! # Persistence
 //!
 //! The mode rides the thread's existing `labels` list as one reserved label,
-//! `mode:orchestration`. `chat` is the absence of a mode label, which is what
+//! `mode:orchestration` (or `mode:debug`). `chat` is the absence of a mode label, which is what
 //! makes the field additive: every thread that predates it reads as `chat` with
 //! no migration, and a store that does not know about modes simply keeps an
 //! opaque label. Labels are the only per-thread metadata the conversation store
@@ -39,6 +39,9 @@ use crate::neppy::memory::ConversationThreadSummary;
 pub const MODE_LABEL_PREFIX: &str = "mode:";
 /// The persisted marker for an orchestration-mode thread.
 pub const ORCHESTRATION_LABEL: &str = "mode:orchestration";
+/// The persisted marker for a debug-mode thread: its turns run the repo-scoped
+/// `debug_agent` against the application's own project repository.
+pub const DEBUG_LABEL: &str = "mode:debug";
 
 /// Operating mode of a conversation thread.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
@@ -51,6 +54,10 @@ pub enum ThreadMode {
     /// Supervisor: the assistant decomposes the task, assigns workers, monitors
     /// them and recovers from failures.
     Orchestration,
+    /// In-app development: turns go to the `debug_agent`, scoped to the
+    /// project repository, with an automatic checkpoint and task record per
+    /// turn (see `agent::debug_mode`).
+    Debug,
 }
 
 impl ThreadMode {
@@ -59,6 +66,7 @@ impl ThreadMode {
         match self {
             Self::Chat => "chat",
             Self::Orchestration => "orchestration",
+            Self::Debug => "debug",
         }
     }
 
@@ -69,13 +77,18 @@ impl ThreadMode {
         match raw.trim().to_ascii_lowercase().as_str() {
             "chat" => Some(Self::Chat),
             "orchestration" => Some(Self::Orchestration),
+            "debug" => Some(Self::Debug),
             _ => None,
         }
     }
 
     /// Reads the mode out of a thread's labels. No mode label means `chat`.
     pub fn from_labels(labels: &[String]) -> Self {
-        if labels.iter().any(|l| l == ORCHESTRATION_LABEL) {
+        // Debug wins over orchestration if a store somehow holds both: the
+        // narrower, repo-scoped surface is the safer reading.
+        if labels.iter().any(|l| l == DEBUG_LABEL) {
+            Self::Debug
+        } else if labels.iter().any(|l| l == ORCHESTRATION_LABEL) {
             Self::Orchestration
         } else {
             Self::Chat
@@ -123,18 +136,20 @@ pub fn strip_mode_labels(labels: Vec<String>) -> Vec<String> {
 /// order of every other label.
 pub fn labels_with_mode(labels: Vec<String>, mode: ThreadMode) -> Vec<String> {
     let mut out = strip_mode_labels(labels);
-    if mode == ThreadMode::Orchestration {
-        out.push(ORCHESTRATION_LABEL.to_string());
+    match mode {
+        ThreadMode::Chat => {}
+        ThreadMode::Orchestration => out.push(ORCHESTRATION_LABEL.to_string()),
+        ThreadMode::Debug => out.push(DEBUG_LABEL.to_string()),
     }
     out
 }
 
-/// Params of `openhuman.threads_set_mode`.
+/// Params of `neppy.threads_set_mode`.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SetThreadModeRequest {
     pub thread_id: String,
-    /// `chat` or `orchestration`.
+    /// `chat`, `orchestration` or `debug`.
     pub mode: String,
     /// Free-form origin tag for the audit trail (`rpc` when omitted). Never
     /// message content.
@@ -142,7 +157,7 @@ pub struct SetThreadModeRequest {
     pub source: Option<String>,
 }
 
-/// Result of `openhuman.threads_set_mode`.
+/// Result of `neppy.threads_set_mode`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ThreadModeResult {

@@ -7,9 +7,9 @@ Service-management domain for the Neppy core daemon. It installs/uninstalls the 
 - Install / uninstall the core daemon as a native per-user service and report its `ServiceStatus`.
 - Start / stop / query the installed service per OS (`launchctl`, `systemctl --user`, `schtasks`).
 - Accept restart/shutdown requests, publish them to the event bus, and (via subscribers) respawn or `process::exit(0)` the running core with a 150ms flush grace window.
-- Resolve the daemon executable to launch (env override `OPENHUMAN_CORE_BIN`, else sibling `neppy-core[-*]` next to the current exe; macOS also searches `../Resources`).
+- Resolve the daemon executable to launch (env override `NEPPY_CORE_BIN`, else sibling `neppy-core[-*]` next to the current exe; macOS also searches `../Resources`).
 - Persist and read daemon-host UI preferences (`show_tray`) next to the main config.
-- Provide a deterministic, file-backed **mock** service backend for E2E tests (`OPENHUMAN_SERVICE_MOCK`).
+- Provide a deterministic, file-backed **mock** service backend for E2E tests (`NEPPY_SERVICE_MOCK`).
 - Expose `daemon_state.json` path helper consumed by doctor/health reporting.
 
 ## Key files
@@ -29,7 +29,7 @@ Service-management domain for the Neppy core daemon. It installs/uninstalls the 
 | `src/neppy/platform/service/windows.rs` | Scheduled-task install/lifecycle via `schtasks`. |
 | `src/neppy/platform/service/daemon.rs` | `state_file_path(config)` → `<config_dir>/daemon_state.json`, used by doctor/health. |
 | `src/neppy/platform/service/daemon_host.rs` | `DaemonHostConfig { show_tray }` + async `load_for_config_dir` / `save_for_config_dir` (JSON next to config, `daemon_host_config.json`). |
-| `src/neppy/platform/service/mock.rs` | File-backed deterministic mock backend gated on `OPENHUMAN_SERVICE_MOCK`; supports forced failures and an `agent_running` flag (`mock_agent_running`). |
+| `src/neppy/platform/service/mock.rs` | File-backed deterministic mock backend gated on `NEPPY_SERVICE_MOCK`; supports forced failures and an `agent_running` flag (`mock_agent_running`). |
 | `src/neppy/platform/service/mock_tests.rs` | Sibling test suite for `mock.rs`. |
 
 ## Public surface
@@ -45,7 +45,7 @@ From `mod.rs` re-exports:
 
 ## RPC / controllers
 
-Namespace `service` (called as `openhuman.service_<fn>` / `service.<fn>`). All nine handlers go through `RpcOutcome` and are wired into the registry by `crate::core::all` via `all_service_registered_controllers`.
+Namespace `service` (called as `neppy.service_<fn>` / `service.<fn>`). All nine handlers go through `RpcOutcome` and are wired into the registry by `crate::core::all` via `all_service_registered_controllers`.
 
 | Method | Inputs | Output |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ Both subscribers are registered idempotently from `src/core/jsonrpc.rs` at start
 - **Daemon-host prefs** — `daemon_host_config.json` next to the main config (`DaemonHostConfig { show_tray }`, default `true`); read/written async by `daemon_host.rs`.
 - **Daemon state path** — `daemon_state.json` next to config (`daemon::state_file_path`), consumed by doctor/health (not written here).
 - **Service unit files** — written by the per-OS impls (macOS plist in `~/Library/LaunchAgents`, Linux systemd user unit, Windows scheduled task).
-- **Mock state** — `service-mock-state.json` (overridable via `OPENHUMAN_SERVICE_MOCK_STATE_FILE`) tracking `installed`/`running`/`agent_running`/forced `failures`, only when the mock is enabled.
+- **Mock state** — `service-mock-state.json` (overridable via `NEPPY_SERVICE_MOCK_STATE_FILE`) tracking `installed`/`running`/`agent_running`/forced `failures`, only when the mock is enabled.
 
 ## Dependencies
 
@@ -102,10 +102,10 @@ Both subscribers are registered idempotently from `src/core/jsonrpc.rs` at start
 
 - Restart/shutdown are **two-phase**: the RPC/CLI call only acknowledges and publishes an event; the actual respawn/exit happens in the subscriber, so RPC, CLI, and internal triggers share one path with consistent logging. The subscriber must be registered or requests are no-ops.
 - One-shot atomic gates exist in **both** `bus.rs` and `restart.rs` (`RESTART_IN_PROGRESS`) — duplicate restart events are ignored; a failed `trigger_self_restart_now` resets the gate to allow a retry.
-- `trigger_self_restart_now` respawns the current exe with the **original argv** (preserving launch mode) and sets `OPENHUMAN_RESTART_DELAY_MS` (default 350) on the child; the child honors it at startup via `apply_startup_restart_delay_from_env` to dodge HTTP-port bind races while the old process releases sockets.
+- `trigger_self_restart_now` respawns the current exe with the **original argv** (preserving launch mode) and sets `NEPPY_RESTART_DELAY_MS` (default 350) on the child; the child honors it at startup via `apply_startup_restart_delay_from_env` to dodge HTTP-port bind races while the old process releases sockets.
 - Self-restart fails if launched with no args (`std::env::args().skip(1)` empty).
 - Platform support is compile-gated; on unsupported targets the dispatchers `bail!` with "supported on macOS, Linux, and Windows only".
-- `OPENHUMAN_SERVICE_MOCK` short-circuits **every** lifecycle dispatcher to the file-backed mock — used for deterministic E2E; it can also inject forced per-operation failures.
+- `NEPPY_SERVICE_MOCK` short-circuits **every** lifecycle dispatcher to the file-backed mock — used for deterministic E2E; it can also inject forced per-operation failures.
 - Windows command spawns set `CREATE_NO_WINDOW` (`common::no_window`) so polled `schtasks /Query` calls don't flash a console.
 - Lifecycle RPCs are deliberately **not** unit-tested (they mutate real OS state or kill the process); RPC-adapter coverage lives in `tests/json_rpc_e2e.rs`. `daemon_host_get`/`set` and the restart/shutdown publish paths are unit-tested.
 - `daemon.rs::state_file_path` and `common.rs::state_file_path` (mock) both compute paths next to config but for different files (`daemon_state.json` vs the mock state file).

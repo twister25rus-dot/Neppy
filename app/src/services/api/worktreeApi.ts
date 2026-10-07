@@ -4,10 +4,10 @@
  * `isolation = "worktree"`.
  *
  * Wraps four read/cleanup RPCs under the `worktree` namespace:
- * - `openhuman.worktree_list`   — managed worktrees + cross-worker overlaps.
- * - `openhuman.worktree_status` — branch / dirty / changed-files for one path.
- * - `openhuman.worktree_diff`   — human-readable `--stat` diff for one path.
- * - `openhuman.worktree_remove` — remove a worktree (refuses dirty unless force).
+ * - `neppy.worktree_list`   — managed worktrees + cross-worker overlaps.
+ * - `neppy.worktree_status` — branch / dirty / changed-files for one path.
+ * - `neppy.worktree_diff`   — human-readable `--stat` diff for one path.
+ * - `neppy.worktree_remove` — remove a worktree (refuses dirty unless force).
  *
  * The wire payloads are already camelCase (the Rust `WorktreeStatus` serializes
  * with `#[serde(rename_all = "camelCase")]`), so this client only types the
@@ -39,7 +39,7 @@ interface WorktreeOverlap {
   branches: string[];
 }
 
-/** Response from `openhuman.worktree_list`. */
+/** Response from `neppy.worktree_list`. */
 interface WorktreeListView {
   worktrees: WorktreeStatus[];
   overlaps: WorktreeOverlap[];
@@ -49,10 +49,7 @@ export const worktreeApi = {
   /** List managed worker worktrees plus cross-worktree file overlaps. */
   list: async (): Promise<WorktreeListView> => {
     log('list');
-    const view = await callCoreRpc<WorktreeListView>({
-      method: 'openhuman.worktree_list',
-      params: {},
-    });
+    const view = await callCoreRpc<WorktreeListView>({ method: 'neppy.worktree_list', params: {} });
     log('list received count=%d overlaps=%d', view.worktrees.length, view.overlaps.length);
     return view;
   },
@@ -61,7 +58,7 @@ export const worktreeApi = {
   status: async (path: string): Promise<WorktreeStatus> => {
     if (!path.trim()) throw new Error('worktreeApi.status: path is required');
     log('status path=%s', path);
-    return callCoreRpc<WorktreeStatus>({ method: 'openhuman.worktree_status', params: { path } });
+    return callCoreRpc<WorktreeStatus>({ method: 'neppy.worktree_status', params: { path } });
   },
 
   /** Fetch a human-readable `git diff HEAD --stat` (plus untracked files). */
@@ -69,7 +66,7 @@ export const worktreeApi = {
     if (!path.trim()) throw new Error('worktreeApi.diff: path is required');
     log('diff path=%s', path);
     const res = await callCoreRpc<{ summary: string }>({
-      method: 'openhuman.worktree_diff',
+      method: 'neppy.worktree_diff',
       params: { path },
     });
     return res.summary;
@@ -84,7 +81,7 @@ export const worktreeApi = {
     if (!path.trim()) throw new Error('worktreeApi.remove: path is required');
     log('remove path=%s force=%s', path, force);
     const res = await callCoreRpc<{ removed: boolean }>({
-      method: 'openhuman.worktree_remove',
+      method: 'neppy.worktree_remove',
       params: { path, force },
     });
     return res.removed;

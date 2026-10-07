@@ -15,6 +15,13 @@
 //! The rewrite is a pure key-to-key lookup. No domain branches, no
 //! parameter inspection — if a method isn't in the table, it passes through
 //! untouched.
+//!
+//! ## The `openhuman.` -> `neppy.` rebrand
+//!
+//! The canonical method prefix is `neppy.`. The old `openhuman.` prefix is a
+//! permanent legacy alias: [`normalize_rpc_method`] rewrites it before the
+//! table is consulted, so the table below is written entirely in the canonical
+//! `neppy.` spelling and one entry covers both prefixes.
 
 /// Legacy → canonical RPC method name pairs.
 ///
@@ -23,178 +30,154 @@
 const LEGACY_ALIASES: &[(&str, &str)] = &[
     // #3565: old desktop clients called the channels controller with a dotted
     // namespace/function spelling before the canonical
-    // `openhuman.<namespace>_<function>` form was established.
-    ("channels.list", "openhuman.channels_list"),
+    // `neppy.<namespace>_<function>` form was established.
+    ("channels.list", "neppy.channels_list"),
     // MCP clients — old method names that appeared in Sentry (CORE-RUST-DR/DS/DT/DV/DW).
     // Callers used dotted namespace, bare `mcp_list`, `mcp_servers_list`, and
     // `mcp_clients_list` before the canonical `mcp_clients_installed_list` was
     // introduced in PR #2409. `tool_registry_call` was an early mis-spelling of
     // `mcp_clients_tool_call` that shipped in at least one older bundle.
-    // `mcp_clients.list` sorts before all `openhuman.*` entries (m < o).
-    ("mcp_clients.list", "openhuman.mcp_clients_installed_list"),
-    ("openhuman.channels.list", "openhuman.channels_list"),
+    // `mcp_clients.list` sorts before all `neppy.*` entries (m < n).
+    ("mcp_clients.list", "neppy.mcp_clients_installed_list"),
+    ("neppy.channels.list", "neppy.channels_list"),
     (
-        "openhuman.get_analytics_settings",
-        "openhuman.config_get_analytics_settings",
+        "neppy.get_analytics_settings",
+        "neppy.config_get_analytics_settings",
     ),
     (
-        "openhuman.get_composio_trigger_settings",
-        "openhuman.config_get_composio_trigger_settings",
+        "neppy.get_composio_trigger_settings",
+        "neppy.config_get_composio_trigger_settings",
     ),
     (
-        "openhuman.get_dashboard_settings",
-        "openhuman.config_get_dashboard_settings",
+        "neppy.get_dashboard_settings",
+        "neppy.config_get_dashboard_settings",
     ),
-    ("openhuman.get_config", "openhuman.config_get"),
+    ("neppy.get_config", "neppy.config_get"),
+    ("neppy.get_runtime_flags", "neppy.config_get_runtime_flags"),
+    ("neppy.mcp_clients_list", "neppy.mcp_clients_installed_list"),
+    ("neppy.mcp_list", "neppy.mcp_clients_installed_list"),
+    ("neppy.mcp_servers_list", "neppy.mcp_clients_installed_list"),
+    ("neppy.ping", "core.ping"),
     (
-        "openhuman.get_runtime_flags",
-        "openhuman.config_get_runtime_flags",
+        "neppy.set_browser_allow_all",
+        "neppy.config_set_browser_allow_all",
     ),
-    (
-        "openhuman.mcp_clients_list",
-        "openhuman.mcp_clients_installed_list",
-    ),
-    ("openhuman.mcp_list", "openhuman.mcp_clients_installed_list"),
-    (
-        "openhuman.mcp_servers_list",
-        "openhuman.mcp_clients_installed_list",
-    ),
-    ("openhuman.ping", "core.ping"),
-    (
-        "openhuman.set_browser_allow_all",
-        "openhuman.config_set_browser_allow_all",
-    ),
-    (
-        "openhuman.tool_registry_call",
-        "openhuman.mcp_clients_tool_call",
-    ),
+    ("neppy.tool_registry_call", "neppy.mcp_clients_tool_call"),
     // #3294: old desktop bundles called the tool-registry diagnostics
     // controller with the dotted `tool_registry.diagnostics` spelling, before
-    // the canonical `openhuman.<namespace>_<function>` form
-    // (`openhuman.tool_registry_diagnostics`) was established. Without this
+    // the canonical `neppy.<namespace>_<function>` form
+    // (`neppy.tool_registry_diagnostics`) was established. Without this
     // alias the Tool Policy diagnostics panel's RPC failed with "unknown
     // method" on those clients.
     (
         "tool_registry.diagnostics",
-        "openhuman.tool_registry_diagnostics",
+        "neppy.tool_registry_diagnostics",
     ),
     (
-        "openhuman.update_analytics_settings",
-        "openhuman.config_update_analytics_settings",
+        "neppy.update_analytics_settings",
+        "neppy.config_update_analytics_settings",
     ),
     (
-        "openhuman.update_autonomy_settings",
-        "openhuman.config_update_autonomy_settings",
+        "neppy.update_autonomy_settings",
+        "neppy.config_update_autonomy_settings",
     ),
     (
-        "openhuman.update_browser_settings",
-        "openhuman.config_update_browser_settings",
+        "neppy.update_browser_settings",
+        "neppy.config_update_browser_settings",
     ),
     (
-        "openhuman.update_composio_trigger_settings",
-        "openhuman.config_update_composio_trigger_settings",
+        "neppy.update_composio_trigger_settings",
+        "neppy.config_update_composio_trigger_settings",
     ),
     (
-        "openhuman.update_local_ai_settings",
-        "openhuman.inference_update_local_settings",
+        "neppy.update_local_ai_settings",
+        "neppy.inference_update_local_settings",
     ),
     (
-        "openhuman.update_memory_settings",
-        "openhuman.config_update_memory_settings",
+        "neppy.update_memory_settings",
+        "neppy.config_update_memory_settings",
     ),
     (
-        "openhuman.update_model_settings",
-        "openhuman.inference_update_model_settings",
+        "neppy.update_model_settings",
+        "neppy.inference_update_model_settings",
     ),
     (
-        "openhuman.update_runtime_settings",
-        "openhuman.config_update_runtime_settings",
+        "neppy.update_runtime_settings",
+        "neppy.config_update_runtime_settings",
     ),
     (
-        "openhuman.workspace_onboarding_flag_exists",
-        "openhuman.config_workspace_onboarding_flag_exists",
+        "neppy.workspace_onboarding_flag_exists",
+        "neppy.config_workspace_onboarding_flag_exists",
     ),
     (
-        "openhuman.workspace_onboarding_flag_set",
-        "openhuman.config_workspace_onboarding_flag_set",
+        "neppy.workspace_onboarding_flag_set",
+        "neppy.config_workspace_onboarding_flag_set",
     ),
     (
-        "openhuman.local_ai_apply_preset",
-        "openhuman.inference_apply_preset",
+        "neppy.local_ai_apply_preset",
+        "neppy.inference_apply_preset",
+    ),
+    ("neppy.local_ai_agent_chat", "neppy.inference_agent_chat"),
+    (
+        "neppy.local_ai_agent_chat_simple",
+        "neppy.inference_agent_chat_simple",
     ),
     (
-        "openhuman.local_ai_agent_chat",
-        "openhuman.inference_agent_chat",
+        "neppy.local_ai_assets_status",
+        "neppy.inference_assets_status",
     ),
     (
-        "openhuman.local_ai_agent_chat_simple",
-        "openhuman.inference_agent_chat_simple",
+        "neppy.local_ai_device_profile",
+        "neppy.inference_device_profile",
+    ),
+    ("neppy.local_ai_diagnostics", "neppy.inference_diagnostics"),
+    (
+        "neppy.local_ai_download_asset",
+        "neppy.inference_download_asset",
     ),
     (
-        "openhuman.local_ai_assets_status",
-        "openhuman.inference_assets_status",
+        "neppy.local_ai_downloads_progress",
+        "neppy.inference_downloads_progress",
     ),
     (
-        "openhuman.local_ai_device_profile",
-        "openhuman.inference_device_profile",
+        "neppy.local_ai_install_piper",
+        "neppy.inference_install_piper",
     ),
     (
-        "openhuman.local_ai_diagnostics",
-        "openhuman.inference_diagnostics",
-    ),
-    (
-        "openhuman.local_ai_download_asset",
-        "openhuman.inference_download_asset",
-    ),
-    (
-        "openhuman.local_ai_downloads_progress",
-        "openhuman.inference_downloads_progress",
-    ),
-    (
-        "openhuman.local_ai_install_piper",
-        "openhuman.inference_install_piper",
-    ),
-    (
-        "openhuman.local_ai_piper_install_status",
-        "openhuman.inference_piper_install_status",
+        "neppy.local_ai_piper_install_status",
+        "neppy.inference_piper_install_status",
     ),
     // bare `health_snapshot` (no namespace prefix) was used by older clients
-    // before the canonical `openhuman.health_snapshot` form was established.
-    ("health_snapshot", "openhuman.health_snapshot"),
+    // before the canonical `neppy.health_snapshot` form was established.
+    ("health_snapshot", "neppy.health_snapshot"),
     // Dotted / bare health probes from older clients and SDK callers (#3566,
-    // Sentry CORE-2C). The canonical method is `openhuman.health_snapshot`
+    // Sentry CORE-2C). The canonical method is `neppy.health_snapshot`
     // (namespace `health`, function `snapshot`); these legacy spellings fell
     // through to the unknown-method path and produced Sentry noise. There is no
     // distinct `status`/`get` health handler — the snapshot already carries the
     // health verdict (`healthy`/`degraded`/`critical_unhealthy`), so all four
     // variants alias to the snapshot.
-    ("health", "openhuman.health_snapshot"),
-    ("health.get", "openhuman.health_snapshot"),
-    ("health.snapshot", "openhuman.health_snapshot"),
-    ("health.status", "openhuman.health_snapshot"),
-    // `openhuman.system_info` was used by older clients / SDK callers before
-    // the method was namespaced under `health` as `openhuman.health_system_info`.
+    ("health", "neppy.health_snapshot"),
+    ("health.get", "neppy.health_snapshot"),
+    ("health.snapshot", "neppy.health_snapshot"),
+    ("health.status", "neppy.health_snapshot"),
+    // `neppy.system_info` was used by older clients / SDK callers before
+    // the method was namespaced under `health` as `neppy.health_system_info`.
     // Sentry CORE-RUST-G0 — https://sentry.tinyhumans.ai/organizations/tinyhumans/issues/6340/
-    ("openhuman.system_info", "openhuman.health_system_info"),
-    ("openhuman.inference_embed", "openhuman.embeddings_embed"),
-    ("openhuman.local_ai_presets", "openhuman.inference_presets"),
+    ("neppy.system_info", "neppy.health_system_info"),
+    ("neppy.inference_embed", "neppy.embeddings_embed"),
+    ("neppy.local_ai_presets", "neppy.inference_presets"),
     (
-        "openhuman.local_ai_test_connection",
-        "openhuman.inference_test_connection",
+        "neppy.local_ai_test_connection",
+        "neppy.inference_test_connection",
     ),
+    ("neppy.local_ai_transcribe", "neppy.inference_transcribe"),
     (
-        "openhuman.local_ai_transcribe",
-        "openhuman.inference_transcribe",
+        "neppy.local_ai_transcribe_bytes",
+        "neppy.inference_transcribe_bytes",
     ),
-    (
-        "openhuman.local_ai_transcribe_bytes",
-        "openhuman.inference_transcribe_bytes",
-    ),
-    ("openhuman.local_ai_tts", "openhuman.inference_tts"),
-    (
-        "openhuman.providers_list_models",
-        "openhuman.inference_list_models",
-    ),
+    ("neppy.local_ai_tts", "neppy.inference_tts"),
+    ("neppy.providers_list_models", "neppy.inference_list_models"),
 ];
 
 /// Returns the server-side legacy → canonical RPC alias table.
@@ -206,23 +189,52 @@ fn legacy_aliases() -> &'static [(&'static str, &'static str)] {
     LEGACY_ALIASES
 }
 
-/// Resolves a legacy RPC method name to its canonical form, if any.
+/// Canonical RPC method prefix (`neppy.<namespace>_<function>`).
+pub const RPC_METHOD_PREFIX: &str = "neppy.";
+
+/// Pre-rebrand RPC method prefix. Still accepted on input forever — see
+/// [`normalize_rpc_method`] — but never emitted by the core.
+pub const LEGACY_RPC_METHOD_PREFIX: &str = "openhuman.";
+
+/// Rewrites the pre-rebrand `openhuman.` method prefix to the canonical
+/// `neppy.` one. Every other name (including already-canonical `neppy.*` and
+/// bare `core.*` names) is returned borrowed and unchanged.
 ///
-/// Returns the canonical name when `method` is a known legacy alias;
-/// otherwise returns `method` unchanged. This function is idempotent:
-/// calling it on an already-canonical name (or any unrelated name) is a
-/// no-op.
+/// This is the single normalisation point for the product prefix: the
+/// transport-level entry points (`jsonrpc::invoke_method`, `dispatch`), the
+/// registry lookups in `core::all` (which MCP tool dispatch and in-process
+/// embedders call directly), and persisted-name comparisons all go through it,
+/// so a client, config file, cron payload or allow-list written against the old
+/// spelling keeps working. It does **not** consult the legacy alias table; use
+/// [`resolve_legacy`] for that.
+pub fn normalize_rpc_method(method: &str) -> std::borrow::Cow<'_, str> {
+    match method.strip_prefix(LEGACY_RPC_METHOD_PREFIX) {
+        Some(rest) => std::borrow::Cow::Owned(format!("{RPC_METHOD_PREFIX}{rest}")),
+        None => std::borrow::Cow::Borrowed(method),
+    }
+}
+
+/// Resolves any inbound RPC method name to its canonical form.
 ///
-/// Returns a borrow that lives for at least the input's lifetime — the
-/// matched-canonical branch returns `&'static`, the pass-through branch
-/// returns the input borrow; elision picks the tighter input lifetime.
-pub fn resolve_legacy(method: &str) -> &str {
+/// Two steps, in order:
+/// 1. the pre-rebrand `openhuman.` prefix is rewritten to `neppy.`
+///    ([`normalize_rpc_method`]), so `openhuman.foo` and `neppy.foo` are the
+///    same method everywhere;
+/// 2. the result is looked up in the legacy alias table (whose keys and values
+///    are written in the canonical `neppy.` spelling) so historical misspellings
+///    such as `neppy.get_config` or the bare `health_snapshot` resolve to the
+///    registered controller.
+///
+/// Unknown names pass through unchanged (after step 1). The function is
+/// idempotent: calling it on an already-canonical name is a no-op.
+pub fn resolve_legacy(method: &str) -> std::borrow::Cow<'_, str> {
+    let normalized = normalize_rpc_method(method);
     for (legacy, canonical) in legacy_aliases() {
-        if *legacy == method {
-            return canonical;
+        if *legacy == normalized.as_ref() {
+            return std::borrow::Cow::Borrowed(canonical);
         }
     }
-    method
+    normalized
 }
 
 #[cfg(test)]
@@ -367,7 +379,7 @@ mod tests {
     fn mcp_method_compiled_out(method: &str) -> bool {
         // `mcp` feature OFF ⇒ the `mcp_clients` (dynamic registry) and
         // `mcp_audit` (write log) controllers are unregistered.
-        method.starts_with("openhuman.mcp_clients_") || method.starts_with("openhuman.mcp_audit_")
+        method.starts_with("neppy.mcp_clients_") || method.starts_with("neppy.mcp_audit_")
     }
 
     #[cfg(feature = "channels")]
@@ -379,12 +391,12 @@ mod tests {
     fn channels_method_compiled_out(method: &str) -> bool {
         // `channels` feature OFF ⇒ the channels + webview_apis +
         // webview_notifications + whatsapp_data controllers are unregistered
-        // (#4801). NOTE: the in-app web chat (`openhuman.channel_*`) is NOT
+        // (#4801). NOTE: the in-app web chat (`neppy.channel_*`) is NOT
         // gated (core product surface, #5002) — do not add that prefix here.
-        method.starts_with("openhuman.channels_")
-            || method.starts_with("openhuman.webview_apis_")
-            || method.starts_with("openhuman.webview_notifications_")
-            || method.starts_with("openhuman.whatsapp_data_")
+        method.starts_with("neppy.channels_")
+            || method.starts_with("neppy.webview_apis_")
+            || method.starts_with("neppy.webview_notifications_")
+            || method.starts_with("neppy.whatsapp_data_")
     }
 
     #[test]
@@ -437,15 +449,15 @@ mod tests {
 
     #[test]
     fn parse_core_rpc_methods_extracts_entries_and_skips_comments() {
-        let source = "export const CORE_RPC_METHODS = {\n  // a comment that should be skipped\n  alphaMethod: 'openhuman.alpha',\n  betaMethod: 'openhuman.beta',\n} as const;\n";
+        let source = "export const CORE_RPC_METHODS = {\n  // a comment that should be skipped\n  alphaMethod: 'neppy.alpha',\n  betaMethod: 'neppy.beta',\n} as const;\n";
         let methods = parse_core_rpc_methods(source);
         assert_eq!(
             methods.get("alphaMethod").map(String::as_str),
-            Some("openhuman.alpha")
+            Some("neppy.alpha")
         );
         assert_eq!(
             methods.get("betaMethod").map(String::as_str),
-            Some("openhuman.beta")
+            Some("neppy.beta")
         );
         assert_eq!(methods.len(), 2);
     }
@@ -454,22 +466,22 @@ mod tests {
     #[should_panic(expected = "malformed CORE_RPC_METHODS entry")]
     fn parse_core_rpc_methods_panics_on_non_colon_line() {
         let source =
-            "export const CORE_RPC_METHODS = {\n  alphaMethod 'openhuman.alpha',\n} as const;\n";
+            "export const CORE_RPC_METHODS = {\n  alphaMethod 'neppy.alpha',\n} as const;\n";
         let _ = parse_core_rpc_methods(source);
     }
 
     #[test]
     fn parse_frontend_legacy_aliases_resolves_core_method_refs_and_literals() {
-        let source = "export const CORE_RPC_METHODS = {\n  alphaMethod: 'openhuman.alpha',\n} as const;\n\nexport const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {\n  'openhuman.legacy_alpha': CORE_RPC_METHODS.alphaMethod,\n  'openhuman.legacy_literal': 'openhuman.literal_target',\n};\n";
+        let source = "export const CORE_RPC_METHODS = {\n  alphaMethod: 'neppy.alpha',\n} as const;\n\nexport const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {\n  'neppy.legacy_alpha': CORE_RPC_METHODS.alphaMethod,\n  'neppy.legacy_literal': 'neppy.literal_target',\n};\n";
         let core_methods = parse_core_rpc_methods(source);
         let aliases = parse_frontend_legacy_aliases(source, &core_methods);
         assert_eq!(
-            aliases.get("openhuman.legacy_alpha").map(String::as_str),
-            Some("openhuman.alpha")
+            aliases.get("neppy.legacy_alpha").map(String::as_str),
+            Some("neppy.alpha")
         );
         assert_eq!(
-            aliases.get("openhuman.legacy_literal").map(String::as_str),
-            Some("openhuman.literal_target")
+            aliases.get("neppy.legacy_literal").map(String::as_str),
+            Some("neppy.literal_target")
         );
     }
 
@@ -480,17 +492,17 @@ mod tests {
         // `health_snapshot` is unquoted. The parser must accept both
         // `'foo':` and bare `foo:`, and must ignore `//` comment lines
         // in the LEGACY_METHOD_ALIASES body.
-        let source = "export const CORE_RPC_METHODS = {\n  alphaMethod: 'openhuman.alpha',\n  betaMethod: 'openhuman.beta',\n} as const;\n\nexport const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {\n  // legacy aliases for the alpha method\n  'openhuman.legacy_alpha': CORE_RPC_METHODS.alphaMethod,\n  beta_legacy: CORE_RPC_METHODS.betaMethod,\n};\n";
+        let source = "export const CORE_RPC_METHODS = {\n  alphaMethod: 'neppy.alpha',\n  betaMethod: 'neppy.beta',\n} as const;\n\nexport const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {\n  // legacy aliases for the alpha method\n  'neppy.legacy_alpha': CORE_RPC_METHODS.alphaMethod,\n  beta_legacy: CORE_RPC_METHODS.betaMethod,\n};\n";
         let core_methods = parse_core_rpc_methods(source);
         let aliases = parse_frontend_legacy_aliases(source, &core_methods);
         assert_eq!(
-            aliases.get("openhuman.legacy_alpha").map(String::as_str),
-            Some("openhuman.alpha"),
+            aliases.get("neppy.legacy_alpha").map(String::as_str),
+            Some("neppy.alpha"),
             "quoted-key entry should still resolve"
         );
         assert_eq!(
             aliases.get("beta_legacy").map(String::as_str),
-            Some("openhuman.beta"),
+            Some("neppy.beta"),
             "bare-identifier key should resolve (Prettier-normalized form)"
         );
         assert!(
@@ -504,7 +516,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "legacy alias references unknown CORE_RPC_METHODS")]
     fn parse_frontend_legacy_aliases_panics_on_unknown_core_method_ref() {
-        let source = "export const CORE_RPC_METHODS = {\n  alphaMethod: 'openhuman.alpha',\n} as const;\n\nexport const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {\n  'openhuman.legacy_alpha': CORE_RPC_METHODS.doesNotExist,\n};\n";
+        let source = "export const CORE_RPC_METHODS = {\n  alphaMethod: 'neppy.alpha',\n} as const;\n\nexport const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {\n  'neppy.legacy_alpha': CORE_RPC_METHODS.doesNotExist,\n};\n";
         let core_methods = parse_core_rpc_methods(source);
         let _ = parse_frontend_legacy_aliases(source, &core_methods);
     }
@@ -521,13 +533,72 @@ mod tests {
     }
 
     #[test]
+    fn normalize_rpc_method_rewrites_only_the_legacy_prefix() {
+        assert_eq!(
+            normalize_rpc_method("openhuman.memory_doc_put"),
+            "neppy.memory_doc_put"
+        );
+        // Already canonical / unrelated names are borrowed, unchanged.
+        for m in [
+            "neppy.memory_doc_put",
+            "core.ping",
+            "channels.list",
+            "",
+            "openhumanx.foo",
+            "x.openhuman.foo",
+            "OPENHUMAN.foo",
+        ] {
+            assert!(
+                matches!(normalize_rpc_method(m), std::borrow::Cow::Borrowed(_)),
+                "{m} must pass through untouched"
+            );
+            assert_eq!(normalize_rpc_method(m), m);
+        }
+    }
+
+    #[test]
+    fn resolve_legacy_accepts_the_old_prefix_for_every_table_entry() {
+        // The table is written in the canonical `neppy.` spelling; the old
+        // `openhuman.` spelling of every prefixed key must resolve identically.
+        for (legacy, canonical) in LEGACY_ALIASES {
+            if let Some(rest) = legacy.strip_prefix(RPC_METHOD_PREFIX) {
+                let old = format!("{LEGACY_RPC_METHOD_PREFIX}{rest}");
+                assert_eq!(
+                    resolve_legacy(&old),
+                    *canonical,
+                    "old spelling {old} must resolve to {canonical}"
+                );
+            }
+        }
+        assert_eq!(resolve_legacy("openhuman.ping"), "core.ping");
+        assert_eq!(resolve_legacy("neppy.ping"), "core.ping");
+        assert_eq!(resolve_legacy("openhuman.get_config"), "neppy.config_get");
+    }
+
+    #[test]
+    fn resolve_legacy_maps_old_prefix_passthrough_to_neppy() {
+        assert_eq!(
+            resolve_legacy("openhuman.memory_list_namespaces"),
+            "neppy.memory_list_namespaces"
+        );
+        assert_eq!(
+            resolve_legacy("neppy.memory_list_namespaces"),
+            "neppy.memory_list_namespaces"
+        );
+    }
+
+    #[test]
     fn resolve_legacy_rewrites_composio_trigger_settings() {
         // The specific case observed in Sentry: older bundles called the
-        // bare `openhuman.update_composio_trigger_settings` against a core
+        // bare `neppy.update_composio_trigger_settings` against a core
         // that only registers the namespaced form.
         assert_eq!(
             resolve_legacy("openhuman.update_composio_trigger_settings"),
-            "openhuman.config_update_composio_trigger_settings",
+            "neppy.config_update_composio_trigger_settings",
+        );
+        assert_eq!(
+            resolve_legacy("neppy.update_composio_trigger_settings"),
+            "neppy.config_update_composio_trigger_settings",
         );
     }
 
@@ -537,10 +608,7 @@ mod tests {
         // `health_snapshot` without the `openhuman.` namespace prefix.  The
         // alias table must rewrite it to the canonical form so the call
         // resolves against the registered controller.
-        assert_eq!(
-            resolve_legacy("health_snapshot"),
-            "openhuman.health_snapshot",
-        );
+        assert_eq!(resolve_legacy("health_snapshot"), "neppy.health_snapshot",);
     }
 
     #[test]
@@ -549,11 +617,11 @@ mod tests {
         // health snapshot under several legacy spellings (bare `health`, and
         // the dotted `health.snapshot` / `health.status` / `health.get`).
         // There is no distinct status/get handler, so every variant must
-        // resolve to the canonical `openhuman.health_snapshot`.
+        // resolve to the canonical `neppy.health_snapshot`.
         for legacy in ["health", "health.get", "health.snapshot", "health.status"] {
             assert_eq!(
                 resolve_legacy(legacy),
-                "openhuman.health_snapshot",
+                "neppy.health_snapshot",
                 "expected health probe variant {legacy} to resolve to the snapshot method",
             );
         }
@@ -566,29 +634,26 @@ mod tests {
         // CORE-2C events were stale (release 0.53.43 predated the alias added
         // in #2853), but this lock-in proves the alias still fires on the
         // exact-match resolver so the bare form can never regress.
-        assert_eq!(
-            resolve_legacy("health_snapshot"),
-            "openhuman.health_snapshot",
-        );
+        assert_eq!(resolve_legacy("health_snapshot"), "neppy.health_snapshot",);
     }
 
     #[test]
     fn resolve_legacy_rewrites_system_info() {
-        // Sentry CORE-RUST-G0: older clients called `openhuman.system_info`
+        // Sentry CORE-RUST-G0: older clients called `neppy.system_info`
         // before the method was namespaced under `health` as
-        // `openhuman.health_system_info`.  The alias table must rewrite it so
+        // `neppy.health_system_info`.  The alias table must rewrite it so
         // the call resolves against the registered controller.
         assert_eq!(
-            resolve_legacy("openhuman.system_info"),
-            "openhuman.health_system_info",
+            resolve_legacy("neppy.system_info"),
+            "neppy.health_system_info",
         );
     }
 
     #[test]
     fn resolve_legacy_passes_through_unknown_methods() {
         assert_eq!(
-            resolve_legacy("openhuman.memory_list_namespaces"),
-            "openhuman.memory_list_namespaces"
+            resolve_legacy("neppy.memory_list_namespaces"),
+            "neppy.memory_list_namespaces"
         );
         assert_eq!(resolve_legacy("does.not.exist"), "does.not.exist");
         assert_eq!(resolve_legacy(""), "");
@@ -612,17 +677,14 @@ mod tests {
     fn resolve_legacy_returned_str_equals_table_value() {
         // Sanity check: the function returns the canonical str slice from
         // the table when it matches, not a copy of the input.
-        let out = resolve_legacy("openhuman.ping");
+        let out = resolve_legacy("neppy.ping");
         assert_eq!(out, "core.ping");
     }
 
     #[test]
     fn resolve_legacy_rewrites_dotted_channel_list_aliases() {
-        assert_eq!(resolve_legacy("channels.list"), "openhuman.channels_list");
-        assert_eq!(
-            resolve_legacy("openhuman.channels.list"),
-            "openhuman.channels_list"
-        );
+        assert_eq!(resolve_legacy("channels.list"), "neppy.channels_list");
+        assert_eq!(resolve_legacy("neppy.channels.list"), "neppy.channels_list");
     }
 
     #[test]
@@ -633,7 +695,7 @@ mod tests {
         // "unknown method".
         assert_eq!(
             resolve_legacy("tool_registry.diagnostics"),
-            "openhuman.tool_registry_diagnostics"
+            "neppy.tool_registry_diagnostics"
         );
     }
 

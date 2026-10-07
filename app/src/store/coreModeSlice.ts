@@ -35,7 +35,7 @@ export type CoreMode =
       url: string;
       /**
        * Bearer token for the remote core. Cloud cores require auth (see
-       * `OPENHUMAN_CORE_TOKEN` in docs/CLOUD_DEPLOY.md). Optional in the type
+       * `NEPPY_CORE_TOKEN` in docs/CLOUD_DEPLOY.md). Optional in the type
        * so persisted state from older builds (which stored cloud mode without
        * a token) still hydrates; the BootCheckGate picker requires a value.
        */

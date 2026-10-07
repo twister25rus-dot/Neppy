@@ -6,7 +6,7 @@ This page is the operator runbook for new deployments and version bumps.
 
 ## Container contract
 
-When `OPENHUMAN_AGENTBOX_MODE=1`, the core HTTP server exposes:
+When `NEPPY_AGENTBOX_MODE=1`, the core HTTP server exposes:
 
 - `POST /run`: accept work, return `202 { "job_id": "<uuid>" }`. Body shape:
   `{ "payload": { "message": "<string>", "thread_id": "<optional string>" } }`.
@@ -26,11 +26,11 @@ In the AgentBox console:
    "GMI MaaS" toggle so the platform injects `GMI_MAAS_BASE_URL` and
    `GMI_MAAS_API_KEY` at runtime.
 3. **Env Variables**: set:
-   - `OPENHUMAN_AGENTBOX_MODE=1`
-   - (optional) `OPENHUMAN_AGENTBOX_JOB_TIMEOUT_SECS` (default 600)
+   - `NEPPY_AGENTBOX_MODE=1`
+   - (optional) `NEPPY_AGENTBOX_JOB_TIMEOUT_SECS` (default 600)
    - `GMI_MODELS` to the marketplace-approved model id (e.g.
      `deepseek-ai/DeepSeek-V4-Pro`).
-   - `OPENHUMAN_WORKSPACE` to a writable container path (e.g. `/home/openhuman/.neppy`).
+   - `NEPPY_WORKSPACE` to a writable container path (e.g. `/home/openhuman/.neppy`).
    - `RUST_LOG=info` (or `debug` while shaking out the first deploy).
 4. **Review & Register**: confirm and test from the console panel.
 
@@ -53,7 +53,7 @@ First deploy takes 10 to 25 minutes to reach `running`; later deploys are faster
 
 AgentBox treats requests >2 min as long-running. Neppy handles this with
 **polling** per AgentBox's documented pattern: the agent runtime is invoked
-inside the worker task, capped by `OPENHUMAN_AGENTBOX_JOB_TIMEOUT_SECS`
+inside the worker task, capped by `NEPPY_AGENTBOX_JOB_TIMEOUT_SECS`
 (default 10 minutes). No streaming.
 
 Polling clients should:
@@ -67,7 +67,7 @@ Polling clients should:
 ## Local smoke test
 
 ```bash
-OPENHUMAN_AGENTBOX_MODE=1 \
+NEPPY_AGENTBOX_MODE=1 \
 GMI_MAAS_BASE_URL=https://api.gmi-serving.com \
 GMI_MAAS_API_KEY=sk-... \
 GMI_MODELS=deepseek-ai/DeepSeek-V4-Pro \
@@ -89,7 +89,7 @@ curl http://127.0.0.1:7788/jobs/<job_id>
   the production invoker stub from before Task 9 landed; rebuild against a
   current `main`.
 - `status: "failed"`, `error: "job timeout after Ns"`: the agent invocation
-  exceeded `OPENHUMAN_AGENTBOX_JOB_TIMEOUT_SECS`. Bump the env var on the
+  exceeded `NEPPY_AGENTBOX_JOB_TIMEOUT_SECS`. Bump the env var on the
   next deploy.
 - `[agentbox::gmi] not registering GMI MaaS provider: missing/blank: GMI_MAAS_API_KEY`:
   the platform did not inject the key. Re-check the wizard's "MaaS

@@ -27,7 +27,7 @@ From `mod.rs`:
 
 ## RPC / controllers
 
-- **`openhuman.mcp_audit_list`** (namespace `mcp_audit`, function `list`) — lists write-attempt audit records (successes and rejected/failed attempts) ordered by `timestamp_ms` descending.
+- **`neppy.mcp_audit_list`** (namespace `mcp_audit`, function `list`) — lists write-attempt audit records (successes and rejected/failed attempts) ordered by `timestamp_ms` descending.
   - Inputs (all optional): `limit` (u64, default 50, max 500), `offset` (u64), `since_ms` (u64), `client_filter` (string, exact), `tool_filter` (string, exact), `success_only` (bool).
   - Output: `records` — array of `McpWriteRecord`.
 - **Internal-only.** Registered via `all_internal_controllers` and wired into `src/core/all.rs` through `all_mcp_audit_internal_controllers()`. Per `src/core/all_tests.rs`, the method is routable internally (`schema_for_rpc_method`) but **not** exposed publicly via `rpc_method_from_parts`.

@@ -39,7 +39,7 @@ should be stated: a value crossing the seam is rebuilt, and the two contracts ca
 mitigation is that every conversion destructures exhaustively, so a field added on either side is
 a compile error naming the field rather than a silently dropped value.
 
-The consequence for this plan: **openhuman stays on `tinycortex-api`** as its contract. §6.7's grep
+The consequence for this plan: **neppy stays on `tinycortex-api`** as its contract. §6.7's grep
 invariant is unchanged. A future phase that unifies the two contracts would re-point the host's
 ~200 `tinycortex_api::` references in one mechanical pass; until then, the seam is the boundary.
 

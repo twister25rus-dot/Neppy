@@ -9,7 +9,7 @@
  *   - PTT round button (hold to talk, release to send)
  *
  * Chat:
- *   - Sends via openhuman.channel_web_chat RPC (same as desktop chat).
+ *   - Sends via neppy.channel_web_chat RPC (same as desktop chat).
  *   - Subscribes to chat events (text_delta, chat_done, chat_error) for
  *     mascot face transitions and transcript display.
  *   - Uses useHumanMascot() to drive face/viseme state.

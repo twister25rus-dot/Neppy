@@ -2,7 +2,7 @@
  * Realtime voice-agent session bootstrap (#5399).
  *
  * Mints a short-lived signed WebSocket URL for an ElevenLabs Agents
- * (Conversational AI) session via the core RPC `openhuman.voice_agent_signed_url`,
+ * (Conversational AI) session via the core RPC `neppy.voice_agent_signed_url`,
  * which proxies the backend `/voice-agent/get-signed-url`. The renderer never
  * sees the provider API key — only the short-lived signed URL — so the realtime
  * session client opens the connection with it directly.
@@ -35,7 +35,7 @@ interface VoiceAgentSignedUrlRpc {
  */
 export async function fetchVoiceAgentSignedUrl(): Promise<VoiceAgentSignedUrl> {
   const result = await callCoreRpc<VoiceAgentSignedUrlRpc>({
-    method: 'openhuman.voice_agent_signed_url',
+    method: 'neppy.voice_agent_signed_url',
   });
   return {
     signedUrl: result.signed_url,

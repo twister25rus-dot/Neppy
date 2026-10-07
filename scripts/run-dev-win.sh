@@ -599,21 +599,21 @@ fi
 # CEF runtime is correctly bundled. APPLE_SIGNING_IDENTITY is macOS-only
 # and is intentionally omitted here.
 #
-# OPENHUMAN_DEV_PORT lets parallel worktree dev sessions avoid the
+# NEPPY_DEV_PORT lets parallel worktree dev sessions avoid the
 # hardcoded 1420 collision. Vite reads the same env var directly; the
 # tauri-cli inline override patches tauri.conf.json's `devUrl` so the
 # shell connects to the right Vite instance.
-# Validate OPENHUMAN_DEV_PORT before interpolating into JSON — a stray
+# Validate NEPPY_DEV_PORT before interpolating into JSON — a stray
 # space, alphabetic char, or out-of-range value would produce an invalid
 # devUrl and tauri would refuse to start (or worse, drift from Vite's
 # own numeric fallback). Trim whitespace, require pure digits in
 # [1, 65535], fall back to 1420 with a warning otherwise.
-raw_dev_port="${OPENHUMAN_DEV_PORT:-1420}"
+raw_dev_port="${NEPPY_DEV_PORT:-1420}"
 raw_dev_port="${raw_dev_port//[[:space:]]/}"
 if [[ "$raw_dev_port" =~ ^[0-9]+$ ]] && (( raw_dev_port >= 1 && raw_dev_port <= 65535 )); then
   DEV_PORT="$raw_dev_port"
 else
-  echo "[run-dev-win] WARNING: invalid OPENHUMAN_DEV_PORT='$raw_dev_port'; falling back to 1420" >&2
+  echo "[run-dev-win] WARNING: invalid NEPPY_DEV_PORT='$raw_dev_port'; falling back to 1420" >&2
   DEV_PORT=1420
 fi
 
@@ -651,7 +651,7 @@ fi
 #    cmd.exe child can find pnpm regardless of any PATH stripping
 #    between bash → cargo-tauri → cmd. The default in tauri.conf.json
 #    is `"pnpm run dev"` (bare name) which depends on PATH.
-#  - overrides `devUrl` when OPENHUMAN_DEV_PORT is non-default.
+#  - overrides `devUrl` when NEPPY_DEV_PORT is non-default.
 # Point beforeDevCommand at vite via a wrapper batch file in a
 # space-free temp directory.
 #
@@ -705,7 +705,7 @@ echo "[run-dev-win] vite wrapper at: $VITE_WRAPPER_WIN"
 BEFORE_DEV_CMD="${VITE_WRAPPER_WIN//\\/\\\\}"
 CONFIG_OVERRIDE="{\"build\":{\"beforeDevCommand\":\"$BEFORE_DEV_CMD\""
 if (( DEV_PORT != 1420 )); then
-  echo "[run-dev-win] OPENHUMAN_DEV_PORT=$DEV_PORT — overriding tauri devUrl"
+  echo "[run-dev-win] NEPPY_DEV_PORT=$DEV_PORT — overriding tauri devUrl"
   CONFIG_OVERRIDE+=",\"devUrl\":\"http://localhost:$DEV_PORT\""
 fi
 CONFIG_OVERRIDE+="}}"

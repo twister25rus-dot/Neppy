@@ -42,7 +42,7 @@ async function getCoreClientVersion(): Promise<string | null> {
 
   if (!coreVersionPromise) {
     coreVersionPromise = callCoreRpc<{ result?: { version?: string } }>({
-      method: 'openhuman.update_version',
+      method: 'neppy.update_version',
       params: {},
     })
       .then(response => sanitizeClientVersion(response?.result?.version))

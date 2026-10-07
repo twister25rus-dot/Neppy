@@ -171,7 +171,7 @@ impl ProxyConfigTool {
                 .as_str()
                 .ok_or_else(|| anyhow::anyhow!("'scope' must be a string"))?;
             proxy.scope = Self::parse_scope(scope).ok_or_else(|| {
-                anyhow::anyhow!("Invalid scope '{scope}'. Use environment|openhuman|services")
+                anyhow::anyhow!("Invalid scope '{scope}'. Use environment|neppy|services")
             })?;
         }
 
@@ -312,7 +312,7 @@ impl Tool for ProxyConfigTool {
     }
 
     fn description(&self) -> &str {
-        "Manage Neppy proxy settings (scope: environment | openhuman | services), including runtime and process env application"
+        "Manage Neppy proxy settings (scope: environment | neppy | services), including runtime and process env application"
     }
 
     fn parameters_schema(&self) -> Value {
@@ -330,7 +330,7 @@ impl Tool for ProxyConfigTool {
                 },
                 "scope": {
                     "type": "string",
-                    "description": "Proxy scope: environment | openhuman | services"
+                    "description": "Proxy scope: environment | neppy | services"
                 },
                 "http_proxy": {
                     "type": ["string", "null"],

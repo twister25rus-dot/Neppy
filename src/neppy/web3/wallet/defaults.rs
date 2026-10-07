@@ -31,11 +31,11 @@ const SOLANA_USDC_MINT_MAINNET: &str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyT
 const SOLANA_USDC_MINT_DEVNET: &str = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
 /// The Solana cluster the wallet broadcasts to, selected via the
-/// `OPENHUMAN_SOLANA_CLUSTER` env (default [`SolanaCluster::Mainnet`]).
+/// `NEPPY_SOLANA_CLUSTER` env (default [`SolanaCluster::Mainnet`]).
 ///
 /// Drives **both** the default Solana RPC endpoint and the USDC SPL mint, so a
 /// devnet x402 payment challenge's on-chain transfer lands on devnet with the
-/// devnet mint rather than mainnet. Pair `OPENHUMAN_SOLANA_CLUSTER=devnet` with
+/// devnet mint rather than mainnet. Pair `NEPPY_SOLANA_CLUSTER=devnet` with
 /// a staging `TINYPLACE_API_BASE_URL` when testing tiny.place on devnet.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SolanaCluster {
@@ -45,7 +45,7 @@ pub enum SolanaCluster {
 
 impl SolanaCluster {
     /// Default JSON-RPC endpoint for the cluster (overridable per-call by
-    /// `OPENHUMAN_WALLET_RPC_SOLANA`).
+    /// `NEPPY_WALLET_RPC_SOLANA`).
     pub fn rpc_url(self) -> &'static str {
         match self {
             Self::Mainnet => DEFAULT_SOLANA_RPC_URL,
@@ -62,16 +62,16 @@ impl SolanaCluster {
     }
 }
 
-/// Resolve the configured Solana cluster from `OPENHUMAN_SOLANA_CLUSTER`
+/// Resolve the configured Solana cluster from `NEPPY_SOLANA_CLUSTER`
 /// (case-insensitive `devnet` → [`SolanaCluster::Devnet`]; anything else or
 /// unset → [`SolanaCluster::Mainnet`], preserving the default behaviour).
 pub fn solana_cluster() -> SolanaCluster {
-    let configured = std::env::var("OPENHUMAN_SOLANA_CLUSTER")
+    let configured = crate::neppy::util::env::var("NEPPY_SOLANA_CLUSTER")
         .ok()
         .map(|v| v.trim().to_ascii_lowercase());
     match configured.as_deref() {
         Some("devnet") => {
-            log::debug!("[wallet] Solana cluster = devnet (via OPENHUMAN_SOLANA_CLUSTER)");
+            log::debug!("[wallet] Solana cluster = devnet (via NEPPY_SOLANA_CLUSTER)");
             SolanaCluster::Devnet
         }
         _ => SolanaCluster::Mainnet,
@@ -124,12 +124,12 @@ impl EvmNetwork {
 
     pub fn rpc_env_var(self) -> &'static str {
         match self {
-            Self::EthereumMainnet => "OPENHUMAN_WALLET_RPC_EVM",
-            Self::BaseMainnet => "OPENHUMAN_WALLET_RPC_BASE",
-            Self::ArbitrumOne => "OPENHUMAN_WALLET_RPC_ARBITRUM",
-            Self::OptimismMainnet => "OPENHUMAN_WALLET_RPC_OPTIMISM",
-            Self::PolygonMainnet => "OPENHUMAN_WALLET_RPC_POLYGON",
-            Self::BscMainnet => "OPENHUMAN_WALLET_RPC_BSC",
+            Self::EthereumMainnet => "NEPPY_WALLET_RPC_EVM",
+            Self::BaseMainnet => "NEPPY_WALLET_RPC_BASE",
+            Self::ArbitrumOne => "NEPPY_WALLET_RPC_ARBITRUM",
+            Self::OptimismMainnet => "NEPPY_WALLET_RPC_OPTIMISM",
+            Self::PolygonMainnet => "NEPPY_WALLET_RPC_POLYGON",
+            Self::BscMainnet => "NEPPY_WALLET_RPC_BSC",
         }
     }
 
@@ -167,7 +167,7 @@ impl EvmNetwork {
     }
 
     pub fn rpc_url(self) -> String {
-        std::env::var(self.rpc_env_var())
+        crate::neppy::util::env::var(self.rpc_env_var())
             .ok()
             .map(|value| value.trim().to_string())
             .filter(|value| !value.is_empty())
@@ -175,7 +175,7 @@ impl EvmNetwork {
     }
 
     pub fn rpc_source(self) -> RpcSource {
-        let raw = std::env::var(self.rpc_env_var()).unwrap_or_default();
+        let raw = crate::neppy::util::env::var(self.rpc_env_var()).unwrap_or_default();
         if raw.trim().is_empty() {
             RpcSource::Default
         } else {
@@ -235,11 +235,11 @@ pub fn default_rpc_url(chain: WalletChain) -> &'static str {
 pub fn rpc_url_for_chain(chain: WalletChain) -> String {
     match chain {
         WalletChain::Evm => EvmNetwork::EthereumMainnet.rpc_url(),
-        WalletChain::Btc => env_or_default("OPENHUMAN_WALLET_RPC_BTC", DEFAULT_BTC_REST_URL),
+        WalletChain::Btc => env_or_default("NEPPY_WALLET_RPC_BTC", DEFAULT_BTC_REST_URL),
         WalletChain::Solana => {
-            env_or_default("OPENHUMAN_WALLET_RPC_SOLANA", solana_cluster().rpc_url())
+            env_or_default("NEPPY_WALLET_RPC_SOLANA", solana_cluster().rpc_url())
         }
-        WalletChain::Tron => env_or_default("OPENHUMAN_WALLET_RPC_TRON", DEFAULT_TRON_REST_URL),
+        WalletChain::Tron => env_or_default("NEPPY_WALLET_RPC_TRON", DEFAULT_TRON_REST_URL),
     }
 }
 
@@ -288,7 +288,7 @@ fn tinyplace_solana_rpc_url() -> String {
 
 /// Trimmed value of `env_var`, or `None` when unset/blank.
 fn env_nonempty(env_var: &str) -> Option<String> {
-    std::env::var(env_var)
+    crate::neppy::util::env::var(env_var)
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
@@ -299,7 +299,7 @@ pub fn rpc_url_for_evm_network(network: EvmNetwork) -> String {
 }
 
 fn env_or_default(env_var: &str, default: &str) -> String {
-    std::env::var(env_var)
+    crate::neppy::util::env::var(env_var)
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
@@ -309,14 +309,14 @@ fn env_or_default(env_var: &str, default: &str) -> String {
 pub fn rpc_source_for_chain(chain: WalletChain) -> RpcSource {
     match chain {
         WalletChain::Evm => EvmNetwork::EthereumMainnet.rpc_source(),
-        WalletChain::Btc => env_or_source("OPENHUMAN_WALLET_RPC_BTC"),
-        WalletChain::Solana => env_or_source("OPENHUMAN_WALLET_RPC_SOLANA"),
-        WalletChain::Tron => env_or_source("OPENHUMAN_WALLET_RPC_TRON"),
+        WalletChain::Btc => env_or_source("NEPPY_WALLET_RPC_BTC"),
+        WalletChain::Solana => env_or_source("NEPPY_WALLET_RPC_SOLANA"),
+        WalletChain::Tron => env_or_source("NEPPY_WALLET_RPC_TRON"),
     }
 }
 
 fn env_or_source(env_var: &str) -> RpcSource {
-    let raw = std::env::var(env_var).unwrap_or_default();
+    let raw = crate::neppy::util::env::var(env_var).unwrap_or_default();
     if raw.trim().is_empty() {
         RpcSource::Default
     } else {
@@ -340,10 +340,10 @@ pub fn explorer_tx_url_for_evm_network(network: EvmNetwork, tx_hash: &str) -> Op
 
 pub fn env_var_for_chain(chain: WalletChain) -> &'static str {
     match chain {
-        WalletChain::Evm => "OPENHUMAN_WALLET_RPC_EVM",
-        WalletChain::Btc => "OPENHUMAN_WALLET_RPC_BTC",
-        WalletChain::Solana => "OPENHUMAN_WALLET_RPC_SOLANA",
-        WalletChain::Tron => "OPENHUMAN_WALLET_RPC_TRON",
+        WalletChain::Evm => "NEPPY_WALLET_RPC_EVM",
+        WalletChain::Btc => "NEPPY_WALLET_RPC_BTC",
+        WalletChain::Solana => "NEPPY_WALLET_RPC_SOLANA",
+        WalletChain::Tron => "NEPPY_WALLET_RPC_TRON",
     }
 }
 
@@ -613,7 +613,7 @@ mod tests {
 
     // ── Solana cluster (devnet) ───────────────────────────────────────────────
     //
-    // `OPENHUMAN_SOLANA_CLUSTER` is process-global env. Serialise these so they
+    // `NEPPY_SOLANA_CLUSTER` is process-global env. Serialise these so they
     // don't race each other (or other env-reading tests) and always restore the
     // prior value afterwards.
     static CLUSTER_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -622,15 +622,15 @@ mod tests {
         let _guard = CLUSTER_ENV_LOCK
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        let prev = std::env::var("OPENHUMAN_SOLANA_CLUSTER").ok();
+        let prev = crate::neppy::util::env::var("NEPPY_SOLANA_CLUSTER").ok();
         match value {
-            Some(v) => std::env::set_var("OPENHUMAN_SOLANA_CLUSTER", v),
-            None => std::env::remove_var("OPENHUMAN_SOLANA_CLUSTER"),
+            Some(v) => std::env::set_var("NEPPY_SOLANA_CLUSTER", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_SOLANA_CLUSTER"),
         }
         let out = f();
         match prev {
-            Some(v) => std::env::set_var("OPENHUMAN_SOLANA_CLUSTER", v),
-            None => std::env::remove_var("OPENHUMAN_SOLANA_CLUSTER"),
+            Some(v) => std::env::set_var("NEPPY_SOLANA_CLUSTER", v),
+            None => crate::neppy::util::env::remove_var("NEPPY_SOLANA_CLUSTER"),
         }
         out
     }
@@ -685,22 +685,22 @@ mod tests {
         let _guard = CLUSTER_ENV_LOCK
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        let prev_rpc = std::env::var("TINYPLACE_SOLANA_RPC_URL").ok();
-        let prev_base = std::env::var("TINYPLACE_API_BASE_URL").ok();
-        let prev_cluster = std::env::var("OPENHUMAN_SOLANA_CLUSTER").ok();
+        let prev_rpc = crate::neppy::util::env::var("TINYPLACE_SOLANA_RPC_URL").ok();
+        let prev_base = crate::neppy::util::env::var("TINYPLACE_API_BASE_URL").ok();
+        let prev_cluster = crate::neppy::util::env::var("NEPPY_SOLANA_CLUSTER").ok();
         let set = |key: &str, val: Option<&str>| match val {
             Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
+            None => crate::neppy::util::env::remove_var(key),
         };
         set("TINYPLACE_SOLANA_RPC_URL", rpc_url);
         set("TINYPLACE_API_BASE_URL", api_base);
-        set("OPENHUMAN_SOLANA_CLUSTER", cluster);
+        set("NEPPY_SOLANA_CLUSTER", cluster);
         // Catch panics (e.g. assertion failures) so env is always restored —
         // otherwise a failing test leaks process-global env into later tests.
         let out = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
         set("TINYPLACE_SOLANA_RPC_URL", prev_rpc.as_deref());
         set("TINYPLACE_API_BASE_URL", prev_base.as_deref());
-        set("OPENHUMAN_SOLANA_CLUSTER", prev_cluster.as_deref());
+        set("NEPPY_SOLANA_CLUSTER", prev_cluster.as_deref());
         match out {
             Ok(v) => v,
             Err(panic) => std::panic::resume_unwind(panic),

@@ -6,7 +6,7 @@ import { callCoreRpc } from '../coreRpcClient';
 // Surfaces the read paths added in PR #2335 (`approval_list_recent_decisions`)
 // and the live `approval_list_pending` queue. Both are exposed by the core's
 // approval gate through the controller registry; this client only READS them —
-// decisions still flow through `openhuman.approval_decide` (ApprovalRequestCard).
+// decisions still flow through `neppy.approval_decide` (ApprovalRequestCard).
 //
 // Wire-shape note: both RPCs return an `RpcOutcome` with a single diagnostic
 // log line when the gate is installed, so the JSON-RPC `result` is the
@@ -94,7 +94,7 @@ export const fetchRecentApprovalDecisions = async (
   limit?: number
 ): Promise<ApprovalAuditEntry[]> => {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.approval_list_recent_decisions',
+    method: 'neppy.approval_list_recent_decisions',
     params: limit === undefined ? {} : { limit },
   });
   return unwrapRows<ApprovalAuditEntry>(raw);
@@ -102,7 +102,7 @@ export const fetchRecentApprovalDecisions = async (
 
 /** Fetch the live queue of pending (undecided) approvals. */
 export const fetchPendingApprovals = async (): Promise<PendingApproval[]> => {
-  const raw = await callCoreRpc<unknown>({ method: 'openhuman.approval_list_pending' });
+  const raw = await callCoreRpc<unknown>({ method: 'neppy.approval_list_pending' });
   return unwrapRows<PendingApproval>(raw);
 };
 
@@ -117,12 +117,12 @@ export const decideApproval = async (
   decision: ApprovalDecision
 ): Promise<void> => {
   await callCoreRpc({
-    method: 'openhuman.approval_decide',
+    method: 'neppy.approval_decide',
     params: { request_id: requestId, decision },
   });
 };
 
-/** Result of `openhuman.approval_preauthorize_flow` (mirrors Rust `FlowPreauthorizationResult`). */
+/** Result of `neppy.approval_preauthorize_flow` (mirrors Rust `FlowPreauthorizationResult`). */
 export interface FlowPreauthorizationResult {
   flow_id: string;
   /** Trust keys newly granted by this call. */
@@ -144,7 +144,7 @@ export const preauthorizeFlow = async (
   toolNames: string[]
 ): Promise<FlowPreauthorizationResult> => {
   const raw = await callCoreRpc<unknown>({
-    method: 'openhuman.approval_preauthorize_flow',
+    method: 'neppy.approval_preauthorize_flow',
     params: { flow_id: flowId, tool_names: toolNames },
   });
   const result = unwrapValue<FlowPreauthorizationResult>(raw);
@@ -162,10 +162,10 @@ export const preauthorizeFlow = async (
  *
  * - `installed` — gate was installed at boot and `external_effect` tool calls
  *   will be intercepted.
- * - `disabledByEnv` — operator set `OPENHUMAN_APPROVAL_GATE=0` AND the host
+ * - `disabledByEnv` — operator set `NEPPY_APPROVAL_GATE=0` AND the host
  *   honored it (CLI / Docker). Gate is OFF; the UI shows the persistent red
  *   banner.
- * - `overrideIgnored` — operator set `OPENHUMAN_APPROVAL_GATE=0` under the
+ * - `overrideIgnored` — operator set `NEPPY_APPROVAL_GATE=0` under the
  *   Tauri desktop shell, which always ignores the override. The UI shows a
  *   one-shot yellow info banner so the user knows the attempt was rejected.
  * - `host` — `"tauri-shell"` / `"cli"` / `"docker"` / `"unknown"` (boot
@@ -192,7 +192,7 @@ const unwrapValue = <T>(raw: unknown): T => {
  */
 export const fetchApprovalGateState = async (): Promise<ApprovalGateBootState> => {
   try {
-    const raw = await callCoreRpc<unknown>({ method: 'openhuman.approval_get_gate_state' });
+    const raw = await callCoreRpc<unknown>({ method: 'neppy.approval_get_gate_state' });
     return unwrapValue<ApprovalGateBootState>(raw);
   } catch {
     return { installed: true, disabledByEnv: false, overrideIgnored: false, host: 'unknown' };

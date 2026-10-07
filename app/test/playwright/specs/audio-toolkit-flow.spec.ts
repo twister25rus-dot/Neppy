@@ -5,8 +5,8 @@ import path from 'node:path';
 import { bootAuthenticatedPage, callCoreRpc } from '../helpers/core-rpc';
 
 function workspaceDir(): string {
-  const ws = process.env.OPENHUMAN_WORKSPACE;
-  if (!ws) throw new Error('OPENHUMAN_WORKSPACE not set for audio-toolkit-flow');
+  const ws = process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE;
+  if (!ws) throw new Error('NEPPY_WORKSPACE not set for audio-toolkit-flow');
   return ws;
 }
 
@@ -30,7 +30,7 @@ test.describe('Audio toolkit flow', () => {
         };
         audio?: { output_path: string; file_name: string; bytes_written: number; format: string };
         email?: { mode: string; capture_path?: string | null; attachment_name: string };
-      }>('openhuman.audio_toolkit_generate_and_email_podcast', {
+      }>('neppy.audio_toolkit_generate_and_email_podcast', {
         text: 'This is the weekly AI podcast briefing for the team.',
         title: 'Weekly briefing',
         to: 'listener@example.com',
@@ -89,7 +89,7 @@ test.describe('Audio toolkit flow', () => {
       file_name?: string;
       bytes_written?: number;
       format?: string;
-    }>('openhuman.audio_toolkit_generate_podcast', {
+    }>('neppy.audio_toolkit_generate_podcast', {
       text: 'This is the weekly AI podcast briefing for the team.',
       title: 'Weekly briefing',
       format: 'mp3',

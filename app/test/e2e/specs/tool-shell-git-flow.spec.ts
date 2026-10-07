@@ -30,7 +30,7 @@ const USER_ID = 'e2e-tool-shell-git';
  * What this spec proves end-to-end:
  *  - 6.2.1 — the agent runtime is up and the `tools_agent` definition that
  *    inherits the shell tool is wired into the live registry served over
- *    JSON-RPC (`openhuman.agent_list_definitions`).
+ *    JSON-RPC (`neppy.agent_list_definitions`).
  *  - 6.2.2 — the same agent definition surfaces the wildcard tool scope so
  *    the security policy's command-allowlist check (validated in Rust unit
  *    tests) is reachable through the live registry path. We additionally
@@ -39,7 +39,7 @@ const USER_ID = 'e2e-tool-shell-git';
  *    invalid argument) — this confirms the RPC denial envelope shape callers
  *    must assert against is consistent across tool families.
  *  - 6.2.3 — the workspace root resolved by the sidecar is the same temp
- *    `OPENHUMAN_WORKSPACE` the spec scaffolds a fixture git repo into, which
+ *    `NEPPY_WORKSPACE` the spec scaffolds a fixture git repo into, which
  *    is the structural prerequisite for every git read operation. We assert
  *    via Node `fs` + `git status` (running locally, not via the agent) that
  *    the fixture is well-formed.
@@ -82,10 +82,10 @@ interface ListDefinitionsResult {
 }
 
 function workspaceDir(): string {
-  const ws = process.env.OPENHUMAN_WORKSPACE;
+  const ws = process.env.NEPPY_WORKSPACE ?? process.env.OPENHUMAN_WORKSPACE;
   if (!ws) {
     throw new Error(
-      'OPENHUMAN_WORKSPACE not set; this spec must be launched via app/scripts/e2e-run-spec.sh'
+      'NEPPY_WORKSPACE not set; this spec must be launched via app/scripts/e2e-run-spec.sh'
     );
   }
   return ws;
@@ -157,7 +157,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
 
     // Seed a deterministic git repo inside the workspace so the read/write
     // assertions below have something to point at. The fixture is rebuilt
-    // every run because OPENHUMAN_WORKSPACE is recreated by e2e-run-spec.sh.
+    // every run because NEPPY_WORKSPACE is recreated by e2e-run-spec.sh.
     const repoDir = path.join(workspaceDir(), FIXTURE_REPO_REL);
     await makeFixtureRepo(repoDir);
     stepLog(`seeded git fixture at ${repoDir}`);
@@ -175,7 +175,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     stepLog('core.ping response', ping);
     expect(ping.ok).toBe(true);
 
-    const status = await callNeppyRpc<ServerStatus>('openhuman.agent_server_status', {});
+    const status = await callNeppyRpc<ServerStatus>('neppy.agent_server_status', {});
     stepLog('agent_server_status response', status);
     expect(status.ok).toBe(true);
     // agent_server_status uses single_log → result is {result: {running, url}, logs: [...]}
@@ -186,7 +186,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     // (shell, file_read, file_write, git_operations, browser_open, browser).
     // Asserting it is registered proves the registry path that resolves
     // shell/git tools is live behind JSON-RPC.
-    const list = await callNeppyRpc<ListDefinitionsResult>('openhuman.agent_list_definitions', {});
+    const list = await callNeppyRpc<ListDefinitionsResult>('neppy.agent_list_definitions', {});
     stepLog('agent_list_definitions response (count only)', {
       count: list.result?.definitions?.length ?? 0,
     });
@@ -207,7 +207,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     // as `{ ok: true }` with a hidden error string. This is the contract every
     // restricted-command response (and every `Tool::error(...)` result) must
     // satisfy for the UI to render the deny path.
-    const bogus = await callNeppyRpc('openhuman.memory_write_file', {
+    const bogus = await callNeppyRpc('neppy.memory_write_file', {
       // omit `relative_path` to force the validator to short-circuit
       content: 'no path provided',
     });
@@ -216,7 +216,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     expect(typeof bogus.error === 'string' && bogus.error.length > 0).toBe(true);
 
     // Negative path traversal — also a denial — must surface the same shape.
-    const traversal = await callNeppyRpc('openhuman.memory_write_file', {
+    const traversal = await callNeppyRpc('neppy.memory_write_file', {
       relative_path: '../shell-restriction-967.txt',
       content: 'should not be written',
     });
@@ -225,7 +225,7 @@ describe('System tools — Shell + Git (registry, denial envelope, fixture repo)
     expect(typeof traversal.error === 'string' && traversal.error.length > 0).toBe(true);
   });
 
-  it('6.2.3 fixture git repo inside OPENHUMAN_WORKSPACE supports read ops (status / log)', async () => {
+  it('6.2.3 fixture git repo inside NEPPY_WORKSPACE supports read ops (status / log)', async () => {
     // The git_operations tool resolves repo paths via
     // `workspace_dir.join(...)` — see GitOperationsTool::run_git_command.
     // Asserting the fixture is a healthy git repo proves the structural

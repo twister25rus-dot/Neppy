@@ -65,7 +65,10 @@ use crate::rpc::StructuredRpcError;
 #[cfg(feature = "http-server")]
 pub async fn rpc_handler(State(state): State<AppState>, Json(req): Json<RpcRequest>) -> Response {
     let id = req.id.clone();
-    let method = req.method.clone();
+    // Log and Sentry-tag the canonical `neppy.` spelling even when an
+    // older client still sends `openhuman.`; `invoke_method` resolves it again
+    // (idempotent), this only keeps observability keyed on one name.
+    let method = crate::core::legacy_aliases::normalize_rpc_method(&req.method).into_owned();
     let started = std::time::Instant::now();
     let result = invoke_method(state, method.as_str(), req.params).await;
     let ms = started.elapsed().as_millis();
@@ -456,6 +459,14 @@ async fn invoke_method_inner(
     method: &str,
     params: Value,
 ) -> Result<Value, String> {
+    // Phase 0: normalise the method name once, at the single entry point shared
+    // by HTTP JSON-RPC, the CLI, Socket.IO, `CoreRuntime::invoke` and the
+    // in-process bus callers. The pre-rebrand `openhuman.` prefix (and the legacy
+    // alias table) resolve to the canonical `neppy.` name here, so everything
+    // below — including unknown-method errors — only ever sees canonical names.
+    let resolved = crate::core::legacy_aliases::resolve_legacy(method);
+    let method = resolved.as_ref();
+
     // Phase 1: Check static controller registry.
     if let Some(schema) = all::schema_for_rpc_method(method) {
         let params_obj = params_to_object(params.clone())?;
@@ -1248,9 +1259,9 @@ async fn http_request_log_middleware(req: Request, next: Next) -> Response {
 
 /// Environment variable for additional comma-separated origins to allow.
 /// Intended for debug harnesses and E2E setups that don't run on loopback —
-/// e.g. `OPENHUMAN_CORE_ALLOWED_ORIGINS=https://e2e.internal,http://my-debugger:8080`.
+/// e.g. `NEPPY_CORE_ALLOWED_ORIGINS=https://e2e.internal,http://my-debugger:8080`.
 #[cfg(feature = "http-server")]
-const ALLOWED_ORIGINS_ENV: &str = "OPENHUMAN_CORE_ALLOWED_ORIGINS";
+const ALLOWED_ORIGINS_ENV: &str = "NEPPY_CORE_ALLOWED_ORIGINS";
 
 /// Decides whether a browser `Origin` header value is allowed to make
 /// authenticated cross-origin requests against the local RPC server.
@@ -1260,7 +1271,7 @@ const ALLOWED_ORIGINS_ENV: &str = "OPENHUMAN_CORE_ALLOWED_ORIGINS";
 ///      `http(s)://tauri.localhost` on Windows.
 ///   2. The Vite dev server during `pnpm dev` — any port on loopback hosts.
 ///   3. Operator-controlled debug harnesses opted in via
-///      `OPENHUMAN_CORE_ALLOWED_ORIGINS`.
+///      `NEPPY_CORE_ALLOWED_ORIGINS`.
 ///
 /// Anything else (a random web page that has somehow obtained the bearer
 /// token via leaked logs / screenshots / a compromised third-party origin
@@ -1268,7 +1279,7 @@ const ALLOWED_ORIGINS_ENV: &str = "OPENHUMAN_CORE_ALLOWED_ORIGINS";
 /// is not enough authorization without an origin binding.
 #[cfg(feature = "http-server")]
 pub(super) fn is_origin_allowed(origin: &str) -> bool {
-    let extra_origins = std::env::var(ALLOWED_ORIGINS_ENV).ok();
+    let extra_origins = crate::neppy::util::env::var(ALLOWED_ORIGINS_ENV).ok();
     is_origin_allowed_with_extra(origin, extra_origins.as_deref())
 }
 
@@ -1339,7 +1350,7 @@ async fn cors_middleware(req: Request, next: Next) -> Response {
 /// the calling JS. Non-browser callers (no `Origin` header) are unaffected.
 ///
 /// For Docker / cloud deployments where the server binds to `0.0.0.0`,
-/// extend the allowlist via the `OPENHUMAN_CORE_ALLOWED_ORIGINS` env var
+/// extend the allowlist via the `NEPPY_CORE_ALLOWED_ORIGINS` env var
 /// (comma-separated) rather than wildcarding `Access-Control-Allow-Origin`.
 #[cfg(feature = "http-server")]
 pub(super) fn with_cors_headers(mut response: Response, origin: Option<&str>) -> Response {
@@ -1693,7 +1704,7 @@ async fn not_found_handler() -> impl IntoResponse {
 /// Resolves the port for the core server from environment variables or defaults.
 #[cfg(feature = "http-server")]
 pub(crate) fn core_port() -> u16 {
-    std::env::var("OPENHUMAN_CORE_PORT")
+    crate::neppy::util::env::var("NEPPY_CORE_PORT")
         .ok()
         .and_then(|v| v.parse::<u16>().ok())
         .unwrap_or(7788)
@@ -1702,7 +1713,7 @@ pub(crate) fn core_port() -> u16 {
 /// Resolves the bind address host for the core server from environment variables or defaults.
 #[cfg(feature = "http-server")]
 pub(crate) fn core_host() -> String {
-    std::env::var("OPENHUMAN_CORE_HOST")
+    crate::neppy::util::env::var("NEPPY_CORE_HOST")
         .ok()
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| "127.0.0.1".to_string())
@@ -1759,7 +1770,7 @@ pub async fn run_server_embedded(
 /// Tauri shell now that the core runs in-process — PR #1061), it should
 /// pass `Some(token)` so the embedded server can seed its auth subsystem
 /// via [`crate::core::auth::init_rpc_token_with_value`] without ever
-/// reading `OPENHUMAN_CORE_TOKEN` from the process environment.  Passing
+/// reading `NEPPY_CORE_TOKEN` from the process environment.  Passing
 /// `None` preserves the env-as-config fallback (CLI / docker / cloud).
 pub async fn run_server_embedded_with_ready(
     host: Option<&str>,
@@ -1989,7 +2000,7 @@ fn register_domain_subscribers(
 
     // Seed the live tool-execution timeout from the persisted `[agent]` config
     // so a user-configured value (Settings → Agent OS access → Action timeout)
-    // is in effect from the first tool call. `OPENHUMAN_TOOL_TIMEOUT_SECS`, when
+    // is in effect from the first tool call. `NEPPY_TOOL_TIMEOUT_SECS`, when
     // set, still overrides this inside `set_tool_timeout_secs`. This lives on
     // the always-on boot path (not `channels::runtime::startup::start_channels`,
     // which is skipped for channel-less / web-chat-only cores) so the timeout
@@ -2224,7 +2235,7 @@ fn register_domain_subscribers(
     // ComposioTriggerReceived / WebhookIncomingRequest onto enabled flows and
     // runs `flows::ops::flows_run`, so schedule/app-event workflows still
     // dispatch when no realtime channel is configured or
-    // `OPENHUMAN_DISABLE_CHANNEL_LISTENERS` short-circuits `start_channels`.
+    // `NEPPY_DISABLE_CHANNEL_LISTENERS` short-circuits `start_channels`.
     // The `plan.flows` runtime guard cannot stand in for the compile-time gate:
     // the `flows::bus::FlowTriggerSubscriber` type path below must still resolve
     // for this to compile, so the whole block is `#[cfg]`-gated too.
@@ -2362,7 +2373,7 @@ fn register_domain_subscribers(
 ///
 /// `host_kind` identifies the embedding process (Tauri desktop shell vs
 /// standalone CLI / Docker). It drives the approval-gate's host-aware
-/// decision tree: under the Tauri shell, the `OPENHUMAN_APPROVAL_GATE=0`
+/// decision tree: under the Tauri shell, the `NEPPY_APPROVAL_GATE=0`
 /// env override is ignored and a domain event is published so the UI can
 /// surface a banner; under CLI / Docker the override is honored (with a
 /// noisy log + a domain event so any connected dashboard can flag it).
@@ -2472,14 +2483,14 @@ pub async fn bootstrap_core_runtime(
 
     // --- Cost dashboard tracker ---
     // Activates the previously-dormant CostTracker so the dashboard RPC
-    // surface (`openhuman.cost_get_dashboard`) and `record_provider_usage`
+    // surface (`neppy.cost_get_dashboard`) and `record_provider_usage`
     // share one JSONL-backed store. Idempotent.
     crate::neppy::platform::cost::init_global(cfg.cost.clone(), &workspace_dir);
 
     // --- x402 payment ledger ---
     // Initializes the JSONL-backed spending ledger for machine-payable API
     // payments (x402 protocol). Budget defaults can be overridden via
-    // the `openhuman.x402_update_budget` RPC. Gated on the Web3 domain (#4808
+    // the `neppy.x402_update_budget` RPC. Gated on the Web3 domain (#4808
     // review): under `harness()`/`none()` the x402 controllers are absent, so
     // their ledger must not initialize either.
     if domains.allows(crate::core::all::DomainGroup::Web3) {
@@ -2544,7 +2555,7 @@ pub async fn bootstrap_core_runtime(
     // --- Triggered-workflow subscriber ---
     // Install on the always-run serve boot, not only inside `start_channels`
     // (skipped for web-chat-only cores with no messaging integrations, and when
-    // `OPENHUMAN_DISABLE_CHANNEL_LISTENERS=1`). Without this, any workflow
+    // `NEPPY_DISABLE_CHANNEL_LISTENERS=1`). Without this, any workflow
     // declaring `triggers:` was silently ignored on web-chat-only desktop
     // installs. Idempotent — shares a process-global OnceLock with the
     // `start_channels` site so it registers exactly once regardless of which
@@ -2558,7 +2569,7 @@ pub async fn bootstrap_core_runtime(
     }
 
     // --- Approval gate (#1339) ---
-    // ON by default; opt out with `OPENHUMAN_APPROVAL_GATE=0` (or `false`).
+    // ON by default; opt out with `NEPPY_APPROVAL_GATE=0` (or `false`).
     // Prompt-class `external_effect()` tool calls route through
     // `ApprovalGate::intercept` and park until the UI dispatches
     // `approval_decide` (or the 10-minute TTL elapses → deny). Safe to default
@@ -2575,7 +2586,7 @@ pub async fn bootstrap_core_runtime(
     // surface) the override is honored, but a `DomainEvent::ApprovalGateDisabled`
     // is still published so any connected dashboard / log shipper can
     // surface the elevated-privilege state.
-    let env_override_requested = std::env::var("OPENHUMAN_APPROVAL_GATE")
+    let env_override_requested = crate::neppy::util::env::var("NEPPY_APPROVAL_GATE")
         .map(|v| {
             let t = v.trim();
             t == "0" || t.eq_ignore_ascii_case("false")
@@ -2600,7 +2611,7 @@ pub async fn bootstrap_core_runtime(
     );
     if decision.override_ignored {
         log::warn!(
-            "[runtime] OPENHUMAN_APPROVAL_GATE=0 IGNORED under desktop shell — \
+            "[runtime] NEPPY_APPROVAL_GATE=0 IGNORED under desktop shell — \
              gate is always on for the Tauri host (host={})",
             host_kind.tag()
         );
@@ -2614,7 +2625,7 @@ pub async fn bootstrap_core_runtime(
     // `approval_request` AND PlanReviewRequested → `plan_review_request` (both
     // handled by the same subscriber). Registered UNCONDITIONALLY here on the
     // always-run serve boot — the plan-review gate is independent of the approval
-    // gate and parks turns even when `OPENHUMAN_APPROVAL_GATE=0`, while
+    // gate and parks turns even when `NEPPY_APPROVAL_GATE=0`, while
     // `start_channels` is skipped for web-chat-only cores. Without this an
     // unguarded standalone/CLI/Docker core would park a plan review that never
     // reaches the UI and dies at the gate TTL. Idempotent (Once-guarded).
@@ -2628,7 +2639,7 @@ pub async fn bootstrap_core_runtime(
     if decision.install_gate {
         // Per-launch correlation token for the approval gate. This is
         // a fresh UUID every boot — it is NOT derived from the
-        // JSON-RPC bearer (`OPENHUMAN_CORE_TOKEN` / the in-memory
+        // JSON-RPC bearer (`NEPPY_CORE_TOKEN` / the in-memory
         // auth subsystem) and carries no credential material, so it
         // is safe to log, persist, and surface in audit events.
         // `approval_list_pending` is session-agnostic so pending rows
@@ -2640,7 +2651,7 @@ pub async fn bootstrap_core_runtime(
             session_id.clone(),
         );
         log::info!(
-            "[runtime] approval gate installed (on by default; set OPENHUMAN_APPROVAL_GATE=0 to disable, session_id={session_id}) — \
+            "[runtime] approval gate installed (on by default; set NEPPY_APPROVAL_GATE=0 to disable, session_id={session_id}) — \
              Prompt-class external-effect tool calls park for approval in interactive chat turns"
         );
         // (The approval/plan-review surface bridge is registered unconditionally
@@ -2648,7 +2659,7 @@ pub async fn bootstrap_core_runtime(
         crate::neppy::web_chat::register_artifact_surface_subscriber();
     } else {
         log::info!(
-            "[runtime] approval gate DISABLED (OPENHUMAN_APPROVAL_GATE=0 honored on host={}) — \
+            "[runtime] approval gate DISABLED (NEPPY_APPROVAL_GATE=0 honored on host={}) — \
              Prompt-class external-effect tool calls run unprompted",
             host_kind.tag()
         );
@@ -2661,7 +2672,7 @@ pub async fn bootstrap_core_runtime(
     // channel ("Files in this chat" panel + ArtifactCard updates). This is
     // independent of the approval-gate config — keep it outside the
     // `if approval_gate` block so artifact events still publish when the user
-    // sets OPENHUMAN_APPROVAL_GATE=0 (CR #3328947323 on PR #3026). Idempotent
+    // sets NEPPY_APPROVAL_GATE=0 (CR #3328947323 on PR #3026). Idempotent
     // (OnceLock-guarded inside register_artifact_surface_subscriber).
     crate::neppy::web_chat::register_artifact_surface_subscriber();
 
@@ -2696,7 +2707,7 @@ pub async fn start_core_runtime_services(
     // One-time first-run initialization (managed Python runtime, spaCy model,
     // managed Node runtime). Spawned AFTER subscribers are live but does NOT
     // block the ready signal — the core becomes RPC-ready immediately and the
-    // frontend watches per-step progress via `openhuman.harness_init_status`.
+    // frontend watches per-step progress via `neppy.harness_init_status`.
     // On a warm host every step's `is_done` probe passes and this settles
     // instantly. See `crate::neppy::agent::harness_init`.
     crate::core::runtime::services::start_boot_once_jobs(services, cfg).await;

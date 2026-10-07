@@ -8,7 +8,7 @@
 //! Everything the crate deliberately refused to own lives on this side of the
 //! seam and is reused from [`super::rpc`] unchanged:
 //!
-//! - **endpoint resolution**, including the `OPENHUMAN_WALLET_RPC_<CHAIN>`
+//! - **endpoint resolution**, including the `NEPPY_WALLET_RPC_<CHAIN>`
 //!   overrides the e2e tests point at a mock;
 //! - **failover** across the tiny.place Solana endpoint list;
 //! - **URL redaction**, so an endpoint carrying an API key never reaches a log;

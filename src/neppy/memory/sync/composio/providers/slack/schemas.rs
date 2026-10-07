@@ -5,9 +5,9 @@
 //! entire Slack integration lives under `composio::providers::slack`.
 //!
 //! Registered JSON-RPC methods (namespace `slack_memory`):
-//! - `openhuman.slack_memory_sync_trigger` — run the Composio-backed
+//! - `neppy.slack_memory_sync_trigger` — run the Composio-backed
 //!   `SlackProvider::sync()` once per active Slack connection.
-//! - `openhuman.slack_memory_sync_status`  — list per-connection
+//! - `neppy.slack_memory_sync_status`  — list per-connection
 //!   cursor + dedup + budget state.
 
 use serde::de::DeserializeOwned;

@@ -15,7 +15,7 @@
 //! is something else (or unreachable), we refuse to attach and surface the
 //! conflict so it can be diagnosed instead of producing 401s and version
 //! drift downstream.
-//! Set `OPENHUMAN_CORE_REUSE_EXISTING=1` to opt back into the legacy
+//! Set `NEPPY_CORE_REUSE_EXISTING=1` to opt back into the legacy
 //! attach-to-whatever-is-listening behavior (e.g. a manual `neppy-core
 //! run` harness for debugging).
 
@@ -78,7 +78,7 @@ pub struct CoreProcessHandle {
     ///
     /// Handed to the embedded server **in-memory** (via the `rpc_token`
     /// argument of [`neppy_core::core::jsonrpc::run_server_embedded_with_ready`])
-    /// rather than through `OPENHUMAN_CORE_TOKEN` on the process environment.
+    /// rather than through `NEPPY_CORE_TOKEN` on the process environment.
     /// Avoiding the env crossing keeps the bearer off `/proc/<pid>/environ`
     /// (Linux) and out of `sysctl KERN_PROCARGS2` / `ps eww -p <pid>` (macOS)
     /// where any same-UID process could otherwise read it without entitlement.
@@ -189,7 +189,7 @@ impl CoreProcessHandle {
 
             if reuse_existing_listener_enabled() {
                 log::warn!(
-                    "[core] OPENHUMAN_CORE_REUSE_EXISTING=1 — attaching to whatever is listening on port {} without identification (legacy behavior)",
+                    "[core] NEPPY_CORE_REUSE_EXISTING=1 — attaching to whatever is listening on port {} without identification (legacy behavior)",
                     self.preferred_port
                 );
                 return Ok(());
@@ -234,7 +234,7 @@ impl CoreProcessHandle {
                     // RPC bearer is handed to the embedded server in-memory
                     // via the `rpc_token` argument of
                     // run_server_embedded_with_ready (see below) — never
-                    // through OPENHUMAN_CORE_TOKEN on the process env.
+                    // through NEPPY_CORE_TOKEN on the process env.
                     // Sidecar-era env-var transport was a leftover from the
                     // PR #1061 cleanup; with the core in-process there is no
                     // child process that needs the env crossing, and
@@ -246,7 +246,7 @@ impl CoreProcessHandle {
                     // Surface the Tauri shell version to the in-process core so
                     // backend-bound HTTP requests can attach `x-tauri-version`
                     // analytics headers alongside `x-core-version`.
-                    std::env::set_var("OPENHUMAN_TAURI_VERSION", env!("CARGO_PKG_VERSION"));
+                    std::env::set_var("NEPPY_TAURI_VERSION", env!("CARGO_PKG_VERSION"));
                     *self.active_port.write() = port;
                     *self.last_port_fallback.write() = None;
 
@@ -300,7 +300,7 @@ impl CoreProcessHandle {
                             // In-memory bearer handoff: the embedded server
                             // seeds its auth subsystem from this value via
                             // `auth::init_rpc_token_with_value`, so the token
-                            // never crosses OPENHUMAN_CORE_TOKEN on the
+                            // never crosses NEPPY_CORE_TOKEN on the
                             // process env.
                             Some(token_for_core),
                         )
@@ -355,6 +355,7 @@ impl CoreProcessHandle {
                             self.rpc_url()
                         );
                     }
+                    crate::launch_marker::mark_ready();
                     return Ok(());
                 }
 
@@ -416,6 +417,7 @@ impl CoreProcessHandle {
                 } else {
                     log::info!("[core] core rpc became ready at {}", self.rpc_url());
                 }
+                crate::launch_marker::mark_ready();
                 return Ok(());
             }
 
@@ -464,7 +466,7 @@ impl CoreProcessHandle {
         ready: neppy_core::core::jsonrpc::EmbeddedReadySignal,
     ) {
         *self.active_port.write() = ready.port;
-        std::env::set_var("OPENHUMAN_CORE_RPC_URL", self.rpc_url());
+        std::env::set_var("NEPPY_CORE_RPC_URL", self.rpc_url());
         if let Some(preferred) = ready.fallback_from {
             let message = format!("port_fallback_engaged: {preferred} -> {}", ready.port);
             log::warn!("[core] {message}");
@@ -511,7 +513,7 @@ impl CoreProcessHandle {
             port
         );
         if let Err(e) = kill_pid_term(pid) {
-            return Err(format!("failed to signal stale openhuman pid {pid}: {e}"));
+            return Err(format!("failed to signal stale neppy pid {pid}: {e}"));
         }
 
         // Wait for the graceful exit, then revalidate ownership before any
@@ -531,9 +533,7 @@ impl CoreProcessHandle {
                         port
                     );
                     if let Err(e) = kill_pid_force(pid) {
-                        return Err(format!(
-                            "failed to force-kill stale openhuman pid {pid}: {e}"
-                        ));
+                        return Err(format!("failed to force-kill stale neppy pid {pid}: {e}"));
                     }
                 }
                 Some(current) => {
@@ -869,17 +869,17 @@ impl CoreProcessHandle {
 }
 
 pub fn default_core_port() -> u16 {
-    std::env::var("OPENHUMAN_CORE_PORT")
+    neppy_core::neppy::util::env::var("NEPPY_CORE_PORT")
         .ok()
         .and_then(|v| v.parse::<u16>().ok())
         .unwrap_or(7788)
 }
 
-/// Whether `OPENHUMAN_CORE_REUSE_EXISTING` is set to a truthy value. Opts
+/// Whether `NEPPY_CORE_REUSE_EXISTING` is set to a truthy value. Opts
 /// back into the pre-#1130 behavior of attaching to whatever is listening
 /// on the port without identification — useful for manual harnesses.
 pub(crate) fn reuse_existing_listener_enabled() -> bool {
-    std::env::var("OPENHUMAN_CORE_REUSE_EXISTING")
+    neppy_core::neppy::util::env::var("NEPPY_CORE_REUSE_EXISTING")
         .map(|v| matches!(v.trim(), "1" | "true" | "TRUE" | "yes" | "YES"))
         .unwrap_or(false)
 }
@@ -902,7 +902,7 @@ enum ListenerKind {
     /// stale Neppy core process from a previous build/session.
     Neppy,
     /// Either the listener didn't speak HTTP, didn't respond, or returned
-    /// a body that doesn't identify as openhuman.
+    /// a body that doesn't identify as neppy.
     Unknown { reason: String },
 }
 
@@ -943,12 +943,12 @@ async fn identify_listener(port: u16) -> ListenerKind {
         }
     };
     if is_neppy_root_body(&body) {
-        log::info!("[core] listener on port {port} identified as openhuman core");
+        log::info!("[core] listener on port {port} identified as neppy core");
         ListenerKind::Neppy
     } else {
         let preview: String = body.chars().take(80).collect();
         ListenerKind::Unknown {
-            reason: format!("probe GET / body did not identify as openhuman ({preview:?})"),
+            reason: format!("probe GET / body did not identify as neppy ({preview:?})"),
         }
     }
 }
@@ -975,7 +975,7 @@ fn is_expected_port_clash(reason: &str) -> bool {
         || reason.contains("connection refused")
         || reason.contains("returned status 404")
         || reason.contains("returned status 200")
-        || reason.contains("body did not identify as openhuman")
+        || reason.contains("body did not identify as neppy")
         || reason.contains("already in use by another process")
         || reason.contains("os error 10013")
         || reason.contains("wsaeacces")

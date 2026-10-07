@@ -104,7 +104,7 @@ const PairPhoneModal = ({ onClose, onPaired }: PairPhoneModalProps) => {
         if (pairedRef.current) return;
         try {
           const res = await callCoreRpc<ListDevicesResponse>({
-            method: 'openhuman.devices_list',
+            method: 'neppy.devices_list',
             params: {},
           });
           const matched = res.devices.find(d => d.channel_id === channelId && !d.revoked);
@@ -138,7 +138,7 @@ const PairPhoneModal = ({ onClose, onPaired }: PairPhoneModalProps) => {
     log('[devices-ui] [pair-modal] calling devices_create_pairing');
     try {
       const session = await callCoreRpc<CreatePairingResponse>({
-        method: 'openhuman.devices_create_pairing',
+        method: 'neppy.devices_create_pairing',
         params: {},
       });
       log(

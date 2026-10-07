@@ -1,4 +1,4 @@
-//! Agent-facing tools that proxy through the openhuman backend's
+//! Agent-facing tools that proxy through the neppy backend's
 //! `/agent-integrations/composio/*` routes.
 //!
 //! These expose Composio capabilities to the autonomous agent loop
@@ -392,7 +392,7 @@ impl Tool for ComposioListToolkitsTool {
         // [#1710 Wave 4] Reload config fresh per execute so a mid-session
         // `composio.mode` toggle takes effect at the very next tool call.
         // Anchor the reload to this tool's original config path rather
-        // than re-resolving process-global `OPENHUMAN_WORKSPACE`; the
+        // than re-resolving process-global `NEPPY_WORKSPACE`; the
         // tool is scoped to the user/workspace it was created for.
         let live_config =
             match config_rpc::reload_config_snapshot_with_timeout(self.config.as_ref()).await {
@@ -484,7 +484,7 @@ impl Tool for ComposioListConnectionsTool {
         // [#1710 Wave 4] Reload config fresh per execute so a mid-session
         // `composio.mode` toggle takes effect at the very next tool call.
         // Anchor the reload to this tool's original config path rather
-        // than re-resolving process-global `OPENHUMAN_WORKSPACE`; the
+        // than re-resolving process-global `NEPPY_WORKSPACE`; the
         // tool is scoped to the user/workspace it was created for.
         let live_config = match config_rpc::reload_config_snapshot_with_timeout(
             self.config.as_ref(),
@@ -613,7 +613,7 @@ impl Tool for ComposioAuthorizeTool {
         // [#1710 Wave 4] Reload config fresh per execute so a mid-session
         // `composio.mode` toggle takes effect at the very next tool call.
         // Anchor the reload to this tool's original config path rather
-        // than re-resolving process-global `OPENHUMAN_WORKSPACE`; the
+        // than re-resolving process-global `NEPPY_WORKSPACE`; the
         // tool is scoped to the user/workspace it was created for.
         let live_config =
             match config_rpc::reload_config_snapshot_with_timeout(self.config.as_ref()).await {
@@ -701,11 +701,11 @@ fn canonicalize_toolkit_slug(slug: &str) -> String {
 const DEFAULT_COMPOSIO_CONNECT_TIMEOUT_SECS: u64 = 120;
 
 /// Resolve the connect-card park bound. Reads
-/// `OPENHUMAN_COMPOSIO_CONNECT_TIMEOUT_SECS`; `0` means "no composio-side bound"
+/// `NEPPY_COMPOSIO_CONNECT_TIMEOUT_SECS`; `0` means "no composio-side bound"
 /// (`None`) → fall back to the gate's own TTL.
 fn composio_connect_timeout() -> Option<std::time::Duration> {
     parse_composio_connect_timeout(
-        std::env::var("OPENHUMAN_COMPOSIO_CONNECT_TIMEOUT_SECS")
+        crate::neppy::util::env::var("NEPPY_COMPOSIO_CONNECT_TIMEOUT_SECS")
             .ok()
             .as_deref(),
     )
@@ -1133,7 +1133,7 @@ impl Tool for ComposioListToolsTool {
         // [#1710 Wave 4] Reload config fresh per execute so a mid-session
         // `composio.mode` toggle takes effect at the very next tool call.
         // Anchor the reload to this tool's original config path rather
-        // than re-resolving process-global `OPENHUMAN_WORKSPACE`; the
+        // than re-resolving process-global `NEPPY_WORKSPACE`; the
         // tool is scoped to the user/workspace it was created for.
         let live_config =
             match config_rpc::reload_config_snapshot_with_timeout(self.config.as_ref()).await {
@@ -1450,7 +1450,7 @@ impl Tool for ComposioExecuteTool {
         // [#1710 Wave 4] Reload config fresh per execute so a mid-session
         // `composio.mode` toggle takes effect at the very next tool call.
         // Anchor the reload to this tool's original config path rather
-        // than re-resolving process-global `OPENHUMAN_WORKSPACE`; the
+        // than re-resolving process-global `NEPPY_WORKSPACE`; the
         // tool is scoped to the user/workspace it was created for.
         let live_config = match config_rpc::reload_config_snapshot_with_timeout(
             self.config.as_ref(),

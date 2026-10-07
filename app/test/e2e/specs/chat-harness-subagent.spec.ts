@@ -113,8 +113,8 @@ interface RuntimeSnapshot {
 
 async function snapshotRuntime(threadId: string): Promise<RuntimeSnapshot> {
   return (await browser.execute((tid: string) => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | {
           chatRuntime?: {
             inferenceStatusByThread?: Record<string, { phase?: string; activeSubagent?: string }>;
@@ -237,7 +237,7 @@ describe('Chat harness — orchestrator → subagent flow', () => {
     await browser.waitUntil(
       async () => {
         const snap = await callNeppyRpc<{ result: { entries: Array<unknown> } }>(
-          'openhuman.test_support_in_flight_chats',
+          'neppy.test_support_in_flight_chats',
           {}
         );
         return snap.ok && (snap.result?.result?.entries?.length ?? 0) === 0;
@@ -269,7 +269,7 @@ describe('Chat harness — orchestrator → subagent flow', () => {
     const deadline = Date.now() + 30_000;
     while (Date.now() < deadline) {
       const read = await callNeppyRpc<{ result: { content_utf8: string } }>(
-        'openhuman.test_support_read_workspace_file',
+        'neppy.test_support_read_workspace_file',
         { rel_path: relPath, max_bytes: 131_072 }
       );
       if (read.ok && read.result?.result?.content_utf8) {

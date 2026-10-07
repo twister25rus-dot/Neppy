@@ -383,7 +383,7 @@ re-export except deliberate facades recorded in the spec.
   tested against a pre-migration workspace fixture.
 - **MIT vs GPL:** tinycortex is MIT (tinyagents is GPL-3.0) — moving host code
   *down* into tinycortex relicenses it; fine for our own code, but keep the
-  "no product policy / no keys / nothing openhuman-branded as API" rule, and
+  "no product policy / no keys / nothing neppy-branded as API" rule, and
   don't move anything derived from GPL-only sources into the MIT crate.
 - **Two Cargo worlds + nested submodule:** vendor bumps now touch up to three
   lockfiles (root, `app/src-tauri`, and tinycortex's own) and two submodule

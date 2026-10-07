@@ -56,7 +56,7 @@ pub(super) fn backend() -> &'static dyn KeyringBackend {
 ///
 /// A single `OnceLock` makes the whole test binary share one credential store,
 /// pinned to whatever workspace the first keyring call happened to observe. When
-/// that winner was a `TempDir` (a test holding an `OPENHUMAN_WORKSPACE` env
+/// that winner was a `TempDir` (a test holding an `NEPPY_WORKSPACE` env
 /// guard), every other test's secrets were written into a directory that
 /// vanished at the end of that test — silently resetting the store to empty and
 /// making unrelated tests read back `None`. See `store_tests.rs`.
@@ -82,15 +82,15 @@ pub(super) fn build_backend() -> Box<dyn KeyringBackend> {
 pub(super) fn build_backend_at(path: &Path) -> Box<dyn KeyringBackend> {
     let path = path.to_path_buf();
     // Priority 1: explicit env var override.
-    if let Ok(env_val) = std::env::var("OPENHUMAN_KEYRING_BACKEND") {
+    if let Ok(env_val) = crate::neppy::util::env::var("NEPPY_KEYRING_BACKEND") {
         match backend_kind_from_env_value(&env_val) {
             Some(BackendKind::Os) => {
-                log::info!("[keyring] backend=os (OPENHUMAN_KEYRING_BACKEND override)");
+                log::info!("[keyring] backend=os (NEPPY_KEYRING_BACKEND override)");
                 return Box::new(backend::OsBackend);
             }
             Some(BackendKind::File) => {
                 log::info!(
-                    "[keyring] backend=file dir={} file={}/dev-keychain.json (OPENHUMAN_KEYRING_BACKEND override)",
+                    "[keyring] backend=file dir={} file={}/dev-keychain.json (NEPPY_KEYRING_BACKEND override)",
                     path.display(),
                     path.display()
                 );
@@ -98,7 +98,7 @@ pub(super) fn build_backend_at(path: &Path) -> Box<dyn KeyringBackend> {
             }
             Some(BackendKind::EncryptedFile) => {
                 log::info!(
-                    "[keyring] backend=encrypted_file path={} (OPENHUMAN_KEYRING_BACKEND override)",
+                    "[keyring] backend=encrypted_file path={} (NEPPY_KEYRING_BACKEND override)",
                     path.display()
                 );
                 return Box::new(super::encrypted_file_backend::EncryptedFileBackend::new(
@@ -107,7 +107,7 @@ pub(super) fn build_backend_at(path: &Path) -> Box<dyn KeyringBackend> {
             }
             None => {
                 log::warn!(
-                    "[keyring] unknown OPENHUMAN_KEYRING_BACKEND={:?}; falling through to defaults",
+                    "[keyring] unknown NEPPY_KEYRING_BACKEND={:?}; falling through to defaults",
                     env_val.trim()
                 );
             }
@@ -138,13 +138,21 @@ pub(super) fn build_backend_at(path: &Path) -> Box<dyn KeyringBackend> {
 }
 
 fn is_staging_or_production() -> bool {
-    is_staging_or_production_value(std::env::var("OPENHUMAN_APP_ENV").as_deref().ok())
+    is_staging_or_production_value(
+        crate::neppy::util::env::var("NEPPY_APP_ENV")
+            .as_deref()
+            .ok(),
+    )
 }
 
 pub(super) fn effective_backend_kind() -> BackendKind {
     effective_backend_kind_for(
-        std::env::var("OPENHUMAN_APP_ENV").as_deref().ok(),
-        std::env::var("OPENHUMAN_KEYRING_BACKEND").as_deref().ok(),
+        crate::neppy::util::env::var("NEPPY_APP_ENV")
+            .as_deref()
+            .ok(),
+        crate::neppy::util::env::var("NEPPY_KEYRING_BACKEND")
+            .as_deref()
+            .ok(),
         cfg!(test),
     )
 }
@@ -193,7 +201,7 @@ pub fn workspace_dir_for_file_backend() -> PathBuf {
 /// Test builds resolve the keyring directory from a **thread-scoped** override
 /// instead of process-global state.
 ///
-/// `WORKSPACE_DIR` (a `OnceLock`) and `OPENHUMAN_WORKSPACE` (a process-wide env
+/// `WORKSPACE_DIR` (a `OnceLock`) and `NEPPY_WORKSPACE` (a process-wide env
 /// var that several tests mutate behind an RAII guard) are both shared by every
 /// concurrently-running test in the binary. Consulting them here meant a test's
 /// keyring writes and its later reads could resolve to *different* directories
@@ -218,16 +226,16 @@ fn resolve_workspace_dir_from_process_state() -> PathBuf {
         return dir.clone();
     }
 
-    if let Ok(custom) = std::env::var("OPENHUMAN_WORKSPACE") {
+    if let Ok(custom) = crate::neppy::util::env::var("NEPPY_WORKSPACE") {
         if !custom.trim().is_empty() {
             return PathBuf::from(custom);
         }
     }
 
     let home = dirs::home_dir().unwrap_or_else(|| {
-        PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string()))
+        PathBuf::from(crate::neppy::util::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string()))
     });
-    let neppy_dir = match std::env::var("OPENHUMAN_APP_ENV").as_deref() {
+    let neppy_dir = match crate::neppy::util::env::var("NEPPY_APP_ENV").as_deref() {
         Ok("staging") => home.join(".neppy-staging"),
         _ => home.join(".neppy"),
     };
@@ -295,7 +303,7 @@ pub(crate) mod test_scope {
     ///
     /// Thread-scoped rather than process-scoped, so a test that needs a private
     /// credential store cannot redirect the secrets of tests running in
-    /// parallel — which is exactly what the `OPENHUMAN_WORKSPACE` env guards
+    /// parallel — which is exactly what the `NEPPY_WORKSPACE` env guards
     /// used to do.
     pub(crate) struct ScopedWorkspace {
         previous: Option<PathBuf>,

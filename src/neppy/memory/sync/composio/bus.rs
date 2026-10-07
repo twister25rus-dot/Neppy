@@ -24,7 +24,7 @@
 //!
 //! ## Feature flag
 //!
-//! The triage path is gated on `OPENHUMAN_TRIGGER_TRIAGE_DISABLED` (set
+//! The triage path is gated on `NEPPY_TRIGGER_TRIAGE_DISABLED` (set
 //! to `1`/`true`/`yes` to disable). The pipeline is on by default; the
 //! env var is an opt-out escape hatch.
 //!
@@ -160,7 +160,7 @@ async fn toolkit_is_memory_source_registrable(
 /// enabled by default; set to `1`/`true`/`yes` to opt out (e.g. for
 /// debugging or in environments where LLM calls on every Composio
 /// webhook are undesirable).
-const TRIAGE_DISABLED_ENV: &str = "OPENHUMAN_TRIGGER_TRIAGE_DISABLED";
+const TRIAGE_DISABLED_ENV: &str = "NEPPY_TRIGGER_TRIAGE_DISABLED";
 
 /// How long we'll keep polling the backend after `composio_authorize`
 /// returns a `connectUrl`, waiting for the user to actually finish the
@@ -489,12 +489,14 @@ impl EventHandler<DomainEvent> for ComposioTriggerSubscriber {
     }
 }
 
-/// Returns `true` when `OPENHUMAN_TRIGGER_TRIAGE_DISABLED` is set to a
+/// Returns `true` when `NEPPY_TRIGGER_TRIAGE_DISABLED` is set to a
 /// truthy value. The pipeline is **on by default**; this env var is the
 /// opt-out escape hatch.
 fn triage_disabled() -> bool {
     matches!(
-        std::env::var(TRIAGE_DISABLED_ENV).ok().as_deref(),
+        crate::neppy::util::env::var(TRIAGE_DISABLED_ENV)
+            .ok()
+            .as_deref(),
         Some("1") | Some("true") | Some("TRUE") | Some("yes") | Some("YES")
     )
 }

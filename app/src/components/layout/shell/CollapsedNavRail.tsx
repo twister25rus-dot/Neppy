@@ -23,6 +23,7 @@ function matchActive(path: string, pathname: string): boolean {
   if (path === '/chat') return pathname.startsWith('/chat');
   if (path === '/settings') return pathname === '/settings' || pathname.startsWith('/settings/');
   if (path === '/flows') return pathname === '/flows' || pathname.startsWith('/flows/');
+  if (path === '/debug') return pathname === '/debug' || pathname.startsWith('/debug/');
   if (path === '/home') return pathname === '/home';
   return pathname === path;
 }
@@ -124,6 +125,7 @@ export default function CollapsedNavRail() {
                 <SidebarMenuButton
                   isActive={active}
                   data-walkthrough={tab.walkthroughAttr}
+                  data-analytics-id={`nav-${tab.id}`}
                   onClick={() => handleClick(tab, active)}
                   aria-label={tab.label}
                   className={RAIL_BTN}>

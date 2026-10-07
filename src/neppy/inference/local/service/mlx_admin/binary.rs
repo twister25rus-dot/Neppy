@@ -85,7 +85,10 @@ pub(crate) fn resolve_binary(
     }
 
     let env_var = env_var_for(server);
-    if let Some(from_env) = std::env::var(env_var).ok().filter(|v| !v.trim().is_empty()) {
+    if let Some(from_env) = crate::neppy::util::env::var(env_var)
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+    {
         let candidate = expand_home(from_env.trim());
         if is_executable(&candidate) {
             return Ok(ResolvedBinary {
@@ -148,7 +151,7 @@ pub(crate) async fn probe_binary(path: &Path) -> Result<(), String> {
 }
 
 fn search_path(name: &str) -> Option<PathBuf> {
-    let path_var = std::env::var_os("PATH")?;
+    let path_var = crate::neppy::util::env::var_os("PATH")?;
     std::env::split_paths(&path_var)
         .map(|dir| dir.join(name))
         .find(|candidate| is_executable(candidate))
@@ -159,7 +162,7 @@ fn uv_tool_bin_dir() -> PathBuf {
 }
 
 fn home_dir() -> PathBuf {
-    std::env::var_os("HOME")
+    crate::neppy::util::env::var_os("HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("/"))
 }

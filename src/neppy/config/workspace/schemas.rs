@@ -193,9 +193,9 @@ mod tests {
             .iter()
             .map(|c| c.rpc_method_name())
             .collect();
-        assert!(methods.contains(&"openhuman.workspace_file_read".to_string()));
-        assert!(methods.contains(&"openhuman.workspace_file_write".to_string()));
-        assert!(methods.contains(&"openhuman.workspace_file_reset".to_string()));
+        assert!(methods.contains(&"neppy.workspace_file_read".to_string()));
+        assert!(methods.contains(&"neppy.workspace_file_write".to_string()));
+        assert!(methods.contains(&"neppy.workspace_file_reset".to_string()));
     }
 
     #[test]

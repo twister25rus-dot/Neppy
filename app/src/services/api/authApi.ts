@@ -52,7 +52,7 @@ export async function sendEmailMagicLink(
  */
 export async function consumeLoginToken(loginToken: string): Promise<string> {
   const response = await callCoreRpc<{ result: { jwtToken: string } }>({
-    method: 'openhuman.auth.consume_login_token',
+    method: 'neppy.auth.consume_login_token',
     params: { loginToken },
   });
   const jwtToken = response.result?.jwtToken;

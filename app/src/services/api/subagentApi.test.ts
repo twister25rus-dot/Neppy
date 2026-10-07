@@ -12,11 +12,11 @@ describe('subagentApi.cancel', () => {
     mockCall.mockReset();
   });
 
-  it('calls openhuman.subagent_cancel with the trimmed taskId', async () => {
+  it('calls neppy.subagent_cancel with the trimmed taskId', async () => {
     mockCall.mockResolvedValue({ cancelled: true, taskId: 'sub-1' });
     const result = await subagentApi.cancel('  sub-1  ');
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.subagent_cancel',
+      method: 'neppy.subagent_cancel',
       params: { taskId: 'sub-1' },
     });
     expect(result).toEqual({ cancelled: true, taskId: 'sub-1' });
@@ -26,14 +26,14 @@ describe('subagentApi.cancel', () => {
     mockCall.mockResolvedValue({ cancelled: true, taskId: 'sub-1' });
     await subagentApi.cancel('sub-1', '  user changed their mind  ');
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.subagent_cancel',
+      method: 'neppy.subagent_cancel',
       params: { taskId: 'sub-1', reason: 'user changed their mind' },
     });
 
     mockCall.mockClear();
     await subagentApi.cancel('sub-1', '   ');
     expect(mockCall).toHaveBeenCalledWith({
-      method: 'openhuman.subagent_cancel',
+      method: 'neppy.subagent_cancel',
       params: { taskId: 'sub-1' },
     });
   });

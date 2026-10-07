@@ -1,0 +1,52 @@
+id = "debug_agent"
+display_name = "Debug Agent"
+# No `delegate_name`, and deliberately absent from the orchestrator's
+# `[subagents] allowlist`: this agent is reached ONLY by a Debug-mode thread
+# (`web_chat::mode::target_agent_id`), which also scopes it to the project
+# repository and records a task + checkpoint for the turn.
+when_to_use = "The application's internal software-development agent. Runs only on Debug-mode threads, scoped to the application's own project repository."
+temperature = 0.3
+# Bounded: `extended` lifts the effective cap to the harness-wide 50 tool
+# iterations (see `EXTENDED_MAX_TOOL_ITERATIONS`); the repeated-failure circuit
+# breaker and cost budget still apply, and the prompt caps self-repair at 5
+# attempts per failing check.
+max_iterations = 40
+iteration_policy = "extended"
+max_result_chars = 16000
+sandbox_mode = "sandboxed"
+omit_identity = true
+omit_memory_context = true
+omit_safety_preamble = false
+omit_skills_catalog = true
+
+[model]
+hint = "coding"
+
+[tools]
+# Coding harness only. No storage_*, curl, web_fetch or memory-writing tools:
+# a debug turn works on the repository and nothing else. `debug_checkpoint`,
+# `debug_validate_candidate` and `debug_report` act on the current
+# turn's debug task and refuse elsewhere.
+# `lsp` is capability-gated (the LSP enable flag); listing it is harmless
+# when the gate is off.
+named = [
+    "shell",
+    "file_read",
+    "file_write",
+    "git_operations",
+    "node_exec",
+    "npm_exec",
+    "grep",
+    "glob",
+    "list",
+    "edit",
+    "apply_patch",
+    "read_diff",
+    "run_tests",
+    "run_linter",
+    "todowrite",
+    "lsp",
+    "debug_checkpoint",
+    "debug_validate_candidate",
+    "debug_report",
+]

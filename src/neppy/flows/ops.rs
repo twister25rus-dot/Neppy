@@ -1785,7 +1785,7 @@ pub(crate) fn validate_binding_resolvability(graph: &WorkflowGraph) -> Vec<Strin
 /// graph because of a transient local read.
 ///
 /// Takes `config` for two reasons. First (CodeRabbit/Codex review on #5114):
-/// one-shot contexts — the generic `openhuman <namespace> <function>` CLI
+/// one-shot contexts — the generic `neppy-core <namespace> <function>` CLI
 /// dispatcher (`default_state()`, no bootstrap), cron, tests — may reach this
 /// gate before the full server bootstrap has called
 /// [`AgentDefinitionRegistry::init_global`]. Without it, `route_for_agent_ref`
@@ -3217,7 +3217,7 @@ pub(crate) fn mock_opaque_tool_call_upstream_ref<'a>(
 /// Validates a candidate graph without persisting it — the same
 /// migrate/validate path `flows_create` and `ProposeWorkflowTool` use — and
 /// reports structural errors alongside non-fatal trigger warnings
-/// ([`graph_trigger_warnings`]). Backs `openhuman.flows_validate` (PHASE 3c):
+/// ([`graph_trigger_warnings`]). Backs `neppy.flows_validate` (PHASE 3c):
 /// an authoring surface can call this to preview validity + warnings before a
 /// save. Pure (no persistence, no config) — `valid == false` is a normal
 /// result, NOT an `Err`; `Err` is reserved for internal serialization faults
@@ -6872,7 +6872,7 @@ pub(crate) async fn flows_build_with_extra_hidden_tools(
     // The reduced (copilot) hide-list is safe ONLY when the process-global
     // `ApprovalGate` is actually installed to park the unhidden
     // `run_flow`/`resume_flow_run`. `flows_build` is a public RPC and the gate
-    // can be opted out (`OPENHUMAN_APPROVAL_GATE=0` on CLI/docker leaves
+    // can be opted out (`NEPPY_APPROVAL_GATE=0` on CLI/docker leaves
     // `ApprovalGate::try_global()` == `None`; desktop always installs it) — and
     // `ApprovalSecurityMiddleware` skips interception entirely when the gate is
     // absent, so the WebChat origin below would NOT park and the unhidden
@@ -6887,7 +6887,7 @@ pub(crate) async fn flows_build_with_extra_hidden_tools(
             tracing::warn!(
                 target: "flows",
                 "[flows] flows_build: streaming turn but no ApprovalGate installed \
-                 (OPENHUMAN_APPROVAL_GATE off / headless) — keeping the full live-run \
+                 (NEPPY_APPROVAL_GATE off / headless) — keeping the full live-run \
                  hide-list so run_flow/resume_flow_run cannot execute unapproved"
             );
         }
@@ -7870,7 +7870,7 @@ pub async fn compute_approval_manifest(config: &Config, graph: &WorkflowGraph) -
 /// `graph`, joined against the flow's existing `flow_tool_trust` grants so
 /// the save+enable card can ask only for what's missing.
 ///
-/// With the approval gate uninstalled (`OPENHUMAN_APPROVAL_GATE=0`) nothing
+/// With the approval gate uninstalled (`NEPPY_APPROVAL_GATE=0`) nothing
 /// ever parks, so `missing` is empty by definition and the card never shows.
 pub async fn flows_approval_manifest(
     config: &Config,

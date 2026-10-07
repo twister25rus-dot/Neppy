@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 #[serde(default)]
 pub struct ObservabilityConfig {
     /// Sentry DSN for error reporting. Overridden by the
-    /// `OPENHUMAN_CORE_SENTRY_DSN` env var (or its legacy alias
-    /// `OPENHUMAN_SENTRY_DSN`).
+    /// `NEPPY_CORE_SENTRY_DSN` env var (or its legacy alias
+    /// `NEPPY_SENTRY_DSN`).
     #[serde(default)]
     pub sentry_dsn: Option<String>,
 

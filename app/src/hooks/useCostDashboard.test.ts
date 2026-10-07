@@ -42,12 +42,12 @@ describe('useCostDashboard', () => {
     vi.useRealTimers();
   });
 
-  it('calls openhuman.cost_get_dashboard and surfaces the payload', async () => {
+  it('calls neppy.cost_get_dashboard and surfaces the payload', async () => {
     mockedCall.mockResolvedValueOnce(fixture);
     const { result } = renderHook(() => useCostDashboard({ paused: true }));
     await waitFor(() => expect(result.current.data).not.toBeNull());
     expect(mockedCall).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.cost_get_dashboard' })
+      expect.objectContaining({ method: 'neppy.cost_get_dashboard' })
     );
     expect(result.current.error).toBeNull();
     expect(result.current.data?.currency).toBe('USD');

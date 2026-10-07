@@ -37,7 +37,7 @@ describe('Webhook controller surface and retired-route coverage', () => {
   });
 
   it('exposes backend tunnel CRUD', async () => {
-    const listed = await callNeppyRpc('openhuman.webhooks_list_tunnels', {});
+    const listed = await callNeppyRpc('neppy.webhooks_list_tunnels', {});
     expect(listed.ok).toBe(true);
   });
 

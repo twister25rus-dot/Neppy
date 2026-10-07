@@ -1,7 +1,7 @@
 //! Announcements RPC adapter — thin-wraps the hosted API.
 //!
 //! Exposes the latest active announcement for the signed-in user through the
-//! standard controller registry (`openhuman.announcements_*`). The UI surfaces
+//! standard controller registry (`neppy.announcements_*`). The UI surfaces
 //! it once on harness init and tracks dismissal locally by id.
 
 mod ops;

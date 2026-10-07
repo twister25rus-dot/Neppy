@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # debug-composio-login.sh — Walk the Composio Google/Gmail OAuth
-# handoff end-to-end against a live openhuman backend.
+# handoff end-to-end against a live neppy backend.
 #
 # This is the Rust-side counterpart to
 #   backend-1/src/scripts/live-test-composio-gmail.ts

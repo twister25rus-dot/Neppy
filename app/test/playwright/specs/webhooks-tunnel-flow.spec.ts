@@ -67,7 +67,7 @@ test.describe('Webhook tunnel CRUD (UI + core RPC + mock backend)', () => {
 
   test('creates a tunnel, lists it, deletes it, and matches mock-backend traffic', async () => {
     const tunnelName = `e2e-tunnel-${Date.now()}`;
-    const created = await callCoreRpc<unknown>('openhuman.webhooks_create_tunnel', {
+    const created = await callCoreRpc<unknown>('neppy.webhooks_create_tunnel', {
       name: tunnelName,
       description: 'Created by webhooks-tunnel-flow Playwright spec.',
     });
@@ -77,13 +77,13 @@ test.describe('Webhook tunnel CRUD (UI + core RPC + mock backend)', () => {
     expect(createdTunnel?.name).toBe(tunnelName);
     expect(await waitForRequest('POST', '/webhooks/core', 10_000)).toBeDefined();
 
-    const listed = await callCoreRpc<unknown>('openhuman.webhooks_list_tunnels', {});
+    const listed = await callCoreRpc<unknown>('neppy.webhooks_list_tunnels', {});
     const tunnels = unwrapRpcValue<Array<{ id?: string; name?: string }>>(listed) ?? [];
     const found = tunnels.find(tunnel => tunnel?.id === tunnelId);
     expect(found?.name).toBe(tunnelName);
     expect(await waitForRequest('GET', '/webhooks/core', 10_000)).toBeDefined();
 
-    await callCoreRpc<unknown>('openhuman.webhooks_delete_tunnel', { id: tunnelId });
+    await callCoreRpc<unknown>('neppy.webhooks_delete_tunnel', { id: tunnelId });
     expect(
       await waitForRequest(
         'DELETE',
@@ -92,7 +92,7 @@ test.describe('Webhook tunnel CRUD (UI + core RPC + mock backend)', () => {
       )
     ).toBeDefined();
 
-    const relisted = await callCoreRpc<unknown>('openhuman.webhooks_list_tunnels', {});
+    const relisted = await callCoreRpc<unknown>('neppy.webhooks_list_tunnels', {});
     const relistedTunnels = unwrapRpcValue<Array<{ id?: string }>>(relisted) ?? [];
     expect(relistedTunnels.some(tunnel => tunnel?.id === tunnelId)).toBe(false);
   });

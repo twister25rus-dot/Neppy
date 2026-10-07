@@ -623,8 +623,8 @@ Implement `validate_extracted_appdir "$appdir"` as follows:
        XDG_CONFIG_HOME="$smoke_config" \
        XDG_DATA_HOME="$smoke_data" \
        XDG_CACHE_HOME="$smoke_cache" \
-       OPENHUMAN_CEF_PREWARM=0 \
-       OPENHUMAN_DISABLE_GPU=1 \
+       NEPPY_CEF_PREWARM=0 \
+       NEPPY_DISABLE_GPU=1 \
        "$appdir/AppRun"
    ```
 

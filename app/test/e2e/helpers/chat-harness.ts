@@ -221,12 +221,12 @@ export async function waitForSocketConnected(timeoutMs = 30_000): Promise<boolea
   while (Date.now() < deadline) {
     const connected = await browser.execute(() => {
       const winAny = window as unknown as {
-        __OPENHUMAN_STORE__?: { getState: () => unknown };
-        __OPENHUMAN_CORE_STATE__?: () => { snapshot?: { auth?: { userId?: string | null } } };
+        __NEPPY_STORE__?: { getState: () => unknown };
+        __NEPPY_CORE_STATE__?: () => { snapshot?: { auth?: { userId?: string | null } } };
       };
-      const activeUserId = winAny.__OPENHUMAN_CORE_STATE__?.()?.snapshot?.auth?.userId;
+      const activeUserId = winAny.__NEPPY_CORE_STATE__?.()?.snapshot?.auth?.userId;
       if (!activeUserId) return false;
-      const state = winAny.__OPENHUMAN_STORE__?.getState() as
+      const state = winAny.__NEPPY_STORE__?.getState() as
         | { socket?: { byUser?: Record<string, { status?: string }> } }
         | undefined;
       const byUser = state?.socket?.byUser ?? {};
@@ -243,8 +243,8 @@ export async function waitForSocketConnected(timeoutMs = 30_000): Promise<boolea
  *  no thread is selected yet. */
 export async function getSelectedThreadId(): Promise<string | null> {
   return (await browser.execute(() => {
-    const winAny = window as unknown as { __OPENHUMAN_STORE__?: { getState: () => unknown } };
-    const state = winAny.__OPENHUMAN_STORE__?.getState() as
+    const winAny = window as unknown as { __NEPPY_STORE__?: { getState: () => unknown } };
+    const state = winAny.__NEPPY_STORE__?.getState() as
       | { thread?: { selectedThreadId?: string | null } }
       | undefined;
     return state?.thread?.selectedThreadId ?? null;

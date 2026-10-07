@@ -367,7 +367,7 @@ smoke_extracted_apprun() {
   for secret_name in \
     GITHUB_TOKEN \
     GH_TOKEN \
-    OPENHUMAN_CEF_NO_SANDBOX \
+    NEPPY_CEF_NO_SANDBOX \
     TAURI_SIGNING_PRIVATE_KEY \
     TAURI_SIGNING_PRIVATE_KEY_PASSWORD \
     SENTRY_AUTH_TOKEN; do
@@ -433,8 +433,8 @@ smoke_extracted_apprun() {
         XDG_CONFIG_HOME="$smoke_config" \
         XDG_DATA_HOME="$smoke_data" \
         XDG_CACHE_HOME="$smoke_cache" \
-        OPENHUMAN_CEF_PREWARM=0 \
-        OPENHUMAN_DISABLE_GPU=1 \
+        NEPPY_CEF_PREWARM=0 \
+        NEPPY_DISABLE_GPU=1 \
         ${dbus_wrapper[@]+"${dbus_wrapper[@]}"} \
         "$appdir/AppRun"
   ) >"$log_file" 2>&1; then

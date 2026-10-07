@@ -57,8 +57,8 @@ function status(over: Record<string, unknown> = {}) {
 /** Answer whichever of the two load calls is asked for. */
 function respond(statusPayload: unknown, models: { id: string; size_gib: number }[] = []) {
   callCoreRpc.mockImplementation(({ method }: { method: string }) => {
-    if (method === 'openhuman.mlx_status') return Promise.resolve(statusPayload);
-    if (method === 'openhuman.mlx_models_list') return Promise.resolve({ models });
+    if (method === 'neppy.mlx_status') return Promise.resolve(statusPayload);
+    if (method === 'neppy.mlx_models_list') return Promise.resolve({ models });
     return Promise.resolve({});
   });
 }
@@ -195,7 +195,7 @@ describe('MlxQuickButton', () => {
     await userEvent.click(await screen.findByTestId('mlx-quick-toggle-primary'));
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.mlx_start',
+      method: 'neppy.mlx_start',
       params: { id: 'primary' },
     });
   });
@@ -208,7 +208,7 @@ describe('MlxQuickButton', () => {
     await userEvent.click(await screen.findByTestId('mlx-quick-toggle-primary'));
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.mlx_stop',
+      method: 'neppy.mlx_stop',
       params: { id: 'primary' },
     });
   });
@@ -228,7 +228,7 @@ describe('MlxQuickButton', () => {
     await userEvent.selectOptions(select, 'ornith-ai/Ornith-1.5-9B-MLX-8bit');
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.mlx_update_server',
+      method: 'neppy.mlx_update_server',
       params: { id: 'primary', patch: { model: 'ornith-ai/Ornith-1.5-9B-MLX-8bit' } },
     });
   });
@@ -249,7 +249,7 @@ describe('MlxQuickButton', () => {
     );
 
     expect(callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.mlx_update_server',
+      method: 'neppy.mlx_update_server',
       params: { id: 'primary', patch: { model: 'org/held-model' } },
     });
   });

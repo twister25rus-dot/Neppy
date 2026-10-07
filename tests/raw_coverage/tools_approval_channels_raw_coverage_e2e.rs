@@ -123,20 +123,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -145,7 +145,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -689,14 +689,14 @@ async fn setup() -> Harness {
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
-        EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_TELEGRAM_BOT_USERNAME", "coverage_bot"),
+        EnvVarGuard::set_to_path("NEPPY_WORKSPACE", &workspace),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_TELEGRAM_BOT_USERNAME", "coverage_bot"),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        EnvVarGuard::unset("OPENHUMAN_LSP_ENABLED"),
+        EnvVarGuard::unset("NEPPY_API_URL"),
+        EnvVarGuard::unset("NEPPY_LSP_ENABLED"),
     ];
 
     let config = Config::load_or_init()
@@ -899,7 +899,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let _lock = env_lock();
     let harness = setup().await;
 
-    let list = rpc(&harness.rpc_base, 1, "openhuman.channels_list", json!({})).await;
+    let list = rpc(&harness.rpc_base, 1, "neppy.channels_list", json!({})).await;
     let channels = payload(&list, "channels_list")
         .as_array()
         .expect("channels list");
@@ -910,7 +910,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let describe = rpc(
         &harness.rpc_base,
         2,
-        "openhuman.channels_describe",
+        "neppy.channels_describe",
         json!({ "channel": " telegram " }),
     )
     .await;
@@ -923,7 +923,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let unknown = rpc(
         &harness.rpc_base,
         3,
-        "openhuman.channels_describe",
+        "neppy.channels_describe",
         json!({ "channel": "missing" }),
     )
     .await;
@@ -932,7 +932,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let bad_mode = rpc(
         &harness.rpc_base,
         4,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({ "channel": "telegram", "authMode": "bad_mode" }),
     )
     .await;
@@ -941,7 +941,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let unsupported_mode = rpc(
         &harness.rpc_base,
         24,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({ "channel": "web", "authMode": "bot_token", "credentials": {} }),
     )
     .await;
@@ -950,7 +950,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let non_object_creds = rpc(
         &harness.rpc_base,
         25,
-        "openhuman.channels_test",
+        "neppy.channels_test",
         json!({ "channel": "telegram", "authMode": "bot_token", "credentials": "bad" }),
     )
     .await;
@@ -960,7 +960,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let telegram_managed = rpc(
         &harness.rpc_base,
         26,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({ "channel": "telegram", "authMode": "managed_dm", "credentials": {} }),
     )
     .await;
@@ -980,7 +980,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let discord_oauth = rpc(
         &harness.rpc_base,
         27,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({ "channel": "discord", "authMode": "oauth", "credentials": {} }),
     )
     .await;
@@ -994,7 +994,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let missing_creds = rpc(
         &harness.rpc_base,
         5,
-        "openhuman.channels_test",
+        "neppy.channels_test",
         json!({ "channel": "telegram", "authMode": "bot_token", "credentials": {} }),
     )
     .await;
@@ -1003,7 +1003,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let test_ok = rpc(
         &harness.rpc_base,
         6,
-        "openhuman.channels_test",
+        "neppy.channels_test",
         json!({
             "channel": "telegram",
             "authMode": "bot_token",
@@ -1021,7 +1021,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let connect_telegram = rpc(
         &harness.rpc_base,
         7,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({
             "channel": "telegram",
             "authMode": "bot_token",
@@ -1039,7 +1039,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let connect_discord = rpc(
         &harness.rpc_base,
         8,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({
             "channel": "discord",
             "authMode": "bot_token",
@@ -1064,7 +1064,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let connect_imessage = rpc(
         &harness.rpc_base,
         9,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({
             "channel": "imessage",
             "authMode": "managed_dm",
@@ -1082,7 +1082,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let lark_test = rpc(
         &harness.rpc_base,
         28,
-        "openhuman.channels_test",
+        "neppy.channels_test",
         json!({
             "channel": "lark",
             "authMode": "api_key",
@@ -1105,7 +1105,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let connect_lark = rpc(
         &harness.rpc_base,
         29,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({
             "channel": "lark",
             "authMode": "api_key",
@@ -1128,7 +1128,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let connect_dingtalk = rpc(
         &harness.rpc_base,
         30,
-        "openhuman.channels_connect",
+        "neppy.channels_connect",
         json!({
             "channel": "dingtalk",
             "authMode": "api_key",
@@ -1150,7 +1150,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let status = rpc(
         &harness.rpc_base,
         10,
-        "openhuman.channels_status",
+        "neppy.channels_status",
         json!({}),
     )
     .await;
@@ -1177,7 +1177,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let filtered_status = rpc(
         &harness.rpc_base,
         11,
-        "openhuman.channels_status",
+        "neppy.channels_status",
         json!({ "channel": " discord " }),
     )
     .await;
@@ -1190,7 +1190,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let telegram_start = rpc(
         &harness.rpc_base,
         12,
-        "openhuman.channels_telegram_login_start",
+        "neppy.channels_telegram_login_start",
         json!({}),
     )
     .await;
@@ -1203,7 +1203,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let telegram_check = rpc(
         &harness.rpc_base,
         13,
-        "openhuman.channels_telegram_login_check",
+        "neppy.channels_telegram_login_check",
         json!({ "linkToken": "telegram-link-e2e" }),
     )
     .await;
@@ -1217,7 +1217,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let discord_start = rpc(
         &harness.rpc_base,
         14,
-        "openhuman.channels_discord_link_start",
+        "neppy.channels_discord_link_start",
         json!({}),
     )
     .await;
@@ -1228,7 +1228,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let discord_check = rpc(
         &harness.rpc_base,
         15,
-        "openhuman.channels_discord_link_check",
+        "neppy.channels_discord_link_check",
         json!({ "linkToken": "discord-link-e2e" }),
     )
     .await;
@@ -1242,7 +1242,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let send = rpc(
         &harness.rpc_base,
         16,
-        "openhuman.channels_send_message",
+        "neppy.channels_send_message",
         json!({ "channel": "telegram", "message": { "text": "hello", "threadId": "thread-1" } }),
     )
     .await;
@@ -1255,7 +1255,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let reaction = rpc(
         &harness.rpc_base,
         17,
-        "openhuman.channels_send_reaction",
+        "neppy.channels_send_reaction",
         json!({ "channel": "telegram", "reaction": { "messageId": "msg-1", "emoji": "+1" } }),
     )
     .await;
@@ -1268,7 +1268,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let create_thread = rpc(
         &harness.rpc_base,
         18,
-        "openhuman.channels_create_thread",
+        "neppy.channels_create_thread",
         json!({ "channel": "telegram", "title": "Coverage Thread" }),
     )
     .await;
@@ -1281,7 +1281,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let update_thread = rpc(
         &harness.rpc_base,
         19,
-        "openhuman.channels_update_thread",
+        "neppy.channels_update_thread",
         json!({ "channel": "telegram", "threadId": "thread-1", "action": "close" }),
     )
     .await;
@@ -1294,7 +1294,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let list_threads = rpc(
         &harness.rpc_base,
         20,
-        "openhuman.channels_list_threads",
+        "neppy.channels_list_threads",
         json!({ "channel": "telegram", "active": true }),
     )
     .await;
@@ -1308,7 +1308,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let bad_update = rpc(
         &harness.rpc_base,
         21,
-        "openhuman.channels_update_thread",
+        "neppy.channels_update_thread",
         json!({ "channel": "telegram", "threadId": "thread-1", "action": "archive" }),
     )
     .await;
@@ -1317,7 +1317,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let disconnect_telegram = rpc(
         &harness.rpc_base,
         22,
-        "openhuman.channels_disconnect",
+        "neppy.channels_disconnect",
         json!({ "channel": "telegram", "authMode": "bot_token", "clearMemory": false }),
     )
     .await;
@@ -1331,7 +1331,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let disconnect_imessage = rpc(
         &harness.rpc_base,
         23,
-        "openhuman.channels_disconnect",
+        "neppy.channels_disconnect",
         json!({ "channel": "imessage", "authMode": "managed_dm", "clearMemory": false }),
     )
     .await;
@@ -1345,7 +1345,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let disconnect_lark = rpc(
         &harness.rpc_base,
         31,
-        "openhuman.channels_disconnect",
+        "neppy.channels_disconnect",
         json!({ "channel": "lark", "authMode": "api_key", "clearMemory": false }),
     )
     .await;
@@ -1359,7 +1359,7 @@ async fn channels_rpc_covers_credentials_managed_backend_and_error_paths() {
     let disconnect_dingtalk = rpc(
         &harness.rpc_base,
         32,
-        "openhuman.channels_disconnect",
+        "neppy.channels_disconnect",
         json!({ "channel": "dingtalk", "authMode": "api_key", "clearMemory": false }),
     )
     .await;
@@ -1577,7 +1577,7 @@ fn tools_and_tool_registry_public_surfaces_cover_schema_and_assembly_paths() {
 async fn orchestrator_tool_synthesis_covers_agent_and_integration_delegation_edges() {
     // This test reads the process-global connection/toolkit registry (the
     // integrations tool's available-toolkit list). Sibling tests mutate
-    // OPENHUMAN_WORKSPACE under env_lock; without holding it here, a concurrent
+    // NEPPY_WORKSPACE under env_lock; without holding it here, a concurrent
     // workspace swap trampled our view and dropped gmail_pro/slack_bot from the
     // unknown-toolkit suggestion (flaky only under llvm-cov's slower parallel
     // run). Hold the same lock so this test is hermetic without serializing the
@@ -1695,7 +1695,7 @@ async fn browser_tool_with_agent_browser_shim_covers_action_parser_and_command_p
             .expect("chmod agent-browser shim");
     }
 
-    let old_path = std::env::var("PATH").unwrap_or_default();
+    let old_path = neppy_core::neppy::util::env::var("PATH").unwrap_or_default();
     let _path_guard = EnvVarGuard::set("PATH", &format!("{}:{old_path}", bin_dir.display()));
 
     let security = Arc::new(SecurityPolicy::from_config(
@@ -2648,7 +2648,7 @@ async fn tool_registry_rpc_controllers_cover_list_get_diagnostics_and_errors() {
     let list = rpc(
         &harness.rpc_base,
         101,
-        "openhuman.tool_registry_list",
+        "neppy.tool_registry_list",
         json!({}),
     )
     .await;
@@ -2663,7 +2663,7 @@ async fn tool_registry_rpc_controllers_cover_list_get_diagnostics_and_errors() {
     let found = rpc(
         &harness.rpc_base,
         102,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": " tools.web_search " }),
     )
     .await;
@@ -2677,7 +2677,7 @@ async fn tool_registry_rpc_controllers_cover_list_get_diagnostics_and_errors() {
     let missing_id = rpc(
         &harness.rpc_base,
         103,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": "   " }),
     )
     .await;
@@ -2686,7 +2686,7 @@ async fn tool_registry_rpc_controllers_cover_list_get_diagnostics_and_errors() {
     let unknown_tool = rpc(
         &harness.rpc_base,
         104,
-        "openhuman.tool_registry_get",
+        "neppy.tool_registry_get",
         json!({ "tool_id": "tools.not_real" }),
     )
     .await;
@@ -2697,7 +2697,7 @@ async fn tool_registry_rpc_controllers_cover_list_get_diagnostics_and_errors() {
     let diagnostics = rpc(
         &harness.rpc_base,
         105,
-        "openhuman.tool_registry_diagnostics",
+        "neppy.tool_registry_diagnostics",
         json!({}),
     )
     .await;
@@ -3237,11 +3237,11 @@ async fn proxy_config_tool_covers_temp_config_runtime_env_and_validation_paths()
         .expect("set environment proxy");
     assert!(!set_environment.is_error, "{}", set_environment.output());
     assert_eq!(
-        std::env::var("HTTP_PROXY").as_deref(),
+        neppy_core::neppy::util::env::var("HTTP_PROXY").as_deref(),
         Ok("http://127.0.0.1:8888")
     );
     assert_eq!(
-        std::env::var("HTTPS_PROXY").as_deref(),
+        neppy_core::neppy::util::env::var("HTTPS_PROXY").as_deref(),
         Ok("http://127.0.0.1:8889")
     );
 
@@ -3250,7 +3250,7 @@ async fn proxy_config_tool_covers_temp_config_runtime_env_and_validation_paths()
         .await
         .expect("clear env");
     assert!(!clear_env.is_error, "{}", clear_env.output());
-    assert!(std::env::var("HTTP_PROXY").is_err());
+    assert!(neppy_core::neppy::util::env::var("HTTP_PROXY").is_err());
 
     let disable = tool
         .execute(json!({ "action": "disable", "clear_env": true }))

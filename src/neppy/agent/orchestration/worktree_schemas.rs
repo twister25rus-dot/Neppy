@@ -400,7 +400,7 @@ mod tests {
 
     /// Drives the full `handle_list` async handler (the public RPC entry point)
     /// through `repo_root` → config load, anchored on a non-git
-    /// `OPENHUMAN_ACTION_DIR`. Confirms the panel-facing path degrades to an
+    /// `NEPPY_ACTION_DIR`. Confirms the panel-facing path degrades to an
     /// empty list rather than erroring. Holds `TEST_ENV_LOCK` because the env
     /// override is process-global.
     #[tokio::test]
@@ -414,8 +414,8 @@ mod tests {
 
         // SAFETY: env writes are serialized by TEST_ENV_LOCK above.
         unsafe {
-            std::env::set_var("OPENHUMAN_WORKSPACE", tmp.path());
-            std::env::set_var("OPENHUMAN_ACTION_DIR", &action_dir);
+            std::env::set_var("NEPPY_WORKSPACE", tmp.path());
+            std::env::set_var("NEPPY_ACTION_DIR", &action_dir);
         }
 
         let out = handle_list(Map::new())
@@ -427,10 +427,8 @@ mod tests {
         assert_eq!(payload["worktrees"], json!([]));
         assert_eq!(payload["overlaps"], json!([]));
 
-        unsafe {
-            std::env::remove_var("OPENHUMAN_ACTION_DIR");
-            std::env::remove_var("OPENHUMAN_WORKSPACE");
-        }
+        crate::neppy::util::env::remove_var("NEPPY_ACTION_DIR");
+        crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
     }
 
     #[test]

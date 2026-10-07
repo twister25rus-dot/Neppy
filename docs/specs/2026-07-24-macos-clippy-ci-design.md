@@ -16,7 +16,7 @@ The repository already owns the authoritative aggregate lint command:
 pnpm rust:clippy
 ```
 
-That command runs clippy for the root `openhuman` crate and then the Tauri crate,
+That command runs clippy for the root `neppy` crate and then the Tauri crate,
 with `-D warnings` configured by the existing package scripts.
 
 ## Goals

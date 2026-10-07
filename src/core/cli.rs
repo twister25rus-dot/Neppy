@@ -104,7 +104,7 @@ pub fn run_from_cli_args(args: &[String]) -> Result<()> {
             crate::core::agent_cli::run_agent_command(&args[1..])
         }
         "sentry-test" => run_sentry_test_command(&args[1..]),
-        // Generic namespace dispatcher: `openhuman <namespace> <function> ...`
+        // Generic namespace dispatcher: `neppy-core <namespace> <function> ...`
         namespace => run_namespace_command(namespace, &args[1..], &grouped),
     }
 }
@@ -118,7 +118,7 @@ struct CliLaunchOptions {
 }
 
 /// Parse launch-wide flags before the subcommand, matching the familiar
-/// `openhuman [global options] [command]` shape. Model/provider values are
+/// `neppy-core [global options] [command]` shape. Model/provider values are
 /// transient process overrides; they never rewrite the user's config file.
 fn parse_launch_options(args: &[String]) -> Result<CliLaunchOptions> {
     let mut parsed = CliLaunchOptions::default();
@@ -186,13 +186,13 @@ fn run_tui_from_cli(args: &[String]) -> Result<()> {
 fn run_tui_from_cli(_args: &[String]) -> Result<()> {
     anyhow::bail!(
         "tui feature disabled at compile time; rebuild with `--features tui` \
-         (or use a default-feature build) to enable `openhuman tui`"
+         (or use a default-feature build) to enable `neppy-core tui`"
     )
 }
 
-/// Pure launch policy for the bare `openhuman` command. Explicit subcommands
+/// Pure launch policy for the bare `neppy-core` command. Explicit subcommands
 /// are never rewritten. Docker and redirected/CI sessions keep the headless
-/// CLI behavior; `openhuman tui` remains an explicit override everywhere.
+/// CLI behavior; `neppy-core tui` remains an explicit override everywhere.
 fn should_auto_launch_tui(
     args: &[String],
     stdin_is_terminal: bool,
@@ -215,7 +215,7 @@ fn should_auto_launch_tui(
 /// triggers a panic so the panic integration is exercised too.
 ///
 /// Requires a DSN resolvable at runtime — either via the
-/// `OPENHUMAN_CORE_SENTRY_DSN` env var (or the legacy `OPENHUMAN_SENTRY_DSN`
+/// `NEPPY_CORE_SENTRY_DSN` env var (or the legacy `NEPPY_SENTRY_DSN`
 /// alias) or baked into the binary at build time via `option_env!`. Absent a
 /// DSN, the command exits non-zero with a diagnostic instead of silently
 /// producing no telemetry.
@@ -245,16 +245,14 @@ fn run_sentry_test_command(args: &[String]) -> Result<()> {
                 i += 1;
             }
             "-h" | "--help" => {
-                println!("Usage: openhuman sentry-test [--message <text>] [--panic]");
+                println!("Usage: neppy-core sentry-test [--message <text>] [--panic]");
                 println!();
                 println!("  --message <text>  Body of the Error-level event sent to Sentry");
-                println!("                    (default: \"openhuman sentry-test ping\")");
+                println!("                    (default: \"neppy-core sentry-test ping\")");
                 println!("  --panic           After capturing the event, trigger a panic so the");
                 println!("                    panic integration reports it as a separate event.");
                 println!();
-                println!(
-                    "Requires OPENHUMAN_CORE_SENTRY_DSN (or the legacy OPENHUMAN_SENTRY_DSN alias)"
-                );
+                println!("Requires NEPPY_CORE_SENTRY_DSN (or the legacy NEPPY_SENTRY_DSN alias)");
                 println!("at runtime, or baked into the binary at build time via option_env!. On");
                 println!("success, prints the event UUID to stdout.");
                 return Ok(());
@@ -274,13 +272,13 @@ fn run_sentry_test_command(args: &[String]) -> Result<()> {
         None => {
             return Err(anyhow::anyhow!(
                 "Sentry is not initialized in this binary — no DSN is resolvable. \
-                 Set OPENHUMAN_CORE_SENTRY_DSN (or the legacy OPENHUMAN_SENTRY_DSN alias) \
+                 Set NEPPY_CORE_SENTRY_DSN (or the legacy NEPPY_SENTRY_DSN alias) \
                  in the environment (or rebuild with it defined at compile time) and try again."
             ));
         }
     }
 
-    let msg = message.unwrap_or_else(|| "openhuman sentry-test ping".to_string());
+    let msg = message.unwrap_or_else(|| "neppy-core sentry-test ping".to_string());
 
     sentry::configure_scope(|scope| {
         scope.set_tag("test", "true");
@@ -303,7 +301,7 @@ fn run_sentry_test_command(args: &[String]) -> Result<()> {
         eprintln!(
             "[sentry-test] Triggering panic as requested — the panic integration should capture it."
         );
-        panic!("openhuman sentry-test intentional panic");
+        panic!("neppy-core sentry-test intentional panic");
     }
 
     Ok(())
@@ -327,13 +325,13 @@ fn run_sentry_test_command(_args: &[String]) -> Result<()> {
 ///
 /// Precedence:
 /// 1. Variables already set in the process environment are **not** overwritten.
-/// 2. If `OPENHUMAN_DOTENV_PATH` is set, that file is loaded.
+/// 2. If `NEPPY_DOTENV_PATH` is set, that file is loaded.
 /// 3. Otherwise, it searches for `.env` in the current working directory.
 pub(crate) fn load_dotenv_for_cli() -> Result<()> {
-    match std::env::var("OPENHUMAN_DOTENV_PATH") {
+    match crate::neppy::util::env::var("NEPPY_DOTENV_PATH") {
         Ok(path) if !path.trim().is_empty() => {
             dotenvy::from_path(&path).map_err(|e| {
-                anyhow::anyhow!("failed to load dotenv from OPENHUMAN_DOTENV_PATH={path}: {e}")
+                anyhow::anyhow!("failed to load dotenv from NEPPY_DOTENV_PATH={path}: {e}")
             })?;
         }
         _ => {
@@ -395,19 +393,17 @@ fn run_server_command(args: &[String]) -> Result<()> {
                 i += 1;
             }
             "-h" | "--help" => {
-                println!("Usage: openhuman run [--host <addr>] [--port <u16>] [--jsonrpc-only|--headless-api] [-v|--verbose]");
+                println!("Usage: neppy-core run [--host <addr>] [--port <u16>] [--jsonrpc-only|--headless-api] [-v|--verbose]");
                 println!();
+                println!("  --host <addr>    Bind address (default: 127.0.0.1 or NEPPY_CORE_HOST)");
                 println!(
-                    "  --host <addr>    Bind address (default: 127.0.0.1 or OPENHUMAN_CORE_HOST)"
-                );
-                println!(
-                    "  --port <u16>     Listen address port (default: 7788 or OPENHUMAN_CORE_PORT)"
+                    "  --port <u16>     Listen address port (default: 7788 or NEPPY_CORE_PORT)"
                 );
                 println!("  --jsonrpc-only   HTTP JSON-RPC only; disable Socket.IO");
                 println!("  --headless-api   HTTP JSON-RPC only; disable all background services");
                 println!("  -v, --verbose    Shorthand for RUST_LOG=debug when RUST_LOG is unset");
                 println!();
-                println!("Logging: set RUST_LOG (e.g. RUST_LOG=debug openhuman run). Default level is info.");
+                println!("Logging: set RUST_LOG (e.g. RUST_LOG=debug neppy-core run). Default level is info.");
                 return Ok(());
             }
             other => return Err(anyhow::anyhow!("unknown run arg: {other}")),
@@ -471,7 +467,7 @@ fn run_call_command(args: &[String]) -> Result<()> {
                 i += 2;
             }
             "-h" | "--help" => {
-                println!("Usage: openhuman call --method <name> [--params '<json>']");
+                println!("Usage: neppy-core call --method <name> [--params '<json>']");
                 return Ok(());
             }
             other => return Err(anyhow::anyhow!("unknown call arg: {other}")),
@@ -487,7 +483,7 @@ fn run_call_command(args: &[String]) -> Result<()> {
     // ambient CoreContext to filter the registry.
     crate::core::cli_capability::ensure_capability_blocking(
         all::capability_for_rpc_method(&method).flatten(),
-        &format!("openhuman call --method {method}"),
+        &format!("neppy-core call --method {method}"),
     )?;
 
     // `call` invokes a JSON-RPC method that may run an orchestrator turn
@@ -506,7 +502,7 @@ fn run_call_command(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-/// Dispatches commands that fall under a specific namespace (e.g., `openhuman <namespace> <function>`).
+/// Dispatches commands that fall under a specific namespace (e.g., `neppy-core <namespace> <function>`).
 ///
 /// It looks up the function schema for validation and executes the request.
 ///
@@ -533,10 +529,10 @@ fn run_namespace_command(
         // and still reports unknown.
         crate::core::cli_capability::ensure_capability_blocking(
             all::sole_capability_for_namespace(namespace),
-            &format!("openhuman {namespace}"),
+            &format!("neppy-core {namespace}"),
         )?;
         return Err(anyhow::anyhow!(
-            "unknown namespace '{namespace}'. Run `openhuman --help` to see available namespaces."
+            "unknown namespace '{namespace}'. Run `neppy-core --help` to see available namespaces."
         ));
     };
 
@@ -556,7 +552,7 @@ fn run_namespace_command(
     // `grouped` comes from `all_controller_schemas()`, which filters through the
     // ambient `CoreContext` — and no plain CLI subcommand builds one, since
     // `DEFAULT_CONTEXT` is set only in `CoreContext::init` (reached by
-    // `run`/`serve` and the TUI). So on a real `openhuman <ns> <fn>` invocation
+    // `run`/`serve` and the TUI). So on a real `neppy-core <ns> <fn>` invocation
     // *nothing* is filtered, a gated function is still found here, and a check
     // placed only in the not-found arm would never execute — the command would
     // simply run. Gating the resolved function instead makes this fire on the
@@ -571,12 +567,12 @@ fn run_namespace_command(
     // carves the CLI out of.
     crate::core::cli_capability::ensure_capability_blocking(
         all::capability_for_parts(namespace, function).flatten(),
-        &format!("openhuman {namespace} {function}"),
+        &format!("neppy-core {namespace} {function}"),
     )?;
 
     let Some(schema) = schemas.iter().find(|s| s.function == function).cloned() else {
         return Err(anyhow::anyhow!(
-            "unknown function '{namespace} {function}'. Run `openhuman {namespace} --help`."
+            "unknown function '{namespace} {function}'. Run `neppy-core {namespace} --help`."
         ));
     };
 
@@ -715,21 +711,23 @@ fn grouped_schemas() -> BTreeMap<String, Vec<ControllerSchema>> {
 fn print_general_help(grouped: &BTreeMap<String, Vec<ControllerSchema>>) {
     println!("Neppy core CLI\n");
     println!("Usage:");
-    println!("  openhuman [OPTIONS]                     (tabbed terminal UI on interactive hosts)");
-    println!("  openhuman run [--host <addr>] [--port <u16>] [--jsonrpc-only] [--verbose]");
-    println!("  openhuman call --method <name> [--params '<json>']");
     println!(
-        "  openhuman mcp [-v|--verbose]              (stdio MCP server; read-only memory tools)"
+        "  neppy-core [OPTIONS]                     (tabbed terminal UI on interactive hosts)"
+    );
+    println!("  neppy-core run [--host <addr>] [--port <u16>] [--jsonrpc-only] [--verbose]");
+    println!("  neppy-core call --method <name> [--params '<json>']");
+    println!(
+        "  neppy-core mcp [-v|--verbose]              (stdio MCP server; read-only memory tools)"
     );
     println!(
-        "  openhuman tui [--thread <id>|--new]        (force tabbed terminal UI, alias: chat)"
+        "  neppy-core tui [--thread <id>|--new]        (force tabbed terminal UI, alias: chat)"
     );
-    println!("  openhuman skills <subcommand> [options]   (skill development runtime)");
-    println!("  openhuman agent <subcommand> [options]    (inspect agent definitions & prompts)");
-    println!("  openhuman voice [--hotkey <combo>] [--mode <tap|push>]  (voice dictation server)");
-    println!("  openhuman tree-summarizer <subcommand> [options]  (summary tree CLI)");
-    println!("  openhuman sentry-test [--message <text>] [--panic]  (verify Sentry wiring)");
-    println!("  openhuman <namespace> <function> [--param value ...]\n");
+    println!("  neppy-core skills <subcommand> [options]   (skill development runtime)");
+    println!("  neppy-core agent <subcommand> [options]    (inspect agent definitions & prompts)");
+    println!("  neppy-core voice [--hotkey <combo>] [--mode <tap|push>]  (voice dictation server)");
+    println!("  neppy-core tree-summarizer <subcommand> [options]  (summary tree CLI)");
+    println!("  neppy-core sentry-test [--message <text>] [--panic]  (verify Sentry wiring)");
+    println!("  neppy-core <namespace> <function> [--param value ...]\n");
     println!("Global options (place before the command):");
     println!("  -m, --model <id>       Override the model for this CLI session");
     println!("  -p, --provider <id>    Override the provider id or slug for this CLI session");
@@ -741,7 +739,7 @@ fn print_general_help(grouped: &BTreeMap<String, Vec<ControllerSchema>>) {
             .unwrap_or("No namespace description available.");
         println!("  {namespace} - {description}");
     }
-    println!("\nUse `openhuman <namespace> --help` to see functions.");
+    println!("\nUse `neppy-core <namespace> --help` to see functions.");
 }
 
 /// Prints help for a specific namespace, listing its functions.
@@ -754,7 +752,7 @@ fn print_namespace_help(namespace: &str, schemas: &[ControllerSchema]) {
     for schema in schemas {
         println!("  {} - {}", schema.function, schema.description);
     }
-    println!("\nUse `openhuman {namespace} <function> --help` for parameters.");
+    println!("\nUse `neppy-core {namespace} <function> --help` for parameters.");
 }
 
 /// Prints detailed help for a specific function, including its parameters and description.

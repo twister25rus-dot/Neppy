@@ -19,11 +19,11 @@ test.describe('Webhooks ingress surface (stub-level)', () => {
     const registrations = await callCoreRpc<{
       result?: { registrations?: unknown[] };
       logs?: string[];
-    }>('openhuman.webhooks_list_registrations', {});
+    }>('neppy.webhooks_list_registrations', {});
     expect(registrations.result?.registrations ?? []).toEqual([]);
 
     const logs = await callCoreRpc<{ result?: { logs?: unknown[] }; logs?: string[] }>(
-      'openhuman.webhooks_list_logs',
+      'neppy.webhooks_list_logs',
       { limit: 5 }
     );
     expect(logs.result?.logs ?? []).toEqual([]);
@@ -32,7 +32,7 @@ test.describe('Webhooks ingress surface (stub-level)', () => {
       const register = await callCoreRpc<{
         result?: { registrations?: unknown[] };
         logs?: string[];
-      }>('openhuman.webhooks_register_echo', {
+      }>('neppy.webhooks_register_echo', {
         tunnel_uuid: tunnelUuid,
         tunnel_name: 'E2E Tunnel',
         backend_tunnel_id: 'backend-e2e-webhooks-ingress',
@@ -40,7 +40,7 @@ test.describe('Webhooks ingress surface (stub-level)', () => {
       expect(Array.isArray(register.result?.registrations ?? [])).toBe(true);
 
       const clear = await callCoreRpc<{ result?: { cleared?: number }; logs?: string[] }>(
-        'openhuman.webhooks_clear_logs',
+        'neppy.webhooks_clear_logs',
         {}
       );
       expect(typeof clear.result?.cleared).toBe('number');
@@ -48,7 +48,7 @@ test.describe('Webhooks ingress surface (stub-level)', () => {
       const unregister = await callCoreRpc<{
         result?: { registrations?: unknown[] };
         logs?: string[];
-      }>('openhuman.webhooks_unregister_echo', { tunnel_uuid: tunnelUuid });
+      }>('neppy.webhooks_unregister_echo', { tunnel_uuid: tunnelUuid });
       expect(unregister.result?.registrations ?? []).toEqual([]);
     } catch {
       // Router initialization is socket-backed and can be absent in this lane.

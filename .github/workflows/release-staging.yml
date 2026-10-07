@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Reuse the Production GitHub Actions environment so Sentry vars
-    # (`OPENHUMAN_*_SENTRY_DSN`, `SENTRY_PROJECT_*`, `SENTRY_ORG`,
+    # (`NEPPY_*_SENTRY_DSN`, `SENTRY_PROJECT_*`, `SENTRY_ORG`,
     # `SENTRY_AUTH_TOKEN`) and `VITE_DEBUG` resolve here too. Staging
     # events differentiate from production via the `environment` tag set
     # at runtime — separate Sentry projects are not needed.

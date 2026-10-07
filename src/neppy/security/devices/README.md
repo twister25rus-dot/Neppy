@@ -37,7 +37,7 @@ Other notable public items (used across the crate but not re-exported at the dom
 
 ## RPC / controllers
 
-Namespace `devices` (invoked as `openhuman.devices_<function>`):
+Namespace `devices` (invoked as `neppy.devices_<function>`):
 
 | Method | Inputs | Output | Behavior |
 | --- | --- | --- | --- |
@@ -105,7 +105,7 @@ Separately, encrypted X25519 private keys are persisted as `enc2:` strings (via 
 - **`TunnelCipher` frame format** (`crypto`): `version(1)=0x01 || nonce(24) || ciphertext+tag`, random nonce per frame, replay protection via a 128-entry sliding window of seen nonces. Wrap in a `Mutex`/`RwLock` at the call site (it is `&mut self` on `open`).
 - The `label` persisted on pairing currently falls back to the `channel_id` (the pending session stores no real label field; `PairingSession.channel_id` is used as the label source).
 - `devices_revoke` only tears down local + in-memory state. There is **no backend revoke endpoint yet** (TODO referencing PR #709 follow-up); the backend channel is left to expire via the pairing-token TTL.
-- `rpc_url` LAN detection uses the UDP "connect to 8.8.8.8" trick to read the local IPv4; port comes from `OPENHUMAN_CORE_RPC_PORT` env (default `7788`). Non-fatal if it fails.
+- `rpc_url` LAN detection uses the UDP "connect to 8.8.8.8" trick to read the local IPv4; port comes from `NEPPY_CORE_RPC_PORT` env (default `7788`). Non-fatal if it fails.
 - `tunnel:register` uses `SocketManager::emit_with_ack` and expects backend ACK shape `{channelId, pairingToken, pairingExpiresAt}` with a 10-second timeout.
 - `PairingSession` and the keypair maps are in-memory only (TTL/cleanup deferred to backend semantics); they are cleared on revoke.
 - Outbound `tunnel:frame` payloads are capped at 64 KB; callers are expected to stay ≤ 100 frames/s.

@@ -2,6 +2,7 @@ import type { IconType } from 'react-icons';
 import {
   LuActivity,
   LuBrain,
+  LuCodeXml,
   LuGift,
   LuHouse,
   LuKeyboard,
@@ -41,6 +42,7 @@ const ICONS: Record<string, IconType> = {
   keyboard: LuKeyboard,
   rewards: LuGift,
   pet: LuPawPrint,
+  debug: LuCodeXml,
 };
 
 interface NavIconProps {

@@ -419,7 +419,7 @@ mod tests {
     }
 
     fn set_evm_rpc(addr: std::net::SocketAddr) {
-        std::env::set_var("OPENHUMAN_WALLET_RPC_EVM", format!("http://{addr}"));
+        std::env::set_var("NEPPY_WALLET_RPC_EVM", format!("http://{addr}"));
     }
 
     #[tokio::test]
@@ -531,7 +531,7 @@ mod tests {
     // broker whose tasks died with the first and the call fails with
     // "connection closed". Verified passing in isolation:
     //
-    //   cargo test -p openhuman --lib --features "$(bash scripts/ci/product-features.sh)" \
+    //   cargo test -p neppy --lib --features "$(bash scripts/ci/product-features.sh)" \
     //     sign_and_broadcast_evm_signs_raw_calldata -- --ignored --test-threads=1
     //
     // Same constraint tinydocs documents for its module-backed tool tests.

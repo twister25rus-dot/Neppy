@@ -154,7 +154,7 @@ impl EmbeddingHost for NeppyEmbeddingHost {
 /// Resolution:
 /// - Runtime *is* Ollama: the previous behaviour, unchanged —
 ///   `local_ai.base_url` (unless it is an OpenAI `/v1` endpoint), else
-///   `OPENHUMAN_OLLAMA_BASE_URL` / `OLLAMA_HOST` / `http://localhost:11434`.
+///   `NEPPY_OLLAMA_BASE_URL` / `OLLAMA_HOST` / `http://localhost:11434`.
 ///   The `ollama` provider entry is never consulted here, so memory cannot be
 ///   redirected to a different (possibly remote) host than the runtime uses.
 /// - Runtime is not Ollama (MLX, LM Studio): a configured `ollama`

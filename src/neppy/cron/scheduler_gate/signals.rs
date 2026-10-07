@@ -41,14 +41,14 @@ fn sample_power() -> (bool, Option<f32>) {
     // explicit truthy/falsy tokens count: garbage values yield None so
     // the real probe still gets to answer (vs. silently coercing to
     // "on battery" and triggering throttling on every misconfigured host).
-    let env_on_ac = std::env::var("OPENHUMAN_ON_AC_POWER").ok().and_then(|v| {
-        match v.to_ascii_lowercase().as_str() {
+    let env_on_ac = crate::neppy::util::env::var("NEPPY_ON_AC_POWER")
+        .ok()
+        .and_then(|v| match v.to_ascii_lowercase().as_str() {
             "1" | "true" | "yes" => Some(true),
             "0" | "false" | "no" => Some(false),
             _ => None,
-        }
-    });
-    let env_charge = std::env::var("OPENHUMAN_BATTERY_CHARGE")
+        });
+    let env_charge = crate::neppy::util::env::var("NEPPY_BATTERY_CHARGE")
         .ok()
         .and_then(|v| v.parse::<f32>().ok())
         .map(|v| v.clamp(0.0, 1.0));
@@ -176,7 +176,7 @@ fn sample_cpu() -> f32 {
 // ---- deployment mode -----------------------------------------------------
 
 fn detect_server_mode(no_battery: bool) -> bool {
-    if let Ok(v) = std::env::var("OPENHUMAN_DEPLOYMENT") {
+    if let Ok(v) = crate::neppy::util::env::var("NEPPY_DEPLOYMENT") {
         if v.eq_ignore_ascii_case("server") {
             return true;
         }
@@ -184,7 +184,7 @@ fn detect_server_mode(no_battery: bool) -> bool {
             return false;
         }
     }
-    if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
+    if crate::neppy::util::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
         return true;
     }
     if Path::new("/.dockerenv").exists() {
@@ -195,8 +195,8 @@ fn detect_server_mode(no_battery: bool) -> bool {
     // from "no battery" alone — desktops have no battery either.
     if cfg!(target_os = "linux")
         && no_battery
-        && std::env::var("DISPLAY").is_err()
-        && std::env::var("WAYLAND_DISPLAY").is_err()
+        && crate::neppy::util::env::var("DISPLAY").is_err()
+        && crate::neppy::util::env::var("WAYLAND_DISPLAY").is_err()
     {
         return true;
     }

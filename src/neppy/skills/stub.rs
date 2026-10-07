@@ -67,7 +67,7 @@ pub fn init_workflows_dir(_workspace_dir: &Path) -> Result<(), String> {
 // Controller aggregators — empty so `src/core/all.rs` needs no `#[cfg]`.
 // ---------------------------------------------------------------------------
 
-/// Always empty: the `openhuman.skills_*` controllers are compiled out, so
+/// Always empty: the `neppy.skills_*` controllers are compiled out, so
 /// they never enter the registry (unknown-method over `/rpc`, absent from
 /// `/schema`).
 pub fn all_skills_registered_controllers() -> Vec<RegisteredController> {

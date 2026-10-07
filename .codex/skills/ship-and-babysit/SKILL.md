@@ -56,7 +56,7 @@ Before shipping feature work, verify that the PR includes end-to-end coverage fo
 
 - Core, domain, persistence, CLI, or JSON-RPC feature changes need Rust E2E coverage in `tests/*_e2e.rs`, usually targeted through `pnpm test:rust:e2e -- --suite <suite>` or `bash scripts/test-rust-e2e.sh --suite <suite>`.
 - New or changed JSON-RPC surfaces should normally extend `tests/json_rpc_e2e.rs` unless a more focused `*_e2e.rs` suite owns the domain.
-- Frontend user flows need Playwright E2E coverage in `app/test/e2e/specs/*.spec.ts`; build/run targeted web E2E with `pnpm --filter openhuman-app test:e2e:web:build` and `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts`.
+- Frontend user flows need Playwright E2E coverage in `app/test/e2e/specs/*.spec.ts`; build/run targeted web E2E with `pnpm --filter neppy-app test:e2e:web:build` and `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts`.
 - Mock backend calls all the way through. Use the repo mock backend (`scripts/mock-api-server.mjs`, `scripts/mock-api/*`, `app/test/e2e/mock-server.ts`) and admin behavior endpoints; do not hit real backend services or third-party APIs.
 - Unit tests are still expected for narrow logic, but they do not replace E2E coverage for newly built features.
 
@@ -146,7 +146,7 @@ If the loop reaches the hard cap, stop and report the PR URL, current CI snapsho
 - `cargo check --manifest-path app/src-tauri/Cargo.toml`
 - `pnpm test:rust`
 - `pnpm test:rust:e2e -- --suite <suite>`
-- `pnpm --filter openhuman-app test:e2e:web:build`
+- `pnpm --filter neppy-app test:e2e:web:build`
 - `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts`
 
 Prefer targeted test commands when the touched area is narrow, but do not claim validation passed if a command was not run.

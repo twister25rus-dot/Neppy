@@ -1,7 +1,7 @@
 /**
  * AgentsPanel — Settings > Agents.
  *
- * Surfaces the user-facing agent registry (`openhuman.agent_registry_*`):
+ * Surfaces the user-facing agent registry (`neppy.agent_registry_*`):
  * shipped built-in agents plus user-authored custom agents. Users can
  * enable/disable agents, create custom agents, edit any agent (editing a
  * built-in saves an override), and delete a custom agent / reset a built-in

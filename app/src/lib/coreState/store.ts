@@ -114,7 +114,7 @@ export function setCoreStateSnapshot(next: CoreState): void {
 // authenticated user id (held in core state, not redux) to scope socket
 // readiness, account-switch races, and other backing-state assertions.
 if (typeof window !== 'undefined') {
-  (window as unknown as { __OPENHUMAN_CORE_STATE__?: () => CoreState }).__OPENHUMAN_CORE_STATE__ =
+  (window as unknown as { __NEPPY_CORE_STATE__?: () => CoreState }).__NEPPY_CORE_STATE__ =
     getCoreStateSnapshot;
 }
 

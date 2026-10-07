@@ -117,7 +117,7 @@ pub(crate) const ARTIFACT_CAPABILITIES: &[Capability] = &[
 
 /// Escape hatch for a locally-built module.
 ///
-/// Set `OPENHUMAN_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES=1` when the loaded
+/// Set `NEPPY_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES=1` when the loaded
 /// library was built from `vendor/tinymemory/crates/tinymemory-module` rather
 /// than downloaded from the pinned release — that build serves the whole
 /// contract, and pinning it to the older list would hide families it does have.
@@ -126,7 +126,7 @@ pub(crate) const ARTIFACT_CAPABILITIES: &[Capability] = &[
 /// exactly the lane that must exercise it.
 fn assume_full_capabilities() -> bool {
     matches!(
-        std::env::var("OPENHUMAN_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES")
+        crate::neppy::util::env::var("NEPPY_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES")
             .ok()
             .as_deref()
             .map(str::trim),
@@ -144,7 +144,7 @@ fn artifact_capabilities() -> Capabilities {
 /// Split out from [`artifact_capabilities`] so the pinned-artifact invariants
 /// can be asserted on the `false` branch directly. Reading the environment
 /// inside the assertion would make those tests fail for anyone who has
-/// `OPENHUMAN_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES=1` exported — a documented,
+/// `NEPPY_MEMORY_MODULE_ASSUME_FULL_CAPABILITIES=1` exported — a documented,
 /// supported configuration — and mutating the variable from a test would race
 /// the rest of the binary.
 fn capabilities_for(assume_full: bool) -> Capabilities {

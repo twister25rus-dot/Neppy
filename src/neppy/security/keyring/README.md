@@ -26,7 +26,7 @@ OS-keychain-backed secret storage with pluggable test/debug backends, plus a Cha
 | `src/neppy/security/keyring/crypto.rs`                 | Shared ChaCha20-Poly1305 helpers (`chacha20_encrypt`/`chacha20_decrypt`), random-byte generation, hex encode/decode. Used by both `encrypted_store` and `encrypted_file_backend`.                                                                                                               |
 | `src/neppy/security/keyring/error.rs`                  | `KeyringError` (thiserror) with variants `Os`/`InvalidUtf8`/`MigrationReadFailed`/`VerifyFailed`/`MigrationDeleteFailed`/`RandomGeneration`/`Crypto`/`Backend`, plus a log-safe `diagnostic()` that preserves the `keyring::Error` variant + `OSStatus`.                                        |
 | `src/neppy/security/keyring/tests.rs`                  | Module tests (backend isolation via `force_backend_for_test`).                                                                                                                                                                                                                                  |
-| `src/neppy/security/keyring/store_tests.rs`            | Test-isolation regressions: test builds ignore `OPENHUMAN_WORKSPACE`, production resolution still honours it, scoped workspaces do not share secrets, and a deleted scoped workspace cannot reset the default store.                                                                            |
+| `src/neppy/security/keyring/store_tests.rs`            | Test-isolation regressions: test builds ignore `NEPPY_WORKSPACE`, production resolution still honours it, scoped workspaces do not share secrets, and a deleted scoped workspace cannot reset the default store.                                                                            |
 | `src/neppy/security/keyring/encrypted_store_tests.rs`  | `SecretStore` tests (wired via `#[path]` from `encrypted_store.rs`).                                                                                                                                                                                                                            |
 
 ## Public surface
@@ -43,7 +43,7 @@ Re-exported from `mod.rs`:
 
 ## RPC / controllers
 
-None. The keyring domain exposes no `schemas.rs`, no `all_*_controller_schemas`, and no `openhuman.keyring_*` methods. It is consumed in-process by other domains.
+None. The keyring domain exposes no `schemas.rs`, no `all_*_controller_schemas`, and no `neppy.keyring_*` methods. It is consumed in-process by other domains.
 
 ## Agent tools
 
@@ -58,15 +58,15 @@ None — no `bus.rs`, publishes/subscribes to no `DomainEvent`.
 Secret storage backend, selected once and frozen in a `OnceLock`:
 
 - **`os`** (production default outside staging/prod special-casing): native OS credential store — macOS Keychain, Windows Credential Manager, Linux Secret Service — under service name `"openhuman"`.
-- **`encrypted_file`** (staging/production, and via `OPENHUMAN_KEYRING_BACKEND=encrypted_file`): single ChaCha20-Poly1305 file `{workspace}/secrets.enc`, encrypted with a master key loaded once from the OS keychain (`openhuman` / `app:master_key`). Files written `0600` on Unix via temp-file + atomic rename.
-- **`file`** (dev default, `cfg(test)`, or `OPENHUMAN_KEYRING_BACKEND=file`): plaintext JSON `{workspace}/dev-keychain.json`. **Not encrypted — test/debug only.**
+- **`encrypted_file`** (staging/production, and via `NEPPY_KEYRING_BACKEND=encrypted_file`): single ChaCha20-Poly1305 file `{workspace}/secrets.enc`, encrypted with a master key loaded once from the OS keychain (`neppy` / `app:master_key`). Files written `0600` on Unix via temp-file + atomic rename.
+- **`file`** (dev default, `cfg(test)`, or `NEPPY_KEYRING_BACKEND=file`): plaintext JSON `{workspace}/dev-keychain.json`. **Not encrypted — test/debug only.**
 - **`mock`** (test-only): in-memory `HashMap`.
 
 `SecretStore` additionally manages a master encryption key: keychain-backed (slot `secretstore.master_key`) in normal builds with one-time migration from the legacy `{data_dir}/openhuman/.secret_key` file; the file path is retained only for unit tests. Decoded keys are cached process-wide keyed by normalized path.
 
-Workspace dir resolves from `init_workspace`, else `OPENHUMAN_WORKSPACE`, else `~/.neppy` (or `~/.neppy-staging` under `OPENHUMAN_APP_ENV=staging`). **In `cfg(test)` builds only**, that rule is bypassed — see the test-isolation note below.
+Workspace dir resolves from `init_workspace`, else `NEPPY_WORKSPACE`, else `~/.neppy` (or `~/.neppy-staging` under `NEPPY_APP_ENV=staging`). **In `cfg(test)` builds only**, that rule is bypassed — see the test-isolation note below.
 
-Both file backends keep every secret in one file, so a `set` of one key rewrites all of them. That read-modify-write cycle is guarded by `file_store::lock_for_write` — an in-process mutex is not sufficient, because a desktop core, a `medulla` TUI embedding the same core, and a `cargo test` run that inherited `OPENHUMAN_WORKSPACE` all address the same path.
+Both file backends keep every secret in one file, so a `set` of one key rewrites all of them. That read-modify-write cycle is guarded by `file_store::lock_for_write` — an in-process mutex is not sufficient, because a desktop core, a `medulla` TUI embedding the same core, and a `cargo test` run that inherited `NEPPY_WORKSPACE` all address the same path.
 
 ## Dependencies
 
@@ -85,8 +85,8 @@ Discovered consumers (`crate::neppy::security::keyring::*`):
 
 ## Notes / gotchas
 
-- **Backend is frozen on first use (production).** Selection order: `OPENHUMAN_KEYRING_BACKEND` (`os`/`file`/`encrypted_file`) → `cfg(test)` → `file` → staging/prod → `encrypted_file`, dev → `file`. Once `BACKEND` is set it cannot change for the process lifetime. A process serves one workspace, so this `OnceLock` is a pure cache.
-- **Test builds resolve the workspace per thread, not per process.** `WORKSPACE_DIR` and `OPENHUMAN_WORKSPACE` are shared by every concurrently-running test, so consulting them made the whole test binary share one credential store pinned to whichever workspace won the race. When the winner was a `TempDir` held by a test's env guard, that directory was deleted at the end of that test and — because `FileBackend::read_map` treats a missing file as an empty map — the next write silently reset the store, so unrelated tests read their own freshly-written secrets back as `None`. Under `cfg(test)`, `workspace_dir_for_file_backend()` therefore ignores both and uses `test_scope::current_workspace()`: a thread-local override when a test binds one with `test_scope::ScopedWorkspace`, otherwise a stable per-process directory under the system temp dir. Backends are then cached **per resolved directory**. Two consequences worth knowing: test runs never read or write the developer's real `~/.neppy/dev-keychain.json`, and a test wanting a private credential store must use `ScopedWorkspace` — setting `OPENHUMAN_WORKSPACE` no longer steers the keyring. Production selection is unchanged.
+- **Backend is frozen on first use (production).** Selection order: `NEPPY_KEYRING_BACKEND` (`os`/`file`/`encrypted_file`) → `cfg(test)` → `file` → staging/prod → `encrypted_file`, dev → `file`. Once `BACKEND` is set it cannot change for the process lifetime. A process serves one workspace, so this `OnceLock` is a pure cache.
+- **Test builds resolve the workspace per thread, not per process.** `WORKSPACE_DIR` and `NEPPY_WORKSPACE` are shared by every concurrently-running test, so consulting them made the whole test binary share one credential store pinned to whichever workspace won the race. When the winner was a `TempDir` held by a test's env guard, that directory was deleted at the end of that test and — because `FileBackend::read_map` treats a missing file as an empty map — the next write silently reset the store, so unrelated tests read their own freshly-written secrets back as `None`. Under `cfg(test)`, `workspace_dir_for_file_backend()` therefore ignores both and uses `test_scope::current_workspace()`: a thread-local override when a test binds one with `test_scope::ScopedWorkspace`, otherwise a stable per-process directory under the system temp dir. Backends are then cached **per resolved directory**. Two consequences worth knowing: test runs never read or write the developer's real `~/.neppy/dev-keychain.json`, and a test wanting a private credential store must use `ScopedWorkspace` — setting `NEPPY_WORKSPACE` no longer steers the keyring. Production selection is unchanged.
 - **Cleaning up historical leakage:** `node scripts/prune-dev-keychain.mjs` reports (and with `--apply` removes, after taking a backup) `dev-keychain.json` entries keyed by dead `TempDir` basenames, left behind before the isolation fix. Dry run by default.
 - **`is_available()` is cached after the first probe.** The probe performs delete/set/get/delete round-trips on the `os` backend; running it per-call triggered repeated macOS permission dialogs and starved frequent pollers. Non-os backends short-circuit to `true`. A failed probe is logged at `warn` because it silently flips `use_keychain` off.
 - **`force_backend_for_test` panics if `BACKEND` is already initialized** — it must run before any keyring call in the same process (dedicated test binary or very top of a test).

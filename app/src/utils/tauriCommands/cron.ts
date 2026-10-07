@@ -73,14 +73,14 @@ export async function neppyCronAdd(params: CronAddParams): Promise<CommandRespon
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
-  return await callCoreRpc<CommandResponse<CoreCronJob>>({ method: 'openhuman.cron_add', params });
+  return await callCoreRpc<CommandResponse<CoreCronJob>>({ method: 'neppy.cron_add', params });
 }
 
 export async function neppyCronList(): Promise<CommandResponse<CoreCronJob[]>> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
-  return await callCoreRpc<CommandResponse<CoreCronJob[]>>({ method: 'openhuman.cron_list' });
+  return await callCoreRpc<CommandResponse<CoreCronJob[]>>({ method: 'neppy.cron_list' });
 }
 
 export async function neppyCronUpdate(
@@ -91,7 +91,7 @@ export async function neppyCronUpdate(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<CoreCronJob>>({
-    method: 'openhuman.cron_update',
+    method: 'neppy.cron_update',
     params: { job_id: jobId, patch },
   });
 }
@@ -103,7 +103,7 @@ export async function neppyCronRemove(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<{ job_id: string; removed: boolean }>>({
-    method: 'openhuman.cron_remove',
+    method: 'neppy.cron_remove',
     params: { job_id: jobId },
   });
 }
@@ -128,7 +128,7 @@ export async function neppyCronRun(
       duration_ms?: number;
       output?: string;
     }>
-  >({ method: 'openhuman.cron_run', params: { job_id: jobId } });
+  >({ method: 'neppy.cron_run', params: { job_id: jobId } });
 }
 
 export async function neppyCronRuns(
@@ -139,7 +139,7 @@ export async function neppyCronRuns(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<CoreCronRun[]>>({
-    method: 'openhuman.cron_runs',
+    method: 'neppy.cron_runs',
     params: { job_id: jobId, limit },
   });
 }

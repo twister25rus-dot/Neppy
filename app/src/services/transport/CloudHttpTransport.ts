@@ -105,7 +105,7 @@ export class CloudHttpTransport implements CoreTransport {
 
   async isHealthy(): Promise<boolean> {
     try {
-      await this.call('openhuman.ping', {}, { signal: AbortSignal.timeout(5000) });
+      await this.call('neppy.ping', {}, { signal: AbortSignal.timeout(5000) });
       return true;
     } catch {
       return false;

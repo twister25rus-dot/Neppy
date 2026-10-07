@@ -1,4 +1,4 @@
-//! Wire-format types for `openhuman.skill_registry_*` RPC methods.
+//! Wire-format types for `neppy.skill_registry_*` RPC methods.
 
 use serde::{Deserialize, Serialize};
 

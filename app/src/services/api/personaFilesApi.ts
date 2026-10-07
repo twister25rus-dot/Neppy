@@ -15,7 +15,7 @@ const log = debug('persona:files');
 /** Files the Persona panel may read / edit / reset. Mirrors the core allowlist. */
 export const PERSONA_FILE_SOUL = 'SOUL.md';
 
-/** Shape returned by every `openhuman.workspace_file_*` method. */
+/** Shape returned by every `neppy.workspace_file_*` method. */
 export interface WorkspaceFile {
   filename: string;
   contents: string;
@@ -27,7 +27,7 @@ export async function readPersonaFile(filename: string): Promise<WorkspaceFile> 
   log('[rpc] read:start file=%s', filename);
   try {
     const file = await callCoreRpc<WorkspaceFile>({
-      method: 'openhuman.workspace_file_read',
+      method: 'neppy.workspace_file_read',
       params: { filename },
     });
     log(
@@ -47,7 +47,7 @@ export async function writePersonaFile(filename: string, contents: string): Prom
   log('[rpc] write:start file=%s bytes=%d', filename, contents.length);
   try {
     const file = await callCoreRpc<WorkspaceFile>({
-      method: 'openhuman.workspace_file_write',
+      method: 'neppy.workspace_file_write',
       params: { filename, contents },
     });
     log('[rpc] write:ok file=%s', filename);
@@ -62,7 +62,7 @@ export async function resetPersonaFile(filename: string): Promise<WorkspaceFile>
   log('[rpc] reset:start file=%s', filename);
   try {
     const file = await callCoreRpc<WorkspaceFile>({
-      method: 'openhuman.workspace_file_reset',
+      method: 'neppy.workspace_file_reset',
       params: { filename },
     });
     log('[rpc] reset:ok file=%s', filename);

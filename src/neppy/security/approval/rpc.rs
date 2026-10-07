@@ -101,7 +101,7 @@ pub async fn approval_list_recent_decisions(
 /// *new* grant so blanket approvals stay visible in Approval history.
 ///
 /// Unlike `approval_decide`, a missing gate is NOT an error: with the gate
-/// uninstalled (`OPENHUMAN_APPROVAL_GATE=0`) nothing ever parks, so there is
+/// uninstalled (`NEPPY_APPROVAL_GATE=0`) nothing ever parks, so there is
 /// nothing to pre-authorize — the call reports `gate_installed: false` and
 /// succeeds, keeping the save-and-enable UX identical in both modes.
 pub async fn approval_preauthorize_flow(

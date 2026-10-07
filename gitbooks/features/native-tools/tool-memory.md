@@ -42,7 +42,7 @@ Two automatic capture paths fire after every turn (via `ToolMemoryCaptureHook`):
 1. **User edicts** - sentences like `never <verb> <noun>`, `don't <verb> ...`, `do not <verb> ...`, or `stop <verb>ing ...` in the user message are promoted to a **Critical** rule on the matching tool. Common-noun aliases map `"email"` to a tool named `send_email`, `"shell"` to `bash`/`exec`, etc.; when no alias matches, the rule lands on the first tool that ran in the turn so it stays adjacent to the relevant call site.
 2. **Repeated tool failures** - a tool that fails twice or more in a single turn earns a **Normal**-priority observation, with the failure class summarized inline so the agent has context next time it considers that tool.
 
-The hook is enabled by default whenever the learning subsystem is on. Disable selectively with `OPENHUMAN_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED=0`.
+The hook is enabled by default whenever the learning subsystem is on. Disable selectively with `NEPPY_LEARNING_TOOL_MEMORY_CAPTURE_ENABLED=0`.
 
 ## Retrieval at tool-selection time
 

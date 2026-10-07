@@ -110,7 +110,7 @@ impl KeyringBackend for OsBackend {
 /// modify → write cycle over *all* of them. That cycle is guarded by the
 /// cross-process advisory lock in [`file_store::lock_for_write`] — an in-process
 /// mutex is not enough, because a desktop core, a `medulla` TUI embedding the
-/// same core, and a `cargo test` run that inherited `OPENHUMAN_WORKSPACE` all
+/// same core, and a `cargo test` run that inherited `NEPPY_WORKSPACE` all
 /// address the same path. Unguarded, the later writer's map (read before the
 /// earlier writer landed) silently discards the earlier one's secret; when that
 /// secret is the app session, the symptom is being signed out for no reason.
@@ -216,7 +216,7 @@ impl KeyringBackend for FileBackend {
 
 // ── MockBackend (test only) ───────────────────────────────────────────────────
 
-/// In-memory backend used in tests and when `OPENHUMAN_KEYRING_BACKEND=mock`.
+/// In-memory backend used in tests and when `NEPPY_KEYRING_BACKEND=mock`.
 #[cfg(test)]
 pub struct MockBackend {
     store: std::sync::Mutex<HashMap<String, String>>,

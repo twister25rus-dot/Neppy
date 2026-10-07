@@ -156,7 +156,7 @@ async fn resolve_thread(
     }
 
     if prefer_existing && !force_new {
-        match runtime.invoke("openhuman.threads_list", json!({})).await {
+        match runtime.invoke("neppy.threads_list", json!({})).await {
             Ok(listed) => {
                 if let Some(id) = super::cockpit::array_at(&listed, &["threads", "items"])
                     .first()
@@ -167,18 +167,17 @@ async fn resolve_thread(
                 }
             }
             Err(error) => {
-                log::warn!("[tui] openhuman.threads_list failed: {error} — starting a new thread")
+                log::warn!("[tui] neppy.threads_list failed: {error} — starting a new thread")
             }
         }
     }
 
     let created = runtime
-        .invoke("openhuman.threads_create_new", json!({}))
+        .invoke("neppy.threads_create_new", json!({}))
         .await
-        .map_err(|e| anyhow::anyhow!("openhuman.threads_create_new failed: {e}"))?;
-    extract_thread_id(&created).ok_or_else(|| {
-        anyhow::anyhow!("openhuman.threads_create_new returned no thread id: {created}")
-    })
+        .map_err(|e| anyhow::anyhow!("neppy.threads_create_new failed: {e}"))?;
+    extract_thread_id(&created)
+        .ok_or_else(|| anyhow::anyhow!("neppy.threads_create_new returned no thread id: {created}"))
 }
 
 /// Pull a thread id out of a `threads.create_new` / `threads.list` response,
@@ -196,10 +195,10 @@ pub(super) fn extract_thread_id(value: &Value) -> Option<String> {
 }
 
 /// Resolve the Neppy data dir (host of `logs/`), mirroring the shell's
-/// resolution: `OPENHUMAN_WORKSPACE` override, else `~/.neppy`, else a temp
+/// resolution: `NEPPY_WORKSPACE` override, else `~/.neppy`, else a temp
 /// fallback. No `eprintln!` — the TUI is about to take the terminal.
 fn resolve_data_dir() -> PathBuf {
-    if let Ok(workspace) = std::env::var("OPENHUMAN_WORKSPACE") {
+    if let Ok(workspace) = crate::neppy::util::env::var("NEPPY_WORKSPACE") {
         if !workspace.is_empty() {
             return PathBuf::from(workspace);
         }
@@ -215,8 +214,8 @@ fn short_hex() -> String {
 }
 
 fn print_help() {
-    println!("Usage: openhuman tui [OPTIONS] [PROMPT]");
-    println!("       openhuman chat [OPTIONS] [PROMPT]");
+    println!("Usage: neppy-core tui [OPTIONS] [PROMPT]");
+    println!("       neppy-core chat [OPTIONS] [PROMPT]");
     println!();
     println!("Open the tabbed terminal UI for core logs, orchestrator chat, configuration,");
     println!("and account settings. Runs the core in-process — no server, no ports.");
@@ -269,7 +268,7 @@ mod tests {
     }
 
     /// Regression guard: the RPC method names the TUI invokes must be the
-    /// canonical `openhuman.<namespace>_<function>` form that the registry
+    /// canonical `neppy.<namespace>_<function>` form that the registry
     /// resolves — NOT the dotted `namespace.function` short form, which
     /// `schema_for_rpc_method` does not recognise and which would make every
     /// turn (and the launch-time thread creation) fail with "unknown method".
@@ -279,41 +278,41 @@ mod tests {
     fn tui_invokes_use_canonical_registered_rpc_method_names() {
         #[allow(unused_mut)]
         let mut methods = vec![
-            "openhuman.channel_web_chat",
-            "openhuman.channel_web_cancel",
-            "openhuman.channel_web_queue_status",
-            "openhuman.threads_create_new",
-            "openhuman.threads_list",
-            "openhuman.threads_transcript_get",
-            "openhuman.threads_update_title",
-            "openhuman.threads_delete",
-            "openhuman.threads_task_board_get",
-            "openhuman.threads_token_usage",
-            "openhuman.thread_goals_get",
-            "openhuman.thread_goals_set",
-            "openhuman.profiles_list",
-            "openhuman.profiles_select",
-            "openhuman.ai_list_artifacts",
-            "openhuman.approval_list_pending",
-            "openhuman.approval_decide",
-            "openhuman.plan_review_decide",
-            "openhuman.config_get_client_config",
-            "openhuman.config_get_agent_paths",
-            "openhuman.config_update_model_settings",
-            "openhuman.config_get_autonomy_settings",
-            "openhuman.config_update_autonomy_settings",
-            "openhuman.config_get_privacy_mode",
-            "openhuman.config_set_privacy_mode",
-            "openhuman.auth_get_state",
-            "openhuman.auth_get_me",
-            "openhuman.auth_consume_login_token",
-            "openhuman.auth_store_session",
-            "openhuman.auth_clear_session",
+            "neppy.channel_web_chat",
+            "neppy.channel_web_cancel",
+            "neppy.channel_web_queue_status",
+            "neppy.threads_create_new",
+            "neppy.threads_list",
+            "neppy.threads_transcript_get",
+            "neppy.threads_update_title",
+            "neppy.threads_delete",
+            "neppy.threads_task_board_get",
+            "neppy.threads_token_usage",
+            "neppy.thread_goals_get",
+            "neppy.thread_goals_set",
+            "neppy.profiles_list",
+            "neppy.profiles_select",
+            "neppy.ai_list_artifacts",
+            "neppy.approval_list_pending",
+            "neppy.approval_decide",
+            "neppy.plan_review_decide",
+            "neppy.config_get_client_config",
+            "neppy.config_get_agent_paths",
+            "neppy.config_update_model_settings",
+            "neppy.config_get_autonomy_settings",
+            "neppy.config_update_autonomy_settings",
+            "neppy.config_get_privacy_mode",
+            "neppy.config_set_privacy_mode",
+            "neppy.auth_get_state",
+            "neppy.auth_get_me",
+            "neppy.auth_consume_login_token",
+            "neppy.auth_store_session",
+            "neppy.auth_clear_session",
         ];
         #[cfg(feature = "skills")]
-        methods.push("openhuman.skills_list");
+        methods.push("neppy.skills_list");
         #[cfg(feature = "mcp")]
-        methods.push("openhuman.mcp_clients_installed_list");
+        methods.push("neppy.mcp_clients_installed_list");
         for method in methods {
             assert!(
                 crate::core::all::schema_for_rpc_method(method).is_some(),

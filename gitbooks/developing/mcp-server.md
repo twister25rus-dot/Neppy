@@ -38,13 +38,13 @@ controller registry plus the core security policy read gate:
 
 | MCP tool            | Backing RPC                          | Purpose                                                                 |
 | ------------------- | ------------------------------------ | ----------------------------------------------------------------------- |
-| `searxng_search`\*  | `openhuman.tools_searxng_search`     | Search a configured self-hosted SearXNG instance.                       |
-| `memory.search`     | `openhuman.memory_tree_search`       | Keyword search over memory-tree chunks.                                 |
-| `memory.recall`     | `openhuman.memory_tree_recall`       | Semantic recall over memory-tree summaries/chunks.                      |
-| `tree.read_chunk`   | `openhuman.memory_tree_get_chunk`    | Read one chunk returned by search or recall.                            |
-| `tree.browse`       | `openhuman.memory_tree_list_chunks`  | Paginated chunk listing with source / entity / time filters.            |
-| `tree.top_entities` | `openhuman.memory_tree_top_entities` | Most-referenced canonical entities, optionally filtered by kind.        |
-| `tree.list_sources` | `openhuman.memory_tree_list_sources` | Distinct ingest sources with chunk counts and last-activity timestamps. |
+| `searxng_search`\*  | `neppy.tools_searxng_search`     | Search a configured self-hosted SearXNG instance.                       |
+| `memory.search`     | `neppy.memory_tree_search`       | Keyword search over memory-tree chunks.                                 |
+| `memory.recall`     | `neppy.memory_tree_recall`       | Semantic recall over memory-tree summaries/chunks.                      |
+| `tree.read_chunk`   | `neppy.memory_tree_get_chunk`    | Read one chunk returned by search or recall.                            |
+| `tree.browse`       | `neppy.memory_tree_list_chunks`  | Paginated chunk listing with source / entity / time filters.            |
+| `tree.top_entities` | `neppy.memory_tree_top_entities` | Most-referenced canonical entities, optionally filtered by kind.        |
+| `tree.list_sources` | `neppy.memory_tree_list_sources` | Distinct ingest sources with chunk counts and last-activity timestamps. |
 
 - `searxng_search` is present only when SearXNG is enabled.
 
@@ -69,11 +69,11 @@ timeout_seconds = 10
 ```
 
 ```bash
-OPENHUMAN_SEARXNG_ENABLED=true
-OPENHUMAN_SEARXNG_BASE_URL=http://localhost:8080
-OPENHUMAN_SEARXNG_MAX_RESULTS=10
-OPENHUMAN_SEARXNG_DEFAULT_LANGUAGE=en
-OPENHUMAN_SEARXNG_TIMEOUT_SECONDS=10
+NEPPY_SEARXNG_ENABLED=true
+NEPPY_SEARXNG_BASE_URL=http://localhost:8080
+NEPPY_SEARXNG_MAX_RESULTS=10
+NEPPY_SEARXNG_DEFAULT_LANGUAGE=en
+NEPPY_SEARXNG_TIMEOUT_SECONDS=10
 ```
 
 ## Resources
@@ -140,9 +140,9 @@ session:
 
 | RPC method                            | Purpose                                                                                                                                                        |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `openhuman.tool_registry_list`        | List MCP stdio tools and controller-backed tools with stable `tool_id`, route, version, input/output schemas, allowed agents, tags, enabled state, and health. |
-| `openhuman.tool_registry_get`         | Return one registry entry by `tool_id`, for example `memory.search` or `tools.web_search`.                                                                     |
-| `openhuman.tool_registry_diagnostics` | Return redacted inventory counts, write-surface candidates, policy surfaces, and external capability-provider diagnostics.                                     |
+| `neppy.tool_registry_list`        | List MCP stdio tools and controller-backed tools with stable `tool_id`, route, version, input/output schemas, allowed agents, tags, enabled state, and health. |
+| `neppy.tool_registry_get`         | Return one registry entry by `tool_id`, for example `memory.search` or `tools.web_search`.                                                                     |
+| `neppy.tool_registry_diagnostics` | Return redacted inventory counts, write-surface candidates, policy surfaces, and external capability-provider diagnostics.                                     |
 
 The registry is discovery-only. It does not change tool dispatch or permission
 checks; MCP calls still go through `tools/call`, and controller-backed tools

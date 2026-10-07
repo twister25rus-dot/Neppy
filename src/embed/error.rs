@@ -192,13 +192,13 @@ mod tests {
         }
         .encode();
 
-        let err = CoreError::from_rpc_string("openhuman.threads_get", raw);
+        let err = CoreError::from_rpc_string("neppy.threads_get", raw);
 
         assert!(matches!(err, CoreError::Domain { .. }));
         assert_eq!(err.kind(), Some("ThreadNotFound"));
         assert!(err.is_expected_user_state());
         assert!(!err.is_unavailable());
-        assert_eq!(err.method(), "openhuman.threads_get");
+        assert_eq!(err.method(), "neppy.threads_get");
     }
 
     #[test]
@@ -206,8 +206,8 @@ mod tests {
         // This is the gated-domain path: DomainSet removes the controller, so
         // dispatch reports unknown-method. Hosts must be able to tell this from
         // a real failure or they render an error where they should hide a tab.
-        let raw = format!("{UNKNOWN_METHOD_PREFIX}openhuman.flows_list");
-        let err = CoreError::from_rpc_string("openhuman.flows_list", raw);
+        let raw = format!("{UNKNOWN_METHOD_PREFIX}neppy.flows_list");
+        let err = CoreError::from_rpc_string("neppy.flows_list", raw);
 
         assert!(err.is_unavailable(), "gated method must map to Unavailable");
         assert!(!err.is_expected_user_state());
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn plain_string_becomes_rpc_error() {
-        let err = CoreError::from_rpc_string("openhuman.config_get_config", "disk on fire".into());
+        let err = CoreError::from_rpc_string("neppy.config_get_config", "disk on fire".into());
 
         assert!(matches!(err, CoreError::Rpc { .. }));
         assert!(!err.is_unavailable());
@@ -234,7 +234,7 @@ mod tests {
         }
         .encode();
 
-        let err = CoreError::from_rpc_string("openhuman.x_y", raw);
+        let err = CoreError::from_rpc_string("neppy.x_y", raw);
 
         assert!(matches!(err, CoreError::Domain { .. }));
         assert!(!err.is_unavailable());
@@ -250,7 +250,7 @@ mod tests {
         }
         .encode();
 
-        let err = CoreError::from_rpc_string("openhuman.a_b", raw);
+        let err = CoreError::from_rpc_string("neppy.a_b", raw);
         assert!(!err.is_expected_user_state());
     }
 }

@@ -53,7 +53,7 @@ use crate::neppy::agent::messages::ChatMessage;
 pub const PROVIDER_PREFIX: &str = "claude-code:";
 
 /// Serializes tests that mutate process-global env vars (`ANTHROPIC_API_KEY`,
-/// `OPENHUMAN_CLAUDE_CODE_*`). `cargo test` runs tests in parallel within a
+/// `NEPPY_CLAUDE_CODE_*`). `cargo test` runs tests in parallel within a
 /// crate, so without this lock the auth-status and auth resolvers race on
 /// `ANTHROPIC_API_KEY` (one sets it while another reads/removes it),
 /// producing flaky failures. Every env-touching test in this module acquires

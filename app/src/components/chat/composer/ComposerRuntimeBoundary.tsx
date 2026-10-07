@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { DetachedComposerRuntime } from './DetachedComposerRuntime';
 
-const debug = debugFactory('openhuman:chat-composer');
+const debug = debugFactory('neppy:chat-composer');
 
 /**
  * Module-level so `useAuiState` keys its cache on selector identity.

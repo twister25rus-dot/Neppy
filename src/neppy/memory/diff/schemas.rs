@@ -1,4 +1,4 @@
-//! Controller-registry schemas for `openhuman.memory_diff_*`.
+//! Controller-registry schemas for `neppy.memory_diff_*`.
 
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};

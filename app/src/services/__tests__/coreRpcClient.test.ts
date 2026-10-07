@@ -31,12 +31,12 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, result: { ok: true } }),
     } as Response);
 
-    await callCoreRpc({ method: 'openhuman.auth.get_state' });
+    await callCoreRpc({ method: 'neppy.auth.get_state' });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
     const body = JSON.parse(String(requestInit.body));
-    expect(body.method).toBe('openhuman.auth_get_state');
+    expect(body.method).toBe('neppy.auth_get_state');
   });
 
   test('throws clean error when JSON-RPC error payload is returned', async () => {
@@ -50,7 +50,7 @@ describe('coreRpcClient', () => {
       }),
     } as Response);
 
-    await expect(callCoreRpc({ method: 'openhuman.config_get' })).rejects.toThrow('boom from core');
+    await expect(callCoreRpc({ method: 'neppy.config_get' })).rejects.toThrow('boom from core');
   });
 
   test('broadcasts core-rpc-auth-expired on a SESSION_EXPIRED error by default', async () => {
@@ -71,9 +71,7 @@ describe('coreRpcClient', () => {
     const listener = vi.fn();
     window.addEventListener('core-rpc-auth-expired', listener);
     try {
-      await expect(callCoreRpc({ method: 'openhuman.team_get' })).rejects.toThrow(
-        'SESSION_EXPIRED'
-      );
+      await expect(callCoreRpc({ method: 'neppy.team_get' })).rejects.toThrow('SESSION_EXPIRED');
     } finally {
       window.removeEventListener('core-rpc-auth-expired', listener);
     }
@@ -100,7 +98,7 @@ describe('coreRpcClient', () => {
     let caught: unknown;
     try {
       await callCoreRpc({
-        method: 'openhuman.composio_list_available_triggers',
+        method: 'neppy.composio_list_available_triggers',
         suppressAuthExpiredEvent: true,
       });
     } catch (err) {
@@ -124,7 +122,7 @@ describe('coreRpcClient', () => {
       text: async () => 'temporarily unavailable',
     } as Response);
 
-    await expect(callCoreRpc({ method: 'openhuman.config_get' })).rejects.toThrow(
+    await expect(callCoreRpc({ method: 'neppy.config_get' })).rejects.toThrow(
       'Core RPC HTTP 503: temporarily unavailable'
     );
   });
@@ -141,18 +139,15 @@ describe('coreRpcClient', () => {
   });
 
   test.each([
-    ['openhuman.get_config', 'openhuman.config_get'],
-    ['openhuman.get_runtime_flags', 'openhuman.config_get_runtime_flags'],
-    ['openhuman.set_browser_allow_all', 'openhuman.config_set_browser_allow_all'],
-    ['openhuman.update_browser_settings', 'openhuman.config_update_browser_settings'],
-    ['openhuman.update_memory_settings', 'openhuman.config_update_memory_settings'],
-    ['openhuman.update_model_settings', 'openhuman.inference_update_model_settings'],
-    ['openhuman.update_runtime_settings', 'openhuman.config_update_runtime_settings'],
-    [
-      'openhuman.workspace_onboarding_flag_exists',
-      'openhuman.config_workspace_onboarding_flag_exists',
-    ],
-    ['openhuman.workspace_onboarding_flag_set', 'openhuman.config_workspace_onboarding_flag_set'],
+    ['neppy.get_config', 'neppy.config_get'],
+    ['neppy.get_runtime_flags', 'neppy.config_get_runtime_flags'],
+    ['neppy.set_browser_allow_all', 'neppy.config_set_browser_allow_all'],
+    ['neppy.update_browser_settings', 'neppy.config_update_browser_settings'],
+    ['neppy.update_memory_settings', 'neppy.config_update_memory_settings'],
+    ['neppy.update_model_settings', 'neppy.inference_update_model_settings'],
+    ['neppy.update_runtime_settings', 'neppy.config_update_runtime_settings'],
+    ['neppy.workspace_onboarding_flag_exists', 'neppy.config_workspace_onboarding_flag_exists'],
+    ['neppy.workspace_onboarding_flag_set', 'neppy.config_workspace_onboarding_flag_set'],
   ])('rewrites legacy alias %s -> %s', async (incoming, expected) => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValueOnce({
@@ -172,9 +167,9 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, result: {} }),
     } as Response);
 
-    await callCoreRpc({ method: 'openhuman.threads_list' });
+    await callCoreRpc({ method: 'neppy.threads_list' });
     const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
-    expect(body.method).toBe('openhuman.threads_list');
+    expect(body.method).toBe('neppy.threads_list');
   });
 
   test('defaults params to empty object when omitted', async () => {
@@ -184,7 +179,7 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, result: {} }),
     } as Response);
 
-    await callCoreRpc({ method: 'openhuman.threads_list' });
+    await callCoreRpc({ method: 'neppy.threads_list' });
     const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
     expect(body.params).toEqual({});
     expect(body.jsonrpc).toBe('2.0');
@@ -199,7 +194,7 @@ describe('coreRpcClient', () => {
     } as Response);
 
     const params = { thread_id: 't-1', nested: { flag: true } };
-    await callCoreRpc({ method: 'openhuman.threads_messages_list', params });
+    await callCoreRpc({ method: 'neppy.threads_messages_list', params });
     const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
     expect(body.params).toEqual(params);
   });
@@ -211,8 +206,8 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 0, result: {} }),
     } as Response);
 
-    await callCoreRpc({ method: 'openhuman.threads_list' });
-    await callCoreRpc({ method: 'openhuman.threads_list' });
+    await callCoreRpc({ method: 'neppy.threads_list' });
+    await callCoreRpc({ method: 'neppy.threads_list' });
     const idA = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)).id;
     const idB = JSON.parse(String((fetchMock.mock.calls[1][1] as RequestInit).body)).id;
     expect(typeof idA).toBe('number');
@@ -227,7 +222,7 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1 }),
     } as Response);
 
-    await expect(callCoreRpc({ method: 'openhuman.threads_list' })).rejects.toThrow(
+    await expect(callCoreRpc({ method: 'neppy.threads_list' })).rejects.toThrow(
       'Core RPC response missing result'
     );
   });
@@ -239,7 +234,7 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, error: { code: -32000, message: '' } }),
     } as Response);
 
-    await expect(callCoreRpc({ method: 'openhuman.threads_list' })).rejects.toThrow(
+    await expect(callCoreRpc({ method: 'neppy.threads_list' })).rejects.toThrow(
       'Core RPC returned an error'
     );
   });
@@ -248,7 +243,7 @@ describe('coreRpcClient', () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockRejectedValueOnce(new Error('ECONNREFUSED sidecar'));
 
-    await expect(callCoreRpc({ method: 'openhuman.threads_list' })).rejects.toThrow(
+    await expect(callCoreRpc({ method: 'neppy.threads_list' })).rejects.toThrow(
       'ECONNREFUSED sidecar'
     );
   });
@@ -260,9 +255,9 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, result: {} }),
     } as Response);
 
-    await callCoreRpc({ method: 'openhuman.auth.sub.segment' });
+    await callCoreRpc({ method: 'neppy.auth.sub.segment' });
     const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
-    expect(body.method).toBe('openhuman.auth_sub_segment');
+    expect(body.method).toBe('neppy.auth_sub_segment');
   });
 
   test('rejects with a timeout error when fetch does not resolve within CORE_RPC_TIMEOUT_MS', async () => {
@@ -286,7 +281,7 @@ describe('coreRpcClient', () => {
           })
       );
 
-      const pending = callCoreRpc({ method: 'openhuman.threads_list' });
+      const pending = callCoreRpc({ method: 'neppy.threads_list' });
       // Swallow the unhandled rejection that would otherwise be raised when
       // advancing timers triggers the abort before the `await expect` below.
       pending.catch(() => {});
@@ -301,7 +296,7 @@ describe('coreRpcClient', () => {
       expect(err).toBeInstanceOf(CoreRpcError);
       expect((err as CoreRpcError).kind).toBe('timeout');
       expect((err as Error).message).toBe(
-        `Core RPC openhuman.threads_list timed out after ${CORE_RPC_TIMEOUT_MS}ms`
+        `Core RPC neppy.threads_list timed out after ${CORE_RPC_TIMEOUT_MS}ms`
       );
     } finally {
       vi.useRealTimers();
@@ -327,7 +322,7 @@ describe('coreRpcClient', () => {
           })
       );
 
-      const pending = callCoreRpc({ method: 'openhuman.app_state_snapshot', timeoutMs: 60_000 });
+      const pending = callCoreRpc({ method: 'neppy.app_state_snapshot', timeoutMs: 60_000 });
       let settled = false;
       pending
         .catch(() => {})
@@ -346,7 +341,7 @@ describe('coreRpcClient', () => {
       await vi.advanceTimersByTimeAsync(30_000);
 
       await expect(pending).rejects.toThrow(
-        'Core RPC openhuman.app_state_snapshot timed out after 60000ms'
+        'Core RPC neppy.app_state_snapshot timed out after 60000ms'
       );
     } finally {
       vi.useRealTimers();
@@ -373,7 +368,7 @@ describe('coreRpcClient', () => {
       );
 
       const pending = callCoreRpc({
-        method: 'openhuman.app_state_snapshot',
+        method: 'neppy.app_state_snapshot',
         // 2 hours — far beyond the 10 minute clamp; should be reduced.
         timeoutMs: 2 * 60 * 60 * 1_000,
       });
@@ -395,7 +390,7 @@ describe('coreRpcClient', () => {
       await vi.advanceTimersByTimeAsync(2);
 
       await expect(pending).rejects.toThrow(
-        `Core RPC openhuman.app_state_snapshot timed out after ${MAX_MS}ms`
+        `Core RPC neppy.app_state_snapshot timed out after ${MAX_MS}ms`
       );
     } finally {
       vi.useRealTimers();
@@ -421,12 +416,12 @@ describe('coreRpcClient', () => {
           })
       );
 
-      const pending = callCoreRpc({ method: 'openhuman.threads_list' });
+      const pending = callCoreRpc({ method: 'neppy.threads_list' });
       pending.catch(() => {});
 
       await vi.advanceTimersByTimeAsync(CORE_RPC_TIMEOUT_MS + 1);
       await expect(pending).rejects.toThrow(
-        `Core RPC openhuman.threads_list timed out after ${CORE_RPC_TIMEOUT_MS}ms`
+        `Core RPC neppy.threads_list timed out after ${CORE_RPC_TIMEOUT_MS}ms`
       );
     } finally {
       vi.useRealTimers();
@@ -440,7 +435,7 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, result: { ok: true } }),
     } as Response);
 
-    const result = await callCoreRpc<{ ok: boolean }>({ method: 'openhuman.threads_list' });
+    const result = await callCoreRpc<{ ok: boolean }>({ method: 'neppy.threads_list' });
     expect(result).toEqual({ ok: true });
 
     // Signal on the request init must be populated so the timeout path
@@ -456,7 +451,7 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, result: {} }),
     } as Response);
 
-    await callCoreRpc({ method: 'openhuman.threads_list' });
+    await callCoreRpc({ method: 'neppy.threads_list' });
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect(init.method).toBe('POST');
     const headers = init.headers as Record<string, string>;
@@ -480,7 +475,7 @@ describe('coreRpcClient', () => {
       json: async () => ({ jsonrpc: '2.0', id: 1, result: {} }),
     } as Response);
 
-    await callFreshCoreRpc({ method: 'openhuman.threads_list' });
+    await callFreshCoreRpc({ method: 'neppy.threads_list' });
 
     const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
     expect(headers.Authorization).toBe('Bearer test-local-token');
@@ -495,7 +490,7 @@ describe('coreRpcClient', () => {
     });
     const { callCoreRpc: callFreshCoreRpc } = await import('../coreRpcClient');
 
-    await expect(callFreshCoreRpc({ method: 'openhuman.threads_list' })).rejects.toThrow(
+    await expect(callFreshCoreRpc({ method: 'neppy.threads_list' })).rejects.toThrow(
       'Core RPC token unavailable in Tauri; local RPC auth cannot be satisfied'
     );
     expect(fetch).not.toHaveBeenCalled();
@@ -510,10 +505,10 @@ describe('coreRpcClient', () => {
     });
     const { callCoreRpc: callFreshCoreRpc } = await import('../coreRpcClient');
 
-    await expect(callFreshCoreRpc({ method: 'openhuman.threads_list' })).rejects.toThrow(
+    await expect(callFreshCoreRpc({ method: 'neppy.threads_list' })).rejects.toThrow(
       'Core RPC token unavailable in Tauri; local RPC auth cannot be satisfied'
     );
-    await expect(callFreshCoreRpc({ method: 'openhuman.threads_list' })).rejects.toThrow(
+    await expect(callFreshCoreRpc({ method: 'neppy.threads_list' })).rejects.toThrow(
       'Core RPC token unavailable in Tauri; local RPC auth cannot be satisfied'
     );
 
@@ -547,13 +542,13 @@ describe('coreRpcClient', () => {
       setActiveCoreTransport(transport);
 
       await callCoreRpc({
-        method: 'openhuman.memory_sources_sync',
+        method: 'neppy.memory_sources_sync',
         params: { source_id: 'src_1' },
         timeoutMs: 600_000,
       });
 
       expect(transport.call).toHaveBeenCalledWith(
-        'openhuman.memory_sources_sync',
+        'neppy.memory_sources_sync',
         { source_id: 'src_1' },
         { timeoutMs: 600_000 }
       );
@@ -563,10 +558,10 @@ describe('coreRpcClient', () => {
       const transport = fakeTransport();
       setActiveCoreTransport(transport);
 
-      await callCoreRpc({ method: 'openhuman.memory_sources_sync', timeoutMs: 99_999_999 });
+      await callCoreRpc({ method: 'neppy.memory_sources_sync', timeoutMs: 99_999_999 });
 
       expect(transport.call).toHaveBeenCalledWith(
-        'openhuman.memory_sources_sync',
+        'neppy.memory_sources_sync',
         {},
         { timeoutMs: 10 * 60 * 1_000 }
       );
@@ -576,11 +571,11 @@ describe('coreRpcClient', () => {
       const transport = fakeTransport();
       setActiveCoreTransport(transport);
 
-      await callCoreRpc({ method: 'openhuman.memory_sources_sync' });
+      await callCoreRpc({ method: 'neppy.memory_sources_sync' });
 
       expect(transport.call).toHaveBeenCalledTimes(1);
       const [method, params, opts] = transport.call.mock.calls[0] as [string, unknown, unknown];
-      expect(method).toBe('openhuman.memory_sources_sync');
+      expect(method).toBe('neppy.memory_sources_sync');
       expect(params).toEqual({});
       expect(opts).toBeUndefined();
     });
@@ -748,7 +743,7 @@ describe('coreRpcClient', () => {
       const fetchMock = vi.mocked(fetch);
       const { callCoreRpc } = await import('../coreRpcClient');
 
-      const result = await callCoreRpc<{ ok: boolean }>({ method: 'openhuman.threads_list' });
+      const result = await callCoreRpc<{ ok: boolean }>({ method: 'neppy.threads_list' });
 
       // A LAN http core URL must be relayed through the Rust host (with the
       // call's abort signal), never fetched cross-origin from the webview.
@@ -774,8 +769,8 @@ describe('classifyRpcError', () => {
     ['HTTP 429 rate-limit exceeded', undefined, 'rate_limited'],
     // #5157 verbatim from Sentry (CORE-RUST-1PY) — the running core does not
     // expose the method. Permanent, so pollers must be able to stop.
-    ['unknown method: openhuman.harness_init_status', undefined, 'method_not_found'],
-    ['unknown method: openhuman.memory_tree_create_namespace', undefined, 'method_not_found'],
+    ['unknown method: neppy.harness_init_status', undefined, 'method_not_found'],
+    ['unknown method: neppy.memory_tree_create_namespace', undefined, 'method_not_found'],
     ['Budget exceeded for current period', undefined, 'budget_exceeded'],
     ['Insufficient budget for request', undefined, 'budget_exceeded'],
     ['error sending request for url', undefined, 'transport'],
@@ -784,12 +779,12 @@ describe('classifyRpcError', () => {
     ['ECONNREFUSED 127.0.0.1:7788', undefined, 'transport'],
     // OPENHUMAN-REACT-15/11/10/12 verbatim from Sentry — local AbortController
     // timeout, NOT backend transport. Must classify as `timeout`.
-    ['Core RPC openhuman.team_list_teams timed out after 30000ms', undefined, 'timeout'],
-    ['Core RPC openhuman.team_list_members timed out after 30000ms', undefined, 'timeout'],
-    ['Core RPC openhuman.team_list_invites timed out after 30000ms', undefined, 'timeout'],
+    ['Core RPC neppy.team_list_teams timed out after 30000ms', undefined, 'timeout'],
+    ['Core RPC neppy.team_list_members timed out after 30000ms', undefined, 'timeout'],
+    ['Core RPC neppy.team_list_invites timed out after 30000ms', undefined, 'timeout'],
     // OPENHUMAN-REACT-Z/Y verbatim (bare-Error shape pre-fix; now CoreRpcError
     // with same message): still kind=timeout under the new classifier.
-    ['Core RPC openhuman.app_state_snapshot timed out after 30000ms', undefined, 'timeout'],
+    ['Core RPC neppy.app_state_snapshot timed out after 30000ms', undefined, 'timeout'],
     // OPENHUMAN-REACT-13 verbatim — backend-side connect timeout. Body never
     // hits the `timed out after \d+ms` matcher and stays `transport`.
     [
@@ -827,10 +822,8 @@ describe('classifyRpcError', () => {
     // `dispatch::unknown_method_name` classifies with `strip_prefix`, so the
     // frontend anchors identically — a nested/quoted occurrence is not the
     // core telling us *this* call's method is absent.
-    expect(classifyRpcError('unknown method: openhuman.harness_init_status')).toBe(
-      'method_not_found'
-    );
-    expect(classifyRpcError('tool failed: unknown method: openhuman.foo_bar')).toBe('unknown');
+    expect(classifyRpcError('unknown method: neppy.harness_init_status')).toBe('method_not_found');
+    expect(classifyRpcError('tool failed: unknown method: neppy.foo_bar')).toBe('unknown');
   });
 
   test('structured ThreadNotFound data wins over message text', () => {
@@ -843,7 +836,7 @@ describe('classifyRpcError', () => {
     // The `timed out` substring also matches the broader transport arm; the
     // `timed out after \d+ms` arm MUST run first so callers can distinguish
     // a local 30s ceiling from a backend `client error (Connect)` timeout.
-    expect(classifyRpcError('Core RPC openhuman.team_list_teams timed out after 30000ms')).toBe(
+    expect(classifyRpcError('Core RPC neppy.team_list_teams timed out after 30000ms')).toBe(
       'timeout'
     );
   });
@@ -898,7 +891,7 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
       }),
     } as Response);
 
-    await expect(callCoreRpc({ method: 'openhuman.team_get_usage' })).rejects.toMatchObject({
+    await expect(callCoreRpc({ method: 'neppy.team_get_usage' })).rejects.toMatchObject({
       name: 'CoreRpcError',
       kind: 'auth_expired',
     });
@@ -909,7 +902,7 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
       source: string;
     }>;
     expect(evt.type).toBe('core-rpc-auth-expired');
-    expect(evt.detail.method).toBe('openhuman.team_get_usage');
+    expect(evt.detail.method).toBe('neppy.team_get_usage');
     expect(evt.detail.source).toBe('rpc');
   });
 
@@ -922,7 +915,7 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
       text: async () => 'session expired',
     } as Response);
 
-    const err = await callCoreRpc({ method: 'openhuman.threads_list' }).catch(e => e);
+    const err = await callCoreRpc({ method: 'neppy.threads_list' }).catch(e => e);
     expect(err).toBeInstanceOf(CoreRpcError);
     expect((err as CoreRpcError).kind).toBe('auth_expired');
     expect((err as CoreRpcError).httpStatus).toBe(401);
@@ -940,7 +933,7 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
       }),
     } as Response);
 
-    const err = await callCoreRpc({ method: 'openhuman.team_get_usage' }).catch(e => e);
+    const err = await callCoreRpc({ method: 'neppy.team_get_usage' }).catch(e => e);
     expect(err).toBeInstanceOf(CoreRpcError);
     expect((err as CoreRpcError).kind).toBe('budget_exceeded');
     expect(authExpiredHandler).not.toHaveBeenCalled();
@@ -955,7 +948,7 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
       text: async () => 'rate-limit exceeded',
     } as Response);
 
-    const err = await callCoreRpc({ method: 'openhuman.team_get_usage' }).catch(e => e);
+    const err = await callCoreRpc({ method: 'neppy.team_get_usage' }).catch(e => e);
     expect(err).toBeInstanceOf(CoreRpcError);
     expect((err as CoreRpcError).kind).toBe('rate_limited');
     expect((err as CoreRpcError).httpStatus).toBe(429);
@@ -968,7 +961,7 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
       new Error('error sending request for url (http://x): ECONNREFUSED')
     );
 
-    const err = await callCoreRpc({ method: 'openhuman.threads_list' }).catch(e => e);
+    const err = await callCoreRpc({ method: 'neppy.threads_list' }).catch(e => e);
     expect(err).toBeInstanceOf(CoreRpcError);
     expect((err as CoreRpcError).kind).toBe('transport');
     expect(authExpiredHandler).not.toHaveBeenCalled();
@@ -985,7 +978,7 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
       }),
     } as Response);
 
-    const err = await callCoreRpc({ method: 'openhuman.threads_list' }).catch(e => e);
+    const err = await callCoreRpc({ method: 'neppy.threads_list' }).catch(e => e);
     expect(err).toBeInstanceOf(CoreRpcError);
     expect((err as CoreRpcError).kind).toBe('unknown');
     expect((err as Error).message).toBe('something weird');
@@ -1005,13 +998,13 @@ describe('coreRpcClient — typed errors + auth-expired event', () => {
           data: {
             kind: 'ThreadNotFound',
             thread_id: 'thread-123',
-            method: 'openhuman.threads_message_append',
+            method: 'neppy.threads_message_append',
           },
         },
       }),
     } as Response);
 
-    const err = await callCoreRpc({ method: 'openhuman.threads_message_append' }).catch(e => e);
+    const err = await callCoreRpc({ method: 'neppy.threads_message_append' }).catch(e => e);
     expect(err).toBeInstanceOf(CoreRpcError);
     expect((err as CoreRpcError).kind).toBe('thread_not_found');
     expect(isThreadNotFoundCoreRpcError(err, 'thread-123')).toBe(true);
@@ -1158,7 +1151,7 @@ describe('getCoreRpcUrl', () => {
 
   test('cloud-picker URL identical to build-time default still wins over local sidecar', async () => {
     // Regression: in the old `storedUrl !== CORE_RPC_URL` check the picker's
-    // value was discarded when it coincided with `VITE_OPENHUMAN_CORE_RPC_URL`,
+    // value was discarded when it coincided with `VITE_NEPPY_CORE_RPC_URL`,
     // silently routing cloud-mode RPC back to the local sidecar.
     vi.doMock('../../utils/configPersistence', () => ({
       peekStoredRpcUrl: () => 'http://127.0.0.1:7788/rpc',
@@ -1227,7 +1220,7 @@ describe('getCoreRpcToken (cloud-mode persistence)', () => {
     } as Response);
 
     const { callCoreRpc: freshCallCoreRpc } = await import('../coreRpcClient');
-    await freshCallCoreRpc({ method: 'openhuman.ping' });
+    await freshCallCoreRpc({ method: 'neppy.ping' });
 
     expect(vi.mocked(invoke)).not.toHaveBeenCalledWith('core_rpc_endpoint', expect.anything());
     const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
@@ -1238,14 +1231,13 @@ describe('getCoreRpcToken (cloud-mode persistence)', () => {
   test('honours the host-injected notch core token before the cache/store', async () => {
     // The notch / overlay WKWebViews have no Tauri IPC; the Rust host injects
     // the bearer as a global, which must win ahead of the resolution cache.
-    (globalThis as { __OPENHUMAN_NOTCH_CORE_TOKEN__?: string }).__OPENHUMAN_NOTCH_CORE_TOKEN__ =
+    (globalThis as { __NEPPY_NOTCH_CORE_TOKEN__?: string }).__NEPPY_NOTCH_CORE_TOKEN__ =
       'notch-bearer-xyz';
     try {
       const { getCoreRpcToken } = await import('../coreRpcClient');
       await expect(getCoreRpcToken()).resolves.toBe('notch-bearer-xyz');
     } finally {
-      delete (globalThis as { __OPENHUMAN_NOTCH_CORE_TOKEN__?: string })
-        .__OPENHUMAN_NOTCH_CORE_TOKEN__;
+      delete (globalThis as { __NEPPY_NOTCH_CORE_TOKEN__?: string }).__NEPPY_NOTCH_CORE_TOKEN__;
     }
   });
 
@@ -1265,7 +1257,7 @@ describe('getCoreRpcToken (cloud-mode persistence)', () => {
 
     const { callCoreRpc: freshCallCoreRpc, clearCoreRpcTokenCache } =
       await import('../coreRpcClient');
-    await freshCallCoreRpc({ method: 'openhuman.ping' });
+    await freshCallCoreRpc({ method: 'neppy.ping' });
     let headers = fetchMock.mock.calls[0][1] as RequestInit;
     expect((headers.headers as Record<string, string>).Authorization).toBe('Bearer first-token');
 
@@ -1273,7 +1265,7 @@ describe('getCoreRpcToken (cloud-mode persistence)', () => {
     // persists. Clearing it makes the next call re-resolve.
     storedToken = 'second-token';
     clearCoreRpcTokenCache();
-    await freshCallCoreRpc({ method: 'openhuman.ping' });
+    await freshCallCoreRpc({ method: 'neppy.ping' });
     headers = fetchMock.mock.calls[1][1] as RequestInit;
     expect((headers.headers as Record<string, string>).Authorization).toBe('Bearer second-token');
   });
@@ -1298,7 +1290,7 @@ describe('getCoreRpcToken (cloud-mode persistence)', () => {
     } as Response);
 
     const { callCoreRpc: freshCallCoreRpc } = await import('../coreRpcClient');
-    await freshCallCoreRpc({ method: 'openhuman.ping' });
+    await freshCallCoreRpc({ method: 'neppy.ping' });
 
     const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
     const headers = requestInit.headers as Record<string, string>;

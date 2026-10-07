@@ -315,23 +315,23 @@ echo "==> starting neppy-core on :$CORE_PORT"
 # BACKEND_URL is the whole redirect: it feeds both the inference base and the
 # backend base, so every outbound call lands on the mock.
 #
-# OPENHUMAN_APPROVAL_GATE=0 is not a convenience. The gate is ON by default and
+# NEPPY_APPROVAL_GATE=0 is not a convenience. The gate is ON by default and
 # parks interactive chat turns pending a human decision, with a 10-minute TTL
 # that resolves to Deny. Left on, every benchmark turn would block on a prompt
 # nobody is there to answer, and the run would measure a queue of parked turns
 # rather than agent throughput.
 #
-# `env -i` clears the environment so a developer's own OPENHUMAN_* or BACKEND_URL
+# `env -i` clears the environment so a developer's own NEPPY_* or BACKEND_URL
 # settings cannot silently redirect the run at their real account or backend.
 env -i \
   PATH="$PATH" HOME="$WORKSPACE" \
-  OPENHUMAN_WORKSPACE="$WORKSPACE" \
-  OPENHUMAN_ACTION_DIR="$WORKSPACE/projects" \
-  OPENHUMAN_CORE_HOST=127.0.0.1 \
-  OPENHUMAN_CORE_PORT="$CORE_PORT" \
-  OPENHUMAN_CORE_TOKEN="$CORE_TOKEN" \
+  NEPPY_WORKSPACE="$WORKSPACE" \
+  NEPPY_ACTION_DIR="$WORKSPACE/projects" \
+  NEPPY_CORE_HOST=127.0.0.1 \
+  NEPPY_CORE_PORT="$CORE_PORT" \
+  NEPPY_CORE_TOKEN="$CORE_TOKEN" \
   BACKEND_URL="http://127.0.0.1:$MOCK_PORT" \
-  OPENHUMAN_APPROVAL_GATE=0 \
+  NEPPY_APPROVAL_GATE=0 \
   RUST_LOG="${RUST_LOG:-warn}" \
   "$CORE_BIN" serve >"$OUT_DIR/core.log" 2>&1 &
 CORE_PID=$!

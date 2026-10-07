@@ -515,7 +515,7 @@ pub fn static_registry(config: &Config) -> McpServerRegistry {
 pub fn oauth_redirect_uri() -> String {
     let port = advertised_port()
         .or_else(|| {
-            std::env::var("OPENHUMAN_CORE_PORT")
+            crate::neppy::util::env::var("NEPPY_CORE_PORT")
                 .ok()
                 .and_then(|value| value.trim().parse::<u16>().ok())
         })
@@ -529,7 +529,7 @@ pub fn oauth_redirect_uri() -> String {
 /// Authoritative when present: it reflects any fallback the core took when its
 /// preferred port was busy.
 fn advertised_port() -> Option<u16> {
-    let advertised = std::env::var("OPENHUMAN_CORE_RPC_URL").ok()?;
+    let advertised = crate::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok()?;
     explicit_port(&advertised)
 }
 

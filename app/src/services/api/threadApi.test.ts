@@ -32,7 +32,7 @@ describe('threadApi', () => {
     const { threadApi } = await import('./threadApi');
     const result = await threadApi.getThreads();
 
-    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'openhuman.threads_list' });
+    expect(mockCallCoreRpc).toHaveBeenCalledWith({ method: 'neppy.threads_list' });
     expect(result.count).toBe(1);
     expect(result.threads[0].id).toBe('default-thread');
   });
@@ -52,7 +52,7 @@ describe('threadApi', () => {
     const result = await threadApi.appendMessage('default-thread', message);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.threads_message_append',
+      method: 'neppy.threads_message_append',
       params: { thread_id: 'default-thread', message },
     });
     expect(result).toEqual(message);
@@ -77,7 +77,7 @@ describe('threadApi', () => {
     );
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.threads_generate_title',
+      method: 'neppy.threads_generate_title',
       params: {
         thread_id: 'default-thread',
         assistant_message: 'I can draft the invoice follow-up note for you.',
@@ -97,14 +97,14 @@ describe('threadApi', () => {
     const { threadApi } = await import('./threadApi');
     await expect(threadApi.getTaskBoard('thread-1')).resolves.toEqual(taskBoard);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.threads_task_board_get',
+      method: 'neppy.threads_task_board_get',
       params: { thread_id: 'thread-1' },
     });
 
     mockCallCoreRpc.mockResolvedValueOnce({ data: { taskBoard } });
     await expect(threadApi.putTaskBoard('thread-1', taskBoard.cards)).resolves.toEqual(taskBoard);
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.threads_task_board_put',
+      method: 'neppy.threads_task_board_put',
       params: { thread_id: 'thread-1', cards: taskBoard.cards },
     });
   });
@@ -135,7 +135,7 @@ describe('threadApi', () => {
     const result = await threadApi.updateTitle('thread-1', 'Invoice follow-up');
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.threads_update_title',
+      method: 'neppy.threads_update_title',
       params: { thread_id: 'thread-1', title: 'Invoice follow-up' },
     });
     expect(result).toEqual(thread);
@@ -150,7 +150,7 @@ describe('threadApi', () => {
     const board = await threadApi.decidePlan('thread-1', 'card-1', true);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.todos_decide_plan',
+      method: 'neppy.todos_decide_plan',
       params: { thread_id: 'thread-1', id: 'card-1', approve: true },
     });
     expect(board?.threadId).toBe('thread-1');
@@ -164,7 +164,7 @@ describe('threadApi', () => {
     const board = await threadApi.decidePlan('thread-1', 'card-1', false);
 
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.todos_decide_plan',
+      method: 'neppy.todos_decide_plan',
       params: { thread_id: 'thread-1', id: 'card-1', approve: false },
     });
     expect(board).toBeNull();
@@ -189,21 +189,21 @@ describe('threadApi', () => {
     const { threadApi } = await import('./threadApi');
     await expect(threadApi.listRuns({ parentThreadId: 'thread-1' })).resolves.toEqual([run]);
     expect(mockCallCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.run_ledger_list',
+      method: 'neppy.run_ledger_list',
       params: { parentThreadId: 'thread-1' },
     });
 
     mockCallCoreRpc.mockResolvedValueOnce({ data: { runs: [], count: 0 } });
     await expect(threadApi.listRuns()).resolves.toEqual([]);
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.run_ledger_list',
+      method: 'neppy.run_ledger_list',
       params: {},
     });
 
     mockCallCoreRpc.mockResolvedValueOnce({ data: { run } });
     await expect(threadApi.getRun('sub-1')).resolves.toEqual(run);
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.run_ledger_get',
+      method: 'neppy.run_ledger_get',
       params: { id: 'sub-1' },
     });
 
@@ -217,7 +217,7 @@ describe('threadApi', () => {
     mockCallCoreRpc.mockResolvedValueOnce({ data: { events: [event], count: 1 } });
     await expect(threadApi.listRunEvents('sub-1', { afterSequence: 0 })).resolves.toEqual([event]);
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.run_ledger_events',
+      method: 'neppy.run_ledger_events',
       params: { runId: 'sub-1', afterSequence: 0 },
     });
   });
@@ -236,7 +236,7 @@ describe('threadApi', () => {
     const result = await threadApi.getDerivedTranscript('thread-1', { cursor: '10', limit: 50 });
 
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.threads_transcript_get',
+      method: 'neppy.threads_transcript_get',
       params: { thread_id: 'thread-1', cursor: '10', limit: 50 },
     });
     expect(result).toEqual(pageData);
@@ -251,7 +251,7 @@ describe('threadApi', () => {
     const result = await threadApi.getDerivedTranscript('thread-1');
 
     expect(mockCallCoreRpc).toHaveBeenLastCalledWith({
-      method: 'openhuman.threads_transcript_get',
+      method: 'neppy.threads_transcript_get',
       params: { thread_id: 'thread-1', cursor: undefined, limit: undefined },
     });
     expect(result.hasTranscript).toBe(false);

@@ -91,7 +91,7 @@ test.describe('Settings - Account Preferences', () => {
       .poll(async () => {
         const wallet = await callCoreRpc<{
           result?: { configured?: boolean; accounts?: unknown[] };
-        }>('openhuman.wallet_status', {});
+        }>('neppy.wallet_status', {});
         return {
           configured: Boolean(wallet.result?.configured),
           accountCount: wallet.result?.accounts?.length ?? 0,
@@ -100,7 +100,7 @@ test.describe('Settings - Account Preferences', () => {
       .toEqual({ configured: true, accountCount: expect.any(Number) });
 
     const wallet = await callCoreRpc<{ result?: { configured?: boolean; accounts?: unknown[] } }>(
-      'openhuman.wallet_status',
+      'neppy.wallet_status',
       {}
     );
     expect(wallet.result?.configured).toBe(true);
@@ -109,7 +109,7 @@ test.describe('Settings - Account Preferences', () => {
 
   test('persists the privacy analytics toggle to core config', async ({ page }) => {
     const beforeAnalytics = await callCoreRpc<{ result?: { enabled?: boolean } }>(
-      'openhuman.config_get_analytics_settings',
+      'neppy.config_get_analytics_settings',
       {}
     );
     const initialAnalytics = Boolean(beforeAnalytics.result?.enabled);
@@ -132,7 +132,7 @@ test.describe('Settings - Account Preferences', () => {
     await expect
       .poll(async () => {
         const analytics = await callCoreRpc<{ result?: { enabled?: boolean } }>(
-          'openhuman.config_get_analytics_settings',
+          'neppy.config_get_analytics_settings',
           {}
         );
         return Boolean(analytics.result?.enabled);
@@ -140,7 +140,7 @@ test.describe('Settings - Account Preferences', () => {
       .toBe(!initialAnalytics);
 
     const snapshot = await callCoreRpc<{ result?: { analyticsEnabled?: boolean } }>(
-      'openhuman.app_state_snapshot',
+      'neppy.app_state_snapshot',
       {}
     );
     expect(Boolean(snapshot.result?.analyticsEnabled)).toBe(!initialAnalytics);

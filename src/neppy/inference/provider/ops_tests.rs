@@ -609,7 +609,7 @@ mod provider_config_rejection_suppression {
                     neppy_backend_model::PROVIDER_LABEL,
                     body,
                 ),
-                "TAURI-RUST-2Z1 body must be suppressed for openhuman backend: {body:?}"
+                "TAURI-RUST-2Z1 body must be suppressed for neppy backend: {body:?}"
             );
         }
     }

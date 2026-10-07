@@ -16,13 +16,13 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &std::path::Path) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = crate::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, path) };
         Self { key, previous }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = crate::neppy::util::env::var_os(key);
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
@@ -33,7 +33,7 @@ impl Drop for EnvVarGuard {
         unsafe {
             match self.previous.take() {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => crate::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -1385,7 +1385,7 @@ async fn start_login_gated_services_completes_with_all_services_disabled() {
     // back in so it actually drives the concurrent spawn/await path it guards.
     // Only presence is checked, so the value (a temp path) is irrelevant.
     let _run_services =
-        EnvVarGuard::set_to_path("OPENHUMAN_RUN_LOGIN_GATED_SERVICES_IN_TEST", tmp.path());
+        EnvVarGuard::set_to_path("NEPPY_RUN_LOGIN_GATED_SERVICES_IN_TEST", tmp.path());
 
     let mut config = Config::default();
     // Every service is disabled so each `start_if_enabled` is a no-op: the test

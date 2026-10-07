@@ -38,7 +38,7 @@
 //! are parked on that mutex, the runtime stops polling **anything** — including
 //! the HTTP task that owes the client its response. That is how a create that
 //! only needs one append blows the frontend's 30 s RPC budget:
-//! `UnhandledRejection: Core RPC openhuman.threads_create_new timed out after
+//! `UnhandledRejection: Core RPC neppy.threads_create_new timed out after
 //! 30000ms` (Sentry TAURI-REACT-10, #5156).
 //!
 //! Moving each call onto the blocking pool keeps the lock wait off the async

@@ -34,8 +34,8 @@ export interface MemoryQueryResult {
 }
 
 /**
- * Raw envelope shape returned by `openhuman.memory_query_namespace` and
- * `openhuman.memory_recall_context` via the registry-based RPC handler.
+ * Raw envelope shape returned by `neppy.memory_query_namespace` and
+ * `neppy.memory_recall_context` via the registry-based RPC handler.
  */
 interface MemoryQueryEnvelope {
   data?: { llm_context_message?: string | null; context?: MemoryRetrievalContext | null };
@@ -92,7 +92,7 @@ export async function syncMemoryClientToken(token: string): Promise<void> {
   try {
     console.debug('[memory] syncMemoryClientToken: payload → memory.init (local-only)');
     // jwt_token is passed for backward compatibility but ignored by the core.
-    await callCoreRpc<boolean>({ method: 'openhuman.memory_init', params: { jwt_token: token } });
+    await callCoreRpc<boolean>({ method: 'neppy.memory_init', params: { jwt_token: token } });
     console.info('[memory] syncMemoryClientToken: exit — ok');
   } catch (err) {
     console.warn('[memory] syncMemoryClientToken: exit — error:', err);
@@ -104,7 +104,7 @@ export async function memoryListDocuments(namespace?: string): Promise<unknown> 
     throw new Error('Not running in Tauri');
   }
   const resp = await callCoreRpc<unknown>({
-    method: 'openhuman.memory_list_documents',
+    method: 'neppy.memory_list_documents',
     params: { namespace },
   });
   // Unwrap envelope: registry returns { data: { documents: [...] }, meta: {...} }
@@ -119,7 +119,7 @@ export async function memoryListNamespaces(): Promise<string[]> {
     throw new Error('Not running in Tauri');
   }
   const resp = await callCoreRpc<{ data?: { namespaces?: string[] }; namespaces?: string[] }>({
-    method: 'openhuman.memory_list_namespaces',
+    method: 'neppy.memory_list_namespaces',
   });
   if (resp && typeof resp === 'object') {
     if (Array.isArray(resp)) return resp;
@@ -137,7 +137,7 @@ export async function memoryDeleteDocument(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<unknown>({
-    method: 'openhuman.memory_delete_document',
+    method: 'neppy.memory_delete_document',
     params: { document_id: documentId, namespace },
   });
 }
@@ -149,7 +149,7 @@ export async function memoryClearNamespace(
     throw new Error('Not running in Tauri');
   }
   const response = await callCoreRpc<{ result: { cleared: boolean; namespace: string } }>({
-    method: 'openhuman.memory_clear_namespace',
+    method: 'neppy.memory_clear_namespace',
     params: { namespace },
   });
   return response.result;
@@ -164,7 +164,7 @@ export async function memoryQueryNamespace(
     throw new Error('Not running in Tauri');
   }
   const resp = await callCoreRpc<unknown>({
-    method: 'openhuman.memory_query_namespace',
+    method: 'neppy.memory_query_namespace',
     params: { namespace, query, max_chunks: maxChunks },
   });
   return unwrapMemoryQueryResult(resp);
@@ -178,7 +178,7 @@ export async function memoryRecallNamespace(
     throw new Error('Not running in Tauri');
   }
   const resp = await callCoreRpc<unknown>({
-    method: 'openhuman.memory_recall_context',
+    method: 'neppy.memory_recall_context',
     params: { namespace, max_chunks: maxChunks },
   });
   return unwrapMemoryQueryResult(resp);
@@ -193,7 +193,7 @@ export async function memoryGraphQuery(
     throw new Error('Not running in Tauri');
   }
   const raw = await callCoreRpc<GraphRelation[] | { result: GraphRelation[] }>({
-    method: 'openhuman.memory_graph_query',
+    method: 'neppy.memory_graph_query',
     params: { namespace, subject, predicate },
   });
   // RpcOutcome wraps with { result, logs } when logs are present — unwrap if needed.
@@ -223,7 +223,7 @@ export async function memoryDocIngest(params: {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
-  return await callCoreRpc<unknown>({ method: 'openhuman.memory_doc_ingest', params });
+  return await callCoreRpc<unknown>({ method: 'neppy.memory_doc_ingest', params });
 }
 
 /**
@@ -242,7 +242,7 @@ export async function aiListMemoryFiles(relativeDir = ''): Promise<string[]> {
     throw new Error('Not running in Tauri');
   }
   const resp = await callCoreRpc<{ data?: { files?: string[] }; files?: string[] }>({
-    method: 'openhuman.memory_list_files',
+    method: 'neppy.memory_list_files',
     params: { relative_dir: relativeDir },
   });
   // Unwrap envelope: registry returns { data: { files: [...] } }
@@ -259,7 +259,7 @@ export async function aiReadMemoryFile(relativePath: string): Promise<string> {
     throw new Error('Not running in Tauri');
   }
   const resp = await callCoreRpc<{ data?: { content?: string }; content?: string } | string>({
-    method: 'openhuman.memory_read_file',
+    method: 'neppy.memory_read_file',
     params: { relative_path: relativePath },
   });
   if (typeof resp === 'string') return resp;
@@ -274,7 +274,7 @@ export async function aiWriteMemoryFile(relativePath: string, content: string): 
     throw new Error('Not running in Tauri');
   }
   await callCoreRpc<boolean>({
-    method: 'openhuman.memory_write_file',
+    method: 'neppy.memory_write_file',
     params: { relative_path: relativePath, content },
   });
 }
@@ -310,7 +310,7 @@ export async function memorySyncChannel(channelId: string): Promise<MemorySyncCh
     throw new Error('Not running in Tauri');
   }
   const resp = await callCoreRpc<MemorySyncChannelResult>({
-    method: 'openhuman.memory_sync_channel',
+    method: 'neppy.memory_sync_channel',
     params: { channel_id: channelId },
   });
   console.debug('[memory.sync] memorySyncChannel: exit result=%o', resp);
@@ -326,7 +326,7 @@ export async function memorySyncAll(): Promise<MemorySyncAllResult> {
   if (!isTauri()) {
     throw new Error('Not running in Tauri');
   }
-  const resp = await callCoreRpc<MemorySyncAllResult>({ method: 'openhuman.memory_sync_all' });
+  const resp = await callCoreRpc<MemorySyncAllResult>({ method: 'neppy.memory_sync_all' });
   console.debug('[memory.sync] memorySyncAll: exit result=%o', resp);
   return resp;
 }
@@ -345,7 +345,7 @@ export async function memoryLearnAll(namespaces?: string[]): Promise<MemoryLearn
     params.namespaces = namespaces;
   }
   const resp = await callCoreRpc<MemoryLearnAllResult>({
-    method: 'openhuman.memory_learn_all',
+    method: 'neppy.memory_learn_all',
     params,
   });
   console.debug('[memory.learn] memoryLearnAll: exit processed=%d', resp?.namespaces_processed);

@@ -5,8 +5,8 @@
 # Tauri-vs-CLI / Docker-vs-binary split owns the value.
 #
 # Resolution order (matches src/core/auth.rs::init_rpc_token):
-#   1. $OPENHUMAN_CORE_TOKEN if set and non-empty   (Tauri / Docker / cloud)
-#   2. ${OPENHUMAN_WORKSPACE:-$HOME/.neppy}/core.token   (standalone CLI)
+#   1. $NEPPY_CORE_TOKEN if set and non-empty   (Tauri / Docker / cloud)
+#   2. ${NEPPY_WORKSPACE:-$HOME/.neppy}/core.token   (standalone CLI)
 #
 # Usage:
 #   scripts/print-core-token.sh           # print full token to stdout
@@ -44,8 +44,8 @@ for arg in "$@"; do
   esac
 done
 
-env_token="${OPENHUMAN_CORE_TOKEN:-}"
-workspace_dir="${OPENHUMAN_WORKSPACE:-$HOME/.neppy}"
+env_token="${NEPPY_CORE_TOKEN:-}"
+workspace_dir="${NEPPY_WORKSPACE:-$HOME/.neppy}"
 file_path="$workspace_dir/core.token"
 
 source="" # one of: env | file
@@ -70,12 +70,12 @@ else
 print-core-token: no core token configured.
 
 Looked for:
-  1. \$OPENHUMAN_CORE_TOKEN environment variable (used by Tauri shell, Docker,
+  1. \$NEPPY_CORE_TOKEN environment variable (used by Tauri shell, Docker,
      and any cloud deploy)
   2. $file_path (standalone CLI 'openhuman core run' writes this on first
-     boot; override the directory with \$OPENHUMAN_WORKSPACE)
+     boot; override the directory with \$NEPPY_WORKSPACE)
 
-If you are running the dockerized core, set OPENHUMAN_CORE_TOKEN in your
+If you are running the dockerized core, set NEPPY_CORE_TOKEN in your
 .env (or the App Platform secrets UI) and bounce the container. See
 gitbooks/features/cloud-deploy.md for the full single-source-of-truth setup.
 EOF

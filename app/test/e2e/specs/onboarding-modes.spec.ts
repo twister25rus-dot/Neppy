@@ -5,7 +5,7 @@
  * Verifies:
  *   - Phase A — Simple/Cloud path: fresh login → Welcome → Runtime choice
  *     (Cloud) → /home. `onboarding_completed = true` lands in
- *     `${OPENHUMAN_WORKSPACE}/config.toml` immediately.
+ *     `${NEPPY_WORKSPACE}/config.toml` immediately.
  *
  *   - Phase B — Advanced/Custom path (Default on every wizard step):
  *     reset onboarding flag → Welcome → Runtime choice (Custom) →
@@ -103,10 +103,9 @@ async function waitForHash(prefix: string, timeout = 15_000): Promise<boolean> {
 
 async function resetOnboardingFlagAndReload(): Promise<void> {
   stepLog('Resetting onboarding_completed=false via RPC');
-  const res = await callNeppyRpc<{ completed: boolean }>(
-    'openhuman.config_set_onboarding_completed',
-    { value: false }
-  );
+  const res = await callNeppyRpc<{ completed: boolean }>('neppy.config_set_onboarding_completed', {
+    value: false,
+  });
   if (!res.ok) {
     throw new Error(`config.set_onboarding_completed failed: ${JSON.stringify(res)}`);
   }
@@ -131,7 +130,7 @@ async function resetOnboardingFlagAndReload(): Promise<void> {
   // overwrite the pre-auth test flag. Apply the requested state once auth is
   // settled, then reload so the onboarding gate consumes the new snapshot.
   const postAuthRes = await callNeppyRpc<{ completed: boolean }>(
-    'openhuman.config_set_onboarding_completed',
+    'neppy.config_set_onboarding_completed',
     { value: false }
   );
   if (!postAuthRes.ok) {
@@ -267,7 +266,7 @@ describe('Onboarding modes — Simple (Cloud) vs Advanced (Custom)', function ()
     await waitForAuthBootstrap(15_000);
     await dismissBootCheckGateIfVisible(8_000);
     stepLog('Setting onboarding_completed=false after auth bootstrap');
-    await callNeppyRpc('openhuman.config_set_onboarding_completed', { value: false });
+    await callNeppyRpc('neppy.config_set_onboarding_completed', { value: false });
     await browser.execute(() => {
       window.location.replace('#/onboarding/welcome');
       window.location.reload();

@@ -1,7 +1,7 @@
 /**
  * Chat Service — RPC-based chat transport.
  *
- * Chat messages are SENT via core RPC (`openhuman.channel_web_chat`).
+ * Chat messages are SENT via core RPC (`neppy.channel_web_chat`).
  * Responses and events stream back over the existing Socket.IO connection
  * (tool_call, tool_result, chat_done, chat_error) via the web-channel
  * event bridge in the Rust core.
@@ -195,8 +195,8 @@ export interface ProactiveMessageEvent {
 /**
  * Emitted when the agent turn parks on the ApprovalGate — a `Prompt`-class
  * (external-effect) tool call is awaiting the user's decision (only when the
- * core runs with `OPENHUMAN_APPROVAL_GATE=1`). The frontend surfaces a
- * pending-approval prompt; answering routes to the `openhuman.approval_decide`
+ * core runs with `NEPPY_APPROVAL_GATE=1`). The frontend surfaces a
+ * pending-approval prompt; answering routes to the `neppy.approval_decide`
  * RPC. A typed `yes`/`no` chat reply is also honoured server-side; any other
  * text cancels the parked turn and is taken as a fresh message.
  */
@@ -218,7 +218,7 @@ export interface ChatApprovalRequestEvent {
 /**
  * Interactive plan-review request: the orchestrator parked the live turn on a
  * thread-scoped plan the user must review before execution (Codex/Claude plan
- * mode). Resolved via the `openhuman.plan_review_decide` RPC. Bridged from the
+ * mode). Resolved via the `neppy.plan_review_decide` RPC. Bridged from the
  * Rust `DomainEvent::PlanReviewRequested` by the web channel.
  */
 export interface ChatPlanReviewRequestEvent {
@@ -1328,7 +1328,7 @@ export async function chatSend(params: ChatSendParams): Promise<string | undefin
   }
 
   const result = await callCoreRpc({
-    method: 'openhuman.channel_web_chat',
+    method: 'neppy.channel_web_chat',
     params: {
       client_id: clientId,
       thread_id: params.threadId,
@@ -1363,7 +1363,7 @@ export async function chatCancel(threadId: string): Promise<boolean> {
 
   try {
     await callCoreRpc({
-      method: 'openhuman.channel_web_cancel',
+      method: 'neppy.channel_web_cancel',
       params: { client_id: clientId, thread_id: threadId },
     });
     return true;
@@ -1383,7 +1383,7 @@ export async function chatCancel(threadId: string): Promise<boolean> {
 export async function chatClearQueue(threadId: string): Promise<number | null> {
   try {
     const res = await callCoreRpc<{ dropped?: number }>({
-      method: 'openhuman.channel_web_queue_clear',
+      method: 'neppy.channel_web_queue_clear',
       params: { thread_id: threadId },
     });
     return res?.dropped ?? 0;
@@ -1407,7 +1407,7 @@ export async function aiRegenerate(artifactId: string, threadId: string): Promis
     throw new Error('Socket not connected — no client ID for event routing');
   }
   await callCoreRpc({
-    method: 'openhuman.ai_regenerate',
+    method: 'neppy.ai_regenerate',
     params: { artifact_id: artifactId, thread_id: threadId, client_id: clientId },
   });
   return true;

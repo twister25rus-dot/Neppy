@@ -7,17 +7,17 @@
 //!
 //! ```bash
 //! # Against any OpenAI-compatible endpoint:
-//! OPENHUMAN_EXAMPLE_BASE_URL=https://api.openai.com/v1 \
-//! OPENHUMAN_EXAMPLE_API_KEY=sk-… \
-//! OPENHUMAN_EXAMPLE_MODEL=gpt-5 \
+//! NEPPY_EXAMPLE_BASE_URL=https://api.openai.com/v1 \
+//! NEPPY_EXAMPLE_API_KEY=sk-… \
+//! NEPPY_EXAMPLE_MODEL=gpt-5 \
 //!   cargo run --example run_turn -- "What can you see in this directory?"
 //!
 //! # Or against the machine's own configured inference, in its real workspace:
-//! OPENHUMAN_EXAMPLE_INHERIT=1 cargo run --example run_turn -- "Hello."
+//! NEPPY_EXAMPLE_INHERIT=1 cargo run --example run_turn -- "Hello."
 //! ```
 //!
-//! Optional: `OPENHUMAN_EXAMPLE_BACKEND_URL` points the core's non-inference
-//! backend calls somewhere, and `OPENHUMAN_EXAMPLE_SKILLS_DIR` supplies skill
+//! Optional: `NEPPY_EXAMPLE_BACKEND_URL` points the core's non-inference
+//! backend calls somewhere, and `NEPPY_EXAMPLE_SKILLS_DIR` supplies skill
 //! bundles.
 //!
 //! Note the runtime is built by hand rather than with `#[tokio::main]`. That is
@@ -51,7 +51,7 @@ async fn run() -> anyhow::Result<()> {
         .nth(1)
         .unwrap_or_else(|| "Introduce yourself in one sentence.".to_string());
 
-    let inherit = std::env::var_os("OPENHUMAN_EXAMPLE_INHERIT").is_some();
+    let inherit = neppy_core::neppy::util::env::var_os("NEPPY_EXAMPLE_INHERIT").is_some();
 
     let mut builder = Harness::builder()
         // Read-only by default: this example should be safe to point at any
@@ -70,18 +70,18 @@ async fn run() -> anyhow::Result<()> {
     } else {
         // A throwaway workspace, removed when the harness drops, and an
         // explicitly named endpoint. Nothing here touches ~/.neppy.
-        let base_url = std::env::var("OPENHUMAN_EXAMPLE_BASE_URL").map_err(|_| {
-            anyhow::anyhow!(
-                "set OPENHUMAN_EXAMPLE_BASE_URL + OPENHUMAN_EXAMPLE_API_KEY, \
-                 or set OPENHUMAN_EXAMPLE_INHERIT=1 to use this machine's own \
+        let base_url =
+            neppy_core::neppy::util::env::var("NEPPY_EXAMPLE_BASE_URL").map_err(|_| {
+                anyhow::anyhow!(
+                    "set NEPPY_EXAMPLE_BASE_URL + NEPPY_EXAMPLE_API_KEY, \
+                 or set NEPPY_EXAMPLE_INHERIT=1 to use this machine's own \
                  configured inference"
-            )
-        })?;
-        let api_key = std::env::var("OPENHUMAN_EXAMPLE_API_KEY").map_err(|_| {
-            anyhow::anyhow!("OPENHUMAN_EXAMPLE_API_KEY is required with a base URL")
-        })?;
-        let model =
-            std::env::var("OPENHUMAN_EXAMPLE_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string());
+                )
+            })?;
+        let api_key = neppy_core::neppy::util::env::var("NEPPY_EXAMPLE_API_KEY")
+            .map_err(|_| anyhow::anyhow!("NEPPY_EXAMPLE_API_KEY is required with a base URL"))?;
+        let model = neppy_core::neppy::util::env::var("NEPPY_EXAMPLE_MODEL")
+            .unwrap_or_else(|_| "gpt-4o-mini".to_string());
 
         let mut builder = builder
             .workspace(Workspace::Ephemeral)
@@ -98,7 +98,7 @@ async fn run() -> anyhow::Result<()> {
         // `SessionExpired`, which fails the *next* turn's provider gate for
         // reasons unrelated to the turn. Point them at your own backend if you
         // have one.
-        if let Ok(url) = std::env::var("OPENHUMAN_EXAMPLE_BACKEND_URL") {
+        if let Ok(url) = neppy_core::neppy::util::env::var("NEPPY_EXAMPLE_BACKEND_URL") {
             builder = builder.backend_url(url);
         }
         builder
@@ -106,7 +106,7 @@ async fn run() -> anyhow::Result<()> {
 
     // Skills are opt-in and copied into the harness's workspace; see the
     // builder method's docs for why they are copied rather than linked.
-    if let Some(dir) = std::env::var_os("OPENHUMAN_EXAMPLE_SKILLS_DIR") {
+    if let Some(dir) = neppy_core::neppy::util::env::var_os("NEPPY_EXAMPLE_SKILLS_DIR") {
         #[cfg(feature = "skills")]
         {
             builder = builder.skills_dir(PathBuf::from(dir));

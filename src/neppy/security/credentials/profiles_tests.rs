@@ -160,7 +160,7 @@ fn corrupt_store_is_quarantined_and_reset() {
 /// When the encrypted-secrets key file has rotated between writes and reads
 /// (e.g. `.secret_key` got regenerated underneath an existing
 /// auth-profiles.json — observed when a workspace gets partially restored
-/// or when OPENHUMAN_WORKSPACE points at a half-populated test dir), the
+/// or when NEPPY_WORKSPACE points at a half-populated test dir), the
 /// store must silently drop the unrecoverable profile and rewrite the
 /// file. Without this, `app_state_snapshot` polls infinite-loop on
 /// "Decryption failed — wrong key or tampered data" and the user can

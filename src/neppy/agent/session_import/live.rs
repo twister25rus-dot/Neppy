@@ -2,9 +2,9 @@
 //!
 //! Additive, best-effort, and gated by the `AgentConfig::session_dual_write`
 //! **config flag** which **defaults ON** ([`dual_write_enabled`]); the
-//! `OPENHUMAN_SESSION_DUAL_WRITE` env var is a **kill switch** — set it to a
+//! `NEPPY_SESSION_DUAL_WRITE` env var is a **kill switch** — set it to a
 //! falsey value (`0`/`false`/`no`/`off`/`disable`) to force the mirror off
-//! regardless of config. This mirrors the `OPENHUMAN_APPROVAL_GATE`
+//! regardless of config. This mirrors the `NEPPY_APPROVAL_GATE`
 //! default-on-with-kill-switch idiom. The legacy `session_raw/*.jsonl`
 //! transcript (`session/turn/session_io.rs` → `transcript::write_transcript`)
 //! stays the primary and authoritative writer; this module mirrors each
@@ -36,21 +36,21 @@ use super::types::{DescriptorSource, JournalMessage, NS_SESSIONS};
 /// (`AgentConfig::session_dual_write`) defaults ON; setting this env var to a
 /// falsey value forces the mirror OFF regardless of config. See
 /// [`dual_write_enabled`].
-const DUAL_WRITE_ENV: &str = "OPENHUMAN_SESSION_DUAL_WRITE";
+const DUAL_WRITE_ENV: &str = "NEPPY_SESSION_DUAL_WRITE";
 
 /// Kill-switch env var for the store-backed session shadow read. The config
 /// flag (`AgentConfig::session_shadow_reads`) defaults ON since the Phase 2
 /// parity soak; setting this env var to a falsey value forces the shadow read
 /// OFF even when the flag is ON. It can never force the shadow read ON. See
 /// [`shadow_reads_enabled`].
-const SHADOW_READ_ENV: &str = "OPENHUMAN_SESSION_SHADOW_READS";
+const SHADOW_READ_ENV: &str = "NEPPY_SESSION_SHADOW_READS";
 
 /// Whether `var` is set to a case-insensitive falsey value
 /// (`0`/`false`/`no`/`off`/`disable`/`disabled`). Unset — or any non-falsey
 /// value — is not a kill. Read live (not cached) so a config reload / env
 /// change is honored on the next turn/read.
 fn env_kill_switch_engaged(var: &str) -> bool {
-    match std::env::var(var) {
+    match crate::neppy::util::env::var(var) {
         Ok(v) => matches!(
             v.trim().to_ascii_lowercase().as_str(),
             "0" | "false" | "no" | "off" | "disable" | "disabled"
@@ -59,7 +59,7 @@ fn env_kill_switch_engaged(var: &str) -> bool {
     }
 }
 
-/// Whether the `OPENHUMAN_SESSION_DUAL_WRITE` kill switch is engaged (set to a
+/// Whether the `NEPPY_SESSION_DUAL_WRITE` kill switch is engaged (set to a
 /// falsey value). Unset — or any non-falsey value — leaves the mirror driven by
 /// the config flag. Read live (not cached) so a config reload / env change is
 /// honored on the next turn.
@@ -77,7 +77,7 @@ pub const TINYAGENTS_SESSION_KV_STORE: &str = "neppy_sessions";
 /// Whether the live session-store dual-write is enabled for this turn.
 ///
 /// `config_enabled` is the `AgentConfig::session_dual_write` flag, which
-/// **defaults ON**. The `OPENHUMAN_SESSION_DUAL_WRITE` env var is a pure kill
+/// **defaults ON**. The `NEPPY_SESSION_DUAL_WRITE` env var is a pure kill
 /// switch: an explicit falsey value (case-insensitive
 /// `0`/`false`/`no`/`off`/`disable`/`disabled`) forces the mirror OFF regardless
 /// of config; otherwise the config flag wins. Read live (never cached) so a
@@ -223,7 +223,7 @@ pub async fn write_live_turn(
 /// `config_enabled` is the `AgentConfig::session_shadow_reads` flag, which
 /// **defaults ON** since the Phase 2 parity soak, as `session_dual_write`
 /// already did. The
-/// `OPENHUMAN_SESSION_SHADOW_READS` env var is a pure kill switch: an explicit
+/// `NEPPY_SESSION_SHADOW_READS` env var is a pure kill switch: an explicit
 /// falsey value (case-insensitive `0`/`false`/`no`/`off`/`disable`/`disabled`)
 /// forces the shadow read OFF regardless of config; it can never force it ON.
 /// Read live (never cached) so a config reload / env change is honored on the

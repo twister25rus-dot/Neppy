@@ -167,17 +167,17 @@ async fn live_dual_write_matches_legacy_jsonl_render() {
 }
 
 /// The dual-write is driven by the `AgentConfig::session_dual_write` config
-/// flag (default ON) with the `OPENHUMAN_SESSION_DUAL_WRITE` env var as a pure
+/// flag (default ON) with the `NEPPY_SESSION_DUAL_WRITE` env var as a pure
 /// kill switch. This exercises the decision matrix directly. Env mutation is
 /// process-global, so all assertions live in one serial test and the var is
 /// restored on exit; no other test reads this var.
 #[test]
 fn config_flag_and_env_kill_switch() {
-    const ENV: &str = "OPENHUMAN_SESSION_DUAL_WRITE";
-    let prior = std::env::var(ENV).ok();
+    const ENV: &str = "NEPPY_SESSION_DUAL_WRITE";
+    let prior = crate::neppy::util::env::var(ENV).ok();
 
     // Config OFF disables regardless of env.
-    std::env::remove_var(ENV);
+    crate::neppy::util::env::remove_var(ENV);
     assert!(!dual_write_enabled(false), "config off disables");
 
     // Config ON (the default) enables when the env is unset.
@@ -205,7 +205,7 @@ fn config_flag_and_env_kill_switch() {
 
     match prior {
         Some(v) => std::env::set_var(ENV, v),
-        None => std::env::remove_var(ENV),
+        None => crate::neppy::util::env::remove_var(ENV),
     }
 }
 
@@ -304,7 +304,7 @@ async fn shadow_read_unavailable_and_divergence() {
 
 /// The shadow read is driven by the `AgentConfig::session_shadow_reads` config
 /// flag (default **ON** since the Phase 2 parity soak) with the
-/// `OPENHUMAN_SESSION_SHADOW_READS` env var as a
+/// `NEPPY_SESSION_SHADOW_READS` env var as a
 /// pure kill switch (can only force OFF, never ON). This exercises the decision
 /// matrix directly — the gate `maybe_shadow_read_session_store` early-returns
 /// (never invoking the reader) whenever this returns `false`. Env mutation is
@@ -312,11 +312,11 @@ async fn shadow_read_unavailable_and_divergence() {
 /// restored on exit.
 #[test]
 fn shadow_read_flag_and_env_kill_switch() {
-    const ENV: &str = "OPENHUMAN_SESSION_SHADOW_READS";
-    let prior = std::env::var(ENV).ok();
+    const ENV: &str = "NEPPY_SESSION_SHADOW_READS";
+    let prior = crate::neppy::util::env::var(ENV).ok();
 
     // Config OFF (the default) disables regardless of env — reader not invoked.
-    std::env::remove_var(ENV);
+    crate::neppy::util::env::remove_var(ENV);
     assert!(
         !shadow_reads_enabled(false),
         "config off (default) disables the shadow read"
@@ -351,7 +351,7 @@ fn shadow_read_flag_and_env_kill_switch() {
 
     match prior {
         Some(v) => std::env::set_var(ENV, v),
-        None => std::env::remove_var(ENV),
+        None => crate::neppy::util::env::remove_var(ENV),
     }
 }
 

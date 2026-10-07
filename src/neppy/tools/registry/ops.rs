@@ -296,7 +296,7 @@ fn build_registry_entries(config: Option<&Config>) -> Vec<ToolRegistryEntry> {
             transport: ToolRegistryTransport::McpStdio,
             route: json!({
                 "protocol": "mcp-client",
-                "rpc_method": "openhuman.mcp_clients_tool_call",
+                "rpc_method": "neppy.mcp_clients_tool_call",
                 "server_id": server_id,
                 "tool_name": tool.name,
             }),

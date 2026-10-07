@@ -23,7 +23,7 @@ describe('Audio toolkit flow', () => {
         audio: { output_path: string; file_name: string; bytes_written: number; format: string };
         email: { mode: string; capture_path?: string | null; attachment_name: string };
       };
-    }>('openhuman.audio_toolkit_generate_and_email_podcast', {
+    }>('neppy.audio_toolkit_generate_and_email_podcast', {
       text: 'This is the weekly AI podcast briefing for the team.',
       title: 'Weekly briefing',
       to: 'listener@example.com',
@@ -46,7 +46,7 @@ describe('Audio toolkit flow', () => {
 
     const workspaceFiles = await callNeppyRpc<{
       result: { entries: Array<{ rel_path: string; size: number; is_dir: boolean }> };
-    }>('openhuman.test_support_list_workspace_files', { rel_root: 'artifacts', max_depth: 4 });
+    }>('neppy.test_support_list_workspace_files', { rel_root: 'artifacts', max_depth: 4 });
     expect(workspaceFiles.ok).toBe(true);
     const entries =
       (
@@ -70,7 +70,7 @@ describe('Audio toolkit flow', () => {
     expect(capturedEmail?.size ?? 0).toBeGreaterThan(0);
 
     const emailRead = await callNeppyRpc<{ result: { content_utf8: string } }>(
-      'openhuman.test_support_read_workspace_file',
+      'neppy.test_support_read_workspace_file',
       { rel_path: result?.email.capture_path, max_bytes: 131072 }
     );
     expect(emailRead.ok).toBe(true);

@@ -1,11 +1,11 @@
-// Listens for `openhuman:mcp-setup-secret-requested` window events dispatched
+// Listens for `neppy:mcp-setup-secret-requested` window events dispatched
 // by `socketService` and renders a native input dialog so the user can hand
 // the core a secret value out-of-band.
 //
 // The dialog deliberately uses `<input type="password">` so the value isn't
 // echoed in the UI by default and never lands in clipboard history via
 // triple-click. On submit, the value is POSTed straight to
-// `openhuman.mcp_setup_submit_secret` and immediately cleared from React
+// `neppy.mcp_setup_submit_secret` and immediately cleared from React
 // state — no logging, no Redux, no persistence on this side. The MCP setup
 // agent only sees the opaque `ref://<hex>` ref returned by
 // `mcp_setup_request_secret`; the raw value never enters the LLM context.
@@ -37,9 +37,9 @@ function SecretPromptDialog() {
       setError(null);
       setSubmitting(false);
     };
-    window.addEventListener('openhuman:mcp-setup-secret-requested', onRequest);
+    window.addEventListener('neppy:mcp-setup-secret-requested', onRequest);
     return () => {
-      window.removeEventListener('openhuman:mcp-setup-secret-requested', onRequest);
+      window.removeEventListener('neppy:mcp-setup-secret-requested', onRequest);
     };
   }, []);
 
@@ -59,7 +59,7 @@ function SecretPromptDialog() {
       setError(null);
       try {
         await callCoreRpc({
-          method: 'openhuman.mcp_setup_submit_secret',
+          method: 'neppy.mcp_setup_submit_secret',
           params: { ref_id: request.refId, value },
         });
         // Wipe local state on success — the value has now moved into the

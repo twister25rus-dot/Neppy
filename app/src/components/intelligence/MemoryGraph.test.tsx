@@ -408,7 +408,7 @@ describe('<MemoryGraph showNodeDetails />', () => {
 
     expect(await screen.findByTestId('memory-graph-node-details')).toBeInTheDocument();
     expect(mocks.callCoreRpc).toHaveBeenCalledWith({
-      method: 'openhuman.memory_tree_get_chunk',
+      method: 'neppy.memory_tree_get_chunk',
       params: { id: 'c1' },
     });
     expect(await screen.findByTestId('memory-graph-node-details-content')).toHaveTextContent(
@@ -502,7 +502,7 @@ describe('<MemoryGraph showNodeDetails />', () => {
     fireEvent.click(screen.getByTestId('memory-graph-node-details-link-c2'));
     await waitFor(() =>
       expect(mocks.callCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.memory_tree_get_chunk',
+        method: 'neppy.memory_tree_get_chunk',
         params: { id: 'c2' },
       })
     );

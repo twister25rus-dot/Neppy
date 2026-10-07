@@ -80,7 +80,7 @@ fn web_error_debug_export_covers_provider_config_and_retry_branches() {
     assert_eq!(non_retryable.provider.as_deref(), Some("zai"));
 
     let exhausted = web_test_support::classify_error_for_test(
-        "All providers/models failed. Attempts: openhuman API error (503 Service Unavailable)",
+        "All providers/models failed. Attempts: neppy API error (503 Service Unavailable)",
     );
     assert_eq!(exhausted.error_type, "provider_error");
     assert_eq!(exhausted.fallback_available, Some(false));

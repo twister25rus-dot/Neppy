@@ -21,7 +21,7 @@ pub fn all_web3_controller_schemas() -> Vec<ControllerSchema> {
 }
 
 /// No web3 controllers are registered when the domain is compiled out — the
-/// `openhuman.web3_*` RPCs become unknown-method.
+/// `neppy.web3_*` RPCs become unknown-method.
 pub fn all_web3_registered_controllers() -> Vec<RegisteredController> {
     Vec::new()
 }

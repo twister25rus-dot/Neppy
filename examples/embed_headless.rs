@@ -20,7 +20,7 @@
 //! swap `ServiceSet::none()` for `ServiceSet::headless_api()`, keep a
 //! `CancellationToken`, and call `runtime.serve(None, Some(token)).await` — it
 //! binds `127.0.0.1:7788` (override with `.host(..)` / `.port(..)` on the
-//! builder, or `OPENHUMAN_CORE_HOST` / `OPENHUMAN_CORE_PORT`) and serves until
+//! builder, or `NEPPY_CORE_HOST` / `NEPPY_CORE_PORT`) and serves until
 //! the token is cancelled. Widen the runtime surface by swapping
 //! `DomainSet::harness()` for `DomainSet::full()`.
 
@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Dispatch a couple of RPC methods in-process — no network involved.
-    // `core.version` and `openhuman.ping` (a legacy alias for the built-in
+    // `core.version` and `neppy.ping` (a legacy alias for the built-in
     // `core.ping`) are always available regardless of the DomainSet — they are
     // transport built-ins, not domain controllers — so they succeed even under
     // `harness()`.
@@ -54,10 +54,10 @@ async fn main() -> anyhow::Result<()> {
     println!("core.version -> {version}");
 
     let ping = runtime
-        .invoke("openhuman.ping", serde_json::json!({}))
+        .invoke("neppy.ping", serde_json::json!({}))
         .await
-        .map_err(|e| anyhow::anyhow!("openhuman.ping failed: {e}"))?;
-    println!("openhuman.ping -> {ping}");
+        .map_err(|e| anyhow::anyhow!("neppy.ping failed: {e}"))?;
+    println!("neppy.ping -> {ping}");
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 /**
  * Renderer client for the subconscious-orchestration Brain surface.
  *
- * Thin typed wrappers over the core `openhuman.orchestration_*` JSON-RPC
+ * Thin typed wrappers over the core `neppy.orchestration_*` JSON-RPC
  * methods, routed through `callCoreRpc` exactly like the tiny.place bridge in
  * `invokeApiClient.ts`. The Rust core owns all business logic — this file is
  * only the transport seam.
@@ -226,7 +226,7 @@ function safeParseJson(s: string): unknown {
 }
 
 /**
- * Call a `openhuman.orchestration_*` method and return the typed result.
+ * Call a `neppy.orchestration_*` method and return the typed result.
  *
  * The core serialises 402 errors as a plain string `"PAYMENT_REQUIRED:<json>"`;
  * we decode it into a {@link PaymentRequiredError} so callers can render the
@@ -250,11 +250,11 @@ async function call<T>(method: string, params?: Record<string, unknown>): Promis
 
 export const orchestrationClient = {
   /** List all orchestration chats (pinned master + subconscious, plus sessions). */
-  sessionsList: () => call<SessionsListResponse>('openhuman.orchestration_sessions_list', {}),
+  sessionsList: () => call<SessionsListResponse>('neppy.orchestration_sessions_list', {}),
 
   /** Create a new empty session for a contact; returns the created summary. */
   sessionsCreate: (params: { agentId: string; label?: string }) =>
-    call<SessionCreateResponse>('openhuman.orchestration_sessions_create', {
+    call<SessionCreateResponse>('neppy.orchestration_sessions_create', {
       agentId: params.agentId,
       ...(params.label !== undefined ? { label: params.label } : {}),
     }),
@@ -264,7 +264,7 @@ export const orchestrationClient = {
    * session's `sessionId`.
    */
   messagesList: (params: { chat: string; limit?: number; before?: string }) =>
-    call<MessagesListResponse>('openhuman.orchestration_messages_list', {
+    call<MessagesListResponse>('neppy.orchestration_messages_list', {
       chat: params.chat,
       ...(params.limit !== undefined ? { limit: params.limit } : {}),
       ...(params.before !== undefined ? { before: params.before } : {}),
@@ -275,30 +275,30 @@ export const orchestrationClient = {
    * under that session (session envelope); otherwise it goes to the Master chat.
    */
   sendMasterMessage: (params: { body: string; recipient?: string; sessionId?: string }) =>
-    call<SendMasterMessageResponse>('openhuman.orchestration_send_master_message', {
+    call<SendMasterMessageResponse>('neppy.orchestration_send_master_message', {
       body: params.body,
       ...(params.recipient !== undefined ? { recipient: params.recipient } : {}),
       ...(params.sessionId !== undefined ? { sessionId: params.sessionId } : {}),
     }),
 
   /** Mark a chat as read (clears the server-side unread count). */
-  markRead: (chat: string) => call<MarkReadResponse>('openhuman.orchestration_mark_read', { chat }),
+  markRead: (chat: string) => call<MarkReadResponse>('neppy.orchestration_mark_read', { chat }),
 
   /** Current orchestration status (active steering directive, tick timing). */
-  status: () => call<OrchestrationStatus>('openhuman.orchestration_status', {}),
+  status: () => call<OrchestrationStatus>('neppy.orchestration_status', {}),
 
   /**
    * The aggregated "needs you" queue: pending tool approvals, agent runs
    * awaiting input, and instances with unread messages, priority-ordered.
    */
-  attention: () => call<AttentionQueue>('openhuman.orchestration_attention', {}),
+  attention: () => call<AttentionQueue>('neppy.orchestration_attention', {}),
 
   /**
    * This agent's own tiny.place identity + discoverability (agent id, @handles,
    * whether its directory card and Signal key are published, whether peers can
    * DM it). Powers the SelfIdentityCard.
    */
-  selfIdentity: () => call<SelfIdentity>('openhuman.orchestration_self_identity', {}),
+  selfIdentity: () => call<SelfIdentity>('neppy.orchestration_self_identity', {}),
 
   /**
    * Make this agent discoverable: publish (or refresh) its directory card + Signal
@@ -307,8 +307,8 @@ export const orchestrationClient = {
    * common "has an identity but card/key aren't published" gap that makes every
    * inbound DM 404. Powers the SelfIdentityCard's "Make discoverable" action.
    */
-  publishIdentity: () => call<SelfIdentity>('openhuman.orchestration_publish_identity', {}),
+  publishIdentity: () => call<SelfIdentity>('neppy.orchestration_publish_identity', {}),
 
   /** The relay endpoint + network label the core is talking to (RelayBadge). */
-  relayInfo: () => call<RelayInfo>('openhuman.orchestration_relay_info', {}),
+  relayInfo: () => call<RelayInfo>('neppy.orchestration_relay_info', {}),
 };

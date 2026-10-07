@@ -70,3 +70,31 @@ async fn turn_mode_is_scoped_and_absent_outside() {
     assert_eq!(seen, Some(ThreadMode::Orchestration));
     assert_eq!(current_turn_mode(), None);
 }
+
+#[test]
+fn debug_mode_round_trips_through_wire_name_and_label() {
+    assert_eq!(ThreadMode::Debug.as_str(), "debug");
+    assert_eq!(ThreadMode::parse(" DEBUG "), Some(ThreadMode::Debug));
+    assert_eq!(DEBUG_LABEL, "mode:debug");
+    assert!(DEBUG_LABEL.starts_with(MODE_LABEL_PREFIX));
+
+    let labels = labels_with_mode(vec!["general".into()], ThreadMode::Debug);
+    assert_eq!(labels, vec!["general", DEBUG_LABEL]);
+    assert_eq!(ThreadMode::from_labels(&labels), ThreadMode::Debug);
+
+    // Switching mode replaces the label rather than stacking a second one.
+    let orch = labels_with_mode(labels, ThreadMode::Orchestration);
+    assert_eq!(orch, vec!["general", ORCHESTRATION_LABEL]);
+    let back = labels_with_mode(orch, ThreadMode::Chat);
+    assert_eq!(back, vec!["general"]);
+    assert_eq!(
+        serde_json::to_string(&ThreadMode::Debug).unwrap(),
+        "\"debug\""
+    );
+}
+
+#[test]
+fn debug_label_is_stripped_from_client_visible_labels() {
+    let stripped = strip_reserved_labels(vec!["a".into(), DEBUG_LABEL.into()]);
+    assert_eq!(stripped, vec!["a"]);
+}

@@ -18,14 +18,14 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OPENHUMAN_ROOT="$(cd "$HERE/../.." && pwd)"
-UMBRELLA_ROOT="$(cd "$OPENHUMAN_ROOT/.." && pwd)"
-APP_DIR="$OPENHUMAN_ROOT/app"
+NEPPY_ROOT="$(cd "$HERE/../.." && pwd)"
+UMBRELLA_ROOT="$(cd "$NEPPY_ROOT/.." && pwd)"
+APP_DIR="$NEPPY_ROOT/app"
 
 BACKEND_PORT="${BACKEND_PORT:-18080}"
 export TINYPLACE_API_BASE_URL="${TINYPLACE_API_BASE_URL:-http://localhost:${BACKEND_PORT}}"
 # Reuse the already-built debug core instead of a separate e2e-web target.
-export E2E_WEB_CORE_TARGET_DIR="${E2E_WEB_CORE_TARGET_DIR:-$OPENHUMAN_ROOT/target}"
+export E2E_WEB_CORE_TARGET_DIR="${E2E_WEB_CORE_TARGET_DIR:-$NEPPY_ROOT/target}"
 MANAGE_STACK="${MANAGE_STACK:-1}"
 COMPOSE_PROJECT="tinyplace-ohe2e"
 SPEC="test/playwright/specs/tinyplace-messaging.spec.ts"
@@ -61,7 +61,7 @@ fi
 # 2) Build web bundle + core if needed.
 if [ ! -f "$APP_DIR/dist-web/index.html" ] || [ ! -x "$E2E_WEB_CORE_TARGET_DIR/debug/neppy-core" ]; then
   log "building web e2e bundle (+ core if missing)…"
-  ( cd "$OPENHUMAN_ROOT" && bash app/scripts/e2e-web-build.sh )
+  ( cd "$NEPPY_ROOT" && bash app/scripts/e2e-web-build.sh )
 fi
 # Ensure the Playwright browser is present.
 ( cd "$APP_DIR" && pnpm exec playwright install chromium chromium-headless-shell >/dev/null 2>&1 || true )

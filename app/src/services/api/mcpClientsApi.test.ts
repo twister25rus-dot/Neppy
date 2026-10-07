@@ -42,7 +42,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.registrySearch({ query: 'test', page: 1 });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_registry_search',
+        method: 'neppy.mcp_clients_registry_search',
         params: { query: 'test', page: 1 },
       });
       expect(result.servers).toEqual(servers);
@@ -57,7 +57,7 @@ describe('mcpClientsApi', () => {
       await mcpClientsApi.registrySearch({});
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_registry_search',
+        method: 'neppy.mcp_clients_registry_search',
         params: {},
       });
     });
@@ -105,7 +105,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.registryGet('test/server');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_registry_get',
+        method: 'neppy.mcp_clients_registry_get',
         params: { qualified_name: 'test/server' },
       });
       expect(result).toEqual(serverDetail);
@@ -153,7 +153,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.installedList();
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_installed_list',
+        method: 'neppy.mcp_clients_installed_list',
         params: {},
       });
       expect(result).toEqual(installed);
@@ -220,7 +220,7 @@ describe('mcpClientsApi', () => {
       });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_install',
+        method: 'neppy.mcp_clients_install',
         params: { qualified_name: 'test/server', env: { API_KEY: 'secret' } },
       });
       expect(result).toEqual(server);
@@ -275,7 +275,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.uninstall('srv-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_uninstall',
+        method: 'neppy.mcp_clients_uninstall',
         params: { server_id: 'srv-1' },
       });
       expect(result.removed).toBe(true);
@@ -291,7 +291,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.connect('srv-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_connect',
+        method: 'neppy.mcp_clients_connect',
         params: { server_id: 'srv-1' },
       });
       expect(result.status).toBe('connected');
@@ -307,7 +307,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.disconnect('srv-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_disconnect',
+        method: 'neppy.mcp_clients_disconnect',
         params: { server_id: 'srv-1' },
       });
       expect(result.status).toBe('disconnected');
@@ -331,7 +331,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.status();
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_status',
+        method: 'neppy.mcp_clients_status',
         params: {},
       });
       expect(result).toEqual(servers);
@@ -378,7 +378,7 @@ describe('mcpClientsApi', () => {
       });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_tool_call',
+        method: 'neppy.mcp_clients_tool_call',
         params: { server_id: 'srv-1', tool_name: 'readFile', arguments: { path: '/etc/hosts' } },
       });
       expect(result.is_error).toBe(false);
@@ -401,7 +401,7 @@ describe('mcpClientsApi', () => {
       });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_update_env',
+        method: 'neppy.mcp_clients_update_env',
         params: { server_id: 'srv-1', env: { API_KEY: 'rotated' } },
       });
       expect(result.status).toBe('connected');
@@ -421,7 +421,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.registrySettingsGet();
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_registry_settings_get',
+        method: 'neppy.mcp_clients_registry_settings_get',
         params: {},
       });
       expect(result.smithery_api_key_set).toBe(true);
@@ -438,7 +438,7 @@ describe('mcpClientsApi', () => {
       await mcpClientsApi.registrySettingsSet({ smithery_api_key: 'sk-x' });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_registry_settings_set',
+        method: 'neppy.mcp_clients_registry_settings_set',
         params: { smithery_api_key: 'sk-x' },
       });
     });
@@ -459,7 +459,7 @@ describe('mcpClientsApi', () => {
       });
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_config_assist',
+        method: 'neppy.mcp_clients_config_assist',
         params: {
           qualified_name: 'test/server',
           user_message: 'How do I configure this?',
@@ -486,7 +486,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.detectAuth('srv-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_detect_auth',
+        method: 'neppy.mcp_clients_detect_auth',
         params: { server_id: 'srv-1' },
       });
       expect(result.kind).toBe('oauth');
@@ -505,7 +505,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.oauthBegin('srv-1');
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_oauth_begin',
+        method: 'neppy.mcp_clients_oauth_begin',
         params: { server_id: 'srv-1' },
       });
       expect(result).toBe('https://auth.example/authorize?code_challenge=x');
@@ -520,7 +520,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.setEnabled('srv-1', true);
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_set_enabled',
+        method: 'neppy.mcp_clients_set_enabled',
         params: { server_id: 'srv-1', enabled: true },
       });
       expect(result.server_id).toBe('srv-1');
@@ -534,7 +534,7 @@ describe('mcpClientsApi', () => {
       const result = await mcpClientsApi.setEnabled('srv-2', false);
 
       expect(mockCallCoreRpc).toHaveBeenCalledWith({
-        method: 'openhuman.mcp_clients_set_enabled',
+        method: 'neppy.mcp_clients_set_enabled',
         params: { server_id: 'srv-2', enabled: false },
       });
       expect(result.server_id).toBe('srv-2');

@@ -116,7 +116,7 @@ function normalizeTelegramSentMessage(entry: SentMessage): SentMessage {
 /**
  * Connect a Telegram bot via the `channels_connect` RPC.
  *
- * Maps to `openhuman.channels_connect` with `authMode: "bot_token"`.
+ * Maps to `neppy.channels_connect` with `authMode: "bot_token"`.
  * The connect call writes TOML config and sets `restart_required: true` —
  * it does NOT start the live polling loop immediately.
  *
@@ -139,7 +139,7 @@ export async function connectTelegramBot(
       `mentionOnly=${opts.mentionOnly ?? false}`
   );
 
-  const out = await callNeppyRpc('openhuman.channels_connect', {
+  const out = await callNeppyRpc('neppy.channels_connect', {
     channel: 'telegram',
     authMode: 'bot_token',
     credentials,
@@ -175,7 +175,7 @@ export async function connectTelegramBot(
 export async function disconnectTelegramBot(): Promise<boolean> {
   console.log(`${LOG_PREFIX} disconnectTelegramBot: calling channels_disconnect`);
 
-  const out = await callNeppyRpc('openhuman.channels_disconnect', {
+  const out = await callNeppyRpc('neppy.channels_disconnect', {
     channel: 'telegram',
     authMode: 'bot_token',
   });
@@ -199,7 +199,7 @@ export async function disconnectTelegramBot(): Promise<boolean> {
 export async function getTelegramChannelStatus(): Promise<TelegramStatusEntry | null> {
   console.log(`${LOG_PREFIX} getTelegramChannelStatus: calling channels_status`);
 
-  const out = await callNeppyRpc('openhuman.channels_status', { channel: 'telegram' });
+  const out = await callNeppyRpc('neppy.channels_status', { channel: 'telegram' });
 
   if (!out.ok) {
     console.warn(`${LOG_PREFIX} getTelegramChannelStatus: RPC failed — ${JSON.stringify(out)}`);

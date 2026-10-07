@@ -251,7 +251,7 @@ pub enum AgentProgress {
     },
 
     /// The agent rewrote the per-thread task board. Emitted by the
-    /// `todo` tool (or `openhuman.todos_*` RPC) after the board has been persisted.
+    /// `todo` tool (or `neppy.todos_*` RPC) after the board has been persisted.
     TaskBoardUpdated {
         board: crate::neppy::agent::task_board::TaskBoard,
     },

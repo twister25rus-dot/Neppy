@@ -34,7 +34,7 @@ export default function SyncConfirmDialog({
     (async () => {
       try {
         const resp = await callCoreRpc<{ result: SyncEstimate }>({
-          method: 'openhuman.memory_sources_estimate_sync_cost',
+          method: 'neppy.memory_sources_estimate_sync_cost',
           params: { source_id: sourceId },
         });
         if (!cancelled) setEstimate(resp.result);

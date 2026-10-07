@@ -271,5 +271,20 @@ pub(super) fn build_session_fingerprint(
             profile,
         ),
         mode,
+        turn_workspace: crate::neppy::agent::turn_workspace::current(),
+        debug_prompt_hash: debug_prompt_hash(mode),
     }
+}
+
+/// Hash of the Debug prompt addendum (which embeds the turn's saved
+/// `[debug_mode]` settings); `None` outside Debug mode. Must be called inside
+/// the Debug turn, where the addendum is derived.
+pub(super) fn debug_prompt_hash(mode: Option<ThreadMode>) -> Option<u64> {
+    use std::hash::{Hash, Hasher};
+    if mode != Some(ThreadMode::Debug) {
+        return None;
+    }
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    super::mode::prompt_addendum(ThreadMode::Debug).hash(&mut h);
+    Some(h.finish())
 }

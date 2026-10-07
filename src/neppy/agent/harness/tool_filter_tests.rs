@@ -134,7 +134,7 @@ fn delete_query_excludes_create_tools() {
 //
 // These run the filter against the actual Composio tool-list dump
 // for each toolkit (1000 tools total) captured from a live sidecar
-// `openhuman.composio_list_tools` call. Fixtures live in
+// `neppy.composio_list_tools` call. Fixtures live in
 // `tests/fixtures/composio_<toolkit>.json`.
 
 fn load_real_toolkit(toolkit: &str) -> Vec<ConnectedIntegrationTool> {
@@ -179,7 +179,7 @@ fn real_data_github_create_pr() {
     let actions = load_real_toolkit("github");
     assert!(actions.len() > 400, "github fixture should have ~500 tools");
     let hits = filter_actions_by_prompt(
-        "Create a pull request from feature/auth-fix to main in the openhuman repo",
+        "Create a pull request from feature/auth-fix to main in the neppy repo",
         &actions,
         15,
     );
@@ -202,7 +202,7 @@ fn real_data_github_create_pr() {
 fn real_data_github_list_prs() {
     let actions = load_real_toolkit("github");
     let hits = filter_actions_by_prompt(
-        "Find all open pull requests assigned to the current user in the openhuman repo",
+        "Find all open pull requests assigned to the current user in the neppy repo",
         &actions,
         15,
     );

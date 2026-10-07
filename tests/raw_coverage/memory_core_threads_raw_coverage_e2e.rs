@@ -50,7 +50,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set_path(key: &'static str, value: &Path) -> Self {
-        let old = std::env::var_os(key);
+        let old = neppy_core::neppy::util::env::var_os(key);
         unsafe {
             std::env::set_var(key, value);
         }
@@ -63,7 +63,7 @@ impl Drop for EnvGuard {
         unsafe {
             match &self.old {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }
@@ -437,7 +437,7 @@ async fn memory_read_rpc_filters_graphs_scores_reset_and_wipe_seeded_rows() {
 async fn thread_ops_welcome_migration_and_turn_state_cover_error_and_cleanup_paths() {
     let _env_lock = __shared_env_lock();
     let tmp = TempDir::new().unwrap();
-    let _env = EnvGuard::set_path("OPENHUMAN_WORKSPACE", tmp.path());
+    let _env = EnvGuard::set_path("NEPPY_WORKSPACE", tmp.path());
     let workspace = Config::load_or_init().await.unwrap().workspace_dir;
 
     ensure_thread(

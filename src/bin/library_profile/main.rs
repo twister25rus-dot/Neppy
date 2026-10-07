@@ -21,7 +21,7 @@
 //! With the `rss-bench-dhat` feature, dhat's global allocator + profiler are
 //! active: RSS/time numbers are perturbed, the result carries `"dhat": true`,
 //! and a `dhat-<scenario>.json` heap profile is written under
-//! `target/profile/rust-library/` (override via `OPENHUMAN_PROFILE_DHAT_OUT`).
+//! `target/profile/rust-library/` (override via `NEPPY_PROFILE_DHAT_OUT`).
 
 mod harness;
 mod mock;
@@ -41,7 +41,7 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 /// Kept alive by the caller until after the JSON result is printed.
 #[cfg(feature = "rss-bench-dhat")]
 fn start_dhat(scenario: &str) -> Result<dhat::Profiler> {
-    let out = std::env::var("OPENHUMAN_PROFILE_DHAT_OUT")
+    let out = neppy_core::neppy::util::env::var("NEPPY_PROFILE_DHAT_OUT")
         .unwrap_or_else(|_| format!("target/profile/rust-library/dhat-{scenario}.json"));
     if let Some(parent) = std::path::Path::new(&out).parent() {
         std::fs::create_dir_all(parent).context("create dhat output directory")?;
@@ -64,13 +64,13 @@ async fn dispatch(scenario: &str) -> Result<ProfileResult> {
     }
 }
 
-/// Build the tokio runtime. When `OPENHUMAN_PROFILE_WORKER_THREADS` is set the
+/// Build the tokio runtime. When `NEPPY_PROFILE_WORKER_THREADS` is set the
 /// multi-thread runtime is built manually with that worker count (set to `2` to
 /// simulate the 2 vCPU box); otherwise the standard multi-thread default runs.
 fn build_runtime() -> Result<tokio::runtime::Runtime> {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
-    if let Some(workers) = std::env::var("OPENHUMAN_PROFILE_WORKER_THREADS")
+    if let Some(workers) = neppy_core::neppy::util::env::var("NEPPY_PROFILE_WORKER_THREADS")
         .ok()
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|n| *n > 0)
@@ -82,7 +82,7 @@ fn build_runtime() -> Result<tokio::runtime::Runtime> {
 }
 
 fn main() -> Result<()> {
-    // Parse args BEFORE building the runtime so `OPENHUMAN_PROFILE_WORKER_THREADS`
+    // Parse args BEFORE building the runtime so `NEPPY_PROFILE_WORKER_THREADS`
     // can size the worker pool (the `fleet` scenario simulates the 2 vCPU box).
     let scenario = std::env::args().nth(1).context(
         "usage: library-profile \
@@ -112,7 +112,7 @@ fn main() -> Result<()> {
 
         println!("{}", serde_json::to_string_pretty(&result)?);
 
-        if let Some(seconds) = std::env::var("OPENHUMAN_PROFILE_HOLD_SECS")
+        if let Some(seconds) = neppy_core::neppy::util::env::var("NEPPY_PROFILE_HOLD_SECS")
             .ok()
             .and_then(|value| value.parse::<u64>().ok())
             .filter(|seconds| *seconds > 0)

@@ -70,14 +70,14 @@ const BUDGET_SIGNAL_TTL: Duration = Duration::from_secs(5 * 60);
 /// harness run entirely (e.g. session assembly / persistence plumbing), so the
 /// client still always gets a terminal event instead of an empty reply / an
 /// endless `inference_heartbeat` stream. Deliberately generous — a hang
-/// backstop, not a UX deadline. Override via `OPENHUMAN_WEB_TURN_TIMEOUT_SECS`;
+/// backstop, not a UX deadline. Override via `NEPPY_WEB_TURN_TIMEOUT_SECS`;
 /// set it to `0` to disable the backstop.
 const DEFAULT_WEB_TURN_TIMEOUT_SECS: u64 = 900;
 
 /// Resolve the per-turn wall-clock backstop. Returns `None` when disabled
-/// (env `OPENHUMAN_WEB_TURN_TIMEOUT_SECS=0`).
+/// (env `NEPPY_WEB_TURN_TIMEOUT_SECS=0`).
 fn web_turn_deadline() -> Option<Duration> {
-    let secs = std::env::var("OPENHUMAN_WEB_TURN_TIMEOUT_SECS")
+    let secs = crate::neppy::util::env::var("NEPPY_WEB_TURN_TIMEOUT_SECS")
         .ok()
         .and_then(|v| v.trim().parse::<u64>().ok())
         .unwrap_or(DEFAULT_WEB_TURN_TIMEOUT_SECS);
@@ -352,7 +352,7 @@ pub(super) static TEST_RUN_CHAT_TASK_BLOCK: Lazy<Mutex<Option<TestRunChatTaskBlo
 
 /// Process-wide lock serializing every test that drives the global
 /// `run_chat_task` test hooks (`set_test_run_chat_task_block`,
-/// `set_test_forced_run_chat_task_error`) or the `OPENHUMAN_WEB_TURN_TIMEOUT_SECS`
+/// `set_test_forced_run_chat_task_error`) or the `NEPPY_WEB_TURN_TIMEOUT_SECS`
 /// turn-timeout override.
 ///
 /// All of those toggles are process-global, so a `start_chat` / `run_chat_task`
@@ -554,7 +554,7 @@ pub async fn start_chat(
     if let Some(raw_mode) = metadata.mode.as_deref() {
         let Some(mode) = crate::neppy::threads::mode::ThreadMode::parse(raw_mode) else {
             return Err(format!(
-                "unknown thread mode '{}': expected 'chat' or 'orchestration'",
+                "unknown thread mode '{}': expected 'chat', 'orchestration' or 'debug'",
                 raw_mode.trim()
             ));
         };

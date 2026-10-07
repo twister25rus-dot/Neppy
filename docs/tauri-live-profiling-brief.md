@@ -29,7 +29,7 @@ family-wide, not single-pid.
 - **JSON schema v2** (`library-profile` output) — reuse the field names
   (`baseline`/`settled`/`peak_rss_kib`/`checkpoints[]`/`budget`) so existing
   aggregation and future CI tooling work on both suites.
-- **Env-var conventions** — `OPENHUMAN_PROFILE_*` knobs, `HOLD_SECS`-style
+- **Env-var conventions** — `NEPPY_PROFILE_*` knobs, `HOLD_SECS`-style
   inspection points.
 
 ## Prior findings to build on (2026-07-21 session)

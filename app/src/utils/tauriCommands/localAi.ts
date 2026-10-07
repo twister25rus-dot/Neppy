@@ -230,19 +230,17 @@ export async function neppyAgentChat(
     throw new Error('Not running in Tauri');
   }
   return await callCoreRpc<CommandResponse<string>>({
-    method: 'openhuman.agent_chat',
+    method: 'neppy.agent_chat',
     params: { message, model_override: modelOverride, temperature },
   });
 }
 
 export async function neppyLocalAiStatus(): Promise<CommandResponse<LocalAiStatus>> {
   try {
-    return await callCoreRpc<CommandResponse<LocalAiStatus>>({
-      method: 'openhuman.inference_status',
-    });
+    return await callCoreRpc<CommandResponse<LocalAiStatus>>({ method: 'neppy.inference_status' });
   } catch (err) {
     const message = tauriErrorMessage(err);
-    if (message.includes('unknown method: openhuman.inference_status')) {
+    if (message.includes('unknown method: neppy.inference_status')) {
       throw new Error(
         'Local model runtime is unavailable in this core build. Restart app after updating to the latest build.'
       );
@@ -256,7 +254,7 @@ export async function neppyLocalAiSummarize(
   maxTokens?: number
 ): Promise<CommandResponse<string>> {
   return await callCoreRpc<CommandResponse<string>>({
-    method: 'openhuman.inference_summarize',
+    method: 'neppy.inference_summarize',
     params: { text, max_tokens: maxTokens },
   });
 }
@@ -267,7 +265,7 @@ export async function neppyLocalAiPrompt(
   noThink?: boolean
 ): Promise<CommandResponse<string>> {
   return await callCoreRpc<CommandResponse<string>>({
-    method: 'openhuman.inference_prompt',
+    method: 'neppy.inference_prompt',
     params: { prompt, max_tokens: maxTokens, no_think: noThink },
   });
 }
@@ -278,7 +276,7 @@ export async function neppyLocalAiVisionPrompt(
   maxTokens?: number
 ): Promise<CommandResponse<string>> {
   return await callCoreRpc<CommandResponse<string>>({
-    method: 'openhuman.inference_vision_prompt',
+    method: 'neppy.inference_vision_prompt',
     params: { prompt, image_refs: imageRefs, max_tokens: maxTokens },
   });
 }
@@ -287,7 +285,7 @@ export async function neppyLocalAiEmbed(
   inputs: string[]
 ): Promise<CommandResponse<LocalAiEmbeddingResult>> {
   return await callCoreRpc<CommandResponse<LocalAiEmbeddingResult>>({
-    method: 'openhuman.inference_embed',
+    method: 'neppy.inference_embed',
     params: { inputs },
   });
 }
@@ -296,7 +294,7 @@ export async function neppyLocalAiTranscribe(
   audioPath: string
 ): Promise<CommandResponse<LocalAiSpeechResult>> {
   return await callCoreRpc<CommandResponse<LocalAiSpeechResult>>({
-    method: 'openhuman.inference_transcribe',
+    method: 'neppy.inference_transcribe',
     params: { audio_path: audioPath },
   });
 }
@@ -306,7 +304,7 @@ export async function neppyLocalAiTranscribeBytes(
   extension?: string
 ): Promise<CommandResponse<LocalAiSpeechResult>> {
   return await callCoreRpc<CommandResponse<LocalAiSpeechResult>>({
-    method: 'openhuman.inference_transcribe_bytes',
+    method: 'neppy.inference_transcribe_bytes',
     params: { audio_bytes: audioBytes, extension },
   });
 }
@@ -316,7 +314,7 @@ export async function neppyLocalAiTts(
   outputPath?: string
 ): Promise<CommandResponse<LocalAiTtsResult>> {
   return await callCoreRpc<CommandResponse<LocalAiTtsResult>>({
-    method: 'openhuman.inference_tts',
+    method: 'neppy.inference_tts',
     params: { text, output_path: outputPath },
   });
 }
@@ -330,7 +328,7 @@ export async function neppyLocalAiShouldReact(
   channelType: string
 ): Promise<CommandResponse<ReactionDecision>> {
   return await callCoreRpc<CommandResponse<ReactionDecision>>({
-    method: 'openhuman.inference_should_react',
+    method: 'neppy.inference_should_react',
     params: { message, channel_type: channelType },
   });
 }
@@ -343,14 +341,14 @@ export async function neppyLocalAiAnalyzeSentiment(
   message: string
 ): Promise<CommandResponse<SentimentResult>> {
   return await callCoreRpc<CommandResponse<SentimentResult>>({
-    method: 'openhuman.inference_analyze_sentiment',
+    method: 'neppy.inference_analyze_sentiment',
     params: { message },
   });
 }
 
 export async function neppyLocalAiAssetsStatus(): Promise<CommandResponse<LocalAiAssetsStatus>> {
   return await callCoreRpc<CommandResponse<LocalAiAssetsStatus>>({
-    method: 'openhuman.inference_assets_status',
+    method: 'neppy.inference_assets_status',
   });
 }
 
@@ -358,7 +356,7 @@ export async function neppyLocalAiDownloadsProgress(): Promise<
   CommandResponse<LocalAiDownloadsProgress>
 > {
   return await callCoreRpc<CommandResponse<LocalAiDownloadsProgress>>({
-    method: 'openhuman.inference_downloads_progress',
+    method: 'neppy.inference_downloads_progress',
   });
 }
 
@@ -366,29 +364,29 @@ export async function neppyLocalAiDownloadAsset(
   capability: 'chat' | 'vision' | 'embedding' | 'stt' | 'tts'
 ): Promise<CommandResponse<LocalAiAssetsStatus>> {
   return await callCoreRpc<CommandResponse<LocalAiAssetsStatus>>({
-    method: 'openhuman.inference_download_asset',
+    method: 'neppy.inference_download_asset',
     params: { capability },
   });
 }
 
 export async function neppyLocalAiDeviceProfile(): Promise<DeviceProfileResult> {
-  return await callCoreRpc<DeviceProfileResult>({ method: 'openhuman.inference_device_profile' });
+  return await callCoreRpc<DeviceProfileResult>({ method: 'neppy.inference_device_profile' });
 }
 
 export async function neppyLocalAiPresets(): Promise<PresetsResponse> {
-  return await callCoreRpc<PresetsResponse>({ method: 'openhuman.inference_presets' });
+  return await callCoreRpc<PresetsResponse>({ method: 'neppy.inference_presets' });
 }
 
 export async function neppyLocalAiApplyPreset(tier: string): Promise<ApplyPresetResult> {
   return await callCoreRpc<ApplyPresetResult>({
-    method: 'openhuman.inference_apply_preset',
+    method: 'neppy.inference_apply_preset',
     params: { tier },
   });
 }
 
 export async function neppyLocalAiDiagnostics(): Promise<LocalAiDiagnostics> {
   return await callCoreRpc<LocalAiDiagnostics>({
-    method: 'openhuman.inference_diagnostics',
+    method: 'neppy.inference_diagnostics',
     params: {},
   });
 }
@@ -401,7 +399,7 @@ export interface OllamaConnectionTestResult {
 
 export async function neppyLocalAiTestConnection(url: string): Promise<OllamaConnectionTestResult> {
   return await callCoreRpc<OllamaConnectionTestResult>({
-    method: 'openhuman.inference_test_connection',
+    method: 'neppy.inference_test_connection',
     params: { url },
   });
 }

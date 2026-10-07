@@ -44,7 +44,7 @@ pub struct SeltzDocument {
 
 /// Real-time web search via the Seltz API.
 ///
-/// Requires a `SELTZ_API_KEY` (or `OPENHUMAN_SELTZ_API_KEY`) environment
+/// Requires a `SELTZ_API_KEY` (or `NEPPY_SELTZ_API_KEY`) environment
 /// variable or `seltz.api_key` config field. When the key is absent the tool
 /// is still registered but returns a clear "not configured" error at call time
 /// so the agent can fall back to other search tools.
@@ -225,7 +225,7 @@ impl Tool for SeltzSearchTool {
         let api_key = self.api_key.as_deref().ok_or_else(|| {
             anyhow::anyhow!(
                 "Seltz search unavailable: no API key configured. \
-                 Set SELTZ_API_KEY or OPENHUMAN_SELTZ_API_KEY, \
+                 Set SELTZ_API_KEY or NEPPY_SELTZ_API_KEY, \
                  or add seltz.api_key to config.toml."
             )
         })?;

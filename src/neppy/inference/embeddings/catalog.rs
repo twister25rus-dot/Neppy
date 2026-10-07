@@ -2,7 +2,7 @@
 //!
 //! Each entry declares its slug, display label, whether it requires an API key,
 //! and the models + dimension presets it supports. The frontend reads this via
-//! `openhuman.embeddings_get_settings` to populate the provider picker.
+//! `neppy.embeddings_get_settings` to populate the provider picker.
 
 use serde::Serialize;
 

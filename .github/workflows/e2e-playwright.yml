@@ -64,16 +64,16 @@ jobs:
           touch app/.env
 
       - name: Build Playwright web E2E bundle + standalone core
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app test:e2e:web:build
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app test:e2e:web:build
 
       - name: Install Playwright Chromium headless shell
-        run: bash scripts/ci-cancel-aware.sh pnpm --filter openhuman-app exec playwright install chromium-headless-shell
+        run: bash scripts/ci-cancel-aware.sh pnpm --filter neppy-app exec playwright install chromium-headless-shell
 
       - name: Run Playwright web E2E suite
         env:
-          OPENHUMAN_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
+          NEPPY_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
         run: |
-          mkdir -p "$OPENHUMAN_WORKSPACE"
+          mkdir -p "$NEPPY_WORKSPACE"
           bash scripts/ci-cancel-aware.sh bash app/scripts/e2e-web-session.sh
 
       - name: Pack Playwright E2E failure artifacts
@@ -81,9 +81,9 @@ jobs:
         run: |
           mkdir -p .ci/artifacts
           tar -czf .ci/artifacts/openhuman-playwright-failure-logs.tar.gz \
-            -C "$OPENHUMAN_WORKSPACE" .
+            -C "$NEPPY_WORKSPACE" .
         env:
-          OPENHUMAN_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
+          NEPPY_WORKSPACE: ${{ runner.temp }}/openhuman-playwright-workspace
 
       - name: Upload Playwright E2E failure artifacts
         if: failure()

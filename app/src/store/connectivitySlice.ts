@@ -8,7 +8,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
  * - `internet` — browser navigator.onLine. Source of truth: `online`/`offline`
  *   listeners on `window`.
  * - `core`     — local Rust sidecar reachability. Source: `coreHealthMonitor`
- *   poll of `openhuman.connectivity_diag`.
+ *   poll of `neppy.connectivity_diag`.
  * - `backend`  — Socket.IO link to the hosted backend. Source:
  *   `socketService` lifecycle callbacks.
  */

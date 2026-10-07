@@ -56,7 +56,7 @@ pub(super) async fn dispatch_write_tool(
     client_info: &str,
     config: &Config,
 ) -> Result<Value, ToolCallError> {
-    let rpc_method = "openhuman.memory_doc_put";
+    let rpc_method = "neppy.memory_doc_put";
 
     tracing::debug!(
         tool = tool_name,

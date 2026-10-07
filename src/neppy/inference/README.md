@@ -8,7 +8,7 @@ Unified inference domain: the canonical home for everything LLM/STT/TTS/embeddin
 - Manage the local AI runtime: detect/spawn/adopt `ollama serve` and LM Studio, install/run Whisper (STT) and Piper (TTS), track download progress, and enforce a minimum-context-window floor.
 - Provide chat, vision (multimodal), summarization, embeddings, sentiment, and "should react" inference operations.
 - Preserve config-rejection, billing, authentication, and retry classification while TinyAgents owns model-call retry execution.
-- Resolve abstract tier names (`reasoning-v1`, `agentic-v1`, `coding-v1`, etc.) through the TinyAgents `ModelRouter` in `openhuman/tinyagents/routes.rs` and the provider factory here.
+- Resolve abstract tier names (`reasoning-v1`, `agentic-v1`, `coding-v1`, etc.) through the TinyAgents `ModelRouter` in `neppy/tinyagents/routes.rs` and the provider factory here.
 - Run ChatGPT/Codex OAuth (PKCE) for the `openai` cloud slug and persist tokens in the encrypted auth-profile store.
 - Expose an OpenAI-compatible `/v1/*` HTTP endpoint guarded by a stable user-managed external bearer.
 - Detect device hardware profile and recommend/apply local model presets/tiers.
@@ -42,7 +42,7 @@ Unified inference domain: the canonical home for everything LLM/STT/TTS/embeddin
 | `provider/types.rs`                                                               | Host request/response, streaming delta, tool-call, and usage DTOs retained at product/RPC boundaries.                                                                                                                                              |
 | `provider/factory.rs`                                                             | `create_chat_model*`, `provider_for_role`, provider-string grammar, access gates, and local/cloud/CLI model construction; `BYOK_INCOMPLETE_SENTINEL`.                                                                                              |
 | `provider/crate_openai.rs`                                                        | TinyAgents OpenAI-compatible model builders for managed, BYOK, and local endpoints.                                                                                                                                                                |
-| `provider/openhuman_backend_model.rs`                                             | Managed Neppy backend `ChatModel` with session JWT, billing metadata, and thread context.                                                                                                                                                      |
+| `provider/neppy_backend_model.rs`                                             | Managed Neppy backend `ChatModel` with session JWT, billing metadata, and thread context.                                                                                                                                                      |
 | `provider/openai_codex.rs`                                                        | Codex OAuth/Responses transport as a host `ChatModel`.                                                                                                                                                                                             |
 | `provider/claude_agent_sdk/`                                                      | Claude Agent SDK subprocess provider (`protocol.rs`, `subprocess.rs`).                                                                                                                                                                             |
 | `provider/config_rejection.rs`, `provider/billing_error.rs`                       | Error classifiers (unknown-model / config rejection / budget exhausted).                                                                                                                                                                           |
@@ -75,7 +75,7 @@ One namespace is wired into the controller registry (`src/core/all.rs`).
 
 `inference.*` (`schemas.rs`, `local/schemas.rs`): `status`, `get_client_config`, `update_model_settings`, `update_local_settings`, `list_models`, `device_profile`, `presets`, `apply_preset`, `diagnostics`, `openai_oauth_start`, `openai_oauth_complete`, `openai_oauth_status`, `openai_oauth_disconnect`, `summarize`, `prompt`, `vision_prompt`, `test_provider_model`, `should_react`, `analyze_sentiment`, `agent_chat`, `agent_chat_simple`, `transcribe`, `transcribe_bytes`, `tts`, `assets_status`, `downloads_progress`, `download_asset`, `install_piper`, `piper_install_status`, `test_connection`.
 
-Legacy `openhuman.local_ai_*` and `openhuman.update_local_ai_settings` method names are rewritten to canonical `openhuman.inference_*` methods by `src/core/legacy_aliases.rs` and `app/src/services/rpcMethods.ts`.
+Legacy `neppy.local_ai_*` and `neppy.update_local_ai_settings` method names are rewritten to canonical `neppy.inference_*` methods by `src/core/legacy_aliases.rs` and `app/src/services/rpcMethods.ts`.
 
 Also exposes a non-RPC HTTP router (`http::router()`) nested at `/v1` by `src/core/jsonrpc.rs` (`/v1/chat/completions`, `/v1/models`), accepting either the core bearer or a stable external API key.
 

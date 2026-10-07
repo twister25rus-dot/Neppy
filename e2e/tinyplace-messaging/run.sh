@@ -12,19 +12,19 @@
 #
 # Env knobs:
 #   TINYPLACE_API_BASE_URL   backend base URL          (default http://localhost:18080)
-#   OPENHUMAN_CORE_BIN       path to neppy-core    (default target/debug/neppy-core)
+#   NEPPY_CORE_BIN       path to neppy-core    (default target/debug/neppy-core)
 #   MANAGE_STACK             1 = auto-manage backend   (default 1)
 #   BACKEND_PORT             host port for managed backend (default 18080)
 #   VERBOSE                  1 = stream core logs
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OPENHUMAN_ROOT="$(cd "$HERE/../.." && pwd)"
-UMBRELLA_ROOT="$(cd "$OPENHUMAN_ROOT/.." && pwd)"
+NEPPY_ROOT="$(cd "$HERE/../.." && pwd)"
+UMBRELLA_ROOT="$(cd "$NEPPY_ROOT/.." && pwd)"
 
 BACKEND_PORT="${BACKEND_PORT:-18080}"
 export TINYPLACE_API_BASE_URL="${TINYPLACE_API_BASE_URL:-http://localhost:${BACKEND_PORT}}"
-export OPENHUMAN_CORE_BIN="${OPENHUMAN_CORE_BIN:-$OPENHUMAN_ROOT/target/debug/neppy-core}"
+export NEPPY_CORE_BIN="${NEPPY_CORE_BIN:-$NEPPY_ROOT/target/debug/neppy-core}"
 MANAGE_STACK="${MANAGE_STACK:-1}"
 COMPOSE_PROJECT="tinyplace-ohe2e"
 
@@ -65,11 +65,11 @@ else
 fi
 
 # 2) Core binary
-if [ ! -x "$OPENHUMAN_CORE_BIN" ]; then
+if [ ! -x "$NEPPY_CORE_BIN" ]; then
   log "building neppy-core (this can take a while the first time)…"
-  ( cd "$OPENHUMAN_ROOT" && GGML_NATIVE=OFF cargo build --bin neppy-core --manifest-path Cargo.toml )
+  ( cd "$NEPPY_ROOT" && GGML_NATIVE=OFF cargo build --bin neppy-core --manifest-path Cargo.toml )
 fi
-log "using core binary: $OPENHUMAN_CORE_BIN"
+log "using core binary: $NEPPY_CORE_BIN"
 
 # 3) Test
 log "running node:test suite…"

@@ -1,7 +1,7 @@
 //! Tauri shell side of file-based logging.
 //!
 //! Resolves the Neppy data directory the same way the core does
-//! (`~/.neppy` or `OPENHUMAN_WORKSPACE` override) and hands it to
+//! (`~/.neppy` or `NEPPY_WORKSPACE` override) and hands it to
 //! [`neppy_core::core::logging::init_for_embedded`], which installs a
 //! daily-rotated file appender so packaged GUI builds — where stderr is
 //! invisible — still produce a log users can share for support.
@@ -17,11 +17,11 @@ use neppy_core::core::logging::{self, log_directory};
 /// safe to call from any startup position; the underlying `Once` guard means
 /// the first caller's data dir wins.
 ///
-/// Verbosity defaults to `info` (or `debug` when `OPENHUMAN_VERBOSE=1`); the
+/// Verbosity defaults to `info` (or `debug` when `NEPPY_VERBOSE=1`); the
 /// `RUST_LOG` env var continues to override both.
 pub fn init() {
     let data_dir = resolve_data_dir();
-    let verbose = std::env::var("OPENHUMAN_VERBOSE")
+    let verbose = neppy_core::neppy::util::env::var("NEPPY_VERBOSE")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     logging::init_for_embedded(&data_dir, verbose);
@@ -36,7 +36,7 @@ pub fn init() {
 /// rather than a relative `.neppy` whose final location depends on the
 /// shell's CWD at launch time.
 pub(crate) fn resolve_data_dir() -> PathBuf {
-    if let Ok(workspace) = std::env::var("OPENHUMAN_WORKSPACE") {
+    if let Ok(workspace) = neppy_core::neppy::util::env::var("NEPPY_WORKSPACE") {
         if !workspace.is_empty() {
             return PathBuf::from(workspace);
         }
@@ -47,7 +47,7 @@ pub(crate) fn resolve_data_dir() -> PathBuf {
     })
 }
 
-/// Process-wide lock for every test that mutates `OPENHUMAN_WORKSPACE`.
+/// Process-wide lock for every test that mutates `NEPPY_WORKSPACE`.
 ///
 /// `resolve_data_dir` reads that variable, so the `file_logging` tests and the
 /// gateway store tests both rewrite it. Each used to keep its own private lock,
@@ -70,29 +70,29 @@ mod tests {
     #[test]
     fn resolve_data_dir_honors_workspace_override() {
         let _guard = ENV_LOCK.lock().unwrap();
-        let prior = std::env::var("OPENHUMAN_WORKSPACE").ok();
-        std::env::set_var("OPENHUMAN_WORKSPACE", "/tmp/openhuman-test-override");
+        let prior = neppy_core::neppy::util::env::var("NEPPY_WORKSPACE").ok();
+        std::env::set_var("NEPPY_WORKSPACE", "/tmp/openhuman-test-override");
         let dir = resolve_data_dir();
         assert_eq!(dir, PathBuf::from("/tmp/openhuman-test-override"));
         match prior {
-            Some(v) => std::env::set_var("OPENHUMAN_WORKSPACE", v),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(v) => std::env::set_var("NEPPY_WORKSPACE", v),
+            None => neppy_core::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 
     #[test]
     fn resolve_data_dir_ignores_empty_workspace() {
         let _guard = ENV_LOCK.lock().unwrap();
-        let prior = std::env::var("OPENHUMAN_WORKSPACE").ok();
-        std::env::set_var("OPENHUMAN_WORKSPACE", "");
+        let prior = neppy_core::neppy::util::env::var("NEPPY_WORKSPACE").ok();
+        std::env::set_var("NEPPY_WORKSPACE", "");
         // Empty string must NOT short-circuit — fall through to the
         // default resolver so the user's real `~/.neppy` is used.
         let dir = resolve_data_dir();
         assert_ne!(dir, PathBuf::from(""));
         assert!(dir.is_absolute(), "expected absolute fallback, got {dir:?}");
         match prior {
-            Some(v) => std::env::set_var("OPENHUMAN_WORKSPACE", v),
-            None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
+            Some(v) => std::env::set_var("NEPPY_WORKSPACE", v),
+            None => neppy_core::neppy::util::env::remove_var("NEPPY_WORKSPACE"),
         }
     }
 

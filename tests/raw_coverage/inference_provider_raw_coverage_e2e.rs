@@ -40,7 +40,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var(key).ok();
+        let previous = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: this test binary is run with --test-threads=1 in validation.
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
@@ -56,7 +56,7 @@ impl Drop for EnvVarGuard {
             }
             None => {
                 // SAFETY: this test binary is run with --test-threads=1 in validation.
-                unsafe { std::env::remove_var(self.key) }
+                unsafe { neppy_core::neppy::util::env::remove_var(self.key) }
             }
         }
     }
@@ -80,7 +80,7 @@ async fn provider_factory_and_model_listing_cover_cloud_local_and_invalid_shapes
     let tmp = tempdir().expect("tempdir");
     let mut config = temp_config(&tmp);
     let _workspace_env = EnvVarGuard::set(
-        "OPENHUMAN_WORKSPACE",
+        "NEPPY_WORKSPACE",
         config.config_path.parent().expect("config parent"),
     );
     seed_session(&config);
@@ -240,7 +240,7 @@ async fn provider_factory_and_model_listing_cover_cloud_local_and_invalid_shapes
 async fn local_service_public_inference_assets_and_shutdown_use_loopback_ollama() {
     let _env_lock = __shared_env_lock();
     let (base, _state) = serve_mock().await;
-    let _ollama_env = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &base);
+    let _ollama_env = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &base);
     let tmp = tempdir().expect("tempdir");
     let mut config = temp_config(&tmp);
     config.local_ai.runtime_enabled = true;

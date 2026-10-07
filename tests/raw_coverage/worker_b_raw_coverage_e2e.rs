@@ -48,20 +48,20 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, path.as_os_str());
         Self { key, old }
     }
 
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         std::env::set_var(key, value);
         Self { key, old }
     }
 
     fn unset(key: &'static str) -> Self {
-        let old = std::env::var(key).ok();
-        std::env::remove_var(key);
+        let old = neppy_core::neppy::util::env::var(key).ok();
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, old }
     }
 }
@@ -70,7 +70,7 @@ impl Drop for EnvVarGuard {
     fn drop(&mut self) {
         match &self.old {
             Some(value) => std::env::set_var(self.key, value),
-            None => std::env::remove_var(self.key),
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -244,17 +244,17 @@ async fn setup() -> TestHarness {
 
     let guards = vec![
         EnvVarGuard::set_to_path("HOME", home),
-        EnvVarGuard::unset("OPENHUMAN_WORKSPACE"),
+        EnvVarGuard::unset("NEPPY_WORKSPACE"),
         EnvVarGuard::unset("BACKEND_URL"),
         EnvVarGuard::unset("VITE_BACKEND_URL"),
-        EnvVarGuard::unset("OPENHUMAN_API_URL"),
-        EnvVarGuard::unset("OPENHUMAN_LOCAL_AI_TIER"),
-        EnvVarGuard::unset("OPENHUMAN_LM_STUDIO_BASE_URL"),
+        EnvVarGuard::unset("NEPPY_API_URL"),
+        EnvVarGuard::unset("NEPPY_LOCAL_AI_TIER"),
+        EnvVarGuard::unset("NEPPY_LM_STUDIO_BASE_URL"),
         EnvVarGuard::unset("LM_STUDIO_BASE_URL"),
-        EnvVarGuard::set("OPENHUMAN_KEYRING_BACKEND", "file"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_STRICT", "false"),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
-        EnvVarGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
+        EnvVarGuard::set("NEPPY_KEYRING_BACKEND", "file"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_STRICT", "false"),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_ENDPOINT", ""),
+        EnvVarGuard::set("NEPPY_MEMORY_EMBED_MODEL", ""),
     ];
 
     let _ =
@@ -324,7 +324,7 @@ async fn configure_mock_provider(rpc_base: &str, mock_base: &str) {
     let update = rpc(
         rpc_base,
         100,
-        "openhuman.inference_update_model_settings",
+        "neppy.inference_update_model_settings",
         json!({
             "api_url": mock_base,
             "default_model": "worker-b-chat",
@@ -378,7 +378,7 @@ async fn inference_provider_success_paths_use_mock_models_and_chat() {
     let models = rpc(
         &harness.rpc_base,
         101,
-        "openhuman.inference_list_models",
+        "neppy.inference_list_models",
         json!({ "provider_id": "mock" }),
     )
     .await;
@@ -400,7 +400,7 @@ async fn inference_provider_success_paths_use_mock_models_and_chat() {
     let models_404 = rpc(
         &harness.rpc_base,
         102,
-        "openhuman.inference_list_models",
+        "neppy.inference_list_models",
         json!({ "provider_id": "mock-404" }),
     )
     .await;
@@ -412,7 +412,7 @@ async fn inference_provider_success_paths_use_mock_models_and_chat() {
     let reply = rpc(
         &harness.rpc_base,
         103,
-        "openhuman.inference_test_provider_model",
+        "neppy.inference_test_provider_model",
         json!({
             "workload": "chat",
             "provider": "mock:worker-b-chat",
@@ -449,7 +449,7 @@ async fn tools_web_search_success_path_uses_backend_session_and_shapes_results()
     let search = rpc(
         &harness.rpc_base,
         201,
-        "openhuman.tools_web_search",
+        "neppy.tools_web_search",
         json!({
             "query": "worker b raw coverage",
             "objective": "prove backend web search success path",
@@ -496,7 +496,7 @@ async fn agent_profile_lifecycle_persists_custom_profile_and_validates_delete() 
     let upsert = rpc(
         &harness.rpc_base,
         301,
-        "openhuman.profiles_upsert",
+        "neppy.profiles_upsert",
         json!({
             "profile": {
                 "id": "worker-b-custom",
@@ -534,7 +534,7 @@ async fn agent_profile_lifecycle_persists_custom_profile_and_validates_delete() 
     let select = rpc(
         &harness.rpc_base,
         302,
-        "openhuman.profiles_select",
+        "neppy.profiles_select",
         json!({ "profile_id": "worker-b-custom" }),
     )
     .await;
@@ -548,7 +548,7 @@ async fn agent_profile_lifecycle_persists_custom_profile_and_validates_delete() 
     let delete_default = rpc(
         &harness.rpc_base,
         303,
-        "openhuman.profiles_delete",
+        "neppy.profiles_delete",
         json!({ "profile_id": "default" }),
     )
     .await;
@@ -560,7 +560,7 @@ async fn agent_profile_lifecycle_persists_custom_profile_and_validates_delete() 
     let delete_custom = rpc(
         &harness.rpc_base,
         304,
-        "openhuman.profiles_delete",
+        "neppy.profiles_delete",
         json!({ "profile_id": "worker-b-custom" }),
     )
     .await;
@@ -618,7 +618,7 @@ async fn approval_gate_rpc_decision_resumes_parked_tool_and_records_execution() 
         let pending = rpc(
             &harness.rpc_base,
             401,
-            "openhuman.approval_list_pending",
+            "neppy.approval_list_pending",
             json!({}),
         )
         .await;
@@ -650,7 +650,7 @@ async fn approval_gate_rpc_decision_resumes_parked_tool_and_records_execution() 
     let decided = rpc(
         &harness.rpc_base,
         402,
-        "openhuman.approval_decide",
+        "neppy.approval_decide",
         json!({
             "request_id": request_id,
             "decision": "approve_once"
@@ -676,7 +676,7 @@ async fn approval_gate_rpc_decision_resumes_parked_tool_and_records_execution() 
     let recent = rpc(
         &harness.rpc_base,
         403,
-        "openhuman.approval_list_recent_decisions",
+        "neppy.approval_list_recent_decisions",
         json!({ "limit": 10 }),
     )
     .await;

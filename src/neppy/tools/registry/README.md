@@ -37,9 +37,9 @@ Namespace `tool_registry`, registered via `all_tool_registry_registered_controll
 
 | Method | Inputs | Output |
 | --- | --- | --- |
-| `tool_registry.list` (`openhuman.tool_registry_list`) | none | `tools`: array of registry entries |
-| `tool_registry.get` (`openhuman.tool_registry_get`) | `tool_id` (required string) | `tool`: one registry entry |
-| `tool_registry.diagnostics` (`openhuman.tool_registry_diagnostics`) | none | `diagnostics`: redacted counts/posture/allowlists/denials/providers |
+| `tool_registry.list` (`neppy.tool_registry_list`) | none | `tools`: array of registry entries |
+| `tool_registry.get` (`neppy.tool_registry_get`) | `tool_id` (required string) | `tool`: one registry entry |
+| `tool_registry.diagnostics` (`neppy.tool_registry_diagnostics`) | none | `diagnostics`: redacted counts/posture/allowlists/denials/providers |
 
 All handlers return `RpcOutcome<T>` serialized via `into_cli_compatible_json()`.
 

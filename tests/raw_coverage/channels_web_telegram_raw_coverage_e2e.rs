@@ -220,7 +220,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &'static str, value: impl AsRef<str>) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: this integration test binary mutates only its own process env
         // before constructing Telegram clients that read these variables.
         unsafe {
@@ -236,7 +236,7 @@ impl Drop for EnvGuard {
         unsafe {
             match self.old.as_deref() {
                 Some(value) => std::env::set_var(self.key, value),
-                None => std::env::remove_var(self.key),
+                None => neppy_core::neppy::util::env::remove_var(self.key),
             }
         }
     }

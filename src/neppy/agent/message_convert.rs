@@ -3,7 +3,7 @@
 //!
 //! The two sides model the same concepts with different shapes:
 //!
-//! - openhuman `ChatMessage` is `{ role: String, content: String }` — tool
+//! - neppy `ChatMessage` is `{ role: String, content: String }` — tool
 //!   calls and tool-result correlation ids are not first-class fields; the
 //!   legacy loop threads them through provider-native encoding instead.
 //! - `tinyagents::harness::message::Message` is a typed enum
@@ -12,7 +12,7 @@
 //!
 //! These helpers bridge the seed history into the harness and the harness'
 //! resulting transcript back out, so a turn can run on the `tinyagents`
-//! agent-loop while callers keep speaking openhuman's `ChatMessage` vocabulary.
+//! agent-loop while callers keep speaking neppy's `ChatMessage` vocabulary.
 
 use tinyagents::harness::message::{
     AssistantMessage, ContentBlock, ImageRef, Message, SystemMessage, ToolMessage, UserMessage,
@@ -22,7 +22,7 @@ use tinyagents::harness::tool::ToolCall as TaToolCall;
 use crate::neppy::agent::messages::{ChatMessage, ConversationMessage, ToolResultMessage};
 
 /// Key under which a thinking model's `reasoning_content` is echoed through
-/// openhuman [`ChatMessage::extra_metadata`]. New harness transcripts carry
+/// neppy [`ChatMessage::extra_metadata`]. New harness transcripts carry
 /// reasoning as [`ContentBlock::Thinking`]; legacy persisted transcripts may
 /// still have the same key inside [`ContentBlock::ProviderExtension`].
 pub(crate) const REASONING_EXT_KEY: &str = "reasoning_content";
@@ -59,7 +59,7 @@ fn reasoning_extra_metadata(content: &[ContentBlock]) -> Option<serde_json::Valu
         .map(|reasoning| serde_json::json!({ REASONING_EXT_KEY: reasoning }))
 }
 
-/// Convert one openhuman [`ChatMessage`] into a harness [`Message`].
+/// Convert one neppy [`ChatMessage`] into a harness [`Message`].
 ///
 /// Role strings map onto the typed arms. A seeded **native** tool round is
 /// serialized by [`NativeToolDispatcher::to_provider_messages`] as a
@@ -266,7 +266,7 @@ fn parse_native_tool_envelope(text: &str) -> Option<(String, String)> {
 }
 
 /// Inverse of [`ta_call_to_oh_call`]: rebuild a harness [`TaToolCall`] from an
-/// openhuman [`ToolCall`] (whose `arguments` is a serialized JSON string).
+/// neppy [`ToolCall`] (whose `arguments` is a serialized JSON string).
 fn oh_call_to_ta_call(oh: &crate::neppy::inference::provider::ToolCall) -> TaToolCall {
     TaToolCall {
         id: oh.id.clone(),
@@ -281,7 +281,7 @@ pub(crate) fn history_to_messages(history: &[ChatMessage]) -> Vec<Message> {
     history.iter().map(chat_message_to_message).collect()
 }
 
-/// Convert a harness [`Message`] back into an openhuman [`ChatMessage`].
+/// Convert a harness [`Message`] back into a neppy [`ChatMessage`].
 ///
 /// Assistant tool calls are flattened to their text (the loop already executed
 /// them and appended `Tool` result messages), and a tool message preserves its
@@ -303,7 +303,7 @@ pub(crate) fn message_to_chat_message(msg: &Message) -> ChatMessage {
     }
 }
 
-/// Convert a harness transcript back into openhuman history.
+/// Convert a harness transcript back into neppy history.
 pub(crate) fn messages_to_history(messages: &[Message]) -> Vec<ChatMessage> {
     messages.iter().map(message_to_chat_message).collect()
 }
@@ -457,7 +457,7 @@ pub(crate) fn messages_since_request(messages: &[Message], base_len: usize) -> &
     &messages[start..]
 }
 
-/// Convert a harness transcript into openhuman [`ChatMessage`]s for a provider
+/// Convert a harness transcript into neppy [`ChatMessage`]s for a provider
 /// that does **not** support native tool calls (text/prompt-guided mode).
 ///
 /// Consecutive `Tool` result messages are coalesced into a single
@@ -491,9 +491,9 @@ pub(crate) fn messages_to_text_mode_chat(messages: &[Message]) -> Vec<ChatMessag
     out
 }
 
-/// Convert a harness [`TaToolCall`] into an openhuman [`ToolCall`].
+/// Convert a harness [`TaToolCall`] into a neppy [`ToolCall`].
 ///
-/// The harness models arguments as parsed JSON; openhuman carries them as the
+/// The harness models arguments as parsed JSON; neppy carries them as the
 /// raw JSON string the provider emitted, so we re-serialize.
 pub(crate) fn ta_call_to_oh_call(call: &TaToolCall) -> crate::neppy::inference::provider::ToolCall {
     crate::neppy::inference::provider::ToolCall {

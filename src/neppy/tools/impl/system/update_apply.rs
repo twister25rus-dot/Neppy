@@ -41,7 +41,7 @@ impl UpdateApplyTool {
     /// path so this tool stays in lock-step with every other act-level
     /// tool's autonomy + rate-limit handling. Hand-rolling
     /// `can_act` + `record_action` here used to drift from the canonical
-    /// `[openhuman:policy]` log format and would silently miss any
+    /// `[neppy:policy]` log format and would silently miss any
     /// future gate the enforcer grows (token budget, supervised
     /// approval, etc.).
     fn require_write_access(&self) -> Option<ToolResult> {

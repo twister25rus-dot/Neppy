@@ -35,7 +35,7 @@ describe('MCP Setup — Secret Dialog', () => {
     // Dispatch the event that the socket service forwards from core
     await browser.execute(() => {
       window.dispatchEvent(
-        new CustomEvent('openhuman:mcp-setup-secret-requested', {
+        new CustomEvent('neppy:mcp-setup-secret-requested', {
           detail: {
             refId: 'secret://e2e_test_ref1',
             keyName: 'TEST_API_KEY',
@@ -98,7 +98,7 @@ describe('MCP Setup — Secret Dialog', () => {
     // Re-trigger a new dialog
     await browser.execute(() => {
       window.dispatchEvent(
-        new CustomEvent('openhuman:mcp-setup-secret-requested', {
+        new CustomEvent('neppy:mcp-setup-secret-requested', {
           detail: {
             refId: 'secret://e2e_test_ref2',
             keyName: 'SECOND_KEY',
@@ -146,13 +146,13 @@ describe('MCP Setup — Secret Dialog', () => {
     }>;
 
     // The submit_secret call should carry the ref and value
-    const submitCall = rpcLog.find(c => c.method === 'openhuman.mcp_setup_submit_secret');
+    const submitCall = rpcLog.find(c => c.method === 'neppy.mcp_setup_submit_secret');
     expect(submitCall).toBeDefined();
     expect(submitCall!.params.ref_id).toBe('secret://e2e_test_ref2');
     expect(submitCall!.params.value).toBe('e2e_super_secret_value');
 
     // No other RPC call should contain the raw secret
-    const otherCalls = rpcLog.filter(c => c.method !== 'openhuman.mcp_setup_submit_secret');
+    const otherCalls = rpcLog.filter(c => c.method !== 'neppy.mcp_setup_submit_secret');
     for (const call of otherCalls) {
       const serialized = JSON.stringify(call.params);
       expect(serialized).not.toContain('e2e_super_secret_value');

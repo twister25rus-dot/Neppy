@@ -508,11 +508,11 @@ impl Config {
     }
 
     /// Load config from the default user paths, bypassing the
-    /// `OPENHUMAN_WORKSPACE` environment variable.
+    /// `NEPPY_WORKSPACE` environment variable.
     ///
     /// This is used by the debug dump to load the real user config
     /// for auth token resolution when the dump script overrides
-    /// `OPENHUMAN_WORKSPACE` to a throwaway temp directory.
+    /// `NEPPY_WORKSPACE` to a throwaway temp directory.
     pub async fn load_from_default_paths() -> Result<Self> {
         let (default_neppy_dir, default_workspace_dir) = default_config_and_workspace_dirs()?;
         let (neppy_dir, workspace_dir, _source) =
@@ -551,7 +551,7 @@ impl Config {
     ///
     /// This is for long-lived runtime objects that hold a `Config`
     /// snapshot and need to observe updates written back to the same
-    /// file. It deliberately bypasses only `OPENHUMAN_WORKSPACE`
+    /// file. It deliberately bypasses only `NEPPY_WORKSPACE`
     /// resolution: the caller has already been scoped to a user/workspace,
     /// and following the process-global workspace env var again can cross
     /// streams with unrelated tests or runtime tasks that temporarily

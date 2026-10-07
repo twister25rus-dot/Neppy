@@ -7,7 +7,7 @@
 // Rust-side counterpart to
 //   backend-1/src/scripts/live-test-composio-trigger.ts
 //
-// Opens a socket.io client against the openhuman backend (same endpoint
+// Opens a socket.io client against the neppy backend (same endpoint
 // the Rust core's SocketManager hits), authenticates with a JWT, and
 // waits for `composio:trigger` events to land on the socket when the
 // backend's POST /webhooks/composio receives and HMAC-verifies an

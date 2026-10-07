@@ -38,8 +38,8 @@ interface Props {
 /**
  * Stepped memory-context window selector.
  *
- * - Reads the persisted preference from the core via `openhuman.get_config`.
- * - Writes it back via `openhuman.update_memory_settings` (the core
+ * - Reads the persisted preference from the core via `neppy.get_config`.
+ * - Writes it back via `neppy.update_memory_settings` (the core
  *   owns the actual char-budget mapping).
  * - Renders four options with plain-language hints so users understand
  *   the cost / continuity tradeoff.

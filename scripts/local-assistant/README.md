@@ -18,8 +18,8 @@ The running core is the controller (the desktop app, or `neppy-core serve`).
 The worker starts lazily on the first task and stops itself when idle.
 
 ```bash
-export OPENHUMAN_CORE_PORT=7788          # default
-export OPENHUMAN_CORE_TOKEN=...          # or scripts/print-core-token.sh finds the token file
+export NEPPY_CORE_PORT=7788          # default
+export NEPPY_CORE_TOKEN=...          # or scripts/print-core-token.sh finds the token file
 scripts/local-assistant/la.sh start-task /path/to/project "goal" --edits --test "cargo test -q" --max-steps 8
 scripts/local-assistant/la.sh status <task_id>
 scripts/local-assistant/la.sh pause          # checkpoint, then stop the worker
@@ -44,14 +44,14 @@ node scripts/local-assistant/soak.mjs --scratch <dir>
 ```
 
 `--scratch` must be a disk-backed directory outside the repo. It holds `home/`
-(HOME for the core), `ws/` (its `OPENHUMAN_WORKSPACE`), `neppy-soak/` (a
+(HOME for the core), `ws/` (its `NEPPY_WORKSPACE`), `neppy-soak/` (a
 `git clone --local` of `--source-repo`, reset between cycles) and
 `runs/run-<ts>/`.
 
 ### Isolation
 
 - A separate `neppy-core serve` on port 17790 with its own workspace, HOME,
-  file keyring (`OPENHUMAN_KEYRING_BACKEND=file`) and a locally generated test
+  file keyring (`NEPPY_KEYRING_BACKEND=file`) and a locally generated test
   session token. `~/.neppy` is never read or written.
 - MLX worker on port 18764 (not the app's 64744). `HF_HUB_OFFLINE=1`, so nothing
   downloads. Module downloads and the update check are disabled in the soak config.

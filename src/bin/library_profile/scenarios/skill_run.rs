@@ -15,7 +15,7 @@
 //!
 //! ## Concurrency knob (K parallel skill runs)
 //!
-//! `OPENHUMAN_PROFILE_SKILL_RUN_CONCURRENCY=K` (default 1) drives **K**
+//! `NEPPY_PROFILE_SKILL_RUN_CONCURRENCY=K` (default 1) drives **K**
 //! `code_executor` turns in parallel, each emitting its own `node_exec` call.
 //! The point of #5106: with the runtime pool **on**, K concurrent skill runs
 //! share a small bounded set of warm `node` workers, so the process tree grows
@@ -25,9 +25,9 @@
 //!
 //! Toggle for an A/B baseline:
 //!
-//! * `OPENHUMAN_PROFILE_SKILL_RUN_POOL=off` — disable the pool (legacy per-call
+//! * `NEPPY_PROFILE_SKILL_RUN_POOL=off` — disable the pool (legacy per-call
 //!   spawn); the tree then shows ~K resident `node` children at peak.
-//! * `OPENHUMAN_PROFILE_SKILL_RUN_POOL_WORKERS=W` — pool size (default 1, for a
+//! * `NEPPY_PROFILE_SKILL_RUN_POOL_WORKERS=W` — pool size (default 1, for a
 //!   tight, deterministic bound).
 //!
 //! ## No interpreter download
@@ -85,7 +85,7 @@ fn require_system_node() -> Result<String> {
 /// a positive integer ⇒ a hard error (silently coercing a bad `0`/garbage value
 /// would change the workload and bypass the `K > 1` pool gate).
 fn env_usize(key: &str, default: usize) -> Result<usize> {
-    match std::env::var(key) {
+    match neppy_core::neppy::util::env::var(key) {
         Err(_) => Ok(default),
         Ok(raw) => {
             let n: usize = raw
@@ -113,18 +113,18 @@ pub async fn run() -> Result<ProfileResult> {
     // Hard requirement: a system node must be present (no download).
     require_system_node()?;
 
-    let concurrency = env_usize("OPENHUMAN_PROFILE_SKILL_RUN_CONCURRENCY", 1)?;
-    let pool_enabled = std::env::var("OPENHUMAN_PROFILE_SKILL_RUN_POOL")
+    let concurrency = env_usize("NEPPY_PROFILE_SKILL_RUN_CONCURRENCY", 1)?;
+    let pool_enabled = neppy_core::neppy::util::env::var("NEPPY_PROFILE_SKILL_RUN_POOL")
         .map(|v| !v.trim().eq_ignore_ascii_case("off"))
         .unwrap_or(true);
-    let pool_workers = env_usize("OPENHUMAN_PROFILE_SKILL_RUN_POOL_WORKERS", 1)?;
+    let pool_workers = env_usize("NEPPY_PROFILE_SKILL_RUN_POOL_WORKERS", 1)?;
 
     // `node_exec` is a Write-class acting tool. Full autonomy keeps the gate
     // from parking the turn on approval; the gate is also opted out explicitly.
     let mut fixture = fixture()?;
     fixture.config.autonomy.level = AutonomyLevel::Full;
     apply_pool_config(&mut fixture.config, pool_enabled, pool_workers);
-    let _approval_env = EnvGuard::set("OPENHUMAN_APPROVAL_GATE", "0");
+    let _approval_env = EnvGuard::set("NEPPY_APPROVAL_GATE", "0");
 
     neppy_core::core::bus::init().await.expect("bus init");
     neppy_core::neppy::agent::bus::register_agent_handlers();

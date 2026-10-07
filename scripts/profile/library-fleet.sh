@@ -10,13 +10,13 @@
 #
 # Options:
 #   --agents "50,100,500"  Comma-separated agent-count sweep (default: "50,100,500")
-#   --turns N              OPENHUMAN_PROFILE_TURNS per agent (default: 3)
-#   --latency-ms N         OPENHUMAN_PROFILE_MOCK_LATENCY_MS (default: 200)
-#   --workers N            OPENHUMAN_PROFILE_WORKER_THREADS, simulates the
+#   --turns N              NEPPY_PROFILE_TURNS per agent (default: 3)
+#   --latency-ms N         NEPPY_PROFILE_MOCK_LATENCY_MS (default: 200)
+#   --workers N            NEPPY_PROFILE_WORKER_THREADS, simulates the
 #                          2 vCPU box (default: 2)
 #   --repeat N             Fresh-process repeats per agent count (default: 3)
-#   --target N             OPENHUMAN_PROFILE_TARGET_AGENTS (default: 1000)
-#   --budget-mib N         OPENHUMAN_PROFILE_RAM_BUDGET_MIB (default: 2048)
+#   --target N             NEPPY_PROFILE_TARGET_AGENTS (default: 1000)
+#   --budget-mib N         NEPPY_PROFILE_RAM_BUDGET_MIB (default: 2048)
 #   --skip-build           Reuse the existing target/release binaries
 #   --slim                 Build with --no-default-features (slim library recipe)
 #   --out DIR              Output directory (default: target/profile/rust-library/fleet-<timestamp>)
@@ -130,12 +130,12 @@ run_sweep_point() {
         local run_file="$point_dir/run-$i.json"
 
         env \
-            "OPENHUMAN_PROFILE_AGENTS=$n" \
-            "OPENHUMAN_PROFILE_TURNS=$TURNS" \
-            "OPENHUMAN_PROFILE_MOCK_LATENCY_MS=$LATENCY_MS" \
-            "OPENHUMAN_PROFILE_WORKER_THREADS=$WORKERS" \
-            "OPENHUMAN_PROFILE_TARGET_AGENTS=$TARGET" \
-            "OPENHUMAN_PROFILE_RAM_BUDGET_MIB=$BUDGET_MIB" \
+            "NEPPY_PROFILE_AGENTS=$n" \
+            "NEPPY_PROFILE_TURNS=$TURNS" \
+            "NEPPY_PROFILE_MOCK_LATENCY_MS=$LATENCY_MS" \
+            "NEPPY_PROFILE_WORKER_THREADS=$WORKERS" \
+            "NEPPY_PROFILE_TARGET_AGENTS=$TARGET" \
+            "NEPPY_PROFILE_RAM_BUDGET_MIB=$BUDGET_MIB" \
             "$BIN" fleet >"$run_file"
 
         if ! jq empty "$run_file" >/dev/null 2>&1; then

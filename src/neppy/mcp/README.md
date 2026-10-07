@@ -1,6 +1,6 @@
 # mcp — MCP client/server family
 
-One directory, one gate. Members: `server/` (the `openhuman mcp` stdio/HTTP
+One directory, one gate. Members: `server/` (the `neppy-core mcp` stdio/HTTP
 server), `registry/` (dynamic, SQLite-backed Smithery installs), `audit/` (the
 write-audit log), `config_servers/` (the static, TOML-declared server set +
 stdio transport), and `http_client/` (the HTTP transport primitive). Each of

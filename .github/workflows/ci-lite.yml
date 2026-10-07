@@ -319,19 +319,19 @@ jobs:
 
       - name: Type check TypeScript files
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm --filter openhuman-app compile
+        run: pnpm --filter neppy-app compile
         env:
           NODE_ENV: test
 
       - name: Check Prettier formatting
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm --filter openhuman-app format:check
+        run: pnpm --filter neppy-app format:check
         env:
           NODE_ENV: test
 
       - name: Run ESLint
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm --filter openhuman-app lint
+        run: pnpm --filter neppy-app lint
         env:
           NODE_ENV: test
 
@@ -427,7 +427,7 @@ jobs:
         # scripts/ci/product-features.txt, asserted equal to the shell's
         # forwarding list by check-feature-forwarding.mjs.
         run: |
-          bash scripts/ci-cancel-aware.sh cargo clippy -p openhuman \
+          bash scripts/ci-cancel-aware.sh cargo clippy -p neppy \
             --features "$(bash scripts/ci/product-features.sh)" -- -D warnings
 
       - name: Run clippy (core crate, contributor default set)
@@ -437,7 +437,7 @@ jobs:
         # a domain is compiled out, say — is invisible to the product lane above
         # and would land red on every contributor's machine while CI stayed
         # green. Cheap: this graph is ~356 packages against the product's ~567.
-        run: bash scripts/ci-cancel-aware.sh cargo clippy -p openhuman -- -D warnings
+        run: bash scripts/ci-cancel-aware.sh cargo clippy -p neppy -- -D warnings
 
       - name: Cache CEF binary distribution
         if: needs.changes.outputs['rust-tauri'] == 'true'

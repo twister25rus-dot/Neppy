@@ -1,4 +1,4 @@
-//! `openhuman.connectivity_diag` RPC.
+//! `neppy.connectivity_diag` RPC.
 //!
 //! Returns a snapshot of the local sidecar's process id + RPC port + backend
 //! Socket.IO state, so the frontend's coreHealthMonitor can prove "the local
@@ -22,7 +22,7 @@ const DEFAULT_CORE_PORT: u16 = 7788;
 const DEFAULT_FALLBACK_START: u16 = 7789;
 const DEFAULT_FALLBACK_END: u16 = 7798;
 
-/// Lightweight diagnostic payload returned by `openhuman.connectivity_diag`.
+/// Lightweight diagnostic payload returned by `neppy.connectivity_diag`.
 ///
 /// Field shape is intentionally flat so a curl/jq dump is human-readable,
 /// and so the frontend can map straight into typed Redux state.
@@ -399,7 +399,7 @@ async fn identify_listener(host: &str, port: u16) -> ListenerFingerprint {
     } else {
         let preview: String = body.chars().take(80).collect();
         ListenerFingerprint::Other(format!(
-            "probe body did not identify as openhuman ({preview:?})"
+            "probe body did not identify as neppy ({preview:?})"
         ))
     }
 }
@@ -421,11 +421,11 @@ fn is_neppy_root_body(body: &str) -> bool {
 /// Mirrors the resolution order in `core_server::transport::http_listener`,
 /// but lighter — we only need a number for a TCP probe, not a bound listener.
 fn resolve_listen_port() -> u16 {
-    if let Ok(raw_url) = std::env::var("OPENHUMAN_CORE_RPC_URL") {
+    if let Ok(raw_url) = crate::neppy::util::env::var("NEPPY_CORE_RPC_URL") {
         if let Ok(url) = url::Url::parse(raw_url.trim()) {
             if let Some(port) = url.port() {
                 debug!(
-                    "[connectivity][rpc] resolve_listen_port: using OPENHUMAN_CORE_RPC_URL port={}",
+                    "[connectivity][rpc] resolve_listen_port: using NEPPY_CORE_RPC_URL port={}",
                     port
                 );
                 return port;
@@ -433,7 +433,7 @@ fn resolve_listen_port() -> u16 {
         }
     }
 
-    if let Ok(raw) = std::env::var("OPENHUMAN_CORE_PORT") {
+    if let Ok(raw) = crate::neppy::util::env::var("NEPPY_CORE_PORT") {
         match raw.trim().parse::<u16>() {
             Ok(parsed) => {
                 debug!(
@@ -447,7 +447,7 @@ fn resolve_listen_port() -> u16 {
                 // than silently using the default. (addresses @coderabbitai
                 // on rpc.rs:56)
                 warn!(
-                    "[connectivity][rpc] resolve_listen_port: invalid OPENHUMAN_CORE_PORT='{}': {}",
+                    "[connectivity][rpc] resolve_listen_port: invalid NEPPY_CORE_PORT='{}': {}",
                     raw, err
                 );
             }
@@ -610,7 +610,7 @@ mod tests {
         )
         .await;
 
-        let err = result.expect_err("openhuman listener should trigger takeover");
+        let err = result.expect_err("neppy listener should trigger takeover");
         assert!(
             matches!(err, PickListenPortError::WouldTakeOver { preferred: p, .. } if p == preferred),
             "expected WouldTakeOver for preferred port, got: {err:?}"
@@ -853,27 +853,26 @@ mod tests {
         // Use a UUID-ish guard so we don't clobber an env the test runner
         // genuinely needs. SAFETY: env mutation is process-global; we
         // restore at the end. See SAFETY note in `cargo test --doc`.
-        let prev_port = std::env::var("OPENHUMAN_CORE_PORT").ok();
-        // resolve_listen_port() also reads OPENHUMAN_CORE_RPC_URL ahead of
-        // OPENHUMAN_CORE_PORT, so an inherited URL from the runner would
+        let prev_port = crate::neppy::util::env::var("NEPPY_CORE_PORT").ok();
+        // resolve_listen_port() also reads NEPPY_CORE_RPC_URL ahead of
+        // NEPPY_CORE_PORT, so an inherited URL from the runner would
         // make this assertion nondeterministic. Save + clear both.
-        let prev_url = std::env::var("OPENHUMAN_CORE_RPC_URL").ok();
+        let prev_url = crate::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok();
         // SAFETY: standard Rust test pattern — env access is unsafe in 2024
         // edition because it isn't thread-safe. Tests are single-threaded
         // for this scope and we restore in the same body.
-        unsafe {
-            std::env::remove_var("OPENHUMAN_CORE_PORT");
-            std::env::remove_var("OPENHUMAN_CORE_RPC_URL");
-        }
+        crate::neppy::util::env::remove_var("NEPPY_CORE_PORT");
+        crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL");
+
         assert_eq!(resolve_listen_port(), DEFAULT_CORE_PORT);
         if let Some(value) = prev_port {
             unsafe {
-                std::env::set_var("OPENHUMAN_CORE_PORT", value);
+                std::env::set_var("NEPPY_CORE_PORT", value);
             }
         }
         if let Some(value) = prev_url {
             unsafe {
-                std::env::set_var("OPENHUMAN_CORE_RPC_URL", value);
+                std::env::set_var("NEPPY_CORE_RPC_URL", value);
             }
         }
     }
@@ -881,62 +880,62 @@ mod tests {
     #[test]
     fn resolve_listen_port_honours_env_override() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
-        let prev_port = std::env::var("OPENHUMAN_CORE_PORT").ok();
-        let prev_url = std::env::var("OPENHUMAN_CORE_RPC_URL").ok();
+        let prev_port = crate::neppy::util::env::var("NEPPY_CORE_PORT").ok();
+        let prev_url = crate::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok();
         unsafe {
-            // Clear OPENHUMAN_CORE_RPC_URL so OPENHUMAN_CORE_PORT is the
+            // Clear NEPPY_CORE_RPC_URL so NEPPY_CORE_PORT is the
             // resolved value (URL has higher priority in resolve_listen_port).
-            std::env::remove_var("OPENHUMAN_CORE_RPC_URL");
-            std::env::set_var("OPENHUMAN_CORE_PORT", "65000");
+            crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL");
+            std::env::set_var("NEPPY_CORE_PORT", "65000");
         }
         assert_eq!(resolve_listen_port(), 65000);
         match prev_port {
-            Some(value) => unsafe { std::env::set_var("OPENHUMAN_CORE_PORT", value) },
-            None => unsafe { std::env::remove_var("OPENHUMAN_CORE_PORT") },
+            Some(value) => unsafe { std::env::set_var("NEPPY_CORE_PORT", value) },
+            None => crate::neppy::util::env::remove_var("NEPPY_CORE_PORT"),
         }
         match prev_url {
-            Some(value) => unsafe { std::env::set_var("OPENHUMAN_CORE_RPC_URL", value) },
-            None => unsafe { std::env::remove_var("OPENHUMAN_CORE_RPC_URL") },
+            Some(value) => unsafe { std::env::set_var("NEPPY_CORE_RPC_URL", value) },
+            None => crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL"),
         }
     }
 
     #[test]
     fn resolve_listen_port_falls_back_on_invalid_env() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
-        let prev_port = std::env::var("OPENHUMAN_CORE_PORT").ok();
-        let prev_url = std::env::var("OPENHUMAN_CORE_RPC_URL").ok();
+        let prev_port = crate::neppy::util::env::var("NEPPY_CORE_PORT").ok();
+        let prev_url = crate::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok();
         unsafe {
-            std::env::remove_var("OPENHUMAN_CORE_RPC_URL");
-            std::env::set_var("OPENHUMAN_CORE_PORT", "not-a-number");
+            crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL");
+            std::env::set_var("NEPPY_CORE_PORT", "not-a-number");
         }
         assert_eq!(resolve_listen_port(), DEFAULT_CORE_PORT);
         match prev_port {
-            Some(value) => unsafe { std::env::set_var("OPENHUMAN_CORE_PORT", value) },
-            None => unsafe { std::env::remove_var("OPENHUMAN_CORE_PORT") },
+            Some(value) => unsafe { std::env::set_var("NEPPY_CORE_PORT", value) },
+            None => crate::neppy::util::env::remove_var("NEPPY_CORE_PORT"),
         }
         match prev_url {
-            Some(value) => unsafe { std::env::set_var("OPENHUMAN_CORE_RPC_URL", value) },
-            None => unsafe { std::env::remove_var("OPENHUMAN_CORE_RPC_URL") },
+            Some(value) => unsafe { std::env::set_var("NEPPY_CORE_RPC_URL", value) },
+            None => crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL"),
         }
     }
 
     #[test]
     fn resolve_listen_port_prefers_neppy_core_rpc_url() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
-        let prev_rpc = std::env::var("OPENHUMAN_CORE_RPC_URL").ok();
-        let prev_port = std::env::var("OPENHUMAN_CORE_PORT").ok();
+        let prev_rpc = crate::neppy::util::env::var("NEPPY_CORE_RPC_URL").ok();
+        let prev_port = crate::neppy::util::env::var("NEPPY_CORE_PORT").ok();
         unsafe {
-            std::env::set_var("OPENHUMAN_CORE_RPC_URL", "http://127.0.0.1:7794/rpc");
-            std::env::set_var("OPENHUMAN_CORE_PORT", "7788");
+            std::env::set_var("NEPPY_CORE_RPC_URL", "http://127.0.0.1:7794/rpc");
+            std::env::set_var("NEPPY_CORE_PORT", "7788");
         }
         assert_eq!(resolve_listen_port(), 7794);
         match prev_rpc {
-            Some(value) => unsafe { std::env::set_var("OPENHUMAN_CORE_RPC_URL", value) },
-            None => unsafe { std::env::remove_var("OPENHUMAN_CORE_RPC_URL") },
+            Some(value) => unsafe { std::env::set_var("NEPPY_CORE_RPC_URL", value) },
+            None => crate::neppy::util::env::remove_var("NEPPY_CORE_RPC_URL"),
         }
         match prev_port {
-            Some(value) => unsafe { std::env::set_var("OPENHUMAN_CORE_PORT", value) },
-            None => unsafe { std::env::remove_var("OPENHUMAN_CORE_PORT") },
+            Some(value) => unsafe { std::env::set_var("NEPPY_CORE_PORT", value) },
+            None => crate::neppy::util::env::remove_var("NEPPY_CORE_PORT"),
         }
     }
 

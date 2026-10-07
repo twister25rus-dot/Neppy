@@ -1,10 +1,10 @@
 //! Controller schemas for Phase 4 retrieval tools (#710).
 //!
 //! Registered JSON-RPC methods:
-//! - `openhuman.memory_tree_query_source`
-//! - `openhuman.memory_tree_search_entities`
-//! - `openhuman.memory_tree_drill_down`
-//! - `openhuman.memory_tree_fetch_leaves`
+//! - `neppy.memory_tree_query_source`
+//! - `neppy.memory_tree_search_entities`
+//! - `neppy.memory_tree_drill_down`
+//! - `neppy.memory_tree_fetch_leaves`
 //!
 //! Handlers delegate to [`super::rpc`]. Namespaces reuse `memory_tree` to
 //! keep the tool surface tightly grouped with the Phase 1-3 ingest

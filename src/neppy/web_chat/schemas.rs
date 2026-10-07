@@ -72,7 +72,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 ),
                 optional_string(
                     "mode",
-                    "Operating mode to apply to the thread before this turn: 'chat' or 'orchestration'. Omit to keep the thread's persisted mode (see openhuman.threads_set_mode).",
+                    "Operating mode to apply to the thread before this turn: 'chat', 'orchestration' or 'debug'. Omit to keep the thread's persisted mode (see neppy.threads_set_mode).",
                 ),
                 optional_string(
                     "regenerate_of",

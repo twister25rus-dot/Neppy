@@ -43,8 +43,8 @@ describe('runBootCheck — local mode', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: false, running: false },
-        'openhuman.update_version': { result: { version: appVersion } },
+        'neppy.service_status': { installed: false, running: false },
+        'neppy.update_version': { result: { version: appVersion } },
       }),
     });
 
@@ -58,8 +58,8 @@ describe('runBootCheck — local mode', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: true, running: false },
-        'openhuman.update_version': { result: { version: appVersion } },
+        'neppy.service_status': { installed: true, running: false },
+        'neppy.update_version': { result: { version: appVersion } },
       }),
     });
 
@@ -71,8 +71,8 @@ describe('runBootCheck — local mode', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: false, running: true },
-        'openhuman.update_version': { result: { version: 'x' } },
+        'neppy.service_status': { installed: false, running: true },
+        'neppy.update_version': { result: { version: 'x' } },
       }),
     });
 
@@ -84,8 +84,8 @@ describe('runBootCheck — local mode', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: false, running: false },
-        'openhuman.update_version': { result: { version: '0.0.0-different' } },
+        'neppy.service_status': { installed: false, running: false },
+        'neppy.update_version': { result: { version: '0.0.0-different' } },
       }),
     });
 
@@ -97,8 +97,8 @@ describe('runBootCheck — local mode', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: false, running: false },
-        'openhuman.update_version': new Error('JSON-RPC error -32601 Method not found'),
+        'neppy.service_status': { installed: false, running: false },
+        'neppy.update_version': new Error('JSON-RPC error -32601 Method not found'),
       }),
     });
 
@@ -110,8 +110,8 @@ describe('runBootCheck — local mode', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: false, running: false },
-        'openhuman.update_version': new Error('method not found'),
+        'neppy.service_status': { installed: false, running: false },
+        'neppy.update_version': new Error('method not found'),
       }),
     });
 
@@ -160,7 +160,7 @@ describe('runBootCheck — cloud mode', () => {
     const appVersion = (await import('../../utils/config')).APP_VERSION;
 
     const transport = makeTransport({
-      callRpc: rpcResponder({ 'openhuman.update_version': { result: { version: appVersion } } }),
+      callRpc: rpcResponder({ 'neppy.update_version': { result: { version: appVersion } } }),
     });
 
     const result = await runBootCheck(
@@ -172,7 +172,7 @@ describe('runBootCheck — cloud mode', () => {
 
   it('returns outdatedCloud when version differs', async () => {
     const transport = makeTransport({
-      callRpc: rpcResponder({ 'openhuman.update_version': { result: { version: '0.0.0-old' } } }),
+      callRpc: rpcResponder({ 'neppy.update_version': { result: { version: '0.0.0-old' } } }),
     });
 
     const result = await runBootCheck(
@@ -184,7 +184,7 @@ describe('runBootCheck — cloud mode', () => {
 
   it('returns noVersionMethod when cloud core returns -32601', async () => {
     const transport = makeTransport({
-      callRpc: rpcResponder({ 'openhuman.update_version': new Error('-32601 Method not found') }),
+      callRpc: rpcResponder({ 'neppy.update_version': new Error('-32601 Method not found') }),
     });
 
     const result = await runBootCheck(
@@ -231,8 +231,8 @@ describe('runBootCheck — port conflict auto-recovery', () => {
     const transport: BootCheckTransport = {
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: false, running: false },
-        'openhuman.update_version': { result: { version: appVersion } },
+        'neppy.service_status': { installed: false, running: false },
+        'neppy.update_version': { result: { version: appVersion } },
       }),
       invokeCmd: vi.fn(async (cmd: string) => {
         if (cmd === 'start_core_process') {
@@ -304,8 +304,8 @@ describe('runBootCheck — port conflict auto-recovery', () => {
           if (pingCallCount <= 12) throw new Error('timeout');
           return {};
         }
-        if (method === 'openhuman.service_status') return { installed: false, running: false };
-        if (method === 'openhuman.update_version') return { result: { version: appVersion } };
+        if (method === 'neppy.service_status') return { installed: false, running: false };
+        if (method === 'neppy.update_version') return { result: { version: appVersion } };
         throw new Error(`Unexpected RPC: ${method}`);
       }) as BootCheckTransport['callRpc'],
     };
@@ -332,8 +332,8 @@ describe('runBootCheck — error and edge branches', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': new Error('rpc transport blew up'),
-        'openhuman.update_version': { result: { version: appVersion } },
+        'neppy.service_status': new Error('rpc transport blew up'),
+        'neppy.update_version': { result: { version: appVersion } },
       }),
     });
 
@@ -345,8 +345,8 @@ describe('runBootCheck — error and edge branches', () => {
     const transport = makeTransport({
       callRpc: rpcResponder({
         'core.ping': {},
-        'openhuman.service_status': { installed: false, running: false },
-        'openhuman.update_version': { result: { version: '' } },
+        'neppy.service_status': { installed: false, running: false },
+        'neppy.update_version': { result: { version: '' } },
       }),
     });
 
@@ -376,10 +376,10 @@ describe('runBootCheck — error and edge branches', () => {
           if (pingCalls === 1) return {};
           throw new Error('subsequent failure');
         }
-        if (method === 'openhuman.service_status') {
+        if (method === 'neppy.service_status') {
           return { installed: false, running: false };
         }
-        if (method === 'openhuman.update_version') {
+        if (method === 'neppy.update_version') {
           // Generic transport error (no -32601), should map to 'unreachable'.
           throw new Error('connection reset');
         }

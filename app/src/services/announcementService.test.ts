@@ -71,7 +71,7 @@ describe('fetchLatestAnnouncement', () => {
     vi.mocked(callCoreRpc).mockResolvedValueOnce({ id: 'a1', title: 't', body: 'b' });
     const result = await fetchLatestAnnouncement();
     expect(callCoreRpc).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'openhuman.announcements_get_latest' })
+      expect.objectContaining({ method: 'neppy.announcements_get_latest' })
     );
     expect(result?.id).toBe('a1');
   });

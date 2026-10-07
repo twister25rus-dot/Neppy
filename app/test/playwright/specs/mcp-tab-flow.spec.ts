@@ -136,7 +136,7 @@ async function setupMockRpc(page: Page, state: MockState) {
     const params = body.params ?? {};
 
     switch (method) {
-      case 'openhuman.update_version':
+      case 'neppy.update_version':
         return route.fulfill(
           rpcOk(id, {
             result: {
@@ -147,7 +147,7 @@ async function setupMockRpc(page: Page, state: MockState) {
           })
         );
 
-      case 'openhuman.app_state_snapshot':
+      case 'neppy.app_state_snapshot':
         return route.fulfill(
           rpcOk(id, {
             result: {
@@ -170,7 +170,7 @@ async function setupMockRpc(page: Page, state: MockState) {
         );
 
       // ---- MCP registry ----
-      case 'openhuman.mcp_clients_registry_search': {
+      case 'neppy.mcp_clients_registry_search': {
         const query = (params.query ?? '').toLowerCase();
         const installedNames = new Set(state.installed.map(s => s.qualified_name));
         const queryFiltered = query
@@ -185,20 +185,20 @@ async function setupMockRpc(page: Page, state: MockState) {
         return route.fulfill(rpcOk(id, { servers: filtered, page: 1, total_pages: 1 }));
       }
 
-      case 'openhuman.mcp_clients_registry_get':
+      case 'neppy.mcp_clients_registry_get':
         if (params.qualified_name === GITHUB_DETAIL.qualified_name) {
           return route.fulfill(rpcOk(id, { server: GITHUB_DETAIL }));
         }
         return route.fulfill(rpcError(id, `server not found: ${params.qualified_name}`));
 
       // ---- Installed servers (mutable) ----
-      case 'openhuman.mcp_clients_installed_list':
+      case 'neppy.mcp_clients_installed_list':
         return route.fulfill(rpcOk(id, { installed: state.installed }));
 
-      case 'openhuman.mcp_clients_status':
+      case 'neppy.mcp_clients_status':
         return route.fulfill(rpcOk(id, { servers: state.statuses }));
 
-      case 'openhuman.mcp_clients_install':
+      case 'neppy.mcp_clients_install':
         if (!params.qualified_name) {
           return route.fulfill(rpcError(id, "missing required param 'qualified_name'"));
         }
@@ -207,10 +207,10 @@ async function setupMockRpc(page: Page, state: MockState) {
 
       // Auth probe for the upfront connect modal — these test servers need no
       // credentials, so report `none` and the modal shows a single Connect button.
-      case 'openhuman.mcp_clients_detect_auth':
+      case 'neppy.mcp_clients_detect_auth':
         return route.fulfill(rpcOk(id, { kind: 'none' }));
 
-      case 'openhuman.mcp_clients_connect': {
+      case 'neppy.mcp_clients_connect': {
         const sid = params.server_id;
         const inst = state.installed.find(s => s.server_id === sid);
         // Reject unknown server ids so the test can't pass while wired to the
@@ -235,7 +235,7 @@ async function setupMockRpc(page: Page, state: MockState) {
 
       // Tool execution — what the playground's "Run tool" calls. Unknown tools
       // come back as a tool error so the spec can't pass on a wrong tool name.
-      case 'openhuman.mcp_clients_tool_call': {
+      case 'neppy.mcp_clients_tool_call': {
         const known = MOCK_TOOLS.some(t => t.name === params.tool_name);
         if (!known) {
           return route.fulfill(
@@ -247,16 +247,16 @@ async function setupMockRpc(page: Page, state: MockState) {
         );
       }
 
-      case 'openhuman.mcp_clients_disconnect':
+      case 'neppy.mcp_clients_disconnect':
         state.statuses = state.statuses.filter(s => s.server_id !== params.server_id);
         return route.fulfill(rpcOk(id, { status: 'disconnected' }));
 
-      case 'openhuman.mcp_clients_uninstall':
+      case 'neppy.mcp_clients_uninstall':
         state.installed = state.installed.filter(s => s.server_id !== params.server_id);
         state.statuses = state.statuses.filter(s => s.server_id !== params.server_id);
         return route.fulfill(rpcOk(id, { success: true }));
 
-      case 'openhuman.mcp_clients_tools':
+      case 'neppy.mcp_clients_tools':
         return route.fulfill(
           rpcOk(id, {
             tools: [
@@ -598,7 +598,7 @@ test.describe('MCP Tab — Empty & Edge States', () => {
     await page.route('**/rpc', async (route, request) => {
       const body = JSON.parse(request.postData() || '{}');
       if (
-        body.method === 'openhuman.mcp_clients_registry_search' &&
+        body.method === 'neppy.mcp_clients_registry_search' &&
         body.params?.query === 'xyznonexistent999'
       ) {
         return route.fulfill(rpcOk(body.id, { servers: [], page: 1, total_pages: 1 }));

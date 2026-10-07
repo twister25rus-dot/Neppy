@@ -14,7 +14,7 @@ use super::types::{HookEvent, HookInput, HookPayload};
 #[derive(Debug, Clone, Default)]
 pub struct HostContext {
     /// Filesystem roots the agent may act in. First entry is the primary root
-    /// and becomes `OPENHUMAN_PROJECT_DIR` for hook processes.
+    /// and becomes `NEPPY_PROJECT_DIR` for hook processes.
     pub workspace_roots: Vec<PathBuf>,
     /// Core version string.
     pub version: String,

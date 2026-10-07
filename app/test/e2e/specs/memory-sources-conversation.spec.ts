@@ -39,12 +39,12 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('adds a conversation source via RPC', async () => {
-    const resp = await callNeppyRpc<{ source: MemorySource }>('openhuman.memory_sources_add', {
+    const resp = await callNeppyRpc<{ source: MemorySource }>('neppy.memory_sources_add', {
       kind: 'conversation',
       label: 'Agent Conversations',
       enabled: true,
     });
-    expectRpcOk('openhuman.memory_sources_add', resp);
+    expectRpcOk('neppy.memory_sources_add', resp);
     const data = resp.result!;
     expect(data.source).toBeDefined();
     expect(data.source.kind).toBe('conversation');
@@ -56,11 +56,8 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('lists sources including the conversation source', async () => {
-    const resp = await callNeppyRpc<{ sources: MemorySource[] }>(
-      'openhuman.memory_sources_list',
-      {}
-    );
-    expectRpcOk('openhuman.memory_sources_list', resp);
+    const resp = await callNeppyRpc<{ sources: MemorySource[] }>('neppy.memory_sources_list', {});
+    expectRpcOk('neppy.memory_sources_list', resp);
     const sources = resp.result!.sources ?? [];
     const convSources = sources.filter(s => s.kind === 'conversation');
     expect(convSources.length).toBeGreaterThanOrEqual(1);
@@ -68,10 +65,10 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('gets the source by id', async () => {
-    const resp = await callNeppyRpc<{ source: MemorySource }>('openhuman.memory_sources_get', {
+    const resp = await callNeppyRpc<{ source: MemorySource }>('neppy.memory_sources_get', {
       id: sourceId,
     });
-    expectRpcOk('openhuman.memory_sources_get', resp);
+    expectRpcOk('neppy.memory_sources_get', resp);
     const data = resp.result!;
     expect(data.source).toBeDefined();
     expect(data.source.kind).toBe('conversation');
@@ -79,30 +76,27 @@ describe('Memory sources — conversation kind', () => {
   });
 
   it('updates the source to disabled', async () => {
-    const resp = await callNeppyRpc<{ source: MemorySource }>('openhuman.memory_sources_update', {
+    const resp = await callNeppyRpc<{ source: MemorySource }>('neppy.memory_sources_update', {
       id: sourceId,
       enabled: false,
     });
-    expectRpcOk('openhuman.memory_sources_update', resp);
+    expectRpcOk('neppy.memory_sources_update', resp);
     const data = resp.result!;
     expect(data.source.enabled).toBe(false);
     expect(data.source.kind).toBe('conversation');
   });
 
   it('removes the conversation source', async () => {
-    const resp = await callNeppyRpc<{ removed: boolean }>('openhuman.memory_sources_remove', {
+    const resp = await callNeppyRpc<{ removed: boolean }>('neppy.memory_sources_remove', {
       id: sourceId,
     });
-    expectRpcOk('openhuman.memory_sources_remove', resp);
+    expectRpcOk('neppy.memory_sources_remove', resp);
     expect(resp.result!.removed).toBe(true);
   });
 
   it('list confirms source is removed', async () => {
-    const resp = await callNeppyRpc<{ sources: MemorySource[] }>(
-      'openhuman.memory_sources_list',
-      {}
-    );
-    expectRpcOk('openhuman.memory_sources_list', resp);
+    const resp = await callNeppyRpc<{ sources: MemorySource[] }>('neppy.memory_sources_list', {});
+    expectRpcOk('neppy.memory_sources_list', resp);
     const sources = resp.result!.sources ?? [];
     const convSources = sources.filter(s => s.kind === 'conversation');
     expect(convSources.length).toBe(0);

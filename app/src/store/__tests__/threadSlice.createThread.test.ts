@@ -4,7 +4,7 @@
  *
  * The original Sentry report (TAURI-REACT-10) read `UnhandledRejection:
  * Non-Error promise rejection captured with value: Core RPC
- * openhuman.threads_create_new timed out after 30000ms`. Two things made that
+ * neppy.threads_create_new timed out after 30000ms`. Two things made that
  * possible: `.unwrap()` throws the `rejectWithValue` payload (a bare string with
  * no stack, hence "Non-Error"), and nothing in the store observed
  * `createNewThread.rejected` — so handling was per-call-site, and a site that
@@ -39,7 +39,7 @@ vi.mock('../../services/api/threadApi', () => ({
 
 const mockedThreadApi = vi.mocked(threadApi);
 
-const TIMEOUT_MESSAGE = 'Core RPC openhuman.threads_create_new timed out after 30000ms';
+const TIMEOUT_MESSAGE = 'Core RPC neppy.threads_create_new timed out after 30000ms';
 
 function createStore() {
   return configureStore({ reducer: { thread: threadReducer } });
@@ -129,14 +129,14 @@ describe('createNewThread failure handling (#5156)', () => {
     // string payload rather than an `Error` — the shape that used to fall through
     // the `error instanceof Error` check and be reported as a generic message.
     mockedThreadApi.getThreads.mockRejectedValueOnce(
-      new CoreRpcError('Core RPC openhuman.threads_list timed out after 30000ms', 'timeout')
+      new CoreRpcError('Core RPC neppy.threads_list timed out after 30000ms', 'timeout')
     );
 
     const result = await store.dispatch(createNewThread(undefined));
 
     expect(result.type).toBe('thread/createNewThread/rejected');
     expect(store.getState().thread.createThreadError).toBe(
-      'Core RPC openhuman.threads_list timed out after 30000ms'
+      'Core RPC neppy.threads_list timed out after 30000ms'
     );
   });
 

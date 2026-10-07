@@ -1,6 +1,6 @@
 # billing
 
-Thin RPC adapter domain over the hosted backend's payment API. It exposes plan lookup, Stripe/Coinbase purchase and top-up flows, credit balance/transactions, auto-recharge + saved-card management, and coupon redemption through the standard controller registry (`openhuman.billing_*`). It holds **no payment logic or state of its own** — every operation forwards an authenticated HTTPS request to the backend (`/payments/*`, `/coupons/*`) and surfaces the JSON response verbatim. Authorization, plan ownership, tenant isolation, and payment policy are enforced backend-side.
+Thin RPC adapter domain over the hosted backend's payment API. It exposes plan lookup, Stripe/Coinbase purchase and top-up flows, credit balance/transactions, auto-recharge + saved-card management, and coupon redemption through the standard controller registry (`neppy.billing_*`). It holds **no payment logic or state of its own** — every operation forwards an authenticated HTTPS request to the backend (`/payments/*`, `/coupons/*`) and surfaces the JSON response verbatim. Authorization, plan ownership, tenant isolation, and payment policy are enforced backend-side.
 
 ## Responsibilities
 
@@ -30,7 +30,7 @@ From `mod.rs`:
 
 ## RPC / controllers
 
-Namespace `billing` (15 methods, exposed as `openhuman.billing_*`):
+Namespace `billing` (15 methods, exposed as `neppy.billing_*`):
 
 | Method | Backend endpoint |
 | --- | --- |

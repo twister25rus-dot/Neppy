@@ -213,7 +213,7 @@ impl BrowserTool {
                     Ok(ResolvedBackend::Playwright)
                 } else {
                     anyhow::bail!(
-                        "browser.backend='playwright' but Playwright is unavailable. Ensure app/node_modules is installed, run `pnpm --filter neppy-app exec playwright install chromium-headless-shell`, or set OPENHUMAN_PLAYWRIGHT_CWD."
+                        "browser.backend='playwright' but Playwright is unavailable. Ensure app/node_modules is installed, run `pnpm --filter neppy-app exec playwright install chromium-headless-shell`, or set NEPPY_PLAYWRIGHT_CWD."
                     )
                 }
             }
@@ -300,7 +300,7 @@ impl BrowserTool {
         if self.allowed_domains.is_empty() && !allow_all_browser_domains() {
             anyhow::bail!(
                 "Browser tool enabled but no allowed_domains configured. \
-                Add [browser].allowed_domains in config.toml or set OPENHUMAN_BROWSER_ALLOW_ALL=1"
+                Add [browser].allowed_domains in config.toml or set NEPPY_BROWSER_ALLOW_ALL=1"
             );
         }
 

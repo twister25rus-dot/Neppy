@@ -1,5 +1,5 @@
 //! Controller schemas and handlers for the `pet` RPC namespace
-//! (`openhuman.pet_<fn>`). Handlers reload config per call and delegate to
+//! (`neppy.pet_<fn>`). Handlers reload config per call and delegate to
 //! [`super::ops`]; results are bare JSON values.
 
 use serde::de::DeserializeOwned;
@@ -28,7 +28,7 @@ const FUNCTIONS: &[&str] = &[
 ];
 
 /// Research-pass controllers, then the desktop companion's
-/// (`openhuman.pet_companion_*`, see `companion::runtime::schemas`).
+/// (`neppy.pet_companion_*`, see `companion::runtime::schemas`).
 pub fn all_controller_schemas() -> Vec<ControllerSchema> {
     FUNCTIONS
         .iter()

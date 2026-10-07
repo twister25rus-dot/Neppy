@@ -28,7 +28,7 @@ describe('CloudHttpTransport', () => {
     const fetchMock = mockFetchOnce({ jsonrpc: '2.0', id: 1, result: 'ok' });
     const t = new CloudHttpTransport(URL);
 
-    await t.call('openhuman.ping', {});
+    await t.call('neppy.ping', {});
 
     const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
     expect(headers).not.toHaveProperty('Authorization');
@@ -38,7 +38,7 @@ describe('CloudHttpTransport', () => {
     const fetchMock = mockFetchOnce({ jsonrpc: '2.0', id: 1, result: 'ok' });
     const t = new CloudHttpTransport(URL, 'abc.def.ghi');
 
-    await t.call('openhuman.ping', {});
+    await t.call('neppy.ping', {});
 
     const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
     expect(headers.Authorization).toBe('Bearer abc.def.ghi');
@@ -47,19 +47,19 @@ describe('CloudHttpTransport', () => {
   it('throws on HTTP failure', async () => {
     mockFetchOnce('nope', { ok: false, status: 502, statusText: 'Bad Gateway' });
     const t = new CloudHttpTransport(URL);
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow(/HTTP 502: nope/);
+    await expect(t.call('neppy.ping', {})).rejects.toThrow(/HTTP 502: nope/);
   });
 
   it('surfaces JSON-RPC error.message', async () => {
     mockFetchOnce({ jsonrpc: '2.0', id: 1, error: { code: 1, message: 'cloud rpc broke' } });
     const t = new CloudHttpTransport(URL);
-    await expect(t.call('openhuman.fail', {})).rejects.toThrow('cloud rpc broke');
+    await expect(t.call('neppy.fail', {})).rejects.toThrow('cloud rpc broke');
   });
 
   it('throws when result key is missing', async () => {
     mockFetchOnce({ jsonrpc: '2.0', id: 1 });
     const t = new CloudHttpTransport(URL);
-    await expect(t.call('openhuman.ping', {})).rejects.toThrow('response missing result');
+    await expect(t.call('neppy.ping', {})).rejects.toThrow('response missing result');
   });
 
   it('isHealthy + stream + close behave like LAN transport', async () => {
@@ -69,7 +69,7 @@ describe('CloudHttpTransport', () => {
 
     mockFetchOnce({ jsonrpc: '2.0', id: 2, result: 7 });
     const yielded: number[] = [];
-    for await (const v of t.stream<number>('openhuman.value', {})) yielded.push(v);
+    for await (const v of t.stream<number>('neppy.value', {})) yielded.push(v);
     expect(yielded).toEqual([7]);
 
     await expect(t.close()).resolves.toBeUndefined();
@@ -96,8 +96,8 @@ describe('CloudHttpTransport', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const t = new CloudHttpTransport(URL);
-    await expect(t.call('openhuman.ping', {}, { timeoutMs: 30 })).rejects.toThrow(
-      /\[transport:cloud\] openhuman.ping timed out after 30ms/
+    await expect(t.call('neppy.ping', {}, { timeoutMs: 30 })).rejects.toThrow(
+      /\[transport:cloud\] neppy.ping timed out after 30ms/
     );
   });
 });

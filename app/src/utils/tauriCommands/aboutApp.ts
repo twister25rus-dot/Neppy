@@ -1,7 +1,7 @@
 /**
  * About-app capability catalog client.
  *
- * Thin wrapper around the `openhuman.about_app_*` JSON-RPC methods exposed by
+ * Thin wrapper around the `neppy.about_app_*` JSON-RPC methods exposed by
  * the Rust core (`src/neppy/platform/about_app/schemas.rs`). The Privacy surface is
  * the first consumer; future panels can reuse the same types.
  */
@@ -42,7 +42,7 @@ export interface Capability {
 
 export async function listCapabilities(category?: CapabilityCategory): Promise<Capability[]> {
   const response = await callCoreRpc<CommandResponse<Capability[]> | Capability[]>({
-    method: 'openhuman.about_app_list',
+    method: 'neppy.about_app_list',
     params: category ? { category } : {},
   });
   // RpcOutcome::single_log emits {result, logs}; bare arrays are handled too

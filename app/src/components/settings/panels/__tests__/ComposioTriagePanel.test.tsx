@@ -148,6 +148,6 @@ describe('ComposioTriagePanel', () => {
       expect(screen.queryByText('Loading…')).toBeNull();
     });
 
-    expect(screen.getByText('OPENHUMAN_TRIGGER_TRIAGE_DISABLED')).toBeInTheDocument();
+    expect(screen.getByText('NEPPY_TRIGGER_TRIAGE_DISABLED')).toBeInTheDocument();
   });
 });

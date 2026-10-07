@@ -17,7 +17,7 @@ use tokio::time::{timeout, Duration};
 
 // Serializes every test that drives `start_chat` with the process-global
 // `run_chat_task` test hooks (forced error / forced block) or the
-// `OPENHUMAN_WEB_TURN_TIMEOUT_SECS` override. Those toggles and the per-thread
+// `NEPPY_WEB_TURN_TIMEOUT_SECS` override. Those toggles and the per-thread
 // session cache are process-global, so two such tests running concurrently can
 // clobber each other before `run_chat_task` reads them — leading to flaky
 // asserts where one test observes another test's state. Holding this mutex for
@@ -1986,6 +1986,8 @@ fn fp(
         model_registry_signature: "registry-default".to_string(),
         profile_signature: "profile-default".to_string(),
         mode: None,
+        turn_workspace: None,
+        debug_prompt_hash: None,
     }
 }
 
@@ -2438,18 +2440,18 @@ async fn cancel_chat_cooperatively_stops_in_flight_turn() {
 async fn wedged_turn_hits_wall_clock_backstop_and_emits_turn_timeout_chat_error() {
     let _serial = FORCED_ERROR_TEST_LOCK.lock().await;
     // Panic-safe teardown of the process-global env override: if any assertion
-    // below unwinds, this guard still clears `OPENHUMAN_WEB_TURN_TIMEOUT_SECS` so
+    // below unwinds, this guard still clears `NEPPY_WEB_TURN_TIMEOUT_SECS` so
     // a 1s backstop can't leak into unrelated tests sharing this process.
     struct EnvGuard;
     impl Drop for EnvGuard {
         fn drop(&mut self) {
-            std::env::remove_var("OPENHUMAN_WEB_TURN_TIMEOUT_SECS");
+            crate::neppy::util::env::remove_var("NEPPY_WEB_TURN_TIMEOUT_SECS");
         }
     }
     let _env_guard = EnvGuard;
     // Tight 1s backstop so the parked (30s) turn trips it quickly. Scoped to this
     // serialized test and cleared by `EnvGuard` on drop (even on unwind).
-    std::env::set_var("OPENHUMAN_WEB_TURN_TIMEOUT_SECS", "1");
+    std::env::set_var("NEPPY_WEB_TURN_TIMEOUT_SECS", "1");
     let block = make_block();
     set_test_run_chat_task_block(Some(block.clone())).await;
 
@@ -2501,7 +2503,7 @@ async fn wedged_turn_hits_wall_clock_backstop_and_emits_turn_timeout_chat_error(
     wait_for_flag(&block.dropped, "wedged turn future dropped by backstop").await;
 
     set_test_run_chat_task_block(None).await;
-    // `OPENHUMAN_WEB_TURN_TIMEOUT_SECS` is cleared by `_env_guard`'s Drop.
+    // `NEPPY_WEB_TURN_TIMEOUT_SECS` is cleared by `_env_guard`'s Drop.
 }
 
 /// Helper: poll the parallel in-flight lane until `pred` holds (or time out).

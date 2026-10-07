@@ -54,7 +54,7 @@ impl SubconsciousEngine {
 #[serde(default)]
 pub struct MedullaLocalConfig {
     /// Path to medulla-v1's built serve entry (`dist/serve/index.js`). Empty
-    /// falls back to the `OPENHUMAN_MEDULLA_SERVE_ENTRY` environment override;
+    /// falls back to the `NEPPY_MEDULLA_SERVE_ENTRY` environment override;
     /// with neither set the medulla engine reports its serve entry as
     /// unconfigured (see [`Self::resolved_serve_entry`]).
     #[serde(default)]
@@ -96,17 +96,20 @@ fn default_request_deadline_secs() -> u64 {
 /// lives outside this repo, so its location is deployment-specific. A developer
 /// pointing at their umbrella checkout sets this env var (or the config field)
 /// rather than relying on a machine-local path baked into the binary.
-const SERVE_ENTRY_ENV: &str = "OPENHUMAN_MEDULLA_SERVE_ENTRY";
+const SERVE_ENTRY_ENV: &str = "NEPPY_MEDULLA_SERVE_ENTRY";
 
 impl MedullaLocalConfig {
     /// The resolved serve entry, or `None` when it is unconfigured.
     ///
     /// Precedence: the explicit `serve_entry` config value, then the
-    /// `OPENHUMAN_MEDULLA_SERVE_ENTRY` environment override. When neither is
+    /// `NEPPY_MEDULLA_SERVE_ENTRY` environment override. When neither is
     /// set this returns `None` — the medulla engine then reports the serve
     /// entry as unconfigured instead of pointing at a machine-local path.
     pub fn resolved_serve_entry(&self) -> Option<std::path::PathBuf> {
-        Self::resolve_entry(&self.serve_entry, std::env::var(SERVE_ENTRY_ENV).ok())
+        Self::resolve_entry(
+            &self.serve_entry,
+            crate::neppy::util::env::var(SERVE_ENTRY_ENV).ok(),
+        )
     }
 
     /// The effective overall per-request deadline. A configured `0` (an

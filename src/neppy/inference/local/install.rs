@@ -79,8 +79,8 @@ pub(crate) fn resolve_powershell_executable() -> std::ffi::OsString {
     //
     // %SystemRoot% defaults to `C:\Windows` and is always set on Windows
     // sessions.
-    let system_root =
-        std::env::var_os("SystemRoot").unwrap_or_else(|| std::ffi::OsString::from("C:\\Windows"));
+    let system_root = crate::neppy::util::env::var_os("SystemRoot")
+        .unwrap_or_else(|| std::ffi::OsString::from("C:\\Windows"));
     for relative in [
         "System32\\WindowsPowerShell\\v1.0\\powershell.exe",
         "SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe",
@@ -92,7 +92,7 @@ pub(crate) fn resolve_powershell_executable() -> std::ffi::OsString {
         }
     }
     // PowerShell 7 (`pwsh.exe`) is another viable substitute when present.
-    if let Ok(pf) = std::env::var("ProgramFiles") {
+    if let Ok(pf) = crate::neppy::util::env::var("ProgramFiles") {
         let p7 = std::path::PathBuf::from(pf)
             .join("PowerShell")
             .join("7")
@@ -125,7 +125,7 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
         // up on the next Neppy launch and waits.
         cmd.kill_on_drop(true);
         crate::neppy::inference::local::process_util::apply_no_window(&mut cmd);
-        cmd.env("OPENHUMAN_OLLAMA_INSTALL_DIR", install_dir);
+        cmd.env("NEPPY_OLLAMA_INSTALL_DIR", install_dir);
         cmd.args([
             "-NoProfile",
             "-ExecutionPolicy",
@@ -134,7 +134,7 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
             r#"
             $ErrorActionPreference = "Stop"
             $ProgressPreference = "SilentlyContinue"
-            $installDir = $env:OPENHUMAN_OLLAMA_INSTALL_DIR
+            $installDir = $env:NEPPY_OLLAMA_INSTALL_DIR
             New-Item -ItemType Directory -Path $installDir -Force | Out-Null
             $installerUrl = "https://ollama.com/download/OllamaSetup.exe"
             $tempInstaller = Join-Path $env:TEMP "OllamaSetup.exe"
@@ -163,7 +163,7 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
         // tokio runtime can exit cleanly instead of waiting for curl to
         // finish downloading the full Ollama.app bundle.
         cmd.kill_on_drop(true);
-        cmd.env("OPENHUMAN_OLLAMA_INSTALL_DIR", install_dir);
+        cmd.env("NEPPY_OLLAMA_INSTALL_DIR", install_dir);
         cmd.arg("-lc")
             .arg(
                 r#"
@@ -171,7 +171,7 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
                 for tool in curl unzip mktemp rm cp chmod mkdir; do
                   command -v "$tool" >/dev/null 2>&1 || { echo "missing required tool: $tool" >&2; exit 1; }
                 done
-                dest="$OPENHUMAN_OLLAMA_INSTALL_DIR"
+                dest="$NEPPY_OLLAMA_INSTALL_DIR"
                 tmp_dir="$(mktemp -d)"
                 cleanup() { rm -rf "$tmp_dir"; }
                 trap cleanup EXIT
@@ -192,7 +192,7 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
     {
         let mut cmd = tokio::process::Command::new("sh");
         cmd.kill_on_drop(true); // see Windows-branch comment above
-        cmd.env("OPENHUMAN_OLLAMA_INSTALL_DIR", install_dir);
+        cmd.env("NEPPY_OLLAMA_INSTALL_DIR", install_dir);
         cmd.arg("-lc")
             .arg(
                 r#"
@@ -206,7 +206,7 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
                   aarch64|arm64) arch="arm64" ;;
                   *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
                 esac
-                dest="$OPENHUMAN_OLLAMA_INSTALL_DIR"
+                dest="$NEPPY_OLLAMA_INSTALL_DIR"
                 archive_url="https://ollama.com/download/ollama-linux-${arch}.tar.zst"
                 if ! command -v unzstd >/dev/null 2>&1; then
                   echo "missing required tool: unzstd (zstd package)" >&2
@@ -231,7 +231,7 @@ fn build_install_command(install_dir: &Path) -> Result<tokio::process::Command, 
 }
 
 pub(crate) fn find_system_ollama_binary() -> Option<PathBuf> {
-    if let Some(from_env) = std::env::var("OLLAMA_BIN")
+    if let Some(from_env) = crate::neppy::util::env::var("OLLAMA_BIN")
         .ok()
         .filter(|v| !v.trim().is_empty())
     {
@@ -246,7 +246,7 @@ pub(crate) fn find_system_ollama_binary() -> Option<PathBuf> {
     } else {
         "ollama"
     };
-    if let Some(path_var) = std::env::var_os("PATH") {
+    if let Some(path_var) = crate::neppy::util::env::var_os("PATH") {
         for entry in std::env::split_paths(&path_var) {
             let candidate = entry.join(binary_name);
             if candidate.is_file() {
@@ -257,7 +257,7 @@ pub(crate) fn find_system_ollama_binary() -> Option<PathBuf> {
 
     if cfg!(windows) {
         let mut candidates: Vec<PathBuf> = Vec::new();
-        if let Ok(local_app_data) = std::env::var("LOCALAPPDATA") {
+        if let Ok(local_app_data) = crate::neppy::util::env::var("LOCALAPPDATA") {
             candidates.push(
                 PathBuf::from(&local_app_data)
                     .join("Programs")
@@ -270,7 +270,7 @@ pub(crate) fn find_system_ollama_binary() -> Option<PathBuf> {
                     .join("ollama.exe"),
             );
         }
-        if let Ok(program_files) = std::env::var("PROGRAMFILES") {
+        if let Ok(program_files) = crate::neppy::util::env::var("PROGRAMFILES") {
             candidates.push(
                 PathBuf::from(&program_files)
                     .join("Ollama")
@@ -301,7 +301,7 @@ pub(crate) fn find_system_ollama_binary() -> Option<PathBuf> {
             .join("Resources")
             .join("ollama");
         candidates.push(PathBuf::from("/").join(&bundle_rel));
-        if let Some(home) = std::env::var_os("HOME") {
+        if let Some(home) = crate::neppy::util::env::var_os("HOME") {
             candidates.push(PathBuf::from(home).join(&bundle_rel));
         }
         for candidate in candidates {
@@ -352,14 +352,14 @@ mod tests {
 
     impl EnvGuard {
         fn set(var: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-            let prior = std::env::var_os(var);
+            let prior = crate::neppy::util::env::var_os(var);
             unsafe { std::env::set_var(var, value) };
             Self { var, prior }
         }
 
         fn unset(var: &'static str) -> Self {
-            let prior = std::env::var_os(var);
-            unsafe { std::env::remove_var(var) };
+            let prior = crate::neppy::util::env::var_os(var);
+            crate::neppy::util::env::remove_var(var);
             Self { var, prior }
         }
     }
@@ -369,7 +369,7 @@ mod tests {
             unsafe {
                 match self.prior.take() {
                     Some(v) => std::env::set_var(self.var, v),
-                    None => std::env::remove_var(self.var),
+                    None => crate::neppy::util::env::remove_var(self.var),
                 }
             }
         }
@@ -448,7 +448,7 @@ mod tests {
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(&fake, std::fs::Permissions::from_mode(0o755)).unwrap();
         }
-        let prev_path = std::env::var_os("PATH").unwrap_or_default();
+        let prev_path = crate::neppy::util::env::var_os("PATH").unwrap_or_default();
         let mut new_entries = vec![tmp.path().to_path_buf()];
         new_entries.extend(std::env::split_paths(&prev_path));
         let new_path = std::env::join_paths(new_entries).unwrap();
@@ -513,7 +513,7 @@ mod tests {
         // Instead verify the ~/Applications path via the HOME trick.
         let _home_guard = EnvGuard::set("HOME", tmp.path());
         let _bin_guard = EnvGuard::unset("OLLAMA_BIN");
-        let prev_path = std::env::var_os("PATH").unwrap_or_default();
+        let prev_path = crate::neppy::util::env::var_os("PATH").unwrap_or_default();
         let _path_guard = EnvGuard::set("PATH", "");
 
         // ~/Applications bundle path is under HOME.

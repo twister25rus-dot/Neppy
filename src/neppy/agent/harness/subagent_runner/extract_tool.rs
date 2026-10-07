@@ -219,13 +219,14 @@ impl Tool for ExtractFromResultTool {
         // Allow test harnesses to lower the chunk budget so multi-chunk
         // extraction can be exercised on compacted payloads. Never consulted
         // in production (env var absent).
-        let effective_chunk_budget = match std::env::var("OPENHUMAN_TEST_EXTRACT_CHUNK_BUDGET")
-            .ok()
-            .and_then(|v| v.parse::<usize>().ok())
-        {
-            Some(budget) => budget,
-            None => self.extract_chunk_char_budget().await,
-        };
+        let effective_chunk_budget =
+            match crate::neppy::util::env::var("NEPPY_TEST_EXTRACT_CHUNK_BUDGET")
+                .ok()
+                .and_then(|v| v.parse::<usize>().ok())
+            {
+                Some(budget) => budget,
+                None => self.extract_chunk_char_budget().await,
+            };
 
         // Fast path: payload fits in a single provider turn.
         if cached.content.len() <= effective_chunk_budget {

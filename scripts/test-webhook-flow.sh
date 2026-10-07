@@ -10,16 +10,16 @@ if [[ -f "$ROOT_DIR/.env" ]]; then
   eval "$(bash "$ROOT_DIR/scripts/load-dotenv.sh" "$ROOT_DIR/.env")"
 fi
 
-CORE_HOST="${OPENHUMAN_CORE_HOST:-127.0.0.1}"
-CORE_PORT="${OPENHUMAN_CORE_PORT:-7788}"
+CORE_HOST="${NEPPY_CORE_HOST:-127.0.0.1}"
+CORE_PORT="${NEPPY_CORE_PORT:-7788}"
 CORE_RPC_URL="${CORE_RPC_URL:-http://${CORE_HOST}:${CORE_PORT}/rpc}"
 
 # Resolve the core RPC bearer token.  Resolution order:
-#   1. OPENHUMAN_CORE_TOKEN env var (set by caller or via .env / docker / cloud).
+#   1. NEPPY_CORE_TOKEN env var (set by caller or via .env / docker / cloud).
 #      Always wins — explicit operator configuration.
 #   2. Whichever of the two on-disk token files is FRESHEST (newest mtime):
 #        a. config-style core.token file in workspace dir (written by
-#           standalone `openhuman core run`)
+#           standalone `neppy core run`)
 #        b. Debug-only e2e token file written by the Tauri shell at
 #           ${TMPDIR:-/tmp}/openhuman-e2e-rpc-token (mode 0600). Only present
 #           in debug builds — release builds do not write it. The Tauri shell
@@ -50,13 +50,13 @@ _file_mtime() {
 }
 
 _resolve_rpc_token() {
-  if [[ -n "${OPENHUMAN_CORE_TOKEN:-}" ]]; then
-    echo "core-token source: OPENHUMAN_CORE_TOKEN env var" >&2
-    echo "$OPENHUMAN_CORE_TOKEN"
+  if [[ -n "${NEPPY_CORE_TOKEN:-}" ]]; then
+    echo "core-token source: NEPPY_CORE_TOKEN env var" >&2
+    echo "$NEPPY_CORE_TOKEN"
     return
   fi
 
-  local workspace="${OPENHUMAN_WORKSPACE:-$HOME/.neppy}"
+  local workspace="${NEPPY_WORKSPACE:-$HOME/.neppy}"
   local workspace_token_file="$workspace/core.token"
   local e2e_token_file="${TMPDIR:-/tmp}/openhuman-e2e-rpc-token"
   e2e_token_file="${e2e_token_file%/}"
@@ -68,8 +68,8 @@ _resolve_rpc_token() {
 
   if [[ "$workspace_mtime" -eq 0 && "$e2e_mtime" -eq 0 ]]; then
     echo "ERROR: core RPC token not found. Options:" >&2
-    echo "  1. Set OPENHUMAN_CORE_TOKEN=<token> before running this script" >&2
-    echo "  2. Start the core standalone: openhuman core run  (writes $workspace_token_file)" >&2
+    echo "  1. Set NEPPY_CORE_TOKEN=<token> before running this script" >&2
+    echo "  2. Start the core standalone: neppy-core run  (writes $workspace_token_file)" >&2
     echo "  3. Run the Neppy app in debug mode (writes $e2e_token_file)" >&2
     exit 1
   fi
@@ -167,7 +167,7 @@ echo "Core RPC: $CORE_RPC_URL"
 curl -fsS "${CORE_RPC_URL%/rpc}/health" >/dev/null
 
 SESSION_TOKEN="$(
-  rpc_call "openhuman.auth_get_session_token" \
+  rpc_call "neppy.auth_get_session_token" \
   | jq -r '.result.result.token // empty'
 )"
 
@@ -177,7 +177,7 @@ if [[ -z "$SESSION_TOKEN" ]]; then
 fi
 
 BACKEND_URL="$(
-  rpc_call "openhuman.config_resolve_api_url" \
+  rpc_call "neppy.config_resolve_api_url" \
   | jq -r '.result.api_url // empty'
 )"
 
@@ -214,7 +214,7 @@ cleanup() {
   fi
 
   echo "Cleaning up local echo registration..."
-  rpc_call "openhuman.webhooks_unregister_echo" \
+  rpc_call "neppy.webhooks_unregister_echo" \
     "$(jq -n --arg tunnel_uuid "$TUNNEL_UUID" '{tunnel_uuid: $tunnel_uuid}')" >/dev/null || true
 
   echo "Deleting backend tunnel..."
@@ -233,7 +233,7 @@ REGISTER_PARAMS="$(
     --arg backend_tunnel_id "$TUNNEL_ID" \
     '{tunnel_uuid: $tunnel_uuid, tunnel_name: $tunnel_name, backend_tunnel_id: $backend_tunnel_id}'
 )"
-rpc_call "openhuman.webhooks_register_echo" "$REGISTER_PARAMS" >/dev/null
+rpc_call "neppy.webhooks_register_echo" "$REGISTER_PARAMS" >/dev/null
 
 WEBHOOK_URL="${BACKEND_URL%/}/webhooks/ingress/${TUNNEL_UUID}${HOOK_PATH}"
 echo "Triggering: ${HOOK_METHOD} ${WEBHOOK_URL}"
@@ -268,11 +268,11 @@ rm -f "$RESPONSE_BODY_FILE"
 sleep 1
 
 echo "Latest captured log:"
-rpc_call "openhuman.webhooks_list_logs" '{"limit":1}' \
+rpc_call "neppy.webhooks_list_logs" '{"limit":1}' \
   | jq '.result.result.logs[0]'
 
 echo "Latest registrations:"
-rpc_call "openhuman.webhooks_list_registrations" \
+rpc_call "neppy.webhooks_list_registrations" \
   | jq '.result.result.registrations'
 
 echo "Done."

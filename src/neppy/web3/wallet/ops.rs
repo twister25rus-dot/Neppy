@@ -36,7 +36,7 @@ static WALLET_STATE_FILE_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 /// path component of the workspace directory.
 fn wallet_user_id(config: &Config) -> String {
     // workspace_dir is typically `{neppy_dir}/workspace` — take the parent
-    // (the user's openhuman dir) and then the last component.
+    // (the user's neppy dir) and then the last component.
     let candidate = config
         .workspace_dir
         .parent()
@@ -996,7 +996,7 @@ mod tests {
     }
 
     // ── reveal_recovery_phrase unit tests ────────────────────────────────────
-    // These use tokio::test and OPENHUMAN_WORKSPACE env var to wire up the full
+    // These use tokio::test and NEPPY_WORKSPACE env var to wire up the full
     // async path including config loading. TEST_LOCK serializes wallet globals;
     // TEST_ENV_LOCK serializes the process-wide workspace env var.
 

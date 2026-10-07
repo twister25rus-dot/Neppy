@@ -181,7 +181,7 @@ pub async fn update_version() -> RpcOutcome<Value> {
 /// core process will exit shortly afterwards.
 pub async fn update_run() -> RpcOutcome<Value> {
     log::info!("[update:rpc] update_run invoked");
-    let policy = match enforce_update_mutation_policy("openhuman.update_run").await {
+    let policy = match enforce_update_mutation_policy("neppy.update_run").await {
         Ok(policy) => policy,
         Err(error) => {
             return RpcOutcome::single_log(
@@ -353,7 +353,7 @@ pub async fn update_apply(
         download_url,
         asset_name,
     );
-    let policy = match enforce_update_mutation_policy("openhuman.update_apply").await {
+    let policy = match enforce_update_mutation_policy("neppy.update_apply").await {
         Ok(policy) => policy,
         Err(error) => {
             return RpcOutcome::single_log(
@@ -491,7 +491,7 @@ mod tests {
     // ── update_apply rejection paths ──────────────────────────────
 
     // `update_apply` reads the mutation-policy config from disk, whose
-    // path is resolved through the process-global `OPENHUMAN_WORKSPACE`
+    // path is resolved through the process-global `NEPPY_WORKSPACE`
     // env var. Tests that don't lock against the disabled-mutations
     // case can race with it: the disabled test sets the env var, the
     // sibling test (running on another thread) clears or shadows it
@@ -536,13 +536,13 @@ mod tests {
     struct WorkspaceEnvGuard;
     impl WorkspaceEnvGuard {
         fn set(path: &std::path::Path) -> Self {
-            std::env::set_var("OPENHUMAN_WORKSPACE", path);
+            std::env::set_var("NEPPY_WORKSPACE", path);
             Self
         }
     }
     impl Drop for WorkspaceEnvGuard {
         fn drop(&mut self) {
-            std::env::remove_var("OPENHUMAN_WORKSPACE");
+            crate::neppy::util::env::remove_var("NEPPY_WORKSPACE");
         }
     }
 

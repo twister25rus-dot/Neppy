@@ -195,9 +195,9 @@ export default function FlowsPage() {
     [busyByFlow, preauth, setRowBusy]
   );
 
-  // F-M1/F-M2 fix: `runFlowDetached` (`openhuman.flows_run_detached`) returns
+  // F-M1/F-M2 fix: `runFlowDetached` (`neppy.flows_run_detached`) returns
   // as soon as the run is registered — genuinely fire-and-forget, unlike the
-  // old `runFlow` (`openhuman.flows_run`) this replaced, which BLOCKED until
+  // old `runFlow` (`neppy.flows_run`) this replaced, which BLOCKED until
   // the run reached a terminal status (up to ~600s). That meant the old
   // per-row busy flag (even before it was widened to page-global) was
   // misleadingly named: "Run started" only toasted once the run had actually

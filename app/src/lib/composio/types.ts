@@ -1,6 +1,6 @@
 /**
  * TypeScript types that mirror the Rust `neppy::composio::types`
- * response envelopes exposed via the `openhuman.composio_*` JSON-RPC
+ * response envelopes exposed via the `neppy.composio_*` JSON-RPC
  * methods. Field names match the wire shape (camelCase where the
  * backend emits camelCase, snake_case where the Rust RPC layer does).
  */

@@ -103,7 +103,7 @@ export class TransportManager {
 
   /**
    * Race LAN (with 2 s timeout) against Tunnel.
-   * Whichever responds to `openhuman.ping` first wins.
+   * Whichever responds to `neppy.ping` first wins.
    * If LAN wins but later fails, caller should call reset() to re-race.
    */
   private async raceLanAndTunnel(): Promise<CoreTransport> {

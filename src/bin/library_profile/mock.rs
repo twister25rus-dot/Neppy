@@ -81,7 +81,7 @@ fn record(prompts: &Mutex<Vec<String>>, joined: &str) {
 
 /// Read `key` as a `u64`, falling back to `default` when unset/unparsable.
 fn env_u64(key: &str, default: u64) -> u64 {
-    std::env::var(key)
+    neppy_core::neppy::util::env::var(key)
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .unwrap_or(default)
@@ -105,7 +105,7 @@ pub fn finding_text(index: usize) -> String {
 pub const MERGE_SENTINEL: &str = "STORM_MERGE_COMPLETE";
 
 /// Shared, dependency-free latency sampler driven by the standard env knobs
-/// (`OPENHUMAN_PROFILE_MOCK_LATENCY_MS` mean, `OPENHUMAN_PROFILE_MOCK_JITTER_MS`
+/// (`NEPPY_PROFILE_MOCK_LATENCY_MS` mean, `NEPPY_PROFILE_MOCK_JITTER_MS`
 /// jitter, default `mean / 4`). Reused by both [`LatencyMock`] and
 /// [`SubagentMock`] so a delegated subagent turn can carry realistic latency.
 pub struct LatencyKnobs {
@@ -116,8 +116,8 @@ pub struct LatencyKnobs {
 
 impl LatencyKnobs {
     pub fn from_env() -> Self {
-        let mean_ms = env_u64("OPENHUMAN_PROFILE_MOCK_LATENCY_MS", 0);
-        let jitter_ms = env_u64("OPENHUMAN_PROFILE_MOCK_JITTER_MS", mean_ms / 4);
+        let mean_ms = env_u64("NEPPY_PROFILE_MOCK_LATENCY_MS", 0);
+        let jitter_ms = env_u64("NEPPY_PROFILE_MOCK_JITTER_MS", mean_ms / 4);
         eprintln!("[library-profile] LatencyKnobs mean_ms={mean_ms} jitter_ms={jitter_ms}");
         Self {
             mean_ms,
@@ -349,8 +349,8 @@ impl SubagentMock {
 
 /// Latency-configurable text-only mock used by the `fleet` scenario. Before
 /// returning its fixed answer it sleeps a sampled latency: a mean from
-/// `OPENHUMAN_PROFILE_MOCK_LATENCY_MS` (default `0` = no sleep) with jitter
-/// `± OPENHUMAN_PROFILE_MOCK_JITTER_MS` (default `mean / 4`). Per-call jitter is
+/// `NEPPY_PROFILE_MOCK_LATENCY_MS` (default `0` = no sleep) with jitter
+/// `± NEPPY_PROFILE_MOCK_JITTER_MS` (default `mean / 4`). Per-call jitter is
 /// derived from a seeded xorshift counter — deterministic and dependency-free
 /// (no `rand` crate).
 pub struct LatencyMock {

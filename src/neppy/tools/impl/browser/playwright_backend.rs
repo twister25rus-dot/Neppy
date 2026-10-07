@@ -246,7 +246,7 @@ async fn start_daemon(headless: bool) -> Result<PlaywrightDaemon> {
         .arg("-e")
         .arg(RUNNER_JS)
         .env(
-            "OPENHUMAN_PLAYWRIGHT_HEADLESS",
+            "NEPPY_PLAYWRIGHT_HEADLESS",
             if headless { "1" } else { "0" },
         )
         .stdin(Stdio::piped())
@@ -293,7 +293,8 @@ async fn start_daemon(headless: bool) -> Result<PlaywrightDaemon> {
 }
 
 fn node_command() -> Command {
-    let binary = std::env::var("OPENHUMAN_PLAYWRIGHT_NODE").unwrap_or_else(|_| "node".to_string());
+    let binary = crate::neppy::util::env::var("NEPPY_PLAYWRIGHT_NODE")
+        .unwrap_or_else(|_| "node".to_string());
     Command::new(binary)
 }
 
@@ -304,7 +305,7 @@ fn apply_node_cwd(command: &mut Command) {
 }
 
 fn playwright_node_cwd() -> Option<PathBuf> {
-    if let Ok(raw) = std::env::var("OPENHUMAN_PLAYWRIGHT_CWD") {
+    if let Ok(raw) = crate::neppy::util::env::var("NEPPY_PLAYWRIGHT_CWD") {
         let path = PathBuf::from(raw);
         if path.exists() {
             return Some(path);

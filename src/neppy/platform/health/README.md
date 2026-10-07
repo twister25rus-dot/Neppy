@@ -42,10 +42,10 @@ Two controllers in the `health` namespace:
 
 | Method | Inputs | Outputs |
 | --- | --- | --- |
-| `openhuman.health_snapshot` | none | `snapshot` (JSON): full serialized `HealthSnapshot`. |
-| `openhuman.health_system_info` | none | `version`, `os`, `arch`, `pid`. |
+| `neppy.health_snapshot` | none | `snapshot` (JSON): full serialized `HealthSnapshot`. |
+| `neppy.health_system_info` | none | `version`, `os`, `arch`, `pid`. |
 
-`system_info`'s `version` is `CARGO_PKG_VERSION`; `os`/`arch` come from `std::env::consts`. Legacy callers may send `openhuman.system_info`, which the alias table rewrites to `health_system_info` before dispatch.
+`system_info`'s `version` is `CARGO_PKG_VERSION`; `os`/`arch` come from `std::env::consts`. Legacy callers may send `neppy.system_info`, which the alias table rewrites to `health_system_info` before dispatch.
 
 ## Events
 

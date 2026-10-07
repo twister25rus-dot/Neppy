@@ -24,16 +24,16 @@ async function openAuthenticatedRoute(page: Page, userId: string, hash: string):
 async function getDefaultMessagingChannel(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const win = window as unknown as {
-      __OPENHUMAN_STORE__?: {
+      __NEPPY_STORE__?: {
         getState?: () => {
           mascot: { voiceId?: string | null };
           channelConnections: { defaultMessagingChannel?: string | null };
         };
       };
     };
-    const state = win.__OPENHUMAN_STORE__?.getState?.();
+    const state = win.__NEPPY_STORE__?.getState?.();
     if (!state) {
-      throw new Error('__OPENHUMAN_STORE__ is unavailable');
+      throw new Error('__NEPPY_STORE__ is unavailable');
     }
     return state.channelConnections.defaultMessagingChannel ?? null;
   });
@@ -42,13 +42,13 @@ async function getDefaultMessagingChannel(page: Page): Promise<string | null> {
 async function getMascotVoiceId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const win = window as unknown as {
-      __OPENHUMAN_STORE__?: {
+      __NEPPY_STORE__?: {
         getState?: () => { mascot: { selectedMascotId?: string | null; voiceId?: string | null } };
       };
     };
-    const state = win.__OPENHUMAN_STORE__?.getState?.();
+    const state = win.__NEPPY_STORE__?.getState?.();
     if (!state) {
-      throw new Error('__OPENHUMAN_STORE__ is unavailable');
+      throw new Error('__NEPPY_STORE__ is unavailable');
     }
     return state.mascot.voiceId ?? null;
   });
@@ -57,11 +57,11 @@ async function getMascotVoiceId(page: Page): Promise<string | null> {
 async function getSelectedMascotId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const win = window as unknown as {
-      __OPENHUMAN_STORE__?: { getState?: () => { mascot: { selectedMascotId?: string | null } } };
+      __NEPPY_STORE__?: { getState?: () => { mascot: { selectedMascotId?: string | null } } };
     };
-    const state = win.__OPENHUMAN_STORE__?.getState?.();
+    const state = win.__NEPPY_STORE__?.getState?.();
     if (!state) {
-      throw new Error('__OPENHUMAN_STORE__ is unavailable');
+      throw new Error('__NEPPY_STORE__ is unavailable');
     }
     return state.mascot.selectedMascotId ?? null;
   });
@@ -215,7 +215,7 @@ test.describe('Settings - Feature Preferences', () => {
     // make Telegram the default first (turning Web into a connected,
     // non-default tile with the control), reload so the panel re-seeds, then
     // switch the default to Web.
-    await callCoreRpc('openhuman.channels_set_default', { channel: 'telegram' });
+    await callCoreRpc('neppy.channels_set_default', { channel: 'telegram' });
     await reloadAndWait(page);
 
     const messagingTab = page.getByTestId('two-pane-nav-channels');
@@ -233,7 +233,7 @@ test.describe('Settings - Feature Preferences', () => {
   test('persists tools preferences to the core app-state snapshot', async ({ page }) => {
     await openAuthenticatedRoute(page, 'pw-settings-tools', '/settings/tools');
 
-    await callCoreRpc('openhuman.app_state_update_local_state', {
+    await callCoreRpc('neppy.app_state_update_local_state', {
       onboardingTasks: {
         accessibilityPermissionGranted: false,
         localModelConsentGiven: false,
@@ -244,7 +244,7 @@ test.describe('Settings - Feature Preferences', () => {
       },
     });
 
-    const before = await callCoreRpc<ToolsSnapshot>('openhuman.app_state_snapshot', {});
+    const before = await callCoreRpc<ToolsSnapshot>('neppy.app_state_snapshot', {});
     const enabledBefore = readEnabledTools(before);
 
     await reloadAndWait(page);
@@ -263,13 +263,13 @@ test.describe('Settings - Feature Preferences', () => {
 
     await expect
       .poll(async () => {
-        const after = await callCoreRpc<ToolsSnapshot>('openhuman.app_state_snapshot', {});
+        const after = await callCoreRpc<ToolsSnapshot>('neppy.app_state_snapshot', {});
         const enabledAfter = readEnabledTools(after);
         return JSON.stringify(enabledAfter) !== JSON.stringify(enabledBefore);
       })
       .toBe(true);
 
-    const after = await callCoreRpc<ToolsSnapshot>('openhuman.app_state_snapshot', {});
+    const after = await callCoreRpc<ToolsSnapshot>('neppy.app_state_snapshot', {});
     expect(readEnabledTools(after)).not.toContain('shell');
   });
 

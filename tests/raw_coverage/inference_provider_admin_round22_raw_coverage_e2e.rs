@@ -51,16 +51,16 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: this integration test is validated with --test-threads=1.
         unsafe { std::env::set_var(key, value) };
         Self { key, previous }
     }
 
     fn unset(key: &'static str) -> Self {
-        let previous = std::env::var_os(key);
+        let previous = neppy_core::neppy::util::env::var_os(key);
         // SAFETY: this integration test is validated with --test-threads=1.
-        unsafe { std::env::remove_var(key) };
+        neppy_core::neppy::util::env::remove_var(key);
         Self { key, previous }
     }
 }
@@ -74,7 +74,7 @@ impl Drop for EnvVarGuard {
             }
             None => {
                 // SAFETY: mutation is serialized by `env_lock()` (see below).
-                unsafe { std::env::remove_var(self.key) }
+                unsafe { neppy_core::neppy::util::env::remove_var(self.key) }
             }
         }
     }
@@ -82,7 +82,7 @@ impl Drop for EnvVarGuard {
 
 /// Serializes the whole suite's process-global env access.
 ///
-/// Several tests mutate `OPENHUMAN_WORKSPACE` / `OPENHUMAN_OLLAMA_BASE_URL` /
+/// Several tests mutate `NEPPY_WORKSPACE` / `NEPPY_OLLAMA_BASE_URL` /
 /// `PATH` via [`EnvVarGuard`]. `cargo test` (and `cargo llvm-cov`) run a
 /// binary's tests on multiple threads by default, so without this lock those
 /// mutations race and a test reads another test's workspace/config — observed
@@ -131,8 +131,8 @@ async fn provider_admin_model_listing_covers_openrouter_validation_and_local_syn
         true,
     )
     .expect("store openrouter key");
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", config.config_path.parent().unwrap());
-    let _ollama_base = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &base);
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", config.config_path.parent().unwrap());
+    let _ollama_base = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &base);
 
     let openrouter = list_configured_models("openrouter")
         .await
@@ -221,7 +221,7 @@ async fn factory_covers_legacy_api_key_scoping_and_abstract_model_errors() {
         true,
     )
     .expect("store app session");
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", config.config_path.parent().unwrap());
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", config.config_path.parent().unwrap());
 
     let (legacy, legacy_model) = create_chat_model_from_string_with_model_id(
         "chat",
@@ -312,8 +312,8 @@ async fn local_admin_covers_diagnostics_errors_assets_status_and_shutdown_with_f
     write_stub_script(&scripts, "piper", "#!/bin/sh\nexit 42\n");
 
     let _path = EnvVarGuard::set("PATH", scripts.path());
-    let _workspace = EnvVarGuard::set("OPENHUMAN_WORKSPACE", config.config_path.parent().unwrap());
-    let _ollama_base = EnvVarGuard::set("OPENHUMAN_OLLAMA_BASE_URL", &base);
+    let _workspace = EnvVarGuard::set("NEPPY_WORKSPACE", config.config_path.parent().unwrap());
+    let _ollama_base = EnvVarGuard::set("NEPPY_OLLAMA_BASE_URL", &base);
     let _ollama_bin = EnvVarGuard::set("OLLAMA_BIN", &ollama);
     let _piper_bin = EnvVarGuard::unset("PIPER_BIN");
     let _whisper_bin = EnvVarGuard::unset("WHISPER_BIN");

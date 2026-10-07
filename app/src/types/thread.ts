@@ -1,15 +1,17 @@
 /**
  * Per-thread operating mode. `chat` is one assistant with full tools;
  * `orchestration` is a supervisor coordinating specialist agents. Threads
- * created before modes existed carry no value and read as `chat`.
+ * created before modes existed carry no value and read as `chat`. `debug` is
+ * a development session scoped to the app's source repository; it is created
+ * only from the Debug page and is never offered by the mode toggle.
  */
-export type ThreadMode = 'chat' | 'orchestration';
+export type ThreadMode = 'chat' | 'orchestration' | 'debug';
 
 export const DEFAULT_THREAD_MODE: ThreadMode = 'chat';
 
 /** Normalise a possibly-missing / unknown wire value to a valid mode. */
 export function resolveThreadMode(value: unknown): ThreadMode {
-  return value === 'orchestration' ? 'orchestration' : DEFAULT_THREAD_MODE;
+  return value === 'orchestration' || value === 'debug' ? value : DEFAULT_THREAD_MODE;
 }
 
 export interface Thread {

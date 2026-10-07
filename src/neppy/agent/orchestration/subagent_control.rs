@@ -1,14 +1,14 @@
 //! Controller schema + JSON-RPC dispatcher for user-driven control of detached
 //! background sub-agents (`spawn_async_subagent`).
 //!
-//! Exposes `openhuman.subagent_cancel`: the frontend "Cancel" affordance in the
+//! Exposes `neppy.subagent_cancel`: the frontend "Cancel" affordance in the
 //! background-tasks drawer calls this to abort a still-running detached
 //! sub-agent. Cancellation aborts the in-flight task via the
 //! [`super::running_subagents`] registry and records a "cancelled" pseudo-
 //! completion so the existing idle-gated delivery path
 //! ([`super::background_delivery`]) surfaces it back in the parent chat.
 //!
-//! It also exposes `openhuman.subagent_runs_history` — the cross-thread "Agent
+//! It also exposes `neppy.subagent_runs_history` — the cross-thread "Agent
 //! runs" projection of the run ledger (see [`super::runs_history`]).
 //!
 //! This is the *manual* counterpart to the *automatic* thread-close
@@ -114,7 +114,7 @@ fn schema_for(function: &str) -> ControllerSchema {
                 optional_str("threadId", "Only runs of this thread."),
                 optional_str(
                     "mode",
-                    "Only runs whose thread is in this mode: 'chat' or 'orchestration'.",
+                    "Only runs whose thread is in this mode: 'chat', 'orchestration' or 'debug'.",
                 ),
                 optional_str(
                     "status",
@@ -258,7 +258,7 @@ fn handle_subagent_runs_history(params: Map<String, Value>) -> ControllerFuture 
         let mode = match opt_str(&params, "mode") {
             Some(raw) => Some(ThreadMode::parse(&raw).ok_or_else(|| {
                 format!(
-                    "unknown mode '{}': expected 'chat' or 'orchestration'",
+                    "unknown mode '{}': expected 'chat', 'orchestration' or 'debug'",
                     raw.trim()
                 )
             })?),

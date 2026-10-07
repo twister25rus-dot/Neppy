@@ -6,9 +6,9 @@
 //! - real network I/O and side effects
 //!
 //! Run manually:
-//! OPENHUMAN_LIVE_API_URL="https://<your-backend>" \
-//! OPENHUMAN_LIVE_TOKEN="<jwt>" \
-//! OPENHUMAN_LIVE_USER_ID="<user-id>" \
+//! NEPPY_LIVE_API_URL="https://<your-backend>" \
+//! NEPPY_LIVE_TOKEN="<jwt>" \
+//! NEPPY_LIVE_USER_ID="<user-id>" \
 //! cargo test --test live_routing_e2e -- --ignored --nocapture
 
 use std::path::Path;
@@ -34,7 +34,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_to_path(key: &'static str, path: &Path) -> Self {
-        let old = std::env::var(key).ok();
+        let old = neppy_core::neppy::util::env::var(key).ok();
         // SAFETY: EnvVarGuard is only used in tests that first acquire
         // live_e2e_env_lock(), which serializes process-global env mutations.
         unsafe { std::env::set_var(key, path.as_os_str()) };
@@ -49,7 +49,7 @@ impl Drop for EnvVarGuard {
             // live_e2e_env_lock() critical section as setup.
             Some(v) => unsafe { std::env::set_var(self.key, v) },
             // SAFETY: Guarded by live_e2e_env_lock(), preventing concurrent env access.
-            None => unsafe { std::env::remove_var(self.key) },
+            None => neppy_core::neppy::util::env::remove_var(self.key),
         }
     }
 }
@@ -63,7 +63,8 @@ fn live_e2e_env_lock() -> std::sync::MutexGuard<'static, ()> {
 }
 
 fn required_env(name: &str) -> String {
-    std::env::var(name).unwrap_or_else(|_| panic!("missing required env var: {name}"))
+    neppy_core::neppy::util::env::var(name)
+        .unwrap_or_else(|_| panic!("missing required env var: {name}"))
 }
 
 fn write_live_config(neppy_dir: &Path, api_origin: &str) {
@@ -79,7 +80,7 @@ encrypt = false
     );
 
     fn write_config_file(config_dir: &Path, cfg: &str) {
-        std::fs::create_dir_all(config_dir).expect("mkdir openhuman");
+        std::fs::create_dir_all(config_dir).expect("mkdir neppy");
         let path = config_dir.join("config.toml");
         std::fs::write(&path, cfg).expect("write config");
     }
@@ -201,9 +202,9 @@ fn ensure_test_rpc_auth() {
 async fn live_channel_web_chat_routing_cases_trigger_real_backend() {
     let _env_lock = live_e2e_env_lock();
 
-    let api_url = required_env("OPENHUMAN_LIVE_API_URL");
-    let token = required_env("OPENHUMAN_LIVE_TOKEN");
-    let user_id = required_env("OPENHUMAN_LIVE_USER_ID");
+    let api_url = required_env("NEPPY_LIVE_API_URL");
+    let token = required_env("NEPPY_LIVE_TOKEN");
+    let user_id = required_env("NEPPY_LIVE_USER_ID");
 
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
@@ -220,7 +221,7 @@ async fn live_channel_web_chat_routing_cases_trigger_real_backend() {
     let store = post_json_rpc(
         &rpc_base,
         1,
-        "openhuman.auth_store_session",
+        "neppy.auth_store_session",
         json!({
             "token": token,
             "user_id": user_id
@@ -247,7 +248,7 @@ async fn live_channel_web_chat_routing_cases_trigger_real_backend() {
         let web_chat = post_json_rpc(
             &rpc_base,
             10 + idx as i64,
-            "openhuman.channel_web_chat",
+            "neppy.channel_web_chat",
             json!({
                 "client_id": client_id,
                 "thread_id": thread_id,

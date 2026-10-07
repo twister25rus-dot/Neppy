@@ -48,18 +48,18 @@ async function connectTelegramBot(opts: {
     status?: string;
     restart_required?: boolean;
     message?: string;
-  }>('openhuman.channels_connect', { channel: 'telegram', authMode: 'bot_token', credentials });
+  }>('neppy.channels_connect', { channel: 'telegram', authMode: 'bot_token', credentials });
 }
 
 async function disconnectTelegramBot() {
-  return callCoreRpc<unknown>('openhuman.channels_disconnect', {
+  return callCoreRpc<unknown>('neppy.channels_disconnect', {
     channel: 'telegram',
     authMode: 'bot_token',
   });
 }
 
 async function getTelegramChannelStatus(): Promise<TelegramStatusEntry | null> {
-  const out = await callCoreRpc<unknown>('openhuman.channels_status', { channel: 'telegram' });
+  const out = await callCoreRpc<unknown>('neppy.channels_status', { channel: 'telegram' });
   const root = (out ?? {}) as Record<string, unknown>;
   const entries = Array.isArray(root)
     ? root
@@ -85,7 +85,7 @@ test.describe('Telegram channel - connect / disconnect RPC flow', () => {
   });
 
   test('channels_list includes telegram with bot_token auth mode', async () => {
-    const out = await callCoreRpc<unknown>('openhuman.channels_list', {});
+    const out = await callCoreRpc<unknown>('neppy.channels_list', {});
     const root = (out ?? {}) as Record<string, unknown>;
     const channels = Array.isArray(root)
       ? root
@@ -108,7 +108,7 @@ test.describe('Telegram channel - connect / disconnect RPC flow', () => {
   });
 
   test('channels_describe for telegram returns auth modes and bot_token field', async () => {
-    const out = await callCoreRpc<unknown>('openhuman.channels_describe', { channel: 'telegram' });
+    const out = await callCoreRpc<unknown>('neppy.channels_describe', { channel: 'telegram' });
     const root = (out ?? {}) as Record<string, unknown>;
     const def =
       typeof root.result === 'object' && root.result !== null
@@ -144,7 +144,7 @@ test.describe('Telegram channel - connect / disconnect RPC flow', () => {
 
   test('connect with missing token fails validation', async () => {
     await expect(
-      callCoreRpc('openhuman.channels_connect', {
+      callCoreRpc('neppy.channels_connect', {
         channel: 'telegram',
         authMode: 'bot_token',
         credentials: { bot_token: '' },

@@ -18,7 +18,7 @@ pub(crate) fn interrupted_pull_settle_window_secs(
 /// Kill a process by PID using `sysinfo`'s cross-platform `Process::kill`.
 ///
 /// Used by `reclaim_orphan_if_ours` where we no longer have the original
-/// `tokio::process::Child` handle (the spawning openhuman crashed) but
+/// `tokio::process::Child` handle (the spawning neppy crashed) but
 /// recorded the PID in the spawn marker.
 pub(crate) fn kill_pid_by_id(pid: u32) {
     use sysinfo::{Pid, ProcessesToUpdate, System};

@@ -8,6 +8,7 @@ import { getIsMobile } from './lib/platform';
 import Accounts from './pages/Accounts';
 import Activity from './pages/Activity';
 import Brain from './pages/Brain';
+import DebugPage from './pages/DebugPage';
 import AgentInsightsPreview from './pages/dev/AgentInsightsPreview';
 import AssistantUiDemoPage from './pages/dev/assistant-ui-demo';
 import UiGallery from './pages/dev/UiGallery';
@@ -244,6 +245,18 @@ const AppRoutes = ({ location }: AppRoutesProps = {}) => {
         element={
           <ProtectedRoute requireAuth={true}>
             <Accounts />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Debug Mode: the same conversation view, scoped to Debug threads and
+          wrapped in the repo banner + last-task decisions. Debug threads are
+          created only here. */}
+      <Route
+        path="/debug/:threadId?"
+        element={
+          <ProtectedRoute requireAuth={true}>
+            <DebugPage />
           </ProtectedRoute>
         }
       />

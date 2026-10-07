@@ -15,7 +15,7 @@ describe('billingApi', () => {
   });
 
   describe('getCurrentPlan', () => {
-    it('should call openhuman.billing_get_current_plan', async () => {
+    it('should call neppy.billing_get_current_plan', async () => {
       const planData = {
         plan: 'BASIC',
         hasActiveSubscription: true,
@@ -33,7 +33,7 @@ describe('billingApi', () => {
 
       const result = await billingApi.getCurrentPlan();
 
-      expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.billing_get_current_plan');
+      expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.billing_get_current_plan');
       expect(result).toEqual(planData);
     });
 
@@ -64,7 +64,7 @@ describe('billingApi', () => {
   });
 
   describe('purchasePlan', () => {
-    it('should call openhuman.billing_purchase_plan with plan ID', async () => {
+    it('should call neppy.billing_purchase_plan with plan ID', async () => {
       const checkoutData = {
         checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_123',
         sessionId: 'cs_test_123',
@@ -73,7 +73,7 @@ describe('billingApi', () => {
 
       const result = await billingApi.purchasePlan('BASIC_MONTHLY');
 
-      expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.billing_purchase_plan', {
+      expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.billing_purchase_plan', {
         plan: 'BASIC_MONTHLY',
       });
       expect(result).toEqual(checkoutData);
@@ -87,7 +87,7 @@ describe('billingApi', () => {
 
       await billingApi.purchasePlan('PRO_YEARLY');
 
-      expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.billing_purchase_plan', {
+      expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.billing_purchase_plan', {
         plan: 'PRO_YEARLY',
       });
     });
@@ -109,13 +109,13 @@ describe('billingApi', () => {
   });
 
   describe('createPortalSession', () => {
-    it('should call openhuman.billing_create_portal_session', async () => {
+    it('should call neppy.billing_create_portal_session', async () => {
       const portalData = { portalUrl: 'https://billing.stripe.com/p/session/test_123' };
       mockCallCoreCommand.mockResolvedValue(portalData);
 
       const result = await billingApi.createPortalSession();
 
-      expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.billing_create_portal_session');
+      expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.billing_create_portal_session');
       expect(result).toEqual(portalData);
     });
 
@@ -139,7 +139,7 @@ describe('billingApi', () => {
   });
 
   describe('createCoinbaseCharge', () => {
-    it('should call openhuman.billing_create_coinbase_charge with plan and interval', async () => {
+    it('should call neppy.billing_create_coinbase_charge with plan and interval', async () => {
       const chargeData = {
         gatewayTransactionId: 'charge_abc',
         hostedUrl: 'https://commerce.coinbase.com/charges/abc',
@@ -150,7 +150,7 @@ describe('billingApi', () => {
 
       const result = await billingApi.createCoinbaseCharge('BASIC', 'annual');
 
-      expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.billing_create_coinbase_charge', {
+      expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.billing_create_coinbase_charge', {
         plan: 'BASIC',
         interval: 'annual',
       });
@@ -167,7 +167,7 @@ describe('billingApi', () => {
 
       await billingApi.createCoinbaseCharge('PRO');
 
-      expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.billing_create_coinbase_charge', {
+      expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.billing_create_coinbase_charge', {
         plan: 'PRO',
         interval: 'annual',
       });
@@ -209,7 +209,7 @@ describe('creditsApi.getBalance', () => {
 
     const result = await creditsApi.getBalance();
 
-    expect(mockCallCoreCommand).toHaveBeenCalledWith('openhuman.billing_get_balance');
+    expect(mockCallCoreCommand).toHaveBeenCalledWith('neppy.billing_get_balance');
     expect(result).toEqual({ promotionBalanceUsd: 0, teamTopupUsd: 3 });
   });
 

@@ -13,15 +13,15 @@
 //   - Groups messages by `threadId` so a single ingest call covers a whole
 //     email thread (this is what the canonicaliser expects — one
 //     EmailThread per source_id).
-//   - For each thread calls `openhuman.memory_tree_ingest` with
+//   - For each thread calls `neppy.memory_tree_ingest` with
 //     source_kind=email + an EmailThread payload (see
 //     src/neppy/memory/tree/canonicalize/email.rs).
-//   - Verifies via `openhuman.memory_tree_list_chunks` that chunks landed.
+//   - Verifies via `neppy.memory_tree_list_chunks` that chunks landed.
 //
 // Pre-reqs: the core server must already be serving JSON-RPC on $RPC_URL
 // (default http://127.0.0.1:7810/rpc). Start it with:
 //
-//   cargo run --bin openhuman -- serve
+//   cargo run --bin neppy-core -- serve
 //
 // Usage:
 //   node scripts/test-memory-email-ingest.mjs [path/to/inbox.json]
@@ -108,9 +108,9 @@ async function main() {
   console.log(`[memory-email-ingest] rpc_url=${RPC_URL}`);
 
   // Sanity-check that the core is up.
-  await rpc("openhuman.health_snapshot", {}).catch((err) => {
+  await rpc("neppy.health_snapshot", {}).catch((err) => {
     throw new Error(
-      `core not reachable at ${RPC_URL} — start it with \`cargo run --bin openhuman -- serve\`. (${err.message})`,
+      `core not reachable at ${RPC_URL} — start it with \`cargo run --bin neppy-core -- serve\`. (${err.message})`,
     );
   });
 
@@ -145,7 +145,7 @@ async function main() {
       `  · ${sourceId}  (${t.messages.length} msg, subject="${t.subject.slice(0, 60)}") … `,
     );
     try {
-      const result = await rpc("openhuman.memory_tree_ingest", params);
+      const result = await rpc("neppy.memory_tree_ingest", params);
       const r = result?.result || result || {};
       chunksWritten += r.chunks_written || 0;
       chunksDropped += r.chunks_dropped || 0;
@@ -162,7 +162,7 @@ async function main() {
   );
 
   // Quick verification — pull email chunks back out and print a count.
-  const list = await rpc("openhuman.memory_tree_list_chunks", {
+  const list = await rpc("neppy.memory_tree_list_chunks", {
     source_kind: "email",
     owner: OWNER,
     limit: 100,

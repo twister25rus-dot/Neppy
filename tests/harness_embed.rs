@@ -129,7 +129,7 @@ fn a_harness_runs_a_turn_against_the_provider_it_was_given() {
         // No listener was bound: `ServiceSet` selects nothing that binds, and
         // `serve()` was never called.
         assert!(
-            std::env::var("OPENHUMAN_CORE_RPC_URL").is_err(),
+            neppy_core::neppy::util::env::var("NEPPY_CORE_RPC_URL").is_err(),
             "a library harness must not bind an RPC listener"
         );
 
