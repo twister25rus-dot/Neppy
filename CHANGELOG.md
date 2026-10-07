@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.68.2] - 2026-10-07
+
+### What's Changed
+
+- fix: show approval cards in every chat; unstall Debug turns; tool rows ([`7f58288e`](https://github.com/twister25rus-dot/Neppy/commit/7f58288ed81f39689396e3da4e99b3a651be0e9e))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/a819646df4c3ba7a7295ee477fcfc6936aa79b08...7f58288ed81f39689396e3da4e99b3a651be0e9e
+
 ## [0.68.1] - 2026-10-07
 
 ### What's Changed
