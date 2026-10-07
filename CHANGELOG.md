@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.68.1] - 2026-10-07
+
+### What's Changed
+
+- feat: Debug Mode switch in chat; keep a stopped MLX server stopped ([`8cf15e8d`](https://github.com/twister25rus-dot/Neppy/commit/8cf15e8d1388b78113bb655f93ac53b67237a6d3))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/f0d928faee54bace73a448389a9909934873b2d8...8cf15e8d1388b78113bb655f93ac53b67237a6d3
+
 ## [0.68.0] - 2026-10-07
 
 ### What's Changed
