@@ -1,11 +1,11 @@
 {
-  "version": "0.68.1",
-  "notes": "## What's Changed\n\n- feat: Debug Mode switch in chat; keep a stopped MLX server stopped ([`8cf15e8d`](https://github.com/twister25rus-dot/Neppy/commit/8cf15e8d1388b78113bb655f93ac53b67237a6d3))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/f0d928faee54bace73a448389a9909934873b2d8...8cf15e8d1388b78113bb655f93ac53b67237a6d3",
-  "pub_date": "2026-10-07T06:31:15Z",
+  "version": "0.68.2",
+  "notes": "## What's Changed\n\n- fix: show approval cards in every chat; unstall Debug turns; tool rows ([`7f58288e`](https://github.com/twister25rus-dot/Neppy/commit/7f58288ed81f39689396e3da4e99b3a651be0e9e))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/a819646df4c3ba7a7295ee477fcfc6936aa79b08...7f58288ed81f39689396e3da4e99b3a651be0e9e",
+  "pub_date": "2026-10-07T11:00:40Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakFLQWRMTFBQQ1FEME82eGQ4Q1pDOXJpTmpZdFZEeURPMUhZL3ZybVN1WVliOUI1WWRjTUVRZjZJZjI3ZVZuR0ZMdVAwWEkvZUEvbExiYXFjY1BXM2cwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzU0MzAyCWZpbGU6TmVwcHkuYXBwLnRhci5negpoVTdCZklpcnhjTytKb1Q2aEpVSWE5bWdWSWk5eDdaTDE5U3BscDB2ZmliWUY3ZmF2UVF3RHFEOGE5bldpa3J5VDVaczNKYmJ2UmVNYmM0WWIyQmxDdz09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/617811205"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakt1bDZiNHhkMFFJRi91cGg1YVdPbGloTE1JdGRlV09FY3pURWQ3RnlvWjBkWmdaamg0c0tYWG9zY3NlV1JodGY3Q0JUT3NiOUpZd1JJUkZGTUhDMGc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzcwNDkyCWZpbGU6TmVwcHkuYXBwLnRhci5negpkL0E0ZHZKR3NETUhqOHBrNDgwYzhXbUtDVHNFYzhkOC9zUXZYK0l2U3FtZE5IK2lmdnlxaE1QWjFkUkVSZ1Y3cWMyajBkSDlTUjVxTFA3UUNBZnlEUT09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/618426085"
     }
   }
 }
