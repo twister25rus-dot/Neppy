@@ -941,7 +941,7 @@ fn create_chat_model_from_string_with_model_id_inner(
             return result;
         }
         if let Some(result) =
-            try_create_local_runtime_chat_model_from_string(role, &resolved, config, true)
+            try_create_local_runtime_chat_model_from_string(role, &resolved, config, true, true)
         {
             return result;
         }
@@ -1468,6 +1468,13 @@ pub(crate) fn create_turn_chat_model_with_native_tools_and_route(
         native_tool_calling,
     )
     .map(|(chat, provider, model)| {
+        // An `mlx:` model takes its default temperature from the server block
+        // (or the Qwen-family default) rather than the global role default.
+        let temperature = if provider == "mlx" {
+            crate::neppy::inference::local::mlx_tuning::turn_default_temperature(config, &model)
+        } else {
+            temperature
+        };
         let chat = with_default_temperature(chat, temperature);
         (
             with_turn_controls(chat, config.turn_controls),
@@ -1543,7 +1550,9 @@ fn create_turn_chat_model_with_native_tools_and_route_inner(
             return result
                 .map(|(chat, _configured_model)| (chat, provider_name.clone(), model.to_string()));
         }
-        if let Some(result) = try_create_local_runtime_chat_model(role, config) {
+        if let Some(result) =
+            try_create_local_runtime_chat_model_with_native_tools(role, config, native_tool_calling)
+        {
             return result
                 .map(|(chat, resolved_model)| (chat, provider_name.clone(), resolved_model));
         }
@@ -1845,8 +1854,25 @@ fn mlx_endpoint(config: &Config) -> String {
 }
 
 fn try_create_local_runtime_chat_model(role: &str, config: &Config) -> OptionalChatModelResult {
+    try_create_local_runtime_chat_model_with_native_tools(role, config, true)
+}
+
+/// `native_tool_calling` is the caller's ceiling (a text-mode agent passes
+/// `false`); the runtime's own profile decides whether native calling is ever
+/// on, so a prompt-guided runtime stays prompt-guided regardless.
+fn try_create_local_runtime_chat_model_with_native_tools(
+    role: &str,
+    config: &Config,
+    native_tool_calling: bool,
+) -> OptionalChatModelResult {
     let resolved = provider_for_role(role, config);
-    try_create_local_runtime_chat_model_from_string(role, &resolved, config, true)
+    try_create_local_runtime_chat_model_from_string(
+        role,
+        &resolved,
+        config,
+        true,
+        native_tool_calling,
+    )
 }
 
 fn try_create_local_runtime_chat_model_from_string(
@@ -1854,8 +1880,17 @@ fn try_create_local_runtime_chat_model_from_string(
     provider: &str,
     config: &Config,
     require_session: bool,
+    native_tool_calling: bool,
 ) -> OptionalChatModelResult {
-    use crate::neppy::inference::local::profile::{LOCAL_OPENAI_PROFILE, OMLX_PROFILE};
+    use crate::neppy::inference::local::profile::{
+        profile_for_kind, LocalProviderKind, LOCAL_OPENAI_PROFILE, OMLX_PROFILE,
+    };
+    // Native tool calling is a property of the runtime, not a blanket "no":
+    // the profile says Ollama/LM Studio/llama.cpp are prompt-guided and the MLX
+    // servers are native. The caller can only narrow that, never widen it.
+    let native_for = |kind: LocalProviderKind| {
+        native_tool_calling && profile_for_kind(kind).native_tool_calling()
+    };
 
     let p = provider.trim().to_string();
     let is_local = p.starts_with(OLLAMA_PROVIDER_PREFIX)
@@ -1934,6 +1969,7 @@ fn try_create_local_runtime_chat_model_from_string(
             &unsupported,
             temp,
             config.local_ai.num_ctx,
+            native_for(LocalProviderKind::Ollama),
         );
         return Some(Ok((chat, model)));
     }
@@ -1953,6 +1989,7 @@ fn try_create_local_runtime_chat_model_from_string(
             &unsupported,
             temp,
             None,
+            native_for(LocalProviderKind::LmStudio),
         );
         return Some(Ok((chat, model)));
     }
@@ -1977,7 +2014,12 @@ fn try_create_local_runtime_chat_model_from_string(
             &unsupported,
             temp,
             None,
+            native_for(LocalProviderKind::Mlx),
         );
+        // Sampling / thinking defaults for the server block and text-form tool
+        // call recovery. Innermost, so the gate below still wraps every request.
+        let chat =
+            crate::neppy::inference::local::mlx_tuning::tune_mlx_chat_model(chat, &model, config);
         // Single-flight + lazy start + idle/pressure policy for the managed
         // worker. A no-op unless `mlx.enabled`.
         let chat =
@@ -2000,6 +2042,7 @@ fn try_create_local_runtime_chat_model_from_string(
             &unsupported,
             temp,
             None,
+            native_for(LocalProviderKind::Omlx),
         );
         return Some(Ok((chat, model)));
     }
@@ -2019,6 +2062,7 @@ fn try_create_local_runtime_chat_model_from_string(
             &unsupported,
             temp,
             None,
+            native_for(LocalProviderKind::LocalOpenai),
         );
         return Some(Ok((chat, model)));
     }
@@ -2031,7 +2075,7 @@ pub(crate) fn create_local_chat_model_from_string(
     provider: &str,
     config: &Config,
 ) -> anyhow::Result<(Arc<dyn ChatModel<()>>, String)> {
-    try_create_local_runtime_chat_model_from_string("chat", provider, config, false)
+    try_create_local_runtime_chat_model_from_string("chat", provider, config, false, true)
         .ok_or_else(|| anyhow::anyhow!("unsupported local provider string '{provider}'"))?
 }
 

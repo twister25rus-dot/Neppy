@@ -114,6 +114,23 @@ pub struct LocalProviderProfile {
     pub base_url_env: &'static str,
 }
 
+impl LocalProviderProfile {
+    /// Whether the harness should advertise **native** (OpenAI `tools`)
+    /// calling for this runtime. Only [`ToolSupport::Native`] says yes:
+    /// `ModelDependent` has no per-model probe wired here, so it stays on the
+    /// prompt-guided path rather than risk an HTTP 400 on `tools`.
+    pub const fn native_tool_calling(&self) -> bool {
+        matches!(self.tool_support, ToolSupport::Native)
+    }
+}
+
+/// Whether the harness should advertise native tool calling for a local
+/// provider string (`mlx:...`, `ollama:...`). `None` for non-local strings, so
+/// callers can keep their own default for cloud / managed providers.
+pub fn native_tool_calling_for_provider_string(provider: &str) -> Option<bool> {
+    kind_from_provider_string(provider).map(|kind| profile_for_kind(kind).native_tool_calling())
+}
+
 /// Ollama profile: conservative defaults, no native tools.
 pub const OLLAMA_PROFILE: LocalProviderProfile = LocalProviderProfile {
     kind: LocalProviderKind::Ollama,
@@ -338,6 +355,27 @@ mod tests {
 
         let mlx = profile_for_kind(LocalProviderKind::Mlx);
         assert_eq!(mlx.default_context_window, Some(MLX_DEFAULT_CONTEXT_WINDOW));
+    }
+
+    #[test]
+    fn native_tool_calling_follows_the_profile_not_a_blanket_false() {
+        assert!(profile_for_kind(LocalProviderKind::Mlx).native_tool_calling());
+        assert!(profile_for_kind(LocalProviderKind::Omlx).native_tool_calling());
+        assert!(!profile_for_kind(LocalProviderKind::Ollama).native_tool_calling());
+        assert!(!profile_for_kind(LocalProviderKind::LmStudio).native_tool_calling());
+        assert!(!profile_for_kind(LocalProviderKind::LocalOpenai).native_tool_calling());
+        assert_eq!(
+            native_tool_calling_for_provider_string("mlx:ornith"),
+            Some(true)
+        );
+        assert_eq!(
+            native_tool_calling_for_provider_string("ollama:qwen3:14b"),
+            Some(false)
+        );
+        assert_eq!(
+            native_tool_calling_for_provider_string("openai:gpt-4o"),
+            None
+        );
     }
 
     #[test]

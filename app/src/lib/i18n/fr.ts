@@ -7629,6 +7629,27 @@ const messages: TranslationMap = {
   'debug.rollback.done':
     "Changements annulés. Un point de contrôle de l'état précédent a été enregistré.",
   'debug.rollback.error': "Échec de l'annulation : {error}",
+  'debug.localInstall.title': 'Installation locale',
+  'debug.localInstall.build': 'Compiler et installer en local',
+  'debug.localInstall.rebuild': 'Compiler à nouveau',
+  'debug.localInstall.building':
+    "Compilation de l'application en cours. Cela peut prendre plusieurs minutes.",
+  'debug.localInstall.ready': 'Build prêt à installer',
+  'debug.localInstall.install': 'Installer et redémarrer',
+  'debug.localInstall.confirmTitle': 'Installer ce build ?',
+  'debug.localInstall.confirmBody':
+    "Neppy va se fermer, remplacer l'application installée par ce build, puis se rouvrir. Votre application actuelle est d'abord sauvegardée et restaurée automatiquement si la nouvelle ne démarre pas.",
+  'debug.localInstall.installing': 'Installation en cours. Neppy va redémarrer.',
+  'debug.localInstall.failed': 'Le build local a échoué.',
+  'debug.localInstall.logLabel': 'Sortie du build',
+  'debug.localInstall.restored':
+    "La dernière installation locale n'a pas démarré, votre version précédente a donc été restaurée automatiquement.",
+  'debug.localInstall.dismiss': 'Ignorer',
+  'debug.localInstall.quitFailed':
+    "Impossible de fermer l'application. Quittez Neppy vous-même pour terminer l'installation.",
+  'debug.localInstall.version': 'v{version}',
+  'debug.localInstall.startFailed': 'Impossible de lancer le build : {error}',
+  'debug.localInstall.installFailed': "Impossible de lancer l'installation : {error}",
   'debug.panels.loading': 'Chargement…',
   'debug.panels.unknownError': 'Erreur inconnue',
   'debug.panels.tabsLabel': 'Vues de débogage',

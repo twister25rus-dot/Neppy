@@ -1,5 +1,7 @@
+import { invoke } from '@tauri-apps/api/core';
 import debug from 'debug';
 
+import { isTauri } from '../../utils/tauriCommands/common';
 import { callCoreRpc } from '../coreRpcClient';
 
 // ---------------------------------------------------------------------------
@@ -207,3 +209,67 @@ export const getDebugSettings = (): Promise<DebugModeSettings> =>
 export const updateDebugSettings = (
   patch: Partial<DebugModeSettings>
 ): Promise<DebugModeSettings> => call<DebugModeSettings>('settings_update', { patch });
+
+// ---------------------------------------------------------------------------
+// Local install: build the source into a Neppy.app and swap it into
+// /Applications without GitHub or the updater. Wire shapes mirror
+// `src/neppy/agent/debug_mode/local_install.rs`.
+// ---------------------------------------------------------------------------
+
+export type LocalInstallPhase = 'idle' | 'building' | 'ready' | 'failed' | 'installing';
+
+export interface LocalInstallStatus {
+  phase: LocalInstallPhase;
+  /** Version baked into the new bundle, when known. */
+  version: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  bundle_path: string | null;
+  /** Build failure tail; empty unless `phase` is `failed`. */
+  error: string;
+  /** Tail of the build output (absent when idle). */
+  log_tail?: string;
+}
+
+/** The installer helper's verdict from its last run. */
+export interface LocalInstallResult {
+  status: 'installed' | 'restored' | 'failed';
+  version: string;
+  backup: string;
+  ts: string;
+  reason: string;
+  /** True once acknowledged: the one-time notice has been shown. */
+  seen: boolean;
+}
+
+/**
+ * Start the background build. The core refuses while a build runs and when the
+ * active debug task changed critical files with no passed candidate.
+ */
+export const startLocalInstallBuild = (): Promise<LocalInstallStatus> =>
+  call<LocalInstallStatus>('install_local_build');
+
+export const getLocalInstallStatus = (): Promise<LocalInstallStatus> =>
+  call<LocalInstallStatus>('install_local_status');
+
+/**
+ * Hand the built bundle to the detached installer helper (sends `confirm:
+ * true`; callers must have asked the user first). The app must quit afterwards:
+ * see {@link quitApp}.
+ */
+export const applyLocalInstall = (): Promise<LocalInstallStatus> =>
+  call<LocalInstallStatus>('install_local_apply', { confirm: true });
+
+/** The installer's last verdict (`null` when none). `acknowledge` marks it seen. */
+export const getLocalInstallResult = (acknowledge = false): Promise<LocalInstallResult | null> =>
+  call<LocalInstallResult | null>('install_local_result', acknowledge ? { acknowledge: true } : {});
+
+/** Quit the desktop app (the Tauri `app_quit` command). No-op outside Tauri. */
+export async function quitApp(): Promise<void> {
+  if (!isTauri()) {
+    log('quitApp skipped: not running in Tauri');
+    return;
+  }
+  log('quitApp: invoking app_quit');
+  await invoke<void>('app_quit');
+}

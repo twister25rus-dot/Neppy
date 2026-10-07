@@ -13,6 +13,10 @@
 use crate::neppy::config::schema::MlxServerConfig;
 use crate::neppy::config::Config;
 
+/// Tokens per prefill step the managed worker launches with when the block
+/// leaves `prefill_step_size` unset (the server's own default is 2048).
+pub(crate) const DEFAULT_WORKER_PREFILL_STEP_SIZE: u32 = 512;
+
 /// The block as it is launched for the assistant's worker: with a single
 /// sequence slot when the stored block leaves it unset.
 ///
@@ -29,7 +33,23 @@ use crate::neppy::config::Config;
 pub(crate) fn apply_spawn_limits(config: &Config, server: &MlxServerConfig) -> MlxServerConfig {
     let mut effective = server.clone();
     let is_worker = super::worker::worker_server_id(config).as_deref() == Some(server.id.as_str());
-    if !is_worker || !config.local_assistant.enabled {
+    if !is_worker {
+        return effective;
+    }
+    // Chunk the prefill smaller than mlx_vlm's 2048 default. A long prompt
+    // (a ~36k-token agent turn) otherwise grows the worker by ~8 GiB of
+    // activations on a 36 GiB Mac and tips the machine into memory pressure.
+    // `--prefill-step-size` exists on `mlx_vlm.server` 0.7 (`server/cli.py`);
+    // the user's explicit value always wins.
+    if effective.is_vlm() && effective.prefill_step_size == 0 {
+        effective.prefill_step_size = DEFAULT_WORKER_PREFILL_STEP_SIZE;
+        log::debug!(
+            "[mlx] `{}` has no prefill_step_size; launching with {}",
+            server.id,
+            DEFAULT_WORKER_PREFILL_STEP_SIZE
+        );
+    }
+    if !config.local_assistant.enabled {
         return effective;
     }
     // The KV cap is NOT imposed here: the worker is shared with normal chat,
@@ -289,5 +309,34 @@ mod limits_tests {
         let launched = apply_spawn_limits(&config, &worker);
         assert_eq!(launched.max_kv_size, 0);
         assert_eq!(launched.max_num_seqs, 0);
+    }
+
+    #[test]
+    fn the_worker_prefills_in_small_chunks_unless_the_user_chose() {
+        let mut config = Config::default();
+        config.local_assistant.enabled = false;
+        let stored = config.mlx.servers[0].clone();
+        assert!(stored.is_vlm());
+        let launched = apply_spawn_limits(&config, &stored);
+        let args = build_argv(&launched, 8123);
+        assert_eq!(flag(&args, "--prefill-step-size"), Some("512"));
+        // The stored block is untouched.
+        assert!(flag(&build_argv(&stored, 8123), "--prefill-step-size").is_none());
+
+        config.mlx.servers[0].prefill_step_size = 1024;
+        let launched = apply_spawn_limits(&config, &config.mlx.servers[0]);
+        assert_eq!(
+            flag(&build_argv(&launched, 8123), "--prefill-step-size"),
+            Some("1024")
+        );
+    }
+
+    #[test]
+    fn a_non_worker_block_keeps_the_server_prefill_default() {
+        let mut config = Config::default();
+        let mut other = config.mlx.servers[0].clone();
+        other.id = "embeddings-only".into();
+        config.mlx.servers.push(other.clone());
+        assert_eq!(apply_spawn_limits(&config, &other).prefill_step_size, 0);
     }
 }

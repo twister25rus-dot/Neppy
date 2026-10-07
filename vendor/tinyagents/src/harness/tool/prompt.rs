@@ -238,6 +238,18 @@ pub fn parse_prompt_tool_calls_from_text(text: &str) -> (String, Vec<ToolCall>) 
         cleaned.push_str(&rest[..open.start]);
         let after_open = &rest[open.body_start..];
         let Some(end) = after_open.find(open.close) else {
+            // A Qwen-coder call whose only missing piece is the outer close tag
+            // (the stop token often lands right after `</function>`) is still a
+            // complete call. Anything else unterminated stays plain text.
+            if open.close == CLOSE_TAG {
+                let body = after_open.trim();
+                if body.starts_with(FUNCTION_OPEN) && body.contains(FUNCTION_CLOSE) {
+                    if let Some(call) = parse_function_form(body, calls.len() + 1) {
+                        calls.push(call);
+                        return (cleaned.trim().to_string(), calls);
+                    }
+                }
+            }
             // Unterminated block: keep it (and everything after) as plain text.
             cleaned.push_str(&rest[open.start..]);
             return (cleaned.trim().to_string(), calls);
@@ -542,8 +554,90 @@ const CALL_ARGUMENT_KEYS: [&str; 4] = ["arguments", "parameters", "args", "input
 /// from; it appears in the id only for readability. Uniqueness comes from the
 /// process-wide counter in [`next_synthetic_call_id`], not from `slot`.
 fn parse_one(inner: &str, slot: usize) -> Option<ToolCall> {
-    let value = parse_relaxed_object(inner)?;
-    tool_call_from_object(&value, slot)
+    if let Some(value) = parse_relaxed_object(inner) {
+        return tool_call_from_object(&value, slot);
+    }
+    parse_function_form(inner, slot)
+}
+
+const FUNCTION_OPEN: &str = "<function=";
+const FUNCTION_CLOSE: &str = "</function>";
+const PARAMETER_OPEN: &str = "<parameter=";
+const PARAMETER_CLOSE: &str = "</parameter>";
+
+/// Parses the Qwen-coder chat-template grammar that some models write inside
+/// `<tool_call>` instead of JSON:
+///
+/// ```text
+/// <function=NAME>
+/// <parameter=KEY>
+/// VALUE
+/// </parameter>
+/// </function>
+/// ```
+///
+/// Only a body that *starts* with `<function=` is read, so prose never becomes a
+/// call. A missing `</function>` or `</parameter>` (a truncated stream) is
+/// tolerated. Values are text on the wire, so without a schema they are typed
+/// conservatively: an object, array, boolean or canonically written number is
+/// parsed as JSON, and everything else stays the string it was written as.
+/// Multi-line values are preserved apart from the template's one framing
+/// newline either side.
+fn parse_function_form(inner: &str, slot: usize) -> Option<ToolCall> {
+    let inner = inner.trim();
+    let after = inner.strip_prefix(FUNCTION_OPEN)?;
+    let name_end = after.find('>')?;
+    let name = after[..name_end].trim().trim_matches('"');
+    if name.is_empty() {
+        return None;
+    }
+    let body = &after[name_end + 1..];
+    let body = body.find(FUNCTION_CLOSE).map_or(body, |end| &body[..end]);
+
+    let mut arguments = Map::new();
+    let mut rest = body;
+    while let Some(open) = rest.find(PARAMETER_OPEN) {
+        let key_start = open + PARAMETER_OPEN.len();
+        let key_end = rest[key_start..].find('>')?;
+        let key = rest[key_start..key_start + key_end]
+            .trim()
+            .trim_matches('"');
+        let value_start = key_start + key_end + 1;
+        let (raw, next) = match rest[value_start..].find(PARAMETER_CLOSE) {
+            Some(end) => (
+                &rest[value_start..value_start + end],
+                value_start + end + PARAMETER_CLOSE.len(),
+            ),
+            // Cut off before its close tag: the value runs to the end.
+            None => (&rest[value_start..], rest.len()),
+        };
+        if !key.is_empty() {
+            arguments.insert(key.to_string(), typed_parameter_value(raw));
+        }
+        rest = &rest[next..];
+    }
+    Some(ToolCall {
+        id: next_synthetic_call_id(slot),
+        name: name.to_string(),
+        arguments: Value::Object(arguments),
+        invalid: None,
+    })
+}
+
+fn typed_parameter_value(raw: &str) -> Value {
+    let text = raw
+        .strip_prefix("\r\n")
+        .or_else(|| raw.strip_prefix('\n'))
+        .unwrap_or(raw);
+    let text = text
+        .strip_suffix("\r\n")
+        .or_else(|| text.strip_suffix('\n'))
+        .unwrap_or(text);
+    match serde_json::from_str::<Value>(text.trim()) {
+        Ok(value @ (Value::Object(_) | Value::Array(_) | Value::Bool(_))) => value,
+        Ok(Value::Number(n)) if text.trim() == n.to_string() => Value::Number(n),
+        _ => Value::String(text.to_string()),
+    }
 }
 
 /// Monotonic source of unique synthetic tool-call ids.

@@ -326,6 +326,34 @@ impl XmlToolDispatcher {
         XmlDialect::instructions(&to_schemas(specs))
     }
 
+    /// The protocol block alone, with no catalogue.
+    ///
+    /// The system prompt already carries one catalogue: `ToolsSection` renders a
+    /// `## Tools` entry with a `Call as: name[a|b]` signature per tool. The
+    /// dialect's own [`XmlDialect::instructions`] appends a second, full-schema
+    /// one under `### Available Tools`, and for a 124-tool agent on a local
+    /// model that duplicate was 84.7k characters on top of 41.8k (141.8k vs
+    /// 15.5k on a hosted model). Send the protocol once and let the section own
+    /// the catalogue, the way the sub-agent path already does.
+    ///
+    /// The one thing the signature catalogue does not say is how it maps onto
+    /// this protocol's JSON body, so a line saying so is appended.
+    pub fn protocol_instructions() -> String {
+        let full = XmlDialect::instructions(&[]);
+        // `instructions` ends in the (now empty) catalogue heading; a heading
+        // over nothing reads as a missing list.
+        let protocol = full
+            .trim_end()
+            .strip_suffix("### Available Tools")
+            .unwrap_or(&full)
+            .trim_end();
+        format!(
+            "{protocol}\n\nThe tools are listed in the `## Tools` section above. In the JSON \
+             body, `name` is the tool's name and `arguments` is an object keyed by the \
+             parameter names shown in that tool's `Call as:` signature.\n"
+        )
+    }
+
     /// Internal helper to extract tool calls from a raw text string.
     #[cfg(test)]
     pub(crate) fn parse_tool_calls_from_text(response: &str) -> (String, Vec<ParsedToolCall>) {
@@ -344,11 +372,19 @@ impl ToolDispatcher for XmlToolDispatcher {
     }
 
     fn prompt_instructions(&self, tools: &[Box<dyn Tool>]) -> String {
+        // An empty slice means "protocol only" (the sub-agent path, which has
+        // the catalogue in its own `## Tools` section already).
+        if tools.is_empty() {
+            return Self::protocol_instructions();
+        }
         XmlDialect::instructions(&schemas_from_tools(tools))
     }
 
-    fn prompt_instructions_for_specs(&self, specs: &[ToolSpec]) -> Option<String> {
-        Some(Self::prompt_instructions_from_specs(specs))
+    fn prompt_instructions_for_specs(&self, _specs: &[ToolSpec]) -> Option<String> {
+        // The session prompt renders the catalogue through `ToolsSection`; see
+        // [`XmlToolDispatcher::protocol_instructions`] for why it is not
+        // repeated here.
+        Some(Self::protocol_instructions())
     }
 
     fn to_provider_messages(&self, history: &[ConversationMessage]) -> Vec<ChatMessage> {
@@ -425,7 +461,36 @@ pub struct NativeToolDispatcher;
 
 impl ToolDispatcher for NativeToolDispatcher {
     fn parse_response(&self, response: &ChatResponse) -> (String, Vec<ParsedToolCall>) {
-        dispatch_parse(&NativeDialect, response)
+        let (text, calls) = dispatch_parse(&NativeDialect, response);
+        if !calls.is_empty() || !response.tool_calls.is_empty() {
+            return (text, calls);
+        }
+        // The dialect's own text fallback reads the JSON-in-tag spelling only.
+        // A Qwen-family model asked for native calling can write the call in the
+        // template's own `<function=...><parameter=...>` grammar instead, and
+        // without this a call the model clearly attempted reads as "none".
+        // Any name is accepted: this method has no tool list, and the caller
+        // (the wrap-up guard) only asks whether a call was attempted.
+        match crate::neppy::inference::local::mlx_tool_text::recover_text_tool_calls(&text, None) {
+            Some(recovery) => {
+                tracing::debug!(
+                    parse_mode = "qwen_text_fallback",
+                    parsed_tool_calls = recovery.calls.len(),
+                    "native dispatcher recovered text-form tool calls"
+                );
+                let calls = recovery
+                    .calls
+                    .into_iter()
+                    .map(|call| ParsedToolCall {
+                        name: call.name,
+                        arguments: call.arguments,
+                        tool_call_id: None,
+                    })
+                    .collect();
+                (recovery.text, calls)
+            }
+            None => (text, calls),
+        }
     }
 
     fn format_results(&self, results: &[ToolExecutionResult]) -> ConversationMessage {

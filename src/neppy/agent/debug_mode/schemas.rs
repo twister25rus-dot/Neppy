@@ -38,6 +38,7 @@ const FUNCTIONS: &[&str] = &[
 pub fn all_controller_schemas() -> Vec<ControllerSchema> {
     let mut all: Vec<ControllerSchema> = FUNCTIONS.iter().map(|f| schemas(f)).collect();
     all.extend(super::candidate_schemas::controller_schemas());
+    all.extend(super::local_install_schemas::controller_schemas());
     all
 }
 
@@ -50,6 +51,7 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         })
         .collect();
     all.extend(super::candidate_schemas::registered_controllers());
+    all.extend(super::local_install_schemas::registered_controllers());
     all
 }
 
@@ -236,7 +238,8 @@ mod tests {
     #[test]
     fn every_function_has_a_schema_and_handler() {
         let all = all_controller_schemas();
-        let candidates = super::super::candidate_schemas::controller_schemas().len();
+        let candidates = super::super::candidate_schemas::controller_schemas().len()
+            + super::super::local_install_schemas::controller_schemas().len();
         assert_eq!(all.len(), FUNCTIONS.len() + candidates);
         for (s, f) in all.iter().zip(FUNCTIONS) {
             assert_eq!(s.namespace, "debug_mode");

@@ -19,6 +19,8 @@ mod core;
 pub(crate) mod gated_model;
 mod mlx_patch;
 mod mlx_schemas;
+pub(crate) mod mlx_tool_text;
+pub(crate) mod mlx_tuning;
 pub mod ops;
 pub mod runtime_presets;
 mod schemas;

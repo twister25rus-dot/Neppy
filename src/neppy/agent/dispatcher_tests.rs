@@ -572,3 +572,332 @@ fn to_provider_messages_treats_unrecognized_role_as_user() {
     );
     assert_eq!(out[0].content, "hi");
 }
+
+// ── One tool catalogue, never two ────────────────────────────────────────
+
+#[test]
+fn xml_protocol_instructions_carry_no_catalogue() {
+    let protocol = XmlToolDispatcher::protocol_instructions();
+    assert!(protocol.contains("## Tool Use Protocol"));
+    assert!(protocol.contains("<tool_call>"));
+    assert!(
+        !protocol.contains("### Available Tools"),
+        "a heading over nothing reads as a missing list: {protocol}"
+    );
+    assert!(!protocol.contains("Parameters: `"), "no schema catalogue");
+    assert!(protocol.contains("`## Tools` section"));
+}
+
+#[test]
+fn xml_session_instructions_are_protocol_only_whatever_the_specs() {
+    let specs = vec![ToolSpec {
+        name: "shell".into(),
+        description: "run a command".into(),
+        parameters: serde_json::json!({"type":"object","properties":{"command":{"type":"string"}}}),
+    }];
+    let from_specs = XmlToolDispatcher
+        .prompt_instructions_for_specs(&specs)
+        .expect("xml renders instructions from specs");
+    assert_eq!(from_specs, XmlToolDispatcher::protocol_instructions());
+    assert!(!from_specs.contains("run a command"));
+    // The explicit "full catalogue" renderer still exists for callers that want it.
+    assert!(XmlToolDispatcher::prompt_instructions_from_specs(&specs).contains("run a command"));
+}
+
+#[test]
+fn xml_prompt_instructions_with_no_tools_is_protocol_only_and_with_tools_is_unchanged() {
+    assert_eq!(
+        XmlToolDispatcher.prompt_instructions(&[]),
+        XmlToolDispatcher::protocol_instructions()
+    );
+}
+
+// ── Native dispatcher: Qwen-coder text fallback ──────────────────────────
+
+fn text_response(text: &str) -> ChatResponse {
+    ChatResponse {
+        text: Some(text.into()),
+        tool_calls: vec![],
+        usage: None,
+        reasoning_content: None,
+    }
+}
+
+#[test]
+fn native_dispatcher_recovers_a_qwen_coder_call_written_as_text() {
+    let text = "Looking.\n<tool_call>\n<function=shell>\n<parameter=command>\nls\n</parameter>\n</function>\n</tool_call>";
+    let (visible, calls) = NativeToolDispatcher.parse_response(&text_response(text));
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].name, "shell");
+    assert_eq!(calls[0].arguments, serde_json::json!({"command": "ls"}));
+    assert_eq!(visible, "Looking.");
+}
+
+#[test]
+fn native_dispatcher_still_recovers_the_json_text_form() {
+    let text = "<tool_call>{\"name\":\"shell\",\"arguments\":{\"command\":\"ls\"}}</tool_call>";
+    let (_, calls) = NativeToolDispatcher.parse_response(&text_response(text));
+    assert_eq!(calls.len(), 1);
+}
+
+#[test]
+fn native_dispatcher_ignores_prose_that_mentions_the_tags() {
+    let text = "Wrap a call in <tool_call> tags, or write <function=NAME> yourself.";
+    let (visible, calls) = NativeToolDispatcher.parse_response(&text_response(text));
+    assert!(calls.is_empty());
+    assert_eq!(visible, text);
+}
+
+#[test]
+fn native_dispatcher_prefers_structured_calls_over_text() {
+    let response = ChatResponse {
+        text: Some("<function=shell><parameter=command>\nrm\n</parameter></function>".into()),
+        tool_calls: vec![crate::neppy::inference::provider::ToolCall {
+            id: "tc1".into(),
+            name: "file_read".into(),
+            arguments: "{\"path\":\"a.txt\"}".into(),
+            extra_content: None,
+        }],
+        usage: None,
+        reasoning_content: None,
+    };
+    let (_, calls) = NativeToolDispatcher.parse_response(&response);
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].name, "file_read");
+}
+
+// ── Measured: the debug_agent system prompt on an MLX route ──────────────
+
+/// Builds the real `debug_agent` session on a given chat route and returns the
+/// rendered system prompt, its tool count, and the visible tool specs.
+async fn debug_agent_prompt(chat_provider: &str) -> (String, Vec<ToolSpec>) {
+    use crate::neppy::agent::context::prompt::LearnedContextData;
+    use crate::neppy::agent::debug_mode::turn;
+    use crate::neppy::agent::harness::AgentDefinitionRegistry;
+
+    AgentDefinitionRegistry::init_global_builtins().expect("builtins");
+    let workspace = tempfile::TempDir::new().expect("tempdir");
+    let mut config = crate::neppy::config::Config {
+        workspace_dir: workspace.path().to_path_buf(),
+        action_dir: workspace.path().to_path_buf(),
+        ..crate::neppy::config::Config::default()
+    };
+    config.chat_provider = Some(chat_provider.to_string());
+
+    // `debug_agent` only builds inside a Debug-mode turn, which needs a git repo.
+    let repo = tempfile::tempdir().expect("repo");
+    for args in [
+        &["init", "-q"][..],
+        &["commit", "--allow-empty", "-qm", "i"][..],
+    ] {
+        assert!(std::process::Command::new("git")
+            .arg("-C")
+            .arg(repo.path())
+            .args(["-c", "user.name=t", "-c", "user.email=t@t"])
+            .args(args)
+            .status()
+            .expect("git runs")
+            .success());
+    }
+    let ws = tempfile::tempdir().expect("ws");
+    let root = repo.path().canonicalize().expect("canonical root");
+    turn::run_in_root(ws.path(), root, "measure", async {
+        let agent = crate::neppy::agent::Agent::from_config_for_agent(&config, "debug_agent")
+            .map_err(|e| e.to_string())?;
+        let prompt = agent
+            .build_system_prompt(LearnedContextData::default())
+            .map_err(|e| e.to_string())?;
+        Ok::<_, String>((prompt, agent.tool_specs().to_vec()))
+    })
+    .await
+    .expect("debug_agent builds inside a Debug turn")
+}
+
+/// The scout measured 141,785 characters for `debug_agent` on MLX against
+/// 15,545 on a hosted model: a `## Tools` catalogue (41.8k) plus a second,
+/// full-schema one under `## Tool Use Protocol` (84.7k) because the runtime was
+/// advertised as prompt-guided. Native calling removes both from the prompt (the
+/// schemas ride the request), and a runtime that stays prompt-guided now gets the
+/// protocol once.
+#[tokio::test(flavor = "multi_thread")]
+async fn debug_agent_prompt_carries_at_most_one_tool_catalogue() {
+    let (native, specs) = debug_agent_prompt("mlx:org/model").await;
+    let (guided, _) = debug_agent_prompt("ollama:org/model").await;
+
+    // Reconstruct what the prompt-guided path used to send: the same prompt with
+    // the dialect's full-schema catalogue in place of the protocol-only block.
+    let protocol = XmlToolDispatcher::protocol_instructions();
+    let old_full = XmlToolDispatcher::prompt_instructions_from_specs(&specs);
+    assert!(
+        guided.contains(&protocol),
+        "prompt-guided agents get the protocol block"
+    );
+    let before = guided.len() - protocol.len() + old_full.len();
+
+    eprintln!(
+        "[measure] debug_agent system prompt: tools={} \
+         before(mlx, prompt-guided, two catalogues)={} chars \
+         after(mlx, native)={} chars after(prompt-guided, one catalogue)={} chars",
+        specs.len(),
+        before,
+        native.len(),
+        guided.len()
+    );
+
+    // One catalogue at most: a tool's name appears as a catalogue entry once.
+    let entry = "- **shell**:";
+    assert!(
+        guided.matches(entry).count() <= 1,
+        "duplicate catalogue entry"
+    );
+    assert!(
+        !guided.contains("### Available Tools"),
+        "the second, full-schema catalogue is gone"
+    );
+    assert!(guided.len() < before, "{} !< {before}", guided.len());
+    // Native: no catalogue in the prompt at all (schemas are sent natively).
+    assert!(!native.contains(entry));
+    assert!(native.len() < guided.len());
+}
+
+// ── Compat: a thread written by the XML dispatcher, continued natively ───
+
+/// Existing MLX users have threads whose tool rounds were persisted by the
+/// prompt-guided dispatcher (calls as `<tool_call>` text inside an assistant
+/// message, results folded into a user turn). Local MLX turns now run native, so
+/// the same history is replayed onto a native request and then continued with a
+/// native tool round. The replay must stay a valid request: old rounds are plain
+/// text, never orphaned `tool` messages, and the new native round pairs ids.
+#[tokio::test]
+async fn an_xml_written_history_replays_validly_onto_a_native_request() {
+    use crate::neppy::agent::message_convert::history_to_messages;
+    use crate::neppy::agent::messages::ChatMessage;
+    use crate::neppy::config::Config;
+    use tinyagents::harness::model::ModelRequest;
+
+    // Persist two old tool rounds exactly as the XML dispatcher does.
+    let xml_round = |id: &str, cmd: &str, out: &str| -> Vec<ConversationMessage> {
+        vec![
+            ConversationMessage::AssistantToolCalls {
+                // Prompt-guided models write the call into the visible text.
+                text: Some(format!(
+                    "Checking.\n<tool_call>{{\"name\":\"shell\",\"arguments\":{{\"command\":\"{cmd}\"}}}}</tool_call>"
+                )),
+                tool_calls: vec![crate::neppy::inference::provider::ToolCall {
+                    id: id.into(),
+                    name: "shell".into(),
+                    arguments: format!("{{\"command\":\"{cmd}\"}}"),
+                    extra_content: None,
+                }],
+                reasoning_content: None,
+                extra_metadata: None,
+            },
+            XmlToolDispatcher.format_results(&[ToolExecutionResult {
+                name: "shell".into(),
+                output: out.into(),
+                success: true,
+                tool_call_id: Some(id.into()),
+            }]),
+        ]
+    };
+    let mut conversation = xml_round("c1", "ls", "a.txt");
+    conversation.extend(xml_round("c2", "pwd", "/tmp"));
+    let mut history = vec![ChatMessage::system("sys"), ChatMessage::user("list files")];
+    history.extend(XmlToolDispatcher.to_provider_messages(&conversation));
+    history.push(ChatMessage::assistant("There is a.txt in /tmp."));
+    // Sanity: the old form really is text, not envelopes.
+    assert!(history.iter().any(|m| m.content.contains("<tool_call>")));
+
+    // Continue natively: new user turn, then a native assistant call + result.
+    history.push(ChatMessage::user("now delete it"));
+    let native_round = vec![
+        ConversationMessage::AssistantToolCalls {
+            text: None,
+            tool_calls: vec![crate::neppy::inference::provider::ToolCall {
+                id: "n1".into(),
+                name: "shell".into(),
+                arguments: "{\"command\":\"rm a.txt\"}".into(),
+                extra_content: None,
+            }],
+            reasoning_content: None,
+            extra_metadata: None,
+        },
+        NativeToolDispatcher.format_results(&[ToolExecutionResult {
+            name: "shell".into(),
+            output: "removed".into(),
+            success: true,
+            tool_call_id: Some("n1".into()),
+        }]),
+    ];
+    history.extend(NativeToolDispatcher.to_provider_messages(&native_round));
+
+    let server = wiremock::MockServer::start().await;
+    wiremock::Mock::given(wiremock::matchers::method("POST"))
+        .and(wiremock::matchers::path("/v1/chat/completions"))
+        .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "id": "c", "object": "chat.completion",
+            "choices": [{"index": 0, "message": {"role": "assistant", "content": "done"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}
+        })))
+        .mount(&server)
+        .await;
+    let mut config = Config::default();
+    config.local_ai.base_url = Some(format!("{}/v1", server.uri()));
+    let (chat, _) =
+        crate::neppy::inference::provider::factory::create_local_chat_model_from_string(
+            "mlx:org/model",
+            &config,
+        )
+        .expect("builds");
+    assert!(
+        chat.profile().is_some_and(|p| p.tool_calling),
+        "native path"
+    );
+    let request = ModelRequest {
+        messages: history_to_messages(&history),
+        tools: vec![tinyagents::harness::tool::ToolSchema::new(
+            "shell",
+            "run",
+            serde_json::json!({"type":"object","properties":{"command":{"type":"string"}}}),
+        )],
+        ..ModelRequest::default()
+    };
+    chat.invoke(&(), request)
+        .await
+        .expect("request is accepted");
+
+    let received = server.received_requests().await.expect("recorded");
+    let body: serde_json::Value = serde_json::from_slice(&received[0].body).unwrap();
+    let messages = body["messages"].as_array().expect("messages");
+
+    // Every `tool` message answers a tool_call declared by the assistant message
+    // directly before it, and every declared call is answered.
+    let mut open: Vec<String> = Vec::new();
+    for message in messages {
+        match message["role"].as_str().unwrap() {
+            "assistant" => {
+                assert!(open.is_empty(), "unanswered tool_calls before {message}");
+                for call in message["tool_calls"].as_array().into_iter().flatten() {
+                    let id = call["id"].as_str().expect("tool_call id present");
+                    assert!(!id.is_empty());
+                    open.push(id.to_string());
+                }
+            }
+            "tool" => {
+                let id = message["tool_call_id"].as_str().expect("tool_call_id");
+                let pos = open.iter().position(|o| o == id);
+                assert!(pos.is_some(), "orphaned tool result {id}");
+                open.remove(pos.unwrap());
+            }
+            _ => assert!(open.is_empty(), "user/system turn inside a tool round"),
+        }
+    }
+    assert!(open.is_empty(), "every tool_call is answered");
+
+    // The old rounds stay readable: calls and results survive as text.
+    let wire = serde_json::to_string(messages).unwrap();
+    assert!(wire.contains("ls") && wire.contains("a.txt") && wire.contains("/tmp"));
+    assert!(wire.contains("tool_result") || wire.contains("Tool results"));
+    // And exactly one native round (n1) exists.
+    assert_eq!(wire.matches("\"tool_call_id\"").count(), 1);
+}

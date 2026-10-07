@@ -434,20 +434,7 @@ impl Agent {
         let master_model_hint = config
             .default_model
             .is_none()
-            .then(|| {
-                target_def.and_then(|def| {
-                    if def.id == "orchestrator" {
-                        match &def.model {
-                            crate::neppy::agent::harness::definition::ModelSpec::Hint(hint) => {
-                                Some(format!("hint:{hint}"))
-                            }
-                            _ => None,
-                        }
-                    } else {
-                        None
-                    }
-                })
-            })
+            .then(|| target_def.and_then(|def| coding_hint_for_definition(def, config)))
             .flatten();
         let provider_role = provider_role_for(
             agent_id,
@@ -996,6 +983,44 @@ impl Agent {
             }
         }
 
+        // Compact belt for weak/local models: a small model drowns in ~120 tool
+        // schemas, so on a local-runtime route the Debug agent keeps only the
+        // core inspect/edit/verify loop. Cloud routes skip this entirely and
+        // keep the full belt (byte-identical). Applied before the profile
+        // restriction so a profile allowlist still intersects with the result.
+        {
+            let resolved_provider =
+                crate::neppy::inference::provider::provider_for_role(provider_role, config);
+            let effective_agent_id = target_def.map(|d| d.id.as_str()).unwrap_or(agent_id);
+            if super::compact_belt_applies(
+                effective_agent_id,
+                &resolved_provider,
+                config.agent.compact_local_tools,
+            ) {
+                let registered: std::collections::HashSet<String> = tools
+                    .iter()
+                    .map(|t| t.name().to_string())
+                    .chain(delegation_tools.iter().map(|t| t.name().to_string()))
+                    .collect();
+                let before = if visible.is_empty() {
+                    registered.len()
+                } else {
+                    visible.len()
+                };
+                if let Some(narrowed) = super::compact_belt_visible(&visible, &registered) {
+                    log::info!(
+                        "[session-builder] compact local tool belt: agent={} provider_kind={} before={} after={}",
+                        effective_agent_id,
+                        resolved_provider.split(':').next().unwrap_or("local"),
+                        before,
+                        narrowed.len()
+                    );
+                    visible = narrowed;
+                    super::ensure_recovery_tool_visible(&mut visible);
+                }
+            }
+        }
+
         // Profile tool selection is a restriction on the resolved agent
         // definition, never a replacement for it. Apply it here at the shared
         // session-builder seam so web chat, cron, tasks, and delegated profile
@@ -1448,6 +1473,46 @@ fn resolve_dispatcher_kind(
     } else {
         base
     }
+}
+
+/// Whether `config.coding_provider` names a real route (set, non-blank, not the
+/// literal `"cloud"`). The non-orchestrator coding hint below is honoured only
+/// then, because an *unset* coding route resolves to the managed/BYOK cloud
+/// fallback rather than to `chat_provider` - routing a local-chat user's Debug
+/// agent to the cloud would be a silent behaviour change.
+fn coding_route_configured(config: &Config) -> bool {
+    config
+        .coding_provider
+        .as_deref()
+        .map(str::trim)
+        .is_some_and(|route| !route.is_empty() && route != "cloud")
+}
+
+/// The `hint:<role>` a top-level session for `def` routes through, if any.
+///
+/// - `orchestrator`: any explicit model hint (unchanged behaviour).
+/// - every other agent whose model hint is `coding` (e.g. `debug_agent`): the
+///   coding workload, but only when a coding provider is configured; otherwise
+///   `None`, i.e. the session keeps resolving through `chat_provider`.
+pub(super) fn coding_hint_for_definition(
+    def: &crate::neppy::agent::harness::definition::AgentDefinition,
+    config: &Config,
+) -> Option<String> {
+    use crate::neppy::agent::harness::definition::ModelSpec;
+    let ModelSpec::Hint(hint) = &def.model else {
+        return None;
+    };
+    if def.id == "orchestrator" {
+        return Some(format!("hint:{hint}"));
+    }
+    if hint.trim() == "coding" && coding_route_configured(config) {
+        log::debug!(
+            "[session-builder] agent_id={} honouring hint:coding via coding_provider",
+            def.id
+        );
+        return Some("hint:coding".to_string());
+    }
+    None
 }
 
 /// Resolve the provider/workload role for a session build.

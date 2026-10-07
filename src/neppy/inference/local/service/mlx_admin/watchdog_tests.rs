@@ -19,6 +19,7 @@ fn inputs(pressure: PressureState, idle_secs: u64, worker: WorkerPhase) -> Watch
         pressure_only: false,
         idle_unload_secs: 300,
         idle_stop_secs: 900,
+        elevated_grace: Duration::from_secs(120),
     }
 }
 
@@ -60,7 +61,31 @@ fn decide_table() {
             inputs(N, 900, W::Unloaded),
             A::Stop,
         ),
-        ("elevated and idle stops", inputs(E, 1, W::Loaded), A::Stop),
+        (
+            "elevated and idle stops",
+            inputs(E, 120, W::Loaded),
+            A::Stop,
+        ),
+        (
+            "elevated within the grace of the last call keeps the worker",
+            inputs(E, 119, W::Loaded),
+            A::None,
+        ),
+        (
+            "elevated right after a call keeps the worker",
+            inputs(E, 1, W::Loaded),
+            A::None,
+        ),
+        (
+            "elevated stops once the grace has run out",
+            inputs(E, 121, W::Loaded),
+            A::Stop,
+        ),
+        (
+            "critical ignores the grace",
+            inputs(C, 1, W::Loaded),
+            A::StopNow,
+        ),
         (
             "elevated while active waits for the step",
             active(inputs(E, 0, W::Loaded)),
@@ -94,7 +119,7 @@ fn decide_table() {
         ),
         (
             "pressure_only still stops on elevated",
-            pressure_only(inputs(E, 0, W::Loaded)),
+            pressure_only(inputs(E, 200, W::Loaded)),
             A::Stop,
         ),
         (
@@ -402,4 +427,37 @@ async fn the_watchdog_stops_only_a_worker_it_holds() {
         PressureState::Elevated,
     )
     .await;
+}
+
+#[test]
+fn a_zero_grace_restores_the_old_stop_between_calls() {
+    let mut i = inputs(E, 1, W::Loaded);
+    i.elevated_grace = Duration::ZERO;
+    assert_eq!(decide(&i), A::Stop);
+}
+
+#[test]
+fn an_in_flight_call_is_never_stopped_by_elevated_pressure() {
+    let mut i = inputs(E, 0, W::Loaded);
+    i.elevated_grace = Duration::ZERO;
+    i.gate_active = true;
+    assert_eq!(decide(&i), A::None, "gate holder");
+    i.gate_active = false;
+    i.server_busy = true;
+    assert_eq!(decide(&i), A::None, "server-side work");
+}
+
+#[test]
+fn elevated_pressure_pauses_the_gate_only_when_the_worker_is_not_warm() {
+    let grace = Duration::from_secs(120);
+    let s = Duration::from_secs;
+    // Alive and called a moment ago: the live turn's next call must get through.
+    assert!(!pause_due(E, true, false, s(5), grace));
+    assert!(!pause_due(E, true, true, s(0), grace));
+    // Grace over, or no worker to protect: pause.
+    assert!(pause_due(E, true, false, s(120), grace));
+    assert!(pause_due(E, false, false, s(5), grace));
+    // Critical always pauses; Normal never does.
+    assert!(pause_due(C, true, true, s(0), grace));
+    assert!(!pause_due(N, true, false, s(500), grace));
 }

@@ -7575,6 +7575,27 @@ const messages: TranslationMap = {
   'debug.rollback.confirm': 'Ripristina',
   'debug.rollback.done': 'Ripristinata. È stato salvato un checkpoint dello stato precedente.',
   'debug.rollback.error': 'Ripristino non riuscito: {error}',
+  'debug.localInstall.title': 'Installazione locale',
+  'debug.localInstall.build': 'Compila e installa in locale',
+  'debug.localInstall.rebuild': 'Compila di nuovo',
+  'debug.localInstall.building':
+    "Compilazione dell'app in corso. Potrebbero volerci alcuni minuti.",
+  'debug.localInstall.ready': 'Build pronta da installare',
+  'debug.localInstall.install': 'Installa e riavvia',
+  'debug.localInstall.confirmTitle': 'Installare questa build?',
+  'debug.localInstall.confirmBody':
+    "Neppy si chiuderà, sostituirà l'app installata con questa build e si riaprirà. L'app attuale viene prima salvata in un backup e ripristinata automaticamente se la nuova non si avvia.",
+  'debug.localInstall.installing': 'Installazione in corso. Neppy sta per riavviarsi.',
+  'debug.localInstall.failed': 'La build locale non è riuscita.',
+  'debug.localInstall.logLabel': 'Output della build',
+  'debug.localInstall.restored':
+    "L'ultima installazione locale non si è avviata, quindi la versione precedente è stata ripristinata automaticamente.",
+  'debug.localInstall.dismiss': 'Chiudi',
+  'debug.localInstall.quitFailed':
+    "Impossibile chiudere l'app. Esci da Neppy tu stesso per completare l'installazione.",
+  'debug.localInstall.version': 'Versione {version}',
+  'debug.localInstall.startFailed': 'Impossibile avviare la build: {error}',
+  'debug.localInstall.installFailed': "Impossibile avviare l'installazione: {error}",
   'debug.panels.loading': 'Caricamento…',
   'debug.panels.unknownError': 'Errore sconosciuto',
   'debug.panels.tabsLabel': 'Viste di debug',

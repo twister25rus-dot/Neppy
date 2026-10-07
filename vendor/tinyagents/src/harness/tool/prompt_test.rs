@@ -676,3 +676,90 @@ fn bare_object_recovery_also_mints_unique_ids() {
     let second_id = &second.message.tool_calls[0].id;
     assert_ne!(first_id, second_id);
 }
+
+// ── Qwen-coder `<function=…><parameter=…>` form inside <tool_call> ───────────
+
+#[test]
+fn qwen_function_form_inside_tool_call_becomes_a_call() {
+    let text = "Looking.\n<tool_call>\n<function=shell>\n<parameter=command>\nls -la\n</parameter>\n\
+                <parameter=timeout>\n30\n</parameter>\n<parameter=background>\nfalse\n</parameter>\n\
+                </function>\n</tool_call>";
+    let (cleaned, calls) = parse_prompt_tool_calls_from_text(text);
+    assert_eq!(cleaned, "Looking.");
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].name, "shell");
+    assert_eq!(
+        calls[0].arguments,
+        serde_json::json!({"command": "ls -la", "timeout": 30, "background": false})
+    );
+    assert!(calls[0].id.starts_with(SYNTHETIC_CALL_ID_PREFIX));
+}
+
+#[test]
+fn qwen_function_form_preserves_multiline_values_and_json_values() {
+    let text = "<tool_call><function=write_file><parameter=path>\na.txt\n</parameter>\
+                <parameter=content>\nline one\n  line two\n\n</parameter>\
+                <parameter=opts>\n{\"mode\": \"w\"}\n</parameter>\
+                <parameter=zip>\n007\n</parameter></function></tool_call>";
+    let (_, calls) = parse_prompt_tool_calls_from_text(text);
+    assert_eq!(
+        calls[0].arguments,
+        serde_json::json!({
+            "path": "a.txt",
+            "content": "line one\n  line two\n",
+            "opts": {"mode": "w"},
+            "zip": "007",
+        })
+    );
+}
+
+#[test]
+fn qwen_function_form_tolerates_missing_inner_close_tags() {
+    let text = "<tool_call><function=shell><parameter=command>\nls\n</function></tool_call>";
+    let (_, calls) = parse_prompt_tool_calls_from_text(text);
+    assert_eq!(calls[0].arguments, serde_json::json!({"command": "ls"}));
+}
+
+#[test]
+fn qwen_function_form_missing_only_the_outer_close_is_still_a_call() {
+    let text =
+        "Go.\n<tool_call>\n<function=shell>\n<parameter=command>\nls\n</parameter>\n</function>";
+    let (cleaned, calls) = parse_prompt_tool_calls_from_text(text);
+    assert_eq!(cleaned, "Go.");
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].name, "shell");
+}
+
+#[test]
+fn qwen_form_prose_mentions_do_not_produce_calls() {
+    for prose in [
+        "Write <tool_call> then <function=NAME> in a block.",
+        "<tool_call>see <function=NAME> for details</tool_call>",
+        "An unterminated <tool_call><function=shell> never finished",
+        "<tool_call>just words</tool_call>",
+    ] {
+        let (_, calls) = parse_prompt_tool_calls_from_text(prose);
+        assert!(calls.is_empty(), "no call from: {prose}");
+    }
+}
+
+#[test]
+fn json_form_is_unchanged_next_to_the_qwen_form() {
+    let text = "<tool_call>{\"name\":\"a\",\"arguments\":{\"x\":1}}</tool_call>\
+                <tool_call><function=b><parameter=y>\n2\n</parameter></function></tool_call>";
+    let (_, calls) = parse_prompt_tool_calls_from_text(text);
+    assert_eq!(calls.len(), 2);
+    assert_eq!(calls[0].arguments, serde_json::json!({"x": 1}));
+    assert_eq!(calls[1].arguments, serde_json::json!({"y": 2}));
+}
+
+#[test]
+fn apply_prompt_tool_calls_recovers_a_qwen_call_from_a_native_response() {
+    let response = ModelResponse::assistant(
+        "<tool_call>\n<function=shell>\n<parameter=command>\ndate\n</parameter>\n</function>\n</tool_call>",
+    );
+    let recovered = apply_prompt_tool_calls(response);
+    assert_eq!(recovered.message.tool_calls.len(), 1);
+    assert_eq!(recovered.message.tool_calls[0].name, "shell");
+    assert_eq!(recovered.text(), "");
+}

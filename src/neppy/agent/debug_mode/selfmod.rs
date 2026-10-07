@@ -32,11 +32,13 @@ pub const CRITICAL_PATTERNS: &[&str] = &[
     "updater/**",
     "scripts/release*",
     "scripts/neppy-recover.sh",
+    "scripts/neppy-install-local.sh",
 ];
 
 /// Files Debug Mode's own path policy must refuse to write (recovery has to
 /// survive a bad self-modification).
-pub const PROTECTED_PATTERNS: &[&str] = &["scripts/neppy-recover.sh"];
+pub const PROTECTED_PATTERNS: &[&str] =
+    &["scripts/neppy-recover.sh", "scripts/neppy-install-local.sh"];
 
 fn normalize(path: &str) -> String {
     let mut p = path.trim().replace('\\', "/");

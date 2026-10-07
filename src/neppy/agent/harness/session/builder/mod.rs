@@ -80,6 +80,72 @@ pub(super) fn ensure_recovery_tool_visible(visible: &mut std::collections::HashS
     }
 }
 
+/// Agents whose belt is trimmed on a weak/local model. The Debug agent is the
+/// only one with a wildcard belt (~120 schemas); the orchestrator's curated
+/// `named` list (~50 + delegates) is left alone because its `delegate_*`
+/// helpers are how it reaches everything else.
+const COMPACT_BELT_AGENTS: &[&str] = &["debug_agent"];
+
+/// The compact allowlist: the inspect -> edit -> verify loop, the Debug-mode
+/// bookkeeping tools, light web/memory reads, and the skill-pack entry points.
+/// Names are matched exactly against the registered tools, so an entry that is
+/// not registered in a given build is simply absent (never an error).
+pub(super) const COMPACT_LOCAL_BELT: &[&str] = &[
+    "shell",
+    "file_read",
+    "file_write",
+    "edit",
+    "apply_patch",
+    "grep",
+    "glob",
+    "list",
+    "git_operations",
+    "read_workspace_state",
+    "run_tests",
+    "run_linter",
+    "read_diff",
+    "todo",
+    "todowrite",
+    "web_fetch",
+    "load_skill",
+    "use_skill",
+    "memory_recall",
+    "ask_user_clarification",
+    "debug_checkpoint",
+    "debug_report",
+    "debug_validate_candidate",
+];
+
+/// Whether the compact belt applies: the agent is on the list, the user has not
+/// opted out, and the *resolved* provider route is a local runtime.
+pub(super) fn compact_belt_applies(
+    agent_id: &str,
+    resolved_provider: &str,
+    compact_local_tools: bool,
+) -> bool {
+    compact_local_tools
+        && COMPACT_BELT_AGENTS.contains(&agent_id)
+        && crate::neppy::inference::local::profile::is_local_provider_string(resolved_provider)
+}
+
+/// Narrow `visible` to the compact belt. `registered` is every tool name in the
+/// build; the result is `COMPACT_LOCAL_BELT` intersected with it and with the
+/// current `visible` set (an empty `visible` means "everything registered").
+/// Returns `None` when the intersection would be empty, so the caller keeps the
+/// existing set rather than collapsing to the "no filter" sentinel.
+pub(super) fn compact_belt_visible(
+    visible: &std::collections::HashSet<String>,
+    registered: &std::collections::HashSet<String>,
+) -> Option<std::collections::HashSet<String>> {
+    let narrowed: std::collections::HashSet<String> = COMPACT_LOCAL_BELT
+        .iter()
+        .filter(|name| registered.contains(**name))
+        .filter(|name| visible.is_empty() || visible.contains(**name))
+        .map(|name| (*name).to_string())
+        .collect();
+    (!narrowed.is_empty()).then_some(narrowed)
+}
+
 pub(super) fn should_synthesize_delegation_tools(def: &AgentDefinition) -> bool {
     match &def.tools {
         ToolScope::Wildcard => !def.subagents.is_empty(),

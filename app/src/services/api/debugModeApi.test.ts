@@ -1,19 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  applyLocalInstall,
   commitDebugTask,
   getDebugDiff,
   getDebugSettings,
   getDebugStatus,
   getDebugTask,
+  getLocalInstallResult,
+  getLocalInstallStatus,
   listDebugCheckpoints,
   listDebugTasks,
+  quitApp,
   rollbackDebug,
+  startLocalInstallBuild,
   tailDebugAudit,
   updateDebugSettings,
 } from './debugModeApi';
 
 const mockCallCoreRpc = vi.fn();
+const mockInvoke = vi.fn();
+const mockIsTauri = vi.fn();
+
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args: unknown[]) => mockInvoke(...args) }));
+vi.mock('../../utils/tauriCommands/common', () => ({ isTauri: () => mockIsTauri() }));
 
 vi.mock('../coreRpcClient', () => ({
   callCoreRpc: (...args: unknown[]) => mockCallCoreRpc(...args),
@@ -122,5 +132,41 @@ describe('debugModeApi', () => {
     await expect(updateDebugSettings({ max_repair_iterations: 99 })).rejects.toThrow(
       'out of range'
     );
+  });
+});
+
+describe('debugModeApi local install', () => {
+  beforeEach(() => {
+    mockCallCoreRpc.mockReset();
+    mockInvoke.mockReset();
+  });
+
+  it('maps each local install call to its RPC, sending confirm only on apply', async () => {
+    mockCallCoreRpc.mockResolvedValue({ phase: 'ready' });
+    await startLocalInstallBuild();
+    await getLocalInstallStatus();
+    await applyLocalInstall();
+    const calls = mockCallCoreRpc.mock.calls.map(c => c[0]);
+    expect(calls).toEqual([
+      { method: 'neppy.debug_mode_install_local_build', params: {} },
+      { method: 'neppy.debug_mode_install_local_status', params: {} },
+      { method: 'neppy.debug_mode_install_local_apply', params: { confirm: true } },
+    ]);
+  });
+
+  it('reads the installer result and acknowledges only when asked', async () => {
+    mockCallCoreRpc.mockResolvedValue(null);
+    expect(await getLocalInstallResult()).toBeNull();
+    await getLocalInstallResult(true);
+    expect(mockCallCoreRpc.mock.calls.map(c => c[0].params)).toEqual([{}, { acknowledge: true }]);
+  });
+
+  it('quits through the Tauri app_quit command, and is a no-op outside Tauri', async () => {
+    mockIsTauri.mockReturnValue(false);
+    await quitApp();
+    expect(mockInvoke).not.toHaveBeenCalled();
+    mockIsTauri.mockReturnValue(true);
+    await quitApp();
+    expect(mockInvoke).toHaveBeenCalledWith('app_quit');
   });
 });

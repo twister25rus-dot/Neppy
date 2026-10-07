@@ -7477,6 +7477,27 @@ const messages: TranslationMap = {
   'debug.rollback.confirm': 'Kembalikan',
   'debug.rollback.done': 'Dikembalikan. Titik pemeriksaan keadaan sebelumnya telah disimpan.',
   'debug.rollback.error': 'Pengembalian gagal: {error}',
+  'debug.localInstall.title': 'Instalasi lokal',
+  'debug.localInstall.build': 'Build dan instal secara lokal',
+  'debug.localInstall.rebuild': 'Build ulang',
+  'debug.localInstall.building':
+    'Sedang membangun aplikasi. Ini bisa memakan waktu beberapa menit.',
+  'debug.localInstall.ready': 'Build siap diinstal',
+  'debug.localInstall.install': 'Instal dan mulai ulang',
+  'debug.localInstall.confirmTitle': 'Instal build ini?',
+  'debug.localInstall.confirmBody':
+    'Neppy akan ditutup, mengganti aplikasi yang terpasang dengan build ini, lalu dibuka kembali. Aplikasi Anda saat ini dicadangkan lebih dulu dan dipulihkan otomatis jika yang baru gagal dimulai.',
+  'debug.localInstall.installing': 'Sedang menginstal. Neppy akan segera dimulai ulang.',
+  'debug.localInstall.failed': 'Build lokal gagal.',
+  'debug.localInstall.logLabel': 'Output build',
+  'debug.localInstall.restored':
+    'Instalasi lokal terakhir tidak bisa dimulai, jadi versi Anda sebelumnya dipulihkan secara otomatis.',
+  'debug.localInstall.dismiss': 'Tutup',
+  'debug.localInstall.quitFailed':
+    'Tidak bisa menutup aplikasi. Keluar dari Neppy sendiri untuk menyelesaikan instalasi.',
+  'debug.localInstall.version': 'Versi {version}',
+  'debug.localInstall.startFailed': 'Tidak bisa memulai build: {error}',
+  'debug.localInstall.installFailed': 'Tidak bisa memulai instalasi: {error}',
   'debug.panels.loading': 'Memuat…',
   'debug.panels.unknownError': 'Kesalahan tidak diketahui',
   'debug.panels.tabsLabel': 'Tampilan debug',

@@ -184,18 +184,22 @@ enum Priority {
 }
 
 /// Counts an interactive caller while it waits.
-struct InteractiveGuard<'a>(&'a AtomicUsize);
+struct InteractiveGuard<'a> {
+    counter: &'a AtomicUsize,
+    /// Interactive callers already waiting when this one joined.
+    ahead: usize,
+}
 
 impl<'a> InteractiveGuard<'a> {
     fn new(counter: &'a AtomicUsize) -> Self {
-        counter.fetch_add(1, Ordering::SeqCst);
-        Self(counter)
+        let ahead = counter.fetch_add(1, Ordering::SeqCst);
+        Self { counter, ahead }
     }
 }
 
 impl Drop for InteractiveGuard<'_> {
     fn drop(&mut self) {
-        self.0.fetch_sub(1, Ordering::SeqCst);
+        self.counter.fetch_sub(1, Ordering::SeqCst);
     }
 }
 
@@ -263,8 +267,17 @@ impl InferenceGate {
     ) -> Result<GatePermit, GateError> {
         let _interactive = (priority == Priority::Interactive)
             .then(|| InteractiveGuard::new(&self.interactive_waiting));
-        let queued = self.waiting.fetch_add(1, Ordering::SeqCst);
+        let total_ahead = self.waiting.fetch_add(1, Ordering::SeqCst);
         let _waiter = WaiterGuard(&self.waiting);
+        // The cap is per class. A background caller (summariser, heartbeat,
+        // triage, the assistant) is refused once `max_waiters` callers of any
+        // kind are queued, but an interactive caller counts only the
+        // interactive callers ahead of it: background work must never fill the
+        // queue and turn a person's chat turn into `busy`.
+        let queued = match &_interactive {
+            Some(guard) => guard.ahead,
+            None => total_ahead,
+        };
         // An uncontended caller is not a waiter; only refuse when the slot is
         // unavailable (taken, or paused) and the queue is full.
         let blocked = self.permits.available_permits() == 0 || self.paused.borrow().is_some();

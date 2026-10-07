@@ -141,19 +141,26 @@ pub struct MlxServerConfig {
     pub model_discovery: String,
 
     // ── Generation defaults ──────────────────────────────────────────────
-    /// Default generation cap. `0` leaves the server default.
+    /// Default generation cap. `0` leaves the server flag unset; chat requests
+    /// then carry `max_tokens` 8192 (more when `thinking_budget` is larger),
+    /// because the server's own 2048 is spent on thinking alone.
     #[serde(default)]
     pub max_tokens: u32,
-    /// Default sampling temperature (`lm` only). Negative means "unset".
+    /// Sampling temperature. Negative means "unset": the server flag is left
+    /// alone (`lm` only), and chat requests carry the Qwen-family default 0.6.
+    /// A value you set is sent on every chat request.
     #[serde(default = "default_unset_f32")]
     pub temp: f32,
-    /// Nucleus sampling (`lm` only). Negative means "unset".
+    /// Nucleus sampling. Negative means "unset": server flag left alone (`lm`
+    /// only), chat requests carry 0.95. A value you set is sent as-is.
     #[serde(default = "default_unset_f32")]
     pub top_p: f32,
-    /// Top-k sampling (`lm` only). Negative means "unset".
+    /// Top-k sampling. Negative means "unset": server flag left alone (`lm`
+    /// only), chat requests carry 20. `0` is a value (top-k off), not "unset".
     #[serde(default = "default_unset_i32")]
     pub top_k: i32,
-    /// Min-p sampling (`lm` only). Negative means "unset".
+    /// Min-p sampling. Negative means "unset": nothing is sent and the server
+    /// default (0.0, off) applies.
     #[serde(default = "default_unset_f32")]
     pub min_p: f32,
 
@@ -164,7 +171,13 @@ pub struct MlxServerConfig {
     /// explicitly (`vlm` only).
     #[serde(default)]
     pub enable_thinking: bool,
-    /// Token ceiling inside a thinking block. `0` leaves it unbounded.
+    /// Token ceiling inside a thinking block. `0` means "auto": chat requests
+    /// carry a per-request `thinking_budget` of 4096, which `mlx_vlm.server`
+    /// enforces by forcing `</think>` once it is spent. Any other value is sent
+    /// as-is (and passed to the process as `--thinking-budget`). The request
+    /// field is omitted for `lm` blocks and for blocks with a `draft_model`
+    /// (the server rejects it alongside speculative decoding), and the server
+    /// only counts thinking tokens while thinking is enabled for the request.
     #[serde(default)]
     pub thinking_budget: u32,
     /// Token opening a thinking block. Empty uses the model's own.

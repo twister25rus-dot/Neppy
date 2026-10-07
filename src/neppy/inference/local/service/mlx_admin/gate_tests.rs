@@ -467,3 +467,58 @@ async fn pinned_scope_is_off_by_default_and_scoped() {
     pinned_scope(false, async { assert!(!is_pinned()) }).await;
     assert!(!is_pinned());
 }
+
+#[tokio::test]
+async fn background_waiters_never_make_a_chat_turn_busy() {
+    let gate = Arc::new(InferenceGate::new());
+    let held = gate.acquire(&cfg()).await.expect("holder");
+    let config = MlxWorkerConfig {
+        max_waiters: 2,
+        ..cfg()
+    };
+    // Two background callers fill the queue.
+    let mut background = Vec::new();
+    for _ in 0..2 {
+        let (gate, config) = (Arc::clone(&gate), config.clone());
+        background.push(tokio::spawn(background_scope(async move {
+            gate.acquire(&config).await.map(|_| ())
+        })));
+    }
+    for _ in 0..50 {
+        if gate.snapshot().waiting == 2 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    assert_eq!(gate.snapshot().waiting, 2);
+
+    // A third background caller is refused ...
+    let refused = background_scope(gate.acquire(&config)).await;
+    assert_eq!(refused.err(), Some(GateError::Busy));
+
+    // ... but chat still queues, and goes ahead of the background callers.
+    let chat = {
+        let (gate, config) = (Arc::clone(&gate), config.clone());
+        tokio::spawn(async move { gate.acquire(&config).await.map(|_| ()) })
+    };
+    tokio::time::sleep(Duration::from_millis(30)).await;
+    assert!(!chat.is_finished(), "chat is queued, not refused");
+    assert_eq!(gate.snapshot().waiting, 3);
+
+    // Interactive callers are still bounded among themselves.
+    let mut more = Vec::new();
+    for _ in 0..1 {
+        let (gate, config) = (Arc::clone(&gate), config.clone());
+        more.push(tokio::spawn(async move {
+            gate.acquire(&config).await.map(|_| ())
+        }));
+    }
+    tokio::time::sleep(Duration::from_millis(30)).await;
+    assert_eq!(gate.acquire(&config).await.err(), Some(GateError::Busy));
+
+    drop(held);
+    chat.await.expect("task").expect("chat acquires");
+    for waiter in more.into_iter().chain(background) {
+        waiter.await.expect("task").expect("queued caller acquires");
+    }
+}

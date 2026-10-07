@@ -6,6 +6,7 @@ import { useT } from '../../lib/i18n/I18nContext';
 import { useAppSelector } from '../../store/hooks';
 import { DebugBanner } from './DebugBanner';
 import { LastTaskCard } from './LastTaskCard';
+import { LocalInstallCard } from './LocalInstallCard';
 import { DebugPanels } from './panels';
 import { useDebugSnapshot } from './useDebugSnapshot';
 
@@ -65,6 +66,7 @@ export function DebugThreadChrome({ threadId }: { threadId: string }) {
           <LastTaskCard key={lastTask.id} task={lastTask} onChanged={() => void refresh()} />
         </div>
       ) : null}
+      <LocalInstallCard />
       <details className="mx-4 my-2 rounded-lg border border-line" data-testid="debug-panels-slot">
         <summary className="cursor-pointer select-none px-3 py-1.5 text-xs font-medium text-content-secondary">
           {t('debug.panels.toggle')}

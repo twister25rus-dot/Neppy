@@ -279,6 +279,10 @@ impl Agent {
     /// instructions and learned context.
     pub fn build_system_prompt(&self, learned: LearnedContextData) -> Result<String> {
         let tools_slice: &[Box<dyn Tool>] = self.tools.as_slice();
+        // Protocol text only: every dispatcher leaves the tool catalogue to
+        // `ToolsSection` (one catalogue per prompt, not two). The XML dispatcher
+        // used to append a full-schema copy here, which on a 124-tool agent
+        // added ~85k characters on top of the section's own ~42k.
         let instructions = self
             .tool_dispatcher
             .prompt_instructions_for_specs(self.visible_tool_specs.as_slice())

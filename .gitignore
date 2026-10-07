@@ -144,3 +144,7 @@ __pycache__/
 *.key
 *.key.pub
 updater/*.sig
+
+# Default agent action_dir (~/Neppy/projects) lives inside this checkout when it
+# is cloned to ~/Neppy; agent artifacts written there must never be committed.
+/projects/

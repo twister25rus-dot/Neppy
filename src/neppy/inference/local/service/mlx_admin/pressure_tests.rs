@@ -22,6 +22,9 @@ fn reading(level: u8, avail_pct: f64) -> SystemMemory {
 /// against. The shipped default is automatic; see `automatic_recovery_*`.
 fn cfg() -> MlxWorkerConfig {
     MlxWorkerConfig {
+        // The table was written against the old 20% line; the shipped default
+        // is 10%, so pin it.
+        elevated_avail_pct: 20.0,
         recover_avail_pct: 30.0,
         ..MlxWorkerConfig::default()
     }
@@ -214,7 +217,8 @@ fn reserve_scales_with_the_machine_between_two_and_eight_gib() {
 fn the_recover_threshold_is_relative_to_the_elevated_one() {
     let auto = MlxWorkerConfig::default();
     assert_eq!(auto.recover_avail_pct, 0.0, "automatic by default");
-    assert_eq!(recover_threshold_pct(&auto), 25.0, "20 + 5");
+    assert_eq!(auto.elevated_avail_pct, 10.0, "shipped default");
+    assert_eq!(recover_threshold_pct(&auto), 15.0, "10 + 5");
     let table: [(f64, f64, f64); 5] = [
         // (elevated, recover configured, effective)
         (20.0, 0.0, 25.0),
@@ -238,7 +242,10 @@ fn automatic_recovery_is_reachable_on_a_machine_that_idles_at_26_percent() {
     // Idle availability of 26% is above the Elevated line (20%) but was below
     // the old fixed 30% recovery line, which held the gate paused forever.
     let base = Instant::now();
-    let auto = MlxWorkerConfig::default();
+    let auto = MlxWorkerConfig {
+        elevated_avail_pct: 20.0,
+        ..MlxWorkerConfig::default()
+    };
     let mut tracker = PressureTracker::new();
     let at = |secs| base + Duration::from_secs(secs);
     let (s, _) = tracker.observe(&reading(1, 15.0), None, 0, at(0), &auto);
@@ -249,6 +256,7 @@ fn automatic_recovery_is_reachable_on_a_machine_that_idles_at_26_percent() {
     assert_eq!(s, N, "26% held for the 30s hold");
 
     let fixed = MlxWorkerConfig {
+        elevated_avail_pct: 20.0,
         recover_avail_pct: 30.0,
         ..MlxWorkerConfig::default()
     };

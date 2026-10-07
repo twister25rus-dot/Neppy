@@ -379,6 +379,20 @@ pub struct AgentConfig {
     /// `AGENTS.md`.
     #[serde(default = "default_agents_md_enabled")]
     pub agents_md_enabled: bool,
+
+    /// Trim the tool belt of the Debug agent to a compact core (~20 tools) when
+    /// its resolved provider is a local runtime (Ollama / LM Studio / MLX /
+    /// OMLX / local-openai). The full wildcard belt is ~120 tool schemas, which
+    /// floods a small model's context and degrades tool selection. Cloud
+    /// providers are never affected. Tools outside the compact belt are simply
+    /// not advertised or callable on those sessions; set this to `false` to
+    /// keep the full belt on local models too. Default `true`.
+    #[serde(default = "default_compact_local_tools")]
+    pub compact_local_tools: bool,
+}
+
+fn default_compact_local_tools() -> bool {
+    true
 }
 
 fn default_agents_md_enabled() -> bool {
@@ -535,6 +549,7 @@ impl Default for AgentConfig {
             session_shadow_reads: default_session_shadow_reads(),
             required_output: None,
             agents_md_enabled: default_agents_md_enabled(),
+            compact_local_tools: default_compact_local_tools(),
         }
     }
 }
@@ -749,6 +764,15 @@ mod memory_window_tests {
         // (matches the `#[serde(default = ...)]` contract).
         let cfg: AgentConfig = serde_json::from_str("{}").unwrap();
         assert!(cfg.agents_md_enabled);
+    }
+
+    #[test]
+    fn compact_local_tools_defaults_true_and_can_be_disabled() {
+        assert!(AgentConfig::default().compact_local_tools);
+        let omitted: AgentConfig = serde_json::from_str("{}").unwrap();
+        assert!(omitted.compact_local_tools);
+        let off: AgentConfig = serde_json::from_str(r#"{"compact_local_tools": false}"#).unwrap();
+        assert!(!off.compact_local_tools);
     }
 
     #[test]

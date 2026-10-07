@@ -88,6 +88,34 @@ pub(crate) struct WatchInputs {
     pub(crate) pressure_only: bool,
     pub(crate) idle_unload_secs: u64,
     pub(crate) idle_stop_secs: u64,
+    /// After the last model call, Elevated pressure leaves the worker alone for
+    /// this long: an agent turn makes several calls back to back, and stopping
+    /// between them forces a cold load plus a full re-prefill on the next.
+    pub(crate) elevated_grace: Duration,
+}
+
+/// Whether the worker is warm for a live turn: a call is using it now, or one
+/// finished within `grace`. Pure; shared by [`decide`] and the gate-pause rule.
+pub(crate) fn live_turn(gate_active: bool, idle_for: Duration, grace: Duration) -> bool {
+    gate_active || idle_for < grace
+}
+
+/// Whether Elevated pressure should pause the gate now. A worker that is up and
+/// warm for a live turn must not be paused: the turn's next call would wait on
+/// the pause instead of reaching a model that is still resident. Critical
+/// always pauses.
+pub(crate) fn pause_due(
+    pressure: PressureState,
+    worker_alive: bool,
+    gate_active: bool,
+    idle_for: Duration,
+    grace: Duration,
+) -> bool {
+    match pressure {
+        PressureState::Normal => false,
+        PressureState::Critical => true,
+        PressureState::Elevated => !(worker_alive && live_turn(gate_active, idle_for, grace)),
+    }
 }
 
 /// The worker policy. Pure: same inputs, same action.
@@ -98,8 +126,13 @@ pub(crate) fn decide(inputs: &WatchInputs) -> WorkerAction {
     }
     match inputs.pressure {
         PressureState::Critical if alive => return WorkerAction::StopNow,
-        // Let the in-flight step finish; the gate is paused, so it is the last.
-        PressureState::Elevated if alive && (inputs.gate_active || inputs.server_busy) => {
+        // Never take the model from under a call, nor between the calls of a
+        // live turn (grace after the last one). Only Critical may do that.
+        PressureState::Elevated
+            if alive
+                && (inputs.server_busy
+                    || live_turn(inputs.gate_active, inputs.idle_for, inputs.elevated_grace)) =>
+        {
             return WorkerAction::None
         }
         PressureState::Elevated if alive => return WorkerAction::Stop,
@@ -190,6 +223,9 @@ pub(crate) async fn tick(svc: &Arc<LocalAiService>, config: &Config) -> Duration
         .filter(|p| p.alive)
         .and_then(|p| sample_process(p.pid));
     let budget_bytes = (budget_gib(config) * BYTES_PER_GIB) as u64;
+    let grace = Duration::from_secs(cfg.elevated_stop_grace_secs);
+    let early_gate = svc.gate.snapshot();
+    let worker_alive = process.is_some_and(|p| p.alive);
     let (pressure, transition) = svc.worker.tracker.lock().observe(
         &system,
         worker_mem.map(|m| m.footprint_bytes),
@@ -216,11 +252,39 @@ pub(crate) async fn tick(svc: &Arc<LocalAiService>, config: &Config) -> Duration
             ),
         );
         if transition.to > PressureState::Normal {
-            svc.gate.pause(transition.to);
-            if transition.to == PressureState::Critical && svc.gate.snapshot().active > 0 {
-                svc.gate.preempt();
-                svc.metrics
-                    .event(event::REQUEST_PREEMPTED, Some(&id), "memory critical");
+            if pause_due(
+                transition.to,
+                worker_alive,
+                early_gate.active > 0,
+                early_gate.idle_for,
+                grace,
+            ) {
+                svc.gate.pause(transition.to);
+            } else {
+                log::info!(
+                    "[mlx:worker] pressure elevated but the worker is warm for a live turn (last call {}s ago, grace {}s); not pausing the gate",
+                    early_gate.idle_for.as_secs(),
+                    grace.as_secs()
+                );
+            }
+            if transition.to == PressureState::Critical {
+                if early_gate.active > 0 {
+                    svc.gate.preempt();
+                    svc.metrics
+                        .event(event::REQUEST_PREEMPTED, Some(&id), "memory critical");
+                } else if worker_alive && early_gate.idle_for < grace {
+                    // The turn is still live and its next call will find the
+                    // worker gone: say why instead of restarting silently.
+                    log::warn!(
+                        "[mlx:worker] memory critical: stopping `{id}` between calls of a live turn (last call {}s ago); the next call fails with a paused error until memory recovers",
+                        early_gate.idle_for.as_secs()
+                    );
+                    svc.metrics.event(
+                        event::REQUEST_PREEMPTED,
+                        Some(&id),
+                        "memory critical between calls of a live turn",
+                    );
+                }
             }
             // Ollama is not ours; touching its models is a last resort. Elevated
             // already pauses chat and stops the worker once idle, which is
@@ -230,6 +294,27 @@ pub(crate) async fn tick(svc: &Arc<LocalAiService>, config: &Config) -> Duration
                 let models = svc.worker.ollama_loaded(&svc.http).await;
                 unload_ollama(svc, &models).await;
             }
+        }
+    }
+
+    // Elevated pressure is acted on per tick, not only on the transition: the
+    // pause is withheld while the worker is warm for a live turn and has to
+    // land once the grace runs out.
+    if pressure == PressureState::Elevated {
+        let gate_now = svc.gate.snapshot();
+        let due = pause_due(
+            pressure,
+            worker_alive,
+            gate_now.active > 0,
+            gate_now.idle_for,
+            grace,
+        );
+        match (due, gate_now.paused) {
+            (true, paused) if paused != Some(PressureState::Elevated) => {
+                svc.gate.pause(PressureState::Elevated)
+            }
+            (false, Some(_)) => svc.gate.resume(),
+            _ => {}
         }
     }
 
@@ -262,6 +347,7 @@ pub(crate) async fn tick(svc: &Arc<LocalAiService>, config: &Config) -> Duration
         pressure_only: cfg.pressure_only(),
         idle_unload_secs: cfg.idle_unload_secs,
         idle_stop_secs: cfg.idle_stop_secs,
+        elevated_grace: grace,
     };
     let mut action = decide(&inputs);
     // Only a verdict that would take the model away is worth a probe.

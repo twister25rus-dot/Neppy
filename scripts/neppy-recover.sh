@@ -10,9 +10,11 @@
 #   neppy-recover.sh restore <id>        restore a checkpoint (asks y/N, saves a safety ref first)
 #   neppy-recover.sh known-good          list saved known-good neppy-core binaries
 #   neppy-recover.sh run-known-good [p]  run the newest (or given) binary with `serve`
+#   neppy-recover.sh restore-app         put the newest known-good-app backup back in /Applications
 #
 # Env: NEPPY_WORKSPACE (or OPENHUMAN_WORKSPACE) selects the workspace;
 #      NEPPY_RECOVER_REPO overrides the repo (default: parent of scripts/).
+#      NEPPY_INSTALL_APPS_DIR / NEPPY_INSTALL_BACKUP_DIR move the app and backup dirs (restore-app).
 set -euo pipefail
 
 CP_PREFIX="refs/neppy-debug/checkpoints"
@@ -153,6 +155,27 @@ cmd_run_known_good() {
   exec "$bin" serve
 }
 
+# Backups taken by neppy-install-local.sh before it replaced the installed app.
+cmd_restore_app() {
+  local apps="${NEPPY_INSTALL_APPS_DIR:-/Applications}" bk target new old answer
+  bk="${NEPPY_INSTALL_BACKUP_DIR:-$(data_dir)/debug_mode/known-good-app}"
+  target="$apps/${NEPPY_INSTALL_APP_NAME:-Neppy.app}"
+  local src; src="$(ls -dt "$bk"/Neppy-*.app 2>/dev/null | head -n 1 || true)"
+  [ -n "$src" ] || die "no app backup in $bk"
+  if pgrep -f "$target/Contents/MacOS" >/dev/null 2>&1; then die "quit Neppy first, then re-run"; fi
+  echo "This replaces $target with the backup $src."
+  printf 'Continue? [y/N] '
+  read -r answer || answer=""
+  case "$answer" in y|Y|yes|YES) ;; *) echo "aborted"; return 1;; esac
+  new="$apps/.restore-new.$$.app"; old="$apps/.restore-old.$$.app"
+  rm -rf "$new" "$old"
+  if command -v ditto >/dev/null 2>&1; then ditto "$src" "$new"; else cp -R "$src" "$new"; fi
+  if [ -e "$target" ]; then mv "$target" "$old"; fi
+  mv "$new" "$target" || { [ -e "$old" ] && mv "$old" "$target"; die "restore failed; the previous app is unchanged"; }
+  rm -rf "$old"
+  echo "restored $src to $target (open it with: open -a '$target')"
+}
+
 main() {
   local sub="${1:-}"; [ $# -gt 0 ] && shift
   case "$sub" in
@@ -161,7 +184,8 @@ main() {
     restore) cmd_restore "$@" ;;
     known-good) cmd_known_good ;;
     run-known-good) cmd_run_known_good "$@" ;;
-    ''|-h|--help|help) sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
+    restore-app) cmd_restore_app ;;
+    ''|-h|--help|help) sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
     *) die "unknown command '$sub' (try --help)" ;;
   esac
 }

@@ -209,10 +209,14 @@ pub(crate) fn make_crate_openai_chat_model(
 }
 
 /// Build a crate-native `ChatModel` for a **local OpenAI-compatible runtime**
-/// (Ollama, LM Studio, MLX, OMLX, local-openai). Local runtimes reject the
-/// OpenAI `tools` parameter and are text-only, so native tool calling and vision
-/// are forced off; `num_ctx` (Ollama) rides baked provider options as
-/// `{"options": {"num_ctx": N}}`, matching the host provider's wire shape.
+/// (Ollama, LM Studio, MLX, OMLX, local-openai). Local runtimes are text-only,
+/// so vision is forced off. Native tool calling is the caller's decision
+/// (`native_tool_calling`), derived from the runtime's
+/// [`LocalProviderProfile`](crate::neppy::inference::local::profile::LocalProviderProfile):
+/// Ollama and friends reject the OpenAI `tools` parameter, while the MLX servers
+/// accept it and ship per-model tool parsers. `num_ctx` (Ollama) rides baked
+/// provider options as `{"options": {"num_ctx": N}}`, matching the host
+/// provider's wire shape.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn make_crate_local_runtime_chat_model(
     provider_name: &str,
@@ -223,6 +227,7 @@ pub(crate) fn make_crate_local_runtime_chat_model(
     temperature_unsupported_models: &[String],
     temperature_override: Option<f64>,
     num_ctx: Option<u32>,
+    native_tool_calling: bool,
 ) -> Arc<dyn ChatModel<()>> {
     let default_provider_options = num_ctx.map(|n| {
         serde_json::json!({
@@ -240,8 +245,8 @@ pub(crate) fn make_crate_local_runtime_chat_model(
         // Local runtimes have a native `system` role; no merge needed.
         merge_system_into_user: false,
         extra_headers: &[],
-        // Parity with the host local providers, which set these off.
-        native_tool_calling: Some(false),
+        native_tool_calling: Some(native_tool_calling),
+        // Local runtimes are text-only here.
         vision: Some(false),
         default_provider_options,
         responses_api_primary: false,
@@ -354,12 +359,33 @@ mod tests {
             &[],
             None,
             Some(8192),
+            false,
         );
         let profile = model.profile().expect("openai models expose a profile");
         assert_eq!(profile.provider.as_deref(), Some("ollama"));
         assert_eq!(profile.model.as_deref(), Some("qwen2.5"));
-        // Local runtimes must not advertise native tools or vision.
+        // A runtime whose profile is prompt-guided must not advertise native
+        // tools; local runtimes are never advertised as vision-capable.
         assert!(!profile.tool_calling);
+        assert!(!profile.modalities.image_in);
+    }
+
+    #[test]
+    fn local_runtime_builder_advertises_native_tools_when_the_profile_says_so() {
+        let model = make_crate_local_runtime_chat_model(
+            "mlx",
+            "http://127.0.0.1:8080/v1",
+            "",
+            HostAuthStyle::None,
+            "ornith-ai/Ornith-1.5-9B-MLX-8bit",
+            &[],
+            None,
+            None,
+            true,
+        );
+        let profile = model.profile().expect("openai models expose a profile");
+        assert_eq!(profile.provider.as_deref(), Some("mlx"));
+        assert!(profile.tool_calling, "MLX serves native tool calls");
         assert!(!profile.modalities.image_in);
     }
 }

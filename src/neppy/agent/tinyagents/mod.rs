@@ -1847,7 +1847,17 @@ impl TurnModelSource {
                 context_window,
                 cn.primary_override.as_deref(),
                 provider_id,
-                !is_local,
+                // Cloud/managed providers advertise native tool calling; a local
+                // runtime does only when its profile says so (MLX does, Ollama
+                // does not) and the turn is not forced into text mode. Must
+                // match the model's own profile, which decides the dispatcher
+                // the durable history suffix is serialized with.
+                !is_local
+                    || (!cn.force_text_mode
+                        && crate::neppy::inference::local::profile::native_tool_calling_for_provider_string(
+                            &provider_string,
+                        )
+                        .unwrap_or(false)),
                 !is_local,
                 cn.force_text_mode,
             );

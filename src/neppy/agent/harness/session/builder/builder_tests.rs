@@ -992,3 +992,275 @@ async fn debug_agent_session_sees_the_full_tool_surface_without_the_fleet() {
         visible.len()
     );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Coding-hint routing for non-orchestrator agents + compact local tool belt.
+// ─────────────────────────────────────────────────────────────────────────────
+
+#[test]
+fn coding_hint_routes_debug_agent_only_when_a_coding_provider_is_configured() {
+    use super::factory::coding_hint_for_definition;
+    let debug = builtin_def("debug_agent");
+    let orchestrator = builtin_def("orchestrator");
+
+    let mut config = crate::neppy::config::Config::default();
+    // No coding provider: Debug keeps resolving through chat_provider.
+    assert_eq!(coding_hint_for_definition(&debug, &config), None);
+    config.coding_provider = Some("  ".to_string());
+    assert_eq!(coding_hint_for_definition(&debug, &config), None);
+    config.coding_provider = Some("cloud".to_string());
+    assert_eq!(coding_hint_for_definition(&debug, &config), None);
+    // The orchestrator is unchanged: it honours its hint regardless.
+    assert_eq!(
+        coding_hint_for_definition(&orchestrator, &config).as_deref(),
+        Some("hint:coding")
+    );
+
+    config.coding_provider = Some("anthropic:claude-sonnet-4-5".to_string());
+    assert_eq!(
+        coding_hint_for_definition(&debug, &config).as_deref(),
+        Some("hint:coding")
+    );
+    assert_eq!(
+        coding_hint_for_definition(&orchestrator, &config).as_deref(),
+        Some("hint:coding")
+    );
+    // An agent whose hint is not `coding` is never rerouted by this path.
+    let researcher = builtin_def("researcher");
+    assert_eq!(coding_hint_for_definition(&researcher, &config), None);
+}
+
+#[test]
+fn compact_belt_applies_only_to_listed_agents_on_local_routes() {
+    use super::compact_belt_applies;
+    for local in [
+        "mlx:qwen",
+        "omlx:x",
+        "ollama:qwen3:8b",
+        "lmstudio:m",
+        "local-openai:m",
+    ] {
+        assert!(compact_belt_applies("debug_agent", local, true), "{local}");
+        assert!(
+            !compact_belt_applies("debug_agent", local, false),
+            "{local} opt-out"
+        );
+        assert!(
+            !compact_belt_applies("orchestrator", local, true),
+            "{local} orchestrator"
+        );
+    }
+    for cloud in ["anthropic:claude", "openai:gpt-5", "cloud", "openhuman", ""] {
+        assert!(
+            !compact_belt_applies("debug_agent", cloud, true),
+            "{cloud:?}"
+        );
+    }
+}
+
+#[test]
+fn compact_belt_visible_intersects_registered_and_current_visible() {
+    use super::{compact_belt_visible, COMPACT_LOCAL_BELT};
+    use std::collections::HashSet;
+    let registered: HashSet<String> = [
+        "shell",
+        "file_read",
+        "automate",
+        "debug_report",
+        "composio_x",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect();
+    let narrowed = compact_belt_visible(&HashSet::new(), &registered).unwrap();
+    let mut names: Vec<_> = narrowed.iter().cloned().collect();
+    names.sort();
+    assert_eq!(names, ["debug_report", "file_read", "shell"]);
+
+    // A narrower current visible set (e.g. disallowed tools) is respected.
+    let visible: HashSet<String> = ["shell", "automate"]
+        .into_iter()
+        .map(String::from)
+        .collect();
+    let narrowed = compact_belt_visible(&visible, &registered).unwrap();
+    assert_eq!(narrowed, HashSet::from(["shell".to_string()]));
+
+    // Nothing in common: None, so the caller keeps its set instead of
+    // collapsing to the empty "no filter" sentinel.
+    let alien: HashSet<String> = HashSet::from(["automate".to_string()]);
+    assert!(compact_belt_visible(&HashSet::new(), &alien).is_none());
+    assert!(COMPACT_LOCAL_BELT.len() <= 25);
+}
+
+/// Visible tool names + the JSON size of their schemas for a built agent.
+fn visible_belt(agent: &crate::neppy::agent::Agent) -> (Vec<String>, usize) {
+    let visible = agent.visible_tool_names_for_test();
+    let specs: Vec<_> = agent
+        .tool_specs()
+        .iter()
+        .filter(|s| visible.is_empty() || visible.contains(&s.name))
+        .collect();
+    let chars = specs
+        .iter()
+        .map(|s| {
+            serde_json::to_string(&(&s.name, &s.description, &s.parameters))
+                .unwrap()
+                .len()
+        })
+        .sum();
+    (specs.iter().map(|s| s.name.clone()).collect(), chars)
+}
+
+/// Build `debug_agent` inside a Debug-mode turn (the only place it may be
+/// built) and return its visible tool names and their schema size in chars.
+async fn debug_belt(
+    config: &crate::neppy::config::Config,
+    repo: &std::path::Path,
+    ws: &std::path::Path,
+) -> (Vec<String>, usize) {
+    use crate::neppy::agent::debug_mode::turn;
+    use crate::neppy::agent::harness::session::types::Agent;
+    let def = builtin_def("debug_agent");
+    let root = repo.canonicalize().unwrap();
+    turn::run_in_root(ws, root, "x", async {
+        let agent =
+            Agent::build_session_agent_inner(config, "debug_agent", Some(&def), None, false, None)
+                .map_err(|e| e.to_string())?;
+        Ok::<_, String>(visible_belt(&agent))
+    })
+    .await
+    .expect("debug_agent builds inside a Debug turn")
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn debug_agent_gets_compact_belt_on_local_provider_and_full_belt_on_cloud() {
+    crate::neppy::memory::host_impls::install_for_tests();
+    use crate::neppy::agent::harness::definition::AgentDefinitionRegistry;
+    AgentDefinitionRegistry::init_global_builtins().expect("builtins");
+
+    let repo = tempfile::tempdir().unwrap();
+    for args in [
+        &["init", "-q"][..],
+        &["commit", "--allow-empty", "-qm", "i"][..],
+    ] {
+        assert!(std::process::Command::new("git")
+            .arg("-C")
+            .arg(repo.path())
+            .args(["-c", "user.name=t", "-c", "user.email=t@t"])
+            .args(args)
+            .status()
+            .unwrap()
+            .success());
+    }
+    let ws = tempfile::tempdir().unwrap();
+    let tmp = tempfile::TempDir::new().unwrap();
+    // Production configs have `default_model` cleared by the tier migrations;
+    // a pinned legacy default disables hint routing for every agent.
+    let mut base = test_config(&tmp);
+    base.default_model = None;
+    let with = |mutate: &dyn Fn(&mut crate::neppy::config::Config)| {
+        let mut config = base.clone();
+        mutate(&mut config);
+        config
+    };
+
+    // Cloud chat provider (default): full belt, untouched.
+    let (full, full_chars) = debug_belt(&base, repo.path(), ws.path()).await;
+    // MLX chat provider: compact belt.
+    let mlx_cfg = with(&|c| c.chat_provider = Some("mlx:qwen".into()));
+    let (mlx, mlx_chars) = debug_belt(&mlx_cfg, repo.path(), ws.path()).await;
+    eprintln!(
+        "[compact-belt] debug_agent visible tools: full={} ({} schema chars) mlx-compact={} ({} schema chars)",
+        full.len(),
+        full_chars,
+        mlx.len(),
+        mlx_chars
+    );
+    assert!(
+        full.len() > 80,
+        "cloud keeps the full belt, got {}",
+        full.len()
+    );
+    assert!(
+        mlx.len() <= 28,
+        "mlx belt must be compact, got {}: {mlx:?}",
+        mlx.len()
+    );
+    for must in [
+        "shell",
+        "file_read",
+        "edit",
+        "apply_patch",
+        "debug_checkpoint",
+        "debug_report",
+        "debug_validate_candidate",
+    ] {
+        assert!(
+            mlx.iter().any(|n| n == must),
+            "compact belt must keep {must}: {mlx:?}"
+        );
+    }
+    assert!(!mlx
+        .iter()
+        .any(|n| n.starts_with("delegate_") || n == "http_request"));
+    assert!(
+        mlx_chars * 3 < full_chars,
+        "compact belt should cut schema size by >3x"
+    );
+
+    // Opt-out keeps the full belt on a local model.
+    let cfg = with(&|c| {
+        c.chat_provider = Some("mlx:qwen".into());
+        c.agent.compact_local_tools = false;
+    });
+    assert_eq!(
+        debug_belt(&cfg, repo.path(), ws.path()).await.0.len(),
+        full.len()
+    );
+
+    // Routing: coding_provider decides the resolved provider for Debug.
+    // chat local + coding cloud => full belt (Debug runs on the cloud model).
+    let cfg = with(&|c| {
+        c.chat_provider = Some("mlx:qwen".into());
+        c.coding_provider = Some("anthropic:claude-sonnet-4-5".into());
+        c.cloud_providers = vec![
+            crate::neppy::config::schema::cloud_providers::CloudProviderCreds {
+                id: "p_anthropic".into(),
+                slug: "anthropic".into(),
+                label: "Anthropic".into(),
+                endpoint: "https://api.anthropic.com/v1".into(),
+                auth_style: crate::neppy::config::schema::cloud_providers::AuthStyle::Anthropic,
+                default_model: Some("claude-sonnet-4-5".into()),
+                ..Default::default()
+            },
+        ];
+    });
+    assert_eq!(
+        debug_belt(&cfg, repo.path(), ws.path()).await.0.len(),
+        full.len()
+    );
+    // chat cloud + coding local => compact belt.
+    let cfg = with(&|c| c.coding_provider = Some("omlx:coder".into()));
+    let routed_local = debug_belt(&cfg, repo.path(), ws.path()).await.0;
+    assert!(routed_local.len() <= 28, "got {}", routed_local.len());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn orchestrator_belt_is_unchanged_on_a_local_provider() {
+    crate::neppy::memory::host_impls::install_for_tests();
+    use crate::neppy::agent::harness::definition::AgentDefinitionRegistry;
+    use crate::neppy::agent::Agent;
+    AgentDefinitionRegistry::init_global_builtins().expect("builtins");
+    let count = |chat: Option<&str>| {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let mut config = test_config(&tmp);
+        config.chat_provider = chat.map(String::from);
+        config.coding_provider = chat.map(String::from);
+        let agent = Agent::from_config_for_agent(&config, "orchestrator").unwrap();
+        (visible_belt(&agent).0.len(), tmp)
+    };
+    let (cloud, _a) = count(None);
+    let (local, _b) = count(Some("mlx:qwen"));
+    eprintln!("[compact-belt] orchestrator visible tools: cloud={cloud} mlx={local}");
+    assert_eq!(cloud, local);
+}

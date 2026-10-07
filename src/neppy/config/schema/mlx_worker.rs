@@ -30,7 +30,15 @@ pub struct MlxWorkerConfig {
     /// `0` disables the stop timer.
     pub idle_stop_secs: u64,
     /// Available memory, percent, below which the state becomes Elevated.
+    /// Default 10: a 9B worker's prefill alone can take a 36 GiB Mac to 15-18%
+    /// free, and an Elevated verdict stops the worker between two calls of the
+    /// same turn, so every next call cold-loads and re-prefills.
     pub elevated_avail_pct: f64,
+    /// Seconds after the last model call during which Elevated pressure does
+    /// not stop the worker (or pause the gate), so the next call of a live
+    /// agent turn finds it warm. Critical pressure ignores this. `0` disables
+    /// the grace.
+    pub elevated_stop_grace_secs: u64,
     /// Available memory, percent, below which the state becomes Critical.
     pub critical_avail_pct: f64,
     /// Available memory, percent, that must hold before returning to Normal.
@@ -68,7 +76,8 @@ impl Default for MlxWorkerConfig {
             idle_policy: IDLE_POLICY_ALWAYS.to_string(),
             idle_unload_secs: 300,
             idle_stop_secs: 900,
-            elevated_avail_pct: 20.0,
+            elevated_avail_pct: 10.0,
+            elevated_stop_grace_secs: 120,
             critical_avail_pct: 10.0,
             recover_avail_pct: 0.0,
             recover_hold_secs: 30,
@@ -104,7 +113,18 @@ mod tests {
         assert_eq!(parsed.idle_unload_secs, 300);
         assert_eq!(parsed.idle_stop_secs, 900);
         assert_eq!(parsed.max_waiters, 4);
+        assert_eq!(parsed.elevated_avail_pct, 10.0);
+        assert_eq!(parsed.elevated_stop_grace_secs, 120);
         assert!(!parsed.pressure_only());
+    }
+
+    #[test]
+    fn an_explicit_elevated_threshold_still_wins_over_the_default() {
+        let parsed: MlxWorkerConfig =
+            toml::from_str("elevated_avail_pct = 20.0\nelevated_stop_grace_secs = 0\n")
+                .expect("explicit values parse");
+        assert_eq!(parsed.elevated_avail_pct, 20.0);
+        assert_eq!(parsed.elevated_stop_grace_secs, 0);
     }
 
     #[test]
