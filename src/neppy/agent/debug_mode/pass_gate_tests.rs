@@ -178,6 +178,25 @@ fn classify_argv_table() {
         "node -e 1",
         "echo test",
         "make test",
+        // Info-only invocations run nothing, wherever the flag sits.
+        "cargo build --help",
+        "cargo check -h",
+        "cargo test --help",
+        "cargo test -- --list",
+        "cargo test --list",
+        "cargo clippy --version",
+        "cargo build -V",
+        "npm run test -- --version",
+        "npm run test -- --help",
+        "pnpm run lint --help",
+        "pnpm test -h",
+        "yarn run build --list",
+        "vitest --help",
+        "vitest run --version",
+        "tsc --version",
+        "tsc -h",
+        "eslint --help",
+        "eslint -V",
     ];
     for c in does_not {
         assert!(!classify_argv(&argv(c)), "{c} should not count");

@@ -41,6 +41,11 @@ const CARGO_VERIFY: &[&str] = &["test", "check", "clippy", "build"];
 /// Tools that verify the code when invoked directly.
 const DIRECT_VERIFY_TOOLS: &[&str] = &["vitest", "tsc", "eslint"];
 
+/// Flags that make a command print information instead of running anything.
+/// Anywhere in the argv (including after a `--` passthrough) they disqualify
+/// it: `cargo build --help` and `npm run test -- --version` verify nothing.
+const INFO_ONLY_FLAGS: &[&str] = &["--help", "-h", "--version", "-V", "--list"];
+
 fn is_verify_script(name: &str) -> bool {
     !NOT_VERIFY_SCRIPT_MARKERS.iter().any(|m| name.contains(m))
         && VERIFY_SCRIPT_PREFIXES.iter().any(|p| name.starts_with(p))
@@ -55,11 +60,20 @@ fn is_verify_script(name: &str) -> bool {
 ///   <script>`) count when the script name is or starts with
 ///   test / typecheck / type-check / compile / lint / build / check, unless it
 ///   is a formatting script;
-/// * direct `vitest`, `tsc`, `eslint` count.
+/// * direct `vitest`, `tsc`, `eslint` count;
+/// * any argv carrying an info-only flag (`--help`, `-h`, `--version`, `-V`,
+///   `--list`) never counts, wherever the flag appears.
 pub(super) fn classify_argv(argv: &[String]) -> bool {
     let Some(program) = argv.first() else {
         return false;
     };
+    if argv
+        .iter()
+        .skip(1)
+        .any(|a| INFO_ONLY_FLAGS.contains(&a.as_str()))
+    {
+        return false;
+    }
     let base = program.rsplit(['/', '\\']).next().unwrap_or(program);
     let sub = argv.get(1).map(String::as_str);
     match base {
