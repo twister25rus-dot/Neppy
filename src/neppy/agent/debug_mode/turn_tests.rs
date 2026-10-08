@@ -89,6 +89,11 @@ async fn the_agents_reported_status_is_kept() {
     let path = repo.path().to_path_buf();
     run_in_root(ws.path(), root_of(&repo).await, "edit", async move {
         std::fs::write(path.join("a.txt"), "two\n").unwrap();
+        let c = super::super::tools::DebugRunCheckTool
+            .execute(serde_json::json!({"command": ["git", "rev-parse", "HEAD"]}))
+            .await
+            .unwrap();
+        assert!(!c.is_error, "{}", c.text());
         let r = super::super::tools::DebugReportTool
             .execute(serde_json::json!({
                 "status": "pass", "summary": "done",
@@ -105,7 +110,71 @@ async fn the_agents_reported_status_is_kept() {
     assert_eq!(t.status, TaskStatus::Pass);
     assert_eq!(t.summary.as_deref(), Some("done"));
     assert_eq!(t.files_changed, ["a.txt"]);
-    assert_eq!(t.validation.len(), 1);
+    assert_eq!(
+        t.validation.len(),
+        2,
+        "the real run plus the attested entry"
+    );
+}
+
+#[tokio::test]
+async fn finish_cannot_keep_a_pass_that_no_real_check_backs() {
+    let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+    let path = repo.path().to_path_buf();
+    run_in_root(ws.path(), root_of(&repo).await, "edit", async move {
+        std::fs::write(path.join("a.txt"), "two\n").unwrap();
+        Ok::<_, String>(())
+    })
+    .await
+    .unwrap();
+    // The fallback path never invents a pass for a task that changed files.
+    assert_eq!(only_task(ws.path()).await.status, TaskStatus::Partial);
+
+    // A `pass` that reached the record without passing the report gate (here:
+    // written straight onto the task) is downgraded by the finish fallback.
+    let (repo2, ws) = (
+        crate::neppy::agent::debug_mode::test_util::repo(),
+        tempfile::tempdir().unwrap(),
+    );
+    let path = repo2.path().to_path_buf();
+    let ws_path = ws.path().to_path_buf();
+    run_in_root(ws.path(), root_of(&repo2).await, "edit", async move {
+        std::fs::write(path.join("a.txt"), "two\n").unwrap();
+        let id = current().unwrap().task_id.unwrap();
+        let ctx = DebugCtx::new(&ws_path);
+        ops::task_update(
+            &ctx,
+            &id,
+            TaskPatch {
+                status: Some(TaskStatus::Pass),
+                summary: Some("self-declared".into()),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        Ok::<_, String>(())
+    })
+    .await
+    .unwrap();
+    let t = only_task(ws.path()).await;
+    assert_eq!(
+        t.status,
+        TaskStatus::Partial,
+        "no real check backs the pass"
+    );
+    assert_eq!(t.summary.as_deref(), Some("self-declared"));
+}
+
+#[tokio::test]
+async fn finish_fallback_passes_only_a_turn_that_changed_nothing() {
+    let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+    run_in_root(ws.path(), root_of(&repo).await, "look", async {
+        Ok::<_, String>(())
+    })
+    .await
+    .unwrap();
+    assert_eq!(only_task(ws.path()).await.status, TaskStatus::Pass);
 }
 
 #[tokio::test]
@@ -263,10 +332,17 @@ async fn critical_files_are_recorded_and_an_unvalidated_pass_becomes_partial() {
 
 #[tokio::test]
 async fn non_critical_pass_is_kept_and_records_no_critical_files() {
+    use crate::neppy::tools::traits::Tool;
     let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
     let path = repo.path().to_path_buf();
     run_in_root(ws.path(), root_of(&repo).await, "edit", async move {
         std::fs::write(path.join("a.txt"), "two\n").unwrap();
+        // A real passing check after the edit backs the pass.
+        let c = super::super::tools::DebugRunCheckTool
+            .execute(serde_json::json!({"command": ["git", "rev-parse", "HEAD"]}))
+            .await
+            .unwrap();
+        assert!(!c.is_error, "{}", c.text());
         let t = current().unwrap();
         let patch = TaskPatch {
             status: Some(TaskStatus::Pass),

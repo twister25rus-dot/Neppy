@@ -2830,6 +2830,7 @@ fn debug_mode_tools_are_registered_and_belong_to_the_agent_group() {
     let names = tool_names(&tools);
     for expected in [
         "debug_checkpoint",
+        "debug_run_check",
         "debug_validate_candidate",
         "debug_report",
     ] {

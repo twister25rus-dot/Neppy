@@ -153,11 +153,55 @@ impl DebugStore {
         Ok(all.into_iter().rev().take(limit).collect())
     }
 
-    /// The most recent task still planning / editing / validating.
+    /// The active task: the NEWEST task, and only when it is still planning /
+    /// editing / validating. An older task stranded in an active status never
+    /// counts once a newer task exists (it would otherwise resurface as "the
+    /// active task" after the newer ones finish); see [`Self::abandon_active_except`].
     pub fn active_task(&self) -> Result<Option<TaskRecord>, String> {
         let _g = lock();
         let all: Vec<TaskRecord> = self.read_json(HISTORY)?;
-        Ok(all.into_iter().rev().find(|t| t.status.is_active()))
+        let newest = all.into_iter().next_back();
+        if let Some(t) = &newest {
+            log::trace!(
+                "[debug_mode] active_task newest={} status={:?} active={}",
+                t.id,
+                t.status,
+                t.status.is_active()
+            );
+        }
+        Ok(newest.filter(|t| t.status.is_active()))
+    }
+
+    /// Closes every task other than `keep_id` that is still in an active
+    /// status: `Failed`, with `abandoned: superseded by <keep_id>` recorded in
+    /// the summary. Returns the ids that were closed (oldest first).
+    pub fn abandon_active_except(&self, keep_id: &str) -> Result<Vec<String>, String> {
+        let _g = lock();
+        let mut all: Vec<TaskRecord> = self.read_json(HISTORY)?;
+        let reason = format!("abandoned: superseded by {keep_id}");
+        let now = chrono::Utc::now().to_rfc3339();
+        let mut closed = Vec::new();
+        for t in all
+            .iter_mut()
+            .filter(|t| t.id != keep_id && t.status.is_active())
+        {
+            log::info!(
+                "[debug_mode] abandoning stale task={} status={:?} superseded_by={keep_id}",
+                t.id,
+                t.status
+            );
+            t.status = super::types::TaskStatus::Failed;
+            t.summary = Some(match t.summary.take() {
+                Some(prev) if !prev.trim().is_empty() => format!("{prev}\n{reason}"),
+                _ => reason.clone(),
+            });
+            t.updated_at = now.clone();
+            closed.push(t.id.clone());
+        }
+        if !closed.is_empty() {
+            self.write_json(HISTORY, &all)?;
+        }
+        Ok(closed)
     }
 
     // ── audit ────────────────────────────────────────────────────────────

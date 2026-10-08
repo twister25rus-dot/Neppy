@@ -305,6 +305,7 @@ pub fn all_tools_with_runtime(
         // Debug-mode turn and refuses elsewhere; only the `debug_agent`
         // definition names them. No rollback tool by design.
         Box::new(DebugCheckpointTool),
+        Box::new(DebugRunCheckTool),
         Box::new(DebugValidateCandidateTool),
         Box::new(DebugReportTool),
         // Agent-first Workflow authoring (issue B4): validates a candidate

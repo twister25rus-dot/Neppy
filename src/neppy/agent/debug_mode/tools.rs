@@ -1,7 +1,7 @@
-//! Agent tools for the Debug agent: `debug_checkpoint`, `debug_validate_candidate`
-//! and `debug_report`.
+//! Agent tools for the Debug agent: `debug_checkpoint`, `debug_run_check`
+//! (in [`super::tools_check`]), `debug_validate_candidate` and `debug_report`.
 //!
-//! Both act on the debug task of the *current turn* ([`super::turn::current`]),
+//! All act on the debug task of the *current turn* ([`super::turn::current`]),
 //! so they refuse outside a Debug-mode turn. Rollback is deliberately not a
 //! tool: it stays a user-confirmed RPC.
 
@@ -15,9 +15,12 @@ use crate::neppy::tools::traits::{PermissionLevel, Tool, ToolResult};
 
 use super::candidate;
 use super::ops;
+use super::pass_gate;
 use super::selfmod;
 use super::turn::{self, DebugTurn};
 use super::types::{TaskPatch, TaskStatus, ValidationRecord};
+
+pub use super::tools_check::DebugRunCheckTool;
 
 const NOT_DEBUG_TURN: &str = "debug_* tools only work inside a Debug-mode turn";
 const NO_TASK: &str =
@@ -27,7 +30,7 @@ const MAX_VALIDATIONS: usize = 50;
 const VALIDATE_WAIT: Duration = Duration::from_secs(45 * 60);
 const VALIDATE_POLL: Duration = Duration::from_secs(2);
 
-fn turn_with_task(tool: &str) -> Result<(DebugTurn, String), ToolResult> {
+pub(super) fn turn_with_task(tool: &str) -> Result<(DebugTurn, String), ToolResult> {
     let Some(turn) = turn::current() else {
         log::debug!("[debug_mode] {tool} refused: not a debug turn");
         return Err(ToolResult::error(NOT_DEBUG_TURN));
@@ -255,9 +258,10 @@ async fn changed_files(turn: &DebugTurn, task_id: &str) -> Vec<String> {
 async fn self_mod_gate(
     turn: &DebugTurn,
     task_id: &str,
+    files: &[String],
     status: TaskStatus,
 ) -> (TaskStatus, Option<String>) {
-    let assessment = selfmod::assess(&changed_files(turn, task_id).await);
+    let assessment = selfmod::assess(files);
     if !assessment.critical {
         return (status, None);
     }
@@ -308,7 +312,9 @@ impl Tool for DebugReportTool {
         "Debug mode only. Call once at the end of the turn to record the task outcome: \
          status (pass | partial | failed), a short summary of what changed, and the \
          validation checks you actually ran with their real results. `pass` is only \
-         accepted when every listed check passed."
+         accepted when every listed check passed AND a check run through `debug_run_check` \
+         passed after your last edit (otherwise it is recorded as `partial`). Checks you \
+         list here are information only; they never count toward `pass`."
     }
 
     fn parameters_schema(&self) -> Value {
@@ -365,9 +371,37 @@ impl Tool for DebugReportTool {
                  report `partial` or `failed`, or fix and re-run the check",
             ));
         }
-        let (status, downgrade) = self_mod_gate(&turn, &task_id, status).await;
+        let files = changed_files(&turn, &task_id).await;
+        let requested = status;
+        let (mut status, downgrade) = self_mod_gate(&turn, &task_id, &files, status).await;
+        let mut notes: Vec<String> = downgrade.into_iter().collect();
+        // Real runs already persisted on the task (the report payload below is
+        // self-attested and never counts toward the gate).
+        let persisted: Vec<ValidationRecord> = turn
+            .ctx
+            .store
+            .task_get(&task_id)
+            .ok()
+            .flatten()
+            .map(|t| t.validation)
+            .unwrap_or_default();
+        if requested == TaskStatus::Pass {
+            if let Some(note) = pass_gate::missing_check_note(&turn.root, &files, &persisted) {
+                log::info!(
+                    "[debug_mode] debug_report pass downgraded task={task_id} reason=no_post_edit_check files={}",
+                    files.len()
+                );
+                status = TaskStatus::Partial;
+                notes.push(note);
+            }
+        }
         let now = chrono::Utc::now().to_rfc3339();
-        let validation: Vec<ValidationRecord> = parsed
+        // Keep every real run, replace any earlier self-attested entries.
+        let mut validation: Vec<ValidationRecord> = persisted
+            .into_iter()
+            .filter(pass_gate::is_real_check)
+            .collect();
+        let attested: Vec<ValidationRecord> = parsed
             .validation
             .into_iter()
             .take(MAX_VALIDATIONS)
@@ -382,6 +416,7 @@ impl Tool for DebugReportTool {
                 output_tail: c.detail.unwrap_or_default(),
             })
             .collect();
+        validation.extend(attested);
         let n_checks = validation.len();
         let patch = TaskPatch {
             status: Some(status),
@@ -397,7 +432,7 @@ impl Tool for DebugReportTool {
                 let mut msg = format!(
                     "Recorded {status:?} for task {task_id} with {n_checks} validation check(s)."
                 );
-                if let Some(note) = downgrade {
+                for note in notes {
                     msg.push(' ');
                     msg.push_str(&note);
                 }

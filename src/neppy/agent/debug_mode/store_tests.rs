@@ -145,3 +145,77 @@ fn audit_appends_lines_and_tails_oldest_first() {
     let raw = std::fs::read_to_string(s.dir().join("audit.jsonl")).unwrap();
     assert_eq!(raw.lines().count(), 5);
 }
+
+#[test]
+fn active_task_is_the_newest_task_and_only_when_it_is_active() {
+    let ws = tempfile::tempdir().unwrap();
+    let s = DebugStore::new(ws.path());
+    assert!(s.active_task().unwrap().is_none(), "empty history");
+
+    // An older task stranded in `editing`, then a newer one that finishes.
+    let mut old = task("old");
+    old.status = TaskStatus::Editing;
+    s.task_add(old).unwrap();
+    s.task_add(task("new")).unwrap();
+    assert_eq!(s.active_task().unwrap().unwrap().id, "new");
+
+    s.task_modify("new", |t| t.status = TaskStatus::Pass)
+        .unwrap();
+    assert!(
+        s.active_task().unwrap().is_none(),
+        "the stranded older task must not resurface once the newest finished"
+    );
+
+    // Every active status counts while the task is the newest.
+    for st in [
+        TaskStatus::Planning,
+        TaskStatus::Editing,
+        TaskStatus::Validating,
+    ] {
+        s.task_modify("new", |t| t.status = st).unwrap();
+        assert_eq!(s.active_task().unwrap().unwrap().id, "new");
+    }
+}
+
+#[test]
+fn abandon_active_except_fails_stale_tasks_with_a_reason() {
+    let ws = tempfile::tempdir().unwrap();
+    let s = DebugStore::new(ws.path());
+    let mut a = task("a");
+    a.status = TaskStatus::Editing;
+    let mut b = task("b");
+    b.status = TaskStatus::Validating;
+    b.summary = Some("half done".into());
+    let mut done = task("done");
+    done.status = TaskStatus::Pass;
+    done.summary = Some("shipped".into());
+    for t in [a, b, done, task("keep")] {
+        s.task_add(t).unwrap();
+    }
+    let closed = s.abandon_active_except("keep").unwrap();
+    assert_eq!(closed, ["a", "b"]);
+
+    let a = s.task_get("a").unwrap().unwrap();
+    assert_eq!(a.status, TaskStatus::Failed);
+    assert_eq!(a.summary.as_deref(), Some("abandoned: superseded by keep"));
+    let b = s.task_get("b").unwrap().unwrap();
+    assert_eq!(b.status, TaskStatus::Failed);
+    assert_eq!(
+        b.summary.as_deref(),
+        Some("half done\nabandoned: superseded by keep"),
+        "an existing note is kept"
+    );
+    let done = s.task_get("done").unwrap().unwrap();
+    assert_eq!(
+        done.status,
+        TaskStatus::Pass,
+        "terminal tasks are untouched"
+    );
+    assert_eq!(done.summary.as_deref(), Some("shipped"));
+    assert_eq!(
+        s.task_get("keep").unwrap().unwrap().status,
+        TaskStatus::Planning
+    );
+
+    assert!(s.abandon_active_except("keep").unwrap().is_empty());
+}

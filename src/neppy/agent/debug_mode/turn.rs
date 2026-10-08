@@ -18,6 +18,7 @@ use crate::neppy::config::schema::debug_mode::DebugModeConfig;
 
 use super::candidate;
 use super::ops::{self, DebugCtx};
+use super::pass_gate;
 use super::policy;
 use super::selfmod;
 use super::types::{TaskPatch, TaskStatus};
@@ -228,6 +229,24 @@ pub(super) async fn diff_files(
     }
 }
 
+/// True when a `pass` cannot stand because no real check passed after the
+/// task's last edit (same rule as `debug_report`; see [`pass_gate`]). The
+/// changed files are the fresh diff plus whatever the task already recorded.
+fn pass_lacks_check(
+    root: &Path,
+    diff: Option<&[String]>,
+    task: Option<&super::types::TaskRecord>,
+) -> bool {
+    let mut files: Vec<String> = diff.map(<[String]>::to_vec).unwrap_or_default();
+    if let Some(t) = task {
+        files.extend(t.files_changed.iter().cloned());
+    }
+    files.sort();
+    files.dedup();
+    let validation = task.map_or(&[][..], |t| t.validation.as_slice());
+    pass_gate::missing_check_note(root, &files, validation).is_some()
+}
+
 /// Records the turn's result on its task. Never fails the caller; returns
 /// whether the task now holds the final status (`true` also when there is no
 /// task to update).
@@ -288,6 +307,13 @@ pub async fn finish(turn: &DebugTurn, outcome: Outcome) -> bool {
                 log::info!(
                     "[debug_mode] turn pass downgraded task={task_id} critical_files={}",
                     assessment.critical_files.len()
+                );
+                (TaskStatus::Partial, None)
+            } else if status == TaskStatus::Pass
+                && pass_lacks_check(&turn.root, files.as_deref(), reported.as_ref())
+            {
+                log::info!(
+                    "[debug_mode] turn pass downgraded task={task_id} reason=no_post_edit_check"
                 );
                 (TaskStatus::Partial, None)
             } else {

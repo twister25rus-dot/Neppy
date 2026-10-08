@@ -279,6 +279,28 @@ pub async fn task_start(ctx: &DebugCtx, request: &str) -> RpcResult<TaskRecord> 
             candidate_id: None,
         };
         ctx.store.task_add(task.clone())?;
+        // A new task makes every older still-active one stale: close them so
+        // they can never resurface as "the active task".
+        match ctx.store.abandon_active_except(&task.id) {
+            Ok(closed) if closed.is_empty() => {
+                log::debug!(
+                    "[debug_mode] task_start {}: no stale tasks to close",
+                    task.id
+                );
+            }
+            Ok(closed) => log::info!(
+                "[debug_mode] task_start {}: closed {} stale task(s): {}",
+                task.id,
+                closed.len(),
+                closed.join(", ")
+            ),
+            // The new task exists; a failure to tidy the old ones must not
+            // fail the turn. `active_task` is newest-only regardless.
+            Err(e) => log::warn!(
+                "[debug_mode] task_start {}: cannot close stale tasks: {e}",
+                task.id
+            ),
+        }
         Ok(task)
     })();
     let target = r
@@ -450,8 +472,17 @@ pub async fn run_check(
             };
             ctx.store.task_modify(tid, |t| {
                 t.validation.push(rec);
-                t.validation.truncate(MAX_VALIDATIONS);
+                // Keep the NEWEST records: the pass gate needs the latest runs.
+                if t.validation.len() > MAX_VALIDATIONS {
+                    let cut = t.validation.len() - MAX_VALIDATIONS;
+                    t.validation.drain(..cut);
+                }
             })?;
+            log::debug!(
+                "[debug_mode] run_check recorded task={tid} passed={} exit={:?}",
+                result.passed,
+                result.exit_code
+            );
         }
         Ok(result)
     }

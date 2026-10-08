@@ -52,6 +52,6 @@ hint = "coding"
 # Everything else still goes through the same enforcement as before: the
 # approval gate (supervised tier), the Debug command policy (installs, push,
 # system commands, destructive commands), secret masking, and the protected-path
-# guard. `debug_checkpoint`, `debug_validate_candidate` and `debug_report` act on
-# the current turn's debug task and refuse elsewhere.
+# guard. `debug_checkpoint`, `debug_run_check`, `debug_validate_candidate` and
+# `debug_report` act on the current turn's debug task and refuse elsewhere.
 wildcard = {}

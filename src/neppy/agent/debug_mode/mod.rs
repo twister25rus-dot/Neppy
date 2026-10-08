@@ -8,7 +8,7 @@
 //!
 //! Phase 2 adds the agent seam: [`turn`] (repo scope + automatic task and
 //! checkpoint per Debug-mode chat turn) and [`tools`] (`debug_checkpoint`,
-//! `debug_report`).
+//! `debug_run_check`, `debug_report`).
 //!
 //! Storage: `{workspace}/debug_mode/{history.json,checkpoints.json,audit.jsonl}`
 //! (agent tools cannot write the workspace dir, so history is tamper-resistant
@@ -27,6 +27,7 @@ pub mod local_install;
 mod local_install_schemas;
 mod local_install_steps;
 pub mod ops;
+mod pass_gate;
 pub mod policy;
 mod policy_scope;
 #[cfg(test)]
@@ -42,6 +43,7 @@ mod store;
 #[cfg(test)]
 mod test_util;
 pub mod tools;
+mod tools_check;
 pub mod turn;
 pub mod types;
 

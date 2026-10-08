@@ -446,3 +446,78 @@ async fn the_runner_reports_failure_and_timeout_with_a_tail() {
         .unwrap_err()
         .contains("is missing"));
 }
+
+/// The reported bug: an older task stranded in `editing` plus a newer finished
+/// one. The old task's checkpoint diff includes a later release commit (version
+/// bumps in Cargo.toml & co), but it is not the active task, so the install is
+/// not refused on its behalf.
+#[tokio::test]
+async fn a_stranded_older_task_does_not_block_a_local_install() {
+    use crate::neppy::agent::debug_mode::turn::begin;
+    let (ws, ctx) = ctx();
+    let root = repo();
+    let root_path = root.path().to_path_buf();
+    // Task 1: checkpointed, left `editing` with no files of its own.
+    let stale = begin(ws.path(), root_path.clone(), "stranded").await;
+    let stale_id = stale.task_id.clone().unwrap();
+    // A release commit lands after its checkpoint, touching critical files.
+    fs::write(
+        root.path().join("Cargo.toml"),
+        "[package]\nversion = \"9.9.9\"\n",
+    )
+    .unwrap();
+    fs::write(root.path().join("Cargo.lock"), "# lock\n").unwrap();
+    for args in [vec!["add", "."], vec!["commit", "-q", "-m", "release"]] {
+        let out = std::process::Command::new("git")
+            .arg("-C")
+            .arg(root.path())
+            .args(["-c", "user.name=t", "-c", "user.email=t@t"])
+            .args(["-c", "commit.gpgsign=false"])
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "git {args:?}");
+    }
+    // The stale task's own diff really does contain critical files.
+    let diff = crate::neppy::agent::debug_mode::turn::diff_files(
+        &ctx,
+        &root.path().display().to_string(),
+        stale.checkpoint_id.as_deref(),
+    )
+    .await
+    .unwrap();
+    assert!(diff.contains(&"Cargo.toml".to_string()), "{diff:?}");
+
+    // Task 2 starts afterwards and finishes with `pass`.
+    let newer = begin(ws.path(), root_path, "newer").await;
+    let newer_id = newer.task_id.clone().unwrap();
+    ctx.store
+        .task_modify(&newer_id, |t| t.status = TaskStatus::Pass)
+        .unwrap();
+
+    assert!(ctx.store.active_task().unwrap().is_none());
+    check_guard(&ctx, root.path())
+        .await
+        .expect("no refusal on behalf of a superseded task");
+    let stale = ctx.store.task_get(&stale_id).unwrap().unwrap();
+    assert_eq!(stale.status, TaskStatus::Failed);
+    assert!(stale
+        .summary
+        .unwrap()
+        .contains(&format!("superseded by {newer_id}")));
+}
+
+/// Even a stranded `editing` task that predates the newest one is ignored when
+/// it was written straight into history (older history files, no task_start).
+#[tokio::test]
+async fn an_unclosed_older_editing_task_never_triggers_the_guard() {
+    let (_ws, ctx) = ctx();
+    let root = repo();
+    ctx.store
+        .task_add(task("t-old", &["Cargo.toml", "Cargo.lock"]))
+        .unwrap();
+    let mut newer = task("t-new", &[]);
+    newer.status = TaskStatus::Pass;
+    ctx.store.task_add(newer).unwrap();
+    check_guard(&ctx, root.path()).await.unwrap();
+}

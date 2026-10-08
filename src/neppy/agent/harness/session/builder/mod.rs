@@ -112,6 +112,7 @@ pub(super) const COMPACT_LOCAL_BELT: &[&str] = &[
     "memory_recall",
     "ask_user_clarification",
     "debug_checkpoint",
+    "debug_run_check",
     "debug_report",
     "debug_validate_candidate",
 ];

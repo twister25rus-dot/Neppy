@@ -477,3 +477,47 @@ async fn task_lifecycle_and_snake_case_status() {
         Some("undone")
     );
 }
+
+#[tokio::test]
+async fn task_start_abandons_older_active_tasks_with_a_reason() {
+    let (_ws, c) = {
+        let ws = tempfile::tempdir().unwrap();
+        let c = DebugCtx::new(ws.path());
+        (ws, c)
+    };
+    let old = task_start(&c, "old work").await.unwrap().value;
+    c.store
+        .task_modify(&old.id, |t| t.status = TaskStatus::Editing)
+        .unwrap();
+    let finished = task_start(&c, "finished work").await.unwrap().value;
+    // Starting `finished` already closed `old`.
+    c.store
+        .task_modify(&finished.id, |t| t.status = TaskStatus::Pass)
+        .unwrap();
+
+    let fresh = task_start(&c, "new work").await.unwrap().value;
+    let old = task_get(&c, &old.id).await.unwrap().value;
+    assert_eq!(old.status, TaskStatus::Failed);
+    assert_eq!(
+        old.summary.as_deref(),
+        Some(format!("abandoned: superseded by {}", finished.id).as_str()),
+        "closed by the task that superseded it"
+    );
+    assert_eq!(
+        task_get(&c, &finished.id).await.unwrap().value.status,
+        TaskStatus::Pass,
+        "a finished task is untouched"
+    );
+    assert_eq!(fresh.status, TaskStatus::Planning);
+    let active = c.store.active_task().unwrap().unwrap();
+    assert_eq!(active.id, fresh.id);
+
+    // Starting yet another closes `fresh`, which was still planning.
+    let next = task_start(&c, "next").await.unwrap().value;
+    let fresh = task_get(&c, &fresh.id).await.unwrap().value;
+    assert_eq!(fresh.status, TaskStatus::Failed);
+    assert_eq!(
+        fresh.summary.as_deref(),
+        Some(format!("abandoned: superseded by {}", next.id).as_str())
+    );
+}
