@@ -7520,7 +7520,7 @@ const messages: TranslationMap = {
   'debug.release.retry': 'Coba lagi',
   'debug.release.loadFailed': 'Tidak bisa memeriksa kesiapan rilis: {error}',
   'debug.release.startFailed': 'Tidak bisa memulai rilis: {error}',
-  'debug.release.branchAhead': 'Cabang {branch} · komit yang akan diterbitkan: {count}',
+  'debug.release.branchAhead': 'Cabang {branch} · commit yang akan diterbitkan: {count}',
   'debug.release.fetchWarning':
     'Tidak bisa menghubungi GitHub untuk memeriksa commit yang lebih baru: {error}',
   'debug.release.recheck': 'Periksa lagi',
