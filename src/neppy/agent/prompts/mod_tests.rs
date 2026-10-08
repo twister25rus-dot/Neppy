@@ -2232,10 +2232,15 @@ fn grounding_no_repeat_rule_allows_rerun_after_a_change() {
 }
 
 #[test]
-fn work_method_keeps_thinking_out_of_the_reply_and_names_skill_tools() {
+fn work_method_keeps_thinking_out_of_the_reply_and_defers_skill_routes() {
     assert!(WORK_METHOD_BODY.contains("Do this in your reasoning, not in your reply."));
-    assert!(WORK_METHOD_BODY.contains("`run_skill`"));
-    assert!(WORK_METHOD_BODY.contains("`run_workflow`"));
+    // The shared block reaches agents with different skill routes (the
+    // orchestrator has `run_skill`, debug_agent only `run_workflow` via
+    // `use_skill`), so it must not name a tool one of them cannot call: each
+    // agent's own prompt names its route.
+    assert!(WORK_METHOD_BODY.contains("the way your instructions say skills are run"));
+    assert!(!WORK_METHOD_BODY.contains("`run_skill`"));
+    assert!(!WORK_METHOD_BODY.contains("`run_workflow`"));
 }
 
 #[test]
