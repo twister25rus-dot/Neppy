@@ -120,4 +120,46 @@ describe('composer file input', () => {
     expect(passed.length).toBe(1);
     expect(passed[0]).toBe(file);
   });
+
+  it('resets the input value after a selection so the same file can be picked again', async () => {
+    const store = buildStore();
+    const onAttachFiles = vi.fn().mockResolvedValue(undefined);
+    const { container } = render(
+      <Provider store={store}>
+        <Chat onAttachFiles={onAttachFiles} />
+      </Provider>
+    );
+    await vi.waitFor(() => expect(findInput(container)).not.toBeNull());
+    const input = findInput(container) as HTMLInputElement;
+
+    // jsdom reports '' for a file input whose `files` was only faked, so a plain
+    // `input.value` read cannot tell a reset from no reset. Model the browser
+    // instead: picking a file makes `value` non-empty, and only an explicit
+    // `value = ''` write clears it (which is what lets the same file fire a
+    // change event again).
+    const writes: string[] = [];
+    let current = '';
+    Object.defineProperty(input, 'value', {
+      configurable: true,
+      get: () => current,
+      set: (next: string) => {
+        writes.push(next);
+        current = next;
+      },
+    });
+
+    const file = new File(['hello'], 'note.txt', { type: 'text/plain' });
+    current = 'C:\\fakepath\\note.txt';
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(onAttachFiles).toHaveBeenCalledTimes(1);
+    expect(writes).toEqual(['']);
+    expect(input.value).toBe('');
+
+    // Picking the very same file again still reaches the host.
+    current = 'C:\\fakepath\\note.txt';
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(onAttachFiles).toHaveBeenCalledTimes(2);
+    expect(input.value).toBe('');
+  });
 });

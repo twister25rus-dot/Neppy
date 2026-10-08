@@ -7686,7 +7686,7 @@ const messages: TranslationMap = {
   'debug.release.retry': 'Erneut versuchen',
   'debug.release.loadFailed': 'Die Release-Bereitschaft konnte nicht geprüft werden: {error}',
   'debug.release.startFailed': 'Das Release konnte nicht gestartet werden: {error}',
-  'debug.release.branchAhead': 'Branch {branch} · Commits zum Veröffentlichen: {count}',
+  'debug.release.branchAhead': 'Zweig {branch} · Commits zum Veröffentlichen: {count}',
   'debug.release.fetchWarning':
     'GitHub war nicht erreichbar, neuere Commits konnten nicht geprüft werden: {error}',
   'debug.release.recheck': 'Erneut prüfen',

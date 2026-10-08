@@ -1,8 +1,19 @@
-import { screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from '../../test/test-utils';
 import { DebugThreadChrome } from './DebugThreadChrome';
+import { DEBUG_POLL_MS } from './useDebugSnapshot';
+
+// Records every `refreshKey` the chrome hands the release card, so the wiring
+// (which repo facts re-run the release preflight) can be asserted directly.
+const releaseKeys = vi.hoisted(() => [] as Array<string | number | undefined>);
+vi.mock('./ReleaseCard', () => ({
+  ReleaseCard: ({ refreshKey }: { refreshKey?: string | number }) => {
+    releaseKeys.push(refreshKey);
+    return <div data-testid="debug-release" />;
+  },
+}));
 
 const mockCall = vi.fn();
 vi.mock('../../services/coreRpcClient', () => ({
@@ -34,17 +45,22 @@ const TASK = {
 };
 
 let statusFails: boolean;
+let currentStatus: typeof STATUS;
+let currentTask: Omit<typeof TASK, 'commit'> & { commit: string | null };
 
 describe('DebugThreadChrome', () => {
   beforeEach(() => {
     mockCall.mockReset();
     statusFails = false;
+    currentStatus = STATUS;
+    currentTask = TASK;
+    releaseKeys.length = 0;
     mockCall.mockImplementation(async ({ method }) => {
       if (method === 'neppy.debug_mode_status') {
         if (statusFails) throw new Error('no repo');
-        return STATUS;
+        return currentStatus;
       }
-      if (method === 'neppy.debug_mode_task_list') return [TASK];
+      if (method === 'neppy.debug_mode_task_list') return [currentTask];
       if (method === 'neppy.debug_mode_diff') {
         return {
           base: 'HEAD',
@@ -86,5 +102,77 @@ describe('DebugThreadChrome', () => {
     expect(screen.queryByTestId('debug-banner')).toBeNull();
     expect(screen.queryByTestId('debug-release')).toBeNull();
     expect(notice.querySelector('a')).toHaveAttribute('href', '/settings/debug-mode');
+  });
+
+  describe('release card refresh key', () => {
+    const lastKey = () => releaseKeys[releaseKeys.length - 1];
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    /** Applies a repo change, lets the snapshot poll pick it up, returns the new key. */
+    async function pollWith(status: typeof STATUS, task: typeof currentTask) {
+      currentStatus = status;
+      currentTask = task;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBUG_POLL_MS + 50);
+      });
+      return lastKey();
+    }
+
+    async function mountSettled() {
+      renderWithProviders(<DebugThreadChrome threadId="t-1" />);
+      await screen.findByTestId('debug-release');
+      return lastKey();
+    }
+
+    it('passes a numeric key derived from the repo state', async () => {
+      const base = await mountSettled();
+      expect(typeof base).toBe('number');
+      expect(base).not.toBe(0);
+    });
+
+    it('changes when HEAD changes', async () => {
+      const base = await mountSettled();
+      expect(await pollWith({ ...STATUS, head: 'fedcba9876543210' }, TASK)).not.toBe(base);
+    });
+
+    it('changes when the branch changes', async () => {
+      const base = await mountSettled();
+      expect(await pollWith({ ...STATUS, branch: 'feat/other' }, TASK)).not.toBe(base);
+    });
+
+    it('changes when the tree goes from dirty to clean', async () => {
+      const base = await mountSettled();
+      const clean = { ...STATUS, dirty: { modified: [], added: [], deleted: [], untracked: [] } };
+      expect(await pollWith(clean, TASK)).not.toBe(base);
+    });
+
+    it("changes when the last task's commit changes", async () => {
+      const base = await mountSettled();
+      expect(await pollWith(STATUS, { ...TASK, commit: 'abc1234' })).not.toBe(base);
+    });
+
+    it('does not change when only the dirty-file count changes', async () => {
+      const base = await mountSettled();
+      const moreDirty = {
+        ...STATUS,
+        dirty: { ...STATUS.dirty, modified: ['a', 'b', 'x', 'y'], untracked: [] },
+      };
+      const before = mockCall.mock.calls.filter(
+        ([a]) => a.method === 'neppy.debug_mode_status'
+      ).length;
+      expect(await pollWith(moreDirty, TASK)).toBe(base);
+      // The poll really ran with the new status; only the key stayed put.
+      const after = mockCall.mock.calls.filter(
+        ([a]) => a.method === 'neppy.debug_mode_status'
+      ).length;
+      expect(after).toBeGreaterThan(before);
+      expect(screen.getByTestId('debug-dirty')).toHaveTextContent('5');
+    });
   });
 });

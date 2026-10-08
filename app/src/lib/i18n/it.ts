@@ -7618,7 +7618,7 @@ const messages: TranslationMap = {
   'debug.release.retry': 'Riprova',
   'debug.release.loadFailed': 'Impossibile verificare se la release è pronta: {error}',
   'debug.release.startFailed': 'Impossibile avviare la release: {error}',
-  'debug.release.branchAhead': 'Branch {branch} · commit da pubblicare: {count}',
+  'debug.release.branchAhead': 'Ramo {branch} · commit da pubblicare: {count}',
   'debug.release.fetchWarning':
     'Impossibile contattare GitHub per verificare la presenza di commit più recenti: {error}',
   'debug.release.recheck': 'Controlla di nuovo',
