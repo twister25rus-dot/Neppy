@@ -61,7 +61,7 @@ export interface ChatComposerProps {
    */
   onNeppyMode?: () => void;
   textInputRef: React.RefObject<HTMLTextAreaElement | null>;
-  fileInputRef: React.Ref<any>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   composerInteractionBlocked: boolean;
   isSending: boolean;
   /**
@@ -434,7 +434,6 @@ function ChatComposerBody({
           <div className="flex min-w-0 items-center gap-1">
             {attachmentsEnabled && (
               <Button
-                ref={fileInputRef}
                 type="button"
                 iconOnly
                 variant="tertiary"
@@ -442,11 +441,7 @@ function ChatComposerBody({
                 analyticsId="chat-composer-attach-file"
                 aria-label={t('composer.attachFile')}
                 title={t('composer.attachFile')}
-                // Forwarding the ref onto the DOM <button> is what opens the
-                // native file picker: clicking the button IS clicking the
-                // hidden input. (The old onClick called fileInputRef.current
-                // .click(), but the ref was never attached to any real element,
-                // so the picker never opened.)
+                onClick={() => fileInputRef.current?.click()}
                 disabled={
                   composerInteractionBlocked || isSending || attachments.length >= maxAttachments
                 }
