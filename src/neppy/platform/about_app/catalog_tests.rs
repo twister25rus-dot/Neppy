@@ -439,3 +439,24 @@ fn catalog_how_to_uses_connections_nav_not_legacy_settings_paths() {
     );
     assert_eq!(how_to("workflows.connect_google"), "Connections > OAuth");
 }
+
+#[test]
+fn debug_mode_documents_the_real_check_rule_and_the_release_card() {
+    let debug = lookup("conversation.debug_mode").expect("debug mode registered");
+    assert!(debug.description.contains("only counts as passed"));
+    assert!(debug.description.contains("type-check"));
+
+    let release = lookup("conversation.debug_release").expect("publish release registered");
+    assert_eq!(release.domain, "debug_mode");
+    assert_eq!(release.category, CapabilityCategory::Conversation);
+    assert!(release.description.contains("can never publish"));
+    assert!(release
+        .how_to
+        .contains("neppy.debug_mode_release_preflight"));
+    let privacy = release
+        .privacy
+        .expect("publishing discloses where data goes");
+    assert!(privacy.leaves_device);
+    assert_eq!(privacy.destinations.len(), 1);
+    assert!(privacy.destinations[0].contains("GitHub"));
+}

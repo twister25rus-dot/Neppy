@@ -229,7 +229,29 @@ async fn new_commits_on_origin_after_a_fetch_block_as_behind() {
     let p = f.preflight().await;
     assert!(p.behind, "preflight fetches before comparing");
     assert_eq!(p.fetch_error, None);
-    assert!(p.blockers.contains(&"behind".to_string()));
+    // Still one local commit ahead: diverged, so only `behind` is reported.
+    assert_eq!(p.ahead_commits, 1);
+    assert_eq!(p.blockers, vec!["behind".to_string()]);
+}
+
+#[tokio::test]
+async fn purely_behind_origin_reports_behind_but_not_nothing_to_release() {
+    let f = Fixture::new();
+    let other = tempfile::tempdir().unwrap();
+    sh(
+        other.path(),
+        &["clone", "-q", &f._origin.path().display().to_string(), "."],
+    );
+    std::fs::write(other.path().join("remote.txt"), "r").unwrap();
+    sh(other.path(), &["add", "."]);
+    sh(other.path(), &["commit", "-q", "-m", "remote work"]);
+    sh(other.path(), &["push", "-q", "origin", "HEAD:main"]);
+    // Drop our own unpublished commit: HEAD is now an ancestor of origin/main.
+    sh(f.root(), &["reset", "-q", "--hard", "HEAD~1"]);
+    let p = f.preflight().await;
+    assert!(p.behind);
+    assert_eq!(p.ahead_commits, 0);
+    assert_eq!(p.blockers, vec!["behind".to_string()]);
 }
 
 #[tokio::test]

@@ -63,6 +63,17 @@ const LOCAL_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     destinations: &[],
 });
 
+// Publish release (Debug Mode) runs `scripts/release-neppy.sh` on this machine:
+// it pushes the release commit and tag to the repository's git remote and
+// uploads the signed app bundle to a GitHub Release. That is the user's source
+// and build output leaving the device for GitHub, not metadata; the signing
+// key itself never leaves (the script reads it locally).
+const RELEASE_TO_GITHUB: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
+    leaves_device: true,
+    data_kind: PrivacyDataKind::Raw,
+    destinations: &["GitHub (git push, tag and release upload)"],
+});
+
 const DIAGNOSTICS_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Diagnostics,
@@ -1597,8 +1608,11 @@ pub(super) const CAPABILITIES: &[Capability] = &[
                       saves a checkpoint first, so any task can be rolled back (a pre-rollback \
                       checkpoint keeps the rollback itself reversible). Commits stage only the \
                       files the task changed, run the repository's own hooks, and never push; \
-                      each commit and rollback needs your explicit confirmation. File contents \
-                      the agent reads are sent to the configured inference provider.",
+                      each commit and rollback needs your explicit confirmation. A task only \
+                      counts as passed after a real test, type-check, lint or build check has \
+                      run and succeeded; reading files or running trivial commands is not \
+                      enough. File contents the agent reads are sent to the configured \
+                      inference provider.",
         how_to: "Open a chat and turn on the Debug switch in the top-right corner next to MLX \
                  (requires the app's source repository, set via NEPPY_DEBUG_PROJECT_ROOT or \
                  Settings > Debug Mode); turning it off returns the thread to its previous \
@@ -1606,6 +1620,27 @@ pub(super) const CAPABILITIES: &[Capability] = &[
                  over RPC.",
         status: CapabilityStatus::Beta,
         privacy: CODING_SESSION_TO_BACKEND,
+    },
+    Capability {
+        id: "conversation.debug_release",
+        name: "Publish Release",
+        domain: "debug_mode",
+        category: CapabilityCategory::Conversation,
+        description: "After a Debug Mode task is committed, a Publish release card offers the \
+                      next version number. After you confirm that exact version, Neppy runs \
+                      the repository's release script on your Mac with your own signing key: \
+                      it builds and signs the app, pushes the release commit and a tag to \
+                      GitHub, and creates the GitHub Release, so installed copies are offered \
+                      the update. Live progress shows in the card and the release keeps \
+                      running if you quit the app. The agent itself can never publish; only \
+                      you can, from this card.",
+        how_to: "In a Debug thread, commit the task, then use the Publish release card, check \
+                 the version and confirm. Or call neppy.debug_mode_release_preflight / \
+                 release_start / release_status over RPC (requires a clean release branch \
+                 that is not behind origin, the signing key in ~/.neppy-updater and an \
+                 authenticated gh CLI).",
+        status: CapabilityStatus::Beta,
+        privacy: RELEASE_TO_GITHUB,
     },
     // ── Update ──────────────────────────────────────────────────────────────
     // ── Mobile (iOS client) ─────────────────────────────────────────────────

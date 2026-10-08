@@ -251,7 +251,9 @@ pub(super) async fn preflight_with(
     push(!signing_key_present, NO_SIGNING_KEY);
     push(!gh_ready, GH_NOT_READY);
     push(release_running, RELEASE_RUNNING);
-    push(ahead_commits == 0, NOTHING_TO_RELEASE);
+    // A behind repo is told to catch up first; "nothing to release" would be
+    // misleading until it has.
+    push(ahead_commits == 0 && !behind, NOTHING_TO_RELEASE);
 
     log::info!(
         "[debug_mode][release] preflight done branch={branch} clean={clean} behind={behind} \

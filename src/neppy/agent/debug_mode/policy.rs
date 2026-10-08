@@ -73,7 +73,16 @@ pub fn ensure_commit_allowed(cfg: &DebugModeConfig) -> Result<(), String> {
 
 /// Classifies a shell string for a Debug turn under `cfg`.
 pub fn check_debug_command(cmd: &str, cfg: &DebugModeConfig) -> DebugCommandDecision {
-    let d = check_inner(cmd, cfg, 0);
+    check_debug_command_with(cmd, cfg, &[])
+}
+
+/// [`check_debug_command`] plus the names of package scripts that wrap a release.
+pub(super) fn check_debug_command_with(
+    cmd: &str,
+    cfg: &DebugModeConfig,
+    release_scripts: &[String],
+) -> DebugCommandDecision {
+    let d = check_inner(cmd, cfg, 0, release_scripts);
     log::debug!(
         "[debug_mode] command gate decision={}",
         match &d {
@@ -88,7 +97,9 @@ pub fn check_debug_command(cmd: &str, cfg: &DebugModeConfig) -> DebugCommandDeci
 /// The gate for the ambient Debug turn; `Allow` when there is none.
 pub fn gate_current_command(cmd: &str) -> DebugCommandDecision {
     match super::turn::current() {
-        Some(t) => check_debug_command(cmd, &t.settings),
+        Some(t) => {
+            check_debug_command_with(cmd, &t.settings, &policy_release::wrapping_scripts(&t.root))
+        }
         None => Allow,
     }
 }
@@ -110,14 +121,19 @@ fn deny_commit() -> String {
     "git commit is not allowed in Debug mode (allow_git_commit=false).".to_string()
 }
 
-fn check_inner(cmd: &str, cfg: &DebugModeConfig, depth: usize) -> DebugCommandDecision {
+fn check_inner(
+    cmd: &str,
+    cfg: &DebugModeConfig,
+    depth: usize,
+    rel: &[String],
+) -> DebugCommandDecision {
     let parsed = match shell_parse::parse(cmd) {
         Ok(p) => p,
         Err(()) => return Ask("the command could not be parsed safely".to_string()),
     };
     let mut decision = Allow;
     for words in &parsed.segments {
-        decision = decision.worst(check_words(words, cfg, depth));
+        decision = decision.worst(check_words(words, cfg, depth, rel));
         if matches!(decision, Deny(_)) {
             return decision;
         }
@@ -142,7 +158,7 @@ fn is_assignment(w: &str) -> bool {
 
 /// Drops leading assignments and transparent wrappers; returns the words of the
 /// command that actually runs (possibly empty).
-fn strip_wrappers(mut w: &[String]) -> &[String] {
+pub(super) fn strip_wrappers(mut w: &[String]) -> &[String] {
     loop {
         let Some(first) = w.first() else { return w };
         if is_assignment(first)
@@ -203,9 +219,18 @@ fn skip_flags(mut w: &[String]) -> &[String] {
     w
 }
 
-fn check_words(words: &[String], cfg: &DebugModeConfig, depth: usize) -> DebugCommandDecision {
+fn check_words(
+    words: &[String],
+    cfg: &DebugModeConfig,
+    depth: usize,
+    rel: &[String],
+) -> DebugCommandDecision {
     let w = strip_wrappers(words);
     let Some(prog) = w.first() else { return Allow };
+    // Never configurable: no setting lets the agent publish a release.
+    if policy_release::publishes_release(w, rel) {
+        return policy_release::deny();
+    }
     let args = &w[1..];
     let prog = base(prog);
     let sys = |what: &str| -> DebugCommandDecision {
@@ -260,11 +285,13 @@ fn check_words(words: &[String], cfg: &DebugModeConfig, depth: usize) -> DebugCo
             .position(|a| a.starts_with('-') && !a.starts_with("--") && a.ends_with('c'))
             .and_then(|i| args.get(i + 1))
         {
-            Some(script) if depth < MAX_DEPTH => check_inner(script, cfg, depth + 1),
+            Some(script) if depth < MAX_DEPTH => check_inner(script, cfg, depth + 1, rel),
+            Some(s) if policy_release::mentions_script(s) => policy_release::deny(),
             Some(_) => Ask("deeply nested shell invocation".to_string()),
             None => Allow,
         },
-        "eval" if depth < MAX_DEPTH => check_inner(&args.join(" "), cfg, depth + 1),
+        "eval" if depth < MAX_DEPTH => check_inner(&args.join(" "), cfg, depth + 1, rel),
+        "eval" if policy_release::mentions_script(&args.join(" ")) => policy_release::deny(),
         "eval" => Ask("deeply nested eval".to_string()),
         "rm" if has_recursive(args) => danger("rm -r"),
         "git" => check_git(args, cfg),
@@ -432,6 +459,9 @@ fn check_git(args: &[String], cfg: &DebugModeConfig) -> DebugCommandDecision {
         _ => Allow,
     }
 }
+
+#[path = "policy_release.rs"]
+mod policy_release;
 
 pub use super::policy_scope::{external_roots, prompt_addendum, validate_external_path};
 

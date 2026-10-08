@@ -317,3 +317,172 @@ fn prompt_addendum_reflects_the_settings() {
     assert!(a.contains("run tests: no"));
     assert!(a.contains("Installing dependencies: allowed") && a.contains("Git push: allowed"));
 }
+
+// ── publishing a release is never the agent's to do ────────────────────
+
+/// Every setting loosened as far as it goes: the release rule must not bend.
+fn permissive() -> DebugModeConfig {
+    DebugModeConfig {
+        allow_git_push: true,
+        allow_git_commit: true,
+        allow_dependency_install: true,
+        allow_system_commands: true,
+        dangerous_commands_require_confirmation: false,
+        ..cfg()
+    }
+}
+
+#[test]
+fn executing_the_release_script_or_publishing_is_denied_however_it_is_invoked() {
+    for c in [
+        "bash scripts/release-neppy.sh 0.69.0",
+        "sh scripts/release-neppy.sh 0.69.0",
+        "zsh scripts/release-neppy.sh 0.69.0 --dry-run",
+        "bash -x scripts/release-neppy.sh 1.0.0",
+        "source scripts/release-neppy.sh 1.0.0",
+        ". scripts/release-neppy.sh 1.0.0",
+        "./scripts/release-neppy.sh 0.69.0",
+        "scripts/release-neppy.sh 0.69.0",
+        "/Users/alex/Neppy/scripts/release-neppy.sh 0.69.0",
+        "bash /Users/alex/Neppy/scripts/release-neppy.sh 0.69.0",
+        "cd scripts && bash release-neppy.sh 0.69.0",
+        "env FOO=1 bash scripts/release-neppy.sh 0.69.0",
+        "nohup bash scripts/release-neppy.sh 0.69.0",
+        "time bash scripts/release-neppy.sh 0.69.0",
+        "timeout 600 bash scripts/release-neppy.sh 0.69.0",
+        "setsid nohup bash scripts/release-neppy.sh 0.69.0 &",
+        "echo 0.69.0 | xargs bash scripts/release-neppy.sh",
+        "sudo bash scripts/release-neppy.sh 0.69.0",
+        "ls && bash scripts/release-neppy.sh 0.69.0",
+        r"find . -exec bash scripts/release-neppy.sh 1.0.0 \;",
+        "bash -c 'bash scripts/release-neppy.sh 0.69.0'",
+        "sh -c \"./scripts/release-neppy.sh 0.69.0\"",
+        "bash -lc 'cd /x && scripts/release-neppy.sh 0.69.0'",
+        "bash -c \"bash -c 'sh -c \\\"bash -c \\\\\\\"bash scripts/release-neppy.sh 1\\\\\\\"\\\"'\"",
+        "eval bash scripts/release-neppy.sh 0.69.0",
+        "pnpm exec bash scripts/release-neppy.sh 0.69.0",
+        "npx bash scripts/release-neppy.sh 0.69.0",
+        "gh release create v0.69.0 --notes x",
+        "gh release upload v0.69.0 a.tar.gz",
+        "gh release delete v0.69.0 --yes",
+        "gh release edit v0.69.0 --draft=false",
+        "gh -R acme/widgets release create v1 a.tgz",
+        "gh --repo acme/widgets release delete v1",
+        "gh release",
+        "gh api repos/acme/widgets/releases -X POST -f tag_name=v1",
+        "gh api repos/acme/widgets/releases/1 --method DELETE",
+        "gh api repos/acme/widgets/releases -f tag_name=v1",
+        "pnpm release",
+        "pnpm run release",
+        "pnpm run release:patch",
+        "pnpm --filter neppy-app run release:x",
+        "pnpm -C app release",
+        "npm run release",
+        "npm run-script release:minor",
+        "yarn release",
+        "bun run release",
+    ] {
+        for cfg in [cfg(), permissive()] {
+            let got = check_debug_command(c, &cfg);
+            assert_eq!(
+                got,
+                Deny(policy_release::DENY_MESSAGE.to_string()),
+                "`{c}` -> {got:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn reading_or_searching_the_release_machinery_stays_allowed() {
+    for c in [
+        "cat scripts/release-neppy.sh",
+        "grep REPO scripts/release-neppy.sh",
+        "grep x scripts/release-neppy.sh",
+        "rg release-neppy",
+        "rg -n 'release-neppy.sh' scripts src",
+        "head -40 scripts/release-neppy.sh",
+        "bash -n scripts/neppy-recover.sh",
+        "bash -c 'cat scripts/release-neppy.sh'",
+        "git log --oneline -- scripts/release-neppy.sh",
+        "git diff HEAD -- scripts/release-neppy.sh",
+        "ls scripts | grep release",
+        "shellcheck scripts/release-neppy.sh",
+        "gh release list",
+        "gh release view v0.68.5",
+        "gh release list -L 5",
+        "gh -R acme/widgets release view v1 --json tagName",
+        "gh pr view 12",
+        "gh pr list --search release",
+        "gh api repos/acme/widgets/releases",
+        "gh api repos/acme/widgets/releases -X GET",
+        "cargo build --release",
+        "pnpm run build",
+        "pnpm test",
+        "npm run lint",
+        "pnpm -C app typecheck",
+    ] {
+        for cfg in [cfg(), permissive()] {
+            let got = check_debug_command(c, &cfg);
+            assert!(
+                !matches!(got, Deny(_)),
+                "`{c}` must not be denied -> {got:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn the_release_deny_is_not_an_ask_and_needs_no_setting() {
+    // Denied even though `dangerous_commands_require_confirmation` would
+    // otherwise turn things into a question, and with push allowed.
+    let d = check_debug_command("bash scripts/release-neppy.sh 0.69.0", &permissive());
+    assert_eq!(kind(&d), "deny");
+    assert!(matches!(&d, Deny(m) if m.contains("Publish release card")));
+}
+
+#[test]
+fn package_scripts_that_wrap_a_release_are_found_and_denied() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(root.path().join("app")).unwrap();
+    std::fs::write(
+        root.path().join("package.json"),
+        r#"{"scripts":{"ship":"bash scripts/release-neppy.sh $1","build:release":"cargo build --release","test":"vitest","cut":"pnpm release:patch","gh-publish":"gh release create v1"}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.path().join("app/package.json"),
+        r#"{"scripts":{"deploy":"pnpm run release","dev":"vite"}}"#,
+    )
+    .unwrap();
+    let mut names = policy_release::wrapping_scripts(root.path());
+    names.sort();
+    assert_eq!(names, ["cut", "deploy", "gh-publish", "ship"]);
+
+    for c in [
+        "pnpm ship",
+        "npm run cut",
+        "pnpm -C app run deploy",
+        "yarn gh-publish",
+    ] {
+        assert_eq!(
+            kind(&check_debug_command_with(c, &cfg(), &names)),
+            "deny",
+            "{c}"
+        );
+        assert_eq!(
+            kind(&check_debug_command(c, &cfg())),
+            "allow",
+            "{c}: unknown without the scan"
+        );
+    }
+    for c in ["pnpm test", "pnpm run build:release", "npm run dev"] {
+        assert_eq!(
+            kind(&check_debug_command_with(c, &cfg(), &names)),
+            "allow",
+            "{c}"
+        );
+    }
+    // No package.json at all is simply "no wrapping scripts".
+    assert!(policy_release::wrapping_scripts(tempfile::tempdir().unwrap().path()).is_empty());
+}
