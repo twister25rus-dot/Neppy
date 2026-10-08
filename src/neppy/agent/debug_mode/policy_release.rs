@@ -9,7 +9,8 @@
 //! `-c` string, which the caller recurses into), any mutating `gh release` or
 //! `gh api .../releases` call, `gh workflow run|enable` for a release or promote
 //! workflow, a `gh api` POST to a `.../dispatches` endpoint, and any package
-//! script that wraps a release are denied. `cat`, `grep`, `rg`,
+//! script that wraps a release, and `gh run rerun` (a past run's workflow cannot
+//! be resolved from its id) are denied. `cat`, `grep`, `rg`,
 //! `gh release list|view`, `gh workflow list|view` and `gh run list|view` only
 //! read, so they pass.
 //!
@@ -99,6 +100,7 @@ fn gh_publishes(args: &[String]) -> bool {
             Some("list" | "view")
         ),
         Some("workflow") => workflow_publishes(rest),
+        Some("run") => run_rerun(rest),
         Some("api") => {
             let lower: Vec<String> = rest.iter().map(|a| a.to_ascii_lowercase()).collect();
             let mentions = lower.iter().any(|a| a.contains("release"));
@@ -135,6 +137,21 @@ fn gh_api_writes(rest: &[String]) -> bool {
                 || (!a.starts_with("--") && (a.starts_with("-f") || a.starts_with("-F")))
         }
     })
+}
+
+/// `gh run rerun <id>`: re-executes a past run, which may be a release run
+/// whose workflow cannot be resolved statically from the id. `list`, `view`,
+/// `watch`, `download` and the like only read.
+fn run_rerun(rest: &[String]) -> bool {
+    let mut i = 0;
+    while i < rest.len() && rest[i].starts_with('-') {
+        i += if matches!(rest[i].as_str(), "-R" | "--repo" | "--hostname") {
+            2
+        } else {
+            1
+        };
+    }
+    rest.get(i).is_some_and(|a| a == "rerun")
 }
 
 /// `gh workflow run|enable <workflow>` where the workflow's file name or name
