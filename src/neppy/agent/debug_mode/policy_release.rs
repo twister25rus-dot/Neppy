@@ -140,9 +140,24 @@ pub(super) fn gh_publishes(args: &[String]) -> bool {
         Some("workflow") => workflow_publishes(rest),
         Some("run") => positionals(rest).first() == Some(&"rerun"),
         // Decided by the endpoint path, never by words in field values.
-        Some("api") => api_path_publishes(rest) && gh_api_writes(rest),
+        Some("api") => {
+            (api_path_publishes(rest) && gh_api_writes(rest)) || graphql_release_mutation(rest)
+        }
         _ => false,
     }
+}
+
+/// `gh api graphql` carrying a `mutation` that mentions a release. A plain
+/// graphql query, or a mutation that never says release, is not a publish.
+fn graphql_release_mutation(rest: &[String]) -> bool {
+    if !positionals(rest)
+        .iter()
+        .any(|p| p.eq_ignore_ascii_case("graphql"))
+    {
+        return false;
+    }
+    let text = rest.join(" ").to_ascii_lowercase();
+    text.contains("mutation") && text.contains("release")
 }
 
 /// True when an operand of `gh api` is a path (or URL) that publishes or

@@ -106,6 +106,10 @@ fn workflow_dispatch_publish_paths_are_denied() {
         "gh api repos/o/r/actions/runs/123/rerun -f enable_debug_logging=false",
         "gh api -X PUT repos/o/r/actions/workflows/release-production.yml/enable",
         "gh api -X POST https://api.github.com/repos/o/r/actions/runs/1/rerun",
+        // graphql mutations that mention a release
+        "gh api graphql -f query='mutation { createRelease(input:{}) { id } }'",
+        "gh api graphql -f query='mutation{deleteRelease(input:{id:1}){id}}'",
+        "gh api graphql -F query='MUTATION { updateRelease { id } }'",
         // `gh release` with -R before the subcommand
         "gh release -R a/b create v1",
         "gh release --repo a/b delete v1",
@@ -141,6 +145,9 @@ fn read_only_workflow_and_run_commands_stay_allowed() {
         "gh run list --workflow release-production.yml",
         "gh run view 123456",
         "gh run view 123456 --log",
+        // graphql reads, and mutations that are not about releases
+        "gh api graphql -f query='{ repository { releases(first:1) { nodes { tagName } } } }'",
+        "gh api graphql -f query='mutation { addComment(input:{}) { id } }'",
         // `gh release -R a/b view` is a read
         "gh release -R a/b view 1",
         "gh release --repo a/b list",

@@ -118,6 +118,29 @@ fn node_source_table() {
         "require('child_process').spawnSync('gh',['api','-X','POST','repos/o/r/actions/runs/1/rerun'])",
         "require('child_process').execSync('pnpm release')",
         "const {fork}=require('child_process'); fork('scripts/release-neppy.sh')",
+        // promisify / aliases / other object names: no call has to be recognised
+        "const {promisify}=require('util'); const {exec}=require('child_process'); const execAsync=promisify(exec); await execAsync('gh release create v1')",
+        "const {execSync: x}=require('child_process'); x('gh release create v1')",
+        "const cp=require('child_process'); const run=cp.execSync.bind(cp); run('gh release create v1')",
+        "const run=require('child_process').execSync; run('gh release create v1')",
+        "const x=require('child_process'); x.exec('gh release create v1')",
+        "const m=await import('node:child_process'); m.execSync('gh release create v1')",
+        // nested shells inside a literal
+        r#"require('child_process').execSync('sh -c "gh release create v1"')"#,
+        r#"require('child_process').execSync("bash -c 'gh release create v1'")"#,
+        r#"require('child_process').execSync("bash -lc 'cd x && gh release create v1'")"#,
+        r#"require('child_process').execSync("sh -c \"bash -c 'bash scripts/release-neppy.sh 1'\"")"#,
+        // argv through a variable
+        "const {spawnSync}=require('child_process'); const args=['release','create','v1']; spawnSync('gh', args)",
+        "const {spawnSync}=require('child_process'); const a=['workflow','run','release-production.yml']; spawnSync('/usr/bin/gh', a)",
+        "const {spawnSync}=require('child_process'); const a=['run','rerun','1']; spawnSync('gh', a)",
+        // graphql mutation
+        r#"require('child_process').execSync("gh api graphql -f query='mutation { createRelease(input:{}) { id } }'")"#,
+        "require('child_process').spawnSync('gh',['api','graphql','-f','query=mutation { deleteRelease(input:{}) { id } }'])",
+        // execa / zx
+        "const {execa}=require('execa'); await execa('gh',['release','create','v1'])",
+        "import {$} from 'zx'; await $`gh release create v1`",
+        "import {$} from 'zx'; await $`bash scripts/release-neppy.sh 1`",
     ];
     for c in denied {
         assert!(is_publish_deny(&node_source_decision(c)), "{c}");
@@ -142,6 +165,17 @@ fn node_source_table() {
         "const t=require('fs').readFileSync('scripts/release-neppy.sh','utf8'); /x/.exec(t); require('child_process');",
         "const re=/release/; re.exec(s); const cp=require('child_process'); cp.execSync('git log')",
         "require('child_process'); function execute(){ return readFileSync('scripts/release-neppy.sh') }",
+        // promisified read-only calls, reads of the script, copies, cat
+        "const {promisify}=require('util'); const {exec}=require('child_process'); await promisify(exec)('gh run list --workflow ci.yml')",
+        "const cp=require('child_process'); cp.spawnSync('cat',['scripts/release-neppy.sh'])",
+        "require('child_process'); require('fs').copyFileSync('scripts/release-neppy.sh','/tmp/x')",
+        "require('child_process'); const t=require('fs').readFileSync(require('path').join('scripts','release-neppy.sh'),'utf8')",
+        "const cp=require('child_process'); const a=['release','list']; cp.spawnSync('gh', a)",
+        "const cp=require('child_process'); const a=['run','list','--workflow','release.yml']; cp.spawnSync('gh', a)",
+        "const cp=require('child_process'); cp.spawnSync('bash',['-c','gh run view 1'])",
+        r#"require('child_process').execSync("gh api graphql -f query='{ repository(owner:\"o\",name:\"r\") { releases(first:1) { nodes { tagName } } } }'")"#,
+        // no process API at all: strings are just strings
+        "console.log('sh -c \"gh release create v1\"')",
     ];
     for c in allowed {
         assert_eq!(node_source_decision(c), Allow, "{c}");
