@@ -167,7 +167,7 @@ fn mode_addenda_defer_planning_to_the_agents_own_planning_step() {
     assert!(!chat.contains("plan it, execute it"));
 
     let orch = prompt_addendum(ThreadMode::Orchestration);
-    assert!(orch.contains("This is the planning step of your instructions, not a second plan"));
+    assert!(orch.contains("Plan once: this is your planning step, so do not write a second plan."));
 }
 
 #[test]

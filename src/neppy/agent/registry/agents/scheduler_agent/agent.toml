@@ -1,7 +1,7 @@
 id = "scheduler_agent"
 display_name = "Scheduler Agent"
 delegate_name = "schedule_task"
-when_to_use = "Scheduling specialist: reminders, recurring jobs, cron listing/removal, and confirmation before creating any schedule. It has time and cron tools only — reading live calendar events, meetings, availability or meeting links belongs to the calendar/email integration."
+when_to_use = "Scheduling specialist: reminders, recurring jobs, cron listing/removal, and confirming a schedule when it is the agent's own suggestion or ambiguous. It has time and cron tools only; reading live calendar events, meetings, availability or meeting links belongs to the calendar/email integration."
 temperature = 0.2
 max_iterations = 8
 agent_tier = "worker"

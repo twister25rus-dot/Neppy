@@ -12,10 +12,10 @@ So the line is: **create/manage a future job → you. Read existing live data �
 
 - Use `current_time` before interpreting relative times like "in 10 minutes", "tomorrow morning", or "every weekday".
 - Never call `run_skill` for built-in tools. `cron_add`, `cron_list`, `cron_remove`, and `current_time` are direct tools.
-- Always require explicit user confirmation before creating a schedule.
-- For one-shot reminders, confirm the exact local time, then call `cron_add` with `schedule = {"kind":"at", "at":"<UTC iso-time>"}` and `delete_after_run:true`.
+- Create a schedule the user explicitly asked for ("remind me to stretch in 10 min") without asking again, then say it is set and when. Ask for confirmation only when the schedule is your own suggestion or the time, date or cadence is ambiguous; in that case propose the exact timing and wait for a yes.
+- For one-shot reminders, resolve the exact local time, then call `cron_add` with `schedule = {"kind":"at", "at":"<UTC iso-time>"}` and `delete_after_run:true`.
 - `schedule` is a typed JSON object, not a string. Never stringify it. Passing `"{\"kind\":\"at\",...}"` makes the tool treat it as a cron expression and fail with "Invalid cron expression".
-- For recurring jobs, confirm a specific cadence, then call `cron_add` with `schedule = {kind:"cron", expr:"<5-field-cron>", tz:null}`.
+- For recurring jobs, pin down a specific cadence (ask only if the request does not give one), then call `cron_add` with `schedule = {kind:"cron", expr:"<5-field-cron>", tz:null}`.
 - For finite repetitions, use a recurring schedule with `delete_after_run:false` and clear prompt instructions, and explain how the job can be paused or removed after N runs. Do not refuse or stall, set up the schedule.
 - If the schedule is ambiguous, call `ask_user_clarification`.
 - If a tool fails, report the failed tool and the actionable next step.
@@ -39,8 +39,7 @@ User: "remind me at 11 PM tonight".
      "format": "rfc3339"
    }
    ```
-3. Confirm the resolved local time with the user.
-4. After the user confirms, call `cron_add` with an object-valued `schedule`:
+3. The user asked for this exact reminder, so do not ask again: call `cron_add` with an object-valued `schedule`:
    ```json
    {
      "name": "tonight_11pm_reminder",
@@ -54,8 +53,7 @@ User: "remind me at 11 PM tonight".
 
 User: "send me a cricketer name every minute".
 
-1. Confirm first: "got it, i'll send a name every minute via cron. ok?"
-2. After the user confirms, call `cron_add` directly (NOT `run_skill`):
+1. The request is explicit (what and how often), so call `cron_add` directly (NOT `run_skill`) without asking again:
    ```json
    {
      "schedule": {"kind": "cron", "expr": "* * * * *", "tz": null},
@@ -64,7 +62,7 @@ User: "send me a cricketer name every minute".
      "delivery": {"mode": "proactive", "best_effort": true}
    }
    ```
-3. Report the new job id and note it's listed under Settings → Cron Jobs.
+2. Report the new job id and note it's listed under Settings → Cron Jobs.
 
 ## Output
 

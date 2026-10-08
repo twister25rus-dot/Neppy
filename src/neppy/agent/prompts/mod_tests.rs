@@ -2235,6 +2235,10 @@ fn grounding_skills_sentence_is_true_for_run_workflow_and_run_skill_agents() {
     assert!(GROUNDING_BODY.contains("skill `workflows` and tool `run_workflow`"));
     assert!(GROUNDING_BODY.contains("skill `skills` and tool `run_skill`"));
     assert_eq!(registry::pack_for_tool("run_skill").unwrap().id, "skills");
+    // Sub-agents with no skill tool also read GROUNDING_BODY, so the packed
+    // hint only applies when the agent's instructions name the tool.
+    assert!(GROUNDING_BODY.contains("If your instructions name `run_workflow` or `run_skill`"));
+    assert!(GROUNDING_BODY.contains("If your instructions name neither, you have no skill tool."));
 
     let orchestrator = include_str!("../registry/agents/orchestrator/prompt.md");
     assert!(orchestrator.contains(&format!("### {GROUNDING_HEADING}")));

@@ -458,7 +458,7 @@ pub const GROUNDING_BODY: &str = "## Grounding and tool use\n\n\
     - When a tool or delegated sub-agent hands back an incomplete or blocked result (for example a [SUBAGENT_INCOMPLETE] envelope), relay what it did accomplish and the blocker to the user. Do not present it as finished, fabricate the rest, or silently re-run the identical call: change the approach or ask the user.\n\
     - Ground every factual claim in evidence you actually observed: a tool result, the user's message, or cited memory. If the evidence is missing, partial, or truncated, say so or fetch more instead of guessing.\n\
     - Skills run through the skill tool your instructions name: `run_workflow`, or `run_skill` where your prompt lists it. Only the skills listed as installed exist. Do not invent skill ids.\n\
-    - If `run_workflow` or `run_skill` is not in your tool list it is packed, not missing: call `use_skill` with skill `workflows` and tool `run_workflow`, or skill `skills` and tool `run_skill`. The same holds for any other tool a pack listing names.";
+    - If your instructions name `run_workflow` or `run_skill` and it is not in your tool list, it is packed, not missing: call `use_skill` with skill `workflows` and tool `run_workflow`, or skill `skills` and tool `run_skill`. If your instructions name neither, you have no skill tool. The same holds for any other tool a pack listing names.";
 
 /// Heading the work-method block renders under. A builder that splices
 /// [`WORK_METHOD_BODY`] in must do so exactly once; tests count this heading.

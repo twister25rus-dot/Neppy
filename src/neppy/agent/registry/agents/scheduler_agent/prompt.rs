@@ -66,7 +66,12 @@ mod tests {
         };
         let body = build(&ctx).unwrap();
         assert!(body.contains("Scheduler Agent"));
-        assert!(body.contains("explicit user confirmation"));
+        // An explicitly requested reminder is created without a second
+        // confirmation round-trip; confirmation is kept for the agent's own
+        // suggestions and ambiguous timing.
+        assert!(body.contains("without asking again"));
+        assert!(body.contains("Ask for confirmation only when the schedule is your own suggestion"));
+        assert!(!body.contains("Always require explicit user confirmation"));
         assert!(body.contains("typed JSON object"));
         assert!(body.contains("\"kind\": \"at\""));
         assert!(body.contains("Evidence used"));
