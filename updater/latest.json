@@ -1,11 +1,11 @@
 {
-  "version": "0.68.4",
-  "notes": "## What's Changed\n\n- commit into v.0.68.4 ([`75c74e03`](https://github.com/twister25rus-dot/Neppy/commit/75c74e030a1d5e56737bd3bf9f8034163ed1e514))\n- feat: reliable local MLX model; Debug Mode local install ([`c54536c7`](https://github.com/twister25rus-dot/Neppy/commit/c54536c7d2391379b68549e30f12b14363221e4c))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/87d9cb3b4b346c3c51d922bff164c91ef17de5f7...c54536c7d2391379b68549e30f12b14363221e4c",
-  "pub_date": "2026-10-07T16:33:00Z",
+  "version": "0.68.5",
+  "notes": "## What's Changed\n\n- feat: new chat composer + mode tabs; MLX prefix cache; Reasoning off sends off ([`9c5b7e09`](https://github.com/twister25rus-dot/Neppy/commit/9c5b7e09e51f4670d01fe6989dd159a1f57ebf53))\n\n**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/459c7a366bce73bc0320f51b07903faacc4bcaea...9c5b7e09e51f4670d01fe6989dd159a1f57ebf53",
+  "pub_date": "2026-10-08T04:42:52Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakh6dFlCclZxeXNVN2hnWmxtV1dPcUw4WW9SYnNCOFZSekdpcjM1SVZQaXpKMHF1VVFiOEJoUTBZQXkxQmpDZzhPZWsrQWY4TFlsVFgxSVdQVWQxZWdvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzkwMzgyCWZpbGU6TmVwcHkuYXBwLnRhci5negpEcFozbS9DOEtwT214Z0s5dk9SdWdnSWlyQ1c1Rm5KTjNMZTVWaW1rOC9yb2tUMnVQRmVHUzlVQzRmakxycE1MV1NnaVJqSEpSL2YwMFhFQXpMZUJDUT09Cg==",
-      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/619213684"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUllhbG10QXVrakFKckx1MWl4ZHQyOCtaNDNmWlhLVlkvUFp1UUtMK2NCeWpVMU14U09tM1NNMEZqSjN5VFRBUzBGbmlhSWQxWE9IMGFZODkwL2ZHSmhOcHFpRnByV1FzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxNDM0MDIwCWZpbGU6TmVwcHkuYXBwLnRhci5negpYcEoyWTkrTjlxeGVocXJsWDhudkZWcytsYnVjOGxwWDN4OExiRHhwQjNXaTJXZk5MZWpwdVBQOGIzWjdNcjZ5U1FBNWE0bStUcHZoUWhZZm5GMXREZz09Cg==",
+      "url": "https://api.github.com/repos/twister25rus-dot/Neppy/releases/assets/620739989"
     }
   }
 }
