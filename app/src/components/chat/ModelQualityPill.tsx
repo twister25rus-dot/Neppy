@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LuChevronDown } from 'react-icons/lu';
 
 import { useT } from '../../lib/i18n/I18nContext';
 import { loadAISettings } from '../../services/api/aiSettingsApi';
@@ -124,10 +125,11 @@ export default function ModelQualityPill({
           aria-label={t('composer.modelSelector')}
           title={t('composer.modelSelector')}
           disabled={!onValueChange || loading}
-          className={`h-7 min-w-0 rounded-md px-2 text-xs text-content-muted hover:bg-surface-hover hover:text-content ${className ?? ''}`}>
+          className={`h-7 min-w-0 gap-1.5 rounded-md px-2 text-xs text-content-muted hover:bg-surface-hover hover:text-content ${className ?? ''}`}>
           <span className="min-w-0 truncate font-medium">
             {loading ? 'Loading models…' : displayValue(value)}
           </span>
+          <LuChevronDown aria-hidden className="h-4 w-4 shrink-0 text-content-muted" />
         </Button>
       </ModelQuickPicker>
       {open && !loading && (

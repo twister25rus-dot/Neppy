@@ -2,7 +2,12 @@ import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from '../../../test/test-utils';
-import ComposerEffortPill, { EMPTY_EFFORT } from '../ComposerEffortPill';
+import ComposerEffortPill, {
+  effortForSend,
+  EMPTY_EFFORT,
+  isReasoningOn,
+  REASONING_ON_EFFORT,
+} from '../ComposerEffortPill';
 
 describe('ComposerEffortPill', () => {
   it('shows the whole scale without needing to be opened', () => {
@@ -55,5 +60,20 @@ describe('ComposerEffortPill', () => {
     expect(screen.getByRole('radio', { name: 'Balanced' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('radio', { name: 'Quick' })).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByRole('radio', { name: 'Auto' })).toHaveAttribute('aria-checked', 'false');
+  });
+});
+
+describe('Reasoning switch helpers', () => {
+  it('reads unset and off as off, any level as on', () => {
+    expect(isReasoningOn(EMPTY_EFFORT)).toBe(false);
+    expect(isReasoningOn({ effort: 'off' })).toBe(false);
+    expect(isReasoningOn({ effort: REASONING_ON_EFFORT })).toBe(true);
+    expect(isReasoningOn({ effort: 'low' })).toBe(true);
+  });
+
+  it('sends off explicitly when the switch is off, so the server default cannot think', () => {
+    expect(effortForSend(EMPTY_EFFORT)).toBe('off');
+    expect(effortForSend({ effort: 'off' })).toBe('off');
+    expect(effortForSend({ effort: 'high' })).toBe('high');
   });
 });

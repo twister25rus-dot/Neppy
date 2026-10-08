@@ -6519,6 +6519,7 @@ const messages: TranslationMap = {
   // Chat composer toolbar
   'composer.attachFile': 'Lampirkan file',
   'composer.modelSelector': 'Model',
+  'composer.webSearch': 'Pencarian web',
   'composer.voiceMode': 'Mode suara',
   'composer.humanMode': 'Mode manusia',
   'composer.qualityHigh': 'Tinggi',

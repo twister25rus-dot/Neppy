@@ -11,6 +11,28 @@ export interface ComposerEffort {
 
 export const EMPTY_EFFORT: ComposerEffort = { effort: null };
 
+/** Wire value the composer's Reasoning switch sends when it is on. */
+export const REASONING_ON_EFFORT = 'high';
+
+/**
+ * Whether the composer's Reasoning switch reads as on. `null` (never set, or a
+ * value saved before the switch existed) and `off` both read as off; any real
+ * effort level reads as on.
+ */
+export function isReasoningOn(value: ComposerEffort): boolean {
+  return value.effort !== null && value.effort !== 'off';
+}
+
+/**
+ * The `reasoning_effort` a send carries. Off is sent explicitly as `off` — the
+ * core maps it to `enable_thinking: false` — because sending nothing let the
+ * server's own default (thinking ON for `mlx_vlm.server --enable-thinking`)
+ * decide, so the model still thought with the switch off.
+ */
+export function effortForSend(value: ComposerEffort): string {
+  return isReasoningOn(value) ? (value.effort as string) : 'off';
+}
+
 /**
  * The scale, lowest first. The ids are the wire values and must not change; the
  * labels name the decision rather than the knob — the question is whether you

@@ -1,5 +1,6 @@
 import { LuCheck, LuChevronDown } from 'react-icons/lu';
 
+import { cn } from '../../lib/cn';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -23,6 +24,7 @@ interface ChatPresetPillProps {
   value: PresetId;
   onChange: (next: PresetId) => void;
   className?: string;
+  chevronClassName?: string;
 }
 
 /**
@@ -42,7 +44,12 @@ interface ChatPresetPillProps {
  * document itself, and each carries a translated-looking meaning that would
  * drift from what the settings panel calls the same thing.
  */
-export default function ChatPresetPill({ value, onChange, className }: ChatPresetPillProps) {
+export default function ChatPresetPill({
+  value,
+  onChange,
+  className,
+  chevronClassName,
+}: ChatPresetPillProps) {
   const current = PRESETS.find(preset => preset.id === value) ?? PRESETS[0];
 
   return (
@@ -53,9 +60,15 @@ export default function ChatPresetPill({ value, onChange, className }: ChatPrese
           data-analytics-id="chat-local-preset"
           data-testid="chat-preset-trigger"
           aria-label={`Model effort: ${current.label}`}
-          className={`flex h-7 shrink-0 items-center gap-1 rounded-full border border-line bg-surface-subtle px-2.5 text-xs font-medium text-content-secondary transition-colors hover:text-content ${className ?? ''}`}>
+          className={cn(
+            'flex h-7 shrink-0 items-center gap-1 rounded-full border border-line bg-surface-subtle px-2.5 text-xs font-medium text-content-secondary transition-colors hover:text-content',
+            className
+          )}>
           {current.label}
-          <LuChevronDown aria-hidden className="h-3 w-3 text-content-faint" />
+          <LuChevronDown
+            aria-hidden
+            className={cn('h-3 w-3 text-content-faint', chevronClassName)}
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">

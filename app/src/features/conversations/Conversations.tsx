@@ -11,6 +11,7 @@ import ChatComposer from '../../components/chat/ChatComposer';
 import ChatFilesChip from '../../components/chat/ChatFilesChip';
 import ChatNewWindowHero from '../../components/chat/ChatNewWindowHero';
 import ChatPresetPill, { type PresetId } from '../../components/chat/ChatPresetPill';
+import { effortForSend } from '../../components/chat/ComposerEffortPill';
 import ComposerTokenStats from '../../components/chat/ComposerTokenStats';
 import { FlowApprovalRequestCard } from '../../components/chat/FlowApprovalRequestCard';
 import PendingApprovalQueue from '../../components/chat/PendingApprovalQueue';
@@ -1233,7 +1234,7 @@ const Conversations = ({
         threadId: sendingThreadId,
         message: messageText,
         model: modelOverride,
-        reasoningEffort: composerSampling.effort,
+        reasoningEffort: effortForSend(composerSampling),
         profileId: selectedAgentProfileId,
         locale: uiLocale,
         regenerateOf: options?.regenerateOf,
@@ -1336,7 +1337,7 @@ const Conversations = ({
         threadId,
         message: messageText,
         model: modelOverride,
-        reasoningEffort: composerSampling.effort,
+        reasoningEffort: effortForSend(composerSampling),
         profileId: selectedAgentProfileId,
         locale: uiLocale,
         queueMode: 'parallel',
@@ -1420,7 +1421,7 @@ const Conversations = ({
         threadId,
         message: messageText,
         model: modelOverride,
-        reasoningEffort: composerSampling.effort,
+        reasoningEffort: effortForSend(composerSampling),
         profileId: selectedAgentProfileId,
         locale: uiLocale,
         queueMode: 'followup',
@@ -2617,8 +2618,9 @@ const Conversations = ({
         onAttachmentOnlySend={() => void handleComposerSend()}
         // Human mode is withdrawn for now — see the note on the other composer
         // above for what to pass to bring the mascot stage back.
-        onSwitchToMicCloud={() => setComposerOverride('mic-cloud')}
         sampling={composerSampling}
+        preset={localPreset}
+        onPresetChange={handlePresetChange}
         onSamplingChange={next => dispatch(setComposerSampling(next))}
         onModelChange={(value, contextWindow) => {
           dispatch(setComposerModel({ model: value, contextWindow }));

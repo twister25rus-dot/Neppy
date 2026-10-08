@@ -89,8 +89,8 @@ export type ThreadComponents = {
   ToolGroup?: ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>> | undefined;
   ReasoningGroup?: ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>> | undefined;
   /**
-   * Extra controls in the composer's action row, to the right of the model
-   * selector. A seam rather than a fixed set because what belongs there is
+   * Extra controls in the composer's action row, on the right just before the
+   * send button. A seam rather than a fixed set because what belongs there is
    * host-specific — Neppy puts the context-window meter and the thread
    * goal here — and hard-coding either would make this component unusable by
    * anything else.
@@ -225,8 +225,8 @@ const ThreadRoot: FC<{
       style={{
         ['--thread-max-width' as string]: '44rem',
         ['--composer-bg' as string]: 'var(--color-card)',
-        ['--composer-radius' as string]: '1.5rem',
-        ['--composer-padding' as string]: '8px',
+        ['--composer-radius' as string]: '1.75rem',
+        ['--composer-padding' as string]: '12px',
       }}>
       <ThreadPrimitive.Viewport
         // Follow the newest tokens while a turn streams, unless the reader has
@@ -392,7 +392,7 @@ const Composer: FC<{
         <ComposerPrimitive.AttachmentDropzone asChild>
           <div
             data-slot="aui_composer-shell"
-            className="border-line focus-within:border-line-strong data-[dragging=true]:border-ring flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color] data-[dragging=true]:border-dashed data-[dragging=true]:bg-[color-mix(in_oklab,var(--color-accent)_50%,var(--color-background))]">
+            className="border-line focus-within:border-line-strong data-[dragging=true]:border-ring flex w-full cursor-text flex-col gap-4 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color] data-[dragging=true]:border-dashed data-[dragging=true]:bg-[color-mix(in_oklab,var(--color-accent)_50%,var(--color-background))]">
             {HostComposerAttachments ? <HostComposerAttachments /> : <ComposerAttachments />}
             {/*
              * Lexical rather than the plain `ComposerPrimitive.Input` textarea,
@@ -444,7 +444,7 @@ const Composer: FC<{
                   event.stopPropagation();
                 }
               }}
-              className="aui-composer-input caret-primary [&_.aui-lexical-placeholder]:text-muted-foreground/60 relative max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-1 text-base leading-6 outline-none [&_.aui-lexical-input]:min-h-lh [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-0 [&_.aui-lexical-placeholder]:right-0 [&_.aui-lexical-placeholder]:left-0 [&_.aui-lexical-placeholder]:truncate [&_.aui-lexical-placeholder]:px-2.5 [&_.aui-lexical-placeholder]:py-1"
+              className="aui-composer-input caret-primary [&_.aui-lexical-placeholder]:text-muted-foreground/60 relative max-h-48 min-h-12 w-full resize-none bg-transparent px-3 pt-2 pb-1 text-lg leading-7 outline-none [&_.aui-lexical-input]:min-h-lh [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-0 [&_.aui-lexical-placeholder]:right-0 [&_.aui-lexical-placeholder]:left-0 [&_.aui-lexical-placeholder]:truncate [&_.aui-lexical-placeholder]:px-3 [&_.aui-lexical-placeholder]:pt-2 [&_.aui-lexical-placeholder]:pb-1"
               aria-label="Message input"
             />
             <ComposerAction model={model} onModelChange={onModelChange} />
@@ -500,13 +500,18 @@ const ComposerAction: FC<{
   const showIdleAction =
     !!ComposerIdleAction && composerText.trim().length === 0 && !hasComposerAttachments;
   return (
-    <div className="aui-composer-action-wrapper relative flex items-center justify-between">
-      <div className="flex min-w-0 items-center gap-1">
+    <div className="aui-composer-action-wrapper relative flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         {HostComposerAddAttachment ? <HostComposerAddAttachment /> : <ComposerAddAttachment />}
-        <ModelQualityPill value={model} onValueChange={onModelChange} />
-        <ComposerExtrasSlot />
+        <span aria-hidden className="bg-line h-7 w-px shrink-0" />
+        <ModelQualityPill
+          value={model}
+          onValueChange={onModelChange}
+          className="h-10 rounded-full border border-line bg-transparent px-4 text-[15px] text-content"
+        />
       </div>
-      <div className="flex items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-2.5">
+        <ComposerExtrasSlot />
         {onSwitchToMicCloud && (
           <TooltipIconButton
             tooltip="Voice mode"
@@ -561,14 +566,14 @@ const ComposerAction: FC<{
               type="button"
               variant="default"
               size="icon"
-              className="aui-composer-send size-7 rounded-full"
+              className="aui-composer-send bg-content text-surface hover:bg-content/85 size-11 rounded-full"
               data-testid="send-message-button"
               aria-label="Send message"
               onClick={() => {
                 onComposerAttachmentSend?.();
                 aui.composer.setText('');
               }}>
-              <ArrowUpIcon className="aui-composer-send-icon size-4" />
+              <ArrowUpIcon className="aui-composer-send-icon size-5" />
             </TooltipIconButton>
           ) : (
             <ComposerPrimitive.Send asChild>
@@ -578,10 +583,10 @@ const ComposerAction: FC<{
                 type="button"
                 variant="default"
                 size="icon"
-                className="aui-composer-send size-7 rounded-full"
+                className="aui-composer-send bg-content text-surface hover:bg-content/85 size-11 rounded-full"
                 data-testid="send-message-button"
                 aria-label="Send message">
-                <ArrowUpIcon className="aui-composer-send-icon size-4" />
+                <ArrowUpIcon className="aui-composer-send-icon size-5" />
               </TooltipIconButton>
             </ComposerPrimitive.Send>
           )}
@@ -592,7 +597,7 @@ const ComposerAction: FC<{
               type="button"
               variant="default"
               size="icon"
-              className="aui-composer-cancel size-7 rounded-full"
+              className="aui-composer-cancel bg-content text-surface hover:bg-content/85 size-11 rounded-full"
               data-testid="stop-generation-button"
               aria-label="Stop generating">
               <SquareIcon className="aui-composer-cancel-icon size-3.5 fill-current" />

@@ -12,12 +12,13 @@ describe('ModelQualityPill', () => {
     expect(screen.getByText('Neppy')).toBeInTheDocument();
   });
 
-  it('draws no chevron', () => {
+  it('draws a trailing chevron that does not shrink', () => {
     const { container } = render(<ModelQualityPill />);
-    // The pill carried a trailing chevron, which #3292 had to add padding for
-    // so it would not clip. It is gone: the model name alone reads as the
-    // control, and with nothing trailing there is nothing left to clip.
-    expect(container.querySelector('svg')).toBeNull();
+    // The composer redesign brings the dropdown chevron back. It is
+    // `shrink-0` so a long model name truncates instead of clipping it (#3292).
+    const chevron = container.querySelector('svg');
+    expect(chevron).not.toBeNull();
+    expect(chevron).toHaveClass('shrink-0');
   });
 
   it('keeps the pill padding and shape the label needs', () => {

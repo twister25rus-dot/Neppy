@@ -6419,6 +6419,7 @@ const messages: TranslationMap = {
   // Chat composer toolbar
   'composer.attachFile': '파일 첨부',
   'composer.modelSelector': '모델',
+  'composer.webSearch': '웹 검색',
   'composer.voiceMode': '음성 모드',
   'composer.humanMode': '휴먼 모드',
   'composer.qualityHigh': '높음',

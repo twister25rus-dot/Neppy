@@ -24,7 +24,7 @@ use super::super::spawn_marker::{
     clear_marker_at, pid_is_alive, read_marker_at, write_marker_at,
     OllamaSpawnMarker as SpawnMarker,
 };
-use super::argv::{build_argv, redact_argv};
+use super::argv::{build_argv, redact_argv, spawn_env};
 use super::binary::{probe_binary, resolve_binary};
 
 /// Lines of server output retained per process. Bounded so a chatty
@@ -145,9 +145,12 @@ pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<M
     let args = build_argv(server, port);
     let redacted_argv = redact_argv(&args);
 
+    let env = spawn_env(server, |name| std::env::var(name).ok());
+
     let mut command = tokio::process::Command::new(&resolved.path);
     command
         .args(&args)
+        .envs(env.iter().map(|(k, v)| (*k, v.as_str())))
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
@@ -157,10 +160,14 @@ pub(crate) async fn spawn(config: &Config, server: &MlxServerConfig) -> Result<M
     apply_no_window(&mut command);
 
     log::info!(
-        "[mlx] starting server `{}`: {} {}",
+        "[mlx] starting server `{}`: {} {} env=[{}]",
         server.id,
         resolved.path.display(),
-        redacted_argv.join(" ")
+        redacted_argv.join(" "),
+        env.iter()
+            .map(|(k, v)| format!("{k}={v}"))
+            .collect::<Vec<_>>()
+            .join(" ")
     );
 
     let mut child = command

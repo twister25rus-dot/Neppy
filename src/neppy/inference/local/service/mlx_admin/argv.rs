@@ -240,6 +240,40 @@ fn format_f32(value: f32) -> String {
 }
 
 /// Redact the bearer token so an argv can be logged or shown in the UI.
+/// Environment variable that switches on `mlx_vlm.server`'s automatic prefix
+/// cache. It has no command-line flag and is off by default.
+pub(crate) const APC_ENV: &str = "APC_ENABLED";
+
+/// Environment the server process is started with, on top of the inherited one.
+///
+/// `mlx_vlm.server` keeps no prompt state between requests unless
+/// `APC_ENABLED` is set, so every agent step re-prefilled the whole system
+/// prompt + tool schemas + transcript: ~19 s for an 8.5k-token prompt on an
+/// M3 Max with a 9B 8-bit model, against ~0.8 s once the prefix is reused.
+/// Measured with the worker's 512-token prefill step, the cache costs nothing
+/// in decode speed (29.7 vs 29.8 tok/s); it is the 2048 step combined with the
+/// cache that slowed decode, which is one more reason the worker keeps 512.
+///
+/// `mlx_lm.server` has its own prompt cache and ignores this, so it is set for
+/// VLM servers only. A value already in the host environment wins, so
+/// `APC_ENABLED=0` still turns the cache off for debugging.
+pub(crate) fn spawn_env(
+    server: &MlxServerConfig,
+    inherited: impl Fn(&str) -> Option<String>,
+) -> Vec<(&'static str, String)> {
+    let mut env = Vec::new();
+    if server.is_vlm() {
+        match inherited(APC_ENV) {
+            Some(existing) => log::debug!(
+                "[mlx] `{}` keeps {APC_ENV}={existing} from the environment",
+                server.id
+            ),
+            None => env.push((APC_ENV, "1".to_string())),
+        }
+    }
+    env
+}
+
 pub(crate) fn redact_argv(args: &[String]) -> Vec<String> {
     let mut out = Vec::with_capacity(args.len());
     let mut redact_next = false;
@@ -338,5 +372,36 @@ mod limits_tests {
         other.id = "embeddings-only".into();
         config.mlx.servers.push(other.clone());
         assert_eq!(apply_spawn_limits(&config, &other).prefill_step_size, 0);
+    }
+}
+
+#[cfg(test)]
+mod spawn_env_tests {
+    use super::*;
+    use crate::neppy::config::Config;
+
+    #[test]
+    fn a_vlm_server_starts_with_the_prefix_cache_on() {
+        let server = Config::default().mlx.servers[0].clone();
+        assert!(server.is_vlm());
+        assert_eq!(
+            spawn_env(&server, |_| None),
+            vec![(APC_ENV, "1".to_string())]
+        );
+    }
+
+    #[test]
+    fn an_explicit_host_value_is_left_alone() {
+        let server = Config::default().mlx.servers[0].clone();
+        let env = spawn_env(&server, |name| (name == APC_ENV).then(|| "0".to_string()));
+        assert!(env.is_empty());
+    }
+
+    #[test]
+    fn an_lm_server_gets_nothing() {
+        let mut server = Config::default().mlx.servers[0].clone();
+        server.kind = "lm".into();
+        assert!(!server.is_vlm());
+        assert!(spawn_env(&server, |_| None).is_empty());
     }
 }

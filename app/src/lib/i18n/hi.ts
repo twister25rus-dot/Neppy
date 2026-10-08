@@ -6490,6 +6490,7 @@ const messages: TranslationMap = {
   // Chat composer toolbar
   'composer.attachFile': 'फ़ाइल संलग्न करें',
   'composer.modelSelector': 'मॉडल',
+  'composer.webSearch': 'वेब खोज',
   'composer.voiceMode': 'वॉइस मोड',
   'composer.humanMode': 'मानव मोड',
   'composer.qualityHigh': 'उच्च',

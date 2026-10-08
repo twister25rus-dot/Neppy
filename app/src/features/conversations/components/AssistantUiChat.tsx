@@ -1,12 +1,16 @@
 import { Thread, type ThreadComponents } from '@/components/assistant-ui/thread';
 import { type AssistantState, useAui, useAuiState } from '@assistant-ui/react';
-import { PlusIcon } from 'lucide-react';
+import { BrainIcon, PlusIcon } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import AttachmentPreview from '../../../components/chat/AttachmentPreview';
-import ComposerEffortPill, {
+import ChatPresetPill, { type PresetId } from '../../../components/chat/ChatPresetPill';
+import {
   type ComposerEffort,
+  isReasoningOn,
+  REASONING_ON_EFFORT,
 } from '../../../components/chat/ComposerEffortPill';
+import WebSearchToggle from '../../../components/chat/WebSearchToggle';
 import { Button, Switch } from '../../../components/ui';
 import type { Attachment } from '../../../lib/attachments';
 import { useRegisterAction } from '../../../lib/commands/useRegisterAction';
@@ -18,13 +22,21 @@ import { DEFAULT_MASCOT_COLOR } from '../../../store/mascotSlice';
 import { MascotChipAvatar } from '../../human/Mascot/MascotChipAvatar';
 import { SelectedThreadModeProvider } from '../threadModeContext';
 import { ChatToolFallback, ChatToolGroup } from './ChatToolParts';
-import {
-  type ThreadGoalController,
-  ThreadGoalEditorPanel,
-  ThreadGoalFooterTrigger,
-} from './ThreadGoalChip';
+import { type ThreadGoalController, ThreadGoalEditorPanel } from './ThreadGoalChip';
 
 const selectComposerText = (state: AssistantState) => state.composer.text;
+
+/** New-chat heading above the mode tabs and composer. */
+function ChatWelcome() {
+  const { t } = useT();
+  return (
+    <div className="mb-8 flex flex-col items-center px-4 text-center">
+      <h1 className="fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-4xl font-bold tracking-tight text-content duration-200">
+        {t('chat.newWindowPrompt')}
+      </h1>
+    </div>
+  );
+}
 
 function ComposerTextBridge({
   value,
@@ -77,7 +89,8 @@ export function AssistantUiChat({
   attachmentInteractionBlocked,
   onAttachmentOnlySend,
   onNeppyMode,
-  onSwitchToMicCloud,
+  preset,
+  onPresetChange,
 }: {
   threadGoal: ThreadGoalController;
   model: string | null;
@@ -98,8 +111,9 @@ export function AssistantUiChat({
   onAttachmentOnlySend: () => void;
   /** Opens the Human page from the composer's idle primary slot. */
   onNeppyMode?: () => void;
-  /** Switches to the existing microphone-first chat composer. */
-  onSwitchToMicCloud?: () => void;
+  /** Local-model effort preset shown in the composer's "Balanced" menu. */
+  preset: PresetId;
+  onPresetChange: (next: PresetId) => void;
 }) {
   const { t } = useT();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,24 +143,38 @@ export function AssistantUiChat({
   });
   const slashCommands = useSlashCommands();
 
+  // Right-hand composer controls: web search, a divider, the reasoning switch
+  // (on asks for `reasoning_effort: high`; off sends `off`, which the core turns
+  // into `enable_thinking: false`) and the local-model effort preset menu. The thread
+  // goal stays reachable through `/goal` and the command palette.
   const ComposerExtras = useCallback(
     () => (
       <>
-        <ComposerEffortPill value={sampling} onChange={onSamplingChange} />
-        <label className="flex h-8 items-center gap-2 rounded-full bg-surface-strong px-3 text-xs text-content-secondary">
-          <span>Reasoning</span>
+        <WebSearchToggle />
+        <span aria-hidden className="h-7 w-px shrink-0 bg-line" />
+        <label
+          htmlFor="chat-reasoning"
+          className="flex h-10 cursor-pointer items-center gap-2.5 rounded-full border border-line px-4 text-sm font-medium text-content-secondary">
+          <BrainIcon aria-hidden className="h-4.5 w-4.5 text-content-muted" />
+          <span>{t('chat.agentProfile.reasoning')}</span>
           <Switch
             id="chat-reasoning"
-            checked={sampling.effort !== null}
-            onCheckedChange={enabled => onSamplingChange({ effort: enabled ? 'high' : null })}
-            aria-label="Enable reasoning"
-            className="h-[18px] w-[32px] [&_[data-slot=switch-thumb]]:h-[14px] [&_[data-slot=switch-thumb]]:w-[14px] [&_[data-slot=switch-thumb][data-state=checked]]:translate-x-[14px]"
+            checked={isReasoningOn(sampling)}
+            onCheckedChange={enabled =>
+              onSamplingChange({ effort: enabled ? REASONING_ON_EFFORT : 'off' })
+            }
+            aria-label={t('chat.agentProfile.reasoning')}
           />
         </label>
-        <ThreadGoalFooterTrigger ctl={threadGoal} />
+        <ChatPresetPill
+          value={preset}
+          onChange={onPresetChange}
+          className="h-10 gap-2 bg-transparent px-4 text-[15px] text-content"
+          chevronClassName="h-4 w-4 text-content-muted"
+        />
       </>
     ),
-    [threadGoal, sampling, onSamplingChange]
+    [sampling, onSamplingChange, preset, onPresetChange, t]
   );
   // The goal editor belongs in the header slot, which `thread.tsx` renders
   // OUTSIDE the bordered composer shell. It used to live in `ComposerExtras`
@@ -196,13 +224,14 @@ export function AssistantUiChat({
         <Button
           type="button"
           iconOnly
-          variant="tertiary"
+          variant="secondary"
           size="xs"
           aria-label={t('composer.attachFile')}
           title={t('composer.attachFile')}
           disabled={attachmentInteractionBlocked || attachments.length >= maxAttachments}
-          onClick={() => fileInputRef.current?.click()}>
-          <PlusIcon className="h-4 w-4" />
+          onClick={() => fileInputRef.current?.click()}
+          className="size-10 shrink-0 rounded-full border-0 bg-surface-strong p-0 text-content hover:bg-surface-hover">
+          <PlusIcon className="h-5 w-5" />
         </Button>
       </>
     ),
@@ -242,7 +271,7 @@ export function AssistantUiChat({
       ComposerExtras,
       ComposerHeader,
       ComposerIdleAction,
-      onSwitchToMicCloud,
+      Welcome: ChatWelcome,
       ...(attachmentsEnabled
         ? {
             ComposerAttachments,
@@ -261,7 +290,6 @@ export function AssistantUiChat({
       attachments.length,
       attachmentsEnabled,
       onAttachmentOnlySend,
-      onSwitchToMicCloud,
     ]
   );
 

@@ -25,7 +25,6 @@ vi.mock('./ThreadGoalChip', () => ({
   ThreadGoalEditorPanel: () => null,
   ThreadGoalFooterTrigger: () => null,
 }));
-vi.mock('../../../components/chat/ComposerEffortPill', () => ({ default: () => null }));
 vi.mock('../../../components/assistant-ui/model-selector', () => ({
   ModelQualityPill: () => null,
 }));
@@ -53,6 +52,8 @@ function Host() {
       attachmentsEnabled={false}
       attachmentInteractionBlocked={false}
       onAttachmentOnlySend={vi.fn()}
+      preset="auto"
+      onPresetChange={vi.fn()}
     />
   );
 }

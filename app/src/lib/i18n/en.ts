@@ -7093,6 +7093,7 @@ const en: TranslationMap = {
   // Chat composer toolbar
   'composer.attachFile': 'Attach file',
   'composer.modelSelector': 'Model',
+  'composer.webSearch': 'Web search',
   'composer.voiceMode': 'Voice mode',
   'composer.humanMode': 'Human mode',
   'composer.qualityHigh': 'High',

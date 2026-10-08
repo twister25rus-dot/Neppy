@@ -6661,6 +6661,7 @@ const messages: TranslationMap = {
   // Chat composer toolbar
   'composer.attachFile': 'Datei anhängen',
   'composer.modelSelector': 'Modell',
+  'composer.webSearch': 'Websuche',
   'composer.voiceMode': 'Sprachmodus',
   'composer.humanMode': 'Mensch-Modus',
   'composer.qualityHigh': 'Hoch',
