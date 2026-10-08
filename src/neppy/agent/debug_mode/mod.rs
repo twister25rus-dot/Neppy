@@ -33,6 +33,10 @@ mod policy_scope;
 #[cfg(test)]
 #[path = "policy_scope_tests.rs"]
 mod policy_scope_tests;
+pub mod release;
+mod release_preflight;
+mod release_schemas;
+mod release_steps;
 mod schema_defs;
 mod schemas;
 pub mod secrets;

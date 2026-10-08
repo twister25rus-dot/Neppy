@@ -80,7 +80,7 @@ pub(super) fn bundle_path(target_dir: &Path) -> PathBuf {
 }
 
 /// A GUI-launched app has a bare PATH; the build needs cargo, node and pnpm.
-fn build_path() -> String {
+pub(super) fn build_path() -> String {
     let mut parts: Vec<String> = Vec::new();
     if let Some(home) = std::env::var_os("HOME") {
         parts.push(Path::new(&home).join(".cargo/bin").display().to_string());
