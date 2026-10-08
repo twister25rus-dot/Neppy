@@ -216,6 +216,22 @@ impl NodeExecTool {
             ));
         }
         let path_policy = super::security_for_tool_context(&self.security, context, "node_exec");
+        // Debug Mode: JS (inline, or the script file) that would publish a
+        // release is refused in a Debug turn. Best effort: arbitrary JS cannot
+        // be fully analysed. Inert outside a Debug turn.
+        let gate = match (inline_code.as_deref(), script_path.as_deref()) {
+            (Some(code), _) => {
+                crate::neppy::agent::debug_mode::policy::gate_node_exec_current(code)
+            }
+            (None, Some(path)) => match resolve_script_path(&path_policy.action_dir, path) {
+                Ok(p) => crate::neppy::agent::debug_mode::policy::gate_node_exec_file_current(&p),
+                Err(_) => crate::neppy::agent::debug_mode::policy::DebugCommandDecision::Allow,
+            },
+            (None, None) => crate::neppy::agent::debug_mode::policy::DebugCommandDecision::Allow,
+        };
+        if let Err(msg) = debug_gate_denial(gate) {
+            return Ok(ToolResult::error(msg));
+        }
         let guard_command = inline_code.clone().unwrap_or_else(|| {
             std::iter::once(script_path.as_deref().unwrap_or_default())
                 .chain(extra_args.iter().map(String::as_str))
@@ -654,6 +670,22 @@ fn shell_quote(s: &str) -> String {
     format!("'{escaped}'")
 }
 
+/// `Err` with the policy-blocked tool error text when a Debug-turn gate denied.
+fn debug_gate_denial(
+    decision: crate::neppy::agent::debug_mode::policy::DebugCommandDecision,
+) -> Result<(), String> {
+    match decision {
+        crate::neppy::agent::debug_mode::policy::DebugCommandDecision::Deny(reason) => {
+            tracing::warn!("[node_exec] debug-mode gate denied a command");
+            Err(format!(
+                "{} {reason}",
+                crate::neppy::security::POLICY_BLOCKED_MARKER
+            ))
+        }
+        _ => Ok(()),
+    }
+}
+
 /// Resolve a caller-supplied `script_path` against the workspace. Mirrors
 /// `npm_exec::resolve_cwd` — rejects absolute paths and any component that
 /// could escape the workspace (`..`, Windows drive prefixes). Scripts
@@ -884,3 +916,7 @@ mod tests {
         assert!(result.text().contains("Cross-profile access blocked"));
     }
 }
+
+#[cfg(test)]
+#[path = "node_exec_debug_tests.rs"]
+mod debug_gate_tests;

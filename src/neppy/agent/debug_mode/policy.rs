@@ -463,8 +463,19 @@ fn check_git(args: &[String], cfg: &DebugModeConfig) -> DebugCommandDecision {
 #[path = "policy_release.rs"]
 mod policy_release;
 
+#[path = "policy_exec.rs"]
+mod policy_exec;
+pub use policy_exec::{
+    gate_node_exec_current, gate_node_exec_file_current, gate_npm_exec_args_current,
+    gate_npm_exec_current,
+};
+
 pub use super::policy_scope::{external_roots, prompt_addendum, validate_external_path};
 
 #[cfg(test)]
 #[path = "policy_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "policy_release_tests.rs"]
+mod release_tests;

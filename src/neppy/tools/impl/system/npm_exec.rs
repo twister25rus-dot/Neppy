@@ -154,7 +154,15 @@ impl Tool for NpmExecTool {
     /// the `Write` bucket, so ask-before-edit routes through the human approval
     /// gate and read-only `execute` refuses below. Previously `npm_exec`
     /// bypassed the gate (only the rate limiter applied).
-    fn external_effect_with_args(&self, _args: &serde_json::Value) -> bool {
+    fn external_effect_with_args(&self, args: &serde_json::Value) -> bool {
+        // Debug Mode: a Debug turn's command gate can ask for a human yes on top
+        // of the tier's decision, exactly as for `shell`. `Allow` outside one.
+        if matches!(
+            crate::neppy::agent::debug_mode::policy::gate_npm_exec_args_current(args),
+            crate::neppy::agent::debug_mode::policy::DebugCommandDecision::Ask(_)
+        ) {
+            return true;
+        }
         self.security.gate_decision(CommandClass::Write) == GateDecision::Prompt
     }
 
@@ -231,6 +239,18 @@ impl NpmExecTool {
             return Ok(ToolResult::error(
                 "[policy-blocked] Action blocked: the agent is in read-only mode and cannot run npm.",
             ));
+        }
+        // Debug Mode command gate (dependency installs, release scripts), the same
+        // verdicts `shell` gives the equivalent `npm ...` line. Inert outside a
+        // Debug turn; `Ask` was already routed to the approval gate.
+        if let crate::neppy::agent::debug_mode::policy::DebugCommandDecision::Deny(reason) =
+            crate::neppy::agent::debug_mode::policy::gate_npm_exec_current(&subcommand, &extra_args)
+        {
+            tracing::warn!("[npm_exec] debug-mode gate denied a command");
+            return Ok(ToolResult::error(format!(
+                "{} {reason}",
+                crate::neppy::security::POLICY_BLOCKED_MARKER
+            )));
         }
         let path_policy = super::security_for_tool_context(&self.security, context, "npm_exec");
         let cwd = match resolve_cwd(&path_policy.action_dir, cwd_override.as_deref()) {
@@ -720,3 +740,7 @@ mod tests {
         assert!(result.text().contains("Cross-profile access blocked"));
     }
 }
+
+#[cfg(test)]
+#[path = "npm_exec_debug_tests.rs"]
+mod debug_gate_tests;

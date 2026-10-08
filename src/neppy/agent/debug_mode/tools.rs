@@ -14,6 +14,7 @@ use serde_json::{json, Value};
 use crate::neppy::tools::traits::{PermissionLevel, Tool, ToolResult};
 
 use super::candidate;
+use super::dead_files;
 use super::ops;
 use super::pass_gate;
 use super::selfmod;
@@ -395,6 +396,24 @@ impl Tool for DebugReportTool {
                 notes.push(note);
             }
         }
+        // A pass that only touched files nothing imports probably edited code that
+        // no longer renders. Warn; never downgrade (a new module may be wired up
+        // by a later change).
+        let mut summary = parsed.summary;
+        if requested == TaskStatus::Pass {
+            let (root, changed) = (turn.root.clone(), files.clone());
+            let warning =
+                tokio::task::spawn_blocking(move || dead_files::dead_file_warning(&root, &changed))
+                    .await
+                    .ok()
+                    .flatten();
+            if let Some(w) = warning {
+                log::info!("[debug_mode] debug_report dead-file warning task={task_id}");
+                summary.push_str("\n\n");
+                summary.push_str(&w);
+                notes.push(w);
+            }
+        }
         let now = chrono::Utc::now().to_rfc3339();
         // Keep every real run, replace any earlier self-attested entries.
         let mut validation: Vec<ValidationRecord> = persisted
@@ -420,7 +439,7 @@ impl Tool for DebugReportTool {
         let n_checks = validation.len();
         let patch = TaskPatch {
             status: Some(status),
-            summary: Some(parsed.summary),
+            summary: Some(summary),
             validation: Some(validation),
             ..Default::default()
         };

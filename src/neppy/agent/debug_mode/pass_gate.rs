@@ -15,6 +15,7 @@ use std::time::SystemTime;
 use chrono::{DateTime, Utc};
 
 use super::checks;
+use super::ops::STORED_OUTPUT_TAIL;
 use super::types::{CheckKind, DebugCheck, ValidationRecord};
 
 /// Shown to the agent when the gate downgrades a `pass`.
@@ -89,6 +90,125 @@ pub(super) fn classify_argv(argv: &[String]) -> bool {
     }
 }
 
+/// Shown instead of [`NO_CHECK_AFTER_EDIT`] when the only passing runs after the
+/// last edit were test runs that executed no tests.
+pub(super) const NO_TESTS_RAN: &str =
+    "DOWNGRADED from pass to partial: the test run after the last edit executed zero tests \
+     (\"running 0 tests\" / \"No test files found\"), which verifies nothing. Run a test \
+     command that matches real tests, or a typecheck, lint or build, with `debug_run_check`, \
+     then call `debug_report` again.";
+
+/// Whether `argv` is a test run: a discovered check of kind Test, else
+/// `cargo test|nextest`, `npm|pnpm|yarn [run] test*`, or `vitest` / `jest`.
+pub(super) fn is_test_run(argv: &[String], discovered: &[DebugCheck]) -> bool {
+    if let Some(c) = discovered.iter().find(|c| c.command == argv) {
+        return c.kind == CheckKind::Test;
+    }
+    let Some(program) = argv.first() else {
+        return false;
+    };
+    let base = program.rsplit(['/', '\\']).next().unwrap_or(program);
+    let sub = argv.get(1).map(String::as_str);
+    match base {
+        "cargo" => matches!(sub, Some("test" | "nextest")),
+        "npm" | "pnpm" | "yarn" => match sub {
+            Some("run" | "run-script") => argv.get(2).is_some_and(|s| s.starts_with("test")),
+            Some(s) => s.starts_with("test"),
+            None => false,
+        },
+        "vitest" | "jest" => true,
+        _ => false,
+    }
+}
+
+/// A stored output tail is the last [`STORED_OUTPUT_TAIL`] characters; one that
+/// long may have lost the sections that ran tests.
+fn tail_may_be_clipped(tail: &str) -> bool {
+    tail.chars().count() >= STORED_OUTPUT_TAIL
+}
+
+/// True when the captured output of a test run shows that no test executed:
+/// cargo (every `running N tests` has N = 0 and every `test result` reports
+/// 0 passed) or vitest / jest (`No test files found`, `No tests found`,
+/// `Tests  0 passed`, `Tests: 0 total`). Any sign of a test that did run, or a
+/// tail long enough to have lost it, makes the output inconclusive (false).
+pub(super) fn ran_no_tests(output_tail: &str) -> bool {
+    if tail_may_be_clipped(output_tail) {
+        return false;
+    }
+    let mut zero_evidence = false;
+    for raw in output_tail.lines() {
+        let line = strip_ansi(raw).trim().to_ascii_lowercase();
+        // cargo / libtest
+        if let Some(n) = line
+            .strip_prefix("running ")
+            .and_then(|r| r.strip_suffix(" tests").or_else(|| r.strip_suffix(" test")))
+            .and_then(|n| n.trim().parse::<u64>().ok())
+        {
+            if n > 0 {
+                return false;
+            }
+            zero_evidence = true;
+            continue;
+        }
+        if line.starts_with("test result:") {
+            match count_before(&line, "passed") {
+                Some(0) => zero_evidence = true,
+                Some(_) => return false,
+                None => {}
+            }
+            continue;
+        }
+        if line.starts_with("test ") && (line.ends_with("... ok") || line.ends_with("... failed")) {
+            return false;
+        }
+        // vitest / jest / nextest
+        if line.starts_with("no test files found") || line.starts_with("no tests") {
+            zero_evidence = true;
+            continue;
+        }
+        if line.starts_with("tests") && line[5..].starts_with([' ', ':']) {
+            for word in ["passed", "failed", "total"] {
+                match count_before(&line, word) {
+                    Some(n) if n > 0 => return false,
+                    Some(_) if word != "failed" => zero_evidence = true,
+                    _ => {}
+                }
+            }
+        }
+    }
+    zero_evidence
+}
+
+/// Drops ANSI colour escapes (`ESC [ ... m`) that reporters print around labels.
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\u{1b}' && chars.peek() == Some(&'[') {
+            for n in chars.by_ref() {
+                if n.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+/// The integer that directly precedes `word` in `line` ("0 passed;" -> 0).
+fn count_before(line: &str, word: &str) -> Option<u64> {
+    let idx = line.find(word)?;
+    line[..idx]
+        .split_whitespace()
+        .next_back()?
+        .trim_end_matches(['.', ':', ','])
+        .parse()
+        .ok()
+}
+
 /// Whether running `argv` verifies the code. A discovered check with exactly
 /// this argv decides by its kind (test / typecheck / lint / build count;
 /// format does not); anything else falls back to [`classify_argv`].
@@ -143,8 +263,9 @@ pub(super) fn missing_check_note(
     }
     let last_edit = last_edit_time(root, files);
     let discovered = checks::discover(root);
+    let mut only_zero_test_runs = false;
     let ok = validation.iter().any(|v| {
-        is_real_check(v)
+        let counts = is_real_check(v)
             && is_verification(&v.command, &discovered)
             && v.passed
             && !v.timed_out
@@ -152,7 +273,16 @@ pub(super) fn missing_check_note(
                 (Some(edit), Some(at)) => at > edit,
                 (None, Some(_)) => true,
                 (_, None) => false,
-            }
+            };
+        if counts && is_test_run(&v.command, &discovered) && ran_no_tests(&v.output_tail) {
+            log::debug!(
+                "[debug_mode] pass gate: test run {:?} executed zero tests, not counted",
+                v.command
+            );
+            only_zero_test_runs = true;
+            return false;
+        }
+        counts
     });
     log::debug!(
         "[debug_mode] pass gate: files={} records={} real={} last_edit={} satisfied={ok}",
@@ -161,7 +291,14 @@ pub(super) fn missing_check_note(
         validation.iter().filter(|v| is_real_check(v)).count(),
         last_edit.map_or_else(|| "-".to_string(), |t| t.to_rfc3339())
     );
-    (!ok).then(|| NO_CHECK_AFTER_EDIT.to_string())
+    (!ok).then(|| {
+        if only_zero_test_runs {
+            NO_TESTS_RAN
+        } else {
+            NO_CHECK_AFTER_EDIT
+        }
+        .to_string()
+    })
 }
 
 #[cfg(test)]

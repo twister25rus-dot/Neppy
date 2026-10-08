@@ -21,6 +21,7 @@ mod candidate_steps;
 mod checkpoints;
 pub mod checks;
 mod commit;
+mod dead_files;
 mod exec;
 mod git;
 pub mod local_install;

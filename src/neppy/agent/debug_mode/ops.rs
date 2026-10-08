@@ -26,7 +26,7 @@ pub(super) static REPO_LOCK: AsyncMutex<()> = AsyncMutex::const_new(());
 const MAX_TEXT: usize = 4000;
 const MAX_FILES: usize = 2000;
 const MAX_VALIDATIONS: usize = 100;
-const STORED_OUTPUT_TAIL: usize = 4096;
+pub(super) const STORED_OUTPUT_TAIL: usize = 4096;
 
 /// Handle on the per-workspace Debug Mode state.
 #[derive(Debug, Clone)]

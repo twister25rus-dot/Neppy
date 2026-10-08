@@ -7,8 +7,11 @@
 //! executing `release-neppy.sh` (directly, through a shell or `source`, through
 //! `env`/`nohup`/`time`/`xargs`/`sudo`/`pnpm exec`/`find -exec`, or inside a
 //! `-c` string, which the caller recurses into), any mutating `gh release` or
-//! `gh api .../releases` call, and any package script that wraps a release are
-//! denied. `cat`, `grep`, `rg`, `gh release list|view` only read, so they pass.
+//! `gh api .../releases` call, `gh workflow run|enable` for a release or promote
+//! workflow, a `gh api` POST to a `.../dispatches` endpoint, and any package
+//! script that wraps a release are denied. `cat`, `grep`, `rg`,
+//! `gh release list|view`, `gh workflow list|view` and `gh run list|view` only
+//! read, so they pass.
 //!
 //! Best effort by nature: a copy of the script under another name, or code that
 //! builds the command at run time, is beyond a static check. The approval gate
@@ -75,8 +78,9 @@ fn skip_flags(mut w: &[String]) -> &[String] {
     w
 }
 
-/// Everything except `gh release list|view`, and `gh api` calls that write to
-/// a releases endpoint.
+/// Everything except `gh release list|view`; `gh workflow run|enable` for a
+/// release or promote workflow; and `gh api` calls that write to a releases
+/// endpoint or to a workflow/repository dispatch endpoint.
 fn gh_publishes(args: &[String]) -> bool {
     let mut i = 0;
     while i < args.len() && args[i].starts_with('-') {
@@ -94,21 +98,83 @@ fn gh_publishes(args: &[String]) -> bool {
                 .map(String::as_str),
             Some("list" | "view")
         ),
+        Some("workflow") => workflow_publishes(rest),
         Some("api") => {
-            let mentions = rest
-                .iter()
-                .any(|a| a.to_ascii_lowercase().contains("release"));
-            let writes = rest.iter().enumerate().any(|(n, a)| match a.as_str() {
-                "-f" | "-F" | "--field" | "--raw-field" | "--input" => true,
-                "-X" | "--method" => rest
-                    .get(n + 1)
-                    .is_none_or(|m| !m.eq_ignore_ascii_case("GET")),
-                _ => false,
-            });
-            mentions && writes
+            let lower: Vec<String> = rest.iter().map(|a| a.to_ascii_lowercase()).collect();
+            let mentions = lower.iter().any(|a| a.contains("release"));
+            // A dispatch endpoint starts a workflow run, whatever the workflow
+            // is called (`.../actions/workflows/<id>/dispatches`, or
+            // `repos/<o>/<r>/dispatches` for `repository_dispatch`).
+            let dispatches = lower.iter().any(|a| a.contains("dispatches"));
+            (mentions || dispatches) && gh_api_writes(rest)
         }
         _ => false,
     }
+}
+
+/// True when the `gh api` operands ask for a mutating request: fields or an
+/// input file (gh then defaults to POST) or an explicit non-GET method, in the
+/// separated (`-X POST`, `--field k=v`) and the attached (`-XPOST`,
+/// `--method=POST`, `-fk=v`, `--field=k=v`) spellings alike.
+fn gh_api_writes(rest: &[String]) -> bool {
+    rest.iter().enumerate().any(|(n, a)| match a.as_str() {
+        "-f" | "-F" | "--field" | "--raw-field" | "--input" => true,
+        "-X" | "--method" => rest
+            .get(n + 1)
+            .is_none_or(|m| !m.eq_ignore_ascii_case("GET")),
+        a => {
+            if let Some(m) = a.strip_prefix("--method=") {
+                return !m.eq_ignore_ascii_case("GET");
+            }
+            if let Some(m) = a.strip_prefix("-X") {
+                return !m.eq_ignore_ascii_case("GET");
+            }
+            ["--field=", "--raw-field=", "--input="]
+                .iter()
+                .any(|p| a.starts_with(p))
+                || (!a.starts_with("--") && (a.starts_with("-f") || a.starts_with("-F")))
+        }
+    })
+}
+
+/// `gh workflow run|enable <workflow>` where the workflow's file name or name
+/// says release or promote (those are `workflow_dispatch` publish paths), or
+/// is a bare numeric id, whose name cannot be checked statically. `list`,
+/// `view` and the like only read.
+fn workflow_publishes(rest: &[String]) -> bool {
+    let Some(sub) = rest.iter().find(|a| !a.starts_with('-')) else {
+        return false;
+    };
+    if !matches!(sub.as_str(), "run" | "enable") {
+        return false;
+    }
+    let mut skip_value = false;
+    let mut seen_sub = false;
+    for a in rest {
+        if skip_value {
+            skip_value = false;
+            continue;
+        }
+        if a.starts_with('-') {
+            skip_value = matches!(
+                a.as_str(),
+                "-r" | "--ref" | "-f" | "--raw-field" | "-F" | "--field" | "-R" | "--repo"
+            );
+            continue;
+        }
+        if !seen_sub {
+            seen_sub = true; // the `run` / `enable` word itself
+            continue;
+        }
+        let lower = a.to_ascii_lowercase();
+        if lower.contains("release")
+            || lower.contains("promote")
+            || (!a.is_empty() && a.chars().all(|c| c.is_ascii_digit()))
+        {
+            return true;
+        }
+    }
+    false
 }
 
 /// A package script invocation: `pnpm release`, `npm run release:x`,
