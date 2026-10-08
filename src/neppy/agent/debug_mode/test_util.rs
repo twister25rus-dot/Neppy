@@ -25,3 +25,20 @@ pub(super) fn repo() -> tempfile::TempDir {
     sh(d.path(), &["commit", "-q", "-m", "init"]);
     d
 }
+
+/// The argv of the fixture's verification check (see [`repo_with_test_script`]).
+pub(super) const TEST_CHECK: [&str; 3] = ["npm", "run", "test"];
+
+/// [`repo`] plus a committed `package.json` whose `test` script succeeds, so
+/// `npm run test` is a discovered, verification-kind check that touches no files.
+pub(super) fn repo_with_test_script() -> tempfile::TempDir {
+    let d = repo();
+    std::fs::write(
+        d.path().join("package.json"),
+        "{\"name\":\"fixture\",\"scripts\":{\"test\":\"true\"}}\n",
+    )
+    .unwrap();
+    sh(d.path(), &["add", "."]);
+    sh(d.path(), &["commit", "-q", "-m", "add test script"]);
+    d
+}

@@ -3,7 +3,7 @@ use serde_json::json;
 use super::*;
 use crate::neppy::agent::debug_mode::ops::DebugCtx;
 use crate::neppy::agent::debug_mode::pass_gate::is_real_check;
-use crate::neppy::agent::debug_mode::test_util::repo;
+use crate::neppy::agent::debug_mode::test_util::{repo, repo_with_test_script, TEST_CHECK};
 use crate::neppy::agent::debug_mode::turn::{begin, resolve_root, with_turn};
 
 async fn in_turn<F: std::future::Future>(
@@ -43,6 +43,8 @@ async fn persists_a_real_validation_record_on_the_current_task() {
     let out: serde_json::Value = serde_json::from_str(&r.output()).unwrap();
     assert_eq!(out["passed"], json!(true));
     assert_eq!(out["exit_code"], json!(0));
+    assert_eq!(out["is_verification"], json!(false), "git verifies nothing");
+    assert_eq!(out["counts_for_pass"], json!(false));
     assert_eq!(out["output_tail"].as_str().unwrap().trim().len(), 40);
     assert!(out["duration_ms"].is_u64());
 
@@ -62,6 +64,30 @@ async fn persists_a_real_validation_record_on_the_current_task() {
 }
 
 #[tokio::test]
+async fn a_verification_check_reports_that_it_counts_for_pass() {
+    let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
+    let (_turn, (by_argv, by_id)) = in_turn(&repo, &ws, async {
+        let a = DebugRunCheckTool
+            .execute(json!({"command": TEST_CHECK}))
+            .await
+            .unwrap();
+        let b = DebugRunCheckTool
+            .execute(json!({"check_id": "npm:test"}))
+            .await
+            .unwrap();
+        (a, b)
+    })
+    .await;
+    for r in [by_argv, by_id] {
+        assert!(!r.is_error, "{}", r.text());
+        let out: serde_json::Value = serde_json::from_str(&r.output()).unwrap();
+        assert_eq!(out["passed"], json!(true), "{out}");
+        assert_eq!(out["is_verification"], json!(true));
+        assert_eq!(out["counts_for_pass"], json!(true));
+    }
+}
+
+#[tokio::test]
 async fn a_failing_check_is_recorded_as_failed() {
     let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
     let (turn, r) = in_turn(&repo, &ws, async {
@@ -74,6 +100,7 @@ async fn a_failing_check_is_recorded_as_failed() {
     assert!(!r.is_error, "a failing check is a result, not a tool error");
     let out: serde_json::Value = serde_json::from_str(&r.output()).unwrap();
     assert_eq!(out["passed"], json!(false));
+    assert_eq!(out["counts_for_pass"], json!(false));
     let task = turn
         .ctx
         .store

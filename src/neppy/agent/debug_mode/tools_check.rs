@@ -11,7 +11,9 @@ use serde_json::{json, Value};
 
 use crate::neppy::tools::traits::{PermissionLevel, Tool, ToolResult};
 
+use super::checks;
 use super::ops;
+use super::pass_gate;
 use super::secrets;
 use super::tools::turn_with_task;
 
@@ -49,7 +51,10 @@ impl Tool for DebugRunCheckTool {
          current debug task and record the real result (command, exit code, time, output \
          tail) on it. Use this after editing, for every check you rely on: only checks run \
          through this tool count toward `pass` in `debug_report`, and a `pass` needs a \
-         passing check that ran AFTER your last edit. Give either `check_id` (from the \
+         passing TEST, TYPECHECK, LINT or BUILD check (cargo test/check/clippy/build, \
+         package.json test/typecheck/lint/build/compile/check scripts) that ran AFTER your \
+         last edit. Commands that verify nothing (git status/diff/rev-parse, cargo \
+         tree/metadata/fmt, format checks) run fine but never count. Give either `check_id` (from the \
          discovered checks) or `command` as an argv array; only commands Debug mode already \
          allows can run. Returns passed, exit_code, duration and the output tail."
     }
@@ -117,6 +122,13 @@ impl Tool for DebugRunCheckTool {
                     r.timed_out,
                     r.duration_ms
                 );
+                let discovered = checks::discover(&turn.root);
+                let is_verification = pass_gate::is_verification(&r.command, &discovered);
+                let counts_for_pass = is_verification && r.passed && !r.timed_out;
+                log::debug!(
+                    "[debug_mode] debug_run_check task={task_id} is_verification={is_verification} \
+                     counts_for_pass={counts_for_pass}"
+                );
                 let combined = format!("{}\n{}", r.stdout_tail, r.stderr_tail);
                 let tail = secrets::mask_secret_like_lines(&tail_chars(
                     combined.trim(),
@@ -124,6 +136,8 @@ impl Tool for DebugRunCheckTool {
                 ));
                 Ok(ToolResult::json(json!({
                     "passed": r.passed,
+                    "is_verification": is_verification,
+                    "counts_for_pass": counts_for_pass,
                     "exit_code": r.exit_code,
                     "timed_out": r.timed_out,
                     "duration_ms": r.duration_ms,

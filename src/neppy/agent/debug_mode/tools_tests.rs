@@ -4,7 +4,7 @@ use super::*;
 use crate::neppy::agent::debug_mode::ops::DebugCtx;
 use crate::neppy::agent::debug_mode::turn::{begin, resolve_root, with_turn};
 
-use crate::neppy::agent::debug_mode::test_util::repo;
+use crate::neppy::agent::debug_mode::test_util::{repo, repo_with_test_script, TEST_CHECK};
 
 async fn in_turn<F: std::future::Future>(
     repo: &tempfile::TempDir,
@@ -19,14 +19,20 @@ async fn in_turn<F: std::future::Future>(
     (turn, out)
 }
 
-/// Runs an allowed trivial command through `debug_run_check`, recording a real
-/// passing validation on the current task.
+/// Runs the fixture's `npm run test` through `debug_run_check`, recording a
+/// real passing verification on the current task (needs
+/// [`repo_with_test_script`]).
 async fn run_real_check() {
     let r = DebugRunCheckTool
-        .execute(json!({"command": ["git", "rev-parse", "HEAD"]}))
+        .execute(json!({"command": TEST_CHECK}))
         .await
         .unwrap();
     assert!(!r.is_error, "{}", r.text());
+    assert!(
+        r.output().contains("\"counts_for_pass\": true"),
+        "{}",
+        r.output()
+    );
 }
 
 #[tokio::test]
@@ -138,7 +144,7 @@ mod self_mod {
 
     #[tokio::test]
     async fn pass_is_downgraded_when_critical_files_changed_without_a_candidate() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             write_critical(&repo);
             DebugReportTool
@@ -160,7 +166,7 @@ mod self_mod {
 
     #[tokio::test]
     async fn pass_is_kept_when_a_candidate_passed_for_the_current_tree() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             write_critical(&repo);
             run_real_check().await;
@@ -210,7 +216,7 @@ mod self_mod {
 
     #[tokio::test]
     async fn non_critical_changes_pass_without_a_candidate() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             std::fs::write(repo.path().join("a.txt"), "changed\n").unwrap();
             run_real_check().await;
@@ -256,7 +262,7 @@ mod pass_gate {
 
     #[tokio::test]
     async fn pass_is_accepted_after_a_passing_post_edit_check() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             edit(&repo, "two\n");
             run_real_check().await;
@@ -272,8 +278,37 @@ mod pass_gate {
     }
 
     #[tokio::test]
+    async fn a_trivial_command_does_not_satisfy_the_gate() {
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
+        for cmd in [
+            json!(["git", "rev-parse", "HEAD"]),
+            json!(["git", "status"]),
+            json!(["git", "diff"]),
+        ] {
+            let (turn, (check, r)) = in_turn(&repo, &ws, async {
+                edit(&repo, &format!("edited {cmd}\n"));
+                let check = DebugRunCheckTool
+                    .execute(json!({ "command": cmd }))
+                    .await
+                    .unwrap();
+                (check, report_pass(json!(null)).await)
+            })
+            .await;
+            assert!(!check.is_error, "{}", check.text());
+            assert!(check.output().contains("\"counts_for_pass\": false"));
+            assert!(r.text().contains("DOWNGRADED"), "{cmd}: {}", r.text());
+            assert!(
+                r.text().contains("TEST, TYPECHECK, LINT or BUILD"),
+                "{}",
+                r.text()
+            );
+            assert_eq!(status_of(&turn).await, TaskStatus::Partial, "{cmd}");
+        }
+    }
+
+    #[tokio::test]
     async fn pass_is_downgraded_without_any_check() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             edit(&repo, "two\n");
             report_pass(json!(null)).await
@@ -282,7 +317,7 @@ mod pass_gate {
         assert!(!r.is_error, "downgrade is not an error: {}", r.text());
         assert!(
             r.text().contains(
-                "DOWNGRADED from pass to partial: no passing check ran after the last edit"
+                "DOWNGRADED from pass to partial: no passing TEST, TYPECHECK, LINT or BUILD check ran after the last edit"
             ),
             "{}",
             r.text()
@@ -293,7 +328,7 @@ mod pass_gate {
 
     #[tokio::test]
     async fn pass_is_downgraded_when_the_only_check_predates_the_last_edit() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             edit(&repo, "two\n");
             run_real_check().await;
@@ -330,7 +365,7 @@ mod pass_gate {
 
     #[tokio::test]
     async fn self_attested_validation_never_satisfies_the_gate() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             edit(&repo, "two\n");
             report_pass(json!([{"check": "cargo test", "passed": true}])).await
@@ -348,7 +383,7 @@ mod pass_gate {
 
     #[tokio::test]
     async fn pass_needs_no_check_when_no_files_changed() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async { report_pass(json!(null)).await }).await;
         assert!(!r.text().contains("DOWNGRADED"), "{}", r.text());
         assert_eq!(status_of(&turn).await, TaskStatus::Pass);
@@ -356,7 +391,7 @@ mod pass_gate {
 
     #[tokio::test]
     async fn both_gates_report_when_both_fail() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             std::fs::create_dir_all(repo.path().join("src/core")).unwrap();
             std::fs::write(repo.path().join("src/core/x.rs"), "// edit\n").unwrap();
@@ -364,13 +399,18 @@ mod pass_gate {
         })
         .await;
         assert!(r.text().contains("critical files changed"), "{}", r.text());
-        assert!(r.text().contains("no passing check ran"), "{}", r.text());
+        assert!(
+            r.text()
+                .contains("no passing TEST, TYPECHECK, LINT or BUILD check ran"),
+            "{}",
+            r.text()
+        );
         assert_eq!(status_of(&turn).await, TaskStatus::Partial);
     }
 
     #[tokio::test]
     async fn partial_and_failed_reports_do_not_need_a_check() {
-        let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+        let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
         let (turn, r) = in_turn(&repo, &ws, async {
             edit(&repo, "two\n");
             DebugReportTool

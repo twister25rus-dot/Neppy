@@ -1,22 +1,92 @@
-//! The `pass` gate: a task may only be recorded as `pass` when a real check
-//! passed after its last file edit.
+//! The `pass` gate: a task may only be recorded as `pass` when a real
+//! VERIFICATION check (test, typecheck, lint or build) passed after its last
+//! file edit.
 //!
 //! "Real" means a [`ValidationRecord`] produced by `ops::run_check` (via the
 //! `debug_run_check` tool): a non-empty argv and a captured exit code. The
 //! entries an agent lists in its own `debug_report` payload are self-attested
-//! (empty argv, no exit code) and never satisfy the gate.
+//! (empty argv, no exit code) and never satisfy the gate. A real run of a
+//! command that verifies nothing (`git rev-parse HEAD`, `cargo tree`, ...) does
+//! not satisfy it either: see [`is_verification`].
 
 use std::path::Path;
 use std::time::SystemTime;
 
 use chrono::{DateTime, Utc};
 
-use super::types::ValidationRecord;
+use super::checks;
+use super::types::{CheckKind, DebugCheck, ValidationRecord};
 
 /// Shown to the agent when the gate downgrades a `pass`.
 pub(super) const NO_CHECK_AFTER_EDIT: &str =
-    "DOWNGRADED from pass to partial: no passing check ran after the last edit (run \
-     `debug_run_check` with the relevant tests/typecheck, then call `debug_report` again).";
+    "DOWNGRADED from pass to partial: no passing TEST, TYPECHECK, LINT or BUILD check ran \
+     after the last edit (run `debug_run_check` with the relevant tests/typecheck/lint/build, \
+     then call `debug_report` again). Commands that verify nothing, such as git status/diff/\
+     rev-parse or cargo tree/metadata/fmt, do not count.";
+
+/// Script-name prefixes that mark a package.json script as a verification run.
+const VERIFY_SCRIPT_PREFIXES: &[&str] = &[
+    "test",
+    "typecheck",
+    "type-check",
+    "compile",
+    "lint",
+    "build",
+    "check",
+];
+/// Names that look like a verification prefix but only check/rewrite formatting.
+const NOT_VERIFY_SCRIPT_MARKERS: &[&str] = &["format", "fmt", "prettier"];
+/// cargo subcommands that verify the code.
+const CARGO_VERIFY: &[&str] = &["test", "check", "clippy", "build"];
+/// Tools that verify the code when invoked directly.
+const DIRECT_VERIFY_TOOLS: &[&str] = &["vitest", "tsc", "eslint"];
+
+fn is_verify_script(name: &str) -> bool {
+    !NOT_VERIFY_SCRIPT_MARKERS.iter().any(|m| name.contains(m))
+        && VERIFY_SCRIPT_PREFIXES.iter().any(|p| name.starts_with(p))
+}
+
+/// Pure, conservative classification of an argv as a verification command
+/// (test, typecheck, lint or build). Unknown commands do not count.
+///
+/// * `cargo test|check|clippy|build ...` counts; `cargo tree|metadata|fmt` do not;
+/// * `git ...` never counts;
+/// * `npm|pnpm|yarn run <script>` (and bare `test`, plus bare `pnpm`/`yarn
+///   <script>`) count when the script name is or starts with
+///   test / typecheck / type-check / compile / lint / build / check, unless it
+///   is a formatting script;
+/// * direct `vitest`, `tsc`, `eslint` count.
+pub(super) fn classify_argv(argv: &[String]) -> bool {
+    let Some(program) = argv.first() else {
+        return false;
+    };
+    let base = program.rsplit(['/', '\\']).next().unwrap_or(program);
+    let sub = argv.get(1).map(String::as_str);
+    match base {
+        "cargo" => sub.is_some_and(|s| CARGO_VERIFY.contains(&s)),
+        "npm" | "pnpm" | "yarn" => match sub {
+            Some("run" | "run-script") => argv.get(2).is_some_and(|s| is_verify_script(s)),
+            Some("test") => true,
+            Some(s) if base != "npm" => is_verify_script(s),
+            _ => false,
+        },
+        b if DIRECT_VERIFY_TOOLS.contains(&b) => true,
+        _ => false,
+    }
+}
+
+/// Whether running `argv` verifies the code. A discovered check with exactly
+/// this argv decides by its kind (test / typecheck / lint / build count;
+/// format does not); anything else falls back to [`classify_argv`].
+pub(super) fn is_verification(argv: &[String], discovered: &[DebugCheck]) -> bool {
+    match discovered.iter().find(|c| c.command == argv) {
+        Some(c) => matches!(
+            c.kind,
+            CheckKind::Test | CheckKind::Typecheck | CheckKind::Lint | CheckKind::Build
+        ),
+        None => classify_argv(argv),
+    }
+}
 
 /// True for a record that came from an actual command run (not self-attested).
 pub(super) fn is_real_check(v: &ValidationRecord) -> bool {
@@ -58,8 +128,10 @@ pub(super) fn missing_check_note(
         return None;
     }
     let last_edit = last_edit_time(root, files);
+    let discovered = checks::discover(root);
     let ok = validation.iter().any(|v| {
         is_real_check(v)
+            && is_verification(&v.command, &discovered)
             && v.passed
             && !v.timed_out
             && match (last_edit, parse_at(&v.at)) {

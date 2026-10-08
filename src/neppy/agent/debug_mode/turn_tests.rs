@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use super::*;
-use crate::neppy::agent::debug_mode::test_util::repo;
+use crate::neppy::agent::debug_mode::test_util::{repo, repo_with_test_script};
 use crate::neppy::agent::debug_mode::types::TaskRecord;
 use crate::neppy::agent::turn_workspace;
 use crate::neppy::config::schema::debug_mode::DebugModeConfig;
@@ -85,12 +85,12 @@ async fn changed_turn_without_a_report_is_partial_and_lists_files() {
 #[tokio::test]
 async fn the_agents_reported_status_is_kept() {
     use crate::neppy::tools::traits::Tool;
-    let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+    let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
     let path = repo.path().to_path_buf();
     run_in_root(ws.path(), root_of(&repo).await, "edit", async move {
         std::fs::write(path.join("a.txt"), "two\n").unwrap();
         let c = super::super::tools::DebugRunCheckTool
-            .execute(serde_json::json!({"command": ["git", "rev-parse", "HEAD"]}))
+            .execute(serde_json::json!({"command": ["npm", "run", "test"]}))
             .await
             .unwrap();
         assert!(!c.is_error, "{}", c.text());
@@ -333,13 +333,13 @@ async fn critical_files_are_recorded_and_an_unvalidated_pass_becomes_partial() {
 #[tokio::test]
 async fn non_critical_pass_is_kept_and_records_no_critical_files() {
     use crate::neppy::tools::traits::Tool;
-    let (repo, ws) = (repo(), tempfile::tempdir().unwrap());
+    let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
     let path = repo.path().to_path_buf();
     run_in_root(ws.path(), root_of(&repo).await, "edit", async move {
         std::fs::write(path.join("a.txt"), "two\n").unwrap();
         // A real passing check after the edit backs the pass.
         let c = super::super::tools::DebugRunCheckTool
-            .execute(serde_json::json!({"command": ["git", "rev-parse", "HEAD"]}))
+            .execute(serde_json::json!({"command": ["npm", "run", "test"]}))
             .await
             .unwrap();
         assert!(!c.is_error, "{}", c.text());
@@ -416,4 +416,39 @@ async fn debug_agent_is_never_a_subagent_even_inside_its_own_turn() {
     .unwrap();
     assert!(inside.0.is_ok(), "it is the turn's own agent");
     assert!(inside.1.is_err(), "but never a sub-agent");
+}
+
+#[tokio::test]
+async fn finish_downgrades_a_pass_backed_only_by_a_trivial_command() {
+    use crate::neppy::tools::traits::Tool;
+    let (repo, ws) = (repo_with_test_script(), tempfile::tempdir().unwrap());
+    let path = repo.path().to_path_buf();
+    run_in_root(ws.path(), root_of(&repo).await, "edit", async move {
+        std::fs::write(path.join("a.txt"), "two\n").unwrap();
+        let c = super::super::tools::DebugRunCheckTool
+            .execute(serde_json::json!({"command": ["git", "rev-parse", "HEAD"]}))
+            .await
+            .unwrap();
+        assert!(!c.is_error, "{}", c.text());
+        let t = current().unwrap();
+        ops::task_update(
+            &t.ctx,
+            t.task_id.as_deref().unwrap(),
+            TaskPatch {
+                status: Some(TaskStatus::Pass),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        Ok::<_, String>(())
+    })
+    .await
+    .unwrap();
+    let t = only_task(ws.path()).await;
+    assert_eq!(
+        t.status,
+        TaskStatus::Partial,
+        "git rev-parse verifies nothing"
+    );
 }
