@@ -361,6 +361,7 @@ fn debug_addendum_states_the_ground_rules() {
     let debug = prompt_addendum(ThreadMode::Debug);
     assert!(debug.contains("Debug mode"));
     assert!(debug.contains("debug_report"));
+    assert!(debug.contains("debug_run_check"));
     assert!(debug.contains("git push"));
     assert!(!debug.to_lowercase().contains("openhuman"));
 }

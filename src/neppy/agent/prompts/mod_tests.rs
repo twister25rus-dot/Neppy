@@ -2221,6 +2221,23 @@ fn grounding_stays_free_of_em_dashes() {
     assert!(!GROUNDING_BODY.contains('\u{2014}'));
 }
 
+/// The no-repeat rule must not stop a model from re-running a check after it
+/// edited something: that is the one repeat that is meant to give a new result.
+#[test]
+fn grounding_no_repeat_rule_allows_rerun_after_a_change() {
+    assert!(GROUNDING_BODY.contains(
+        "Never repeat a call with the same arguments unless something changed since the last call"
+    ));
+    assert!(GROUNDING_BODY.contains("re-running a check after a fix"));
+}
+
+#[test]
+fn work_method_keeps_thinking_out_of_the_reply_and_names_skill_tools() {
+    assert!(WORK_METHOD_BODY.contains("Do this in your reasoning, not in your reply."));
+    assert!(WORK_METHOD_BODY.contains("`run_skill`"));
+    assert!(WORK_METHOD_BODY.contains("`run_workflow`"));
+}
+
 #[test]
 fn work_method_block_is_stable_dash_free_and_not_a_central_append() {
     assert!(WORK_METHOD_BODY.starts_with(&format!("## {WORK_METHOD_HEADING}\n")));

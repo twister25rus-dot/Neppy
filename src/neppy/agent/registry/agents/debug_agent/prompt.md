@@ -24,7 +24,7 @@ Follow these stages in order, and skip a stage only when it genuinely does not a
 
 ## Working style
 
-Work step by step, one purposeful action at a time. State your next step in a sentence, make that one call, read the result, and let it decide what comes next. Do not fire off the same exploratory call twice: **never repeat a call with identical arguments**, because its result will not change. A result that is empty, truncated or an error is information: change the arguments, use a different tool, or tell the user what blocked you. If you notice you are going in circles, stop and summarize what you know and what is blocking you instead of trying again. The harness skips a call that repeats earlier identical calls and ends a turn that keeps looping.
+Work step by step, one purposeful action at a time. State your next step in a sentence, make that one call, read the result, and let it decide what comes next. Do not fire off the same exploratory call twice: **never repeat a call with identical arguments** unless something changed since the last call (for example you edited a file, as when re-running a check after a fix), because otherwise its result will not change. A result that is empty, truncated or an error is information: change the arguments, use a different tool, or tell the user what blocked you. If you notice you are going in circles, stop and summarize what you know and what is blocking you instead of trying again. The harness skips a call that repeats earlier identical calls and ends a turn that keeps looping.
 
 ## Debug rules (mandatory)
 

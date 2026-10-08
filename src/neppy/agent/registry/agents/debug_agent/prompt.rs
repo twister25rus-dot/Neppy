@@ -144,6 +144,13 @@ mod tests {
     }
 
     #[test]
+    fn working_style_allows_rerunning_a_check_after_an_edit() {
+        let body = built_debug_prompt();
+        assert!(body.contains("never repeat a call with identical arguments** unless something changed since the last call"));
+        assert!(body.contains("re-running a check after a fix"));
+    }
+
+    #[test]
     fn prompt_names_debug_run_check_as_the_way_to_verify() {
         let body = built_debug_prompt();
         assert!(body.contains("`debug_run_check`"));
