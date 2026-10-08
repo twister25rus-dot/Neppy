@@ -112,6 +112,12 @@ fn node_source_table() {
         "require('child_process').spawnSync('gh',['workflow','run','promote-main-to-release.yml'])",
         "require('child_process').execFileSync('gh',['api','repos/a/b/actions/workflows/x.yml/dispatches','-f','ref=main'])",
         "const cp=require('child_process'); cp.execSync('GH release create v1')",
+        "require('child_process').execSync('gh -R a/b workflow run release-production.yml')",
+        "require('child_process').execSync('gh run rerun 123')",
+        "require('child_process').execSync('cd x && gh release upload v1 a.tgz')",
+        "require('child_process').spawnSync('gh',['api','-X','POST','repos/o/r/actions/runs/1/rerun'])",
+        "require('child_process').execSync('pnpm release')",
+        "const {fork}=require('child_process'); fork('scripts/release-neppy.sh')",
     ];
     for c in denied {
         assert!(is_publish_deny(&node_source_decision(c)), "{c}");
@@ -125,6 +131,17 @@ fn node_source_table() {
         // `gh` as a substring of a longer word is not the GitHub CLI
         "require('child_process').execSync('echo high release')",
         "require('child_process').execSync('echo github release notes')",
+        // read-only gh calls that merely mention workflow / release
+        "require('child_process').execSync('gh run list --workflow ci.yml')",
+        "require('child_process').execSync('gh release list')",
+        "require('child_process').execSync('gh release view v1 --json tagName')",
+        "require('child_process').spawnSync('gh',['run','list','--workflow','release.yml'])",
+        "require('child_process').execSync('gh workflow run ci.yml')",
+        "require('child_process').execSync('gh api repos/o/r/issues/1/comments -f body=release')",
+        // reading the script, a regex .exec( and 'execute' are not spawns
+        "const t=require('fs').readFileSync('scripts/release-neppy.sh','utf8'); /x/.exec(t); require('child_process');",
+        "const re=/release/; re.exec(s); const cp=require('child_process'); cp.execSync('git log')",
+        "require('child_process'); function execute(){ return readFileSync('scripts/release-neppy.sh') }",
     ];
     for c in allowed {
         assert_eq!(node_source_decision(c), Allow, "{c}");

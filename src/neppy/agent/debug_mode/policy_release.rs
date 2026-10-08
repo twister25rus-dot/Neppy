@@ -79,10 +79,53 @@ fn skip_flags(mut w: &[String]) -> &[String] {
     w
 }
 
+/// `gh` options that take a value in the next word, wherever they sit.
+const GH_VALUE_FLAGS: &[&str] = &[
+    "-R",
+    "--repo",
+    "--hostname",
+    "-r",
+    "--ref",
+    "-f",
+    "--raw-field",
+    "-F",
+    "--field",
+    "-X",
+    "--method",
+    "--input",
+    "-H",
+    "--header",
+    "-q",
+    "--jq",
+    "-t",
+    "--template",
+    "--cache",
+    "-p",
+    "--preview",
+];
+
+/// The non-flag words of `args`, skipping the value of each option that takes
+/// one (`-R a/b`, `--ref main`, `-X POST`). Attached forms (`--repo=a/b`) are a
+/// single flag word and need no skipping.
+fn positionals(args: &[String]) -> Vec<&str> {
+    let mut out = Vec::new();
+    let mut skip = false;
+    for a in args {
+        if skip {
+            skip = false;
+        } else if a.starts_with('-') {
+            skip = GH_VALUE_FLAGS.contains(&a.as_str());
+        } else {
+            out.push(a.as_str());
+        }
+    }
+    out
+}
+
 /// Everything except `gh release list|view`; `gh workflow run|enable` for a
-/// release or promote workflow; and `gh api` calls that write to a releases
-/// endpoint or to a workflow/repository dispatch endpoint.
-fn gh_publishes(args: &[String]) -> bool {
+/// release or promote workflow; `gh run rerun`; and `gh api` writes to a
+/// releases, dispatch, rerun or release-workflow endpoint.
+pub(super) fn gh_publishes(args: &[String]) -> bool {
     let mut i = 0;
     while i < args.len() && args[i].starts_with('-') {
         i += if matches!(args[i].as_str(), "-R" | "--repo" | "--hostname") {
@@ -93,25 +136,34 @@ fn gh_publishes(args: &[String]) -> bool {
     }
     let rest = args.get(i + 1..).unwrap_or(&[]);
     match args.get(i).map(String::as_str) {
-        Some("release") => !matches!(
-            rest.iter()
-                .find(|a| !a.starts_with('-'))
-                .map(String::as_str),
-            Some("list" | "view")
-        ),
+        Some("release") => !matches!(positionals(rest).first(), Some(&("list" | "view"))),
         Some("workflow") => workflow_publishes(rest),
-        Some("run") => run_rerun(rest),
-        Some("api") => {
-            let lower: Vec<String> = rest.iter().map(|a| a.to_ascii_lowercase()).collect();
-            let mentions = lower.iter().any(|a| a.contains("release"));
-            // A dispatch endpoint starts a workflow run, whatever the workflow
-            // is called (`.../actions/workflows/<id>/dispatches`, or
-            // `repos/<o>/<r>/dispatches` for `repository_dispatch`).
-            let dispatches = lower.iter().any(|a| a.contains("dispatches"));
-            (mentions || dispatches) && gh_api_writes(rest)
-        }
+        Some("run") => positionals(rest).first() == Some(&"rerun"),
+        // Decided by the endpoint path, never by words in field values.
+        Some("api") => api_path_publishes(rest) && gh_api_writes(rest),
         _ => false,
     }
+}
+
+/// True when an operand of `gh api` is a path (or URL) that publishes or
+/// triggers a run: a `releases`, `dispatches`, `rerun` or `rerun-failed-jobs`
+/// segment (covers `.../runs/<id>/rerun` and `.../jobs/<id>/rerun`), or a
+/// release / promote workflow under `actions/workflows`.
+fn api_path_publishes(rest: &[String]) -> bool {
+    positionals(rest).iter().any(|p| {
+        let lower = p.to_ascii_lowercase();
+        let path = lower.split(['?', '#']).next().unwrap_or("");
+        let segs: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+        segs.iter().any(|s| {
+            matches!(
+                *s,
+                "releases" | "dispatches" | "rerun" | "rerun-failed-jobs"
+            )
+        }) || (segs.contains(&"workflows")
+            && segs
+                .iter()
+                .any(|s| s.contains("release") || s.contains("promote")))
+    })
 }
 
 /// True when the `gh api` operands ask for a mutating request: fields or an
@@ -139,59 +191,22 @@ fn gh_api_writes(rest: &[String]) -> bool {
     })
 }
 
-/// `gh run rerun <id>`: re-executes a past run, which may be a release run
-/// whose workflow cannot be resolved statically from the id. `list`, `view`,
-/// `watch`, `download` and the like only read.
-fn run_rerun(rest: &[String]) -> bool {
-    let mut i = 0;
-    while i < rest.len() && rest[i].starts_with('-') {
-        i += if matches!(rest[i].as_str(), "-R" | "--repo" | "--hostname") {
-            2
-        } else {
-            1
-        };
-    }
-    rest.get(i).is_some_and(|a| a == "rerun")
-}
-
 /// `gh workflow run|enable <workflow>` where the workflow's file name or name
 /// says release or promote (those are `workflow_dispatch` publish paths), or
 /// is a bare numeric id, whose name cannot be checked statically. `list`,
-/// `view` and the like only read.
+/// `view` and the like only read. `-R/--repo <v>` may sit before or after the
+/// subcommand.
 fn workflow_publishes(rest: &[String]) -> bool {
-    let Some(sub) = rest.iter().find(|a| !a.starts_with('-')) else {
-        return false;
-    };
-    if !matches!(sub.as_str(), "run" | "enable") {
+    let pos = positionals(rest);
+    if !matches!(pos.first(), Some(&("run" | "enable"))) {
         return false;
     }
-    let mut skip_value = false;
-    let mut seen_sub = false;
-    for a in rest {
-        if skip_value {
-            skip_value = false;
-            continue;
-        }
-        if a.starts_with('-') {
-            skip_value = matches!(
-                a.as_str(),
-                "-r" | "--ref" | "-f" | "--raw-field" | "-F" | "--field" | "-R" | "--repo"
-            );
-            continue;
-        }
-        if !seen_sub {
-            seen_sub = true; // the `run` / `enable` word itself
-            continue;
-        }
+    pos[1..].iter().any(|a| {
         let lower = a.to_ascii_lowercase();
-        if lower.contains("release")
+        lower.contains("release")
             || lower.contains("promote")
             || (!a.is_empty() && a.chars().all(|c| c.is_ascii_digit()))
-        {
-            return true;
-        }
-    }
-    false
+    })
 }
 
 /// A package script invocation: `pnpm release`, `npm run release:x`,

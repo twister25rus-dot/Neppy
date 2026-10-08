@@ -8,10 +8,11 @@
 //! install it is and `npm_exec run release` is the release script it is.
 //!
 //! `node_exec` runs arbitrary JavaScript, which a static check cannot fully
-//! analyse. It denies the evident ways of publishing from JS: code that can
-//! start a process (`child_process`, `spawn`, `exec`) and names the release
-//! script, `gh release` / `gh workflow run`, or `gh` together with a
-//! release, workflow or dispatch operand. Code that builds the command at run
+//! analyse. It denies the evident ways of publishing from JS: code that imports
+//! `child_process` and calls a starter (`exec(`, `execSync(`, `spawn(`, ...)
+//! while a string literal holds a publish-shaped command (the shell rules'
+//! verdict on it, or a `gh` argv spread over literals) or names the release
+//! script. Reading the script or running a read-only `gh` call is allowed. Code that builds the command at run
 //! time (string concatenation, decoding, reading it from a file it wrote) is
 //! beyond this check; the approval gate and the tier still apply on top.
 //!
@@ -19,14 +20,11 @@
 //! normal chat turn behaves exactly as before.
 
 use super::{check_debug_command_with, policy_release, DebugCommandDecision};
-use crate::neppy::agent::debug_mode::turn;
+use crate::neppy::agent::debug_mode::{shell_parse, turn};
 use DebugCommandDecision::Allow;
 
 /// Largest script file `node_exec` hands to the source scan.
 const MAX_SCRIPT_SCAN_BYTES: u64 = 1024 * 1024;
-
-const SPAWN_MARKERS: &[&str] = &["child_process", "spawn", "exec"];
-const GH_RELEASE_MARKERS: &[&str] = &["release", "workflow", "dispatches", "promote"];
 
 /// `npm <subcommand> <args...>` with every word single-quoted, so the shell
 /// parser sees the same words the tool will pass to npm.
@@ -110,27 +108,138 @@ pub fn gate_node_exec_current(source: &str) -> DebugCommandDecision {
 }
 
 /// Pure scan of JavaScript source; see the module docs for what it catches.
+///
+/// A denial needs both halves: the code can start a process (it mentions
+/// `child_process` and calls `exec` / `execSync` / `spawn` / `spawnSync` /
+/// `execFile` / `execFileSync` / `fork`), and a string literal holds a
+/// publish-shaped command (see [`literals_publish`]). Reading the release
+/// script, a regex `.exec(`, or a read-only `gh run list` is not a publish.
 pub(super) fn node_source_decision(source: &str) -> DebugCommandDecision {
     let lower = source.to_ascii_lowercase();
-    if !SPAWN_MARKERS.iter().any(|m| lower.contains(m)) {
+    if !lower.contains("child_process") || !calls_a_spawner(&lower) {
         return Allow;
     }
-    // `gh` as a whole word anywhere (an argv element, `gh release ...`) plus a
-    // release / workflow / dispatch word covers `gh release` and `gh workflow run`.
-    let names_publish = lower.contains("release-neppy")
-        || (contains_word(&lower, "gh") && GH_RELEASE_MARKERS.iter().any(|m| lower.contains(m)));
-    if names_publish {
+    if literals_publish(&string_literals(source)) {
         policy_release::deny()
     } else {
         Allow
     }
 }
 
-/// `needle` as a whole word (not inside `github`, `high`, ...).
-fn contains_word(haystack: &str, needle: &str) -> bool {
-    haystack
-        .split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
-        .any(|w| w == needle)
+const PROCESS_OBJECTS: &[&str] = &["cp", "child_process", "childprocess", "child", "proc"];
+
+/// True when `source` (lower-cased) calls one of the child_process starters.
+/// A bare `exec(` counts; `x.exec(` counts only when `x` names a child_process
+/// object (a regex or other object's `.exec(` is not a spawn).
+fn calls_a_spawner(source: &str) -> bool {
+    use std::sync::OnceLock;
+    static CALL: OnceLock<regex::Regex> = OnceLock::new();
+    let re = CALL.get_or_init(|| {
+        regex::Regex::new(r"\b(exec|execsync|spawn|spawnsync|execfile|execfilesync|fork)\s*\(")
+            .expect("static spawner regex")
+    });
+    re.captures_iter(source).any(|c| {
+        let m = c.get(0).expect("whole match");
+        let before = source[..m.start()].trim_end();
+        if &c[1] != "exec" || !before.ends_with('.') {
+            return true;
+        }
+        let object = before[..before.len() - 1].trim_end();
+        // `require('child_process').exec(...)`
+        if ["child_process')", "child_process\")", "child_process`)"]
+            .iter()
+            .any(|t| object.ends_with(t))
+        {
+            return true;
+        }
+        let obj: String = object
+            .chars()
+            .rev()
+            .take_while(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '_' | '$'))
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect();
+        PROCESS_OBJECTS.contains(&obj.as_str())
+    })
+}
+
+/// The quoted strings of `source` in order (single, double and backtick;
+/// single and double quotes end at a newline). Comments and regex literals are
+/// not parsed: a stray quote only mis-pairs literals, never hides one that
+/// follows a closed pair.
+fn string_literals(source: &str) -> Vec<String> {
+    let chars: Vec<char> = source.chars().collect();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < chars.len() {
+        let q = chars[i];
+        i += 1;
+        if !matches!(q, '\'' | '"' | '`') {
+            continue;
+        }
+        let mut lit = String::new();
+        let mut closed = false;
+        while i < chars.len() {
+            let c = chars[i];
+            i += 1;
+            if c == '\\' {
+                if let Some(n) = chars.get(i) {
+                    lit.push(*n);
+                    i += 1;
+                }
+            } else if c == q {
+                closed = true;
+                break;
+            } else if c == '\n' && q != '`' {
+                break;
+            } else {
+                lit.push(c);
+            }
+        }
+        if closed {
+            out.push(lit);
+        }
+    }
+    out
+}
+
+/// True when the literals hold a publish-shaped command: the release script
+/// by name; a shell command line that [`policy_release::publishes_release`]
+/// denies (`gh release create`, `pnpm release`, `bash scripts/release-...`);
+/// or an argv spread over literals (`spawn('gh', ['release', 'create'])`),
+/// checked by running the `gh` rules on the words that follow each `gh`.
+fn literals_publish(lits: &[String]) -> bool {
+    if lits
+        .iter()
+        .any(|l| l.to_ascii_lowercase().contains("release-neppy"))
+    {
+        return true;
+    }
+    for lit in lits {
+        let Ok(parsed) = shell_parse::parse(lit) else {
+            continue;
+        };
+        // Program names are case-insensitive on macOS and Windows: `GH release`.
+        let hit = parsed.segments.iter().any(|w| {
+            let mut w = super::strip_wrappers(w).to_vec();
+            if let Some(first) = w.first_mut() {
+                *first = first.to_ascii_lowercase();
+            }
+            policy_release::publishes_release(&w, &[])
+        });
+        if hit {
+            return true;
+        }
+    }
+    let words: Vec<String> = lits
+        .iter()
+        .flat_map(|l| l.split_whitespace().map(str::to_string))
+        .collect();
+    words.iter().enumerate().any(|(i, w)| {
+        w.eq_ignore_ascii_case("gh")
+            && policy_release::gh_publishes(&words[i + 1..(i + 17).min(words.len())])
+    })
 }
 
 #[cfg(test)]
