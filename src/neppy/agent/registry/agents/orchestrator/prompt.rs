@@ -15,6 +15,7 @@ use crate::neppy::agent::context::prompt::{
     render_datetime, render_identity, render_tools, render_user_files, render_workspace,
     ConnectedIntegration, PromptContext, ToolCallFormat,
 };
+use crate::neppy::agent::prompts::WORK_METHOD_BODY;
 use crate::neppy::skills::ops_types::Workflow;
 use crate::neppy::tools::orchestrator_tools::sanitise_slug;
 use anyhow::Result;
@@ -53,6 +54,12 @@ pub fn build(ctx: &PromptContext<'_>) -> Result<String> {
     }
 
     out.push_str(ARCHETYPE.trim_end());
+    out.push_str("\n\n");
+
+    // Shared method block (how to investigate, plan, verify, report). Spliced
+    // in here, once, rather than by the central builder: sub-agents keep their
+    // narrow prompts.
+    out.push_str(WORK_METHOD_BODY);
     out.push_str("\n\n");
 
     let user_files = render_user_files(ctx)?;
@@ -1117,6 +1124,51 @@ mod tests {
                 ARCHETYPE.contains(tool),
                 "capability-miss clause must name `{tool}`"
             );
+        }
+    }
+
+    /// The prompt a Chat or Orchestration turn is sent: the central builder's
+    /// output plus the mode addendum, which the session appends as a suffix.
+    fn assembled_for_mode(mode: crate::neppy::threads::mode::ThreadMode) -> String {
+        use crate::neppy::agent::prompts::SystemPromptBuilder;
+        let built = SystemPromptBuilder::from_dynamic(build)
+            .build(&ctx_with(&[]))
+            .unwrap();
+        format!(
+            "{built}\n\n{}",
+            crate::neppy::web_chat::mode::prompt_addendum(mode)
+        )
+    }
+
+    #[test]
+    fn built_prompt_carries_the_work_method_once_in_chat_and_orchestration_mode() {
+        use crate::neppy::threads::mode::ThreadMode;
+        for mode in [ThreadMode::Chat, ThreadMode::Orchestration] {
+            let body = assembled_for_mode(mode);
+            assert_eq!(
+                body.matches("## How you work").count(),
+                1,
+                "{mode:?}: the work-method heading must appear exactly once"
+            );
+            assert!(body.contains("Verify before you claim success"), "{mode:?}");
+            assert!(
+                body.contains("Never edit a file you have not read"),
+                "{mode:?}"
+            );
+            assert!(body.contains("When you think:"), "{mode:?}");
+            // Placed right after the role text, ahead of the tool catalogue.
+            let method = body.find("## How you work").unwrap();
+            let delegation = body.find("## Delegation (direct-first)").unwrap();
+            assert!(
+                delegation < method,
+                "{mode:?}: method follows the role text"
+            );
+            if let Some(tools) = body.find("## Tools") {
+                assert!(
+                    method < tools,
+                    "{mode:?}: method precedes the tool catalogue"
+                );
+            }
         }
     }
 }

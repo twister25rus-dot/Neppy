@@ -2220,3 +2220,29 @@ fn grounding_names_a_route_to_run_workflow_for_agents_that_cannot_see_it() {
 fn grounding_stays_free_of_em_dashes() {
     assert!(!GROUNDING_BODY.contains('\u{2014}'));
 }
+
+#[test]
+fn work_method_block_is_stable_dash_free_and_not_a_central_append() {
+    assert!(WORK_METHOD_BODY.starts_with(&format!("## {WORK_METHOD_HEADING}\n")));
+    assert!(
+        !WORK_METHOD_BODY.contains('\u{2014}'),
+        "STYLE bans em-dashes in prompt text"
+    );
+    assert!(
+        WORK_METHOD_BODY.lines().count() <= 45,
+        "block must stay compact for small models"
+    );
+    assert_eq!(WORK_METHOD_BODY.matches("## ").count(), 1);
+
+    // Not part of the shared builder chain: sub-agents and plain builds keep
+    // their narrow prompts. Only the three agents' own builders splice it in.
+    let ctx = ctx_with_identity(None);
+    let rendered = SystemPromptBuilder::from_final_body("## Custom Agent\n\nBody.".into())
+        .build(&ctx)
+        .unwrap();
+    assert!(!rendered.contains("## How you work"));
+    let sub = SystemPromptBuilder::for_subagent("role".into(), true, true, true)
+        .build(&ctx)
+        .unwrap();
+    assert!(!sub.contains("## How you work"));
+}
