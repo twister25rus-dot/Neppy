@@ -144,6 +144,19 @@ describe('ChatComposer', () => {
     expect(screen.getByRole('button', { name: 'composer.attachFile' })).toBeInTheDocument();
   });
 
+  it('opens the file picker when the attach button is clicked', () => {
+    const fileInputRef = createRef<HTMLInputElement | null>();
+    const clickSpy = vi.spyOn(HTMLButtonElement.prototype, 'click');
+    const { container } = renderComposer({ fileInputRef });
+    // The ref now points at the DOM <button> itself, so clicking it fires the
+    // native file picker.
+    expect(clickSpy).not.toHaveBeenCalled();
+    screen.getByRole('button', { name: 'composer.attachFile' }).click();
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    clickSpy.mockRestore();
+    expect(container.querySelector('input[type="file"]')).not.toBeNull();
+  });
+
   it('hides the attach button and file input when attachmentsEnabled is false', () => {
     const { container } = renderComposer({ attachmentsEnabled: false });
     expect(screen.queryByRole('button', { name: 'composer.attachFile' })).not.toBeInTheDocument();
