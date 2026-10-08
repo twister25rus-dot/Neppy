@@ -1111,6 +1111,26 @@ mod tests {
     }
 
     #[test]
+    fn prompt_routes_a_packed_run_skill_through_use_skill() {
+        use crate::neppy::tools::toolpacks::registry;
+        let pack = registry::pack_for_tool("run_skill").expect("`run_skill` is packed");
+        assert_eq!(pack.id, "skills", "the prompt names pack `skills`");
+        assert!(!pack.owners.contains(&"orchestrator"));
+        assert!(ARCHETYPE.contains(
+            "If `run_skill` is not in your tool list it is packed: call `use_skill` with skill `skills` and tool `run_skill`."
+        ));
+    }
+
+    #[test]
+    fn scheduling_confirmation_has_an_exception_for_explicit_requests() {
+        assert!(!ARCHETYPE
+            .contains("Always get explicit user confirmation before creating any schedule"));
+        assert!(ARCHETYPE
+            .contains("unless the user explicitly asked for that exact reminder or schedule"));
+        assert!(ARCHETYPE.contains("your own idea, or the timing or details are ambiguous"));
+    }
+
+    #[test]
     fn prompt_carries_the_missing_capability_discovery_clause() {
         assert!(ARCHETYPE.contains("Missing capability: discover before you say"));
         for tool in [

@@ -161,6 +161,16 @@ fn addenda_describe_their_mode_and_the_recovery_policy() {
 }
 
 #[test]
+fn mode_addenda_defer_planning_to_the_agents_own_planning_step() {
+    let chat = prompt_addendum(ThreadMode::Chat);
+    assert!(chat.contains("plan it once, in the planning step of your instructions"));
+    assert!(!chat.contains("plan it, execute it"));
+
+    let orch = prompt_addendum(ThreadMode::Orchestration);
+    assert!(orch.contains("This is the planning step of your instructions, not a second plan"));
+}
+
+#[test]
 fn fingerprint_differs_by_mode_so_a_switch_rebuilds_the_session() {
     let a = fp_with_mode(Some(ThreadMode::Chat));
     let b = fp_with_mode(Some(ThreadMode::Orchestration));

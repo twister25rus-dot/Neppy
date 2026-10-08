@@ -2221,6 +2221,38 @@ fn grounding_stays_free_of_em_dashes() {
     assert!(!GROUNDING_BODY.contains('\u{2014}'));
 }
 
+/// One reconciled skills sentence, true for every agent: the route is the
+/// skill tool the agent's own prompt names, and a packed one is reached with
+/// `use_skill`. The orchestrator carries its own copy of the grounding block
+/// (it has the heading), so the same facts are pinned there too.
+#[test]
+fn grounding_skills_sentence_is_true_for_run_workflow_and_run_skill_agents() {
+    use crate::neppy::tools::toolpacks::registry;
+
+    assert!(!GROUNDING_BODY.contains("Skills run only via"));
+    assert!(GROUNDING_BODY.contains("Skills run through the skill tool your instructions name"));
+    assert!(GROUNDING_BODY.contains("Do not invent skill ids."));
+    assert!(GROUNDING_BODY.contains("skill `workflows` and tool `run_workflow`"));
+    assert!(GROUNDING_BODY.contains("skill `skills` and tool `run_skill`"));
+    assert_eq!(registry::pack_for_tool("run_skill").unwrap().id, "skills");
+
+    let orchestrator = include_str!("../registry/agents/orchestrator/prompt.md");
+    assert!(orchestrator.contains(&format!("### {GROUNDING_HEADING}")));
+    assert!(!orchestrator.contains("Skills run only via"));
+    assert!(orchestrator.contains("Skills run through the skill tool your instructions name"));
+    assert!(orchestrator.contains("skill `workflows` and tool `run_workflow`"));
+    assert!(orchestrator.contains("skill `skills` and tool `run_skill`"));
+}
+
+/// "One purposeful tool call" must not forbid the batching the orchestrator
+/// prompt asks for.
+#[test]
+fn grounding_one_call_rule_allows_batching_independent_lookups() {
+    assert!(GROUNDING_BODY.contains("make one purposeful tool call"));
+    assert!(GROUNDING_BODY
+        .contains("(independent read-only lookups may be batched when your instructions say so)"));
+}
+
 /// The no-repeat rule must not stop a model from re-running a check after it
 /// edited something: that is the one repeat that is meant to give a new result.
 #[test]

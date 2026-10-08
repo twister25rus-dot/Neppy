@@ -162,6 +162,22 @@ mod tests {
     }
 
     #[test]
+    fn prompt_routes_packed_run_workflow_through_use_skill() {
+        use crate::neppy::tools::toolpacks::registry;
+        let pack = registry::pack_for_tool("run_workflow").expect("`run_workflow` is packed");
+        assert_eq!(pack.id, "workflows", "the prompt names pack `workflows`");
+        assert!(ARCHETYPE.contains(
+            "`run_workflow` is packed, not missing: call `use_skill` with skill `workflows` and tool `run_workflow`"
+        ));
+    }
+
+    #[test]
+    fn working_style_decides_the_next_step_in_reasoning_not_the_reply() {
+        assert!(ARCHETYPE.contains("Decide your next step in your reasoning, not in your reply"));
+        assert!(!ARCHETYPE.contains("State your next step in a sentence"));
+    }
+
+    #[test]
     fn prompt_md_has_no_em_dash() {
         assert!(!ARCHETYPE.contains('\u{2014}'), "STYLE bans em-dashes");
     }
