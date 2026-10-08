@@ -4,6 +4,14 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.68.5] - 2026-10-08
+
+### What's Changed
+
+- feat: new chat composer + mode tabs; MLX prefix cache; Reasoning off sends off ([`9c5b7e09`](https://github.com/twister25rus-dot/Neppy/commit/9c5b7e09e51f4670d01fe6989dd159a1f57ebf53))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/459c7a366bce73bc0320f51b07903faacc4bcaea...9c5b7e09e51f4670d01fe6989dd159a1f57ebf53
+
 ## [0.68.4] - 2026-10-07
 
 ### What's Changed

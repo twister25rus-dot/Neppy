@@ -1,6 +1,6 @@
 {
   "name": "neppy-app",
-  "version": "0.68.4",
+  "version": "0.68.5",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
