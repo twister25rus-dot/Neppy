@@ -7673,6 +7673,14 @@ const messages: TranslationMap = {
   'debug.release.loadFailed':
     'Impossible de vérifier que tout est prêt pour la publication : {error}',
   'debug.release.startFailed': 'Impossible de lancer la publication : {error}',
+  'debug.release.branchAhead': 'Branche {branch} · commits à publier : {count}',
+  'debug.release.fetchWarning':
+    'Impossible de joindre GitHub pour vérifier la présence de commits plus récents : {error}',
+  'debug.release.recheck': 'Vérifier à nouveau',
+  'debug.release.rechecking': 'Vérification…',
+  'debug.release.lostContact':
+    'Contact perdu avec le processus de publication. Il est peut-être encore en cours.',
+  'debug.release.failedVersion': 'La publication de v{version} a échoué.',
   'debug.release.blocker.not_release_branch': "Passez d'abord sur la branche {branch}.",
   'debug.release.blocker.dirty':
     "Faites d'abord un commit ou un stash de vos modifications non validées.",

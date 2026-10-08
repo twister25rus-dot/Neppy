@@ -7586,6 +7586,13 @@ const messages: TranslationMap = {
   'debug.release.retry': 'Spróbuj ponownie',
   'debug.release.loadFailed': 'Nie udało się sprawdzić gotowości do wydania: {error}',
   'debug.release.startFailed': 'Nie udało się rozpocząć wydania: {error}',
+  'debug.release.branchAhead': 'Gałąź {branch} · commity do opublikowania: {count}',
+  'debug.release.fetchWarning':
+    'Nie udało się połączyć z GitHubem, aby sprawdzić nowsze commity: {error}',
+  'debug.release.recheck': 'Sprawdź ponownie',
+  'debug.release.rechecking': 'Sprawdzanie…',
+  'debug.release.lostContact': 'Utracono kontakt z procesem wydania. Może nadal działać.',
+  'debug.release.failedVersion': 'Wydanie v{version} nie powiodło się.',
   'debug.release.blocker.not_release_branch': 'Najpierw przełącz się na gałąź {branch}.',
   'debug.release.blocker.dirty': 'Najpierw zatwierdź lub schowaj (stash) niezatwierdzone zmiany.',
   'debug.release.blocker.behind':

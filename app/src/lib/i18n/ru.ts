@@ -7560,6 +7560,14 @@ const messages: TranslationMap = {
   'debug.release.retry': 'Повторить',
   'debug.release.loadFailed': 'Не удалось проверить готовность к релизу: {error}',
   'debug.release.startFailed': 'Не удалось запустить релиз: {error}',
+  'debug.release.branchAhead': 'Ветка {branch} · коммитов к публикации: {count}',
+  'debug.release.fetchWarning':
+    'Не удалось связаться с GitHub, чтобы проверить более новые коммиты: {error}',
+  'debug.release.recheck': 'Проверить снова',
+  'debug.release.rechecking': 'Проверка…',
+  'debug.release.lostContact':
+    'Потеряна связь с процессом релиза. Возможно, он всё ещё выполняется.',
+  'debug.release.failedVersion': 'Релиз v{version} не удался.',
   'debug.release.blocker.not_release_branch': 'Сначала переключитесь на ветку {branch}.',
   'debug.release.blocker.dirty':
     'Сначала закоммитьте или уберите в stash незафиксированные изменения.',

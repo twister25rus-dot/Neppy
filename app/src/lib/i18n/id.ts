@@ -7520,6 +7520,14 @@ const messages: TranslationMap = {
   'debug.release.retry': 'Coba lagi',
   'debug.release.loadFailed': 'Tidak bisa memeriksa kesiapan rilis: {error}',
   'debug.release.startFailed': 'Tidak bisa memulai rilis: {error}',
+  'debug.release.branchAhead': 'Branch {branch} · commit yang akan diterbitkan: {count}',
+  'debug.release.fetchWarning':
+    'Tidak bisa menghubungi GitHub untuk memeriksa commit yang lebih baru: {error}',
+  'debug.release.recheck': 'Periksa lagi',
+  'debug.release.rechecking': 'Memeriksa…',
+  'debug.release.lostContact':
+    'Kontak dengan proses rilis terputus. Prosesnya mungkin masih berjalan.',
+  'debug.release.failedVersion': 'Rilis v{version} gagal.',
   'debug.release.blocker.not_release_branch': 'Pindah ke branch {branch} terlebih dahulu.',
   'debug.release.blocker.dirty':
     'Commit atau stash perubahan yang belum di-commit terlebih dahulu.',

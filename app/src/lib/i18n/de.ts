@@ -7686,6 +7686,14 @@ const messages: TranslationMap = {
   'debug.release.retry': 'Erneut versuchen',
   'debug.release.loadFailed': 'Die Release-Bereitschaft konnte nicht geprüft werden: {error}',
   'debug.release.startFailed': 'Das Release konnte nicht gestartet werden: {error}',
+  'debug.release.branchAhead': 'Branch {branch} · Commits zum Veröffentlichen: {count}',
+  'debug.release.fetchWarning':
+    'GitHub war nicht erreichbar, neuere Commits konnten nicht geprüft werden: {error}',
+  'debug.release.recheck': 'Erneut prüfen',
+  'debug.release.rechecking': 'Wird geprüft…',
+  'debug.release.lostContact':
+    'Die Verbindung zum Release-Prozess ist abgebrochen. Er läuft möglicherweise noch.',
+  'debug.release.failedVersion': 'Release v{version} ist fehlgeschlagen.',
   'debug.release.blocker.not_release_branch': 'Wechsle zuerst zum Branch {branch}.',
   'debug.release.blocker.dirty': 'Committe oder stashe zuerst deine nicht committeten Änderungen.',
   'debug.release.blocker.behind':

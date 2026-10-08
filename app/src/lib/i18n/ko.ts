@@ -7398,6 +7398,13 @@ const messages: TranslationMap = {
   'debug.release.retry': '다시 시도',
   'debug.release.loadFailed': '릴리스 준비 상태를 확인하지 못했습니다: {error}',
   'debug.release.startFailed': '릴리스를 시작하지 못했습니다: {error}',
+  'debug.release.branchAhead': '브랜치 {branch} · 게시할 커밋: {count}',
+  'debug.release.fetchWarning':
+    '더 새로운 커밋을 확인하려 했지만 GitHub에 연결하지 못했습니다: {error}',
+  'debug.release.recheck': '다시 확인',
+  'debug.release.rechecking': '확인 중…',
+  'debug.release.lostContact': '릴리스 프로세스와 연결이 끊겼습니다. 아직 실행 중일 수 있습니다.',
+  'debug.release.failedVersion': 'v{version} 릴리스에 실패했습니다.',
   'debug.release.blocker.not_release_branch': '먼저 {branch} 브랜치로 전환하세요.',
   'debug.release.blocker.dirty': '먼저 커밋하지 않은 변경 사항을 커밋하거나 스태시하세요.',
   'debug.release.blocker.behind':

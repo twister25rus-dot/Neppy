@@ -78,6 +78,7 @@ describe('validateReleaseVersion', () => {
 describe('ReleaseCard', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
+    window.localStorage.clear();
     Object.values(api).forEach(f => f.mockReset());
     openUrl.mockReset();
     openUrl.mockResolvedValue(undefined);
@@ -263,7 +264,7 @@ describe('ReleaseCard', () => {
     renderWithProviders(<ReleaseCard />);
 
     expect(await screen.findByTestId('debug-release-failed')).toHaveTextContent(
-      'The release failed.'
+      'Release v0.68.6 failed.'
     );
     expect(screen.getByTestId('debug-release-failed-reason')).toHaveTextContent(
       'gh release create failed'
@@ -298,5 +299,141 @@ describe('ReleaseCard', () => {
       'Could not check release readiness: no repo'
     );
     expect(screen.queryByTestId('debug-release-publish')).toBeNull();
+  });
+
+  it('shows the branch and how many commits are waiting to be published', async () => {
+    api.getReleasePreflight.mockResolvedValue(preflight({ branch: 'main', ahead_commits: 3 }));
+    renderWithProviders(<ReleaseCard />);
+    expect(await screen.findByTestId('debug-release-branch')).toHaveTextContent(
+      'Branch main · commits to publish: 3'
+    );
+  });
+
+  it('warns when the fetch failed, without adding a blocker', async () => {
+    api.getReleasePreflight.mockResolvedValue(preflight({ fetch_error: 'network unreachable' }));
+    renderWithProviders(<ReleaseCard />);
+    expect(await screen.findByTestId('debug-release-fetch-warning')).toHaveTextContent(
+      'Could not reach GitHub to check for newer commits: network unreachable'
+    );
+    expect(screen.queryByTestId('debug-release-blockers')).toBeNull();
+    expect(screen.getByTestId('debug-release-publish')).toBeEnabled();
+  });
+
+  it('"Check again" reloads the preflight and shows a checking state meanwhile', async () => {
+    renderWithProviders(<ReleaseCard />);
+    await screen.findByTestId('debug-release-publish');
+    const before = api.getReleasePreflight.mock.calls.length;
+
+    let resolve!: (v: ReleasePreflight) => void;
+    api.getReleasePreflight.mockReturnValueOnce(
+      new Promise<ReleasePreflight>(r => {
+        resolve = r;
+      })
+    );
+    fireEvent.click(screen.getByTestId('debug-release-recheck'));
+    expect(await screen.findByText('Checking…')).toBeInTheDocument();
+    expect(screen.getByTestId('debug-release-recheck')).toBeDisabled();
+    expect(api.getReleasePreflight.mock.calls.length).toBe(before + 1);
+
+    await act(async () => {
+      resolve(preflight({ blockers: ['dirty'] }));
+    });
+    await waitFor(() => expect(screen.getByTestId('debug-release-recheck')).toBeEnabled());
+    expect(screen.getByTestId('debug-release-recheck')).toHaveTextContent('Check again');
+    expect(screen.getByTestId('debug-release-blockers')).toHaveTextContent('uncommitted');
+  });
+
+  it('re-runs the preflight when the refresh key changes, and only then', async () => {
+    const view = renderWithProviders(<ReleaseCard refreshKey={1} />);
+    await screen.findByTestId('debug-release-publish');
+    const before = api.getReleasePreflight.mock.calls.length;
+
+    view.rerender(<ReleaseCard refreshKey={1} />);
+    await tick(10);
+    expect(api.getReleasePreflight.mock.calls.length).toBe(before);
+
+    api.getReleasePreflight.mockResolvedValue(preflight({ blockers: ['nothing_to_release'] }));
+    view.rerender(<ReleaseCard refreshKey={2} />);
+    await waitFor(() => expect(api.getReleasePreflight.mock.calls.length).toBe(before + 1));
+    expect(await screen.findByTestId('debug-release-blockers')).toHaveTextContent(
+      'nothing new to publish'
+    );
+  });
+
+  it('keeps a dismissed finished run dismissed after a remount, but shows a new run', async () => {
+    const finished = record({
+      phase: 'succeeded',
+      version: '0.68.6',
+      started_at: '2026-10-08T10:00:00Z',
+      finished_at: '2026-10-08T10:20:00Z',
+      exit_code: 0,
+      tag: 'v0.68.6',
+    });
+    api.getReleaseStatus.mockResolvedValue(finished);
+    const first = renderWithProviders(<ReleaseCard />);
+    fireEvent.click(await screen.findByTestId('debug-release-dismiss'));
+    expect(await screen.findByTestId('debug-release-publish')).toBeInTheDocument();
+    first.unmount();
+
+    // Same finished run after a remount: stays idle.
+    renderWithProviders(<ReleaseCard />);
+    expect(await screen.findByTestId('debug-release-publish')).toBeInTheDocument();
+    expect(screen.queryByTestId('debug-release-succeeded')).toBeNull();
+  });
+
+  it('shows a different finished run even when an older one was dismissed', async () => {
+    window.localStorage.setItem(
+      'neppy:debug:release:dismissed',
+      '0.68.6|2026-10-08T10:00:00Z|2026-10-08T10:20:00Z'
+    );
+    api.getReleaseStatus.mockResolvedValue(
+      record({
+        phase: 'failed',
+        version: '0.68.7',
+        started_at: '2026-10-09T10:00:00Z',
+        finished_at: '2026-10-09T10:05:00Z',
+        exit_code: 1,
+        error: 'boom',
+      })
+    );
+    renderWithProviders(<ReleaseCard />);
+    expect(await screen.findByTestId('debug-release-failed')).toHaveTextContent(
+      'Release v0.68.7 failed.'
+    );
+  });
+
+  it('still works when localStorage is unavailable', async () => {
+    const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('denied');
+    });
+    api.getReleaseStatus.mockResolvedValue(
+      record({ phase: 'failed', version: '0.68.6', finished_at: '2026-10-08T10:20:00Z' })
+    );
+    renderWithProviders(<ReleaseCard />);
+    expect(await screen.findByTestId('debug-release-failed')).toBeInTheDocument();
+    spy.mockRestore();
+  });
+
+  it('says contact was lost after 3 failed status polls, and recovers on success', async () => {
+    api.startRelease.mockResolvedValue(running());
+    renderWithProviders(<ReleaseCard />);
+    fireEvent.click(await screen.findByTestId('debug-release-publish'));
+    fireEvent.click(await screen.findByTestId('debug-release-confirm'));
+    await screen.findByTestId('debug-release-running');
+
+    api.getReleaseStatus.mockRejectedValue(new Error('rpc down'));
+    await tick();
+    await tick();
+    expect(screen.queryByTestId('debug-release-lost-contact')).toBeNull();
+    await tick();
+    expect(await screen.findByTestId('debug-release-lost-contact')).toHaveTextContent(
+      'Lost contact with the release process. It may still be running.'
+    );
+
+    // Polling continues, and a successful read clears the message.
+    api.getReleaseStatus.mockResolvedValue(running({ log_tail: 'still going' }));
+    await tick();
+    await waitFor(() => expect(screen.queryByTestId('debug-release-lost-contact')).toBeNull());
+    expect(screen.getByTestId('debug-release-log')).toHaveTextContent('still going');
   });
 });

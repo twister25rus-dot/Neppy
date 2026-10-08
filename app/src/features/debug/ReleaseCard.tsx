@@ -131,9 +131,20 @@ function ReleaseConfirmDialog({ preflight, onConfirm, onCancel }: ConfirmProps) 
  * release) and follows it live. Starting always goes through a confirm dialog
  * that shows the exact version. This is UI-only; no agent tool can reach it.
  */
-export function ReleaseCard() {
+export function ReleaseCard({ refreshKey }: { refreshKey?: string | number } = {}) {
   const { t } = useT();
-  const { preflight, record, error, busy, dismissed, start, reset } = useRelease();
+  const {
+    preflight,
+    record,
+    error,
+    busy,
+    checking,
+    dismissed,
+    lostContact,
+    start,
+    recheck,
+    reset,
+  } = useRelease(refreshKey);
   const [confirming, setConfirming] = useState(false);
 
   const phase = record?.phase ?? 'idle';
@@ -170,7 +181,29 @@ export function ReleaseCard() {
               {t('debug.release.lastTag').replace('{tag}', preflight.last_tag)}
             </span>
           ) : null}
-          <div className="ml-auto">
+          <span className="text-xs text-content-secondary" data-testid="debug-release-branch">
+            {t('debug.release.branchAhead')
+              .replace('{branch}', preflight.branch)
+              .replace('{count}', String(preflight.ahead_commits))}
+          </span>
+          {preflight.fetch_error ? (
+            <p
+              role="status"
+              className="w-full text-xs text-amber-700 dark:text-amber-300"
+              data-testid="debug-release-fetch-warning">
+              {t('debug.release.fetchWarning').replace('{error}', preflight.fetch_error)}
+            </p>
+          ) : null}
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              size="xs"
+              variant="secondary"
+              analyticsId="debug-release-recheck"
+              data-testid="debug-release-recheck"
+              disabled={checking}
+              onClick={() => void recheck()}>
+              {checking ? t('debug.release.rechecking') : t('debug.release.recheck')}
+            </Button>
             <Button
               size="xs"
               analyticsId="debug-release-publish"
@@ -213,6 +246,14 @@ export function ReleaseCard() {
             data-testid="debug-release-elapsed">
             {t('debug.release.elapsed').replace('{time}', formatElapsed(elapsed))}
           </span>
+          {lostContact ? (
+            <p
+              role="alert"
+              className="w-full text-xs text-amber-700 dark:text-amber-300"
+              data-testid="debug-release-lost-contact">
+              {t('debug.release.lostContact')}
+            </p>
+          ) : null}
           {record?.log_tail ? (
             <LogTail
               text={record.log_tail}
@@ -260,7 +301,9 @@ export function ReleaseCard() {
       {view === 'failed' ? (
         <>
           <span className="text-xs text-coral" role="alert" data-testid="debug-release-failed">
-            {t('debug.release.failed')}
+            {version
+              ? t('debug.release.failedVersion').replace('{version}', version)
+              : t('debug.release.failed')}
           </span>
           <div className="ml-auto">
             <Button

@@ -7796,6 +7796,12 @@ const en: TranslationMap = {
   'debug.release.retry': 'Try again',
   'debug.release.loadFailed': 'Could not check release readiness: {error}',
   'debug.release.startFailed': 'Could not start the release: {error}',
+  'debug.release.branchAhead': 'Branch {branch} · commits to publish: {count}',
+  'debug.release.fetchWarning': 'Could not reach GitHub to check for newer commits: {error}',
+  'debug.release.recheck': 'Check again',
+  'debug.release.rechecking': 'Checking…',
+  'debug.release.lostContact': 'Lost contact with the release process. It may still be running.',
+  'debug.release.failedVersion': 'Release v{version} failed.',
   'debug.release.blocker.not_release_branch': 'Switch to the {branch} branch first.',
   'debug.release.blocker.dirty': 'Commit or stash your uncommitted changes first.',
   'debug.release.blocker.behind':

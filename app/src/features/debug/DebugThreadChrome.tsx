@@ -5,6 +5,7 @@ import { Alert } from '../../components/ui';
 import { useT } from '../../lib/i18n/I18nContext';
 import { useAppSelector } from '../../store/hooks';
 import { DebugBanner } from './DebugBanner';
+import { dirtyCount } from './debugFormat';
 import { LastTaskCard } from './LastTaskCard';
 import { LocalInstallCard } from './LocalInstallCard';
 import { DebugPanels } from './panels';
@@ -33,6 +34,16 @@ export function DebugThreadChrome({ threadId }: { threadId: string }) {
   const panelsRefresh = hashKey(
     lastTask ? `${lastTask.id}:${lastTask.status}:${lastTask.commit ?? ''}` : ''
   );
+
+  // Readiness to publish moves with HEAD, the branch, whether the tree is clean
+  // and the latest task's commit; any of those changing re-runs the release
+  // preflight. (Clean/dirty only, not the count, so edits mid-turn do not
+  // trigger a `git fetch` each time.)
+  const releaseRefresh = status
+    ? hashKey(
+        `${status.head ?? ''}:${status.branch ?? ''}:${dirtyCount(status) === 0}:${lastTask?.commit ?? ''}`
+      )
+    : 0;
 
   if (loading) return null;
 
@@ -68,7 +79,7 @@ export function DebugThreadChrome({ threadId }: { threadId: string }) {
         </div>
       ) : null}
       <LocalInstallCard />
-      <ReleaseCard />
+      <ReleaseCard refreshKey={releaseRefresh} />
       <details className="mx-4 my-2 rounded-lg border border-line" data-testid="debug-panels-slot">
         <summary className="cursor-pointer select-none px-3 py-1.5 text-xs font-medium text-content-secondary">
           {t('debug.panels.toggle')}

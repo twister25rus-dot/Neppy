@@ -7480,6 +7480,12 @@ const messages: TranslationMap = {
   'debug.release.retry': 'আবার চেষ্টা করুন',
   'debug.release.loadFailed': 'রিলিজের প্রস্তুতি যাচাই করা যায়নি: {error}',
   'debug.release.startFailed': 'রিলিজ শুরু করা যায়নি: {error}',
+  'debug.release.branchAhead': 'ব্রাঞ্চ {branch} · প্রকাশযোগ্য কমিট: {count}',
+  'debug.release.fetchWarning': 'নতুন কমিট আছে কি না দেখতে GitHub-এ পৌঁছানো যায়নি: {error}',
+  'debug.release.recheck': 'আবার যাচাই করুন',
+  'debug.release.rechecking': 'যাচাই করা হচ্ছে…',
+  'debug.release.lostContact': 'রিলিজ প্রক্রিয়ার সঙ্গে যোগাযোগ হারিয়ে গেছে। এটি এখনও চলতে পারে।',
+  'debug.release.failedVersion': 'রিলিজ v{version} ব্যর্থ হয়েছে।',
   'debug.release.blocker.not_release_branch': 'আগে {branch} ব্রাঞ্চে যান।',
   'debug.release.blocker.dirty': 'আগে আপনার অসংরক্ষিত পরিবর্তন কমিট বা স্ট্যাশ করুন।',
   'debug.release.blocker.behind':
