@@ -1,7 +1,16 @@
 import { Thread, type ThreadComponents } from '@/components/assistant-ui/thread';
 import { type AssistantState, useAui, useAuiState } from '@assistant-ui/react';
+import debugFactory from 'debug';
 import { BrainIcon, PlusIcon } from 'lucide-react';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  type ChangeEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import AttachmentPreview from '../../../components/chat/AttachmentPreview';
 import ChatPresetPill, { type PresetId } from '../../../components/chat/ChatPresetPill';
@@ -23,6 +32,8 @@ import { MascotChipAvatar } from '../../human/Mascot/MascotChipAvatar';
 import { SelectedThreadModeProvider } from '../threadModeContext';
 import { ChatToolFallback, ChatToolGroup } from './ChatToolParts';
 import { type ThreadGoalController, ThreadGoalEditorPanel } from './ThreadGoalChip';
+
+const debug = debugFactory('assistant-ui-chat');
 
 const selectComposerText = (state: AssistantState) => state.composer.text;
 
@@ -117,6 +128,19 @@ export function AssistantUiChat({
 }) {
   const { t } = useT();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // The host passes a fresh `onAttachFiles` on every render. Read it through a
+  // ref so the input's `onChange` always reaches the latest one without the
+  // input itself having to be re-created when the callback changes.
+  const onAttachFilesRef = useRef(onAttachFiles);
+  useLayoutEffect(() => {
+    onAttachFilesRef.current = onAttachFiles;
+  }, [onAttachFiles]);
+  const handleFileInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    debug('[chat][attach] file input change count=%d', files?.length ?? 0);
+    void onAttachFilesRef.current(files);
+    event.target.value = '';
+  }, []);
   // The idle composer button wears the user's own mascot (yellow by default),
   // so the control looks like the thing it opens rather than a generic glyph.
   //
@@ -208,34 +232,29 @@ export function AssistantUiChat({
     ),
     [attachmentInteractionBlocked, attachments, onRemoveAttachment]
   );
+  // Only the "+" button lives in the slot. The hidden file input is rendered once
+  // by `AssistantUiChat` itself (below): `Thread` treats a slot whose identity
+  // changes as a different component type and remounts it, which would detach an
+  // input whose OS file picker is still open and silently drop the chosen files.
   const ComposerAddAttachment = useCallback(
     () => (
-      <>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={event => {
-            void onAttachFiles(event.target.files);
-            event.target.value = '';
-          }}
-        />
-        <Button
-          type="button"
-          iconOnly
-          variant="secondary"
-          size="xs"
-          aria-label={t('composer.attachFile')}
-          title={t('composer.attachFile')}
-          disabled={attachmentInteractionBlocked || attachments.length >= maxAttachments}
-          onClick={() => fileInputRef.current?.click()}
-          className="size-10 shrink-0 rounded-full border-0 bg-surface-strong p-0 text-content hover:bg-surface-hover">
-          <PlusIcon className="h-5 w-5" />
-        </Button>
-      </>
+      <Button
+        type="button"
+        iconOnly
+        variant="secondary"
+        size="xs"
+        aria-label={t('composer.attachFile')}
+        title={t('composer.attachFile')}
+        disabled={attachmentInteractionBlocked || attachments.length >= maxAttachments}
+        onClick={() => {
+          debug('[chat][attach] open file picker');
+          fileInputRef.current?.click();
+        }}
+        className="size-10 shrink-0 rounded-full border-0 bg-surface-strong p-0 text-content hover:bg-surface-hover">
+        <PlusIcon className="h-5 w-5" />
+      </Button>
     ),
-    [attachmentInteractionBlocked, attachments.length, maxAttachments, onAttachFiles, t]
+    [attachmentInteractionBlocked, attachments.length, maxAttachments, t]
   );
   /**
    * Primary-slot control for an empty composer: a circular button carrying the
@@ -297,6 +316,14 @@ export function AssistantUiChat({
     <AssistantUiRuntimeProvider>
       <SelectedThreadModeProvider>
         <ComposerTextBridge value={inputValue} onChange={onInputValueChange} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          data-testid="composer-file-input"
+          onChange={handleFileInputChange}
+        />
         <Thread
           components={components}
           model={model}
