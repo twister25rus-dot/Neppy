@@ -4,6 +4,35 @@ All notable changes to Neppy are recorded here. Each release also carries these 
 
 ## [Unreleased]
 
+## [0.68.6] - 2026-10-08
+
+### What's Changed
+
+- feat(debug): solve a problem of “attach file” button doesn’t attach files ([`00ada1f1`](https://github.com/twister25rus-dot/Neppy/commit/00ada1f105a08e8133b08272cb9aa3f7ab1aae54))
+- Revert "feat(debug): solve a problem of “attach file” button doesn’t attach files" ([`3a179fd8`](https://github.com/twister25rus-dot/Neppy/commit/3a179fd863c3caa9d67256534dfa388e5ab325fd))
+- fix(chat): keep composer file input mounted so attachments are not lost ([`a84cc962`](https://github.com/twister25rus-dot/Neppy/commit/a84cc962fa397d01daaa68fa4f08e79ddedb8764))
+- fix(debug): stale tasks never stay active; pass requires a real post-edit check ([`dd6eb3ec`](https://github.com/twister25rus-dot/Neppy/commit/dd6eb3ec373153d8c5f21cdf5ed1eae966cbc1c9))
+- fix(debug): only test/typecheck/lint/build checks satisfy the pass gate ([`a3ab2af8`](https://github.com/twister25rus-dot/Neppy/commit/a3ab2af8770e7fe978c5678866e31d0af768c07d))
+- feat(agents): shared "How you work" method for chat, orchestration and debug agents ([`362c2fc0`](https://github.com/twister25rus-dot/Neppy/commit/362c2fc043d5e78148b005fb3766f08ef0bd29a8))
+- fix(debug): help/version invocations never count as verification ([`3f70ac0e`](https://github.com/twister25rus-dot/Neppy/commit/3f70ac0eabb62c757176da105020c3da5a93f069))
+- fix(agents): prompt wording a small model can follow without conflicts ([`c33cf077`](https://github.com/twister25rus-dot/Neppy/commit/c33cf077dea12218f9b9eb07aa3ecc7a490de995))
+- fix(agents): shared method names no skill tool an agent cannot call ([`22f51efd`](https://github.com/twister25rus-dot/Neppy/commit/22f51efddb8bec6007d411b683ae0cd5a4f1fd62))
+- feat(debug): Publish release card (UI) for Debug Mode ([`93ca86d6`](https://github.com/twister25rus-dot/Neppy/commit/93ca86d63b93e9fab074dc49986b386bf0079e52))
+- fix(debug): release card re-checks after commits and remembers dismissed runs ([`d816c4ca`](https://github.com/twister25rus-dot/Neppy/commit/d816c4ca5be1312b75df293dafb113d3d23d628c))
+- feat(debug): release preflight/start/status RPCs for the Publish release card ([`195e52f1`](https://github.com/twister25rus-dot/Neppy/commit/195e52f1c9cccce325c6446ec2ee4cf6a5f25e7a))
+- fix(debug): agents can never publish a release; clearer release blockers ([`4be39ea2`](https://github.com/twister25rus-dot/Neppy/commit/4be39ea239bc9c1254ec8c991426f50a6f0e8a4d))
+- fix(debug): close remaining publish paths; zero-test runs and dead-file edits are caught ([`1af4ee56`](https://github.com/twister25rus-dot/Neppy/commit/1af4ee569d1f0d662b25c526826cf28c575c3de8))
+- fix(debug): re-running a past CI run is denied in Debug mode ([`4e3152be`](https://github.com/twister25rus-dot/Neppy/commit/4e3152be604507f54b7e74921fb980f27adbe07b))
+- fix(debug): tighter publish detection (fewer false positives, two more bypasses closed) ([`6421cd83`](https://github.com/twister25rus-dot/Neppy/commit/6421cd839cdabb211132231b178679cead2b50e0))
+- fix(debug): node_exec publish detection survives promisify, aliases and nested shells ([`becf1129`](https://github.com/twister25rus-dot/Neppy/commit/becf1129eebb9c70d495be96bdd36eb7526de2c8))
+- fix(agents): one consistent route for skills, planning, scheduling and batching ([`20c954d7`](https://github.com/twister25rus-dot/Neppy/commit/20c954d79a8ae97ff50922c7d2578817a303375d))
+- fix(agents): scheduler creates explicitly requested reminders; skill hint only for agents that have one ([`2582191f`](https://github.com/twister25rus-dot/Neppy/commit/2582191ffe61a8e56addbaa63cd8f7ae6072ef69))
+- test(debug): pin release refresh wiring; finish branchAhead translations; assert file input reset ([`bb6b7f2b`](https://github.com/twister25rus-dot/Neppy/commit/bb6b7f2b188584555eb024f97d7cc48306f5cbee))
+- i18n(debug): use the locales' existing 'commit' term in branchAhead (es, id) ([`bc6edab0`](https://github.com/twister25rus-dot/Neppy/commit/bc6edab0fede157136b62f81b53f08c237f2d272))
+- build: don't strip proc-macros/build scripts in release ([`a6ffc64d`](https://github.com/twister25rus-dot/Neppy/commit/a6ffc64d33153e4b5657ef14c52c03479aee4e8f))
+
+**Full Changelog:** https://github.com/twister25rus-dot/Neppy/compare/dd29be4f2cc006832602e995b37578cb2999ff60...a6ffc64d33153e4b5657ef14c52c03479aee4e8f
+
 ## [0.68.5] - 2026-10-08
 
 ### What's Changed
