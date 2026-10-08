@@ -8,6 +8,7 @@ import { DebugBanner } from './DebugBanner';
 import { LastTaskCard } from './LastTaskCard';
 import { LocalInstallCard } from './LocalInstallCard';
 import { DebugPanels } from './panels';
+import { ReleaseCard } from './ReleaseCard';
 import { useDebugSnapshot } from './useDebugSnapshot';
 
 const log = debug('neppy:debug:chrome');
@@ -67,6 +68,7 @@ export function DebugThreadChrome({ threadId }: { threadId: string }) {
         </div>
       ) : null}
       <LocalInstallCard />
+      <ReleaseCard />
       <details className="mx-4 my-2 rounded-lg border border-line" data-testid="debug-panels-slot">
         <summary className="cursor-pointer select-none px-3 py-1.5 text-xs font-medium text-content-secondary">
           {t('debug.panels.toggle')}

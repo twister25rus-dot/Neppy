@@ -273,3 +273,73 @@ export async function quitApp(): Promise<void> {
   log('quitApp: invoking app_quit');
   await invoke<void>('app_quit');
 }
+
+// ---------------------------------------------------------------------------
+// Publish release: runs `scripts/release-neppy.sh <version>` on this machine
+// (builds and signs, pushes, tags, creates the GitHub release). UI/RPC only,
+// never an agent tool. Wire shapes mirror
+// `src/neppy/agent/debug_mode/release.rs`.
+// ---------------------------------------------------------------------------
+
+/** Stable blocker codes from `release_preflight`; translated by the UI. */
+export type ReleaseBlocker =
+  | 'not_release_branch'
+  | 'dirty'
+  | 'behind'
+  | 'no_signing_key'
+  | 'gh_not_ready'
+  | 'release_running'
+  | 'nothing_to_release';
+
+export interface ReleasePreflight {
+  project_root: string;
+  /** Current branch. */
+  branch: string;
+  /** Branch releases are cut from (`NEPPY_RELEASE_BRANCH` or `main`). */
+  release_branch: string;
+  /** `git status --porcelain` is empty. */
+  clean: boolean;
+  /** `origin/<release_branch>` is not an ancestor of HEAD. */
+  behind: boolean;
+  /** Commits in HEAD that are not in `origin/<release_branch>`. */
+  ahead_commits: number;
+  /** `version` from `app/package.json`. */
+  current_version: string;
+  /** `current_version` with the patch component incremented. */
+  suggested_version: string;
+  signing_key_present: boolean;
+  gh_ready: boolean;
+  fetch_error: string | null;
+  blockers: ReleaseBlocker[];
+  /** Latest `v*` tag, best effort. */
+  last_tag: string | null;
+}
+
+export type ReleasePhase = 'idle' | 'running' | 'succeeded' | 'failed';
+
+export interface ReleaseRecord {
+  phase: ReleasePhase;
+  version: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  exit_code: number | null;
+  /** Last ~6 KB of the release log, secret-like lines masked. */
+  log_tail: string;
+  /** `v<version>` on success. */
+  tag: string | null;
+  release_url: string | null;
+  /** Short failure reason; empty otherwise. */
+  error: string;
+}
+
+export const getReleasePreflight = (): Promise<ReleasePreflight> =>
+  call<ReleasePreflight>('release_preflight');
+
+/**
+ * Start the release script. The caller must have asked the user to confirm the
+ * exact version first; the core re-validates the version and re-runs preflight.
+ */
+export const startRelease = (version: string): Promise<ReleaseRecord> =>
+  call<ReleaseRecord>('release_start', { version });
+
+export const getReleaseStatus = (): Promise<ReleaseRecord> => call<ReleaseRecord>('release_status');

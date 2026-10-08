@@ -7582,6 +7582,40 @@ const messages: TranslationMap = {
   'debug.localInstall.version': 'Versão {version}',
   'debug.localInstall.startFailed': 'Não foi possível iniciar a compilação: {error}',
   'debug.localInstall.installFailed': 'Não foi possível iniciar a instalação: {error}',
+  'debug.release.title': 'Publicar versão',
+  'debug.release.publish': 'Publicar versão',
+  'debug.release.currentVersion': 'Versão atual {version}',
+  'debug.release.lastTag': 'Última versão publicada {tag}',
+  'debug.release.confirmTitle': 'Publicar uma nova versão?',
+  'debug.release.confirmBody':
+    'O Neppy vai compilar e assinar o app neste computador, enviar seus commits para o GitHub, marcar a nova versão com uma tag e publicar o release. Depois, as cópias instaladas do Neppy receberão a oferta de atualização.',
+  'debug.release.versionLabel': 'Versão a publicar',
+  'debug.release.versionInvalid': 'Use o formato X.Y.Z, por exemplo 1.2.3.',
+  'debug.release.versionNotGreater': 'A versão deve ser maior que {current}.',
+  'debug.release.confirm': 'Publicar v{version}',
+  'debug.release.running': 'Publicando v{version}…',
+  'debug.release.elapsed': 'Tempo decorrido {time}',
+  'debug.release.logLabel': 'Saída da publicação',
+  'debug.release.succeeded': 'v{version} publicada',
+  'debug.release.viewRelease': 'Ver o release no GitHub',
+  'debug.release.dismiss': 'Dispensar',
+  'debug.release.failed': 'A publicação falhou.',
+  'debug.release.retry': 'Tentar novamente',
+  'debug.release.loadFailed':
+    'Não foi possível verificar se tudo está pronto para publicar: {error}',
+  'debug.release.startFailed': 'Não foi possível iniciar a publicação: {error}',
+  'debug.release.blocker.not_release_branch': 'Mude primeiro para a branch {branch}.',
+  'debug.release.blocker.dirty':
+    'Faça commit ou stash das suas alterações não commitadas primeiro.',
+  'debug.release.blocker.behind':
+    'Baixe primeiro as alterações mais recentes do GitHub. Sua branch está atrasada.',
+  'debug.release.blocker.no_signing_key':
+    'A chave de assinatura do atualizador não foi encontrada. Coloque-a em ~/.neppy-updater/neppy.key.',
+  'debug.release.blocker.gh_not_ready':
+    'A CLI do GitHub não está conectada. Execute "gh auth login" em um terminal.',
+  'debug.release.blocker.release_running': 'Já existe uma publicação em andamento.',
+  'debug.release.blocker.nothing_to_release':
+    'Não há nada novo para publicar. Faça commit de uma alteração primeiro.',
   'debug.panels.loading': 'Carregando…',
   'debug.panels.unknownError': 'Erro desconhecido',
   'debug.panels.tabsLabel': 'Visualizações de depuração',

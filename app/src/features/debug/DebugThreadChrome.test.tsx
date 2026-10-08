@@ -72,6 +72,9 @@ describe('DebugThreadChrome', () => {
     );
     await waitFor(() => expect(screen.getByText('Last task')).toBeInTheDocument());
     expect(screen.getByTestId('debug-panels-slot')).toBeInTheDocument();
+    // The release card sits right after the local-install card.
+    const install = screen.getByTestId('debug-local-install');
+    expect(screen.getByTestId('debug-release')).toBe(install.nextElementSibling);
   });
 
   it('says what is missing, with a settings link, when there is no source repository', async () => {
@@ -81,6 +84,7 @@ describe('DebugThreadChrome', () => {
     const notice = await screen.findByTestId('debug-unavailable');
     expect(notice).toHaveTextContent('Neppy source repository');
     expect(screen.queryByTestId('debug-banner')).toBeNull();
+    expect(screen.queryByTestId('debug-release')).toBeNull();
     expect(notice.querySelector('a')).toHaveAttribute('href', '/settings/debug-mode');
   });
 });
