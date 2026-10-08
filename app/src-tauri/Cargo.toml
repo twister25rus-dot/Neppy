@@ -347,6 +347,16 @@ codegen-units = 16
 strip = "symbols"
 
 # Fast CI builds: trade runtime perf for compile speed
+
+# Build-time helpers (proc-macros and build scripts) are never shipped, so they
+# are not stripped. With `MACOSX_DEPLOYMENT_TARGET=12.3` (tauri's
+# minimumSystemVersion) the Xcode 27 linker (ld-27037) plus `strip` produces
+# proc-macro dylibs that dyld refuses to load ("mis-aligned LINKEDIT string
+# pool"), so a cold release build fails with "can't find crate for
+# `serde_derive`" and friends. The shipped binary keeps `strip = "symbols"`.
+[profile.release.build-override]
+strip = "none"
+
 [profile.ci]
 inherits = "release"
 opt-level = 1
